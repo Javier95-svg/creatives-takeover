@@ -1,10 +1,13 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { CreditCostBadge } from "@/components/CreditCostTooltip";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { techStackData, TechStackCategory, TechStackData, TechStackProduct } from '@/data/techStack';
-import { CheckCircle2, Calculator, DollarSign, Monitor, Server, Cloud, BarChart, CreditCard, Mail, Users, Lock, Sparkles, TrendingUp, AlertTriangle, Lightbulb, Target, Link2, Zap } from 'lucide-react';
+import { CheckCircle2, Calculator, DollarSign, Monitor, Server, Cloud, BarChart, CreditCard, Mail, Users, Lock, TrendingUp, AlertTriangle, Lightbulb, Target, Link2, Zap, Save, FolderOpen, Trash2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useSubscription } from '@/hooks/useSubscription';
@@ -37,6 +40,16 @@ interface BudgetBreakdown {
   isVariable: boolean;
 }
 
+interface TechStackReport {
+  id: string;
+  name: string | null;
+  selected_products: Record<string, string | null>;
+  budget_total: number;
+  budget_breakdown: BudgetBreakdown[];
+  has_variable: boolean;
+  created_at: string;
+}
+
 interface IntegrationSuggestion {
   title: string;
   description: string;
@@ -51,15 +64,50 @@ const TechStack: React.FC = () => {
   const { subscriptionData } = useSubscription();
   const { checkFeatureAccess } = useFeatureGating();
   const { refreshBalance } = useCredits();
-  const { ensureCredits, deductCredits } = useCreditActions();
+  const { deductCredits } = useCreditActions();
   const { openUpgradePrompt } = useUpgradePrompt();
   const { toast } = useToast();
   const [selectedProducts, setSelectedProducts] = useState<SelectedProducts>({});
   const [showBudget, setShowBudget] = useState(false);
+  const [savedReports, setSavedReports] = useState<TechStackReport[]>([]);
+  const [reportsLoading, setReportsLoading] = useState(false);
+  const [savingReport, setSavingReport] = useState(false);
+  const [reportName, setReportName] = useState('');
+  const [saveDialogOpen, setSaveDialogOpen] = useState(false);
 
   const currentTier = subscriptionData.subscription_tier?.toLowerCase() || 'free';
-  const hasPaidAccess = user && ['creator', 'professional'].includes(currentTier);
   const isAdmin = user?.email?.toLowerCase() === 'admin@creatives-takeover.com';
+
+  useEffect(() => {
+    if (!user) {
+      setSavedReports([]);
+      return;
+    }
+
+    const fetchReports = async () => {
+      setReportsLoading(true);
+      const { data, error } = await supabase
+        .from('tech_stack_reports')
+        .select('id, name, selected_products, budget_total, budget_breakdown, has_variable, created_at')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Failed to load tech stack reports', error);
+        toast({
+          title: 'Failed to load saved reports',
+          description: 'Please refresh and try again.',
+          variant: 'destructive'
+        });
+        setSavedReports([]);
+      } else {
+        setSavedReports((data as TechStackReport[]) || []);
+      }
+      setReportsLoading(false);
+    };
+
+    fetchReports();
+  }, [user?.id, toast]);
 
   const handleProductSelect = (categoryId: string, productId: string) => {
     setSelectedProducts(prev => {
@@ -210,12 +258,185 @@ const TechStack: React.FC = () => {
     if (!isAdmin) await refreshBalance();
   };
 
+  const handleSaveReport = async () => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+
+    if (!allCategoriesSelected) {
+      toast({
+        title: 'Select all categories',
+        description: `Please select one product in all ${techStackData.length} categories before saving.`,
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    setSavingReport(true);
+    const fallbackName = `Tech Stack Report - ${new Date().toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    })}`;
+    const name = reportName.trim() || fallbackName;
+
+    const { data, error } = await supabase
+      .from('tech_stack_reports')
+      .insert({
+        user_id: user.id,
+        name,
+        selected_products: selectedProducts,
+        budget_total: budget.total,
+        budget_breakdown: budget.breakdown,
+        has_variable: budget.hasVariable
+      })
+      .select('id, name, selected_products, budget_total, budget_breakdown, has_variable, created_at')
+      .single();
+
+    if (error) {
+      console.error('Failed to save tech stack report', error);
+      toast({
+        title: 'Failed to save report',
+        description: error.message || 'Please try again.',
+        variant: 'destructive'
+      });
+    } else if (data) {
+      setSavedReports((prev) => [data as TechStackReport, ...prev]);
+      setReportName('');
+      setSaveDialogOpen(false);
+      toast({
+        title: 'Report saved',
+        description: 'You can access it anytime from Saved Reports.'
+      });
+    }
+
+    setSavingReport(false);
+  };
+
+  const handleLoadReport = (report: TechStackReport) => {
+    setSelectedProducts(report.selected_products || {});
+    setShowBudget(true);
+    setReportName(report.name || '');
+    toast({
+      title: 'Report loaded',
+      description: report.name || 'Tech Stack Report'
+    });
+  };
+
+  const handleDeleteReport = async (reportId: string) => {
+    if (!user) return;
+    const { error } = await supabase
+      .from('tech_stack_reports')
+      .delete()
+      .eq('id', reportId)
+      .eq('user_id', user.id);
+
+    if (error) {
+      toast({
+        title: 'Failed to delete report',
+        description: error.message || 'Please try again.',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    setSavedReports((prev) => prev.filter((report) => report.id !== reportId));
+    toast({ title: 'Report deleted' });
+  };
+
   const selectedCount = Object.values(selectedProducts).filter(id => id !== null).length;
   const allCategoriesSelected = selectedCount === techStackData.length;
   const canGenerateBudget = Boolean(user) && allCategoriesSelected;
+  const canSaveReport = Boolean(user) && showBudget && allCategoriesSelected;
 
   return (
     <div className="space-y-6 sm:space-y-8 pb-8">
+      <Dialog open={saveDialogOpen} onOpenChange={setSaveDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Save Tech Stack Report</DialogTitle>
+            <DialogDescription>
+              Keep this budget report so you can load it anytime without rebuilding the stack.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label htmlFor="tech-stack-report-name">Report name</Label>
+            <Input
+              id="tech-stack-report-name"
+              value={reportName}
+              onChange={(event) => setReportName(event.target.value)}
+              placeholder="e.g., MVP Stack - Jan 2026"
+            />
+            <p className="text-xs text-muted-foreground">
+              Leave blank to auto-name it with today&apos;s date.
+            </p>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setSaveDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSaveReport} disabled={savingReport || !allCategoriesSelected}>
+              <Save className="w-4 h-4 mr-2" />
+              {savingReport ? 'Saving...' : 'Save Report'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {user && (
+        <Card className="border-2 border-primary/10">
+          <CardHeader>
+            <CardTitle className="text-xl flex items-center gap-2">
+              <FolderOpen className="w-5 h-5" />
+              Saved Reports
+            </CardTitle>
+            <CardDescription>
+              Reopen past budgets without redoing your selections.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {reportsLoading ? (
+              <p className="text-sm text-muted-foreground">Loading saved reports...</p>
+            ) : savedReports.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No saved reports yet.</p>
+            ) : (
+              <div className="space-y-3">
+                {savedReports.map((report) => (
+                  <div
+                    key={report.id}
+                    className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3 rounded-lg border bg-muted/40"
+                  >
+                    <div>
+                      <p className="font-medium">
+                        {report.name || 'Tech Stack Report'}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {new Date(report.created_at).toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric'
+                        })} · ${Number(report.budget_total || 0).toFixed(2)} / mo
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm" onClick={() => handleLoadReport(report)}>
+                        <FolderOpen className="w-4 h-4 mr-2" />
+                        Load
+                      </Button>
+                      <Button variant="ghost" size="sm" onClick={() => handleDeleteReport(report.id)}>
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Delete
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
       {techStackData.map((category) => (
         <CategorySection
           key={category.id}
@@ -240,25 +461,39 @@ const TechStack: React.FC = () => {
                   </p>
                 )}
               </div>
-              <Button
-                onClick={handleSeeBudget}
-                size="lg"
-                className={`w-full sm:w-auto min-w-[140px] ${!canGenerateBudget ? 'opacity-70' : ''}`}
-                aria-disabled={!canGenerateBudget}
-              >
-                {!user ? (
-                  <>
-                    <Lock className="w-4 h-4 mr-2" />
-                    Sign In to View Budget
-                  </>
-                ) : (
-                  <>
-                    <Calculator className="w-4 h-4 mr-2" />
-                    {currentTier === 'free' ? 'Generate (1/month)' : 'Generate Budget'}
-                    <CreditCostBadge feature="TECH_STACK_GENERATION" className="ml-2 bg-background/20 text-primary-foreground" />
-                  </>
+              <div className="flex flex-col sm:flex-row w-full sm:w-auto gap-2">
+                {canSaveReport && (
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    onClick={() => setSaveDialogOpen(true)}
+                    className="w-full sm:w-auto min-w-[140px]"
+                    disabled={savingReport}
+                  >
+                    <Save className="w-4 h-4 mr-2" />
+                    {savingReport ? 'Saving...' : 'Save Report'}
+                  </Button>
                 )}
-              </Button>
+                <Button
+                  onClick={handleSeeBudget}
+                  size="lg"
+                  className={`w-full sm:w-auto min-w-[140px] ${!canGenerateBudget ? 'opacity-70' : ''}`}
+                  aria-disabled={!canGenerateBudget}
+                >
+                  {!user ? (
+                    <>
+                      <Lock className="w-4 h-4 mr-2" />
+                      Sign In to View Budget
+                    </>
+                  ) : (
+                    <>
+                      <Calculator className="w-4 h-4 mr-2" />
+                      {currentTier === 'free' ? 'Generate (1/month)' : 'Generate Budget'}
+                      <CreditCostBadge feature="TECH_STACK_GENERATION" className="ml-2 bg-background/20 text-primary-foreground" />
+                    </>
+                  )}
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -269,6 +504,10 @@ const TechStack: React.FC = () => {
           budget={budget}
           selectedProducts={selectedProducts}
           techStackData={techStackData}
+          saveName={reportName}
+          onSaveNameChange={setReportName}
+          onSave={handleSaveReport}
+          saving={savingReport}
           onClose={() => setShowBudget(false)}
         />
       )}
@@ -375,10 +614,23 @@ interface BudgetDisplayProps {
   budget: { total: number; breakdown: BudgetBreakdown[]; hasVariable: boolean };
   selectedProducts: SelectedProducts;
   techStackData: TechStackData;
+  saveName: string;
+  onSaveNameChange: (value: string) => void;
+  onSave: () => void;
+  saving: boolean;
   onClose: () => void;
 }
 
-const BudgetDisplay: React.FC<BudgetDisplayProps> = ({ budget, selectedProducts, techStackData, onClose }) => {
+const BudgetDisplay: React.FC<BudgetDisplayProps> = ({
+  budget,
+  selectedProducts,
+  techStackData,
+  saveName,
+  onSaveNameChange,
+  onSave,
+  saving,
+  onClose
+}) => {
   const { total, breakdown, hasVariable } = budget;
 
   // Generate strategy plan based on selected products
@@ -757,6 +1009,22 @@ const BudgetDisplay: React.FC<BudgetDisplayProps> = ({ budget, selectedProducts,
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
+          <div className="flex flex-col sm:flex-row gap-2 sm:items-end">
+            <div className="flex-1">
+              <p className="text-xs text-muted-foreground mb-1">Save this report</p>
+              <Input
+                value={saveName}
+                onChange={(event) => onSaveNameChange(event.target.value)}
+                placeholder="Report name (optional)"
+                className="text-sm"
+              />
+            </div>
+            <Button onClick={onSave} disabled={saving}>
+              <Save className="w-4 h-4 mr-2" />
+              {saving ? 'Saving...' : 'Save'}
+            </Button>
+          </div>
+
           <div className="space-y-2">
             {breakdown.map((item, idx) => (
               <div
