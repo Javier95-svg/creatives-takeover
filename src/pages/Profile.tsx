@@ -85,6 +85,13 @@ const Profile = () => {
   
   const { stats, loading: statsLoading } = useProfileData(profile?.id || '');
 
+  const formatLabel = (value: string) =>
+    value
+      .split(/[\s-]+/)
+      .filter(Boolean)
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+
   const handleBookDiscoveryCall = () => {
     window.open(SAMUEL_STARKMAN_CALENDLY_URL, '_blank', 'noopener,noreferrer');
   };
@@ -341,22 +348,26 @@ const Profile = () => {
                         <h1 className="text-2xl font-bold mb-1">
                           {profile.full_name || 'Anonymous User'}
                         </h1>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-sm text-muted-foreground mb-3">
                           @{profile.username || username}
                         </p>
                         <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
                           {profile.role && (
-                            <Badge variant="default" className="capitalize">
+                            <Badge variant="default" className="capitalize bg-blue-600 text-white border-blue-600">
                               {profile.role === 'founders' ? 'Founder' :
                                profile.role === 'investors' ? 'Investor' :
                                profile.role === 'accelerators' ? 'Accelerator' : profile.role}
                             </Badge>
                           )}
                           {profile.creative_niche && (
-                            <Badge variant="outline">{profile.creative_niche}</Badge>
+                            <Badge className="bg-green-600 text-white border-green-600">
+                              {formatLabel(profile.creative_niche)}
+                            </Badge>
                           )}
                           {profile.business_stage && (
-                            <Badge variant="outline">{profile.business_stage}</Badge>
+                            <Badge className="bg-red-600 text-white border-red-600">
+                              {formatLabel(profile.business_stage)}
+                            </Badge>
                           )}
                           <div className="flex items-center gap-1">
                             <Calendar className="h-4 w-4" />
