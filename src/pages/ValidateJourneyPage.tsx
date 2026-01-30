@@ -1,101 +1,293 @@
+import React, { useEffect, useMemo, useState } from "react";
 import SEO, { createBreadcrumbSchema } from "@/components/SEO";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle2, ClipboardList, Rocket, Target } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Slider } from "@/components/ui/slider";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Progress } from "@/components/ui/progress";
+import { CheckCircle2, ClipboardList, Rocket, Target, ArrowRight, Scale, Star } from "lucide-react";
 import { Link } from "react-router-dom";
+import { cn } from "@/lib/utils";
 
-const validateDays = [
+type CriteriaKey =
+  | "problemSeverity"
+  | "frequency"
+  | "willingnessToPay"
+  | "reachableCustomer"
+  | "differentiation"
+  | "founderAdvantage"
+  | "earlyEvidence";
+
+interface IdeaScore {
+  id: string;
+  name: string;
+  oneLiner: string;
+  targetCustomer: string;
+  coreProblem: string;
+  currentAlternative: string;
+  unfairAdvantage: string;
+  marketSignals: string[];
+  risks: string;
+  criteria: Record<CriteriaKey, number>;
+}
+
+const MAX_IDEAS = 3;
+const STORAGE_KEY = "validateDecisionSprint";
+
+const SIGNAL_OPTIONS = [
   {
-    day: "Day 1",
-    title: "Clarify the problem + persona",
-    tasks: [
-      "Write a one-sentence problem statement",
-      "List 3 assumptions you must validate",
-      "Run the PMF Lab to pressure-test your inputs"
-    ],
-    cta: true
+    id: "search_demand",
+    title: "Search or community demand",
+    description: "People are already asking for this solution."
   },
   {
-    day: "Day 2",
-    title: "Design 10 interview questions",
-    tasks: [
-      "Draft an interview guide (no pitching)",
-      "Identify 20 people who fit the persona",
-      "Send 10 interview DMs"
-    ]
+    id: "competitor_spend",
+    title: "Competitors spending on ads",
+    description: "Others are paying to acquire these customers."
   },
   {
-    day: "Day 3",
-    title: "Run 5 interviews",
-    tasks: [
-      "Record exact pains, words, and priorities",
-      "Tag: problem frequency + urgency",
-      "Summarize top 3 patterns"
-    ]
+    id: "manual_workaround",
+    title: "Painful manual workaround",
+    description: "Customers are hacking together a fix today."
   },
   {
-    day: "Day 4",
-    title: "Draft a landing page + offer",
-    tasks: [
-      "Create a 1-screen landing page draft",
-      "Write 3 value props + 1 CTA",
-      "Create 2 pricing options"
-    ]
+    id: "paid_alternatives",
+    title: "Paid alternatives exist",
+    description: "Indicates willingness to pay."
   },
   {
-    day: "Day 5",
-    title: "Run a pricing test",
-    tasks: [
-      "Send the landing page to 15 people",
-      "Track clicks + reply intent",
-      "Refine offer and price"
-    ]
+    id: "urgent_deadline",
+    title: "Urgent deadline or regulatory pressure",
+    description: "The problem cannot wait."
   },
   {
-    day: "Day 6",
-    title: "Get your first soft commit",
-    tasks: [
-      "Ask for a pre-order / waitlist deposit",
-      "Collect 3 LOIs or pre-orders",
-      "Document objections"
-    ]
-  },
-  {
-    day: "Day 7",
-    title: "Decide: build, pivot, or pause",
-    tasks: [
-      "Summarize validation signals",
-      "Update the PMF Lab assumptions",
-      "Pick your next 14-day build plan"
-    ]
+    id: "early_interest",
+    title: "Early inbound interest",
+    description: "People already asked for a solution."
   }
 ];
 
+const CRITERIA = [
+  {
+    key: "problemSeverity" as const,
+    title: "Problem severity",
+    description: "How painful is the problem?",
+  },
+  {
+    key: "frequency" as const,
+    title: "Frequency",
+    description: "How often does it happen?",
+  },
+  {
+    key: "willingnessToPay" as const,
+    title: "Willingness to pay",
+    description: "Will customers pay to solve it?",
+  },
+  {
+    key: "reachableCustomer" as const,
+    title: "Reachability",
+    description: "Can you reach the customer cheaply?",
+  },
+  {
+    key: "differentiation" as const,
+    title: "Differentiation",
+    description: "Is there a clear edge vs alternatives?",
+  },
+  {
+    key: "founderAdvantage" as const,
+    title: "Founder advantage",
+    description: "Do you have unique insight or access?",
+  },
+  {
+    key: "earlyEvidence" as const,
+    title: "Early evidence",
+    description: "Any proof of demand today?",
+  }
+];
+
+const createIdea = (): IdeaScore => ({
+  id: `idea-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+  name: "",
+  oneLiner: "",
+  targetCustomer: "",
+  coreProblem: "",
+  currentAlternative: "",
+  unfairAdvantage: "",
+  marketSignals: [],
+  risks: "",
+  criteria: {
+    problemSeverity: 3,
+    frequency: 3,
+    willingnessToPay: 3,
+    reachableCustomer: 3,
+    differentiation: 3,
+    founderAdvantage: 3,
+    earlyEvidence: 3,
+  },
+});
+
+const computeScore = (idea: IdeaScore) => {
+  const total = CRITERIA.reduce((sum, criterion) => sum + idea.criteria[criterion.key], 0);
+  const max = CRITERIA.length * 5;
+  return Math.round((total / max) * 100);
+};
+
+const getDecisionLabel = (score: number) => {
+  if (score >= 80) {
+    return {
+      title: "Build",
+      description: "Strong signal. Move to Market Need Lab and design your MVP scope.",
+      tone: "text-emerald-600",
+      badge: "bg-emerald-500/10 text-emerald-700 border-emerald-200",
+    };
+  }
+  if (score >= 60) {
+    return {
+      title: "Refine",
+      description: "Promising, but tighten the problem or segment before building.",
+      tone: "text-amber-600",
+      badge: "bg-amber-500/10 text-amber-700 border-amber-200",
+    };
+  }
+  return {
+    title: "Pause",
+    description: "Weak signal. Replace or reshape this idea before investing time.",
+    tone: "text-rose-600",
+    badge: "bg-rose-500/10 text-rose-700 border-rose-200",
+  };
+};
+
 export default function ValidateJourneyPage() {
+  const [ideas, setIdeas] = useState<IdeaScore[]>([createIdea()]);
+  const [activeIdeaId, setActiveIdeaId] = useState<string>(ideas[0]?.id || "");
+  const [chosenIdeaId, setChosenIdeaId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const stored = window.localStorage.getItem(STORAGE_KEY);
+    if (!stored) return;
+    try {
+      const parsed = JSON.parse(stored) as {
+        ideas?: IdeaScore[];
+        activeIdeaId?: string;
+        chosenIdeaId?: string | null;
+      };
+      if (parsed.ideas && parsed.ideas.length > 0) {
+        setIdeas(parsed.ideas);
+        setActiveIdeaId(parsed.activeIdeaId || parsed.ideas[0].id);
+        setChosenIdeaId(parsed.chosenIdeaId ?? null);
+      }
+    } catch (error) {
+      console.error("Failed to load validation sprint data", error);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const payload = JSON.stringify({ ideas, activeIdeaId, chosenIdeaId });
+    window.localStorage.setItem(STORAGE_KEY, payload);
+  }, [ideas, activeIdeaId, chosenIdeaId]);
+
+  const rankedIdeas = useMemo(() => {
+    return [...ideas].sort((a, b) => computeScore(b) - computeScore(a));
+  }, [ideas]);
+
+  const activeIdea = ideas.find((idea) => idea.id === activeIdeaId) || ideas[0];
+
+  const updateIdea = (ideaId: string, updates: Partial<IdeaScore>) => {
+    setIdeas((prev) =>
+      prev.map((idea) => (idea.id === ideaId ? { ...idea, ...updates } : idea))
+    );
+  };
+
+  const updateCriteria = (ideaId: string, key: CriteriaKey, value: number) => {
+    setIdeas((prev) =>
+      prev.map((idea) =>
+        idea.id === ideaId
+          ? {
+              ...idea,
+              criteria: {
+                ...idea.criteria,
+                [key]: value,
+              },
+            }
+          : idea
+      )
+    );
+  };
+
+  const toggleSignal = (ideaId: string, signalId: string) => {
+    setIdeas((prev) =>
+      prev.map((idea) => {
+        if (idea.id !== ideaId) return idea;
+        const hasSignal = idea.marketSignals.includes(signalId);
+        return {
+          ...idea,
+          marketSignals: hasSignal
+            ? idea.marketSignals.filter((signal) => signal !== signalId)
+            : [...idea.marketSignals, signalId],
+        };
+      })
+    );
+  };
+
+  const handleAddIdea = () => {
+    if (ideas.length >= MAX_IDEAS) return;
+    const nextIdea = createIdea();
+    setIdeas((prev) => [...prev, nextIdea]);
+    setActiveIdeaId(nextIdea.id);
+  };
+
+  const handleRemoveIdea = (ideaId: string) => {
+    if (ideas.length <= 1) return;
+    setIdeas((prev) => prev.filter((idea) => idea.id !== ideaId));
+    if (activeIdeaId === ideaId) {
+      const remaining = ideas.filter((idea) => idea.id !== ideaId);
+      setActiveIdeaId(remaining[0]?.id || "");
+    }
+    if (chosenIdeaId === ideaId) {
+      setChosenIdeaId(null);
+    }
+  };
+
+  const decisionScore = activeIdea ? computeScore(activeIdea) : 0;
+  const decisionLabel = getDecisionLabel(decisionScore);
+  const readinessFields = [
+    activeIdea?.name,
+    activeIdea?.oneLiner,
+    activeIdea?.targetCustomer,
+    activeIdea?.coreProblem,
+  ];
+  const readinessCount = readinessFields.filter((field) => field && field.trim()).length + (activeIdea?.marketSignals.length >= 2 ? 1 : 0);
+  const readinessTotal = 5;
+  const readinessPercent = Math.round((readinessCount / readinessTotal) * 100);
+
   const structuredData = [
     {
       "@context": "https://schema.org",
       "@type": "WebPage",
-      "name": "Validate in 7 Days - Creatives Takeover",
-      "description": "A 7-day execution plan to validate your startup idea using PMF Lab, interviews, pricing tests, and real signals.",
+      "name": "Validate in 7 Days - Decision Sprint",
+      "description": "Choose which product to build with a structured decision sprint for founders.",
       "url": "https://creatives-takeover.com/validate"
     },
     createBreadcrumbSchema([
       { name: "Home", url: "/" },
       { name: "BizMap AI", url: "/bizmap-ai" },
-      { name: "Validate in 7 Days", url: "/validate" }
+      { name: "Validate", url: "/validate" }
     ])
   ];
 
   return (
     <div className="min-h-screen bg-background">
       <SEO
-        title="Validate in 7 Days - Creatives Takeover"
-        description="Validate your startup idea in 7 days with daily tasks, templates, and PMF Lab checkpoints."
-        keywords="startup validation, PMF, customer discovery, pricing test, founder journey"
+        title="Validate - Decision Sprint - Creatives Takeover"
+        description="Decide which product to build with a structured sprint: shortlist ideas, score signals, and choose a winning concept."
+        keywords="startup validation, idea scoring, decision sprint, founder validation, product choice"
         url="/validate"
         structuredData={structuredData}
       />
@@ -109,7 +301,7 @@ export default function ValidateJourneyPage() {
               className="absolute -top-40 -right-48 w-[55rem] h-[55rem] rounded-full opacity-70 blur-3xl animate-[spin_28s_linear_infinite]"
               style={{
                 background:
-                  "radial-gradient(circle at 30% 30%, rgba(34, 197, 94, 0.25), transparent 60%), radial-gradient(circle at 70% 70%, rgba(239, 68, 68, 0.2), transparent 55%)",
+                  "radial-gradient(circle at 30% 30%, rgba(34, 197, 94, 0.22), transparent 60%), radial-gradient(circle at 70% 70%, rgba(59, 130, 246, 0.2), transparent 55%)",
                 animationDuration: "28s"
               }}
             />
@@ -119,26 +311,26 @@ export default function ValidateJourneyPage() {
             <div className="text-center space-y-4">
               <div className="flex justify-center">
                 <Badge className="bg-primary/10 text-primary border-primary/20 px-4 py-1">
-                  Execution Journey
+                  Decision Sprint
                 </Badge>
               </div>
               <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold takeover-gradient creatives-font">
-                Validate in 7 Days
+                Decide What to Build
               </h1>
               <p className="text-lg sm:text-xl text-muted-foreground max-w-3xl mx-auto">
-                A clear path from idea to real signal. Use PMF Lab, real conversations, and pricing tests to decide what to build.
+                Compare up to three ideas, score the signals, and pick the product that deserves your next build cycle.
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
                 <Button size="lg" asChild>
-                  <Link to="/pmf-lab">
-                    <Target className="h-4 w-4 mr-2" />
-                    Start PMF Lab
+                  <Link to="#shortlist">
+                    <ClipboardList className="h-4 w-4 mr-2" />
+                    Start Decision Sprint
                   </Link>
                 </Button>
                 <Button size="lg" variant="outline" asChild>
-                  <Link to="/validate">
-                    <ClipboardList className="h-4 w-4 mr-2" />
-                    View Daily Plan
+                  <Link to="/pmf-lab">
+                    <Target className="h-4 w-4 mr-2" />
+                    Run Market Need Lab After Decision
                   </Link>
                 </Button>
               </div>
@@ -148,22 +340,22 @@ export default function ValidateJourneyPage() {
               <Card className="border-primary/20 bg-background/80">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-lg">
-                    <Target className="h-5 w-5 text-primary" />
-                    PMF Lab checkpoint
+                    <ClipboardList className="h-5 w-5 text-primary" />
+                    Shortlist ideas
                   </CardTitle>
                   <CardDescription>
-                    Day 1 runs through your core assumptions. Day 7 re-runs with real signal.
+                    Capture the top 2-3 concepts you are considering building.
                   </CardDescription>
                 </CardHeader>
               </Card>
               <Card className="border-primary/20 bg-background/80">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-lg">
-                    <ClipboardList className="h-5 w-5 text-primary" />
-                    Tiny daily tasks
+                    <Scale className="h-5 w-5 text-primary" />
+                    Score the signal
                   </CardTitle>
                   <CardDescription>
-                    30–60 minutes per day. Focused, concrete, and accountable.
+                    Use a simple rubric to compare pain, reachability, and demand evidence.
                   </CardDescription>
                 </CardHeader>
               </Card>
@@ -171,51 +363,315 @@ export default function ValidateJourneyPage() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-lg">
                     <Rocket className="h-5 w-5 text-primary" />
-                    Real outcome
+                    Choose the winner
                   </CardTitle>
                   <CardDescription>
-                    By Day 7 you&apos;ll know: build, pivot, or pause.
+                    Pick the concept with the strongest signal and move forward with confidence.
                   </CardDescription>
                 </CardHeader>
               </Card>
             </div>
 
-            <div id="daily-plan" className="space-y-6">
+            <div id="shortlist" className="space-y-6">
               <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold">Daily validation plan</h2>
-                <Badge variant="outline">7 days</Badge>
+                <h2 className="text-2xl font-bold">Idea shortlist</h2>
+                <Badge variant="outline">Up to {MAX_IDEAS} ideas</Badge>
               </div>
+
               <div className="grid gap-4">
-                {validateDays.map((day) => (
-                  <Card key={day.day} className="border-border/70 bg-background/90">
-                    <CardHeader className="pb-3">
-                      <CardTitle className="flex items-center gap-2">
-                        <span className="text-primary font-semibold">{day.day}</span>
-                        <span className="text-lg font-semibold">{day.title}</span>
-                      </CardTitle>
-                      {day.cta && (
-                        <CardDescription className="flex items-center gap-2 text-sm">
-                          PMF Lab is your validation engine for this step.
-                        </CardDescription>
+                {ideas.map((idea, index) => {
+                  const score = computeScore(idea);
+                  const isActive = idea.id === activeIdeaId;
+                  const isChosen = idea.id === chosenIdeaId;
+
+                  return (
+                    <Card
+                      key={idea.id}
+                      className={cn(
+                        "border-border/70 bg-background/90",
+                        isActive && "border-primary/50 shadow-sm"
                       )}
+                    >
+                      <CardHeader className="pb-3">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <CardTitle className="flex items-center gap-2">
+                            <span className="text-primary font-semibold">Idea {index + 1}</span>
+                            <span className="text-sm text-muted-foreground">Score {score}/100</span>
+                            {isChosen && (
+                              <Badge className="bg-emerald-500/15 text-emerald-700 border-emerald-200">
+                                Chosen
+                              </Badge>
+                            )}
+                          </CardTitle>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              size="sm"
+                              variant={isActive ? "default" : "outline"}
+                              onClick={() => setActiveIdeaId(idea.id)}
+                            >
+                              {isActive ? "Active" : "Score this idea"}
+                            </Button>
+                            {ideas.length > 1 && (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => handleRemoveIdea(idea.id)}
+                              >
+                                Remove
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div className="grid gap-4 md:grid-cols-2">
+                          <div className="space-y-2">
+                            <label className="text-sm font-medium">Idea name</label>
+                            <Input
+                              value={idea.name}
+                              onChange={(event) => updateIdea(idea.id, { name: event.target.value })}
+                              placeholder="e.g., AI scheduling assistant"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <label className="text-sm font-medium">Target customer</label>
+                            <Input
+                              value={idea.targetCustomer}
+                              onChange={(event) => updateIdea(idea.id, { targetCustomer: event.target.value })}
+                              placeholder="e.g., boutique agencies, solo consultants"
+                            />
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">One-line value prop</label>
+                          <Textarea
+                            value={idea.oneLiner}
+                            onChange={(event) => updateIdea(idea.id, { oneLiner: event.target.value })}
+                            placeholder="Describe the promise in one clear sentence."
+                            rows={2}
+                            className="resize-none"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">Core problem</label>
+                          <Textarea
+                            value={idea.coreProblem}
+                            onChange={(event) => updateIdea(idea.id, { coreProblem: event.target.value })}
+                            placeholder="What painful outcome are you fixing?"
+                            rows={2}
+                            className="resize-none"
+                          />
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+
+              <div className="flex flex-wrap gap-3">
+                <Button
+                  variant="outline"
+                  onClick={handleAddIdea}
+                  disabled={ideas.length >= MAX_IDEAS}
+                >
+                  Add another idea
+                </Button>
+                <Button
+                  variant="ghost"
+                  onClick={() => setActiveIdeaId(rankedIdeas[0]?.id || "")}
+                  disabled={ideas.length === 0}
+                >
+                  Focus highest score
+                </Button>
+              </div>
+            </div>
+
+            {activeIdea && (
+              <div className="grid gap-6 lg:grid-cols-[1.1fr,0.9fr]">
+                <div className="space-y-6">
+                  <Card className="border-primary/20 bg-background/90">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Target className="h-5 w-5 text-primary" />
+                        Active idea deep dive
+                      </CardTitle>
+                      <CardDescription>
+                        Clarify the problem, market signal, and your edge for the idea you are scoring.
+                      </CardDescription>
                     </CardHeader>
-                    <CardContent className="space-y-2">
-                      {day.tasks.map((task) => (
-                        <div key={task} className="flex items-start gap-2 text-sm text-muted-foreground">
-                          <CheckCircle2 className="h-4 w-4 text-primary mt-0.5" />
-                          <span>{task}</span>
+                    <CardContent className="space-y-4">
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Current alternative</label>
+                        <Textarea
+                          value={activeIdea.currentAlternative}
+                          onChange={(event) => updateIdea(activeIdea.id, { currentAlternative: event.target.value })}
+                          placeholder="What do customers do today instead?"
+                          rows={2}
+                          className="resize-none"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Unfair advantage</label>
+                        <Textarea
+                          value={activeIdea.unfairAdvantage}
+                          onChange={(event) => updateIdea(activeIdea.id, { unfairAdvantage: event.target.value })}
+                          placeholder="What edge do you have (data, access, brand, speed)?"
+                          rows={2}
+                          className="resize-none"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Key risks</label>
+                        <Textarea
+                          value={activeIdea.risks}
+                          onChange={(event) => updateIdea(activeIdea.id, { risks: event.target.value })}
+                          placeholder="What could break demand or execution?"
+                          rows={2}
+                          className="resize-none"
+                        />
+                      </div>
+                      <div className="space-y-3">
+                        <label className="text-sm font-medium">Market signals observed</label>
+                        <div className="grid gap-3 sm:grid-cols-2">
+                          {SIGNAL_OPTIONS.map((signal) => (
+                            <label
+                              key={signal.id}
+                              className="flex items-start gap-2 rounded-md border border-border/70 bg-background/80 p-3 text-sm"
+                            >
+                              <Checkbox
+                                checked={activeIdea.marketSignals.includes(signal.id)}
+                                onCheckedChange={() => toggleSignal(activeIdea.id, signal.id)}
+                              />
+                              <span>
+                                <span className="font-medium">{signal.title}</span>
+                                <span className="block text-xs text-muted-foreground mt-1">{signal.description}</span>
+                              </span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="border-primary/20 bg-background/90">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Scale className="h-5 w-5 text-primary" />
+                        Decision scorecard
+                      </CardTitle>
+                      <CardDescription>
+                        Rate each dimension from 1 to 5. Use real evidence where possible.
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                      {CRITERIA.map((criterion) => (
+                        <div key={criterion.key} className="space-y-3">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="text-sm font-medium">{criterion.title}</p>
+                              <p className="text-xs text-muted-foreground">{criterion.description}</p>
+                            </div>
+                            <Badge variant="outline">{activeIdea.criteria[criterion.key]} / 5</Badge>
+                          </div>
+                          <Slider
+                            value={[activeIdea.criteria[criterion.key]]}
+                            onValueChange={(value) => updateCriteria(activeIdea.id, criterion.key, value[0])}
+                            min={1}
+                            max={5}
+                            step={1}
+                          />
                         </div>
                       ))}
-                      {day.cta && (
-                        <Button size="sm" variant="outline" className="mt-4" asChild>
-                          <Link to="/pmf-lab">Run PMF Lab</Link>
-                        </Button>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                <div className="space-y-6">
+                  <Card className="border-primary/20 bg-background/90">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Star className="h-5 w-5 text-primary" />
+                        Decision output
+                      </CardTitle>
+                      <CardDescription>
+                        Live score and recommendation for the active idea.
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="font-medium">Decision readiness</span>
+                          <span className="text-muted-foreground">{readinessPercent}%</span>
+                        </div>
+                        <Progress value={readinessPercent} className="h-2" />
+                        <p className="text-xs text-muted-foreground">
+                          Complete the basics and add two signals to finalize a decision.
+                        </p>
+                      </div>
+
+                      <div className="rounded-lg border border-border/70 bg-background/80 p-4 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium">Score</span>
+                          <span className="text-2xl font-bold text-primary">{decisionScore}</span>
+                        </div>
+                        <Badge className={decisionLabel.badge}>{decisionLabel.title}</Badge>
+                        <p className={cn("text-sm", decisionLabel.tone)}>{decisionLabel.description}</p>
+                      </div>
+
+                      <Button
+                        className="w-full"
+                        onClick={() => setChosenIdeaId(activeIdea.id)}
+                        disabled={!activeIdea.name.trim()}
+                      >
+                        Mark this idea as chosen
+                      </Button>
+                      <Button variant="outline" className="w-full" asChild>
+                        <Link to="/pmf-lab">
+                          Continue to Market Need Lab
+                          <ArrowRight className="h-4 w-4 ml-2" />
+                        </Link>
+                      </Button>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="border-primary/20 bg-background/90">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <CheckCircle2 className="h-5 w-5 text-primary" />
+                        Scoreboard
+                      </CardTitle>
+                      <CardDescription>
+                        Rank your shortlist before committing resources.
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      {rankedIdeas.map((idea, index) => (
+                        <div
+                          key={idea.id}
+                          className={cn(
+                            "flex items-center justify-between rounded-lg border border-border/60 px-3 py-2 text-sm",
+                            idea.id === activeIdeaId && "border-primary/60 bg-primary/5"
+                          )}
+                        >
+                          <div>
+                            <p className="font-medium">{idea.name || `Idea ${index + 1}`}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {idea.targetCustomer || "Define a target customer"}
+                            </p>
+                          </div>
+                          <Badge variant="outline">{computeScore(idea)}/100</Badge>
+                        </div>
+                      ))}
+                      {chosenIdeaId && (
+                        <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
+                          Chosen concept: {ideas.find((idea) => idea.id === chosenIdeaId)?.name || "Unnamed idea"}
+                        </div>
                       )}
                     </CardContent>
                   </Card>
-                ))}
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </section>
       </main>
@@ -224,3 +680,4 @@ export default function ValidateJourneyPage() {
     </div>
   );
 }
+

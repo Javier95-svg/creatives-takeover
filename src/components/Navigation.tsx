@@ -56,8 +56,8 @@ const Navigation = () => {
 
   // BizMap AI submenu items
   const bizMapSubmenu = [
-    { name: "Validate in 7 Days", href: "/validate", icon: Rocket, description: "Execution plan + PMF Lab checkpoints" },
-    { name: "PMF Lab", href: "/pmf-lab", icon: Target, description: "Analyze your product-market fit" },
+    { name: "Validate in 7 Days", href: "/validate", icon: Rocket, description: "Decision sprint to choose what to build" },
+    { name: "PMF Lab", href: "/pmf-lab", icon: Target, description: "Clarify core problem + market need" },
     { name: "BizMap AI Assist", href: "/bizmap-ai/chat", icon: Lightbulb, description: "AI assistant for plans and templates" },
     { name: "Prompt Library", href: "/prompt-library", icon: BookOpen, description: "60 business cases from 8 industries" },
     { name: "Tech Stack", href: "/bizmap-ai/tech-stack", icon: Boxes, description: "Build your ideal tech stack" },

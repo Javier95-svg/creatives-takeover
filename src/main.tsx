@@ -74,7 +74,7 @@ const initPosthog = () => {
       });
       // Debug helpers: confirm init and send a test event (only in development)
       if (import.meta.env.DEV) {
-        logInfo('PostHog init OK ƒ?" test event will be sent', { 
+        logInfo('PostHog init OK - test event will be sent', { 
           maskedKey: (import.meta.env.VITE_POSTHOG_API_KEY as string).slice(0,6) + '...' 
         });
       }

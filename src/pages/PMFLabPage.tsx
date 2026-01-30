@@ -1,29 +1,87 @@
 import SEO, { createBreadcrumbSchema } from "@/components/SEO";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { useReadingAnalytics } from "@/hooks/useReadingAnalytics";
-import { useEffect } from "react";
 import { Loader2 } from "lucide-react";
+import type { PMFFormPrefillData } from "@/components/pmf/ProductMarketFitLab";
 
 // Lazy load the PMF Lab component
 const ProductMarketFitLab = lazy(() => import("@/components/pmf/ProductMarketFitLab"));
 
+const DECISION_STORAGE_KEY = "validateDecisionSprint";
+const DECISION_SIGNAL_LABELS: Record<string, string> = {
+  search_demand: "Search or community demand",
+  competitor_spend: "Competitors spending on ads",
+  manual_workaround: "Painful manual workaround",
+  paid_alternatives: "Paid alternatives exist",
+  urgent_deadline: "Urgent deadline or regulatory pressure",
+  early_interest: "Early inbound interest",
+};
+
 export default function PMFLabPage() {
   const { trackPageVisit } = useReadingAnalytics();
+  const [prefillData, setPrefillData] = useState<PMFFormPrefillData | null>(null);
 
   // Track page visit when component mounts
   useEffect(() => {
     trackPageVisit('PMF Lab');
   }, [trackPageVisit]);
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const stored = window.localStorage.getItem(DECISION_STORAGE_KEY);
+    if (!stored) return;
+
+    try {
+      const parsed = JSON.parse(stored) as {
+        ideas?: Array<{
+          id: string;
+          oneLiner?: string;
+          targetCustomer?: string;
+          coreProblem?: string;
+          currentAlternative?: string;
+          marketSignals?: string[];
+          risks?: string;
+        }>;
+        chosenIdeaId?: string | null;
+      };
+
+      const ideas = parsed.ideas || [];
+      const chosenIdea = parsed.chosenIdeaId
+        ? ideas.find((idea) => idea.id === parsed.chosenIdeaId)
+        : null;
+
+      if (!chosenIdea) return;
+
+      const signalLabels = (chosenIdea.marketSignals || [])
+        .map((signalId) => DECISION_SIGNAL_LABELS[signalId])
+        .filter(Boolean);
+
+      setPrefillData({
+        problemStatement: chosenIdea.coreProblem || "",
+        solutionDescription: chosenIdea.oneLiner || "",
+        targetMarket: chosenIdea.targetCustomer || "",
+        competitiveLandscape: chosenIdea.currentAlternative
+          ? `Current alternative: ${chosenIdea.currentAlternative}`
+          : "",
+        tractionValidation: signalLabels.length
+          ? `Signals observed: ${signalLabels.join(", ")}`
+          : "",
+        keyAssumptions: chosenIdea.risks ? [`Risk to validate: ${chosenIdea.risks}`] : undefined,
+      });
+    } catch (error) {
+      console.error("Failed to read decision sprint data", error);
+    }
+  }, []);
+
   // Structured data for PMF Lab page
   const structuredData = [
     {
       "@context": "https://schema.org",
       "@type": "WebPage",
-      "name": "PMF Lab - Validate Your Business Idea",
-      "description": "Analyze your product-market fit with AI-powered insights. Validate your business concept, understand your target market, and get actionable recommendations.",
+      "name": "PMF Lab - Clarify Market Need",
+      "description": "Clarify the core problem, confirm market need, and get actionable evidence plans before you build.",
       "url": "https://creatives-takeover.com/pmf-lab",
       "publisher": {
         "@type": "Organization",
@@ -45,8 +103,8 @@ export default function PMFLabPage() {
     <div className="min-h-screen bg-background">
       <SEO
         title="PMF Lab - Creatives Takeover"
-        description="Analyze your product-market fit with AI-powered insights. Validate your business concept, understand your target market, and get actionable recommendations for success."
-        keywords="product market fit, PMF analysis, business validation, market analysis, startup validation, product validation"
+        description="Clarify the core problem and confirm market need with AI-powered insights, experiments, and scoring."
+        keywords="market need, problem clarity, PMF analysis, market validation, startup validation"
         url="/pmf-lab"
         structuredData={structuredData}
       />
@@ -74,7 +132,7 @@ export default function PMFLabPage() {
                 PMF Lab
               </h1>
               <p className="text-lg sm:text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed animate-fade-in px-4" style={{ animationDelay: '0.3s' }}>
-                Test your product in the market and uncover whether there's<span className="gradient-text font-semibold" style={{ lineHeight: 'inherit', marginLeft: '0.25rem' }}> genuine demand waiting for you.</span>
+                Clarify the core problem and confirm there is<span className="gradient-text font-semibold" style={{ lineHeight: 'inherit', marginLeft: '0.25rem' }}> real market need before you build.</span>
               </p>
             </div>
 
@@ -86,7 +144,7 @@ export default function PMFLabPage() {
                 </div>
               }
             >
-              <ProductMarketFitLab />
+              <ProductMarketFitLab prefillData={prefillData ?? undefined} />
             </Suspense>
           </div>
         </section>

@@ -11,14 +11,14 @@ import { Bot, ClipboardList, Rocket, Target, CheckCircle2 } from "lucide-react";
 const journeys = [
   {
     title: "Validate in 7 Days",
-    description: "Use PMF Lab + real conversations to prove demand fast.",
+    description: "Decide what to build with a focused 7-day decision sprint.",
     tag: "Live",
     href: "/validate",
     icon: Target,
     highlights: [
-      "PMF Lab checkpoints on Day 1 & Day 7",
-      "Daily tasks (30–60 mins)",
-      "Pricing test + first soft commit"
+      "Idea shortlist + signal scorecard",
+      "Rank the strongest problem",
+      "Handoff to PMF Lab"
     ]
   },
   {
@@ -63,7 +63,7 @@ export default function BizMapJourneyHubPage() {
       "@context": "https://schema.org",
       "@type": "WebPage",
       "name": "BizMap AI Journeys - Creatives Takeover",
-      "description": "Choose a fixed execution journey to validate, build, and launch your startup with clear daily tasks and PMF Lab checkpoints.",
+      "description": "Choose a fixed execution journey to decide what to build, confirm market need, and launch your startup with clear daily tasks.",
       "url": "https://creatives-takeover.com/bizmap-ai"
     },
     createBreadcrumbSchema([
@@ -76,8 +76,8 @@ export default function BizMapJourneyHubPage() {
     <div className="min-h-screen bg-background">
       <SEO
         title="BizMap AI Journeys - Creatives Takeover"
-        description="Execution-first journeys for founders: validate in 7 days, ship an MVP, and reach paying users."
-        keywords="startup validation, PMF, founder journeys, execution plan, MVP launch"
+        description="Execution-first journeys for founders: decide what to build, confirm market need, ship an MVP, and reach paying users."
+        keywords="startup validation, market need, founder journeys, execution plan, MVP launch"
         url="/bizmap-ai"
         structuredData={structuredData}
       />
@@ -108,19 +108,19 @@ export default function BizMapJourneyHubPage() {
                 BizMap AI Journeys
               </h1>
               <p className="text-lg sm:text-xl text-muted-foreground max-w-3xl mx-auto">
-                Pick a fixed path and execute daily. Validate demand, ship an MVP, and land your first customers.
+                Pick a fixed path and execute daily. Decide what to build, confirm market need, then ship.
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
                 <Button size="lg" asChild>
                   <Link to="/validate">
                     <Target className="h-4 w-4 mr-2" />
-                    Start Validate in 7 Days
+                    Start Decision Sprint
                   </Link>
                 </Button>
                 <Button size="lg" variant="outline" asChild>
                   <Link to="/pmf-lab">
                     <ClipboardList className="h-4 w-4 mr-2" />
-                    Run PMF Lab
+                    Run Market Need Lab
                   </Link>
                 </Button>
               </div>
@@ -189,3 +189,4 @@ export default function BizMapJourneyHubPage() {
     </div>
   );
 }
+

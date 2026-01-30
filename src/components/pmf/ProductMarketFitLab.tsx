@@ -20,6 +20,17 @@ import ProblemSolutionFit from './ProblemSolutionFit';
 import ValidationExperiments from './ValidationExperiments';
 import PMFInputForm from './PMFInputForm';
 
+export type PMFFormPrefillData = Partial<{
+  problemStatement: string;
+  solutionDescription: string;
+  targetMarket: string;
+  businessModel: string;
+  industry: string;
+  keyAssumptions: string[];
+  competitiveLandscape: string;
+  tractionValidation: string;
+}>;
+
 interface ProductMarketFitLabProps {
   businessPlanData?: {
     answers?: {
@@ -34,6 +45,7 @@ interface ProductMarketFitLabProps {
     launchReport?: string;
     successScore?: any;
   };
+  prefillData?: PMFFormPrefillData;
   onDataExport?: (data: {
     selectedSegment?: string;
     refinedProblem?: string;
@@ -147,6 +159,7 @@ interface PMFAnalysis {
 
 const ProductMarketFitLab: React.FC<ProductMarketFitLabProps> = ({ 
   businessPlanData,
+  prefillData,
   onDataExport 
 }) => {
   const { user } = useAuth();
@@ -156,7 +169,7 @@ const ProductMarketFitLab: React.FC<ProductMarketFitLabProps> = ({
   const { checkFeatureAccess } = useFeatureGating();
   const { openUpgradePrompt } = useUpgradePrompt();
   
-  const [structuredFormData, setStructuredFormData] = useState<any>(null);
+  const [structuredFormData, setStructuredFormData] = useState<PMFFormPrefillData | null>(prefillData ?? null);
 
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState<PMFAnalysis | null>(null);
@@ -180,6 +193,12 @@ const ProductMarketFitLab: React.FC<ProductMarketFitLabProps> = ({
       throw error;
     }
   }, []);
+
+  useEffect(() => {
+    if (prefillData && !structuredFormData) {
+      setStructuredFormData(prefillData);
+    }
+  }, [prefillData, structuredFormData]);
 
   const handleExportSurvey = () => {
     console.log('Exporting survey:', analysis?.surveys);
@@ -317,10 +336,10 @@ const ProductMarketFitLab: React.FC<ProductMarketFitLabProps> = ({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Target className="w-5 h-5 text-primary" />
-            PMF Lab
+            Problem & Market Need Lab
           </CardTitle>
           <CardDescription>
-            Validate your product in the market and discover if there's real demand
+            Clarify the core problem and confirm market need before you build.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -328,35 +347,41 @@ const ProductMarketFitLab: React.FC<ProductMarketFitLabProps> = ({
             <TabsList className="grid w-full grid-cols-5">
               <TabsTrigger value="input">
                 <FileText className="w-4 h-4 mr-2" />
-                Input
+                Problem Brief
               </TabsTrigger>
               <TabsTrigger value="segments">
                 <Users className="w-4 h-4 mr-2" />
-                Segments
+                Core Buyers
               </TabsTrigger>
               <TabsTrigger value="fit">
                 <CheckCircle2 className="w-4 h-4 mr-2" />
-                Fit
+                Problem Clarity
               </TabsTrigger>
               <TabsTrigger value="experiments">
                 <FlaskConical className="w-4 h-4 mr-2" />
-                Experiments
+                Evidence Plan
               </TabsTrigger>
               <TabsTrigger value="score">
                 <TrendingUp className="w-4 h-4 mr-2" />
-                Score
+                Market Need
               </TabsTrigger>
             </TabsList>
 
             <TabsContent value="input" className="mt-6">
+              {prefillData && (
+                <div className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg border-l-4 border-primary mb-6">
+                  <p className="font-medium text-primary mb-1">Decision Sprint Data Loaded</p>
+                  <p>We pulled your chosen concept. Review the problem brief and adjust before analyzing.</p>
+                </div>
+              )}
               {businessPlanData && (
                 <div className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg border-l-4 border-primary mb-6">
-                  <p className="font-medium text-primary mb-1">✓ Business Plan Data Loaded</p>
+                  <p className="font-medium text-primary mb-1">Business Plan Data Loaded</p>
                   <p>Your business plan information has been pre-filled. You can edit or add more context.</p>
                 </div>
               )}
               <PMFInputForm
-                initialData={structuredFormData}
+                initialData={structuredFormData ?? prefillData ?? undefined}
                 businessPlanData={businessPlanData}
                 onSubmit={handleStructuredFormSubmit}
                 isSubmitting={isAnalyzing}
@@ -376,10 +401,10 @@ const ProductMarketFitLab: React.FC<ProductMarketFitLabProps> = ({
                     <Target className="w-12 h-12 text-muted-foreground mb-4 opacity-50" />
                     <h3 className="text-lg font-semibold mb-2">No Analysis Yet</h3>
                     <p className="text-muted-foreground mb-4 max-w-md">
-                      Run a PMF analysis first to see your customer segments. Go to the Input tab and click "Analyze Product-Market Fit".
+                      Run a market-need analysis first to see your core buyer segments. Go to the Problem Brief tab and click "Analyze Market Need".
                     </p>
                     <Button onClick={() => setActiveTab('input')}>
-                      Go to Input
+                      Go to Problem Brief
                     </Button>
                   </CardContent>
                 </Card>
@@ -401,10 +426,10 @@ const ProductMarketFitLab: React.FC<ProductMarketFitLabProps> = ({
                     <Target className="w-12 h-12 text-muted-foreground mb-4 opacity-50" />
                     <h3 className="text-lg font-semibold mb-2">No Analysis Yet</h3>
                     <p className="text-muted-foreground mb-4 max-w-md">
-                      Run a PMF analysis first to see problem-solution fit insights. Go to the Input tab and click "Analyze Product-Market Fit".
+                      Run a market-need analysis first to see problem clarity insights. Go to the Problem Brief tab and click "Analyze Market Need".
                     </p>
                     <Button onClick={() => setActiveTab('input')}>
-                      Go to Input
+                      Go to Problem Brief
                     </Button>
                   </CardContent>
                 </Card>
@@ -422,10 +447,10 @@ const ProductMarketFitLab: React.FC<ProductMarketFitLabProps> = ({
                     <Target className="w-12 h-12 text-muted-foreground mb-4 opacity-50" />
                     <h3 className="text-lg font-semibold mb-2">No Analysis Yet</h3>
                     <p className="text-muted-foreground mb-4 max-w-md">
-                      Run a PMF analysis first to see validation experiments. Go to the Input tab and click "Analyze Product-Market Fit".
+                      Run a market-need analysis first to see evidence experiments. Go to the Problem Brief tab and click "Analyze Market Need".
                     </p>
                     <Button onClick={() => setActiveTab('input')}>
-                      Go to Input
+                      Go to Problem Brief
                     </Button>
                   </CardContent>
                 </Card>
@@ -446,10 +471,10 @@ const ProductMarketFitLab: React.FC<ProductMarketFitLabProps> = ({
                     <Target className="w-12 h-12 text-muted-foreground mb-4 opacity-50" />
                     <h3 className="text-lg font-semibold mb-2">No Analysis Yet</h3>
                     <p className="text-muted-foreground mb-4 max-w-md">
-                      Run a PMF analysis first to see your PMF score. Go to the Input tab and click "Analyze Product-Market Fit".
+                      Run a market-need analysis first to see your score. Go to the Problem Brief tab and click "Analyze Market Need".
                     </p>
                     <Button onClick={() => setActiveTab('input')}>
-                      Go to Input
+                      Go to Problem Brief
                     </Button>
                   </CardContent>
                 </Card>
@@ -463,4 +488,6 @@ const ProductMarketFitLab: React.FC<ProductMarketFitLabProps> = ({
 };
 
 export default ProductMarketFitLab;
+
+
 

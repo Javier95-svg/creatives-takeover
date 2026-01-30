@@ -19,7 +19,7 @@ interface PMFInputFormData {
   solutionDescription: string;
   targetMarket: string;
   businessModel: string;
-  industry: string;
+  Industry Context: string;
   keyAssumptions: string[];
   competitiveLandscape: string;
   tractionValidation: string;
@@ -79,7 +79,7 @@ const PMFInputForm: React.FC<PMFInputFormProps> = ({
     solutionDescription: initialData?.solutionDescription || businessPlanData?.answers?.solution || '',
     targetMarket: initialData?.targetMarket || businessPlanData?.answers?.market || '',
     businessModel: initialData?.businessModel || '',
-    industry: initialData?.industry || '',
+    Industry Context: initialData?.Industry Context || '',
     keyAssumptions: initialData?.keyAssumptions || [],
     competitiveLandscape: initialData?.competitiveLandscape || '',
     tractionValidation: initialData?.tractionValidation || '',
@@ -165,7 +165,7 @@ const PMFInputForm: React.FC<PMFInputFormProps> = ({
         <CardContent className="pt-6">
           <div className="space-y-2">
             <div className="flex items-center justify-between text-sm">
-              <span className="font-medium">Form Completion</span>
+              <span className="font-medium">Problem Brief Completion</span>
               <span className="text-muted-foreground">{Math.round(completionPercentage)}%</span>
             </div>
             <Progress value={completionPercentage} className="h-2" />
@@ -180,13 +180,13 @@ const PMFInputForm: React.FC<PMFInputFormProps> = ({
       <div className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="problemStatement" className="flex items-center gap-2">
-            Problem Statement <span className="text-destructive">*</span>
+            Core Problem <span className="text-destructive">*</span>
           </Label>
           <Textarea
             id="problemStatement"
             value={formData.problemStatement}
             onChange={(e) => setFormData(prev => ({ ...prev, problemStatement: e.target.value }))}
-            placeholder="Describe the problem you're solving. What pain point does your target market experience?"
+            placeholder="Describe the core problem and who feels it most."
             rows={4}
             className="resize-none"
             required
@@ -199,19 +199,19 @@ const PMFInputForm: React.FC<PMFInputFormProps> = ({
             />
           )}
           <p className="text-xs text-muted-foreground">
-            Be specific about the problem and who experiences it.
+            Be precise about the pain and who experiences it.
           </p>
         </div>
 
         <div className="space-y-2">
           <Label htmlFor="solutionDescription" className="flex items-center gap-2">
-            Solution Description <span className="text-destructive">*</span>
+            Proposed Solution <span className="text-destructive">*</span>
           </Label>
           <Textarea
             id="solutionDescription"
             value={formData.solutionDescription}
             onChange={(e) => setFormData(prev => ({ ...prev, solutionDescription: e.target.value }))}
-            placeholder="Describe your solution. How does your product/service solve the problem?"
+            placeholder="Describe your proposed solution and why it should relieve the pain."
             rows={4}
             className="resize-none"
             required
@@ -224,20 +224,20 @@ const PMFInputForm: React.FC<PMFInputFormProps> = ({
             />
           )}
           <p className="text-xs text-muted-foreground">
-            Explain how your solution addresses the problem you identified.
+            Explain why this solution should address the core problem.
           </p>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2">
             <Label htmlFor="targetMarket" className="flex items-center gap-2">
-              Target Market <span className="text-destructive">*</span>
+              Primary Customer Segment <span className="text-destructive">*</span>
             </Label>
             <Input
               id="targetMarket"
               value={formData.targetMarket}
               onChange={(e) => setFormData(prev => ({ ...prev, targetMarket: e.target.value }))}
-              placeholder="e.g., Small business owners, Students, etc."
+              placeholder="e.g., Boutique agencies, Solo consultants, Retail founders"
               required
             />
             {autoPopulatedFields.has('targetMarket') && (
@@ -248,38 +248,38 @@ const PMFInputForm: React.FC<PMFInputFormProps> = ({
               />
             )}
             <p className="text-xs text-muted-foreground">
-              Who is your primary customer?
+              Who feels this pain most?
             </p>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="industry">
-              Industry
+            <Label htmlFor="Industry Context">
+              Industry Context
             </Label>
             <Select
-              value={formData.industry}
-              onValueChange={(value) => setFormData(prev => ({ ...prev, industry: value }))}
+              value={formData.Industry Context}
+              onValueChange={(value) => setFormData(prev => ({ ...prev, Industry Context: value }))}
             >
-              <SelectTrigger id="industry">
-                <SelectValue placeholder="Select industry" />
+              <SelectTrigger id="Industry Context">
+                <SelectValue placeholder="Select Industry Context" />
               </SelectTrigger>
               <SelectContent>
-                {INDUSTRIES.map((industry) => (
-                  <SelectItem key={industry} value={industry}>
-                    {industry}
+                {INDUSTRIES.map((Industry Context) => (
+                  <SelectItem key={Industry Context} value={Industry Context}>
+                    {Industry Context}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-            {autoPopulatedFields.has('industry') && (
+            {autoPopulatedFields.has('Industry Context') && (
               <DataSourceBadge
-                source={dataSources.industry}
-                confidence={confidence.industry}
+                source={dataSources.Industry Context}
+                confidence={confidence.Industry Context}
                 compact
               />
             )}
             <p className="text-xs text-muted-foreground">
-              Helps provide industry-specific insights
+              Helps provide Industry Context-specific insights
             </p>
           </div>
         </div>
@@ -299,14 +299,14 @@ const PMFInputForm: React.FC<PMFInputFormProps> = ({
         <div className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="businessModel">
-              Business Model
+              Revenue Model
             </Label>
             <Select
               value={formData.businessModel}
               onValueChange={(value) => setFormData(prev => ({ ...prev, businessModel: value }))}
             >
               <SelectTrigger id="businessModel">
-                <SelectValue placeholder="Select business model" />
+                <SelectValue placeholder="Select Revenue Model" />
               </SelectTrigger>
               <SelectContent>
                 {BUSINESS_MODELS.map((model) => (
@@ -324,13 +324,13 @@ const PMFInputForm: React.FC<PMFInputFormProps> = ({
               />
             )}
             <p className="text-xs text-muted-foreground">
-              How do you plan to make money?
+              How do you expect to capture value?
             </p>
           </div>
 
-          {/* Key Assumptions */}
+          {/* Problem Assumptions */}
           <div className="space-y-2">
-            <Label>Key Assumptions</Label>
+            <Label>Problem Assumptions</Label>
             <div className="space-y-2">
               <div className="flex gap-2">
                 <Input
@@ -376,32 +376,32 @@ const PMFInputForm: React.FC<PMFInputFormProps> = ({
               )}
             </div>
             <p className="text-xs text-muted-foreground">
-              List key assumptions you're making about the market, customers, or solution.
+              List Problem Assumptions you're making about the market, customers, or solution.
             </p>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="competitiveLandscape">Competitive Landscape</Label>
+            <Label htmlFor="competitiveLandscape">Current Alternatives</Label>
             <Textarea
               id="competitiveLandscape"
               value={formData.competitiveLandscape}
               onChange={(e) => setFormData(prev => ({ ...prev, competitiveLandscape: e.target.value }))}
-              placeholder="Who are your main competitors? What are their strengths and weaknesses?"
+              placeholder="What do customers use today? Who solves this now?"
               rows={3}
               className="resize-none"
             />
             <p className="text-xs text-muted-foreground">
-              Help us understand the competitive environment.
+              Helps identify current alternatives and gaps.
             </p>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="tractionValidation">Traction/Validation</Label>
+            <Label htmlFor="tractionValidation">Market Need Evidence</Label>
             <Textarea
               id="tractionValidation"
               value={formData.tractionValidation}
               onChange={(e) => setFormData(prev => ({ ...prev, tractionValidation: e.target.value }))}
-              placeholder="Any early traction, validation, or customer feedback? (e.g., beta users, pre-orders, pilot programs)"
+              placeholder="Any early signals that demand exists? (e.g., interviews, waitlist, pre-orders)"
               rows={3}
               className="resize-none"
             />
@@ -413,7 +413,7 @@ const PMFInputForm: React.FC<PMFInputFormProps> = ({
               />
             )}
             <p className="text-xs text-muted-foreground">
-              Share any validation signals you've already received.
+              Share proof that the problem is real and urgent.
             </p>
           </div>
         </div>
@@ -445,10 +445,10 @@ const PMFInputForm: React.FC<PMFInputFormProps> = ({
               <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5" />
               <div className="flex-1">
                 <p className="text-sm font-medium text-green-800 dark:text-green-200">
-                  Ready to Analyze
+                  Ready to Analyze Market Need
                 </p>
                 <p className="text-xs text-green-700 dark:text-green-300 mt-1">
-                  All required fields are complete. Click "Analyze Product-Market Fit" to proceed.
+                  All required fields are complete. Click "Analyze Market Need" to proceed.
                 </p>
               </div>
             </div>
@@ -466,12 +466,12 @@ const PMFInputForm: React.FC<PMFInputFormProps> = ({
         {isSubmitting ? (
           <>
             <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            Analyzing PMF...
+            Analyzing Market Need...
           </>
         ) : (
           <>
             <Target className="w-4 h-4 mr-2" />
-            Analyze Product-Market Fit
+            Analyze Market Need
           </>
         )}
       </Button>
@@ -480,4 +480,5 @@ const PMFInputForm: React.FC<PMFInputFormProps> = ({
 };
 
 export default PMFInputForm;
+
 
