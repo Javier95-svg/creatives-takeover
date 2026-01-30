@@ -172,7 +172,7 @@ const EntrepreneurProblems = () => {
                       ) : index === 1 ? (
                         <div className="flex justify-center">
                           <Link 
-                            to="/bizmap-ai/pmf-lab" 
+                            to="/pmf-lab" 
                             className="inline-flex items-center gap-2 rounded-md border border-border bg-background px-4 py-2 text-sm font-medium text-foreground hover:border-primary/40 transition-colors"
                           >
                             <span className="font-semibold text-foreground flex items-center gap-2 text-sm">
@@ -275,7 +275,7 @@ const EntrepreneurProblems = () => {
                         ) : index === 1 ? (
                           <div className="flex justify-center">
                             <Link 
-                              to="/bizmap-ai/pmf-lab" 
+                            to="/pmf-lab" 
                             className="inline-flex items-center gap-2 rounded-md border border-border bg-background px-4 py-2 text-sm font-medium text-foreground hover:border-primary/40 transition-colors"
                             >
                               <span className="font-semibold text-foreground flex items-center gap-2 text-sm">
@@ -421,7 +421,7 @@ const EntrepreneurProblems = () => {
                         ) : index === 1 ? (
                           <div className="flex justify-center">
                             <Link 
-                              to="/bizmap-ai/pmf-lab" 
+                              to="/pmf-lab" 
                               className="inline-flex items-center gap-2 rounded-md border border-border bg-background px-4 py-2 text-sm font-medium text-foreground hover:border-primary/40 transition-colors"
                             >
                               <span className="font-semibold text-foreground flex items-center gap-2 text-sm">

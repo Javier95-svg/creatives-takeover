@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { UserProvider } from "@/contexts/UserContext";
 import { ProgressProvider } from "@/contexts/ProgressContext";
@@ -37,6 +37,7 @@ const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const Terms = lazy(() => import("./pages/Terms"));
 const Signup = lazy(() => import("./pages/Signup"));
 const Dream2Plan = lazy(() => import("./pages/Dream2Plan"));
+const BizMapJourneyHubPage = lazy(() => import("./pages/BizMapJourneyHubPage"));
 const Onboarding = lazy(() => import("./pages/Onboarding"));
 
 const Login = lazy(() => import("./pages/Login"));
@@ -79,6 +80,7 @@ const MentorBookingPage = lazy(() => import("./pages/community/MentorBookingPage
 const MyBookings = lazy(() => import("./pages/community/MyBookings"));
 const AdminMentorEditor = lazy(() => import("./pages/community/AdminMentorEditor"));
 const PMFLabPage = lazy(() => import("./pages/PMFLabPage"));
+const ValidateJourneyPage = lazy(() => import("./pages/ValidateJourneyPage"));
 const TechStackPage = lazy(() => import("./pages/TechStackPage"));
 const FocusFunnel = lazy(() => import("./pages/FocusFunnel"));
 const CoreMetricsPage = lazy(() => import("./pages/CoreMetricsPage"));
@@ -153,9 +155,12 @@ function App() {
                         <Route path="/prompt-library" element={<PromptLibrary />} />
                         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
                         <Route path="/terms" element={<Terms />} />
-                        <Route path="/bizmap-ai" element={<Dream2Plan />} />
-                        <Route path="/bizmap-ai/pmf-lab" element={<PMFLabPage />} />
+                        <Route path="/bizmap-ai" element={<BizMapJourneyHubPage />} />
+                        <Route path="/bizmap-ai/chat" element={<Dream2Plan />} />
+                        <Route path="/pmf-lab" element={<PMFLabPage />} />
+                        <Route path="/bizmap-ai/pmf-lab" element={<Navigate to="/pmf-lab" replace />} />
                         <Route path="/bizmap-ai/tech-stack" element={<TechStackPage />} />
+                        <Route path="/validate" element={<ValidateJourneyPage />} />
 
                         <Route path="/auth" element={<Auth />} />
                         <Route path="/login" element={<Login />} />

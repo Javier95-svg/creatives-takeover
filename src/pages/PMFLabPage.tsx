@@ -24,7 +24,7 @@ export default function PMFLabPage() {
       "@type": "WebPage",
       "name": "PMF Lab - Validate Your Business Idea",
       "description": "Analyze your product-market fit with AI-powered insights. Validate your business concept, understand your target market, and get actionable recommendations.",
-      "url": "https://creatives-takeover.com/bizmap-ai/pmf-lab",
+      "url": "https://creatives-takeover.com/pmf-lab",
       "publisher": {
         "@type": "Organization",
         "name": "Creatives Takeover",
@@ -37,7 +37,7 @@ export default function PMFLabPage() {
     createBreadcrumbSchema([
       { name: 'Home', url: '/' },
       { name: 'BizMap AI', url: '/bizmap-ai' },
-      { name: 'PMF Lab', url: '/bizmap-ai/pmf-lab' }
+      { name: 'PMF Lab', url: '/pmf-lab' }
     ])
   ];
 
@@ -47,7 +47,7 @@ export default function PMFLabPage() {
         title="PMF Lab - Creatives Takeover"
         description="Analyze your product-market fit with AI-powered insights. Validate your business concept, understand your target market, and get actionable recommendations for success."
         keywords="product market fit, PMF analysis, business validation, market analysis, startup validation, product validation"
-        url="/bizmap-ai/pmf-lab"
+        url="/pmf-lab"
         structuredData={structuredData}
       />
       <Navigation />

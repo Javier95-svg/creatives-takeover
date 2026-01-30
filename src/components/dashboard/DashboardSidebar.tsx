@@ -93,8 +93,8 @@ export const DashboardSidebar = ({ dashboardMode: _dashboardMode }: DashboardSid
 
   // Build tools items based on user preferences
   const toolsItems = [
-    sidebarPreferences.showBizMapAI && { path: '/bizmap-ai', label: 'BizMap AI Chatbot', icon: MessageSquare },
-    sidebarPreferences.showPMFLab && { path: '/bizmap-ai/pmf-lab', label: 'PMF Lab', icon: FlaskConical },
+    sidebarPreferences.showBizMapAI && { path: '/bizmap-ai/chat', label: 'BizMap AI Assist', icon: MessageSquare },
+    sidebarPreferences.showPMFLab && { path: '/pmf-lab', label: 'PMF Lab', icon: FlaskConical },
     sidebarPreferences.showPromptLibrary && { path: '/prompt-library', label: 'Prompt Library', icon: Library },
     sidebarPreferences.showTechStack && { path: '/bizmap-ai/tech-stack', label: 'Tech Stack Builder', icon: Zap },
     sidebarPreferences.showVCSearch && { path: '/insighta/vc-search', label: 'VC Search', icon: FileSearch },
