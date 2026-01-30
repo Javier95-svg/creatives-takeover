@@ -136,7 +136,7 @@ export default function ValidateJourneyPage() {
                   </Link>
                 </Button>
                 <Button size="lg" variant="outline" asChild>
-                  <Link to="#daily-plan">
+                  <Link to="/validate">
                     <ClipboardList className="h-4 w-4 mr-2" />
                     View Daily Plan
                   </Link>
