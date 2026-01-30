@@ -79,7 +79,7 @@ const PMFInputForm: React.FC<PMFInputFormProps> = ({
     solutionDescription: initialData?.solutionDescription || businessPlanData?.answers?.solution || '',
     targetMarket: initialData?.targetMarket || businessPlanData?.answers?.market || '',
     businessModel: initialData?.businessModel || '',
-    Industry Context: initialData?.Industry Context || '',
+    industry: initialData?.industry || '',
     keyAssumptions: initialData?.keyAssumptions || [],
     competitiveLandscape: initialData?.competitiveLandscape || '',
     tractionValidation: initialData?.tractionValidation || '',
