@@ -253,28 +253,28 @@ const PMFInputForm: React.FC<PMFInputFormProps> = ({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="Industry Context">
+            <Label htmlFor="industry">
               Industry Context
             </Label>
             <Select
-              value={formData.Industry Context}
-              onValueChange={(value) => setFormData(prev => ({ ...prev, Industry Context: value }))}
+              value={formData.industry}
+              onValueChange={(value) => setFormData(prev => ({ ...prev, industry: value }))}
             >
-              <SelectTrigger id="Industry Context">
-                <SelectValue placeholder="Select Industry Context" />
+              <SelectTrigger id="industry">
+                <SelectValue placeholder="Select industry context" />
               </SelectTrigger>
               <SelectContent>
-                {INDUSTRIES.map((Industry Context) => (
-                  <SelectItem key={Industry Context} value={Industry Context}>
-                    {Industry Context}
+                {INDUSTRIES.map((industryOption) => (
+                  <SelectItem key={industryOption} value={industryOption}>
+                    {industryOption}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-            {autoPopulatedFields.has('Industry Context') && (
+            {autoPopulatedFields.has('industry') && (
               <DataSourceBadge
-                source={dataSources.Industry Context}
-                confidence={confidence.Industry Context}
+                source={dataSources.industry}
+                confidence={confidence.industry}
                 compact
               />
             )}
@@ -480,5 +480,6 @@ const PMFInputForm: React.FC<PMFInputFormProps> = ({
 };
 
 export default PMFInputForm;
+
 
 
