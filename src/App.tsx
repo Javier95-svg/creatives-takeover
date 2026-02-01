@@ -86,6 +86,9 @@ const FocusFunnel = lazy(() => import("./pages/FocusFunnel"));
 const CoreMetricsPage = lazy(() => import("./pages/CoreMetricsPage"));
 const WeeklyMissionPage = lazy(() => import("./pages/WeeklyMissionPage"));
 const TasksPage = lazy(() => import("./pages/TasksPage"));
+const ValidateJourney = lazy(() => import("./pages/journeys/ValidateJourney"));
+const MvpJourney = lazy(() => import("./pages/journeys/MvpJourney"));
+const FirstCustomersJourney = lazy(() => import("./pages/journeys/FirstCustomersJourney"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -161,6 +164,9 @@ function App() {
                         <Route path="/bizmap-ai/pmf-lab" element={<Navigate to="/pmf-lab" replace />} />
                         <Route path="/bizmap-ai/tech-stack" element={<TechStackPage />} />
                         <Route path="/validate" element={<ValidateJourneyPage />} />
+                        <Route path="/journeys/validate" element={<ValidateJourney />} />
+                        <Route path="/journeys/mvp" element={<MvpJourney />} />
+                        <Route path="/journeys/first-customers" element={<FirstCustomersJourney />} />
 
                         <Route path="/auth" element={<Auth />} />
                         <Route path="/login" element={<Login />} />

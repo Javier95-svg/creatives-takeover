@@ -7,45 +7,106 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Bot, ClipboardList, Rocket, Target, CheckCircle2 } from "lucide-react";
+import { useJourneyStore } from "@/store/journeyStore";
+import { Progress } from "@/components/ui/progress";
+import { journeyDefinitions } from "@/data/journeys";
+import type { JourneySlug } from "@/types/journey";
 
 const journeys = [
   {
     title: "Validate in 7 Days",
-    description: "Decide what to build with a focused 7-day decision sprint.",
+    description: "A 7-day sprint with daily tasks to narrow your ideas, test demand signals, and choose what to build.",
     tag: "Live",
-    href: "/validate",
+    href: "/journeys/validate",
+    slug: "validate" as JourneySlug,
     icon: Target,
     highlights: [
-      "Idea shortlist + signal scorecard",
-      "Rank the strongest problem",
-      "Handoff to PMF Lab"
+      "Day-by-day tasks with templates",
+      "DM scripts + scoring tools",
+      "Founder examples at every step"
     ]
   },
   {
     title: "Ship MVP in 14 Days",
-    description: "Turn validated demand into a shippable MVP.",
-    tag: "Coming Soon",
-    href: "/validate",
+    description: "A 14-day sprint from validated idea to deployed MVP — with daily build checkpoints.",
+    tag: "Live",
+    href: "/journeys/mvp",
+    slug: "mvp" as JourneySlug,
     icon: Rocket,
     highlights: [
-      "Scope the smallest MVP",
-      "Design + build checkpoints",
-      "Launch-ready demo"
+      "Scope lock + tech stack selection",
+      "Landing page + payment templates",
+      "Ship-ready in 14 days"
     ]
   },
   {
     title: "Get 5 Paying Users in 30 Days",
-    description: "Build a repeatable channel and close your first users.",
-    tag: "Coming Soon",
-    href: "/validate",
+    description: "A 30-day playbook to go from MVP to first revenue with outreach, pricing, and closing.",
+    tag: "Live",
+    href: "/journeys/first-customers",
+    slug: "first-customers" as JourneySlug,
     icon: ClipboardList,
     highlights: [
-      "Daily outreach plan",
-      "Offer + pricing experiments",
-      "Repeatable channel setup"
+      "Daily outreach + DM scripts",
+      "Pricing experiments + objection handling",
+      "Repeatable channel playbook"
     ]
   }
 ];
+
+function JourneyCards() {
+  const store = useJourneyStore();
+
+  return (
+    <div className="grid gap-6 md:grid-cols-3">
+      {journeys.map((journey) => {
+        const Icon = journey.icon;
+        const journeyProgress = store.journeys[journey.slug];
+        const journeyDef = journeyDefinitions[journey.slug];
+        const started = !!journeyProgress;
+
+        // Calculate completion
+        let percent = 0;
+        if (started && journeyDef) {
+          const tasksPerDay: Record<number, number> = {};
+          journeyDef.days.forEach((d) => { tasksPerDay[d.dayNumber] = d.tasks.length; });
+          percent = store.getJourneyCompletionPercent(journey.slug, journeyDef.totalDays, tasksPerDay);
+        }
+
+        return (
+          <Card key={journey.title} className="border-primary/10 bg-background/90">
+            <CardHeader className="space-y-3">
+              <div className="flex items-center justify-between">
+                <Badge variant="default">
+                  {started ? (percent === 100 ? "Complete" : `${percent}%`) : journey.tag}
+                </Badge>
+                <Icon className="h-5 w-5 text-primary" />
+              </div>
+              <CardTitle className="text-xl">{journey.title}</CardTitle>
+              <CardDescription>{journey.description}</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {started && (
+                <Progress value={percent} className="h-1.5 mb-2" />
+              )}
+              {journey.highlights.map((item) => (
+                <div key={item} className="flex items-start gap-2 text-sm text-muted-foreground">
+                  <CheckCircle2 className="h-4 w-4 text-primary mt-0.5" />
+                  <span>{item}</span>
+                </div>
+              ))}
+              <Button size="sm" className="mt-4 w-full" asChild>
+                <Link to={journey.href}>
+                  {started ? (percent === 100 ? "Review Journey" : "Continue Journey") : "Start Journey"}
+                </Link>
+              </Button>
+            </CardContent>
+          </Card>
+        );
+      })}
+    </div>
+  );
+}
 
 export default function BizMapJourneyHubPage() {
   const navigate = useNavigate();
@@ -112,9 +173,9 @@ export default function BizMapJourneyHubPage() {
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
                 <Button size="lg" asChild>
-                  <Link to="/validate">
+                  <Link to="/journeys/validate">
                     <Target className="h-4 w-4 mr-2" />
-                    Start Decision Sprint
+                    Start Validation Sprint
                   </Link>
                 </Button>
                 <Button size="lg" variant="outline" asChild>
@@ -126,44 +187,7 @@ export default function BizMapJourneyHubPage() {
               </div>
             </div>
 
-            <div className="grid gap-6 md:grid-cols-3">
-              {journeys.map((journey) => {
-                const Icon = journey.icon;
-                return (
-                  <Card key={journey.title} className="border-primary/10 bg-background/90">
-                    <CardHeader className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <Badge variant={journey.tag === "Live" ? "default" : "outline"}>
-                          {journey.tag}
-                        </Badge>
-                        <Icon className="h-5 w-5 text-primary" />
-                      </div>
-                      <CardTitle className="text-xl">{journey.title}</CardTitle>
-                      <CardDescription>{journey.description}</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                      {journey.highlights.map((item) => (
-                        <div key={item} className="flex items-start gap-2 text-sm text-muted-foreground">
-                          <CheckCircle2 className="h-4 w-4 text-primary mt-0.5" />
-                          <span>{item}</span>
-                        </div>
-                      ))}
-                      <Button
-                        size="sm"
-                        className="mt-4 w-full"
-                        variant={journey.tag === "Live" ? "default" : "outline"}
-                        asChild
-                        disabled={journey.tag !== "Live"}
-                      >
-                        <Link to={journey.href}>
-                          {journey.tag === "Live" ? "Open Journey" : "Coming Soon"}
-                        </Link>
-                      </Button>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
+            <JourneyCards />
 
             <Card className="border-primary/20 bg-background/90">
               <CardHeader>
