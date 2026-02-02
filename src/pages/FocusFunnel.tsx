@@ -19,6 +19,7 @@ import {
   Target,
 } from 'lucide-react';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
+import { useLeanStartupStore } from '@/store/leanStartupStore';
 
 type AiMessage = {
   role: 'user' | 'assistant';
@@ -34,6 +35,8 @@ const QUICK_PROMPTS = [
 
 const FocusFunnel = () => {
   const { user } = useAuth();
+  const { markToolUsed } = useLeanStartupStore();
+  useEffect(() => { markToolUsed('focus-funnel'); }, [markToolUsed]);
   const {
     goals,
     projects,

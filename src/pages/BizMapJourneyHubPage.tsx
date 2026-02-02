@@ -6,112 +6,120 @@ import Footer from "@/components/Footer";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Bot, ClipboardList, Rocket, Target, CheckCircle2 } from "lucide-react";
+import {
+  Bot,
+  Search,
+  Hammer,
+  BarChart3,
+  Target,
+  FlaskConical,
+  Boxes,
+  Filter,
+  CheckSquare,
+  LineChart,
+  CalendarCheck,
+} from "lucide-react";
 import { useJourneyStore } from "@/store/journeyStore";
-import { Progress } from "@/components/ui/progress";
+import {
+  useLeanStartupStore,
+  getPhaseCompletion,
+  isPhaseUnlocked,
+  getCurrentPhase,
+  getTransitionPrompt,
+  type Phase,
+} from "@/store/leanStartupStore";
 import { journeyDefinitions } from "@/data/journeys";
 import type { JourneySlug } from "@/types/journey";
+import LeanStartupCycle from "@/components/bizmap/LeanStartupCycle";
+import PhaseCard from "@/components/bizmap/PhaseCard";
+import PhaseTransitionBanner from "@/components/bizmap/PhaseTransitionBanner";
 
-const journeys = [
+// ---------------------------------------------------------------------------
+// Phase configuration
+// ---------------------------------------------------------------------------
+
+const PHASE_CONFIG: {
+  phase: Phase;
+  title: string;
+  description: string;
+  icon: typeof Search;
+  journey: { title: string; href: string; slug: JourneySlug; totalDays: number };
+  tools: { name: string; href: string; icon: typeof Search; id: string }[];
+}[] = [
   {
-    title: "Validate in 7 Days",
-    description: "A 7-day sprint with daily tasks to narrow your ideas, test demand signals, and choose what to build.",
-    tag: "Live",
-    href: "/validate",
-    slug: "validate" as JourneySlug,
-    icon: Target,
-    highlights: [
-      "Day-by-day tasks with templates",
-      "DM scripts + scoring tools",
-      "Founder examples at every step"
-    ]
+    phase: "learn",
+    title: "Learn",
+    description: "Validate your idea before you build. Test demand signals and confirm market need.",
+    icon: Search,
+    journey: { title: "Validate in 7 Days", href: "/validate", slug: "validate", totalDays: 7 },
+    tools: [
+      { name: "Decision Sprint", href: "/decision-sprint", icon: Target, id: "decision-sprint" },
+      { name: "PMF Lab", href: "/pmf-lab", icon: FlaskConical, id: "pmf-lab" },
+    ],
   },
   {
-    title: "Ship MVP in 14 Days",
-    description: "A 14-day sprint from validated idea to deployed MVP — with daily build checkpoints.",
-    tag: "Live",
-    href: "/mvp-builder",
-    slug: "mvp" as JourneySlug,
-    icon: Rocket,
-    highlights: [
-      "Scope lock + tech stack selection",
-      "Landing page + payment templates",
-      "Ship-ready in 14 days"
-    ]
+    phase: "build",
+    title: "Build",
+    description: "Ship your MVP fast. Choose a stack, set scope, and deploy in 14 days.",
+    icon: Hammer,
+    journey: { title: "Ship MVP in 14 Days", href: "/mvp-builder", slug: "mvp", totalDays: 14 },
+    tools: [
+      { name: "Tech Stack Builder", href: "/bizmap-ai/tech-stack", icon: Boxes, id: "tech-stack" },
+      { name: "Focus Funnel", href: "/focus-funnel", icon: Filter, id: "focus-funnel" },
+      { name: "Tasks", href: "/tasks", icon: CheckSquare, id: "tasks" },
+    ],
   },
   {
-    title: "Get 5 Paying Users in 30 Days",
-    description: "A 30-day playbook to go from MVP to first revenue with outreach, pricing, and closing.",
-    tag: "Live",
-    href: "/client-acquisition",
-    slug: "first-customers" as JourneySlug,
-    icon: ClipboardList,
-    highlights: [
-      "Daily outreach + DM scripts",
-      "Pricing experiments + objection handling",
-      "Repeatable channel playbook"
-    ]
-  }
+    phase: "measure",
+    title: "Measure",
+    description: "Get traction and iterate. Reach your first paying customers and track what matters.",
+    icon: BarChart3,
+    journey: {
+      title: "Get 5 Paying Users in 30 Days",
+      href: "/client-acquisition",
+      slug: "first-customers",
+      totalDays: 30,
+    },
+    tools: [
+      { name: "Core Metrics", href: "/core-metrics", icon: LineChart, id: "core-metrics" },
+      { name: "Weekly Mission", href: "/weekly-mission", icon: CalendarCheck, id: "weekly-mission" },
+    ],
+  },
 ];
 
-function JourneyCards() {
+// ---------------------------------------------------------------------------
+// Helper: get journey % from journeyStore
+// ---------------------------------------------------------------------------
+
+function useJourneyPercent(slug: JourneySlug): { percent: number; started: boolean } {
   const store = useJourneyStore();
+  const def = journeyDefinitions[slug];
+  const progress = store.journeys[slug];
+  const started = !!progress;
 
-  return (
-    <div className="grid gap-6 md:grid-cols-3">
-      {journeys.map((journey) => {
-        const Icon = journey.icon;
-        const journeyProgress = store.journeys[journey.slug];
-        const journeyDef = journeyDefinitions[journey.slug];
-        const started = !!journeyProgress;
+  if (!started || !def) return { percent: 0, started };
 
-        // Calculate completion
-        let percent = 0;
-        if (started && journeyDef) {
-          const tasksPerDay: Record<number, number> = {};
-          journeyDef.days.forEach((d) => { tasksPerDay[d.dayNumber] = d.tasks.length; });
-          percent = store.getJourneyCompletionPercent(journey.slug, journeyDef.totalDays, tasksPerDay);
-        }
+  const tasksPerDay: Record<number, number> = {};
+  def.days.forEach((d) => {
+    tasksPerDay[d.dayNumber] = d.tasks.length;
+  });
 
-        return (
-          <Card key={journey.title} className="border-primary/10 bg-background/90">
-            <CardHeader className="space-y-3">
-              <div className="flex items-center justify-between">
-                <Badge variant="default">
-                  {started ? (percent === 100 ? "Complete" : `${percent}%`) : journey.tag}
-                </Badge>
-                <Icon className="h-5 w-5 text-primary" />
-              </div>
-              <CardTitle className="text-xl">{journey.title}</CardTitle>
-              <CardDescription>{journey.description}</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {started && (
-                <Progress value={percent} className="h-1.5 mb-2" />
-              )}
-              {journey.highlights.map((item) => (
-                <div key={item} className="flex items-start gap-2 text-sm text-muted-foreground">
-                  <CheckCircle2 className="h-4 w-4 text-primary mt-0.5" />
-                  <span>{item}</span>
-                </div>
-              ))}
-              <Button size="sm" className="mt-4 w-full" asChild>
-                <Link to={journey.href}>
-                  {started ? (percent === 100 ? "Review Journey" : "Continue Journey") : "Start Journey"}
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
-        );
-      })}
-    </div>
-  );
+  return {
+    percent: store.getJourneyCompletionPercent(slug, def.totalDays, tasksPerDay),
+    started,
+  };
 }
+
+// ---------------------------------------------------------------------------
+// Page
+// ---------------------------------------------------------------------------
 
 export default function BizMapJourneyHubPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const leanStore = useLeanStartupStore();
 
+  // Redirect ?session= to chat
   useEffect(() => {
     const sessionId = searchParams.get("session");
     if (sessionId) {
@@ -119,26 +127,42 @@ export default function BizMapJourneyHubPage() {
     }
   }, [navigate, searchParams]);
 
+  // Read live state
+  const currentPhase = getCurrentPhase();
+  const transition = getTransitionPrompt();
+
+  // Journey progress for each phase
+  const validateProgress = useJourneyPercent("validate");
+  const mvpProgress = useJourneyPercent("mvp");
+  const customersProgress = useJourneyPercent("first-customers");
+
+  const journeyProgressMap: Record<JourneySlug, { percent: number; started: boolean }> = {
+    validate: validateProgress,
+    mvp: mvpProgress,
+    "first-customers": customersProgress,
+  };
+
   const structuredData = [
     {
       "@context": "https://schema.org",
       "@type": "WebPage",
-      "name": "BizMap AI Journeys - Creatives Takeover",
-      "description": "Choose a fixed execution journey to decide what to build, confirm market need, and launch your startup with clear daily tasks.",
-      "url": "https://creatives-takeover.com/bizmap-ai"
+      name: "BizMap AI — Lean Startup System",
+      description:
+        "A cohesive system to validate your idea, ship an MVP, and reach your first paying customers using the Lean Startup Method.",
+      url: "https://creatives-takeover.com/bizmap-ai",
     },
     createBreadcrumbSchema([
       { name: "Home", url: "/" },
-      { name: "BizMap AI", url: "/bizmap-ai" }
-    ])
+      { name: "BizMap AI", url: "/bizmap-ai" },
+    ]),
   ];
 
   return (
     <div className="min-h-screen bg-background">
       <SEO
-        title="BizMap AI Journeys - Creatives Takeover"
-        description="Execution-first journeys for founders: decide what to build, confirm market need, ship an MVP, and reach paying users."
-        keywords="startup validation, market need, founder journeys, execution plan, MVP launch"
+        title="BizMap AI — Lean Startup System"
+        description="Learn, Build, Measure, Iterate. A cohesive founder system to validate your idea, ship an MVP, and reach paying users."
+        keywords="lean startup, startup validation, MVP, founder journey, build measure learn"
         url="/bizmap-ai"
         structuredData={structuredData}
       />
@@ -146,6 +170,7 @@ export default function BizMapJourneyHubPage() {
 
       <main>
         <section className="py-20 px-4 relative overflow-hidden">
+          {/* Background animation */}
           <div className="absolute inset-0 pointer-events-none overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-b from-background via-background/95 to-background" />
             <div
@@ -153,42 +178,74 @@ export default function BizMapJourneyHubPage() {
               style={{
                 background:
                   "radial-gradient(circle at 30% 30%, rgba(59, 130, 246, 0.2), transparent 60%), radial-gradient(circle at 70% 70%, rgba(34, 197, 94, 0.2), transparent 55%)",
-                animationDuration: "28s"
+                animationDuration: "28s",
               }}
             />
           </div>
 
-          <div className="container mx-auto max-w-6xl relative z-10 space-y-12">
-            <div className="text-center space-y-4">
+          <div className="container mx-auto max-w-6xl relative z-10 space-y-10">
+            {/* Hero */}
+            <div className="text-center space-y-5">
               <div className="flex justify-center">
                 <Badge className="bg-primary/10 text-primary border-primary/20 px-4 py-1">
-                  Execution-First Journeys
+                  The Lean Startup Method
                 </Badge>
               </div>
               <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold takeover-gradient creatives-font">
-                BizMap AI Journeys
+                Learn. Build. Measure. Iterate.
               </h1>
               <p className="text-lg sm:text-xl text-muted-foreground max-w-3xl mx-auto">
-                Pick a fixed path and execute daily. Decide what to build, confirm market need, then ship.
+                One connected system to take your idea from validation to revenue.
+                Every tool has a role. Every step moves you forward.
               </p>
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-                <Button size="lg" asChild>
-                  <Link to="/validate">
-                    <Target className="h-4 w-4 mr-2" />
-                    Start Validation Sprint
-                  </Link>
-                </Button>
-                <Button size="lg" variant="outline" asChild>
-                  <Link to="/pmf-lab">
-                    <ClipboardList className="h-4 w-4 mr-2" />
-                    Run Market Need Lab
-                  </Link>
-                </Button>
-              </div>
+              <LeanStartupCycle currentPhase={currentPhase} />
             </div>
 
-            <JourneyCards />
+            {/* Transition banner */}
+            {transition && (
+              <PhaseTransitionBanner
+                prompt={transition}
+                onDismiss={() =>
+                  leanStore.dismissTransition(`${transition.from}->${transition.to}`)
+                }
+              />
+            )}
 
+            {/* Phase cards */}
+            <div className="grid gap-6 md:grid-cols-3">
+              {PHASE_CONFIG.map((cfg) => {
+                const completion = getPhaseCompletion(cfg.phase);
+                const unlocked = isPhaseUnlocked(cfg.phase);
+                const jp = journeyProgressMap[cfg.journey.slug];
+
+                return (
+                  <PhaseCard
+                    key={cfg.phase}
+                    phase={cfg.phase}
+                    title={cfg.title}
+                    description={cfg.description}
+                    icon={cfg.icon}
+                    journey={{
+                      ...cfg.journey,
+                      journeyPercent: jp.percent,
+                      started: jp.started,
+                    }}
+                    tools={cfg.tools.map((t) => ({
+                      name: t.name,
+                      href: t.href,
+                      icon: t.icon,
+                      used: leanStore.phases[cfg.phase].toolsUsed.includes(t.id),
+                    }))}
+                    completionPercent={completion}
+                    isActive={currentPhase === cfg.phase}
+                    isLocked={!unlocked}
+                    onSkipAhead={() => leanStore.skipPhase(cfg.phase)}
+                  />
+                );
+              })}
+            </div>
+
+            {/* AI Assist — always available */}
             <Card className="border-primary/20 bg-background/90">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -196,7 +253,8 @@ export default function BizMapJourneyHubPage() {
                   BizMap AI Assist
                 </CardTitle>
                 <CardDescription>
-                  Use the AI assistant to fill templates, rewrite copy, and pressure-test your assumptions.
+                  Available in every phase. Use the AI assistant to fill templates, rewrite copy,
+                  and pressure-test your assumptions.
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -213,4 +271,3 @@ export default function BizMapJourneyHubPage() {
     </div>
   );
 }
-

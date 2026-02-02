@@ -3,6 +3,7 @@ import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { lazy, Suspense } from "react";
 import { useReadingAnalytics } from "@/hooks/useReadingAnalytics";
+import { useLeanStartupStore } from "@/store/leanStartupStore";
 import { useEffect } from "react";
 import { Loader2 } from "lucide-react";
 
@@ -11,6 +12,9 @@ const TechStack = lazy(() => import("@/components/tech-stack/TechStack"));
 
 export default function TechStackPage() {
   const { trackPageVisit } = useReadingAnalytics();
+  const { markToolUsed } = useLeanStartupStore();
+
+  useEffect(() => { markToolUsed('tech-stack'); }, [markToolUsed]);
 
   // Track page visit when component mounts
   useEffect(() => {

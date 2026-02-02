@@ -3,6 +3,7 @@ import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { lazy, Suspense, useEffect, useState } from "react";
 import { useReadingAnalytics } from "@/hooks/useReadingAnalytics";
+import { useLeanStartupStore } from "@/store/leanStartupStore";
 import { Loader2 } from "lucide-react";
 import type { PMFFormPrefillData } from "@/components/pmf/ProductMarketFitLab";
 
@@ -21,7 +22,10 @@ const DECISION_SIGNAL_LABELS: Record<string, string> = {
 
 export default function PMFLabPage() {
   const { trackPageVisit } = useReadingAnalytics();
+  const { markToolUsed } = useLeanStartupStore();
   const [prefillData, setPrefillData] = useState<PMFFormPrefillData | null>(null);
+
+  useEffect(() => { markToolUsed('pmf-lab'); }, [markToolUsed]);
 
   // Track page visit when component mounts
   useEffect(() => {

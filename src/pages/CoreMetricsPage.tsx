@@ -1,7 +1,12 @@
+import { useEffect } from 'react';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { CoreMetrics } from '@/components/dashboard/CoreMetrics';
+import { useLeanStartupStore } from '@/store/leanStartupStore';
 
 const CoreMetricsPage = () => {
+  const { markToolUsed } = useLeanStartupStore();
+  useEffect(() => { markToolUsed('core-metrics'); }, [markToolUsed]);
+
   return (
     <DashboardLayout
       title="Core Metrics"

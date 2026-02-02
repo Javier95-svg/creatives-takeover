@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useLeanStartupStore } from "@/store/leanStartupStore";
 import SEO, { createBreadcrumbSchema } from "@/components/SEO";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
@@ -166,6 +167,9 @@ export default function ValidateJourneyPage() {
   const [ideas, setIdeas] = useState<IdeaScore[]>([createIdea()]);
   const [activeIdeaId, setActiveIdeaId] = useState<string>(ideas[0]?.id || "");
   const [chosenIdeaId, setChosenIdeaId] = useState<string | null>(null);
+
+  const { markToolUsed } = useLeanStartupStore();
+  useEffect(() => { markToolUsed('decision-sprint'); }, [markToolUsed]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;

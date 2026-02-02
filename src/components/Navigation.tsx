@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Menu, X, LogIn, LogOut, User, Settings, Gift, UserPlus, MessageCircle, Home, Bot, BookOpen, TrendingUp, Users as UsersIcon, FileText, Info, DollarSign, ChevronDown, Mail, Rocket, FlaskConical, Lightbulb, Target, Boxes, GraduationCap, Handshake, BarChart3 } from "lucide-react";
+import { Menu, X, LogIn, LogOut, User, Settings, Gift, UserPlus, MessageCircle, Home, Bot, BookOpen, TrendingUp, Users as UsersIcon, FileText, Info, DollarSign, ChevronDown, Mail, Rocket, FlaskConical, Lightbulb, Target, Boxes, GraduationCap, Handshake, BarChart3, Filter, CheckSquare, LineChart, CalendarCheck } from "lucide-react";
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -54,14 +54,28 @@ const Navigation = () => {
     "Pricing": DollarSign,
   };
 
-  // BizMap AI submenu items
-  const bizMapSubmenu = [
+  // BizMap AI submenu — grouped by Lean Startup phase
+  type BizMapMenuItem =
+    | { type: 'label'; label: string }
+    | { type: 'separator' }
+    | { type?: undefined; name: string; href: string; icon: React.ComponentType<{ className?: string }>; description: string };
+
+  const bizMapSubmenu: BizMapMenuItem[] = [
+    { type: 'label', label: 'Learn: Validate Your Idea' },
     { name: "Validate in 7 Days", href: "/validate", icon: Target, description: "Day-by-day sprint to choose what to build" },
+    { name: "Decision Sprint", href: "/decision-sprint", icon: Target, description: "Score and compare up to 3 ideas" },
+    { name: "PMF Lab", href: "/pmf-lab", icon: FlaskConical, description: "AI market analysis + validation" },
+    { type: 'label', label: 'Build: Ship Your MVP' },
     { name: "Ship MVP in 14 Days", href: "/mvp-builder", icon: Rocket, description: "From validated idea to working product" },
+    { name: "Tech Stack Builder", href: "/bizmap-ai/tech-stack", icon: Boxes, description: "Choose your stack with budget calc" },
+    { name: "Focus Funnel", href: "/focus-funnel", icon: Filter, description: "Outcome \u2192 Strategy \u2192 Actions" },
+    { name: "Tasks", href: "/tasks", icon: CheckSquare, description: "Manage your build tasks" },
+    { type: 'label', label: 'Measure: Get Traction' },
     { name: "Get 5 Paying Users", href: "/client-acquisition", icon: DollarSign, description: "30-day playbook to first revenue" },
-    { name: "PMF Lab", href: "/pmf-lab", icon: FlaskConical, description: "Clarify core problem + market need" },
-    { name: "BizMap AI Assist", href: "/bizmap-ai/chat", icon: Lightbulb, description: "AI assistant for plans and templates" },
-    { name: "Tech Stack", href: "/bizmap-ai/tech-stack", icon: Boxes, description: "Build your ideal tech stack" },
+    { name: "Core Metrics", href: "/core-metrics", icon: LineChart, description: "Track your key performance indicators" },
+    { name: "Weekly Mission", href: "/weekly-mission", icon: CalendarCheck, description: "Set weekly goals with decision engine" },
+    { type: 'separator' },
+    { name: "BizMap AI Assist", href: "/bizmap-ai/chat", icon: Lightbulb, description: "AI assistant for all phases" },
   ];
 
   // Insighta submenu items
@@ -207,22 +221,33 @@ const Navigation = () => {
                             <p>{item.tooltip}</p>
                           </TooltipContent>
                         </Tooltip>
-                        <DropdownMenuContent align="start" className="w-64">
-                          <DropdownMenuLabel>AI-Powered Business Tools</DropdownMenuLabel>
+                        <DropdownMenuContent align="start" className="w-72">
+                          <DropdownMenuLabel>Lean Startup System</DropdownMenuLabel>
                           <DropdownMenuSeparator />
-                          {bizMapSubmenu.map((subItem) => {
-                            const SubIcon = subItem.icon;
+                          {bizMapSubmenu.map((subItem, idx) => {
+                            if ('type' in subItem && subItem.type === 'label') {
+                              return (
+                                <DropdownMenuLabel key={idx} className="text-[10px] font-semibold uppercase tracking-wider text-primary mt-2 first:mt-0">
+                                  {subItem.label}
+                                </DropdownMenuLabel>
+                              );
+                            }
+                            if ('type' in subItem && subItem.type === 'separator') {
+                              return <DropdownMenuSeparator key={idx} />;
+                            }
+                            const linkItem = subItem as { name: string; href: string; icon: React.ComponentType<{ className?: string }>; description: string };
+                            const SubIcon = linkItem.icon;
                             return (
-                              <DropdownMenuItem key={subItem.name} asChild>
+                              <DropdownMenuItem key={linkItem.name} asChild>
                                 <Link
-                                  to={subItem.href}
-                                  onClick={() => trackClick(`${item.name} - ${subItem.name}`, 'Navigation')}
+                                  to={linkItem.href}
+                                  onClick={() => trackClick(`${item.name} - ${linkItem.name}`, 'Navigation')}
                                   className="cursor-pointer"
                                 >
                                   <SubIcon className="h-4 w-4 mr-2" />
                                   <div className="flex flex-col">
-                                    <span className="font-medium">{subItem.name}</span>
-                                    <span className="text-xs text-muted-foreground">{subItem.description}</span>
+                                    <span className="font-medium">{linkItem.name}</span>
+                                    <span className="text-xs text-muted-foreground">{linkItem.description}</span>
                                   </div>
                                 </Link>
                               </DropdownMenuItem>
