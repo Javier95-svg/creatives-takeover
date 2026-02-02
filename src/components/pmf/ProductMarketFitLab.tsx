@@ -175,7 +175,7 @@ const ProductMarketFitLab: React.FC<ProductMarketFitLabProps> = ({
   const [analysis, setAnalysis] = useState<PMFAnalysis | null>(null);
   const [analysisId, setAnalysisId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('input');
-  const [selectedSegment, setSelectedSegment] = useState<string | undefined>();
+  const [selectedSegment, setSelectedSegment] = useState<string | null>(null);
 
   // Validate required contexts on mount to catch initialization errors early
   useEffect(() => {
@@ -391,7 +391,7 @@ const ProductMarketFitLab: React.FC<ProductMarketFitLabProps> = ({
             <TabsContent value="segments" className="mt-6">
               {analysis ? (
                 <CustomerSegments
-                  segments={analysis.customerSegments}
+                  segments={analysis.customerSegments ?? []}
                   selectedSegment={selectedSegment}
                   onSelectSegment={setSelectedSegment}
                 />
@@ -439,7 +439,7 @@ const ProductMarketFitLab: React.FC<ProductMarketFitLabProps> = ({
             <TabsContent value="experiments" className="mt-6">
               {analysis ? (
                 <ValidationExperiments
-                  experiments={analysis.validationExperiments}
+                  experiments={analysis.validationExperiments ?? []}
                 />
               ) : (
                 <Card>

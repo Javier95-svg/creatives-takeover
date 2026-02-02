@@ -19,7 +19,7 @@ interface PMFInputFormData {
   solutionDescription: string;
   targetMarket: string;
   businessModel: string;
-  Industry Context: string;
+  industry: string;
   keyAssumptions: string[];
   competitiveLandscape: string;
   tractionValidation: string;

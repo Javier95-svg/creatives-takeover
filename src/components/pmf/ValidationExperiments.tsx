@@ -15,10 +15,10 @@ interface ValidationExperiment {
 }
 
 interface ValidationExperimentsProps {
-  experiments: ValidationExperiment[];
+  experiments?: ValidationExperiment[];
 }
 
-const ValidationExperiments: React.FC<ValidationExperimentsProps> = ({ experiments }) => {
+const ValidationExperiments: React.FC<ValidationExperimentsProps> = ({ experiments = [] }) => {
   const priorityColors = {
     High: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 border-red-200 dark:border-red-800',
     Medium: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400 border-yellow-200 dark:border-yellow-800',
@@ -37,6 +37,20 @@ const ValidationExperiments: React.FC<ValidationExperimentsProps> = ({ experimen
     const priorityOrder = { High: 0, Medium: 1, Low: 2 };
     return priorityOrder[a.priority] - priorityOrder[b.priority];
   });
+
+  if (sortedExperiments.length === 0) {
+    return (
+      <Card>
+        <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+          <FlaskConical className="w-12 h-12 text-muted-foreground mb-4 opacity-50" />
+          <h3 className="text-lg font-semibold mb-2">No Experiments Yet</h3>
+          <p className="text-muted-foreground max-w-md">
+            We didn't receive experiment data yet. Try re-running the analysis after refining your inputs.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <div className="space-y-4">

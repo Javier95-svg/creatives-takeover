@@ -15,16 +15,30 @@ interface CustomerSegment {
 }
 
 interface CustomerSegmentsProps {
-  segments: CustomerSegment[];
+  segments?: CustomerSegment[];
   selectedSegment: string | null;
   onSelectSegment: (segmentName: string) => void;
 }
 
 const CustomerSegments: React.FC<CustomerSegmentsProps> = ({
-  segments,
+  segments = [],
   selectedSegment,
   onSelectSegment,
 }) => {
+  if (segments.length === 0) {
+    return (
+      <Card>
+        <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+          <Users className="w-12 h-12 text-muted-foreground mb-4 opacity-50" />
+          <h3 className="text-lg font-semibold mb-2">No Segments Available</h3>
+          <p className="text-muted-foreground max-w-md">
+            We didn't receive customer segment data yet. Try re-running the analysis or refining your inputs.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
