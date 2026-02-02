@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, Calendar, MessageCircle, Linkedin, Instagram, Globe, Settings } from "lucide-react";
+import { LayoutDashboard, Calendar, MessageCircle, Linkedin, Instagram, Globe, Settings } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { SocialButtons } from "@/components/social/SocialButtons";
@@ -325,15 +325,18 @@ const Profile = () => {
           <Navigation />
           <main className="container mx-auto px-4 py-8">
             <div className="max-w-4xl mx-auto">
-              <Button variant="ghost" size="sm" asChild className="mb-4">
-                <Link to="/community" className="flex items-center gap-2">
-                  <ArrowLeft className="h-4 w-4" />
-                  Back to Community
-                </Link>
-              </Button>
+              {/* Profile Header with Dashboard CTA */}
+              <div className="flex gap-4 mb-6 items-start">
+                {/* Dashboard CTA - Left side */}
+                <Button asChild variant="default" className="shrink-0 h-auto py-3 px-4 flex-col gap-1 hidden md:flex">
+                  <Link to="/dashboard">
+                    <LayoutDashboard className="h-5 w-5" />
+                    <span className="text-xs font-medium">Dashboard</span>
+                  </Link>
+                </Button>
 
-              {/* Profile Header */}
-              <Card className="p-6 mb-6">
+                {/* Profile Card */}
+                <Card className="p-6 flex-1">
                 <div className="flex flex-col md:flex-row gap-6">
                   <Avatar className="h-24 w-24">
                     <AvatarImage src={profile.avatar_url || undefined} />
@@ -478,6 +481,17 @@ const Profile = () => {
                   </div>
                 </div>
               </Card>
+              </div>
+
+              {/* Dashboard CTA - Mobile (below profile card) */}
+              <div className="md:hidden mb-4">
+                <Button asChild variant="default" className="w-full">
+                  <Link to="/dashboard" className="flex items-center justify-center gap-2">
+                    <LayoutDashboard className="h-4 w-4" />
+                    Dashboard
+                  </Link>
+                </Button>
+              </div>
 
               {/* Pinned Posts */}
               <PinnedPosts posts={pinnedPosts} isOwnProfile={isOwnProfile} />
