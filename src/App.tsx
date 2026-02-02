@@ -163,10 +163,10 @@ function App() {
                         <Route path="/pmf-lab" element={<PMFLabPage />} />
                         <Route path="/bizmap-ai/pmf-lab" element={<Navigate to="/pmf-lab" replace />} />
                         <Route path="/bizmap-ai/tech-stack" element={<TechStackPage />} />
-                        <Route path="/validate" element={<ValidateJourneyPage />} />
-                        <Route path="/journeys/validate" element={<ValidateJourney />} />
-                        <Route path="/journeys/mvp" element={<MvpJourney />} />
-                        <Route path="/journeys/first-customers" element={<FirstCustomersJourney />} />
+                        <Route path="/decision-sprint" element={<ValidateJourneyPage />} />
+                        <Route path="/validate" element={<ValidateJourney />} />
+                        <Route path="/mvp-builder" element={<MvpJourney />} />
+                        <Route path="/client-acquisition" element={<FirstCustomersJourney />} />
 
                         <Route path="/auth" element={<Auth />} />
                         <Route path="/login" element={<Login />} />

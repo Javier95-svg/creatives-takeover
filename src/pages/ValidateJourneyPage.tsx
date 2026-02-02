@@ -278,7 +278,7 @@ export default function ValidateJourneyPage() {
     createBreadcrumbSchema([
       { name: "Home", url: "/" },
       { name: "BizMap AI", url: "/bizmap-ai" },
-      { name: "Validate", url: "/validate" }
+      { name: "Decision Sprint", url: "/decision-sprint" }
     ])
   ];
 
@@ -288,7 +288,7 @@ export default function ValidateJourneyPage() {
         title="Validate - Decision Sprint - Creatives Takeover"
         description="Decide which product to build with a structured sprint: shortlist ideas, score signals, and choose a winning concept."
         keywords="startup validation, idea scoring, decision sprint, founder validation, product choice"
-        url="/validate"
+        url="/decision-sprint"
         structuredData={structuredData}
       />
       <Navigation />

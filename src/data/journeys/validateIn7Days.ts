@@ -196,7 +196,7 @@ For each idea, fill in:
           deliverable: 'Scored ideas in the Decision Sprint tool',
           toolLink: {
             label: 'Open Decision Sprint',
-            href: '/validate',
+            href: '/decision-sprint',
           },
         },
         {

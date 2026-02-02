@@ -9,4 +9,11 @@ export const journeyDefinitions: Record<JourneySlug, JourneyDefinition> = {
   'first-customers': get5PayingUsersIn30Days,
 };
 
+/** Slug-to-route mapping for journey pages */
+export const journeyRoutes: Record<JourneySlug, string> = {
+  validate: '/validate',
+  mvp: '/mvp-builder',
+  'first-customers': '/client-acquisition',
+};
+
 export { validateIn7Days, shipMvpIn14Days, get5PayingUsersIn30Days };

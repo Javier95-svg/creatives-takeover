@@ -17,7 +17,7 @@ const journeys = [
     title: "Validate in 7 Days",
     description: "A 7-day sprint with daily tasks to narrow your ideas, test demand signals, and choose what to build.",
     tag: "Live",
-    href: "/journeys/validate",
+    href: "/validate",
     slug: "validate" as JourneySlug,
     icon: Target,
     highlights: [
@@ -30,7 +30,7 @@ const journeys = [
     title: "Ship MVP in 14 Days",
     description: "A 14-day sprint from validated idea to deployed MVP — with daily build checkpoints.",
     tag: "Live",
-    href: "/journeys/mvp",
+    href: "/mvp-builder",
     slug: "mvp" as JourneySlug,
     icon: Rocket,
     highlights: [
@@ -43,7 +43,7 @@ const journeys = [
     title: "Get 5 Paying Users in 30 Days",
     description: "A 30-day playbook to go from MVP to first revenue with outreach, pricing, and closing.",
     tag: "Live",
-    href: "/journeys/first-customers",
+    href: "/client-acquisition",
     slug: "first-customers" as JourneySlug,
     icon: ClipboardList,
     highlights: [
@@ -173,7 +173,7 @@ export default function BizMapJourneyHubPage() {
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
                 <Button size="lg" asChild>
-                  <Link to="/journeys/validate">
+                  <Link to="/validate">
                     <Target className="h-4 w-4 mr-2" />
                     Start Validation Sprint
                   </Link>

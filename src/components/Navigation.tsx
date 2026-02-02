@@ -56,9 +56,9 @@ const Navigation = () => {
 
   // BizMap AI submenu items
   const bizMapSubmenu = [
-    { name: "Validate in 7 Days", href: "/journeys/validate", icon: Target, description: "Day-by-day sprint to choose what to build" },
-    { name: "Ship MVP in 14 Days", href: "/journeys/mvp", icon: Rocket, description: "From validated idea to working product" },
-    { name: "Get 5 Paying Users", href: "/journeys/first-customers", icon: DollarSign, description: "30-day playbook to first revenue" },
+    { name: "Validate in 7 Days", href: "/validate", icon: Target, description: "Day-by-day sprint to choose what to build" },
+    { name: "Ship MVP in 14 Days", href: "/mvp-builder", icon: Rocket, description: "From validated idea to working product" },
+    { name: "Get 5 Paying Users", href: "/client-acquisition", icon: DollarSign, description: "30-day playbook to first revenue" },
     { name: "PMF Lab", href: "/pmf-lab", icon: FlaskConical, description: "Clarify core problem + market need" },
     { name: "BizMap AI Assist", href: "/bizmap-ai/chat", icon: Lightbulb, description: "AI assistant for plans and templates" },
     { name: "Tech Stack", href: "/bizmap-ai/tech-stack", icon: Boxes, description: "Build your ideal tech stack" },

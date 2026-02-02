@@ -2,6 +2,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Trophy, ArrowRight } from 'lucide-react';
 import type { JourneyDefinition } from '@/types/journey';
+import { journeyRoutes } from '@/data/journeys';
 
 interface JourneyCompletionCardProps {
   journey: JourneyDefinition;
@@ -24,7 +25,7 @@ export default function JourneyCompletionCard({ journey }: JourneyCompletionCard
         </div>
         {journey.nextJourney && (
           <Button className="gap-2" asChild>
-            <a href={`/journeys/${journey.nextJourney}`}>
+            <a href={journeyRoutes[journey.nextJourney]}>
               Start Next Journey
               <ArrowRight className="h-4 w-4" />
             </a>

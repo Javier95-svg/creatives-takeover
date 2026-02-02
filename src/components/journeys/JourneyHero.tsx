@@ -2,6 +2,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Play, RotateCcw } from 'lucide-react';
 import type { JourneyDefinition } from '@/types/journey';
+import { journeyRoutes } from '@/data/journeys';
 import JourneyProgressBar from './JourneyProgressBar';
 
 interface JourneyHeroProps {
@@ -45,7 +46,7 @@ export default function JourneyHero({
           <div className="flex items-center justify-center gap-2">
             {isComplete && journey.nextJourney && (
               <Button asChild>
-                <a href={`/journeys/${journey.nextJourney}`}>
+                <a href={journeyRoutes[journey.nextJourney]}>
                   Start Next Journey
                 </a>
               </Button>

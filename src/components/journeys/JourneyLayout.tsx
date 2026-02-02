@@ -4,6 +4,7 @@ import Footer from '@/components/Footer';
 import SEO, { createBreadcrumbSchema } from '@/components/SEO';
 import type { JourneyDefinition, DayStatus } from '@/types/journey';
 import { useJourneyStore } from '@/store/journeyStore';
+import { journeyRoutes } from '@/data/journeys';
 import JourneyHero from './JourneyHero';
 import JourneyTimeline from './JourneyTimeline';
 import DayCard from './DayCard';
@@ -88,12 +89,12 @@ export default function JourneyLayout({ journey }: JourneyLayoutProps) {
       '@type': 'WebPage',
       name: `${journey.title} - Creatives Takeover`,
       description: journey.description,
-      url: `https://creatives-takeover.com/journeys/${journey.slug}`,
+      url: `https://creatives-takeover.com${journeyRoutes[journey.slug]}`,
     },
     createBreadcrumbSchema([
       { name: 'Home', url: '/' },
       { name: 'BizMap AI', url: '/bizmap-ai' },
-      { name: journey.title, url: `/journeys/${journey.slug}` },
+      { name: journey.title, url: `${journeyRoutes[journey.slug]}` },
     ]),
   ];
 
@@ -103,7 +104,7 @@ export default function JourneyLayout({ journey }: JourneyLayoutProps) {
         title={`${journey.title} - Creatives Takeover`}
         description={journey.description}
         keywords={`startup validation, founder journey, ${journey.title.toLowerCase()}, execution plan`}
-        url={`/journeys/${journey.slug}`}
+        url={`${journeyRoutes[journey.slug]}`}
         structuredData={structuredData}
       />
       <Navigation />
