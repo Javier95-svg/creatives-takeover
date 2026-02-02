@@ -20,7 +20,7 @@ const AuthCallback = () => {
         // Check for error parameters from Google
         const error = searchParams.get('error');
         const errorDescription = searchParams.get('error_description');
-        
+
         if (error) {
           console.error('OAuth error from URL:', { error, errorDescription });
           setStatus('error');
@@ -29,8 +29,21 @@ const AuthCallback = () => {
           return;
         }
 
+        // Handle PKCE code exchange
+        const code = searchParams.get('code');
+        if (code) {
+          const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+          if (exchangeError) {
+            console.error('Code exchange error:', exchangeError);
+            setStatus('error');
+            toast.error('Authentication failed');
+            setTimeout(() => navigate('/login'), 3000);
+            return;
+          }
+        }
+
         console.log('Waiting for auth session...');
-        
+
         // Wait for session to be established
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         

@@ -30,35 +30,56 @@ const ResetPassword = () => {
 
   // Check if we have a valid session/token from the email link
   useEffect(() => {
+    // Listen for auth state changes — fires after PKCE code exchange or hash token detection
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'PASSWORD_RECOVERY' || (event === 'SIGNED_IN' && session)) {
+        setIsValidToken(true);
+      }
+    });
+
     const checkSession = async () => {
       try {
+        // 1. Handle PKCE flow: check for ?code= in the URL
+        const code = new URLSearchParams(window.location.search).get('code');
+        if (code) {
+          const { error } = await supabase.auth.exchangeCodeForSession(code);
+          if (error) {
+            setIsValidToken(false);
+            toast.error("Invalid or expired reset link. Please request a new one.");
+          }
+          // onAuthStateChange above will set isValidToken to true on success
+          return;
+        }
+
+        // 2. Check if session already exists (e.g. detectSessionInUrl handled it)
         const { data: { session } } = await supabase.auth.getSession();
         if (session) {
           setIsValidToken(true);
-        } else {
-          // Check URL hash for access token (Supabase uses hash fragments)
-          const hashParams = new URLSearchParams(window.location.hash.substring(1));
-          const accessToken = hashParams.get('access_token');
-          const type = hashParams.get('type');
-          
-          if (accessToken && type === 'recovery') {
-            // Try to set the session with the token
-            const { error } = await supabase.auth.setSession({
-              access_token: accessToken,
-              refresh_token: hashParams.get('refresh_token') || ''
-            });
-            
-            if (error) {
-              setIsValidToken(false);
-              toast.error("Invalid or expired reset link. Please request a new one.");
-            } else {
-              setIsValidToken(true);
-            }
-          } else {
-            setIsValidToken(false);
-            toast.error("Invalid reset link. Please request a new password reset.");
-          }
+          return;
         }
+
+        // 3. Legacy implicit flow: check URL hash for access_token
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        const accessToken = hashParams.get('access_token');
+        const type = hashParams.get('type');
+
+        if (accessToken && type === 'recovery') {
+          const { error } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: hashParams.get('refresh_token') || ''
+          });
+          if (error) {
+            setIsValidToken(false);
+            toast.error("Invalid or expired reset link. Please request a new one.");
+          } else {
+            setIsValidToken(true);
+          }
+          return;
+        }
+
+        // No valid token found
+        setIsValidToken(false);
+        toast.error("Invalid reset link. Please request a new password reset.");
       } catch (err) {
         setIsValidToken(false);
         toast.error("Failed to verify reset link. Please try again.");
@@ -66,6 +87,8 @@ const ResetPassword = () => {
     };
 
     checkSession();
+
+    return () => subscription.unsubscribe();
   }, []);
 
   // Handle input changes
