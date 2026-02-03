@@ -63,19 +63,14 @@ const Navigation = () => {
   const bizMapSubmenu: BizMapMenuItem[] = [
     { type: 'label', label: 'Learn: Validate Your Idea' },
     { name: "Validate in 7 Days", href: "/validate", icon: Target, description: "Day-by-day sprint to choose what to build" },
-    { name: "Decision Sprint", href: "/decision-sprint", icon: Target, description: "Score and compare up to 3 ideas" },
     { name: "PMF Lab", href: "/pmf-lab", icon: FlaskConical, description: "AI market analysis + validation" },
+    { name: "Prompt Library", href: "/prompt-library", icon: BookOpen, description: "60+ business cases and prompts" },
     { type: 'label', label: 'Build: Ship Your MVP' },
     { name: "Ship MVP in 14 Days", href: "/mvp-builder", icon: Rocket, description: "From validated idea to working product" },
     { name: "Tech Stack Builder", href: "/bizmap-ai/tech-stack", icon: Boxes, description: "Choose your stack with budget calc" },
-    { name: "Focus Funnel", href: "/focus-funnel", icon: Filter, description: "Outcome \u2192 Strategy \u2192 Actions" },
-    { name: "Tasks", href: "/tasks", icon: CheckSquare, description: "Manage your build tasks" },
+    { name: "BizMap AI Chatbot", href: "/bizmap-ai/chat", icon: Bot, description: "AI co-founder for every phase" },
     { type: 'label', label: 'Measure: Get Traction' },
     { name: "Get 5 Paying Users", href: "/client-acquisition", icon: DollarSign, description: "30-day playbook to first revenue" },
-    { name: "Core Metrics", href: "/core-metrics", icon: LineChart, description: "Track your key performance indicators" },
-    { name: "Weekly Mission", href: "/weekly-mission", icon: CalendarCheck, description: "Set weekly goals with decision engine" },
-    { type: 'separator' },
-    { name: "BizMap AI Assist", href: "/bizmap-ai/chat", icon: Lightbulb, description: "AI assistant for all phases" },
   ];
 
   // Insighta submenu items

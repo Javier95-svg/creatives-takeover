@@ -5,6 +5,7 @@ import { MonthlyRevenueTarget } from '../MonthlyRevenueTarget';
 import { CoreMetrics } from '../CoreMetrics';
 import { QuickWins } from '../QuickWins';
 import { FocusFunnelWidget } from '@/components/focus-funnel/FocusFunnelWidget';
+import { DecisionSprintCard } from '../DecisionSprintCard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Flame, Target, Calendar, CheckCircle2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -40,8 +41,13 @@ export function DashboardModeView({
         </div>
       </div>
 
-      <div id="focus-funnel">
-        <FocusFunnelWidget onOpenAIPartner={() => navigate('/focus-funnel')} />
+      <div className="grid gap-6 lg:grid-cols-[1.6fr_1fr]">
+        <div id="focus-funnel">
+          <FocusFunnelWidget onOpenAIPartner={() => navigate('/focus-funnel')} />
+        </div>
+        <div id="decision-sprint">
+          <DecisionSprintCard />
+        </div>
       </div>
 
       {/* Metrics Grid - 4 Cards */}

@@ -22,6 +22,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Flame, Target, Calendar, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { FocusFunnelWidget } from '@/components/focus-funnel/FocusFunnelWidget';
+import { DecisionSprintCard } from '../DecisionSprintCard';
 import { useNavigate } from 'react-router-dom';
 
 interface ControlCenterViewProps {
@@ -58,8 +59,13 @@ export function ControlCenterView({
         </div>
       </div>
 
-      <div id="focus-funnel">
-        <FocusFunnelWidget onOpenAIPartner={() => navigate('/focus-funnel')} />
+      <div className="grid gap-6 lg:grid-cols-[1.6fr_1fr]">
+        <div id="focus-funnel">
+          <FocusFunnelWidget onOpenAIPartner={() => navigate('/focus-funnel')} />
+        </div>
+        <div id="decision-sprint">
+          <DecisionSprintCard />
+        </div>
       </div>
 
       {/* Key Metrics - Same as Dashboard Mode */}

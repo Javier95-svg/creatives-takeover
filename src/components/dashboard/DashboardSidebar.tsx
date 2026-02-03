@@ -86,6 +86,7 @@ export const DashboardSidebar = ({ dashboardMode: _dashboardMode }: DashboardSid
   const dashboardNavItems = [
     { path: '/dashboard', label: 'Home', icon: Home },
     { path: '/focus-funnel', label: 'Focus Funnel', icon: Target },
+    { path: '/decision-sprint', label: 'Decision Sprint', icon: ClipboardList },
     { path: '/core-metrics', label: 'Core Metrics', icon: BarChart3 },
     { path: '/weekly-mission', label: 'Weekly Mission', icon: Calendar },
     { path: '/tasks', label: 'Your Tasks', icon: CheckSquare },

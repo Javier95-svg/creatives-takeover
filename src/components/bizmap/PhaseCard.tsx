@@ -130,32 +130,34 @@ export default function PhaseCard({
         </div>
 
         {/* Tools section */}
-        <div>
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
-            Tools
-          </p>
-          <div className="space-y-1">
-            {tools.map((tool) => {
-              const ToolIcon = tool.icon;
-              return (
-                <Link
-                  key={tool.name}
-                  to={tool.href}
-                  className="flex items-center gap-2 rounded-md px-3 py-1.5 text-sm hover:bg-muted/50 transition-colors"
-                >
-                  {tool.used ? (
-                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
-                  ) : (
-                    <ToolIcon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                  )}
-                  <span className={tool.used ? 'text-foreground' : 'text-muted-foreground'}>
-                    {tool.name}
-                  </span>
-                </Link>
-              );
-            })}
+        {tools.length > 0 && (
+          <div>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
+              Tools
+            </p>
+            <div className="space-y-1">
+              {tools.map((tool) => {
+                const ToolIcon = tool.icon;
+                return (
+                  <Link
+                    key={tool.name}
+                    to={tool.href}
+                    className="flex items-center gap-2 rounded-md px-3 py-1.5 text-sm hover:bg-muted/50 transition-colors"
+                  >
+                    {tool.used ? (
+                      <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
+                    ) : (
+                      <ToolIcon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                    )}
+                    <span className={tool.used ? 'text-foreground' : 'text-muted-foreground'}>
+                      {tool.name}
+                    </span>
+                  </Link>
+                );
+              })}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* CTA */}
         <Button className="w-full gap-2" size="sm" asChild>

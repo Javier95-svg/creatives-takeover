@@ -11,13 +11,9 @@ import {
   Search,
   Hammer,
   BarChart3,
-  Target,
   FlaskConical,
   Boxes,
-  Filter,
-  CheckSquare,
-  LineChart,
-  CalendarCheck,
+  BookOpen,
 } from "lucide-react";
 import { useJourneyStore } from "@/store/journeyStore";
 import {
@@ -53,8 +49,8 @@ const PHASE_CONFIG: {
     icon: Search,
     journey: { title: "Validate in 7 Days", href: "/validate", slug: "validate", totalDays: 7 },
     tools: [
-      { name: "Decision Sprint", href: "/decision-sprint", icon: Target, id: "decision-sprint" },
       { name: "PMF Lab", href: "/pmf-lab", icon: FlaskConical, id: "pmf-lab" },
+      { name: "Prompt Library", href: "/prompt-library", icon: BookOpen, id: "prompt-library" },
     ],
   },
   {
@@ -65,8 +61,7 @@ const PHASE_CONFIG: {
     journey: { title: "Ship MVP in 14 Days", href: "/mvp-builder", slug: "mvp", totalDays: 14 },
     tools: [
       { name: "Tech Stack Builder", href: "/bizmap-ai/tech-stack", icon: Boxes, id: "tech-stack" },
-      { name: "Focus Funnel", href: "/focus-funnel", icon: Filter, id: "focus-funnel" },
-      { name: "Tasks", href: "/tasks", icon: CheckSquare, id: "tasks" },
+      { name: "BizMap AI Chatbot", href: "/bizmap-ai/chat", icon: Bot, id: "bizmap-chat" },
     ],
   },
   {
@@ -80,10 +75,7 @@ const PHASE_CONFIG: {
       slug: "first-customers",
       totalDays: 30,
     },
-    tools: [
-      { name: "Core Metrics", href: "/core-metrics", icon: LineChart, id: "core-metrics" },
-      { name: "Weekly Mission", href: "/weekly-mission", icon: CalendarCheck, id: "weekly-mission" },
-    ],
+    tools: [],
   },
 ];
 

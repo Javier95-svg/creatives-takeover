@@ -3,6 +3,7 @@ import { WeeklyMissionPanel } from '../decision-engine/WeeklyMissionPanel';
 import { TaskOverview } from '../TaskOverview';
 import { CoreMetrics } from '../CoreMetrics';
 import { FocusFunnelWidget } from '@/components/focus-funnel/FocusFunnelWidget';
+import { DecisionSprintCard } from '../DecisionSprintCard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Flame, Target, Calendar } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -39,6 +40,10 @@ export function FocusModeView({
         <div id="weekly-mission">
           <WeeklyMissionPanel />
         </div>
+      </div>
+
+      <div id="decision-sprint">
+        <DecisionSprintCard />
       </div>
 
       {/* Minimal Key Metrics - 3 Cards Only */}
