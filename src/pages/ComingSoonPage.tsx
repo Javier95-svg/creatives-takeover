@@ -125,11 +125,6 @@ export default function ComingSoonPage({ title, description, highlights }: Comin
                 </Button>
               </CardContent>
             </Card>
-
-            {/* Bottom teaser */}
-            <p className="text-center text-xs text-muted-foreground">
-              We're building something founders actually need. No fluff, just execution.
-            </p>
           </div>
         </section>
       </main>
