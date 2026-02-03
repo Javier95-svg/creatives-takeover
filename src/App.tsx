@@ -144,6 +144,7 @@ function App() {
                         <Route path="/community/co-founders" element={<FindCoFounder />} />
                         <Route path="/community/co-founders/create" element={<CreateCoFounderPost />} />
                         <Route path="/community/co-founders/edit/:postId" element={<EditCoFounderPost />} />
+                        <Route path="/community/angels" element={<ComingSoonPage title="Find your Angel" description="Meet angel investors, showcase your product, send direct messages, and build relationships that fund your vision." highlights={["Browse and connect with verified angel investors", "Showcase your product or project to potential backers", "Send direct messages and start conversations", "Build meaningful investor relationships"]} />} />
                         <Route path="/community/my-bookings" element={<MyBookings />} />
                         <Route path="/community/admin/new" element={<AdminMentorEditor />} />
                         <Route path="/community/admin/edit/:id" element={<AdminMentorEditor />} />
