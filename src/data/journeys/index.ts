@@ -13,7 +13,7 @@ export const journeyDefinitions: Record<JourneySlug, JourneyDefinition> = {
 export const journeyRoutes: Record<JourneySlug, string> = {
   validate: '/validate',
   mvp: '/mvp-builder',
-  'first-customers': '/client-acquisition',
+  'first-customers': '/go-to-market',
 };
 
 export { validateIn7Days, shipMvpIn14Days, get5PayingUsersIn30Days };

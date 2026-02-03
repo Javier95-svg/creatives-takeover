@@ -195,9 +195,9 @@ export function getTransitionPrompt(): TransitionPrompt | null {
       'build->measure': {
         from: 'build',
         to: 'measure',
-        message: 'MVP shipped! Time to find your first paying customers.',
-        ctaLabel: 'Start Client Acquisition',
-        ctaHref: '/client-acquisition',
+        message: 'MVP shipped! Time to plan your go-to-market strategy.',
+        ctaLabel: 'Launch GTM Strategist',
+        ctaHref: '/go-to-market',
       },
     };
 

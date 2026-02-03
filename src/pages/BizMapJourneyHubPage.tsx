@@ -71,7 +71,7 @@ const PHASE_CONFIG: {
     icon: BarChart3,
     journey: {
       title: "Get 5 Paying Users in 30 Days",
-      href: "/client-acquisition",
+      href: "/go-to-market",
       slug: "first-customers",
       totalDays: 30,
     },

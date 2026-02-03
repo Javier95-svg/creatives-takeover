@@ -170,7 +170,8 @@ function App() {
                         <Route path="/decision-sprint" element={<ValidateJourneyPage />} />
                         <Route path="/validate" element={<ValidateJourney />} />
                         <Route path="/mvp-builder" element={<MvpJourney />} />
-                        <Route path="/client-acquisition" element={<FirstCustomersJourney />} />
+                        <Route path="/go-to-market" element={<FirstCustomersJourney />} />
+                        <Route path="/client-acquisition" element={<Navigate to="/go-to-market" replace />} />
 
                         <Route path="/auth" element={<Auth />} />
                         <Route path="/login" element={<Login />} />

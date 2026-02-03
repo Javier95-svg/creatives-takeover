@@ -69,7 +69,7 @@ const Navigation = () => {
     { name: "BizMap AI Chatbot", href: "/bizmap-ai/chat", icon: Bot, description: "AI co-founder for every phase" },
     { name: "Tech Stack Builder", href: "/tech-stack", icon: Boxes, description: "Choose your stack with budget calc" },
     { type: 'label', label: 'Measure: Get Traction' },
-    { name: "Get 5 Paying Users", href: "/client-acquisition", icon: DollarSign, description: "30-day playbook to first revenue" },
+    { name: "GTM Strategist", href: "/go-to-market", icon: DollarSign, description: "End-to-end go-to-market planning" },
   ];
 
   // Insighta submenu items
