@@ -25,10 +25,13 @@ const ValuePropositionCards = () => {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const carouselContentRef = useRef<HTMLDivElement | null>(null);
   const autoScrollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [isAutoScrollPaused, setIsAutoScrollPaused] = useState(false);
   const [cardImages, setCardImages] = useState<ValueCardImage[]>([]);
   const [uploading, setUploading] = useState<number | null>(null);
   const [optimisticPreviews, setOptimisticPreviews] = useState<Record<number, string>>({});
   const fileInputRefs = useRef<Record<number, HTMLInputElement | null>>({});
+  const lastStopTapRef = useRef<number>(0);
+  const suppressStopClickRef = useRef<number>(0);
   const { user } = useAuth();
   const isAdmin = user?.email?.toLowerCase() === 'admin@creatives-takeover.com';
 
@@ -290,6 +293,11 @@ const ValuePropositionCards = () => {
       clearInterval(autoScrollRef.current);
     }
 
+    if (isAutoScrollPaused) {
+      autoScrollRef.current = null;
+      return;
+    }
+
     autoScrollRef.current = setInterval(() => {
       api.scrollNext();
     }, 5000);
@@ -300,7 +308,7 @@ const ValuePropositionCards = () => {
         autoScrollRef.current = null;
       }
     };
-  }, [api]);
+  }, [api, isAutoScrollPaused]);
 
   // Navigate to specific card
   const goToCard = (index: number) => {
@@ -308,6 +316,31 @@ const ValuePropositionCards = () => {
       api.scrollTo(index);
       setSelectedIndex(index);
     }
+  };
+
+  const handleStopClick = () => {
+    if (Date.now() < suppressStopClickRef.current) {
+      return;
+    }
+    setIsAutoScrollPaused(true);
+  };
+
+  const handleStopDoubleClick = () => {
+    setIsAutoScrollPaused(false);
+  };
+
+  const handleStopTouchEnd = () => {
+    const now = Date.now();
+    suppressStopClickRef.current = now + 400;
+
+    if (now - lastStopTapRef.current < 300) {
+      lastStopTapRef.current = 0;
+      setIsAutoScrollPaused(false);
+      return;
+    }
+
+    lastStopTapRef.current = now;
+    setIsAutoScrollPaused(true);
   };
 
   useEffect(() => {
@@ -446,18 +479,32 @@ const ValuePropositionCards = () => {
 
                         {/* Content - Right */}
                         <div className="p-6 md:p-10 flex flex-col justify-center md:h-full">
-                          <div className="flex items-center gap-3 mb-4">
-                            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                              <Icon className="h-5 w-5 text-primary" />
+                          <div className="flex items-start justify-between gap-3 mb-4">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                                <Icon className="h-5 w-5 text-primary" />
+                              </div>
+                              <div>
+                                <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                                  {card.title}
+                                </p>
+                                <h3 className="font-space-grotesk text-2xl font-bold">
+                                  {card.subtitle}
+                                </h3>
+                              </div>
                             </div>
-                            <div>
-                              <p className="text-xs uppercase tracking-wide text-muted-foreground">
-                                {card.title}
-                              </p>
-                              <h3 className="font-space-grotesk text-2xl font-bold">
-                                {card.subtitle}
-                              </h3>
-                            </div>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={handleStopClick}
+                              onDoubleClick={handleStopDoubleClick}
+                              onTouchEnd={handleStopTouchEnd}
+                              title={isAutoScrollPaused ? "Double tap/click to resume" : "Click/tap to pause"}
+                              className="shrink-0"
+                            >
+                              {isAutoScrollPaused ? "Paused" : "Stop"}
+                            </Button>
                           </div>
 
                           <div className="text-base leading-relaxed text-foreground/85 space-y-4">
