@@ -216,7 +216,7 @@ const EntrepreneurProblems = () => {
                       ) : index === 5 ? (
                         <div className="flex justify-center">
                           <Link
-                            to="/bizmap-ai/tech-stack"
+                            to="/tech-stack"
                             className="inline-flex items-center gap-2 rounded-md border border-border bg-background px-4 py-2 text-sm font-medium text-foreground hover:border-primary/40 transition-colors"
                           >
                             <span className="font-semibold text-foreground flex items-center gap-2 text-sm">
@@ -319,7 +319,7 @@ const EntrepreneurProblems = () => {
                         ) : index === 5 ? (
                           <div className="flex justify-center">
                             <Link
-                              to="/bizmap-ai/tech-stack"
+                              to="/tech-stack"
                             className="inline-flex items-center gap-2 rounded-md border border-border bg-background px-4 py-2 text-sm font-medium text-foreground hover:border-primary/40 transition-colors"
                             >
                               <span className="font-semibold text-foreground flex items-center gap-2 text-sm">
@@ -465,7 +465,7 @@ const EntrepreneurProblems = () => {
                         ) : index === 5 ? (
                           <div className="flex justify-center">
                             <Link
-                              to="/bizmap-ai/tech-stack"
+                              to="/tech-stack"
                               className="inline-flex items-center gap-2 rounded-md border border-border bg-background px-4 py-2 text-sm font-medium text-foreground hover:border-primary/40 transition-colors"
                             >
                               <span className="font-semibold text-foreground flex items-center gap-2 text-sm">

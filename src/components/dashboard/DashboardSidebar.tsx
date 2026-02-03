@@ -97,7 +97,7 @@ export const DashboardSidebar = ({ dashboardMode: _dashboardMode }: DashboardSid
     sidebarPreferences.showBizMapAI && { path: '/bizmap-ai/chat', label: 'BizMap AI Assist', icon: MessageSquare },
     sidebarPreferences.showPMFLab && { path: '/pmf-lab', label: 'PMF Lab', icon: FlaskConical },
     sidebarPreferences.showPromptLibrary && { path: '/prompt-library', label: 'Prompt Library', icon: Library },
-    sidebarPreferences.showTechStack && { path: '/bizmap-ai/tech-stack', label: 'Tech Stack Builder', icon: Zap },
+    sidebarPreferences.showTechStack && { path: '/tech-stack', label: 'Tech Stack Builder', icon: Zap },
     sidebarPreferences.showVCSearch && { path: '/insighta/vc-search', label: 'VC Search', icon: FileSearch },
     sidebarPreferences.showEmailTemplates && { path: '/insighta/email-templates', label: 'Email Templates', icon: Mail },
     sidebarPreferences.showPitchDeckAnalyzer && { path: '/insighta/pitch-deck-analyzer', label: 'Pitch Deck Analyzer', icon: ClipboardList },

@@ -162,7 +162,8 @@ function App() {
                         <Route path="/bizmap-ai/chat" element={<Dream2Plan />} />
                         <Route path="/pmf-lab" element={<PMFLabPage />} />
                         <Route path="/bizmap-ai/pmf-lab" element={<Navigate to="/pmf-lab" replace />} />
-                        <Route path="/bizmap-ai/tech-stack" element={<TechStackPage />} />
+                        <Route path="/bizmap-ai/tech-stack" element={<Navigate to="/tech-stack" replace />} />
+                        <Route path="/tech-stack" element={<TechStackPage />} />
                         <Route path="/decision-sprint" element={<ValidateJourneyPage />} />
                         <Route path="/validate" element={<ValidateJourney />} />
                         <Route path="/mvp-builder" element={<MvpJourney />} />

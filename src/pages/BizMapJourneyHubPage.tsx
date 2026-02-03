@@ -60,7 +60,7 @@ const PHASE_CONFIG: {
     icon: Hammer,
     journey: { title: "Ship MVP in 14 Days", href: "/mvp-builder", slug: "mvp", totalDays: 14 },
     tools: [
-      { name: "Tech Stack Builder", href: "/bizmap-ai/tech-stack", icon: Boxes, id: "tech-stack" },
+      { name: "Tech Stack Builder", href: "/tech-stack", icon: Boxes, id: "tech-stack" },
       { name: "BizMap AI Chatbot", href: "/bizmap-ai/chat", icon: Bot, id: "bizmap-chat" },
     ],
   },

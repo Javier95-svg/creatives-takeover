@@ -103,7 +103,7 @@ A user can {{core_action}} from start to finish without help.
           deliverable: 'Tech stack decided',
           toolLink: {
             label: 'Open Tech Stack Builder',
-            href: '/bizmap-ai/tech-stack',
+            href: '/tech-stack',
           },
         },
         {

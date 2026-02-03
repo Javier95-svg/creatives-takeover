@@ -28,7 +28,7 @@ export default function TechStackPage() {
       "@type": "WebPage",
       "name": "Tech Stack Builder - Build Your Ideal Technology Stack",
       "description": "Get AI-powered recommendations for your technology stack. Choose the right tools, frameworks, and platforms for your startup based on your specific needs.",
-      "url": "https://creatives-takeover.com/bizmap-ai/tech-stack",
+      "url": "https://creatives-takeover.com/tech-stack",
       "publisher": {
         "@type": "Organization",
         "name": "Creatives Takeover",
@@ -41,7 +41,7 @@ export default function TechStackPage() {
     createBreadcrumbSchema([
       { name: 'Home', url: '/' },
       { name: 'BizMap AI', url: '/bizmap-ai' },
-      { name: 'Tech Stack', url: '/bizmap-ai/tech-stack' }
+      { name: 'Tech Stack', url: '/tech-stack' }
     ])
   ];
 
@@ -51,7 +51,7 @@ export default function TechStackPage() {
         title="Tech Stack Builder - Creatives Takeover"
         description="Get AI-powered recommendations for your technology stack. Choose the right tools, frameworks, and platforms for your startup based on your specific needs and budget."
         keywords="tech stack, technology stack, startup tools, development tools, platform selection, framework selection"
-        url="/bizmap-ai/tech-stack"
+        url="/tech-stack"
         structuredData={structuredData}
       />
       <Navigation />
