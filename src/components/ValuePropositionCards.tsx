@@ -97,9 +97,9 @@ const ValuePropositionCards = () => {
     {
       position: 6,
       icon: LayoutDashboard,
-      title: "Personalized Experience",
-      subtitle: "Your Dashboard, Fully Unlocked",
-      buttonLabel: "Personalized Experience",
+      title: "Command Center",
+      subtitle: "Dashboard: Execute with Confidence",
+      buttonLabel: "Command Center",
       description: "Dashboard is your command center — one place to track progress, set milestones, and stay on top of everything without feeling scattered.\n\nSee your startup metrics at a glance, manage tasks and priorities with the Focus Funnel, and keep momentum with built-in accountability features. Everything from your BizMap AI progress to your community connections lives in a single, personalized view.",
       cta: "View Dashboard",
       link: "/dashboard",
