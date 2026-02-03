@@ -1,6 +1,7 @@
--- Add slug, website_url, and application_url columns to funding_opportunities
+-- Add slug, logo_url, website_url, and application_url columns to funding_opportunities
 ALTER TABLE public.funding_opportunities
   ADD COLUMN IF NOT EXISTS slug TEXT UNIQUE,
+  ADD COLUMN IF NOT EXISTS logo_url TEXT,
   ADD COLUMN IF NOT EXISTS website_url TEXT,
   ADD COLUMN IF NOT EXISTS application_url TEXT;
 
