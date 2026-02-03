@@ -30,8 +30,6 @@ const ValuePropositionCards = () => {
   const [uploading, setUploading] = useState<number | null>(null);
   const [optimisticPreviews, setOptimisticPreviews] = useState<Record<number, string>>({});
   const fileInputRefs = useRef<Record<number, HTMLInputElement | null>>({});
-  const lastStopTapRef = useRef<number>(0);
-  const suppressStopClickRef = useRef<number>(0);
   const { user } = useAuth();
   const isAdmin = user?.email?.toLowerCase() === 'admin@creatives-takeover.com';
 
@@ -319,28 +317,7 @@ const ValuePropositionCards = () => {
   };
 
   const handleStopClick = () => {
-    if (Date.now() < suppressStopClickRef.current) {
-      return;
-    }
-    setIsAutoScrollPaused(true);
-  };
-
-  const handleStopDoubleClick = () => {
-    setIsAutoScrollPaused(false);
-  };
-
-  const handleStopTouchEnd = () => {
-    const now = Date.now();
-    suppressStopClickRef.current = now + 400;
-
-    if (now - lastStopTapRef.current < 300) {
-      lastStopTapRef.current = 0;
-      setIsAutoScrollPaused(false);
-      return;
-    }
-
-    lastStopTapRef.current = now;
-    setIsAutoScrollPaused(true);
+    setIsAutoScrollPaused((prev) => !prev);
   };
 
   useEffect(() => {
@@ -417,7 +394,17 @@ const ValuePropositionCards = () => {
                 const isUploadingPosition = uploading === card.position;
                 return (
                   <CarouselItem key={card.title} className="pl-4 basis-full h-full">
-                    <Card className="glass border-border overflow-hidden h-full" data-value-card>
+                    <Card className="glass border-border overflow-hidden h-full relative" data-value-card>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={handleStopClick}
+                        title={isAutoScrollPaused ? "Resume auto-scroll" : "Pause auto-scroll"}
+                        className="absolute right-4 top-4 z-10 h-7 px-2 text-xs"
+                      >
+                        {isAutoScrollPaused ? "Resume" : "Stop"}
+                      </Button>
                       <div className="grid md:grid-cols-2 h-full">
                         {/* Image - Left */}
                         <figure className="relative h-64 md:h-full md:min-h-[320px] group">
@@ -479,32 +466,18 @@ const ValuePropositionCards = () => {
 
                         {/* Content - Right */}
                         <div className="p-6 md:p-10 flex flex-col justify-center md:h-full">
-                          <div className="flex items-start justify-between gap-3 mb-4">
-                            <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                                <Icon className="h-5 w-5 text-primary" />
-                              </div>
-                              <div>
-                                <p className="text-xs uppercase tracking-wide text-muted-foreground">
-                                  {card.title}
-                                </p>
-                                <h3 className="font-space-grotesk text-2xl font-bold">
-                                  {card.subtitle}
-                                </h3>
-                              </div>
+                          <div className="flex items-center gap-3 mb-4">
+                            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                              <Icon className="h-5 w-5 text-primary" />
                             </div>
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              onClick={handleStopClick}
-                              onDoubleClick={handleStopDoubleClick}
-                              onTouchEnd={handleStopTouchEnd}
-                              title={isAutoScrollPaused ? "Double tap/click to resume" : "Click/tap to pause"}
-                              className="shrink-0"
-                            >
-                              {isAutoScrollPaused ? "Paused" : "Stop"}
-                            </Button>
+                            <div>
+                              <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                                {card.title}
+                              </p>
+                              <h3 className="font-space-grotesk text-2xl font-bold">
+                                {card.subtitle}
+                              </h3>
+                            </div>
                           </div>
 
                           <div className="text-base leading-relaxed text-foreground/85 space-y-4">
