@@ -475,7 +475,7 @@ const ValuePropositionCards = () => {
           </Carousel>
 
           {/* Navigation Buttons */}
-          <div className="flex flex-wrap justify-center gap-3 mt-8">
+          <div className="flex flex-nowrap justify-center gap-3 mt-8 overflow-x-auto">
             {allCards.map((card, index) => (
               <Button
                 key={card.buttonLabel}
