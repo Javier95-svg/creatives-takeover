@@ -33,6 +33,7 @@ import { useFounderOSIntegration } from "@/hooks/useFounderOSIntegration";
 import { BizMapTour } from "@/components/onboarding/BizMapTour";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import BizmapWallpaper from "@/components/wallpapers/BizmapWallpaper";
+import { useSearchParams } from "react-router-dom";
 
 const BizMapAI = () => {
   const [currentStep, setCurrentStep] = useState(0);
@@ -171,12 +172,20 @@ const BizMapAI = () => {
     getSession,
     sessions
   } = useChatSessions();
+  const [searchParams] = useSearchParams();
 
   const [message, setMessage] = useState("");
   const [followUpState, setFollowUpState] = useState<{ active: boolean; stepKey: string | null; initialAnswer: string }>(
     { active: false, stepKey: null, initialAnswer: "" }
   );
   const [isLoadingSession, setIsLoadingSession] = useState(false);
+
+  useEffect(() => {
+    const sessionId = searchParams.get('session');
+    if (sessionId && sessionId !== currentSessionId) {
+      setCurrentSessionId(sessionId);
+    }
+  }, [searchParams, currentSessionId, setCurrentSessionId]);
 
   // Sync currentSessionId changes from useChatSessions
   useEffect(() => {

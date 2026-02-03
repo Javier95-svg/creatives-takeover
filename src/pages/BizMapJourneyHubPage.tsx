@@ -141,11 +141,12 @@ export default function BizMapJourneyHubPage() {
       name: "BizMap AI — Lean Startup System",
       description:
         "A cohesive system to validate your idea, ship an MVP, and reach your first paying customers using the Lean Startup Method.",
-      url: "https://creatives-takeover.com/bizmap-ai",
+      url: "https://creatives-takeover.com/bizmap-ai/hub",
     },
     createBreadcrumbSchema([
       { name: "Home", url: "/" },
       { name: "BizMap AI", url: "/bizmap-ai" },
+      { name: "Lean Startup System", url: "/bizmap-ai/hub" },
     ]),
   ];
 
@@ -155,7 +156,7 @@ export default function BizMapJourneyHubPage() {
         title="BizMap AI — Lean Startup System"
         description="Learn, Build, Measure, Iterate. A cohesive founder system to validate your idea, ship an MVP, and reach paying users."
         keywords="lean startup, startup validation, MVP, founder journey, build measure learn"
-        url="/bizmap-ai"
+        url="/bizmap-ai/hub"
         structuredData={structuredData}
       />
       <Navigation />
