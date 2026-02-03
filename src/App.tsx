@@ -38,7 +38,6 @@ const Terms = lazy(() => import("./pages/Terms"));
 const Signup = lazy(() => import("./pages/Signup"));
 const Dream2Plan = lazy(() => import("./pages/Dream2Plan"));
 const BizMapJourneyHubPage = lazy(() => import("./pages/BizMapJourneyHubPage"));
-const IcpBuilderPage = lazy(() => import("./pages/IcpBuilderPage"));
 const Onboarding = lazy(() => import("./pages/Onboarding"));
 
 const Login = lazy(() => import("./pages/Login"));
@@ -81,6 +80,7 @@ const MentorBookingPage = lazy(() => import("./pages/community/MentorBookingPage
 const MyBookings = lazy(() => import("./pages/community/MyBookings"));
 const AdminMentorEditor = lazy(() => import("./pages/community/AdminMentorEditor"));
 const PMFLabPage = lazy(() => import("./pages/PMFLabPage"));
+const ICPBuilderPage = lazy(() => import("./pages/ICPBuilderPage"));
 const ValidateJourneyPage = lazy(() => import("./pages/ValidateJourneyPage"));
 const TechStackPage = lazy(() => import("./pages/TechStackPage"));
 const FocusFunnel = lazy(() => import("./pages/FocusFunnel"));
@@ -111,11 +111,6 @@ const FeedbackWidgetWrapper = () => {
   const showWidget = publicPages.includes(location.pathname) || location.pathname.startsWith('/insighta/');
 
   return showWidget ? <FloatingFeedbackWidget /> : null;
-};
-
-const BizMapChatRedirect = () => {
-  const location = useLocation();
-  return <Navigate to={`/bizmap-ai${location.search}`} replace />;
 };
 
 function App() {
@@ -164,14 +159,13 @@ function App() {
                         <Route path="/prompt-library" element={<PromptLibrary />} />
                         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
                         <Route path="/terms" element={<Terms />} />
-                        <Route path="/bizmap-ai" element={<Dream2Plan />} />
-                        <Route path="/bizmap-ai/hub" element={<BizMapJourneyHubPage />} />
-                        <Route path="/bizmap-ai/chat" element={<BizMapChatRedirect />} />
+                        <Route path="/bizmap-ai" element={<BizMapJourneyHubPage />} />
+                        <Route path="/bizmap-ai/chat" element={<Dream2Plan />} />
                         <Route path="/pmf-lab" element={<PMFLabPage />} />
                         <Route path="/bizmap-ai/pmf-lab" element={<Navigate to="/pmf-lab" replace />} />
-                        <Route path="/bizmap-ai/tech-stack" element={<Navigate to="/tech-stack" replace />} />
-                        <Route path="/tech-stack" element={<TechStackPage />} />
-                        <Route path="/icp-builder" element={<IcpBuilderPage />} />
+                        <Route path="/bizmap-ai/tech-stack" element={<TechStackPage />} />
+                        <Route path="/icp-builder" element={<ICPBuilderPage />} />
+                        <Route path="/bizmap-ai/icp-builder" element={<Navigate to="/icp-builder" replace />} />
                         <Route path="/decision-sprint" element={<ValidateJourneyPage />} />
                         <Route path="/validate" element={<ValidateJourney />} />
                         <Route path="/mvp-builder" element={<MvpJourney />} />

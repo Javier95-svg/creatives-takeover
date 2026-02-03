@@ -21,6 +21,7 @@ export const CREDIT_COSTS = {
   FUNDRAISING_READINESS_ANALYSIS: 8,
   BUSINESS_INSIGHTS: 5,
   PMF_ANALYSIS: 8,
+  ICP_ANALYSIS: 8,
 
   // Investor Matching & Outreach
   INVESTOR_MATCHING: 5,
@@ -190,6 +191,7 @@ export const TIER_USAGE_LIMITS = {
     bizmap_conversations: 10,
     tech_stack_generations: 1,
     pmf_analyses: 0, // Preview only
+    icp_analyses: 0, // Preview only
     insighta_tests: 1,
     investor_matches: 0, // View only
     market_intelligence_queries: 0,
@@ -201,6 +203,7 @@ export const TIER_USAGE_LIMITS = {
     bizmap_conversations: -1, // Unlimited (credit-gated)
     tech_stack_generations: -1, // Unlimited (credit-gated)
     pmf_analyses: -1, // Unlimited (credit-gated)
+    icp_analyses: -1, // Unlimited (credit-gated)
     insighta_tests: -1, // Unlimited (credit-gated)
     investor_matches: 0, // Not available on Creator tier (Professional only)
     market_intelligence_queries: 10,
@@ -212,6 +215,7 @@ export const TIER_USAGE_LIMITS = {
     bizmap_conversations: -1, // Unlimited (credit-gated)
     tech_stack_generations: -1, // Unlimited (credit-gated)
     pmf_analyses: -1, // Unlimited (credit-gated)
+    icp_analyses: -1, // Unlimited (credit-gated)
     insighta_tests: -1, // Unlimited (credit-gated)
     investor_matches: -1, // Unlimited (credit-gated)
     market_intelligence_queries: -1, // Unlimited

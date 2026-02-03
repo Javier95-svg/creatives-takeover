@@ -271,6 +271,24 @@ export function useFeatureGating() {
         // Preview mode available to all tiers
         return { hasAccess: true };
 
+      // ICP Builder (Creator+ only)
+      case 'icp_analysis':
+        if (tier === 'free') {
+          return {
+            hasAccess: false,
+            message: 'Upgrade to Creator tier to run full ICP analysis. Free tier includes preview only.',
+            requiredTier: 'creator'
+          };
+        }
+        // Creator+ has full access (8 credits)
+        if (!hasCredits(CREDIT_COSTS.ICP_ANALYSIS)) {
+          return {
+            hasAccess: false,
+            message: `Insufficient credits. You need ${CREDIT_COSTS.ICP_ANALYSIS} credits for ICP analysis.`,
+          };
+        }
+        return { hasAccess: true };
+
       // Insighta Test (Fundraising Readiness Assessment)
       case 'insighta_test':
         if (tier === 'free') {
