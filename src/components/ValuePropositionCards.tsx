@@ -360,8 +360,9 @@ const ValuePropositionCards = () => {
           <h2 className="font-space-grotesk text-3xl sm:text-4xl lg:text-5xl font-semibold mb-4 tracking-tight text-primary">
             Here's What You Get
           </h2>
-          <p className="font-poppins text-base sm:text-lg text-muted-foreground">
-            Everything you need to go from idea to launch. Six pillars designed for creative entrepreneurs who want to build real, sustainable businesses.
+          <p className="font-poppins text-base sm:text-lg text-muted-foreground whitespace-pre-line">
+            Everything you need, all in one place.
+            Built on six core pillars to help solofounders validate, build, and grow a business that lasts.
           </p>
         </div>
 
