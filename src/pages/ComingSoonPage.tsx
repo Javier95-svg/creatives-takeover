@@ -106,8 +106,8 @@ export default function ComingSoonPage({ title, description, highlights }: Comin
                         Launching soon. Be the first to access it.
                       </p>
                       <Button asChild>
-                        <Link to="/auth">
-                          Sign in to get early access
+                        <Link to="/signup">
+                          Sign Up for Early Access
                         </Link>
                       </Button>
                     </div>
