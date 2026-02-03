@@ -11,13 +11,9 @@ import {
   Search,
   Hammer,
   BarChart3,
-  Target,
   FlaskConical,
   Boxes,
-  Filter,
-  CheckSquare,
-  LineChart,
-  CalendarCheck,
+  BookOpen,
 } from "lucide-react";
 import { useJourneyStore } from "@/store/journeyStore";
 import {
@@ -49,12 +45,12 @@ const PHASE_CONFIG: {
   {
     phase: "learn",
     title: "Learn",
-    description: "Validate your idea before you build. Test demand signals and confirm market need.",
+    description: "Clarify your niche before you build. Identify demand signals and confirm market need.",
     icon: Search,
-    journey: { title: "Validate in 7 Days", href: "/validate", slug: "validate", totalDays: 7 },
+    journey: { title: "ICP Builder", href: "/icp-builder", slug: "validate", totalDays: 7 },
     tools: [
-      { name: "Decision Sprint", href: "/decision-sprint", icon: Target, id: "decision-sprint" },
       { name: "PMF Lab", href: "/pmf-lab", icon: FlaskConical, id: "pmf-lab" },
+      { name: "Prompt Library", href: "/prompt-library", icon: BookOpen, id: "prompt-library" },
     ],
   },
   {
@@ -64,9 +60,8 @@ const PHASE_CONFIG: {
     icon: Hammer,
     journey: { title: "Ship MVP in 14 Days", href: "/mvp-builder", slug: "mvp", totalDays: 14 },
     tools: [
-      { name: "Tech Stack Builder", href: "/bizmap-ai/tech-stack", icon: Boxes, id: "tech-stack" },
-      { name: "Focus Funnel", href: "/focus-funnel", icon: Filter, id: "focus-funnel" },
-      { name: "Tasks", href: "/tasks", icon: CheckSquare, id: "tasks" },
+      { name: "Tech Stack Builder", href: "/tech-stack", icon: Boxes, id: "tech-stack" },
+      { name: "BizMap AI Chatbot", href: "/bizmap-ai", icon: Bot, id: "bizmap-chat" },
     ],
   },
   {
@@ -80,10 +75,7 @@ const PHASE_CONFIG: {
       slug: "first-customers",
       totalDays: 30,
     },
-    tools: [
-      { name: "Core Metrics", href: "/core-metrics", icon: LineChart, id: "core-metrics" },
-      { name: "Weekly Mission", href: "/weekly-mission", icon: CalendarCheck, id: "weekly-mission" },
-    ],
+    tools: [],
   },
 ];
 
@@ -123,7 +115,7 @@ export default function BizMapJourneyHubPage() {
   useEffect(() => {
     const sessionId = searchParams.get("session");
     if (sessionId) {
-      navigate(`/bizmap-ai/chat?session=${sessionId}`, { replace: true });
+      navigate(`/bizmap-ai?session=${sessionId}`, { replace: true });
     }
   }, [navigate, searchParams]);
 
@@ -146,24 +138,25 @@ export default function BizMapJourneyHubPage() {
     {
       "@context": "https://schema.org",
       "@type": "WebPage",
-      name: "BizMap AI — Lean Startup System",
+      name: "BizMap AI - Lean Startup System",
       description:
         "A cohesive system to validate your idea, ship an MVP, and reach your first paying customers using the Lean Startup Method.",
-      url: "https://creatives-takeover.com/bizmap-ai",
+      url: "https://creatives-takeover.com/bizmap-ai/hub",
     },
     createBreadcrumbSchema([
       { name: "Home", url: "/" },
       { name: "BizMap AI", url: "/bizmap-ai" },
+      { name: "Lean Startup System", url: "/bizmap-ai/hub" },
     ]),
   ];
 
   return (
     <div className="min-h-screen bg-background">
       <SEO
-        title="BizMap AI — Lean Startup System"
+        title="BizMap AI - Lean Startup System"
         description="Learn, Build, Measure, Iterate. A cohesive founder system to validate your idea, ship an MVP, and reach paying users."
         keywords="lean startup, startup validation, MVP, founder journey, build measure learn"
-        url="/bizmap-ai"
+        url="/bizmap-ai/hub"
         structuredData={structuredData}
       />
       <Navigation />
@@ -245,7 +238,7 @@ export default function BizMapJourneyHubPage() {
               })}
             </div>
 
-            {/* AI Assist — always available */}
+            {/* AI Assist - always available */}
             <Card className="border-primary/20 bg-background/90">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -259,7 +252,7 @@ export default function BizMapJourneyHubPage() {
               </CardHeader>
               <CardContent>
                 <Button asChild>
-                  <Link to="/bizmap-ai/chat">Open AI Assistant</Link>
+                  <Link to="/bizmap-ai">Open AI Assistant</Link>
                 </Button>
               </CardContent>
             </Card>
