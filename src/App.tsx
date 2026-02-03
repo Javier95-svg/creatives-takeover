@@ -59,6 +59,7 @@ const AdminStoryEditor = lazy(() => import("./pages/AdminStoryEditor"));
 const AdminHeroImages = lazy(() => import("./pages/AdminHeroImages"));
 const StoriesRSS = lazy(() => import("./pages/StoriesRSS"));
 const AdminVCManagement = lazy(() => import("./pages/AdminVCManagement"));
+const AdminAcceleratorManagement = lazy(() => import("./pages/AdminAcceleratorManagement"));
 
 const Demo = lazy(() => import("./pages/Demo"));
 const Profile = lazy(() => import("./pages/Profile"));
@@ -157,6 +158,7 @@ function App() {
                         <Route path="/stories/admin/edit/:id" element={<AdminStoryEditor />} />
                         <Route path="/admin/hero-images" element={<AdminHeroImages />} />
                         <Route path="/admin/vc-management" element={<AdminVCManagement />} />
+                        <Route path="/admin/accelerator-management" element={<AdminAcceleratorManagement />} />
                         <Route path="/careers" element={<Careers />} />
                         <Route path="/prompt-library" element={<PromptLibrary />} />
                         <Route path="/privacy-policy" element={<PrivacyPolicy />} />

@@ -10,6 +10,7 @@ export interface FundingOpportunity {
   funding_amount: string | null;
   location: string[];
   keywords: string[];
+  logo_url: string | null;
   is_featured: boolean;
   is_active: boolean;
   created_at: string;

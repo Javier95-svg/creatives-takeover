@@ -1,21 +1,32 @@
+import { useState } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, Building2, MapPin, DollarSign } from "lucide-react";
 import { FundingOpportunity } from "@/types/funding";
-import { useDeviceType } from "@/hooks/use-device-type";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 interface FundingOpportunityCardProps {
   opportunity: FundingOpportunity;
-  profileLink?: string; // Optional internal profile link (e.g., /insighta/accelerator/:id)
+  profileLink?: string;
 }
 
 const FundingOpportunityCard = ({ opportunity, profileLink }: FundingOpportunityCardProps) => {
-  const deviceType = useDeviceType();
-  const isMobile = deviceType === 'mobile';
-  const navigate = useNavigate();
-  
+  const getFallbackLogo = (url?: string) => {
+    if (!url) return null;
+    try {
+      const normalized = url.startsWith("http") ? url : `https://${url}`;
+      const hostname = new URL(normalized).hostname.replace(/^www\./, "");
+      return hostname ? `https://logo.clearbit.com/${hostname}` : null;
+    } catch {
+      return null;
+    }
+  };
+
+  const [resolvedLogo, setResolvedLogo] = useState<string | null>(
+    opportunity.logo_url || getFallbackLogo(opportunity.url)
+  );
+
   const getTypeColor = (type: string) => {
     switch (type) {
       case 'grant':
@@ -31,95 +42,98 @@ const FundingOpportunityCard = ({ opportunity, profileLink }: FundingOpportunity
     }
   };
 
-  const handleCardClick = () => {
-    if (profileLink) {
-      navigate(profileLink);
-    } else {
-      window.open(opportunity.url, '_blank', 'noopener,noreferrer');
-    }
-  };
-
   return (
-    <Card
-      className={`
-        hover:shadow-lg transition-all duration-300 cursor-pointer group border-0
-        bg-gradient-to-br from-background to-muted/20 h-full flex flex-col
-        ${isMobile ? 'active:scale-[0.98]' : ''}
-      `}
-      onClick={handleCardClick}
-      role="article"
-      aria-label={`Funding opportunity: ${opportunity.title}`}
-      tabIndex={0}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          handleCardClick();
-        }
-      }}
-    >
-      <CardHeader className="pb-4 flex-grow">
+    <Card className="hover:shadow-lg transition-all duration-300 group border-0 bg-gradient-to-br from-background to-muted/20 h-full flex flex-col">
+      <CardHeader className="pb-4">
         <div className="flex items-start justify-between gap-3">
-          <h3 className="text-lg font-semibold leading-tight group-hover:text-primary transition-colors flex-1">
-            {opportunity.title}
-          </h3>
-          {opportunity.is_featured && (
-            <Badge className="text-xs bg-yellow-500/10 text-yellow-600 border-yellow-500/20 shrink-0">
-              ⭐ Featured
-            </Badge>
-          )}
+          <div className="flex-1 min-w-0">
+            <h3 className="text-lg font-semibold group-hover:text-primary transition-colors truncate">
+              {opportunity.title}
+            </h3>
+            {opportunity.funding_amount && (
+              <div className="flex items-center gap-1 text-sm text-muted-foreground mt-0.5">
+                <DollarSign className="h-3 w-3" />
+                <span>{opportunity.funding_amount}</span>
+              </div>
+            )}
+          </div>
+          {/* Logo Frame - matches VCCard style */}
+          <div className="shrink-0 w-12 h-12 rounded-lg border border-border bg-muted/30 flex items-center justify-center overflow-hidden">
+            {resolvedLogo ? (
+              <img
+                src={resolvedLogo}
+                alt={`${opportunity.title} logo`}
+                className="w-full h-full object-contain p-1"
+                onError={() => setResolvedLogo(null)}
+              />
+            ) : (
+              <Building2 className="h-6 w-6 text-muted-foreground/50" />
+            )}
+          </div>
         </div>
-        
-        <div className="flex items-center gap-2 text-sm mt-2 flex-wrap">
+
+        {/* Type & Featured badges */}
+        <div className="flex flex-wrap gap-1 mt-2">
           <Badge variant="outline" className={`text-xs font-medium capitalize ${getTypeColor(opportunity.type)}`}>
             {opportunity.type}
           </Badge>
-          {opportunity.funding_amount && (
-            <Badge className="text-xs border bg-primary/5 text-primary border-primary/20">
-              {opportunity.funding_amount}
+          {opportunity.is_featured && (
+            <Badge className="text-xs bg-yellow-500/10 text-yellow-600 border-yellow-500/20">
+              Featured
             </Badge>
           )}
         </div>
       </CardHeader>
-      
-      <CardContent className="pt-0 space-y-4 flex flex-col flex-grow">
-        <p className="text-muted-foreground text-sm leading-relaxed flex-grow">
+
+      <CardContent className="pt-0 space-y-3 flex-grow flex flex-col">
+        {/* Description */}
+        <p className="text-sm text-muted-foreground line-clamp-3 flex-grow">
           {opportunity.description}
         </p>
-        
+
+        {/* Location badges */}
         {opportunity.location && opportunity.location.length > 0 && (
           <div className="flex flex-wrap gap-1">
-            {opportunity.location.slice(0, 3).map((loc, index) => (
-              <Badge 
-                key={index}
-                variant="secondary" 
-                className="text-xs px-2 py-0.5"
-              >
+            {opportunity.location.slice(0, 3).map((loc, idx) => (
+              <Badge key={idx} variant="secondary" className="text-xs">
                 {loc}
               </Badge>
             ))}
             {opportunity.location.length > 3 && (
-              <Badge variant="secondary" className="text-xs px-2 py-0.5">
+              <Badge variant="secondary" className="text-xs">
                 +{opportunity.location.length - 3} more
               </Badge>
             )}
           </div>
         )}
-        
+
+        {/* Location & Keywords row */}
+        <div className="flex items-center gap-4 text-xs text-muted-foreground pt-2 border-t">
+          {opportunity.location && opportunity.location.length > 0 && (
+            <div className="flex items-center gap-1">
+              <MapPin className="h-3 w-3" />
+              <span className="truncate">{opportunity.location[0]}</span>
+            </div>
+          )}
+        </div>
+
+        {/* View Details Button */}
         <Button
+          asChild
           size="sm"
-          className={`w-full text-xs mt-auto touch-manipulation ${isMobile ? 'h-10 min-h-[44px]' : 'h-8'}`}
-          onClick={(e) => {
-            e.stopPropagation();
-            if (profileLink) {
-              navigate(profileLink);
-            } else {
-              window.open(opportunity.url, '_blank', 'noopener,noreferrer');
-            }
-          }}
-          aria-label={`Learn more about ${opportunity.title} funding opportunity`}
+          className="w-full mt-auto"
         >
-          <ExternalLink className="h-3 w-3 mr-1" aria-hidden="true" />
-          {profileLink ? 'View Details' : 'Learn More'}
+          {profileLink ? (
+            <Link to={profileLink}>
+              View Details
+              <ExternalLink className="h-3 w-3 ml-1" />
+            </Link>
+          ) : (
+            <a href={opportunity.url} target="_blank" rel="noopener noreferrer">
+              Learn More
+              <ExternalLink className="h-3 w-3 ml-1" />
+            </a>
+          )}
         </Button>
       </CardContent>
     </Card>
@@ -127,4 +141,3 @@ const FundingOpportunityCard = ({ opportunity, profileLink }: FundingOpportunity
 };
 
 export default FundingOpportunityCard;
-
