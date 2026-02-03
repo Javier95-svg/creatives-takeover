@@ -80,7 +80,7 @@ const MentorBookingPage = lazy(() => import("./pages/community/MentorBookingPage
 const MyBookings = lazy(() => import("./pages/community/MyBookings"));
 const AdminMentorEditor = lazy(() => import("./pages/community/AdminMentorEditor"));
 const PMFLabPage = lazy(() => import("./pages/PMFLabPage"));
-const ICPBuilderPage = lazy(() => import("./pages/ICPBuilderPage"));
+const ICPBuilderPage = lazy(() => import("./pages/IcpBuilderPage"));
 const ValidateJourneyPage = lazy(() => import("./pages/ValidateJourneyPage"));
 const TechStackPage = lazy(() => import("./pages/TechStackPage"));
 const FocusFunnel = lazy(() => import("./pages/FocusFunnel"));
