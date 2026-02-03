@@ -1216,7 +1216,7 @@ Subject: "Quick question about [their pain point]"
     createBreadcrumbSchema([
       { name: 'Home', url: '/' },
       { name: 'BizMap AI', url: '/bizmap-ai' },
-      { name: 'BizMap AI Assist', url: '/bizmap-ai/chat' }
+      { name: 'BizMap AI Assist', url: '/bizmap-ai' }
     ])
   ];
 
@@ -1227,7 +1227,7 @@ Subject: "Quick question about [their pain point]"
           title="BizMap AI - Founder Idea Validation + 30-Day Launch OS"
           description="Validate your startup idea with AI-powered market analysis, get a 30-day launch roadmap, and join founder cohorts. Free market validation and personalized sprint planning."
           keywords="AI idea validation, startup validation, 30-day launch, founder OS, MVP builder, startup roadmap, market validation AI"
-          url="/bizmap-ai/chat"
+        url="/bizmap-ai"
           structuredData={structuredData}
         />
         

@@ -638,7 +638,7 @@ Hey {{name}}, I realize you're probably swamped. No hard feelings if this isn't 
           deliverable: 'Pitch rewritten in customer language',
           toolLink: {
             label: 'Get AI Help',
-            href: '/bizmap-ai/chat',
+            href: '/bizmap-ai',
           },
         },
         {

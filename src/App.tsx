@@ -159,7 +159,7 @@ function App() {
                         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
                         <Route path="/terms" element={<Terms />} />
                         <Route path="/bizmap-ai" element={<BizMapJourneyHubPage />} />
-                        <Route path="/bizmap-ai/chat" element={<Dream2Plan />} />
+                        <Route path="/bizmap-ai/chat" element={<Navigate to="/bizmap-ai" replace />} />
                         <Route path="/pmf-lab" element={<PMFLabPage />} />
                         <Route path="/bizmap-ai/pmf-lab" element={<Navigate to="/pmf-lab" replace />} />
                         <Route path="/bizmap-ai/tech-stack" element={<Navigate to="/tech-stack" replace />} />

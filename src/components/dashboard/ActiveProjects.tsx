@@ -150,7 +150,7 @@ export const ActiveProjects = () => {
             return (
               <Link
                 key={project.id}
-                to={`/bizmap-ai/chat?session=${project.id}`}
+                to={`/bizmap-ai?session=${project.id}`}
                 className="block animate-fade-in-up opacity-0"
                 style={{ animationDelay: `${index * 0.1}s`, animationFillMode: 'forwards' }}
               >
@@ -210,7 +210,7 @@ export const ActiveProjects = () => {
                       className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-300 hover:scale-105"
                       onClick={(e) => {
                         e.preventDefault();
-                        window.location.href = `/bizmap-ai/chat?session=${project.id}`;
+                        window.location.href = `/bizmap-ai?session=${project.id}`;
                       }}
                     >
                       <Play className="h-3 w-3 mr-2 transition-transform duration-300 group-hover:translate-x-1" />

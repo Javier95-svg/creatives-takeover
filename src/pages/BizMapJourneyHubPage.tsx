@@ -61,7 +61,7 @@ const PHASE_CONFIG: {
     journey: { title: "Ship MVP in 14 Days", href: "/mvp-builder", slug: "mvp", totalDays: 14 },
     tools: [
       { name: "Tech Stack Builder", href: "/tech-stack", icon: Boxes, id: "tech-stack" },
-      { name: "BizMap AI Chatbot", href: "/bizmap-ai/chat", icon: Bot, id: "bizmap-chat" },
+      { name: "BizMap AI Chatbot", href: "/bizmap-ai", icon: Bot, id: "bizmap-chat" },
     ],
   },
   {
@@ -115,7 +115,7 @@ export default function BizMapJourneyHubPage() {
   useEffect(() => {
     const sessionId = searchParams.get("session");
     if (sessionId) {
-      navigate(`/bizmap-ai/chat?session=${sessionId}`, { replace: true });
+      navigate(`/bizmap-ai?session=${sessionId}`, { replace: true });
     }
   }, [navigate, searchParams]);
 
@@ -251,7 +251,7 @@ export default function BizMapJourneyHubPage() {
               </CardHeader>
               <CardContent>
                 <Button asChild>
-                  <Link to="/bizmap-ai/chat">Open AI Assistant</Link>
+                  <Link to="/bizmap-ai">Open AI Assistant</Link>
                 </Button>
               </CardContent>
             </Card>

@@ -265,7 +265,7 @@ A user can {{core_action}} from start to finish without help.
           deliverable: 'Core feature working (even if ugly)',
           toolLink: {
             label: 'Get AI Help',
-            href: '/bizmap-ai/chat',
+            href: '/bizmap-ai',
           },
         },
         {
