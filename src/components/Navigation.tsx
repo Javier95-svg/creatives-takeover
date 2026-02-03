@@ -49,7 +49,7 @@ const Navigation = () => {
     "BizMap AI": Bot,
     "Insighta": TrendingUp,
     "Community": UsersIcon,
-    "Stories": FileText,
+    "Resources": FileText,
     "About Us": Info,
     "Pricing": DollarSign,
   };
@@ -64,7 +64,6 @@ const Navigation = () => {
     { type: 'label', label: 'Learn: Validate Your Idea' },
     { name: "ICP Builder", href: "/icp-builder", icon: Target, description: "Define your ideal customer and niche" },
     { name: "PMF Lab", href: "/pmf-lab", icon: FlaskConical, description: "AI market analysis + validation" },
-    { name: "Prompt Library", href: "/prompt-library", icon: BookOpen, description: "60+ business cases and prompts" },
     { type: 'label', label: 'Build: Ship Your MVP' },
     { name: "MVP Builder", href: "/mvp-builder", icon: Rocket, description: "From validated idea to working product" },
     { name: "BizMap AI Chatbot", href: "/bizmap-ai/chat", icon: Bot, description: "AI co-founder for every phase" },
@@ -85,6 +84,12 @@ const Navigation = () => {
   const communitySubmenu = [
     { name: "Find a Mentor", href: "/community", icon: GraduationCap, description: "Connect with experienced mentors" },
     { name: "Find a Co-Founder", href: "/community/co-founders", icon: Handshake, description: "Meet your business soulmate" },
+  ];
+
+  // Resources submenu items
+  const resourcesSubmenu = [
+    { name: "Stories", href: "/stories", icon: FileText, description: "Insights and articles for founders" },
+    { name: "Prompt Library", href: "/prompt-library", icon: BookOpen, description: "60+ business cases and prompts" },
   ];
 
   // Fetch user avatar
@@ -128,7 +133,7 @@ const Navigation = () => {
     { name: "BizMap AI", href: "/bizmap-ai", tooltip: "AI Co-Founder that creates your business plan", icon: Bot },
     { name: "Insighta", href: "/insighta", tooltip: "Funding opportunities and investment resources", icon: TrendingUp },
     { name: "Community", href: "/community", tooltip: "Connect with fellow creative entrepreneurs", icon: UsersIcon },
-    { name: "Stories", href: "/stories", tooltip: "Read insights and articles about building your business", icon: FileText },
+    { name: "Resources", href: "/stories", tooltip: "Stories, prompts, and learning resources", icon: FileText },
     { name: "About Us", href: "/about", tooltip: "Learn about our mission and team", icon: Info },
     { name: "Pricing", href: "/pricing", tooltip: "View plans and pricing options", icon: DollarSign }
   ];
@@ -327,6 +332,54 @@ const Navigation = () => {
                           <DropdownMenuLabel>Connect & Collaborate</DropdownMenuLabel>
                           <DropdownMenuSeparator />
                           {communitySubmenu.map((subItem) => {
+                            const SubIcon = subItem.icon;
+                            return (
+                              <DropdownMenuItem key={subItem.name} asChild>
+                                <Link
+                                  to={subItem.href}
+                                  onClick={() => trackClick(`${item.name} - ${subItem.name}`, 'Navigation')}
+                                  className="cursor-pointer"
+                                >
+                                  <SubIcon className="h-4 w-4 mr-2" />
+                                  <div className="flex flex-col">
+                                    <span className="font-medium">{subItem.name}</span>
+                                    <span className="text-xs text-muted-foreground">{subItem.description}</span>
+                                  </div>
+                                </Link>
+                              </DropdownMenuItem>
+                            );
+                          })}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    );
+                  }
+
+                  // Special handling for Resources with dropdown
+                  if (item.name === 'Resources') {
+                    return (
+                      <DropdownMenu key={item.name}>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <DropdownMenuTrigger className={cn(
+                              "relative flex items-center gap-1 px-3 py-2 rounded-lg transition-all duration-250 whitespace-nowrap font-medium text-sm outline-none",
+                              "nav-item-hover-effect",
+                              active
+                                ? "text-foreground bg-primary/5 nav-active-indicator active"
+                                : `text-muted-foreground ${colorClass}`
+                            )}>
+                              {Icon && <Icon className="h-4 w-4 flex-shrink-0" />}
+                              <span className="tracking-wide">{item.name}</span>
+                              <ChevronDown className="h-3 w-3 ml-0.5" />
+                            </DropdownMenuTrigger>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>{item.tooltip}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                        <DropdownMenuContent align="start" className="w-56">
+                          <DropdownMenuLabel>Resources</DropdownMenuLabel>
+                          <DropdownMenuSeparator />
+                          {resourcesSubmenu.map((subItem) => {
                             const SubIcon = subItem.icon;
                             return (
                               <DropdownMenuItem key={subItem.name} asChild>
