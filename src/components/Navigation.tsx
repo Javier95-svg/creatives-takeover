@@ -377,7 +377,7 @@ const Navigation = () => {
                           </TooltipContent>
                         </Tooltip>
                         <DropdownMenuContent align="start" className="w-56">
-                          <DropdownMenuLabel>Resources</DropdownMenuLabel>
+                          <DropdownMenuLabel>Niche Content for Founders</DropdownMenuLabel>
                           <DropdownMenuSeparator />
                           {resourcesSubmenu.map((subItem) => {
                             const SubIcon = subItem.icon;
