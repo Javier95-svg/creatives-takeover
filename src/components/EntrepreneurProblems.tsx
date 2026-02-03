@@ -148,7 +148,7 @@ const EntrepreneurProblems = () => {
                     {/* Content */}
                     <div className="flex-1 pt-2">
                       <div className="mb-2 flex justify-center">
-                        <span className="inline-flex items-center rounded-full border border-border bg-muted px-3 py-1 text-xs font-medium text-muted-foreground">
+                        <span className="inline-flex items-center rounded-full border border-green-300 dark:border-green-700 bg-green-100 dark:bg-green-900/30 px-3 py-1 text-xs font-medium text-green-700 dark:text-green-400">
                           {step.phase}
                         </span>
                       </div>
@@ -251,7 +251,7 @@ const EntrepreneurProblems = () => {
                     {isEven && (
                       <div className={`${index === 0 ? 'pr-20' : 'pr-12'} ${index === 2 ? 'text-left' : 'text-right'}`}>
                         <div className="mb-3 flex justify-center">
-                          <span className="inline-flex items-center rounded-full border border-border bg-muted px-3 py-1 text-xs font-medium text-muted-foreground">
+                          <span className="inline-flex items-center rounded-full border border-green-300 dark:border-green-700 bg-green-100 dark:bg-green-900/30 px-3 py-1 text-xs font-medium text-green-700 dark:text-green-400">
                             {step.phase}
                           </span>
                         </div>
@@ -397,7 +397,7 @@ const EntrepreneurProblems = () => {
                       {!isEven ? (
                       <div className={index === 1 ? 'pl-20' : 'pl-12'}>
                         <div className="mb-3 flex justify-center">
-                          <span className="inline-flex items-center rounded-full border border-border bg-muted px-3 py-1 text-xs font-medium text-muted-foreground">
+                          <span className="inline-flex items-center rounded-full border border-green-300 dark:border-green-700 bg-green-100 dark:bg-green-900/30 px-3 py-1 text-xs font-medium text-green-700 dark:text-green-400">
                             {step.phase}
                           </span>
                         </div>
