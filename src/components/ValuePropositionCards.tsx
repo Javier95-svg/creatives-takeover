@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef, type ChangeEvent } from "react";
-import { Lightbulb, Users, Rocket, LayoutDashboard, Upload, Loader2 } from "lucide-react";
+import { Lightbulb, Users, Rocket, LayoutDashboard, Upload, Loader2, GraduationCap, TrendingUp, Handshake, BookOpen } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -32,55 +32,79 @@ const ValuePropositionCards = () => {
   const { user } = useAuth();
   const isAdmin = user?.email?.toLowerCase() === 'admin@creatives-takeover.com';
 
-  // Core value propositions - condensed to 4 essential offerings
+  // Core value propositions - 6 outcome-driven selling points
   const allCards = [
     {
       position: 1,
       icon: Lightbulb,
-      title: "PLAN",
-      subtitle: "BizMap AI",
+      title: "1. BUILD YOUR PRODUCT",
+      subtitle: "Product & Distribution System",
       buttonLabel: "BizMap AI",
-      description: "BizMap AI is a hub of business development tools that helps founders plan, validate, and scale their startup in a simple, organized way.\n\nIt includes a Business Planner chatbot, a Product Market Fit Lab for testing and refining your positioning, a Prompt Library with 60 business cases across 8 industries, and a Tech Stack builder that estimates monthly and yearly costs based on the tools you choose.",
-      cta: "Start Planning",
+      description: "BizMap AI follows The Lean Startup methodology by Eric Ries — a proven cycle that turns raw ideas into sustainable businesses:\n\n1. Build — Turn your ideas into products with guided sprints. Validate in 7 Days, Ship your MVP in 14 Days, and reach 5 paying customers in 30 days.\n2. Measure — Test your assumptions with the PMF Lab and Core Metrics so you know what's working and what isn't.\n3. Learn — Use the Decision Sprint to score ideas, the Focus Funnel to prioritize, and AI Assist to refine your strategy at every step.\n\nEvery tool works together as one system. No guesswork, just execution.",
+      cta: "Start Building",
       link: "/bizmap-ai",
       image: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=800&h=600&fit=crop&q=80",
       imageAlt: "Business development planning with strategy notes"
     },
     {
       position: 2,
-      icon: LayoutDashboard,
-      title: "EXECUTE",
-      subtitle: "Dashboard",
-      buttonLabel: "Dashboard",
-      description: "Dashboard is where everything comes together, so founders can stay on top of day to day work, milestones, and accountability without feeling scattered.\n\nIt helps founders track progress in one place, set clear milestones, and keep momentum with simple accountability features. It also includes the Focus Funnel, a tool that breaks goals into projects and projects into next actions, so you always know what to prioritize and what to do next.",
-      cta: "View Dashboard",
-      link: "/dashboard",
-      image: "https://images.unsplash.com/photo-1553877522-43269d4ea984?w=800&h=600&fit=crop&q=80",
-      imageAlt: "Task tracking and project management board"
+      icon: GraduationCap,
+      title: "2. ACCELERATORS",
+      subtitle: "Discover and Join Accelerators",
+      buttonLabel: "Accelerators",
+      description: "Accelerator Hunt helps you find the right programs for your stage, industry, and goals — so you stop wasting time on applications that go nowhere.\n\nBrowse curated accelerator programs, filter by industry, funding stage, and location, and get the details you need to craft a strong application. The right accelerator can give you funding, mentorship, and a network that takes years to build on your own.",
+      cta: "Find Accelerators",
+      link: "/insighta/accelerator-hunt",
+      image: "https://images.unsplash.com/photo-1531482615713-2afd69097998?w=800&h=600&fit=crop&q=80",
+      imageAlt: "Startup accelerator program session"
     },
     {
       position: 3,
-      icon: Rocket,
-      title: "FUNDRAISE",
-      subtitle: "Insighta",
-      buttonLabel: "Insighta",
-      description: "Insighta is where founders organize their fundraising process, so pitching feels more structured and less like guesswork.\n\nIt includes VC Search to explore venture capital firms and key details for building a targeted investor list, Email Templates for cold outreach that can be quickly customized, a Pitch Deck Analyzer to flag weak points and improve clarity, and the Insighta Test to check fundraising readiness and highlight what to fix before starting outreach.",
-      cta: "Explore Insighta",
-      link: "/insighta/test",
+      icon: TrendingUp,
+      title: "3. INVESTORS",
+      subtitle: "Connect with Angel Investors and VCs",
+      buttonLabel: "Investors",
+      description: "VC Search gives you a database of venture capital firms and angel investors so you can build a targeted outreach list instead of pitching blind.\n\nExplore investors by industry, stage, and check size. Combine it with Email Templates for cold outreach, a Pitch Deck Analyzer to sharpen your deck before meetings, and the Insighta Test to check your fundraising readiness before you start pitching.",
+      cta: "Explore Investors",
+      link: "/insighta/vc-search",
       image: "https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=800&h=600&fit=crop&q=80",
       imageAlt: "Fundraising meeting with investors"
     },
     {
       position: 4,
-      icon: Users,
-      title: "CONNECT",
-      subtitle: "Community",
+      icon: Handshake,
+      title: "4. NETWORK",
+      subtitle: "Mentorship and Co-Founder Network",
       buttonLabel: "Community",
-      description: "Community is the space where founders connect with people who actually get it, so building your startup doesn't have to feel like a solo mission.\n\nHere, users can find mentors for guidance and feedback, and meet other founders to share wins, challenges, and lessons in real time. Having the right people around you helps you stay accountable, make better decisions faster, and avoid the isolation that often leads to stress and burnout.",
+      description: "Community is where founders find the people who make the journey less lonely and more effective.\n\nConnect with mentors for guidance and honest feedback, meet other founders to share wins and challenges, and find potential co-founders who complement your skills. The right network helps you make better decisions faster, stay accountable, and avoid the isolation that leads to burnout.",
       cta: "Join Community",
       link: "/community",
       image: "https://images.unsplash.com/photo-1587614382346-4ec70e388b28?w=800&h=600&fit=crop&q=80",
       imageAlt: "Founders collaborating in a video call"
+    },
+    {
+      position: 5,
+      icon: BookOpen,
+      title: "5. CONTENT",
+      subtitle: "Stories + Classroom",
+      buttonLabel: "Content",
+      description: "Real founder insights and practical knowledge to help you grow — not recycled advice from people who never built anything.\n\nStories features articles, interviews, and lessons from founders who've been where you are. Classroom (coming soon) will offer structured courses and workshops on the skills that matter most — from customer acquisition to fundraising to product development.",
+      cta: "Read Stories",
+      link: "/stories",
+      image: "https://images.unsplash.com/photo-1456324504439-367cee3b3c32?w=800&h=600&fit=crop&q=80",
+      imageAlt: "Founder reading and learning from content"
+    },
+    {
+      position: 6,
+      icon: LayoutDashboard,
+      title: "6. YOUR DASHBOARD",
+      subtitle: "Personalized Experience",
+      buttonLabel: "Dashboard",
+      description: "Dashboard is your command center — one place to track progress, set milestones, and stay on top of everything without feeling scattered.\n\nSee your startup metrics at a glance, manage tasks and priorities with the Focus Funnel, and keep momentum with built-in accountability features. Everything from your BizMap AI progress to your community connections lives in a single, personalized view.",
+      cta: "View Dashboard",
+      link: "/dashboard",
+      image: "https://images.unsplash.com/photo-1553877522-43269d4ea984?w=800&h=600&fit=crop&q=80",
+      imageAlt: "Personalized startup dashboard"
     }
   ];
 
@@ -337,7 +361,7 @@ const ValuePropositionCards = () => {
             Here's What You Get
           </h2>
           <p className="font-poppins text-base sm:text-lg text-muted-foreground">
-            Everything you need to go from idea to launch. Four core tools designed for creative entrepreneurs who want to build real, sustainable businesses.
+            Everything you need to go from idea to launch. Six pillars designed for creative entrepreneurs who want to build real, sustainable businesses.
           </p>
         </div>
 
