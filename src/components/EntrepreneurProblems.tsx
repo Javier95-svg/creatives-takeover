@@ -264,11 +264,11 @@ const EntrepreneurProblems = () => {
                         {index === 0 ? (
                           <div className="flex justify-center">
                             <Link
-                              to="/bizmap-ai" 
-                            className="inline-flex items-center gap-2 rounded-md border border-border bg-background px-4 py-2 text-sm font-medium text-foreground hover:border-primary/40 transition-colors"
+                              to="/icp-builder"
+                              className="inline-flex items-center gap-2 rounded-md border border-border bg-background px-4 py-2 text-sm font-medium text-foreground hover:border-primary/40 transition-colors"
                             >
                               <span className="font-semibold text-foreground flex items-center gap-2 text-sm">
-                                Try BizMap AI <Bot className="h-4 w-4" />
+                                Define your Niche <Target className="h-4 w-4" />
                               </span>
                             </Link>
                           </div>
@@ -410,11 +410,11 @@ const EntrepreneurProblems = () => {
                         {index === 0 ? (
                           <div className="flex justify-center">
                             <Link
-                              to="/bizmap-ai" 
+                              to="/icp-builder"
                               className="inline-flex items-center gap-2 rounded-md border border-border bg-background px-4 py-2 text-sm font-medium text-foreground hover:border-primary/40 transition-colors"
                             >
                               <span className="font-semibold text-foreground flex items-center gap-2 text-sm">
-                                Try BizMap AI <Bot className="h-4 w-4" />
+                                Define your Niche <Target className="h-4 w-4" />
                               </span>
                             </Link>
                           </div>
