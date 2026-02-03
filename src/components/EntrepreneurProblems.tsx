@@ -1,4 +1,4 @@
-﻿import { Map, Users, Target, Rocket, Lightbulb, LayoutDashboard, Bot, Handshake, Code } from "lucide-react";
+﻿import { Map, Users, Target, Rocket, Lightbulb, LayoutDashboard, Bot, Handshake, Code, FlaskConical } from "lucide-react";
 import { Link } from "react-router-dom";
 import FounderJourneyVideo from "./FounderJourneyVideo";
 
@@ -176,7 +176,7 @@ const EntrepreneurProblems = () => {
                             className="inline-flex items-center gap-2 rounded-md border border-border bg-background px-4 py-2 text-sm font-medium text-foreground hover:border-primary/40 transition-colors"
                           >
                             <span className="font-semibold text-foreground flex items-center gap-2 text-sm">
-                              Try PMF Lab <Target className="h-4 w-4" />
+                              Try PMF Lab <FlaskConical className="h-4 w-4" />
                             </span>
                           </Link>
                         </div>
@@ -279,7 +279,7 @@ const EntrepreneurProblems = () => {
                             className="inline-flex items-center gap-2 rounded-md border border-border bg-background px-4 py-2 text-sm font-medium text-foreground hover:border-primary/40 transition-colors"
                             >
                               <span className="font-semibold text-foreground flex items-center gap-2 text-sm">
-                                Try PMF Lab <Target className="h-4 w-4" />
+                                Try PMF Lab <FlaskConical className="h-4 w-4" />
                               </span>
                             </Link>
                           </div>
@@ -425,7 +425,7 @@ const EntrepreneurProblems = () => {
                               className="inline-flex items-center gap-2 rounded-md border border-border bg-background px-4 py-2 text-sm font-medium text-foreground hover:border-primary/40 transition-colors"
                             >
                               <span className="font-semibold text-foreground flex items-center gap-2 text-sm">
-                                Try PMF Lab <Target className="h-4 w-4" />
+                                Try PMF Lab <FlaskConical className="h-4 w-4" />
                               </span>
                             </Link>
                           </div>
