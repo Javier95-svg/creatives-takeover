@@ -420,13 +420,13 @@ const Hero = () => {
           {/* Left Section - All existing content */}
           <div className="text-center flex flex-col justify-center">
             {/* Main Headline */}
-            <h1 className="font-space-grotesk text-4xl sm:text-5xl lg:text-6xl font-semibold mb-6 leading-tight tracking-tight">
+            <h1 className="font-space-grotesk text-5xl sm:text-6xl lg:text-7xl font-semibold mb-6 leading-tight tracking-tight">
               <span className="text-primary">The One-Person Business</span> Factory
             </h1>
 
             {/* Subheadline - Improved readability */}
             <p className="font-poppins text-base sm:text-lg text-muted-foreground mb-8 max-w-xl mx-auto leading-relaxed">
-              We blend technology, strategy and community to accelerate startup growth, empowering solofounders with business development, expert support, and fundraising tools.
+              We blend technology, strategy, and community to empower individuals to build and launch startups with minimal friction. Our platform provides business development, expert support, and access to fundraising.
             </p>
             
             {/* Enhanced CTA Section */}
