@@ -38,6 +38,7 @@ const Terms = lazy(() => import("./pages/Terms"));
 const Signup = lazy(() => import("./pages/Signup"));
 const Dream2Plan = lazy(() => import("./pages/Dream2Plan"));
 const BizMapJourneyHubPage = lazy(() => import("./pages/BizMapJourneyHubPage"));
+const IcpBuilderPage = lazy(() => import("./pages/IcpBuilderPage"));
 const Onboarding = lazy(() => import("./pages/Onboarding"));
 
 const Login = lazy(() => import("./pages/Login"));
@@ -170,6 +171,7 @@ function App() {
                         <Route path="/bizmap-ai/pmf-lab" element={<Navigate to="/pmf-lab" replace />} />
                         <Route path="/bizmap-ai/tech-stack" element={<Navigate to="/tech-stack" replace />} />
                         <Route path="/tech-stack" element={<TechStackPage />} />
+                        <Route path="/icp-builder" element={<IcpBuilderPage />} />
                         <Route path="/decision-sprint" element={<ValidateJourneyPage />} />
                         <Route path="/validate" element={<ValidateJourney />} />
                         <Route path="/mvp-builder" element={<MvpJourney />} />

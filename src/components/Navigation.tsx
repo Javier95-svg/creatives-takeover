@@ -54,7 +54,7 @@ const Navigation = () => {
     "Pricing": DollarSign,
   };
 
-  // BizMap AI submenu — grouped by Lean Startup phase
+  // BizMap AI submenu -- grouped by Lean Startup phase
   type BizMapMenuItem =
     | { type: 'label'; label: string }
     | { type: 'separator' }
@@ -62,7 +62,7 @@ const Navigation = () => {
 
   const bizMapSubmenu: BizMapMenuItem[] = [
     { type: 'label', label: 'Learn: Validate Your Idea' },
-    { name: "Validate in 7 Days", href: "/validate", icon: Target, description: "Day-by-day sprint to choose what to build" },
+    { name: "ICP Builder", href: "/icp-builder", icon: Target, description: "Define your ideal customer and niche" },
     { name: "PMF Lab", href: "/pmf-lab", icon: FlaskConical, description: "AI market analysis + validation" },
     { name: "Prompt Library", href: "/prompt-library", icon: BookOpen, description: "60+ business cases and prompts" },
     { type: 'label', label: 'Build: Ship Your MVP' },

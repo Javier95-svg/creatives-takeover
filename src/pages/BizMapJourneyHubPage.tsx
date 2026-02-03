@@ -45,9 +45,9 @@ const PHASE_CONFIG: {
   {
     phase: "learn",
     title: "Learn",
-    description: "Validate your idea before you build. Test demand signals and confirm market need.",
+    description: "Clarify your niche before you build. Identify demand signals and confirm market need.",
     icon: Search,
-    journey: { title: "Validate in 7 Days", href: "/validate", slug: "validate", totalDays: 7 },
+    journey: { title: "ICP Builder", href: "/icp-builder", slug: "validate", totalDays: 7 },
     tools: [
       { name: "PMF Lab", href: "/pmf-lab", icon: FlaskConical, id: "pmf-lab" },
       { name: "Prompt Library", href: "/prompt-library", icon: BookOpen, id: "prompt-library" },
@@ -138,7 +138,7 @@ export default function BizMapJourneyHubPage() {
     {
       "@context": "https://schema.org",
       "@type": "WebPage",
-      name: "BizMap AI — Lean Startup System",
+      name: "BizMap AI - Lean Startup System",
       description:
         "A cohesive system to validate your idea, ship an MVP, and reach your first paying customers using the Lean Startup Method.",
       url: "https://creatives-takeover.com/bizmap-ai/hub",
@@ -153,7 +153,7 @@ export default function BizMapJourneyHubPage() {
   return (
     <div className="min-h-screen bg-background">
       <SEO
-        title="BizMap AI — Lean Startup System"
+        title="BizMap AI - Lean Startup System"
         description="Learn, Build, Measure, Iterate. A cohesive founder system to validate your idea, ship an MVP, and reach paying users."
         keywords="lean startup, startup validation, MVP, founder journey, build measure learn"
         url="/bizmap-ai/hub"
@@ -238,7 +238,7 @@ export default function BizMapJourneyHubPage() {
               })}
             </div>
 
-            {/* AI Assist — always available */}
+            {/* AI Assist - always available */}
             <Card className="border-primary/20 bg-background/90">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
