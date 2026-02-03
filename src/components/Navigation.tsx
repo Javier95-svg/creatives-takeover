@@ -66,9 +66,9 @@ const Navigation = () => {
     { name: "PMF Lab", href: "/pmf-lab", icon: FlaskConical, description: "AI market analysis + validation" },
     { name: "Prompt Library", href: "/prompt-library", icon: BookOpen, description: "60+ business cases and prompts" },
     { type: 'label', label: 'Build: Ship Your MVP' },
-    { name: "Ship MVP in 14 Days", href: "/mvp-builder", icon: Rocket, description: "From validated idea to working product" },
-    { name: "Tech Stack Builder", href: "/tech-stack", icon: Boxes, description: "Choose your stack with budget calc" },
+    { name: "MVP Builder", href: "/mvp-builder", icon: Rocket, description: "From validated idea to working product" },
     { name: "BizMap AI Chatbot", href: "/bizmap-ai/chat", icon: Bot, description: "AI co-founder for every phase" },
+    { name: "Tech Stack Builder", href: "/tech-stack", icon: Boxes, description: "Choose your stack with budget calc" },
     { type: 'label', label: 'Measure: Get Traction' },
     { name: "Get 5 Paying Users", href: "/client-acquisition", icon: DollarSign, description: "30-day playbook to first revenue" },
   ];
