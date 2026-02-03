@@ -68,7 +68,7 @@ const Navigation = () => {
     { type: 'label', label: 'Build: Ship Your MVP' },
     { name: "MVP Builder", href: "/mvp-builder", icon: Rocket, description: "From validated idea to working product" },
     { name: "BizMap AI Chatbot", href: "/bizmap-ai/chat", icon: Bot, description: "AI co-founder for every phase" },
-    { name: "Tech Stack Builder", href: "/tech-stack", icon: Boxes, description: "Choose your stack with budget calc" },
+    { name: "Tech Stack Builder", href: "/bizmap-ai/tech-stack", icon: Boxes, description: "Choose your stack with budget calc" },
     { type: 'label', label: 'Measure: Get Traction' },
     { name: "Get 5 Paying Users", href: "/client-acquisition", icon: DollarSign, description: "30-day playbook to first revenue" },
   ];
