@@ -35,7 +35,7 @@ const AcceleratorHuntTab = () => {
                 <FundingOpportunityCard
                   key={accelerator.id}
                   opportunity={accelerator}
-                  profileLink={`/insighta/accelerator/${accelerator.id}`}
+                  profileLink={`/insighta/accelerator/${accelerator.slug || accelerator.id}`}
                 />
               ))}
             </div>

@@ -6,11 +6,14 @@ export interface FundingOpportunity {
   title: string;
   description: string;
   url: string;
+  slug: string | null;
   type: FundingType;
   funding_amount: string | null;
   location: string[];
   keywords: string[];
   logo_url: string | null;
+  website_url: string | null;
+  application_url: string | null;
   is_featured: boolean;
   is_active: boolean;
   created_at: string;

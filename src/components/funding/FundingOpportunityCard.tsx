@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ExternalLink, Building2, MapPin, DollarSign } from "lucide-react";
+import { ExternalLink, Building2, DollarSign } from "lucide-react";
 import { FundingOpportunity } from "@/types/funding";
 import { Link } from "react-router-dom";
 
@@ -90,32 +90,6 @@ const FundingOpportunityCard = ({ opportunity, profileLink }: FundingOpportunity
         <p className="text-sm text-muted-foreground line-clamp-3 flex-grow">
           {opportunity.description}
         </p>
-
-        {/* Location badges */}
-        {opportunity.location && opportunity.location.length > 0 && (
-          <div className="flex flex-wrap gap-1">
-            {opportunity.location.slice(0, 3).map((loc, idx) => (
-              <Badge key={idx} variant="secondary" className="text-xs">
-                {loc}
-              </Badge>
-            ))}
-            {opportunity.location.length > 3 && (
-              <Badge variant="secondary" className="text-xs">
-                +{opportunity.location.length - 3} more
-              </Badge>
-            )}
-          </div>
-        )}
-
-        {/* Location & Keywords row */}
-        <div className="flex items-center gap-4 text-xs text-muted-foreground pt-2 border-t">
-          {opportunity.location && opportunity.location.length > 0 && (
-            <div className="flex items-center gap-1">
-              <MapPin className="h-3 w-3" />
-              <span className="truncate">{opportunity.location[0]}</span>
-            </div>
-          )}
-        </div>
 
         {/* View Details Button */}
         <Button

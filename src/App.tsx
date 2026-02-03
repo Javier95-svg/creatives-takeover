@@ -197,7 +197,7 @@ function App() {
                         <Route path="/insighta/pitch-deck-analyzer" element={<PitchDeckAnalyzerPage />} />
                         <Route path="/insighta/test" element={<InsightaTestPage />} />
                         <Route path="/insighta/vc/:slug" element={<VCProfilePage />} />
-                        <Route path="/insighta/accelerator/:id" element={<AcceleratorProfilePage />} />
+                        <Route path="/insighta/accelerator/:slug" element={<AcceleratorProfilePage />} />
                         <Route path="/demo" element={<Demo />} />
                         <Route path="/messages/:username" element={<Messages />} />
                         <Route path="/messages" element={<Messages />} />
