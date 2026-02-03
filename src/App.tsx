@@ -90,6 +90,7 @@ const TasksPage = lazy(() => import("./pages/TasksPage"));
 const ValidateJourney = lazy(() => import("./pages/journeys/ValidateJourney"));
 const MvpJourney = lazy(() => import("./pages/journeys/MvpJourney"));
 const FirstCustomersJourney = lazy(() => import("./pages/journeys/FirstCustomersJourney"));
+const ComingSoonPage = lazy(() => import("./pages/ComingSoonPage"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -169,8 +170,8 @@ function App() {
                         <Route path="/bizmap-ai/icp-builder" element={<Navigate to="/icp-builder" replace />} />
                         <Route path="/decision-sprint" element={<ValidateJourneyPage />} />
                         <Route path="/validate" element={<ValidateJourney />} />
-                        <Route path="/mvp-builder" element={<MvpJourney />} />
-                        <Route path="/go-to-market" element={<FirstCustomersJourney />} />
+                        <Route path="/mvp-builder" element={<ComingSoonPage title="MVP Builder" description="A step-by-step sprint to take your validated idea and ship a working MVP. Scope, build, and deploy with daily checkpoints." />} />
+                        <Route path="/go-to-market" element={<ComingSoonPage title="GTM Strategist" description="Your end-to-end go-to-market planning assistant. Define your target market, clarify positioning, select channels, and generate actionable GTM plans." />} />
                         <Route path="/client-acquisition" element={<Navigate to="/go-to-market" replace />} />
 
                         <Route path="/auth" element={<Auth />} />
