@@ -475,7 +475,7 @@ A user can {{core_action}} from start to finish without help.
 **Value**: How much time/money does your product save? {{value_saved}}
 **Floor**: What's the minimum price that makes this worth your time? {{min_price}}
 
-**Your Price**: ${{your_price}} / {{period}}
+**Your Price**: \${{your_price}} / {{period}}
 
 ## Step 3: Test It
 - Launch at your price for 2 weeks
