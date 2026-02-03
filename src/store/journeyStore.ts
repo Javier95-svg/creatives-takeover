@@ -1,6 +1,7 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { createJSONStorage, persist } from 'zustand/middleware';
 import type { JourneySlug, DayStatus, DayProgress, JourneyProgress } from '@/types/journey';
+import { getSafeLocalStorage } from '@/lib/safeStorage';
 
 interface JourneyStoreState {
   journeys: Record<JourneySlug, JourneyProgress | null>;
@@ -140,6 +141,7 @@ export const useJourneyStore = create<JourneyStore>()(
     }),
     {
       name: 'creatives-journey-progress',
+      storage: createJSONStorage(getSafeLocalStorage),
       partialize: (state) => ({
         journeys: state.journeys,
         activeJourney: state.activeJourney,

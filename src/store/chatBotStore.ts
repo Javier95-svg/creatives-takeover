@@ -1,5 +1,6 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { createJSONStorage, persist } from 'zustand/middleware';
+import { getSafeLocalStorage } from '@/lib/safeStorage';
 
 interface StepResponse {
   step: number;
@@ -222,6 +223,7 @@ ${step7.supportNeeded || step7.help || 'General guidance'}
     }),
     {
       name: 'bizmap-chatbot-storage',
+      storage: createJSONStorage(getSafeLocalStorage),
       partialize: (state) => ({ 
         stepsProgress: state.stepsProgress,
         finalReport: state.finalReport 

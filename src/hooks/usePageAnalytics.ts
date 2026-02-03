@@ -6,10 +6,17 @@ import { captureEvent } from '@/lib/analytics';
 
 // Generate a session ID for anonymous tracking
 const getSessionId = () => {
-  let sessionId = sessionStorage.getItem('analytics_session_id');
-  if (!sessionId) {
+  let sessionId: string | null = null;
+  try {
+    sessionId = sessionStorage.getItem('analytics_session_id');
+    if (!sessionId) {
+      sessionId = `session_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
+      sessionStorage.setItem('analytics_session_id', sessionId);
+    }
+  } catch (error) {
+    // Storage can be blocked (privacy modes, third-party contexts).
+    console.warn('Analytics session storage unavailable:', error);
     sessionId = `session_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
-    sessionStorage.setItem('analytics_session_id', sessionId);
   }
   return sessionId;
 };

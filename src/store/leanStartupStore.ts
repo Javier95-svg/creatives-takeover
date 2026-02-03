@@ -1,8 +1,9 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { createJSONStorage, persist } from 'zustand/middleware';
 import { useJourneyStore } from './journeyStore';
 import { journeyDefinitions } from '@/data/journeys';
 import type { JourneySlug } from '@/types/journey';
+import { getSafeLocalStorage } from '@/lib/safeStorage';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -117,6 +118,7 @@ export const useLeanStartupStore = create<LeanStartupStore>()(
     }),
     {
       name: 'lean-startup-progress',
+      storage: createJSONStorage(getSafeLocalStorage),
       partialize: (state) => ({
         phases: state.phases,
         skippedPhases: state.skippedPhases,

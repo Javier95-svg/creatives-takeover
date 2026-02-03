@@ -20,7 +20,15 @@ export const CreditCampaignPopup = ({ trigger, delay = 3000, onClose }: CreditCa
 
     // Check if user has already seen this popup in this session
     const sessionKey = `credit-popup-${trigger}-seen`;
-    const hasSeenPopup = sessionStorage.getItem(sessionKey);
+    let hasSeenPopup: string | null = null;
+    try {
+      hasSeenPopup = sessionStorage.getItem(sessionKey);
+    } catch (error) {
+      // Storage can be blocked in some environments; avoid crashing.
+      console.warn('CreditCampaignPopup storage unavailable:', error);
+      setHasShown(true);
+      return;
+    }
     console.log('CreditCampaignPopup session check:', { sessionKey, hasSeenPopup, hasShown });
     if (hasSeenPopup || hasShown) return;
 
@@ -30,7 +38,11 @@ export const CreditCampaignPopup = ({ trigger, delay = 3000, onClose }: CreditCa
       if (!hasShown) {
         setIsOpen(true);
         setHasShown(true);
-        sessionStorage.setItem(sessionKey, 'true');
+        try {
+          sessionStorage.setItem(sessionKey, 'true');
+        } catch (error) {
+          console.warn('CreditCampaignPopup storage unavailable:', error);
+        }
       }
     };
 

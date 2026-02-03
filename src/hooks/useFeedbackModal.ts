@@ -14,9 +14,14 @@ export const useFeedbackModal = (questionsCompleted: boolean) => {
     if (!questionsCompleted) return;
 
     // Check if user has already completed feedback in this session
-    const hasCompletedFeedback = sessionStorage.getItem('bizmap-feedback-completed');
-    if (hasCompletedFeedback) {
-      setFeedbackCompleted(true);
+    try {
+      const hasCompletedFeedback = sessionStorage.getItem('bizmap-feedback-completed');
+      if (hasCompletedFeedback) {
+        setFeedbackCompleted(true);
+        return;
+      }
+    } catch (error) {
+      console.warn('Feedback storage unavailable:', error);
       return;
     }
 
@@ -32,11 +37,19 @@ export const useFeedbackModal = (questionsCompleted: boolean) => {
     setShowFeedback(false);
     setFeedbackCompleted(true);
     // Remember that user has completed feedback for this session
-    sessionStorage.setItem('bizmap-feedback-completed', 'true');
+    try {
+      sessionStorage.setItem('bizmap-feedback-completed', 'true');
+    } catch (error) {
+      console.warn('Feedback storage unavailable:', error);
+    }
     
     // Store credit bonus if provided
     if (feedbackData?.creditBonus) {
-      sessionStorage.setItem('feedback-credit-bonus', feedbackData.creditBonus.toString());
+      try {
+        sessionStorage.setItem('feedback-credit-bonus', feedbackData.creditBonus.toString());
+      } catch (error) {
+        console.warn('Feedback storage unavailable:', error);
+      }
     }
   };
 

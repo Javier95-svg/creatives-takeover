@@ -14,8 +14,14 @@ export const useHoverPopup = ({ delay = 2000, trigger }: UseHoverPopupProps) => 
   useEffect(() => {
     // Check if popup has already been shown in this session
     const sessionKey = `hover-popup-${trigger}-shown`;
-    const hasSeenPopup = sessionStorage.getItem(sessionKey);
-    if (hasSeenPopup) {
+    try {
+      const hasSeenPopup = sessionStorage.getItem(sessionKey);
+      if (hasSeenPopup) {
+        setHasShown(true);
+      }
+    } catch (error) {
+      // Storage can be blocked in some environments; fail closed.
+      console.warn('Hover popup storage unavailable:', error);
       setHasShown(true);
     }
   }, [trigger]);
@@ -28,7 +34,11 @@ export const useHoverPopup = ({ delay = 2000, trigger }: UseHoverPopupProps) => 
       if (!hasShown) {
         setShowPopup(true);
         setHasShown(true);
-        sessionStorage.setItem(`hover-popup-${trigger}-shown`, 'true');
+        try {
+          sessionStorage.setItem(`hover-popup-${trigger}-shown`, 'true');
+        } catch (error) {
+          console.warn('Hover popup storage unavailable:', error);
+        }
       }
     }, delay);
   };
