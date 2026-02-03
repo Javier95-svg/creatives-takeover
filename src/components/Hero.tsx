@@ -425,7 +425,7 @@ const Hero = () => {
             </h1>
 
             {/* Subheadline - Improved readability */}
-            <p className="font-poppins text-base sm:text-lg text-muted-foreground mb-8 max-w-xl mx-auto leading-relaxed">
+            <p className="font-space-grotesk text-base sm:text-lg text-muted-foreground mb-8 max-w-xl mx-auto leading-relaxed">
               We blend technology, strategy, and community to empower individuals to build and launch startups with minimal friction. Our platform provides business development, expert support, and access to fundraising.
             </p>
             
