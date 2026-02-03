@@ -6,6 +6,7 @@ import { useReadingAnalytics } from "@/hooks/useReadingAnalytics";
 import { useLeanStartupStore } from "@/store/leanStartupStore";
 import { Loader2 } from "lucide-react";
 import type { PMFFormPrefillData } from "@/components/pmf/ProductMarketFitLab";
+import { getSafeLocalStorage } from "@/lib/safeStorage";
 
 // Lazy load the PMF Lab component
 const ProductMarketFitLab = lazy(() => import("@/components/pmf/ProductMarketFitLab"));
@@ -34,7 +35,8 @@ export default function PMFLabPage() {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const stored = window.localStorage.getItem(DECISION_STORAGE_KEY);
+    const storage = getSafeLocalStorage();
+    const stored = storage.getItem(DECISION_STORAGE_KEY);
     if (!stored) return;
 
     try {

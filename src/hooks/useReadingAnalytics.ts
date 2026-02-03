@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { getSafeLocalStorage, getSafeSessionStorage } from '@/lib/safeStorage';
 
 interface ReadingEvent {
   articleId: string;
@@ -12,6 +13,8 @@ interface ReadingEvent {
 
 export const useReadingAnalytics = () => {
   const { user } = useAuth();
+  const localStore = getSafeLocalStorage();
+  const sessionStore = getSafeSessionStorage();
 
   const trackReadingEvent = async (event: ReadingEvent) => {
     // Track for both authenticated and anonymous users
@@ -34,9 +37,8 @@ export const useReadingAnalytics = () => {
         console.log('Tracking authenticated user event:', eventData);
       } else {
         // Store anonymous analytics in localStorage
-        const anonymousEvents = JSON.parse(
-          localStorage.getItem('insighta-analytics') || '[]'
-        );
+        const raw = localStore.getItem('insighta-analytics') || '[]';
+        const anonymousEvents = JSON.parse(raw);
         anonymousEvents.push(eventData);
         
         // Keep only last 100 events to prevent storage bloat
@@ -44,7 +46,7 @@ export const useReadingAnalytics = () => {
           anonymousEvents.splice(0, anonymousEvents.length - 100);
         }
         
-        localStorage.setItem('insighta-analytics', JSON.stringify(anonymousEvents));
+        localStore.setItem('insighta-analytics', JSON.stringify(anonymousEvents));
       }
     } catch (error) {
       console.error('Error tracking reading event:', error);
@@ -52,10 +54,10 @@ export const useReadingAnalytics = () => {
   };
 
   const getSessionId = () => {
-    let sessionId = sessionStorage.getItem('insighta-session-id');
+    let sessionId = sessionStore.getItem('insighta-session-id');
     if (!sessionId) {
       sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      sessionStorage.setItem('insighta-session-id', sessionId);
+      sessionStore.setItem('insighta-session-id', sessionId);
     }
     return sessionId;
   };

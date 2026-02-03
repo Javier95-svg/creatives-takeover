@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useLeanStartupStore } from "@/store/leanStartupStore";
+import { getSafeLocalStorage } from "@/lib/safeStorage";
 import SEO, { createBreadcrumbSchema } from "@/components/SEO";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
@@ -173,7 +174,8 @@ export default function ValidateJourneyPage() {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const stored = window.localStorage.getItem(STORAGE_KEY);
+    const storage = getSafeLocalStorage();
+    const stored = storage.getItem(STORAGE_KEY);
     if (!stored) return;
     try {
       const parsed = JSON.parse(stored) as {
@@ -194,7 +196,8 @@ export default function ValidateJourneyPage() {
   useEffect(() => {
     if (typeof window === "undefined") return;
     const payload = JSON.stringify({ ideas, activeIdeaId, chosenIdeaId });
-    window.localStorage.setItem(STORAGE_KEY, payload);
+    const storage = getSafeLocalStorage();
+    storage.setItem(STORAGE_KEY, payload);
   }, [ideas, activeIdeaId, chosenIdeaId]);
 
   const rankedIdeas = useMemo(() => {
