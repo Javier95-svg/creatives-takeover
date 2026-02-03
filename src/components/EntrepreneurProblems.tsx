@@ -162,10 +162,10 @@ const EntrepreneurProblems = () => {
                         <div className="flex justify-center">
                           <Link
                             to="/icp-builder"
-                            className="inline-flex items-center gap-2 rounded-md border border-border bg-background px-4 py-2 text-sm font-medium text-foreground hover:border-primary/40 transition-colors"
+                            className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-5 py-2.5 text-base font-medium text-foreground hover:border-primary/50 hover:bg-primary/5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
                           >
-                            <span className="font-semibold text-foreground flex items-center gap-2 text-sm">
-                              Define your Niche <Target className="h-4 w-4" />
+                            <span className="font-semibold text-foreground flex items-center gap-2 text-base">
+                              Define your Niche <Target className="h-5 w-5" />
                             </span>
                           </Link>
                         </div>
@@ -173,10 +173,10 @@ const EntrepreneurProblems = () => {
                         <div className="flex justify-center">
                           <Link 
                             to="/pmf-lab" 
-                            className="inline-flex items-center gap-2 rounded-md border border-border bg-background px-4 py-2 text-sm font-medium text-foreground hover:border-primary/40 transition-colors"
+                            className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-5 py-2.5 text-base font-medium text-foreground hover:border-primary/50 hover:bg-primary/5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
                           >
-                            <span className="font-semibold text-foreground flex items-center gap-2 text-sm">
-                              Try PMF Lab <FlaskConical className="h-4 w-4" />
+                            <span className="font-semibold text-foreground flex items-center gap-2 text-base">
+                              Try PMF Lab <FlaskConical className="h-5 w-5" />
                             </span>
                           </Link>
                         </div>
@@ -184,10 +184,10 @@ const EntrepreneurProblems = () => {
                         <div className="flex justify-center">
                           <Link 
                             to="/community" 
-                            className="inline-flex items-center gap-2 rounded-md border border-border bg-background px-4 py-2 text-sm font-medium text-foreground hover:border-primary/40 transition-colors"
+                            className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-5 py-2.5 text-base font-medium text-foreground hover:border-primary/50 hover:bg-primary/5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
                           >
-                            <span className="font-semibold text-foreground flex items-center gap-2 text-sm">
-                              Find a Mentor <Users className="h-4 w-4" />
+                            <span className="font-semibold text-foreground flex items-center gap-2 text-base">
+                              Find a Mentor <Users className="h-5 w-5" />
                             </span>
                           </Link>
                         </div>
@@ -195,10 +195,10 @@ const EntrepreneurProblems = () => {
                         <div className="flex justify-center">
                           <Link 
                             to="/dashboard" 
-                            className="inline-flex items-center gap-2 rounded-md border border-border bg-background px-4 py-2 text-sm font-medium text-foreground hover:border-primary/40 transition-colors"
+                            className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-5 py-2.5 text-base font-medium text-foreground hover:border-primary/50 hover:bg-primary/5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
                           >
-                            <span className="font-semibold text-foreground flex items-center gap-2 text-sm">
-                              <LayoutDashboard className="h-4 w-4" /> Explore Dashboard
+                            <span className="font-semibold text-foreground flex items-center gap-2 text-base">
+                              <LayoutDashboard className="h-5 w-5" /> Explore Dashboard
                             </span>
                           </Link>
                         </div>
@@ -206,10 +206,10 @@ const EntrepreneurProblems = () => {
                         <div className="flex justify-center">
                           <Link 
                             to="/insighta/vc-search" 
-                            className="inline-flex items-center gap-2 rounded-md border border-border bg-background px-4 py-2 text-sm font-medium text-foreground hover:border-primary/40 transition-colors"
+                            className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-5 py-2.5 text-base font-medium text-foreground hover:border-primary/50 hover:bg-primary/5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
                           >
-                            <span className="font-semibold text-foreground flex items-center gap-2 text-sm">
-                              {step.pathway} <Rocket className="h-4 w-4" />
+                            <span className="font-semibold text-foreground flex items-center gap-2 text-base">
+                              {step.pathway} <Rocket className="h-5 w-5" />
                             </span>
                           </Link>
                         </div>
@@ -217,10 +217,10 @@ const EntrepreneurProblems = () => {
                         <div className="flex justify-center">
                           <Link
                             to="/tech-stack"
-                            className="inline-flex items-center gap-2 rounded-md border border-border bg-background px-4 py-2 text-sm font-medium text-foreground hover:border-primary/40 transition-colors"
+                            className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-5 py-2.5 text-base font-medium text-foreground hover:border-primary/50 hover:bg-primary/5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
                           >
-                            <span className="font-semibold text-foreground flex items-center gap-2 text-sm">
-                              {step.pathway} <Code className="h-4 w-4" />
+                            <span className="font-semibold text-foreground flex items-center gap-2 text-base">
+                              {step.pathway} <Code className="h-5 w-5" />
                             </span>
                           </Link>
                         </div>
@@ -228,10 +228,10 @@ const EntrepreneurProblems = () => {
                         <div className="flex justify-center">
                           <Link
                             to="/community/co-founders"
-                            className="inline-flex items-center gap-2 rounded-md border border-border bg-background px-4 py-2 text-sm font-medium text-foreground hover:border-primary/40 transition-colors"
+                            className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-5 py-2.5 text-base font-medium text-foreground hover:border-primary/50 hover:bg-primary/5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
                           >
-                            <span className="font-semibold text-foreground flex items-center gap-2 text-sm">
-                              {step.pathway} <Handshake className="h-4 w-4" />
+                            <span className="font-semibold text-foreground flex items-center gap-2 text-base">
+                              {step.pathway} <Handshake className="h-5 w-5" />
                             </span>
                           </Link>
                         </div>
@@ -265,10 +265,10 @@ const EntrepreneurProblems = () => {
                           <div className="flex justify-center">
                             <Link
                               to="/icp-builder"
-                              className="inline-flex items-center gap-2 rounded-md border border-border bg-background px-4 py-2 text-sm font-medium text-foreground hover:border-primary/40 transition-colors"
+                              className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-5 py-2.5 text-base font-medium text-foreground hover:border-primary/50 hover:bg-primary/5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
                             >
-                              <span className="font-semibold text-foreground flex items-center gap-2 text-sm">
-                                Define your Niche <Target className="h-4 w-4" />
+                              <span className="font-semibold text-foreground flex items-center gap-2 text-base">
+                                Define your Niche <Target className="h-5 w-5" />
                               </span>
                             </Link>
                           </div>
@@ -276,10 +276,10 @@ const EntrepreneurProblems = () => {
                           <div className="flex justify-center">
                             <Link 
                             to="/pmf-lab" 
-                            className="inline-flex items-center gap-2 rounded-md border border-border bg-background px-4 py-2 text-sm font-medium text-foreground hover:border-primary/40 transition-colors"
+                            className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-5 py-2.5 text-base font-medium text-foreground hover:border-primary/50 hover:bg-primary/5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
                             >
-                              <span className="font-semibold text-foreground flex items-center gap-2 text-sm">
-                                Try PMF Lab <FlaskConical className="h-4 w-4" />
+                              <span className="font-semibold text-foreground flex items-center gap-2 text-base">
+                                Try PMF Lab <FlaskConical className="h-5 w-5" />
                               </span>
                             </Link>
                           </div>
@@ -287,10 +287,10 @@ const EntrepreneurProblems = () => {
                           <div className="flex justify-center">
                             <Link 
                               to="/community" 
-                            className="inline-flex items-center gap-2 rounded-md border border-border bg-background px-4 py-2 text-sm font-medium text-foreground hover:border-primary/40 transition-colors"
+                            className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-5 py-2.5 text-base font-medium text-foreground hover:border-primary/50 hover:bg-primary/5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
                             >
-                              <span className="font-semibold text-foreground flex items-center gap-2 text-sm">
-                                Find a Mentor <Users className="h-4 w-4" />
+                              <span className="font-semibold text-foreground flex items-center gap-2 text-base">
+                                Find a Mentor <Users className="h-5 w-5" />
                               </span>
                             </Link>
                           </div>
@@ -298,10 +298,10 @@ const EntrepreneurProblems = () => {
                           <div className="flex justify-center">
                             <Link 
                               to="/dashboard" 
-                            className="inline-flex items-center gap-2 rounded-md border border-border bg-background px-4 py-2 text-sm font-medium text-foreground hover:border-primary/40 transition-colors"
+                            className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-5 py-2.5 text-base font-medium text-foreground hover:border-primary/50 hover:bg-primary/5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
                             >
-                              <span className="font-semibold text-foreground flex items-center gap-2 text-sm">
-                                <LayoutDashboard className="h-4 w-4" /> Explore Dashboard
+                              <span className="font-semibold text-foreground flex items-center gap-2 text-base">
+                                <LayoutDashboard className="h-5 w-5" /> Explore Dashboard
                               </span>
                             </Link>
                           </div>
@@ -309,10 +309,10 @@ const EntrepreneurProblems = () => {
                           <div className="flex justify-center">
                             <Link 
                               to="/insighta/vc-search" 
-                            className="inline-flex items-center gap-2 rounded-md border border-border bg-background px-4 py-2 text-sm font-medium text-foreground hover:border-primary/40 transition-colors"
+                            className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-5 py-2.5 text-base font-medium text-foreground hover:border-primary/50 hover:bg-primary/5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
                             >
-                              <span className="font-semibold text-foreground flex items-center gap-2 text-sm">
-                                {step.pathway} <Rocket className="h-4 w-4" />
+                              <span className="font-semibold text-foreground flex items-center gap-2 text-base">
+                                {step.pathway} <Rocket className="h-5 w-5" />
                               </span>
                             </Link>
                           </div>
@@ -320,10 +320,10 @@ const EntrepreneurProblems = () => {
                           <div className="flex justify-center">
                             <Link
                               to="/tech-stack"
-                            className="inline-flex items-center gap-2 rounded-md border border-border bg-background px-4 py-2 text-sm font-medium text-foreground hover:border-primary/40 transition-colors"
+                            className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-5 py-2.5 text-base font-medium text-foreground hover:border-primary/50 hover:bg-primary/5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
                             >
-                              <span className="font-semibold text-foreground flex items-center gap-2 text-sm">
-                                {step.pathway} <Code className="h-4 w-4" />
+                              <span className="font-semibold text-foreground flex items-center gap-2 text-base">
+                                {step.pathway} <Code className="h-5 w-5" />
                               </span>
                             </Link>
                           </div>
@@ -331,10 +331,10 @@ const EntrepreneurProblems = () => {
                           <div className="flex justify-center">
                             <Link
                               to="/community/co-founders"
-                            className="inline-flex items-center gap-2 rounded-md border border-border bg-background px-4 py-2 text-sm font-medium text-foreground hover:border-primary/40 transition-colors"
+                            className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-5 py-2.5 text-base font-medium text-foreground hover:border-primary/50 hover:bg-primary/5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
                             >
-                              <span className="font-semibold text-foreground flex items-center gap-2 text-sm">
-                                {step.pathway} <Handshake className="h-4 w-4" />
+                              <span className="font-semibold text-foreground flex items-center gap-2 text-base">
+                                {step.pathway} <Handshake className="h-5 w-5" />
                               </span>
                             </Link>
                           </div>
@@ -411,10 +411,10 @@ const EntrepreneurProblems = () => {
                           <div className="flex justify-center">
                             <Link
                               to="/icp-builder"
-                              className="inline-flex items-center gap-2 rounded-md border border-border bg-background px-4 py-2 text-sm font-medium text-foreground hover:border-primary/40 transition-colors"
+                              className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-5 py-2.5 text-base font-medium text-foreground hover:border-primary/50 hover:bg-primary/5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
                             >
-                              <span className="font-semibold text-foreground flex items-center gap-2 text-sm">
-                                Define your Niche <Target className="h-4 w-4" />
+                              <span className="font-semibold text-foreground flex items-center gap-2 text-base">
+                                Define your Niche <Target className="h-5 w-5" />
                               </span>
                             </Link>
                           </div>
@@ -422,10 +422,10 @@ const EntrepreneurProblems = () => {
                           <div className="flex justify-center">
                             <Link 
                               to="/pmf-lab" 
-                              className="inline-flex items-center gap-2 rounded-md border border-border bg-background px-4 py-2 text-sm font-medium text-foreground hover:border-primary/40 transition-colors"
+                              className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-5 py-2.5 text-base font-medium text-foreground hover:border-primary/50 hover:bg-primary/5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
                             >
-                              <span className="font-semibold text-foreground flex items-center gap-2 text-sm">
-                                Try PMF Lab <FlaskConical className="h-4 w-4" />
+                              <span className="font-semibold text-foreground flex items-center gap-2 text-base">
+                                Try PMF Lab <FlaskConical className="h-5 w-5" />
                               </span>
                             </Link>
                           </div>
@@ -433,10 +433,10 @@ const EntrepreneurProblems = () => {
                           <div className="flex justify-center">
                             <Link 
                               to="/community" 
-                              className="inline-flex items-center gap-2 rounded-md border border-border bg-background px-4 py-2 text-sm font-medium text-foreground hover:border-primary/40 transition-colors"
+                              className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-5 py-2.5 text-base font-medium text-foreground hover:border-primary/50 hover:bg-primary/5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
                             >
-                              <span className="font-semibold text-foreground flex items-center gap-2 text-sm">
-                                Find a Mentor <Users className="h-4 w-4" />
+                              <span className="font-semibold text-foreground flex items-center gap-2 text-base">
+                                Find a Mentor <Users className="h-5 w-5" />
                               </span>
                             </Link>
                           </div>
@@ -444,10 +444,10 @@ const EntrepreneurProblems = () => {
                           <div className="flex justify-center">
                             <Link 
                               to="/dashboard" 
-                              className="inline-flex items-center gap-2 rounded-md border border-border bg-background px-4 py-2 text-sm font-medium text-foreground hover:border-primary/40 transition-colors"
+                              className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-5 py-2.5 text-base font-medium text-foreground hover:border-primary/50 hover:bg-primary/5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
                             >
-                              <span className="font-semibold text-foreground flex items-center gap-2 text-sm">
-                                <LayoutDashboard className="h-4 w-4" /> Explore Dashboard
+                              <span className="font-semibold text-foreground flex items-center gap-2 text-base">
+                                <LayoutDashboard className="h-5 w-5" /> Explore Dashboard
                               </span>
                             </Link>
                           </div>
@@ -455,10 +455,10 @@ const EntrepreneurProblems = () => {
                           <div className="flex justify-center">
                             <Link 
                               to="/insighta/vc-search" 
-                              className="inline-flex items-center gap-2 rounded-md border border-border bg-background px-4 py-2 text-sm font-medium text-foreground hover:border-primary/40 transition-colors"
+                              className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-5 py-2.5 text-base font-medium text-foreground hover:border-primary/50 hover:bg-primary/5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
                             >
-                              <span className="font-semibold text-foreground flex items-center gap-2 text-sm">
-                                {step.pathway} <Rocket className="h-4 w-4" />
+                              <span className="font-semibold text-foreground flex items-center gap-2 text-base">
+                                {step.pathway} <Rocket className="h-5 w-5" />
                               </span>
                             </Link>
                           </div>
@@ -466,10 +466,10 @@ const EntrepreneurProblems = () => {
                           <div className="flex justify-center">
                             <Link
                               to="/tech-stack"
-                              className="inline-flex items-center gap-2 rounded-md border border-border bg-background px-4 py-2 text-sm font-medium text-foreground hover:border-primary/40 transition-colors"
+                              className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-5 py-2.5 text-base font-medium text-foreground hover:border-primary/50 hover:bg-primary/5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
                             >
-                              <span className="font-semibold text-foreground flex items-center gap-2 text-sm">
-                                {step.pathway} <Code className="h-4 w-4" />
+                              <span className="font-semibold text-foreground flex items-center gap-2 text-base">
+                                {step.pathway} <Code className="h-5 w-5" />
                               </span>
                             </Link>
                           </div>
@@ -477,10 +477,10 @@ const EntrepreneurProblems = () => {
                           <div className="flex justify-center">
                             <Link
                               to="/community/co-founders"
-                              className="inline-flex items-center gap-2 rounded-md border border-border bg-background px-4 py-2 text-sm font-medium text-foreground hover:border-primary/40 transition-colors"
+                              className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-5 py-2.5 text-base font-medium text-foreground hover:border-primary/50 hover:bg-primary/5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
                             >
-                              <span className="font-semibold text-foreground flex items-center gap-2 text-sm">
-                                {step.pathway} <Handshake className="h-4 w-4" />
+                              <span className="font-semibold text-foreground flex items-center gap-2 text-base">
+                                {step.pathway} <Handshake className="h-5 w-5" />
                               </span>
                             </Link>
                           </div>
