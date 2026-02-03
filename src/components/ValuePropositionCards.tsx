@@ -99,7 +99,7 @@ const ValuePropositionCards = () => {
       icon: LayoutDashboard,
       title: "100% Customizable",
       subtitle: "Dashboard: Execute with Confidence",
-      buttonLabel: "Execute, Measure & Iterate",
+      buttonLabel: "Prioritize Tasks",
       description: "Dashboard is your command center — one place to track progress, set milestones, and stay on top of everything without feeling scattered.\n\nSee your startup metrics at a glance, manage tasks and priorities with the Focus Funnel, and keep momentum with built-in accountability features. Everything from your BizMap AI progress to your community connections lives in a single, personalized view.",
       cta: "View Dashboard",
       link: "/dashboard",
