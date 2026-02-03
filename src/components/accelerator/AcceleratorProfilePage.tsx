@@ -46,12 +46,22 @@ const AcceleratorProfilePage = () => {
     const fetchAccelerator = async () => {
       if (!slug) return;
 
-      const { data, error } = await supabase
+      // Try slug first, fall back to ID lookup
+      let { data, error } = await supabase
         .from('funding_opportunities')
         .select('*')
         .eq('slug', slug)
         .eq('type', 'accelerator')
         .single();
+
+      if (error || !data) {
+        ({ data, error } = await supabase
+          .from('funding_opportunities')
+          .select('*')
+          .eq('id', slug)
+          .eq('type', 'accelerator')
+          .single());
+      }
 
       if (error) {
         console.error('Error fetching accelerator:', error);

@@ -44,3 +44,15 @@ SET slug = 'founder-institute',
     website_url = 'https://fi.co',
     application_url = 'https://fi.co/apply'
 WHERE title = 'Founder Institute' AND type = 'accelerator';
+
+UPDATE public.funding_opportunities
+SET slug = 'entrepreneur-first',
+    website_url = 'https://www.joinef.com',
+    application_url = 'https://www.joinef.com/apply'
+WHERE title = 'Entrepreneur First' AND type = 'accelerator';
+
+UPDATE public.funding_opportunities
+SET slug = 'antler',
+    website_url = 'https://www.antler.co',
+    application_url = 'https://www.antler.co/apply'
+WHERE title = 'Antler' AND type = 'accelerator';
