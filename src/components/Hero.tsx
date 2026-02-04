@@ -420,7 +420,10 @@ const Hero = () => {
           {/* Left Section - All existing content */}
           <div className="text-center flex flex-col justify-center">
             {/* Main Headline */}
-            <h1 className="font-space-grotesk text-4xl sm:text-5xl lg:text-6xl font-semibold mb-6 leading-tight tracking-tight">
+            <h1
+              className="font-space-grotesk text-4xl sm:text-5xl lg:text-6xl font-semibold mb-6 leading-tight tracking-tight"
+              style={{ textShadow: '0 0 40px hsl(var(--primary) / 0.15)' }}
+            >
               <span className="text-primary">The One-Person Business</span> Factory
             </h1>
 
