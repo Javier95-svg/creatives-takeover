@@ -25,7 +25,7 @@ const ProUpgradeBanner = () => {
     if (!showBanner) return null;
 
     return (
-        <div className="bg-primary text-primary-foreground border-b border-primary/20 sticky top-0 z-[100]">
+        <div className="bg-background/60 backdrop-blur-md text-foreground border-b border-border/40 sticky top-0 z-[100]">
             <div className="container mx-auto px-4 h-9 flex items-center justify-center gap-2 text-sm font-medium">
                 {isAuthenticated ? (
                     <>
@@ -34,7 +34,7 @@ const ProUpgradeBanner = () => {
                             href="https://koalendar.com/e/meet-with-javier-pena"
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex items-center gap-1 text-primary-foreground/90 hover:text-primary-foreground transition-colors font-semibold underline underline-offset-4 group ml-1"
+                            className="flex items-center gap-1 text-primary hover:text-primary/80 transition-colors font-semibold underline underline-offset-4 group ml-1"
                         >
                             Book Here
                             <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5" />
