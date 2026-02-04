@@ -3186,6 +3186,7 @@ export type Database = {
       }
       funding_opportunities: {
         Row: {
+          application_url: string | null
           created_at: string
           description: string
           funding_amount: string | null
@@ -3194,12 +3195,16 @@ export type Database = {
           is_featured: boolean | null
           keywords: string[] | null
           location: string[] | null
+          logo_url: string | null
+          slug: string | null
           title: string
           type: string
           updated_at: string
           url: string
+          website_url: string | null
         }
         Insert: {
+          application_url?: string | null
           created_at?: string
           description: string
           funding_amount?: string | null
@@ -3208,12 +3213,16 @@ export type Database = {
           is_featured?: boolean | null
           keywords?: string[] | null
           location?: string[] | null
+          logo_url?: string | null
+          slug?: string | null
           title: string
           type: string
           updated_at?: string
           url: string
+          website_url?: string | null
         }
         Update: {
+          application_url?: string | null
           created_at?: string
           description?: string
           funding_amount?: string | null
@@ -3222,10 +3231,13 @@ export type Database = {
           is_featured?: boolean | null
           keywords?: string[] | null
           location?: string[] | null
+          logo_url?: string | null
+          slug?: string | null
           title?: string
           type?: string
           updated_at?: string
           url?: string
+          website_url?: string | null
         }
         Relationships: []
       }
@@ -3370,6 +3382,45 @@ export type Database = {
           is_active?: boolean | null
           position?: number
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      icp_analysis_results: {
+        Row: {
+          analysis_data: Json
+          business_description: string
+          created_at: string | null
+          id: string
+          industry: string | null
+          niche_score: number | null
+          target_audience: string | null
+          updated_at: string | null
+          user_id: string
+          verdict: string | null
+        }
+        Insert: {
+          analysis_data: Json
+          business_description: string
+          created_at?: string | null
+          id?: string
+          industry?: string | null
+          niche_score?: number | null
+          target_audience?: string | null
+          updated_at?: string | null
+          user_id: string
+          verdict?: string | null
+        }
+        Update: {
+          analysis_data?: Json
+          business_description?: string
+          created_at?: string | null
+          id?: string
+          industry?: string | null
+          niche_score?: number | null
+          target_audience?: string | null
+          updated_at?: string | null
+          user_id?: string
+          verdict?: string | null
         }
         Relationships: []
       }

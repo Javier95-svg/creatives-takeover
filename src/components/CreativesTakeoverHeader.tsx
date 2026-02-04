@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
+import ctLogo from '@/assets/ct-logo.png';
 
 const CreativesTakeoverHeader = () => {
   const [isNavOpen, setIsNavOpen] = useState(false);
@@ -18,8 +19,9 @@ const CreativesTakeoverHeader = () => {
       <div className="header-inner container mx-auto px-4 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link to="/" className="creatives-font text-xl font-bold takeover-gradient">
-            Creatives Takeover
+          <Link to="/" className="flex items-center gap-2">
+            <img src={ctLogo} alt="Creatives Takeover" className="h-8 w-8" />
+            <span className="creatives-font text-xl font-bold takeover-gradient">Creatives Takeover</span>
           </Link>
 
           {/* Desktop Navigation */}
