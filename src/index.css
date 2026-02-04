@@ -2355,19 +2355,35 @@ All colors MUST be HSL.
   }
 }
 
-/* Logo Breathing Pulse Animation - Subtle Scale In/Out */
+/* Logo Breathing Pulse Animation - Subtle Scale In/Out with RGB Glow */
 @keyframes logo-breathing {
   0%, 100% {
     transform: scale(1);
+    filter: 
+      drop-shadow(0 0 4px hsl(var(--blue-primary) / 0.35))
+      drop-shadow(0 0 8px hsl(var(--red-primary) / 0.3))
+      drop-shadow(0 0 12px hsl(var(--green-primary) / 0.25));
   }
   25% {
     transform: scale(1.04);
+    filter: 
+      drop-shadow(0 0 6px hsl(var(--blue-primary) / 0.45))
+      drop-shadow(0 0 10px hsl(var(--red-primary) / 0.4))
+      drop-shadow(0 0 14px hsl(var(--green-primary) / 0.35));
   }
   50% {
     transform: scale(1.08);
+    filter: 
+      drop-shadow(0 0 8px hsl(var(--blue-primary) / 0.55))
+      drop-shadow(0 0 12px hsl(var(--red-primary) / 0.5))
+      drop-shadow(0 0 16px hsl(var(--green-primary) / 0.45));
   }
   75% {
     transform: scale(1.04);
+    filter: 
+      drop-shadow(0 0 6px hsl(var(--blue-primary) / 0.45))
+      drop-shadow(0 0 10px hsl(var(--red-primary) / 0.4))
+      drop-shadow(0 0 14px hsl(var(--green-primary) / 0.35));
   }
 }
 
@@ -2376,6 +2392,10 @@ All colors MUST be HSL.
   animation: logo-breathing 3s ease-in-out infinite;
   transform-origin: center;
   will-change: transform, filter;
+  /* Smooth anti-aliased edges */
+  image-rendering: -webkit-optimize-contrast;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
 }
 
 /* Stories Wallpaper Animations */
