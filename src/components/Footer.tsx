@@ -28,6 +28,13 @@ const Footer = () => {
               <Mail className="h-4 w-4" aria-hidden="true" />
               javier@creatives-takeover.com
             </a>
+            <a
+              href="mailto:admin@creatives-takeover.com"
+              className="mt-2 inline-flex items-center gap-2 text-sm underline-offset-4 hover:underline"
+            >
+              <Mail className="h-4 w-4" aria-hidden="true" />
+              admin@creatives-takeover.com
+            </a>
           </section>
 
           <nav aria-labelledby="footer-legal">
