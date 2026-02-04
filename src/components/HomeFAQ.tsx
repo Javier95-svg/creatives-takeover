@@ -60,7 +60,7 @@ const HomeFAQ = () => {
             Time to Answer 💡
           </Badge>
           <h2 className="font-space-grotesk text-3xl sm:text-4xl md:text-5xl font-semibold mb-4 sm:mb-6 text-primary">
-            FAQ
+            FAQs
           </h2>
           <p className="font-poppins text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto px-4">
             Everything you need to know about Creatives Takeover.
