@@ -44,7 +44,7 @@ const ValuePropositionCards = () => {
       description: "BizMap AI is your personal business planning partner that walks you through every stage of building a product and getting it into the right hands. From defining your ideal customer with ICP Builder to validating demand with PMF Lab, choosing your tech stack, and mapping out your go-to-market strategy, every tool works together to keep you moving forward.\n\nThink of it as having a co-founder who never sleeps. Chat with the Business Planner about any challenge, get tailored recommendations, and export polished plans when you need to share your vision with investors or partners.",
       cta: "Start Building",
       link: "/bizmap-ai",
-      image: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=800&h=600&fit=crop&q=80",
+      image: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=800&h=600&fit=crop&q=80&fm=webp",
       imageAlt: "Business development planning with strategy notes"
     },
     {
@@ -56,7 +56,7 @@ const ValuePropositionCards = () => {
       description: "Finding the right accelerator can change the trajectory of your startup, but sorting through programs on your own is overwhelming. Accelerator Hunt gives you a curated collection of top programs so you can filter by industry, funding stage, and location to find the ones that actually match where you are.\n\nEach profile breaks down what the program offers, what they look for in applicants, and how to apply. Whether you're eyeing Y Combinator, Techstars, or a niche program in your space, you'll have everything you need to put your best application forward.",
       cta: "Find Accelerators",
       link: "/insighta/accelerator-hunt",
-      image: "https://images.unsplash.com/photo-1531482615713-2afd69097998?w=800&h=600&fit=crop&q=80",
+      image: "https://images.unsplash.com/photo-1531482615713-2afd69097998?w=800&h=600&fit=crop&q=80&fm=webp",
       imageAlt: "Startup accelerator program session"
     },
     {
@@ -68,7 +68,7 @@ const ValuePropositionCards = () => {
       description: "Raising money starts with knowing who to talk to. VC Search lets you explore a curated database of venture capital firms filtered by industry, stage, and check size so you can build a targeted list instead of pitching blind. Find your Angel connects you directly with angel investors who are actively looking to back early stage founders.\n\nPair your outreach with the Pitch Deck Analyzer to sharpen your presentation, Email Templates to craft messages that actually feel personal, and the Insighta Test to check your fundraising readiness. It's everything you need to walk into investor conversations prepared.",
       cta: "Explore Investors",
       link: "/insighta/vc-search",
-      image: "https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=800&h=600&fit=crop&q=80",
+      image: "https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=800&h=600&fit=crop&q=80&fm=webp",
       imageAlt: "Fundraising meeting with investors"
     },
     {
@@ -80,7 +80,7 @@ const ValuePropositionCards = () => {
       description: "Building a business on your own doesn't mean you have to figure everything out alone. The Mentor Marketplace connects you with experienced founders and industry experts who offer guidance, honest feedback, and the kind of perspective that only comes from having been through it before.\n\nLooking for someone to build with? The Co-Founder Marketplace helps you find partners who complement your skills and share your ambition. Filter by industry, stage, and expertise to connect with people who get what you're working on and want to be part of the journey.",
       cta: "Join Community",
       link: "/community",
-      image: "https://images.unsplash.com/photo-1587614382346-4ec70e388b28?w=800&h=600&fit=crop&q=80",
+      image: "https://images.unsplash.com/photo-1587614382346-4ec70e388b28?w=800&h=600&fit=crop&q=80&fm=webp",
       imageAlt: "Founders collaborating in a video call"
     },
     {
@@ -92,7 +92,7 @@ const ValuePropositionCards = () => {
       description: "Great ideas often start with the right spark. The Prompt Library gives you a rich collection of business cases and startup scenarios across industries like AI, e-commerce, SaaS, and the creator economy, so you always have fresh starting points when you need inspiration or want to explore a new direction.\n\nFounder Stories brings you real experiences from entrepreneurs who've walked the path before you. No recycled advice or theory, just honest lessons, practical wins, and real struggles from people who understand what it takes to get something off the ground.",
       cta: "Read Stories",
       link: "/stories",
-      image: "https://images.unsplash.com/photo-1456324504439-367cee3b3c32?w=800&h=600&fit=crop&q=80",
+      image: "https://images.unsplash.com/photo-1456324504439-367cee3b3c32?w=800&h=600&fit=crop&q=80&fm=webp",
       imageAlt: "Founder reading and learning from content"
     },
     {
@@ -104,7 +104,7 @@ const ValuePropositionCards = () => {
       description: "Your dashboard is where everything comes together. Focus Funnel helps you cut through the noise and prioritize what actually moves the needle, while Decision Sprint gives you a structured way to evaluate ideas before committing. Core Metrics keeps your key numbers visible so you always know where you stand.\n\nWeekly Mission and Your Tasks keep you accountable with clear goals and action items, so you spend less time wondering what to do next and more time making real progress. It's your personal command center, designed to keep you focused and moving forward.",
       cta: "View Dashboard",
       link: "/dashboard",
-      image: "https://images.unsplash.com/photo-1553877522-43269d4ea984?w=800&h=600&fit=crop&q=80",
+      image: "https://images.unsplash.com/photo-1553877522-43269d4ea984?w=800&h=600&fit=crop&q=80&fm=webp",
       imageAlt: "Personalized startup dashboard"
     }
   ];

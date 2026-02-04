@@ -3,6 +3,11 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Star, MapPin, CheckCircle2 } from "lucide-react";
 
+const avatarSvg = (name: string, bg: string) => {
+  const initials = name.split(' ').map(n => n[0]).join('');
+  return `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128"><rect width="128" height="128" fill="${bg}"/><text x="64" y="64" dominant-baseline="central" text-anchor="middle" fill="white" font-size="48" font-weight="bold" font-family="Arial,sans-serif">${initials}</text></svg>`)}`;
+};
+
 const UserReviews = () => {
   const reviews = [
     {
@@ -12,7 +17,7 @@ const UserReviews = () => {
       location: "Mumbai, India",
       role: "Indie founder",
       rating: 5,
-      avatar: "https://ui-avatars.com/api/?name=Priya+Sharma&background=6366f1&color=fff&size=128&bold=true",
+      avatar: avatarSvg("Priya Sharma", "#6366f1"),
       verified: true,
       outcome: "Launched in 28 days"
     },
@@ -23,7 +28,7 @@ const UserReviews = () => {
       location: "London, UK",
       role: "First-time creator",
       rating: 4.5,
-      avatar: "https://ui-avatars.com/api/?name=James+Mitchell&background=3b82f6&color=fff&size=128&bold=true",
+      avatar: avatarSvg("James Mitchell", "#3b82f6"),
       verified: true,
       outcome: "Accepted to accelerator"
     },
@@ -34,7 +39,7 @@ const UserReviews = () => {
       location: "Barcelona, Spain",
       role: "Creative entrepreneur",
       rating: 4,
-      avatar: "https://ui-avatars.com/api/?name=Sofia+Martinez&background=ec4899&color=fff&size=128&bold=true",
+      avatar: avatarSvg("Sofia Martinez", "#ec4899"),
       verified: true,
       outcome: "30-day streak maintained"
     },
@@ -45,7 +50,7 @@ const UserReviews = () => {
       location: "Seoul, South Korea",
       role: "Tech founder",
       rating: 4.5,
-      avatar: "https://ui-avatars.com/api/?name=David+Kim&background=10b981&color=fff&size=128&bold=true",
+      avatar: avatarSvg("David Kim", "#10b981"),
       verified: true,
       outcome: "Improved plan score by 25%"
     },
@@ -56,7 +61,7 @@ const UserReviews = () => {
       location: "Lagos, Nigeria",
       role: "Startup founder",
       rating: 5,
-      avatar: "https://ui-avatars.com/api/?name=Aisha+Okafor&background=f59e0b&color=fff&size=128&bold=true",
+      avatar: avatarSvg("Aisha Okafor", "#f59e0b"),
       verified: true,
       outcome: "Connected with angel investor"
     },
@@ -67,7 +72,7 @@ const UserReviews = () => {
       location: "Stockholm, Sweden",
       role: "Solo entrepreneur",
       rating: 4,
-      avatar: "https://ui-avatars.com/api/?name=Lucas+Anderson&background=8b5cf6&color=fff&size=128&bold=true",
+      avatar: avatarSvg("Lucas Anderson", "#8b5cf6"),
       verified: true,
       outcome: "Plan completed in 2 days"
     },
@@ -78,7 +83,7 @@ const UserReviews = () => {
       location: "Tokyo, Japan",
       role: "Indie developer",
       rating: 4.5,
-      avatar: "https://ui-avatars.com/api/?name=Yuki+Tanaka&background=ef4444&color=fff&size=128&bold=true",
+      avatar: avatarSvg("Yuki Tanaka", "#ef4444"),
       verified: true,
       outcome: "5x productivity increase"
     },
@@ -89,7 +94,7 @@ const UserReviews = () => {
       location: "Melbourne, Australia",
       role: "First-time creator",
       rating: 4,
-      avatar: "https://ui-avatars.com/api/?name=Emma+Thompson&background=06b6d4&color=fff&size=128&bold=true",
+      avatar: avatarSvg("Emma Thompson", "#06b6d4"),
       verified: true,
       outcome: "Secured co-founder alignment"
     }
