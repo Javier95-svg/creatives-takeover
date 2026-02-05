@@ -10,6 +10,7 @@ import { useHoverPopup } from "@/hooks/useHoverPopup";
 import { useSocial } from "@/hooks/useSocial";
 import { FriendRequestsModal } from "@/components/social/FriendRequestsModal";
 import { NotificationBell } from "@/components/community/NotificationBell";
+import { useMessaging } from "@/hooks/useMessaging";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { supabase } from "@/integrations/supabase/client";
@@ -39,6 +40,8 @@ const Navigation = () => {
   const { trackClick } = usePageAnalytics();
   const deviceType = useDeviceType();
   const location = useLocation();
+  const { getTotalUnreadCount } = useMessaging({ autoLoad: true, suppressLoadErrors: true });
+  const totalUnreadMessages = user ? getTotalUnreadCount() : 0;
 
   // Hover popup for BizMap AI menu item
   const bizMapHover = useHoverPopup({ delay: 1500, trigger: 'bizmap-nav' });
@@ -462,6 +465,11 @@ const Navigation = () => {
                   >
                     <Link to="/messages">
                       <MessageCircle className="w-4 h-4" />
+                      {totalUnreadMessages > 0 && (
+                        <Badge variant="destructive" className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs">
+                          {totalUnreadMessages > 9 ? '9+' : totalUnreadMessages}
+                        </Badge>
+                      )}
                     </Link>
                   </Button>
                   <NotificationBell />

@@ -20,6 +20,9 @@ export const NotificationBell = () => {
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useCommunityNotifications(user?.id);
   const navigate = useNavigate();
 
+  // Filter out message notifications - they're handled separately in the messages icon
+  const systemNotifications = notifications.filter(n => n.notification_type !== 'message');
+
   const handleNotificationClick = async (notification: any) => {
     await markAsRead(notification.id);
 
@@ -94,12 +97,12 @@ export const NotificationBell = () => {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <ScrollArea className="h-[400px]">
-          {notifications.length === 0 ? (
+          {systemNotifications.length === 0 ? (
             <div className="p-4 text-center text-muted-foreground text-sm">
               No notifications yet
             </div>
           ) : (
-            notifications.map((notification) => (
+            systemNotifications.map((notification) => (
               <DropdownMenuItem
                 key={notification.id}
                 onClick={() => handleNotificationClick(notification)}

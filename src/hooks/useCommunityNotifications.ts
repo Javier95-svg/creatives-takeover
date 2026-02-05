@@ -82,7 +82,8 @@ export const useCommunityNotifications = (userId: string | undefined) => {
       );
 
       setNotifications(notificationsWithActors);
-      setUnreadCount(notificationsWithActors.filter(n => !n.read).length);
+      // Exclude message notifications from unread count - they're handled separately in the messages icon
+      setUnreadCount(notificationsWithActors.filter(n => !n.read && n.notification_type !== 'message').length);
     } catch (error) {
       console.error('Error fetching notifications:', error);
     } finally {
@@ -99,10 +100,13 @@ export const useCommunityNotifications = (userId: string | undefined) => {
 
       if (error) throw error;
 
-      setNotifications(prev =>
-        prev.map(n => n.id === notificationId ? { ...n, read: true } : n)
-      );
-      setUnreadCount(prev => Math.max(0, prev - 1));
+      setNotifications(prev => {
+        const updated = prev.map(n => n.id === notificationId ? { ...n, read: true } : n);
+        // Recalculate unread count excluding message notifications
+        const newUnreadCount = updated.filter(n => !n.read && n.notification_type !== 'message').length;
+        setUnreadCount(newUnreadCount);
+        return updated;
+      });
     } catch (error) {
       console.error('Error marking notification as read:', error);
     }
@@ -121,6 +125,8 @@ export const useCommunityNotifications = (userId: string | undefined) => {
       if (error) throw error;
 
       setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+      // Only mark system notifications as read, message notifications remain separate
+      // Recalculate unread count excluding message notifications (should be 0 after marking all system notifications as read)
       setUnreadCount(0);
       toast.success('All notifications marked as read');
     } catch (error) {

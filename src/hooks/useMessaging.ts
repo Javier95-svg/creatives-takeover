@@ -547,6 +547,18 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
     ).length;
   };
 
+  // Get total unread messages count across all conversations
+  const getTotalUnreadCount = useCallback((): number => {
+    if (!user) return 0;
+    return conversations.reduce((total, conversation) => {
+      const conversationMessages = messages[conversation.id] || [];
+      const unread = conversationMessages.filter(msg => 
+        msg.sender_id !== user.id && !msg.is_read
+      ).length;
+      return total + unread;
+    }, 0);
+  }, [conversations, messages, user]);
+
   // Get user ID by username
   const getUserIdByUsername = useCallback(async (username: string): Promise<string | null> => {
     try {
@@ -681,6 +693,7 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
     sendMessage,
     markAsRead,
     getUnreadCount,
+    getTotalUnreadCount,
     deleteConversation,
     getUserIdByEmail,
     getUserIdByUsername,
