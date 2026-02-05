@@ -31,7 +31,7 @@ const ProUpgradeBanner = () => {
                     <>
                         <span>Give us your feedback and get a free Pro upgrade</span>
                         <a
-                            href="https://koalendar.com/e/meet-with-javier-pena"
+                            href="https://calendly.com/javier-creatives-takeover/30min"
                             target="_blank"
                             rel="noopener noreferrer"
                             className="flex items-center gap-1 text-primary hover:text-primary/80 transition-colors font-semibold underline underline-offset-4 group ml-1"
