@@ -4,6 +4,7 @@ import { OnboardingForm } from '@/components/OnboardingForm';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Helmet } from 'react-helmet-async';
+import HomeWallpaper from '@/components/wallpapers/HomeWallpaper';
 
 const Onboarding = () => {
   const { user, isAuthenticated } = useAuth();
@@ -51,8 +52,16 @@ const Onboarding = () => {
         <meta name="description" content="Complete your onboarding to get started with Creatives Takeover" />
       </Helmet>
       
-      <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/30 bg-[radial-gradient(1200px_circle_at_top,_rgba(56,189,248,0.12),_transparent_65%)] py-10 px-4">
-        <OnboardingForm onComplete={handleComplete} />
+      {/* Home Wallpaper Background */}
+      <HomeWallpaper />
+      
+      <div className="relative min-h-screen flex items-center justify-center py-8 px-4 sm:py-12">
+        <div className="w-full max-w-4xl mx-auto">
+          {/* Fade-in animation for smooth appearance */}
+          <div className="animate-fade-in-up">
+            <OnboardingForm onComplete={handleComplete} />
+          </div>
+        </div>
       </div>
     </>
   );

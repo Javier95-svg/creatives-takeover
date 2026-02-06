@@ -842,7 +842,7 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
 
   return (
     <div className="w-full max-w-[680px] mx-auto p-4 sm:p-6 font-poppins">
-      <Card className="rounded-2xl border border-border/60 bg-card/80 shadow-xl backdrop-blur">
+      <Card className="rounded-2xl border border-border/60 bg-card/90 backdrop-blur-md shadow-2xl hover:shadow-2xl hover:shadow-primary/10 transition-all duration-300">
         <CardHeader className="space-y-4 pb-6 border-b border-border/60">
           <div>
             <CardTitle className="text-2xl sm:text-3xl font-semibold tracking-tight font-space-grotesk">Welcome to Creatives Takeover</CardTitle>
