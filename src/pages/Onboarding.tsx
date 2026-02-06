@@ -24,9 +24,11 @@ const Onboarding = () => {
           .eq('id', user.id)
           .single();
 
-        if (profile?.onboarding_completed) {
-          // Already onboarded, redirect to dashboard
-          navigate('/dashboard');
+        // STRICT CHECK: Only redirect if onboarding_completed is explicitly true
+        // This ensures users who completed onboarding NEVER see this page again
+        if (profile?.onboarding_completed === true) {
+          // Already onboarded, immediately redirect to dashboard
+          navigate('/dashboard', { replace: true });
         }
       } catch (error) {
         console.error('Error checking onboarding status:', error);

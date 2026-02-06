@@ -47,10 +47,13 @@ const Dashboard = () => {
         .single();
 
       if (profile) {
+        // STRICT CHECK: Only redirect if onboarding_completed is explicitly false
+        // NEVER redirect if onboarding_completed is true (already completed)
         if (profile.onboarding_completed === false) {
           navigate('/onboarding');
           return;
         }
+        // If onboarding_completed is true or null, proceed with dashboard
         setUseClassicDashboard(profile.use_classic_dashboard || false);
       }
     };

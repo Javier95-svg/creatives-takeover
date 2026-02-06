@@ -232,13 +232,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                     .eq('id', session.user.id);
                 }
 
-                // Redirect to onboarding page if onboarding not completed
-                if (profileData && !profileData.onboarding_completed) {
-                  // For admin user, always clear the redirect flag to enable repeated testing
-                  if (isAdminUser) {
-                    sessionStorage.removeItem(`onboarding_redirect_${session.user.id}`);
-                  }
-
+                // Redirect to onboarding page ONLY if onboarding is explicitly not completed
+                // NEVER redirect if onboarding_completed is true or null/undefined
+                if (profileData && profileData.onboarding_completed === false) {
                   // Check if we've already redirected in this session to prevent loops
                   const hasRedirected = sessionStorage.getItem(`onboarding_redirect_${session.user.id}`);
 
@@ -248,13 +244,27 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
                     // Small delay to ensure auth state is fully settled
                     setTimeout(() => {
-                      // Only redirect if not already on onboarding page
-                      if (!window.location.pathname.includes('/onboarding')) {
-                        window.location.href = '/onboarding';
-                        logInfo('Redirected first-time user to onboarding page', { userId: session.user.id });
-                      }
+                      // Double-check onboarding status before redirecting (in case it was completed)
+                      supabase
+                        .from('profiles')
+                        .select('onboarding_completed')
+                        .eq('id', session.user.id)
+                        .single()
+                        .then(({ data: recheckProfile }) => {
+                          // Only redirect if still not completed AND not already on onboarding page
+                          if (recheckProfile?.onboarding_completed === false && !window.location.pathname.includes('/onboarding')) {
+                            window.location.href = '/onboarding';
+                            logInfo('Redirected first-time user to onboarding page', { userId: session.user.id });
+                          } else if (recheckProfile?.onboarding_completed === true) {
+                            // Clear redirect flag if onboarding was completed
+                            sessionStorage.removeItem(`onboarding_redirect_${session.user.id}`);
+                          }
+                        });
                     }, 1500);
                   }
+                } else if (profileData && profileData.onboarding_completed === true) {
+                  // If onboarding is completed, ensure redirect flag is cleared
+                  sessionStorage.removeItem(`onboarding_redirect_${session.user.id}`);
                 }
               } catch (onboardingError) {
                 logError('Failed to check onboarding status', onboardingError, { userId: session.user.id });

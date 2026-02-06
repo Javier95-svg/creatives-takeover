@@ -46,13 +46,16 @@ const Index = () => {
           .maybeSingle();
 
         if (profile) {
-          if (!profile.onboarding_completed) {
+          // STRICT CHECK: Only redirect to onboarding if explicitly false
+          // NEVER redirect if onboarding_completed is true or null/undefined
+          if (profile.onboarding_completed === false) {
             // Redirect to onboarding if not completed
             navigate('/onboarding');
-          } else {
+          } else if (profile.onboarding_completed === true) {
             // Redirect to dashboard if onboarding completed
             navigate('/dashboard');
           }
+          // If onboarding_completed is null/undefined, stay on homepage (let user decide)
         }
       } catch (error) {
         console.error('Error checking onboarding status:', error);
