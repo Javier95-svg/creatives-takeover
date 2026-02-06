@@ -57,11 +57,19 @@ const Auth: React.FC = () => {
       return;
     }
 
-    // If redirect is a booking flow, go to /community instead
-    const finalRedirect = redirectUrl.startsWith('/community/book/') ? '/community' : redirectUrl;
     // Only redirect if we're still on the auth page
     if (window.location.pathname === '/auth') {
-      navigate(finalRedirect);
+      // If redirect is a booking flow, go to /community instead
+      const finalRedirect = redirectUrl.startsWith('/community/book/') ? '/community' : redirectUrl;
+      
+      // If redirect is just '/', check onboarding status to avoid double redirect
+      if (finalRedirect === '/') {
+        // Let Index.tsx handle the redirect based on onboarding status
+        navigate('/');
+      } else {
+        // Use the specific redirect URL
+        navigate(finalRedirect);
+      }
     }
   }, [user, navigate, redirectUrl]);
 
