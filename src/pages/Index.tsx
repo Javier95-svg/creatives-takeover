@@ -1,4 +1,5 @@
 import { useEffect, lazy, Suspense } from "react";
+import { useNavigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import Hero from "@/components/Hero";
 import ValuePropositionCards from "@/components/ValuePropositionCards";
@@ -13,12 +14,16 @@ import SEO, { createOrganizationSchema, createWebSiteSchema, createBreadcrumbSch
 import Footer from "@/components/Footer";
 import { usePageAnalytics } from "@/hooks/usePageAnalytics";
 import HomeWallpaper from "@/components/wallpapers/HomeWallpaper";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 // Lazy load below-the-fold components for better performance
 const HomeFAQ = lazy(() => import("@/components/HomeFAQ"));
 
 const Index = () => {
   const isMobile = useIsMobile();
+  const navigate = useNavigate();
+  const { user, loading: authLoading } = useAuth();
   // Track homepage analytics
   usePageAnalytics('/', 'Home - Creatives Takeover');
   
@@ -27,6 +32,36 @@ const Index = () => {
     // Clear popup session storage on fresh page load
     sessionStorage.removeItem('credit-popup-time-seen');
   }, []);
+
+  // Redirect authenticated users appropriately
+  useEffect(() => {
+    if (authLoading || !user) return;
+
+    const checkOnboardingAndRedirect = async () => {
+      try {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('onboarding_completed')
+          .eq('id', user.id)
+          .maybeSingle();
+
+        if (profile) {
+          if (!profile.onboarding_completed) {
+            // Redirect to onboarding if not completed
+            navigate('/onboarding');
+          } else {
+            // Redirect to dashboard if onboarding completed
+            navigate('/dashboard');
+          }
+        }
+      } catch (error) {
+        console.error('Error checking onboarding status:', error);
+        // If error, allow user to stay on homepage
+      }
+    };
+
+    checkOnboardingAndRedirect();
+  }, [user, authLoading, navigate]);
   
   const handleRefresh = async () => {
     window.location.reload();

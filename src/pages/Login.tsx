@@ -25,13 +25,15 @@ const Login = () => {
     password: ""
   });
   const [rememberMe, setRememberMe] = useState(false);
+  const [resendEmailLoading, setResendEmailLoading] = useState(false);
+  const [loginError, setLoginError] = useState<string | null>(null);
   
   const { signIn, user } = useAuth();
   const navigate = useNavigate();
 
-  // Redirect if already logged in
+  // Handle redirect after successful login - wait for auth state to update
   useEffect(() => {
-    if (user) {
+    if (user && window.location.pathname === '/login') {
       navigate('/');
     }
   }, [user, navigate]);
@@ -104,15 +106,17 @@ const Login = () => {
       const { error } = await signIn(formData.email, formData.password);
       
       if (error) {
+        setLoginError(error.message || "Login failed. Please check your credentials.");
         toast.error(error.message || "Login failed. Please check your credentials.");
       } else {
+        setLoginError(null);
         if (rememberMe) {
           localStorage.setItem('rememberedEmail', formData.email);
         } else {
           localStorage.removeItem('rememberedEmail');
         }
         toast.success("Login successful! Welcome back.");
-        navigate('/');
+        // Don't redirect here - let useEffect handle redirect when user state updates
       }
     } catch (error) {
       toast.error("An unexpected error occurred.");
@@ -124,6 +128,36 @@ const Login = () => {
   // Toggle password visibility
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
+  };
+
+  // Resend confirmation email
+  const handleResendConfirmationEmail = async () => {
+    if (!formData.email) {
+      toast.error('Please enter your email address first');
+      return;
+    }
+
+    setResendEmailLoading(true);
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: formData.email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        }
+      });
+
+      if (error) {
+        toast.error(error.message || 'Failed to resend confirmation email');
+      } else {
+        toast.success('Confirmation email sent! Please check your inbox.');
+        setLoginError(null);
+      }
+    } catch (err) {
+      toast.error('Failed to resend confirmation email. Please try again.');
+    } finally {
+      setResendEmailLoading(false);
+    }
   };
 
   // Google OAuth login
@@ -280,6 +314,32 @@ const Login = () => {
                   <p className="text-sm text-red-500 animate-fade-in">{errors.password}</p>
                 )}
               </div>
+
+              {/* Email Confirmation Error & Resend */}
+              {loginError && loginError.toLowerCase().includes('email') && loginError.toLowerCase().includes('confirm') && (
+                <div className="bg-muted/50 border border-border rounded-lg p-3 space-y-2">
+                  <p className="text-sm text-muted-foreground">
+                    Your email hasn't been confirmed yet. Check your inbox for the confirmation email.
+                  </p>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleResendConfirmationEmail}
+                    disabled={resendEmailLoading || !formData.email}
+                    className="w-full"
+                  >
+                    {resendEmailLoading ? (
+                      <>
+                        <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
+                        Sending...
+                      </>
+                    ) : (
+                      'Resend Confirmation Email'
+                    )}
+                  </Button>
+                </div>
+              )}
 
               {/* Remember Me + Forgot Password */}
               <div className="flex items-center justify-between">

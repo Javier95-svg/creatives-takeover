@@ -31,16 +31,35 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   // Track timeout IDs to prevent memory leaks
   const timeoutRefs = useRef<Set<NodeJS.Timeout>>(new Set());
 
-  useEffect(() => {
-    // Set up auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        setLoading(false);
+    useEffect(() => {
+      // Set up auth state listener FIRST
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(
+        async (event, session) => {
+          // Verify session is valid before updating state
+          if (session) {
+            // Double-check session is still valid by verifying with Supabase
+            const { data: { session: verifiedSession } } = await supabase.auth.getSession();
+            if (!verifiedSession || verifiedSession.access_token !== session.access_token) {
+              // Session changed or invalidated, use the verified one
+              setSession(verifiedSession);
+              setUser(verifiedSession?.user ?? null);
+              setLoading(false);
+              return;
+            }
+          }
+          
+          setSession(session);
+          setUser(session?.user ?? null);
+          setLoading(false);
 
-        // Create or update profile when user signs in
-        if (event === 'SIGNED_IN' && session?.user) {
+          // Create or update profile when user signs in
+          if (event === 'SIGNED_IN' && session?.user) {
+            // Verify session is established before proceeding
+            const { data: { session: currentSession } } = await supabase.auth.getSession();
+            if (!currentSession || currentSession.user.id !== session.user.id) {
+              logError('Session verification failed after sign in', null, { userId: session.user.id });
+              return;
+            }
           // Check for pending Calendly redirect
           const CALENDLY_REDIRECT_KEY = 'pending_calendly_redirect';
           const pendingCalendlyUrl = localStorage.getItem(CALENDLY_REDIRECT_KEY);
@@ -213,7 +232,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                     .eq('id', session.user.id);
                 }
 
-                // Redirect to account page if onboarding not completed
+                // Redirect to onboarding page if onboarding not completed
                 if (profileData && !profileData.onboarding_completed) {
                   // For admin user, always clear the redirect flag to enable repeated testing
                   if (isAdminUser) {
@@ -229,10 +248,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
                     // Small delay to ensure auth state is fully settled
                     setTimeout(() => {
-                      // Only redirect if not already on account page
-                      if (!window.location.pathname.includes('/account')) {
-                        window.location.href = '/account';
-                        logInfo('Redirected first-time user to account page', { userId: session.user.id });
+                      // Only redirect if not already on onboarding page
+                      if (!window.location.pathname.includes('/onboarding')) {
+                        window.location.href = '/onboarding';
+                        logInfo('Redirected first-time user to onboarding page', { userId: session.user.id });
                       }
                     }, 1500);
                   }
@@ -399,7 +418,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const signUp = async (email: string, password: string, fullName: string, dateOfBirth?: string) => {
-    const redirectUrl = `${window.location.origin}/`;
+    // Redirect to callback handler for proper email confirmation handling
+    const redirectUrl = `${window.location.origin}/auth/callback`;
     
     const { error } = await supabase.auth.signUp({
       email,
@@ -427,10 +447,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
+    const { error, data } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
+    
+    // Verify session was established after sign-in
+    if (!error && data.session) {
+      // Session is available immediately, but let onAuthStateChange handle state updates
+      // This ensures consistency across the app
+      logInfo('Sign-in successful, session established', { userId: data.session.user.id });
+    }
     
     return { error };
   };

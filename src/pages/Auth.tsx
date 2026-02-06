@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 import AuthWallpaper from '@/components/wallpapers/AuthWallpaper';
 import MobileFormOptimizer from '@/components/MobileFormOptimizer';
 import { useFeedbackCredits } from '@/hooks/useFeedbackCredits';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Auth: React.FC = () => {
   const navigate = useNavigate();
@@ -21,6 +22,7 @@ const Auth: React.FC = () => {
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState('login');
   const { hasPendingCredits } = useFeedbackCredits();
+  const { user } = useAuth();
 
   // Get redirect parameter from URL
   const searchParams = new URLSearchParams(location.search);
@@ -38,17 +40,30 @@ const Auth: React.FC = () => {
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [resendEmailLoading, setResendEmailLoading] = useState(false);
 
+  // Handle redirect after successful login - wait for auth state to update
   useEffect(() => {
-    // Check if user is already logged in
-    const checkUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        navigate('/');
-      }
-    };
-    checkUser();
-  }, [navigate]);
+    if (!user) return;
+
+    // Check for pending Calendly redirect
+    const pendingCalendlyUrl = localStorage.getItem(CALENDLY_REDIRECT_KEY);
+    if (pendingCalendlyUrl) {
+      localStorage.removeItem(CALENDLY_REDIRECT_KEY);
+      // Redirect to Calendly
+      window.open(pendingCalendlyUrl, '_blank', 'noopener,noreferrer');
+      // Also navigate to community page
+      navigate('/community');
+      return;
+    }
+
+    // If redirect is a booking flow, go to /community instead
+    const finalRedirect = redirectUrl.startsWith('/community/book/') ? '/community' : redirectUrl;
+    // Only redirect if we're still on the auth page
+    if (window.location.pathname === '/auth') {
+      navigate(finalRedirect);
+    }
+  }, [user, navigate, redirectUrl]);
 
   // Prefill saved email if user opted to be remembered
   useEffect(() => {
@@ -87,21 +102,8 @@ const Auth: React.FC = () => {
         localStorage.removeItem('rememberedEmail');
       }
       toast.success('Welcome back!');
-      
-      // Check for pending Calendly redirect
-      const pendingCalendlyUrl = localStorage.getItem(CALENDLY_REDIRECT_KEY);
-      if (pendingCalendlyUrl) {
-        localStorage.removeItem(CALENDLY_REDIRECT_KEY);
-        // Redirect to Calendly
-        window.open(pendingCalendlyUrl, '_blank', 'noopener,noreferrer');
-        // Also navigate to community page
-        navigate('/community');
-        return;
-      }
-      
-      // If redirect is a booking flow, go to /community instead
-      const finalRedirect = redirectUrl.startsWith('/community/book/') ? '/community' : redirectUrl;
-      navigate(finalRedirect);
+      setLoading(false);
+      // Don't redirect here - let useEffect handle redirect when user state updates
     }
   };
 
@@ -128,7 +130,8 @@ const Auth: React.FC = () => {
       return;
     }
 
-    const redirectUrl = `${window.location.origin}/`;
+    // Redirect to callback handler for proper email confirmation handling
+    const redirectUrl = `${window.location.origin}/auth/callback`;
 
     const { error } = await supabase.auth.signUp({
       email,
@@ -204,6 +207,34 @@ const Auth: React.FC = () => {
   };
 
   // Google OAuth signup
+  const handleResendConfirmationEmail = async () => {
+    if (!email) {
+      toast.error('Please enter your email address first');
+      return;
+    }
+
+    setResendEmailLoading(true);
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        }
+      });
+
+      if (error) {
+        toast.error(error.message || 'Failed to resend confirmation email');
+      } else {
+        toast.success('Confirmation email sent! Please check your inbox.');
+      }
+    } catch (err) {
+      toast.error('Failed to resend confirmation email. Please try again.');
+    } finally {
+      setResendEmailLoading(false);
+    }
+  };
+
   const handleGoogleSignup = async () => {
     try {
       console.log("Starting Google OAuth signup...");
@@ -352,10 +383,37 @@ const Auth: React.FC = () => {
                       {rememberMe && <span className="text-xs text-muted-foreground ml-1">(✓ saved)</span>}
                     </Label>
                   </div>
-                  <div className="text-xs text-muted-foreground">
-                    💡 Save password in browser for auto-fill
-                  </div>
+                  <Link
+                    to="/forgot-password"
+                    className="text-sm text-primary hover:text-primary/80 transition-colors font-medium"
+                  >
+                    Forgot password?
+                  </Link>
                 </div>
+                {error && error.includes('email') && error.includes('confirm') && (
+                  <div className="bg-muted/50 border border-border rounded-lg p-3 space-y-2">
+                    <p className="text-sm text-muted-foreground">
+                      Your email hasn't been confirmed yet. Check your inbox for the confirmation email.
+                    </p>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleResendConfirmationEmail}
+                      disabled={resendEmailLoading || !email}
+                      className="w-full"
+                    >
+                      {resendEmailLoading ? (
+                        <>
+                          <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                          Sending...
+                        </>
+                      ) : (
+                        'Resend Confirmation Email'
+                      )}
+                    </Button>
+                  </div>
+                )}
                 <Button type="submit" className="w-full" disabled={loading}>
                   {loading ? (
                     <>

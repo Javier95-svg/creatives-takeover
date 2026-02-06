@@ -29,7 +29,19 @@ const AuthCallback = () => {
           return;
         }
 
-        // Handle PKCE code exchange
+        // Handle email confirmation token (from email confirmation link)
+        const token = searchParams.get('token');
+        const type = searchParams.get('type');
+        
+        if (token && type === 'signup') {
+          console.log('Email confirmation detected, verifying token...');
+          // Supabase automatically processes email confirmation tokens via URL hash
+          // We just need to wait for the session to be established
+          // The token is processed automatically when the page loads
+          toast.success('Email confirmed successfully!');
+        }
+
+        // Handle PKCE code exchange (for OAuth)
         const code = searchParams.get('code');
         if (code) {
           const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
@@ -44,7 +56,7 @@ const AuthCallback = () => {
 
         console.log('Waiting for auth session...');
 
-        // Wait for session to be established
+        // Wait for session to be established (works for both OAuth and email confirmation)
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
         if (sessionError) {
@@ -58,7 +70,13 @@ const AuthCallback = () => {
         if (session?.user) {
           console.log('Auth successful, checking for return URL...');
           setStatus('success');
-          toast.success('Successfully signed in!');
+          
+          // Show appropriate success message
+          if (token && type === 'signup') {
+            toast.success('Email confirmed! Welcome to Creatives Takeover!');
+          } else {
+            toast.success('Successfully signed in!');
+          }
           
           // Check for pending Calendly redirect (from OAuth or regular auth)
           const CALENDLY_REDIRECT_KEY = 'pending_calendly_redirect';
