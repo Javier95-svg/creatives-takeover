@@ -16,6 +16,8 @@ const StickySectionNav: React.FC = () => {
   );
 
   useEffect(() => {
+    if (typeof document === 'undefined') return;
+    
     const ids = inPageItems.map((i) => i.id);
     const sections = ids
       .map((id) => document.getElementById(id))
@@ -41,13 +43,17 @@ const StickySectionNav: React.FC = () => {
   const handleAnchorClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
     if (!href.startsWith("#")) return; // allow normal navigation for routes
     e.preventDefault();
+    if (typeof document === 'undefined') return;
+    
     const id = href.replace("#", "");
     const el = document.getElementById(id);
     if (el) {
       el.scrollIntoView({ behavior: "smooth", block: "start" });
       setActive(id);
       // Update hash without jumping
-      history.replaceState(null, "", `#${id}`);
+      if (typeof history !== 'undefined') {
+        history.replaceState(null, "", `#${id}`);
+      }
     }
   };
 

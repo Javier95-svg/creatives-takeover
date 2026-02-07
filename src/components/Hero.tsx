@@ -48,7 +48,6 @@ const Hero = () => {
   useEffect(() => {
     const fetchHeroImages = async () => {
       try {
-        console.log('🖼️ Fetching hero images from database...');
         const { data, error } = await supabase
           .from('hero_images')
           .select('position, image_url, alt_text')
@@ -56,19 +55,15 @@ const Hero = () => {
           .order('position', { ascending: true });
 
         if (error) {
-          console.error('❌ Error fetching hero images:', error);
+          console.error('Error fetching hero images:', error);
           return;
         }
 
-        console.log('✅ Hero images fetched:', data);
         if (data && data.length > 0) {
-          console.log(`📸 Found ${data.length} active hero images:`, data);
           setHeroImages(data);
-        } else {
-          console.log('⚠️ No active hero images found in database');
         }
       } catch (error) {
-        console.error('❌ Error fetching hero images:', error);
+        console.error('Error fetching hero images:', error);
       }
     };
 
@@ -92,7 +87,7 @@ const Hero = () => {
     // Extract storage domain from first image URL for preconnect
     try {
       const firstImageUrl = topRowImages[0]?.image_url;
-      if (isValidImageHref(firstImageUrl)) {
+      if (isValidImageHref(firstImageUrl) && typeof document !== 'undefined' && document.head) {
         const imageUrl = new URL(firstImageUrl);
         const storageDomain = imageUrl.origin;
 
@@ -108,43 +103,47 @@ const Hero = () => {
       }
     } catch (e) {
       // If URL parsing fails, skip preconnect
-      console.warn('Could not parse image URL for preconnect:', e);
+      // Silently fail - not critical for functionality
     }
 
     // Preload top row images
-    topRowImages.forEach((image) => {
-      const linkId = `hero-preload-${image.position}`;
-      let preloadLink = document.getElementById(linkId) as HTMLLinkElement;
-      
-      if (!preloadLink) {
-        preloadLink = document.createElement('link');
-        preloadLink.id = linkId;
-        preloadLink.setAttribute('rel', 'preload');
-        preloadLink.setAttribute('as', 'image');
-        document.head.appendChild(preloadLink);
-      }
-      
-      if (isValidImageHref(image.image_url)) {
-        preloadLink.setAttribute('href', image.image_url);
-      } else {
-        preloadLink.remove();
-        return;
-      }
-      // Add fetchpriority for critical images
-      if (image.position <= 2) {
-        preloadLink.setAttribute('fetchpriority', 'high');
-      }
-    });
+    if (typeof document !== 'undefined' && document.head) {
+      topRowImages.forEach((image) => {
+        const linkId = `hero-preload-${image.position}`;
+        let preloadLink = document.getElementById(linkId) as HTMLLinkElement;
+        
+        if (!preloadLink) {
+          preloadLink = document.createElement('link');
+          preloadLink.id = linkId;
+          preloadLink.setAttribute('rel', 'preload');
+          preloadLink.setAttribute('as', 'image');
+          document.head.appendChild(preloadLink);
+        }
+        
+        if (isValidImageHref(image.image_url)) {
+          preloadLink.setAttribute('href', image.image_url);
+        } else {
+          preloadLink.remove();
+          return;
+        }
+        // Add fetchpriority for critical images
+        if (image.position <= 2) {
+          preloadLink.setAttribute('fetchpriority', 'high');
+        }
+      });
+    }
 
     // Cleanup function to remove preload links when component unmounts or images change
     return () => {
-      topRowImages.forEach((image) => {
-        const linkId = `hero-preload-${image.position}`;
-        const preloadLink = document.getElementById(linkId);
-        if (preloadLink) {
-          preloadLink.remove();
-        }
-      });
+      if (typeof document !== 'undefined') {
+        topRowImages.forEach((image) => {
+          const linkId = `hero-preload-${image.position}`;
+          const preloadLink = document.getElementById(linkId);
+          if (preloadLink) {
+            preloadLink.remove();
+          }
+        });
+      }
     };
   }, [heroImages]);
 
@@ -374,6 +373,8 @@ const Hero = () => {
     
     // Small delay to ensure tracking is logged
     setTimeout(() => {
+      if (typeof document === 'undefined' || typeof window === 'undefined') return;
+      
       // Find the target section
       const targetSection = document.getElementById('what-you-get');
       if (targetSection) {
@@ -389,6 +390,8 @@ const Hero = () => {
       } else {
         // Fallback: try scrolling after a short delay in case component hasn't rendered
         setTimeout(() => {
+          if (typeof document === 'undefined' || typeof window === 'undefined') return;
+          
           const targetSection = document.getElementById('what-you-get');
           if (targetSection) {
             const navHeight = 64;
