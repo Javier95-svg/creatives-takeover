@@ -27,7 +27,7 @@ This flexibility means you can start small and scale up as you grow, or adjust b
       question: "What happens when I run out of AI conversation credits?",
       answer: `Running out of credits doesn't mean hitting a wall. It actually means you're actively building your business, and we celebrate that progress!
 
-When you reach your monthly limit, you can upgrade to a higher tier for more monthly credits and additional premium features. The best part is that all your other features remain fully functional. Your community access, resource library, dashboard, and collaboration tools keep working exactly as they should.
+When you reach your monthly limit, you can upgrade to a higher tier for more monthly credits and additional premium features. The best part is that all your other features remain fully functional. Your Dashboard features (Focus Funnel, Core Metrics, Weekly Mission, Your Tasks), community access (Find a Mentor, Find a Co-Founder), Stories content, and Prompt Library browsing keep working exactly as they should. Only AI-powered actions like BizMap AI chat, ICP Builder, PMF Lab, Pitch Deck Analyzer, and similar tools require credits.
 
 Many successful entrepreneurs start with one tier and upgrade as their momentum builds. Think of it as a sign of growth, not a limitation. Plus, credits reset monthly, so you're never penalized long-term.`,
       relatedQuestions: [0, 5]
@@ -61,11 +61,11 @@ You can focus on building your business knowing your financial data is protected
     },
     {
       question: "What's included in the free tier?",
-      answer: `Our free tier is genuinely valuable. It's not a teaser, but a real tool to help you start your entrepreneurial journey. You get 5 AI-powered business conversations per month with our intelligent chatbot, community read-only access, and our comprehensive prompt library to browse through helpful resources.
+      answer: `Our free tier is genuinely valuable. It's not a teaser, but a real tool to help you start your entrepreneurial journey. You get 25 credits per month, which includes 25 AI-powered business conversations with BizMap AI, basic Dashboard access (Focus Funnel, Core Metrics, Weekly Mission in read-only mode), read-only access to PMF Lab, 5 VC profile views per month, basic Insighta Test, Stories content (read-only), Prompt Library browsing (view only), and limited community access.
 
-This means you can validate your business idea, connect with like-minded builders, and access professional resources without spending a dime. It's perfect for exploring the platform, testing our AI's capabilities with your specific business questions, and experiencing the community support before committing financially.
+This means you can validate your business idea, explore Dashboard features, connect with like-minded builders, and access professional resources without spending a dime. It's perfect for exploring the platform, testing our AI's capabilities with your specific business questions, and experiencing the community support before committing financially.
 
-Many successful BizMap users started on the free tier, validated their ideas, then upgraded as they gained momentum and needed more advanced features. Start free today and upgrade only when you're ready to scale. No credit card required to begin.`,
+Many successful BizMap users started on the free tier, validated their ideas, then upgraded as they gained momentum and needed more advanced features like ICP Builder, MVP Builder, GTM Strategist, Accelerator Hunt, and unlimited VC searches. Start free today and upgrade only when you're ready to scale. No credit card required to begin.`,
       relatedQuestions: [0, 1]
     },
     {

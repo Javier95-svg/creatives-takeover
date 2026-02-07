@@ -13,25 +13,43 @@ const PricingComparison = () => {
       category: "Credits & Dashboard",
       items: [
         { feature: "Monthly Credits", free: "25 Credits", creator: "50 Credits", professional: "150 Credits" },
-        { feature: "Dashboard Access", free: "Preview only", creator: "Full access", professional: "Full access" }
+        { feature: "Dashboard Access", free: "Basic (read-only)", creator: "Full access", professional: "Full access" },
+        { feature: "Focus Funnel", free: "View only", creator: "Full access", professional: "Full access" },
+        { feature: "Decision Sprint", free: false, creator: "Full access", professional: "Full access" },
+        { feature: "Core Metrics", free: "View only", creator: "Full access", professional: "Full access" },
+        { feature: "Weekly Mission", free: "View only", creator: "Full access", professional: "Full access" },
+        { feature: "Your Tasks", free: false, creator: "Full access", professional: "Full access" }
       ]
     },
     {
-      category: "BizMap AI",
+      category: "BizMap AI - Learn",
       items: [
-        { feature: `Business Planning (${CREDIT_COSTS.AI_CHAT_MESSAGE} credit/msg)`, free: "25 messages", creator: "50 messages", professional: "150 messages" },
-        { feature: "Product–Market Fit Lab", free: "Read-only", creator: `Full access (${CREDIT_COSTS.PMF_ANALYSIS} credits)`, professional: `Full + insights (${CREDIT_COSTS.PMF_ANALYSIS} credits)` },
-        { feature: "Tech Stack Generator", free: "View only", creator: `Full access (${CREDIT_COSTS.TECH_STACK_GENERATION} credits)`, professional: `Advanced (${CREDIT_COSTS.TECH_STACK_GENERATION} credits)` },
-        { feature: "Prompt Library", free: "View only", creator: "Full access", professional: "Full + custom templates" }
+        { feature: `ICP Builder (${CREDIT_COSTS.ICP_ANALYSIS} credits)`, free: "Read-only", creator: `Full access`, professional: `Full access` },
+        { feature: `PMF Lab (${CREDIT_COSTS.PMF_ANALYSIS} credits)`, free: "Read-only", creator: `Full access`, professional: `Full access` }
+      ]
+    },
+    {
+      category: "BizMap AI - Build",
+      items: [
+        { feature: `Business Planner (${CREDIT_COSTS.AI_CHAT_MESSAGE} credit/msg)`, free: "25 messages", creator: "50 messages", professional: "150 messages" },
+        { feature: "MVP Builder", free: false, creator: "Full access", professional: "Full access" },
+        { feature: `Tech Stack Builder (${CREDIT_COSTS.TECH_STACK_GENERATION} credits)`, free: "View only", creator: `Full access`, professional: `Advanced` }
+      ]
+    },
+    {
+      category: "BizMap AI - Measure",
+      items: [
+        { feature: "GTM Strategist", free: false, creator: false, professional: "Full access" }
       ]
     },
     {
       category: "Insighta",
       items: [
         { feature: "VC Search", free: "5 views/month", creator: "25 views/month", professional: "Unlimited" },
-        { feature: "Email Templates", free: "View only", creator: `AI generation (${CREDIT_COSTS.EMAIL_TEMPLATE_GENERATION} credits)`, professional: `AI + custom (${CREDIT_COSTS.EMAIL_TEMPLATE_GENERATION} credits)` },
-        { feature: "Pitch Deck Analyzer", free: false, creator: `Full access (${CREDIT_COSTS.PITCH_DECK_ANALYZER} credits)`, professional: `Advanced + benchmarks (${CREDIT_COSTS.PITCH_DECK_ANALYZER} credits)` },
-        { feature: "Insighta Test", free: `Basic (${CREDIT_COSTS.FUNDRAISING_READINESS_ANALYSIS} credits)`, creator: `Full access (${CREDIT_COSTS.FUNDRAISING_READINESS_ANALYSIS} credits)`, professional: `Full + personalized (${CREDIT_COSTS.FUNDRAISING_READINESS_ANALYSIS} credits)` }
+        { feature: "Accelerator Hunt", free: false, creator: false, professional: "Full access" },
+        { feature: `Email Templates (${CREDIT_COSTS.EMAIL_TEMPLATE_GENERATION} credits)`, free: "View only", creator: `AI generation`, professional: `AI + custom` },
+        { feature: `Pitch Deck Analyzer (${CREDIT_COSTS.PITCH_DECK_ANALYZER} credits)`, free: false, creator: `Full access`, professional: `Advanced + benchmarks` },
+        { feature: `Insights Test (${CREDIT_COSTS.FUNDRAISING_READINESS_ANALYSIS} credits)`, free: `Basic`, creator: `Full access`, professional: `Full + personalized` }
       ]
     },
     {
@@ -39,7 +57,14 @@ const PricingComparison = () => {
       items: [
         { feature: "Find a Mentor", free: "Browse only", creator: "Full access", professional: "Full + verified priority" },
         { feature: "Find a Co-Founder", free: "Browse only", creator: "Full access", professional: "Full + featured listings" },
-        { feature: "Stories Content", free: "Full access", creator: "Full access", professional: "Full access" }
+        { feature: "Find your Angel", free: false, creator: false, professional: "Full access" }
+      ]
+    },
+    {
+      category: "Resources",
+      items: [
+        { feature: "Stories", free: "Read-only", creator: "Full access", professional: "Full access" },
+        { feature: `Prompt Library (${CREDIT_COSTS.PROMPT_GENERATION} credits for generation)`, free: "View only", creator: "Full access", professional: "Full + custom templates" }
       ]
     },
     {

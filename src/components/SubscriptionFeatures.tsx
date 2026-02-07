@@ -17,30 +17,43 @@ const SubscriptionFeatures = () => {
 
   const creditBreakdown = {
     dashboard: [
-      { name: "Sprint Task Generation", cost: CREDIT_COSTS.SPRINT_TASK_GENERATION, description: "AI-generated sprint tasks and priorities" },
+      { name: "Focus Funnel", cost: 0, description: "Goal tracking and prioritization", badge: "FREE" },
+      { name: "Decision Sprint", cost: CREDIT_COSTS.SPRINT_TASK_GENERATION, description: "AI-generated sprint tasks and priorities" },
+      { name: "Core Metrics", cost: 0, description: "Track your key performance indicators", badge: "FREE" },
+      { name: "Weekly Mission", cost: 0, description: "Weekly goal setting and tracking", badge: "FREE" },
+      { name: "Your Tasks", cost: 0, description: "Task management and organization", badge: "FREE" },
       { name: "Roadmap Generation", cost: CREDIT_COSTS.ROADMAP_GENERATION, description: "Strategic business roadmap" },
       { name: "Market Research", cost: CREDIT_COSTS.MARKET_RESEARCH, description: "In-depth market analysis and insights" },
       { name: "Financial Analysis", cost: CREDIT_COSTS.FINANCIAL_ANALYSIS, description: "Financial projections and modeling" },
       { name: "Business Insights", cost: CREDIT_COSTS.BUSINESS_INSIGHTS, description: "Custom business intelligence reports" },
     ],
     bizmap: [
-      { name: "AI Chat Message", cost: CREDIT_COSTS.AI_CHAT_MESSAGE, description: "Every message in Business Planning mode" },
+      { name: "Business Planner (AI Chat)", cost: CREDIT_COSTS.AI_CHAT_MESSAGE, description: "Every message in Business Planning mode" },
+      { name: "ICP Builder", cost: CREDIT_COSTS.ICP_ANALYSIS, description: "Define your ideal customer profile" },
       { name: "Product-Market Fit Lab", cost: CREDIT_COSTS.PMF_ANALYSIS, description: "Complete PMF analysis with recommendations" },
-      { name: "Tech Stack Generator", cost: CREDIT_COSTS.TECH_STACK_GENERATION, description: "Custom tech stack for your startup" },
+      { name: "MVP Builder", cost: CREDIT_COSTS.LAUNCH_REPORT, description: "14-day MVP building sprint" },
+      { name: "Tech Stack Builder", cost: CREDIT_COSTS.TECH_STACK_GENERATION, description: "Custom tech stack for your startup" },
+      { name: "GTM Strategist", cost: CREDIT_COSTS.ROADMAP_GENERATION, description: "End-to-end go-to-market planning" },
       { name: "Launch Report", cost: CREDIT_COSTS.LAUNCH_REPORT, description: "Comprehensive business launch roadmap" },
       { name: "Prompt Generation", cost: CREDIT_COSTS.PROMPT_GENERATION, description: "AI-generated custom prompts" },
     ],
     insighta: [
+      { name: "VC Search", cost: 0, description: "Browse venture capital firms (view limits per tier)", badge: "VIEW LIMITS" },
+      { name: "Accelerator Hunt", cost: 0, description: "Find accelerator programs (Pro only)", badge: "PRO ONLY" },
       { name: "Pitch Deck Analyzer", cost: CREDIT_COSTS.PITCH_DECK_ANALYZER, description: "AI analysis with actionable feedback" },
       { name: "Email Template Generation", cost: CREDIT_COSTS.EMAIL_TEMPLATE_GENERATION, description: "Personalized investor outreach emails" },
-      { name: "Insighta Test", cost: CREDIT_COSTS.FUNDRAISING_READINESS_ANALYSIS, description: "Fundraising readiness assessment" },
+      { name: "Insights Test", cost: CREDIT_COSTS.FUNDRAISING_READINESS_ANALYSIS, description: "Fundraising readiness assessment" },
       { name: "Investor Matching", cost: CREDIT_COSTS.INVESTOR_MATCHING, description: "Find VCs aligned with your startup" },
       { name: "One-Pager Generation", cost: CREDIT_COSTS.ONEPAGER_GENERATION, description: "Professional one-page pitch document" },
     ],
     community: [
       { name: "Find a Mentor", cost: 0, description: "Browse and connect with mentors", badge: "FREE" },
       { name: "Find a Co-Founder", cost: 0, description: "Discover potential co-founders", badge: "FREE" },
-      { name: "Stories Content", cost: 0, description: "Read founder stories and insights", badge: "FREE" },
+      { name: "Find your Angel", cost: 0, description: "Connect with angel investors (Pro only)", badge: "PRO ONLY" },
+    ],
+    resources: [
+      { name: "Stories", cost: 0, description: "Read founder stories and insights", badge: "FREE" },
+      { name: "Prompt Library", cost: CREDIT_COSTS.PROMPT_GENERATION, description: "Browse prompts (generation costs credits)", badge: "VIEW FREE" },
     ],
   };
 
@@ -48,17 +61,17 @@ const SubscriptionFeatures = () => {
     free: {
       credits: 25,
       example: "25 AI chat messages OR 1 Market Research + 1 Launch Report + 15 chat messages",
-      typical: "Perfect for exploring ideas and validating concepts",
+      typical: "Perfect for exploring ideas and validating concepts with Dashboard basics",
     },
     creator: {
       credits: 50,
-      example: "30 AI chat messages + 1 PMF analysis + 2 tech stacks + 1 pitch deck analyzer",
-      typical: "Build your startup with comprehensive AI tools",
+      example: "30 AI chat messages + 1 ICP Builder + 1 PMF analysis + 2 tech stacks + 1 pitch deck analyzer + 2 email templates",
+      typical: "Build your startup with comprehensive AI tools across Learn and Build phases",
     },
     professional: {
       credits: 150,
-      example: "100 AI messages + 3 PMF analyses + 5 pitch deck analyses + 5 email templates + market research",
-      typical: "Scale your operations with unlimited VC access",
+      example: "100 AI messages + 1 GTM Strategist + 3 PMF analyses + 5 pitch deck analyses + 5 email templates + market research + MVP Builder",
+      typical: "Scale your operations with unlimited VC access and complete Measure phase tools",
     },
   };
 
@@ -112,8 +125,8 @@ const SubscriptionFeatures = () => {
           </CardContent>
         </Card>
 
-        {/* Credit Breakdown Grid - 4 cards in a single row */}
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+        {/* Credit Breakdown Grid - 5 cards in a single row */}
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-6">
           {/* Dashboard Card */}
           <Card className="rounded-2xl border-border/60 bg-card/80 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md">
             <CardHeader>
@@ -213,12 +226,43 @@ const SubscriptionFeatures = () => {
               </div>
               <div className="space-y-3">
                 {creditBreakdown.community.map((feature, idx) => (
-                  <div key={idx} className="flex items-start gap-2 pb-3 border-b border-border/50 last:border-0">
-                    <Check className="h-4 w-4 text-green-500 mt-0.5 shrink-0" />
+                  <div key={idx} className="flex justify-between items-start gap-3 pb-3 border-b border-border/50 last:border-0">
                     <div className="flex-1">
                       <p className="font-medium text-sm">{feature.name}</p>
                       <p className="text-xs text-muted-foreground mt-1">{feature.description}</p>
                     </div>
+                    {feature.badge && (
+                      <Badge variant="outline" className="shrink-0 bg-blue-50 dark:bg-blue-950/30">{feature.badge}</Badge>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Resources Card */}
+          <Card className="rounded-2xl border-border/60 bg-card/80 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md">
+            <CardHeader>
+              <div className="flex items-center gap-3 mb-2">
+                <div className="p-2 rounded-full bg-primary/10">
+                  <Lightbulb className="h-6 w-6 text-primary" />
+                </div>
+                <CardTitle className="text-xl font-space-grotesk">Resources</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {creditBreakdown.resources.map((feature, idx) => (
+                  <div key={idx} className="flex justify-between items-start gap-3 pb-3 border-b border-border/50 last:border-0">
+                    <div className="flex-1">
+                      <p className="font-medium text-sm">{feature.name}</p>
+                      <p className="text-xs text-muted-foreground mt-1">{feature.description}</p>
+                    </div>
+                    {feature.cost === 0 ? (
+                      <Badge variant="outline" className="shrink-0 bg-green-50 dark:bg-green-950/30">{feature.badge || "FREE"}</Badge>
+                    ) : (
+                      <Badge variant="secondary" className="shrink-0">{feature.cost} credits</Badge>
+                    )}
                   </div>
                 ))}
               </div>

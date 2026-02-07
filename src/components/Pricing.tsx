@@ -95,29 +95,33 @@ const Pricing = () => {
     const featureMap: Record<string, string[]> = {
       free: [
         "25 credits per month",
+        "Dashboard (Focus Funnel, Core Metrics, Weekly Mission)",
         "BizMap AI (25 messages/month)",
         "PMF Lab (read-only)",
         "Prompt Library (view only)",
         "VC Search (5 views/month)",
-        "Community access (limited)",
-        "Insighta Test (basic)"
+        "Stories (read-only)",
+        "Community access (limited)"
       ],
       creator: [
-        "50 credits per month (5x more)",
-        "BizMap AI (50 messages/month)",
-        "PMF Lab (full access)",
-        "Pitch Deck Analyzer",
-        "AI Email Templates",
-        "VC Search (25 views/month)",
-        "Community (full access)",
+        "50 credits per month (2x more)",
+        "Dashboard (Full access: Focus Funnel, Decision Sprint, Core Metrics, Weekly Mission, Your Tasks)",
+        "BizMap AI Learn: ICP Builder & PMF Lab (full access)",
+        "BizMap AI Build: MVP Builder, Business Planner, Tech Stack Builder",
+        "Insighta: VC Search (25 views/month), Email Templates, Pitch Deck Analyzer, Insights Test",
+        "Community: Find a Mentor, Find a Co-Founder",
+        "Resources: Stories & Prompt Library (full access)",
         "Priority support"
       ],
       professional: [
-        "150 credits per month (15x more)",
-        "BizMap AI (150 messages/month)",
-        "Unlimited VC searches",
-        "Advanced Pitch Deck Analyzer",
-        "Custom email templates",
+        "150 credits per month (6x more)",
+        "Dashboard (Full access: All features)",
+        "BizMap AI Learn: ICP Builder & PMF Lab",
+        "BizMap AI Build: MVP Builder, Business Planner, Tech Stack Builder",
+        "BizMap AI Measure: GTM Strategist",
+        "Insighta: Unlimited VC Search, Accelerator Hunt, Email Templates, Advanced Pitch Deck Analyzer, Insights Test",
+        "Community: Find a Mentor, Find a Co-Founder, Find your Angel",
+        "Resources: Stories & Prompt Library (full + custom templates)",
         "Featured in Community",
         "Priority support (24h response)",
         "Early access to new features"

@@ -377,14 +377,172 @@ export function useFeatureGating() {
 
       // Dashboard Access
       case 'dashboard_access':
+        // Free tier gets read-only access, Creator+ gets full access
+        return { hasAccess: true };
+
+      // Dashboard Features
+      case 'focus_funnel':
+        // Free tier: read-only, Creator+: full access
+        return { hasAccess: true };
+
+      case 'decision_sprint':
+        if (tier === 'free') {
+          return {
+            hasAccess: false,
+            message: 'Upgrade to Creator tier or higher to use Decision Sprint.',
+            requiredTier: 'creator'
+          };
+        }
+        // Creator+ has full access (2 credits per generation)
+        if (!hasCredits(CREDIT_COSTS.SPRINT_TASK_GENERATION)) {
+          return {
+            hasAccess: false,
+            message: `Insufficient credits. Decision Sprint costs ${CREDIT_COSTS.SPRINT_TASK_GENERATION} credits per generation.`,
+          };
+        }
+        return { hasAccess: true };
+
+      case 'core_metrics':
+        // Free tier: read-only, Creator+: full access
+        return { hasAccess: true };
+
+      case 'weekly_mission':
+        // Free tier: read-only, Creator+: full access
+        return { hasAccess: true };
+
+      case 'your_tasks':
+        if (tier === 'free') {
+          return {
+            hasAccess: false,
+            message: 'Upgrade to Creator tier or higher to manage tasks.',
+            requiredTier: 'creator'
+          };
+        }
+        return { hasAccess: true };
+
+      case 'roadmap_generation':
         if (['creator', 'professional'].includes(tier)) {
+          if (!hasCredits(CREDIT_COSTS.ROADMAP_GENERATION)) {
+            return {
+              hasAccess: false,
+              message: `Insufficient credits. Roadmap Generation costs ${CREDIT_COSTS.ROADMAP_GENERATION} credits.`,
+            };
+          }
           return { hasAccess: true };
         }
         return {
           hasAccess: false,
-          message: 'Upgrade to Creator tier or higher to access the Dashboard.',
+          message: 'Upgrade to Creator tier or higher to generate roadmaps.',
           requiredTier: 'creator'
         };
+
+      case 'market_research':
+        if (['creator', 'professional'].includes(tier)) {
+          if (!hasCredits(CREDIT_COSTS.MARKET_RESEARCH)) {
+            return {
+              hasAccess: false,
+              message: `Insufficient credits. Market Research costs ${CREDIT_COSTS.MARKET_RESEARCH} credits.`,
+            };
+          }
+          return { hasAccess: true };
+        }
+        return {
+          hasAccess: false,
+          message: 'Upgrade to Creator tier or higher for market research.',
+          requiredTier: 'creator'
+        };
+
+      case 'financial_analysis':
+        if (['creator', 'professional'].includes(tier)) {
+          if (!hasCredits(CREDIT_COSTS.FINANCIAL_ANALYSIS)) {
+            return {
+              hasAccess: false,
+              message: `Insufficient credits. Financial Analysis costs ${CREDIT_COSTS.FINANCIAL_ANALYSIS} credits.`,
+            };
+          }
+          return { hasAccess: true };
+        }
+        return {
+          hasAccess: false,
+          message: 'Upgrade to Creator tier or higher for financial analysis.',
+          requiredTier: 'creator'
+        };
+
+      case 'business_insights':
+        if (['creator', 'professional'].includes(tier)) {
+          if (!hasCredits(CREDIT_COSTS.BUSINESS_INSIGHTS)) {
+            return {
+              hasAccess: false,
+              message: `Insufficient credits. Business Insights costs ${CREDIT_COSTS.BUSINESS_INSIGHTS} credits.`,
+            };
+          }
+          return { hasAccess: true };
+        }
+        return {
+          hasAccess: false,
+          message: 'Upgrade to Creator tier or higher for business insights.',
+          requiredTier: 'creator'
+        };
+
+      // MVP Builder (Creator+ only)
+      case 'mvp_builder':
+        if (tier === 'free') {
+          return {
+            hasAccess: false,
+            message: 'Upgrade to Creator tier or higher to access MVP Builder.',
+            requiredTier: 'creator'
+          };
+        }
+        // Creator+ has full access (5 credits)
+        if (!hasCredits(CREDIT_COSTS.LAUNCH_REPORT)) {
+          return {
+            hasAccess: false,
+            message: `Insufficient credits. MVP Builder costs ${CREDIT_COSTS.LAUNCH_REPORT} credits.`,
+          };
+        }
+        return { hasAccess: true };
+
+      // GTM Strategist (Pro only)
+      case 'gtm_strategist':
+        if (tier !== 'professional') {
+          return {
+            hasAccess: false,
+            message: 'Upgrade to Professional tier to access GTM Strategist.',
+            requiredTier: 'professional'
+          };
+        }
+        // Professional tier has full access (5 credits)
+        if (!hasCredits(CREDIT_COSTS.ROADMAP_GENERATION)) {
+          return {
+            hasAccess: false,
+            message: `Insufficient credits. GTM Strategist costs ${CREDIT_COSTS.ROADMAP_GENERATION} credits.`,
+          };
+        }
+        return { hasAccess: true };
+
+      // Accelerator Hunt (Pro only)
+      case 'accelerator_hunt':
+        if (tier !== 'professional') {
+          return {
+            hasAccess: false,
+            message: 'Upgrade to Professional tier to access Accelerator Hunt.',
+            requiredTier: 'professional'
+          };
+        }
+        // Professional tier has full access (free, no credits)
+        return { hasAccess: true };
+
+      // Find your Angel (Pro only)
+      case 'find_your_angel':
+        if (tier !== 'professional') {
+          return {
+            hasAccess: false,
+            message: 'Upgrade to Professional tier to access Find your Angel.',
+            requiredTier: 'professional'
+          };
+        }
+        // Professional tier has full access (free, no credits)
+        return { hasAccess: true };
 
       // Discovery Calls with Mentors
       case 'discovery_calls_mentors':
@@ -415,33 +573,37 @@ export function useFeatureGating() {
   const getTierFeatures = (tierName: string): string[] => {
     const featureMap: Record<string, string[]> = {
       free: [
-        '10 credits per month',
-        'BizMap - Business Planning Mode',
-        'Prompt Library (Free Models Only)',
-        'Insighta Test Assessment',
-        'Funding Opportunities',
-        'Full access to Stories (Content)'
+        '25 credits per month',
+        'Dashboard (Basic: Focus Funnel, Core Metrics, Weekly Mission - read-only)',
+        'BizMap AI (25 messages/month)',
+        'PMF Lab (read-only)',
+        'Prompt Library (view only)',
+        'VC Search (5 views/month)',
+        'Stories (read-only)',
+        'Community access (limited)'
       ],
       creator: [
         '50 credits per month',
-        'Dashboard Access',
-        'BizMap AI Upgrade: Business Planning & PMF Lab modes.',
-        'Full Access to Prompt Library',
-        'Insighta Test Assessment',
-        'Funding Opportunities',
-        'Discovery Calls with Mentors (Community)',
-        'Full access to Stories (Content)'
+        'Dashboard (Full access: Focus Funnel, Decision Sprint, Core Metrics, Weekly Mission, Your Tasks)',
+        'BizMap AI Learn: ICP Builder & PMF Lab (full access)',
+        'BizMap AI Build: MVP Builder, Business Planner, Tech Stack Builder',
+        'Insighta: VC Search (25 views/month), Email Templates, Pitch Deck Analyzer, Insights Test',
+        'Community: Find a Mentor, Find a Co-Founder',
+        'Resources: Stories & Prompt Library (full access)',
+        'Priority support'
       ],
       professional: [
         '150 credits per month',
-        'Dashboard Access',
-        'Full Access to BizMap AI (Business Planning, PMF Lab & Tech Stack)',
-        'Full Access to Prompt Library',
-        'Insighta Test Assessment',
-        'Investor Matchmaker (Insighta)',
-        'Funding Opportunities',
-        'Discovery Calls with Mentors (Community)',
-        'Full access to Stories (Content)'
+        'Dashboard (Full access: All features)',
+        'BizMap AI Learn: ICP Builder & PMF Lab',
+        'BizMap AI Build: MVP Builder, Business Planner, Tech Stack Builder',
+        'BizMap AI Measure: GTM Strategist',
+        'Insighta: Unlimited VC Search, Accelerator Hunt, Email Templates, Advanced Pitch Deck Analyzer, Insights Test',
+        'Community: Find a Mentor, Find a Co-Founder, Find your Angel',
+        'Resources: Stories & Prompt Library (full + custom templates)',
+        'Featured in Community',
+        'Priority support (24h response)',
+        'Early access to new features'
       ]
     };
     return featureMap[tierName] || [];
