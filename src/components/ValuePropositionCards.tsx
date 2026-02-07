@@ -100,7 +100,7 @@ const ValuePropositionCards = () => {
       icon: LayoutDashboard,
       title: "100% Customizable",
       subtitle: "Dashboard: Perform Confidently",
-      buttonLabel: "Prioritize Tasks",
+      buttonLabel: "Execute Smartly",
       description: "Your dashboard is where everything comes together. Focus Funnel helps you cut through the noise and prioritize what actually moves the needle, while Decision Sprint gives you a structured way to evaluate ideas before committing. Core Metrics keeps your key numbers visible so you always know where you stand.\n\nWeekly Mission and Your Tasks keep you accountable with clear goals and action items, so you spend less time wondering what to do next and more time making real progress. It's your personal command center, designed to keep you focused and moving forward.",
       cta: "View Dashboard",
       link: "/dashboard",
