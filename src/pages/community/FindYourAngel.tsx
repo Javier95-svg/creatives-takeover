@@ -490,7 +490,7 @@ const FindYourAngel = () => {
                           Upgrade to Professional
                         </Button>
                         <p className="text-xs text-muted-foreground mt-4">
-                          Professional plan — full access to all investor profiles
+                          Get full access to all investor profiles
                         </p>
                       </div>
                     </div>
