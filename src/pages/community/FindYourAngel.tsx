@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Helmet } from "react-helmet-async";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import HomeWallpaper from "@/components/wallpapers/HomeWallpaper";
@@ -12,12 +12,25 @@ import { AngelInvestor } from "@/types/angel";
 import { useAngels } from "@/hooks/useAngels";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTypingAnimation } from "@/hooks/useTypingAnimation";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+  PaginationEllipsis,
+} from "@/components/ui/pagination";
+
+const ANGELS_PER_PAGE = 10;
 
 const FindYourAngel = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuth();
   const isAdmin = user?.email?.toLowerCase() === 'admin@creatives-takeover.com';
   const { fetchAngels, loading } = useAngels();
   const [angels, setAngels] = useState<AngelInvestor[]>([]);
+  const currentPage = parseInt(searchParams.get("page") || "1", 10);
 
   useEffect(() => {
     loadAngels();
@@ -32,6 +45,66 @@ const FindYourAngel = () => {
       setAngels([]);
     }
   };
+
+  const handlePageChange = (page: number) => {
+    const params = new URLSearchParams(searchParams);
+    params.set("page", page.toString());
+    setSearchParams(params);
+    const grid = document.getElementById("angel-grid");
+    if (grid) {
+      grid.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
+  // Generate page numbers to display with ellipsis
+  const getPageNumbers = (totalPages: number, currentPage: number) => {
+    const pages: (number | string)[] = [];
+
+    if (totalPages <= 7) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      pages.push(1);
+
+      if (currentPage <= 3) {
+        for (let i = 2; i <= 4; i++) {
+          pages.push(i);
+        }
+        pages.push("ellipsis");
+        pages.push(totalPages);
+      } else if (currentPage >= totalPages - 2) {
+        pages.push("ellipsis");
+        for (let i = totalPages - 3; i <= totalPages; i++) {
+          pages.push(i);
+        }
+      } else {
+        pages.push("ellipsis");
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+          pages.push(i);
+        }
+        pages.push("ellipsis");
+        pages.push(totalPages);
+      }
+    }
+
+    return pages;
+  };
+
+  // Pagination calculations
+  const totalPages = Math.ceil(angels.length / ANGELS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ANGELS_PER_PAGE;
+  const endIndex = startIndex + ANGELS_PER_PAGE;
+  const paginatedAngels = angels.slice(startIndex, endIndex);
+
+  // Reset to page 1 if current page is out of bounds
+  useEffect(() => {
+    if (currentPage > totalPages && totalPages > 0) {
+      const params = new URLSearchParams(searchParams);
+      params.set("page", "1");
+      setSearchParams(params);
+    }
+  }, [currentPage, totalPages, searchParams, setSearchParams]);
 
   // Typing animation for description
   const descriptionText = "Find and connect with Angel Investors or Venture Capitalists who believe in bold ideas and back them early. Browse investor profiles, explore their focus areas and investment stages, and take the first step toward building a relationship that could fund your vision.\n\nWhether you are raising your first pre-seed round or looking for a strategic partner at the seed stage, this is where you start.";
@@ -85,7 +158,7 @@ const FindYourAngel = () => {
           </section>
 
           {/* Angel Investors Section */}
-          <section className="container mx-auto px-4 py-12 relative z-10">
+          <section id="angel-grid" className="container mx-auto px-4 py-12 relative z-10">
             {/* Admin Create Button */}
             {isAdmin && (
               <div className="mb-6 flex justify-end">
@@ -104,15 +177,73 @@ const FindYourAngel = () => {
                 <p className="text-muted-foreground">Loading angel investors...</p>
               </div>
             ) : angels.length > 0 ? (
-              <div className="grid grid-cols-1 gap-6">
-                {angels.map((angel, index) => (
-                  <AngelCard
-                    key={angel.id}
-                    angel={angel}
-                    priority={index < 4}
-                  />
-                ))}
-              </div>
+              <>
+                <div className="grid grid-cols-1 gap-6">
+                  {paginatedAngels.map((angel, index) => (
+                    <AngelCard
+                      key={angel.id}
+                      angel={angel}
+                      priority={index < 4}
+                    />
+                  ))}
+                </div>
+
+                {/* Pagination */}
+                {totalPages > 1 && (
+                  <div className="mt-8">
+                    <Pagination>
+                      <PaginationContent>
+                        {currentPage > 1 && (
+                          <PaginationItem>
+                            <PaginationPrevious
+                              href="#"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                handlePageChange(currentPage - 1);
+                              }}
+                            />
+                          </PaginationItem>
+                        )}
+                        {getPageNumbers(totalPages, currentPage).map((page, index) => {
+                          if (page === "ellipsis") {
+                            return (
+                              <PaginationItem key={`ellipsis-${index}`}>
+                                <PaginationEllipsis />
+                              </PaginationItem>
+                            );
+                          }
+
+                          return (
+                            <PaginationItem key={page}>
+                              <PaginationLink
+                                href="#"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  handlePageChange(page as number);
+                                }}
+                                isActive={page === currentPage}
+                              >
+                                {page}
+                              </PaginationLink>
+                            </PaginationItem>
+                          );
+                        })}
+                        {currentPage < totalPages && (
+                          <PaginationItem>
+                            <PaginationNext
+                              href="#"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                handlePageChange(currentPage + 1);
+                              }}
+                            />
+                          </PaginationItem>
+                        )}
+                      </PaginationContent>
+                    </Pagination>
+                  </div>
+                )}
+              </>
             ) : (
               <Card>
                 <CardContent className="p-12 text-center">
