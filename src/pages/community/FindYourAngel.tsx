@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Helmet } from "react-helmet-async";
 import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
@@ -6,12 +6,23 @@ import Footer from "@/components/Footer";
 import HomeWallpaper from "@/components/wallpapers/HomeWallpaper";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { AngelCard } from "@/components/angels/AngelCard";
-import { Sparkles, Loader2, Edit } from "lucide-react";
+import { Sparkles, Loader2, Edit, Search, ChevronDown, X } from "lucide-react";
 import { AngelInvestor } from "@/types/angel";
 import { useAngels } from "@/hooks/useAngels";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTypingAnimation } from "@/hooks/useTypingAnimation";
+import { cn } from "@/lib/utils";
 import {
   Pagination,
   PaginationContent,
@@ -24,6 +35,14 @@ import {
 
 const ANGELS_PER_PAGE = 10;
 
+const INVESTMENT_STAGE_OPTIONS = [
+  "Pre-Seed",
+  "Seed",
+  "Series A",
+  "Series B",
+  "Series C+",
+];
+
 const FindYourAngel = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -31,6 +50,8 @@ const FindYourAngel = () => {
   const isAdmin = user?.email?.toLowerCase() === 'admin@creatives-takeover.com';
   const { fetchAngels, loading } = useAngels();
   const [angels, setAngels] = useState<AngelInvestor[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedStages, setSelectedStages] = useState<string[]>([]);
   const currentPage = parseInt(searchParams.get("page") || "1", 10);
 
   useEffect(() => {
@@ -46,6 +67,67 @@ const FindYourAngel = () => {
       setAngels([]);
     }
   };
+
+  // Reset to page 1 when search or filters change
+  const resetToFirstPage = () => {
+    if (currentPage !== 1) {
+      const params = new URLSearchParams(searchParams);
+      params.set("page", "1");
+      setSearchParams(params);
+    }
+  };
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+    resetToFirstPage();
+  };
+
+  const handleStageToggle = (stage: string) => {
+    setSelectedStages((prev) =>
+      prev.includes(stage)
+        ? prev.filter((s) => s !== stage)
+        : [...prev, stage]
+    );
+    resetToFirstPage();
+  };
+
+  const clearStageFilter = () => {
+    setSelectedStages([]);
+    resetToFirstPage();
+  };
+
+  const clearAllFilters = () => {
+    setSearchQuery("");
+    setSelectedStages([]);
+    resetToFirstPage();
+  };
+
+  const hasActiveFilters = searchQuery.length > 0 || selectedStages.length > 0;
+
+  // Filtered angels based on search and stage filters
+  const filteredAngels = useMemo(() => {
+    let result = angels;
+
+    // Search filter
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      result = result.filter(
+        (angel) =>
+          angel.name.toLowerCase().includes(query) ||
+          angel.firm_name.toLowerCase().includes(query) ||
+          angel.investment_stages?.some((s) => s.toLowerCase().includes(query))
+      );
+    }
+
+    // Investment stage filter
+    if (selectedStages.length > 0) {
+      result = result.filter((angel) =>
+        selectedStages.some((stage) => angel.investment_stages?.includes(stage))
+      );
+    }
+
+    return result;
+  }, [angels, searchQuery, selectedStages]);
 
   const handlePageChange = (page: number) => {
     const params = new URLSearchParams(searchParams);
@@ -92,11 +174,11 @@ const FindYourAngel = () => {
     return pages;
   };
 
-  // Pagination calculations
-  const totalPages = Math.ceil(angels.length / ANGELS_PER_PAGE);
+  // Pagination calculations (based on filtered results)
+  const totalPages = Math.ceil(filteredAngels.length / ANGELS_PER_PAGE);
   const startIndex = (currentPage - 1) * ANGELS_PER_PAGE;
   const endIndex = startIndex + ANGELS_PER_PAGE;
-  const paginatedAngels = angels.slice(startIndex, endIndex);
+  const paginatedAngels = filteredAngels.slice(startIndex, endIndex);
 
   // Reset to page 1 if current page is out of bounds
   useEffect(() => {
@@ -171,13 +253,113 @@ const FindYourAngel = () => {
               </div>
             )}
 
+            {/* Search Bar */}
+            <div className="mb-6">
+              <div className="relative w-full max-w-md mx-auto md:mx-0">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search by name or keyword"
+                  value={searchQuery}
+                  onChange={handleSearchChange}
+                  className="pl-10 h-11 w-full min-h-[44px] text-base md:text-sm"
+                />
+              </div>
+            </div>
+
+            {/* Investment Stage Filter Bar */}
+            <div className="flex flex-wrap items-center gap-3 mb-6">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "h-9",
+                      selectedStages.length > 0 && "border-primary bg-primary/5"
+                    )}
+                  >
+                    Investment Stage
+                    {selectedStages.length > 0 && (
+                      <Badge variant="secondary" className="ml-2 h-5 px-1.5">
+                        {selectedStages.length}
+                      </Badge>
+                    )}
+                    <ChevronDown className="h-4 w-4 ml-2" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-64" align="start">
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <Label className="font-semibold">Investment Stage</Label>
+                      {selectedStages.length > 0 && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={clearStageFilter}
+                        >
+                          Clear
+                        </Button>
+                      )}
+                    </div>
+                    <Separator />
+                    <div className="space-y-2">
+                      {INVESTMENT_STAGE_OPTIONS.map((stage) => (
+                        <div
+                          key={stage}
+                          className="flex items-center space-x-2"
+                        >
+                          <Checkbox
+                            id={`filter-stage-${stage}`}
+                            checked={selectedStages.includes(stage)}
+                            onCheckedChange={() => handleStageToggle(stage)}
+                          />
+                          <Label
+                            htmlFor={`filter-stage-${stage}`}
+                            className="font-normal cursor-pointer flex-1"
+                          >
+                            {stage}
+                          </Label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
+
+              {/* Clear All Filters */}
+              {hasActiveFilters && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={clearAllFilters}
+                  className="h-9 text-muted-foreground hover:text-foreground"
+                >
+                  <X className="h-4 w-4 mr-1" />
+                  Clear all
+                </Button>
+              )}
+            </div>
+
+            {/* Results Count */}
+            <div className="mb-4">
+              {loading ? (
+                <div className="flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span className="text-sm text-muted-foreground">Loading angel investors...</span>
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  {filteredAngels.length} angel investor{filteredAngels.length !== 1 ? 's' : ''} found
+                </p>
+              )}
+            </div>
+
             {/* Angel Investor Cards Grid */}
             {loading ? (
               <div className="flex flex-col items-center justify-center py-20 space-y-4">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
                 <p className="text-muted-foreground">Loading angel investors...</p>
               </div>
-            ) : angels.length > 0 ? (
+            ) : filteredAngels.length > 0 ? (
               <>
                 <div className="grid grid-cols-1 gap-6">
                   {paginatedAngels.map((angel, index) => (
@@ -263,7 +445,7 @@ const FindYourAngel = () => {
                   </div>
                 )}
               </>
-            ) : (
+            ) : angels.length === 0 ? (
               <Card>
                 <CardContent className="p-12 text-center">
                   <Sparkles className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
@@ -278,6 +460,19 @@ const FindYourAngel = () => {
                       </Link>
                     </Button>
                   )}
+                </CardContent>
+              </Card>
+            ) : (
+              <Card>
+                <CardContent className="p-12 text-center">
+                  <Sparkles className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                  <h3 className="text-xl font-semibold mb-2">No results found</h3>
+                  <p className="text-muted-foreground mb-6">
+                    No angel investors match your current search or filters. Try adjusting your criteria.
+                  </p>
+                  <Button variant="outline" onClick={clearAllFilters}>
+                    Clear all filters
+                  </Button>
                 </CardContent>
               </Card>
             )}
