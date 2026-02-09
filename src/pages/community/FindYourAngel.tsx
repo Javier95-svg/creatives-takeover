@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react";
 import { Helmet } from "react-helmet-async";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import HomeWallpaper from "@/components/wallpapers/HomeWallpaper";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { AngelCard } from "@/components/angels/AngelCard";
-import { Sparkles, Loader2 } from "lucide-react";
+import { Sparkles, Loader2, Edit } from "lucide-react";
 import { AngelInvestor } from "@/types/angel";
 import { useAngels } from "@/hooks/useAngels";
 import { useAuth } from "@/contexts/AuthContext";
@@ -26,6 +26,7 @@ const ANGELS_PER_PAGE = 10;
 
 const FindYourAngel = () => {
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
   const { user } = useAuth();
   const isAdmin = user?.email?.toLowerCase() === 'admin@creatives-takeover.com';
   const { fetchAngels, loading } = useAngels();
@@ -180,11 +181,29 @@ const FindYourAngel = () => {
               <>
                 <div className="grid grid-cols-1 gap-6">
                   {paginatedAngels.map((angel, index) => (
-                    <AngelCard
-                      key={angel.id}
-                      angel={angel}
-                      priority={index < 4}
-                    />
+                    <div key={angel.id} className="relative group">
+                      <AngelCard
+                        angel={angel}
+                        priority={index < 4}
+                      />
+                      {/* Admin Edit Button - Overlay */}
+                      {isAdmin && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            navigate(`/community/angels/admin/edit/${angel.id}`);
+                          }}
+                          className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-background/90 backdrop-blur-sm hover:bg-background z-10"
+                          aria-label={`Edit ${angel.name}`}
+                        >
+                          <Edit className="w-4 h-4 mr-1" />
+                          Edit
+                        </Button>
+                      )}
+                    </div>
                   ))}
                 </div>
 
