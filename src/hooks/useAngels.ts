@@ -54,7 +54,7 @@ export const useAngels = () => {
         .from('angel_investors')
         .select('*')
         .eq('is_active', true)
-        .order('created_at', { ascending: false });
+        .order('name', { ascending: true });
 
       if (error) throw error;
 
