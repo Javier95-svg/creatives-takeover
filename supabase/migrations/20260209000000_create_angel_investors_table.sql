@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS public.angel_investors (
   name TEXT NOT NULL,
   picture TEXT, -- Profile picture URL
   firm_name TEXT NOT NULL, -- Venture Capital Firm name
-  investment_stage TEXT NOT NULL DEFAULT 'Seed', -- e.g. "Pre-Seed", "Seed", "Series A", "Series B"
+  investment_stages TEXT[] DEFAULT '{}', -- e.g. {"Pre-Seed","Seed","Series A"}
   website_url TEXT, -- Firm or personal website
   linkedin_url TEXT, -- LinkedIn profile URL
   is_active BOOLEAN DEFAULT true,
@@ -36,7 +36,6 @@ CREATE POLICY "Admin can manage all angel investors"
 
 -- Indexes
 CREATE INDEX IF NOT EXISTS idx_angel_investors_is_active ON public.angel_investors(is_active);
-CREATE INDEX IF NOT EXISTS idx_angel_investors_investment_stage ON public.angel_investors(investment_stage);
 
 -- Updated_at trigger
 CREATE OR REPLACE FUNCTION update_angel_investors_updated_at()
@@ -55,11 +54,11 @@ CREATE TRIGGER update_angel_investors_updated_at
 -- ================================================
 -- SAMPLE ANGEL INVESTOR
 -- ================================================
-INSERT INTO public.angel_investors (name, firm_name, investment_stage, website_url, linkedin_url, is_active)
+INSERT INTO public.angel_investors (name, firm_name, investment_stages, website_url, linkedin_url, is_active)
 VALUES (
   'Marc Andreessen',
   'Andreessen Horowitz (a16z)',
-  'Seed',
+  ARRAY['Pre-Seed', 'Seed'],
   'https://a16z.com',
   'https://linkedin.com/in/pmarca',
   true

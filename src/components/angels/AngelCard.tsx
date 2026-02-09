@@ -68,12 +68,19 @@ export const AngelCard = ({ angel, className, priority = false }: AngelCardProps
               <span className="font-medium">{angel.firm_name}</span>
             </div>
 
-            {/* Investment Stage */}
-            <div>
-              <Badge className={cn("text-xs font-semibold px-3 py-1", getStageColor(angel.investment_stage))}>
-                {angel.investment_stage}
-              </Badge>
-            </div>
+            {/* Investment Stages */}
+            {angel.investment_stages && angel.investment_stages.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {angel.investment_stages.map((stage) => (
+                  <Badge
+                    key={stage}
+                    className={cn("text-xs font-semibold px-3 py-1", getStageColor(stage))}
+                  >
+                    {stage}
+                  </Badge>
+                ))}
+              </div>
+            )}
 
             {/* Social Links */}
             <div className="flex items-center gap-4 pt-1">

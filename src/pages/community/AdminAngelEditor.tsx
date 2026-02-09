@@ -8,13 +8,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { useAngels } from "@/hooks/useAngels";
 import { useAuth } from "@/contexts/AuthContext";
 import { Save, Loader2, ArrowLeft, Trash2, User } from "lucide-react";
@@ -33,7 +26,7 @@ const INVESTMENT_STAGE_OPTIONS = [
 const AdminAngelEditor = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const isAdmin = user?.email?.toLowerCase() === "admin@creatives-takeover.com";
   const {
     fetchAngelById,
@@ -51,13 +44,16 @@ const AdminAngelEditor = () => {
     name: "",
     picture: null,
     firm_name: "",
-    investment_stage: "Seed",
+    investment_stages: [],
     website_url: null,
     linkedin_url: null,
     is_active: true,
   });
 
+  // Wait for auth to load before checking admin status
   useEffect(() => {
+    if (authLoading) return; // Wait for auth to settle
+
     if (!isAdmin) {
       toast.error("Only admins can access this page");
       navigate("/community/angels");
@@ -67,7 +63,7 @@ const AdminAngelEditor = () => {
     if (id && id !== "new") {
       loadAngel(id);
     }
-  }, [id, isAdmin, navigate]);
+  }, [id, isAdmin, authLoading, navigate]);
 
   const loadAngel = async (angelId: string) => {
     const found = await fetchAngelById(angelId);
@@ -78,7 +74,7 @@ const AdminAngelEditor = () => {
         name: found.name,
         picture: found.picture || null,
         firm_name: found.firm_name,
-        investment_stage: found.investment_stage,
+        investment_stages: found.investment_stages || [],
         website_url: found.website_url || null,
         linkedin_url: found.linkedin_url || null,
         is_active: found.is_active !== false,
@@ -188,9 +184,24 @@ const AdminAngelEditor = () => {
     toast.success('Picture removed');
   };
 
+  const toggleStage = (stage: string) => {
+    setFormData((prev) => {
+      const current = prev.investment_stages || [];
+      const newStages = current.includes(stage)
+        ? current.filter((s) => s !== stage)
+        : [...current, stage];
+      return { ...prev, investment_stages: newStages };
+    });
+  };
+
   const handleSave = async () => {
     if (!formData.name || !formData.firm_name) {
       toast.error("Please fill in name and venture capital firm");
+      return;
+    }
+
+    if (!formData.investment_stages || formData.investment_stages.length === 0) {
+      toast.error("Please select at least one investment stage");
       return;
     }
 
@@ -201,11 +212,13 @@ const AdminAngelEditor = () => {
         name: formData.name,
         picture: formData.picture || null,
         firm_name: formData.firm_name,
-        investment_stage: formData.investment_stage,
+        investment_stages: formData.investment_stages || [],
         website_url: formData.website_url || null,
         linkedin_url: formData.linkedin_url || null,
         is_active: formData.is_active !== undefined ? formData.is_active : true,
       };
+
+      console.log('Saving angel investor:', saveData);
 
       let result: AngelInvestor | null = null;
       if (angel) {
@@ -218,7 +231,7 @@ const AdminAngelEditor = () => {
         toast.success(angel ? "Angel investor updated!" : "Angel investor created!");
         navigate("/community/angels");
       } else {
-        toast.error("Failed to save. Please check the console for details.");
+        toast.error("Failed to save. Please check the browser console for details.");
       }
     } catch (error: any) {
       console.error('Error saving angel investor:', error);
@@ -238,6 +251,15 @@ const AdminAngelEditor = () => {
       }
     }
   };
+
+  // Show loading while auth is settling
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   if (!isAdmin) {
     return null;
@@ -367,28 +389,27 @@ const AdminAngelEditor = () => {
                 />
               </div>
 
-              {/* Investment Stage */}
+              {/* Investment Stages (Multi-select toggle buttons) */}
               <div>
-                <Label htmlFor="investment_stage">Investment Stage *</Label>
-                <Select
-                  value={formData.investment_stage}
-                  onValueChange={(value) =>
-                    setFormData((prev) => ({ ...prev, investment_stage: value }))
-                  }
-                >
-                  <SelectTrigger className="mt-1">
-                    <SelectValue placeholder="Select investment stage" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {INVESTMENT_STAGE_OPTIONS.map((stage) => (
-                      <SelectItem key={stage} value={stage}>
+                <Label>Investment Stages *</Label>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {INVESTMENT_STAGE_OPTIONS.map((stage) => {
+                    const isSelected = formData.investment_stages?.includes(stage) || false;
+                    return (
+                      <Button
+                        key={stage}
+                        type="button"
+                        variant={isSelected ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => toggleStage(stage)}
+                      >
                         {stage}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <p className="text-xs text-muted-foreground mt-1">
-                  The primary investment stage this investor focuses on.
+                      </Button>
+                    );
+                  })}
+                </div>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Select all investment stages this investor focuses on.
                 </p>
               </div>
 

@@ -33,11 +33,11 @@ const Index = () => {
     sessionStorage.removeItem('credit-popup-time-seen');
   }, []);
 
-  // Redirect authenticated users appropriately
+  // Redirect to onboarding only if explicitly not completed
   useEffect(() => {
     if (authLoading || !user) return;
 
-    const checkOnboardingAndRedirect = async () => {
+    const checkOnboardingRedirect = async () => {
       try {
         const { data: profile } = await supabase
           .from('profiles')
@@ -46,24 +46,18 @@ const Index = () => {
           .maybeSingle();
 
         if (profile) {
-          // STRICT CHECK: Only redirect to onboarding if explicitly false
-          // NEVER redirect if onboarding_completed is true or null/undefined
+          // Only redirect to onboarding if explicitly false
+          // Authenticated users can freely browse the homepage
           if (profile.onboarding_completed === false) {
-            // Redirect to onboarding if not completed
             navigate('/onboarding');
-          } else if (profile.onboarding_completed === true) {
-            // Redirect to dashboard if onboarding completed
-            navigate('/dashboard');
           }
-          // If onboarding_completed is null/undefined, stay on homepage (let user decide)
         }
       } catch (error) {
         console.error('Error checking onboarding status:', error);
-        // If error, allow user to stay on homepage
       }
     };
 
-    checkOnboardingAndRedirect();
+    checkOnboardingRedirect();
   }, [user, authLoading, navigate]);
   
   const handleRefresh = async () => {

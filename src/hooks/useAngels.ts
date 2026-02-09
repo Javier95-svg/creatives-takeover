@@ -7,6 +7,7 @@ import { AngelInvestor, CreateAngelInput } from '@/types/angel';
 // Helper function to format error messages
 const formatErrorMessage = (error: any, defaultMessage: string): string => {
   const errorMessage = error?.message || error?.toString() || '';
+  const errorCode = error?.code || error?.hint || '';
 
   if (errorMessage.includes('schema cache') ||
       errorMessage.includes('Could not find the table') ||
@@ -18,8 +19,10 @@ const formatErrorMessage = (error: any, defaultMessage: string): string => {
     return `Database schema error: ${errorMessage}. Please ensure all migrations have been applied.`;
   }
 
-  if (errorMessage.includes('permission denied') ||
-      errorMessage.includes('row-level security')) {
+  if (errorCode === '42501' ||
+      errorMessage.includes('permission denied') ||
+      errorMessage.includes('row-level security') ||
+      errorMessage.includes('new row violates row-level security')) {
     return 'Permission denied. Please check your access rights.';
   }
 
@@ -27,6 +30,10 @@ const formatErrorMessage = (error: any, defaultMessage: string): string => {
       errorMessage.includes('network') ||
       errorMessage.includes('Failed to fetch')) {
     return 'Network error. Please check your connection and try again.';
+  }
+
+  if (errorMessage.includes('violates') || errorMessage.includes('constraint')) {
+    return `Database constraint error: ${errorMessage}`;
   }
 
   return errorMessage || defaultMessage;
@@ -53,7 +60,13 @@ export const useAngels = () => {
 
       return (data || []) as AngelInvestor[];
     } catch (error: any) {
-      console.error('Error fetching angel investors:', error);
+      console.error('Error fetching angel investors:', {
+        message: error?.message,
+        code: error?.code,
+        details: error?.details,
+        hint: error?.hint,
+        fullError: error
+      });
       const errorMessage = formatErrorMessage(error, 'Failed to load angel investors');
       toast.error(errorMessage);
       return [];
@@ -77,7 +90,14 @@ export const useAngels = () => {
 
       return data as AngelInvestor | null;
     } catch (error: any) {
-      console.error('Error fetching angel investor:', error);
+      console.error('Error fetching angel investor:', {
+        id,
+        message: error?.message,
+        code: error?.code,
+        details: error?.details,
+        hint: error?.hint,
+        fullError: error
+      });
       const errorMessage = formatErrorMessage(error, 'Failed to load angel investor');
       toast.error(errorMessage);
       return null;
@@ -99,12 +119,21 @@ export const useAngels = () => {
       const insertData: Record<string, any> = {
         name: input.name,
         firm_name: input.firm_name,
-        investment_stage: input.investment_stage,
+        investment_stages: input.investment_stages || [],
         picture: input.picture || null,
         website_url: input.website_url || null,
         linkedin_url: input.linkedin_url || null,
         is_active: input.is_active !== undefined ? input.is_active : true,
       };
+
+      console.log('Creating angel investor with data:', {
+        fields: Object.keys(insertData),
+        name: insertData.name,
+        firm_name: insertData.firm_name,
+        investment_stages: insertData.investment_stages,
+        hasPicture: !!insertData.picture,
+        is_active: insertData.is_active
+      });
 
       const { data, error } = await (supabase as any)
         .from('angel_investors')
@@ -112,19 +141,42 @@ export const useAngels = () => {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Database error details:', {
+          message: error.message,
+          code: error.code,
+          details: error.details,
+          hint: error.hint,
+          column: (error as any).column,
+          table: (error as any).table
+        });
+        throw error;
+      }
+
+      console.log('Angel investor created successfully:', {
+        id: data?.id,
+        name: data?.name,
+      });
 
       toast.success('Angel investor created successfully');
       return data as AngelInvestor;
     } catch (error: any) {
-      console.error('Error creating angel investor:', error);
+      console.error('Error creating angel investor:', {
+        input,
+        message: error?.message,
+        code: error?.code,
+        details: error?.details,
+        hint: error?.hint,
+        column: error?.column,
+        fullError: error
+      });
       const errorMessage = formatErrorMessage(error, 'Failed to create angel investor');
       toast.error(errorMessage);
       return null;
     } finally {
       setLoading(false);
     }
-  }, [isAdmin]);
+  }, [isAdmin, user]);
 
   // Update angel investor (admin only)
   const updateAngel = useCallback(async (id: string, input: Partial<CreateAngelInput>): Promise<AngelInvestor | null> => {
@@ -140,10 +192,15 @@ export const useAngels = () => {
       if (input.name !== undefined) cleanInput.name = input.name;
       if (input.picture !== undefined) cleanInput.picture = input.picture;
       if (input.firm_name !== undefined) cleanInput.firm_name = input.firm_name;
-      if (input.investment_stage !== undefined) cleanInput.investment_stage = input.investment_stage;
+      if (input.investment_stages !== undefined) cleanInput.investment_stages = input.investment_stages;
       if (input.website_url !== undefined) cleanInput.website_url = input.website_url;
       if (input.linkedin_url !== undefined) cleanInput.linkedin_url = input.linkedin_url;
       if (input.is_active !== undefined) cleanInput.is_active = input.is_active;
+
+      console.log('Updating angel investor with data:', {
+        id,
+        fields: Object.keys(cleanInput),
+      });
 
       const { data, error } = await (supabase as any)
         .from('angel_investors')
@@ -152,19 +209,40 @@ export const useAngels = () => {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Database error details:', {
+          message: error.message,
+          code: error.code,
+          details: error.details,
+          hint: error.hint,
+        });
+        throw error;
+      }
+
+      console.log('Angel investor updated successfully:', {
+        id: data?.id,
+        name: data?.name,
+      });
 
       toast.success('Angel investor updated successfully');
       return data as AngelInvestor;
     } catch (error: any) {
-      console.error('Error updating angel investor:', error);
+      console.error('Error updating angel investor:', {
+        id,
+        input,
+        message: error?.message,
+        code: error?.code,
+        details: error?.details,
+        hint: error?.hint,
+        fullError: error
+      });
       const errorMessage = formatErrorMessage(error, 'Failed to update angel investor');
       toast.error(errorMessage);
       return null;
     } finally {
       setLoading(false);
     }
-  }, [isAdmin]);
+  }, [isAdmin, user]);
 
   // Delete angel investor (admin only)
   const deleteAngel = useCallback(async (id: string): Promise<boolean> => {
@@ -186,7 +264,12 @@ export const useAngels = () => {
       toast.success('Angel investor deleted successfully');
       return true;
     } catch (error: any) {
-      console.error('Error deleting angel investor:', error);
+      console.error('Error deleting angel investor:', {
+        id,
+        message: error?.message,
+        code: error?.code,
+        fullError: error
+      });
       const errorMessage = formatErrorMessage(error, 'Failed to delete angel investor');
       toast.error(errorMessage);
       return false;
