@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, useRef, useCallback, ReactNode } from 'react';
 import { useAuth } from './AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -48,6 +48,7 @@ interface ProgressContextType {
 }
 
 const STORAGE_KEY = 'creatives_takeover_progress_context';
+const SAVE_DEBOUNCE_MS = 1500;
 
 const initialState: ProgressContextState = {
   currentPhase: null,
@@ -87,9 +88,14 @@ export const ProgressProvider = ({ children }: { children: ReactNode }) => {
   const { user } = useAuth();
   const [state, setState] = useState<ProgressContextState>(initialState);
   const [isLoading, setIsLoading] = useState(true);
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Track whether we're in the initial load phase to prevent save-on-load cascades
+  const isInitialLoadRef = useRef(true);
 
   // Load from database or localStorage on mount
   useEffect(() => {
+    isInitialLoadRef.current = true;
+
     if (user) {
       loadProgressFromDatabase();
     } else {
@@ -102,25 +108,43 @@ export const ProgressProvider = ({ children }: { children: ReactNode }) => {
         }
       }
       setIsLoading(false);
+      isInitialLoadRef.current = false;
     }
   }, [user]);
 
-  // Persist to localStorage and database on state change
+  // Debounced persist to localStorage and database on state change
   useEffect(() => {
-    if (!isLoading && state.isInitialized && user) {
+    // Don't save during initial load or before initialization
+    if (isLoading || !state.isInitialized || isInitialLoadRef.current) return;
+
+    if (user) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-      saveProgressToDatabase();
-    } else if (!isLoading && state.isInitialized && !user) {
+
+      // Debounce database save
+      if (saveTimerRef.current) {
+        clearTimeout(saveTimerRef.current);
+      }
+      saveTimerRef.current = setTimeout(() => {
+        saveProgressToDatabase();
+      }, SAVE_DEBOUNCE_MS);
+    } else {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     }
+
+    return () => {
+      if (saveTimerRef.current) {
+        clearTimeout(saveTimerRef.current);
+      }
+    };
   }, [state, isLoading, user]);
 
   const loadProgressFromDatabase = async () => {
     if (!user) {
       setIsLoading(false);
+      isInitialLoadRef.current = false;
       return;
     }
-    
+
     try {
       const { data: profile } = await supabase
         .from('profiles')
@@ -142,13 +166,15 @@ export const ProgressProvider = ({ children }: { children: ReactNode }) => {
           }
         }
       }
-      
-      // Always sync with database after loading
-      await syncWithDatabase();
     } catch (error) {
       console.error('Error loading progress from database:', error);
     } finally {
       setIsLoading(false);
+      // Mark initial load as complete AFTER state has been set
+      // Use setTimeout to ensure setState has been processed
+      setTimeout(() => {
+        isInitialLoadRef.current = false;
+      }, 0);
     }
   };
 
@@ -162,10 +188,10 @@ export const ProgressProvider = ({ children }: { children: ReactNode }) => {
         .eq('id', user.id)
         .single();
 
-      const existingPrefs = profile?.user_preferences && typeof profile.user_preferences === 'object' 
+      const existingPrefs = profile?.user_preferences && typeof profile.user_preferences === 'object'
         ? profile.user_preferences as Record<string, any>
         : {};
-      
+
       const updatedPreferences = {
         ...existingPrefs,
         progressState: state,
@@ -210,14 +236,14 @@ export const ProgressProvider = ({ children }: { children: ReactNode }) => {
     setState(prev => {
       const sprintsPhase = prev.phases.sprints;
       const isNewSprint = !sprintsPhase.activeSprints?.includes(sprintId);
-      
+
       return {
         ...prev,
         phases: {
           ...prev.phases,
           sprints: {
             ...sprintsPhase,
-            activeSprints: isNewSprint 
+            activeSprints: isNewSprint
               ? [...(sprintsPhase.activeSprints || []), sprintId]
               : sprintsPhase.activeSprints,
             totalTasksCompleted: (sprintsPhase.totalTasksCompleted || 0) + (stats.tasksCompleted || 0),
@@ -232,31 +258,31 @@ export const ProgressProvider = ({ children }: { children: ReactNode }) => {
     });
   };
 
-  const calculateOverallProgress = (): number => {
+  const calculateOverallProgress = useCallback((): number => {
     const { phases } = state;
     let totalProgress = 0;
-    
+
     if (phases.braindump.completed) totalProgress += 25;
     if (phases.roadmap.completed) totalProgress += 25;
     if (phases.sprints.completed) totalProgress += 25;
     if (phases.scale.unlocked) totalProgress += 25;
-    
-    return totalProgress;
-  };
 
-  const syncWithDatabase = async () => {
+    return totalProgress;
+  }, [state.phases]);
+
+  const syncWithDatabase = useCallback(async () => {
     if (!user) return;
-    
+
     try {
       const { data: sprints } = await supabase
         .from('sprints')
         .select('id, status')
         .eq('user_id', user.id);
-      
+
       if (sprints && sprints.length > 0) {
         const activeSprints = sprints.filter(s => s.status === 'active').map(s => s.id);
         const completedSprints = sprints.filter(s => s.status === 'completed').map(s => s.id);
-        
+
         setState(prev => ({
           ...prev,
           phases: {
@@ -273,7 +299,7 @@ export const ProgressProvider = ({ children }: { children: ReactNode }) => {
     } catch (error) {
       console.error('Error syncing progress with database:', error);
     }
-  };
+  }, [user]);
 
   const resetProgress = async () => {
     if (user) {
@@ -284,10 +310,10 @@ export const ProgressProvider = ({ children }: { children: ReactNode }) => {
           .eq('id', user.id)
           .single();
 
-        const existingPrefs = profile?.user_preferences && typeof profile.user_preferences === 'object' 
+        const existingPrefs = profile?.user_preferences && typeof profile.user_preferences === 'object'
           ? profile.user_preferences as Record<string, any>
           : {};
-        
+
         const updatedPreferences = {
           ...existingPrefs,
           progressState: null,
@@ -305,15 +331,29 @@ export const ProgressProvider = ({ children }: { children: ReactNode }) => {
     localStorage.removeItem(STORAGE_KEY);
   };
 
-  // Auto-calculate overall progress
+  // Auto-calculate overall progress (no cascading save — just updates the number)
   useEffect(() => {
     if (state.isInitialized) {
       const progress = calculateOverallProgress();
       if (progress !== state.overallProgress) {
-        setState(prev => ({ ...prev, overallProgress: progress }));
+        // Use functional update to avoid triggering another save cycle
+        // This will trigger the save effect, but that's expected since progress changed
+        setState(prev => {
+          if (prev.overallProgress === progress) return prev; // Bail if no change
+          return { ...prev, overallProgress: progress };
+        });
       }
     }
-  }, [state.phases]);
+  }, [state.phases, calculateOverallProgress]);
+
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => {
+      if (saveTimerRef.current) {
+        clearTimeout(saveTimerRef.current);
+      }
+    };
+  }, []);
 
   return (
     <ProgressContext.Provider value={{

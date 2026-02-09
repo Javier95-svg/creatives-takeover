@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, useRef, ReactNode } from 'react';
 import { useAuth } from './AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -36,6 +36,7 @@ interface UserContextType {
 }
 
 const STORAGE_KEY = 'creatives_takeover_user_context';
+const SAVE_DEBOUNCE_MS = 1500;
 
 const initialState: UserContextState = {
   surveyData: {
@@ -60,9 +61,14 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const { user } = useAuth();
   const [state, setState] = useState<UserContextState>(initialState);
   const [isLoading, setIsLoading] = useState(true);
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Track whether we're in the initial load phase to prevent save-on-load cascades
+  const isInitialLoadRef = useRef(true);
 
   // Load from database or localStorage on mount
   useEffect(() => {
+    isInitialLoadRef.current = true;
+
     if (user) {
       loadUserContextFromDatabase();
     } else {
@@ -75,20 +81,36 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         }
       }
       setIsLoading(false);
+      isInitialLoadRef.current = false;
     }
   }, [user]);
 
-  // Persist to localStorage and database on state change
+  // Debounced persist to localStorage and database on state change
   useEffect(() => {
-    if (!isLoading && state.isInitialized && user) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-      saveUserContextToDatabase();
+    // Don't save during initial load or before initialization
+    if (isLoading || !state.isInitialized || isInitialLoadRef.current) return;
+    if (!user) return;
+
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+
+    // Debounce database save
+    if (saveTimerRef.current) {
+      clearTimeout(saveTimerRef.current);
     }
+    saveTimerRef.current = setTimeout(() => {
+      saveUserContextToDatabase();
+    }, SAVE_DEBOUNCE_MS);
+
+    return () => {
+      if (saveTimerRef.current) {
+        clearTimeout(saveTimerRef.current);
+      }
+    };
   }, [state, isLoading, user]);
 
   const loadUserContextFromDatabase = async () => {
     if (!user) return;
-    
+
     try {
       const { data: profile } = await supabase
         .from('profiles')
@@ -131,6 +153,10 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       console.error('Error loading user context from database:', error);
     } finally {
       setIsLoading(false);
+      // Mark initial load as complete AFTER state has been set
+      setTimeout(() => {
+        isInitialLoadRef.current = false;
+      }, 0);
     }
   };
 
@@ -194,14 +220,23 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     const { surveyData } = state;
     let completed = 0;
     const total = 4;
-    
+
     if (surveyData.userRole) completed++;
     if (surveyData.experienceLevel) completed++;
     if (surveyData.primaryGoals?.length > 0) completed++;
     if (surveyData.businessStage) completed++;
-    
+
     return Math.round((completed / total) * 100);
   };
+
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => {
+      if (saveTimerRef.current) {
+        clearTimeout(saveTimerRef.current);
+      }
+    };
+  }, []);
 
   return (
     <UserContext.Provider value={{
