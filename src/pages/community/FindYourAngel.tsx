@@ -24,10 +24,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { AngelCard } from "@/components/angels/AngelCard";
-import { Sparkles, Loader2, Edit, Search, ChevronDown, X } from "lucide-react";
+import { Sparkles, Loader2, Edit, Search, ChevronDown, X, Lock, Crown } from "lucide-react";
 import { AngelInvestor } from "@/types/angel";
 import { useAngels } from "@/hooks/useAngels";
 import { useAuth } from "@/contexts/AuthContext";
+import { useFeatureGating } from "@/hooks/useFeatureGating";
+import { useUpgradePrompt } from "@/contexts/UpgradePromptContext";
 import { useTypingAnimation } from "@/hooks/useTypingAnimation";
 import { cn } from "@/lib/utils";
 import {
@@ -55,7 +57,10 @@ const FindYourAngel = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const isAdmin = user?.email?.toLowerCase() === 'admin@creatives-takeover.com';
+  const { currentTier } = useFeatureGating();
+  const { openUpgradePrompt } = useUpgradePrompt();
   const { fetchAngels, loading } = useAngels();
+  const isPro = isAdmin || currentTier === 'professional';
   const [angels, setAngels] = useState<AngelInvestor[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedStages, setSelectedStages] = useState<string[]>([]);
@@ -414,40 +419,90 @@ const FindYourAngel = () => {
               </div>
             ) : filteredAngels.length > 0 ? (
               <>
-                <div className="grid grid-cols-1 gap-6">
-                  {paginatedAngels.map((angel, index) => (
-                    <div key={angel.id} className="relative group">
-                      <AngelCard
-                        angel={angel}
-                        priority={index < 4}
-                      />
-                      {/* Admin Edit Button - Overlay */}
-                      {isAdmin && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            navigate(`/community/angels/admin/edit/${angel.id}`);
-                          }}
-                          className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-background/90 backdrop-blur-sm hover:bg-background z-10"
-                          aria-label={`Edit ${angel.name}`}
-                        >
-                          <Edit className="w-4 h-4 mr-1" />
-                          Edit
-                        </Button>
-                      )}
+                {/* Pro users: full access */}
+                {isPro ? (
+                  <div className="grid grid-cols-1 gap-6">
+                    {paginatedAngels.map((angel, index) => (
+                      <div key={angel.id} className="relative group">
+                        <AngelCard
+                          angel={angel}
+                          priority={index < 4}
+                        />
+                        {/* Admin Edit Button - Overlay */}
+                        {isAdmin && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              navigate(`/community/angels/admin/edit/${angel.id}`);
+                            }}
+                            className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-background/90 backdrop-blur-sm hover:bg-background z-10"
+                            aria-label={`Edit ${angel.name}`}
+                          >
+                            <Edit className="w-4 h-4 mr-1" />
+                            Edit
+                          </Button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  /* Non-Pro users: blurred cards with upgrade overlay */
+                  <div className="relative">
+                    {/* Blurred angel cards */}
+                    <div className="grid grid-cols-1 gap-6 select-none pointer-events-none blur-[6px]" aria-hidden="true">
+                      {paginatedAngels.map((angel, index) => (
+                        <AngelCard
+                          key={angel.id}
+                          angel={angel}
+                          priority={index < 4}
+                        />
+                      ))}
                     </div>
-                  ))}
-                </div>
 
-                {/* Pagination */}
+                    {/* Upgrade overlay */}
+                    <div className="absolute inset-0 flex items-center justify-center bg-background/40 backdrop-blur-[2px] rounded-xl">
+                      <div className="text-center max-w-md px-6 py-10 bg-card/95 backdrop-blur-md border border-border rounded-2xl shadow-2xl">
+                        <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-primary/10 mb-5">
+                          <Lock className="w-6 h-6 text-primary" />
+                        </div>
+                        <h3 className="text-xl font-bold mb-2">
+                          Unlock Angel Investor Profiles
+                        </h3>
+                        <p className="text-muted-foreground text-sm mb-6 leading-relaxed">
+                          Upgrade to Professional to access full angel investor and VC profiles, explore their focus areas, investment stages, and connect with investors who can fund your vision.
+                        </p>
+                        <Button
+                          size="lg"
+                          className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                          onClick={() =>
+                            openUpgradePrompt({
+                              reason: 'feature',
+                              featureName: 'Angel Investor Profiles',
+                              requiredTier: 'professional',
+                              description: 'Professional plan gives you unlimited access to all angel investor profiles.',
+                            })
+                          }
+                        >
+                          <Crown className="w-4 h-4 mr-2" />
+                          Upgrade to Professional
+                        </Button>
+                        <p className="text-xs text-muted-foreground mt-4">
+                          Professional plan — full access to all investor profiles
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Pagination — always visible so users see there are multiple pages */}
                 {totalPages > 1 && (
                   <div className="mt-8">
                     <Pagination>
                       <PaginationContent>
-                        {currentPage > 1 && (
+                        {isPro && currentPage > 1 && (
                           <PaginationItem>
                             <PaginationPrevious
                               href="#"
@@ -473,7 +528,16 @@ const FindYourAngel = () => {
                                 href="#"
                                 onClick={(e) => {
                                   e.preventDefault();
-                                  handlePageChange(page as number);
+                                  if (isPro) {
+                                    handlePageChange(page as number);
+                                  } else {
+                                    openUpgradePrompt({
+                                      reason: 'feature',
+                                      featureName: 'Angel Investor Profiles',
+                                      requiredTier: 'professional',
+                                      description: 'Professional plan gives you unlimited access to all angel investor profiles.',
+                                    });
+                                  }
                                 }}
                                 isActive={page === currentPage}
                               >
@@ -482,7 +546,7 @@ const FindYourAngel = () => {
                             </PaginationItem>
                           );
                         })}
-                        {currentPage < totalPages && (
+                        {isPro && currentPage < totalPages && (
                           <PaginationItem>
                             <PaginationNext
                               href="#"
