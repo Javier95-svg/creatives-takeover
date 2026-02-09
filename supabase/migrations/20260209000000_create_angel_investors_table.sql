@@ -59,14 +59,3 @@ CREATE TRIGGER update_angel_investors_updated_at
   BEFORE UPDATE ON public.angel_investors
   FOR EACH ROW
   EXECUTE FUNCTION update_angel_investors_updated_at();
-
--- Sample data
-INSERT INTO public.angel_investors (name, firm_name, investment_stages, website_url, linkedin_url, is_active)
-VALUES (
-  'Marc Andreessen',
-  'Andreessen Horowitz (a16z)',
-  ARRAY['Pre-Seed', 'Seed'],
-  'https://a16z.com',
-  'https://linkedin.com/in/pmarca',
-  true
-);
