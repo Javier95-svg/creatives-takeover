@@ -16,6 +16,13 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { AngelCard } from "@/components/angels/AngelCard";
 import { Sparkles, Loader2, Edit, Search, ChevronDown, X } from "lucide-react";
 import { AngelInvestor } from "@/types/angel";
@@ -52,6 +59,7 @@ const FindYourAngel = () => {
   const [angels, setAngels] = useState<AngelInvestor[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedStages, setSelectedStages] = useState<string[]>([]);
+  const [sortBy, setSortBy] = useState("alphabetical");
   const currentPage = parseInt(searchParams.get("page") || "1", 10);
 
   useEffect(() => {
@@ -96,6 +104,11 @@ const FindYourAngel = () => {
     resetToFirstPage();
   };
 
+  const handleSortChange = (newSort: string) => {
+    setSortBy(newSort);
+    resetToFirstPage();
+  };
+
   const clearAllFilters = () => {
     setSearchQuery("");
     setSelectedStages([]);
@@ -104,7 +117,7 @@ const FindYourAngel = () => {
 
   const hasActiveFilters = searchQuery.length > 0 || selectedStages.length > 0;
 
-  // Filtered angels based on search and stage filters
+  // Filtered and sorted angels based on search, stage filters, and sort
   const filteredAngels = useMemo(() => {
     let result = angels;
 
@@ -126,8 +139,32 @@ const FindYourAngel = () => {
       );
     }
 
+    // Sorting
+    result = [...result];
+    switch (sortBy) {
+      case "alphabetical":
+      default:
+        result.sort((a, b) => a.name.localeCompare(b.name));
+        break;
+      case "newest":
+        result.sort(
+          (a, b) =>
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
+        break;
+      case "oldest":
+        result.sort(
+          (a, b) =>
+            new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+        );
+        break;
+      case "firm":
+        result.sort((a, b) => a.firm_name.localeCompare(b.firm_name));
+        break;
+    }
+
     return result;
-  }, [angels, searchQuery, selectedStages]);
+  }, [angels, searchQuery, selectedStages, sortBy]);
 
   const handlePageChange = (page: number) => {
     const params = new URLSearchParams(searchParams);
@@ -337,6 +374,22 @@ const FindYourAngel = () => {
                   Clear all
                 </Button>
               )}
+
+              {/* Sort */}
+              <div className="ml-auto flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">Sort by:</span>
+                <Select value={sortBy} onValueChange={handleSortChange}>
+                  <SelectTrigger className="w-[180px] h-9">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="alphabetical">Alphabetical (A-Z)</SelectItem>
+                    <SelectItem value="newest">Newest first</SelectItem>
+                    <SelectItem value="oldest">Oldest first</SelectItem>
+                    <SelectItem value="firm">By firm name</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             {/* Results Count */}
