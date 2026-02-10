@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Check, X, ChevronLeft, ChevronRight } from "lucide-react";
-import { CREDIT_COSTS } from "@/config/constants";
+
 
 const PricingComparison = () => {
   const [currentMobileIndex, setCurrentMobileIndex] = useState(0);
@@ -10,10 +10,15 @@ const PricingComparison = () => {
 
   const features = [
     {
-      category: "Credits & Dashboard",
+      category: "Credits",
       items: [
-        { feature: "Monthly Credits", free: "25 Credits", creator: "50 Credits", professional: "150 Credits" },
-        { feature: "Dashboard Access", free: "Basic (read-only)", creator: "Full access", professional: "Full access" },
+        { feature: "Monthly Credits", free: "25 Credits", creator: "50 Credits", professional: "150 Credits" }
+      ]
+    },
+    {
+      category: "Dashboard",
+      items: [
+        { feature: "Dashboard Access", free: "Basic read-only", creator: "Full access", professional: "Full access" },
         { feature: "Focus Funnel", free: "View only", creator: "Full access", professional: "Full access" },
         { feature: "Decision Sprint", free: false, creator: "Full access", professional: "Full access" },
         { feature: "Core Metrics", free: "View only", creator: "Full access", professional: "Full access" },
@@ -22,23 +27,13 @@ const PricingComparison = () => {
       ]
     },
     {
-      category: "BizMap AI - Learn",
+      category: "BizMap AI",
       items: [
-        { feature: `ICP Builder (${CREDIT_COSTS.ICP_ANALYSIS} credits)`, free: "Read-only", creator: `Full access`, professional: `Full access` },
-        { feature: `PMF Lab (${CREDIT_COSTS.PMF_ANALYSIS} credits)`, free: "Read-only", creator: `Full access`, professional: `Full access` }
-      ]
-    },
-    {
-      category: "BizMap AI - Build",
-      items: [
-        { feature: `Business Planner (${CREDIT_COSTS.AI_CHAT_MESSAGE} credit/msg)`, free: "25 messages", creator: "50 messages", professional: "150 messages" },
+        { feature: "ICP Builder", free: "Read-only", creator: "Full access", professional: "Full access" },
+        { feature: "PMF Lab", free: "Read-only", creator: "Full access", professional: "Full access" },
+        { feature: "Business Planner", free: "25 messages", creator: "50 messages", professional: "150 messages" },
         { feature: "MVP Builder", free: false, creator: "Full access", professional: "Full access" },
-        { feature: `Tech Stack Builder (${CREDIT_COSTS.TECH_STACK_GENERATION} credits)`, free: "View only", creator: `Full access`, professional: `Advanced` }
-      ]
-    },
-    {
-      category: "BizMap AI - Measure",
-      items: [
+        { feature: "Tech Stack Builder", free: "View only", creator: "Full access", professional: "Advanced" },
         { feature: "GTM Strategist", free: false, creator: false, professional: "Full access" }
       ]
     },
@@ -47,9 +42,9 @@ const PricingComparison = () => {
       items: [
         { feature: "VC Search", free: "5 views/month", creator: "25 views/month", professional: "Unlimited" },
         { feature: "Accelerator Hunt", free: false, creator: false, professional: "Full access" },
-        { feature: `Email Templates (${CREDIT_COSTS.EMAIL_TEMPLATE_GENERATION} credits)`, free: "View only", creator: `AI generation`, professional: `AI + custom` },
-        { feature: `Pitch Deck Analyzer (${CREDIT_COSTS.PITCH_DECK_ANALYZER} credits)`, free: false, creator: `Full access`, professional: `Advanced + benchmarks` },
-        { feature: `Insights Test (${CREDIT_COSTS.FUNDRAISING_READINESS_ANALYSIS} credits)`, free: `Basic`, creator: `Full access`, professional: `Full + personalized` }
+        { feature: "Email Templates", free: "View only", creator: "AI generation", professional: "AI + custom" },
+        { feature: "Pitch Deck Analyzer", free: false, creator: "Full access", professional: "Advanced + benchmarks" },
+        { feature: "Insights Test", free: "Basic", creator: "Full access", professional: "Full + personalized" }
       ]
     },
     {
@@ -64,13 +59,12 @@ const PricingComparison = () => {
       category: "Resources",
       items: [
         { feature: "Stories", free: "Read-only", creator: "Full access", professional: "Full access" },
-        { feature: `Prompt Library (${CREDIT_COSTS.PROMPT_GENERATION} credits for generation)`, free: "View only", creator: "Full access", professional: "Full + custom templates" }
+        { feature: "Prompt Library", free: "View only", creator: "Full access", professional: "Full + custom templates" }
       ]
     },
     {
-      category: "Support & Access",
+      category: "Premium Access",
       items: [
-        { feature: "Support", free: "Community", creator: "Priority support", professional: "Priority (24h response)" },
         { feature: "Early Access to New Features", free: false, creator: false, professional: true }
       ]
     }

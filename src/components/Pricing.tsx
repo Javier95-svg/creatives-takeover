@@ -95,35 +95,30 @@ const Pricing = () => {
     const featureMap: Record<string, string[]> = {
       free: [
         "25 credits per month",
-        "Dashboard (Focus Funnel, Core Metrics, Weekly Mission)",
-        "BizMap AI (25 messages/month)",
-        "PMF Lab (read-only)",
-        "Prompt Library (view only)",
-        "VC Search (5 views/month)",
-        "Stories (read-only)",
-        "Community access (limited)"
+        "Dashboard: Focus Funnel, Core Metrics, Weekly Mission",
+        "BizMap AI: 25 messages per month",
+        "PMF Lab: read-only",
+        "Prompt Library: view only",
+        "VC Search: 5 views per month",
+        "Stories: read-only",
+        "Community access: limited"
       ],
       creator: [
-        "50 credits per month (2x more)",
-        "Dashboard (Full access: Focus Funnel, Decision Sprint, Core Metrics, Weekly Mission, Your Tasks)",
-        "BizMap AI Learn: ICP Builder & PMF Lab (full access)",
-        "BizMap AI Build: MVP Builder, Business Planner, Tech Stack Builder",
-        "Insighta: VC Search (25 views/month), Email Templates, Pitch Deck Analyzer, Insights Test",
+        "50 credits per month",
+        "Full Dashboard access",
+        "BizMap AI: ICP Builder, PMF Lab, MVP Builder, Business Planner, Tech Stack Builder",
+        "Insighta: VC Search, Email Templates, Pitch Deck Analyzer, Insights Test",
         "Community: Find a Mentor, Find a Co-Founder",
-        "Resources: Stories & Prompt Library (full access)",
-        "Priority support"
+        "Stories and Prompt Library"
       ],
       professional: [
-        "150 credits per month (6x more)",
-        "Dashboard (Full access: All features)",
-        "BizMap AI Learn: ICP Builder & PMF Lab",
-        "BizMap AI Build: MVP Builder, Business Planner, Tech Stack Builder",
-        "BizMap AI Measure: GTM Strategist",
-        "Insighta: Unlimited VC Search, Accelerator Hunt, Email Templates, Advanced Pitch Deck Analyzer, Insights Test",
+        "150 credits per month",
+        "Full Dashboard access",
+        "BizMap AI: All tools including GTM Strategist",
+        "Insighta: Unlimited VC Search, Accelerator Hunt, Email Templates, Pitch Deck Analyzer, Insights Test",
         "Community: Find a Mentor, Find a Co-Founder, Find your Angel",
-        "Resources: Stories & Prompt Library (full + custom templates)",
+        "Stories, Prompt Library, and custom templates",
         "Featured in Community",
-        "Priority support (24h response)",
         "Early access to new features"
       ]
     };
