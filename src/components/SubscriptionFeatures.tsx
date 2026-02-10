@@ -125,10 +125,10 @@ const SubscriptionFeatures = () => {
           </CardContent>
         </Card>
 
-        {/* Credit Breakdown Grid - 5 cards, each auto-fits its content */}
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-6 items-start">
+        {/* Credit Breakdown Grid - wider cards for readability */}
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 items-start">
           {/* Dashboard Card */}
-          <Card className="rounded-2xl border-border/60 bg-card/80 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md">
+          <Card className="rounded-2xl border border-slate-300/60 dark:border-slate-500/40 bg-card/80 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md">
             <CardHeader>
               <div className="flex items-center gap-3 mb-2">
                 <div className="p-2 rounded-full bg-primary/10">
@@ -153,7 +153,7 @@ const SubscriptionFeatures = () => {
           </Card>
 
           {/* BizMap AI Card */}
-          <Card className="rounded-2xl border-border/60 bg-card/80 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md">
+          <Card className="rounded-2xl border border-slate-300/60 dark:border-slate-500/40 bg-card/80 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md">
             <CardHeader>
               <div className="flex items-center gap-3 mb-2">
                 <div className="p-2 rounded-full bg-primary/10">
@@ -178,7 +178,7 @@ const SubscriptionFeatures = () => {
           </Card>
 
           {/* Insighta Card */}
-          <Card className="rounded-2xl border-border/60 bg-card/80 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md">
+          <Card className="rounded-2xl border border-slate-300/60 dark:border-slate-500/40 bg-card/80 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md">
             <CardHeader>
               <div className="flex items-center gap-3 mb-2">
                 <div className="p-2 rounded-full bg-primary/10">
@@ -211,7 +211,7 @@ const SubscriptionFeatures = () => {
           </Card>
 
           {/* Community Card */}
-          <Card className="rounded-2xl border-border/60 bg-card/80 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md">
+          <Card className="rounded-2xl border border-slate-300/60 dark:border-slate-500/40 bg-card/80 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md">
             <CardHeader>
               <div className="flex items-center gap-3 mb-2">
                 <div className="p-2 rounded-full bg-primary/10">
@@ -241,7 +241,7 @@ const SubscriptionFeatures = () => {
           </Card>
 
           {/* Resources Card */}
-          <Card className="rounded-2xl border-border/60 bg-card/80 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md">
+          <Card className="rounded-2xl border border-slate-300/60 dark:border-slate-500/40 bg-card/80 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md">
             <CardHeader>
               <div className="flex items-center gap-3 mb-2">
                 <div className="p-2 rounded-full bg-primary/10">
