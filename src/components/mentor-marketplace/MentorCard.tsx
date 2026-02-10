@@ -45,7 +45,7 @@ export const MentorCard = ({ mentor, className, priority = false }: MentorCardPr
   const rating = mentor.rating || 0;
   const reviewCount = mentor.review_count || 0;
   
-  // Get country flag - special cases for Samuel (American), Nic M Rayce (Singapore), Irfan Ahmad Malik (Pakistan), Gonzalo Wangüemert (Spain), Marc Bright (Great Britain), Vashti Joseph (France), Ramona Chihaia (Netherlands), and Dikshit Kukreja (India)
+  // Get country flag - special cases for Samuel (American), Nic M Rayce (Singapore), Irfan Ahmad Malik (Pakistan), Gonzalo Wangüemert (Spain), Marc Bright (Great Britain), Vashti Joseph (France), Ramona Chihaia (Netherlands), Dikshit Kukreja (India), and Karolina Żurawska (Poland)
   const getNationality = () => {
     if (mentor.nationality) {
       return mentor.nationality;
@@ -93,6 +93,10 @@ export const MentorCard = ({ mentor, className, priority = false }: MentorCardPr
     // Special case: Rachel Yenko-Martinka is from USA
     if (mentor.name.toLowerCase().includes('rachel') && mentor.name.toLowerCase().includes('yenko')) {
       return 'USA';
+    }
+    // Special case: Karolina Żurawska is from Poland
+    if (mentor.name.toLowerCase().includes('karolina') && mentor.name.toLowerCase().includes('urawska')) {
+      return 'Poland';
     }
     return null;
   };

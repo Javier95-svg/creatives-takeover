@@ -70,6 +70,22 @@ export const MentorProfile = ({ mentor, onBookClick }: MentorProfileProps) => {
     if (mentor.name.toLowerCase().includes('dikshit') && mentor.name.toLowerCase().includes('kukreja')) {
       return 'India';
     }
+    // Special case: Ceren Aslan is from Turkey
+    if (mentor.name.toLowerCase().includes('ceren') && mentor.name.toLowerCase().includes('aslan')) {
+      return 'Turkey';
+    }
+    // Special case: Parnika Sharma is from India
+    if (mentor.name.toLowerCase().includes('parnika') && mentor.name.toLowerCase().includes('sharma')) {
+      return 'India';
+    }
+    // Special case: Rachel Yenko-Martinka is from USA
+    if (mentor.name.toLowerCase().includes('rachel') && mentor.name.toLowerCase().includes('yenko')) {
+      return 'USA';
+    }
+    // Special case: Karolina Żurawska is from Poland
+    if (mentor.name.toLowerCase().includes('karolina') && mentor.name.toLowerCase().includes('urawska')) {
+      return 'Poland';
+    }
     return null;
   };
   const nationality = getNationality();
