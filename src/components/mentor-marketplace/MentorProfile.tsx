@@ -117,74 +117,60 @@ export const MentorProfile = ({ mentor, onBookClick }: MentorProfileProps) => {
       return;
     }
 
-    const mentorNameLower = mentor.name.toLowerCase();
-    
-    // Check if this is Samuel Starkman's profile
-    const isSamuelStarkman = (mentorNameLower.includes('samuel') && mentorNameLower.includes('starkman')) ||
-                             mentorNameLower.includes('samuel starkman');
+    // Universal messaging: use mentor's user_id if available
+    let mentorUserId: string | null = null;
 
-    // Check if this is Nic M Rayce's profile
-    const isNicMRayce = (mentorNameLower.includes('nic') && mentorNameLower.includes('rayce')) ||
-                        mentorNameLower.includes('nic m rayce');
+    if (mentor.user_id) {
+      // Mentor has a linked user account - use it directly
+      mentorUserId = mentor.user_id;
+    } else {
+      // Fallback: Try to find user by email for known mentors (backward compatibility)
+      const mentorNameLower = mentor.name.toLowerCase();
+      
+      // Check if this is Samuel Starkman's profile
+      const isSamuelStarkman = (mentorNameLower.includes('samuel') && mentorNameLower.includes('starkman')) ||
+                               mentorNameLower.includes('samuel starkman');
+      
+      // Check if this is Nic M Rayce's profile
+      const isNicMRayce = (mentorNameLower.includes('nic') && mentorNameLower.includes('rayce')) ||
+                          mentorNameLower.includes('nic m rayce');
+      
+      // Check if this is Karolina Żurawska's profile
+      const isKarolinaZurawska = mentorNameLower.includes('karolina') && mentorNameLower.includes('urawska');
 
-    if (isSamuelStarkman) {
-      // Navigate to messages page to see all chats
-      navigate('/messages');
+      if (isSamuelStarkman) {
+        mentorUserId = SAMUEL_STARKMAN_USER_ID;
+      } else if (isNicMRayce) {
+        mentorUserId = await getUserIdByEmail(NIC_M_RAYCE_EMAIL);
+      } else if (isKarolinaZurawska) {
+        mentorUserId = await getUserIdByEmail(KAROLINA_ZURAWSKA_EMAIL);
+      }
+    }
+
+    if (!mentorUserId) {
+      toast.error('This mentor does not have messaging enabled. Please contact them through their other channels.');
       return;
     }
 
-    if (isNicMRayce) {
-      try {
-        // Get user ID by email
-        const userId = await getUserIdByEmail(NIC_M_RAYCE_EMAIL);
-        
-        if (!userId) {
-          toast.error('Unable to find user. Please try again later.');
-          return;
-        }
+    // Prevent messaging yourself
+    if (mentorUserId === user.id) {
+      toast.error('You cannot message yourself.');
+      return;
+    }
 
-        // Start conversation
-        const conversationId = await startConversation(userId);
-        if (conversationId) {
-          // Navigate to messages page with conversationId to automatically open the chat
-          navigate(`/messages?conversationId=${conversationId}`);
-        } else {
-          toast.error('Failed to start conversation. Please try again.');
-        }
-      } catch (error) {
-        console.error('Error starting conversation with Nic M Rayce:', error);
+    try {
+      // Start or find existing conversation
+      const conversationId = await startConversation(mentorUserId);
+      if (conversationId) {
+        // Navigate to messages page with conversationId to automatically open the chat
+        navigate(`/messages?conversationId=${conversationId}`);
+      } else {
         toast.error('Failed to start conversation. Please try again.');
       }
-      return;
+    } catch (error) {
+      console.error('Error starting conversation:', error);
+      toast.error('Failed to start conversation. Please try again.');
     }
-
-    // Check if this is Karolina Żurawska's profile
-    const isKarolinaZurawska = mentorNameLower.includes('karolina') && mentorNameLower.includes('urawska');
-
-    if (isKarolinaZurawska) {
-      try {
-        const userId = await getUserIdByEmail(KAROLINA_ZURAWSKA_EMAIL);
-        
-        if (!userId) {
-          toast.error('Unable to find user. Please try again later.');
-          return;
-        }
-
-        const conversationId = await startConversation(userId);
-        if (conversationId) {
-          navigate(`/messages?conversationId=${conversationId}`);
-        } else {
-          toast.error('Failed to start conversation. Please try again.');
-        }
-      } catch (error) {
-        console.error('Error starting conversation with Karolina Żurawska:', error);
-        toast.error('Failed to start conversation. Please try again.');
-      }
-      return;
-    }
-
-    // For other mentors, just navigate to auth for now
-    navigate('/auth');
   };
 
   return (
