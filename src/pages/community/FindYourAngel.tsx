@@ -332,7 +332,7 @@ const FindYourAngel = () => {
                 </h1>
 
                 {/* Description with typing animation (skip on repeat visits) */}
-                <div className="max-w-3xl mx-auto mb-8 relative">
+                <div className="max-w-3xl mx-auto mb-8 relative animate-zoom-in">
                   <p
                     className="text-base sm:text-lg md:text-xl text-foreground/90 leading-relaxed"
                     style={{
