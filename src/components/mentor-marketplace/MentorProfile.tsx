@@ -314,19 +314,14 @@ export const MentorProfile = ({ mentor, onBookClick }: MentorProfileProps) => {
               </div>
             )}
 
-            {/* Pricing: Hourly Rate & 8 Week Coaching Program */}
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs lg:text-sm">
-              {hourlyRate > 0 && (
+            {/* Pricing: Hourly Rate */}
+            {hourlyRate > 0 && (
+              <div className="text-xs lg:text-sm">
                 <span className="text-foreground font-semibold">
                   {currencySymbol}{hourlyRate.toLocaleString()}<span className="text-muted-foreground font-normal">/hr</span>
                 </span>
-              )}
-              {programFee > 0 && (
-                <span className="text-foreground font-semibold">
-                  {currencySymbol}{programFee.toLocaleString()}<span className="text-muted-foreground font-normal"> · 8 Week Program</span>
-                </span>
-              )}
-            </div>
+              </div>
+            )}
 
                 {/* Action Buttons */}
                 <div className="flex items-center gap-3 pt-2">
