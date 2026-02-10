@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Helmet } from "react-helmet-async";
 import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
@@ -35,7 +35,7 @@ import { useAngels } from "@/hooks/useAngels";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFeatureGating } from "@/hooks/useFeatureGating";
 import { useUpgradePrompt } from "@/contexts/UpgradePromptContext";
-import { useTypingAnimation } from "@/hooks/useTypingAnimation";
+
 import { cn } from "@/lib/utils";
 import {
   Pagination,
@@ -48,7 +48,7 @@ import {
 } from "@/components/ui/pagination";
 
 const ANGELS_PER_PAGE = 10;
-const TYPING_SESSION_KEY = "angels_typing_done";
+
 
 const INVESTMENT_STAGE_OPTIONS = [
   "Pre-Seed",
@@ -89,10 +89,6 @@ const FindYourAngel = () => {
   const [sortBy, setSortBy] = useState(searchParams.get("sort") || "alphabetical");
   const currentPage = parseInt(searchParams.get("page") || "1", 10);
 
-  // Track whether typing animation already played this session (fix 1b)
-  const hasAnimated = useRef(
-    typeof window !== "undefined" && sessionStorage.getItem(TYPING_SESSION_KEY) === "true"
-  );
 
   useEffect(() => {
     loadAngels();
@@ -283,19 +279,7 @@ const FindYourAngel = () => {
     }
   }, [currentPage, totalPages, searchParams, setSearchParams]);
 
-  // Typing animation for description — only animate on first session visit (fix 1b)
   const descriptionText = "Find and connect with Angel Investors or Venture Capitalists who believe in bold ideas and back them early. Browse investor profiles, explore their focus areas and investment stages, and take the first step toward building a relationship that could fund your vision.\n\nWhether you are raising your first pre-seed round or looking for a strategic partner at the seed stage, this is where you start.";
-  const { displayedText, isTyping, skipAnimation } = useTypingAnimation({
-    text: hasAnimated.current ? "" : descriptionText,
-    speed: 20,
-    startDelay: 500,
-    onComplete: () => {
-      try { sessionStorage.setItem(TYPING_SESSION_KEY, "true"); } catch {}
-    },
-  });
-  // If already animated this session, show full text immediately
-  const heroText = hasAnimated.current ? descriptionText : displayedText;
-  const showCursor = !hasAnimated.current && isTyping;
 
   return (
     <>
@@ -331,7 +315,7 @@ const FindYourAngel = () => {
                   </span>
                 </h1>
 
-                {/* Description with typing animation (skip on repeat visits) */}
+                {/* Description with zoom-in effect */}
                 <div className="max-w-3xl mx-auto mb-8 relative animate-zoom-in">
                   <p
                     className="text-base sm:text-lg md:text-xl text-foreground/90 leading-relaxed"
@@ -340,24 +324,8 @@ const FindYourAngel = () => {
                       fontFamily: "'Space Grotesk', 'Poppins', sans-serif",
                     }}
                   >
-                    {heroText}
-                    {showCursor && (
-                      <span className="inline-block w-0.5 h-5 sm:h-6 bg-primary ml-1 animate-pulse" />
-                    )}
+                    {descriptionText}
                   </p>
-                  {/* Skip button during animation */}
-                  {showCursor && (
-                    <button
-                      onClick={() => {
-                        skipAnimation();
-                        hasAnimated.current = true;
-                        try { sessionStorage.setItem(TYPING_SESSION_KEY, "true"); } catch {}
-                      }}
-                      className="mt-3 text-xs text-muted-foreground hover:text-foreground transition-colors underline underline-offset-2"
-                    >
-                      Skip animation
-                    </button>
-                  )}
                 </div>
               </div>
             </div>
