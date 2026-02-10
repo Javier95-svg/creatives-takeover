@@ -1,0 +1,61 @@
+-- Link mentors to their user accounts by email
+-- This script helps populate the user_id field for mentors who have user accounts
+-- 
+-- IMPORTANT: Update the mentor names and emails below to match your actual data
+-- Run this query for each mentor who has a user account
+
+-- Example: Link Karolina Żurawska to her user account
+-- UPDATE public.mentors
+-- SET user_id = (
+--   SELECT id 
+--   FROM auth.users 
+--   WHERE email = 'kz.zurawska@gmail.com'
+-- )
+-- WHERE name ILIKE '%karolina%zurawska%'
+--   AND user_id IS NULL;
+
+-- Example: Link Nic M Rayce to his user account
+-- UPDATE public.mentors
+-- SET user_id = (
+--   SELECT id 
+--   FROM auth.users 
+--   WHERE email = 'nicmrayce@gmail.com'
+-- )
+-- WHERE name ILIKE '%nic%rayce%'
+--   AND user_id IS NULL;
+
+-- Example: Link Samuel Starkman to his user account
+-- UPDATE public.mentors
+-- SET user_id = (
+--   SELECT id 
+--   FROM auth.users 
+--   WHERE email = 'sestarkman@gmail.com'
+-- )
+-- WHERE name ILIKE '%samuel%starkman%'
+--   AND user_id IS NULL;
+
+-- Template for linking any mentor:
+-- UPDATE public.mentors
+-- SET user_id = (
+--   SELECT id 
+--   FROM auth.users 
+--   WHERE email = 'MENTOR_EMAIL_HERE'
+-- )
+-- WHERE name ILIKE '%MENTOR_NAME_PATTERN%'
+--   AND user_id IS NULL;
+
+-- To check which mentors don't have user_id linked:
+-- SELECT id, name, user_id 
+-- FROM public.mentors 
+-- WHERE user_id IS NULL 
+-- ORDER BY name;
+
+-- To verify a mentor is linked correctly:
+-- SELECT 
+--   m.id as mentor_id,
+--   m.name as mentor_name,
+--   m.user_id,
+--   u.email as user_email
+-- FROM public.mentors m
+-- LEFT JOIN auth.users u ON m.user_id = u.id
+-- WHERE m.name ILIKE '%MENTOR_NAME%';
