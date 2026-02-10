@@ -10,6 +10,7 @@ import { useMentors } from "@/hooks/useMentors";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFeatureGating } from "@/hooks/useFeatureGating";
 import { useUpgradePrompt } from "@/contexts/UpgradePromptContext";
+import { useCreditActions } from "@/hooks/useCreditActions";
 import { ArrowLeft, Loader2, Edit } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -27,6 +28,7 @@ const MentorProfilePage = () => {
   const { fetchMentorById, fetchMentorBySlug } = useMentors();
   const { checkFeatureAccess } = useFeatureGating();
   const { openUpgradePrompt } = useUpgradePrompt();
+  const { deductCredits } = useCreditActions();
   const [mentor, setMentor] = useState<MentorProfileType | null>(null);
   const [loadingMentor, setLoadingMentor] = useState(true);
 
@@ -76,7 +78,7 @@ const MentorProfilePage = () => {
     };
   }, [id, slug, location.pathname, fetchMentorById, fetchMentorBySlug]);
 
-  const handleBookClick = () => {
+  const handleBookClick = async () => {
     if (!mentor) return;
 
     // Check if this is Samuel Starkman's profile
@@ -122,7 +124,18 @@ const MentorProfilePage = () => {
       return;
     }
 
-    // User is authenticated and has access, open Calendly directly
+    // Deduct credits for discovery call (5 credits)
+    const creditsDeducted = await deductCredits('DISCOVERY_CALL', {
+      featureName: 'Discovery Call',
+      metadata: { mentor_id: mentor.id, mentor_name: mentor.name }
+    });
+    
+    if (!creditsDeducted) {
+      // Credit deduction failed (insufficient credits or error)
+      return;
+    }
+
+    // User is authenticated, has access, and credits deducted - open Calendly
     window.open(calendlyUrl, '_blank', 'noopener,noreferrer');
   };
 

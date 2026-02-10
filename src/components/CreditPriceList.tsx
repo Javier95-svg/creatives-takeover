@@ -15,6 +15,7 @@ export function CreditPriceList() {
         { name: "AI Chat Message", cost: CREDIT_COSTS.AI_CHAT_MESSAGE },
         { name: "Tech Stack", cost: CREDIT_COSTS.TECH_STACK_GENERATION },
         { name: "PDF Export", cost: CREDIT_COSTS.PDF_EXPORT },
+        { name: "Discovery Call", cost: CREDIT_COSTS.DISCOVERY_CALL },
     ];
 
     return (

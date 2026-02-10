@@ -10,6 +10,7 @@ import { getCountryFlag } from "@/utils/countryFlags";
 import { useMessaging, SAMUEL_STARKMAN_EMAIL, SAMUEL_STARKMAN_USER_ID, SAMUEL_STARKMAN_USERNAME, NIC_M_RAYCE_EMAIL, KAROLINA_ZURAWSKA_EMAIL } from "@/hooks/useMessaging";
 import { useFeatureGating } from "@/hooks/useFeatureGating";
 import { useUpgradePrompt } from "@/contexts/UpgradePromptContext";
+import { useCreditActions } from "@/hooks/useCreditActions";
 import { useState } from "react";
 import { toast } from "sonner";
 import { generateMentorSlug } from "@/utils/mentorSlug";
@@ -31,6 +32,7 @@ export const MentorCard = ({ mentor, className, priority = false }: MentorCardPr
   const { openUpgradePrompt } = useUpgradePrompt();
   const { startConversation, getUserIdByEmail } = useMessaging({ autoLoad: false });
   const { checkFeatureAccess } = useFeatureGating();
+  const { deductCredits } = useCreditActions();
   const currencySymbol = getCurrencySymbol(mentor.currency);
   const programFee = mentor.hourly_rate / 100;
   const hourlyRate = ((mentor as any).hourly_rate_per_hour || 0) / 100;
@@ -169,7 +171,18 @@ export const MentorCard = ({ mentor, className, priority = false }: MentorCardPr
       return;
     }
     
-    // User is authenticated and has access, open Calendly directly
+    // Deduct credits for discovery call (5 credits)
+    const creditsDeducted = await deductCredits('DISCOVERY_CALL', {
+      featureName: 'Discovery Call',
+      metadata: { mentor_id: mentor.id, mentor_name: mentor.name }
+    });
+    
+    if (!creditsDeducted) {
+      // Credit deduction failed (insufficient credits or error)
+      return;
+    }
+    
+    // User is authenticated, has access, and credits deducted - open Calendly
     window.open(calendlyUrl, '_blank', 'noopener,noreferrer');
   };
 

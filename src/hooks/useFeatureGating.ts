@@ -544,16 +544,17 @@ export function useFeatureGating() {
         // Professional tier has full access (free, no credits)
         return { hasAccess: true };
 
-      // Discovery Calls with Mentors
+      // Discovery Calls with Mentors (Available to all tiers, costs 5 credits)
       case 'discovery_calls_mentors':
-        if (['creator', 'professional'].includes(tier)) {
-          return { hasAccess: true };
+        // All tiers can access, but need credits
+        if (!hasCredits(CREDIT_COSTS.DISCOVERY_CALL)) {
+          return {
+            hasAccess: false,
+            message: `Insufficient credits. Discovery calls cost ${CREDIT_COSTS.DISCOVERY_CALL} credits.`,
+            requiredTier: tier === 'free' ? 'creator' : undefined
+          };
         }
-        return {
-          hasAccess: false,
-          message: 'Upgrade to Creator tier or higher to book discovery calls with mentors.',
-          requiredTier: 'creator'
-        };
+        return { hasAccess: true };
 
       default:
         return { hasAccess: true };

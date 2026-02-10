@@ -50,6 +50,7 @@ const SubscriptionFeatures = () => {
       { name: "Find a Mentor", cost: 0, description: "Browse and connect with mentors", badge: "FREE" },
       { name: "Find a Co-Founder", cost: 0, description: "Discover potential co-founders", badge: "FREE" },
       { name: "Find your Angel", cost: 0, description: "Connect with angel investors (Pro only)", badge: "PRO ONLY" },
+      { name: "Discovery Calls", cost: CREDIT_COSTS.DISCOVERY_CALL, description: "Book discovery calls with mentors" },
     ],
     resources: [
       { name: "Stories", cost: 0, description: "Read founder stories and insights", badge: "FREE" },
@@ -60,18 +61,18 @@ const SubscriptionFeatures = () => {
   const usageExamples = {
     free: {
       credits: 25,
-      example: "25 AI chat messages OR 1 Market Research + 1 Launch Report + 15 chat messages",
-      typical: "Perfect for exploring ideas and validating concepts with Dashboard basics",
+      example: "25 AI chat messages OR 1 Market Research + 1 Launch Report + 15 chat messages OR 5 Discovery Calls",
+      typical: "Perfect for exploring ideas and validating concepts with Dashboard basics and mentor discovery calls",
     },
     creator: {
       credits: 50,
-      example: "30 AI chat messages + 1 ICP Builder + 1 PMF analysis + 2 tech stacks + 1 pitch deck analyzer + 2 email templates",
-      typical: "Build your startup with comprehensive AI tools across Learn and Build phases",
+      example: "30 AI chat messages + 1 ICP Builder + 1 PMF analysis + 2 tech stacks + 1 pitch deck analyzer + 2 email templates OR 10 Discovery Calls",
+      typical: "Build your startup with comprehensive AI tools across Learn and Build phases, plus mentor discovery calls",
     },
     professional: {
       credits: 150,
-      example: "100 AI messages + 1 GTM Strategist + 3 PMF analyses + 5 pitch deck analyses + 5 email templates + market research + MVP Builder",
-      typical: "Scale your operations with unlimited VC access and complete Measure phase tools",
+      example: "100 AI messages + 1 GTM Strategist + 3 PMF analyses + 5 pitch deck analyses + 5 email templates + market research + MVP Builder OR 30 Discovery Calls",
+      typical: "Scale your operations with unlimited VC access, complete Measure phase tools, and extensive mentor discovery calls",
     },
   };
 
@@ -221,9 +222,6 @@ const SubscriptionFeatures = () => {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="flex items-center gap-2 mb-4">
-                <Badge className="bg-green-500 text-white">FREE</Badge>
-              </div>
               <div className="space-y-3">
                 {creditBreakdown.community.map((feature, idx) => (
                   <div key={idx} className="flex justify-between items-start gap-3 pb-3 border-b border-border/50 last:border-0">
@@ -231,8 +229,14 @@ const SubscriptionFeatures = () => {
                       <p className="font-medium text-sm">{feature.name}</p>
                       <p className="text-xs text-muted-foreground mt-1">{feature.description}</p>
                     </div>
-                    {feature.badge && (
-                      <Badge variant="outline" className="shrink-0 bg-blue-50 dark:bg-blue-950/30">{feature.badge}</Badge>
+                    {feature.cost === 0 ? (
+                      feature.badge ? (
+                        <Badge variant="outline" className="shrink-0 bg-blue-50 dark:bg-blue-950/30">{feature.badge}</Badge>
+                      ) : (
+                        <Badge variant="outline" className="shrink-0 bg-green-50 dark:bg-green-950/30">FREE</Badge>
+                      )
+                    ) : (
+                      <Badge variant="secondary" className="shrink-0">{feature.cost} credits</Badge>
                     )}
                   </div>
                 ))}

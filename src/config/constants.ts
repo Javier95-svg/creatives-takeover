@@ -44,6 +44,9 @@ export const CREDIT_COSTS = {
   PITCH_DECK_ANALYZER: 8,
   EMAIL_TEMPLATE_GENERATION: 3,
   PROMPT_GENERATION: 2,
+
+  // Community Features
+  DISCOVERY_CALL: 5,
 } as const;
 
 // Type for credit cost feature names

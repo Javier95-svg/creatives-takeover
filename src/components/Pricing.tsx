@@ -101,7 +101,8 @@ const Pricing = () => {
         "Prompt Library: view only",
         "VC Search: 5 views per month",
         "Stories: read-only",
-        "Community access: limited"
+        "Community access: limited",
+        "Discovery Calls: Book calls with mentors (5 credits per call)"
       ],
       creator: [
         "50 credits per month",
