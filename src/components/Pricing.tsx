@@ -391,7 +391,7 @@ const Pricing = () => {
                     : isPopular
                       ? 'border-primary/60 ring-1 ring-primary/30 shadow-md'
                       : tier.tier_name === 'professional'
-                        ? 'border-amber-500/60 ring-1 ring-amber-500/30 shadow-md'
+                        ? 'border-red-500/60 ring-1 ring-red-500/30 shadow-md'
                         : 'border-border/60'
                     }`}
                   style={{ animationDelay: `${index * 0.2}s` }}
