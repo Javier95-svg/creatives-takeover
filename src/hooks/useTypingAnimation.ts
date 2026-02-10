@@ -41,6 +41,8 @@ export const useTypingAnimation = ({
 
     if (text) {
       startTyping();
+    } else {
+      setIsTyping(false);
     }
 
     return () => {

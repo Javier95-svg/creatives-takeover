@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
@@ -8,6 +8,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useAngels } from "@/hooks/useAngels";
 import { useAuth } from "@/contexts/AuthContext";
 import { Save, Loader2, ArrowLeft, Trash2, User } from "lucide-react";
@@ -40,6 +50,9 @@ const AdminAngelEditor = () => {
   const [uploadingPicture, setUploadingPicture] = useState(false);
   const [picturePreview, setPicturePreview] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [isDirty, setIsDirty] = useState(false);
+  const initialFormRef = useRef<string>("");
   const [formData, setFormData] = useState<CreateAngelInput>({
     name: "",
     picture: null,
@@ -70,7 +83,7 @@ const AdminAngelEditor = () => {
 
     if (found) {
       setAngel(found);
-      setFormData({
+      const loadedForm: CreateAngelInput = {
         name: found.name,
         picture: found.picture || null,
         firm_name: found.firm_name,
@@ -78,12 +91,36 @@ const AdminAngelEditor = () => {
         website_url: found.website_url || null,
         linkedin_url: found.linkedin_url || null,
         is_active: found.is_active !== false,
-      });
+      };
+      setFormData(loadedForm);
+      initialFormRef.current = JSON.stringify(loadedForm);
+      setIsDirty(false);
       if (found.picture) {
         setPicturePreview(found.picture);
       }
     }
   };
+
+  // Track dirty state by comparing current form to initial snapshot
+  useEffect(() => {
+    if (initialFormRef.current) {
+      setIsDirty(JSON.stringify(formData) !== initialFormRef.current);
+    } else if (formData.name || formData.firm_name) {
+      // New angel: dirty as soon as any content is entered
+      setIsDirty(true);
+    }
+  }, [formData]);
+
+  // Warn before closing/refreshing with unsaved changes (fix 5a)
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isDirty) {
+        e.preventDefault();
+      }
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [isDirty]);
 
   const handlePictureUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -228,6 +265,7 @@ const AdminAngelEditor = () => {
       }
 
       if (result) {
+        setIsDirty(false); // Clear dirty flag before navigating
         toast.success(angel ? "Angel investor updated!" : "Angel investor created!");
         navigate("/community/angels");
       } else {
@@ -244,11 +282,10 @@ const AdminAngelEditor = () => {
   const handleDelete = async () => {
     if (!angel) return;
 
-    if (confirm("Are you sure you want to delete this angel investor?")) {
-      const success = await deleteAngel(angel.id);
-      if (success) {
-        navigate("/community/angels");
-      }
+    const success = await deleteAngel(angel.id);
+    if (success) {
+      setIsDirty(false); // Prevent beforeunload warning after delete
+      navigate("/community/angels");
     }
   };
 
@@ -291,7 +328,7 @@ const AdminAngelEditor = () => {
             </div>
             <div className="flex gap-2">
               {angel && (
-                <Button variant="destructive" size="sm" onClick={handleDelete} disabled={loading}>
+                <Button variant="destructive" size="sm" onClick={() => setShowDeleteDialog(true)} disabled={loading}>
                   <Trash2 className="w-4 h-4 mr-2" />
                   Delete
                 </Button>
@@ -473,6 +510,28 @@ const AdminAngelEditor = () => {
       </main>
 
       <Footer />
+
+      {/* Delete Confirmation Dialog (fix 5b: styled AlertDialog) */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Angel Investor</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete <strong>{angel?.name}</strong>? This action cannot be undone and will permanently remove their profile.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              <Trash2 className="w-4 h-4 mr-2" />
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

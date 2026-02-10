@@ -34,12 +34,12 @@ export const AngelCard = ({ angel, className, priority = false }: AngelCardProps
       "border-2 border-border/60 rounded-lg hover:shadow-lg hover:-translate-y-1 transition-all duration-300 bg-background",
       className
     )}>
-      <CardContent className="p-6 lg:p-8">
-        <div className="flex gap-6 lg:gap-8">
-          {/* Left: Avatar */}
+      <CardContent className="p-4 sm:p-6 lg:p-8">
+        <div className="flex gap-4 sm:gap-6 lg:gap-8">
+          {/* Left: Avatar (responsive sizing for mobile) */}
           <div className="flex-shrink-0">
             <div className="relative group">
-              <Avatar className="h-20 w-20 lg:h-24 lg:w-24 ring-4 ring-primary/20 group-hover:ring-primary/40 transition-all duration-300 group-hover:scale-105 shadow-lg">
+              <Avatar className="h-14 w-14 sm:h-20 sm:w-20 lg:h-24 lg:w-24 ring-4 ring-primary/20 group-hover:ring-primary/40 transition-all duration-300 group-hover:scale-105 shadow-lg">
                 <AvatarImage
                   src={angel.picture || undefined}
                   alt={angel.name}
@@ -48,7 +48,7 @@ export const AngelCard = ({ angel, className, priority = false }: AngelCardProps
                   decoding="async"
                   fetchPriority={priority ? "high" : "auto"}
                 />
-                <AvatarFallback className="bg-muted text-foreground font-semibold text-lg lg:text-xl animate-pulse">
+                <AvatarFallback className="bg-muted text-foreground font-semibold text-sm sm:text-lg lg:text-xl">
                   {angel.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
                 </AvatarFallback>
               </Avatar>

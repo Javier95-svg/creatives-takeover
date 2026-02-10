@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { Helmet } from "react-helmet-async";
 import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
@@ -23,8 +23,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { AngelCard } from "@/components/angels/AngelCard";
-import { Sparkles, Loader2, Edit, Search, ChevronDown, X, Lock, Crown } from "lucide-react";
+import { Sparkles, Loader2, Edit, Search, ChevronDown, X, Lock, Crown, ArrowLeft } from "lucide-react";
 import { AngelInvestor } from "@/types/angel";
 import { useAngels } from "@/hooks/useAngels";
 import { useAuth } from "@/contexts/AuthContext";
@@ -43,6 +48,7 @@ import {
 } from "@/components/ui/pagination";
 
 const ANGELS_PER_PAGE = 10;
+const TYPING_SESSION_KEY = "angels_typing_done";
 
 const INVESTMENT_STAGE_OPTIONS = [
   "Pre-Seed",
@@ -51,6 +57,16 @@ const INVESTMENT_STAGE_OPTIONS = [
   "Series B",
   "Series C+",
 ];
+
+// Custom debounce hook
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedValue(value), delay);
+    return () => clearTimeout(timer);
+  }, [value, delay]);
+  return debouncedValue;
+}
 
 const FindYourAngel = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -62,10 +78,21 @@ const FindYourAngel = () => {
   const { fetchAngels, loading } = useAngels();
   const isPro = isAdmin || currentTier === 'professional';
   const [angels, setAngels] = useState<AngelInvestor[]>([]);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedStages, setSelectedStages] = useState<string[]>([]);
-  const [sortBy, setSortBy] = useState("alphabetical");
+
+  // Initialize state from URL params (fix 4b: persist filters in URL)
+  const [searchQuery, setSearchQuery] = useState(searchParams.get("q") || "");
+  const debouncedSearch = useDebounce(searchQuery, 300);
+  const [selectedStages, setSelectedStages] = useState<string[]>(() => {
+    const stagesParam = searchParams.get("stages");
+    return stagesParam ? stagesParam.split(",").filter(Boolean) : [];
+  });
+  const [sortBy, setSortBy] = useState(searchParams.get("sort") || "alphabetical");
   const currentPage = parseInt(searchParams.get("page") || "1", 10);
+
+  // Track whether typing animation already played this session (fix 1b)
+  const hasAnimated = useRef(
+    typeof window !== "undefined" && sessionStorage.getItem(TYPING_SESSION_KEY) === "true"
+  );
 
   useEffect(() => {
     loadAngels();
@@ -81,54 +108,79 @@ const FindYourAngel = () => {
     }
   };
 
-  // Reset to page 1 when search or filters change
-  const resetToFirstPage = () => {
-    if (currentPage !== 1) {
-      const params = new URLSearchParams(searchParams);
-      params.set("page", "1");
-      setSearchParams(params);
-    }
-  };
-
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
-    resetToFirstPage();
   };
 
+  // Sync debounced search to URL and reset page
+  useEffect(() => {
+    const params = new URLSearchParams(searchParams);
+    if (debouncedSearch) {
+      params.set("q", debouncedSearch);
+    } else {
+      params.delete("q");
+    }
+    params.set("page", "1");
+    setSearchParams(params, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedSearch]);
+
   const handleStageToggle = (stage: string) => {
-    setSelectedStages((prev) =>
-      prev.includes(stage)
+    setSelectedStages((prev) => {
+      const next = prev.includes(stage)
         ? prev.filter((s) => s !== stage)
-        : [...prev, stage]
-    );
-    resetToFirstPage();
+        : [...prev, stage];
+      // Sync to URL
+      const params = new URLSearchParams(searchParams);
+      if (next.length > 0) {
+        params.set("stages", next.join(","));
+      } else {
+        params.delete("stages");
+      }
+      params.set("page", "1");
+      setSearchParams(params, { replace: true });
+      return next;
+    });
   };
 
   const clearStageFilter = () => {
     setSelectedStages([]);
-    resetToFirstPage();
+    const params = new URLSearchParams(searchParams);
+    params.delete("stages");
+    params.set("page", "1");
+    setSearchParams(params, { replace: true });
   };
 
   const handleSortChange = (newSort: string) => {
     setSortBy(newSort);
-    resetToFirstPage();
+    const params = new URLSearchParams(searchParams);
+    if (newSort !== "alphabetical") {
+      params.set("sort", newSort);
+    } else {
+      params.delete("sort");
+    }
+    params.set("page", "1");
+    setSearchParams(params, { replace: true });
   };
 
   const clearAllFilters = () => {
     setSearchQuery("");
     setSelectedStages([]);
-    resetToFirstPage();
+    setSortBy("alphabetical");
+    const params = new URLSearchParams();
+    params.set("page", "1");
+    setSearchParams(params, { replace: true });
   };
 
   const hasActiveFilters = searchQuery.length > 0 || selectedStages.length > 0;
 
-  // Filtered and sorted angels based on search, stage filters, and sort
+  // Filtered and sorted angels based on debounced search, stage filters, and sort
   const filteredAngels = useMemo(() => {
     let result = angels;
 
-    // Search filter
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
+    // Search filter (uses debounced value)
+    if (debouncedSearch) {
+      const query = debouncedSearch.toLowerCase();
       result = result.filter(
         (angel) =>
           angel.name.toLowerCase().includes(query) ||
@@ -169,7 +221,7 @@ const FindYourAngel = () => {
     }
 
     return result;
-  }, [angels, searchQuery, selectedStages, sortBy]);
+  }, [angels, debouncedSearch, selectedStages, sortBy]);
 
   const handlePageChange = (page: number) => {
     const params = new URLSearchParams(searchParams);
@@ -231,13 +283,19 @@ const FindYourAngel = () => {
     }
   }, [currentPage, totalPages, searchParams, setSearchParams]);
 
-  // Typing animation for description
+  // Typing animation for description — only animate on first session visit (fix 1b)
   const descriptionText = "Find and connect with Angel Investors or Venture Capitalists who believe in bold ideas and back them early. Browse investor profiles, explore their focus areas and investment stages, and take the first step toward building a relationship that could fund your vision.\n\nWhether you are raising your first pre-seed round or looking for a strategic partner at the seed stage, this is where you start.";
-  const { displayedText, isTyping } = useTypingAnimation({
-    text: descriptionText,
+  const { displayedText, isTyping, skipAnimation } = useTypingAnimation({
+    text: hasAnimated.current ? "" : descriptionText,
     speed: 20,
     startDelay: 500,
+    onComplete: () => {
+      try { sessionStorage.setItem(TYPING_SESSION_KEY, "true"); } catch {}
+    },
   });
+  // If already animated this session, show full text immediately
+  const heroText = hasAnimated.current ? descriptionText : displayedText;
+  const showCursor = !hasAnimated.current && isTyping;
 
   return (
     <>
@@ -252,8 +310,18 @@ const FindYourAngel = () => {
         <HomeWallpaper />
         <Navigation />
         <div className="pt-16 relative z-10">
+          {/* Back to Community link (fix 1a) */}
+          <div className="container mx-auto px-4 sm:px-6 pt-4">
+            <Button variant="ghost" size="sm" asChild>
+              <Link to="/community" className="flex items-center gap-2">
+                <ArrowLeft className="h-4 w-4" />
+                Back to Community
+              </Link>
+            </Button>
+          </div>
+
           {/* Hero Section */}
-          <section className="relative py-20 lg:py-32">
+          <section className="relative py-16 lg:py-28">
             <div className="container mx-auto px-4 sm:px-6">
               <div className="max-w-4xl mx-auto text-center">
                 {/* Title */}
@@ -263,8 +331,8 @@ const FindYourAngel = () => {
                   </span>
                 </h1>
 
-                {/* Description with typing animation */}
-                <div className="max-w-3xl mx-auto mb-8">
+                {/* Description with typing animation (skip on repeat visits) */}
+                <div className="max-w-3xl mx-auto mb-8 relative">
                   <p
                     className="text-base sm:text-lg md:text-xl text-foreground/90 leading-relaxed"
                     style={{
@@ -272,11 +340,24 @@ const FindYourAngel = () => {
                       fontFamily: "'Space Grotesk', 'Poppins', sans-serif",
                     }}
                   >
-                    {displayedText}
-                    {isTyping && (
+                    {heroText}
+                    {showCursor && (
                       <span className="inline-block w-0.5 h-5 sm:h-6 bg-primary ml-1 animate-pulse" />
                     )}
                   </p>
+                  {/* Skip button during animation */}
+                  {showCursor && (
+                    <button
+                      onClick={() => {
+                        skipAnimation();
+                        hasAnimated.current = true;
+                        try { sessionStorage.setItem(TYPING_SESSION_KEY, "true"); } catch {}
+                      }}
+                      className="mt-3 text-xs text-muted-foreground hover:text-foreground transition-colors underline underline-offset-2"
+                    >
+                      Skip animation
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
@@ -295,118 +376,179 @@ const FindYourAngel = () => {
               </div>
             )}
 
-            {/* Search Bar */}
+            {/* Search Bar (fix 6b: aria-label, fix 2a: disabled for non-Pro) */}
             <div className="mb-6">
-              <div className="relative w-full max-w-md mx-auto md:mx-0">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search by name or keyword"
-                  value={searchQuery}
-                  onChange={handleSearchChange}
-                  className="pl-10 h-11 w-full min-h-[44px] text-base md:text-sm"
-                />
-              </div>
-            </div>
-
-            {/* Investment Stage Filter Bar */}
-            <div className="flex flex-wrap items-center gap-3 mb-6">
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "h-9",
-                      selectedStages.length > 0 && "border-primary bg-primary/5"
-                    )}
-                  >
-                    Investment Stage
-                    {selectedStages.length > 0 && (
-                      <Badge variant="secondary" className="ml-2 h-5 px-1.5">
-                        {selectedStages.length}
-                      </Badge>
-                    )}
-                    <ChevronDown className="h-4 w-4 ml-2" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-64" align="start">
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <Label className="font-semibold">Investment Stage</Label>
-                      {selectedStages.length > 0 && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={clearStageFilter}
-                        >
-                          Clear
-                        </Button>
-                      )}
+              {isPro ? (
+                <div className="relative w-full max-w-md mx-auto md:mx-0">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search by name or keyword"
+                    value={searchQuery}
+                    onChange={handleSearchChange}
+                    aria-label="Search angel investors by name or keyword"
+                    className="pl-10 h-11 w-full min-h-[44px] text-base md:text-sm"
+                  />
+                </div>
+              ) : (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="relative w-full max-w-md mx-auto md:mx-0 opacity-50 cursor-not-allowed">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Search by name or keyword"
+                        disabled
+                        aria-label="Search angel investors (upgrade to unlock)"
+                        className="pl-10 h-11 w-full min-h-[44px] text-base md:text-sm pointer-events-none"
+                      />
                     </div>
-                    <Separator />
-                    <div className="space-y-2">
-                      {INVESTMENT_STAGE_OPTIONS.map((stage) => (
-                        <div
-                          key={stage}
-                          className="flex items-center space-x-2"
-                        >
-                          <Checkbox
-                            id={`filter-stage-${stage}`}
-                            checked={selectedStages.includes(stage)}
-                            onCheckedChange={() => handleStageToggle(stage)}
-                          />
-                          <Label
-                            htmlFor={`filter-stage-${stage}`}
-                            className="font-normal cursor-pointer flex-1"
-                          >
-                            {stage}
-                          </Label>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </PopoverContent>
-              </Popover>
-
-              {/* Clear All Filters */}
-              {hasActiveFilters && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={clearAllFilters}
-                  className="h-9 text-muted-foreground hover:text-foreground"
-                >
-                  <X className="h-4 w-4 mr-1" />
-                  Clear all
-                </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Upgrade to Professional to unlock search</p>
+                  </TooltipContent>
+                </Tooltip>
               )}
+            </div>
 
-              {/* Sort */}
-              <div className="ml-auto flex items-center gap-2">
+            {/* Investment Stage Filter Bar (fix 3a: responsive layout) */}
+            <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3 mb-6">
+              <div className="flex flex-wrap items-center gap-3">
+                {isPro ? (
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "h-9",
+                          selectedStages.length > 0 && "border-primary bg-primary/5"
+                        )}
+                      >
+                        Investment Stage
+                        {selectedStages.length > 0 && (
+                          <Badge variant="secondary" className="ml-2 h-5 px-1.5">
+                            {selectedStages.length}
+                          </Badge>
+                        )}
+                        <ChevronDown className="h-4 w-4 ml-2" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-64" align="start">
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <Label className="font-semibold">Investment Stage</Label>
+                          {selectedStages.length > 0 && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={clearStageFilter}
+                            >
+                              Clear
+                            </Button>
+                          )}
+                        </div>
+                        <Separator />
+                        <div className="space-y-2">
+                          {INVESTMENT_STAGE_OPTIONS.map((stage) => (
+                            <div
+                              key={stage}
+                              className="flex items-center space-x-2"
+                            >
+                              <Checkbox
+                                id={`filter-stage-${stage}`}
+                                checked={selectedStages.includes(stage)}
+                                onCheckedChange={() => handleStageToggle(stage)}
+                              />
+                              <Label
+                                htmlFor={`filter-stage-${stage}`}
+                                className="font-normal cursor-pointer flex-1"
+                              >
+                                {stage}
+                              </Label>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                ) : (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className="h-9 opacity-50 cursor-not-allowed"
+                        disabled
+                      >
+                        Investment Stage
+                        <ChevronDown className="h-4 w-4 ml-2" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Upgrade to Professional to unlock filters</p>
+                    </TooltipContent>
+                  </Tooltip>
+                )}
+
+                {/* Clear All Filters */}
+                {hasActiveFilters && isPro && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={clearAllFilters}
+                    className="h-9 text-muted-foreground hover:text-foreground"
+                  >
+                    <X className="h-4 w-4 mr-1" />
+                    Clear all
+                  </Button>
+                )}
+              </div>
+
+              {/* Sort (fix 3a: full-width on mobile) */}
+              <div className="sm:ml-auto flex items-center gap-2">
                 <span className="text-sm text-muted-foreground">Sort by:</span>
-                <Select value={sortBy} onValueChange={handleSortChange}>
-                  <SelectTrigger className="w-[180px] h-9">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="alphabetical">Alphabetical (A-Z)</SelectItem>
-                    <SelectItem value="newest">Newest first</SelectItem>
-                    <SelectItem value="oldest">Oldest first</SelectItem>
-                    <SelectItem value="firm">By firm name</SelectItem>
-                  </SelectContent>
-                </Select>
+                {isPro ? (
+                  <Select value={sortBy} onValueChange={handleSortChange}>
+                    <SelectTrigger className="w-[180px] h-9">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="alphabetical">Alphabetical (A-Z)</SelectItem>
+                      <SelectItem value="newest">Newest first</SelectItem>
+                      <SelectItem value="oldest">Oldest first</SelectItem>
+                      <SelectItem value="firm">By firm name</SelectItem>
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="opacity-50 cursor-not-allowed">
+                        <Select value="alphabetical" disabled>
+                          <SelectTrigger className="w-[180px] h-9 pointer-events-none">
+                            <SelectValue />
+                          </SelectTrigger>
+                        </Select>
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Upgrade to Professional to unlock sorting</p>
+                    </TooltipContent>
+                  </Tooltip>
+                )}
               </div>
             </div>
 
-            {/* Results Count */}
+            {/* Results Count (fix 2b: hide exact count for non-Pro) */}
             <div className="mb-4">
               {loading ? (
                 <div className="flex items-center gap-2">
                   <Loader2 className="h-4 w-4 animate-spin" />
                   <span className="text-sm text-muted-foreground">Loading angel investors...</span>
                 </div>
-              ) : (
+              ) : isPro ? (
                 <p className="text-sm text-muted-foreground">
                   {filteredAngels.length} angel investor{filteredAngels.length !== 1 ? 's' : ''} found
+                </p>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  Upgrade to Professional to browse all investor profiles
                 </p>
               )}
             </div>
@@ -428,7 +570,7 @@ const FindYourAngel = () => {
                           angel={angel}
                           priority={index < 4}
                         />
-                        {/* Admin Edit Button - Overlay */}
+                        {/* Admin Edit Button - Overlay (fix 3c: visible on touch) */}
                         {isAdmin && (
                           <Button
                             variant="outline"
@@ -438,7 +580,7 @@ const FindYourAngel = () => {
                               e.stopPropagation();
                               navigate(`/community/angels/admin/edit/${angel.id}`);
                             }}
-                            className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-background/90 backdrop-blur-sm hover:bg-background z-10"
+                            className="absolute top-2 right-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity bg-background/90 backdrop-blur-sm hover:bg-background z-10"
                             aria-label={`Edit ${angel.name}`}
                           >
                             <Edit className="w-4 h-4 mr-1" />
@@ -450,8 +592,8 @@ const FindYourAngel = () => {
                   </div>
                 ) : (
                   /* Non-Pro users: blurred cards with upgrade overlay */
-                  <div className="relative">
-                    {/* Blurred angel cards */}
+                  <div className="relative min-h-[400px]">
+                    {/* Blurred angel cards (fix 2c: min-height for overlay) */}
                     <div className="grid grid-cols-1 gap-6 select-none pointer-events-none blur-[6px]" aria-hidden="true">
                       {paginatedAngels.map((angel, index) => (
                         <AngelCard
@@ -497,7 +639,7 @@ const FindYourAngel = () => {
                   </div>
                 )}
 
-                {/* Pagination — always visible so users see there are multiple pages */}
+                {/* Pagination — always visible so users see there are multiple pages (fix 6a: proper hrefs) */}
                 {totalPages > 1 && (
                   <div className="mt-8">
                     <Pagination>
@@ -505,7 +647,7 @@ const FindYourAngel = () => {
                         {isPro && currentPage > 1 && (
                           <PaginationItem>
                             <PaginationPrevious
-                              href="#"
+                              href={`?page=${currentPage - 1}`}
                               onClick={(e) => {
                                 e.preventDefault();
                                 handlePageChange(currentPage - 1);
@@ -525,7 +667,7 @@ const FindYourAngel = () => {
                           return (
                             <PaginationItem key={page}>
                               <PaginationLink
-                                href="#"
+                                href={`?page=${page}`}
                                 onClick={(e) => {
                                   e.preventDefault();
                                   if (isPro) {
@@ -549,7 +691,7 @@ const FindYourAngel = () => {
                         {isPro && currentPage < totalPages && (
                           <PaginationItem>
                             <PaginationNext
-                              href="#"
+                              href={`?page=${currentPage + 1}`}
                               onClick={(e) => {
                                 e.preventDefault();
                                 handlePageChange(currentPage + 1);
