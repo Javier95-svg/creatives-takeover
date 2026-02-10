@@ -125,8 +125,8 @@ const SubscriptionFeatures = () => {
           </CardContent>
         </Card>
 
-        {/* Credit Breakdown Grid - 5 cards in a single row */}
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-6">
+        {/* Credit Breakdown Grid - 5 cards, each auto-fits its content */}
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-6 items-start">
           {/* Dashboard Card */}
           <Card className="rounded-2xl border-border/60 bg-card/80 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md">
             <CardHeader>
