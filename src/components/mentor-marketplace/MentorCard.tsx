@@ -32,7 +32,8 @@ export const MentorCard = ({ mentor, className, priority = false }: MentorCardPr
   const { startConversation, getUserIdByEmail } = useMessaging({ autoLoad: false });
   const { checkFeatureAccess } = useFeatureGating();
   const currencySymbol = getCurrencySymbol(mentor.currency);
-  const hourlyRateFormatted = `${currencySymbol}${(mentor.hourly_rate / 100).toFixed(0)}`;
+  const programFee = mentor.hourly_rate / 100;
+  const hourlyRate = ((mentor as any).hourly_rate_per_hour || 0) / 100;
   const mentorSlug = generateMentorSlug(mentor.name);
   const profileUrl = `/community/${mentorSlug}`;
 
@@ -356,11 +357,18 @@ export const MentorCard = ({ mentor, className, priority = false }: MentorCardPr
               </div>
             )}
 
-            {/* 8 Week Coaching Program / Hourly Rate Basis */}
-            <div className="text-xs lg:text-sm text-muted-foreground">
-              {mentor.name.toLowerCase().includes('marc') && mentor.name.toLowerCase().includes('bright')
-                ? 'Hourly Rate Basis'
-                : '8 Week Coaching Program'}
+            {/* Pricing: Hourly Rate & 8 Week Coaching Program */}
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs lg:text-sm">
+              {hourlyRate > 0 && (
+                <span className="text-foreground font-semibold">
+                  {currencySymbol}{hourlyRate.toLocaleString()}<span className="text-muted-foreground font-normal">/hr</span>
+                </span>
+              )}
+              {programFee > 0 && (
+                <span className="text-foreground font-semibold">
+                  {currencySymbol}{programFee.toLocaleString()}<span className="text-muted-foreground font-normal"> · 8 Week Program</span>
+                </span>
+              )}
             </div>
 
                 {/* Action Buttons */}

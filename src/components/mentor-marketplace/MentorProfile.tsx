@@ -22,7 +22,8 @@ export const MentorProfile = ({ mentor, onBookClick }: MentorProfileProps) => {
   const { isAuthenticated, user } = useAuth();
   const { startConversation, getUserIdByEmail } = useMessaging({ autoLoad: false });
   const currencySymbol = getCurrencySymbol(mentor.currency);
-  const hourlyRateFormatted = `${currencySymbol}${(mentor.hourly_rate / 100).toFixed(0)}`;
+  const programFee = mentor.hourly_rate / 100;
+  const hourlyRate = ((mentor as any).hourly_rate_per_hour || 0) / 100;
   const averageRating = mentor.rating || 0;
   const reviewCount = mentor.review_count || 0;
   const sessionsCompleted = mentor.total_sessions_completed || 0;
@@ -313,11 +314,18 @@ export const MentorProfile = ({ mentor, onBookClick }: MentorProfileProps) => {
               </div>
             )}
 
-            {/* 8 Week Coaching Program / Hourly Rate Basis */}
-            <div className="text-xs lg:text-sm text-muted-foreground">
-              {mentor.name.toLowerCase().includes('marc') && mentor.name.toLowerCase().includes('bright')
-                ? 'Hourly Rate Basis'
-                : '8 Week Coaching Program'}
+            {/* Pricing: Hourly Rate & 8 Week Coaching Program */}
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs lg:text-sm">
+              {hourlyRate > 0 && (
+                <span className="text-foreground font-semibold">
+                  {currencySymbol}{hourlyRate.toLocaleString()}<span className="text-muted-foreground font-normal">/hr</span>
+                </span>
+              )}
+              {programFee > 0 && (
+                <span className="text-foreground font-semibold">
+                  {currencySymbol}{programFee.toLocaleString()}<span className="text-muted-foreground font-normal"> · 8 Week Program</span>
+                </span>
+              )}
             </div>
 
                 {/* Action Buttons */}
