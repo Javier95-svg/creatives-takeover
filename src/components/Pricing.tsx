@@ -150,8 +150,8 @@ const Pricing = () => {
   const getTitleAndCTA = (tierName: string) => {
     const details: Record<string, { title: string; cta: string }> = {
       free: { title: "Get Started", cta: "Start Free" },
-      creator: { title: "Build & Create", cta: "Start Building" },
-      professional: { title: "Scale & Collaborate", cta: "Scale Your Startup" }
+      creator: { title: "Build & Create", cta: "Upgrade to Creator" },
+      professional: { title: "Scale & Collaborate", cta: "Upgrade to Pro" }
     };
     return details[tierName] || { title: "Get Started", cta: "Subscribe" };
   };
@@ -373,7 +373,7 @@ const Pricing = () => {
           </div>
 
           {/* Pricing Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6 sm:gap-8 max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6 sm:gap-8 max-w-7xl mx-auto items-start">
             {tiers.map((tier, index) => {
               const { title, cta } = getTitleAndCTA(tier.tier_name);
               const features = getFeatures(tier.tier_name);
@@ -439,7 +439,7 @@ const Pricing = () => {
                   </div>
 
                   {/* Plan Highlights */}
-                  <div className="mb-6 flex-grow">
+                  <div className="mb-6">
                     <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4 font-poppins">Plan highlights:</p>
                     <div className="space-y-3">
                       {features.map((feature, featureIndex) => (
