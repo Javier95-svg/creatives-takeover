@@ -14,7 +14,7 @@ import { Users, Loader2, Search } from "lucide-react";
 import { Mentor } from "@/types/mentor";
 import { useMentors } from "@/hooks/useMentors";
 import { useAuth } from "@/contexts/AuthContext";
-import { useTypingAnimation } from "@/hooks/useTypingAnimation";
+
 import {
   Pagination,
   PaginationContent,
@@ -237,13 +237,7 @@ const MentorMarketplaceHub = () => {
     return result;
   }, [mentors]);
 
-  // Typing animation for description
   const descriptionText = "Work with startup mentors from all over the globe who have built, launched, and raised at the earliest stages. Expect clear, grounded advice that fits the reality of pre seed founders, not theory from later stage playbooks. \n\nBook focused one to one sessions, stress test your roadmap, pitch, and go to market, and leave each call with a short list of concrete next steps. Move from uncertainty to a plan you can actually execute, with someone beside you who has already been through it.";
-  const { displayedText, isTyping } = useTypingAnimation({
-    text: descriptionText,
-    speed: 20,
-    startDelay: 500
-  });
 
   return (
     <>
@@ -269,8 +263,8 @@ const MentorMarketplaceHub = () => {
                   </span>
                 </h1>
                 
-                {/* Description with typing animation */}
-                <div className="max-w-3xl mx-auto mb-8">
+                {/* Description with zoom-in effect */}
+                <div className="max-w-3xl mx-auto mb-8 animate-zoom-in">
                   <p 
                     className="text-base sm:text-lg md:text-xl text-foreground/90 leading-relaxed" 
                     style={{ 
@@ -278,10 +272,7 @@ const MentorMarketplaceHub = () => {
                       fontFamily: "'Space Grotesk', 'Poppins', sans-serif"
                     }}
                   >
-                    {displayedText}
-                    {isTyping && (
-                      <span className="inline-block w-0.5 h-5 sm:h-6 bg-primary ml-1 animate-pulse" />
-                    )}
+                    {descriptionText}
                   </p>
                 </div>
 
