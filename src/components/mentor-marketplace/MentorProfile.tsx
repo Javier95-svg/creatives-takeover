@@ -8,7 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { getCountryFlag } from "@/utils/countryFlags";
 import { useAuth } from "@/contexts/AuthContext";
-import { useMessaging, SAMUEL_STARKMAN_EMAIL, SAMUEL_STARKMAN_USER_ID, SAMUEL_STARKMAN_USERNAME, NIC_M_RAYCE_EMAIL } from "@/hooks/useMessaging";
+import { useMessaging, SAMUEL_STARKMAN_EMAIL, SAMUEL_STARKMAN_USER_ID, SAMUEL_STARKMAN_USERNAME, NIC_M_RAYCE_EMAIL, KAROLINA_ZURAWSKA_EMAIL } from "@/hooks/useMessaging";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -153,6 +153,31 @@ export const MentorProfile = ({ mentor, onBookClick }: MentorProfileProps) => {
         }
       } catch (error) {
         console.error('Error starting conversation with Nic M Rayce:', error);
+        toast.error('Failed to start conversation. Please try again.');
+      }
+      return;
+    }
+
+    // Check if this is Karolina Żurawska's profile
+    const isKarolinaZurawska = mentorNameLower.includes('karolina') && mentorNameLower.includes('urawska');
+
+    if (isKarolinaZurawska) {
+      try {
+        const userId = await getUserIdByEmail(KAROLINA_ZURAWSKA_EMAIL);
+        
+        if (!userId) {
+          toast.error('Unable to find user. Please try again later.');
+          return;
+        }
+
+        const conversationId = await startConversation(userId);
+        if (conversationId) {
+          navigate(`/messages?conversationId=${conversationId}`);
+        } else {
+          toast.error('Failed to start conversation. Please try again.');
+        }
+      } catch (error) {
+        console.error('Error starting conversation with Karolina Żurawska:', error);
         toast.error('Failed to start conversation. Please try again.');
       }
       return;

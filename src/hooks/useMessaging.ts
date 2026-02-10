@@ -42,6 +42,9 @@ export const SAMUEL_STARKMAN_USERNAME = 'samuelstarkman'; // Username based on f
 // Nic M Rayce's email constant
 export const NIC_M_RAYCE_EMAIL = 'nicmrayce@gmail.com';
 
+// Karolina Żurawska's email constant
+export const KAROLINA_ZURAWSKA_EMAIL = 'kz.zurawska@gmail.com';
+
 type UseMessagingOptions = {
   autoLoad?: boolean;
   suppressLoadErrors?: boolean;
@@ -53,6 +56,7 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [messages, setMessages] = useState<Record<string, Message[]>>({});
   const [loading, setLoading] = useState(false);
+  const [sending, setSending] = useState(false);
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   // Ref to track current messages for subscription callbacks
   const messagesRef = useRef<Record<string, Message[]>>({});
@@ -437,16 +441,16 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
   }, [user, loading, conversations, setActiveConversationId]);
 
   const sendMessage = useCallback(async (conversationId: string, content: string, replyToId?: string) => {
-    if (!user || loading || !content.trim()) {
+    if (!user || !content.trim()) {
       logWarn('sendMessage: Invalid parameters', {
         hasUser: !!user,
-        loading,
         hasContent: !!content.trim()
       });
       return;
     }
 
-    setLoading(true);
+    // Use separate sending state so the input stays enabled
+    setSending(true);
     try {
       logInfo('sendMessage: Sending message', {
         conversationId,
@@ -517,9 +521,9 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
       const errorMessage = getUserMessage(error);
       toast.error(errorMessage);
     } finally {
-      setLoading(false);
+      setSending(false);
     }
-  }, [user, loading]);
+  }, [user]);
 
   const markAsRead = useCallback(async (conversationId: string) => {
     if (!user) return;
@@ -687,6 +691,7 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
     conversations,
     messages,
     loading,
+    sending,
     activeConversationId,
     setActiveConversationId,
     startConversation,

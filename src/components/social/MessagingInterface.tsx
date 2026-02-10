@@ -27,6 +27,7 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
     conversations,
     messages,
     loading,
+    sending,
     activeConversationId,
     setActiveConversationId,
     sendMessage,
@@ -124,13 +125,16 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newMessage.trim() || !activeConversationId || loading) return;
+    if (!newMessage.trim() || !activeConversationId || sending) return;
+
+    const messageToSend = newMessage;
+    // Clear the input immediately so the user can type the next message
+    setNewMessage("");
 
     // Store current scroll position to prevent unwanted scrolling
     const scrollY = window.scrollY;
 
-    await sendMessage(activeConversationId, newMessage);
-    setNewMessage("");
+    await sendMessage(activeConversationId, messageToSend);
 
     // Restore scroll position if it changed
     setTimeout(() => {
@@ -426,13 +430,12 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
                   placeholder="Type a message..."
-                  disabled={loading}
                   autoFocus={!isMobile}
                   className="min-h-[44px] text-base md:text-sm"
                 />
                 <Button 
                   type="submit" 
-                  disabled={loading || !newMessage.trim()}
+                  disabled={sending || !newMessage.trim()}
                   className="min-h-[44px] min-w-[44px] px-3 touch-manipulation"
                 >
                   <Send className="h-4 w-4" />
