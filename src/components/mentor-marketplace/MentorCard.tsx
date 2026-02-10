@@ -124,7 +124,7 @@ export const MentorCard = ({ mentor, className, priority = false }: MentorCardPr
     );
   };
 
-  const handleBookDiscoveryCall = (e: React.MouseEvent) => {
+  const handleBookDiscoveryCall = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     
