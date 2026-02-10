@@ -12,10 +12,11 @@ import { Switch } from "@/components/ui/switch";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useMentors, CreateMentorInput } from "@/hooks/useMentors";
 import { useAuth } from "@/contexts/AuthContext";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Save, X, Loader2, ArrowLeft, Trash2, Upload, DollarSign, User } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { Mentor } from "@/types/mentor";
+import { Mentor, CURRENCY_OPTIONS, MentorCurrency, getCurrencySymbol } from "@/types/mentor";
 import { logInfo, logError, logWarn } from "@/lib/logger";
 import { handleError } from "@/lib/errors";
 
@@ -57,6 +58,7 @@ const AdminMentorEditor = () => {
     bio: "",
     hourly_rate: 10000, // $100 default for 8-week program (stored in cents)
     hourly_rate_per_hour: 0, // $0 default for per-hour rate (stored in cents)
+    currency: 'USD', // Default currency
     expertise: [],
     universities: [],
     is_active: true,
@@ -90,6 +92,7 @@ const AdminMentorEditor = () => {
         bio: found.bio,
         hourly_rate: found.hourly_rate,
         hourly_rate_per_hour: (found as any).hourly_rate_per_hour || 0,
+        currency: (found.currency as MentorCurrency) || 'USD',
         expertise: found.expertise || [],
         universities: found.universities || [],
         is_active: found.is_active !== false,
@@ -307,6 +310,7 @@ const AdminMentorEditor = () => {
         bio: formData.bio,
         hourly_rate: formData.hourly_rate,
         hourly_rate_per_hour: formData.hourly_rate_per_hour || 0,
+        currency: formData.currency || 'USD',
         picture: formData.picture || null,
         expertise: formData.expertise || [],
         universities: formData.universities || [], // Explicitly include universities
@@ -563,14 +567,42 @@ const AdminMentorEditor = () => {
                 </p>
               </div>
 
+              {/* Currency Selector */}
+              <div>
+                <Label htmlFor="currency" className="flex items-center gap-2">
+                  <DollarSign className="w-4 h-4" />
+                  Currency
+                </Label>
+                <Select
+                  value={formData.currency || 'USD'}
+                  onValueChange={(value) =>
+                    setFormData((prev) => ({ ...prev, currency: value as MentorCurrency }))
+                  }
+                >
+                  <SelectTrigger className="mt-1 w-full md:w-64">
+                    <SelectValue placeholder="Select currency" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CURRENCY_OPTIONS.map((c) => (
+                      <SelectItem key={c.code} value={c.code}>
+                        {c.symbol} — {c.code} ({c.name})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Select the currency for both the hourly rate and 8-week coaching program fee.
+                </p>
+              </div>
+
               {/* Hourly Rate */}
               <div>
                 <Label htmlFor="hourly_rate_per_hour" className="flex items-center gap-2">
                   <DollarSign className="w-4 h-4" />
-                  Hourly Rate (USD)
+                  Hourly Rate ({formData.currency || 'USD'})
                 </Label>
                 <div className="flex items-center gap-2 mt-1">
-                  <span className="text-muted-foreground">$</span>
+                  <span className="text-muted-foreground">{getCurrencySymbol(formData.currency)}</span>
                   <Input
                     id="hourly_rate_per_hour"
                     type="number"
@@ -590,7 +622,7 @@ const AdminMentorEditor = () => {
                   <span className="text-muted-foreground text-sm">per hour</span>
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Enter the per-hour consulting rate in dollars (e.g., 150 for $150/hour). Enter 0 if not offering hourly consulting.
+                  Enter the per-hour consulting rate (e.g., 150 for {getCurrencySymbol(formData.currency)}150/hour). Enter 0 if not offering hourly consulting.
                 </p>
               </div>
 
@@ -598,10 +630,10 @@ const AdminMentorEditor = () => {
               <div>
                 <Label htmlFor="hourly_rate" className="flex items-center gap-2">
                   <DollarSign className="w-4 h-4" />
-                  8 Week Coaching Program Fee (USD) *
+                  8 Week Coaching Program Fee ({formData.currency || 'USD'}) *
                 </Label>
                 <div className="flex items-center gap-2 mt-1">
-                  <span className="text-muted-foreground">$</span>
+                  <span className="text-muted-foreground">{getCurrencySymbol(formData.currency)}</span>
                   <Input
                     id="hourly_rate"
                     type="number"
@@ -620,7 +652,7 @@ const AdminMentorEditor = () => {
                   />
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Enter the 8-week coaching program fee in dollars (e.g., 1000 for $1,000). Minimum: $100
+                  Enter the 8-week coaching program fee (e.g., 1000 for {getCurrencySymbol(formData.currency)}1,000). Minimum: {getCurrencySymbol(formData.currency)}100
                 </p>
               </div>
 

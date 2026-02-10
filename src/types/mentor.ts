@@ -1,12 +1,38 @@
 // Mentor Marketplace Type Definitions
 
+// Supported currencies for mentor pricing
+export type MentorCurrency = 'USD' | 'GBP' | 'EUR' | 'CAD' | 'AUD' | 'SGD' | 'CHF' | 'INR';
+
+export interface CurrencyOption {
+  code: MentorCurrency;
+  symbol: string;
+  name: string;
+}
+
+export const CURRENCY_OPTIONS: CurrencyOption[] = [
+  { code: 'USD', symbol: '$', name: 'US Dollar' },
+  { code: 'GBP', symbol: '£', name: 'British Pound' },
+  { code: 'EUR', symbol: '€', name: 'Euro' },
+  { code: 'CAD', symbol: 'C$', name: 'Canadian Dollar' },
+  { code: 'AUD', symbol: 'A$', name: 'Australian Dollar' },
+  { code: 'SGD', symbol: 'S$', name: 'Singapore Dollar' },
+  { code: 'CHF', symbol: 'CHF', name: 'Swiss Franc' },
+  { code: 'INR', symbol: '₹', name: 'Indian Rupee' },
+];
+
+export const getCurrencySymbol = (code?: string): string => {
+  const found = CURRENCY_OPTIONS.find((c) => c.code === code);
+  return found ? found.symbol : '$';
+};
+
 export interface Mentor {
   id: string;
   user_id?: string; // Link to user account if mentor is a platform user
   name: string;
   picture?: string; // Avatar/profile picture URL
   bio: string;
-  hourly_rate: number; // In USD cents (e.g., 10000 = $100.00)
+  hourly_rate: number; // In cents (e.g., 10000 = $100.00)
+  currency?: MentorCurrency; // Currency code (e.g., 'USD', 'GBP', 'EUR'). Defaults to 'USD'.
   stripe_connected_account_id?: string; // Stripe Connect account ID
   expertise?: string[]; // Array of expertise areas/tags
   rating?: number; // Average rating (1-5)

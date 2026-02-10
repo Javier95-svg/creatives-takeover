@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Separator } from "@/components/ui/separator";
-import { Mentor } from "@/types/mentor";
+import { Mentor, getCurrencySymbol } from "@/types/mentor";
 import { format } from "date-fns";
 import { CalendarIcon, Clock, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -46,6 +46,7 @@ export const BookingModal = ({
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedTime, setSelectedTime] = useState<string>("");
   
+  const sym = getCurrencySymbol(mentor.currency);
   const hourlyRate = mentor.hourly_rate / 100;
   const platformFee = hourlyRate * 0.1; // 10% platform fee
   const total = hourlyRate + platformFee;
@@ -145,16 +146,16 @@ export const BookingModal = ({
             <div className="space-y-1 text-sm">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">8 Week Coaching Program Fee</span>
-                <span>${hourlyRate.toFixed(2)}</span>
+                <span>{sym}{hourlyRate.toFixed(2)}</span>
               </div>
               <div className="flex justify-between text-xs text-muted-foreground">
                 <span>Platform Fee (10%)</span>
-                <span>${platformFee.toFixed(2)}</span>
+                <span>{sym}{platformFee.toFixed(2)}</span>
               </div>
               <Separator className="my-2" />
               <div className="flex justify-between font-semibold">
                 <span>Total</span>
-                <span>${total.toFixed(2)}</span>
+                <span>{sym}{total.toFixed(2)}</span>
               </div>
             </div>
           </div>

@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-import { Mentor, AvailabilitySlot } from '@/types/mentor';
+import { Mentor, AvailabilitySlot, MentorCurrency } from '@/types/mentor';
 import { generateMentorSlug } from '@/utils/mentorSlug';
 
 export interface CreateMentorInput {
@@ -11,6 +11,7 @@ export interface CreateMentorInput {
   bio: string;
   hourly_rate: number; // In cents (8-week program fee)
   hourly_rate_per_hour?: number; // In cents (per-hour consulting rate)
+  currency?: MentorCurrency; // Currency code (e.g., 'USD', 'GBP', 'EUR')
   stripe_connected_account_id?: string | null;
   expertise?: string[];
   universities?: string[];
@@ -245,6 +246,7 @@ export const useMentors = () => {
         name: input.name,
         bio: input.bio,
         hourly_rate: input.hourly_rate,
+        currency: input.currency || 'USD',
         user_id: user?.id || null,
         picture: input.picture || null,
         expertise: input.expertise || [],
@@ -335,6 +337,7 @@ export const useMentors = () => {
       if (input.picture !== undefined) cleanInput.picture = input.picture;
       if (input.bio !== undefined) cleanInput.bio = input.bio;
       if (input.hourly_rate !== undefined) cleanInput.hourly_rate = input.hourly_rate;
+      if (input.currency !== undefined) cleanInput.currency = input.currency;
       if (input.stripe_connected_account_id !== undefined) cleanInput.stripe_connected_account_id = input.stripe_connected_account_id;
       if (input.expertise !== undefined) cleanInput.expertise = input.expertise;
       if (input.universities !== undefined) cleanInput.universities = input.universities;

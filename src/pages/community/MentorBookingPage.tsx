@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useMentors } from "@/hooks/useMentors";
 import { Loader2, ArrowLeft, CheckCircle2 } from "lucide-react";
-import { Mentor } from "@/types/mentor";
+import { Mentor, getCurrencySymbol } from "@/types/mentor";
 
 const MentorBookingPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -74,6 +74,7 @@ const MentorBookingPage = () => {
     );
   }
 
+  const sym = getCurrencySymbol(mentor.currency);
   const hourlyRate = mentor.hourly_rate / 100;
   const platformFee = hourlyRate * 0.1;
   const total = hourlyRate + platformFee;
@@ -116,15 +117,15 @@ const MentorBookingPage = () => {
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">8 Week Coaching Program Fee</span>
-                        <span>${hourlyRate.toFixed(2)}</span>
+                        <span>{sym}{hourlyRate.toFixed(2)}</span>
                       </div>
                       <div className="flex justify-between text-xs text-muted-foreground">
                         <span>Platform Fee (10%)</span>
-                        <span>${platformFee.toFixed(2)}</span>
+                        <span>{sym}{platformFee.toFixed(2)}</span>
                       </div>
                       <div className="border-t pt-2 flex justify-between font-semibold">
                         <span>Total</span>
-                        <span>${total.toFixed(2)}</span>
+                        <span>{sym}{total.toFixed(2)}</span>
                       </div>
                     </div>
                   </div>

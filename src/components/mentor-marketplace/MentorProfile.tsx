@@ -2,7 +2,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { MentorProfile as MentorProfileType } from "@/types/mentor";
+import { MentorProfile as MentorProfileType, getCurrencySymbol } from "@/types/mentor";
 import { Star, Calendar, MessageCircle, CheckCircle2, Heart, Users, Linkedin } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -21,7 +21,8 @@ export const MentorProfile = ({ mentor, onBookClick }: MentorProfileProps) => {
   const navigate = useNavigate();
   const { isAuthenticated, user } = useAuth();
   const { startConversation, getUserIdByEmail } = useMessaging({ autoLoad: false });
-  const hourlyRateFormatted = `$${(mentor.hourly_rate / 100).toFixed(0)}`;
+  const currencySymbol = getCurrencySymbol(mentor.currency);
+  const hourlyRateFormatted = `${currencySymbol}${(mentor.hourly_rate / 100).toFixed(0)}`;
   const averageRating = mentor.rating || 0;
   const reviewCount = mentor.review_count || 0;
   const sessionsCompleted = mentor.total_sessions_completed || 0;

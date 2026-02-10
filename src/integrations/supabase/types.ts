@@ -4191,6 +4191,7 @@ export type Database = {
           bio: string
           calendly_url: string | null
           created_at: string
+          currency: string | null
           expertise: string[] | null
           hourly_rate: number
           hourly_rate_per_hour: number | null
@@ -4215,6 +4216,7 @@ export type Database = {
           bio: string
           calendly_url?: string | null
           created_at?: string
+          currency?: string | null
           expertise?: string[] | null
           hourly_rate?: number
           hourly_rate_per_hour?: number | null
@@ -4239,6 +4241,7 @@ export type Database = {
           bio?: string
           calendly_url?: string | null
           created_at?: string
+          currency?: string | null
           expertise?: string[] | null
           hourly_rate?: number
           hourly_rate_per_hour?: number | null

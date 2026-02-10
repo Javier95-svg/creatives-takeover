@@ -1,7 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Mentor } from "@/types/mentor";
+import { Mentor, getCurrencySymbol } from "@/types/mentor";
 import { Link, useNavigate } from "react-router-dom";
 import { Star, CheckCircle2, MessageCircle, Calendar, Heart, Linkedin } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -31,7 +31,8 @@ export const MentorCard = ({ mentor, className, priority = false }: MentorCardPr
   const { openUpgradePrompt } = useUpgradePrompt();
   const { startConversation, getUserIdByEmail } = useMessaging({ autoLoad: false });
   const { checkFeatureAccess } = useFeatureGating();
-  const hourlyRateFormatted = `$${(mentor.hourly_rate / 100).toFixed(0)}`;
+  const currencySymbol = getCurrencySymbol(mentor.currency);
+  const hourlyRateFormatted = `${currencySymbol}${(mentor.hourly_rate / 100).toFixed(0)}`;
   const mentorSlug = generateMentorSlug(mentor.name);
   const profileUrl = `/community/${mentorSlug}`;
 
