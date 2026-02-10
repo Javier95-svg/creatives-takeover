@@ -99,6 +99,8 @@ export function getCountryFlag(country: string | null | undefined): string {
     'UKRAINE': '🇺🇦',
     'PK': '🇵🇰',
     'PAKISTAN': '🇵🇰',
+    'RO': '🇷🇴',
+    'ROMANIA': '🇷🇴',
   };
   
   // Check direct match
