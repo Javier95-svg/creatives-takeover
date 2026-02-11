@@ -15,6 +15,7 @@ import {
   CheckCircle2,
   FolderKanban,
   Loader2,
+  Plus,
   Sparkles,
   Target,
 } from 'lucide-react';
@@ -64,6 +65,9 @@ const FocusFunnel = () => {
   const [aiMessages, setAiMessages] = useState<AiMessage[]>([]);
   const [aiInput, setAiInput] = useState('');
   const [aiStreaming, setAiStreaming] = useState(false);
+
+  const [suggestedActions, setSuggestedActions] = useState<string[]>([]);
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
   const sessionIdRef = useRef(
     `focus_funnel_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
   );
@@ -346,6 +350,78 @@ const FocusFunnel = () => {
     await reorderTasks(ids, orders);
   };
 
+  const generateSuggestions = async () => {
+    if (loadingSuggestions) return;
+    if (!selectedGoal && !selectedProject) {
+      toast({ title: 'Select a goal or strategy first', description: 'We need context to suggest actions.' });
+      return;
+    }
+
+    setLoadingSuggestions(true);
+    setSuggestedActions([]);
+
+    const goalContext = selectedGoal ? `Goal: "${selectedGoal.title}"${selectedGoal.description ? ` — ${selectedGoal.description}` : ''}` : '';
+    const strategyContext = selectedProject ? `Strategy: "${selectedProject.title}"${selectedProject.description ? ` — ${selectedProject.description}` : ''}` : '';
+    const existingTasks = visibleTasks.map((t) => t.title).join(', ');
+
+    const prompt = [
+      'You are a startup execution coach. Based on the context below, suggest exactly 5 concrete, specific next actions the founder should take this week.',
+      'Each action must be a short, actionable sentence (under 12 words). Return ONLY a numbered list (1. to 5.), no introduction or explanation.',
+      '',
+      goalContext,
+      strategyContext,
+      existingTasks ? `Existing tasks (avoid duplicates): ${existingTasks}` : '',
+    ].filter(Boolean).join('\n');
+
+    let fullResponse = '';
+
+    try {
+      await streamChat(
+        prompt,
+        `focus_suggestions_${Date.now()}`,
+        [],
+        { goals: goals.map((g) => g.title) },
+        user?.id ?? null,
+        null,
+        null,
+        'freeform',
+        undefined,
+        (chunk) => { fullResponse += chunk; },
+        (final) => { fullResponse = final; },
+        undefined,
+        () => { fullResponse = ''; }
+      );
+
+      // Parse numbered list from AI response
+      const lines = fullResponse
+        .split('\n')
+        .map((line) => line.replace(/^\d+[\.\)]\s*/, '').trim())
+        .filter((line) => line.length > 3 && line.length < 120);
+
+      setSuggestedActions(lines.slice(0, 5));
+    } catch {
+      toast({ title: 'Could not generate suggestions', description: 'Please try again.', variant: 'destructive' });
+    } finally {
+      setLoadingSuggestions(false);
+    }
+  };
+
+  const handleAddSuggestion = async (suggestion: string) => {
+    if (!selectedGoal && !selectedProject) return;
+    setIsSavingTask(true);
+    const created = await createTask({
+      title: suggestion,
+      goal_id: selectedGoal?.id,
+      project_id: selectedProject?.id,
+      priority: 'medium',
+    });
+    if (created) {
+      setSuggestedActions((prev) => prev.filter((s) => s !== suggestion));
+      toast({ title: 'Action added', description: suggestion });
+    }
+    setIsSavingTask(false);
+  };
+
   return (
     <DashboardLayout
       title="Focus Funnel"
@@ -363,7 +439,7 @@ const FocusFunnel = () => {
           </div>
         )}
 
-        <div className="grid gap-6 lg:grid-cols-[2fr_1fr]">
+        <div className="space-y-6">
           <div className="grid gap-4 md:grid-cols-3">
             <Card className="border-border/70 bg-card/90">
               <CardHeader className="pb-3">
@@ -537,12 +613,51 @@ const FocusFunnel = () => {
                       'Add Task'
                     )}
                   </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="w-full gap-2"
+                    disabled={(!selectedGoal && !selectedProject) || loadingSuggestions}
+                    onClick={generateSuggestions}
+                  >
+                    {loadingSuggestions ? (
+                      <>
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                        Generating...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="h-3 w-3" />
+                        Suggest Actions
+                      </>
+                    )}
+                  </Button>
                 </div>
 
+                {suggestedActions.length > 0 && (
+                  <div className="space-y-2">
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                      Suggested Actions
+                    </p>
+                    {suggestedActions.map((suggestion) => (
+                      <button
+                        key={suggestion}
+                        type="button"
+                        className="w-full text-left rounded-md border border-primary/30 bg-primary/5 px-3 py-2 text-sm hover:bg-primary/10 transition-colors flex items-center gap-2"
+                        onClick={() => handleAddSuggestion(suggestion)}
+                        disabled={isSavingTask}
+                      >
+                        <Plus className="h-3 w-3 text-primary shrink-0" />
+                        <span>{suggestion}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+
                 <div className="space-y-2">
-                  {visibleTasks.length === 0 && (
+                  {visibleTasks.length === 0 && suggestedActions.length === 0 && (
                     <p className="text-sm text-muted-foreground">
-                      {selectedGoal ? 'No tasks yet.' : 'Select a goal to see tasks.'}
+                      {selectedGoal ? 'No tasks yet. Try "Suggest Actions" to get started.' : 'Select a goal to see tasks.'}
                     </p>
                   )}
                   <SortableList
