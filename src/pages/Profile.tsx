@@ -21,6 +21,7 @@ import { EditProfileModal } from "@/components/profile/EditProfileModal";
 import { PinnedPosts } from "@/components/profile/PinnedPosts";
 import { PicturesGallery } from "@/components/profile/PicturesGallery";
 import { useProfileData } from "@/hooks/useProfileData";
+import { useCreditActions } from "@/hooks/useCreditActions";
 import { toast } from "sonner";
 import { logError } from "@/lib/logger";
 import DOMPurify from "dompurify";
@@ -84,6 +85,7 @@ const Profile = () => {
   const isOwnProfile = currentUser?.id === profile?.id;
   
   const { stats, loading: statsLoading } = useProfileData(profile?.id || '');
+  const { deductCredits } = useCreditActions();
 
   const formatLabel = (value: string) =>
     value
@@ -92,8 +94,35 @@ const Profile = () => {
       .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
       .join(' ');
 
-  const handleBookDiscoveryCall = () => {
-    window.open(SAMUEL_STARKMAN_CALENDLY_URL, '_blank', 'noopener,noreferrer');
+  const handleBookDiscoveryCall = async () => {
+    // Check if user is authenticated
+    if (!currentUser) {
+      toast.error('Please sign in to book a discovery call.');
+      return;
+    }
+
+    // Deduct credits for discovery call (5 credits) BEFORE opening Calendly
+    // This ensures users are always charged when booking a call
+    const creditsDeducted = await deductCredits('DISCOVERY_CALL', {
+      featureName: 'Discovery Call',
+      metadata: { mentor_name: profile?.full_name || 'Samuel Starkman' }
+    });
+
+    // Only open Calendly if credits were successfully deducted
+    if (!creditsDeducted) {
+      // Credit deduction failed (insufficient credits or error)
+      // The deductCredits function already shows appropriate error messages
+      return;
+    }
+
+    // Open Calendly URL in a new tab after successful credit deduction
+    const calendlyTab = window.open(SAMUEL_STARKMAN_CALENDLY_URL, '_blank', 'noopener,noreferrer');
+    if (!calendlyTab) {
+      toast.error('Popup blocked. Please allow popups and try again.');
+      // Note: Credits were already deducted, but we couldn't open Calendly
+      // This is a rare edge case - the user was charged but couldn't access the booking page
+      console.error('Credits deducted but Calendly popup was blocked');
+    }
   };
 
   useEffect(() => {
