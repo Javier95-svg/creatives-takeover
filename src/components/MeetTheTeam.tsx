@@ -10,6 +10,7 @@ type TeamMember = {
   role: string;
   bio: string;
   linkedin?: string;
+  x?: string;
   email?: string;
   photo: string;
 };
@@ -20,6 +21,7 @@ const teamMembers: TeamMember[] = [
     role: "Founder & CEO",
     bio: "As a founder myself, my mission is to support my peers in building and scaling successful startups by giving visibility to ideas, connecting founders with investors, and accelerating growth through community-driven execution.",
     linkedin: "https://www.linkedin.com/in/javier-digital-marketing/",
+    x: "https://x.com/JavierPulse",
     photo: javierPhoto,
   },
   {
@@ -94,26 +96,48 @@ const MeetTheTeam = () => {
                   {member.bio}
                 </p>
 
-                {(member.linkedin || member.email) && (
-                  <a
-                    href={member.email ? `mailto:${member.email}` : member.linkedin}
-                    target={member.email ? undefined : "_blank"}
-                    rel={member.email ? undefined : "noopener noreferrer"}
-                    className="mt-6 inline-flex items-center gap-2 text-sm font-medium text-primary hover:text-primary/80 transition-colors"
-                    aria-label={member.email ? `Send a message to ${member.name}` : `Connect with ${member.name} on LinkedIn`}
-                  >
+                {(member.linkedin || member.email || member.x) && (
+                  <div className="mt-6 flex flex-col gap-3">
                     {member.email ? (
-                      <>
+                      <a
+                        href={`mailto:${member.email}`}
+                        className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:text-primary/80 transition-colors"
+                        aria-label={`Send a message to ${member.name}`}
+                      >
                         <Mail className="h-5 w-5" />
                         <span>Send a Message</span>
-                      </>
+                      </a>
                     ) : (
                       <>
-                        <Linkedin className="h-5 w-5" />
-                        <span>Connect on LinkedIn</span>
+                        {member.linkedin && (
+                          <a
+                            href={member.linkedin}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:text-primary/80 transition-colors"
+                            aria-label={`Connect with ${member.name} on LinkedIn`}
+                          >
+                            <Linkedin className="h-5 w-5" />
+                            <span>Connect on LinkedIn</span>
+                          </a>
+                        )}
+                        {member.x && (
+                          <a
+                            href={member.x}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:text-primary/80 transition-colors"
+                            aria-label={`Connect with ${member.name} on X`}
+                          >
+                            <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+                              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                            </svg>
+                            <span>Connect on X</span>
+                          </a>
+                        )}
                       </>
                     )}
-                  </a>
+                  </div>
                 )}
               </div>
             </Card>
