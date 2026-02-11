@@ -1,9 +1,7 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useLeanStartupStore } from "@/store/leanStartupStore";
 import { getSafeLocalStorage } from "@/lib/safeStorage";
-import SEO, { createBreadcrumbSchema } from "@/components/SEO";
-import Navigation from "@/components/Navigation";
-import Footer from "@/components/Footer";
+import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -274,110 +272,47 @@ export default function ValidateJourneyPage() {
   const readinessTotal = 5;
   const readinessPercent = Math.round((readinessCount / readinessTotal) * 100);
 
-  const structuredData = [
-    {
-      "@context": "https://schema.org",
-      "@type": "WebPage",
-      "name": "Validate in 7 Days - Decision Sprint",
-      "description": "Choose which product to build with a structured decision sprint for founders.",
-      "url": "https://creatives-takeover.com/validate"
-    },
-    createBreadcrumbSchema([
-      { name: "Home", url: "/" },
-      { name: "BizMap AI", url: "/bizmap-ai" },
-      { name: "Decision Sprint", url: "/decision-sprint" }
-    ])
-  ];
-
   return (
-    <div className="min-h-screen bg-background">
-      <SEO
-        title="Validate - Decision Sprint - Creatives Takeover"
-        description="Decide which product to build with a structured sprint: shortlist ideas, score signals, and choose a winning concept."
-        keywords="startup validation, idea scoring, decision sprint, founder validation, product choice"
-        url="/decision-sprint"
-        structuredData={structuredData}
-      />
-      <Navigation />
-
-      <main>
-        <section className="py-20 px-4 relative overflow-hidden">
-          <div className="absolute inset-0 pointer-events-none overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-b from-background via-background/95 to-background" />
-            <div
-              className="absolute -top-40 -right-48 w-[55rem] h-[55rem] rounded-full opacity-70 blur-3xl animate-[spin_28s_linear_infinite]"
-              style={{
-                background:
-                  "radial-gradient(circle at 30% 30%, rgba(34, 197, 94, 0.22), transparent 60%), radial-gradient(circle at 70% 70%, rgba(59, 130, 246, 0.2), transparent 55%)",
-                animationDuration: "28s"
-              }}
-            />
-          </div>
-
-          <div className="container mx-auto max-w-6xl relative z-10 space-y-12">
-            <div className="text-center space-y-4">
-              <div className="flex justify-center">
-                <Badge className="bg-primary/10 text-primary border-primary/20 px-4 py-1">
-                  Decision Sprint
-                </Badge>
-              </div>
-              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold takeover-gradient creatives-font">
-                Decide What to Build
-              </h1>
-              <p className="text-lg sm:text-xl text-muted-foreground max-w-3xl mx-auto">
-                Compare up to three ideas, score the signals, and pick the product that deserves your next build cycle.
-              </p>
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-                <Button size="lg" asChild>
-                  <Link to="#shortlist">
-                    <ClipboardList className="h-4 w-4 mr-2" />
-                    Start Decision Sprint
-                  </Link>
-                </Button>
-                <Button size="lg" variant="outline" asChild>
-                  <Link to="/pmf-lab">
-                    <Target className="h-4 w-4 mr-2" />
-                    Run Market Need Lab After Decision
-                  </Link>
-                </Button>
-              </div>
-            </div>
-
-            <div className="grid gap-6 md:grid-cols-3">
-              <Card className="border-primary/20 bg-background/80">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-lg">
-                    <ClipboardList className="h-5 w-5 text-primary" />
-                    Shortlist ideas
-                  </CardTitle>
-                  <CardDescription>
-                    Capture the top 2-3 concepts you are considering building.
-                  </CardDescription>
-                </CardHeader>
-              </Card>
-              <Card className="border-primary/20 bg-background/80">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-lg">
-                    <Scale className="h-5 w-5 text-primary" />
-                    Score the signal
-                  </CardTitle>
-                  <CardDescription>
-                    Use a simple rubric to compare pain, reachability, and demand evidence.
-                  </CardDescription>
-                </CardHeader>
-              </Card>
-              <Card className="border-primary/20 bg-background/80">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-lg">
-                    <Rocket className="h-5 w-5 text-primary" />
-                    Choose the winner
-                  </CardTitle>
-                  <CardDescription>
-                    Pick the concept with the strongest signal and move forward with confidence.
-                  </CardDescription>
-                </CardHeader>
-              </Card>
-            </div>
+    <DashboardLayout
+      title="Decision Sprint"
+      subtitle="Compare up to three ideas, score the signals, and pick the product that deserves your next build cycle."
+    >
+      <div className="space-y-8">
+        <div className="grid gap-6 md:grid-cols-3">
+          <Card className="border-primary/20 bg-background/80">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <ClipboardList className="h-5 w-5 text-primary" />
+                Shortlist ideas
+              </CardTitle>
+              <CardDescription>
+                Capture the top 2-3 concepts you are considering building.
+              </CardDescription>
+            </CardHeader>
+          </Card>
+          <Card className="border-primary/20 bg-background/80">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Scale className="h-5 w-5 text-primary" />
+                Score the signal
+              </CardTitle>
+              <CardDescription>
+                Use a simple rubric to compare pain, reachability, and demand evidence.
+              </CardDescription>
+            </CardHeader>
+          </Card>
+          <Card className="border-primary/20 bg-background/80">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Rocket className="h-5 w-5 text-primary" />
+                Choose the winner
+              </CardTitle>
+              <CardDescription>
+                Pick the concept with the strongest signal and move forward with confidence.
+              </CardDescription>
+            </CardHeader>
+          </Card>
+        </div>
 
             <div id="shortlist" className="space-y-6">
               <div className="flex items-center justify-between">
@@ -679,12 +614,8 @@ export default function ValidateJourneyPage() {
                 </div>
               </div>
             )}
-          </div>
-        </section>
-      </main>
-
-      <Footer />
-    </div>
+      </div>
+    </DashboardLayout>
   );
 }
 
