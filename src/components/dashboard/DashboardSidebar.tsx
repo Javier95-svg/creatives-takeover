@@ -17,6 +17,7 @@ import {
   ClipboardList,
   Home,
   BarChart3,
+  Trash2,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -94,17 +95,33 @@ export const DashboardSidebar = ({ dashboardMode: _dashboardMode }: DashboardSid
 
   // Build tools items based on user preferences
   const toolsItems = [
-    sidebarPreferences.showBizMapAI && { path: '/bizmap-ai', label: 'BizMap AI Assist', icon: MessageSquare },
-    sidebarPreferences.showPMFLab && { path: '/pmf-lab', label: 'PMF Lab', icon: FlaskConical },
-    sidebarPreferences.showPromptLibrary && { path: '/prompt-library', label: 'Prompt Library', icon: Library },
-    sidebarPreferences.showTechStack && { path: '/tech-stack', label: 'Tech Stack Builder', icon: Zap },
-    sidebarPreferences.showVCSearch && { path: '/insighta/vc-search', label: 'VC Search', icon: FileSearch },
-    sidebarPreferences.showEmailTemplates && { path: '/insighta/email-templates', label: 'Email Templates', icon: Mail },
-    sidebarPreferences.showPitchDeckAnalyzer && { path: '/insighta/pitch-deck-analyzer', label: 'Pitch Deck Analyzer', icon: ClipboardList },
-    sidebarPreferences.showInsightaTest && { path: '/insighta/test', label: 'Insighta Test', icon: Sparkles },
-    sidebarPreferences.showCommunity && { path: '/community', label: 'Find a Mentor', icon: Users },
-    sidebarPreferences.showRead && { path: '/stories', label: 'Read', icon: BookOpen },
-  ].filter(Boolean) as { path: string; label: string; icon: any }[];
+    sidebarPreferences.showBizMapAI && { path: '/bizmap-ai/chat', label: 'BizMap AI', icon: MessageSquare, prefKey: 'showBizMapAI' as const },
+    sidebarPreferences.showPMFLab && { path: '/pmf-lab', label: 'PMF Lab', icon: FlaskConical, prefKey: 'showPMFLab' as const },
+    sidebarPreferences.showPromptLibrary && { path: '/prompt-library', label: 'Prompt Library', icon: Library, prefKey: 'showPromptLibrary' as const },
+    sidebarPreferences.showTechStack && { path: '/tech-stack', label: 'Tech Stack Builder', icon: Zap, prefKey: 'showTechStack' as const },
+    sidebarPreferences.showVCSearch && { path: '/insighta/vc-search', label: 'VC Search', icon: FileSearch, prefKey: 'showVCSearch' as const },
+    sidebarPreferences.showEmailTemplates && { path: '/insighta/email-templates', label: 'Email Templates', icon: Mail, prefKey: 'showEmailTemplates' as const },
+    sidebarPreferences.showPitchDeckAnalyzer && { path: '/insighta/pitch-deck-analyzer', label: 'Pitch Deck Analyzer', icon: ClipboardList, prefKey: 'showPitchDeckAnalyzer' as const },
+    sidebarPreferences.showInsightaTest && { path: '/insighta/test', label: 'Insighta Test', icon: Sparkles, prefKey: 'showInsightaTest' as const },
+    sidebarPreferences.showCommunity && { path: '/community', label: 'Find a Mentor', icon: Users, prefKey: 'showCommunity' as const },
+    sidebarPreferences.showRead && { path: '/stories', label: 'Read', icon: BookOpen, prefKey: 'showRead' as const },
+  ].filter(Boolean) as { path: string; label: string; icon: any; prefKey: keyof typeof defaultSidebarPreferences }[];
+
+  const removeTool = async (prefKey: keyof typeof defaultSidebarPreferences) => {
+    const updatedPreferences = { ...sidebarPreferences, [prefKey]: false };
+    setSidebarPreferences(updatedPreferences);
+
+    if (user) {
+      try {
+        await supabase
+          .from('profiles')
+          .update({ sidebar_preferences: updatedPreferences })
+          .eq('id', user.id);
+      } catch (error) {
+        console.error('Error removing tool:', error);
+      }
+    }
+  };
 
   return (
     <Sidebar collapsible="icon" className="glass-sidebar" variant="floating" side="left">
@@ -150,12 +167,25 @@ export const DashboardSidebar = ({ dashboardMode: _dashboardMode }: DashboardSid
             <SidebarMenu>
               {toolsItems.map((item) => (
                 <SidebarMenuItem key={item.path}>
-                  <SidebarMenuButton asChild tooltip={item.label}>
-                    <Link to={item.path}>
-                      <item.icon className="h-4 w-4" />
-                      <span>{item.label}</span>
-                    </Link>
-                  </SidebarMenuButton>
+                  <div className="flex items-center w-full group/tool">
+                    <SidebarMenuButton asChild tooltip={item.label} className="flex-1">
+                      <Link to={item.path}>
+                        <item.icon className="h-4 w-4" />
+                        <span>{item.label}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        removeTool(item.prefKey);
+                      }}
+                      className="opacity-0 group-hover/tool:opacity-100 p-1 rounded-md hover:bg-destructive/10 hover:text-destructive transition-all mr-1 group-data-[collapsible=icon]:hidden"
+                      title={`Remove ${item.label}`}
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </button>
+                  </div>
                 </SidebarMenuItem>
               ))}
             </SidebarMenu>

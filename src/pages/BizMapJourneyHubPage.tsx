@@ -243,7 +243,7 @@ export default function BizMapJourneyHubPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Bot className="h-5 w-5 text-primary" />
-                  BizMap AI Assist
+                  BizMap AI
                 </CardTitle>
                 <CardDescription>
                   Available in every phase. Use the AI assistant to fill templates, rewrite copy,

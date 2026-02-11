@@ -1225,7 +1225,7 @@ Subject: "Quick question about [their pain point]"
     createBreadcrumbSchema([
       { name: 'Home', url: '/' },
       { name: 'BizMap AI', url: '/bizmap-ai' },
-      { name: 'BizMap AI Assist', url: '/bizmap-ai' }
+      { name: 'BizMap AI', url: '/bizmap-ai' }
     ])
   ];
 
