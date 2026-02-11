@@ -138,7 +138,7 @@ export const MentorCard = ({ mentor, className, priority = false }: MentorCardPr
     }
 
     // Open tab synchronously to avoid popup blockers after async credit checks.
-    const calendlyTab = window.open('about:blank', '_blank', 'noopener,noreferrer');
+    const calendlyTab = window.open('', '_blank');
     if (!calendlyTab) {
       toast.error('Popup blocked. Please allow popups and try again.');
       return;
@@ -156,7 +156,8 @@ export const MentorCard = ({ mentor, className, priority = false }: MentorCardPr
         return;
       }
 
-      calendlyTab.location.href = normalizedCalendlyUrl;
+      calendlyTab.opener = null;
+      calendlyTab.location.replace(normalizedCalendlyUrl);
     } catch (error) {
       calendlyTab.close();
       console.error('Error booking discovery call:', error);
