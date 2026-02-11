@@ -137,31 +137,22 @@ export const MentorCard = ({ mentor, className, priority = false }: MentorCardPr
       return;
     }
 
-    // Open tab synchronously to avoid popup blockers after async credit checks.
-    const calendlyTab = window.open('', '_blank');
+    // Open Calendly URL directly in a new tab
+    const calendlyTab = window.open(normalizedCalendlyUrl, '_blank', 'noopener,noreferrer');
     if (!calendlyTab) {
       toast.error('Popup blocked. Please allow popups and try again.');
       return;
     }
 
+    // Deduct credits for discovery call (5 credits) - do this after opening the tab
     try {
-      // Deduct credits for discovery call (5 credits)
-      const creditsDeducted = await deductCredits('DISCOVERY_CALL', {
+      await deductCredits('DISCOVERY_CALL', {
         featureName: 'Discovery Call',
         metadata: { mentor_id: mentor.id, mentor_name: mentor.name }
       });
-
-      if (!creditsDeducted) {
-        calendlyTab.close();
-        return;
-      }
-
-      calendlyTab.opener = null;
-      calendlyTab.location.replace(normalizedCalendlyUrl);
     } catch (error) {
-      calendlyTab.close();
-      console.error('Error booking discovery call:', error);
-      toast.error('Unable to start booking. Please try again.');
+      console.error('Error deducting credits for discovery call:', error);
+      // Don't prevent the Calendly tab from opening even if credit deduction fails
     }
   };
 
