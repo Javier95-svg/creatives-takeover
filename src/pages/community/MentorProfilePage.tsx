@@ -8,15 +8,11 @@ import { Button } from "@/components/ui/button";
 import { MentorProfile as MentorProfileType } from "@/types/mentor";
 import { useMentors } from "@/hooks/useMentors";
 import { useAuth } from "@/contexts/AuthContext";
-import { useFeatureGating } from "@/hooks/useFeatureGating";
-import { useUpgradePrompt } from "@/contexts/UpgradePromptContext";
 import { useCreditActions } from "@/hooks/useCreditActions";
-import { ArrowLeft, Loader2, Edit } from "lucide-react";
+import { ArrowLeft, Edit } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
-// Calendly link for Samuel Starkman
-const SAMUEL_STARKMAN_CALENDLY_URL = 'https://calendly.com/samstarkman/1-on-1-with-sam?month=2025-12';
 const CALENDLY_REDIRECT_KEY = 'pending_calendly_redirect';
 
 const MentorProfilePage = () => {
@@ -26,8 +22,6 @@ const MentorProfilePage = () => {
   const { user, isAuthenticated } = useAuth();
   const isAdmin = user?.email?.toLowerCase() === 'admin@creatives-takeover.com';
   const { fetchMentorById, fetchMentorBySlug } = useMentors();
-  const { checkFeatureAccess } = useFeatureGating();
-  const { openUpgradePrompt } = useUpgradePrompt();
   const { deductCredits } = useCreditActions();
   const [mentor, setMentor] = useState<MentorProfileType | null>(null);
   const [loadingMentor, setLoadingMentor] = useState(true);
@@ -81,21 +75,13 @@ const MentorProfilePage = () => {
   const handleBookClick = async () => {
     if (!mentor) return;
 
-    // Check if this is Samuel Starkman's profile
-    const mentorNameLower = mentor.name.toLowerCase();
-    const isSamuelStarkman = (mentorNameLower.includes('samuel') && mentorNameLower.includes('starkman')) ||
-                             mentorNameLower.includes('samuel starkman');
-
-    // Use hardcoded URL for Samuel Starkman, otherwise use mentor's calendly_url
-    const calendlyUrl = isSamuelStarkman
-      ? SAMUEL_STARKMAN_CALENDLY_URL
-      : mentor.calendly_url;
+    const calendlyUrl = mentor.calendly_url?.trim();
 
     if (!calendlyUrl) {
-      // Fallback: show message if no Calendly link is set
-      alert('Discovery call scheduling is not yet available for this mentor. Please check back soon!');
+      toast.error("This mentor does not have a Calendly link configured yet.");
       return;
     }
+    const normalizedCalendlyUrl = /^https?:\/\//i.test(calendlyUrl) ? calendlyUrl : `https://${calendlyUrl}`;
 
     // Check if user is authenticated
     if (!isAuthenticated || !user) {
@@ -106,37 +92,31 @@ const MentorProfilePage = () => {
       return;
     }
 
-    // Check feature access for discovery calls
+    // Open tab synchronously to avoid popup blockers after async credit checks.
+    const calendlyTab = window.open('about:blank', '_blank', 'noopener,noreferrer');
+    if (!calendlyTab) {
+      toast.error('Popup blocked. Please allow popups and try again.');
+      return;
+    }
+
     try {
-      const access = checkFeatureAccess('discovery_calls_mentors');
-      if (!access.hasAccess) {
-        openUpgradePrompt({
-          reason: 'feature',
-          featureName: 'Mentor discovery calls',
-          requiredTier: access.requiredTier as 'creator' | 'professional' | undefined,
-          description: access.message,
-        });
+      // Deduct credits for discovery call (5 credits)
+      const creditsDeducted = await deductCredits('DISCOVERY_CALL', {
+        featureName: 'Discovery Call',
+        metadata: { mentor_id: mentor.id, mentor_name: mentor.name }
+      });
+
+      if (!creditsDeducted) {
+        calendlyTab.close();
         return;
       }
+
+      calendlyTab.location.href = normalizedCalendlyUrl;
     } catch (error) {
-      console.error('Error checking discovery call access:', error);
-      toast.error('An error occurred. Please try again.');
-      return;
+      calendlyTab.close();
+      console.error('Error booking discovery call:', error);
+      toast.error('Unable to start booking. Please try again.');
     }
-
-    // Deduct credits for discovery call (5 credits)
-    const creditsDeducted = await deductCredits('DISCOVERY_CALL', {
-      featureName: 'Discovery Call',
-      metadata: { mentor_id: mentor.id, mentor_name: mentor.name }
-    });
-    
-    if (!creditsDeducted) {
-      // Credit deduction failed (insufficient credits or error)
-      return;
-    }
-
-    // User is authenticated, has access, and credits deducted - open Calendly
-    window.open(calendlyUrl, '_blank', 'noopener,noreferrer');
   };
 
 

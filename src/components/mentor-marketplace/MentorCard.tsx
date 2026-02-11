@@ -7,16 +7,11 @@ import { Star, CheckCircle2, MessageCircle, Calendar, Heart, Linkedin } from "lu
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { getCountryFlag } from "@/utils/countryFlags";
-import { useMessaging, SAMUEL_STARKMAN_EMAIL, SAMUEL_STARKMAN_USER_ID, SAMUEL_STARKMAN_USERNAME, NIC_M_RAYCE_EMAIL, KAROLINA_ZURAWSKA_EMAIL } from "@/hooks/useMessaging";
-import { useFeatureGating } from "@/hooks/useFeatureGating";
-import { useUpgradePrompt } from "@/contexts/UpgradePromptContext";
+import { useMessaging, SAMUEL_STARKMAN_EMAIL, SAMUEL_STARKMAN_USER_ID, NIC_M_RAYCE_EMAIL, KAROLINA_ZURAWSKA_EMAIL } from "@/hooks/useMessaging";
 import { useCreditActions } from "@/hooks/useCreditActions";
-import { useState } from "react";
 import { toast } from "sonner";
 import { generateMentorSlug } from "@/utils/mentorSlug";
 
-// Calendly link for Samuel Starkman
-const SAMUEL_STARKMAN_CALENDLY_URL = 'https://calendly.com/samstarkman/1-on-1-with-sam?month=2025-12';
 const CALENDLY_REDIRECT_KEY = 'pending_calendly_redirect';
 
 interface MentorCardProps {
@@ -29,12 +24,9 @@ interface MentorCardProps {
 export const MentorCard = ({ mentor, className, priority = false }: MentorCardProps) => {
   const navigate = useNavigate();
   const { isAuthenticated, user } = useAuth();
-  const { openUpgradePrompt } = useUpgradePrompt();
   const { startConversation, getUserIdByEmail } = useMessaging({ autoLoad: false });
-  const { checkFeatureAccess } = useFeatureGating();
   const { deductCredits } = useCreditActions();
   const currencySymbol = getCurrencySymbol(mentor.currency);
-  const programFee = mentor.hourly_rate / 100;
   const hourlyRate = ((mentor as any).hourly_rate_per_hour || 0) / 100;
   const mentorSlug = generateMentorSlug(mentor.name);
   const profileUrl = `/community/${mentorSlug}`;
@@ -127,23 +119,15 @@ export const MentorCard = ({ mentor, className, priority = false }: MentorCardPr
   const handleBookDiscoveryCall = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    
-    // Check if this is Samuel Starkman's profile
-    const mentorNameLower = mentor.name.toLowerCase();
-    const isSamuelStarkman = (mentorNameLower.includes('samuel') && mentorNameLower.includes('starkman')) ||
-                             mentorNameLower.includes('samuel starkman');
-    
-    // Use hardcoded URL for Samuel Starkman, otherwise use mentor's calendly_url
-    const calendlyUrl = isSamuelStarkman 
-      ? SAMUEL_STARKMAN_CALENDLY_URL 
-      : mentor.calendly_url;
-    
+
+    const calendlyUrl = mentor.calendly_url?.trim();
+
     if (!calendlyUrl) {
-      // Fallback: show message if no Calendly link is set
-      alert('Discovery call scheduling is not yet available for this mentor. Please check back soon!');
+      toast.error("This mentor does not have a Calendly link configured yet.");
       return;
     }
-    
+    const normalizedCalendlyUrl = /^https?:\/\//i.test(calendlyUrl) ? calendlyUrl : `https://${calendlyUrl}`;
+
     // Check if user is authenticated
     if (!isAuthenticated || !user) {
       // Store Calendly URL in localStorage for redirect after auth
@@ -152,38 +136,32 @@ export const MentorCard = ({ mentor, className, priority = false }: MentorCardPr
       navigate('/auth?redirect=/community');
       return;
     }
-    
-    // Check feature access for discovery calls
+
+    // Open tab synchronously to avoid popup blockers after async credit checks.
+    const calendlyTab = window.open('about:blank', '_blank', 'noopener,noreferrer');
+    if (!calendlyTab) {
+      toast.error('Popup blocked. Please allow popups and try again.');
+      return;
+    }
+
     try {
-      const access = checkFeatureAccess('discovery_calls_mentors');
-      if (!access.hasAccess) {
-        openUpgradePrompt({
-          reason: 'feature',
-          featureName: 'Mentor discovery calls',
-          requiredTier: access.requiredTier as 'creator' | 'professional' | undefined,
-          description: access.message,
-        });
+      // Deduct credits for discovery call (5 credits)
+      const creditsDeducted = await deductCredits('DISCOVERY_CALL', {
+        featureName: 'Discovery Call',
+        metadata: { mentor_id: mentor.id, mentor_name: mentor.name }
+      });
+
+      if (!creditsDeducted) {
+        calendlyTab.close();
         return;
       }
+
+      calendlyTab.location.href = normalizedCalendlyUrl;
     } catch (error) {
-      console.error('Error checking discovery call access:', error);
-      toast.error('An error occurred. Please try again.');
-      return;
+      calendlyTab.close();
+      console.error('Error booking discovery call:', error);
+      toast.error('Unable to start booking. Please try again.');
     }
-    
-    // Deduct credits for discovery call (5 credits)
-    const creditsDeducted = await deductCredits('DISCOVERY_CALL', {
-      featureName: 'Discovery Call',
-      metadata: { mentor_id: mentor.id, mentor_name: mentor.name }
-    });
-    
-    if (!creditsDeducted) {
-      // Credit deduction failed (insufficient credits or error)
-      return;
-    }
-    
-    // User is authenticated, has access, and credits deducted - open Calendly
-    window.open(calendlyUrl, '_blank', 'noopener,noreferrer');
   };
 
   const handleSendMessage = async (e: React.MouseEvent) => {
