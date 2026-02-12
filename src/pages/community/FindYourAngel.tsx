@@ -516,7 +516,7 @@ const FindYourAngel = () => {
                 </p>
               ) : (
                 <p className="text-sm text-muted-foreground">
-                  Upgrade to Professional to browse all investor profiles
+                  27 angel investors found
                 </p>
               )}
             </div>
