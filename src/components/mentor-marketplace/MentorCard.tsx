@@ -25,7 +25,7 @@ export const MentorCard = ({ mentor, className, priority = false }: MentorCardPr
   const navigate = useNavigate();
   const { isAuthenticated, user } = useAuth();
   const { startConversation, getUserIdByEmail } = useMessaging({ autoLoad: false });
-  const { deductCredits } = useCreditActions();
+  const { deductCredits, ensureCredits } = useCreditActions();
   const currencySymbol = getCurrencySymbol(mentor.currency);
   const hourlyRate = ((mentor as any).hourly_rate_per_hour || 0) / 100;
   const mentorSlug = generateMentorSlug(mentor.name);
@@ -141,27 +141,46 @@ export const MentorCard = ({ mentor, className, priority = false }: MentorCardPr
       return;
     }
 
-    // Deduct credits for discovery call (5 credits) BEFORE opening Calendly
-    // This ensures users are always charged when booking a call
-    const creditsDeducted = await deductCredits('DISCOVERY_CALL', {
+    // Check credits FIRST (synchronously from cache) before opening tab
+    // This ensures we don't open the tab if user doesn't have enough credits
+    const requiredCredits = ensureCredits('DISCOVERY_CALL', {
       featureName: 'Discovery Call',
       metadata: { mentor_id: mentor.id, mentor_name: mentor.name }
     });
 
-    // Only open Calendly if credits were successfully deducted
-    if (!creditsDeducted) {
-      // Credit deduction failed (insufficient credits or error)
-      // The deductCredits function already shows appropriate error messages
+    if (requiredCredits === null) {
+      // User doesn't have enough credits - ensureCredits already showed upgrade prompt
       return;
     }
 
-    // Open Calendly URL in a new tab after successful credit deduction
+    // Open Calendly URL synchronously (must be in direct response to user click)
+    // This prevents popup blockers from blocking the new tab
     const calendlyTab = window.open(normalizedCalendlyUrl, '_blank', 'noopener,noreferrer');
     if (!calendlyTab) {
       toast.error('Popup blocked. Please allow popups and try again.');
-      // Note: Credits were already deducted, but we couldn't open Calendly
-      // This is a rare edge case - the user was charged but couldn't access the booking page
-      console.error('Credits deducted but Calendly popup was blocked');
+      return;
+    }
+
+    // Deduct credits for discovery call (5 credits) AFTER opening Calendly
+    // Credits were already verified above, so this should succeed
+    try {
+      const creditsDeducted = await deductCredits('DISCOVERY_CALL', {
+        featureName: 'Discovery Call',
+        metadata: { mentor_id: mentor.id, mentor_name: mentor.name }
+      });
+
+      if (!creditsDeducted) {
+        // Credit deduction failed (rare edge case - e.g., credits spent between check and deduction)
+        // Close the tab and show error
+        calendlyTab.close();
+        toast.error('Unable to process booking. Please try again.');
+        return;
+      }
+    } catch (error) {
+      // If credit deduction fails, close the tab
+      calendlyTab.close();
+      console.error('Error deducting credits for discovery call:', error);
+      toast.error('Unable to process booking. Please try again.');
     }
   };
 
