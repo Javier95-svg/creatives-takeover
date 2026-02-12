@@ -40,7 +40,7 @@ export const MentorCard = ({ mentor, className, priority = false }: MentorCardPr
   const rating = mentor.rating || 0;
   const reviewCount = mentor.review_count || 0;
   
-  // Get country flag - special cases for Samuel (American), Nic M Rayce (Singapore), Irfan Ahmad Malik (Pakistan), Gonzalo Wangüemert (Spain), Marc Bright (Great Britain), Vashti Joseph (France), Ramona Chihaia (Romania), Dikshit Kukreja (India), Karolina Żurawska (Poland), and Ricardo Quiroga (Argentina)
+  // Get country flag - special cases for Samuel (American), Nic M Rayce (Singapore), Irfan Ahmad Malik (Pakistan), Gonzalo Wangüemert (Spain), Marc Bright (Great Britain), Vashti Joseph (France), Ramona Chihaia (Romania), Dikshit Kukreja (India), Karolina Żurawska (Poland), and Ricardo Quiroga (UAE)
   const getNationality = () => {
     if (mentor.nationality) {
       return mentor.nationality;
@@ -93,9 +93,9 @@ export const MentorCard = ({ mentor, className, priority = false }: MentorCardPr
     if (mentor.name.toLowerCase().includes('karolina') && mentor.name.toLowerCase().includes('urawska')) {
       return 'Poland';
     }
-    // Special case: Ricardo Quiroga is from Argentina
+    // Special case: Ricardo Quiroga is from UAE
     if (mentor.name.toLowerCase().includes('ricardo') && mentor.name.toLowerCase().includes('quiroga')) {
-      return 'Argentina';
+      return 'UAE';
     }
     return null;
   };

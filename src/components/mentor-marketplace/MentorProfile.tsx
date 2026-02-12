@@ -87,9 +87,9 @@ export const MentorProfile = ({ mentor, onBookClick }: MentorProfileProps) => {
     if (mentor.name.toLowerCase().includes('karolina') && mentor.name.toLowerCase().includes('urawska')) {
       return 'Poland';
     }
-    // Special case: Ricardo Quiroga is from Argentina
+    // Special case: Ricardo Quiroga is from UAE
     if (mentor.name.toLowerCase().includes('ricardo') && mentor.name.toLowerCase().includes('quiroga')) {
-      return 'Argentina';
+      return 'UAE';
     }
     return null;
   };
