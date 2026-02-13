@@ -38,20 +38,20 @@ export const BizMapHero = () => {
             </div>
 
             {/* H1 */}
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-tight font-space-grotesk leading-tight text-center -mt-1">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-semibold tracking-tight font-space-grotesk leading-tight text-center -mt-1 px-2 sm:px-0">
               {HERO_CONFIG.headline}
             </h1>
 
             {/* Subcopy */}
-            <p className="text-lg sm:text-xl text-muted-foreground leading-relaxed max-w-2xl mx-auto text-center font-sans">
+            <p className="text-base sm:text-lg md:text-xl text-muted-foreground leading-relaxed max-w-2xl mx-auto text-center font-sans px-4 sm:px-0">
               {HERO_CONFIG.subcopy}
             </p>
           </div>
 
           {/* Right Column: Chatbot Preview */}
-          <div className="space-y-6 lg:max-w-2xl lg:ml-auto">
+          <div className="space-y-6 lg:max-w-2xl lg:ml-auto w-full">
             {/* Mini Chatbot Preview */}
-            <div className="rounded-2xl border border-border/60 bg-card/80 p-6 shadow-lg overflow-hidden">
+            <div className="rounded-2xl border border-border/60 bg-card/80 p-4 sm:p-6 shadow-lg overflow-hidden w-full">
               <div className="space-y-4">
                 {/* Chat Header */}
                 <div className="flex items-center gap-2 pb-3 border-b border-border/40">
@@ -75,8 +75,8 @@ export const BizMapHero = () => {
 
                   {/* User Message */}
                   <div className="flex gap-3 justify-end">
-                    <div className="flex-1 rounded-lg bg-primary/10 p-4 max-w-[80%]">
-                      <p className="text-sm text-foreground/80 leading-relaxed font-poppins text-right">
+                    <div className="flex-1 rounded-lg bg-primary/10 p-3 sm:p-4 max-w-[85%] sm:max-w-[80%]">
+                      <p className="text-xs sm:text-sm text-foreground/80 leading-relaxed font-poppins text-right">
                         I want to validate my startup idea
                       </p>
                     </div>
@@ -104,7 +104,7 @@ export const BizMapHero = () => {
                     type="text"
                     placeholder="Type your message..."
                     disabled
-                    className="flex-1 px-4 py-3 text-sm rounded-lg border border-border/60 bg-background/50 text-muted-foreground/60 font-poppins cursor-not-allowed"
+                    className="flex-1 px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm rounded-lg border border-border/60 bg-background/50 text-muted-foreground/60 font-poppins cursor-not-allowed"
                   />
                   <Button size="icon" variant="ghost" disabled className="flex-shrink-0">
                     <Send className="w-5 h-5 text-muted-foreground/40" />

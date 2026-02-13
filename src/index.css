@@ -2201,6 +2201,49 @@ All colors MUST be HSL.
   touch-action: manipulation;
 }
 
+/* Global touch target optimization for mobile */
+@media (max-width: 767px) {
+  button:not(.no-touch-target),
+  a:not(.no-touch-target),
+  input[type="button"]:not(.no-touch-target),
+  input[type="submit"]:not(.no-touch-target),
+  [role="button"]:not(.no-touch-target) {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+/* Ensure proper spacing between touch targets on mobile */
+@media (max-width: 767px) {
+  .flex.gap-2 > button,
+  .flex.gap-2 > a,
+  .space-x-2 > button,
+  .space-x-2 > a {
+    margin: 0 4px;
+  }
+}
+
+/* Responsive images */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Prevent image overflow on mobile */
+@media (max-width: 767px) {
+  img {
+    width: 100%;
+    object-fit: contain;
+  }
+  
+  /* Ensure images in cards don't overflow */
+  .rounded-xl img,
+  .rounded-lg img,
+  .rounded-2xl img {
+    border-radius: inherit;
+  }
+}
+
 /* Mobile Navigation */
 @media (max-width: 767px) {
   .site-nav {

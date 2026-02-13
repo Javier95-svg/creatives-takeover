@@ -414,38 +414,38 @@ const Hero = () => {
     <section
       ref={heroRef}
       id="overview"
-      className="scroll-mt-24 relative pt-24 pb-20 px-4 sm:px-6 font-poppins"
+      className="scroll-mt-24 relative pt-16 sm:pt-20 md:pt-24 pb-12 sm:pb-16 md:pb-20 px-4 sm:px-6 font-poppins"
     >
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-muted/40 to-transparent pointer-events-none" />
 
       <div className="container mx-auto max-w-7xl relative z-10">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 lg:gap-20 items-center">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 lg:gap-20 items-center">
           {/* Left Section - All existing content */}
           <div className="text-center flex flex-col justify-center">
             {/* Main Headline */}
             <h1
-              className="font-space-grotesk text-4xl sm:text-5xl lg:text-6xl font-semibold mb-6 leading-tight tracking-tight"
+              className="font-space-grotesk text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-semibold mb-4 sm:mb-6 leading-tight tracking-tight"
               style={{ textShadow: '0 0 40px hsl(var(--primary) / 0.15)' }}
             >
               <span className="text-primary">The One-Person Business</span> Factory
             </h1>
 
             {/* Subheadline - Improved readability */}
-            <p className="font-space-grotesk text-base sm:text-lg text-muted-foreground mb-8 max-w-xl mx-auto leading-relaxed">
+            <p className="font-space-grotesk text-sm sm:text-base md:text-lg text-muted-foreground mb-6 sm:mb-8 max-w-xl mx-auto leading-relaxed px-2 sm:px-0">
               We blend technology, strategy, and community to empower individuals to build and launch startups with minimal friction. Our platform provides business development, expert support, and access to fundraising.
             </p>
             
             {/* Enhanced CTA Section */}
-            <div className="mb-8 sm:mb-10">
+            <div className="mb-6 sm:mb-8 md:mb-10">
               {isAuthenticated ? (
-                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-center justify-center">
-                  <Button size="lg" variant="outline" className="w-full sm:w-auto min-w-[180px]" asChild>
+                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-center justify-center px-4 sm:px-0">
+                  <Button size="lg" variant="outline" className="w-full sm:w-auto min-w-[180px] min-h-[44px] touch-manipulation" asChild>
                     <Link to={userUsername ? `/profile/${userUsername}` : '/dashboard'}>
                       <User className="w-5 h-5" />
                       Your Profile
                     </Link>
                   </Button>
-                  <Button size="lg" className="w-full sm:w-auto min-w-[180px]" asChild>
+                  <Button size="lg" className="w-full sm:w-auto min-w-[180px] min-h-[44px] touch-manipulation" asChild>
                     <Link to="/dashboard" onClick={handleDashboardCTAClick}>
                       <LayoutDashboard className="w-5 h-5" />
                       Dashboard
@@ -454,8 +454,8 @@ const Hero = () => {
                   </Button>
                 </div>
             ) : (
-              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-center justify-center">
-                <Button size="lg" className="w-full sm:w-auto" asChild>
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-center justify-center px-4 sm:px-0">
+                <Button size="lg" className="w-full sm:w-auto min-h-[44px] touch-manipulation" asChild>
                   <Link to="/signup" onClick={handlePrimaryCTAClick}>
                     Join Today
                     <ArrowRight className="w-4 h-4" />
@@ -465,7 +465,7 @@ const Hero = () => {
                 <Button 
                   variant="outline"
                   size="lg" 
-                  className="w-full sm:w-auto" 
+                  className="w-full sm:w-auto min-h-[44px] touch-manipulation" 
                   onClick={(e) => {
                     e.preventDefault();
                     handleSecondaryCTAClick(e as any);
@@ -480,9 +480,9 @@ const Hero = () => {
           </div>
 
           {/* Right Section - 4-Pic Grid Layout */}
-          <div className="hidden md:block">
-            <div className="rounded-2xl border border-border/70 bg-card shadow-lg p-4">
-              <div className="grid grid-cols-2 gap-3 sm:gap-4 w-full">
+          <div className="w-full">
+            <div className="rounded-2xl border border-border/70 bg-card shadow-lg p-3 sm:p-4">
+              <div className="grid grid-cols-2 gap-2 sm:gap-3 md:gap-4 w-full">
                 {[1, 2, 3, 4].map((position) => {
                 // Use optimistic preview if available (instant rendering), otherwise use database image
                 const optimisticPreview = optimisticPreviews[position];
@@ -564,6 +564,7 @@ const Hero = () => {
                       decoding="async"
                       width="800"
                       height="800"
+                      sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 400px"
                       key={optimisticPreview ? `optimistic-${position}-${Date.now()}` : `stable-${position}`}
                     />
                     {isAdmin && (
