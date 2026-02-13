@@ -63,26 +63,8 @@ export const BizMapHero = () => {
             </div>
           </div>
 
-          {/* Right Column: Promo Card + Chatbot Preview */}
+          {/* Right Column: Chatbot Preview */}
           <div className="space-y-6">
-            {/* Promo Card */}
-            <div className="rounded-2xl border border-border/60 bg-card/80 p-6 shadow-lg hover:shadow-xl transition-shadow">
-              <div className="space-y-4">
-                <div className="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground font-poppins">
-                  {HERO_CONFIG.promoCard.date}
-                </div>
-                <h3 className="text-xl font-semibold font-space-grotesk">
-                  {HERO_CONFIG.promoCard.title}
-                </h3>
-                <p className="text-sm text-muted-foreground leading-relaxed font-poppins">
-                  {HERO_CONFIG.promoCard.description}
-                </p>
-                <Button variant="ghost" size="sm" className="text-primary hover:text-primary/80 font-poppins">
-                  {HERO_CONFIG.promoCard.cta} →
-                </Button>
-              </div>
-            </div>
-
             {/* Mini Chatbot Preview */}
             <div className="rounded-2xl border border-border/60 bg-card/80 p-4 shadow-lg overflow-hidden">
               <div className="space-y-3">
