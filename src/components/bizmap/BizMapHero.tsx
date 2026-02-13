@@ -49,16 +49,6 @@ export const BizMapHero = () => {
               {HERO_CONFIG.subcopy}
             </p>
 
-            {/* CTAs */}
-            <div className="flex flex-col sm:flex-row gap-4 pt-2">
-              <Button size="lg" className="font-semibold font-poppins">
-                {HERO_CONFIG.primaryCTA}
-              </Button>
-              <Button size="lg" variant="outline" className="font-semibold font-poppins">
-                {HERO_CONFIG.secondaryCTA}
-              </Button>
-            </div>
-
             {/* Trust Signals */}
             <div className="flex flex-wrap gap-3 pt-4">
               {HERO_CONFIG.trustSignals.map((signal) => (
