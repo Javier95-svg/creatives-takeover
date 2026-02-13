@@ -28,7 +28,7 @@ export const BizMapHero = () => {
   return (
     <div className="relative w-full">
       {/* Hero Main Content */}
-      <div className="container mx-auto px-4 sm:px-6 py-12 sm:py-16 lg:py-20">
+      <div className="container mx-auto px-4 sm:px-6 pt-16 sm:pt-20 lg:pt-24 pb-12 sm:pb-16 lg:pb-20">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-start max-w-7xl mx-auto">
           {/* Left Column: Copy Block */}
           <div className="space-y-6 sm:space-y-8">
