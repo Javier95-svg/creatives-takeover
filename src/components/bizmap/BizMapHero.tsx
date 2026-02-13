@@ -6,7 +6,7 @@ import { Bot, Send } from "lucide-react";
 // Placeholder constants for customization
 const HERO_CONFIG = {
   productName: "Creatives Takeover",
-  label: "CREATIVE AI ASSISTANT",
+  label: "YOUR AI CO-FOUNDER",
   headline: "All your ideas, one trusted assistant.",
   subcopy: "Turn your vision into action with comprehensive business planning, AI-powered guidance, investor-ready templates, and structured support for every stage of your journey.",
   primaryCTA: "Request a demo",
@@ -32,15 +32,15 @@ export const BizMapHero = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-start max-w-7xl mx-auto">
           {/* Left Column: Copy Block */}
           <div className="space-y-6 sm:space-y-8">
-            {/* Small Label */}
-            <div className="inline-block">
+            {/* Small Label - Centered and closer to title */}
+            <div className="text-center mb-2">
               <span className="text-xs font-semibold uppercase tracking-[0.2em] text-primary/80 font-poppins">
                 {HERO_CONFIG.label}
               </span>
             </div>
 
             {/* H1 */}
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-tight font-space-grotesk leading-tight">
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-tight font-space-grotesk leading-tight text-center -mt-2">
               {HERO_CONFIG.headline}
             </h1>
 
