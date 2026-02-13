@@ -368,7 +368,9 @@ const Pricing = () => {
                 <TabsTrigger className="rounded-full text-sm font-medium font-poppins data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" value="monthly">Monthly</TabsTrigger>
                 <TabsTrigger className="rounded-full text-sm font-medium font-poppins data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" value="yearly">
                   Yearly
-                  <Badge variant="secondary" className="ml-2 rounded-full bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20">Save up to 24%</Badge>
+                  <Badge variant="secondary" className="ml-1.5 sm:ml-2 rounded-full bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20 text-[10px] sm:text-xs px-1.5 sm:px-2.5">
+                    <span className="hidden sm:inline">Save up to </span>24%
+                  </Badge>
                 </TabsTrigger>
               </TabsList>
             </Tabs>

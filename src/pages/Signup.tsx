@@ -13,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { trackActivity } from "@/lib/activity";
 import { useConversionTracking } from "@/hooks/useConversionTracking";
 import { SocialProof } from "@/components/SocialProof";
+import MobileFormOptimizer from "@/components/MobileFormOptimizer";
 
 const Signup = () => {
   const [formData, setFormData] = useState({
@@ -293,208 +294,209 @@ const Signup = () => {
         </div>
 
         {/* Signup Form */}
-        <Card className="glass-card border-2 border-border/50 shadow-2xl hover:shadow-3xl transition-all duration-300">
-          <CardHeader className="space-y-1 pb-4">
-            <h2 className="text-xl font-semibold text-center">Create your account</h2>
-            <p className="text-sm text-muted-foreground text-center">Get started with your free account today</p>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} autoComplete="on" className="space-y-5">
-              {/* Name Fields */}
-              <div className="grid grid-cols-2 gap-3">
+        <MobileFormOptimizer>
+          <Card className="glass-card border-2 border-border/50 shadow-2xl hover:shadow-3xl transition-all duration-300">
+            <CardHeader className="space-y-1 pb-4">
+              <h2 className="text-xl font-semibold text-center">Create your account</h2>
+              <p className="text-sm text-muted-foreground text-center">Get started with your free account today</p>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleSubmit} autoComplete="on" className="space-y-5">
+                {/* Name Fields */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Label htmlFor="firstName" className="text-sm font-medium">
+                      First Name
+                    </Label>
+                    <div className="relative">
+                      <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                      <Input
+                        id="firstName"
+                        name="firstName"
+                        type="text"
+                        value={formData.firstName}
+                        onChange={handleInputChange}
+                        placeholder="First name"
+                        className={`pl-10 h-12 bg-background/50 backdrop-blur-sm border-2 transition-all duration-200 focus:border-primary focus:ring-2 focus:ring-primary/20 ${errors.firstName ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : ''}`}
+                        disabled={isLoading}
+                        autoComplete="given-name"
+                      />
+                    </div>
+                    {errors.firstName && (
+                      <p className="text-sm text-red-500 animate-fade-in">{errors.firstName}</p>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="lastName" className="text-sm font-medium">
+                      Last Name
+                    </Label>
+                    <Input
+                      id="lastName"
+                      name="lastName"
+                      type="text"
+                      value={formData.lastName}
+                      onChange={handleInputChange}
+                      placeholder="Last name"
+                      className={`h-12 bg-background/50 backdrop-blur-sm border-2 transition-all duration-200 focus:border-primary focus:ring-2 focus:ring-primary/20 ${errors.lastName ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : ''}`}
+                      disabled={isLoading}
+                      autoComplete="family-name"
+                    />
+                    {errors.lastName && (
+                      <p className="text-sm text-red-500 animate-fade-in">{errors.lastName}</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Email Field */}
                 <div className="space-y-2">
-                  <Label htmlFor="firstName" className="text-sm font-medium">
-                    First Name
+                  <Label htmlFor="email" className="text-sm font-medium">
+                    Email address
                   </Label>
                   <div className="relative">
-                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
                     <Input
-                      id="firstName"
-                      name="firstName"
-                      type="text"
-                      value={formData.firstName}
+                      id="email"
+                      name="email"
+                      type="email"
+                      value={formData.email}
                       onChange={handleInputChange}
-                      placeholder="First name"
-                      className={`pl-10 h-12 bg-background/50 backdrop-blur-sm border-2 transition-all duration-200 focus:border-primary focus:ring-2 focus:ring-primary/20 ${errors.firstName ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : ''}`}
+                      placeholder="Enter your email"
+                      className={`pl-10 h-12 bg-background/50 backdrop-blur-sm border-2 transition-all duration-200 focus:border-primary focus:ring-2 focus:ring-primary/20 ${errors.email ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : ''
+                        }`}
                       disabled={isLoading}
-                      autoComplete="given-name"
+                      autoComplete="email"
+                      autoCapitalize="off"
+                      autoCorrect="off"
+                      inputMode="email"
                     />
                   </div>
-                  {errors.firstName && (
-                    <p className="text-sm text-red-500 animate-fade-in">{errors.firstName}</p>
+                  {errors.email && (
+                    <p className="text-sm text-red-500 animate-fade-in">{errors.email}</p>
                   )}
                 </div>
 
+                {/* Password Field */}
                 <div className="space-y-2">
-                  <Label htmlFor="lastName" className="text-sm font-medium">
-                    Last Name
+                  <Label htmlFor="password" className="text-sm font-medium">
+                    Password
                   </Label>
-                  <Input
-                    id="lastName"
-                    name="lastName"
-                    type="text"
-                    value={formData.lastName}
-                    onChange={handleInputChange}
-                    placeholder="Last name"
-                    className={`h-12 bg-background/50 backdrop-blur-sm border-2 transition-all duration-200 focus:border-primary focus:ring-2 focus:ring-primary/20 ${errors.lastName ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : ''}`}
-                    disabled={isLoading}
-                    autoComplete="family-name"
-                  />
-                  {errors.lastName && (
-                    <p className="text-sm text-red-500 animate-fade-in">{errors.lastName}</p>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                    <Input
+                      id="password"
+                      name="password"
+                      type={showPassword ? "text" : "password"}
+                      value={formData.password}
+                      onChange={handleInputChange}
+                      placeholder="Create a password"
+                      className={`pl-10 pr-12 h-12 bg-background/50 backdrop-blur-sm border-2 transition-all duration-200 focus:border-primary focus:ring-2 focus:ring-primary/20 ${errors.password ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : ''
+                        }`}
+                      disabled={isLoading}
+                      autoComplete="new-password"
+                    />
+                    <button
+                      type="button"
+                      onClick={togglePasswordVisibility}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                      disabled={isLoading}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="w-4 h-4" />
+                      ) : (
+                        <Eye className="w-4 h-4" />
+                      )}
+                    </button>
+                  </div>
+                  {!errors.password && formData.password.length > 0 && (
+                    <p className="text-xs text-muted-foreground">Use at least 8 characters</p>
+                  )}
+                  {errors.password && (
+                    <p className="text-sm text-red-500 animate-fade-in">{errors.password}</p>
                   )}
                 </div>
-              </div>
 
-              {/* Email Field */}
-              <div className="space-y-2">
-                <Label htmlFor="email" className="text-sm font-medium">
-                  Email address
-                </Label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                  <Input
-                    id="email"
-                    name="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    placeholder="Enter your email"
-                    className={`pl-10 h-12 bg-background/50 backdrop-blur-sm border-2 transition-all duration-200 focus:border-primary focus:ring-2 focus:ring-primary/20 ${errors.email ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : ''
-                      }`}
-                    disabled={isLoading}
-                    autoComplete="email"
-                    autoCapitalize="off"
-                    autoCorrect="off"
-                    inputMode="email"
-                  />
-                </div>
-                {errors.email && (
-                  <p className="text-sm text-red-500 animate-fade-in">{errors.email}</p>
-                )}
-              </div>
-
-              {/* Password Field */}
-              <div className="space-y-2">
-                <Label htmlFor="password" className="text-sm font-medium">
-                  Password
-                </Label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                  <Input
-                    id="password"
-                    name="password"
-                    type={showPassword ? "text" : "password"}
-                    value={formData.password}
-                    onChange={handleInputChange}
-                    placeholder="Create a password"
-                    className={`pl-10 pr-12 h-12 bg-background/50 backdrop-blur-sm border-2 transition-all duration-200 focus:border-primary focus:ring-2 focus:ring-primary/20 ${errors.password ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : ''
-                      }`}
-                    disabled={isLoading}
-                    autoComplete="new-password"
-                  />
-                  <button
-                    type="button"
-                    onClick={togglePasswordVisibility}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                    disabled={isLoading}
-                  >
-                    {showPassword ? (
-                      <EyeOff className="w-4 h-4" />
-                    ) : (
-                      <Eye className="w-4 h-4" />
-                    )}
-                  </button>
-                </div>
-                {!errors.password && formData.password.length > 0 && (
-                  <p className="text-xs text-muted-foreground">Use at least 8 characters</p>
-                )}
-                {errors.password && (
-                  <p className="text-sm text-red-500 animate-fade-in">{errors.password}</p>
-                )}
-              </div>
-
-              {/* Sign Up Button */}
-              <Button
-                type="submit"
-                disabled={isLoading}
-                className="w-full h-12 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-200 mt-6 group"
-                style={{
-                  background: 'linear-gradient(135deg, hsl(var(--blue-primary)), hsl(var(--blue-dark)))',
-                }}
-              >
-                {isLoading ? (
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                    Creating account...
-                  </div>
-                ) : (
-                  <>
-                    <Sparkles className="w-4 h-4 mr-2" />
-                    Create Account
-                  </>
-                )}
-              </Button>
-
-              {/* Divider */}
-              <div className="relative my-6">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t border-border" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-card px-2 text-muted-foreground">
-                    OR
-                  </span>
-                </div>
-              </div>
-
-              {/* Social Login Buttons - Enhanced */}
-              <div className="grid grid-cols-1 gap-3">
-                <div
-                  className="relative p-[2px] rounded-md"
+                {/* Sign Up Button */}
+                <Button
+                  type="submit"
+                  disabled={isLoading}
+                  className="w-full h-12 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-200 mt-6 group"
                   style={{
-                    background: 'linear-gradient(90deg, hsl(var(--blue-primary)), hsl(var(--red-primary)), #EAB308, hsl(var(--green-primary)))'
+                    background: 'linear-gradient(135deg, hsl(var(--blue-primary)), hsl(var(--blue-dark)))',
                   }}
                 >
-                  <Button
-                    type="button"
-                    variant="outline"
-                    disabled={isLoading}
-                    onClick={handleGoogleSignup}
-                    className="h-12 w-full font-medium relative bg-background hover:bg-muted/50 transition-all duration-200 border-0"
-                  >
-                    <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
-                      <path fill="hsl(var(--blue-primary))" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                      <path fill="hsl(var(--red-primary))" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                      <path fill="#EAB308" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
-                      <path fill="hsl(var(--green-primary))" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
-                    </svg>
-                    <span
-                      className="bg-clip-text text-transparent font-medium"
-                      style={{
-                        backgroundImage: 'linear-gradient(90deg, hsl(var(--blue-primary)), hsl(var(--red-primary)), #EAB308, hsl(var(--green-primary)))'
-                      }}
-                    >
-                      Continue with Google
-                    </span>
-                  </Button>
-                </div>
-              </div>
+                  {isLoading ? (
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                      Creating account...
+                    </div>
+                  ) : (
+                    <>
+                      <Sparkles className="w-4 h-4 mr-2" />
+                      Create Account
+                    </>
+                  )}
+                </Button>
 
-              {/* Hype Text */}
-              <div className="text-center mt-4 space-y-1">
-                <p className="text-sm text-muted-foreground">
-                  Join <span className="font-semibold text-foreground">1,247 entrepreneurs</span> building their businesses.
-                </p>
-                <p className="text-xs text-muted-foreground flex items-center justify-center gap-2">
-                  <span
-                    className="relative w-2 h-2 rounded-full bg-green-500"
+                {/* Divider */}
+                <div className="relative my-6">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t border-border" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-card px-2 text-muted-foreground">
+                      OR
+                    </span>
+                  </div>
+                </div>
+
+                {/* Social Login Buttons - Enhanced */}
+                <div className="grid grid-cols-1 gap-3">
+                  <div
+                    className="relative p-[2px] rounded-md"
                     style={{
-                      animation: 'flicker 1.5s ease-in-out infinite',
-                      boxShadow: '0 0 6px rgba(34, 197, 94, 0.8), 0 0 12px rgba(34, 197, 94, 0.5)'
+                      background: 'linear-gradient(90deg, hsl(var(--blue-primary)), hsl(var(--red-primary)), #EAB308, hsl(var(--green-primary)))'
                     }}
                   >
-                    <style>{`
+                    <Button
+                      type="button"
+                      variant="outline"
+                      disabled={isLoading}
+                      onClick={handleGoogleSignup}
+                      className="h-12 w-full font-medium relative bg-background hover:bg-muted/50 transition-all duration-200 border-0"
+                    >
+                      <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
+                        <path fill="hsl(var(--blue-primary))" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                        <path fill="hsl(var(--red-primary))" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                        <path fill="#EAB308" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+                        <path fill="hsl(var(--green-primary))" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+                      </svg>
+                      <span
+                        className="bg-clip-text text-transparent font-medium"
+                        style={{
+                          backgroundImage: 'linear-gradient(90deg, hsl(var(--blue-primary)), hsl(var(--red-primary)), #EAB308, hsl(var(--green-primary)))'
+                        }}
+                      >
+                        Continue with Google
+                      </span>
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Hype Text */}
+                <div className="text-center mt-4 space-y-1">
+                  <p className="text-sm text-muted-foreground">
+                    Join <span className="font-semibold text-foreground">1,247 entrepreneurs</span> building their businesses.
+                  </p>
+                  <p className="text-xs text-muted-foreground flex items-center justify-center gap-2">
+                    <span
+                      className="relative w-2 h-2 rounded-full bg-green-500"
+                      style={{
+                        animation: 'flicker 1.5s ease-in-out infinite',
+                        boxShadow: '0 0 6px rgba(34, 197, 94, 0.8), 0 0 12px rgba(34, 197, 94, 0.5)'
+                      }}
+                    >
+                      <style>{`
                       @keyframes flicker {
                         0%, 100% {
                           opacity: 1;
@@ -508,33 +510,34 @@ const Signup = () => {
                         }
                       }
                     `}</style>
-                  </span>
-                  <span className="font-semibold text-foreground">2 people</span> signed up in the last hour.
-                </p>
-              </div>
+                    </span>
+                    <span className="font-semibold text-foreground">2 people</span> signed up in the last hour.
+                  </p>
+                </div>
 
-              {/* Security Badge */}
-              <div className="flex items-center justify-center gap-2 pt-2 pb-2 text-xs text-muted-foreground">
-                <Shield className="w-3.5 h-3.5 text-primary/70" />
-                <span>Secure authentication powered by Supabase</span>
-              </div>
+                {/* Security Badge */}
+                <div className="flex items-center justify-center gap-2 pt-2 pb-2 text-xs text-muted-foreground">
+                  <Shield className="w-3.5 h-3.5 text-primary/70" />
+                  <span>Secure authentication powered by Supabase</span>
+                </div>
 
-              {/* Terms */}
-              <div className="text-center">
-                <p className="text-xs text-muted-foreground">
-                  By creating an account, you agree to our{" "}
-                  <Link to="/terms" className="text-primary hover:underline">
-                    Terms of Service
-                  </Link>{" "}
-                  and{" "}
-                  <Link to="/privacy-policy" className="text-primary hover:underline">
-                    Privacy Policy
-                  </Link>
-                </p>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
+                {/* Terms */}
+                <div className="text-center">
+                  <p className="text-xs text-muted-foreground">
+                    By creating an account, you agree to our{" "}
+                    <Link to="/terms" className="text-primary hover:underline">
+                      Terms of Service
+                    </Link>{" "}
+                    and{" "}
+                    <Link to="/privacy-policy" className="text-primary hover:underline">
+                      Privacy Policy
+                    </Link>
+                  </p>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        </MobileFormOptimizer>
 
         {/* Sign In Link */}
         <div className="text-center mt-6">
