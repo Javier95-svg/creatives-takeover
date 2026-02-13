@@ -1,6 +1,4 @@
-import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Bot, Send } from "lucide-react";
 
 // Placeholder constants for customization
@@ -33,14 +31,14 @@ export const BizMapHero = () => {
           {/* Left Column: Copy Block */}
           <div className="space-y-6 sm:space-y-8">
             {/* Small Label - Centered and closer to title */}
-            <div className="text-center mb-2">
+            <div className="text-center mb-1">
               <span className="text-xs font-semibold uppercase tracking-[0.2em] text-primary/80 font-poppins">
                 {HERO_CONFIG.label}
               </span>
             </div>
 
             {/* H1 */}
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-tight font-space-grotesk leading-tight text-center -mt-2">
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-tight font-space-grotesk leading-tight text-center -mt-1">
               {HERO_CONFIG.headline}
             </h1>
 
@@ -48,19 +46,6 @@ export const BizMapHero = () => {
             <p className="text-lg sm:text-xl text-muted-foreground leading-relaxed max-w-2xl mx-auto text-center font-sans">
               {HERO_CONFIG.subcopy}
             </p>
-
-            {/* Trust Signals */}
-            <div className="flex flex-wrap gap-3 pt-4">
-              {HERO_CONFIG.trustSignals.map((signal) => (
-                <Badge
-                  key={signal}
-                  variant="secondary"
-                  className="text-xs font-medium px-3 py-1.5 rounded-full border-border/60 bg-background/80"
-                >
-                  {signal}
-                </Badge>
-              ))}
-            </div>
           </div>
 
           {/* Right Column: Chatbot Preview */}
