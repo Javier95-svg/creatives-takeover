@@ -70,7 +70,7 @@ const CollaborationDemo = () => {
           </div>
 
           {/* Main Collaboration Dashboard */}
-          <div className="h-[600px]">
+          <div className="h-[600px] responsive-collab-shell">
             <CollaborationDashboard 
               sessionId={demosprint?.id || 'demo-session'}
               sprintId={demosprint?.id}

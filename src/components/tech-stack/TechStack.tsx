@@ -17,6 +17,7 @@ import { useCreditActions } from '@/hooks/useCreditActions';
 import { useUpgradePrompt } from '@/contexts/UpgradePromptContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 // Icon mapping
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -67,6 +68,7 @@ const TechStack: React.FC = () => {
   const { deductCredits } = useCreditActions();
   const { openUpgradePrompt } = useUpgradePrompt();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
   const [selectedProducts, setSelectedProducts] = useState<SelectedProducts>({});
   const [showBudget, setShowBudget] = useState(false);
   const [savedReports, setSavedReports] = useState<TechStackReport[]>([]);
@@ -522,6 +524,7 @@ const TechStack: React.FC = () => {
           selectedProductId={selectedProducts[category.id]}
           onProductSelect={handleProductSelect}
           isProductSelected={isProductSelected}
+          isMobile={isMobile}
         />
       ))}
 
@@ -599,13 +602,15 @@ interface CategorySectionProps {
   selectedProductId: string | null;
   onProductSelect: (categoryId: string, productId: string) => void;
   isProductSelected: (categoryId: string, productId: string) => boolean;
+  isMobile: boolean;
 }
 
 const CategorySection: React.FC<CategorySectionProps> = ({
   category,
   selectedProductId,
   onProductSelect,
-  isProductSelected
+  isProductSelected,
+  isMobile
 }) => {
   return (
     <Card>
@@ -622,67 +627,116 @@ const CategorySection: React.FC<CategorySectionProps> = ({
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="min-w-[150px] sm:w-[200px]">Product</TableHead>
-                <TableHead className="min-w-[200px]">Description</TableHead>
-                <TableHead className="min-w-[180px]">Pros</TableHead>
-                <TableHead className="min-w-[180px]">Cons</TableHead>
-                <TableHead className="min-w-[120px] sm:w-[150px]">Price</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {category.products.map((product) => {
-                const selected = isProductSelected(category.id, product.id);
-                return (
-                  <TableRow
-                    key={product.id}
-                    onClick={() => onProductSelect(category.id, product.id)}
-                    className={`cursor-pointer transition-all ${selected
-                      ? 'bg-primary/10 border-l-4 border-l-primary'
-                      : 'hover:bg-muted/50'
-                      }`}
-                  >
-                    <TableCell className="font-medium">
-                      <div className="flex items-center">
-                        <span className="whitespace-nowrap">{product.name}</span>
-                        {selected && (
-                          <CheckCircle2 className="w-4 h-4 text-primary ml-1.5" />
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell className="max-w-md text-sm">
-                      {product.description}
-                    </TableCell>
-                    <TableCell>
-                      <ul className="list-disc list-inside space-y-1 text-xs sm:text-sm">
+        {isMobile ? (
+          <div className="space-y-3">
+            {category.products.map((product) => {
+              const selected = isProductSelected(category.id, product.id);
+              return (
+                <button
+                  key={product.id}
+                  type="button"
+                  onClick={() => onProductSelect(category.id, product.id)}
+                  className={`w-full rounded-xl border p-4 text-left transition-all ${
+                    selected
+                      ? 'border-primary bg-primary/10 shadow-sm'
+                      : 'border-border hover:border-primary/40 hover:bg-muted/40'
+                  }`}
+                >
+                  <div className="mb-3 flex items-start justify-between gap-3">
+                    <div>
+                      <p className="font-semibold">{product.name}</p>
+                      <p className="text-xs text-muted-foreground mt-1">{product.price}</p>
+                    </div>
+                    {selected && <CheckCircle2 className="w-4 h-4 text-primary shrink-0 mt-0.5" />}
+                  </div>
+
+                  <p className="text-sm text-muted-foreground mb-3">{product.description}</p>
+
+                  <div className="grid grid-cols-1 gap-3">
+                    <div>
+                      <p className="text-xs font-medium mb-1">Pros</p>
+                      <ul className="list-disc list-inside space-y-1 text-xs text-muted-foreground">
                         {product.pros.map((pro, idx) => (
-                          <li key={idx} className="text-muted-foreground">
-                            {pro}
-                          </li>
+                          <li key={idx}>{pro}</li>
                         ))}
                       </ul>
-                    </TableCell>
-                    <TableCell>
-                      <ul className="list-disc list-inside space-y-1 text-xs sm:text-sm">
+                    </div>
+                    <div>
+                      <p className="text-xs font-medium mb-1">Cons</p>
+                      <ul className="list-disc list-inside space-y-1 text-xs text-muted-foreground">
                         {product.cons.map((con, idx) => (
-                          <li key={idx} className="text-muted-foreground">
-                            {con}
-                          </li>
+                          <li key={idx}>{con}</li>
                         ))}
                       </ul>
-                    </TableCell>
-                    <TableCell className="font-medium">
-                      {product.price}
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </div>
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="min-w-[150px] sm:w-[200px]">Product</TableHead>
+                  <TableHead className="min-w-[200px]">Description</TableHead>
+                  <TableHead className="min-w-[180px]">Pros</TableHead>
+                  <TableHead className="min-w-[180px]">Cons</TableHead>
+                  <TableHead className="min-w-[120px] sm:w-[150px]">Price</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {category.products.map((product) => {
+                  const selected = isProductSelected(category.id, product.id);
+                  return (
+                    <TableRow
+                      key={product.id}
+                      onClick={() => onProductSelect(category.id, product.id)}
+                      className={`cursor-pointer transition-all ${selected
+                        ? 'bg-primary/10 border-l-4 border-l-primary'
+                        : 'hover:bg-muted/50'
+                        }`}
+                    >
+                      <TableCell className="font-medium">
+                        <div className="flex items-center">
+                          <span className="whitespace-nowrap">{product.name}</span>
+                          {selected && (
+                            <CheckCircle2 className="w-4 h-4 text-primary ml-1.5" />
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell className="max-w-md text-sm">
+                        {product.description}
+                      </TableCell>
+                      <TableCell>
+                        <ul className="list-disc list-inside space-y-1 text-xs sm:text-sm">
+                          {product.pros.map((pro, idx) => (
+                            <li key={idx} className="text-muted-foreground">
+                              {pro}
+                            </li>
+                          ))}
+                        </ul>
+                      </TableCell>
+                      <TableCell>
+                        <ul className="list-disc list-inside space-y-1 text-xs sm:text-sm">
+                          {product.cons.map((con, idx) => (
+                            <li key={idx} className="text-muted-foreground">
+                              {con}
+                            </li>
+                          ))}
+                        </ul>
+                      </TableCell>
+                      <TableCell className="font-medium">
+                        {product.price}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

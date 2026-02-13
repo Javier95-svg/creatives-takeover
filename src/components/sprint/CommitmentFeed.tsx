@@ -111,7 +111,7 @@ const CommitmentFeed: React.FC = () => {
         </CardHeader>
         <CardContent>
           <Tabs value={filter} onValueChange={(v: any) => setFilter(v)}>
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="adaptive-tabs grid w-full grid-cols-4">
               <TabsTrigger value="all">All</TabsTrigger>
               <TabsTrigger value="active">Active</TabsTrigger>
               <TabsTrigger value="achieved">Achieved</TabsTrigger>

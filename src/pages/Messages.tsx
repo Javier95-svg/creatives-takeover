@@ -208,7 +208,7 @@ const Messages = () => {
               
               <Card className="p-3 md:p-4 lg:p-6">
                 {isResolvingUsername ? (
-                  <div className="flex items-center justify-center h-[600px]">
+                  <div className="flex items-center justify-center min-h-[320px] h-[45vh] md:h-[600px]">
                     <div className="text-center">
                       <MessageCircle className="h-12 w-12 mx-auto mb-4 animate-pulse text-muted-foreground" />
                       <p className="text-muted-foreground">Loading conversation...</p>

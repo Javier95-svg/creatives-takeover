@@ -344,7 +344,7 @@ const ProductMarketFitLab: React.FC<ProductMarketFitLabProps> = ({
         </CardHeader>
         <CardContent>
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-5">
+            <TabsList className="adaptive-tabs grid w-full grid-cols-5">
               <TabsTrigger value="input">
                 <FileText className="w-4 h-4 mr-2" />
                 Problem Brief

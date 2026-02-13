@@ -1260,7 +1260,7 @@ Subject: "Quick question about [their pain point]"
             {/* Business Planning Chat Interface */}
             <div className="w-full">
                 {/* Unified Chat Interface Container */}
-                <div className="chat-unified-frame mb-6 sm:mb-8 h-[700px] rounded-xl lg:rounded-2xl overflow-hidden shadow-2xl">
+                <div className="chat-unified-frame responsive-chat-frame mb-6 sm:mb-8 h-[700px] rounded-xl lg:rounded-2xl overflow-hidden shadow-2xl">
                   <div className="flex flex-row h-full">
                     {/* Chat Sidebar */}
                     <ChatSidebar 

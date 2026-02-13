@@ -332,7 +332,7 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
   );
 
   return (
-    <div className={`flex ${isMobile ? 'flex-col h-[calc(100vh-200px)] min-h-[500px]' : isTablet ? 'h-[calc(100vh-250px)]' : 'h-[600px]'} border rounded-lg bg-card`}>
+    <div className={`responsive-messaging-shell flex ${isMobile ? 'flex-col' : ''} border rounded-lg bg-card`}>
       {/* Desktop & Tablet Conversations List */}
       {!isMobile && (
         <div className={`${isTablet ? 'w-64' : 'w-80'} border-r bg-card/50 flex-shrink-0`}>

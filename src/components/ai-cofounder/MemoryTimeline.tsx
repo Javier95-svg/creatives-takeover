@@ -67,7 +67,7 @@ export const MemoryTimeline = () => {
       </div>
 
       <Tabs value={filter} onValueChange={(v) => setFilter(v as MemoryType | 'all')}>
-        <TabsList className="grid grid-cols-6 w-full">
+        <TabsList className="adaptive-tabs grid grid-cols-6 w-full">
           <TabsTrigger value="all">All</TabsTrigger>
           <TabsTrigger value="decision">Decisions</TabsTrigger>
           <TabsTrigger value="win">Wins</TabsTrigger>

@@ -285,7 +285,7 @@ const TemplateLibrary = () => {
             </div>
             
             <Tabs value={selectedCategory} onValueChange={setSelectedCategory}>
-              <TabsList className="grid w-full grid-cols-3 lg:grid-cols-7">
+              <TabsList className="adaptive-tabs grid w-full grid-cols-3 lg:grid-cols-7">
                 {categories.map(category => (
                   <TabsTrigger 
                     key={category.id} 

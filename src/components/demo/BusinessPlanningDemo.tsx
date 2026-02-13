@@ -63,7 +63,7 @@ const BusinessPlanningDemo = ({ scenario }: BusinessPlanningDemoProps) => {
       {/* Business Plan Content */}
       <Card className="glass-card">
         <Tabs defaultValue="overview" className="p-6">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="adaptive-tabs grid w-full grid-cols-5">
             {planSections.map((section) => {
               const Icon = section.icon;
               return (

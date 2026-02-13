@@ -251,7 +251,7 @@ export const InvestorQAPrepModal: React.FC<InvestorQAPrepModalProps> = ({ onClos
         </DialogHeader>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-4">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="adaptive-tabs grid w-full grid-cols-5">
             {categories.map(cat => (
               <TabsTrigger key={cat.id} value={cat.id} className="text-xs">
                 {cat.label}

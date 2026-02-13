@@ -132,7 +132,7 @@ export const Phase4CollaborationHub: React.FC<Phase4CollaborationHubProps> = ({
           onValueChange={setActiveTab}
           className="h-full flex flex-col"
         >
-          <TabsList className="grid w-full grid-cols-4 rounded-none border-b">
+          <TabsList className="adaptive-tabs grid w-full grid-cols-4 rounded-none border-b">
             <TabsTrigger value="presence" className="flex items-center gap-2">
               <Users className="h-4 w-4" />
               <span className="hidden sm:inline">Presence</span>

@@ -26,6 +26,38 @@
   .grid[class~="grid-cols-7"]:not([class*="lg:grid-cols"]):not([class*="xl:grid-cols"]):not([class*="2xl:grid-cols"]) {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   }
+
+  .adaptive-tabs {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 0.5rem;
+  }
+
+  .adaptive-tabs > [role="tab"] {
+    min-width: 0;
+    white-space: normal;
+    line-height: 1.2;
+  }
+
+  .responsive-chat-frame {
+    height: min(70vh, 48rem) !important;
+    min-height: 30rem;
+  }
+
+  .responsive-collab-shell {
+    height: min(68vh, 46rem) !important;
+    min-height: 30rem;
+  }
+
+  .responsive-messaging-shell {
+    height: min(70vh, 46rem) !important;
+    min-height: 30rem;
+  }
+
+  .responsive-community-chat {
+    height: min(68vh, 42rem) !important;
+    min-height: 28rem;
+  }
 }
 
 @media (max-width: 767px) {
@@ -98,5 +130,45 @@
 
   .responsive-filter-row .responsive-sort-trigger {
     width: 100%;
+  }
+
+  .adaptive-tabs {
+    display: flex !important;
+    justify-content: flex-start !important;
+    flex-wrap: nowrap;
+    gap: 0.5rem;
+    overflow-x: auto;
+    padding: 0.25rem;
+    scrollbar-width: none;
+  }
+
+  .adaptive-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .adaptive-tabs > [role="tab"] {
+    flex: 0 0 auto;
+    min-width: max-content;
+    white-space: nowrap;
+  }
+
+  .responsive-chat-frame {
+    height: min(78vh, 40rem) !important;
+    min-height: 24rem;
+  }
+
+  .responsive-collab-shell {
+    height: min(72vh, 38rem) !important;
+    min-height: 24rem;
+  }
+
+  .responsive-messaging-shell {
+    height: min(72vh, 38rem) !important;
+    min-height: 24rem;
+  }
+
+  .responsive-community-chat {
+    height: min(70vh, 36rem) !important;
+    min-height: 22rem;
   }
 }

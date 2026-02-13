@@ -26,7 +26,7 @@ export const StorytellingPlaybookModal: React.FC<StorytellingPlaybookModalProps>
         </DialogHeader>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-4">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="adaptive-tabs grid w-full grid-cols-4">
             <TabsTrigger value="hero-journey">Hero's Journey</TabsTrigger>
             <TabsTrigger value="problem-agitate">Problem-Agitate</TabsTrigger>
             <TabsTrigger value="before-after">Before/After</TabsTrigger>
