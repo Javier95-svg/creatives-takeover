@@ -8,7 +8,7 @@ const HERO_CONFIG = {
   productName: "Creatives Takeover",
   label: "YOUR AI CO-FOUNDER",
   headline: "All your ideas, one trusted assistant.",
-  subcopy: "Turn your vision into action with comprehensive business planning, AI-powered guidance, investor-ready templates, and structured support for every stage of your journey.",
+  subcopy: "Your AI-powered business planner and assistant that helps you turn ideas into actionable plans, validate concepts, and build your business step by step through intelligent conversation.",
   primaryCTA: "Request a demo",
   secondaryCTA: "See how it works",
   trustSignals: [
