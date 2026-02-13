@@ -8,6 +8,7 @@ import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import TypingMessage from "@/components/TypingMessage";
 import { BizMapHero } from "@/components/bizmap/BizMapHero";
+import InteractiveProgress from "@/components/InteractiveProgress";
 import SEO, { createSoftwareSchema, createBreadcrumbSchema } from "@/components/SEO";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -1358,6 +1359,16 @@ Subject: "Quick question about [their pain point]"
                       />
                     </div>
                   </div>
+                </div>
+
+                {/* BizMap AI Timeline */}
+                <div className="animate-fade-in mb-8 mt-8">
+                  <InteractiveProgress
+                    currentStep={currentStep}
+                    totalSteps={wizardSteps.length}
+                    stepTitles={wizardSteps.map(step => step.title)}
+                    isComplete={!!launchReport}
+                  />
                 </div>
 
                 {/* Smart Recommendations */}
