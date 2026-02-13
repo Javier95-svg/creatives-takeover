@@ -1,9 +1,7 @@
-import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Menu, X, LogIn, Bot, Send } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
+import { Bot, Send } from "lucide-react";
 
 // Placeholder constants for customization
 const HERO_CONFIG = {
@@ -27,117 +25,8 @@ const HERO_CONFIG = {
 };
 
 export const BizMapHero = () => {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { user } = useAuth();
-
-  const navItems = [
-    { name: "Product", href: "/bizmap-ai" },
-    { name: "Solutions", href: "/#solutions" },
-    { name: "Resources", href: "/stories" },
-    { name: "Pricing", href: "/pricing" }
-  ];
-
   return (
     <div className="relative w-full">
-      {/* Navigation Bar */}
-      <nav className="sticky top-0 z-50 w-full border-b border-border/60 bg-background/70 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container mx-auto px-4 sm:px-6">
-          <div className="flex h-16 items-center justify-between">
-            {/* Left: Product Name */}
-            <Link 
-              to="/" 
-              className="text-lg font-semibold font-space-grotesk tracking-tight hover:text-primary transition-colors"
-            >
-              {HERO_CONFIG.productName}
-            </Link>
-
-            {/* Center: Nav Links (Desktop) */}
-            <div className="hidden md:flex items-center gap-6">
-              {navItems.map((item) => (
-                <Link
-                  key={item.name}
-                  to={item.href}
-                  className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  {item.name}
-                </Link>
-              ))}
-            </div>
-
-            {/* Right: Utility Actions */}
-            <div className="flex items-center gap-3">
-              {user ? (
-                <Link to="/dashboard">
-                  <Button variant="ghost" size="sm" className="hidden sm:flex">
-                    Dashboard
-                  </Button>
-                </Link>
-              ) : (
-                <Link to="/auth">
-                  <Button variant="ghost" size="sm" className="hidden sm:flex gap-2">
-                    <LogIn className="w-4 h-4" />
-                    Sign in
-                  </Button>
-                </Link>
-              )}
-              <Button size="sm" className="hidden sm:flex">
-                Get demo
-              </Button>
-              
-              {/* Mobile Menu Button */}
-              <Button
-                variant="ghost"
-                size="icon"
-                className="md:hidden"
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                aria-label="Toggle menu"
-              >
-                {mobileMenuOpen ? (
-                  <X className="h-5 w-5" />
-                ) : (
-                  <Menu className="h-5 w-5" />
-                )}
-              </Button>
-            </div>
-          </div>
-
-          {/* Mobile Menu */}
-          {mobileMenuOpen && (
-            <div className="md:hidden border-t border-border/60 py-4 space-y-3">
-              {navItems.map((item) => (
-                <Link
-                  key={item.name}
-                  to={item.href}
-                  className="block px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  {item.name}
-                </Link>
-              ))}
-              <div className="px-4 pt-2 space-y-2">
-                {user ? (
-                  <Link to="/dashboard">
-                    <Button variant="outline" className="w-full" onClick={() => setMobileMenuOpen(false)}>
-                      Dashboard
-                    </Button>
-                  </Link>
-                ) : (
-                  <Link to="/auth">
-                    <Button variant="outline" className="w-full gap-2" onClick={() => setMobileMenuOpen(false)}>
-                      <LogIn className="w-4 h-4" />
-                      Sign in
-                    </Button>
-                  </Link>
-                )}
-                <Button className="w-full" onClick={() => setMobileMenuOpen(false)}>
-                  Get demo
-                </Button>
-              </div>
-            </div>
-          )}
-        </div>
-      </nav>
-
       {/* Hero Main Content */}
       <div className="container mx-auto px-4 sm:px-6 py-12 sm:py-16 lg:py-20">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-start max-w-7xl mx-auto">

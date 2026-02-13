@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Send, Bot, User, Target, Rocket, CheckCircle, Loader2, FileText, Sparkles, MessageSquare, Package, RefreshCw, Brain, ArrowRight, TrendingUp } from "lucide-react";
+import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import TypingMessage from "@/components/TypingMessage";
 import { BizMapHero } from "@/components/bizmap/BizMapHero";
@@ -1242,6 +1243,8 @@ Subject: "Quick question about [their pain point]"
         <BizmapWallpaper />
         
         <div className="relative z-10 bg-transparent">
+          <Navigation />
+          
           {/* Feature Tour for New Users */}
           <BizMapTour />
         
