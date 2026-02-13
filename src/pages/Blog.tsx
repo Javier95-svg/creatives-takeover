@@ -89,7 +89,7 @@ const Blog = ({ defaultTab = 'vc-search' }: BlogProps) => {
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-3 mb-8 rounded-full border border-border/70 bg-muted/40 p-1 shadow-sm">
+            <TabsList className="adaptive-tabs grid w-full grid-cols-3 mb-8 rounded-full border border-border/70 bg-muted/40 p-1 shadow-sm">
               <TabsTrigger value="vc-search" className="flex items-center gap-2 rounded-full data-[state=active]:shadow-md">
                 <Users className="h-4 w-4" />
                 <span>VC Search</span>

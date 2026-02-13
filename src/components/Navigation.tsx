@@ -448,9 +448,9 @@ const Navigation = () => {
                     variant="ghost"
                     size="icon"
                     onClick={() => setShowFriendRequests(true)}
-                    className="relative h-9 w-9 transition-all duration-200 hover:bg-muted/50 hover:scale-110"
+                    className="relative h-11 w-11 transition-all duration-200 hover:bg-muted/50 hover:scale-110 touch-manipulation"
                   >
-                    <UserPlus className="w-4 h-4" />
+                    <UserPlus className="w-5 h-5" />
                     {pendingFriendRequests.length > 0 && (
                       <Badge variant="destructive" className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs animate-pulse">
                         {pendingFriendRequests.length}
@@ -461,10 +461,10 @@ const Navigation = () => {
                     variant="ghost"
                     size="icon"
                     asChild
-                    className="relative h-9 w-9 transition-all duration-200 hover:bg-muted/50 hover:scale-110"
+                    className="relative h-11 w-11 transition-all duration-200 hover:bg-muted/50 hover:scale-110 touch-manipulation"
                   >
                     <Link to="/messages">
-                      <MessageCircle className="w-4 h-4" />
+                      <MessageCircle className="w-5 h-5" />
                       {totalUnreadMessages > 0 && (
                         <Badge variant="destructive" className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs">
                           {totalUnreadMessages > 9 ? '9+' : totalUnreadMessages}
@@ -477,7 +477,7 @@ const Navigation = () => {
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <button className="cursor-pointer outline-none focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-full transition-all duration-200 hover:scale-110">
-                        <Avatar className="h-9 w-9 hover:ring-2 hover:ring-primary transition-all">
+                        <Avatar className="h-11 w-11 hover:ring-2 hover:ring-primary transition-all">
                           <AvatarImage src={avatarUrl} alt={user.user_metadata?.full_name || 'User'} />
                           <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
                             {(user.user_metadata?.full_name || user.email || 'U')[0].toUpperCase()}
@@ -579,22 +579,51 @@ const Navigation = () => {
                     const Icon = item.icon || iconMap[item.name];
                     const active = isActive(item.href);
 
+                    // Determine submenu for this item
+                    const submenuMap: Record<string, { items: typeof insightaSubmenu }> = {
+                      'BizMap AI': { items: bizMapSubmenu.filter((s): s is { name: string; href: string; icon: React.ComponentType<{ className?: string }>; description: string } => !('type' in s)) },
+                      'Insighta': { items: insightaSubmenu },
+                      'Community': { items: communitySubmenu },
+                      'Resources': { items: resourcesSubmenu },
+                    };
+                    const submenu = submenuMap[item.name];
+
                     return (
-                      <Link
-                        key={item.name}
-                        to={item.href}
-                        className={cn(
-                          "block px-4 py-3.5 min-h-[48px] touch-manipulation flex items-center gap-3 text-base transition-all duration-200",
-                          "hover:bg-muted/50 active:bg-muted rounded-lg mx-2",
-                          active
-                            ? "text-foreground font-semibold bg-primary/5"
-                            : "text-muted-foreground hover:text-foreground"
+                      <div key={item.name}>
+                        <Link
+                          to={item.href}
+                          className={cn(
+                            "block px-4 py-3.5 min-h-[48px] touch-manipulation flex items-center gap-3 text-base transition-all duration-200",
+                            "hover:bg-muted/50 active:bg-muted rounded-lg mx-2",
+                            active
+                              ? "text-foreground font-semibold bg-primary/5"
+                              : "text-muted-foreground hover:text-foreground"
+                          )}
+                          onClick={() => setIsOpen(false)}
+                        >
+                          {Icon && <Icon className="h-5 w-5 flex-shrink-0" />}
+                          <span>{item.name}</span>
+                        </Link>
+                        {/* Mobile submenu items */}
+                        {submenu && (
+                          <div className="ml-10 mr-2 mb-1 space-y-0.5">
+                            {submenu.items.map((sub) => {
+                              const SubIcon = sub.icon;
+                              return (
+                                <Link
+                                  key={sub.name}
+                                  to={sub.href}
+                                  className="flex items-center gap-2.5 px-3 py-2.5 min-h-[44px] touch-manipulation text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50 active:bg-muted rounded-lg transition-colors"
+                                  onClick={() => setIsOpen(false)}
+                                >
+                                  <SubIcon className="h-4 w-4 flex-shrink-0" />
+                                  <span>{sub.name}</span>
+                                </Link>
+                              );
+                            })}
+                          </div>
                         )}
-                        onClick={() => setIsOpen(false)}
-                      >
-                        {Icon && <Icon className="h-5 w-5 flex-shrink-0" />}
-                        <span>{item.name}</span>
-                      </Link>
+                      </div>
                     );
                   })}
                 </div>

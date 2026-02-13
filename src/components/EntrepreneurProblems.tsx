@@ -250,10 +250,10 @@ const EntrepreneurProblems = () => {
                   </div>
 
                   {/* Desktop Layout (Alternating) */}
-                  <div className="hidden md:grid md:grid-cols-2 gap-8 items-center">
+                  <div className="hidden md:grid md:grid-cols-2 md:gap-6 lg:gap-8 items-center">
                     {/* Left Side Content (for even indexes) */}
                     {isEven && (
-                      <div className={`${index === 0 ? 'pr-20' : 'pr-12'} ${index === 2 ? 'text-left' : 'text-right'}`}>
+                      <div className={`${index === 0 ? 'md:pr-8 lg:pr-16 xl:pr-20' : 'md:pr-6 lg:pr-10 xl:pr-12'} ${index === 2 ? 'text-left' : 'text-right'}`}>
                         <div className="mb-3 flex justify-center">
                           <span className="inline-flex items-center rounded-full border border-green-300 dark:border-green-700 bg-green-100 dark:bg-green-900/30 px-2.5 py-0.5 text-[11px] font-medium text-green-700 dark:text-green-400">
                             {step.phase}
@@ -356,37 +356,37 @@ const EntrepreneurProblems = () => {
                     <div className="flex justify-center relative z-10">
                       {index === 0 ? (
                         /* GIF Frame for First Row */
-                        <div className="w-full max-w-4xl ml-4">
+                        <div className="w-full md:max-w-2xl lg:max-w-3xl xl:max-w-4xl ml-2 lg:ml-4">
                           <FounderJourneyVideo position={0} />
                         </div>
                       ) : index === 1 ? (
                         /* GIF Frame for Second Row */
-                        <div className="w-full max-w-4xl mr-4">
+                        <div className="w-full md:max-w-2xl lg:max-w-3xl xl:max-w-4xl mr-2 lg:mr-4">
                           <FounderJourneyVideo position={1} />
                         </div>
                       ) : index === 2 ? (
                         /* GIF Frame for Third Row */
-                        <div className="w-full max-w-4xl ml-4">
+                        <div className="w-full md:max-w-2xl lg:max-w-3xl xl:max-w-4xl ml-2 lg:ml-4">
                           <FounderJourneyVideo position={2} />
                         </div>
                       ) : index === 3 ? (
                         /* GIF Frame for Fourth Row */
-                        <div className="w-full max-w-4xl mr-4">
+                        <div className="w-full md:max-w-2xl lg:max-w-3xl xl:max-w-4xl mr-2 lg:mr-4">
                           <FounderJourneyVideo position={3} />
                         </div>
                       ) : index === 4 ? (
                         /* GIF Frame for Fifth Row */
-                        <div className="w-full max-w-4xl ml-4">
+                        <div className="w-full md:max-w-2xl lg:max-w-3xl xl:max-w-4xl ml-2 lg:ml-4">
                           <FounderJourneyVideo position={4} />
                         </div>
                       ) : index === 5 ? (
                         /* GIF Frame for Sixth Row */
-                        <div className="w-full max-w-4xl mr-4">
+                        <div className="w-full md:max-w-2xl lg:max-w-3xl xl:max-w-4xl mr-2 lg:mr-4">
                           <FounderJourneyVideo position={5} />
                         </div>
                       ) : index === 6 ? (
                         /* GIF Frame for Seventh Row */
-                        <div className="w-full max-w-4xl ml-4">
+                        <div className="w-full md:max-w-2xl lg:max-w-3xl xl:max-w-4xl ml-2 lg:ml-4">
                           <FounderJourneyVideo position={6} />
                         </div>
                       ) : (
@@ -399,7 +399,7 @@ const EntrepreneurProblems = () => {
 
                       {/* Right Side Content (for odd indexes) */}
                       {!isEven ? (
-                      <div className={index === 1 ? 'pl-20' : 'pl-12'}>
+                      <div className={index === 1 ? 'md:pl-8 lg:pl-16 xl:pl-20' : 'md:pl-6 lg:pl-10 xl:pl-12'}>
                         <div className="mb-3 flex justify-center">
                           <span className="inline-flex items-center rounded-full border border-green-300 dark:border-green-700 bg-green-100 dark:bg-green-900/30 px-2.5 py-0.5 text-[11px] font-medium text-green-700 dark:text-green-400">
                             {step.phase}

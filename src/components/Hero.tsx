@@ -419,7 +419,7 @@ const Hero = () => {
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-muted/40 to-transparent pointer-events-none" />
 
       <div className="container mx-auto max-w-7xl relative z-10">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 lg:gap-20 items-center">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 xl:gap-20 items-center">
           {/* Left Section - All existing content */}
           <div className="text-center flex flex-col justify-center">
             {/* Main Headline */}

@@ -627,7 +627,7 @@ export const BizMapChat = ({
               isStreaming
             }
             size="icon"
-            className="h-14 w-14 sm:h-[52px] sm:w-[52px] rounded-2xl glass-chat-button shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:hover:scale-100 disabled:cursor-not-allowed touch-manipulation"
+            className="h-[52px] w-[52px] sm:h-14 sm:w-14 rounded-2xl glass-chat-button shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:hover:scale-100 disabled:cursor-not-allowed touch-manipulation"
             aria-label="Send message"
             aria-describedby={isTyping || isStreaming ? "sending-status" : undefined}
           >

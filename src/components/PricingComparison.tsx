@@ -120,7 +120,7 @@ const PricingComparison = () => {
             <button
               onClick={() => handleMobileNavigation('prev')}
               disabled={currentMobileIndex === 0}
-              className="p-2 rounded-full border border-border/60 bg-background/70 shadow-sm disabled:opacity-30 disabled:cursor-not-allowed"
+              className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full border border-border/60 bg-background/70 shadow-sm disabled:opacity-30 disabled:cursor-not-allowed touch-manipulation"
             >
               <ChevronLeft className="w-5 h-5" />
             </button>
@@ -130,7 +130,7 @@ const PricingComparison = () => {
             <button
               onClick={() => handleMobileNavigation('next')}
               disabled={currentMobileIndex === plans.length - 1}
-              className="p-2 rounded-full border border-border/60 bg-background/70 shadow-sm disabled:opacity-30 disabled:cursor-not-allowed"
+              className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full border border-border/60 bg-background/70 shadow-sm disabled:opacity-30 disabled:cursor-not-allowed touch-manipulation"
             >
               <ChevronRight className="w-5 h-5" />
             </button>

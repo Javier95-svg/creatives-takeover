@@ -53,7 +53,7 @@ const DashboardPreview = () => {
         </div>
 
         {/* Project Planning Overview Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
           {/* Task Overview */}
           <Card className="glass-card border-border/50 overflow-hidden group hover:shadow-xl transition-all duration-300 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
             <CardHeader className="pb-3">

@@ -527,7 +527,7 @@ const Profile = () => {
 
               {/* Tabbed Content */}
               <Tabs defaultValue="posts" className="space-y-6">
-                <TabsList className="grid w-full grid-cols-3">
+                <TabsList className="adaptive-tabs grid w-full grid-cols-3">
                   <TabsTrigger value="posts">Content</TabsTrigger>
                   <TabsTrigger value="pictures">Pictures</TabsTrigger>
                   <TabsTrigger value="stats">Statistics</TabsTrigger>
