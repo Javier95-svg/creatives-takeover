@@ -120,7 +120,6 @@ const Pricing = () => {
         "Insighta: Unlimited VC Search, Accelerator Hunt, Email Templates, Pitch Deck Analyzer, Insights Test",
         "Community: Find a Mentor, Find a Co-Founder, Find your Angel",
         "Stories, Prompt Library, and custom templates",
-        "Featured in Community",
         "Early access to new features",
         "Discovery Calls: Book calls with mentors (5 credits per call)"
       ]
