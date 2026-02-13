@@ -1489,6 +1489,7 @@ Subject: "Quick question about [their pain point]"
                   </div>
                 )}
             </div>
+            </div>
           </div>
         </div>
       </div>
