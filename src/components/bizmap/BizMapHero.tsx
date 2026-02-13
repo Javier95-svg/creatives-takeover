@@ -45,7 +45,7 @@ export const BizMapHero = () => {
             </h1>
 
             {/* Subcopy */}
-            <p className="text-lg sm:text-xl text-muted-foreground leading-relaxed max-w-2xl font-poppins">
+            <p className="text-lg sm:text-xl text-muted-foreground leading-relaxed max-w-2xl mx-auto text-center font-sans">
               {HERO_CONFIG.subcopy}
             </p>
 
