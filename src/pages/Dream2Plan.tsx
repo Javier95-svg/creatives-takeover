@@ -1255,7 +1255,7 @@ Subject: "Quick question about [their pain point]"
             <BizMapHero />
             
             {/* Spacing between hero and chat */}
-            <div className="pt-8 sm:pt-12">
+            <div className="pt-4 sm:pt-6">
 
             {/* Business Planning Chat Interface */}
             <div className="w-full">
@@ -1362,7 +1362,7 @@ Subject: "Quick question about [their pain point]"
                 </div>
 
                 {/* BizMap AI Timeline */}
-                <div className="animate-fade-in mb-8 mt-8">
+                <div className="animate-fade-in mb-8 mt-12 sm:mt-16">
                   <InteractiveProgress
                     currentStep={currentStep}
                     totalSteps={wizardSteps.length}
