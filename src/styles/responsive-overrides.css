@@ -1,0 +1,102 @@
+/* Responsive overrides are loaded after index.css.
+   Keep desktop unchanged by scoping all rules to max-width breakpoints. */
+
+@media (max-width: 1024px) {
+  html,
+  body,
+  #root {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: clip;
+  }
+
+  main,
+  section,
+  article {
+    max-width: 100%;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1024px) {
+  /* Tablet fallback for base multi-column grids that have no small-screen override. */
+  .grid[class~="grid-cols-3"]:not([class*="lg:grid-cols"]):not([class*="xl:grid-cols"]):not([class*="2xl:grid-cols"]),
+  .grid[class~="grid-cols-4"]:not([class*="lg:grid-cols"]):not([class*="xl:grid-cols"]):not([class*="2xl:grid-cols"]),
+  .grid[class~="grid-cols-5"]:not([class*="lg:grid-cols"]):not([class*="xl:grid-cols"]):not([class*="2xl:grid-cols"]),
+  .grid[class~="grid-cols-6"]:not([class*="lg:grid-cols"]):not([class*="xl:grid-cols"]):not([class*="2xl:grid-cols"]),
+  .grid[class~="grid-cols-7"]:not([class*="lg:grid-cols"]):not([class*="xl:grid-cols"]):not([class*="2xl:grid-cols"]) {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 767px) {
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  /* Mobile fallback for base multi-column grids that can squeeze content. */
+  .grid[class~="grid-cols-3"]:not([class*="sm:grid-cols"]):not([class*="md:grid-cols"]):not([class*="lg:grid-cols"]):not([class*="xl:grid-cols"]):not([class*="2xl:grid-cols"]),
+  .grid[class~="grid-cols-4"]:not([class*="sm:grid-cols"]):not([class*="md:grid-cols"]):not([class*="lg:grid-cols"]):not([class*="xl:grid-cols"]):not([class*="2xl:grid-cols"]),
+  .grid[class~="grid-cols-5"]:not([class*="sm:grid-cols"]):not([class*="md:grid-cols"]):not([class*="lg:grid-cols"]):not([class*="xl:grid-cols"]):not([class*="2xl:grid-cols"]),
+  .grid[class~="grid-cols-6"]:not([class*="sm:grid-cols"]):not([class*="md:grid-cols"]):not([class*="lg:grid-cols"]):not([class*="xl:grid-cols"]):not([class*="2xl:grid-cols"]),
+  .grid[class~="grid-cols-7"]:not([class*="sm:grid-cols"]):not([class*="md:grid-cols"]):not([class*="lg:grid-cols"]):not([class*="xl:grid-cols"]):not([class*="2xl:grid-cols"]) {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  /* Keep dense tab sets usable on mobile by allowing horizontal scrolling. */
+  [role="tablist"][class*="grid-cols-3"],
+  [role="tablist"][class*="grid-cols-4"],
+  [role="tablist"][class*="grid-cols-5"],
+  [role="tablist"][class*="grid-cols-6"],
+  [role="tablist"][class*="grid-cols-7"],
+  [role="tablist"][class*="grid-cols-8"],
+  [role="tablist"][class*="grid-cols-9"] {
+    display: flex !important;
+    justify-content: flex-start !important;
+    flex-wrap: nowrap;
+    gap: 0.5rem;
+    overflow-x: auto;
+    padding: 0.25rem;
+    scrollbar-width: none;
+  }
+
+  [role="tablist"][class*="grid-cols-3"]::-webkit-scrollbar,
+  [role="tablist"][class*="grid-cols-4"]::-webkit-scrollbar,
+  [role="tablist"][class*="grid-cols-5"]::-webkit-scrollbar,
+  [role="tablist"][class*="grid-cols-6"]::-webkit-scrollbar,
+  [role="tablist"][class*="grid-cols-7"]::-webkit-scrollbar,
+  [role="tablist"][class*="grid-cols-8"]::-webkit-scrollbar,
+  [role="tablist"][class*="grid-cols-9"]::-webkit-scrollbar {
+    display: none;
+  }
+
+  [role="tablist"][class*="grid-cols-3"] > [role="tab"],
+  [role="tablist"][class*="grid-cols-4"] > [role="tab"],
+  [role="tablist"][class*="grid-cols-5"] > [role="tab"],
+  [role="tablist"][class*="grid-cols-6"] > [role="tab"],
+  [role="tablist"][class*="grid-cols-7"] > [role="tab"],
+  [role="tablist"][class*="grid-cols-8"] > [role="tab"],
+  [role="tablist"][class*="grid-cols-9"] > [role="tab"] {
+    flex: 0 0 auto;
+    min-width: max-content;
+    white-space: nowrap;
+  }
+
+  .value-prop-nav {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .value-prop-nav button {
+    width: 100%;
+  }
+
+  .responsive-filter-row .responsive-sort-group {
+    margin-left: 0;
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .responsive-filter-row .responsive-sort-trigger {
+    width: 100%;
+  }
+}

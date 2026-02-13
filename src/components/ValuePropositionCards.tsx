@@ -495,7 +495,7 @@ const ValuePropositionCards = () => {
           </Carousel>
 
           {/* Navigation Buttons */}
-          <div className="grid grid-cols-3 gap-3 mt-8 max-w-4xl mx-auto">
+          <div className="value-prop-nav grid grid-cols-3 gap-3 mt-8 max-w-4xl mx-auto">
             {allCards.map((card, index) => (
               <Button
                 key={card.buttonLabel}

@@ -70,7 +70,7 @@ export const TopFilterBar = ({
   const coachingFormatCount = filters.coachingFormat.length;
 
   return (
-    <div className="flex flex-wrap items-center gap-3 mb-6">
+    <div className="responsive-filter-row flex flex-wrap items-center gap-3 mb-6">
       {/* Expertise Filter */}
       <Popover>
         <PopoverTrigger asChild>
@@ -211,10 +211,10 @@ export const TopFilterBar = ({
       )}
 
       {/* Sort */}
-      <div className="ml-auto flex items-center gap-2">
+      <div className="responsive-sort-group ml-auto flex items-center gap-2">
         <span className="text-sm text-muted-foreground">Sort by:</span>
         <Select value={sortBy} onValueChange={onSortChange}>
-          <SelectTrigger className="w-[180px] h-9">
+          <SelectTrigger className="responsive-sort-trigger w-full sm:w-[180px] h-9">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
