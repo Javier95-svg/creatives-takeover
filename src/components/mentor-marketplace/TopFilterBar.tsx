@@ -90,7 +90,7 @@ export const TopFilterBar = ({
             <ChevronDown className="h-4 w-4 ml-2" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-80" align="start">
+        <PopoverContent className="w-[300px] sm:w-80" align="start">
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <Label className="font-semibold">Expertise</Label>

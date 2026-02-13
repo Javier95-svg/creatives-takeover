@@ -33,13 +33,13 @@ export const MentorCard = ({ mentor, className, priority = false }: MentorCardPr
 
   // Truncate bio if too long
   const bioMaxLength = 200;
-  const truncatedBio = mentor.bio.length > bioMaxLength 
+  const truncatedBio = mentor.bio.length > bioMaxLength
     ? mentor.bio.substring(0, bioMaxLength) + '...'
     : mentor.bio;
 
   const rating = mentor.rating || 0;
   const reviewCount = mentor.review_count || 0;
-  
+
   // Get country flag - special cases for Samuel (American), Nic M Rayce (Singapore), Irfan Ahmad Malik (Pakistan), Gonzalo Wangüemert (Spain), Marc Bright (Great Britain), Vashti Joseph (France), Ramona Chihaia (Romania), Dikshit Kukreja (India), Karolina Żurawska (Poland), and Ricardo Quiroga (UAE)
   const getNationality = () => {
     if (mentor.nationality) {
@@ -99,7 +99,7 @@ export const MentorCard = ({ mentor, className, priority = false }: MentorCardPr
     }
     return null;
   };
-  
+
   const countryFlag = getCountryFlag(getNationality());
 
   const renderStars = (ratingValue: number) => {
@@ -187,7 +187,7 @@ export const MentorCard = ({ mentor, className, priority = false }: MentorCardPr
   const handleSendMessage = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     // Check if user is authenticated
     if (!isAuthenticated || !user) {
       navigate('/auth');
@@ -203,15 +203,15 @@ export const MentorCard = ({ mentor, className, priority = false }: MentorCardPr
     } else {
       // Fallback: Try to find user by email for known mentors (backward compatibility)
       const mentorNameLower = mentor.name.toLowerCase();
-      
+
       // Check if this is Samuel Starkman's profile
       const isSamuelStarkman = (mentorNameLower.includes('samuel') && mentorNameLower.includes('starkman')) ||
-                               mentorNameLower.includes('samuel starkman');
-      
+        mentorNameLower.includes('samuel starkman');
+
       // Check if this is Nic M Rayce's profile
       const isNicMRayce = (mentorNameLower.includes('nic') && mentorNameLower.includes('rayce')) ||
-                          mentorNameLower.includes('nic m rayce');
-      
+        mentorNameLower.includes('nic m rayce');
+
       // Check if this is Karolina Żurawska's profile
       const isKarolinaZurawska = mentorNameLower.includes('karolina') && mentorNameLower.includes('urawska');
 
@@ -253,11 +253,11 @@ export const MentorCard = ({ mentor, className, priority = false }: MentorCardPr
   return (
     <Card className={cn("border-2 border-border/60 rounded-lg hover:shadow-lg hover:-translate-y-1 transition-all duration-300 bg-background", className)}>
       <CardContent className="p-6 lg:p-8">
-        <div className="flex gap-6 lg:gap-8">
+        <div className="flex flex-col sm:flex-row gap-6 lg:gap-8">
           {/* Left: Avatar */}
-          <div className="flex-shrink-0">
+          <div className="flex-shrink-0 flex justify-center sm:justify-start">
             <div className="relative group">
-              <Avatar className="h-20 w-20 lg:h-24 lg:w-24 ring-4 ring-primary/20 group-hover:ring-primary/40 transition-all duration-300 group-hover:scale-105 shadow-lg">
+              <Avatar className="h-24 w-24 sm:h-20 sm:w-20 lg:h-24 lg:w-24 ring-4 ring-primary/20 group-hover:ring-primary/40 transition-all duration-300 group-hover:scale-105 shadow-lg">
                 <AvatarImage
                   src={mentor.picture || undefined}
                   alt={mentor.name}
@@ -316,7 +316,7 @@ export const MentorCard = ({ mentor, className, priority = false }: MentorCardPr
                     onClick={(e) => e.stopPropagation()}
                   >
                     <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
                     </svg>
                   </a>
                 )}
@@ -330,9 +330,9 @@ export const MentorCard = ({ mentor, className, priority = false }: MentorCardPr
                     onClick={(e) => e.stopPropagation()}
                   >
                     <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" xmlns="http://www.w3.org/2000/svg">
-                      <circle cx="12" cy="12" r="10"/>
-                      <line x1="2" y1="12" x2="22" y2="12"/>
-                      <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                      <circle cx="12" cy="12" r="10" />
+                      <line x1="2" y1="12" x2="22" y2="12" />
+                      <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
                     </svg>
                   </a>
                 )}
@@ -388,26 +388,26 @@ export const MentorCard = ({ mentor, className, priority = false }: MentorCardPr
               </div>
             )}
 
-                {/* Action Buttons */}
-                <div className="flex items-center gap-3 pt-2">
-                  <Button
-                    size="default"
-                    onClick={handleBookDiscoveryCall}
-                    className="h-10 flex-1 hover:shadow-md transition-all duration-200"
-                  >
-                    <Calendar className="h-4 w-4 mr-1.5" />
-                    Book Discovery Call
-                  </Button>
-                  <Button
-                    size="default"
-                    variant="outline"
-                    onClick={handleSendMessage}
-                    className="h-10 flex-1 hover:shadow-md transition-all duration-200"
-                  >
-                    <MessageCircle className="h-4 w-4 mr-1.5" />
-                    Message
-                  </Button>
-                </div>
+            {/* Action Buttons */}
+            <div className="flex flex-col sm:flex-row items-center gap-3 pt-2">
+              <Button
+                size="default"
+                onClick={handleBookDiscoveryCall}
+                className="w-full sm:w-auto h-10 flex-1 hover:shadow-md transition-all duration-200"
+              >
+                <Calendar className="h-4 w-4 mr-1.5" />
+                Book Discovery Call
+              </Button>
+              <Button
+                size="default"
+                variant="outline"
+                onClick={handleSendMessage}
+                className="w-full sm:w-auto h-10 flex-1 hover:shadow-md transition-all duration-200"
+              >
+                <MessageCircle className="h-4 w-4 mr-1.5" />
+                Message
+              </Button>
+            </div>
           </div>
 
           {/* Right: Heart */}
