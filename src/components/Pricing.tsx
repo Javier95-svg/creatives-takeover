@@ -108,7 +108,7 @@ const Pricing = () => {
         "50 credits per month",
         "Full Dashboard access",
         "BizMap AI: ICP Builder, PMF Lab, MVP Builder, Business Planner, Tech Stack Builder",
-        "Insighta: VC Search, Email Templates, Pitch Deck Analyzer, Insights Test",
+        "Insighta: VC Search, Email Templates, Pitch Deck Analyzer, Insighta Test",
         "Community: Find a Mentor, Find a Co-Founder",
         "Stories and Prompt Library",
         "Discovery Calls: Book calls with mentors (5 credits per call)"
@@ -117,7 +117,7 @@ const Pricing = () => {
         "150 credits per month",
         "Full Dashboard access",
         "BizMap AI: All tools including GTM Strategist",
-        "Insighta: Unlimited VC Search, Accelerator Hunt, Email Templates, Pitch Deck Analyzer, Insights Test",
+        "Insighta: Unlimited VC Search, Accelerator Hunt, Email Templates, Pitch Deck Analyzer, Insighta Test",
         "Community: Find a Mentor, Find a Co-Founder, Find your Angel",
         "Stories, Prompt Library, and custom templates",
         "Early access to new features",
