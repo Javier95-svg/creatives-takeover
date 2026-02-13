@@ -98,7 +98,7 @@ const Pricing = () => {
         "Dashboard: Focus Funnel, Core Metrics, Weekly Mission",
         "BizMap AI: 25 messages per month",
         "PMF Lab: read-only",
-        "Prompt Library: view only",
+        "Prompt Library: limited access",
         "VC Search: 5 views per month",
         "Stories: read-only",
         "Community access: limited",
