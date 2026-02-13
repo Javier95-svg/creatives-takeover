@@ -29,6 +29,8 @@ export const BizMapHero = () => {
       <div className="container mx-auto px-4 sm:px-6 pt-16 sm:pt-20 lg:pt-24 pb-12 sm:pb-16 lg:pb-20">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-start max-w-7xl mx-auto">
           {/* Left Column: Copy Block */}
+          <div className="space-y-6 sm:space-y-8 lg:max-w-xl">
+          {/* Left Column: Copy Block */}
           <div className="space-y-6 sm:space-y-8">
             {/* Small Label - Centered and closer to title */}
             <div className="text-center mb-1">
@@ -49,7 +51,7 @@ export const BizMapHero = () => {
           </div>
 
           {/* Right Column: Chatbot Preview */}
-          <div className="space-y-6">
+          <div className="space-y-6 lg:max-w-2xl lg:ml-auto">
             {/* Mini Chatbot Preview */}
             <div className="rounded-2xl border border-border/60 bg-card/80 p-6 shadow-lg overflow-hidden">
               <div className="space-y-4">
