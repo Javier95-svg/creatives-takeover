@@ -30,8 +30,6 @@ export const BizMapHero = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-start max-w-7xl mx-auto">
           {/* Left Column: Copy Block */}
           <div className="space-y-6 sm:space-y-8 lg:max-w-xl">
-          {/* Left Column: Copy Block */}
-          <div className="space-y-6 sm:space-y-8">
             {/* Small Label - Centered and closer to title */}
             <div className="text-center mb-1">
               <span className="text-xs font-semibold uppercase tracking-[0.2em] text-primary/80 font-poppins">
