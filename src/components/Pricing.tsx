@@ -110,7 +110,8 @@ const Pricing = () => {
         "BizMap AI: ICP Builder, PMF Lab, MVP Builder, Business Planner, Tech Stack Builder",
         "Insighta: VC Search, Email Templates, Pitch Deck Analyzer, Insights Test",
         "Community: Find a Mentor, Find a Co-Founder",
-        "Stories and Prompt Library"
+        "Stories and Prompt Library",
+        "Discovery Calls: Book calls with mentors (5 credits per call)"
       ],
       professional: [
         "150 credits per month",
@@ -120,7 +121,8 @@ const Pricing = () => {
         "Community: Find a Mentor, Find a Co-Founder, Find your Angel",
         "Stories, Prompt Library, and custom templates",
         "Featured in Community",
-        "Early access to new features"
+        "Early access to new features",
+        "Discovery Calls: Book calls with mentors (5 credits per call)"
       ]
     };
     return featureMap[tierName] || [];
