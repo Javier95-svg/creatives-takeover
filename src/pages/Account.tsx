@@ -20,6 +20,7 @@ import { ProfilePictureCropModal } from "@/components/ProfilePictureCropModal";
 import { AccountWallpaper } from "@/components/AccountWallpaper";
 import { ProfileCompletionTracker } from "@/components/ProfileCompletionTracker";
 import { OnboardingChecklist } from "@/components/OnboardingChecklist";
+import { trackActivity } from "@/lib/activity";
 
 const Account = () => {
   const { user } = useAuth();
@@ -46,6 +47,7 @@ const Account = () => {
   const [passwordVerificationCode, setPasswordVerificationCode] = useState("");
   const [passwordStep, setPasswordStep] = useState<"input" | "verify">("input");
   const [passwordLoading, setPasswordLoading] = useState(false);
+  const [passwordResendCooldown, setPasswordResendCooldown] = useState(0);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   
@@ -230,6 +232,16 @@ const Account = () => {
 
   // Warn user before leaving with unsaved changes
   useEffect(() => {
+    if (passwordResendCooldown <= 0) return;
+
+    const timerId = window.setInterval(() => {
+      setPasswordResendCooldown((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+
+    return () => window.clearInterval(timerId);
+  }, [passwordResendCooldown]);
+
+  useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       if (hasUnsavedChanges()) {
         e.preventDefault();
@@ -243,6 +255,18 @@ const Account = () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
   }, [fullName, bio, avatarUrl, twitterUrl, linkedinUrl, instagramUrl, facebookUrl, youtubeUrl, githubUrl, websiteUrl, initialValues]);
+
+  const resetPasswordVerificationFlow = () => {
+    setPasswordStep("input");
+    setPasswordVerificationCode("");
+    setPasswordResendCooldown(0);
+  };
+
+  const handleRestartPasswordVerification = () => {
+    resetPasswordVerificationFlow();
+    void trackActivity("security:password_change_verification_reset", {}, user?.id);
+    toast.info("Verification reset. Request a new code to continue.");
+  };
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -427,8 +451,14 @@ const Account = () => {
         }
 
         setPasswordStep("verify");
+        setPasswordResendCooldown(45);
+        void trackActivity("security:password_change_verification_sent", { source: "account_page_initial" }, user.id);
         toast.success("Verification code sent to your email. Enter it to confirm password change.");
       } catch (error: any) {
+        void trackActivity("security:password_change_verification_send_failed", {
+          source: "account_page_initial",
+          message: error?.message || "unknown_error",
+        }, user.id);
         toast.error("Failed to send verification code: " + error.message);
       } finally {
         setPasswordLoading(false);
@@ -454,10 +484,14 @@ const Account = () => {
 
       setNewPassword("");
       setConfirmPassword("");
-      setPasswordVerificationCode("");
-      setPasswordStep("input");
+      resetPasswordVerificationFlow();
+      void trackActivity("security:password_change_completed", { source: "account_page" }, user.id);
       toast.success("Password updated successfully.");
     } catch (error: any) {
+      void trackActivity("security:password_change_verification_failed", {
+        source: "account_page",
+        message: error?.message || "unknown_error",
+      }, user.id);
       toast.error("Failed to update password: " + error.message);
     } finally {
       setPasswordLoading(false);
@@ -470,6 +504,11 @@ const Account = () => {
       return;
     }
 
+    if (passwordResendCooldown > 0) {
+      toast.info(`Please wait ${passwordResendCooldown}s before requesting another code.`);
+      return;
+    }
+
     setPasswordLoading(true);
     try {
       const { error } = await supabase.auth.reauthenticate();
@@ -478,8 +517,14 @@ const Account = () => {
         throw error;
       }
 
+      setPasswordResendCooldown(45);
+      void trackActivity("security:password_change_verification_resent", { source: "account_page" }, user.id);
       toast.success("New verification code sent.");
     } catch (error: any) {
+      void trackActivity("security:password_change_verification_resend_failed", {
+        source: "account_page",
+        message: error?.message || "unknown_error",
+      }, user.id);
       toast.error("Failed to resend verification code: " + error.message);
     } finally {
       setPasswordLoading(false);
@@ -946,6 +991,11 @@ const Account = () => {
                     <p className="text-xs text-muted-foreground">
                       Check your inbox for the verification code to confirm this password change.
                     </p>
+                    {passwordResendCooldown > 0 && (
+                      <p className="text-xs text-muted-foreground">
+                        You can request a new code in {passwordResendCooldown}s.
+                      </p>
+                    )}
                   </div>
                 )}
 
@@ -955,11 +1005,21 @@ const Account = () => {
                     {passwordStep === "verify" && (
                       <Button
                         type="button"
-                        variant="outline"
+                        variant="ghost"
                         disabled={passwordLoading}
+                        onClick={handleRestartPasswordVerification}
+                      >
+                        Start Over
+                      </Button>
+                    )}
+                    {passwordStep === "verify" && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        disabled={passwordLoading || passwordResendCooldown > 0}
                         onClick={handleResendPasswordVerificationCode}
                       >
-                        Resend Code
+                        {passwordResendCooldown > 0 ? `Resend in ${passwordResendCooldown}s` : "Resend Code"}
                       </Button>
                     )}
                     <Button type="submit" disabled={passwordLoading} className="w-full sm:w-auto">
