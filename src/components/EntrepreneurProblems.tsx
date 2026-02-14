@@ -137,7 +137,7 @@ const EntrepreneurProblems = () => {
         {/* Section Header */}
         <div className="text-center mb-16 sm:mb-20 max-w-4xl mx-auto">
           <Badge variant="outline" className="mb-5 text-xs uppercase tracking-wide text-muted-foreground">
-            Own Your Path ??
+            Own Your Path {"\uD83D\uDE80"}
           </Badge>
           <h2 id="journey-heading" className="font-space-grotesk text-3xl sm:text-4xl lg:text-5xl font-semibold mb-6 leading-tight tracking-tight text-primary">
             Every Founder's Journey is Unique
