@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import { logError, logWarn } from '@/lib/logger';
 import { APIError } from '@/lib/errors';
 import { CREDIT_COSTS } from '@/config/constants';
+import { createIdempotencyKey } from '@/lib/idempotency';
 
 interface CreditBalance {
   balance: number;
@@ -36,6 +37,7 @@ export function useCredits() {
 
     try {
       const { data, error } = await supabase.functions.invoke('credit-service', {
+        headers: { 'Idempotency-Key': createIdempotencyKey(`credit-initialize-${user.id}`) },
         body: { action: 'initialize', userId: user.id }
       });
 
@@ -44,7 +46,7 @@ export function useCredits() {
       }
 
       if (data?.success && data?.isNewUser) {
-        toast.success('Welcome! You received 10 free credits to get started!');
+        toast.success('Welcome! You received 25 free credits to get started!');
       }
 
       return Boolean(data?.success);
@@ -179,10 +181,12 @@ export function useCredits() {
     }
 
     try {
+      const requestIdempotencyKey = createIdempotencyKey('credit-add');
+
       const { data, error } = await supabase.functions.invoke('credit-service', {
+        headers: { 'Idempotency-Key': requestIdempotencyKey },
         body: {
           action: 'addCredits',
-          user_id: user.id,
           amount,
           tx_type: 'purchase',
           reason

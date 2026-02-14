@@ -1,3 +1,6 @@
+import { supabase } from '@/integrations/supabase/client';
+import { createIdempotencyKey } from '@/lib/idempotency';
+
 interface Message {
   role: 'user' | 'assistant';
   content: string;
@@ -57,6 +60,12 @@ export const streamChat = async (
   onError?: (error: Error) => void
 ): Promise<string> => {
   const STREAM_URL = `https://rcjlaybjnozqbsoxzboa.supabase.co/functions/v1/chatbot-streaming`;
+  const streamRequestId = createIdempotencyKey(
+    'chatbot-streaming',
+    `${sessionId}-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
+  );
+  const { data: { session } } = await supabase.auth.getSession();
+  const accessToken = session?.access_token;
 
   console.log('🚀 Starting SSE streaming chat:', { 
     sessionId, 
@@ -102,12 +111,19 @@ export const streamChat = async (
   const connectWithRetry = async (): Promise<string> => {
     return new Promise((resolve, reject) => {
       try {
+        const headers: Record<string, string> = {
+          'Content-Type': 'application/json',
+          'Idempotency-Key': streamRequestId,
+        };
+
+        if (accessToken) {
+          headers.Authorization = `Bearer ${accessToken}`;
+        }
+
         // EventSource doesn't support POST, so we'll use fetch with manual SSE parsing
         fetch(STREAM_URL, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers,
           body: JSON.stringify({
             message,
             sessionId,

@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { checkAndDeductCredits } from '../_shared/credit-deduction.ts';
+import { checkAndDeductCredits, getUserFromAuth } from '../_shared/credit-deduction.ts';
 import { CREDIT_COSTS } from '../_shared/credit-constants.ts';
 import { logInfo, logWarn, logError } from '../_shared/logger.ts';
 import { fetchWithRetry } from '../_shared/api-retry.ts';
@@ -9,7 +9,7 @@ import { validateResponseStructure, scoreResponseQuality, postProcessResponse, e
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, idempotency-key',
 };
 
 // ========== INLINED TEMPLATE MATCHING (avoiding import issues) ==========
@@ -283,6 +283,28 @@ serve(async (req) => {
       chatMode = 'wizard',
       attachments = []
     } = await req.json();
+    const authUser = await getUserFromAuth(req);
+    const resolvedUserId = authUser?.id ?? null;
+
+    if (userId && !resolvedUserId) {
+      return new Response(
+        JSON.stringify({ error: 'Authentication required for user-scoped chat' }),
+        {
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+
+    if (userId && resolvedUserId && userId !== resolvedUserId) {
+      return new Response(
+        JSON.stringify({ error: 'User mismatch in request payload' }),
+        {
+          status: 403,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
 
     logInfo('🔍 DEBUG: Request parsed', { 
       messageLength: message?.length || 0, 
@@ -302,7 +324,7 @@ serve(async (req) => {
 
     // 🎯 ROUTE: If bizmap-structured mode, route to structured system
     if (chatMode === 'bizmap-structured') {
-      return routeToStructuredSystem(req, supabase, sessionId, message, userId);
+      return routeToStructuredSystem(req, supabase, sessionId, message, resolvedUserId);
     }
 
     // Get/create conversation first (fast DB query with index)
@@ -319,7 +341,7 @@ serve(async (req) => {
         .from('chatbot_conversations')
         .insert({
           session_id: sessionId,
-          user_id: userId,
+          user_id: resolvedUserId,
           business_context: businessContext,
           conversation_stage: 'discovery',
           chat_mode: chatMode
@@ -382,9 +404,10 @@ serve(async (req) => {
 
     // 🚀 OPTIMIZATION: Generate cache keys in parallel (only if template didn't match)
     const [requestFingerprint, cacheKey] = await Promise.all([
-      generateRequestFingerprint(message, businessContext, conversationHistory),
+      generateRequestFingerprint(sessionId, message, businessContext, conversationHistory),
       generateCacheKey(message, businessContext, conversationHistory, chatMode)
     ]);
+    const idempotencyKey = req.headers.get('Idempotency-Key')?.trim() || `chat-streaming:${sessionId}:${requestFingerprint}`;
 
     // Check request deduplication cache (in-memory, fast)
     // Note: We don't cache Response objects as they're streams that can only be consumed once
@@ -402,16 +425,16 @@ serve(async (req) => {
 
     // 💳 CREDIT DEDUCTION: Check and deduct credits for authenticated users
     // Tour-guide mode is free for everyone to encourage exploration and signups
-    const shouldChargeCredits = userId !== null && chatMode !== 'tour-guide';
+    const shouldChargeCredits = resolvedUserId !== null && chatMode !== 'tour-guide';
     
     if (shouldChargeCredits) {
       const creditCost = CREDIT_COSTS.AI_CHAT_MESSAGE;
       const creditCheck = await checkAndDeductCredits(
-        userId,
+        resolvedUserId,
         creditCost,
         'AI Chat Message',
         conversation.id,
-        { chatMode, messageLength: message.length }
+        { chatMode, messageLength: message.length, idempotencyKey }
       );
 
       if (!creditCheck.success) {
@@ -463,7 +486,7 @@ serve(async (req) => {
     // Timeouts are handled inside fetch functions (1000ms max each)
     const [ragData, marketData, webSearchData] = await Promise.all([
       needsKnowledge && (searchIntent === 'business' || searchIntent === 'hybrid')
-        ? fetchRAGData(supabase, [], userId, businessContext, conversation?.id)
+        ? fetchRAGData(supabase, [], resolvedUserId, businessContext, conversation?.id)
         : Promise.resolve(null),
       needsMarketData 
         ? fetchMarketData(supabase, message, businessContext)
@@ -828,11 +851,19 @@ function determineCacheTTL(message: string, businessContext: BusinessContext): n
 }
 
 // 🚀 OPTIMIZATION: Generate request fingerprint for deduplication
-async function generateRequestFingerprint(message: string, businessContext: BusinessContext, conversationHistory: ChatMessage[]): Promise<string> {
+async function generateRequestFingerprint(
+  sessionId: string,
+  message: string,
+  businessContext: BusinessContext,
+  conversationHistory: ChatMessage[]
+): Promise<string> {
+  const historyTail = conversationHistory.slice(-2).map((item) => `${item.role}:${item.content}`).join('|');
   const contextStr = JSON.stringify({
+    sessionId,
     message: message.toLowerCase().trim(),
-    sessionId: businessContext.industry, // Use as session identifier
-    timestamp: Math.floor(Date.now() / 1000) // Round to nearest second
+    historyTail,
+    industry: businessContext.industry || null,
+    stage: businessContext.stage || null,
   });
   const encoder = new TextEncoder();
   const data = encoder.encode(contextStr);

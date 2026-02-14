@@ -46,7 +46,97 @@ export async function checkAndDeductCredits(
     auth: { persistSession: false }
   });
 
+  const idempotencyKey = typeof metadata?.idempotencyKey === 'string'
+    ? metadata.idempotencyKey.trim()
+    : undefined;
+  const idempotencyLockId = idempotencyKey ? `credit-deduct:${userId}:${idempotencyKey}` : undefined;
+  let idempotencyStarted = false;
+
+  const finalizeIdempotency = async (result: CreditDeductionResult, persistResult: boolean) => {
+    if (!idempotencyLockId || !idempotencyStarted) {
+      return;
+    }
+
+    try {
+      if (persistResult) {
+        await supabase.rpc('idempotency_mark_completed', {
+          p_id: idempotencyLockId,
+          p_result: result
+        });
+      } else {
+        await supabase.rpc('idempotency_clear', { p_id: idempotencyLockId });
+      }
+    } catch (idempotencyError) {
+      console.error('Error finalizing idempotency state:', idempotencyError);
+    }
+  };
+
+  const returnWithIdempotency = async (result: CreditDeductionResult, persistResult = true) => {
+    await finalizeIdempotency(result, persistResult);
+    return result;
+  };
+
   try {
+    if (!Number.isFinite(amount) || amount <= 0) {
+      return await returnWithIdempotency({
+        success: false,
+        error: 'Invalid credit amount',
+        errorCode: 'DEDUCTION_FAILED'
+      }, false);
+    }
+
+    if (idempotencyLockId) {
+      const { data: beginStatus, error: beginError } = await supabase.rpc('idempotency_try_begin', {
+        p_id: idempotencyLockId
+      });
+
+      if (beginError) {
+        console.error('Error starting idempotency lock:', beginError);
+        return {
+          success: false,
+          error: 'Unable to process request safely. Please retry.',
+          errorCode: 'DEDUCTION_FAILED'
+        };
+      }
+
+      if (beginStatus === 'completed') {
+        const { data: cachedResult } = await supabase.rpc('idempotency_get', { p_id: idempotencyLockId });
+        if (cachedResult) {
+          return cachedResult as CreditDeductionResult;
+        }
+
+        const { data: currentCredits } = await supabase
+          .from('user_credits')
+          .select('balance, monthly_quota')
+          .eq('user_id', userId)
+          .single();
+
+        if (currentCredits) {
+          return {
+            success: true,
+            newBalance: currentCredits.balance,
+            newQuota: currentCredits.monthly_quota
+          };
+        }
+
+        return {
+          success: false,
+          error: 'Unable to replay previous credit deduction result',
+          errorCode: 'DEDUCTION_FAILED'
+        };
+      }
+
+      if (beginStatus === 'processing') {
+        return {
+          success: false,
+          error: 'Duplicate request is already being processed',
+          errorCode: 'DEDUCTION_FAILED'
+        };
+      }
+
+      idempotencyStarted = true;
+    }
+
     // Check if quota needs reset (monthly reset logic)
     await checkAndResetMonthlyQuota(userId, supabase);
 
@@ -58,11 +148,11 @@ export async function checkAndDeductCredits(
       .single();
 
     if (fetchError || !credits) {
-      return {
+      return await returnWithIdempotency({
         success: false,
         error: 'User credit record not found',
         errorCode: 'USER_NOT_FOUND'
-      };
+      });
     }
 
     // Calculate available credits: quota + balance
@@ -70,11 +160,11 @@ export async function checkAndDeductCredits(
 
     // Check if user has sufficient credits (for better error message)
     if (totalAvailable < amount) {
-      return {
+      return await returnWithIdempotency({
         success: false,
         error: 'Insufficient credits',
         errorCode: 'INSUFFICIENT_CREDITS'
-      };
+      });
     }
 
     // Strategy: Deduct from quota first, then from balance
@@ -111,11 +201,11 @@ export async function checkAndDeductCredits(
 
     if (updateError) {
       console.error('Error updating credit balance:', updateError);
-      return {
+      return await returnWithIdempotency({
         success: false,
         error: 'Failed to update credit balance',
         errorCode: 'DEDUCTION_FAILED'
-      };
+      }, false);
     }
 
     // If no rows were updated, balance was insufficient or changed concurrently
@@ -130,20 +220,20 @@ export async function checkAndDeductCredits(
       if (recheck) {
         const recheckTotal = recheck.monthly_quota + recheck.balance;
         if (recheckTotal < amount) {
-          return {
+          return await returnWithIdempotency({
             success: false,
             error: 'Insufficient credits (balance may have changed)',
             errorCode: 'INSUFFICIENT_CREDITS'
-          };
+          });
         }
       }
 
       // Concurrent modification detected
-      return {
+      return await returnWithIdempotency({
         success: false,
         error: 'Concurrent modification detected. Please try again.',
         errorCode: 'DEDUCTION_FAILED'
-      };
+      }, false);
     }
 
     // Success - use the updated values from the result
@@ -162,6 +252,7 @@ export async function checkAndDeductCredits(
         session_id: sessionId,
         metadata: {
           ...(metadata || {}),
+          ...(idempotencyKey ? { idempotencyKey } : {}),
           usedFromQuota,
           usedFromBalance,
           quotaRemaining: finalQuota,
@@ -170,25 +261,41 @@ export async function checkAndDeductCredits(
       }]);
 
     if (logError) {
+      if (logError.code === '23505' && idempotencyKey) {
+        const { data: latestCredits } = await supabase
+          .from('user_credits')
+          .select('balance, monthly_quota')
+          .eq('user_id', userId)
+          .single();
+
+        return await returnWithIdempotency({
+          success: true,
+          newBalance: latestCredits?.balance ?? finalBalance,
+          newQuota: latestCredits?.monthly_quota ?? finalQuota,
+          usedFromQuota,
+          usedFromBalance
+        });
+      }
+
       console.error('Error logging credit transaction:', logError);
       // Don't fail the operation for logging errors, but log it
     }
 
-    return {
+    return await returnWithIdempotency({
       success: true,
       newBalance: finalBalance,
       newQuota: finalQuota,
       usedFromQuota,
       usedFromBalance
-    };
+    });
 
   } catch (error) {
     console.error('Error in checkAndDeductCredits:', error);
-    return {
+    return await returnWithIdempotency({
       success: false,
       error: error instanceof Error ? error.message : 'Transaction failed',
       errorCode: 'DEDUCTION_FAILED'
-    };
+    }, false);
   }
 }
 
@@ -233,7 +340,7 @@ async function checkAndResetMonthlyQuota(userId: string, supabase: any): Promise
 
       // Default quota amounts by tier (can be customized)
       const quotaAmounts: Record<string, number> = {
-        'free': 10,
+        'free': 25,
         'creator': 50,
         'professional': 150,
         'admin': 150
@@ -241,7 +348,7 @@ async function checkAndResetMonthlyQuota(userId: string, supabase: any): Promise
 
       // Prefer subscriber tier if available, otherwise use profile tier
       const tier = subscriber?.subscription_tier || profile?.subscription_tier || 'free';
-      const newQuota = quotaAmounts[tier] || 5;
+      const newQuota = quotaAmounts[tier] || 25;
 
       // Reset quota atomically
       await supabase

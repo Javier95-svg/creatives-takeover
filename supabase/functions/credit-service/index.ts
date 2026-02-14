@@ -2,11 +2,11 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
 import { withErrorBoundary, logInfo, logWarn } from "../_shared/logger.ts";
 import { withIdempotency } from "../_shared/idempotency.ts";
 import { CREDIT_COSTS } from '../_shared/credit-constants.ts';
-import { checkAndDeductCredits } from '../_shared/credit-deduction.ts';
+import { checkAndDeductCredits, getUserFromAuth } from '../_shared/credit-deduction.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, idempotency-key',
 };
 
 interface CreditTransaction {
@@ -143,7 +143,7 @@ export class CreditService {
     return data || [];
   }
 
-  // Initialize credits for new users (10 free credits)
+  // Initialize credits for new users (25 free credits)
   async initializeUserCredits(userId: string): Promise<{ success: boolean; isNewUser: boolean }> {
     try {
       // Check if user already has a credit record
@@ -159,9 +159,9 @@ export class CreditService {
       }
 
       // Determine credits and tier - admin gets professional tier but normal credits
-      const initialCredits = 10; // Standard free credits for all new users
+      const initialCredits = 25; // Standard free credits for all new users
       const subscriptionTier = 'free'; // Will be updated to professional by other mechanisms
-      const welcomeReason = 'Welcome bonus - 10 free credits';
+      const welcomeReason = 'Welcome bonus - 25 free credits';
 
       // Check if there's already a welcome transaction to avoid duplicate grants
       const { data: existingTx } = await this.supabase
@@ -231,74 +231,141 @@ export default withErrorBoundary(async function handler(req: Request) {
   try {
     logInfo('credit-service:start', { method: req.method });
     const { action, ...params } = await req.json();
+    const idempotencyKey = req.headers.get('Idempotency-Key')?.trim();
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    
+
     const creditService = new CreditService(supabaseUrl, serviceRoleKey);
+    const authenticatedUser = await getUserFromAuth(req);
+    const requestedUserId = (params.userId || params.user_id) as string | undefined;
 
-    switch (action) {
-      case 'getBalance': {
-        const { userId } = params;
-        const balance = await creditService.getBalance(userId);
-        return new Response(JSON.stringify({ balance }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        });
-      }
-
-      case 'checkCredits': {
-        const { userId, amount } = params;
-        const hasCredits = await creditService.hasCredits(userId, amount);
-        return new Response(JSON.stringify({ hasCredits }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        });
-      }
-
-      case 'deductCredits': {
-        const result = await creditService.deductCredits(params);
-        return new Response(JSON.stringify(result), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        });
-      }
-
-      case 'addCredits': {
-        const result = await creditService.addCredits(params);
-        return new Response(JSON.stringify(result), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        });
-      }
-
-      case 'getHistory': {
-        const { userId, limit } = params;
-        const history = await creditService.getTransactionHistory(userId, limit);
-        return new Response(JSON.stringify({ history }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        });
-      }
-
-      case 'initialize': {
-        const { userId } = params;
-        const result = await creditService.initializeUserCredits(userId);
-        return new Response(JSON.stringify(result), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        });
-      }
-
-      case 'getCreditCosts': {
-        // Return all credit costs for transparency
-        return new Response(JSON.stringify({ costs: CREDIT_COSTS }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        });
-      }
-
-      default:
-        logWarn('credit-service:unknown_action', { action });
-        return new Response(JSON.stringify({ error: 'Unknown action' }), {
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        });
+    if (action !== 'getCreditCosts' && !authenticatedUser) {
+      return new Response(JSON.stringify({ error: 'Authentication required' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
     }
 
+    if (authenticatedUser && requestedUserId && requestedUserId !== authenticatedUser.id) {
+      return new Response(JSON.stringify({ error: 'Forbidden user scope' }), {
+        status: 403,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    const effectiveUserId = authenticatedUser?.id;
+    const executeAction = async () => {
+      switch (action) {
+        case 'getBalance': {
+          const balance = await creditService.getBalance(effectiveUserId!);
+          return new Response(JSON.stringify({ balance }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+
+        case 'checkCredits': {
+          const amount = Number(params.amount || 0);
+          const hasCredits = await creditService.hasCredits(effectiveUserId!, amount);
+          return new Response(JSON.stringify({ hasCredits }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+
+        case 'deductCredits': {
+          if (!idempotencyKey) {
+            return new Response(JSON.stringify({ error: 'Idempotency-Key header is required for deductCredits' }), {
+              status: 400,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            });
+          }
+
+          const amount = Number(params.amount || 0);
+          const feature = (params.feature as string) || 'Credit Deduction';
+          const sessionId = params.session_id as string | undefined;
+          const metadata = {
+            ...(params.metadata as Record<string, unknown> | undefined),
+            idempotencyKey,
+          };
+
+          const result = await creditService.deductCredits({
+            user_id: effectiveUserId!,
+            amount,
+            tx_type: 'deduct',
+            feature,
+            reason: `Used ${amount} credits for ${feature}`,
+            session_id: sessionId,
+            metadata,
+          });
+
+          return new Response(JSON.stringify(result), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+
+        case 'addCredits': {
+          if (!idempotencyKey) {
+            return new Response(JSON.stringify({ error: 'Idempotency-Key header is required for addCredits' }), {
+              status: 400,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            });
+          }
+
+          const amount = Number(params.amount || 0);
+          const reason = (params.reason as string) || 'Credit purchase';
+          const result = await creditService.addCredits({
+            user_id: effectiveUserId!,
+            amount,
+            tx_type: 'purchase',
+            reason,
+            feature: (params.feature as string) || 'Credit Purchase',
+            session_id: params.session_id as string | undefined,
+            metadata: {
+              ...(params.metadata as Record<string, unknown> | undefined),
+              idempotencyKey,
+            },
+          });
+
+          return new Response(JSON.stringify(result), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+
+        case 'getHistory': {
+          const limit = Number(params.limit || 50);
+          const history = await creditService.getTransactionHistory(effectiveUserId!, limit);
+          return new Response(JSON.stringify({ history }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+
+        case 'initialize': {
+          const result = await creditService.initializeUserCredits(effectiveUserId!);
+          return new Response(JSON.stringify(result), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+
+        case 'getCreditCosts': {
+          return new Response(JSON.stringify({ costs: CREDIT_COSTS }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+
+        default:
+          logWarn('credit-service:unknown_action', { action });
+          return new Response(JSON.stringify({ error: 'Unknown action' }), {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+      }
+    };
+
+    if (action === 'deductCredits' || action === 'addCredits') {
+      return await withIdempotency(req, `credit-service:${action}`, async () => executeAction());
+    }
+
+    return await executeAction();
   } catch (error) {
     console.error('Error in credit-service function:', error);
     return new Response(JSON.stringify({ error: 'Internal server error' }), {

@@ -5,6 +5,7 @@ import { useCredits } from '@/hooks/useCredits';
 import { useUpgradePrompt } from '@/contexts/UpgradePromptContext';
 import { CREDIT_COSTS, CreditFeature, getCreditCost } from '@/config/constants';
 import { toast } from 'sonner';
+import { createIdempotencyKey } from '@/lib/idempotency';
 
 const CREDIT_FEATURE_LABELS: Record<CreditFeature, string> = {
   LAUNCH_REPORT: 'Launch Report Generation',
@@ -37,6 +38,8 @@ type CreditActionOptions = {
   requiredTier?: 'creator' | 'professional';
   description?: string;
   metadata?: Record<string, unknown>;
+  idempotencyKey?: string;
+  operationId?: string;
 };
 
 const resolveFeatureLabel = (feature: CreditFeature, override?: string) =>
@@ -125,16 +128,24 @@ export const useCreditActions = () => {
       if (requiredCredits === 0) return true;
 
       const featureLabel = resolveFeatureLabel(feature, options.featureName);
+      const requestIdempotencyKey = options.idempotencyKey || createIdempotencyKey(
+        `credit-deduct-${feature.toLowerCase()}`,
+        options.operationId
+      );
+      const metadata = {
+        ...(options.metadata || {}),
+        operationId: options.operationId || requestIdempotencyKey,
+      };
 
       const { data, error } = await supabase.functions.invoke('credit-service', {
+        headers: { 'Idempotency-Key': requestIdempotencyKey },
         body: {
           action: 'deductCredits',
-          user_id: user.id,
           amount: requiredCredits,
           tx_type: 'deduct',
           feature: featureLabel,
           reason: `Used ${requiredCredits} credits for ${featureLabel}`,
-          metadata: options.metadata,
+          metadata,
         },
       });
 
