@@ -1,6 +1,5 @@
 import { Map, Users, Target, Rocket, Lightbulb, LayoutDashboard, Handshake, Code, FlaskConical } from "lucide-react";
 import { Link } from "react-router-dom";
-import { Badge } from "@/components/ui/badge";
 import FounderJourneyVideo from "./FounderJourneyVideo";
 
 const EntrepreneurProblems = () => {
@@ -136,9 +135,6 @@ const EntrepreneurProblems = () => {
       <div className="container mx-auto px-4 sm:px-6 relative z-10">
         {/* Section Header */}
         <div className="section-header max-w-4xl">
-          <Badge variant="outline" className="section-eyebrow">
-            Own Your Path {"\uD83D\uDE80"}
-          </Badge>
           <h2 id="journey-heading" className="section-title">
             Every Founder's Journey is Unique
           </h2>

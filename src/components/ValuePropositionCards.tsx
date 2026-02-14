@@ -2,7 +2,6 @@ import { useState, useCallback, useEffect, useRef, type ChangeEvent } from "reac
 import { Lightbulb, LayoutDashboard, Upload, Loader2, GraduationCap, TrendingUp, Handshake, BookOpen } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -364,9 +363,6 @@ const ValuePropositionCards = () => {
       <div className="container mx-auto px-4 sm:px-6">
         {/* Section Header */}
         <div className="section-header max-w-3xl">
-          <Badge variant="outline" className="section-eyebrow">
-            The perfect ecosystem
-          </Badge>
           <h2 className="section-title">
             Creatives Takeover in a Nutshell
           </h2>

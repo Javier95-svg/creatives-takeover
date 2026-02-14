@@ -106,9 +106,6 @@ const UserReviews = () => {
     <section className="section-shell">
       <div className="container mx-auto px-4 sm:px-6">
         <div className="section-header px-6 sm:px-8 lg:px-12">
-          <Badge variant="outline" className="section-eyebrow">
-            Join them
-          </Badge>
           <h2 className="section-title mb-6 break-words">
             Helping Founders Succeed
           </h2>

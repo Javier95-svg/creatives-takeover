@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { TrendingUp, Target, Zap } from "lucide-react";
 import {
   LineChart,
@@ -144,9 +143,6 @@ const AISpecializationTrends = () => {
       <div className="container mx-auto px-4 sm:px-6 relative z-10">
         {/* Section Header - Enhanced */}
         <div className="section-header">
-          <Badge variant="outline" className="section-eyebrow">
-            The power of small teams
-          </Badge>
           <h2 className="section-title mb-6">
             The Future of Work Is Here
           </h2>
