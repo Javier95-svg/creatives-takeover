@@ -43,6 +43,8 @@ const Account = () => {
   // Password update state
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordVerificationCode, setPasswordVerificationCode] = useState("");
+  const [passwordStep, setPasswordStep] = useState<"input" | "verify">("input");
   const [passwordLoading, setPasswordLoading] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -415,10 +417,35 @@ const Account = () => {
       return;
     }
 
+    if (passwordStep === "input") {
+      setPasswordLoading(true);
+      try {
+        const { error } = await supabase.auth.reauthenticate();
+
+        if (error) {
+          throw error;
+        }
+
+        setPasswordStep("verify");
+        toast.success("Verification code sent to your email. Enter it to confirm password change.");
+      } catch (error: any) {
+        toast.error("Failed to send verification code: " + error.message);
+      } finally {
+        setPasswordLoading(false);
+      }
+      return;
+    }
+
+    if (!passwordVerificationCode.trim()) {
+      toast.error("Please enter the verification code from your email.");
+      return;
+    }
+
     setPasswordLoading(true);
     try {
       const { error } = await supabase.auth.updateUser({
         password: newPassword,
+        nonce: passwordVerificationCode.trim(),
       });
 
       if (error) {
@@ -427,9 +454,33 @@ const Account = () => {
 
       setNewPassword("");
       setConfirmPassword("");
+      setPasswordVerificationCode("");
+      setPasswordStep("input");
       toast.success("Password updated successfully.");
     } catch (error: any) {
       toast.error("Failed to update password: " + error.message);
+    } finally {
+      setPasswordLoading(false);
+    }
+  };
+
+  const handleResendPasswordVerificationCode = async () => {
+    if (!user) {
+      toast.error("Please sign in to continue.");
+      return;
+    }
+
+    setPasswordLoading(true);
+    try {
+      const { error } = await supabase.auth.reauthenticate();
+
+      if (error) {
+        throw error;
+      }
+
+      toast.success("New verification code sent.");
+    } catch (error: any) {
+      toast.error("Failed to resend verification code: " + error.message);
     } finally {
       setPasswordLoading(false);
     }
@@ -832,7 +883,7 @@ const Account = () => {
                 Security
               </CardTitle>
               <CardDescription>
-                Update your password.
+                Update your password with email verification.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -881,18 +932,47 @@ const Account = () => {
                   </div>
                 </div>
 
+                {passwordStep === "verify" && (
+                  <div className="space-y-2">
+                    <Label htmlFor="password-verification-code">Verification Code</Label>
+                    <Input
+                      id="password-verification-code"
+                      type="text"
+                      value={passwordVerificationCode}
+                      onChange={(e) => setPasswordVerificationCode(e.target.value)}
+                      placeholder="Enter the code sent to your email"
+                      autoComplete="one-time-code"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Check your inbox for the verification code to confirm this password change.
+                    </p>
+                  </div>
+                )}
+
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                   <p className="text-xs text-muted-foreground">Minimum 6 characters.</p>
-                  <Button type="submit" disabled={passwordLoading} className="w-full sm:w-auto">
-                    {passwordLoading ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Updating...
-                      </>
-                    ) : (
-                      "Update Password"
+                  <div className="flex w-full sm:w-auto gap-2">
+                    {passwordStep === "verify" && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        disabled={passwordLoading}
+                        onClick={handleResendPasswordVerificationCode}
+                      >
+                        Resend Code
+                      </Button>
                     )}
-                  </Button>
+                    <Button type="submit" disabled={passwordLoading} className="w-full sm:w-auto">
+                      {passwordLoading ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          {passwordStep === "input" ? "Sending Code..." : "Updating..."}
+                        </>
+                      ) : (
+                        passwordStep === "input" ? "Send Verification Code" : "Verify & Update Password"
+                      )}
+                    </Button>
+                  </div>
                 </div>
               </form>
             </CardContent>
