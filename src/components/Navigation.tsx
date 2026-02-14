@@ -285,7 +285,7 @@ const Navigation = () => {
         <div className="mx-auto w-full max-w-[1480px]">
           <div
             className={cn(
-              "flex h-16 w-full items-center rounded-[999px] border px-3 sm:px-4 lg:px-5",
+              "flex h-[4.25rem] w-full items-center rounded-[999px] border px-3 sm:px-4 lg:px-5",
               "backdrop-blur-2xl",
               scrolled
                 ? "border-border/80 bg-background/90 shadow-[0_14px_34px_hsl(var(--foreground)/0.18)]"
@@ -293,7 +293,7 @@ const Navigation = () => {
             )}
           >
             {/* Logo with Enhanced Hover Effects - Fixed width to prevent layout shifts */}
-            <div className="flex w-16 min-w-[4rem] flex-shrink-0 items-center border-0 md:w-[4.5rem]">
+            <div className="flex w-[3.5rem] min-w-[3.5rem] flex-shrink-0 items-center border-0 md:w-[3.9rem] md:min-w-[3.9rem]">
               <Link to="/" className="flex items-center justify-center w-full" aria-label="Home">
                 <img
                   src={ctLogo}
@@ -315,7 +315,7 @@ const Navigation = () => {
 
             {/* Desktop Navigation */}
             {deviceType === 'desktop' && (
-              <div className="flex min-w-0 flex-1 items-center justify-center px-3 lg:px-6">
+              <div className="flex min-w-0 flex-1 items-center justify-center px-2 lg:px-4">
                 <div className="flex items-center gap-1">
                 {navItems.map((item) => {
                   const Icon = item.icon || iconMap[item.name];
@@ -485,10 +485,10 @@ const Navigation = () => {
             />
           )}
 
-          {/* Mobile Navigation */}
+            {/* Mobile Navigation */}
           {isOpen && (
             <div
-              style={{ top: 'calc(var(--banner-height, 0px) + 80px)' } as React.CSSProperties}
+              style={{ top: 'calc(var(--banner-height, 0px) + 84px)' } as React.CSSProperties}
               className="md:hidden fixed left-0 right-0 bottom-0 bg-background/95 backdrop-blur-xl border-t border-border animate-mobile-drawer safe-area-inset z-50 shadow-2xl"
             >
               <div className="h-full overflow-y-auto px-2 pt-2 pb-safe space-y-1">
