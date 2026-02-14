@@ -72,9 +72,11 @@ const UserReviews = () => {
   return (
     <section className="section-shell">
       <div className="container mx-auto px-4 sm:px-6">
-        <div className="section-header px-6 sm:px-8 lg:px-12">
-          <h2 className="section-title mb-6 break-words">Startup Development Cycle</h2>
-          <p className="section-description max-w-3xl mx-auto">
+        <div className="text-center mb-16 sm:mb-20 px-6 sm:px-8 lg:px-12">
+          <h2 className="font-space-grotesk text-3xl sm:text-4xl lg:text-5xl font-semibold mb-6 tracking-tight text-primary break-words">
+            Startup Development Cycle
+          </h2>
+          <p className="font-poppins text-base sm:text-lg text-muted-foreground max-w-3xl mx-auto leading-relaxed">
             Click each stage to explore what founders should achieve before moving to the next phase.
           </p>
         </div>
