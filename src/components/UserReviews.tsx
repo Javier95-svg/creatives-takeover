@@ -1,231 +1,139 @@
+import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Star, MapPin, CheckCircle2 } from "lucide-react";
 
-const avatarSvg = (name: string, bg: string) => {
-  const initials = name.split(' ').map(n => n[0]).join('');
-  return `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128"><rect width="128" height="128" fill="${bg}"/><text x="64" y="64" dominant-baseline="central" text-anchor="middle" fill="white" font-size="48" font-weight="bold" font-family="Arial,sans-serif">${initials}</text></svg>`)}`;
+type CycleStep = {
+  shortLabel: string;
+  title: string;
+  description: string;
 };
 
-const UserReviews = () => {
-  const reviews = [
-    {
-      name: "Priya Sharma",
-      comment: "BizMap AI made planning my creative business so much easier. The conversational approach felt natural, and I had a solid plan in minutes instead of days. The success score really helped me validate my idea before investing more time.",
-      timestamp: "3 days ago",
-      location: "Mumbai, India",
-      role: "Indie founder",
-      rating: 5,
-      avatar: avatarSvg("Priya Sharma", "#6366f1"),
-      verified: true,
-      outcome: "Launched in 28 days"
-    },
-    {
-      name: "James Mitchell",
-      comment: "The fundraising toolkit through Insighta is incredible. I found three accelerator programs that were perfect fits for my stage. The deadline reminders saved me from missing applications. Already got accepted to one!",
-      timestamp: "1 week ago",
-      location: "London, UK",
-      role: "First-time creator",
-      rating: 4.5,
-      avatar: avatarSvg("James Mitchell", "#3b82f6"),
-      verified: true,
-      outcome: "Accepted to accelerator"
-    },
-    {
-      name: "Sofia Martinez",
-      comment: "The community here is unlike anything I've experienced. Everyone genuinely wants to help each other succeed. My accountability partner has been a game-changer - we check in daily and keep each other motivated.",
-      timestamp: "2 weeks ago",
-      location: "Barcelona, Spain",
-      role: "Creative entrepreneur",
-      rating: 4,
-      avatar: avatarSvg("Sofia Martinez", "#ec4899"),
-      verified: true,
-      outcome: "30-day streak maintained"
-    },
-    {
-      name: "David Kim",
-      comment: "The feedback quality on my business plan was outstanding. Community members gave me actionable insights I hadn't considered. The anonymous sharing feature let me get honest feedback without feeling exposed.",
-      timestamp: "5 days ago",
-      location: "Seoul, South Korea",
-      role: "Tech founder",
-      rating: 4.5,
-      avatar: avatarSvg("David Kim", "#10b981"),
-      verified: true,
-      outcome: "Improved plan score by 25%"
-    },
-    {
-      name: "Aisha Okafor",
-      comment: "Investor visibility through the platform has been amazing. I shared my plan and got connected with an angel investor who's now mentoring me. The Demo Days feature helped me practice my pitch with real feedback.",
-      timestamp: "1 month ago",
-      location: "Lagos, Nigeria",
-      role: "Startup founder",
-      rating: 5,
-      avatar: avatarSvg("Aisha Okafor", "#f59e0b"),
-      verified: true,
-      outcome: "Connected with angel investor"
-    },
-    {
-      name: "Lucas Anderson",
-      comment: "The Prompt Library saved me hours of research. I found templates for my exact niche and adapted them quickly. Combined with BizMap AI, I went from idea to launch-ready plan in one weekend.",
-      timestamp: "1 week ago",
-      location: "Stockholm, Sweden",
-      role: "Solo entrepreneur",
-      rating: 4,
-      avatar: avatarSvg("Lucas Anderson", "#8b5cf6"),
-      verified: true,
-      outcome: "Plan completed in 2 days"
-    },
-    {
-      name: "Yuki Tanaka",
-      comment: "Sprint-based accountability is what I needed. The daily check-ins keep me focused, and seeing my progress visually motivates me. I've completed more in 30 days than I did in the previous 6 months.",
-      timestamp: "4 days ago",
-      location: "Tokyo, Japan",
-      role: "Indie developer",
-      rating: 4.5,
-      avatar: avatarSvg("Yuki Tanaka", "#ef4444"),
-      verified: true,
-      outcome: "5x productivity increase"
-    },
-    {
-      name: "Emma Thompson",
-      comment: "As someone new to business, the step-by-step guidance from BizMap AI was perfect. It asked questions I didn't know I needed to answer. The PDF export made it easy to share with my co-founder and get aligned.",
-      timestamp: "2 weeks ago",
-      location: "Melbourne, Australia",
-      role: "First-time creator",
-      rating: 4,
-      avatar: avatarSvg("Emma Thompson", "#06b6d4"),
-      verified: true,
-      outcome: "Secured co-founder alignment"
-    }
-  ];
+const cycleSteps: CycleStep[] = [
+  {
+    shortLabel: "Identity",
+    title: "Step 1: Identity",
+    description:
+      "Define the exact problem, who it is for, what differentiates your solution, and why your team can deliver. The outcome is a clear ICP and measurable goals for the next stage."
+  },
+  {
+    shortLabel: "Prototyping",
+    title: "Step 2: Prototyping",
+    description:
+      "Build a simple landing page and waitlist that clearly presents the future MVP features and user flow. This tests whether your value proposition is compelling before writing product code."
+  },
+  {
+    shortLabel: "Validation",
+    title: "Step 3: Validation",
+    description:
+      "Run direct outreach and interviews, capture feedback, and measure waitlist conversion to confirm demand. If traction is weak, refine positioning and feature priorities with your ICP before moving on."
+  },
+  {
+    shortLabel: "Building",
+    title: "Step 4: Building",
+    description:
+      "Once demand is validated, ship the MVP with only core features and tight scope. Use tools, mentors, and technical guidance to build reliably while preserving room to iterate."
+  },
+  {
+    shortLabel: "Launch",
+    title: "Step 5: Launch",
+    description:
+      "Distribute aggressively across social channels, communities, and startup directories. Treat launch as an ongoing acquisition system, not a one-day event, and compound visibility with consistent branding."
+  },
+  {
+    shortLabel: "Networking",
+    title: "Step 6: Networking",
+    description:
+      "Form strategic relationships through founder communities, partnerships, accelerators, and early investor conversations. Strong backing increases speed, distribution opportunities, and resilience."
+  },
+  {
+    shortLabel: "Fundraising",
+    title: "Step 7: Fundraising",
+    description:
+      "After proving MVP execution, real demand, and early customers, raise capital to accelerate growth. It is optional, but the right funding can expand runway, talent, and execution capacity."
+  }
+];
 
-  const duplicatedReviews = [...reviews, ...reviews];
+const STEP_ANGLE = 360 / cycleSteps.length;
+
+const UserReviews = () => {
+  const [activeStepIndex, setActiveStepIndex] = useState(0);
+
+  const stepPositions = cycleSteps.map((_, index) => {
+    const angleInRadians = ((-90 + STEP_ANGLE * index) * Math.PI) / 180;
+    const radius = 39;
+    return {
+      x: 50 + Math.cos(angleInRadians) * radius,
+      y: 50 + Math.sin(angleInRadians) * radius
+    };
+  });
+
+  const activeStep = cycleSteps[activeStepIndex];
 
   return (
-    <section className="py-20 lg:py-28 font-poppins">
+    <section className="section-shell">
       <div className="container mx-auto px-4 sm:px-6">
-        <div className="text-center mb-16 sm:mb-20 px-6 sm:px-8 lg:px-12">
-          <Badge variant="outline" className="mb-5 text-xs uppercase tracking-wide text-muted-foreground">
-            Join Them 💙
-          </Badge>
-          <h2 className="font-space-grotesk text-3xl sm:text-4xl lg:text-5xl font-semibold mb-6 break-words tracking-tight text-primary">
-            Helping Founders Succeed
-          </h2>
-          <p className="font-poppins text-base sm:text-lg text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-            See how founders are turning their ideas into thriving projects.
+        <div className="section-header px-6 sm:px-8 lg:px-12">
+          <h2 className="section-title mb-6 break-words">Startup Development Cycle</h2>
+          <p className="section-description max-w-3xl mx-auto">
+            Click each stage to explore what founders should achieve before moving to the next phase.
           </p>
         </div>
-        <div className="relative overflow-hidden -mx-4 sm:-mx-6 px-4 sm:px-6">
-          <style>{`
-            @keyframes reviewScroll {
-              0% {
-                transform: translateX(0);
-              }
-              100% {
-                transform: translateX(calc(-50% - 1rem));
-              }
-            }
-            .reviews-scroll {
-              animation: reviewScroll 90s linear infinite;
-            }
-            .reviews-scroll:hover {
-              animation-play-state: paused;
-            }
-          `}</style>
-          <div className="flex gap-6 md:gap-8 reviews-scroll" style={{ width: 'max-content' }}>
-            {duplicatedReviews.map((review, index) => (
-              <Card 
-                key={`${review.name}-${index}`} 
-                className="group border-border/70 shadow-sm hover:shadow-md transition-shadow flex-shrink-0 w-[320px] sm:w-[360px] md:w-[400px]"
-              >
-                <CardContent className="p-6">
-                  {/* Rating Stars and Verification */}
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-0.5">
-                      {[...Array(5)].map((_, i) => {
-                        const rating = review.rating || 5;
-                        const starValue = i + 1;
-                        const isFullStar = starValue <= Math.floor(rating);
-                        const isHalfStar = !isFullStar && starValue === Math.ceil(rating) && rating % 1 !== 0;
-                        const isEmptyStar = starValue > Math.ceil(rating);
-                        
-                        return (
-                          <div key={i} className="relative inline-block w-4 h-4">
-                            {/* Empty star background */}
-                            <Star className="absolute inset-0 w-4 h-4 fill-gray-300 text-gray-300" />
-                            {/* Full star overlay */}
-                            {isFullStar && (
-                              <Star className="absolute inset-0 w-4 h-4 fill-yellow-400 text-yellow-400" />
-                            )}
-                            {/* Half star overlay */}
-                            {isHalfStar && (
-                              <div className="absolute inset-0 w-4 h-4" style={{ clipPath: 'polygon(0 0, 50% 0, 50% 100%, 0 100%)' }}>
-                                <Star className="absolute inset-0 w-4 h-4 fill-yellow-400 text-yellow-400" />
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                    {review.verified && (
-                      <Badge variant="secondary" className="bg-green-500/10 text-green-600 border-green-500/20 text-xs">
-                        <CheckCircle2 className="w-3 h-3 mr-1" />
-                        Verified
-                      </Badge>
-                    )}
-                  </div>
 
-                  {/* Review Comment */}
-                  <p className="text-muted-foreground mb-4 leading-relaxed text-sm sm:text-base">
-                    "{review.comment}"
-                  </p>
-                  
-                  {/* Outcome Badge */}
-                  {review.outcome && (
-                    <div className="mb-6">
-                      <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20">
-                        {review.outcome}
-                      </Badge>
-                    </div>
-                  )}
-
-                  {/* User Info */}
-                  <div className="pt-4 border-t border-border/50">
-                    <div className="flex items-start gap-3 mb-3">
-                      <Avatar className="w-10 h-10 flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
-                        <AvatarImage src={review.avatar} alt={review.name} />
-                        <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/10 text-primary text-xs">
-                          {review.name.split(' ').map(n => n[0]).join('')}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-space-grotesk font-semibold text-sm sm:text-base mb-1 group-hover:text-primary transition-colors">
-                          {review.name}
-                        </h4>
-                        {review.role && (
-                          <p className="text-xs text-muted-foreground mb-1">
-                            {review.role}
-                          </p>
-                        )}
-                        {review.location && (
-                          <p className="text-xs text-muted-foreground mb-1 flex items-center gap-1">
-                            <MapPin className="w-3 h-3" />
-                            {review.location}
-                          </p>
-                        )}
-                        {review.timestamp && (
-                          <p className="text-xs text-muted-foreground">
-                            {review.timestamp}
-                          </p>
-                        )}
-                      </div>
-                    </div>
+        <div className="grid gap-8 lg:gap-10 lg:grid-cols-2 items-stretch">
+          <Card className="surface-panel trust-outline">
+            <CardContent className="p-6 sm:p-8">
+              <div className="relative mx-auto w-full max-w-[560px] aspect-square">
+                <div className="absolute inset-[8%] rounded-full border border-primary/20 bg-gradient-to-b from-primary/[0.07] to-background" />
+                <div className="absolute inset-[19%] rounded-full border border-primary/15" />
+                <div className="absolute inset-[33%] rounded-full border border-primary/10 bg-background/90 backdrop-blur-sm flex items-center justify-center text-center px-6">
+                  <div>
+                    <p className="text-xs tracking-[0.22em] uppercase text-muted-foreground mb-2">Active Stage</p>
+                    <p className="font-space-grotesk text-xl sm:text-2xl font-semibold">{activeStep.shortLabel}</p>
                   </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                </div>
+
+                {stepPositions.map((position, index) => {
+                  const step = cycleSteps[index];
+                  const isActive = index === activeStepIndex;
+
+                  return (
+                    <button
+                      key={step.shortLabel}
+                      type="button"
+                      onClick={() => setActiveStepIndex(index)}
+                      className={`absolute -translate-x-1/2 -translate-y-1/2 w-[104px] sm:w-[116px] px-3 py-2 rounded-xl border text-xs sm:text-sm text-center font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 ${
+                        isActive
+                          ? "bg-primary text-primary-foreground border-primary shadow-[0_0_0_3px_rgba(99,102,241,0.25)]"
+                          : "bg-background/95 border-border/70 hover:border-primary/45 hover:bg-primary/5"
+                      }`}
+                      style={{ left: `${position.x}%`, top: `${position.y}%` }}
+                      aria-pressed={isActive}
+                      aria-label={`Select ${step.title}`}
+                    >
+                      <span className="block text-[10px] sm:text-[11px] tracking-[0.1em] uppercase opacity-75">
+                        {index + 1}
+                      </span>
+                      <span className="block mt-0.5 leading-tight">{step.shortLabel}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="surface-panel trust-outline">
+            <CardContent className="p-6 sm:p-8 lg:p-10 h-full flex flex-col justify-center">
+              <Badge variant="outline" className="w-fit mb-4 bg-primary/10 border-primary/20 text-primary">
+                Startup Development Cycle
+              </Badge>
+              <h3 className="font-space-grotesk text-2xl sm:text-3xl font-semibold mb-4">
+                {activeStep.title}
+              </h3>
+              <p className="text-muted-foreground leading-relaxed text-base sm:text-lg">
+                {activeStep.description}
+              </p>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </section>
