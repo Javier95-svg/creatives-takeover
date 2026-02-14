@@ -2,12 +2,13 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { checkAndDeductCredits, getUserFromAuth } from '../_shared/credit-deduction.ts';
 import { CREDIT_COSTS } from '../_shared/credit-constants.ts';
+import { resolveCreditIdempotencyKey } from '../_shared/request-idempotency.ts';
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, idempotency-key',
 };
 
 serve(async (req) => {
@@ -42,6 +43,16 @@ serve(async (req) => {
       );
     }
 
+    const idempotencyKey = await resolveCreditIdempotencyKey(req, {
+      userId: user.id,
+      feature: 'Sprint Task Generation',
+      requestFingerprint: {
+        sprintTitle,
+        sprintDuration,
+        fuzzyIdea,
+      },
+    });
+
     // Check and deduct credits before processing
     const creditCost = CREDIT_COSTS.SPRINT_TASK_GENERATION;
     const creditCheck = await checkAndDeductCredits(
@@ -49,7 +60,7 @@ serve(async (req) => {
       creditCost,
       'Sprint Task Generation',
       undefined,
-      { sprintTitle, sprintDuration }
+      { sprintTitle, sprintDuration, idempotencyKey }
     );
 
     if (!creditCheck.success) {

@@ -2,10 +2,11 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { checkAndDeductCredits, getUserFromAuth } from '../_shared/credit-deduction.ts';
 import { CREDIT_COSTS } from '../_shared/credit-constants.ts';
+import { resolveCreditIdempotencyKey } from '../_shared/request-idempotency.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, idempotency-key',
 };
 
 serve(async (req) => {
@@ -58,6 +59,12 @@ serve(async (req) => {
       );
     }
 
+    const idempotencyKey = await resolveCreditIdempotencyKey(req, {
+      userId: user.id,
+      feature: 'Business Insights Generation',
+      requestFingerprint: { industry, businessStage, specificQuery },
+    });
+
     // Check and deduct credits before generating new insights
     const creditCost = CREDIT_COSTS.BUSINESS_INSIGHTS;
     const creditCheck = await checkAndDeductCredits(
@@ -65,7 +72,7 @@ serve(async (req) => {
       creditCost,
       'Business Insights Generation',
       undefined,
-      { industry, businessStage }
+      { industry, businessStage, specificQuery, idempotencyKey }
     );
 
     if (!creditCheck.success) {

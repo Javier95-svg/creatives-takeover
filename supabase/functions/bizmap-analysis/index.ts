@@ -3,10 +3,11 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
 import { checkAndDeductCredits } from '../_shared/credit-deduction.ts';
 import { CREDIT_COSTS } from '../_shared/credit-constants.ts';
+import { resolveCreditIdempotencyKey } from '../_shared/request-idempotency.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, idempotency-key',
 };
 
 interface LaunchReportRequest {
@@ -75,6 +76,19 @@ serve(async (req) => {
 
     const { answers, stage = "Explore", region = "Global", sessionId, refinedContext, researchData }: LaunchReportRequest & { sessionId?: string } = await req.json();
 
+    const idempotencyKey = await resolveCreditIdempotencyKey(req, {
+      userId,
+      feature: 'Launch Report Generation',
+      sessionId,
+      requestFingerprint: {
+        stage,
+        region,
+        answers,
+        hasRefinedContext: Boolean(refinedContext),
+        hasResearchData: Boolean(researchData),
+      },
+    });
+
     // Check and deduct credits BEFORE making the OpenAI call
     const creditCost = CREDIT_COSTS.LAUNCH_REPORT;
     const creditCheck = await checkAndDeductCredits(
@@ -82,7 +96,7 @@ serve(async (req) => {
       creditCost,
       'Launch Report Generation',
       sessionId,
-      { stage, region }
+      { stage, region, idempotencyKey }
     );
 
     if (!creditCheck.success) {

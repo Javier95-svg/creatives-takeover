@@ -5,6 +5,7 @@ import { withErrorBoundary, logInfo } from "../_shared/logger.ts";
 import { withIdempotency } from "../_shared/idempotency.ts";
 import { checkAndDeductCredits, getUserFromAuth } from '../_shared/credit-deduction.ts';
 import { CREDIT_COSTS } from '../_shared/credit-constants.ts';
+import { resolveCreditIdempotencyKey } from '../_shared/request-idempotency.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -47,12 +48,26 @@ serve(withErrorBoundary(async (req: Request) => {
       );
     }
 
+    const { reportContent, businessName, userAnswers, successScore, validationScore }: PDFRequest = await req.json();
+
+    const idempotencyKey = await resolveCreditIdempotencyKey(req, {
+      userId: user.id,
+      feature: 'PDF Export',
+      requestFingerprint: {
+        businessName,
+        reportContentLength: reportContent?.length ?? 0,
+        hasValidationScore: Boolean(validationScore),
+      },
+    });
+
     // Check and deduct credits before processing
     const creditCost = CREDIT_COSTS.PDF_EXPORT;
     const creditCheck = await checkAndDeductCredits(
       user.id,
       creditCost,
-      'PDF Export'
+      'PDF Export',
+      undefined,
+      { idempotencyKey, businessName }
     );
 
     if (!creditCheck.success) {
@@ -68,7 +83,6 @@ serve(withErrorBoundary(async (req: Request) => {
       );
     }
 
-    const { reportContent, businessName, userAnswers, successScore, validationScore }: PDFRequest = await req.json();
     logInfo('pdf:request_received', { hasScore: Boolean(successScore), hasRedditData: Boolean(validationScore?.reddit_discussions?.length) });
 
     // Generate enhanced PDF content with professional formatting

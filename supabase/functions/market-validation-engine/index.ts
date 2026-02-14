@@ -2,10 +2,11 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 import { checkAndDeductCredits, getUserFromAuth } from '../_shared/credit-deduction.ts';
 import { CREDIT_COSTS } from '../_shared/credit-constants.ts';
+import { resolveCreditIdempotencyKey } from '../_shared/request-idempotency.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, idempotency-key',
 };
 
 // Reddit API Configuration
@@ -275,6 +276,13 @@ serve(async (req) => {
 
     // Skip credit check for admin account
     if (!isAdmin) {
+      const idempotencyKey = await resolveCreditIdempotencyKey(req, {
+        userId: user.id,
+        feature: 'Market Validation',
+        sessionId: session_id,
+        requestFingerprint: { business_idea, industry, target_market },
+      });
+
       // Check and deduct credits before processing
       const creditCost = CREDIT_COSTS.MARKET_VALIDATION;
       const creditCheck = await checkAndDeductCredits(
@@ -282,7 +290,7 @@ serve(async (req) => {
         creditCost,
         'Market Validation',
         session_id,
-        { business_idea, industry, target_market }
+        { business_idea, industry, target_market, idempotencyKey }
       );
 
       if (!creditCheck.success) {

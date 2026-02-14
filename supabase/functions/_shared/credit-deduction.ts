@@ -140,67 +140,21 @@ export async function checkAndDeductCredits(
     // Check if quota needs reset (monthly reset logic)
     await checkAndResetMonthlyQuota(userId, supabase);
 
-    // Get current balance and quota
-    const { data: credits, error: fetchError } = await supabase
-      .from('user_credits')
-      .select('balance, monthly_quota, last_reset_at')
-      .eq('user_id', userId)
-      .single();
+    const deductionMetadata = {
+      ...(metadata || {}),
+      ...(idempotencyKey ? { idempotencyKey } : {}),
+    };
 
-    if (fetchError || !credits) {
-      return await returnWithIdempotency({
-        success: false,
-        error: 'User credit record not found',
-        errorCode: 'USER_NOT_FOUND'
-      });
-    }
+    const { data: deductionData, error: deductionError } = await supabase.rpc('deduct_credits_atomic', {
+      p_user_id: userId,
+      p_amount: amount,
+      p_feature: feature,
+      p_session_id: sessionId ?? null,
+      p_metadata: deductionMetadata,
+    });
 
-    // Calculate available credits: quota + balance
-    const totalAvailable = credits.monthly_quota + credits.balance;
-
-    // Check if user has sufficient credits (for better error message)
-    if (totalAvailable < amount) {
-      return await returnWithIdempotency({
-        success: false,
-        error: 'Insufficient credits',
-        errorCode: 'INSUFFICIENT_CREDITS'
-      });
-    }
-
-    // Strategy: Deduct from quota first, then from balance
-    // This gives users their monthly allowance first before using purchased credits
-    let usedFromQuota = 0;
-    let usedFromBalance = 0;
-    let newQuota = credits.monthly_quota;
-    let newBalance = credits.balance;
-
-    if (credits.monthly_quota >= amount) {
-      // Enough quota available - use quota only
-      usedFromQuota = amount;
-      newQuota = credits.monthly_quota - amount;
-    } else {
-      // Use all available quota, then deduct remainder from balance
-      usedFromQuota = credits.monthly_quota;
-      usedFromBalance = amount - credits.monthly_quota;
-      newQuota = 0;
-      newBalance = credits.balance - usedFromBalance;
-    }
-
-    // ATOMIC UPDATE: Update both quota and balance atomically
-    // The WHERE clause ensures we only update if sufficient credits exist (atomic check)
-    const { data: updateResult, error: updateError } = await supabase
-      .from('user_credits')
-      .update({ 
-        monthly_quota: newQuota,
-        balance: newBalance
-      })
-      .eq('user_id', userId)
-      .gte('balance', credits.balance - usedFromBalance) // Ensure balance doesn't go negative
-      .gte('monthly_quota', credits.monthly_quota - usedFromQuota) // Ensure quota doesn't go negative
-      .select('balance, monthly_quota');
-
-    if (updateError) {
-      console.error('Error updating credit balance:', updateError);
+    if (deductionError || !deductionData) {
+      console.error('Error running deduct_credits_atomic:', deductionError);
       return await returnWithIdempotency({
         success: false,
         error: 'Failed to update credit balance',
@@ -208,85 +162,31 @@ export async function checkAndDeductCredits(
       }, false);
     }
 
-    // If no rows were updated, balance was insufficient or changed concurrently
-    if (!updateResult || updateResult.length === 0) {
-      // Re-check to see what changed (for better error message)
-      const { data: recheck } = await supabase
-        .from('user_credits')
-        .select('balance, monthly_quota')
-        .eq('user_id', userId)
-        .single();
+    const result = deductionData as {
+      success: boolean;
+      newBalance?: number;
+      newQuota?: number;
+      usedFromQuota?: number;
+      usedFromBalance?: number;
+      error?: string;
+      errorCode?: CreditDeductionResult['errorCode'];
+    };
 
-      if (recheck) {
-        const recheckTotal = recheck.monthly_quota + recheck.balance;
-        if (recheckTotal < amount) {
-          return await returnWithIdempotency({
-            success: false,
-            error: 'Insufficient credits (balance may have changed)',
-            errorCode: 'INSUFFICIENT_CREDITS'
-          });
-        }
-      }
-
-      // Concurrent modification detected
+    if (!result.success) {
+      const shouldPersist = result.errorCode !== 'DEDUCTION_FAILED';
       return await returnWithIdempotency({
         success: false,
-        error: 'Concurrent modification detected. Please try again.',
-        errorCode: 'DEDUCTION_FAILED'
-      }, false);
-    }
-
-    // Success - use the updated values from the result
-    const finalBalance = updateResult[0].balance;
-    const finalQuota = updateResult[0].monthly_quota;
-
-    // Log transaction with quota breakdown in metadata
-    const { error: logError } = await supabase
-      .from('credit_transactions')
-      .insert([{
-        user_id: userId,
-        amount: -amount,
-        tx_type: 'deduct',
-        reason: `Used ${amount} credits for ${feature}`,
-        feature,
-        session_id: sessionId,
-        metadata: {
-          ...(metadata || {}),
-          ...(idempotencyKey ? { idempotencyKey } : {}),
-          usedFromQuota,
-          usedFromBalance,
-          quotaRemaining: finalQuota,
-          balanceRemaining: finalBalance
-        }
-      }]);
-
-    if (logError) {
-      if (logError.code === '23505' && idempotencyKey) {
-        const { data: latestCredits } = await supabase
-          .from('user_credits')
-          .select('balance, monthly_quota')
-          .eq('user_id', userId)
-          .single();
-
-        return await returnWithIdempotency({
-          success: true,
-          newBalance: latestCredits?.balance ?? finalBalance,
-          newQuota: latestCredits?.monthly_quota ?? finalQuota,
-          usedFromQuota,
-          usedFromBalance
-        });
-      }
-
-      console.error('Error logging credit transaction:', logError);
-      // Don't fail the operation for logging errors, but log it
+        error: result.error || 'Credit deduction failed',
+        errorCode: result.errorCode || 'DEDUCTION_FAILED'
+      }, shouldPersist);
     }
 
     return await returnWithIdempotency({
       success: true,
-      newBalance: finalBalance,
-      newQuota: finalQuota,
-      usedFromQuota,
-      usedFromBalance
+      newBalance: result.newBalance,
+      newQuota: result.newQuota,
+      usedFromQuota: result.usedFromQuota,
+      usedFromBalance: result.usedFromBalance
     });
 
   } catch (error) {

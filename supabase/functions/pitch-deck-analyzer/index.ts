@@ -2,10 +2,11 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { checkAndDeductCredits, getUserFromAuth } from '../_shared/credit-deduction.ts';
 import { CREDIT_COSTS } from '../_shared/credit-constants.ts';
+import { resolveCreditIdempotencyKey } from '../_shared/request-idempotency.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, idempotency-key',
 };
 
 interface PitchDeckAnalysisRequest {
@@ -71,13 +72,24 @@ serve(async (req) => {
     const effectiveUserId = authUser?.id || userId;
     console.log(`Analyzing pitch deck for user ${effectiveUserId}: ${fileName}`);
 
+    const idempotencyKey = await resolveCreditIdempotencyKey(req, {
+      userId: effectiveUserId,
+      feature: 'Pitch Deck Analyzer',
+      requestFingerprint: {
+        fileName,
+        fileSize,
+        storagePath,
+        contentLength: content.length,
+      },
+    });
+
     const creditCost = CREDIT_COSTS.PITCH_DECK_ANALYZER;
     const creditCheck = await checkAndDeductCredits(
       effectiveUserId,
       creditCost,
       'Pitch Deck Analyzer',
       undefined,
-      { fileName, fileSize, storagePath }
+      { fileName, fileSize, storagePath, idempotencyKey }
     );
 
     if (!creditCheck.success) {

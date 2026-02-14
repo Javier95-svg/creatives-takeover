@@ -2,10 +2,11 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 import { checkAndDeductCredits, getUserFromAuth } from '../_shared/credit-deduction.ts';
 import { CREDIT_COSTS } from '../_shared/credit-constants.ts';
+import { resolveCreditIdempotencyKey } from '../_shared/request-idempotency.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, idempotency-key',
 };
 
 serve(async (req) => {
@@ -37,6 +38,19 @@ serve(async (req) => {
       );
     }
 
+    const idempotencyKey = await resolveCreditIdempotencyKey(req, {
+      userId: user.id,
+      feature: 'Roadmap Generation',
+      sessionId: session_id,
+      requestFingerprint: {
+        business_idea,
+        industry,
+        start_date,
+        user_experience_level,
+        wizard_answers,
+      },
+    });
+
     // Check and deduct credits before processing
     const creditCost = CREDIT_COSTS.ROADMAP_GENERATION;
     const creditCheck = await checkAndDeductCredits(
@@ -44,7 +58,7 @@ serve(async (req) => {
       creditCost,
       'Roadmap Generation',
       session_id,
-      { business_idea, industry, user_experience_level }
+      { business_idea, industry, user_experience_level, idempotencyKey }
     );
 
     if (!creditCheck.success) {

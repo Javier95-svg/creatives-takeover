@@ -2,10 +2,11 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 import { checkAndDeductCredits, getUserFromAuth } from '../_shared/credit-deduction.ts';
 import { CREDIT_COSTS } from '../_shared/credit-constants.ts';
+import { resolveCreditIdempotencyKey } from '../_shared/request-idempotency.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, idempotency-key',
 };
 
 type MaterialType = 'pitch_deck' | 'cold_email' | 'one_pager';
@@ -225,12 +226,27 @@ serve(async (req) => {
     };
 
     const creditCost = creditCostMap[request.material_type];
+    const featureName = `${request.material_type.replace('_', ' ')} Generation`;
+    const idempotencyKey = await resolveCreditIdempotencyKey(req, {
+      userId: user.id,
+      feature: featureName,
+      requestFingerprint: {
+        material_type: request.material_type,
+        investor_id: request.investor_id,
+        assessment_id: request.assessment_id,
+        industry: request.industry,
+        funding_amount: request.funding_amount,
+        business_stage: request.business_stage,
+      },
+    });
 
     // Check and deduct credits
     const creditCheck = await checkAndDeductCredits(
       user.id,
       creditCost,
-      `${request.material_type.replace('_', ' ')} Generation`
+      featureName,
+      undefined,
+      { idempotencyKey, materialType: request.material_type }
     );
 
     if (!creditCheck.success) {

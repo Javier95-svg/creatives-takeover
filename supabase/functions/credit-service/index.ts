@@ -149,19 +149,38 @@ export class CreditService {
       // Check if user already has a credit record
       const existing = await this.getBalance(userId);
       
-      // If user already has a record (even with 0 balance), don't overwrite
+      // If user already has a record (even with 0 balance), don't overwrite.
+      // Normalize legacy bootstrap rows from older migrations (5 balance / 0 quota).
       if (existing !== null) {
+        if (existing.balance === 5 && existing.monthly_quota === 0) {
+          const { error: normalizeError } = await this.supabase
+            .from('user_credits')
+            .update({
+              balance: 0,
+              monthly_quota: 25,
+              subscription_tier: 'free',
+              last_reset_at: new Date().toISOString(),
+            })
+            .eq('user_id', userId);
+
+          if (normalizeError) {
+            console.error('Error normalizing legacy bootstrap credits:', normalizeError);
+            return { success: false, isNewUser: false };
+          }
+        }
+
         console.log('User already has credit record, skipping initialization', { 
           userId, 
-          existingBalance: existing.balance 
+          existingBalance: existing.balance,
+          existingQuota: existing.monthly_quota,
         });
         return { success: true, isNewUser: false }; // Already initialized, don't overwrite
       }
 
-      // Determine credits and tier - admin gets professional tier but normal credits
-      const initialCredits = 25; // Standard free credits for all new users
+      // Free plan starts with monthly quota (not spendable balance).
+      const initialMonthlyQuota = 25;
       const subscriptionTier = 'free'; // Will be updated to professional by other mechanisms
-      const welcomeReason = 'Welcome bonus - 25 free credits';
+      const welcomeReason = 'Monthly free-tier allocation on signup';
 
       // Check if there's already a welcome transaction to avoid duplicate grants
       const { data: existingTx } = await this.supabase
@@ -180,8 +199,8 @@ export class CreditService {
         .from('user_credits')
         .insert([{
           user_id: userId,
-          balance: initialCredits,
-          monthly_quota: initialCredits,
+          balance: 0,
+          monthly_quota: initialMonthlyQuota,
           subscription_tier: subscriptionTier
         }])
         .select();
@@ -202,10 +221,14 @@ export class CreditService {
           .from('credit_transactions')
           .insert([{
             user_id: userId,
-            amount: initialCredits,
+            amount: initialMonthlyQuota,
             tx_type: 'grant',
             reason: welcomeReason,
-            feature: 'Account Creation'
+            feature: 'Account Creation',
+            metadata: {
+              grantType: 'monthly_quota',
+              quotaGranted: initialMonthlyQuota,
+            }
           }]);
 
         if (txError) {

@@ -2,10 +2,11 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { checkAndDeductCredits } from '../_shared/credit-deduction.ts';
 import { CREDIT_COSTS } from '../_shared/credit-constants.ts';
+import { resolveCreditIdempotencyKey } from '../_shared/request-idempotency.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, idempotency-key',
 };
 
 interface ChatMessage {
@@ -81,13 +82,25 @@ serve(async (req) => {
     const shouldChargeCredits = userId !== null && chatMode !== 'tour-guide';
     
     if (shouldChargeCredits) {
+      const idempotencyKey = await resolveCreditIdempotencyKey(req, {
+        userId,
+        feature: 'AI Chat Message',
+        sessionId: conversation.id,
+        requestFingerprint: {
+          chatMode,
+          sessionId,
+          message,
+          conversationLength: conversationHistory.length,
+        },
+      });
+
       const creditCost = CREDIT_COSTS.AI_CHAT_MESSAGE;
       const creditCheck = await checkAndDeductCredits(
         userId,
         creditCost,
         'AI Chat Message',
         conversation.id,
-        { chatMode, messageLength: message.length }
+        { chatMode, messageLength: message.length, idempotencyKey }
       );
 
       if (!creditCheck.success) {

@@ -2,10 +2,11 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 import { checkAndDeductCredits, getUserFromAuth } from '../_shared/credit-deduction.ts';
 import { CREDIT_COSTS } from '../_shared/credit-constants.ts';
+import { resolveCreditIdempotencyKey } from '../_shared/request-idempotency.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, idempotency-key',
 };
 
 // Types (matching TypeScript interfaces)
@@ -349,12 +350,26 @@ serve(async (req) => {
       );
     }
 
+    const idempotencyKey = await resolveCreditIdempotencyKey(req, {
+      userId: user.id,
+      feature: 'Investor Matching',
+      requestFingerprint: {
+        industry: requestData.industry,
+        funding_amount: requestData.funding_amount,
+        locations: requestData.locations,
+        business_stage: requestData.business_stage,
+        assessment_id: requestData.assessment_id,
+      },
+    });
+
     // Check and deduct credits before processing
     const creditCost = CREDIT_COSTS.INVESTOR_MATCHING;
     const creditCheck = await checkAndDeductCredits(
       user.id,
       creditCost,
-      'Investor Matching'
+      'Investor Matching',
+      undefined,
+      { idempotencyKey, request: requestData }
     );
 
     if (!creditCheck.success) {
