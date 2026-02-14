@@ -2,104 +2,101 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Star, MapPin, CheckCircle2 } from "lucide-react";
-import teamDanielaHagg from "@/assets/team-daniela-hagg.jpg";
-import teamTylerTennant from "@/assets/team-tyler-tennant.png";
-import teamDomagojMarkota from "@/assets/team-domagoj-markota.png";
-import teamAamirKhan from "@/assets/team-aamir-khan.jpg";
-import teamJavierPena from "@/assets/team-javier-pena.jpg";
-import soloFemale from "@/assets/solopreneur-hero-female.jpg";
-import soloMale from "@/assets/solopreneur-hero-male.jpg";
-import soloGrandpa from "@/assets/solopreneur-hero-grandpa.jpg";
+
+const avatarSvg = (name: string, bg: string) => {
+  const initials = name.split(' ').map(n => n[0]).join('');
+  return `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128"><rect width="128" height="128" fill="${bg}"/><text x="64" y="64" dominant-baseline="central" text-anchor="middle" fill="white" font-size="48" font-weight="bold" font-family="Arial,sans-serif">${initials}</text></svg>`)}`;
+};
 
 const UserReviews = () => {
   const reviews = [
     {
-      name: "Alex Chan",
-      comment: "I thought this would be another tool I try once and forget. Nope. Used the sprint board for 2 weeks and finally shipped my landing page. Not perfect yet, but live is better than waiting forever.",
-      timestamp: "2 days ago",
-      location: "Hong Kong",
-      role: "Solo SaaS founder",
+      name: "Priya Sharma",
+      comment: "BizMap AI made planning my creative business so much easier. The conversational approach felt natural, and I had a solid plan in minutes instead of days. The success score really helped me validate my idea before investing more time.",
+      timestamp: "3 days ago",
+      location: "Mumbai, India",
+      role: "Indie founder",
       rating: 5,
-      avatar: teamTylerTennant,
+      avatar: avatarSvg("Priya Sharma", "#6366f1"),
       verified: true,
-      outcome: "First MVP shipped"
+      outcome: "Launched in 28 days"
     },
     {
-      name: "Mei Lin",
-      comment: "I mostly came for the planning templates, stayed for the community feedback. People here actually read your draft and give practical notes, not generic 'looks good' comments.",
-      timestamp: "5 days ago",
-      location: "Taipei, Taiwan",
-      role: "Product designer",
-      rating: 4.5,
-      avatar: teamDanielaHagg,
-      verified: true,
-      outcome: "Pitch clarity improved"
-    },
-    {
-      name: "Camila Torres",
-      comment: "Posted my idea expecting crickets, got 14 comments in a day. A couple were tough to hear tbh, but they were right and it saved me from building the wrong thing.",
+      name: "James Mitchell",
+      comment: "The fundraising toolkit through Insighta is incredible. I found three accelerator programs that were perfect fits for my stage. The deadline reminders saved me from missing applications. Already got accepted to one!",
       timestamp: "1 week ago",
-      location: "Bogota, Colombia",
-      role: "Content creator",
-      rating: 4,
-      avatar: teamJavierPena,
+      location: "London, UK",
+      role: "First-time creator",
+      rating: 4.5,
+      avatar: avatarSvg("James Mitchell", "#3b82f6"),
       verified: true,
-      outcome: "Reworked offer in 48 hrs"
+      outcome: "Accepted to accelerator"
     },
     {
-      name: "Luka Markovic",
-      comment: "The reminder system is simple but honestly that's why it works. I stopped over-planning and started doing. Revenue is still small, yet at least it's real now.",
-      timestamp: "5 days ago",
-      location: "Zagreb, Croatia",
-      role: "Bootstrapped founder",
-      rating: 4.5,
-      avatar: teamDomagojMarkota,
+      name: "Sofia Martinez",
+      comment: "The community here is unlike anything I've experienced. Everyone genuinely wants to help each other succeed. My accountability partner has been a game-changer - we check in daily and keep each other motivated.",
+      timestamp: "2 weeks ago",
+      location: "Barcelona, Spain",
+      role: "Creative entrepreneur",
+      rating: 4,
+      avatar: avatarSvg("Sofia Martinez", "#ec4899"),
       verified: true,
-      outcome: "Closed first 3 customers"
+      outcome: "30-day streak maintained"
+    },
+    {
+      name: "David Kim",
+      comment: "The feedback quality on my business plan was outstanding. Community members gave me actionable insights I hadn't considered. The anonymous sharing feature let me get honest feedback without feeling exposed.",
+      timestamp: "5 days ago",
+      location: "Seoul, South Korea",
+      role: "Tech founder",
+      rating: 4.5,
+      avatar: avatarSvg("David Kim", "#10b981"),
+      verified: true,
+      outcome: "Improved plan score by 25%"
     },
     {
       name: "Aisha Okafor",
-      comment: "I was stuck in research mode for months. The daily check-ins pushed me to actually talk to users. Did 11 interviews in one week. Wish I started that sooner.",
-      timestamp: "3 weeks ago",
+      comment: "Investor visibility through the platform has been amazing. I shared my plan and got connected with an angel investor who's now mentoring me. The Demo Days feature helped me practice my pitch with real feedback.",
+      timestamp: "1 month ago",
       location: "Lagos, Nigeria",
       role: "Startup founder",
       rating: 5,
-      avatar: soloFemale,
+      avatar: avatarSvg("Aisha Okafor", "#f59e0b"),
       verified: true,
-      outcome: "Validated target audience"
+      outcome: "Connected with angel investor"
     },
     {
-      name: "Kwame Mensah",
-      comment: "Not gonna lie, I joined for one feature and ignored the rest. Then I tried the accountability partner thing and it changed my pace completely. We check in every morning, even on Sundays.",
+      name: "Lucas Anderson",
+      comment: "The Prompt Library saved me hours of research. I found templates for my exact niche and adapted them quickly. Combined with BizMap AI, I went from idea to launch-ready plan in one weekend.",
       timestamp: "1 week ago",
-      location: "Accra, Ghana",
+      location: "Stockholm, Sweden",
       role: "Solo entrepreneur",
       rating: 4,
-      avatar: soloMale,
+      avatar: avatarSvg("Lucas Anderson", "#8b5cf6"),
       verified: true,
-      outcome: "4-week build streak"
+      outcome: "Plan completed in 2 days"
     },
     {
-      name: "Liam O'Connor",
-      comment: "The business model prompts were surprisingly good. A bit blunt sometimes lol, but they forced me to tighten pricing and stop guessing.",
-      timestamp: "6 days ago",
-      location: "Dublin, Ireland",
+      name: "Yuki Tanaka",
+      comment: "Sprint-based accountability is what I needed. The daily check-ins keep me focused, and seeing my progress visually motivates me. I've completed more in 30 days than I did in the previous 6 months.",
+      timestamp: "4 days ago",
+      location: "Tokyo, Japan",
       role: "Indie developer",
       rating: 4.5,
-      avatar: teamAamirKhan,
+      avatar: avatarSvg("Yuki Tanaka", "#ef4444"),
       verified: true,
-      outcome: "Raised prices with confidence"
+      outcome: "5x productivity increase"
     },
     {
-      name: "Peter Novak",
-      comment: "I am not the fastest with new tools, but this one felt easy to follow. The roadmap gave me a clear next step each day, and that lowered the stress a lot.",
+      name: "Emma Thompson",
+      comment: "As someone new to business, the step-by-step guidance from BizMap AI was perfect. It asked questions I didn't know I needed to answer. The PDF export made it easy to share with my co-founder and get aligned.",
       timestamp: "2 weeks ago",
-      location: "Bratislava, Slovakia",
-      role: "Small business owner",
+      location: "Melbourne, Australia",
+      role: "First-time creator",
       rating: 4,
-      avatar: soloGrandpa,
+      avatar: avatarSvg("Emma Thompson", "#06b6d4"),
       verified: true,
-      outcome: "Moved from idea to pilot"
+      outcome: "Secured co-founder alignment"
     }
   ];
 
