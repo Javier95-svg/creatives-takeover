@@ -27,7 +27,7 @@ const cycleSteps: CycleStep[] = [
     shortLabel: "Identity",
     title: "Stage 1: Identity",
     description:
-      "Define the exact problem, who it is for, what differentiates your solution, and why your team can deliver. The outcome is a clear ICP and measurable goals for the next stage.",
+      "In this stage, founders clarify the foundation of their startup by answering a few core questions:\n\nWhat specific problem are you solving?\nWho are you solving it for?\nWhat makes your solution different and more efficient?\nWhy are you the right person to build it?\n\nThe goal is to define your Ideal Customer Profile (ICP) and set clear, specific goals for what you want to achieve next.",
     icon: Lightbulb,
     color: "from-yellow-500/20 to-yellow-600/20"
   },
@@ -301,7 +301,7 @@ const UserReviews = () => {
                     {activeStep.title}
                   </h3>
                 </div>
-                <p className="text-muted-foreground leading-relaxed text-base sm:text-lg">
+                <p className="text-muted-foreground leading-relaxed text-base sm:text-lg whitespace-pre-line">
                   {activeStep.description}
                 </p>
 
