@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef, type ChangeEvent } from "react";
-import { Lightbulb, Users, Rocket, LayoutDashboard, Upload, Loader2, GraduationCap, TrendingUp, Handshake, BookOpen } from "lucide-react";
+import { Lightbulb, LayoutDashboard, Upload, Loader2, GraduationCap, TrendingUp, Handshake, BookOpen } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -386,7 +386,7 @@ const ValuePropositionCards = () => {
             className="w-full"
           >
             <CarouselContent ref={carouselContentRef} className="-ml-4 items-stretch">
-              {allCards.map((card, index) => {
+              {allCards.map((card) => {
                 const Icon = card.icon;
                 const storedImage = cardImages.find((img) => img.position === card.position);
                 const imageSrc = optimisticPreviews[card.position] || storedImage?.image_url || card.image;
@@ -495,7 +495,7 @@ const ValuePropositionCards = () => {
           </Carousel>
 
           {/* Navigation Buttons */}
-          <div className="value-prop-nav grid grid-cols-3 gap-3 mt-8 max-w-4xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-8 max-w-4xl mx-auto">
             {allCards.map((card, index) => (
               <Button
                 key={card.buttonLabel}

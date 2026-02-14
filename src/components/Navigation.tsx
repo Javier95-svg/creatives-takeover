@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Menu, X, LogIn, LogOut, User, Settings, Gift, UserPlus, MessageCircle, Home, Bot, BookOpen, TrendingUp, Users as UsersIcon, FileText, Info, DollarSign, ChevronDown, Mail, Rocket, FlaskConical, Lightbulb, Target, Boxes, GraduationCap, Handshake, BarChart3, Filter, CheckSquare, LineChart, CalendarCheck, HeartHandshake, Sparkles } from "lucide-react";
+import { Menu, X, LogIn, LogOut, User, Settings, UserPlus, MessageCircle, Home, Bot, BookOpen, TrendingUp, Users as UsersIcon, FileText, Info, DollarSign, ChevronDown, Mail, Rocket, FlaskConical, Target, Boxes, GraduationCap, Handshake, BarChart3, Sparkles } from "lucide-react";
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -35,7 +35,7 @@ const Navigation = () => {
   const [scrolled, setScrolled] = useState(false);
   const [showFriendRequests, setShowFriendRequests] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string>("");
-  const { user, signOut, loading, isAuthenticated } = useAuth();
+  const { user, signOut, loading } = useAuth();
   const { pendingFriendRequests } = useSocial(user?.id || '');
   const { trackClick } = usePageAnalytics();
   const deviceType = useDeviceType();
@@ -128,7 +128,7 @@ const Navigation = () => {
     try {
       await signOut();
       toast.success("Signed out successfully");
-    } catch (error) {
+    } catch {
       toast.error("Failed to sign out");
     }
   };
@@ -149,6 +149,114 @@ const Navigation = () => {
       return location.pathname === "/";
     }
     return location.pathname.startsWith(href);
+  };
+
+  type DropdownConfig = {
+    label: string;
+    widthClass: string;
+    items: BizMapMenuItem[];
+  };
+
+  const dropdownMenus: Record<string, DropdownConfig> = {
+    "BizMap AI": {
+      label: "Lean Startup System",
+      widthClass: "w-72",
+      items: bizMapSubmenu,
+    },
+    "Insighta": {
+      label: "Fundraising Tools",
+      widthClass: "w-56",
+      items: insightaSubmenu as unknown as BizMapMenuItem[],
+    },
+    "Community": {
+      label: "Connect & Collaborate",
+      widthClass: "w-56",
+      items: communitySubmenu as unknown as BizMapMenuItem[],
+    },
+    "Resources": {
+      label: "Niche Content for Founders",
+      widthClass: "w-56",
+      items: resourcesSubmenu as unknown as BizMapMenuItem[],
+    },
+  };
+
+  const renderDropdownNavigationItem = (
+    item: { name: string; href: string; tooltip: string; icon?: React.ComponentType<{ className?: string }> },
+    Icon: React.ComponentType<{ className?: string }> | undefined,
+    active: boolean,
+    colorClass: string
+  ) => {
+    const config = dropdownMenus[item.name];
+    if (!config) return null;
+
+    return (
+      <DropdownMenu key={item.name}>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <DropdownMenuTrigger
+              className={cn(
+                "relative flex items-center gap-1 px-3 py-2 rounded-lg transition-all duration-250 whitespace-nowrap font-medium text-sm outline-none",
+                "nav-item-hover-effect",
+                active
+                  ? "text-foreground bg-primary/5 nav-active-indicator active"
+                  : `text-muted-foreground ${colorClass}`
+              )}
+            >
+              {Icon && <Icon className="h-4 w-4 flex-shrink-0" />}
+              <span className="tracking-wide">{item.name}</span>
+              <ChevronDown className="h-3 w-3 ml-0.5" />
+            </DropdownMenuTrigger>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>{item.tooltip}</p>
+          </TooltipContent>
+        </Tooltip>
+        <DropdownMenuContent align="start" className={config.widthClass}>
+          <DropdownMenuLabel>{config.label}</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          {config.items.map((subItem, idx) => {
+            if ("type" in subItem && subItem.type === "label") {
+              return (
+                <DropdownMenuLabel
+                  key={`${item.name}-label-${idx}`}
+                  className="text-[10px] font-semibold uppercase tracking-wider text-primary mt-2 first:mt-0"
+                >
+                  {subItem.label}
+                </DropdownMenuLabel>
+              );
+            }
+
+            if ("type" in subItem && subItem.type === "separator") {
+              return <DropdownMenuSeparator key={`${item.name}-separator-${idx}`} />;
+            }
+
+            const linkItem = subItem as {
+              name: string;
+              href: string;
+              icon: React.ComponentType<{ className?: string }>;
+              description: string;
+            };
+            const SubIcon = linkItem.icon;
+
+            return (
+              <DropdownMenuItem key={`${item.name}-${linkItem.name}`} asChild>
+                <Link
+                  to={linkItem.href}
+                  onClick={() => trackClick(`${item.name} - ${linkItem.name}`, "Navigation")}
+                  className="cursor-pointer"
+                >
+                  <SubIcon className="h-4 w-4 mr-2" />
+                  <div className="flex flex-col">
+                    <span className="font-medium">{linkItem.name}</span>
+                    <span className="text-xs text-muted-foreground">{linkItem.description}</span>
+                  </div>
+                </Link>
+              </DropdownMenuItem>
+            );
+          })}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    );
   };
 
   return (
@@ -204,207 +312,8 @@ const Navigation = () => {
                     colorClass = 'hover:text-primary';
                   }
 
-                  // Special handling for BizMap AI with dropdown
-                  if (item.name === 'BizMap AI') {
-                    return (
-                      <DropdownMenu key={item.name}>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <DropdownMenuTrigger className={cn(
-                              "relative flex items-center gap-1 px-3 py-2 rounded-lg transition-all duration-250 whitespace-nowrap font-medium text-sm outline-none",
-                              "nav-item-hover-effect",
-                              active
-                                ? "text-foreground bg-primary/5 nav-active-indicator active"
-                                : `text-muted-foreground ${colorClass}`
-                            )}>
-                              {Icon && <Icon className="h-4 w-4 flex-shrink-0" />}
-                              <span className="tracking-wide">{item.name}</span>
-                              <ChevronDown className="h-3 w-3 ml-0.5" />
-                            </DropdownMenuTrigger>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>{item.tooltip}</p>
-                          </TooltipContent>
-                        </Tooltip>
-                        <DropdownMenuContent align="start" className="w-72">
-                          <DropdownMenuLabel>Lean Startup System</DropdownMenuLabel>
-                          <DropdownMenuSeparator />
-                          {bizMapSubmenu.map((subItem, idx) => {
-                            if ('type' in subItem && subItem.type === 'label') {
-                              return (
-                                <DropdownMenuLabel key={idx} className="text-[10px] font-semibold uppercase tracking-wider text-primary mt-2 first:mt-0">
-                                  {subItem.label}
-                                </DropdownMenuLabel>
-                              );
-                            }
-                            if ('type' in subItem && subItem.type === 'separator') {
-                              return <DropdownMenuSeparator key={idx} />;
-                            }
-                            const linkItem = subItem as { name: string; href: string; icon: React.ComponentType<{ className?: string }>; description: string };
-                            const SubIcon = linkItem.icon;
-                            return (
-                              <DropdownMenuItem key={linkItem.name} asChild>
-                                <Link
-                                  to={linkItem.href}
-                                  onClick={() => trackClick(`${item.name} - ${linkItem.name}`, 'Navigation')}
-                                  className="cursor-pointer"
-                                >
-                                  <SubIcon className="h-4 w-4 mr-2" />
-                                  <div className="flex flex-col">
-                                    <span className="font-medium">{linkItem.name}</span>
-                                    <span className="text-xs text-muted-foreground">{linkItem.description}</span>
-                                  </div>
-                                </Link>
-                              </DropdownMenuItem>
-                            );
-                          })}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    );
-                  }
-
-                  // Special handling for Insighta with dropdown
-                  if (item.name === 'Insighta') {
-                    return (
-                      <DropdownMenu key={item.name}>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <DropdownMenuTrigger className={cn(
-                              "relative flex items-center gap-1 px-3 py-2 rounded-lg transition-all duration-250 whitespace-nowrap font-medium text-sm outline-none",
-                              "nav-item-hover-effect",
-                              active
-                                ? "text-foreground bg-primary/5 nav-active-indicator active"
-                                : `text-muted-foreground ${colorClass}`
-                            )}>
-                              {Icon && <Icon className="h-4 w-4 flex-shrink-0" />}
-                              <span className="tracking-wide">{item.name}</span>
-                              <ChevronDown className="h-3 w-3 ml-0.5" />
-                            </DropdownMenuTrigger>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>{item.tooltip}</p>
-                          </TooltipContent>
-                        </Tooltip>
-                        <DropdownMenuContent align="start" className="w-56">
-                          <DropdownMenuLabel>Fundraising Tools</DropdownMenuLabel>
-                          <DropdownMenuSeparator />
-                          {insightaSubmenu.map((subItem) => {
-                            const SubIcon = subItem.icon;
-                            return (
-                              <DropdownMenuItem key={subItem.name} asChild>
-                                <Link
-                                  to={subItem.href}
-                                  onClick={() => trackClick(`${item.name} - ${subItem.name}`, 'Navigation')}
-                                  className="cursor-pointer"
-                                >
-                                  <SubIcon className="h-4 w-4 mr-2" />
-                                  <div className="flex flex-col">
-                                    <span className="font-medium">{subItem.name}</span>
-                                    <span className="text-xs text-muted-foreground">{subItem.description}</span>
-                                  </div>
-                                </Link>
-                              </DropdownMenuItem>
-                            );
-                          })}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    );
-                  }
-
-                  // Special handling for Community with dropdown
-                  if (item.name === 'Community') {
-                    return (
-                      <DropdownMenu key={item.name}>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <DropdownMenuTrigger className={cn(
-                              "relative flex items-center gap-1 px-3 py-2 rounded-lg transition-all duration-250 whitespace-nowrap font-medium text-sm outline-none",
-                              "nav-item-hover-effect",
-                              active
-                                ? "text-foreground bg-primary/5 nav-active-indicator active"
-                                : `text-muted-foreground ${colorClass}`
-                            )}>
-                              {Icon && <Icon className="h-4 w-4 flex-shrink-0" />}
-                              <span className="tracking-wide">{item.name}</span>
-                              <ChevronDown className="h-3 w-3 ml-0.5" />
-                            </DropdownMenuTrigger>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>{item.tooltip}</p>
-                          </TooltipContent>
-                        </Tooltip>
-                        <DropdownMenuContent align="start" className="w-56">
-                          <DropdownMenuLabel>Connect & Collaborate</DropdownMenuLabel>
-                          <DropdownMenuSeparator />
-                          {communitySubmenu.map((subItem) => {
-                            const SubIcon = subItem.icon;
-                            return (
-                              <DropdownMenuItem key={subItem.name} asChild>
-                                <Link
-                                  to={subItem.href}
-                                  onClick={() => trackClick(`${item.name} - ${subItem.name}`, 'Navigation')}
-                                  className="cursor-pointer"
-                                >
-                                  <SubIcon className="h-4 w-4 mr-2" />
-                                  <div className="flex flex-col">
-                                    <span className="font-medium">{subItem.name}</span>
-                                    <span className="text-xs text-muted-foreground">{subItem.description}</span>
-                                  </div>
-                                </Link>
-                              </DropdownMenuItem>
-                            );
-                          })}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    );
-                  }
-
-                  // Special handling for Resources with dropdown
-                  if (item.name === 'Resources') {
-                    return (
-                      <DropdownMenu key={item.name}>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <DropdownMenuTrigger className={cn(
-                              "relative flex items-center gap-1 px-3 py-2 rounded-lg transition-all duration-250 whitespace-nowrap font-medium text-sm outline-none",
-                              "nav-item-hover-effect",
-                              active
-                                ? "text-foreground bg-primary/5 nav-active-indicator active"
-                                : `text-muted-foreground ${colorClass}`
-                            )}>
-                              {Icon && <Icon className="h-4 w-4 flex-shrink-0" />}
-                              <span className="tracking-wide">{item.name}</span>
-                              <ChevronDown className="h-3 w-3 ml-0.5" />
-                            </DropdownMenuTrigger>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>{item.tooltip}</p>
-                          </TooltipContent>
-                        </Tooltip>
-                        <DropdownMenuContent align="start" className="w-56">
-                          <DropdownMenuLabel>Niche Content for Founders</DropdownMenuLabel>
-                          <DropdownMenuSeparator />
-                          {resourcesSubmenu.map((subItem) => {
-                            const SubIcon = subItem.icon;
-                            return (
-                              <DropdownMenuItem key={subItem.name} asChild>
-                                <Link
-                                  to={subItem.href}
-                                  onClick={() => trackClick(`${item.name} - ${subItem.name}`, 'Navigation')}
-                                  className="cursor-pointer"
-                                >
-                                  <SubIcon className="h-4 w-4 mr-2" />
-                                  <div className="flex flex-col">
-                                    <span className="font-medium">{subItem.name}</span>
-                                    <span className="text-xs text-muted-foreground">{subItem.description}</span>
-                                  </div>
-                                </Link>
-                              </DropdownMenuItem>
-                            );
-                          })}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    );
+                  if (dropdownMenus[item.name]) {
+                    return renderDropdownNavigationItem(item, Icon, active, colorClass);
                   }
 
                   return (

@@ -412,10 +412,6 @@ All colors MUST be HSL.
 @layer base {
   * {
     @apply border-border;
-    /* Smooth theme transitions for theme-aware properties */
-    transition-property: background-color, border-color, color, fill, stroke;
-    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-    transition-duration: 0.3s;
   }
 
   body {

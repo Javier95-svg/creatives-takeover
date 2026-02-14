@@ -1,8 +1,6 @@
 import { Helmet } from "react-helmet-async";
 import { useParams, Link } from "react-router-dom";
-import { useEffect, useState } from "react";
-import Navigation from "@/components/Navigation";
-import Footer from "@/components/Footer";
+import { useEffect, useState, type ReactNode } from "react";
 import ProfileWallpaper from "@/components/wallpapers/ProfileWallpaper";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,7 +8,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Progress } from "@/components/ui/progress";
 import { LayoutDashboard, Calendar, MessageCircle, Linkedin, Instagram, Globe, Settings } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -25,6 +22,7 @@ import { useCreditActions } from "@/hooks/useCreditActions";
 import { toast } from "sonner";
 import { logError } from "@/lib/logger";
 import DOMPurify from "dompurify";
+import PageShell from "@/components/layouts/PageShell";
 
 // Calendly link for Samuel Starkman
 const SAMUEL_STARKMAN_CALENDLY_URL = 'https://calendly.com/samstarkman/1-on-1-with-sam?month=2025-12';
@@ -289,71 +287,42 @@ const Profile = () => {
     };
   }, [profile?.id]);
 
+  const pageTitle = "Creatives Takeover";
+  const pageDescription = !loading && profile
+    ? `View ${profile.full_name || "user"}'s profile and posts`
+    : null;
+
+  let pageContent: ReactNode;
+
   if (loading) {
-    return (
-      <>
-        <Helmet>
-          <title>Creatives Takeover</title>
-        </Helmet>
-        <div className="relative min-h-screen overflow-hidden">
-          <ProfileWallpaper />
-          <div className="relative z-10">
-            <Navigation />
-            <main className="container mx-auto px-4 py-20">
-              <div className="max-w-4xl mx-auto">
-                <div className="animate-pulse space-y-4">
-                  <div className="h-32 bg-muted rounded-lg" />
-                  <div className="h-64 bg-muted rounded-lg" />
-                </div>
-              </div>
-            </main>
-            <Footer />
+    pageContent = (
+      <div className="container mx-auto px-4 py-20">
+        <div className="max-w-4xl mx-auto">
+          <div className="animate-pulse space-y-4">
+            <div className="h-32 bg-muted rounded-lg" />
+            <div className="h-64 bg-muted rounded-lg" />
           </div>
         </div>
-      </>
+      </div>
     );
-  }
-
-  if (!profile) {
-    return (
-      <>
-        <Helmet>
-          <title>Creatives Takeover</title>
-        </Helmet>
-        <div className="relative min-h-screen overflow-hidden">
-          <ProfileWallpaper />
-          <div className="relative z-10">
-            <Navigation />
-            <main className="container mx-auto px-4 py-20">
-              <Card className="max-w-md mx-auto p-8 text-center">
-                <h2 className="text-2xl font-bold mb-4">Profile Not Found</h2>
-                <p className="text-muted-foreground mb-6">
-                  The profile you're looking for doesn't exist.
-                </p>
-                <Button asChild>
-                  <Link to="/community">Back to Community</Link>
-                </Button>
-              </Card>
-            </main>
-            <Footer />
-          </div>
-        </div>
-      </>
+  } else if (!profile) {
+    pageContent = (
+      <div className="container mx-auto px-4 py-20">
+        <Card className="max-w-md mx-auto p-8 text-center">
+          <h2 className="text-2xl font-bold mb-4">Profile Not Found</h2>
+          <p className="text-muted-foreground mb-6">
+            The profile you're looking for doesn't exist.
+          </p>
+          <Button asChild>
+            <Link to="/community">Back to Community</Link>
+          </Button>
+        </Card>
+      </div>
     );
-  }
-
-  return (
-    <>
-      <Helmet>
-        <title>Creatives Takeover</title>
-        <meta name="description" content={`View ${profile.full_name || 'user'}'s profile and posts`} />
-      </Helmet>
-      <div className="relative min-h-screen overflow-hidden">
-        <ProfileWallpaper />
-        <div className="relative z-10">
-          <Navigation />
-          <main className="container mx-auto px-4 py-8">
-            <div className="max-w-4xl mx-auto">
+  } else {
+    pageContent = (
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-4xl mx-auto">
               {/* Profile Header with Dashboard CTA */}
               <div className="flex gap-4 mb-6 items-start">
                 {/* Dashboard CTA - Left side */}
@@ -576,11 +545,20 @@ const Profile = () => {
                   }}
                 />
               )}
-            </div>
-          </main>
-          <Footer />
         </div>
       </div>
+    );
+  }
+
+  return (
+    <>
+      <Helmet>
+        <title>{pageTitle}</title>
+        {pageDescription && <meta name="description" content={pageDescription} />}
+      </Helmet>
+      <PageShell background={<ProfileWallpaper />}>
+        {pageContent}
+      </PageShell>
     </>
   );
 };
