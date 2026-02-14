@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Lightbulb,
@@ -25,7 +24,7 @@ type CycleStep = {
 const cycleSteps: CycleStep[] = [
   {
     shortLabel: "Identity",
-    title: "Step 1: Identity",
+    title: "Stage 1: Identity",
     description:
       "Define the exact problem, who it is for, what differentiates your solution, and why your team can deliver. The outcome is a clear ICP and measurable goals for the next stage.",
     icon: Lightbulb,
@@ -33,7 +32,7 @@ const cycleSteps: CycleStep[] = [
   },
   {
     shortLabel: "Prototyping",
-    title: "Step 2: Prototyping",
+    title: "Stage 2: Prototyping",
     description:
       "Build a simple landing page and waitlist that clearly presents the future MVP features and user flow. This tests whether your value proposition is compelling before writing product code.",
     icon: Pencil,
@@ -41,7 +40,7 @@ const cycleSteps: CycleStep[] = [
   },
   {
     shortLabel: "Validation",
-    title: "Step 3: Validation",
+    title: "Stage 3: Validation",
     description:
       "Run direct outreach and interviews, capture feedback, and measure waitlist conversion to confirm demand. If traction is weak, refine positioning and feature priorities with your ICP before moving on.",
     icon: CheckCircle,
@@ -49,7 +48,7 @@ const cycleSteps: CycleStep[] = [
   },
   {
     shortLabel: "Building",
-    title: "Step 4: Building",
+    title: "Stage 4: Building",
     description:
       "Once demand is validated, ship the MVP with only core features and tight scope. Use tools, mentors, and technical guidance to build reliably while preserving room to iterate.",
     icon: Hammer,
@@ -57,7 +56,7 @@ const cycleSteps: CycleStep[] = [
   },
   {
     shortLabel: "Launch",
-    title: "Step 5: Launch",
+    title: "Stage 5: Launch",
     description:
       "Distribute aggressively across social channels, communities, and startup directories. Treat launch as an ongoing acquisition system, not a one-day event, and compound visibility with consistent branding.",
     icon: Rocket,
@@ -65,7 +64,7 @@ const cycleSteps: CycleStep[] = [
   },
   {
     shortLabel: "Networking",
-    title: "Step 6: Networking",
+    title: "Stage 6: Networking",
     description:
       "Form strategic relationships through founder communities, partnerships, accelerators, and early investor conversations. Strong backing increases speed, distribution opportunities, and resilience.",
     icon: Users,
@@ -73,7 +72,7 @@ const cycleSteps: CycleStep[] = [
   },
   {
     shortLabel: "Fundraising",
-    title: "Step 7: Fundraising",
+    title: "Stage 7: Fundraising",
     description:
       "After proving MVP execution, real demand, and early customers, raise capital to accelerate growth. It is optional, but the right funding can expand runway, talent, and execution capacity.",
     icon: TrendingUp,
@@ -290,9 +289,6 @@ const UserReviews = () => {
             <div className={`absolute inset-0 bg-gradient-to-br ${activeStep.color} opacity-50 transition-all duration-500`} />
             <CardContent className="p-6 sm:p-8 lg:p-10 h-full flex flex-col justify-center relative z-10">
               <div className="animate-in fade-in slide-in-from-right duration-500" key={activeStepIndex}>
-                <Badge variant="outline" className="w-fit mb-4 bg-primary/10 border-primary/20 text-primary backdrop-blur-sm">
-                  Startup Development Cycle
-                </Badge>
                 <div className="flex items-start gap-4 mb-4">
                   <div className={`p-3 rounded-xl bg-gradient-to-br ${activeStep.color} border border-primary/20`}>
                     <ActiveIcon className="w-6 h-6 sm:w-7 sm:h-7 text-primary" />
