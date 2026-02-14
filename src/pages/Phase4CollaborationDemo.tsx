@@ -58,7 +58,7 @@ const Phase4CollaborationDemo = () => {
           </div>
 
           {/* Phase 4 Collaboration Hub */}
-          <div className="h-[min(72vh,38rem)] min-h-[24rem] md:h-[min(68vh,46rem)] md:min-h-[30rem] lg:h-[700px]">
+          <div className="h-[700px] responsive-collab-shell">
             <Phase4CollaborationHub 
               sessionId={demosprint?.id || 'demo-session'}
             />

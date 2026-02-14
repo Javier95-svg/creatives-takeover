@@ -110,7 +110,7 @@ const Community = () => {
 
             {/* Chat Area */}
             <div className="lg:col-span-3">
-              <Card className="glass border-border h-[min(70vh,36rem)] min-h-[22rem] md:h-[min(68vh,42rem)] md:min-h-[28rem] lg:h-[600px] flex flex-col">
+              <Card className="glass border-border h-[600px] responsive-community-chat flex flex-col">
                 <CardHeader className="border-b border-border">
                   <CardTitle className="text-lg flex items-center space-x-2">
                     <span># general</span>

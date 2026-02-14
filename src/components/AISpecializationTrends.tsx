@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { TrendingUp, Target, Zap } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { TrendingUp, Target, Zap, BarChart3 } from "lucide-react";
 import {
   LineChart,
   Line,
@@ -95,7 +96,7 @@ const AISpecializationTrends = () => {
 
 
   return (
-    <section className="section-shell">
+    <section className="py-20 lg:py-28 relative overflow-hidden font-poppins">
       <style>{`
         @keyframes chartFadeIn {
           from {
@@ -142,18 +143,21 @@ const AISpecializationTrends = () => {
 
       <div className="container mx-auto px-4 sm:px-6 relative z-10">
         {/* Section Header - Enhanced */}
-        <div className="section-header">
-          <h2 className="section-title mb-6">
+        <div className="text-center mb-16 sm:mb-20">
+          <Badge variant="outline" className="mb-5 text-xs uppercase tracking-wide text-muted-foreground">
+            The Power of Small Teams 👥
+          </Badge>
+          <h2 className="font-space-grotesk text-3xl sm:text-4xl lg:text-5xl font-semibold mb-6 tracking-tight text-primary">
             The Future of Work Is Here
           </h2>
-          <p className="section-description max-w-3xl mx-auto px-4">
+          <p className="font-poppins text-base sm:text-lg text-muted-foreground max-w-3xl mx-auto px-4 leading-relaxed">
             Technology is enabling small teams to build exceptional products and business models that can successfully compete with large enterprises.
           </p>
         </div>
 
         {/* Key Statistics */}
         <div ref={chartAnimationRef} className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-          <Card className="surface-panel trust-outline">
+          <Card className="border-border/70 bg-card shadow-sm">
             <CardContent className="p-6 text-center">
               <div ref={revenueRef} className="text-3xl md:text-4xl font-bold text-primary mb-2">
                 ${revenueCount.toFixed(1)}M
@@ -166,7 +170,7 @@ const AISpecializationTrends = () => {
             </CardContent>
           </Card>
 
-          <Card className="surface-panel trust-outline">
+          <Card className="border-border/70 bg-card shadow-sm">
             <CardContent className="p-6 text-center">
               <div ref={speedRef} className="text-3xl md:text-4xl font-bold text-muted-foreground mb-2">
                 {speedCount.toFixed(0)}x
@@ -179,7 +183,7 @@ const AISpecializationTrends = () => {
             </CardContent>
           </Card>
 
-          <Card className="surface-panel trust-outline">
+          <Card className="border-border/70 bg-card shadow-sm">
             <CardContent className="p-6 text-center">
               <div ref={marginRef} className="text-3xl md:text-4xl font-bold text-accent mb-2">
                 {marginCount.toFixed(0)}%
@@ -196,7 +200,7 @@ const AISpecializationTrends = () => {
         {/* Charts Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
           {/* Chart 1: Operational Velocity */}
-          <Card className="surface-panel trust-outline">
+          <Card className="border-border/70 shadow-sm hover:shadow-md transition-shadow">
             <CardHeader>
               <CardTitle className="font-space-grotesk text-base sm:text-lg flex items-center gap-2">
                 <Zap className="w-5 h-5 text-primary" />
@@ -332,7 +336,7 @@ const AISpecializationTrends = () => {
           </Card>
 
           {/* Chart 2: Market Value Capture */}
-          <Card className="surface-panel trust-outline">
+          <Card className="border-border/70 shadow-sm hover:shadow-md transition-shadow">
             <CardHeader>
               <CardTitle className="font-space-grotesk text-base sm:text-lg flex items-center gap-2">
                 <Target className="w-5 h-5 text-primary" />
@@ -443,7 +447,7 @@ const AISpecializationTrends = () => {
 
         {/* Narrative Conclusion */}
         <div ref={textSectionRef} className="mt-12 max-w-4xl mx-auto">
-          <div className="surface-panel trust-outline rounded-2xl p-8">
+          <div className="bg-muted/40 border border-border/70 rounded-lg p-8">
             <h3 className="font-space-grotesk text-2xl font-semibold mb-4 text-center">
               A Lifetime Opportunity
             </h3>

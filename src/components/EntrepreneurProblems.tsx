@@ -1,5 +1,6 @@
-import { Map, Users, Target, Rocket, Lightbulb, LayoutDashboard, Handshake, Code, FlaskConical } from "lucide-react";
+ï»¿import { Map, Users, Target, Rocket, Lightbulb, LayoutDashboard, Bot, Handshake, Code, FlaskConical } from "lucide-react";
 import { Link } from "react-router-dom";
+import { Badge } from "@/components/ui/badge";
 import FounderJourneyVideo from "./FounderJourneyVideo";
 
 const EntrepreneurProblems = () => {
@@ -9,7 +10,7 @@ const EntrepreneurProblems = () => {
       phase: "The Starting Point",
       challenge: "Scattered ideas without a clear direction",
       insight: "Founders often face a flood of ideas but struggle to prioritize or organize them into a clear plan. This lack of focus leads to confusion, indecision, and slow progress, as they bounce between concepts without a unified strategy, making it difficult to move the business forward. Without a clear roadmap, they risk losing momentum and missing key opportunities that are critical for growth.",
-      pathway: "BizMap AI guides you from scattered thoughts to a strategic plan—clarifying your market, competitors, and next steps in one conversation.",
+      pathway: "BizMap AI guides you from scattered thoughts to a strategic planâ€”clarifying your market, competitors, and next steps in one conversation.",
       icon: Lightbulb,
       accentColor: "blue", // Planning
     },
@@ -17,7 +18,7 @@ const EntrepreneurProblems = () => {
       phase: "Finding Direction",
       challenge: "Aligning your product with a genuine market need",
       insight: "Founders frequently build products based on assumptions, only to face the harsh reality of limited market demand, which leads to wasted resources and a high risk of building something nobody is willing to buy. To avoid this, it's crucial to validate ideas early through market research and customer feedback, ensuring the product aligns with real needs and demands.",
-      pathway: "The Dashboard breaks down your vision into weekly sprints, tracks progress, and keeps you accountable—transforming busyness into real momentum.",
+      pathway: "The Dashboard breaks down your vision into weekly sprints, tracks progress, and keeps you accountableâ€”transforming busyness into real momentum.",
       icon: Target,
       accentColor: "green", // Execution/Growth
     },
@@ -25,7 +26,7 @@ const EntrepreneurProblems = () => {
       phase: "Lack of Experience",
       challenge: "Navigating Uncertainty and Decision-Making",
       insight: "Early-stage founders often find themselves in situations with limited information and high uncertainty. This makes decision-making difficult, as they must navigate unknowns while balancing short-term survival with long-term vision. A mentor can help provide perspective and guidance on key decisions, like product direction, market fit, or hiring, based on their own experience.",
-      pathway: "Our Community connects you with mentors and fellow founders who've navigated these exact challenges—offering guidance, feedback, and genuine support.",
+      pathway: "Our Community connects you with mentors and fellow founders who've navigated these exact challengesâ€”offering guidance, feedback, and genuine support.",
       icon: Users,
       accentColor: "red", // Action/Connection
     },
@@ -33,7 +34,7 @@ const EntrepreneurProblems = () => {
       phase: "Working Smartly",
       challenge: "Task prioritization and resources management",
       insight: "80% of results come from 20% of effort. Many founders get lost in low-impact tasks that take them nowhere, struggling to prioritize effectively. Proper task prioritization and resource management help focus energy on what truly drives progress, ensuring time and resources are used wisely.",
-      pathway: "BizMap AI helps define your ICP, select the right channels, and craft a go-to-market strategy based on proven frameworks—no more guessing.",
+      pathway: "BizMap AI helps define your ICP, select the right channels, and craft a go-to-market strategy based on proven frameworksâ€”no more guessing.",
       icon: Map,
       accentColor: "blue", // Planning
     },
@@ -89,56 +90,19 @@ const EntrepreneurProblems = () => {
     return classes[color as keyof typeof classes] || classes.blue;
   };
 
-  const founderJourneyVideoPositions = new Set([0, 1, 2, 3, 4, 5, 6]);
-
-  const ctaClassName = "inline-flex items-center gap-2 rounded-[12px] border border-border/80 bg-background/95 px-5 py-2.5 text-base font-semibold text-foreground shadow-[0_1px_2px_hsl(var(--foreground)/0.06)] hover:-translate-y-0.5 hover:border-primary/40 hover:bg-primary/5 hover:shadow-[0_10px_20px_hsl(var(--foreground)/0.12)] transition-all duration-200";
-
-  const pathwayCtaConfig: Record<number, { to: string; label?: string; icon: typeof Target; iconPosition?: "start" | "end" }> = {
-    0: { to: "/icp-builder", label: "Define your Niche", icon: Target, iconPosition: "end" },
-    1: { to: "/pmf-lab", label: "Try PMF Lab", icon: FlaskConical, iconPosition: "end" },
-    2: { to: "/community", label: "Find a Mentor", icon: Users, iconPosition: "end" },
-    3: { to: "/dashboard", label: "Explore Dashboard", icon: LayoutDashboard, iconPosition: "start" },
-    4: { to: "/insighta/vc-search", icon: Rocket, iconPosition: "end" },
-    5: { to: "/tech-stack", icon: Code, iconPosition: "end" },
-    6: { to: "/community/co-founders", icon: Handshake, iconPosition: "end" },
-  };
-
-  const renderPathway = (index: number, pathwayText: string) => {
-    const config = pathwayCtaConfig[index];
-    if (!config) {
-      return (
-        <div className="rounded-md border border-border bg-background/80 p-4">
-          <p className="text-sm text-foreground/90 leading-relaxed">{pathwayText}</p>
-        </div>
-      );
-    }
-
-    const CtaIcon = config.icon;
-    const label = config.label || pathwayText;
-
-    return (
-      <div className="flex justify-center">
-        <Link to={config.to} className={ctaClassName}>
-          <span className="font-semibold text-foreground flex items-center gap-2 text-base">
-            {config.iconPosition === "start" && <CtaIcon className="h-5 w-5" />}
-            {label}
-            {config.iconPosition !== "start" && <CtaIcon className="h-5 w-5" />}
-          </span>
-        </Link>
-      </div>
-    );
-  };
-
   return (
-    <section className="section-shell" aria-labelledby="journey-heading">
+    <section className="py-20 lg:py-28 relative font-poppins" aria-labelledby="journey-heading">
 
       <div className="container mx-auto px-4 sm:px-6 relative z-10">
         {/* Section Header */}
-        <div className="section-header max-w-4xl">
-          <h2 id="journey-heading" className="section-title">
+        <div className="text-center mb-16 sm:mb-20 max-w-4xl mx-auto">
+          <Badge variant="outline" className="mb-5 text-xs uppercase tracking-wide text-muted-foreground">
+            Own Your Path ðŸš€
+          </Badge>
+          <h2 id="journey-heading" className="font-space-grotesk text-3xl sm:text-4xl lg:text-5xl font-semibold mb-6 leading-tight tracking-tight text-primary">
             Every Founder's Journey is Unique
           </h2>
-          <p className="section-description">
+          <p className="font-poppins text-base sm:text-lg text-muted-foreground leading-relaxed">
             But some challenges are universal. Here, we highlight some of the most common obstacles founders face and how we assist to overcome them.
           </p>
         </div>
@@ -146,7 +110,7 @@ const EntrepreneurProblems = () => {
         {/* Vertical Timeline */}
         <div className="max-w-5xl mx-auto relative">
           {/* Timeline Line - Continuous vertical line */}
-          <div className="absolute left-8 md:left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-primary/30 via-border to-primary/25 hidden sm:block" />
+          <div className="absolute left-8 md:left-1/2 top-0 bottom-0 w-px bg-border hidden sm:block" />
 
           {/* Timeline Items */}
           <div className="space-y-12 md:space-y-16">
@@ -163,9 +127,21 @@ const EntrepreneurProblems = () => {
                   {/* Mobile Layout (Stacked) */}
                   <div className="md:hidden flex gap-6">
                     {/* Icon or Video */}
-                    <div className={founderJourneyVideoPositions.has(index) ? "w-full" : "flex-shrink-0"}>
-                      {founderJourneyVideoPositions.has(index) ? (
-                        <FounderJourneyVideo position={index} />
+                    <div className={index === 0 || index === 1 || index === 2 || index === 3 || index === 4 || index === 5 || index === 6 ? "w-full" : "flex-shrink-0"}>
+                      {index === 0 ? (
+                        <FounderJourneyVideo position={0} />
+                      ) : index === 1 ? (
+                        <FounderJourneyVideo position={1} />
+                      ) : index === 2 ? (
+                        <FounderJourneyVideo position={2} />
+                      ) : index === 3 ? (
+                        <FounderJourneyVideo position={3} />
+                      ) : index === 4 ? (
+                        <FounderJourneyVideo position={4} />
+                      ) : index === 5 ? (
+                        <FounderJourneyVideo position={5} />
+                      ) : index === 6 ? (
+                        <FounderJourneyVideo position={6} />
                       ) : (
                         <div className={`w-14 h-14 rounded-full flex items-center justify-center ${accentClasses.icon} shadow-sm transition-colors`}>
                           <Icon className="w-7 h-7" />
@@ -186,7 +162,90 @@ const EntrepreneurProblems = () => {
                       <p className={`text-sm text-muted-foreground mb-4 leading-relaxed ${index === 0 || index === 4 || index === 6 ? 'text-left' : ''}`}>
                         {step.insight}
                       </p>
-                      {renderPathway(index, step.pathway)}
+                      {index === 0 ? (
+                        <div className="flex justify-center">
+                          <Link
+                            to="/icp-builder"
+                            className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-5 py-2.5 text-base font-medium text-foreground hover:border-primary/50 hover:bg-primary/5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
+                          >
+                            <span className="font-semibold text-foreground flex items-center gap-2 text-base">
+                              Define your Niche <Target className="h-5 w-5" />
+                            </span>
+                          </Link>
+                        </div>
+                      ) : index === 1 ? (
+                        <div className="flex justify-center">
+                          <Link 
+                            to="/pmf-lab" 
+                            className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-5 py-2.5 text-base font-medium text-foreground hover:border-primary/50 hover:bg-primary/5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
+                          >
+                            <span className="font-semibold text-foreground flex items-center gap-2 text-base">
+                              Try PMF Lab <FlaskConical className="h-5 w-5" />
+                            </span>
+                          </Link>
+                        </div>
+                      ) : index === 2 ? (
+                        <div className="flex justify-center">
+                          <Link 
+                            to="/community" 
+                            className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-5 py-2.5 text-base font-medium text-foreground hover:border-primary/50 hover:bg-primary/5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
+                          >
+                            <span className="font-semibold text-foreground flex items-center gap-2 text-base">
+                              Find a Mentor <Users className="h-5 w-5" />
+                            </span>
+                          </Link>
+                        </div>
+                      ) : index === 3 ? (
+                        <div className="flex justify-center">
+                          <Link 
+                            to="/dashboard" 
+                            className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-5 py-2.5 text-base font-medium text-foreground hover:border-primary/50 hover:bg-primary/5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
+                          >
+                            <span className="font-semibold text-foreground flex items-center gap-2 text-base">
+                              <LayoutDashboard className="h-5 w-5" /> Explore Dashboard
+                            </span>
+                          </Link>
+                        </div>
+                      ) : index === 4 ? (
+                        <div className="flex justify-center">
+                          <Link 
+                            to="/insighta/vc-search" 
+                            className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-5 py-2.5 text-base font-medium text-foreground hover:border-primary/50 hover:bg-primary/5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
+                          >
+                            <span className="font-semibold text-foreground flex items-center gap-2 text-base">
+                              {step.pathway} <Rocket className="h-5 w-5" />
+                            </span>
+                          </Link>
+                        </div>
+                      ) : index === 5 ? (
+                        <div className="flex justify-center">
+                          <Link
+                            to="/tech-stack"
+                            className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-5 py-2.5 text-base font-medium text-foreground hover:border-primary/50 hover:bg-primary/5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
+                          >
+                            <span className="font-semibold text-foreground flex items-center gap-2 text-base">
+                              {step.pathway} <Code className="h-5 w-5" />
+                            </span>
+                          </Link>
+                        </div>
+                      ) : index === 6 ? (
+                        <div className="flex justify-center">
+                          <Link
+                            to="/community/co-founders"
+                            className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-5 py-2.5 text-base font-medium text-foreground hover:border-primary/50 hover:bg-primary/5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
+                          >
+                            <span className="font-semibold text-foreground flex items-center gap-2 text-base">
+                              {step.pathway} <Handshake className="h-5 w-5" />
+                            </span>
+                          </Link>
+                        </div>
+                      ) : (
+                        <div className="rounded-md border border-border bg-background/80 p-4">
+                          <p className="text-sm text-foreground/90 leading-relaxed">
+                            {step.pathway}
+                          </p>
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -206,17 +265,132 @@ const EntrepreneurProblems = () => {
                         <p className={`text-sm text-muted-foreground mb-5 leading-relaxed ${index === 0 || index === 4 || index === 6 ? 'text-left' : ''}`}>
                           {step.insight}
                         </p>
-                        {renderPathway(index, step.pathway)}
+                        {index === 0 ? (
+                          <div className="flex justify-center">
+                            <Link
+                              to="/icp-builder"
+                              className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-5 py-2.5 text-base font-medium text-foreground hover:border-primary/50 hover:bg-primary/5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
+                            >
+                              <span className="font-semibold text-foreground flex items-center gap-2 text-base">
+                                Define your Niche <Target className="h-5 w-5" />
+                              </span>
+                            </Link>
+                          </div>
+                        ) : index === 1 ? (
+                          <div className="flex justify-center">
+                            <Link 
+                            to="/pmf-lab" 
+                            className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-5 py-2.5 text-base font-medium text-foreground hover:border-primary/50 hover:bg-primary/5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
+                            >
+                              <span className="font-semibold text-foreground flex items-center gap-2 text-base">
+                                Try PMF Lab <FlaskConical className="h-5 w-5" />
+                              </span>
+                            </Link>
+                          </div>
+                        ) : index === 2 ? (
+                          <div className="flex justify-center">
+                            <Link 
+                              to="/community" 
+                            className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-5 py-2.5 text-base font-medium text-foreground hover:border-primary/50 hover:bg-primary/5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
+                            >
+                              <span className="font-semibold text-foreground flex items-center gap-2 text-base">
+                                Find a Mentor <Users className="h-5 w-5" />
+                              </span>
+                            </Link>
+                          </div>
+                        ) : index === 3 ? (
+                          <div className="flex justify-center">
+                            <Link 
+                              to="/dashboard" 
+                            className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-5 py-2.5 text-base font-medium text-foreground hover:border-primary/50 hover:bg-primary/5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
+                            >
+                              <span className="font-semibold text-foreground flex items-center gap-2 text-base">
+                                <LayoutDashboard className="h-5 w-5" /> Explore Dashboard
+                              </span>
+                            </Link>
+                          </div>
+                        ) : index === 4 ? (
+                          <div className="flex justify-center">
+                            <Link 
+                              to="/insighta/vc-search" 
+                            className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-5 py-2.5 text-base font-medium text-foreground hover:border-primary/50 hover:bg-primary/5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
+                            >
+                              <span className="font-semibold text-foreground flex items-center gap-2 text-base">
+                                {step.pathway} <Rocket className="h-5 w-5" />
+                              </span>
+                            </Link>
+                          </div>
+                        ) : index === 5 ? (
+                          <div className="flex justify-center">
+                            <Link
+                              to="/tech-stack"
+                            className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-5 py-2.5 text-base font-medium text-foreground hover:border-primary/50 hover:bg-primary/5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
+                            >
+                              <span className="font-semibold text-foreground flex items-center gap-2 text-base">
+                                {step.pathway} <Code className="h-5 w-5" />
+                              </span>
+                            </Link>
+                          </div>
+                        ) : index === 6 ? (
+                          <div className="flex justify-center">
+                            <Link
+                              to="/community/co-founders"
+                            className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-5 py-2.5 text-base font-medium text-foreground hover:border-primary/50 hover:bg-primary/5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
+                            >
+                              <span className="font-semibold text-foreground flex items-center gap-2 text-base">
+                                {step.pathway} <Handshake className="h-5 w-5" />
+                              </span>
+                            </Link>
+                          </div>
+                        ) : (
+                          <div className="rounded-md border border-border bg-background/80 p-4">
+                            <p className="text-sm text-foreground/90 leading-relaxed">
+                              {step.pathway}
+                            </p>
+                          </div>
+                        )}
                       </div>
                     )}
 
                     {/* Center Icon or Video (for all rows with GIF frames) */}
                     <div className="flex justify-center relative z-10">
-                      {founderJourneyVideoPositions.has(index) ? (
-                        <div className={`w-full md:max-w-2xl lg:max-w-3xl xl:max-w-4xl ${index % 2 === 0 ? 'ml-2 lg:ml-4' : 'mr-2 lg:mr-4'}`}>
-                          <FounderJourneyVideo position={index} />
+                      {index === 0 ? (
+                        /* GIF Frame for First Row */
+                        <div className="w-full md:max-w-2xl lg:max-w-3xl xl:max-w-4xl ml-2 lg:ml-4">
+                          <FounderJourneyVideo position={0} />
+                        </div>
+                      ) : index === 1 ? (
+                        /* GIF Frame for Second Row */
+                        <div className="w-full md:max-w-2xl lg:max-w-3xl xl:max-w-4xl mr-2 lg:mr-4">
+                          <FounderJourneyVideo position={1} />
+                        </div>
+                      ) : index === 2 ? (
+                        /* GIF Frame for Third Row */
+                        <div className="w-full md:max-w-2xl lg:max-w-3xl xl:max-w-4xl ml-2 lg:ml-4">
+                          <FounderJourneyVideo position={2} />
+                        </div>
+                      ) : index === 3 ? (
+                        /* GIF Frame for Fourth Row */
+                        <div className="w-full md:max-w-2xl lg:max-w-3xl xl:max-w-4xl mr-2 lg:mr-4">
+                          <FounderJourneyVideo position={3} />
+                        </div>
+                      ) : index === 4 ? (
+                        /* GIF Frame for Fifth Row */
+                        <div className="w-full md:max-w-2xl lg:max-w-3xl xl:max-w-4xl ml-2 lg:ml-4">
+                          <FounderJourneyVideo position={4} />
+                        </div>
+                      ) : index === 5 ? (
+                        /* GIF Frame for Sixth Row */
+                        <div className="w-full md:max-w-2xl lg:max-w-3xl xl:max-w-4xl mr-2 lg:mr-4">
+                          <FounderJourneyVideo position={5} />
+                        </div>
+                      ) : index === 6 ? (
+                        /* GIF Frame for Seventh Row */
+                        <div className="w-full md:max-w-2xl lg:max-w-3xl xl:max-w-4xl ml-2 lg:ml-4">
+                          <FounderJourneyVideo position={6} />
                         </div>
                       ) : (
+                        /* Regular Icon for Other Rows */
                         <div className={`w-16 h-16 rounded-full flex items-center justify-center ${accentClasses.icon} shadow-sm bg-background transition-colors`}>
                           <Icon className="w-9 h-9" />
                         </div>
@@ -237,7 +411,90 @@ const EntrepreneurProblems = () => {
                         <p className={`text-sm text-muted-foreground mb-5 leading-relaxed ${index === 4 || index === 6 ? 'text-left' : ''}`}>
                           {step.insight}
                         </p>
-                        {renderPathway(index, step.pathway)}
+                        {index === 0 ? (
+                          <div className="flex justify-center">
+                            <Link
+                              to="/icp-builder"
+                              className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-5 py-2.5 text-base font-medium text-foreground hover:border-primary/50 hover:bg-primary/5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
+                            >
+                              <span className="font-semibold text-foreground flex items-center gap-2 text-base">
+                                Define your Niche <Target className="h-5 w-5" />
+                              </span>
+                            </Link>
+                          </div>
+                        ) : index === 1 ? (
+                          <div className="flex justify-center">
+                            <Link 
+                              to="/pmf-lab" 
+                              className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-5 py-2.5 text-base font-medium text-foreground hover:border-primary/50 hover:bg-primary/5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
+                            >
+                              <span className="font-semibold text-foreground flex items-center gap-2 text-base">
+                                Try PMF Lab <FlaskConical className="h-5 w-5" />
+                              </span>
+                            </Link>
+                          </div>
+                        ) : index === 2 ? (
+                          <div className="flex justify-center">
+                            <Link 
+                              to="/community" 
+                              className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-5 py-2.5 text-base font-medium text-foreground hover:border-primary/50 hover:bg-primary/5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
+                            >
+                              <span className="font-semibold text-foreground flex items-center gap-2 text-base">
+                                Find a Mentor <Users className="h-5 w-5" />
+                              </span>
+                            </Link>
+                          </div>
+                        ) : index === 3 ? (
+                          <div className="flex justify-center">
+                            <Link 
+                              to="/dashboard" 
+                              className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-5 py-2.5 text-base font-medium text-foreground hover:border-primary/50 hover:bg-primary/5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
+                            >
+                              <span className="font-semibold text-foreground flex items-center gap-2 text-base">
+                                <LayoutDashboard className="h-5 w-5" /> Explore Dashboard
+                              </span>
+                            </Link>
+                          </div>
+                        ) : index === 4 ? (
+                          <div className="flex justify-center">
+                            <Link 
+                              to="/insighta/vc-search" 
+                              className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-5 py-2.5 text-base font-medium text-foreground hover:border-primary/50 hover:bg-primary/5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
+                            >
+                              <span className="font-semibold text-foreground flex items-center gap-2 text-base">
+                                {step.pathway} <Rocket className="h-5 w-5" />
+                              </span>
+                            </Link>
+                          </div>
+                        ) : index === 5 ? (
+                          <div className="flex justify-center">
+                            <Link
+                              to="/tech-stack"
+                              className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-5 py-2.5 text-base font-medium text-foreground hover:border-primary/50 hover:bg-primary/5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
+                            >
+                              <span className="font-semibold text-foreground flex items-center gap-2 text-base">
+                                {step.pathway} <Code className="h-5 w-5" />
+                              </span>
+                            </Link>
+                          </div>
+                        ) : index === 6 ? (
+                          <div className="flex justify-center">
+                            <Link
+                              to="/community/co-founders"
+                              className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-5 py-2.5 text-base font-medium text-foreground hover:border-primary/50 hover:bg-primary/5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
+                            >
+                              <span className="font-semibold text-foreground flex items-center gap-2 text-base">
+                                {step.pathway} <Handshake className="h-5 w-5" />
+                              </span>
+                            </Link>
+                          </div>
+                        ) : (
+                          <div className="rounded-md border border-border bg-background/80 p-4">
+                            <p className="text-sm text-foreground/90 leading-relaxed">
+                              {step.pathway}
+                            </p>
+                          </div>
+                        )}
                       </div>
                     ) : (
                       <div /> // Empty div to maintain grid structure

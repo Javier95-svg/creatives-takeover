@@ -1,7 +1,8 @@
 import { useState, useCallback, useEffect, useRef, type ChangeEvent } from "react";
-import { Lightbulb, LayoutDashboard, Upload, Loader2, GraduationCap, TrendingUp, Handshake, BookOpen } from "lucide-react";
+import { Lightbulb, Users, Rocket, LayoutDashboard, Upload, Loader2, GraduationCap, TrendingUp, Handshake, BookOpen } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -359,14 +360,17 @@ const ValuePropositionCards = () => {
   }, []);
 
   return (
-    <section id="what-you-get" className="section-shell scroll-mt-24">
+    <section id="what-you-get" className="py-20 lg:py-28 scroll-mt-24 font-poppins">
       <div className="container mx-auto px-4 sm:px-6">
         {/* Section Header */}
-        <div className="section-header max-w-3xl">
-          <h2 className="section-title">
+        <div className="max-w-3xl mx-auto text-center mb-12 sm:mb-16">
+          <Badge variant="outline" className="mb-5 text-xs uppercase tracking-wide text-muted-foreground">
+            The Perfect Ecosystem ♻️
+          </Badge>
+          <h2 className="font-space-grotesk text-3xl sm:text-4xl lg:text-5xl font-semibold mb-4 tracking-tight text-primary">
             Creatives Takeover in a Nutshell
           </h2>
-          <p className="section-description">
+          <p className="font-poppins text-base sm:text-lg text-muted-foreground">
             Everything you need, all in one place. Built on six core pillars to help solofounders validate, build, and grow a business from scratch.
           </p>
         </div>
@@ -382,7 +386,7 @@ const ValuePropositionCards = () => {
             className="w-full"
           >
             <CarouselContent ref={carouselContentRef} className="-ml-4 items-stretch">
-              {allCards.map((card) => {
+              {allCards.map((card, index) => {
                 const Icon = card.icon;
                 const storedImage = cardImages.find((img) => img.position === card.position);
                 const imageSrc = optimisticPreviews[card.position] || storedImage?.image_url || card.image;
@@ -390,14 +394,14 @@ const ValuePropositionCards = () => {
                 const isUploadingPosition = uploading === card.position;
                 return (
                   <CarouselItem key={card.title} className="pl-4 basis-full h-full">
-                    <Card className="surface-panel trust-outline overflow-hidden h-full relative" data-value-card>
+                    <Card className="glass border-border overflow-hidden h-full relative" data-value-card>
                       <Button
                         type="button"
                         variant="outline"
                         size="sm"
                         onClick={handleStopClick}
                         title={isAutoScrollPaused ? "Resume auto-scroll" : "Pause auto-scroll"}
-                        className="absolute right-4 top-4 z-10 h-8 px-3 text-xs"
+                        className="absolute right-4 top-4 z-10 h-7 px-2 text-xs"
                       >
                         {isAutoScrollPaused ? "Resume" : "Stop"}
                       </Button>
@@ -407,10 +411,10 @@ const ValuePropositionCards = () => {
                           <img
                             src={imageSrc}
                             alt={altText}
-                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+                            className="w-full h-full object-cover"
                             loading="lazy"
                           />
-                          <div className="absolute inset-0 bg-gradient-to-t from-background/20 via-transparent to-transparent" />
+                          <div className="absolute inset-0 bg-gradient-to-t from-background/10 to-transparent" />
                           {isAdmin && (
                             <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/40">
                               <div className="w-full max-w-[200px] px-4">
@@ -463,14 +467,14 @@ const ValuePropositionCards = () => {
                         {/* Content - Right */}
                         <div className="p-6 md:p-10 flex flex-col justify-center md:h-full">
                           <div className="flex items-center gap-3 mb-4">
-                            <div className="w-10 h-10 rounded-full bg-primary/12 border border-primary/20 flex items-center justify-center">
+                            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
                               <Icon className="h-5 w-5 text-primary" />
                             </div>
                             <div>
-                              <p className="text-xs uppercase tracking-[0.08em] text-muted-foreground">
+                              <p className="text-xs uppercase tracking-wide text-muted-foreground">
                                 {card.title}
                               </p>
-                              <h3 className="font-space-grotesk text-2xl font-semibold tracking-tight">
+                              <h3 className="font-space-grotesk text-2xl font-bold">
                                 {card.subtitle}
                               </h3>
                             </div>
@@ -491,7 +495,7 @@ const ValuePropositionCards = () => {
           </Carousel>
 
           {/* Navigation Buttons */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-8 max-w-4xl mx-auto">
+          <div className="value-prop-nav grid grid-cols-3 gap-3 mt-8 max-w-4xl mx-auto">
             {allCards.map((card, index) => (
               <Button
                 key={card.buttonLabel}
@@ -499,8 +503,8 @@ const ValuePropositionCards = () => {
                 onClick={() => goToCard(index)}
                 className={`transition-all duration-200 ${
                   selectedIndex === index
-                    ? "text-primary-foreground"
-                    : "hover:border-primary/40 hover:bg-primary/5"
+                    ? "bg-primary text-primary-foreground shadow-md"
+                    : "hover:border-primary/50"
                 }`}
               >
                 {card.buttonLabel}
@@ -514,4 +518,3 @@ const ValuePropositionCards = () => {
 };
 
 export default ValuePropositionCards;
-

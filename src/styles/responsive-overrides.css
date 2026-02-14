@@ -28,8 +28,8 @@
   }
 
   .adaptive-tabs {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
     gap: 0.5rem;
   }
 
@@ -37,6 +37,26 @@
     min-width: 0;
     white-space: normal;
     line-height: 1.2;
+  }
+
+  .responsive-chat-frame {
+    height: min(70vh, 48rem) !important;
+    min-height: 30rem;
+  }
+
+  .responsive-collab-shell {
+    height: min(68vh, 46rem) !important;
+    min-height: 30rem;
+  }
+
+  .responsive-messaging-shell {
+    height: min(70vh, 46rem) !important;
+    min-height: 30rem;
+  }
+
+  .responsive-community-chat {
+    height: min(68vh, 42rem) !important;
+    min-height: 28rem;
   }
 }
 
@@ -55,9 +75,66 @@
     grid-template-columns: minmax(0, 1fr) !important;
   }
 
+  /* Keep dense tab sets usable on mobile by allowing horizontal scrolling. */
+  [role="tablist"][class*="grid-cols-3"],
+  [role="tablist"][class*="grid-cols-4"],
+  [role="tablist"][class*="grid-cols-5"],
+  [role="tablist"][class*="grid-cols-6"],
+  [role="tablist"][class*="grid-cols-7"],
+  [role="tablist"][class*="grid-cols-8"],
+  [role="tablist"][class*="grid-cols-9"] {
+    display: flex !important;
+    justify-content: flex-start !important;
+    flex-wrap: nowrap;
+    gap: 0.5rem;
+    overflow-x: auto;
+    padding: 0.25rem;
+    scrollbar-width: none;
+  }
+
+  [role="tablist"][class*="grid-cols-3"]::-webkit-scrollbar,
+  [role="tablist"][class*="grid-cols-4"]::-webkit-scrollbar,
+  [role="tablist"][class*="grid-cols-5"]::-webkit-scrollbar,
+  [role="tablist"][class*="grid-cols-6"]::-webkit-scrollbar,
+  [role="tablist"][class*="grid-cols-7"]::-webkit-scrollbar,
+  [role="tablist"][class*="grid-cols-8"]::-webkit-scrollbar,
+  [role="tablist"][class*="grid-cols-9"]::-webkit-scrollbar {
+    display: none;
+  }
+
+  [role="tablist"][class*="grid-cols-3"] > [role="tab"],
+  [role="tablist"][class*="grid-cols-4"] > [role="tab"],
+  [role="tablist"][class*="grid-cols-5"] > [role="tab"],
+  [role="tablist"][class*="grid-cols-6"] > [role="tab"],
+  [role="tablist"][class*="grid-cols-7"] > [role="tab"],
+  [role="tablist"][class*="grid-cols-8"] > [role="tab"],
+  [role="tablist"][class*="grid-cols-9"] > [role="tab"] {
+    flex: 0 0 auto;
+    min-width: max-content;
+    white-space: nowrap;
+  }
+
+  .value-prop-nav {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .value-prop-nav button {
+    width: 100%;
+  }
+
+  .responsive-filter-row .responsive-sort-group {
+    margin-left: 0;
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .responsive-filter-row .responsive-sort-trigger {
+    width: 100%;
+  }
+
   .adaptive-tabs {
-    display: flex;
-    justify-content: flex-start;
+    display: flex !important;
+    justify-content: flex-start !important;
     flex-wrap: nowrap;
     gap: 0.5rem;
     overflow-x: auto;
@@ -73,5 +150,25 @@
     flex: 0 0 auto;
     min-width: max-content;
     white-space: nowrap;
+  }
+
+  .responsive-chat-frame {
+    height: min(78vh, 40rem) !important;
+    min-height: 24rem;
+  }
+
+  .responsive-collab-shell {
+    height: min(72vh, 38rem) !important;
+    min-height: 24rem;
+  }
+
+  .responsive-messaging-shell {
+    height: min(72vh, 38rem) !important;
+    min-height: 24rem;
+  }
+
+  .responsive-community-chat {
+    height: min(70vh, 36rem) !important;
+    min-height: 22rem;
   }
 }

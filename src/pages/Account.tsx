@@ -11,6 +11,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Loader2, Save, User, Mail, Calendar, Upload, Twitter, Linkedin, Instagram, Facebook, Youtube, Github, Globe, Camera, Users, UserCheck, MessageSquare, ArrowRight, ClipboardList, CheckCircle2, Edit2, X, Lock, Eye, EyeOff } from "lucide-react";
+import Navigation from "@/components/Navigation";
+import Footer from "@/components/Footer";
+import AnimatedBackground from "@/components/AnimatedBackground";
 import { FriendRequestsModal } from "@/components/social/FriendRequestsModal";
 import { useSocial } from "@/hooks/useSocial";
 import { ProfilePictureCropModal } from "@/components/ProfilePictureCropModal";
@@ -18,7 +21,6 @@ import { AccountWallpaper } from "@/components/AccountWallpaper";
 import { ProfileCompletionTracker } from "@/components/ProfileCompletionTracker";
 import { OnboardingChecklist } from "@/components/OnboardingChecklist";
 import { trackActivity } from "@/lib/activity";
-import PageShell from "@/components/layouts/PageShell";
 
 const Account = () => {
   const { user } = useAuth();
@@ -607,24 +609,31 @@ const Account = () => {
 
   if (!user) {
     return (
-      <PageShell background={<AccountWallpaper />}>
-        <div className="container mx-auto px-6 pt-24">
-          <Card className="max-w-md mx-auto backdrop-blur-sm bg-card/80 border-border/50">
-            <CardHeader>
-              <CardTitle>Access Denied</CardTitle>
-              <CardDescription>
-                Please log in to access your account settings.
-              </CardDescription>
-            </CardHeader>
-          </Card>
+      <div className="relative min-h-screen overflow-hidden">
+        <AccountWallpaper />
+        <div className="relative z-10">
+          <Navigation />
+          <div className="container mx-auto px-6 pt-24">
+            <Card className="max-w-md mx-auto backdrop-blur-sm bg-card/80 border-border/50">
+              <CardHeader>
+                <CardTitle>Access Denied</CardTitle>
+                <CardDescription>
+                  Please log in to access your account settings.
+                </CardDescription>
+              </CardHeader>
+            </Card>
+          </div>
         </div>
-      </PageShell>
+      </div>
     );
   }
 
   return (
-    <PageShell background={<AccountWallpaper />}>
-      <div className="container mx-auto px-6 pt-24 pb-12">
+    <div className="relative min-h-screen overflow-hidden">
+      <AccountWallpaper />
+      <div className="relative z-10">
+        <Navigation />
+        <div className="container mx-auto px-6 pt-24 pb-12">
           {/* Centered Hero Section */}
           <div className="text-center py-12 space-y-4">
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight">
@@ -1360,24 +1369,26 @@ const Account = () => {
             </Card>
           )}
         </div>
+        </div>
+        <FriendRequestsModal
+          open={friendRequestsOpen}
+          onOpenChange={setFriendRequestsOpen}
+        />
+        <ProfilePictureCropModal
+          open={cropModalOpen}
+          onClose={() => {
+            setCropModalOpen(false);
+            if (tempImageUrl) {
+              URL.revokeObjectURL(tempImageUrl);
+              setTempImageUrl("");
+            }
+          }}
+          imageUrl={tempImageUrl}
+          onCropComplete={handleCropComplete}
+        />
+        <Footer />
       </div>
-      <FriendRequestsModal
-        open={friendRequestsOpen}
-        onOpenChange={setFriendRequestsOpen}
-      />
-      <ProfilePictureCropModal
-        open={cropModalOpen}
-        onClose={() => {
-          setCropModalOpen(false);
-          if (tempImageUrl) {
-            URL.revokeObjectURL(tempImageUrl);
-            setTempImageUrl("");
-          }
-        }}
-        imageUrl={tempImageUrl}
-        onCropComplete={handleCropComplete}
-      />
-    </PageShell>
+    </div>
   );
 };
 
