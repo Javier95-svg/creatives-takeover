@@ -276,16 +276,24 @@ const Navigation = () => {
       <nav
         style={{ top: 'var(--banner-height, 0)' } as React.CSSProperties}
         className={cn(
-          "fixed left-0 right-0 z-50 border-b transition-all duration-300",
+          "fixed left-0 right-0 z-50 px-2 sm:px-4 lg:px-6 transition-all duration-300",
           scrolled
-            ? "border-border/80 bg-background/94 backdrop-blur-2xl shadow-[0_10px_30px_hsl(var(--foreground)/0.12)]"
-            : "border-border/70 bg-background/82 backdrop-blur-xl shadow-[0_1px_0_hsl(var(--border)/0.65)]"
+            ? "py-1.5"
+            : "py-2"
         )}
       >
-        <div className="mx-auto max-w-[1480px] border-0 px-4 sm:px-6 lg:px-10">
-          <div className="flex h-16 items-center border-0 md:h-[4.5rem]">
+        <div className="mx-auto w-full max-w-[1480px]">
+          <div
+            className={cn(
+              "flex h-16 w-full items-center rounded-[999px] border px-3 sm:px-4 lg:px-5",
+              "backdrop-blur-2xl",
+              scrolled
+                ? "border-border/80 bg-background/90 shadow-[0_14px_34px_hsl(var(--foreground)/0.18)]"
+                : "border-border/70 bg-background/78 shadow-[0_10px_26px_hsl(var(--foreground)/0.14)]"
+            )}
+          >
             {/* Logo with Enhanced Hover Effects - Fixed width to prevent layout shifts */}
-            <div className="flex w-16 min-w-[4rem] flex-shrink-0 items-center border-0">
+            <div className="flex w-16 min-w-[4rem] flex-shrink-0 items-center border-0 md:w-[4.5rem]">
               <Link to="/" className="flex items-center justify-center w-full" aria-label="Home">
                 <img
                   src={ctLogo}
@@ -307,8 +315,8 @@ const Navigation = () => {
 
             {/* Desktop Navigation */}
             {deviceType === 'desktop' && (
-              <div className="flex flex-1 items-center justify-center px-5 lg:px-8">
-                <div className="flex items-center gap-1 rounded-2xl border border-border/60 bg-background/62 px-2 py-1.5 shadow-[inset_0_1px_0_hsl(var(--background)/0.7)] backdrop-blur-xl">
+              <div className="flex min-w-0 flex-1 items-center justify-center px-3 lg:px-6">
+                <div className="flex items-center gap-1">
                 {navItems.map((item) => {
                   const Icon = item.icon || iconMap[item.name];
                   const active = isActive(item.href);
@@ -352,7 +360,7 @@ const Navigation = () => {
             )}
 
             {/* Desktop & Tablet CTA */}
-            <div className="hidden md:flex items-center gap-3 !border-0 ml-auto">
+            <div className="ml-auto hidden items-center gap-2.5 border-0 pl-2 md:flex">
               {loading ? (
                 <div className="w-8 h-8 animate-pulse bg-muted rounded-full" />
               ) : user ? (
@@ -459,7 +467,7 @@ const Navigation = () => {
 
             {/* Mobile Menu Button */}
             <button
-              className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-xl border border-border/60 bg-background/70 text-foreground shadow-sm backdrop-blur md:hidden touch-manipulation transition-colors hover:bg-muted/60 active:opacity-70"
+              className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-xl border border-border/60 bg-background/75 text-foreground shadow-sm backdrop-blur md:hidden touch-manipulation transition-colors hover:bg-muted/60 active:opacity-70"
               onClick={() => setIsOpen(!isOpen)}
               aria-label={isOpen ? "Close menu" : "Open menu"}
               aria-expanded={isOpen}
@@ -479,8 +487,11 @@ const Navigation = () => {
 
           {/* Mobile Navigation */}
           {isOpen && (
-            <div className="md:hidden fixed top-16 left-0 right-0 bottom-0 bg-background/95 backdrop-blur-xl border-t border-border animate-mobile-drawer safe-area-inset z-50 shadow-2xl">
-              <div className="px-2 pt-2 pb-safe space-y-1 max-h-[calc(100vh-64px)] overflow-y-auto">
+            <div
+              style={{ top: 'calc(var(--banner-height, 0px) + 80px)' } as React.CSSProperties}
+              className="md:hidden fixed left-0 right-0 bottom-0 bg-background/95 backdrop-blur-xl border-t border-border animate-mobile-drawer safe-area-inset z-50 shadow-2xl"
+            >
+              <div className="h-full overflow-y-auto px-2 pt-2 pb-safe space-y-1">
                 {/* Theme Toggle at top of mobile menu */}
                 <div className="sticky top-0 z-10 border-b border-border/70 bg-background/95 px-4 py-3 backdrop-blur">
                   <div className="flex items-center justify-between">

@@ -41,7 +41,7 @@ export const TabletNavigation: React.FC<TabletNavigationProps> = ({
 
   return (
     <TooltipProvider>
-      <nav className="flex items-center justify-center rounded-2xl border border-border/60 bg-background/62 px-2 py-1.5 shadow-[inset_0_1px_0_hsl(var(--background)/0.7)] backdrop-blur-xl">
+      <nav className="flex items-center justify-center gap-1 px-1.5">
         {visibleItems.map((item) => {
           const isActive = location.pathname === item.href || 
             (item.href !== "/" && location.pathname.startsWith(item.href));
