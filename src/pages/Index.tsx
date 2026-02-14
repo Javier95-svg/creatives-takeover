@@ -93,13 +93,13 @@ const Index = () => {
           <PullToRefresh onRefresh={handleRefresh}>
             <Hero />
             <EntrepreneurProblems />
-            
-            <AISpecializationTrends />
-            
-            <ValuePropositionCards />
-            
+             
             <UserReviews />
-            
+             
+            <AISpecializationTrends />
+             
+            <ValuePropositionCards />
+             
             <Suspense fallback={<div className="h-96 animate-pulse bg-muted/20" />}>
               <HomeFAQ />
             </Suspense>
@@ -108,13 +108,13 @@ const Index = () => {
           <>
             <Hero />
             <EntrepreneurProblems />
-            
-            <AISpecializationTrends />
-            
-            <ValuePropositionCards />
-            
+             
             <UserReviews />
-            
+             
+            <AISpecializationTrends />
+             
+            <ValuePropositionCards />
+             
             <Suspense fallback={<div className="h-96 animate-pulse bg-muted/20" />}>
               <HomeFAQ />
             </Suspense>
