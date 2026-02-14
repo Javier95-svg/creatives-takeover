@@ -195,31 +195,39 @@ const Navigation = () => {
           <TooltipTrigger asChild>
             <DropdownMenuTrigger
               className={cn(
-                "relative flex items-center gap-1 px-3 py-2 rounded-lg transition-all duration-250 whitespace-nowrap font-medium text-sm outline-none",
+                "group relative flex items-center gap-1.5 rounded-xl px-3.5 py-2 whitespace-nowrap text-sm font-medium tracking-[0.01em] outline-none transition-all duration-200",
                 "nav-item-hover-effect",
                 active
-                  ? "text-foreground bg-primary/5 nav-active-indicator active"
+                  ? "bg-primary/10 text-foreground shadow-[inset_0_0_0_1px_hsl(var(--primary)/0.22)] nav-active-indicator active"
                   : `text-muted-foreground ${colorClass}`
               )}
             >
               {Icon && <Icon className="h-4 w-4 flex-shrink-0" />}
               <span className="tracking-wide">{item.name}</span>
-              <ChevronDown className="h-3 w-3 ml-0.5" />
+              <ChevronDown className="ml-0.5 h-3.5 w-3.5 transition-transform duration-200 group-data-[state=open]:rotate-180" />
             </DropdownMenuTrigger>
           </TooltipTrigger>
           <TooltipContent>
             <p>{item.tooltip}</p>
           </TooltipContent>
         </Tooltip>
-        <DropdownMenuContent align="start" className={config.widthClass}>
-          <DropdownMenuLabel>{config.label}</DropdownMenuLabel>
+        <DropdownMenuContent
+          align="start"
+          className={cn(
+            config.widthClass,
+            "rounded-2xl border border-border/70 bg-background/95 p-1.5 shadow-[0_16px_44px_hsl(var(--foreground)/0.2)] backdrop-blur-xl"
+          )}
+        >
+          <DropdownMenuLabel className="px-2 pb-1 text-[11px] font-semibold tracking-wide text-muted-foreground">
+            {config.label}
+          </DropdownMenuLabel>
           <DropdownMenuSeparator />
           {config.items.map((subItem, idx) => {
             if ("type" in subItem && subItem.type === "label") {
               return (
                 <DropdownMenuLabel
                   key={`${item.name}-label-${idx}`}
-                  className="text-[10px] font-semibold uppercase tracking-wider text-primary mt-2 first:mt-0"
+                  className="mt-2 px-2 text-[10px] font-semibold uppercase tracking-wider text-primary/85 first:mt-0"
                 >
                   {subItem.label}
                 </DropdownMenuLabel>
@@ -239,16 +247,20 @@ const Navigation = () => {
             const SubIcon = linkItem.icon;
 
             return (
-              <DropdownMenuItem key={`${item.name}-${linkItem.name}`} asChild>
+              <DropdownMenuItem
+                key={`${item.name}-${linkItem.name}`}
+                asChild
+                className="rounded-xl px-0 focus:bg-transparent"
+              >
                 <Link
                   to={linkItem.href}
                   onClick={() => trackClick(`${item.name} - ${linkItem.name}`, "Navigation")}
-                  className="cursor-pointer"
+                  className="group flex w-full cursor-pointer items-start gap-2.5 rounded-xl px-2.5 py-2.5 transition-colors hover:bg-muted/70 focus:bg-muted/70"
                 >
-                  <SubIcon className="h-4 w-4 mr-2" />
+                  <SubIcon className="mt-0.5 h-4 w-4 flex-shrink-0 text-muted-foreground transition-colors group-hover:text-foreground" />
                   <div className="flex flex-col">
-                    <span className="font-medium">{linkItem.name}</span>
-                    <span className="text-xs text-muted-foreground">{linkItem.description}</span>
+                    <span className="font-medium leading-tight">{linkItem.name}</span>
+                    <span className="text-xs leading-snug text-muted-foreground">{linkItem.description}</span>
                   </div>
                 </Link>
               </DropdownMenuItem>
@@ -266,19 +278,19 @@ const Navigation = () => {
         className={cn(
           "fixed left-0 right-0 z-50 border-b transition-all duration-300",
           scrolled
-            ? "bg-background/92 backdrop-blur-xl border-border/80 shadow-[0_10px_30px_hsl(var(--foreground)/0.12)]"
-            : "bg-background/75 backdrop-blur-md border-border/65 shadow-[0_1px_0_hsl(var(--border)/0.6)]"
+            ? "border-border/80 bg-background/94 backdrop-blur-2xl shadow-[0_10px_30px_hsl(var(--foreground)/0.12)]"
+            : "border-border/70 bg-background/82 backdrop-blur-xl shadow-[0_1px_0_hsl(var(--border)/0.65)]"
         )}
       >
-        <div className="max-w-[1480px] mx-auto px-4 sm:px-6 lg:px-10 border-0">
-          <div className="flex items-center h-16 md:h-18 border-0">
+        <div className="mx-auto max-w-[1480px] border-0 px-4 sm:px-6 lg:px-10">
+          <div className="flex h-16 items-center border-0 md:h-[4.5rem]">
             {/* Logo with Enhanced Hover Effects - Fixed width to prevent layout shifts */}
-            <div className="flex items-center border-0 flex-shrink-0 w-16 min-w-[4rem]">
+            <div className="flex w-16 min-w-[4rem] flex-shrink-0 items-center border-0">
               <Link to="/" className="flex items-center justify-center w-full" aria-label="Home">
                 <img
                   src={ctLogo}
                   alt="Creatives Takeover Logo"
-                  className="h-10 w-auto max-w-full object-contain animate-logo-breathing nav-logo-hover"
+                  className="h-9 w-auto max-w-full object-contain animate-logo-breathing nav-logo-hover md:h-10"
                 />
               </Link>
             </div>
@@ -295,22 +307,14 @@ const Navigation = () => {
 
             {/* Desktop Navigation */}
             {deviceType === 'desktop' && (
-              <div className="flex items-center justify-evenly flex-1 pl-8 lg:pl-10 pr-8 lg:pr-12 !border-0 gap-1.5">
+              <div className="flex flex-1 items-center justify-center px-5 lg:px-8">
+                <div className="flex items-center gap-1 rounded-2xl border border-border/60 bg-background/62 px-2 py-1.5 shadow-[inset_0_1px_0_hsl(var(--background)/0.7)] backdrop-blur-xl">
                 {navItems.map((item) => {
                   const Icon = item.icon || iconMap[item.name];
                   const active = isActive(item.href);
 
                   // Color-code navigation items semantically
-                  let colorClass = '';
-                  if (item.name === 'BizMap AI' || item.name === 'Prompt Library') {
-                    colorClass = 'hover:text-planning';
-                  } else if (item.name === 'Community' || item.name === 'Stories' || item.name === 'About Us') {
-                    colorClass = 'hover:text-action';
-                  } else if (item.name === 'Insighta' || item.name === 'Pricing') {
-                    colorClass = 'hover:text-growth';
-                  } else {
-                    colorClass = 'hover:text-primary';
-                  }
+                  const colorClass = 'hover:text-foreground';
 
                   if (dropdownMenus[item.name]) {
                     return renderDropdownNavigationItem(item, Icon, active, colorClass);
@@ -323,10 +327,10 @@ const Navigation = () => {
                           to={item.href}
                           onClick={() => trackClick(item.name, 'Navigation')}
                           className={cn(
-                            "relative flex items-center gap-1.5 px-3 py-2 rounded-xl transition-all duration-250 whitespace-nowrap font-medium text-sm",
+                            "relative flex items-center gap-1.5 rounded-xl px-3.5 py-2 whitespace-nowrap text-sm font-medium tracking-[0.01em] transition-all duration-200",
                             "nav-item-hover-effect",
                             active
-                              ? "text-foreground bg-primary/5 nav-active-indicator active"
+                              ? "bg-primary/10 text-foreground shadow-[inset_0_0_0_1px_hsl(var(--primary)/0.22)] nav-active-indicator active"
                               : `text-muted-foreground ${colorClass}`,
                             item.name === 'BizMap AI' && 'relative'
                           )}
@@ -343,6 +347,7 @@ const Navigation = () => {
                     </Tooltip>
                   );
                 })}
+                </div>
               </div>
             )}
 
@@ -357,7 +362,7 @@ const Navigation = () => {
                     variant="ghost"
                     size="icon"
                     onClick={() => setShowFriendRequests(true)}
-                    className="relative h-11 w-11 border border-transparent hover:border-border/70 hover:bg-muted/60 hover:scale-105 touch-manipulation"
+                    className="relative h-10 w-10 rounded-xl border border-border/60 bg-background/60 text-muted-foreground transition-colors duration-200 hover:bg-muted/70 hover:text-foreground touch-manipulation"
                   >
                     <UserPlus className="w-5 h-5" />
                     {pendingFriendRequests.length > 0 && (
@@ -370,7 +375,7 @@ const Navigation = () => {
                     variant="ghost"
                     size="icon"
                     asChild
-                    className="relative h-11 w-11 border border-transparent hover:border-border/70 hover:bg-muted/60 hover:scale-105 touch-manipulation"
+                    className="relative h-10 w-10 rounded-xl border border-border/60 bg-background/60 text-muted-foreground transition-colors duration-200 hover:bg-muted/70 hover:text-foreground touch-manipulation"
                   >
                     <Link to="/messages">
                       <MessageCircle className="w-5 h-5" />
@@ -385,8 +390,8 @@ const Navigation = () => {
                   <ThemeToggle />
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <button className="cursor-pointer outline-none focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-full transition-all duration-200 hover:scale-105">
-                        <Avatar className="h-11 w-11 ring-1 ring-border/70 hover:ring-primary/50 transition-all">
+                      <button className="cursor-pointer rounded-full outline-none transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2">
+                        <Avatar className="h-10 w-10 ring-1 ring-border/70 transition-all hover:ring-primary/50">
                           <AvatarImage src={avatarUrl} alt={user.user_metadata?.full_name || 'User'} />
                           <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
                             {(user.user_metadata?.full_name || user.email || 'U')[0].toUpperCase()}
@@ -435,7 +440,7 @@ const Navigation = () => {
               ) : (
                 <div className="flex items-center space-x-3">
                   <ThemeToggle />
-                  <Button variant="ghost" size="sm" asChild className="border border-transparent hover:border-border/70">
+                  <Button variant="ghost" size="sm" asChild className="rounded-xl border border-border/60 bg-background/55 px-3 hover:bg-muted/70">
                     <Link to="/login" className="flex items-center gap-2">
                       <LogIn className="w-4 h-4" />
                       Sign In
@@ -443,7 +448,7 @@ const Navigation = () => {
                   </Button>
                   <Button
                     size="sm"
-                    className="font-semibold px-4"
+                    className="rounded-xl px-4 font-semibold shadow-sm"
                     asChild
                   >
                     <Link to="/signup">Sign Up</Link>
@@ -454,7 +459,7 @@ const Navigation = () => {
 
             {/* Mobile Menu Button */}
             <button
-              className="md:hidden flex items-center justify-center min-h-[44px] min-w-[44px] touch-manipulation !border-0 active:opacity-70 transition-opacity"
+              className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-xl border border-border/60 bg-background/70 text-foreground shadow-sm backdrop-blur md:hidden touch-manipulation transition-colors hover:bg-muted/60 active:opacity-70"
               onClick={() => setIsOpen(!isOpen)}
               aria-label={isOpen ? "Close menu" : "Open menu"}
               aria-expanded={isOpen}
@@ -477,7 +482,7 @@ const Navigation = () => {
             <div className="md:hidden fixed top-16 left-0 right-0 bottom-0 bg-background/95 backdrop-blur-xl border-t border-border animate-mobile-drawer safe-area-inset z-50 shadow-2xl">
               <div className="px-2 pt-2 pb-safe space-y-1 max-h-[calc(100vh-64px)] overflow-y-auto">
                 {/* Theme Toggle at top of mobile menu */}
-                <div className="px-4 py-3 border-b border-border sticky top-0 bg-background z-10">
+                <div className="sticky top-0 z-10 border-b border-border/70 bg-background/95 px-4 py-3 backdrop-blur">
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium text-foreground">Theme</span>
                     <ThemeToggle />
@@ -502,10 +507,10 @@ const Navigation = () => {
                         <Link
                           to={item.href}
                           className={cn(
-                            "block px-4 py-3.5 min-h-[48px] touch-manipulation flex items-center gap-3 text-base transition-all duration-200",
-                            "hover:bg-muted/50 active:bg-muted rounded-lg mx-2",
+                            "mx-2 flex min-h-[48px] touch-manipulation items-center gap-3 rounded-xl border border-transparent px-4 py-3 text-base transition-all duration-200",
+                            "hover:border-border/60 hover:bg-muted/50 active:bg-muted",
                             active
-                              ? "text-foreground font-semibold bg-primary/5"
+                              ? "border-primary/30 bg-primary/10 font-semibold text-foreground"
                               : "text-muted-foreground hover:text-foreground"
                           )}
                           onClick={() => setIsOpen(false)}
@@ -515,14 +520,14 @@ const Navigation = () => {
                         </Link>
                         {/* Mobile submenu items */}
                         {submenu && (
-                          <div className="ml-10 mr-2 mb-1 space-y-0.5">
+                          <div className="mb-1 ml-10 mr-2 mt-0.5 space-y-1">
                             {submenu.items.map((sub) => {
                               const SubIcon = sub.icon;
                               return (
                                 <Link
                                   key={sub.name}
                                   to={sub.href}
-                                  className="flex items-center gap-2.5 px-3 py-2.5 min-h-[44px] touch-manipulation text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50 active:bg-muted rounded-lg transition-colors"
+                                  className="flex min-h-[44px] touch-manipulation items-center gap-2.5 rounded-lg border border-transparent px-3 py-2.5 text-sm text-muted-foreground transition-colors hover:border-border/60 hover:bg-muted/50 hover:text-foreground active:bg-muted"
                                   onClick={() => setIsOpen(false)}
                                 >
                                   <SubIcon className="h-4 w-4 flex-shrink-0" />
@@ -541,7 +546,7 @@ const Navigation = () => {
                     <div className="w-full h-12 animate-pulse bg-muted rounded" />
                   ) : user ? (
                     <div className="space-y-2">
-                      <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-primary/5 to-secondary/5 rounded-lg mb-3 border border-primary/10">
+                      <div className="mb-3 flex items-center justify-between rounded-xl border border-primary/15 bg-gradient-to-r from-primary/10 to-secondary/10 px-4 py-3">
                         <div className="flex items-center space-x-3">
                           <Avatar className="h-10 w-10 ring-2 ring-primary/20">
                             <AvatarImage src={avatarUrl} alt={user.user_metadata?.full_name || 'User'} />
@@ -559,7 +564,7 @@ const Navigation = () => {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="w-full justify-start min-h-[48px] touch-manipulation text-base transition-all duration-200 hover:bg-muted/50 hover:scale-[1.02]"
+                        className="w-full justify-start min-h-[48px] touch-manipulation rounded-xl border border-border/60 bg-background/55 text-base transition-colors duration-200 hover:bg-muted/70"
                         onClick={() => setIsOpen(false)}
                         asChild
                       >
@@ -571,7 +576,7 @@ const Navigation = () => {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="w-full justify-start min-h-[48px] touch-manipulation text-base transition-all duration-200 hover:bg-muted/50 hover:scale-[1.02]"
+                        className="w-full justify-start min-h-[48px] touch-manipulation rounded-xl border border-border/60 bg-background/55 text-base transition-colors duration-200 hover:bg-muted/70"
                         onClick={() => setIsOpen(false)}
                         asChild
                       >
@@ -583,7 +588,7 @@ const Navigation = () => {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="w-full justify-start min-h-[48px] touch-manipulation text-base transition-all duration-200 hover:bg-muted/50 hover:scale-[1.02]"
+                        className="w-full justify-start min-h-[48px] touch-manipulation rounded-xl border border-border/60 bg-background/55 text-base transition-colors duration-200 hover:bg-muted/70"
                         onClick={() => setIsOpen(false)}
                         asChild
                       >
@@ -595,7 +600,7 @@ const Navigation = () => {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="w-full justify-start min-h-[48px] touch-manipulation text-base text-destructive hover:text-destructive hover:bg-destructive/10"
+                        className="w-full justify-start min-h-[48px] touch-manipulation rounded-xl border border-destructive/30 bg-background/55 text-base text-destructive hover:bg-destructive/10 hover:text-destructive"
                         onClick={() => {
                           setIsOpen(false);
                           handleSignOut();
@@ -610,7 +615,7 @@ const Navigation = () => {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="w-full justify-start min-h-[48px] touch-manipulation text-base"
+                        className="w-full justify-start min-h-[48px] touch-manipulation rounded-xl border border-border/60 bg-background/55 text-base hover:bg-muted/70"
                         onClick={() => setIsOpen(false)}
                         asChild
                       >

@@ -3,7 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Gift, Home, Bot, BookOpen, TrendingUp, Users, FileText, Info, DollarSign } from "lucide-react";
+import { Home, Bot, BookOpen, TrendingUp, Users, FileText, Info, DollarSign } from "lucide-react";
 
 interface NavItem {
   name: string;
@@ -41,23 +41,11 @@ export const TabletNavigation: React.FC<TabletNavigationProps> = ({
 
   return (
     <TooltipProvider>
-      <nav className="flex items-center justify-center gap-3 lg:gap-4 px-4">
+      <nav className="flex items-center justify-center rounded-2xl border border-border/60 bg-background/62 px-2 py-1.5 shadow-[inset_0_1px_0_hsl(var(--background)/0.7)] backdrop-blur-xl">
         {visibleItems.map((item) => {
           const isActive = location.pathname === item.href || 
             (item.href !== "/" && location.pathname.startsWith(item.href));
           const Icon = item.icon || iconMap[item.name];
-          
-          // Color-code navigation items semantically
-          let colorClass = '';
-          if (item.name === 'BizMap AI' || item.name === 'Prompt Library') {
-            colorClass = 'hover:text-planning';
-          } else if (item.name === 'Community' || item.name === 'Stories' || item.name === 'About Us') {
-            colorClass = 'hover:text-action';
-          } else if (item.name === 'Insighta' || item.name === 'Pricing') {
-            colorClass = 'hover:text-growth';
-          } else {
-            colorClass = 'hover:text-foreground';
-          }
 
           return (
             <Tooltip key={item.name}>
@@ -66,18 +54,16 @@ export const TabletNavigation: React.FC<TabletNavigationProps> = ({
                   to={item.href}
                   onClick={() => onItemClick?.(item.name)}
                   className={cn(
-                    "flex flex-col items-center justify-center gap-1 relative",
-                    "px-3 py-2.5 rounded-lg transition-all duration-250",
-                    "min-h-[48px] min-w-[60px] touch-manipulation",
-                    "text-sm font-medium",
+                    "relative flex min-h-[48px] min-w-[64px] touch-manipulation flex-col items-center justify-center gap-1 rounded-xl px-3 py-2 transition-all duration-200",
+                    "text-sm font-medium tracking-[0.01em]",
                     isActive
-                      ? "text-primary bg-primary/10 shadow-sm scale-105"
-                      : `text-muted-foreground ${colorClass} hover:bg-muted/50`,
-                    "active:scale-95 hover:scale-105"
+                      ? "nav-active-indicator active bg-primary/10 text-foreground shadow-[inset_0_0_0_1px_hsl(var(--primary)/0.22)]"
+                      : "text-muted-foreground hover:bg-muted/55 hover:text-foreground",
+                    "nav-item-hover-effect active:scale-95"
                   )}
                 >
                   {Icon && <Icon className="h-4 w-4" />}
-                  <span className="text-[10px] leading-tight text-center max-w-[60px] truncate">
+                  <span className="max-w-[60px] truncate text-center text-[10px] leading-tight">
                     {item.name}
                   </span>
                 </Link>
