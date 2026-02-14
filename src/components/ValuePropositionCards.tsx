@@ -360,17 +360,17 @@ const ValuePropositionCards = () => {
   }, []);
 
   return (
-    <section id="what-you-get" className="py-20 lg:py-28 scroll-mt-24 font-poppins">
+    <section id="what-you-get" className="section-shell scroll-mt-24">
       <div className="container mx-auto px-4 sm:px-6">
         {/* Section Header */}
-        <div className="max-w-3xl mx-auto text-center mb-12 sm:mb-16">
-          <Badge variant="outline" className="mb-5 text-xs uppercase tracking-wide text-muted-foreground">
-            The Perfect Ecosystem ♻️
+        <div className="section-header max-w-3xl">
+          <Badge variant="outline" className="section-eyebrow">
+            The perfect ecosystem
           </Badge>
-          <h2 className="font-space-grotesk text-3xl sm:text-4xl lg:text-5xl font-semibold mb-4 tracking-tight text-primary">
+          <h2 className="section-title">
             Creatives Takeover in a Nutshell
           </h2>
-          <p className="font-poppins text-base sm:text-lg text-muted-foreground">
+          <p className="section-description">
             Everything you need, all in one place. Built on six core pillars to help solofounders validate, build, and grow a business from scratch.
           </p>
         </div>
@@ -394,14 +394,14 @@ const ValuePropositionCards = () => {
                 const isUploadingPosition = uploading === card.position;
                 return (
                   <CarouselItem key={card.title} className="pl-4 basis-full h-full">
-                    <Card className="glass border-border overflow-hidden h-full relative" data-value-card>
+                    <Card className="surface-panel trust-outline overflow-hidden h-full relative" data-value-card>
                       <Button
                         type="button"
                         variant="outline"
                         size="sm"
                         onClick={handleStopClick}
                         title={isAutoScrollPaused ? "Resume auto-scroll" : "Pause auto-scroll"}
-                        className="absolute right-4 top-4 z-10 h-7 px-2 text-xs"
+                        className="absolute right-4 top-4 z-10 h-8 px-3 text-xs"
                       >
                         {isAutoScrollPaused ? "Resume" : "Stop"}
                       </Button>
@@ -411,10 +411,10 @@ const ValuePropositionCards = () => {
                           <img
                             src={imageSrc}
                             alt={altText}
-                            className="w-full h-full object-cover"
+                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
                             loading="lazy"
                           />
-                          <div className="absolute inset-0 bg-gradient-to-t from-background/10 to-transparent" />
+                          <div className="absolute inset-0 bg-gradient-to-t from-background/20 via-transparent to-transparent" />
                           {isAdmin && (
                             <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/40">
                               <div className="w-full max-w-[200px] px-4">
@@ -467,14 +467,14 @@ const ValuePropositionCards = () => {
                         {/* Content - Right */}
                         <div className="p-6 md:p-10 flex flex-col justify-center md:h-full">
                           <div className="flex items-center gap-3 mb-4">
-                            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                            <div className="w-10 h-10 rounded-full bg-primary/12 border border-primary/20 flex items-center justify-center">
                               <Icon className="h-5 w-5 text-primary" />
                             </div>
                             <div>
-                              <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                              <p className="text-xs uppercase tracking-[0.08em] text-muted-foreground">
                                 {card.title}
                               </p>
-                              <h3 className="font-space-grotesk text-2xl font-bold">
+                              <h3 className="font-space-grotesk text-2xl font-semibold tracking-tight">
                                 {card.subtitle}
                               </h3>
                             </div>
@@ -503,8 +503,8 @@ const ValuePropositionCards = () => {
                 onClick={() => goToCard(index)}
                 className={`transition-all duration-200 ${
                   selectedIndex === index
-                    ? "bg-primary text-primary-foreground shadow-md"
-                    : "hover:border-primary/50"
+                    ? "text-primary-foreground"
+                    : "hover:border-primary/40 hover:bg-primary/5"
                 }`}
               >
                 {card.buttonLabel}
@@ -518,3 +518,4 @@ const ValuePropositionCards = () => {
 };
 
 export default ValuePropositionCards;
+

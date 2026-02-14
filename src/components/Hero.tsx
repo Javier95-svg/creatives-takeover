@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowRight, Sparkles, LayoutDashboard, User, Users, DollarSign, Play, Image as ImageIcon, Upload, Loader2 } from "lucide-react";
+import { ArrowRight, LayoutDashboard, User, Play, Image as ImageIcon, Upload, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useConversionTracking } from "@/hooks/useConversionTracking";
@@ -416,36 +416,40 @@ const Hero = () => {
       id="overview"
       className="scroll-mt-24 relative pt-16 sm:pt-20 md:pt-24 pb-12 sm:pb-16 md:pb-20 px-4 sm:px-6 font-poppins"
     >
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-muted/40 to-transparent pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-muted/30 to-transparent pointer-events-none" />
 
       <div className="container mx-auto max-w-7xl relative z-10">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 xl:gap-20 items-center">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 xl:gap-16 items-center">
           {/* Left Section - All existing content */}
-          <div className="text-center flex flex-col justify-center">
+          <div className="text-center lg:text-left flex flex-col justify-center items-center lg:items-start">
+            <span className="section-eyebrow mb-6">Built for serious solo founders</span>
+
             {/* Main Headline */}
             <h1
-              className="font-space-grotesk text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-semibold mb-4 sm:mb-6 leading-tight tracking-tight"
-              style={{ textShadow: '0 0 40px hsl(var(--primary) / 0.15)' }}
+              className="font-space-grotesk text-3xl sm:text-4xl md:text-5xl lg:text-[3.65rem] font-semibold mb-4 sm:mb-6 leading-[1.08] tracking-tight max-w-2xl"
+              style={{ textShadow: '0 0 32px hsl(var(--primary) / 0.12)' }}
             >
-              <span className="text-primary">The One-Person Business</span> Factory
+              <span className="text-primary">The One-Person Business</span>
+              <br />
+              Factory
             </h1>
 
             {/* Subheadline - Improved readability */}
-            <p className="font-space-grotesk text-sm sm:text-base md:text-lg text-muted-foreground mb-6 sm:mb-8 max-w-xl mx-auto leading-relaxed px-2 sm:px-0">
+            <p className="font-space-grotesk text-sm sm:text-base md:text-lg text-muted-foreground mb-6 sm:mb-8 max-w-xl lg:max-w-2xl mx-auto lg:mx-0 leading-relaxed px-2 sm:px-0">
               We blend technology, strategy, and community to empower individuals to build and launch startups with minimal friction. Our platform provides business development, expert support, and access to fundraising.
             </p>
             
             {/* Enhanced CTA Section */}
-            <div className="mb-6 sm:mb-8 md:mb-10">
+            <div className="mb-6 sm:mb-8 md:mb-10 w-full">
               {isAuthenticated ? (
-                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-center justify-center px-4 sm:px-0">
-                  <Button size="lg" variant="outline" className="w-full sm:w-auto min-w-[180px] min-h-[44px] touch-manipulation" asChild>
+                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-center lg:justify-start justify-center px-4 sm:px-0">
+                  <Button size="lg" variant="outline" className="w-full sm:w-auto min-w-[190px] min-h-[44px] touch-manipulation" asChild>
                     <Link to={userUsername ? `/profile/${userUsername}` : '/dashboard'}>
                       <User className="w-5 h-5" />
                       Your Profile
                     </Link>
                   </Button>
-                  <Button size="lg" className="w-full sm:w-auto min-w-[180px] min-h-[44px] touch-manipulation" asChild>
+                  <Button size="lg" className="w-full sm:w-auto min-w-[190px] min-h-[44px] touch-manipulation" asChild>
                     <Link to="/dashboard" onClick={handleDashboardCTAClick}>
                       <LayoutDashboard className="w-5 h-5" />
                       Dashboard
@@ -454,8 +458,8 @@ const Hero = () => {
                   </Button>
                 </div>
             ) : (
-              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-center justify-center px-4 sm:px-0">
-                <Button size="lg" className="w-full sm:w-auto min-h-[44px] touch-manipulation" asChild>
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-center lg:justify-start justify-center px-4 sm:px-0">
+                <Button size="lg" className="w-full sm:w-auto min-w-[190px] min-h-[44px] touch-manipulation" asChild>
                   <Link to="/signup" onClick={handlePrimaryCTAClick}>
                     Join Today
                     <ArrowRight className="w-4 h-4" />
@@ -465,7 +469,7 @@ const Hero = () => {
                 <Button 
                   variant="outline"
                   size="lg" 
-                  className="w-full sm:w-auto min-h-[44px] touch-manipulation" 
+                  className="w-full sm:w-auto min-w-[190px] min-h-[44px] touch-manipulation" 
                   onClick={(e) => {
                     e.preventDefault();
                     handleSecondaryCTAClick(e as any);
@@ -477,11 +481,19 @@ const Hero = () => {
               </div>
               )}
             </div>
+
+            <div className="surface-tile trust-outline px-4 py-3 w-full max-w-xl lg:max-w-2xl">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4 text-sm">
+                <p className="text-foreground font-medium">AI-guided planning</p>
+                <p className="text-foreground font-medium">Mentor-backed execution</p>
+                <p className="text-foreground font-medium">Investor-ready tools</p>
+              </div>
+            </div>
           </div>
 
           {/* Right Section - 4-Pic Grid Layout */}
           <div className="w-full">
-            <div className="rounded-2xl border border-border/70 bg-card shadow-lg p-3 sm:p-4">
+            <div className="surface-panel trust-outline p-3 sm:p-4">
               <div className="grid grid-cols-2 gap-2 sm:gap-3 md:gap-4 w-full">
                 {[1, 2, 3, 4].map((position) => {
                 // Use optimistic preview if available (instant rendering), otherwise use database image
@@ -553,12 +565,12 @@ const Hero = () => {
                 return (
                   <div
                     key={position}
-                    className="relative rounded-xl overflow-hidden border border-border/60 bg-muted/30 group"
+                    className="relative rounded-xl overflow-hidden border border-border/60 bg-muted/30 group shadow-[0_10px_24px_hsl(var(--foreground)/0.12)]"
                   >
                     <img
                       src={imageSrc}
                       alt={altText}
-                      className="w-full h-auto object-cover aspect-square"
+                      className="w-full h-auto object-cover aspect-square transition-transform duration-500 group-hover:scale-[1.035]"
                       loading={shouldLoadEagerly ? "eager" : "lazy"}
                       fetchPriority={shouldLoadEagerly ? "high" : "auto"}
                       decoding="async"

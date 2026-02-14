@@ -266,11 +266,11 @@ const Navigation = () => {
         className={cn(
           "fixed left-0 right-0 z-50 border-b transition-all duration-300",
           scrolled
-            ? "bg-background/95 backdrop-blur-lg shadow-sm border-border/70"
-            : "bg-background/85 backdrop-blur-md border-border/60"
+            ? "bg-background/92 backdrop-blur-xl border-border/80 shadow-[0_10px_30px_hsl(var(--foreground)/0.12)]"
+            : "bg-background/75 backdrop-blur-md border-border/65 shadow-[0_1px_0_hsl(var(--border)/0.6)]"
         )}
       >
-        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-12 border-0">
+        <div className="max-w-[1480px] mx-auto px-4 sm:px-6 lg:px-10 border-0">
           <div className="flex items-center h-16 md:h-18 border-0">
             {/* Logo with Enhanced Hover Effects - Fixed width to prevent layout shifts */}
             <div className="flex items-center border-0 flex-shrink-0 w-16 min-w-[4rem]">
@@ -295,7 +295,7 @@ const Navigation = () => {
 
             {/* Desktop Navigation */}
             {deviceType === 'desktop' && (
-              <div className="flex items-center justify-evenly flex-1 pl-8 lg:pl-12 pr-8 lg:pr-16 !border-0 gap-1">
+              <div className="flex items-center justify-evenly flex-1 pl-8 lg:pl-10 pr-8 lg:pr-12 !border-0 gap-1.5">
                 {navItems.map((item) => {
                   const Icon = item.icon || iconMap[item.name];
                   const active = isActive(item.href);
@@ -323,7 +323,7 @@ const Navigation = () => {
                           to={item.href}
                           onClick={() => trackClick(item.name, 'Navigation')}
                           className={cn(
-                            "relative flex items-center gap-1.5 px-3 py-2 rounded-lg transition-all duration-250 whitespace-nowrap font-medium text-sm",
+                            "relative flex items-center gap-1.5 px-3 py-2 rounded-xl transition-all duration-250 whitespace-nowrap font-medium text-sm",
                             "nav-item-hover-effect",
                             active
                               ? "text-foreground bg-primary/5 nav-active-indicator active"
@@ -357,7 +357,7 @@ const Navigation = () => {
                     variant="ghost"
                     size="icon"
                     onClick={() => setShowFriendRequests(true)}
-                    className="relative h-11 w-11 transition-all duration-200 hover:bg-muted/50 hover:scale-110 touch-manipulation"
+                    className="relative h-11 w-11 border border-transparent hover:border-border/70 hover:bg-muted/60 hover:scale-105 touch-manipulation"
                   >
                     <UserPlus className="w-5 h-5" />
                     {pendingFriendRequests.length > 0 && (
@@ -370,7 +370,7 @@ const Navigation = () => {
                     variant="ghost"
                     size="icon"
                     asChild
-                    className="relative h-11 w-11 transition-all duration-200 hover:bg-muted/50 hover:scale-110 touch-manipulation"
+                    className="relative h-11 w-11 border border-transparent hover:border-border/70 hover:bg-muted/60 hover:scale-105 touch-manipulation"
                   >
                     <Link to="/messages">
                       <MessageCircle className="w-5 h-5" />
@@ -385,8 +385,8 @@ const Navigation = () => {
                   <ThemeToggle />
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <button className="cursor-pointer outline-none focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-full transition-all duration-200 hover:scale-110">
-                        <Avatar className="h-11 w-11 hover:ring-2 hover:ring-primary transition-all">
+                      <button className="cursor-pointer outline-none focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-full transition-all duration-200 hover:scale-105">
+                        <Avatar className="h-11 w-11 ring-1 ring-border/70 hover:ring-primary/50 transition-all">
                           <AvatarImage src={avatarUrl} alt={user.user_metadata?.full_name || 'User'} />
                           <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
                             {(user.user_metadata?.full_name || user.email || 'U')[0].toUpperCase()}
@@ -435,7 +435,7 @@ const Navigation = () => {
               ) : (
                 <div className="flex items-center space-x-3">
                   <ThemeToggle />
-                  <Button variant="ghost" size="sm" asChild className="transition-all duration-200 hover:scale-105">
+                  <Button variant="ghost" size="sm" asChild className="border border-transparent hover:border-border/70">
                     <Link to="/login" className="flex items-center gap-2">
                       <LogIn className="w-4 h-4" />
                       Sign In
@@ -443,7 +443,7 @@ const Navigation = () => {
                   </Button>
                   <Button
                     size="sm"
-                    className="bg-gradient-unified hover:opacity-90 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 font-semibold px-4"
+                    className="font-semibold px-4"
                     asChild
                   >
                     <Link to="/signup">Sign Up</Link>
@@ -474,7 +474,7 @@ const Navigation = () => {
 
           {/* Mobile Navigation */}
           {isOpen && (
-            <div className="md:hidden fixed top-16 left-0 right-0 bottom-0 bg-background border-t border-border animate-mobile-drawer safe-area-inset z-50 shadow-2xl">
+            <div className="md:hidden fixed top-16 left-0 right-0 bottom-0 bg-background/95 backdrop-blur-xl border-t border-border animate-mobile-drawer safe-area-inset z-50 shadow-2xl">
               <div className="px-2 pt-2 pb-safe space-y-1 max-h-[calc(100vh-64px)] overflow-y-auto">
                 {/* Theme Toggle at top of mobile menu */}
                 <div className="px-4 py-3 border-b border-border sticky top-0 bg-background z-10">

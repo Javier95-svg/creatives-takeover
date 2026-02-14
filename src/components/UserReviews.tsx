@@ -103,16 +103,16 @@ const UserReviews = () => {
   const duplicatedReviews = [...reviews, ...reviews];
 
   return (
-    <section className="py-20 lg:py-28 font-poppins">
+    <section className="section-shell">
       <div className="container mx-auto px-4 sm:px-6">
-        <div className="text-center mb-16 sm:mb-20 px-6 sm:px-8 lg:px-12">
-          <Badge variant="outline" className="mb-5 text-xs uppercase tracking-wide text-muted-foreground">
-            Join Them 💙
+        <div className="section-header px-6 sm:px-8 lg:px-12">
+          <Badge variant="outline" className="section-eyebrow">
+            Join them
           </Badge>
-          <h2 className="font-space-grotesk text-3xl sm:text-4xl lg:text-5xl font-semibold mb-6 break-words tracking-tight text-primary">
+          <h2 className="section-title mb-6 break-words">
             Helping Founders Succeed
           </h2>
-          <p className="font-poppins text-base sm:text-lg text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+          <p className="section-description max-w-3xl mx-auto">
             See how founders are turning their ideas into thriving projects.
           </p>
         </div>
@@ -127,7 +127,7 @@ const UserReviews = () => {
               }
             }
             .reviews-scroll {
-              animation: reviewScroll 90s linear infinite;
+              animation: reviewScroll 72s linear infinite;
             }
             .reviews-scroll:hover {
               animation-play-state: paused;
@@ -137,7 +137,7 @@ const UserReviews = () => {
             {duplicatedReviews.map((review, index) => (
               <Card 
                 key={`${review.name}-${index}`} 
-                className="group border-border/70 shadow-sm hover:shadow-md transition-shadow flex-shrink-0 w-[320px] sm:w-[360px] md:w-[400px]"
+                className="group surface-panel trust-outline flex-shrink-0 w-[320px] sm:w-[360px] md:w-[400px]"
               >
                 <CardContent className="p-6">
                   {/* Rating Stars and Verification */}
@@ -148,7 +148,6 @@ const UserReviews = () => {
                         const starValue = i + 1;
                         const isFullStar = starValue <= Math.floor(rating);
                         const isHalfStar = !isFullStar && starValue === Math.ceil(rating) && rating % 1 !== 0;
-                        const isEmptyStar = starValue > Math.ceil(rating);
                         
                         return (
                           <div key={i} className="relative inline-block w-4 h-4">
@@ -169,7 +168,7 @@ const UserReviews = () => {
                       })}
                     </div>
                     {review.verified && (
-                      <Badge variant="secondary" className="bg-green-500/10 text-green-600 border-green-500/20 text-xs">
+                      <Badge variant="secondary" className="bg-green-500/10 text-green-600 border-green-500/20 text-[11px]">
                         <CheckCircle2 className="w-3 h-3 mr-1" />
                         Verified
                       </Badge>
@@ -184,7 +183,7 @@ const UserReviews = () => {
                   {/* Outcome Badge */}
                   {review.outcome && (
                     <div className="mb-6">
-                      <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20">
+                      <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
                         {review.outcome}
                       </Badge>
                     </div>

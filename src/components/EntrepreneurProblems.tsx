@@ -92,7 +92,7 @@ const EntrepreneurProblems = () => {
 
   const founderJourneyVideoPositions = new Set([0, 1, 2, 3, 4, 5, 6]);
 
-  const ctaClassName = "inline-flex items-center gap-2 rounded-lg border border-border bg-background px-5 py-2.5 text-base font-medium text-foreground hover:border-primary/50 hover:bg-primary/5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200";
+  const ctaClassName = "inline-flex items-center gap-2 rounded-[12px] border border-border/80 bg-background/95 px-5 py-2.5 text-base font-semibold text-foreground shadow-[0_1px_2px_hsl(var(--foreground)/0.06)] hover:-translate-y-0.5 hover:border-primary/40 hover:bg-primary/5 hover:shadow-[0_10px_20px_hsl(var(--foreground)/0.12)] transition-all duration-200";
 
   const pathwayCtaConfig: Record<number, { to: string; label?: string; icon: typeof Target; iconPosition?: "start" | "end" }> = {
     0: { to: "/icp-builder", label: "Define your Niche", icon: Target, iconPosition: "end" },
@@ -131,18 +131,18 @@ const EntrepreneurProblems = () => {
   };
 
   return (
-    <section className="py-20 lg:py-28 relative font-poppins" aria-labelledby="journey-heading">
+    <section className="section-shell" aria-labelledby="journey-heading">
 
       <div className="container mx-auto px-4 sm:px-6 relative z-10">
         {/* Section Header */}
-        <div className="text-center mb-16 sm:mb-20 max-w-4xl mx-auto">
-          <Badge variant="outline" className="mb-5 text-xs uppercase tracking-wide text-muted-foreground">
+        <div className="section-header max-w-4xl">
+          <Badge variant="outline" className="section-eyebrow">
             Own Your Path {"\uD83D\uDE80"}
           </Badge>
-          <h2 id="journey-heading" className="font-space-grotesk text-3xl sm:text-4xl lg:text-5xl font-semibold mb-6 leading-tight tracking-tight text-primary">
+          <h2 id="journey-heading" className="section-title">
             Every Founder's Journey is Unique
           </h2>
-          <p className="font-poppins text-base sm:text-lg text-muted-foreground leading-relaxed">
+          <p className="section-description">
             But some challenges are universal. Here, we highlight some of the most common obstacles founders face and how we assist to overcome them.
           </p>
         </div>
@@ -150,7 +150,7 @@ const EntrepreneurProblems = () => {
         {/* Vertical Timeline */}
         <div className="max-w-5xl mx-auto relative">
           {/* Timeline Line - Continuous vertical line */}
-          <div className="absolute left-8 md:left-1/2 top-0 bottom-0 w-px bg-border hidden sm:block" />
+          <div className="absolute left-8 md:left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-primary/30 via-border to-primary/25 hidden sm:block" />
 
           {/* Timeline Items */}
           <div className="space-y-12 md:space-y-16">
