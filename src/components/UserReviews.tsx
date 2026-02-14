@@ -148,7 +148,7 @@ const UserReviews = () => {
             Startup Development Cycle
           </h2>
           <p className="font-poppins text-base sm:text-lg text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-            The Startup Development Cycle is a step-by-step roadmap designed by Creatives Takeover to guide founders from shaping an idea to building, launching, and growing a startup. It gives you a clear path to validate your direction, gain traction, and scale with confidence.
+            The Startup Development Cycle is a step-by-step roadmap designed by Creatives Takeover to guide founders from shaping an idea to building, launching, and growing a startup.
           </p>
           <div className="mt-6">
             <Button
