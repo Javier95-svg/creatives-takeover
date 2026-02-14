@@ -2469,37 +2469,41 @@ img {
   }
 }
 
-/* Logo Breathing Pulse Animation - subtle and professional */
+/* Logo Breathing Pulse Animation - Subtle Scale In/Out with RGB Glow */
 @keyframes logo-breathing {
   0%, 100% {
     transform: scale(1);
     filter: 
-      drop-shadow(0 2px 6px hsl(var(--primary) / 0.2))
-      drop-shadow(0 0 10px hsl(var(--primary) / 0.12));
+      drop-shadow(0 0 4px hsl(var(--blue-primary) / 0.35))
+      drop-shadow(0 0 8px hsl(var(--red-primary) / 0.3))
+      drop-shadow(0 0 12px hsl(var(--green-primary) / 0.25));
   }
   25% {
-    transform: scale(1.012);
+    transform: scale(1.04);
     filter: 
-      drop-shadow(0 3px 8px hsl(var(--primary) / 0.24))
-      drop-shadow(0 0 12px hsl(var(--primary) / 0.15));
+      drop-shadow(0 0 6px hsl(var(--blue-primary) / 0.45))
+      drop-shadow(0 0 10px hsl(var(--red-primary) / 0.4))
+      drop-shadow(0 0 14px hsl(var(--green-primary) / 0.35));
   }
   50% {
-    transform: scale(1.022);
+    transform: scale(1.08);
     filter: 
-      drop-shadow(0 4px 10px hsl(var(--primary) / 0.28))
-      drop-shadow(0 0 14px hsl(var(--primary) / 0.18));
+      drop-shadow(0 0 8px hsl(var(--blue-primary) / 0.55))
+      drop-shadow(0 0 12px hsl(var(--red-primary) / 0.5))
+      drop-shadow(0 0 16px hsl(var(--green-primary) / 0.45));
   }
   75% {
-    transform: scale(1.012);
+    transform: scale(1.04);
     filter: 
-      drop-shadow(0 3px 8px hsl(var(--primary) / 0.24))
-      drop-shadow(0 0 12px hsl(var(--primary) / 0.15));
+      drop-shadow(0 0 6px hsl(var(--blue-primary) / 0.45))
+      drop-shadow(0 0 10px hsl(var(--red-primary) / 0.4))
+      drop-shadow(0 0 14px hsl(var(--green-primary) / 0.35));
   }
 }
 
 /* Logo Breathing Animation Utility Class */
 .animate-logo-breathing {
-  animation: logo-breathing 3.6s ease-in-out infinite;
+  animation: logo-breathing 3s ease-in-out infinite;
   transform-origin: center;
   will-change: transform, filter;
   /* Smooth anti-aliased edges */
@@ -2916,8 +2920,8 @@ img {
 }
 
 .nav-logo-hover:hover {
-  transform: scale(1.02);
-  filter: drop-shadow(0 8px 14px hsl(var(--primary) / 0.2));
+  transform: scale(1.03);
+  filter: drop-shadow(0 8px 14px hsl(var(--primary) / 0.24));
 }
 
 /* Dashboard CTA Pulse + Glow Animation */
