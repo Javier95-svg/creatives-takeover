@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
-import { checkAndDeductCredits, getUserFromAuth } from '../_shared/credit-deduction.ts';
+import { checkAndDeductCredits, getUserFromAuth, refundCredits } from '../_shared/credit-deduction.ts';
 import { CREDIT_COSTS } from '../_shared/credit-constants.ts';
 import { resolveCreditIdempotencyKey } from '../_shared/request-idempotency.ts';
 
@@ -322,114 +322,120 @@ serve(async (req) => {
       throw new Error('LOVABLE_API_KEY not configured');
     }
 
-    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [
-          {
-            role: 'system',
-            content: `You are an expert at creating ${request.material_type.replace('_', ' ')} materials for startup fundraising. Always return valid JSON in the exact structure specified.`
-          },
-          {
-            role: 'user',
-            content: prompt
-          }
-        ],
-        response_format: { type: 'json_object' },
-        temperature: 0.7,
-        max_tokens: request.material_type === 'pitch_deck' ? 4000 : 2000,
-      }),
-    });
-
-    if (!aiResponse.ok) {
-      const errorText = await aiResponse.text();
-      console.error('AI API Error:', errorText);
-      throw new Error(`AI API Error: ${aiResponse.status}`);
-    }
-
-    const aiData = await aiResponse.json();
-    let generatedContent: any;
-
     try {
-      const content = aiData.choices[0].message.content;
-      generatedContent = JSON.parse(content);
-    } catch (parseError) {
-      console.error('Error parsing AI response:', parseError);
-      // Fallback: try to extract JSON from markdown code blocks
-      const content = aiData.choices[0].message.content;
-      const jsonMatch = content.match(/```json\s*([\s\S]*?)\s*```/) || content.match(/```\s*([\s\S]*?)\s*```/);
-      if (jsonMatch) {
-        generatedContent = JSON.parse(jsonMatch[1]);
-      } else {
-        throw new Error('Failed to parse AI response as JSON');
-      }
-    }
-
-    // Structure the response based on material type
-    let materialContent = '';
-    let materialContentJson: any = null;
-    let subject = '';
-
-    if (request.material_type === 'pitch_deck') {
-      materialContentJson = generatedContent;
-      materialContent = JSON.stringify(generatedContent);
-    } else if (request.material_type === 'cold_email') {
-      subject = generatedContent.subject_variations?.[0] || '';
-      materialContent = generatedContent.body || '';
-      materialContentJson = generatedContent;
-    } else if (request.material_type === 'one_pager') {
-      materialContentJson = generatedContent;
-      materialContent = generatedContent.sections?.map((s: any) => `## ${s.heading}\n\n${s.content}`).join('\n\n') || '';
-    }
-
-    // Save to database (optional, non-blocking)
-    let saved = false;
-    try {
-      const { error: saveError } = await supabase
-        .from('outreach_materials')
-        .insert({
-          user_id: user.id,
-          investor_id: request.investor_id || null,
-          material_type: request.material_type,
-          subject: subject || null,
-          content: materialContent,
-          content_json: materialContentJson,
-          version: 1,
-          is_template: false,
-          is_final: false
-        });
-
-      if (!saveError) {
-        saved = true;
-      } else {
-        console.error('Failed to save material (non-critical):', saveError);
-      }
-    } catch (saveError) {
-      console.error('Error saving material (non-critical):', saveError);
-    }
-
-    // Return generated material
-    return new Response(
-      JSON.stringify({
-        material: {
-          type: request.material_type,
-          content: materialContent,
-          content_json: materialContentJson,
-          subject: subject || undefined
+      const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+          'Content-Type': 'application/json',
         },
-        credits_used: creditCost,
-        saved
-      }),
-      { 
-        status: 200,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        body: JSON.stringify({
+          model: 'google/gemini-2.5-flash',
+          messages: [
+            {
+              role: 'system',
+              content: `You are an expert at creating ${request.material_type.replace('_', ' ')} materials for startup fundraising. Always return valid JSON in the exact structure specified.`
+            },
+            {
+              role: 'user',
+              content: prompt
+            }
+          ],
+          response_format: { type: 'json_object' },
+          temperature: 0.7,
+          max_tokens: request.material_type === 'pitch_deck' ? 4000 : 2000,
+        }),
+      });
+
+      if (!aiResponse.ok) {
+        const errorText = await aiResponse.text();
+        console.error('AI API Error:', errorText);
+        throw new Error(`AI API Error: ${aiResponse.status}`);
       }
-    );
+
+      const aiData = await aiResponse.json();
+      let generatedContent: any;
+
+      try {
+        const content = aiData.choices[0].message.content;
+        generatedContent = JSON.parse(content);
+      } catch (parseError) {
+        console.error('Error parsing AI response:', parseError);
+        // Fallback: try to extract JSON from markdown code blocks
+        const content = aiData.choices[0].message.content;
+        const jsonMatch = content.match(/```json\s*([\s\S]*?)\s*```/) || content.match(/```\s*([\s\S]*?)\s*```/);
+        if (jsonMatch) {
+          generatedContent = JSON.parse(jsonMatch[1]);
+        } else {
+          throw new Error('Failed to parse AI response as JSON');
+        }
+      }
+
+      // Structure the response based on material type
+      let materialContent = '';
+      let materialContentJson: any = null;
+      let subject = '';
+
+      if (request.material_type === 'pitch_deck') {
+        materialContentJson = generatedContent;
+        materialContent = JSON.stringify(generatedContent);
+      } else if (request.material_type === 'cold_email') {
+        subject = generatedContent.subject_variations?.[0] || '';
+        materialContent = generatedContent.body || '';
+        materialContentJson = generatedContent;
+      } else if (request.material_type === 'one_pager') {
+        materialContentJson = generatedContent;
+        materialContent = generatedContent.sections?.map((s: any) => `## ${s.heading}\n\n${s.content}`).join('\n\n') || '';
+      }
+
+      // Save to database (optional, non-blocking)
+      let saved = false;
+      try {
+        const { error: saveError } = await supabase
+          .from('outreach_materials')
+          .insert({
+            user_id: user.id,
+            investor_id: request.investor_id || null,
+            material_type: request.material_type,
+            subject: subject || null,
+            content: materialContent,
+            content_json: materialContentJson,
+            version: 1,
+            is_template: false,
+            is_final: false
+          });
+
+        if (!saveError) {
+          saved = true;
+        } else {
+          console.error('Failed to save material (non-critical):', saveError);
+        }
+      } catch (saveError) {
+        console.error('Error saving material (non-critical):', saveError);
+      }
+
+      // Return generated material
+      return new Response(
+        JSON.stringify({
+          material: {
+            type: request.material_type,
+            content: materialContent,
+            content_json: materialContentJson,
+            subject: subject || undefined
+          },
+          credits_used: creditCost,
+          saved
+        }),
+        {
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    } catch (err) {
+      console.error('AI processing failed, refunding credits:', err);
+      await refundCredits(user.id, creditCost, featureName, 'Refund: AI processing failed', { error: err instanceof Error ? err.message : String(err) });
+      throw err;
+    }
 
   } catch (error) {
     console.error('Error in outreach-generator:', error);

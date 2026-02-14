@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
-import { checkAndDeductCredits, getUserFromAuth } from '../_shared/credit-deduction.ts';
+import { checkAndDeductCredits, getUserFromAuth, refundCredits } from '../_shared/credit-deduction.ts';
 import { CREDIT_COSTS } from '../_shared/credit-constants.ts';
 import { resolveCreditIdempotencyKey } from '../_shared/request-idempotency.ts';
 
@@ -102,17 +102,18 @@ CRITICAL: Every task MUST reference the user's specific inputs above. Don't use 
 ` : '';
 
     // Generate tasks using AI
-    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [{
-          role: 'user',
-          content: `Create a highly personalized 30-day launch roadmap for this specific business:
+    try {
+      const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'google/gemini-2.5-flash',
+          messages: [{
+            role: 'user',
+            content: `Create a highly personalized 30-day launch roadmap for this specific business:
 
 ${contextualPrompt}
 
@@ -154,99 +155,104 @@ TASK REQUIREMENTS:
 - Clear success criteria that builds toward their stated Day 30 goal
 
 Make this feel like THEIR roadmap, not a generic template.`
-        }],
-        tools: [{
-          type: 'function',
-          function: {
-            name: 'generate_roadmap',
-            parameters: {
-              type: 'object',
-              properties: {
-                tasks: {
-                  type: 'array',
-                  items: {
-                    type: 'object',
-                    properties: {
-                      day_number: { type: 'number', minimum: 1, maximum: 30 },
-                      title: { type: 'string' },
-                      description: { type: 'string' },
-                      priority: { type: 'string', enum: ['low', 'medium', 'high', 'critical'] },
-                      estimated_hours: { type: 'number' },
-                      ai_reasoning: { type: 'string' }
-                    },
-                    required: ['day_number', 'title', 'priority', 'estimated_hours']
+          }],
+          tools: [{
+            type: 'function',
+            function: {
+              name: 'generate_roadmap',
+              parameters: {
+                type: 'object',
+                properties: {
+                  tasks: {
+                    type: 'array',
+                    items: {
+                      type: 'object',
+                      properties: {
+                        day_number: { type: 'number', minimum: 1, maximum: 30 },
+                        title: { type: 'string' },
+                        description: { type: 'string' },
+                        priority: { type: 'string', enum: ['low', 'medium', 'high', 'critical'] },
+                        estimated_hours: { type: 'number' },
+                        ai_reasoning: { type: 'string' }
+                      },
+                      required: ['day_number', 'title', 'priority', 'estimated_hours']
+                    }
                   }
-                }
-              },
-              required: ['tasks']
+                },
+                required: ['tasks']
+              }
             }
-          }
-        }],
-        tool_choice: { type: 'function', function: { name: 'generate_roadmap' } }
-      }),
-    });
+          }],
+          tool_choice: { type: 'function', function: { name: 'generate_roadmap' } }
+        }),
+      });
 
-    if (!aiResponse.ok) {
-      throw new Error(`AI API error: ${aiResponse.status}`);
-    }
+      if (!aiResponse.ok) {
+        throw new Error(`AI API error: ${aiResponse.status}`);
+      }
 
-    const aiData = await aiResponse.json();
-    const toolCall = aiData.choices[0]?.message?.tool_calls?.[0];
-    if (!toolCall) throw new Error('No tasks generated');
+      const aiData = await aiResponse.json();
+      const toolCall = aiData.choices[0]?.message?.tool_calls?.[0];
+      if (!toolCall) throw new Error('No tasks generated');
 
-    const tasksData = JSON.parse(toolCall.function.arguments);
+      const tasksData = JSON.parse(toolCall.function.arguments);
 
-    // Create roadmap
-    const { data: roadmap, error: roadmapError } = await supabase
-      .from('launch_roadmaps')
-      .insert({
+      // Create roadmap
+      const { data: roadmap, error: roadmapError } = await supabase
+        .from('launch_roadmaps')
+        .insert({
+          user_id: user.id,
+          session_id,
+          business_idea,
+          start_date,
+          target_launch_date: targetLaunchDate.toISOString().split('T')[0],
+          total_tasks: tasksData.tasks.length,
+          status: 'active',
+        })
+        .select()
+        .single();
+
+      if (roadmapError) throw roadmapError;
+
+      // Create tasks
+      const tasks = tasksData.tasks.map((task: any) => ({
+        roadmap_id: roadmap.id,
         user_id: user.id,
-        session_id,
-        business_idea,
-        start_date,
-        target_launch_date: targetLaunchDate.toISOString().split('T')[0],
-        total_tasks: tasksData.tasks.length,
-        status: 'active',
-      })
-      .select()
-      .single();
+        title: task.title,
+        description: task.description || null,
+        week_number: Math.ceil(task.day_number / 7),
+        day_number: task.day_number,
+        priority: task.priority,
+        estimated_hours: task.estimated_hours,
+        due_date: new Date(startDateObj.getTime() + (task.day_number - 1) * 24 * 60 * 60 * 1000)
+          .toISOString().split('T')[0],
+        ai_generated: true,
+        ai_reasoning: task.ai_reasoning || null,
+        status: 'todo',
+      }));
 
-    if (roadmapError) throw roadmapError;
+      const { data: createdTasks, error: tasksError } = await supabase
+        .from('roadmap_tasks')
+        .insert(tasks)
+        .select();
 
-    // Create tasks
-    const tasks = tasksData.tasks.map((task: any) => ({
-      roadmap_id: roadmap.id,
-      user_id: user.id,
-      title: task.title,
-      description: task.description || null,
-      week_number: Math.ceil(task.day_number / 7),
-      day_number: task.day_number,
-      priority: task.priority,
-      estimated_hours: task.estimated_hours,
-      due_date: new Date(startDateObj.getTime() + (task.day_number - 1) * 24 * 60 * 60 * 1000)
-        .toISOString().split('T')[0],
-      ai_generated: true,
-      ai_reasoning: task.ai_reasoning || null,
-      status: 'todo',
-    }));
+      if (tasksError) throw tasksError;
 
-    const { data: createdTasks, error: tasksError } = await supabase
-      .from('roadmap_tasks')
-      .insert(tasks)
-      .select();
+      console.log('Roadmap created with', createdTasks?.length, 'tasks');
 
-    if (tasksError) throw tasksError;
-
-    console.log('Roadmap created with', createdTasks?.length, 'tasks');
-
-    return new Response(
-      JSON.stringify({
-        success: true,
-        roadmap,
-        tasks: createdTasks,
-      }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+      return new Response(
+        JSON.stringify({
+          success: true,
+          roadmap,
+          tasks: createdTasks,
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    } catch (err) {
+      console.error('AI processing failed, refunding credits:', err);
+      await refundCredits(user.id, creditCost, 'Roadmap Generation', 'Refund: AI processing failed', { error: err instanceof Error ? err.message : String(err) });
+      throw err;
+    }
 
   } catch (error) {
     console.error('Error:', error);

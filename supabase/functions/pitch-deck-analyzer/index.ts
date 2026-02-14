@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { checkAndDeductCredits, getUserFromAuth } from '../_shared/credit-deduction.ts';
+import { checkAndDeductCredits, getUserFromAuth, refundCredits } from '../_shared/credit-deduction.ts';
 import { CREDIT_COSTS } from '../_shared/credit-constants.ts';
 import { resolveCreditIdempotencyKey } from '../_shared/request-idempotency.ts';
 
@@ -107,14 +107,20 @@ serve(async (req) => {
     }
 
     // Analyze the pitch deck content using AI
-    const analysis = await analyzePitchDeck(content, fileName);
+    try {
+      const analysis = await analyzePitchDeck(content, fileName);
 
-    console.log(`Analysis complete. Overall score: ${analysis.overallScore}`);
+      console.log(`Analysis complete. Overall score: ${analysis.overallScore}`);
 
-    return new Response(
-      JSON.stringify(analysis),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+      return new Response(
+        JSON.stringify(analysis),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    } catch (err) {
+      console.error('AI processing failed, refunding credits:', err);
+      await refundCredits(effectiveUserId, creditCost, 'Pitch Deck Analyzer', 'Refund: AI processing failed', { error: err instanceof Error ? err.message : String(err) });
+      throw err;
+    }
 
   } catch (error) {
     console.error('Pitch deck analysis error:', error);

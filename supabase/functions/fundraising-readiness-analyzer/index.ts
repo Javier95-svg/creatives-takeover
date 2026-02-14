@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
-import { checkAndDeductCredits, getUserFromAuth } from '../_shared/credit-deduction.ts';
+import { checkAndDeductCredits, getUserFromAuth, refundCredits } from '../_shared/credit-deduction.ts';
 import { CREDIT_COSTS } from '../_shared/credit-constants.ts';
 import { resolveCreditIdempotencyKey } from '../_shared/request-idempotency.ts';
 
@@ -317,6 +317,8 @@ ${industry ? `6. Provide ${industry}-specific benchmarks and advice` : ''}
 
 Provide a comprehensive, stage-appropriate analysis with concrete examples and strength-leverage strategies.`;
 
+    // Wrap AI processing in try/catch for credit refund on failure
+    try {
     const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -452,7 +454,7 @@ CRITICAL: Judge against ${stage} standards, NOT scaling-stage perfection.`
 
     const aiData = await aiResponse.json();
     const toolCall = aiData.choices[0]?.message?.tool_calls?.[0];
-    
+
     if (!toolCall) {
       // Fallback: parse text response
       const textResponse = aiData.choices[0]?.message?.content || '';
@@ -545,6 +547,13 @@ CRITICAL: Judge against ${stage} standards, NOT scaling-stage perfection.`
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
+
+    } catch (aiError) {
+      // Refund credits on AI processing failure
+      const err = aiError instanceof Error ? aiError : new Error(String(aiError));
+      await refundCredits(user.id, creditCost, 'Fundraising Readiness Analysis', 'Refund: AI processing failed', { error: err.message });
+      throw aiError;
+    }
 
   } catch (error) {
     console.error('Error in fundraising-readiness-analyzer:', error);

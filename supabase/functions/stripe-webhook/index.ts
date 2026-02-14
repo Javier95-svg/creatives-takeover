@@ -166,22 +166,56 @@ async function handleSubscriptionDeleted(subscription: any, supabaseAdmin: any) 
 
   const { customer } = subscription;
 
-  // Downgrade user to free tier
-  const { error } = await supabaseAdmin
+  // Downgrade profiles table to free tier
+  const { error: profileError } = await supabaseAdmin
     .from("profiles")
     .update({
       subscription_tier: "free",
       subscribed: false,
       subscription_end: null,
-      monthly_credits: 10,
-      credits: 10,
       billing_cycle: null,
     })
     .eq("stripe_customer_id", customer);
 
-  if (error) {
-    console.error("[Subscription] Error downgrading user:", error);
-    throw error;
+  if (profileError) {
+    console.error("[Subscription] Error downgrading profile:", profileError);
+    throw profileError;
+  }
+
+  // Update user_credits table — the actual source of truth for credit balances
+  const { data: profile } = await supabaseAdmin
+    .from("profiles")
+    .select("id")
+    .eq("stripe_customer_id", customer)
+    .single();
+
+  if (profile?.id) {
+    const { error: creditsError } = await supabaseAdmin
+      .from("user_credits")
+      .update({
+        subscription_tier: "free",
+        monthly_quota: 25,
+        last_reset_at: new Date().toISOString(),
+      })
+      .eq("user_id", profile.id);
+
+    if (creditsError) {
+      console.error("[Subscription] Error downgrading user_credits:", creditsError);
+    }
+
+    // Log the downgrade transaction
+    await supabaseAdmin.from("credit_transactions").insert({
+      user_id: profile.id,
+      amount: 0,
+      tx_type: "adjustment",
+      reason: "Subscription cancelled - downgraded to free tier (25 monthly credits)",
+      feature: "Subscription Downgrade",
+      metadata: { previousTier: "paid", newTier: "free", newQuota: 25 },
+    });
+
+    console.log(`[Subscription] Updated user_credits for ${profile.id} to free tier (25 quota)`);
+  } else {
+    console.error("[Subscription] No profile found for stripe customer:", customer);
   }
 
   console.log(`[Subscription] Successfully downgraded customer ${customer} to free tier`);

@@ -1,7 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
-import { checkAndDeductCredits, getUserFromAuth } from '../_shared/credit-deduction.ts';
+import { checkAndDeductCredits, getUserFromAuth, refundCredits } from '../_shared/credit-deduction.ts';
 import { CREDIT_COSTS } from '../_shared/credit-constants.ts';
 import { resolveCreditIdempotencyKey } from '../_shared/request-idempotency.ts';
 
@@ -439,18 +439,19 @@ Return your analysis as a JSON object with this exact structure:
 }`;
 
     // Call OpenAI API
-    const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openaiApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o',
-        messages: [
-          {
-            role: 'system',
-            content: `You are a Product-Market Fit expert focused on providing accurate, realistic assessments of success odds. 
+    try {
+      const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${openaiApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o',
+          messages: [
+            {
+              role: 'system',
+              content: `You are a Product-Market Fit expert focused on providing accurate, realistic assessments of success odds.
 
 CRITICAL REQUIREMENTS:
 1. Always return valid JSON in the exact structure specified
@@ -463,145 +464,150 @@ CRITICAL REQUIREMENTS:
 8. When real market data (Reddit, competitors) is provided, prioritize it over assumptions
 
 Your analysis should help founders make informed decisions, not just validate their ideas.`
-          },
-          {
-            role: 'user',
-            content: prompt
-          }
-        ],
-        response_format: { type: 'json_object' },
-        temperature: 0.6,
-        max_tokens: 6000,
-      }),
-    });
-
-    if (!openaiResponse.ok) {
-      const errorText = await openaiResponse.text();
-      console.error('OpenAI API Error:', errorText);
-      throw new Error(`OpenAI API Error: ${openaiResponse.status}`);
-    }
-
-    const aiData = await openaiResponse.json();
-    let analysisResult;
-
-    try {
-      const content = aiData.choices[0].message.content;
-      analysisResult = JSON.parse(content);
-    } catch (parseError) {
-      console.error('Error parsing AI response:', parseError);
-      // Fallback: try to extract JSON from markdown code blocks
-      const content = aiData.choices[0].message.content;
-      const jsonMatch = content.match(/```json\s*([\s\S]*?)\s*```/) || content.match(/```\s*([\s\S]*?)\s*```/);
-      if (jsonMatch) {
-        analysisResult = JSON.parse(jsonMatch[1]);
-      } else {
-        throw new Error('Failed to parse AI response as JSON');
-      }
-    }
-
-    // Find similar historical analyses for pattern matching
-    let similarAnalyses: any[] = [];
-    let patternInsights: any = null;
-    
-    try {
-      const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-      const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-      const supabase = createClient(supabaseUrl, supabaseKey);
-
-      // Query for similar analyses using full-text search and score similarity
-      const { data: similarData, error: similarError } = await supabase
-        .from('pmf_analysis_results')
-        .select('id, business_description, pmf_score, verdict, actual_outcome, outcome_date, industry')
-        .neq('user_id', user.id) // Exclude current user's analyses
-        .not('actual_outcome', 'is', null) // Only include analyses with outcomes
-        .limit(10);
-
-      if (!similarError && similarData && similarData.length > 0) {
-        similarAnalyses = similarData;
-        
-        // Calculate pattern insights
-        const outcomes = similarAnalyses.map((a: any) => a.actual_outcome);
-        const outcomeCounts: Record<string, number> = {};
-        outcomes.forEach((outcome: string) => {
-          outcomeCounts[outcome] = (outcomeCounts[outcome] || 0) + 1;
-        });
-        
-        const avgScore = similarAnalyses.reduce((sum: number, a: any) => sum + (a.pmf_score || 0), 0) / similarAnalyses.length;
-        const successRate = (outcomeCounts['launched'] || 0) + (outcomeCounts['funded'] || 0) / similarAnalyses.length;
-        
-        patternInsights = {
-          similarCount: similarAnalyses.length,
-          averageScore: Math.round(avgScore),
-          successRate: Math.round(successRate * 100),
-          outcomeDistribution: outcomeCounts,
-          message: `Found ${similarAnalyses.length} similar analyses. Average PMF score: ${Math.round(avgScore)}/100. Success rate: ${Math.round(successRate * 100)}%`
-        };
-      }
-    } catch (patternError) {
-      console.warn('Pattern matching failed:', patternError);
-      // Continue without pattern matching
-    }
-
-    // Store analysis result in database
-    let storedAnalysisId: string | null = null;
-    try {
-      const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-      const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-      const supabase = createClient(supabaseUrl, supabaseKey);
-
-      const { data: storedData, error: storeError } = await supabase
-        .from('pmf_analysis_results')
-        .insert({
-          user_id: user.id,
-          business_description: businessDescription,
-          target_market: targetMarket || null,
-          industry: industry || businessPlanData?.answers?.market || null,
-          analysis_data: analysisResult,
-          pmf_score: analysisResult.pmfScore?.overall || null,
-          verdict: analysisResult.pmfScore?.verdict || null,
-          confidence_level: analysisResult.pmfScore?.subScoreConfidence ? 
-            (Object.values(analysisResult.pmfScore.subScoreConfidence).filter((c: any) => c === 'High').length >= 2 ? 'high' : 
-             Object.values(analysisResult.pmfScore.subScoreConfidence).filter((c: any) => c === 'Low').length >= 2 ? 'low' : 'medium') : 'medium',
-          demand_score: analysisResult.pmfScore?.subScores?.demand || null,
-          differentiation_score: analysisResult.pmfScore?.subScores?.differentiation || null,
-          timing_score: analysisResult.pmfScore?.subScores?.timing || null,
-          execution_risk_score: analysisResult.pmfScore?.subScores?.executionRisk || null,
-          data_sources: [
-            { name: 'AI Analysis', type: 'ai_inference', reliability_score: 75 },
-            ...(marketValidationData ? [{ name: 'Market Validation Engine', type: 'api', reliability_score: 85 }] : []),
-            ...(redditDiscussions.length > 0 ? [{ name: 'Reddit Communities', type: 'api', reliability_score: 80 }] : [])
+            },
+            {
+              role: 'user',
+              content: prompt
+            }
           ],
-          prompt_variant_id: selectedVariantId
-        })
-        .select('id')
-        .single();
+          response_format: { type: 'json_object' },
+          temperature: 0.6,
+          max_tokens: 6000,
+        }),
+      });
 
-      if (!storeError && storedData) {
-        storedAnalysisId = storedData.id;
-        console.log('PMF analysis stored with ID:', storedAnalysisId);
-      } else {
-        console.warn('Failed to store PMF analysis:', storeError);
+      if (!openaiResponse.ok) {
+        const errorText = await openaiResponse.text();
+        console.error('OpenAI API Error:', errorText);
+        throw new Error(`OpenAI API Error: ${openaiResponse.status}`);
       }
-    } catch (storeError) {
-      console.warn('Error storing PMF analysis:', storeError);
-      // Continue even if storage fails
-    }
 
-    // Add pattern insights to analysis result if available
-    if (patternInsights) {
-      analysisResult.patternInsights = patternInsights;
-    }
+      const aiData = await openaiResponse.json();
+      let analysisResult;
 
-    return new Response(JSON.stringify({
-      success: true,
-      analysis: analysisResult,
-      analysisId: storedAnalysisId,
-      patternInsights: patternInsights,
-      creditsUsed: creditCost,
-      newBalance: creditResult.newBalance
-    }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-    });
+      try {
+        const content = aiData.choices[0].message.content;
+        analysisResult = JSON.parse(content);
+      } catch (parseError) {
+        console.error('Error parsing AI response:', parseError);
+        // Fallback: try to extract JSON from markdown code blocks
+        const content = aiData.choices[0].message.content;
+        const jsonMatch = content.match(/```json\s*([\s\S]*?)\s*```/) || content.match(/```\s*([\s\S]*?)\s*```/);
+        if (jsonMatch) {
+          analysisResult = JSON.parse(jsonMatch[1]);
+        } else {
+          throw new Error('Failed to parse AI response as JSON');
+        }
+      }
+
+      // Find similar historical analyses for pattern matching
+      let similarAnalyses: any[] = [];
+      let patternInsights: any = null;
+
+      try {
+        const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+        const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+        const supabase = createClient(supabaseUrl, supabaseKey);
+
+        // Query for similar analyses using full-text search and score similarity
+        const { data: similarData, error: similarError } = await supabase
+          .from('pmf_analysis_results')
+          .select('id, business_description, pmf_score, verdict, actual_outcome, outcome_date, industry')
+          .neq('user_id', user.id) // Exclude current user's analyses
+          .not('actual_outcome', 'is', null) // Only include analyses with outcomes
+          .limit(10);
+
+        if (!similarError && similarData && similarData.length > 0) {
+          similarAnalyses = similarData;
+
+          // Calculate pattern insights
+          const outcomes = similarAnalyses.map((a: any) => a.actual_outcome);
+          const outcomeCounts: Record<string, number> = {};
+          outcomes.forEach((outcome: string) => {
+            outcomeCounts[outcome] = (outcomeCounts[outcome] || 0) + 1;
+          });
+
+          const avgScore = similarAnalyses.reduce((sum: number, a: any) => sum + (a.pmf_score || 0), 0) / similarAnalyses.length;
+          const successRate = (outcomeCounts['launched'] || 0) + (outcomeCounts['funded'] || 0) / similarAnalyses.length;
+
+          patternInsights = {
+            similarCount: similarAnalyses.length,
+            averageScore: Math.round(avgScore),
+            successRate: Math.round(successRate * 100),
+            outcomeDistribution: outcomeCounts,
+            message: `Found ${similarAnalyses.length} similar analyses. Average PMF score: ${Math.round(avgScore)}/100. Success rate: ${Math.round(successRate * 100)}%`
+          };
+        }
+      } catch (patternError) {
+        console.warn('Pattern matching failed:', patternError);
+        // Continue without pattern matching
+      }
+
+      // Store analysis result in database
+      let storedAnalysisId: string | null = null;
+      try {
+        const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+        const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+        const supabase = createClient(supabaseUrl, supabaseKey);
+
+        const { data: storedData, error: storeError } = await supabase
+          .from('pmf_analysis_results')
+          .insert({
+            user_id: user.id,
+            business_description: businessDescription,
+            target_market: targetMarket || null,
+            industry: industry || businessPlanData?.answers?.market || null,
+            analysis_data: analysisResult,
+            pmf_score: analysisResult.pmfScore?.overall || null,
+            verdict: analysisResult.pmfScore?.verdict || null,
+            confidence_level: analysisResult.pmfScore?.subScoreConfidence ?
+              (Object.values(analysisResult.pmfScore.subScoreConfidence).filter((c: any) => c === 'High').length >= 2 ? 'high' :
+               Object.values(analysisResult.pmfScore.subScoreConfidence).filter((c: any) => c === 'Low').length >= 2 ? 'low' : 'medium') : 'medium',
+            demand_score: analysisResult.pmfScore?.subScores?.demand || null,
+            differentiation_score: analysisResult.pmfScore?.subScores?.differentiation || null,
+            timing_score: analysisResult.pmfScore?.subScores?.timing || null,
+            execution_risk_score: analysisResult.pmfScore?.subScores?.executionRisk || null,
+            data_sources: [
+              { name: 'AI Analysis', type: 'ai_inference', reliability_score: 75 },
+              ...(marketValidationData ? [{ name: 'Market Validation Engine', type: 'api', reliability_score: 85 }] : []),
+              ...(redditDiscussions.length > 0 ? [{ name: 'Reddit Communities', type: 'api', reliability_score: 80 }] : [])
+            ],
+            prompt_variant_id: selectedVariantId
+          })
+          .select('id')
+          .single();
+
+        if (!storeError && storedData) {
+          storedAnalysisId = storedData.id;
+          console.log('PMF analysis stored with ID:', storedAnalysisId);
+        } else {
+          console.warn('Failed to store PMF analysis:', storeError);
+        }
+      } catch (storeError) {
+        console.warn('Error storing PMF analysis:', storeError);
+        // Continue even if storage fails
+      }
+
+      // Add pattern insights to analysis result if available
+      if (patternInsights) {
+        analysisResult.patternInsights = patternInsights;
+      }
+
+      return new Response(JSON.stringify({
+        success: true,
+        analysis: analysisResult,
+        analysisId: storedAnalysisId,
+        patternInsights: patternInsights,
+        creditsUsed: creditCost,
+        newBalance: creditResult.newBalance
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    } catch (err) {
+      console.error('AI processing failed, refunding credits:', err);
+      await refundCredits(user.id, creditCost, 'PMF Analysis', 'Refund: AI processing failed', { error: err instanceof Error ? err.message : String(err) });
+      throw err;
+    }
 
   } catch (error) {
     console.error('Error in PMF analyzer:', error);

@@ -3,6 +3,9 @@ import { useCredits } from './useCredits';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
+// Server-enforced maximum — prevents client-side tampering via sessionStorage
+const MAX_FEEDBACK_CREDIT_BONUS = 5;
+
 export const useFeedbackCredits = () => {
   const { addCredits } = useCredits();
   const { user, isAuthenticated } = useAuth();
@@ -16,19 +19,28 @@ export const useFeedbackCredits = () => {
       const pendingCredits = sessionStorage.getItem('feedback-credit-bonus');
       if (!pendingCredits) return;
 
-      const creditAmount = parseInt(pendingCredits);
+      const rawAmount = parseInt(pendingCredits);
+      // Clamp to server-enforced maximum to prevent sessionStorage tampering
+      const creditAmount = Math.min(
+        Math.max(0, Number.isFinite(rawAmount) ? rawAmount : 0),
+        MAX_FEEDBACK_CREDIT_BONUS
+      );
+
       if (creditAmount > 0) {
-        // Grant the credits
+        // Grant the credits with a reason the server can validate
         const success = await addCredits(
-          creditAmount, 
+          creditAmount,
           'Feedback survey completion bonus'
         );
-        
+
         if (success) {
           // Clear the pending credits
           sessionStorage.removeItem('feedback-credit-bonus');
           toast.success(`Welcome! ${creditAmount} bonus credits have been added to your account for completing our survey!`);
         }
+      } else {
+        // Invalid value — clean up
+        sessionStorage.removeItem('feedback-credit-bonus');
       }
     };
 
@@ -40,7 +52,7 @@ export const useFeedbackCredits = () => {
   // Check if user has pending feedback credits
   const hasPendingCredits = (): number => {
     const pending = sessionStorage.getItem('feedback-credit-bonus');
-    return pending ? parseInt(pending) : 0;
+    return pending ? Math.min(parseInt(pending) || 0, MAX_FEEDBACK_CREDIT_BONUS) : 0;
   };
 
   return {

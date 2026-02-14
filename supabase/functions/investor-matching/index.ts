@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
-import { checkAndDeductCredits, getUserFromAuth } from '../_shared/credit-deduction.ts';
+import { checkAndDeductCredits, getUserFromAuth, refundCredits } from '../_shared/credit-deduction.ts';
 import { CREDIT_COSTS } from '../_shared/credit-constants.ts';
 import { resolveCreditIdempotencyKey } from '../_shared/request-idempotency.ts';
 
@@ -385,6 +385,8 @@ serve(async (req) => {
       );
     }
 
+    // Wrap processing in try/catch for credit refund on failure
+    try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
@@ -403,7 +405,7 @@ serve(async (req) => {
         readinessScores = {
           verdict: assessment.verdict as 'Ready' | 'Not Ready' | 'Almost Ready'
         };
-        
+
         // Merge assessment data into request
         if (assessment.analysis_data && typeof assessment.analysis_data === 'object') {
           const analysis = assessment.analysis_data as any;
@@ -411,7 +413,7 @@ serve(async (req) => {
           requestData.strengths = analysis.strengths;
           requestData.critical_gaps = analysis.critical_gaps;
         }
-        
+
         if (!requestData.readiness_scores) {
           requestData.readiness_scores = {
             mvp: assessment.mvp_score,
@@ -433,7 +435,7 @@ serve(async (req) => {
       console.error('Error fetching investors:', investorsError);
       return new Response(
         JSON.stringify({ error: 'Failed to fetch investors' }),
-        { 
+        {
           status: 500,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
@@ -442,14 +444,14 @@ serve(async (req) => {
 
     if (!investors || investors.length === 0) {
       return new Response(
-        JSON.stringify({ 
+        JSON.stringify({
           matches: [],
           top_matches: [],
           match_request: requestData,
           generated_at: new Date().toISOString(),
           credits_used: creditCost
         }),
-        { 
+        {
           status: 200,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
@@ -507,11 +509,18 @@ serve(async (req) => {
         generated_at: new Date().toISOString(),
         credits_used: creditCost
       }),
-      { 
+      {
         status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
     );
+
+    } catch (processingError) {
+      // Refund credits on processing failure
+      const err = processingError instanceof Error ? processingError : new Error(String(processingError));
+      await refundCredits(user.id, creditCost, 'Investor Matching', 'Refund: AI processing failed', { error: err.message });
+      throw processingError;
+    }
 
   } catch (error) {
     console.error('Error in investor-matching:', error);

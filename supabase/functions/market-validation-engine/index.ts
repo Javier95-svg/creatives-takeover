@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
-import { checkAndDeductCredits, getUserFromAuth } from '../_shared/credit-deduction.ts';
+import { checkAndDeductCredits, getUserFromAuth, refundCredits } from '../_shared/credit-deduction.ts';
 import { CREDIT_COSTS } from '../_shared/credit-constants.ts';
 import { resolveCreditIdempotencyKey } from '../_shared/request-idempotency.ts';
 
@@ -274,6 +274,9 @@ serve(async (req) => {
       // Continue without admin bypass if check fails
     }
 
+    // Credit cost defined outside admin check for refund availability
+    const creditCost = CREDIT_COSTS.MARKET_VALIDATION;
+
     // Skip credit check for admin account
     if (!isAdmin) {
       const idempotencyKey = await resolveCreditIdempotencyKey(req, {
@@ -284,7 +287,6 @@ serve(async (req) => {
       });
 
       // Check and deduct credits before processing
-      const creditCost = CREDIT_COSTS.MARKET_VALIDATION;
       const creditCheck = await checkAndDeductCredits(
         user.id,
         creditCost,
@@ -334,10 +336,12 @@ serve(async (req) => {
     }
     
     // Extract market insights from Reddit
-    const redditInsights = redditDiscussions.length > 0 
+    const redditInsights = redditDiscussions.length > 0
       ? extractMarketInsights(redditDiscussions)
       : { customerNeeds: [], painPoints: [], demandSignals: [], competitionSignals: [] };
 
+    // Wrap AI processing in try/catch for credit refund on failure
+    try {
     const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -587,6 +591,15 @@ Provide a comprehensive market validation analysis.`
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
+
+    } catch (aiError) {
+      // Refund credits on AI processing failure (only if credits were deducted)
+      if (!isAdmin) {
+        const err = aiError instanceof Error ? aiError : new Error(String(aiError));
+        await refundCredits(user.id, creditCost, 'Market Validation', 'Refund: AI processing failed', { error: err.message });
+      }
+      throw aiError;
+    }
 
   } catch (error) {
     console.error('Error in market-validation-engine:', error);

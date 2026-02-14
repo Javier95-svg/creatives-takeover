@@ -3,7 +3,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
 import { withErrorBoundary, logInfo } from "../_shared/logger.ts";
 import { withIdempotency } from "../_shared/idempotency.ts";
-import { checkAndDeductCredits, getUserFromAuth } from '../_shared/credit-deduction.ts';
+import { checkAndDeductCredits, getUserFromAuth, refundCredits } from '../_shared/credit-deduction.ts';
 import { CREDIT_COSTS } from '../_shared/credit-constants.ts';
 import { resolveCreditIdempotencyKey } from '../_shared/request-idempotency.ts';
 
@@ -85,6 +85,8 @@ serve(withErrorBoundary(async (req: Request) => {
 
     logInfo('pdf:request_received', { hasScore: Boolean(successScore), hasRedditData: Boolean(validationScore?.reddit_discussions?.length) });
 
+    // Wrap processing in try/catch for credit refund on failure
+    try {
     // Generate enhanced PDF content with professional formatting
     const enhancedPDFContent = generateProfessionalPDFContent(reportContent, businessName, userAnswers, successScore, validationScore);
 
@@ -95,33 +97,33 @@ serve(withErrorBoundary(async (req: Request) => {
         <head>
           <meta charset="UTF-8">
           <style>
-            body { 
-              font-family: 'Arial', sans-serif; 
-              margin: 0; 
-              padding: 40px; 
-              line-height: 1.6; 
+            body {
+              font-family: 'Arial', sans-serif;
+              margin: 0;
+              padding: 40px;
+              line-height: 1.6;
               color: #333;
             }
-            .header { 
-              text-align: center; 
-              border-bottom: 3px solid #6366f1; 
-              padding-bottom: 20px; 
-              margin-bottom: 30px; 
+            .header {
+              text-align: center;
+              border-bottom: 3px solid #6366f1;
+              padding-bottom: 20px;
+              margin-bottom: 30px;
             }
-            .logo { 
-              font-size: 28px; 
-              font-weight: bold; 
-              color: #6366f1; 
-              margin-bottom: 10px; 
+            .logo {
+              font-size: 28px;
+              font-weight: bold;
+              color: #6366f1;
+              margin-bottom: 10px;
             }
-            .business-name { 
-              font-size: 24px; 
-              color: #1f2937; 
-              margin-bottom: 5px; 
+            .business-name {
+              font-size: 24px;
+              color: #1f2937;
+              margin-bottom: 5px;
             }
-            .report-date { 
-              color: #6b7280; 
-              font-size: 14px; 
+            .report-date {
+              color: #6b7280;
+              font-size: 14px;
             }
             .score-section {
               background: linear-gradient(135deg, #6366f1, #8b5cf6);
@@ -136,55 +138,55 @@ serve(withErrorBoundary(async (req: Request) => {
               font-weight: bold;
               margin-bottom: 10px;
             }
-            .section { 
-              margin-bottom: 25px; 
+            .section {
+              margin-bottom: 25px;
             }
-            .section h2 { 
-              color: #6366f1; 
-              border-left: 4px solid #6366f1; 
-              padding-left: 15px; 
-              margin-bottom: 15px; 
+            .section h2 {
+              color: #6366f1;
+              border-left: 4px solid #6366f1;
+              padding-left: 15px;
+              margin-bottom: 15px;
             }
-            .section h3 { 
-              color: #1f2937; 
-              margin-bottom: 10px; 
+            .section h3 {
+              color: #1f2937;
+              margin-bottom: 10px;
             }
-            .highlight-box { 
-              background: #f8fafc; 
-              border-left: 4px solid #6366f1; 
-              padding: 15px; 
-              margin: 15px 0; 
+            .highlight-box {
+              background: #f8fafc;
+              border-left: 4px solid #6366f1;
+              padding: 15px;
+              margin: 15px 0;
             }
-            .action-item { 
-              background: #fef3c7; 
-              border-left: 4px solid #f59e0b; 
-              padding: 10px; 
-              margin: 10px 0; 
+            .action-item {
+              background: #fef3c7;
+              border-left: 4px solid #f59e0b;
+              padding: 10px;
+              margin: 10px 0;
             }
-            .footer { 
-              text-align: center; 
-              margin-top: 40px; 
-              padding-top: 20px; 
-              border-top: 1px solid #e5e7eb; 
-              color: #6b7280; 
-              font-size: 12px; 
+            .footer {
+              text-align: center;
+              margin-top: 40px;
+              padding-top: 20px;
+              border-top: 1px solid #e5e7eb;
+              color: #6b7280;
+              font-size: 12px;
             }
-            table { 
-              width: 100%; 
-              border-collapse: collapse; 
-              margin: 15px 0; 
+            table {
+              width: 100%;
+              border-collapse: collapse;
+              margin: 15px 0;
             }
-            th, td { 
-              border: 1px solid #e5e7eb; 
-              padding: 10px; 
-              text-align: left; 
+            th, td {
+              border: 1px solid #e5e7eb;
+              padding: 10px;
+              text-align: left;
             }
-            th { 
-              background: #f9fafb; 
-              font-weight: bold; 
+            th {
+              background: #f9fafb;
+              font-weight: bold;
             }
-            .page-break { 
-              page-break-before: always; 
+            .page-break {
+              page-break-before: always;
             }
             @media print {
               body { margin: 0; }
@@ -200,13 +202,20 @@ serve(withErrorBoundary(async (req: Request) => {
 
     // For now, return the HTML content - in production you'd use Puppeteer
     // This allows the frontend to generate the PDF using jsPDF or similar
-    return new Response(JSON.stringify({ 
-      success: true, 
+    return new Response(JSON.stringify({
+      success: true,
       htmlContent: htmlContent,
       pdfReady: true
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
+
+    } catch (processingError) {
+      // Refund credits on processing failure
+      const err = processingError instanceof Error ? processingError : new Error(String(processingError));
+      await refundCredits(user.id, creditCost, 'PDF Export', 'Refund: AI processing failed', { error: err.message });
+      throw processingError;
+    }
 
   });
 }, { fn: 'generate-pdf-report' }));

@@ -1,7 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
-import { checkAndDeductCredits } from '../_shared/credit-deduction.ts';
+import { checkAndDeductCredits, refundCredits } from '../_shared/credit-deduction.ts';
 import { CREDIT_COSTS } from '../_shared/credit-constants.ts';
 import { resolveCreditIdempotencyKey } from '../_shared/request-idempotency.ts';
 
@@ -111,6 +111,7 @@ serve(async (req) => {
 
     console.log(`✅ Credits deducted: ${creditCost} credit(s), new balance: ${creditCheck.newBalance}`);
 
+    try {
     const { quality, reasons } = getInputQuality(answers);
 
     const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
@@ -123,22 +124,22 @@ serve(async (req) => {
 Your personality: professional, insightful, and practical.
 Your role encompasses three key capacities:
 1. **Startup Strategist** → break down ideas into step-by-step launch plans
-2. **Market Analyst** → provide market research, competitive insights, and trend analysis  
+2. **Market Analyst** → provide market research, competitive insights, and trend analysis
 3. **Funding Advisor** → suggest funding options, investor strategies, and financial planning
 
     REGION AWARE: ${region || 'Global'}
     STAGE: ${stage || 'Explore'}
-    
+
     INPUT_QUALITY: ${quality}
     INPUT_QUALITY_REASONS: ${reasons.join('; ') || 'N/A'}
-    
+
     CLARIFY-FIRST RULE:
     - If INPUT_QUALITY is "Weak": Ignore the asset request.
     - Return only this section:
     ## Clarifying Questions
     - 3–5 concise, targeted questions
     - Stop after the questions.
-    
+
     USER INPUTS:
 1) Overview: ${answers.overview}
 2) Market: ${answers.market}
@@ -285,6 +286,13 @@ Format:
       JSON.stringify({ asset }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
+
+    } catch (err) {
+      // Refund credits before re-throwing since AI processing failed
+      await refundCredits(userId, creditCost, 'Asset Generation', 'Refund: AI processing failed', { error: err.message });
+      throw err;
+    }
+
   } catch (error) {
     console.error('Error in bizmap-assets function:', error);
     return new Response(

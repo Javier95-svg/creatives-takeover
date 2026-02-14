@@ -284,6 +284,76 @@ async function checkAndResetMonthlyQuota(userId: string, supabase: any): Promise
 }
 
 /**
+ * Refund credits back to the user after a failed operation (e.g. AI API error).
+ * Adds credits back to balance (purchased pool) and logs a refund transaction.
+ * @param userId - User ID
+ * @param amount - Amount of credits to refund
+ * @param feature - Feature name for transaction logging
+ * @param reason - Human-readable reason for the refund
+ * @param metadata - Optional metadata for transaction
+ * @returns true if refund succeeded
+ */
+export async function refundCredits(
+  userId: string,
+  amount: number,
+  feature: string,
+  reason: string,
+  metadata?: Record<string, any>
+): Promise<boolean> {
+  const supabaseUrl = Deno.env.get('SUPABASE_URL');
+  const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+
+  if (!supabaseUrl || !serviceRoleKey || !Number.isFinite(amount) || amount <= 0) {
+    console.error('[refundCredits] Invalid config or amount', { userId, amount });
+    return false;
+  }
+
+  const supabase = createClient(supabaseUrl, serviceRoleKey, {
+    auth: { persistSession: false }
+  });
+
+  try {
+    // Add credits back to the balance pool
+    const { data: current, error: fetchError } = await supabase
+      .from('user_credits')
+      .select('balance')
+      .eq('user_id', userId)
+      .single();
+
+    if (fetchError || !current) {
+      console.error('[refundCredits] User not found:', fetchError);
+      return false;
+    }
+
+    const { error: updateError } = await supabase
+      .from('user_credits')
+      .update({ balance: (current.balance || 0) + amount })
+      .eq('user_id', userId);
+
+    if (updateError) {
+      console.error('[refundCredits] Failed to update balance:', updateError);
+      return false;
+    }
+
+    // Log the refund transaction
+    await supabase.from('credit_transactions').insert({
+      user_id: userId,
+      amount: amount,
+      tx_type: 'refund',
+      reason,
+      feature,
+      metadata: metadata || {},
+    });
+
+    console.log(`[refundCredits] Refunded ${amount} credits to user ${userId} for ${feature}`);
+    return true;
+  } catch (error) {
+    console.error('[refundCredits] Unexpected error:', error);
+    return false;
+  }
+}
+
+/**
  * Get user's current credit balance and quota
  * @param userId - User ID
  * @returns Current balance and quota or null if user not found

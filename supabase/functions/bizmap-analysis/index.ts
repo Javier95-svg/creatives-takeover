@@ -1,7 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
-import { checkAndDeductCredits } from '../_shared/credit-deduction.ts';
+import { checkAndDeductCredits, refundCredits } from '../_shared/credit-deduction.ts';
 import { CREDIT_COSTS } from '../_shared/credit-constants.ts';
 import { resolveCreditIdempotencyKey } from '../_shared/request-idempotency.ts';
 
@@ -115,7 +115,8 @@ serve(async (req) => {
     }
 
     console.log(`✅ Credits deducted: ${creditCost} credit(s), new balance: ${creditCheck.newBalance}`);
-    
+
+    try {
     const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
     if (!openaiApiKey) {
       throw new Error('OpenAI API key not configured');
@@ -129,7 +130,7 @@ serve(async (req) => {
 Your personality: professional, insightful, and practical.
 Your role encompasses three key capacities:
 1. **Startup Strategist** → break down ideas into step-by-step launch plans
-2. **Market Analyst** → provide market research, competitive insights, and trend analysis  
+2. **Market Analyst** → provide market research, competitive insights, and trend analysis
 3. **Funding Advisor** → suggest funding options, investor strategies, and financial planning
 
 USER'S 7-STEP RESPONSES:
@@ -203,9 +204,9 @@ Generate a comprehensive LAUNCH REPORT that demonstrates your three advisor capa
 ## 🎯 Executive Summary
 **Business Opportunity:** [2-3 sentences summarizing the core opportunity and market potential]
 
-**Success Factors:** 
+**Success Factors:**
 • [Key factor 1]
-• [Key factor 2] 
+• [Key factor 2]
 • [Key factor 3]
 
 **Immediate Priority:** [Single most important next step]
@@ -216,7 +217,7 @@ Generate a comprehensive LAUNCH REPORT that demonstrates your three advisor capa
 
 ### Lean Canvas Snapshot
 **Core Problem:** [From their response - be specific]
-**Solution Approach:** [From their response - focus on unique value]  
+**Solution Approach:** [From their response - focus on unique value]
 **Target Customers:** [Based on market/problem responses - be precise]
 **Distribution Channels:** [From their response + regional optimization]
 **Revenue Model:** [Based on pricing response - include pricing strategy]
@@ -304,7 +305,7 @@ Generate a comprehensive LAUNCH REPORT that demonstrates your three advisor capa
 
 ### Financial Projections (Conservative)
 **Key Assumptions to Test:**
-• Customer acquisition cost: $[X-Y range] 
+• Customer acquisition cost: $[X-Y range]
 • Average customer lifetime value: $[X-Y range]
 • Monthly customer target: [X customers]
 • Break-even timeline: [X] months
@@ -312,7 +313,7 @@ Generate a comprehensive LAUNCH REPORT that demonstrates your three advisor capa
 
 **Monthly Revenue Milestones:**
 • Month 3: $[X] (validation phase)
-• Month 6: $[X] (growth phase)  
+• Month 6: $[X] (growth phase)
 • Month 12: $[X] (scale phase)
 **Monthly Cost Estimate:** $[X-Y range]
 
@@ -335,7 +336,7 @@ Tip: You can turn this into a proper chart later in Canva, Notion, or Excel.
 **KPI:** [Measurable metric]
 **Do Next:** Complete the first key action within 48 hours.
 
-### Month 2: Validation  
+### Month 2: Validation
 **Goal:** [Specific milestone]
 **Key Actions:** [3 specific tasks]
 **KPI:** [Measurable metric]
@@ -349,7 +350,7 @@ Tip: You can turn this into a proper chart later in Canva, Notion, or Excel.
 
 Timeline (Emoji View):
 - Month 1: Foundation milestone
-- Month 2: Validation milestone  
+- Month 2: Validation milestone
 - Month 3: Launch milestone
 
 ## Copy-Paste Scripts (Stage-Specific)
@@ -379,15 +380,15 @@ Contact: [your email or handle]
 Most useful: [section]
 Unclear: [section]
 
-After you reply, I’ll summarize your feedback in a friendly tone and close with a short encouragement.
+After you reply, I'll summarize your feedback in a friendly tone and close with a short encouragement.
 
 ## Export Options
 Where would you like to export this plan?
 
-- PDF (ready to share): In your browser press Ctrl/Cmd+P → Destination: “Save as PDF”. For nicer styling, paste into Google Docs or Notion first, then File → Download/Export as PDF.
-- Notion template (importable): In Notion, click Import → Markdown & CSV and upload a saved .md of this report; or create a new page and paste—use “Turn into” to format headings/blocks.
+- PDF (ready to share): In your browser press Ctrl/Cmd+P → Destination: "Save as PDF". For nicer styling, paste into Google Docs or Notion first, then File → Download/Export as PDF.
+- Notion template (importable): In Notion, click Import → Markdown & CSV and upload a saved .md of this report; or create a new page and paste—use "Turn into" to format headings/blocks.
 - Google Doc (editable): Open docs.new → Paste the report → Insert → Table of contents (optional) → Share as needed.
-- Simple text copy (for WhatsApp/email): Copy the sections you need, or ask me for a condensed text-only version and I’ll generate it.
+- Simple text copy (for WhatsApp/email): Copy the sections you need, or ask me for a condensed text-only version and I'll generate it.
 
 Tip: You can easily turn this into a chart using Canva, Notion, or Excel.
 
@@ -474,6 +475,12 @@ IMPORTANT GUIDELINES:
     return new Response(JSON.stringify({ launchReport }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
+
+    } catch (err) {
+      // Refund credits before re-throwing since AI processing failed
+      await refundCredits(userId, creditCost, 'Launch Report Generation', 'Refund: AI processing failed', { error: err.message });
+      throw err;
+    }
 
   } catch (error) {
     console.error('Error in bizmap-analysis function:', error);
