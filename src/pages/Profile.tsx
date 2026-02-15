@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
-import { LayoutDashboard, Calendar, MessageCircle, Linkedin, Instagram, Globe, Settings, MapPin, Briefcase, Rocket, Target, Users2, ExternalLink, FileText, Zap, TrendingUp, Image, Video } from "lucide-react";
+import { LayoutDashboard, Calendar, MessageCircle, Linkedin, Instagram, Globe, Settings, MapPin, Briefcase, Rocket, Target, Users2, ExternalLink, FileText, Zap, TrendingUp, Image, Video, Lightbulb } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { SocialButtons } from "@/components/social/SocialButtons";
