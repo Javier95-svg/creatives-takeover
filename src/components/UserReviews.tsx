@@ -75,7 +75,7 @@ const cycleSteps: CycleStep[] = [
     shortLabel: "Fundraising",
     title: "Stage 7: Fundraising",
     description:
-      "After proving MVP execution, real demand, and early customers, raise capital to accelerate growth. It is optional, but the right funding can expand runway, talent, and execution capacity.",
+      "This is the final stage of the cycle, where founders raise capital to accelerate growth. It typically comes after proving the fundamentals, meaning you have a functional MVP, clear demand, early paying customers, and a solid plan for product and business development.\n\nFundraising provides the resources to scale faster, keep improving the product, and expand the team or operations. It also adds credibility, since investment often attracts more investment, and can help founders sustain themselves while they build and deliver on what they promised.",
     icon: TrendingUp,
     color: "from-indigo-500/20 to-indigo-600/20"
   }
