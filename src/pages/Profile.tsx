@@ -489,22 +489,28 @@ const Profile = () => {
                 {/* Quick Stats Bar */}
                 <div className="grid grid-cols-4 gap-4 py-4 px-2 bg-muted/30 rounded-lg mb-4">
                   <div className="text-center">
-                    <div className="text-xl font-bold text-primary">{profile.followers_count}</div>
-                    <div className="text-xs text-muted-foreground">Followers</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-xl font-bold text-primary">{stats.totalPosts}</div>
-                    <div className="text-xs text-muted-foreground">Updates</div>
+                    <div className="text-xl font-bold text-primary">
+                      {profile.founder_role === 'founder' ? 'Founder' :
+                       profile.founder_role === 'co-founder' ? 'Co-Founder' :
+                       profile.founder_role === 'cto' ? 'CTO' :
+                       profile.founder_role === 'cmo' ? 'CMO' :
+                       profile.founder_role === 'investor' ? 'Investor' : 'N/A'}
+                    </div>
+                    <div className="text-xs text-muted-foreground">Role</div>
                   </div>
                   <div className="text-center">
                     <div className="text-xl font-bold text-primary">
-                      {profile.startup_stage ? profile.startup_stage.toUpperCase().slice(0, 3) : 'N/A'}
+                      {profile.startup_stage ? profile.startup_stage.toUpperCase() : 'N/A'}
                     </div>
                     <div className="text-xs text-muted-foreground">Stage</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-xl font-bold text-primary">{profile.following_count}</div>
-                    <div className="text-xs text-muted-foreground">Connections</div>
+                    <div className="text-xl font-bold text-primary">{stats.totalPosts}</div>
+                    <div className="text-xs text-muted-foreground">Posts</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-xl font-bold text-primary">{profile.followers_count}</div>
+                    <div className="text-xs text-muted-foreground">Followers</div>
                   </div>
                 </div>
 
