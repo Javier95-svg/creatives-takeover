@@ -93,7 +93,7 @@ const UserReviews = () => {
 
     const interval = setInterval(() => {
       setActiveStepIndex((prev) => (prev + 1) % cycleSteps.length);
-    }, 3000);
+    }, 5000);
 
     return () => clearInterval(interval);
   }, [isAutoPlaying]);
