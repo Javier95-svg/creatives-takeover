@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from "react";
-import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -283,32 +282,6 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
     return null;
   };
 
-  const getProfileLink = (conversation: Conversation): string | null => {
-    // Don't link to group chats
-    if (conversation.is_group) {
-      return null;
-    }
-
-    // Use username-based profile URLs; never link by raw UUID.
-    const otherParticipantId = getOtherParticipant(conversation);
-    if (!otherParticipantId) return null;
-
-    const participantProfile = participantProfiles[otherParticipantId];
-    if (!participantProfile) return null;
-
-    // Mentors should route to their mentor profile slug.
-    if (participantProfile.mentor_slug) {
-      return `/community/${participantProfile.mentor_slug}`;
-    }
-
-    // Regular founders route to personalized profile URL.
-    if (participantProfile.username) {
-      return `/profile/${participantProfile.username}`;
-    }
-
-    return null;
-  };
-
   const activeMessages = activeConversationId ? messages[activeConversationId] || [] : [];
 
   const handleDeleteClick = (e: React.MouseEvent, conversationId: string) => {
@@ -380,19 +353,9 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
                       </Avatar>
                       
                       <div className="flex-1 text-left min-w-0">
-                        {getProfileLink(conversation) ? (
-                          <Link
-                            to={getProfileLink(conversation)!}
-                            className="font-medium text-sm truncate hover:underline block"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            {getConversationName(conversation)}
-                          </Link>
-                        ) : (
-                          <p className="font-medium text-sm truncate">
-                            {getConversationName(conversation)}
-                          </p>
-                        )}
+                        <p className="font-medium text-sm truncate">
+                          {getConversationName(conversation)}
+                        </p>
                         {conversation.last_message_at && (
                           <p className="text-xs text-muted-foreground">
                             {formatDistanceToNow(new Date(conversation.last_message_at))} ago
@@ -468,7 +431,6 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
               {(() => {
                 const activeConversation = conversations.find(c => c.id === activeConversationId);
                 if (!activeConversation) return null;
-                const profileLink = activeConversation ? getProfileLink(activeConversation) : null;
 
                 const conversationName = getConversationName(activeConversation);
                 const conversationAvatar = getConversationAvatar(activeConversation);
@@ -481,18 +443,9 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
                         {conversationName.charAt(0).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
-                    {profileLink ? (
-                      <Link
-                        to={profileLink}
-                        className="font-semibold text-sm md:text-base truncate hover:underline"
-                      >
-                        {conversationName}
-                      </Link>
-                    ) : (
-                      <h4 className="font-semibold text-sm md:text-base truncate">
-                        {conversationName}
-                      </h4>
-                    )}
+                    <h4 className="font-semibold text-sm md:text-base truncate">
+                      {conversationName}
+                    </h4>
                   </div>
                 );
               })()}
