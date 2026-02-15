@@ -14,6 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useDeviceType, useIsMobile } from "@/hooks/use-device-type";
 import { useHapticFeedback } from "@/hooks/useHapticFeedback";
 import { logError } from "@/lib/logger";
+import { generateMentorSlug } from "@/utils/mentorSlug";
 
 interface MessagingInterfaceProps {
   initialConversationId?: string;
@@ -44,7 +45,7 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
   const hasSetInitialConversation = useRef(false);
   const previousInitialConversationId = useRef<string | undefined>(undefined);
   const [participantProfiles, setParticipantProfiles] = useState<
-    Record<string, { full_name: string; avatar_url: string | null; username: string | null }>
+    Record<string, { full_name: string; avatar_url: string | null; username: string | null; mentor_slug: string | null }>
   >({});
   const [conversationToDelete, setConversationToDelete] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -180,15 +181,29 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
           .select('id, full_name, avatar_url, username')
           .in('id', idsToFetch);
 
+        const { data: mentorData, error: mentorError } = await supabase
+          .from('mentors')
+          .select('user_id, name')
+          .in('user_id', idsToFetch)
+          .eq('is_active', true);
+
         if (error) throw error;
+        if (mentorError) throw mentorError;
 
         if (data) {
-          const newProfiles: Record<string, { full_name: string; avatar_url: string | null; username: string | null }> = {};
+          const mentorSlugByUserId = new Map<string, string>();
+          (mentorData || []).forEach((mentor) => {
+            if (!mentor.user_id || !mentor.name) return;
+            mentorSlugByUserId.set(mentor.user_id, generateMentorSlug(mentor.name));
+          });
+
+          const newProfiles: Record<string, { full_name: string; avatar_url: string | null; username: string | null; mentor_slug: string | null }> = {};
           data.forEach(profile => {
             newProfiles[profile.id] = {
               full_name: profile.full_name || 'Unknown User',
               avatar_url: profile.avatar_url,
-              username: profile.username || null
+              username: profile.username || null,
+              mentor_slug: mentorSlugByUserId.get(profile.id) || null
             };
           });
 
@@ -238,8 +253,19 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
 
     // Use username-based profile URLs; never link by raw UUID.
     const otherParticipantId = getOtherParticipant(conversation);
-    if (otherParticipantId && participantProfiles[otherParticipantId]?.username) {
-      return `/profile/${participantProfiles[otherParticipantId].username}`;
+    if (!otherParticipantId) return null;
+
+    const participantProfile = participantProfiles[otherParticipantId];
+    if (!participantProfile) return null;
+
+    // Mentors should route to their mentor profile slug.
+    if (participantProfile.mentor_slug) {
+      return `/community/${participantProfile.mentor_slug}`;
+    }
+
+    // Regular founders route to personalized profile URL.
+    if (participantProfile.username) {
+      return `/profile/${participantProfile.username}`;
     }
 
     return null;
