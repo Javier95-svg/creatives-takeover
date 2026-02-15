@@ -85,11 +85,7 @@ const STEP_ANGLE = 360 / cycleSteps.length;
 
 const UserReviews = () => {
   const [activeStepIndex, setActiveStepIndex] = useState(0);
-  const [isAutoPlaying, setIsAutoPlaying] = useState(false);
-
-  useEffect(() => {
-    setIsAutoPlaying(false);
-  }, []);
+  const [isAutoPlaying, setIsAutoPlaying] = useState(true);
 
   // Auto-play functionality
   useEffect(() => {
