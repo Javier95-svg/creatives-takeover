@@ -565,17 +565,17 @@ const Profile = () => {
 
               {/* Journey Modules */}
               <div className="grid md:grid-cols-3 gap-4 mb-6">
-                {/* Current Focus */}
+                {/* What Inspires You */}
                 {(profile.current_focus || isOwnProfile) && (
                   <Card className="p-4">
                     <h3 className="text-sm font-semibold mb-2 flex items-center gap-2">
-                      <Target className="h-4 w-4 text-primary" />
-                      Current Focus
+                      <Lightbulb className="h-4 w-4 text-primary" />
+                      What Inspires You?
                     </h3>
                     {profile.current_focus ? (
                       <p className="text-sm text-muted-foreground">{profile.current_focus}</p>
                     ) : (
-                      <p className="text-sm text-muted-foreground/50 italic">No current focus set</p>
+                      <p className="text-sm text-muted-foreground/50 italic">No inspiration shared yet</p>
                     )}
                   </Card>
                 )}

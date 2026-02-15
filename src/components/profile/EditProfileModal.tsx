@@ -377,12 +377,12 @@ export const EditProfileModal = ({ open, onClose, profile, onSuccess }: EditProf
               </div>
 
               <div>
-                <Label htmlFor="current_focus">Current Focus</Label>
+                <Label htmlFor="current_focus">What Inspires You?</Label>
                 <Input
                   id="current_focus"
                   value={formData.current_focus}
                   onChange={(e) => setFormData({ ...formData, current_focus: e.target.value })}
-                  placeholder="What are you working on this week?"
+                  placeholder="Share what drives and motivates you..."
                   maxLength={150}
                 />
               </div>
