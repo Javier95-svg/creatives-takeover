@@ -450,13 +450,13 @@ export const EditProfileModal = ({ open, onClose, profile, onSuccess }: EditProf
                   />
                 </div>
                 <div>
-                  <Label htmlFor="twitter_url">Twitter</Label>
+                  <Label htmlFor="twitter_url">X</Label>
                   <Input
                     id="twitter_url"
                     type="url"
                     value={formData.twitter_url}
                     onChange={(e) => setFormData({ ...formData, twitter_url: e.target.value })}
-                    placeholder="https://twitter.com/..."
+                    placeholder="https://x.com/..."
                   />
                 </div>
                 <div>
