@@ -157,12 +157,12 @@ const UserReviews = () => {
               onClick={() => setIsAutoPlaying(!isAutoPlaying)}
               className="gap-2"
             >
-              {isAutoPlaying ? (
-                <>
-                  <Pause className="w-4 h-4" />
-                  Pause Tour
-                </>
-              ) : (
+                {isAutoPlaying ? (
+                  <>
+                    <Pause className="w-4 h-4" />
+                    Pause
+                  </>
+                ) : (
                 <>
                   <Play className="w-4 h-4" />
                   Auto Play
