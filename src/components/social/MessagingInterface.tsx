@@ -20,6 +20,13 @@ interface MessagingInterfaceProps {
   initialConversationId?: string;
 }
 
+type ParticipantProfile = {
+  full_name: string;
+  avatar_url: string | null;
+  username: string | null;
+  mentor_slug: string | null;
+};
+
 export const MessagingInterface = ({ initialConversationId }: MessagingInterfaceProps) => {
   const { user } = useAuth();
   const deviceType = useDeviceType();
@@ -44,9 +51,8 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
   const scrollAreaRef = useRef<React.ElementRef<typeof ScrollArea>>(null);
   const hasSetInitialConversation = useRef(false);
   const previousInitialConversationId = useRef<string | undefined>(undefined);
-  const [participantProfiles, setParticipantProfiles] = useState<
-    Record<string, { full_name: string; avatar_url: string | null; username: string | null; mentor_slug: string | null }>
-  >({});
+  const [participantProfiles, setParticipantProfiles] = useState<Record<string, ParticipantProfile>>({});
+  const [currentUserMentorAvatar, setCurrentUserMentorAvatar] = useState<string | null>(null);
   const [conversationToDelete, setConversationToDelete] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [mobileSheetOpen, setMobileSheetOpen] = useState(false);
@@ -107,6 +113,33 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
       }
     }
   }, [initialConversationId, conversations, loading, setActiveConversationId]);
+
+  // If the current user is also a mentor, prefer mentor profile picture over auth provider avatar.
+  useEffect(() => {
+    if (!user) {
+      setCurrentUserMentorAvatar(null);
+      return;
+    }
+
+    const fetchCurrentUserMentorAvatar = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('mentors')
+          .select('picture')
+          .eq('user_id', user.id)
+          .eq('is_active', true)
+          .maybeSingle();
+
+        if (error) throw error;
+        setCurrentUserMentorAvatar(data?.picture || null);
+      } catch (error) {
+        logError('Error fetching current user mentor avatar', error);
+        setCurrentUserMentorAvatar(null);
+      }
+    };
+
+    fetchCurrentUserMentorAvatar();
+  }, [user]);
 
   // Mark messages as read when conversation is opened
   useEffect(() => {
@@ -183,7 +216,7 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
 
         const { data: mentorData, error: mentorError } = await supabase
           .from('mentors')
-          .select('user_id, name')
+          .select('user_id, name, picture')
           .in('user_id', idsToFetch)
           .eq('is_active', true);
 
@@ -191,19 +224,24 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
         if (mentorError) throw mentorError;
 
         if (data) {
-          const mentorSlugByUserId = new Map<string, string>();
+          const mentorMetaByUserId = new Map<string, { slug: string; picture: string | null }>();
           (mentorData || []).forEach((mentor) => {
             if (!mentor.user_id || !mentor.name) return;
-            mentorSlugByUserId.set(mentor.user_id, generateMentorSlug(mentor.name));
+            mentorMetaByUserId.set(mentor.user_id, {
+              slug: generateMentorSlug(mentor.name),
+              picture: mentor.picture || null
+            });
           });
 
-          const newProfiles: Record<string, { full_name: string; avatar_url: string | null; username: string | null; mentor_slug: string | null }> = {};
+          const newProfiles: Record<string, ParticipantProfile> = {};
           data.forEach(profile => {
+            const mentorMeta = mentorMetaByUserId.get(profile.id);
             newProfiles[profile.id] = {
               full_name: profile.full_name || 'Unknown User',
-              avatar_url: profile.avatar_url,
+              // Use mentor profile picture whenever available to keep /messages consistent with mentor pages.
+              avatar_url: mentorMeta?.picture || profile.avatar_url,
               username: profile.username || null,
-              mentor_slug: mentorSlugByUserId.get(profile.id) || null
+              mentor_slug: mentorMeta?.slug || null
             };
           });
 
@@ -429,19 +467,33 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
               )}
               {(() => {
                 const activeConversation = conversations.find(c => c.id === activeConversationId);
+                if (!activeConversation) return null;
                 const profileLink = activeConversation ? getProfileLink(activeConversation) : null;
 
-                return profileLink ? (
-                  <Link
-                    to={profileLink}
-                    className="font-semibold text-sm md:text-base truncate flex-1 hover:underline"
-                  >
-                    {getConversationName(activeConversation)}
-                  </Link>
-                ) : (
-                  <h4 className="font-semibold text-sm md:text-base truncate flex-1">
-                    {activeConversation ? getConversationName(activeConversation) : ''}
-                  </h4>
+                const conversationName = getConversationName(activeConversation);
+                const conversationAvatar = getConversationAvatar(activeConversation);
+
+                return (
+                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                    <Avatar className="h-8 w-8 flex-shrink-0">
+                      <AvatarImage src={conversationAvatar || undefined} />
+                      <AvatarFallback>
+                        {conversationName.charAt(0).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    {profileLink ? (
+                      <Link
+                        to={profileLink}
+                        className="font-semibold text-sm md:text-base truncate hover:underline"
+                      >
+                        {conversationName}
+                      </Link>
+                    ) : (
+                      <h4 className="font-semibold text-sm md:text-base truncate">
+                        {conversationName}
+                      </h4>
+                    )}
+                  </div>
                 );
               })()}
             </div>
@@ -458,9 +510,15 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
                   >
                     {message.sender_id !== user?.id && (
                       <Avatar className="h-7 w-7 md:h-8 md:w-8 flex-shrink-0">
-                        <AvatarImage src={message.sender?.avatar_url} />
+                        <AvatarImage
+                          src={
+                            participantProfiles[message.sender_id]?.avatar_url ||
+                            message.sender?.avatar_url ||
+                            undefined
+                          }
+                        />
                         <AvatarFallback>
-                          {message.sender?.full_name?.charAt(0) || '?'}
+                          {(participantProfiles[message.sender_id]?.full_name || message.sender?.full_name || '?').charAt(0)}
                         </AvatarFallback>
                       </Avatar>
                     )}
@@ -480,7 +538,7 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
 
                     {message.sender_id === user?.id && (
                       <Avatar className="h-7 w-7 md:h-8 md:w-8 flex-shrink-0">
-                        <AvatarImage src={user.user_metadata?.avatar_url} />
+                        <AvatarImage src={currentUserMentorAvatar || user.user_metadata?.avatar_url} />
                         <AvatarFallback>
                           {user.user_metadata?.full_name?.charAt(0) || user.email?.charAt(0) || '?'}
                         </AvatarFallback>
