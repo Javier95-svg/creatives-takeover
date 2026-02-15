@@ -392,7 +392,7 @@ export const EditProfileModal = ({ open, onClose, profile, onSuccess }: EditProf
               <h4 className="font-medium">Founder Details</h4>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="founder_role">Founder Role</Label>
+                  <Label htmlFor="founder_role">Startup Role</Label>
                   <Select
                     value={formData.founder_role}
                     onValueChange={(value) => setFormData({ ...formData, founder_role: value })}
@@ -401,9 +401,11 @@ export const EditProfileModal = ({ open, onClose, profile, onSuccess }: EditProf
                       <SelectValue placeholder="Select role" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="founder">Founder</SelectItem>
-                      <SelectItem value="co-founder">Co-Founder</SelectItem>
                       <SelectItem value="solo-founder">Solo Founder</SelectItem>
+                      <SelectItem value="co-founder">Co-Founder</SelectItem>
+                      <SelectItem value="cto">Chief Technology Officer (CTO)</SelectItem>
+                      <SelectItem value="cmo">Chief Marketing Officer (CMO)</SelectItem>
+                      <SelectItem value="investor">Investor</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
