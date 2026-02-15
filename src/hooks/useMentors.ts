@@ -247,7 +247,9 @@ export const useMentors = () => {
         bio: input.bio,
         hourly_rate: input.hourly_rate,
         currency: input.currency || 'USD',
-        user_id: user?.id || null,
+        // Do not auto-link mentor ownership to the currently logged-in admin.
+        // `user_id` must only point to the mentor's own account, set explicitly later.
+        user_id: null,
         picture: input.picture || null,
         expertise: input.expertise || [],
         universities: input.universities || [],
