@@ -59,7 +59,7 @@ const cycleSteps: CycleStep[] = [
     shortLabel: "Launch",
     title: "Stage 5: Launch",
     description:
-      "Distribute aggressively across social channels, communities, and startup directories. Treat launch as an ongoing acquisition system, not a one-day event, and compound visibility with consistent branding.",
+      "In this stage, founders bring the product to the public and start actively promoting it wherever their audience already spends time. That includes direct outreach and consistent posting across channels like Product Hunt, LinkedIn, X, Reddit, Instagram, and other relevant sites.\n\nThey should also submit the startup to directories to increase visibility and begin building the brand through clear messaging, visuals, and a steady online presence. The goal is to generate early attention, attract first users, and start building momentum.",
     icon: Rocket,
     color: "from-purple-500/20 to-purple-600/20"
   },
