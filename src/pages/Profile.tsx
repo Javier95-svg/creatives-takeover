@@ -448,6 +448,17 @@ const Profile = () => {
                           </span>
                         )}
                       </div>
+
+                      {/* Follow and Message CTAs */}
+                      {!isOwnProfile && profile.id && (
+                        <div className="mt-4">
+                          <SocialButtons
+                            userId={profile.id}
+                            userName={profile.full_name || undefined}
+                            showAccountabilityPartner={false}
+                          />
+                        </div>
+                      )}
                     </div>
                   </div>
 

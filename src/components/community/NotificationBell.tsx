@@ -38,6 +38,30 @@ export const NotificationBell = () => {
       return;
     }
 
+    // Navigate to profile for follow requests
+    if (notification.notification_type === 'follow_request') {
+      navigate(`/profile/${notification.actor.username || notification.actor_id}`);
+      return;
+    }
+
+    // Navigate to profile pictures tab for new picture notifications
+    if (notification.notification_type === 'follower_new_picture') {
+      navigate(`/profile/${notification.actor.username || notification.actor_id}`);
+      return;
+    }
+
+    // Navigate to profile for new reel notifications
+    if (notification.notification_type === 'follower_new_reel') {
+      navigate(`/profile/${notification.actor.username || notification.actor_id}`);
+      return;
+    }
+
+    // Navigate to profile startup tab for startup updates
+    if (notification.notification_type === 'follower_startup_update') {
+      navigate(`/profile/${notification.actor.username || notification.actor_id}`);
+      return;
+    }
+
     // Navigate to the post for community notifications
     if (notification.post_id) {
       navigate(`/community?post=${notification.post_id}`);
@@ -60,6 +84,14 @@ export const NotificationBell = () => {
         return `${actor.name} shared your post`;
       case 'post_published':
         return metadata?.message || 'Your co-founder post is now live!';
+      case 'follow_request':
+        return `${actor.name} sent you a follow request`;
+      case 'follower_new_picture':
+        return `${actor.name} posted a new picture`;
+      case 'follower_new_reel':
+        return `${actor.name} shared a reel`;
+      case 'follower_startup_update':
+        return `${actor.name} posted a startup update`;
       default:
         return `${actor.name} interacted with your post`;
     }

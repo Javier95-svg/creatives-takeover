@@ -106,7 +106,7 @@ export const SocialButtons = ({
       case 'following':
         return compact ? 'Following' : 'Following';
       case 'pending':
-        return compact ? 'Pending' : 'Pending';
+        return compact ? 'Pending' : 'Request Sent';
       case 'blocked':
         return compact ? 'Blocked' : 'Blocked';
       default:
@@ -157,17 +157,19 @@ export const SocialButtons = ({
 
   return (
     <div className={containerClass}>
-      {/* Message Button */}
-      <Button
-        variant="outline"
-        size={buttonSize}
-        onClick={handleSendMessage}
-        disabled={loading}
-        className="bg-card/50 border-border/50 hover:bg-accent"
-      >
-        <MessageCircle className="h-4 w-4" />
-        {!compact && <span className="ml-2">Message</span>}
-      </Button>
+      {/* Message Button - Only show if follow request accepted */}
+      {followStatus === 'following' && (
+        <Button
+          variant="outline"
+          size={buttonSize}
+          onClick={handleSendMessage}
+          disabled={loading}
+          className="bg-card/50 border-border/50 hover:bg-accent"
+        >
+          <MessageCircle className="h-4 w-4" />
+          {!compact && <span className="ml-2">Message</span>}
+        </Button>
+      )}
 
       {/* Follow Button */}
       <Button

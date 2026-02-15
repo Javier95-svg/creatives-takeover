@@ -22,12 +22,27 @@ export interface FriendRequest {
   updated_at: string;
 }
 
+export interface PendingFollowRequest {
+  id: string;
+  follower_id: string;
+  following_id: string;
+  status: 'pending';
+  created_at: string;
+  follower: {
+    id: string;
+    full_name: string | null;
+    avatar_url: string | null;
+    username: string | null;
+  } | null;
+}
+
 export const useSocial = (targetUserId?: string) => {
   const { user } = useAuth();
   const [followStatus, setFollowStatus] = useState<'none' | 'following' | 'pending' | 'blocked'>('none');
   const [friendStatus, setFriendStatus] = useState<'none' | 'pending_sent' | 'pending_received' | 'friends'>('none');
   const [loading, setLoading] = useState(false);
   const [pendingFriendRequests, setPendingFriendRequests] = useState<FriendRequest[]>([]);
+  const [pendingFollowRequests, setPendingFollowRequests] = useState<PendingFollowRequest[]>([]);
 
   // Check current relationship status
   useEffect(() => {
@@ -117,6 +132,46 @@ export const useSocial = (targetUserId?: string) => {
     loadFriendRequests();
   }, [user]);
 
+  // Load pending follow requests
+  useEffect(() => {
+    if (!user) return;
+
+    const loadFollowRequests = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('user_follows')
+          .select('*')
+          .eq('following_id', user.id)
+          .eq('status', 'pending');
+
+        if (error) throw error;
+
+        // Get follower profiles
+        const requestsWithFollowers = await Promise.all(
+          (data || []).map(async (request) => {
+            const { data: followerData } = await supabase
+              .from('profiles')
+              .select('id, full_name, avatar_url, username')
+              .eq('id', request.follower_id)
+              .single();
+
+            return {
+              ...request,
+              status: 'pending' as const,
+              follower: followerData
+            };
+          })
+        );
+
+        setPendingFollowRequests(requestsWithFollowers);
+      } catch (error) {
+        console.error('Error loading follow requests:', error);
+      }
+    };
+
+    loadFollowRequests();
+  }, [user]);
+
   const followUser = async () => {
     if (!user || !targetUserId || loading) return;
 
@@ -127,13 +182,13 @@ export const useSocial = (targetUserId?: string) => {
         .insert({
           follower_id: user.id,
           following_id: targetUserId,
-          status: 'accepted'
+          status: 'pending'
         });
 
       if (error) throw error;
 
-      setFollowStatus('following');
-      toast.success('User followed successfully');
+      setFollowStatus('pending');
+      toast.success('Follow request sent');
     } catch (error) {
       console.error('Error following user:', error);
       toast.error('Failed to follow user');
@@ -246,15 +301,70 @@ export const useSocial = (targetUserId?: string) => {
     }
   };
 
+  const acceptFollowRequest = async (followerId: string) => {
+    if (!user || loading) return;
+
+    setLoading(true);
+    try {
+      const { error } = await supabase
+        .from('user_follows')
+        .update({ status: 'accepted' })
+        .eq('follower_id', followerId)
+        .eq('following_id', user.id)
+        .eq('status', 'pending');
+
+      if (error) throw error;
+
+      // Remove from pending requests
+      setPendingFollowRequests(prev => prev.filter(req => req.follower_id !== followerId));
+
+      toast.success('Follow request accepted');
+    } catch (error) {
+      console.error('Error accepting follow request:', error);
+      toast.error('Failed to accept follow request');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const rejectFollowRequest = async (followerId: string) => {
+    if (!user || loading) return;
+
+    setLoading(true);
+    try {
+      const { error } = await supabase
+        .from('user_follows')
+        .delete()
+        .eq('follower_id', followerId)
+        .eq('following_id', user.id)
+        .eq('status', 'pending');
+
+      if (error) throw error;
+
+      // Remove from pending requests
+      setPendingFollowRequests(prev => prev.filter(req => req.follower_id !== followerId));
+
+      toast.success('Follow request rejected');
+    } catch (error) {
+      console.error('Error rejecting follow request:', error);
+      toast.error('Failed to reject follow request');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return {
     followStatus,
     friendStatus,
     loading,
     pendingFriendRequests,
+    pendingFollowRequests,
     followUser,
     unfollowUser,
     sendFriendRequest,
     respondToFriendRequest,
-    cancelFriendRequest
+    cancelFriendRequest,
+    acceptFollowRequest,
+    rejectFollowRequest
   };
 };
