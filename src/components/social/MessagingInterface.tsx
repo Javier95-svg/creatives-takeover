@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -217,12 +218,27 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
     if (conversation.is_group) {
       return null; // Group avatars handled separately
     }
-    
+
     const otherParticipantId = getOtherParticipant(conversation);
     if (otherParticipantId && participantProfiles[otherParticipantId]) {
       return participantProfiles[otherParticipantId].avatar_url;
     }
-    
+
+    return null;
+  };
+
+  const getProfileLink = (conversation: Conversation): string | null => {
+    // Don't link to group chats
+    if (conversation.is_group) {
+      return null;
+    }
+
+    // Get the other participant's ID and return profile link
+    const otherParticipantId = getOtherParticipant(conversation);
+    if (otherParticipantId) {
+      return `/profile/${otherParticipantId}`;
+    }
+
     return null;
   };
 
@@ -296,9 +312,19 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
                       </Avatar>
                       
                       <div className="flex-1 text-left min-w-0">
-                        <p className="font-medium text-sm truncate">
-                          {getConversationName(conversation)}
-                        </p>
+                        {getProfileLink(conversation) ? (
+                          <Link
+                            to={getProfileLink(conversation)!}
+                            className="font-medium text-sm truncate hover:underline block"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            {getConversationName(conversation)}
+                          </Link>
+                        ) : (
+                          <p className="font-medium text-sm truncate">
+                            {getConversationName(conversation)}
+                          </p>
+                        )}
                         {conversation.last_message_at && (
                           <p className="text-xs text-muted-foreground">
                             {formatDistanceToNow(new Date(conversation.last_message_at))} ago
@@ -371,9 +397,23 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
                   <Menu className="h-5 w-5" />
                 </Button>
               )}
-              <h4 className="font-semibold text-sm md:text-base truncate flex-1">
-                {getConversationName(conversations.find(c => c.id === activeConversationId))}
-              </h4>
+              {(() => {
+                const activeConversation = conversations.find(c => c.id === activeConversationId);
+                const profileLink = activeConversation ? getProfileLink(activeConversation) : null;
+
+                return profileLink ? (
+                  <Link
+                    to={profileLink}
+                    className="font-semibold text-sm md:text-base truncate flex-1 hover:underline"
+                  >
+                    {getConversationName(activeConversation)}
+                  </Link>
+                ) : (
+                  <h4 className="font-semibold text-sm md:text-base truncate flex-1">
+                    {activeConversation ? getConversationName(activeConversation) : ''}
+                  </h4>
+                );
+              })()}
             </div>
 
             {/* Messages */}
