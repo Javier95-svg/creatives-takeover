@@ -138,24 +138,24 @@ const UserReviews = () => {
   };
 
   return (
-    <section className="section-shell">
+    <section className="section-shell overflow-hidden">
       <div className="container mx-auto px-4 sm:px-6">
         <div className="text-center mb-16 sm:mb-20 px-6 sm:px-8 lg:px-12">
-          <Badge variant="outline" className="mb-5 text-xs uppercase tracking-wide text-muted-foreground">
+          <Badge variant="outline" className="mb-5 text-xs uppercase tracking-wide text-muted-foreground animate-in fade-in slide-in-from-top duration-700">
             The 7 Stage Journey 🧭
           </Badge>
-          <h2 className="font-space-grotesk text-3xl sm:text-4xl lg:text-5xl font-semibold mb-6 tracking-tight text-primary break-words">
+          <h2 className="font-space-grotesk text-3xl sm:text-4xl lg:text-5xl font-semibold mb-6 tracking-tight text-primary break-words animate-in fade-in slide-in-from-bottom duration-700 delay-100">
             Startup Development Cycle
           </h2>
-          <p className="font-poppins text-base sm:text-lg text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+          <p className="font-poppins text-base sm:text-lg text-muted-foreground max-w-3xl mx-auto leading-relaxed animate-in fade-in slide-in-from-bottom duration-700 delay-200">
             The Startup Development Cycle is a step-by-step roadmap designed by Creatives Takeover to guide founders from shaping an idea to building, launching, and growing a startup.
           </p>
-          <div className="mt-6">
+          <div className="mt-6 animate-in fade-in zoom-in duration-700 delay-300">
             <Button
               variant="outline"
               size="sm"
               onClick={() => setIsAutoPlaying(!isAutoPlaying)}
-              className="gap-2"
+              className="gap-2 hover:scale-105 transition-transform duration-200"
             >
                 {isAutoPlaying ? (
                   <>
@@ -173,25 +173,50 @@ const UserReviews = () => {
         </div>
 
         <div className="grid gap-8 lg:gap-10 lg:grid-cols-2 items-stretch">
-          <Card className="surface-panel trust-outline overflow-hidden">
-            <CardContent className="p-6 sm:p-8">
-              <div className="relative mx-auto w-full max-w-[560px] aspect-square">
+          <Card className="surface-panel trust-outline overflow-hidden relative group">
+            {/* Ambient background animation */}
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/5 animate-pulse" style={{ animationDuration: '4s' }} />
+            <CardContent className="p-6 sm:p-8 relative">
+              <div className="relative mx-auto w-full max-w-[560px] aspect-square" style={{ perspective: '1000px' }}>
                 {/* SVG Layer for Connection Lines */}
                 <svg
                   className="absolute inset-0 w-full h-full pointer-events-none"
                   viewBox="0 0 100 100"
                   xmlns="http://www.w3.org/2000/svg"
                 >
-                  {/* Outer decorative circle */}
+                  {/* Glowing outer ring */}
+                  <defs>
+                    <filter id="glow">
+                      <feGaussianBlur stdDeviation="0.5" result="coloredBlur"/>
+                      <feMerge>
+                        <feMergeNode in="coloredBlur"/>
+                        <feMergeNode in="SourceGraphic"/>
+                      </feMerge>
+                    </filter>
+                    <radialGradient id="ringGradient">
+                      <stop offset="0%" stopColor="currentColor" stopOpacity="0.1" />
+                      <stop offset="100%" stopColor="currentColor" stopOpacity="0.4" />
+                    </radialGradient>
+                  </defs>
+
+                  {/* Outer decorative circle with glow */}
                   <circle
                     cx="50"
                     cy="50"
                     r="39"
                     fill="none"
-                    stroke="currentColor"
-                    strokeWidth="0.15"
-                    className="text-primary/20"
-                  />
+                    stroke="url(#ringGradient)"
+                    strokeWidth="0.25"
+                    className="text-primary"
+                    filter="url(#glow)"
+                  >
+                    <animate
+                      attributeName="r"
+                      values="39;39.5;39"
+                      dur="3s"
+                      repeatCount="indefinite"
+                    />
+                  </circle>
 
                   {/* Animated connection path */}
                   <path
@@ -201,6 +226,7 @@ const UserReviews = () => {
                     strokeWidth="0.4"
                     className="text-primary/30"
                     strokeDasharray="2 2"
+                    filter="url(#glow)"
                   >
                     <animate
                       attributeName="stroke-dashoffset"
@@ -214,6 +240,7 @@ const UserReviews = () => {
                   {/* Progress indicator - active segment glow */}
                   {stepPositions.map((_, index) => {
                     const isActiveSegment = index === activeStepIndex;
+                    const isPastSegment = index < activeStepIndex;
                     const nextIndex = (index + 1) % stepPositions.length;
                     const startAngle = ((-90 + STEP_ANGLE * index) * Math.PI) / 180;
                     const endAngle = ((-90 + STEP_ANGLE * nextIndex) * Math.PI) / 180;
@@ -230,27 +257,43 @@ const UserReviews = () => {
                         d={`M ${x1} ${y1} A ${radius} ${radius} 0 0 1 ${x2} ${y2}`}
                         fill="none"
                         stroke="currentColor"
-                        strokeWidth="0.6"
-                        className={`transition-all duration-500 ${
+                        strokeWidth={isActiveSegment ? "0.8" : "0.6"}
+                        className={`transition-all duration-700 ${
                           isActiveSegment
-                            ? "text-primary opacity-100"
+                            ? "text-primary opacity-100 drop-shadow-[0_0_8px_currentColor]"
+                            : isPastSegment
+                            ? "text-primary/50 opacity-70"
                             : "text-primary/10 opacity-50"
                         }`}
-                      />
+                        filter={isActiveSegment ? "url(#glow)" : undefined}
+                      >
+                        {isActiveSegment && (
+                          <animate
+                            attributeName="stroke-width"
+                            values="0.8;1;0.8"
+                            dur="2s"
+                            repeatCount="indefinite"
+                          />
+                        )}
+                      </path>
                     );
                   })}
                 </svg>
 
-                {/* Background circles */}
-                <div className="absolute inset-[8%] rounded-full border border-primary/20 bg-gradient-to-b from-primary/[0.07] to-background" />
-                <div className="absolute inset-[19%] rounded-full border border-primary/15" />
+                {/* Background circles with 3D effect */}
+                <div className="absolute inset-[8%] rounded-full border-2 border-primary/20 bg-gradient-to-b from-primary/[0.07] to-background shadow-[inset_0_2px_20px_rgba(0,0,0,0.1)] animate-pulse" style={{ animationDuration: '6s', transform: 'translateZ(0)' }} />
+                <div className="absolute inset-[19%] rounded-full border border-primary/15 shadow-[0_0_15px_rgba(99,102,241,0.1)] animate-pulse" style={{ animationDuration: '5s', animationDelay: '1s' }} />
 
                 {/* Center active indicator with icon */}
-                <div className={`absolute inset-[33%] rounded-full border border-primary/10 bg-gradient-to-br ${activeStep.color} backdrop-blur-sm flex items-center justify-center text-center px-6 transition-all duration-500`}>
-                  <div className="animate-in fade-in zoom-in duration-300" key={activeStepIndex}>
-                    <ActiveIcon className="w-8 h-8 sm:w-10 sm:h-10 mx-auto mb-2 text-primary" />
+                <div className={`absolute inset-[33%] rounded-full border-2 border-primary/20 bg-gradient-to-br ${activeStep.color} backdrop-blur-sm flex items-center justify-center text-center px-6 transition-all duration-700 shadow-[0_0_30px_rgba(99,102,241,0.3),inset_0_2px_15px_rgba(255,255,255,0.1)] hover:scale-105`} style={{ transform: 'translateZ(20px)' }}>
+                  <div className="animate-in fade-in zoom-in duration-500" key={activeStepIndex}>
+                    <div className="relative">
+                      <ActiveIcon className="w-8 h-8 sm:w-10 sm:h-10 mx-auto mb-2 text-primary drop-shadow-[0_0_8px_currentColor] animate-pulse" style={{ animationDuration: '3s' }} />
+                      {/* Particle effect */}
+                      <div className="absolute inset-0 rounded-full bg-primary/20 blur-xl animate-ping" style={{ animationDuration: '3s' }} />
+                    </div>
                     <p className="text-xs tracking-[0.22em] uppercase text-muted-foreground mb-1">Active Stage</p>
-                    <p className="font-space-grotesk text-lg sm:text-xl font-semibold">{activeStep.shortLabel}</p>
+                    <p className="font-space-grotesk text-lg sm:text-xl font-semibold bg-gradient-to-r from-primary via-primary/80 to-primary bg-clip-text">{activeStep.shortLabel}</p>
                   </div>
                 </div>
 
@@ -259,6 +302,7 @@ const UserReviews = () => {
                   const step = cycleSteps[index];
                   const StepIcon = step.icon;
                   const isActive = index === activeStepIndex;
+                  const isPast = index < activeStepIndex;
 
                   return (
                     <button
@@ -268,20 +312,35 @@ const UserReviews = () => {
                         setActiveStepIndex(index);
                         setIsAutoPlaying(false);
                       }}
-                      className={`absolute -translate-x-1/2 -translate-y-1/2 w-[110px] sm:w-[122px] px-3 py-2.5 rounded-xl border text-xs sm:text-sm text-center font-medium transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 group ${
+                      className={`absolute -translate-x-1/2 -translate-y-1/2 w-[110px] sm:w-[122px] px-3 py-2.5 rounded-xl border-2 text-xs sm:text-sm text-center font-medium transition-all duration-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 group overflow-hidden ${
                         isActive
-                          ? "bg-primary text-primary-foreground border-primary shadow-[0_0_20px_rgba(99,102,241,0.4)] scale-110 animate-pulse"
-                          : "bg-background/95 border-border/70 hover:border-primary/60 hover:bg-primary/10 hover:scale-105 hover:shadow-lg"
+                          ? "bg-gradient-to-br from-primary via-primary to-primary/90 text-primary-foreground border-primary shadow-[0_0_25px_rgba(99,102,241,0.6),0_0_40px_rgba(99,102,241,0.3),inset_0_1px_0_rgba(255,255,255,0.2)] scale-110 animate-pulse"
+                          : isPast
+                          ? "bg-background/95 border-primary/40 hover:border-primary/60 hover:bg-primary/10 hover:scale-105 hover:shadow-[0_8px_20px_rgba(99,102,241,0.2)] hover:-translate-y-1"
+                          : "bg-background/95 border-border/70 hover:border-primary/60 hover:bg-primary/10 hover:scale-105 hover:shadow-[0_8px_20px_rgba(99,102,241,0.2)] hover:-translate-y-1"
                       }`}
-                      style={{ left: `${position.x}%`, top: `${position.y}%` }}
+                      style={{
+                        left: `${position.x}%`,
+                        top: `${position.y}%`,
+                        transform: isActive ? `translate(-50%, -50%) rotateX(5deg) rotateY(5deg) scale(1.1)` : 'translate(-50%, -50%)',
+                        transformStyle: 'preserve-3d'
+                      }}
                       aria-pressed={isActive}
                       aria-label={`Select ${step.title}`}
                     >
-                      <StepIcon className={`w-4 h-4 mx-auto mb-1 transition-transform group-hover:scale-110 ${isActive ? 'animate-bounce' : ''}`} />
-                      <span className="block text-[10px] sm:text-[11px] tracking-[0.1em] uppercase opacity-75">
-                        {index + 1}
-                      </span>
-                      <span className="block mt-0.5 leading-tight font-semibold">{step.shortLabel}</span>
+                      {/* Ripple effect on active */}
+                      {isActive && (
+                        <div className="absolute inset-0 rounded-xl bg-primary/30 animate-ping" style={{ animationDuration: '2s' }} />
+                      )}
+                      <div className="relative z-10">
+                        <StepIcon className={`w-4 h-4 mx-auto mb-1 transition-all duration-300 ${isActive ? 'animate-bounce drop-shadow-[0_0_8px_currentColor]' : 'group-hover:scale-125 group-hover:rotate-12'}`} style={{ animationDuration: isActive ? '1.5s' : undefined }} />
+                        <span className="block text-[10px] sm:text-[11px] tracking-[0.1em] uppercase opacity-75">
+                          {index + 1}
+                        </span>
+                        <span className="block mt-0.5 leading-tight font-semibold">{step.shortLabel}</span>
+                      </div>
+                      {/* Shine effect on hover */}
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
                     </button>
                   );
                 })}
@@ -289,24 +348,34 @@ const UserReviews = () => {
             </CardContent>
           </Card>
 
-          <Card className="surface-panel trust-outline overflow-hidden relative">
-            <div className={`absolute inset-0 bg-gradient-to-br ${activeStep.color} opacity-50 transition-all duration-500`} />
+          <Card className="surface-panel trust-outline overflow-hidden relative group">
+            {/* Animated gradient background */}
+            <div className={`absolute inset-0 bg-gradient-to-br ${activeStep.color} opacity-50 transition-all duration-700`} />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(99,102,241,0.1),transparent)] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+
+            {/* Floating particles effect */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+              <div className="absolute top-1/4 left-1/4 w-2 h-2 bg-primary/20 rounded-full blur-sm animate-pulse" style={{ animationDuration: '3s' }} />
+              <div className="absolute top-3/4 right-1/4 w-3 h-3 bg-primary/15 rounded-full blur-sm animate-pulse" style={{ animationDuration: '4s', animationDelay: '1s' }} />
+              <div className="absolute top-1/2 right-1/3 w-1.5 h-1.5 bg-primary/25 rounded-full blur-sm animate-pulse" style={{ animationDuration: '2.5s', animationDelay: '0.5s' }} />
+            </div>
+
             <CardContent className="p-6 sm:p-8 lg:p-10 h-full flex flex-col justify-center relative z-10">
-              <div className="animate-in fade-in slide-in-from-right duration-500" key={activeStepIndex}>
+              <div className="animate-in fade-in slide-in-from-right duration-700" key={activeStepIndex}>
                 <div className="flex items-start gap-4 mb-4">
-                  <div className={`p-3 rounded-xl bg-gradient-to-br ${activeStep.color} border border-primary/20`}>
-                    <ActiveIcon className="w-6 h-6 sm:w-7 sm:h-7 text-primary" />
+                  <div className={`p-3 rounded-xl bg-gradient-to-br ${activeStep.color} border-2 border-primary/30 shadow-[0_0_20px_rgba(99,102,241,0.2)] backdrop-blur-sm hover:scale-110 transition-transform duration-300`}>
+                    <ActiveIcon className="w-6 h-6 sm:w-7 sm:h-7 text-primary drop-shadow-[0_0_6px_currentColor]" />
                   </div>
-                  <h3 className="font-space-grotesk text-2xl sm:text-3xl font-semibold flex-1">
+                  <h3 className="font-space-grotesk text-2xl sm:text-3xl font-semibold flex-1 bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text">
                     {activeStep.title}
                   </h3>
                 </div>
-                <p className="text-muted-foreground leading-relaxed text-base sm:text-lg whitespace-pre-line">
+                <p className="text-muted-foreground leading-relaxed text-base sm:text-lg whitespace-pre-line animate-in fade-in duration-700 delay-100">
                   {activeStep.description}
                 </p>
 
-                {/* Progress indicator */}
-                <div className="mt-6 flex gap-1.5">
+                {/* Enhanced progress indicator */}
+                <div className="mt-6 flex gap-1.5 animate-in fade-in slide-in-from-bottom duration-700 delay-200">
                   {cycleSteps.map((_, index) => (
                     <button
                       key={index}
@@ -314,12 +383,12 @@ const UserReviews = () => {
                         setActiveStepIndex(index);
                         setIsAutoPlaying(false);
                       }}
-                      className={`h-1.5 rounded-full transition-all duration-300 ${
+                      className={`h-1.5 rounded-full transition-all duration-500 hover:h-2 ${
                         index === activeStepIndex
-                          ? "bg-primary w-8"
+                          ? "bg-gradient-to-r from-primary via-primary/90 to-primary w-8 shadow-[0_0_10px_rgba(99,102,241,0.5)]"
                           : index < activeStepIndex
-                          ? "bg-primary/40 w-6"
-                          : "bg-primary/20 w-4"
+                          ? "bg-primary/40 w-6 hover:w-7 hover:bg-primary/60"
+                          : "bg-primary/20 w-4 hover:w-5 hover:bg-primary/30"
                       }`}
                       aria-label={`Go to ${cycleSteps[index].shortLabel}`}
                     />
