@@ -35,7 +35,7 @@ const cycleSteps: CycleStep[] = [
     shortLabel: "Prototyping",
     title: "Stage 2: Prototyping",
     description:
-      "Build a simple landing page and waitlist that clearly presents the future MVP features and user flow. This tests whether your value proposition is compelling before writing product code.",
+      "After defining your identity, the next step is to create a simple landing page that works as your waitlist. This page should clearly explain what your product is, who it is for, and the core problem it solves so visitors quickly understand the value.\n\nIt should also describe the key features you plan to offer and give a simple overview of how the product will work, without building the MVP yet. The goal is to make the idea feel real enough to test interest, collect sign-ups, and confirm there is market demand before investing time and money into development.",
     icon: Pencil,
     color: "from-blue-500/20 to-blue-600/20"
   },
