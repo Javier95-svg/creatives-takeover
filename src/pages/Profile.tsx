@@ -552,6 +552,54 @@ const Profile = () => {
                   </Card>
                 )}
 
+                {/* Startup Links */}
+                {(profile.startup_links || isOwnProfile) && (
+                  <Card className="p-4">
+                    <h3 className="text-sm font-semibold mb-2 flex items-center gap-2">
+                      <ExternalLink className="h-4 w-4 text-primary" />
+                      Startup Links
+                    </h3>
+                    {profile.startup_links && Object.keys(profile.startup_links).length > 0 ? (
+                      <div className="flex flex-wrap gap-2">
+                        {profile.startup_links.pitchDeck && (
+                          <a href={profile.startup_links.pitchDeck} target="_blank" rel="noopener noreferrer">
+                            <Badge variant="outline" className="text-xs cursor-pointer hover:bg-primary/10">
+                              <FileText className="h-3 w-3 mr-1" />
+                              Pitch Deck
+                            </Badge>
+                          </a>
+                        )}
+                        {profile.startup_links.waitlist && (
+                          <a href={profile.startup_links.waitlist} target="_blank" rel="noopener noreferrer">
+                            <Badge variant="outline" className="text-xs cursor-pointer hover:bg-primary/10">
+                              <Users2 className="h-3 w-3 mr-1" />
+                              Waitlist
+                            </Badge>
+                          </a>
+                        )}
+                        {profile.startup_links.demo && (
+                          <a href={profile.startup_links.demo} target="_blank" rel="noopener noreferrer">
+                            <Badge variant="outline" className="text-xs cursor-pointer hover:bg-primary/10">
+                              <Rocket className="h-3 w-3 mr-1" />
+                              Demo
+                            </Badge>
+                          </a>
+                        )}
+                        {profile.startup_links.website && (
+                          <a href={profile.startup_links.website} target="_blank" rel="noopener noreferrer">
+                            <Badge variant="outline" className="text-xs cursor-pointer hover:bg-primary/10">
+                              <Globe className="h-3 w-3 mr-1" />
+                              Website
+                            </Badge>
+                          </a>
+                        )}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground/50 italic">No links added</p>
+                    )}
+                  </Card>
+                )}
+
                 {/* Social Links */}
                 {(profile.website_url || profile.twitter_url || profile.linkedin_url || profile.github_url || profile.instagram_url || isOwnProfile) && (
                   <Card className="p-4">
@@ -593,54 +641,6 @@ const Profile = () => {
                       </div>
                     ) : (
                       <p className="text-sm text-muted-foreground/50 italic">No social links added</p>
-                    )}
-                  </Card>
-                )}
-
-                {/* Quick Links */}
-                {(profile.startup_links || isOwnProfile) && (
-                  <Card className="p-4">
-                    <h3 className="text-sm font-semibold mb-2 flex items-center gap-2">
-                      <ExternalLink className="h-4 w-4 text-primary" />
-                      Quick Links
-                    </h3>
-                    {profile.startup_links && Object.keys(profile.startup_links).length > 0 ? (
-                      <div className="flex flex-wrap gap-2">
-                        {profile.startup_links.pitchDeck && (
-                          <a href={profile.startup_links.pitchDeck} target="_blank" rel="noopener noreferrer">
-                            <Badge variant="outline" className="text-xs cursor-pointer hover:bg-primary/10">
-                              <FileText className="h-3 w-3 mr-1" />
-                              Pitch Deck
-                            </Badge>
-                          </a>
-                        )}
-                        {profile.startup_links.waitlist && (
-                          <a href={profile.startup_links.waitlist} target="_blank" rel="noopener noreferrer">
-                            <Badge variant="outline" className="text-xs cursor-pointer hover:bg-primary/10">
-                              <Users2 className="h-3 w-3 mr-1" />
-                              Waitlist
-                            </Badge>
-                          </a>
-                        )}
-                        {profile.startup_links.demo && (
-                          <a href={profile.startup_links.demo} target="_blank" rel="noopener noreferrer">
-                            <Badge variant="outline" className="text-xs cursor-pointer hover:bg-primary/10">
-                              <Rocket className="h-3 w-3 mr-1" />
-                              Demo
-                            </Badge>
-                          </a>
-                        )}
-                        {profile.startup_links.website && (
-                          <a href={profile.startup_links.website} target="_blank" rel="noopener noreferrer">
-                            <Badge variant="outline" className="text-xs cursor-pointer hover:bg-primary/10">
-                              <Globe className="h-3 w-3 mr-1" />
-                              Website
-                            </Badge>
-                          </a>
-                        )}
-                      </div>
-                    ) : (
-                      <p className="text-sm text-muted-foreground/50 italic">No links added</p>
                     )}
                   </Card>
                 )}
