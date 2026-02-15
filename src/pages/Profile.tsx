@@ -116,8 +116,9 @@ const Profile = () => {
   const [pinnedPosts, setPinnedPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [pictureCount, setPictureCount] = useState(0);
   const isOwnProfile = currentUser?.id === profile?.id;
-  
+
   const { stats, loading: statsLoading } = useProfileData(profile?.id || '');
   const { deductCredits } = useCreditActions();
 
@@ -267,7 +268,7 @@ const Profile = () => {
             .eq('is_pinned', true)
             .order('created_at', { ascending: false })
             .limit(4);
-          
+
           if (pinnedError) {
             logError('Error loading pinned posts', pinnedError);
             setPinnedPosts([]); // Set empty array on error
@@ -277,6 +278,24 @@ const Profile = () => {
         } catch (pinnedErr) {
           console.error('Error loading pinned posts:', pinnedErr);
           setPinnedPosts([]); // Set empty array on error
+        }
+
+        // Load picture count (handle errors gracefully)
+        try {
+          const { count, error: photoCountError } = await supabase
+            .from('user_photos')
+            .select('*', { count: 'exact', head: true })
+            .eq('user_id', finalProfileData.id);
+
+          if (photoCountError) {
+            console.error('Error loading picture count:', photoCountError);
+            setPictureCount(0);
+          } else {
+            setPictureCount(count || 0);
+          }
+        } catch (photoCountErr) {
+          console.error('Error loading picture count:', photoCountErr);
+          setPictureCount(0);
         }
 
       } catch (error) {
@@ -505,7 +524,7 @@ const Profile = () => {
                     <div className="text-xs text-muted-foreground">Stage</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-xl font-bold text-primary">{stats.totalPosts}</div>
+                    <div className="text-xl font-bold text-primary">{pictureCount}</div>
                     <div className="text-xs text-muted-foreground">Posts</div>
                   </div>
                   <div className="text-center">
