@@ -677,17 +677,6 @@ const Profile = () => {
                 <TabsContent value="journey" className="space-y-6">
                   {/* Milestones Timeline */}
                   <MilestonesTimeline userId={profile.id} isOwnProfile={isOwnProfile} />
-
-                  {/* Updates & Learnings */}
-                  <div>
-                    <h3 className="text-lg font-semibold mb-4">Recent Updates</h3>
-                    <ContentGrid
-                      items={posts.map(p => ({ ...p, content_type: 'post' }))}
-                      isOwnProfile={isOwnProfile}
-                      onEdit={(id) => console.log('Edit', id)}
-                      onDelete={(id) => console.log('Delete', id)}
-                    />
-                  </div>
                 </TabsContent>
 
                 <TabsContent value="startup" className="space-y-4">
