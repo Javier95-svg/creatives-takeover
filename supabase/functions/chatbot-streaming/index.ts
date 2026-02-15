@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { checkAndDeductCredits, getUserFromAuth } from '../_shared/credit-deduction.ts';
+import { checkAndDeductCredits, getUserFromAuth, refundCredits } from '../_shared/credit-deduction.ts';
 import { CREDIT_COSTS } from '../_shared/credit-constants.ts';
 import { logInfo, logWarn, logError } from '../_shared/logger.ts';
 import { fetchWithRetry } from '../_shared/api-retry.ts';
@@ -2690,14 +2690,15 @@ async function createAIStream(messages: ChatMessage[], userMessage: string, conv
     // #region agent log
     fetch('http://127.0.0.1:7247/ingest/7f5d4e2e-0919-470e-91bc-f49c54e31856',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'chatbot-streaming/index.ts:2513',message:'API call exception',data:{errorMessage:error?.message,model:selectedModel},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
     // #endregion
-    logError('API request failed after retries', { 
+    logError('API request failed after retries', {
       requestId,
       error: error.message,
       status: error.status,
       timeout: error.timeout,
       model: selectedModel
     });
-    
+
+    // Note: Refund will happen after fallback attempts fail (see end of catch block)
     // Try fallback if primary model failed
     const isDeepSeek = selectedModel.startsWith('deepseek-');
     const isGemini = selectedModel.includes('gemini');
@@ -2762,19 +2763,38 @@ async function createAIStream(messages: ChatMessage[], userMessage: string, conv
         logError('🔍 DEBUG: Gemini fallback also failed', { requestId, error: fallbackError?.message });
       }
     }
-    
+
+    // Refund credits if all AI API attempts failed (including fallbacks) and credits were charged
+    // This runs only if we reach here (fallbacks failed or didn't apply)
+    const shouldRefund = conversation.user_id && conversation.chat_mode !== 'tour-guide';
+    if (shouldRefund) {
+      try {
+        const creditCost = CREDIT_COSTS.AI_CHAT_MESSAGE;
+        await refundCredits(
+          conversation.user_id,
+          creditCost,
+          'AI Chat Message',
+          'Refund: AI processing failed after all retry attempts',
+          { error: error.message, model: selectedModel, requestId }
+        );
+        logInfo('💸 Refunded credits due to AI API failure', { userId: conversation.user_id, amount: creditCost, requestId });
+      } catch (refundError) {
+        logError('Failed to refund credits', { error: refundError, userId: conversation.user_id });
+      }
+    }
+
     // Return user-friendly error message
-    const errorMessage = error.timeout 
+    const errorMessage = error.timeout
       ? "I'm taking longer than usual to respond. Please try again in a moment."
       : error.status === 429
       ? "I'm receiving too many requests right now. Please wait a moment and try again."
       : "I encountered an error processing your request. Please try again.";
-    
+
     return new Response(
       JSON.stringify({ error: errorMessage, requestId }),
-      { 
-        status: error.status || 500, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      {
+        status: error.status || 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
     );
   }
@@ -2825,6 +2845,24 @@ async function createAIStream(messages: ChatMessage[], userMessage: string, conv
     if (isModelNotFound && (isGPT5 || isDeepSeek)) {
       logWarn('🔍 DEBUG: Model not found, falling back', { requestId, model: selectedModel, status, error: err.substring(0, 300) });
     } else if ([400, 401, 403, 404, 402].includes(status) && !isGPT5 && !isDeepSeek) {
+      // Refund credits before returning error
+      const shouldRefund = conversation.user_id && conversation.chat_mode !== 'tour-guide';
+      if (shouldRefund) {
+        try {
+          const creditCost = CREDIT_COSTS.AI_CHAT_MESSAGE;
+          await refundCredits(
+            conversation.user_id,
+            creditCost,
+            'AI Chat Message',
+            'Refund: AI API returned error status',
+            { error: err, status, model: selectedModel, requestId }
+          );
+          logInfo('💸 Refunded credits due to AI API error response', { userId: conversation.user_id, amount: creditCost, status });
+        } catch (refundError) {
+          logError('Failed to refund credits', { error: refundError, userId: conversation.user_id });
+        }
+      }
+
       // Only return error immediately for non-GPT-5/DeepSeek models
       return new Response(
         JSON.stringify({ error: userMessage, requestId }),

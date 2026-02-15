@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { checkAndDeductCredits } from '../_shared/credit-deduction.ts';
+import { checkAndDeductCredits, refundCredits } from '../_shared/credit-deduction.ts';
 import { CREDIT_COSTS } from '../_shared/credit-constants.ts';
 import { resolveCreditIdempotencyKey } from '../_shared/request-idempotency.ts';
 
@@ -167,28 +167,45 @@ serve(async (req) => {
       throw new Error('LOVABLE_API_KEY not configured');
     }
 
-    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages,
-        max_tokens: 150, // Reduced for shorter responses
-        temperature: 0.8, // Slightly higher for more natural, conversational tone
-      }),
-    });
+    let assistantMessage: string;
+    try {
+      const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'google/gemini-2.5-flash',
+          messages,
+          max_tokens: 150, // Reduced for shorter responses
+          temperature: 0.8, // Slightly higher for more natural, conversational tone
+        }),
+      });
 
-    if (!aiResponse.ok) {
-      const errorText = await aiResponse.text();
-      console.error('AI API Error:', errorText);
-      throw new Error(`AI API Error: ${aiResponse.status}`);
+      if (!aiResponse.ok) {
+        const errorText = await aiResponse.text();
+        console.error('AI API Error:', errorText);
+        throw new Error(`AI API Error: ${aiResponse.status}`);
+      }
+
+      const aiData = await aiResponse.json();
+      assistantMessage = aiData.choices[0].message.content;
+    } catch (aiError) {
+      // Refund credits if AI API call failed and credits were charged
+      if (shouldChargeCredits && userId) {
+        const creditCost = CREDIT_COSTS.AI_CHAT_MESSAGE;
+        await refundCredits(
+          userId,
+          creditCost,
+          'AI Chat Message',
+          'Refund: AI processing failed',
+          { error: aiError instanceof Error ? aiError.message : String(aiError) }
+        );
+        console.log(`💸 Refunded ${creditCost} credit(s) due to AI API failure`);
+      }
+      throw aiError;
     }
-
-    const aiData = await aiResponse.json();
-    const assistantMessage = aiData.choices[0].message.content;
 
     // Extract business context from conversation
     const updatedContext = await extractBusinessContext(message, assistantMessage, businessContext);
