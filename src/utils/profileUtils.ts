@@ -11,6 +11,13 @@ export function generateProfileSlug(fullName: string | null | undefined): string
     return '';
   }
 
+  const normalizeUsernamePart = (value: string): string =>
+    value
+      .normalize('NFKD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, '');
+
   const trimmed = fullName.trim();
   const nameParts = trimmed.split(/\s+/).filter(part => part.length > 0);
   
@@ -20,14 +27,14 @@ export function generateProfileSlug(fullName: string | null | undefined): string
 
   // If only one name part, use it
   if (nameParts.length === 1) {
-    return nameParts[0].toLowerCase().replace(/[^a-z0-9]/g, '');
+    return normalizeUsernamePart(nameParts[0]);
   }
 
   // Combine first and last name (handle middle names by taking first and last)
   const firstName = nameParts[0];
   const lastName = nameParts[nameParts.length - 1];
   
-  const slug = (firstName + lastName).toLowerCase().replace(/[^a-z0-9]/g, '');
+  const slug = normalizeUsernamePart(firstName) + normalizeUsernamePart(lastName);
   
   return slug;
 }

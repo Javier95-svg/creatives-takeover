@@ -237,6 +237,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const createUserProfile = async (profileUser: User): Promise<boolean> => {
     try {
+      const normalizeUsernamePart = (value: string): string => {
+        return value
+          .normalize('NFKD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .toLowerCase()
+          .replace(/[^a-z0-9]/g, '');
+      };
+
       // Check if profile already exists (trigger may have created it)
       const { data: existingProfile } = await supabase
         .from('profiles')
@@ -256,11 +264,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (fullName) {
         const nameParts = fullName.trim().split(/\s+/).filter((p: string) => p.length > 0);
         if (nameParts.length >= 2) {
-          const firstName = nameParts[0].toLowerCase().replace(/[^a-z0-9]/g, '');
-          const lastName = nameParts[nameParts.length - 1].toLowerCase().replace(/[^a-z0-9]/g, '');
-          username = firstName + '-' + lastName;
+          const firstName = normalizeUsernamePart(nameParts[0]);
+          const lastName = normalizeUsernamePart(nameParts[nameParts.length - 1]);
+          username = firstName + lastName;
         } else if (nameParts.length === 1) {
-          username = nameParts[0].toLowerCase().replace(/[^a-z0-9]/g, '');
+          username = normalizeUsernamePart(nameParts[0]);
         }
       }
 

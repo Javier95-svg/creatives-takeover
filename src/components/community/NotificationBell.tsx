@@ -25,6 +25,9 @@ export const NotificationBell = () => {
 
   const handleNotificationClick = async (notification: any) => {
     await markAsRead(notification.id);
+    const actorProfilePath = notification.actor?.username
+      ? `/profile/${notification.actor.username}`
+      : null;
 
     // Navigate to messages if it's a message notification - go directly to /messages
     if (notification.notification_type === 'message') {
@@ -40,25 +43,25 @@ export const NotificationBell = () => {
 
     // Navigate to profile for follow requests
     if (notification.notification_type === 'follow_request') {
-      navigate(`/profile/${notification.actor.username || notification.actor_id}`);
+      navigate(actorProfilePath || '/community');
       return;
     }
 
     // Navigate to profile pictures tab for new picture notifications
     if (notification.notification_type === 'follower_new_picture') {
-      navigate(`/profile/${notification.actor.username || notification.actor_id}`);
+      navigate(actorProfilePath || '/community');
       return;
     }
 
     // Navigate to profile for new reel notifications
     if (notification.notification_type === 'follower_new_reel') {
-      navigate(`/profile/${notification.actor.username || notification.actor_id}`);
+      navigate(actorProfilePath || '/community');
       return;
     }
 
     // Navigate to profile startup tab for startup updates
     if (notification.notification_type === 'follower_startup_update') {
-      navigate(`/profile/${notification.actor.username || notification.actor_id}`);
+      navigate(actorProfilePath || '/community');
       return;
     }
 

@@ -43,7 +43,9 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
   const scrollAreaRef = useRef<React.ElementRef<typeof ScrollArea>>(null);
   const hasSetInitialConversation = useRef(false);
   const previousInitialConversationId = useRef<string | undefined>(undefined);
-  const [participantProfiles, setParticipantProfiles] = useState<Record<string, { full_name: string; avatar_url: string | null }>>({});
+  const [participantProfiles, setParticipantProfiles] = useState<
+    Record<string, { full_name: string; avatar_url: string | null; username: string | null }>
+  >({});
   const [conversationToDelete, setConversationToDelete] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [mobileSheetOpen, setMobileSheetOpen] = useState(false);
@@ -175,17 +177,18 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
       try {
         const { data, error } = await supabase
           .from('profiles')
-          .select('id, full_name, avatar_url')
+          .select('id, full_name, avatar_url, username')
           .in('id', idsToFetch);
 
         if (error) throw error;
 
         if (data) {
-          const newProfiles: Record<string, { full_name: string; avatar_url: string | null }> = {};
+          const newProfiles: Record<string, { full_name: string; avatar_url: string | null; username: string | null }> = {};
           data.forEach(profile => {
             newProfiles[profile.id] = {
               full_name: profile.full_name || 'Unknown User',
-              avatar_url: profile.avatar_url
+              avatar_url: profile.avatar_url,
+              username: profile.username || null
             };
           });
 
@@ -233,10 +236,10 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
       return null;
     }
 
-    // Get the other participant's ID and return profile link
+    // Use username-based profile URLs; never link by raw UUID.
     const otherParticipantId = getOtherParticipant(conversation);
-    if (otherParticipantId) {
-      return `/profile/${otherParticipantId}`;
+    if (otherParticipantId && participantProfiles[otherParticipantId]?.username) {
+      return `/profile/${participantProfiles[otherParticipantId].username}`;
     }
 
     return null;

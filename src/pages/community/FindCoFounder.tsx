@@ -41,6 +41,7 @@ interface CofounderPost {
   author?: {
     full_name: string;
     avatar_url: string;
+    username?: string | null;
   };
 }
 
@@ -71,13 +72,13 @@ const FindCoFounder = () => {
         (data || []).map(async (post) => {
           const { data: profileData } = await supabase
             .from('profiles')
-            .select('full_name, avatar_url')
+            .select('full_name, avatar_url, username')
             .eq('id', post.user_id)
             .single();
 
           return {
             ...post,
-            author: profileData || { full_name: 'Anonymous', avatar_url: '' }
+            author: profileData || { full_name: 'Anonymous', avatar_url: '', username: null }
           };
         })
       );
@@ -242,13 +243,15 @@ const FindCoFounder = () => {
                           <div className="flex items-center gap-2 text-sm text-muted-foreground">
                             {post.is_sample ? (
                               <span>{post.author?.full_name}</span>
-                            ) : (
+                            ) : post.author?.username ? (
                               <Link
-                                to={`/profile/${post.user_id}`}
+                                to={`/profile/${post.author.username}`}
                                 className="hover:text-primary hover:underline transition-colors cursor-pointer"
                               >
                                 {post.author?.full_name}
                               </Link>
+                            ) : (
+                              <span>{post.author?.full_name}</span>
                             )}
                             <span>•</span>
                             <span className="flex items-center gap-1">
