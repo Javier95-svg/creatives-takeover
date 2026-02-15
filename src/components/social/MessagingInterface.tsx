@@ -267,6 +267,7 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
 
   const handleConversationSelect = (conversationId: string) => {
     setActiveConversationId(conversationId);
+    markAsRead(conversationId);
     if (isMobile) {
       setMobileSheetOpen(false);
     }
@@ -362,7 +363,7 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
       {/* Desktop & Tablet Conversations List */}
       {!isMobile && (
         <div className={`${isTablet ? 'w-64' : 'w-80'} border-r bg-card/50 flex-shrink-0`}>
-          <ConversationList onSelect={setActiveConversationId} />
+          <ConversationList onSelect={handleConversationSelect} />
         </div>
       )}
 

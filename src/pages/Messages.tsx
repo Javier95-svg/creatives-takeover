@@ -18,7 +18,7 @@ const Messages = () => {
   const { username } = useParams<{ username: string }>();
   const [searchParams] = useSearchParams();
   const conversationIdParam = searchParams.get('conversationId');
-  const { getUserIdByUsername, startConversation } = useMessaging();
+  const { getUserIdByUsername, startConversation } = useMessaging({ autoLoad: false, suppressLoadErrors: true });
   const [resolvedConversationId, setResolvedConversationId] = useState<string | undefined>(conversationIdParam || undefined);
   const [isResolvingUsername, setIsResolvingUsername] = useState(false);
   const hasResolvedUsername = useRef<string | null>(null);

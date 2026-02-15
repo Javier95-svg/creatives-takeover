@@ -55,16 +55,22 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
   const { user } = useAuth();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [messages, setMessages] = useState<Record<string, Message[]>>({});
+  const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   // Ref to track current messages for subscription callbacks
   const messagesRef = useRef<Record<string, Message[]>>({});
+  const conversationIdsRef = useRef<Set<string>>(new Set());
   
   // Keep ref in sync with state
   useEffect(() => {
     messagesRef.current = messages;
   }, [messages]);
+
+  useEffect(() => {
+    conversationIdsRef.current = new Set(conversations.map((conversation) => conversation.id));
+  }, [conversations]);
 
   // Get user ID by email using database function with fallback
   const getUserIdByEmail = useCallback(async (email: string): Promise<string | null> => {
@@ -131,52 +137,140 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
     }
   }, [user]);
 
-  // Load user's conversations
+  const loadUnreadCounts = useCallback(async (conversationIds?: string[]) => {
+    if (!user) return;
+
+    const ids = conversationIds ?? Array.from(conversationIdsRef.current);
+
+    if (ids.length === 0) {
+      setUnreadCounts({});
+      return;
+    }
+
+    try {
+      const { data, error } = await safe.select(async () =>
+        await supabase
+          .from('messages')
+          .select('conversation_id')
+          .in('conversation_id', ids)
+          .neq('sender_id', user.id)
+          .eq('is_read', false)
+      );
+
+      if (error) throw error;
+
+      const nextUnreadCounts: Record<string, number> = {};
+      ids.forEach((id) => {
+        nextUnreadCounts[id] = 0;
+      });
+
+      (data || []).forEach((row) => {
+        const conversationId = row.conversation_id;
+        nextUnreadCounts[conversationId] = (nextUnreadCounts[conversationId] || 0) + 1;
+      });
+
+      console.log('[UNREAD_SYNC] Reloaded unread counts:', nextUnreadCounts);
+      setUnreadCounts(nextUnreadCounts);
+    } catch (error) {
+      logError('Error loading unread counts', error);
+    }
+  }, [user]);
+
+  const loadConversationsFromServer = useCallback(async () => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await safe.select(async () =>
+        await supabase
+          .from('conversations')
+          .select('*')
+          .contains('participants', [user.id])
+          .order('last_message_at', { ascending: false, nullsFirst: false })
+      );
+
+      if (error) throw error;
+
+      const loadedConversations = (data || []) as Conversation[];
+      setConversations(loadedConversations);
+
+      const conversationIds = loadedConversations.map((conversation) => conversation.id);
+      await loadUnreadCounts(conversationIds);
+
+      console.log('[CONVERSATION_SYNC] Reloaded conversations from backend:', {
+        conversationCount: loadedConversations.length,
+        conversationIds
+      });
+    } catch (error) {
+      logError('Error loading conversations', error);
+      if (!suppressLoadErrors) {
+        toast.error('Failed to load conversations. Please refresh the page.');
+      }
+    }
+  }, [user, loadUnreadCounts, suppressLoadErrors]);
+
+  // Load user's conversations and keep them synced with backend as source of truth
   useEffect(() => {
     if (!user || !autoLoad) return;
 
-    const loadConversations = async () => {
-      try {
-        const { data, error } = await safe.select(async () =>
-          await supabase
-            .from('conversations')
-            .select('*')
-            .contains('participants', [user.id])
-            .order('last_message_at', { ascending: false, nullsFirst: false })
-        );
+    loadConversationsFromServer();
 
-        if (error) throw error;
-        setConversations(data || []);
-      } catch (error) {
-        logError('Error loading conversations', error);
-        if (!suppressLoadErrors) {
-          toast.error('Failed to load conversations. Please refresh the page.');
-        }
-      }
-    };
-
-    loadConversations();
-
-    // Subscribe to conversation changes
     const conversationSubscription = supabase
-      .channel('user-conversations')
-      .on('postgres_changes', 
-        { 
-          event: '*', 
-          schema: 'public', 
+      .channel(`user-conversations-${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
           table: 'conversations',
           filter: `participants.cs.{${user.id}}`
-        }, 
+        },
         () => {
-          loadConversations();
+          console.log('[CONVERSATION_SYNC] Realtime conversation change received, reloading from backend');
+          loadConversationsFromServer();
+        }
+      )
+      .subscribe();
+
+    const messageSyncSubscription = supabase
+      .channel(`user-messages-sync-${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'messages'
+        },
+        (payload) => {
+          const payloadConversationId = (payload.new as { conversation_id?: string } | null)?.conversation_id
+            ?? (payload.old as { conversation_id?: string } | null)?.conversation_id;
+
+          console.log('[UNREAD_SYNC] Realtime message event received:', {
+            eventType: payload.eventType,
+            conversationId: payloadConversationId
+          });
+
+          if (payloadConversationId && conversationIdsRef.current.has(payloadConversationId)) {
+            loadUnreadCounts([payloadConversationId]);
+          } else {
+            loadConversationsFromServer();
+          }
         }
       )
       .subscribe();
 
     return () => {
       supabase.removeChannel(conversationSubscription);
+      supabase.removeChannel(messageSyncSubscription);
     };
-  }, [user, autoLoad, suppressLoadErrors]);
+  }, [user, autoLoad, loadConversationsFromServer, loadUnreadCounts]);
+
+  useEffect(() => {
+    if (user) return;
+    setConversations([]);
+    setMessages({});
+    setUnreadCounts({});
+    setActiveConversationId(null);
+  }, [user]);
 
   // Load messages for active conversation
   useEffect(() => {
@@ -204,6 +298,10 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
           setMessages(prev => ({
             ...prev,
             [activeConversationId]: []
+          }));
+          setUnreadCounts(prev => ({
+            ...prev,
+            [activeConversationId]: 0
           }));
           return;
         }
@@ -235,6 +333,15 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
           setMessages(prev => ({
             ...prev,
             [activeConversationId]: messagesWithSenders
+          }));
+
+          const unreadForActiveConversation = messagesWithSenders.filter(
+            (message) => message.sender_id !== user?.id && !message.is_read
+          ).length;
+
+          setUnreadCounts(prev => ({
+            ...prev,
+            [activeConversationId]: unreadForActiveConversation
           }));
         }
       } catch (error: any) {
@@ -335,7 +442,16 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
                 msg.id === updatedMessage.id ? updatedMessage : msg
               )
             }));
+          } else if (payload.eventType === 'DELETE') {
+            setMessages(prev => ({
+              ...prev,
+              [activeConversationId]: (prev[activeConversationId] || []).filter(
+                (msg) => msg.id !== payload.old.id
+              )
+            }));
           }
+
+          loadUnreadCounts([activeConversationId]);
         }
       )
       .subscribe();
@@ -344,7 +460,7 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
       abortController.abort();
       supabase.removeChannel(messageSubscription);
     };
-  }, [activeConversationId]);
+  }, [activeConversationId, user?.id, loadUnreadCounts]);
 
   const startConversation = useCallback(async (participantId: string): Promise<string | null> => {
     if (!user || loading) {
@@ -555,18 +671,20 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
   const markAsRead = useCallback(async (conversationId: string) => {
     if (!user) return;
 
-    console.log('[MARK_READ] Marking conversation as read:', conversationId);
+    console.log('[MARK_READ] Marking conversation as read:', {
+      conversationId,
+      userId: user.id
+    });
 
     try {
-      // Update database and get count of updated messages
-      const { error, count } = await safe.update(async () => {
+      const { data, error } = await safe.update(async () => {
         const result = await supabase
           .from('messages')
           .update({ is_read: true })
           .eq('conversation_id', conversationId)
           .neq('sender_id', user.id)
           .eq('is_read', false)
-          .select('id', { count: 'exact', head: false });
+          .select('id');
         return result;
       });
 
@@ -575,7 +693,11 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
         throw error;
       }
 
-      console.log('[MARK_READ] Marked', count || 0, 'messages as read');
+      const updatedCount = data?.length || 0;
+      console.log('[MARK_READ] Backend write succeeded:', {
+        conversationId,
+        updatedCount
+      });
 
       // CRITICAL: Update local state immediately (don't wait for real-time subscription)
       // This ensures unread badges clear instantly
@@ -591,30 +713,27 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
         };
       });
 
+      setUnreadCounts(prev => ({
+        ...prev,
+        [conversationId]: 0
+      }));
+
+      // Force reload from source of truth to prevent stale badge reappearance.
+      await loadUnreadCounts([conversationId]);
     } catch (error) {
       console.error('[MARK_READ] Exception:', error);
       logError('Error marking messages as read', error);
     }
-  }, [user]);
+  }, [user, loadUnreadCounts]);
 
   const getUnreadCount = (conversationId: string): number => {
-    const conversationMessages = messages[conversationId] || [];
-    return conversationMessages.filter(msg => 
-      msg.sender_id !== user?.id && !msg.is_read
-    ).length;
+    return unreadCounts[conversationId] || 0;
   };
 
   // Get total unread messages count across all conversations
   const getTotalUnreadCount = useCallback((): number => {
-    if (!user) return 0;
-    return conversations.reduce((total, conversation) => {
-      const conversationMessages = messages[conversation.id] || [];
-      const unread = conversationMessages.filter(msg => 
-        msg.sender_id !== user.id && !msg.is_read
-      ).length;
-      return total + unread;
-    }, 0);
-  }, [conversations, messages, user]);
+    return conversations.reduce((total, conversation) => total + (unreadCounts[conversation.id] || 0), 0);
+  }, [conversations, unreadCounts]);
 
   // Get user ID by username
   const getUserIdByUsername = useCallback(async (username: string): Promise<string | null> => {
@@ -690,28 +809,68 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
         return false;
       }
 
-      console.log('[DELETE] Attempting to delete conversation:', conversationId);
+      console.log('[DELETE] Attempting conversation removal:', {
+        conversationId,
+        userId: user.id,
+        participants: conversation.participants
+      });
 
-      // Delete the conversation (messages cascade-delete automatically via FK constraint)
-      const { error } = await safe.delete(async () =>
+      // Try hard delete first and verify the backend actually deleted rows.
+      const { data: deletedRows, error: deleteError } = await safe.delete(async () =>
         await supabase
           .from('conversations')
           .delete()
           .eq('id', conversationId)
+          .select('id')
       );
 
-      if (error) {
-        console.error('[DELETE] Failed:', error);
-        logError('Error deleting conversation', error);
+      if (deleteError) {
+        console.error('[DELETE] Hard delete failed:', deleteError);
+        logError('Error deleting conversation', deleteError);
         toast.error('Failed to delete conversation');
         return false;
       }
 
-      console.log('[DELETE] Success! Conversation and all messages deleted');
+      const hardDeleteCount = deletedRows?.length || 0;
+      let removalMode: 'hard-delete' | 'participant-removal' = 'hard-delete';
+
+      if (hardDeleteCount === 0) {
+        // Fallback for environments where DELETE policy is unavailable:
+        // remove current user from participants so the thread stays hidden for this user across sessions/devices.
+        const updatedParticipants = conversation.participants.filter((participantId) => participantId !== user.id);
+
+        const { data: participantUpdateRows, error: participantUpdateError } = await safe.update(async () =>
+          await supabase
+            .from('conversations')
+            .update({ participants: updatedParticipants })
+            .eq('id', conversationId)
+            .select('id, participants')
+        );
+
+        if (participantUpdateError || !participantUpdateRows || participantUpdateRows.length === 0) {
+          console.error('[DELETE] Fallback participant removal failed:', participantUpdateError);
+          logError('Error removing participant from conversation during delete fallback', participantUpdateError);
+          toast.error('Failed to delete conversation');
+          return false;
+        }
+
+        removalMode = 'participant-removal';
+      }
+
+      console.log('[DELETE] Backend write succeeded:', {
+        conversationId,
+        hardDeleteCount,
+        removalMode
+      });
 
       // Remove from local state only after successful database deletion
       setConversations(prev => prev.filter(c => c.id !== conversationId));
       setMessages(prev => {
+        const updated = { ...prev };
+        delete updated[conversationId];
+        return updated;
+      });
+      setUnreadCounts(prev => {
         const updated = { ...prev };
         delete updated[conversationId];
         return updated;
@@ -722,6 +881,9 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
         setActiveConversationId(null);
       }
 
+      // Always re-sync from source of truth after deletion.
+      await loadConversationsFromServer();
+
       toast.success('Conversation deleted successfully');
       return true;
     } catch (error) {
@@ -730,7 +892,7 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
       toast.error('Failed to delete conversation');
       return false;
     }
-  }, [user, conversations, activeConversationId, setActiveConversationId]);
+  }, [user, conversations, activeConversationId, setActiveConversationId, loadConversationsFromServer]);
 
   return {
     conversations,
