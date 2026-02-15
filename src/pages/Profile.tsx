@@ -423,23 +423,14 @@ const Profile = () => {
                       <h1 className="text-2xl font-bold mb-1 truncate">
                         {profile.full_name || 'Anonymous User'}
                       </h1>
-                      <div className="flex items-center gap-2 mb-2 flex-wrap">
-                        {profile.founder_role && (
-                          <Badge variant="default" className="text-xs">
-                            {profile.founder_role === 'founder' ? 'Founder' :
-                             profile.founder_role === 'co-founder' ? 'Co-Founder' :
-                             profile.founder_role === 'cto' ? 'Chief Technology Officer (CTO)' :
-                             profile.founder_role === 'cmo' ? 'Chief Marketing Officer (CMO)' :
-                             profile.founder_role === 'investor' ? 'Investor' : profile.founder_role}
-                          </Badge>
-                        )}
-                        {profile.location && (
+                      {profile.location && (
+                        <div className="mb-2">
                           <span className="text-sm text-muted-foreground flex items-center gap-1">
                             <MapPin className="h-3 w-3" />
                             {profile.location}
                           </span>
-                        )}
-                      </div>
+                        </div>
+                      )}
                       {profile.positioning_line && (
                         <p className="text-sm text-muted-foreground italic mb-2">
                           "{profile.positioning_line}"
@@ -480,13 +471,12 @@ const Profile = () => {
                             )}
                           </div>
                         </div>
+                        {profile.startup_description && (
+                          <p className="text-sm text-muted-foreground mb-2">
+                            {profile.startup_description}
+                          </p>
+                        )}
                         <div className="flex flex-wrap gap-2 mb-2">
-                          {profile.startup_stage && (
-                            <Badge className="text-xs bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0">
-                              <Target className="h-3 w-3 mr-1" />
-                              {profile.startup_stage.charAt(0).toUpperCase() + profile.startup_stage.slice(1)}
-                            </Badge>
-                          )}
                           {profile.startup_industry?.map((industry, idx) => (
                             <Badge key={idx} variant="secondary" className="text-xs">
                               {industry}
