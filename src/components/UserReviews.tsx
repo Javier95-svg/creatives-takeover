@@ -43,7 +43,7 @@ const cycleSteps: CycleStep[] = [
     shortLabel: "Validation",
     title: "Stage 3: Validation",
     description:
-      "Run direct outreach and interviews, capture feedback, and measure waitlist conversion to confirm demand. If traction is weak, refine positioning and feature priorities with your ICP before moving on.",
+      "In this stage, founders actively reach out to potential customers and book one-on-one conversations to gather honest feedback on the concept. The goal is to confirm real demand by tracking signals like interview insights and how many people join the waitlist.\n\nThis step is crucial because it helps you avoid building something nobody wants. If validation is strong, you move forward to Step 4; if it’s weak, you iterate by asking your ideal customers what’s missing, what would make it valuable, or what alternatives they would choose instead.",
     icon: CheckCircle,
     color: "from-green-500/20 to-green-600/20"
   },
