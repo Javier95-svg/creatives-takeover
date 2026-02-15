@@ -202,7 +202,7 @@ const Messages = () => {
                   <span className="gradient-unified animate-flicker">Time to Chat</span>
                 </h1>
                 <p className="text-muted-foreground text-sm md:text-base lg:text-lg px-2">
-                  Meet, connect, and chat with fellow founders, entrepreneurs, and experienced mentors.
+                  Meet, connect, and chat with other founders, builders, and experienced mentors.
                 </p>
               </div>
               
