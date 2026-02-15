@@ -247,68 +247,95 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
 
     loadMessages();
 
-    // Subscribe to new messages in this conversation
+    // Subscribe to messages in this conversation (INSERT and UPDATE events)
     const messageSubscription = supabase
       .channel(`messages-${activeConversationId}`)
       .on('postgres_changes',
         {
-          event: 'INSERT',
+          event: '*', // Listen to all events: INSERT, UPDATE, DELETE
           schema: 'public',
           table: 'messages',
           filter: `conversation_id=eq.${activeConversationId}`
         },
         async (payload) => {
-          // Use ref to access current messages without causing re-renders
-          const existingMessages = messagesRef.current[activeConversationId] || [];
-          
-          // Check if message already exists (prevent duplicates)
-          if (existingMessages.some(m => m.id === payload.new.id)) {
-            return;
-          }
+          console.log('[REALTIME] Message event:', payload.eventType, payload);
 
-          // Get sender info from existing messages if available
-          let senderData = existingMessages.find(m => m.sender_id === payload.new.sender_id)?.sender;
+          if (payload.eventType === 'INSERT') {
+            // Handle new message insertion
+            const existingMessages = messagesRef.current[activeConversationId] || [];
 
-          // If sender not found, fetch it
-          if (!senderData) {
-            try {
-              const { data } = await supabase
-                .from('profiles')
-                .select('id, full_name, avatar_url')
-                .eq('id', payload.new.sender_id)
-                .single();
-              senderData = data || undefined;
-            } catch (error) {
-              logError('Error fetching sender profile', error);
+            // Check if message already exists (prevent duplicates)
+            if (existingMessages.some(m => m.id === payload.new.id)) {
+              return;
             }
-          }
 
-          const newMessage: Message = {
-            id: payload.new.id,
-            conversation_id: payload.new.conversation_id,
-            sender_id: payload.new.sender_id,
-            content: payload.new.content,
-            message_type: payload.new.message_type as 'text' | 'image' | 'file',
-            attachments: payload.new.attachments,
-            is_read: payload.new.is_read,
-            reply_to_id: payload.new.reply_to_id,
-            created_at: payload.new.created_at,
-            updated_at: payload.new.updated_at,
-            sender: senderData
-          };
+            // Get sender info from existing messages if available
+            let senderData = existingMessages.find(m => m.sender_id === payload.new.sender_id)?.sender;
 
-          // Use functional update to add message
-          setMessages(prev => {
-            const currentMessages = prev[activeConversationId] || [];
-            // Double-check for duplicates (race condition protection)
-            if (currentMessages.some(m => m.id === newMessage.id)) {
-              return prev;
+            // If sender not found, fetch it
+            if (!senderData) {
+              try {
+                const { data } = await supabase
+                  .from('profiles')
+                  .select('id, full_name, avatar_url')
+                  .eq('id', payload.new.sender_id)
+                  .single();
+                senderData = data || undefined;
+              } catch (error) {
+                logError('Error fetching sender profile', error);
+              }
             }
-            return {
-              ...prev,
-              [activeConversationId]: [...currentMessages, newMessage]
+
+            const newMessage: Message = {
+              id: payload.new.id,
+              conversation_id: payload.new.conversation_id,
+              sender_id: payload.new.sender_id,
+              content: payload.new.content,
+              message_type: payload.new.message_type as 'text' | 'image' | 'file',
+              attachments: payload.new.attachments,
+              is_read: payload.new.is_read,
+              reply_to_id: payload.new.reply_to_id,
+              created_at: payload.new.created_at,
+              updated_at: payload.new.updated_at,
+              sender: senderData
             };
-          });
+
+            // Use functional update to add message
+            setMessages(prev => {
+              const currentMessages = prev[activeConversationId] || [];
+              // Double-check for duplicates (race condition protection)
+              if (currentMessages.some(m => m.id === newMessage.id)) {
+                return prev;
+              }
+              return {
+                ...prev,
+                [activeConversationId]: [...currentMessages, newMessage]
+              };
+            });
+          } else if (payload.eventType === 'UPDATE') {
+            // Handle message updates (like is_read status changes)
+            const updatedMessage: Message = {
+              id: payload.new.id,
+              conversation_id: payload.new.conversation_id,
+              sender_id: payload.new.sender_id,
+              content: payload.new.content,
+              message_type: payload.new.message_type as 'text' | 'image' | 'file',
+              attachments: payload.new.attachments,
+              is_read: payload.new.is_read,
+              reply_to_id: payload.new.reply_to_id,
+              created_at: payload.new.created_at,
+              updated_at: payload.new.updated_at,
+              sender: messagesRef.current[activeConversationId]?.find(m => m.id === payload.new.id)?.sender
+            };
+
+            // Update the specific message in state
+            setMessages(prev => ({
+              ...prev,
+              [activeConversationId]: (prev[activeConversationId] || []).map(msg =>
+                msg.id === updatedMessage.id ? updatedMessage : msg
+              )
+            }));
+          }
         }
       )
       .subscribe();
@@ -528,18 +555,44 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
   const markAsRead = useCallback(async (conversationId: string) => {
     if (!user) return;
 
+    console.log('[MARK_READ] Marking conversation as read:', conversationId);
+
     try {
-      const { error } = await safe.update(async () =>
-        await supabase
+      // Update database and get count of updated messages
+      const { error, count } = await safe.update(async () => {
+        const result = await supabase
           .from('messages')
           .update({ is_read: true })
           .eq('conversation_id', conversationId)
           .neq('sender_id', user.id)
           .eq('is_read', false)
-      );
+          .select('id', { count: 'exact', head: false });
+        return result;
+      });
 
-      if (error) throw error;
+      if (error) {
+        console.error('[MARK_READ] Error:', error);
+        throw error;
+      }
+
+      console.log('[MARK_READ] Marked', count || 0, 'messages as read');
+
+      // CRITICAL: Update local state immediately (don't wait for real-time subscription)
+      // This ensures unread badges clear instantly
+      setMessages(prev => {
+        const conversationMessages = prev[conversationId] || [];
+        return {
+          ...prev,
+          [conversationId]: conversationMessages.map(msg =>
+            msg.sender_id !== user.id && !msg.is_read
+              ? { ...msg, is_read: true }
+              : msg
+          )
+        };
+      });
+
     } catch (error) {
+      console.error('[MARK_READ] Exception:', error);
       logError('Error marking messages as read', error);
     }
   }, [user]);
@@ -637,35 +690,26 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
         return false;
       }
 
-      // Delete all messages in the conversation first (due to foreign key constraints)
-      const { error: messagesError } = await safe.delete(async () =>
-        await supabase
-          .from('messages')
-          .delete()
-          .eq('conversation_id', conversationId)
-      );
+      console.log('[DELETE] Attempting to delete conversation:', conversationId);
 
-      if (messagesError) {
-        logError('Error deleting messages', messagesError);
-        toast.error('Failed to delete messages');
-        return false;
-      }
-
-      // Delete the conversation
-      const { error: conversationError } = await safe.delete(async () =>
+      // Delete the conversation (messages cascade-delete automatically via FK constraint)
+      const { error } = await safe.delete(async () =>
         await supabase
           .from('conversations')
           .delete()
           .eq('id', conversationId)
       );
 
-      if (conversationError) {
-        logError('Error deleting conversation', conversationError);
+      if (error) {
+        console.error('[DELETE] Failed:', error);
+        logError('Error deleting conversation', error);
         toast.error('Failed to delete conversation');
         return false;
       }
 
-      // Remove from local state
+      console.log('[DELETE] Success! Conversation and all messages deleted');
+
+      // Remove from local state only after successful database deletion
       setConversations(prev => prev.filter(c => c.id !== conversationId));
       setMessages(prev => {
         const updated = { ...prev };
@@ -681,6 +725,7 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
       toast.success('Conversation deleted successfully');
       return true;
     } catch (error) {
+      console.error('[DELETE] Exception:', error);
       logError('Error deleting conversation', error);
       toast.error('Failed to delete conversation');
       return false;
