@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
-import { LayoutDashboard, Calendar, MessageCircle, Linkedin, Instagram, Globe, Settings, MapPin, Briefcase, Rocket, Target, Users2, ExternalLink, FileText, Zap, TrendingUp } from "lucide-react";
+import { LayoutDashboard, Calendar, MessageCircle, Linkedin, Instagram, Globe, Settings, MapPin, Briefcase, Rocket, Target, Users2, ExternalLink, FileText, Zap, TrendingUp, Image, Video } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { SocialButtons } from "@/components/social/SocialButtons";
@@ -657,26 +657,35 @@ const Profile = () => {
               {/* Pinned Posts */}
               <PinnedPosts posts={pinnedPosts} isOwnProfile={isOwnProfile} />
 
-              {/* Founder Tabs */}
-              <Tabs defaultValue="journey" className="space-y-6">
+              {/* Profile Tabs */}
+              <Tabs defaultValue="posts" className="space-y-6">
                 <TabsList className="adaptive-tabs grid w-full grid-cols-3">
-                  <TabsTrigger value="journey" className="flex items-center gap-2">
-                    <TrendingUp className="h-4 w-4" />
-                    Journey
+                  <TabsTrigger value="posts" className="flex items-center gap-2">
+                    <Image className="h-4 w-4" />
+                    Posts
+                  </TabsTrigger>
+                  <TabsTrigger value="reels" className="flex items-center gap-2">
+                    <Video className="h-4 w-4" />
+                    Reels
                   </TabsTrigger>
                   <TabsTrigger value="startup" className="flex items-center gap-2">
                     <Rocket className="h-4 w-4" />
                     Startup
                   </TabsTrigger>
-                  <TabsTrigger value="proof" className="flex items-center gap-2">
-                    <Target className="h-4 w-4" />
-                    Proof
-                  </TabsTrigger>
                 </TabsList>
 
-                <TabsContent value="journey" className="space-y-6">
-                  {/* Milestones Timeline */}
-                  <MilestonesTimeline userId={profile.id} isOwnProfile={isOwnProfile} />
+                <TabsContent value="posts" className="space-y-4">
+                  <PicturesGallery userId={profile.id} isOwnProfile={isOwnProfile} />
+                </TabsContent>
+
+                <TabsContent value="reels" className="space-y-4">
+                  <Card className="p-6">
+                    <div className="text-center py-12 text-muted-foreground">
+                      <Video className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                      <h3 className="text-lg font-semibold mb-2">Reels Coming Soon</h3>
+                      <p>{isOwnProfile ? 'Share short videos about your startup journey' : 'No reels available yet'}</p>
+                    </div>
+                  </Card>
                 </TabsContent>
 
                 <TabsContent value="startup" className="space-y-4">
@@ -726,17 +735,6 @@ const Profile = () => {
                       </div>
                     )}
                   </Card>
-                </TabsContent>
-
-                <TabsContent value="proof" className="space-y-4">
-                  {statsLoading ? (
-                    <div className="animate-pulse space-y-4">
-                      <div className="h-32 bg-muted rounded-lg" />
-                      <div className="h-32 bg-muted rounded-lg" />
-                    </div>
-                  ) : (
-                    <ProfileStats stats={{...stats, joinDate: profile.created_at}} />
-                  )}
                 </TabsContent>
               </Tabs>
 
