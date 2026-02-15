@@ -1,11 +1,12 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Send, MessageCircle, Trash2, Menu } from "lucide-react";
+import { Send, MessageCircle, Trash2, Menu, Check, CheckCheck } from "lucide-react";
 import { useMessaging, Conversation } from "@/hooks/useMessaging";
 import { useAuth } from "@/contexts/AuthContext";
 import { formatDistanceToNow } from "date-fns";
@@ -14,6 +15,7 @@ import { useDeviceType, useIsMobile } from "@/hooks/use-device-type";
 import { useHapticFeedback } from "@/hooks/useHapticFeedback";
 import { logError } from "@/lib/logger";
 import { generateMentorSlug } from "@/utils/mentorSlug";
+import { TypingIndicator } from "./TypingIndicator";
 
 interface MessagingInterfaceProps {
   initialConversationId?: string;
@@ -46,7 +48,7 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
   
   const [newMessage, setNewMessage] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const scrollAreaRef = useRef<React.ElementRef<typeof ScrollArea>>(null);
   const hasSetInitialConversation = useRef(false);
   const previousInitialConversationId = useRef<string | undefined>(undefined);
@@ -55,6 +57,8 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
   const [conversationToDelete, setConversationToDelete] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [mobileSheetOpen, setMobileSheetOpen] = useState(false);
+  const [otherUserTyping, setOtherUserTyping] = useState(false);
+  const typingTimeoutRef = useRef<NodeJS.Timeout>();
   const { trigger: triggerHaptic } = useHapticFeedback();
 
   // Track message count to detect new messages
@@ -159,6 +163,41 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
     }
   }, [activeConversationId, markAsRead]);
 
+  // Auto-resize textarea as user types
+  useEffect(() => {
+    const textarea = inputRef.current;
+    if (textarea) {
+      textarea.style.height = '44px'; // Reset to minimum
+      const scrollHeight = textarea.scrollHeight;
+      textarea.style.height = Math.min(scrollHeight, 120) + 'px'; // Max 120px
+    }
+  }, [newMessage]);
+
+  // Listen for typing broadcasts
+  useEffect(() => {
+    if (!activeConversationId) return;
+
+    const channel = supabase.channel(`typing-${activeConversationId}`)
+      .on('broadcast', { event: 'typing' }, (payload: any) => {
+        if (payload.payload?.user_id !== user?.id) {
+          setOtherUserTyping(true);
+
+          if (typingTimeoutRef.current) {
+            clearTimeout(typingTimeoutRef.current);
+          }
+
+          typingTimeoutRef.current = setTimeout(() => {
+            setOtherUserTyping(false);
+          }, 3000);
+        }
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [activeConversationId, user?.id]);
+
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newMessage.trim() || !activeConversationId || sending) return;
@@ -179,6 +218,18 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
       }
     }, 0);
   };
+
+  // Broadcast typing events
+  const handleTyping = useCallback(() => {
+    if (!activeConversationId) return;
+
+    supabase.channel(`typing-${activeConversationId}`)
+      .send({
+        type: 'broadcast',
+        event: 'typing',
+        payload: { user_id: user?.id }
+      });
+  }, [activeConversationId, user?.id]);
 
   const getOtherParticipant = (conversation: Conversation): string | undefined => {
     if (!user) return undefined;
@@ -311,6 +362,109 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
     if (isMobile) {
       setMobileSheetOpen(false);
     }
+  };
+
+  // Group messages by sender and time (within 5 minutes)
+  const groupedMessages = activeMessages.reduce<typeof activeMessages[]>((groups, message, index) => {
+    const prevMessage = activeMessages[index - 1];
+    const shouldGroup =
+      prevMessage &&
+      prevMessage.sender_id === message.sender_id &&
+      new Date(message.created_at).getTime() - new Date(prevMessage.created_at).getTime() < 300000; // 5 minutes
+
+    if (shouldGroup && groups.length > 0) {
+      groups[groups.length - 1].push(message);
+    } else {
+      groups.push([message]);
+    }
+
+    return groups;
+  }, []);
+
+  // Message group component for rendering grouped messages
+  const MessageGroup = ({ messages }: { messages: typeof activeMessages }) => {
+    if (messages.length === 0) return null;
+
+    const firstMessage = messages[0];
+    const isOwnMessage = firstMessage.sender_id === user?.id;
+
+    return (
+      <div className={`flex gap-2 md:gap-3 animate-in slide-in-from-bottom-2 duration-300 ${
+        isOwnMessage ? 'justify-end' : 'justify-start'
+      }`}>
+        {!isOwnMessage && (
+          <Avatar className="h-7 w-7 md:h-8 md:w-8 flex-shrink-0 self-end">
+            <AvatarImage
+              src={
+                participantProfiles[firstMessage.sender_id]?.avatar_url ||
+                firstMessage.sender?.avatar_url ||
+                undefined
+              }
+            />
+            <AvatarFallback>
+              {(participantProfiles[firstMessage.sender_id]?.full_name || firstMessage.sender?.full_name || '?').charAt(0)}
+            </AvatarFallback>
+          </Avatar>
+        )}
+
+        <div className="flex flex-col gap-1 max-w-[75%] md:max-w-xs">
+          {messages.map((message, idx) => (
+            <div
+              key={message.id}
+              className={`relative px-3 py-2 ${
+                isOwnMessage
+                  ? 'bg-primary text-primary-foreground rounded-2xl rounded-br-sm'
+                  : 'bg-muted rounded-2xl rounded-bl-sm'
+              }`}
+            >
+              {/* Speech bubble tail only on last message in group */}
+              {idx === messages.length - 1 && (
+                isOwnMessage ? (
+                  <div
+                    className="absolute bottom-0 -right-2 w-4 h-4 bg-primary"
+                    style={{ clipPath: 'polygon(0 0, 100% 0, 100% 100%)' }}
+                  />
+                ) : (
+                  <div
+                    className="absolute bottom-0 -left-2 w-4 h-4 bg-muted"
+                    style={{ clipPath: 'polygon(0 0, 100% 100%, 0 100%)' }}
+                  />
+                )
+              )}
+
+              <p className="text-sm break-words">{message.content}</p>
+
+              {/* Timestamp and read receipt only on last message */}
+              {idx === messages.length - 1 && (
+                <div className="flex items-center gap-1 mt-1">
+                  <p className="text-xs opacity-70">
+                    {formatDistanceToNow(new Date(message.created_at))} ago
+                  </p>
+                  {isOwnMessage && (
+                    <span className="text-xs flex items-center">
+                      {message.is_read ? (
+                        <CheckCheck className="h-3 w-3 text-blue-500" />
+                      ) : (
+                        <Check className="h-3 w-3 opacity-70" />
+                      )}
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {isOwnMessage && (
+          <Avatar className="h-7 w-7 md:h-8 md:w-8 flex-shrink-0 self-end">
+            <AvatarImage src={currentUserMentorAvatar || user?.user_metadata?.avatar_url} />
+            <AvatarFallback>
+              {user?.user_metadata?.full_name?.charAt(0) || user?.email?.charAt(0) || '?'}
+            </AvatarFallback>
+          </Avatar>
+        )}
+      </div>
+    );
   };
 
   // Conversation list component (reusable for desktop and mobile)
@@ -454,51 +608,26 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
             {/* Messages */}
             <ScrollArea ref={scrollAreaRef} className="flex-1 p-3 md:p-4">
               <div className="space-y-3 md:space-y-4">
-                {activeMessages.map((message) => (
-                  <div
-                    key={message.id}
-                    className={`flex gap-2 md:gap-3 ${
-                      message.sender_id === user?.id ? 'justify-end' : 'justify-start'
-                    }`}
-                  >
-                    {message.sender_id !== user?.id && (
-                      <Avatar className="h-7 w-7 md:h-8 md:w-8 flex-shrink-0">
-                        <AvatarImage
-                          src={
-                            participantProfiles[message.sender_id]?.avatar_url ||
-                            message.sender?.avatar_url ||
-                            undefined
-                          }
-                        />
-                        <AvatarFallback>
-                          {(participantProfiles[message.sender_id]?.full_name || message.sender?.full_name || '?').charAt(0)}
-                        </AvatarFallback>
-                      </Avatar>
-                    )}
-                    
-                    <div
-                      className={`max-w-[75%] md:max-w-xs px-3 py-2 rounded-lg ${
-                        message.sender_id === user?.id
-                          ? 'bg-primary text-primary-foreground'
-                          : 'bg-muted'
-                      }`}
-                    >
-                      <p className="text-sm break-words">{message.content}</p>
-                      <p className="text-xs opacity-70 mt-1">
-                        {formatDistanceToNow(new Date(message.created_at))} ago
-                      </p>
-                    </div>
-
-                    {message.sender_id === user?.id && (
-                      <Avatar className="h-7 w-7 md:h-8 md:w-8 flex-shrink-0">
-                        <AvatarImage src={currentUserMentorAvatar || user.user_metadata?.avatar_url} />
-                        <AvatarFallback>
-                          {user.user_metadata?.full_name?.charAt(0) || user.email?.charAt(0) || '?'}
-                        </AvatarFallback>
-                      </Avatar>
-                    )}
-                  </div>
+                {groupedMessages.map((messageGroup, groupIndex) => (
+                  <MessageGroup
+                    key={messageGroup[0]?.id || groupIndex}
+                    messages={messageGroup}
+                  />
                 ))}
+                {otherUserTyping && (() => {
+                  const activeConversation = conversations.find(c => c.id === activeConversationId);
+                  if (!activeConversation) return null;
+
+                  const otherParticipantId = getOtherParticipant(activeConversation);
+                  const otherParticipant = otherParticipantId ? participantProfiles[otherParticipantId] : null;
+
+                  return (
+                    <TypingIndicator
+                      userAvatar={otherParticipant?.avatar_url}
+                      userName={otherParticipant?.full_name}
+                    />
+                  );
+                })()}
                 <div ref={messagesEndRef} />
               </div>
             </ScrollArea>
@@ -506,16 +635,26 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
             {/* Message Input - Sticky on mobile */}
             <form onSubmit={handleSendMessage} className={`p-3 md:p-4 border-t bg-card/50 ${isMobile ? 'sticky bottom-0' : ''}`}>
               <div className="flex gap-2">
-                <Input
+                <Textarea
                   ref={inputRef}
                   value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
+                  onChange={(e) => {
+                    setNewMessage(e.target.value);
+                    handleTyping();
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSendMessage(e as any);
+                    }
+                  }}
                   placeholder="Type a message..."
                   autoFocus={!isMobile}
-                  className="min-h-[44px] text-base md:text-sm"
+                  className="min-h-[44px] max-h-[120px] resize-none text-base md:text-sm"
+                  rows={1}
                 />
-                <Button 
-                  type="submit" 
+                <Button
+                  type="submit"
                   disabled={sending || !newMessage.trim()}
                   className="min-h-[44px] min-w-[44px] px-3 touch-manipulation"
                 >
