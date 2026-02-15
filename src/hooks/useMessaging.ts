@@ -659,7 +659,9 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
           .from('conversations')
           .insert({
             participants: [user.id, participantId],
-            is_group: false
+            is_group: false,
+            // Ensure newly created conversations sort to the top immediately.
+            last_message_at: new Date().toISOString()
           })
           .select()
           .single()
