@@ -50,6 +50,23 @@ type UseMessagingOptions = {
   suppressLoadErrors?: boolean;
 };
 
+const normalizeIdentity = (value: string): string =>
+  value
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]/g, '');
+
+const tokenizeIdentity = (value: string): string[] =>
+  value
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim()
+    .split(/\s+/)
+    .filter((token) => token.length >= 2);
+
 export const useMessaging = (options: UseMessagingOptions = {}) => {
   const { autoLoad = true, suppressLoadErrors = false } = options;
   const { user } = useAuth();
@@ -173,6 +190,109 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
       setUnreadCounts(nextUnreadCounts);
     } catch (error) {
       logError('Error loading unread counts', error);
+    }
+  }, [user]);
+
+  const resolveMentorUserId = useCallback(async (mentor: { name: string; user_id?: string | null }): Promise<string | null> => {
+    if (!user) {
+      logWarn('resolveMentorUserId: User not authenticated');
+      return null;
+    }
+
+    if (mentor.user_id && mentor.user_id.trim() !== '') {
+      return mentor.user_id;
+    }
+
+    const mentorName = mentor.name?.trim();
+    if (!mentorName) {
+      logWarn('resolveMentorUserId: Missing mentor name');
+      return null;
+    }
+
+    const mentorTokens = tokenizeIdentity(mentorName);
+    if (mentorTokens.length === 0) {
+      logWarn('resolveMentorUserId: Could not tokenize mentor name', { mentorName });
+      return null;
+    }
+
+    const firstToken = mentorTokens[0];
+    const lastToken = mentorTokens[mentorTokens.length - 1];
+    const searchTokens = Array.from(new Set([firstToken, lastToken].filter(Boolean)));
+    const mentorNameNormalized = normalizeIdentity(mentorName);
+
+    try {
+      const orClauses = searchTokens.flatMap((token) => [
+        `full_name.ilike.%${token}%`,
+        `username.ilike.%${token}%`
+      ]);
+
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, full_name, username')
+        .or(orClauses.join(','))
+        .limit(50);
+
+      if (error) {
+        logError('resolveMentorUserId: Error querying profiles', error, {
+          mentorName,
+          searchTokens
+        });
+        return null;
+      }
+
+      if (!data || data.length === 0) {
+        logWarn('resolveMentorUserId: No profile candidates found', { mentorName, searchTokens });
+        return null;
+      }
+
+      const ranked = data
+        .map((profile) => {
+          const profileFullNameNormalized = normalizeIdentity(profile.full_name || '');
+          const profileUsernameNormalized = normalizeIdentity(profile.username || '');
+          const combinedNormalized = `${profileFullNameNormalized} ${profileUsernameNormalized}`;
+
+          const exactNameMatch = profileFullNameNormalized === mentorNameNormalized;
+          const exactUsernameMatch = profileUsernameNormalized === mentorNameNormalized;
+          const hasAllTokens = mentorTokens.every((token) => combinedNormalized.includes(token));
+          const hasFirstLast = combinedNormalized.includes(firstToken) && combinedNormalized.includes(lastToken);
+
+          let score = 0;
+          if (exactNameMatch) score += 120;
+          if (exactUsernameMatch) score += 110;
+          if (hasAllTokens) score += 70;
+          if (hasFirstLast) score += 45;
+          score += mentorTokens.reduce((acc, token) => acc + (combinedNormalized.includes(token) ? 5 : 0), 0);
+
+          return {
+            profileId: profile.id,
+            score
+          };
+        })
+        .filter((candidate) => candidate.score > 0)
+        .sort((a, b) => b.score - a.score);
+
+      if (ranked.length === 0) {
+        logWarn('resolveMentorUserId: No ranked matches found', { mentorName, searchTokens });
+        return null;
+      }
+
+      if (ranked.length > 1 && ranked[0].score - ranked[1].score < 25) {
+        logWarn('resolveMentorUserId: Ambiguous mentor match; refusing auto-link', {
+          mentorName,
+          topScores: ranked.slice(0, 3).map((candidate) => candidate.score)
+        });
+        return null;
+      }
+
+      logInfo('resolveMentorUserId: Resolved mentor user ID via profile matching', {
+        mentorName,
+        resolvedUserId: ranked[0].profileId,
+        score: ranked[0].score
+      });
+      return ranked[0].profileId;
+    } catch (error) {
+      logError('resolveMentorUserId: Exception occurred', error, { mentorName, searchTokens });
+      return null;
     }
   }, [user]);
 
@@ -908,6 +1028,7 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
     getTotalUnreadCount,
     deleteConversation,
     getUserIdByEmail,
+    resolveMentorUserId,
     getUserIdByUsername,
     getUsernameByUserId
   };

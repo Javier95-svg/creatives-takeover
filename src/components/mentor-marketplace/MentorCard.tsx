@@ -7,7 +7,7 @@ import { Star, CheckCircle2, MessageCircle, Calendar, Heart, Linkedin } from "lu
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { getCountryFlag } from "@/utils/countryFlags";
-import { useMessaging, SAMUEL_STARKMAN_EMAIL, SAMUEL_STARKMAN_USER_ID, NIC_M_RAYCE_EMAIL, KAROLINA_ZURAWSKA_EMAIL } from "@/hooks/useMessaging";
+import { useMessaging } from "@/hooks/useMessaging";
 import { useCreditActions } from "@/hooks/useCreditActions";
 import { toast } from "sonner";
 import { generateMentorSlug } from "@/utils/mentorSlug";
@@ -24,7 +24,7 @@ interface MentorCardProps {
 export const MentorCard = ({ mentor, className, priority = false }: MentorCardProps) => {
   const navigate = useNavigate();
   const { isAuthenticated, user } = useAuth();
-  const { startConversation, getUserIdByEmail } = useMessaging({ autoLoad: false });
+  const { startConversation, resolveMentorUserId } = useMessaging({ autoLoad: false });
   const { deductCredits, ensureCredits } = useCreditActions();
   const currencySymbol = getCurrencySymbol(mentor.currency);
   const hourlyRate = ((mentor as any).hourly_rate_per_hour || 0) / 100;
@@ -193,36 +193,10 @@ export const MentorCard = ({ mentor, className, priority = false }: MentorCardPr
       navigate('/auth');
       return;
     }
-
-    // Universal messaging: use mentor's user_id if available
-    let mentorUserId: string | null = null;
-
-    if (mentor.user_id) {
-      // Mentor has a linked user account - use it directly
-      mentorUserId = mentor.user_id;
-    } else {
-      // Fallback: Try to find user by email for known mentors (backward compatibility)
-      const mentorNameLower = mentor.name.toLowerCase();
-
-      // Check if this is Samuel Starkman's profile
-      const isSamuelStarkman = (mentorNameLower.includes('samuel') && mentorNameLower.includes('starkman')) ||
-        mentorNameLower.includes('samuel starkman');
-
-      // Check if this is Nic M Rayce's profile
-      const isNicMRayce = (mentorNameLower.includes('nic') && mentorNameLower.includes('rayce')) ||
-        mentorNameLower.includes('nic m rayce');
-
-      // Check if this is Karolina Żurawska's profile
-      const isKarolinaZurawska = mentorNameLower.includes('karolina') && mentorNameLower.includes('urawska');
-
-      if (isSamuelStarkman) {
-        mentorUserId = SAMUEL_STARKMAN_USER_ID;
-      } else if (isNicMRayce) {
-        mentorUserId = await getUserIdByEmail(NIC_M_RAYCE_EMAIL);
-      } else if (isKarolinaZurawska) {
-        mentorUserId = await getUserIdByEmail(KAROLINA_ZURAWSKA_EMAIL);
-      }
-    }
+    const mentorUserId = await resolveMentorUserId({
+      name: mentor.name,
+      user_id: mentor.user_id || null
+    });
 
     if (!mentorUserId) {
       toast.error('This mentor does not have messaging enabled. Please contact them through their other channels.');
