@@ -29,6 +29,21 @@ interface EditProfileModalProps {
     linkedin_url: string | null;
     instagram_url: string | null;
     role: string | null;
+
+    // Founder fields
+    founder_role: string | null;
+    location: string | null;
+    positioning_line: string | null;
+
+    // Startup fields
+    startup_name: string | null;
+    startup_tagline: string | null;
+    startup_stage: string | null;
+    startup_industry: string[] | null;
+    startup_description: string | null;
+    current_focus: string | null;
+    looking_for: string[] | null;
+    startup_links: any | null;
   };
   onSuccess: () => void;
 }
@@ -46,6 +61,26 @@ export const EditProfileModal = ({ open, onClose, profile, onSuccess }: EditProf
     linkedin_url: profile.linkedin_url || "",
     instagram_url: profile.instagram_url || "",
     role: profile.role || "",
+
+    // Founder fields
+    founder_role: profile.founder_role || "",
+    location: profile.location || "",
+    positioning_line: profile.positioning_line || "",
+
+    // Startup fields
+    startup_name: profile.startup_name || "",
+    startup_tagline: profile.startup_tagline || "",
+    startup_stage: profile.startup_stage || "",
+    startup_industry: profile.startup_industry || [],
+    startup_description: profile.startup_description || "",
+    current_focus: profile.current_focus || "",
+    looking_for: profile.looking_for || [],
+
+    // Startup links
+    pitch_deck_url: profile.startup_links?.pitchDeck || "",
+    waitlist_url: profile.startup_links?.waitlist || "",
+    demo_url: profile.startup_links?.demo || "",
+    github_url: profile.startup_links?.github || "",
   });
   const [avatarFile, setAvatarFile] = useState<string | null>(null);
   const [showCropModal, setShowCropModal] = useState(false);
@@ -139,6 +174,28 @@ export const EditProfileModal = ({ open, onClose, profile, onSuccess }: EditProf
         linkedin_url: formData.linkedin_url,
         instagram_url: formData.instagram_url,
         role: formData.role || null,
+
+        // Founder fields
+        founder_role: formData.founder_role || null,
+        location: formData.location || null,
+        positioning_line: formData.positioning_line || null,
+
+        // Startup fields
+        startup_name: formData.startup_name || null,
+        startup_tagline: formData.startup_tagline || null,
+        startup_stage: formData.startup_stage || null,
+        startup_industry: formData.startup_industry.length > 0 ? formData.startup_industry : null,
+        startup_description: formData.startup_description || null,
+        current_focus: formData.current_focus || null,
+        looking_for: formData.looking_for.length > 0 ? formData.looking_for : null,
+
+        // Startup links as JSONB
+        startup_links: {
+          pitchDeck: formData.pitch_deck_url || undefined,
+          waitlist: formData.waitlist_url || undefined,
+          demo: formData.demo_url || undefined,
+          github: formData.github_url || undefined,
+        },
       };
 
       const { error } = await supabase
@@ -330,18 +387,182 @@ export const EditProfileModal = ({ open, onClose, profile, onSuccess }: EditProf
               </div>
             </div>
 
-            {/* Social Links */}
-            <div className="space-y-4">
-              <h4 className="font-medium">Social Links</h4>
-              <div className="grid grid-cols-1 gap-4">
+            {/* Founder Information */}
+            <div className="space-y-4 border-t pt-4">
+              <h4 className="font-medium">Founder Details</h4>
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="website_url">Project URL</Label>
+                  <Label htmlFor="founder_role">Founder Role</Label>
+                  <Select
+                    value={formData.founder_role}
+                    onValueChange={(value) => setFormData({ ...formData, founder_role: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select role" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="founder">Founder</SelectItem>
+                      <SelectItem value="co-founder">Co-Founder</SelectItem>
+                      <SelectItem value="solo-founder">Solo Founder</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label htmlFor="location">Location</Label>
+                  <Input
+                    id="location"
+                    value={formData.location}
+                    onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                    placeholder="e.g., San Francisco, CA"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="positioning_line">One-Line Positioning</Label>
+                <Input
+                  id="positioning_line"
+                  value={formData.positioning_line}
+                  onChange={(e) => setFormData({ ...formData, positioning_line: e.target.value })}
+                  placeholder="e.g., Building AI tools for creators"
+                  maxLength={100}
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  A brief tagline about what you're building
+                </p>
+              </div>
+            </div>
+
+            {/* Startup Information */}
+            <div className="space-y-4 border-t pt-4">
+              <h4 className="font-medium">Startup Information</h4>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="startup_name">Startup Name</Label>
+                  <Input
+                    id="startup_name"
+                    value={formData.startup_name}
+                    onChange={(e) => setFormData({ ...formData, startup_name: e.target.value })}
+                    placeholder="Your startup name"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="startup_stage">Startup Stage</Label>
+                  <Select
+                    value={formData.startup_stage}
+                    onValueChange={(value) => setFormData({ ...formData, startup_stage: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select stage" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="idea">Idea</SelectItem>
+                      <SelectItem value="prototype">Prototype</SelectItem>
+                      <SelectItem value="mvp">MVP</SelectItem>
+                      <SelectItem value="launch">Launch</SelectItem>
+                      <SelectItem value="growth">Growth</SelectItem>
+                      <SelectItem value="scale">Scale</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="startup_tagline">Tagline</Label>
+                <Input
+                  id="startup_tagline"
+                  value={formData.startup_tagline}
+                  onChange={(e) => setFormData({ ...formData, startup_tagline: e.target.value })}
+                  placeholder="One sentence about your startup"
+                  maxLength={120}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="startup_description">Description</Label>
+                <Textarea
+                  id="startup_description"
+                  value={formData.startup_description}
+                  onChange={(e) => setFormData({ ...formData, startup_description: e.target.value })}
+                  placeholder="Describe your startup, the problem you're solving, and your solution..."
+                  rows={4}
+                  maxLength={1000}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="current_focus">Current Focus</Label>
+                <Input
+                  id="current_focus"
+                  value={formData.current_focus}
+                  onChange={(e) => setFormData({ ...formData, current_focus: e.target.value })}
+                  placeholder="What are you working on this week?"
+                  maxLength={150}
+                />
+              </div>
+            </div>
+
+            {/* Startup Links */}
+            <div className="space-y-4 border-t pt-4">
+              <h4 className="font-medium">Startup Resources</h4>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="pitch_deck_url">Pitch Deck URL</Label>
+                  <Input
+                    id="pitch_deck_url"
+                    type="url"
+                    value={formData.pitch_deck_url}
+                    onChange={(e) => setFormData({ ...formData, pitch_deck_url: e.target.value })}
+                    placeholder="https://..."
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="waitlist_url">Waitlist URL</Label>
+                  <Input
+                    id="waitlist_url"
+                    type="url"
+                    value={formData.waitlist_url}
+                    onChange={(e) => setFormData({ ...formData, waitlist_url: e.target.value })}
+                    placeholder="https://..."
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="demo_url">Demo URL</Label>
+                  <Input
+                    id="demo_url"
+                    type="url"
+                    value={formData.demo_url}
+                    onChange={(e) => setFormData({ ...formData, demo_url: e.target.value })}
+                    placeholder="https://..."
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="github_url">GitHub URL</Label>
+                  <Input
+                    id="github_url"
+                    type="url"
+                    value={formData.github_url}
+                    onChange={(e) => setFormData({ ...formData, github_url: e.target.value })}
+                    placeholder="https://github.com/..."
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Social Links */}
+            <div className="space-y-4 border-t pt-4">
+              <h4 className="font-medium">Social Links</h4>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="website_url">Personal Website</Label>
                   <Input
                     id="website_url"
                     type="url"
                     value={formData.website_url}
                     onChange={(e) => setFormData({ ...formData, website_url: e.target.value })}
-                    placeholder="https://yourstartup.com"
+                    placeholder="https://..."
                   />
                 </div>
                 <div>
@@ -351,7 +572,7 @@ export const EditProfileModal = ({ open, onClose, profile, onSuccess }: EditProf
                     type="url"
                     value={formData.twitter_url}
                     onChange={(e) => setFormData({ ...formData, twitter_url: e.target.value })}
-                    placeholder="https://twitter.com/username"
+                    placeholder="https://twitter.com/..."
                   />
                 </div>
                 <div>
@@ -361,7 +582,7 @@ export const EditProfileModal = ({ open, onClose, profile, onSuccess }: EditProf
                     type="url"
                     value={formData.linkedin_url}
                     onChange={(e) => setFormData({ ...formData, linkedin_url: e.target.value })}
-                    placeholder="https://linkedin.com/in/username"
+                    placeholder="https://linkedin.com/in/..."
                   />
                 </div>
                 <div>
@@ -371,7 +592,7 @@ export const EditProfileModal = ({ open, onClose, profile, onSuccess }: EditProf
                     type="url"
                     value={formData.instagram_url}
                     onChange={(e) => setFormData({ ...formData, instagram_url: e.target.value })}
-                    placeholder="https://instagram.com/username"
+                    placeholder="https://instagram.com/..."
                   />
                 </div>
               </div>
