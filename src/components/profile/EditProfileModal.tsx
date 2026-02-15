@@ -393,7 +393,7 @@ export const EditProfileModal = ({ open, onClose, profile, onSuccess }: EditProf
               <h4 className="font-medium">Startup Links</h4>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="pitch_deck_url">Pitch Deck URL</Label>
+                  <Label htmlFor="pitch_deck_url">Pitch Deck</Label>
                   <Input
                     id="pitch_deck_url"
                     type="url"
@@ -403,7 +403,7 @@ export const EditProfileModal = ({ open, onClose, profile, onSuccess }: EditProf
                   />
                 </div>
                 <div>
-                  <Label htmlFor="waitlist_url">Waitlist URL</Label>
+                  <Label htmlFor="waitlist_url">Waitlist</Label>
                   <Input
                     id="waitlist_url"
                     type="url"
@@ -413,7 +413,7 @@ export const EditProfileModal = ({ open, onClose, profile, onSuccess }: EditProf
                   />
                 </div>
                 <div>
-                  <Label htmlFor="demo_url">Demo URL</Label>
+                  <Label htmlFor="demo_url">Website</Label>
                   <Input
                     id="demo_url"
                     type="url"

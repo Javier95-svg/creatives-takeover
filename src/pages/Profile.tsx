@@ -693,7 +693,7 @@ const Profile = () => {
                         </div>
                         {profile.startup_links && (
                           <div>
-                            <h4 className="text-sm font-semibold mb-2">Resources</h4>
+                            <h4 className="text-sm font-semibold mb-2">Links</h4>
                             <div className="flex flex-wrap gap-2">
                               {profile.startup_links.pitchDeck && (
                                 <Button variant="outline" size="sm" asChild>
@@ -707,15 +707,23 @@ const Profile = () => {
                                 <Button variant="outline" size="sm" asChild>
                                   <a href={profile.startup_links.waitlist} target="_blank" rel="noopener noreferrer">
                                     <Users2 className="h-4 w-4 mr-2" />
-                                    Join Waitlist
+                                    Waitlist
                                   </a>
                                 </Button>
                               )}
                               {profile.startup_links.demo && (
                                 <Button variant="outline" size="sm" asChild>
                                   <a href={profile.startup_links.demo} target="_blank" rel="noopener noreferrer">
-                                    <Rocket className="h-4 w-4 mr-2" />
-                                    View Demo
+                                    <Globe className="h-4 w-4 mr-2" />
+                                    Website
+                                  </a>
+                                </Button>
+                              )}
+                              {profile.startup_links.loom && (
+                                <Button variant="outline" size="sm" asChild>
+                                  <a href={profile.startup_links.loom} target="_blank" rel="noopener noreferrer">
+                                    <Video className="h-4 w-4 mr-2" />
+                                    Loom Presentation
                                   </a>
                                 </Button>
                               )}
