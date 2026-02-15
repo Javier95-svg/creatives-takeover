@@ -407,7 +407,7 @@ const Profile = () => {
                       <div className="flex items-center gap-2 mb-2 flex-wrap">
                         {profile.founder_role && (
                           <Badge variant="default" className="text-xs">
-                            {profile.founder_role === 'solo-founder' ? 'Solo Founder' :
+                            {profile.founder_role === 'founder' ? 'Founder' :
                              profile.founder_role === 'co-founder' ? 'Co-Founder' :
                              profile.founder_role === 'cto' ? 'Chief Technology Officer (CTO)' :
                              profile.founder_role === 'cmo' ? 'Chief Marketing Officer (CMO)' :

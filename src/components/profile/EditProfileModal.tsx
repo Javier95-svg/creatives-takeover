@@ -401,7 +401,7 @@ export const EditProfileModal = ({ open, onClose, profile, onSuccess }: EditProf
                       <SelectValue placeholder="Select role" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="solo-founder">Solo Founder</SelectItem>
+                      <SelectItem value="founder">Founder</SelectItem>
                       <SelectItem value="co-founder">Co-Founder</SelectItem>
                       <SelectItem value="cto">Chief Technology Officer (CTO)</SelectItem>
                       <SelectItem value="cmo">Chief Marketing Officer (CMO)</SelectItem>
