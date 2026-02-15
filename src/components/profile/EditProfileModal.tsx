@@ -28,6 +28,7 @@ interface EditProfileModalProps {
     twitter_url: string | null;
     linkedin_url: string | null;
     instagram_url: string | null;
+    github_url: string | null;
     role: string | null;
 
     // Founder fields
@@ -60,6 +61,7 @@ export const EditProfileModal = ({ open, onClose, profile, onSuccess }: EditProf
     twitter_url: profile.twitter_url || "",
     linkedin_url: profile.linkedin_url || "",
     instagram_url: profile.instagram_url || "",
+    github_url: profile.github_url || "",
     role: profile.role || "",
 
     // Founder fields
@@ -80,7 +82,7 @@ export const EditProfileModal = ({ open, onClose, profile, onSuccess }: EditProf
     pitch_deck_url: profile.startup_links?.pitchDeck || "",
     waitlist_url: profile.startup_links?.waitlist || "",
     demo_url: profile.startup_links?.demo || "",
-    github_url: profile.startup_links?.github || "",
+    loom_url: profile.startup_links?.loom || "",
   });
   const [avatarFile, setAvatarFile] = useState<string | null>(null);
   const [showCropModal, setShowCropModal] = useState(false);
@@ -173,6 +175,7 @@ export const EditProfileModal = ({ open, onClose, profile, onSuccess }: EditProf
         twitter_url: formData.twitter_url,
         linkedin_url: formData.linkedin_url,
         instagram_url: formData.instagram_url,
+        github_url: formData.github_url,
         role: formData.role || null,
 
         // Founder fields
@@ -194,7 +197,7 @@ export const EditProfileModal = ({ open, onClose, profile, onSuccess }: EditProf
           pitchDeck: formData.pitch_deck_url || undefined,
           waitlist: formData.waitlist_url || undefined,
           demo: formData.demo_url || undefined,
-          github: formData.github_url || undefined,
+          loom: formData.loom_url || undefined,
         },
       };
 
@@ -387,7 +390,7 @@ export const EditProfileModal = ({ open, onClose, profile, onSuccess }: EditProf
 
             {/* Startup Links */}
             <div className="space-y-4 border-t pt-4">
-              <h4 className="font-medium">Startup Resources</h4>
+              <h4 className="font-medium">Startup Links</h4>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="pitch_deck_url">Pitch Deck URL</Label>
@@ -420,13 +423,13 @@ export const EditProfileModal = ({ open, onClose, profile, onSuccess }: EditProf
                   />
                 </div>
                 <div>
-                  <Label htmlFor="github_url">GitHub URL</Label>
+                  <Label htmlFor="loom_url">Loom Presentation</Label>
                   <Input
-                    id="github_url"
+                    id="loom_url"
                     type="url"
-                    value={formData.github_url}
-                    onChange={(e) => setFormData({ ...formData, github_url: e.target.value })}
-                    placeholder="https://github.com/..."
+                    value={formData.loom_url}
+                    onChange={(e) => setFormData({ ...formData, loom_url: e.target.value })}
+                    placeholder="https://loom.com/..."
                   />
                 </div>
               </div>
@@ -437,13 +440,13 @@ export const EditProfileModal = ({ open, onClose, profile, onSuccess }: EditProf
               <h4 className="font-medium">Social Links</h4>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="website_url">Personal Website</Label>
+                  <Label htmlFor="github_url">GitHub URL</Label>
                   <Input
-                    id="website_url"
+                    id="github_url"
                     type="url"
-                    value={formData.website_url}
-                    onChange={(e) => setFormData({ ...formData, website_url: e.target.value })}
-                    placeholder="https://..."
+                    value={formData.github_url}
+                    onChange={(e) => setFormData({ ...formData, github_url: e.target.value })}
+                    placeholder="https://github.com/..."
                   />
                 </div>
                 <div>
