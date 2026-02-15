@@ -287,11 +287,7 @@ const UserReviews = () => {
                 {/* Center active indicator with icon */}
                 <div className={`absolute inset-[33%] rounded-full border-2 border-primary/20 bg-gradient-to-br ${activeStep.color} backdrop-blur-sm flex items-center justify-center text-center px-6 transition-all duration-700 shadow-[0_0_30px_rgba(99,102,241,0.3),inset_0_2px_15px_rgba(255,255,255,0.1)] hover:scale-105`} style={{ transform: 'translateZ(20px)' }}>
                   <div className="animate-in fade-in zoom-in duration-500" key={activeStepIndex}>
-                    <div className="relative">
-                      <ActiveIcon className="w-8 h-8 sm:w-10 sm:h-10 mx-auto mb-2 text-primary drop-shadow-[0_0_8px_currentColor] animate-pulse" style={{ animationDuration: '3s' }} />
-                      {/* Particle effect */}
-                      <div className="absolute inset-0 rounded-full bg-primary/20 blur-xl animate-ping" style={{ animationDuration: '3s' }} />
-                    </div>
+                    <ActiveIcon className="w-8 h-8 sm:w-10 sm:h-10 mx-auto mb-2 text-primary drop-shadow-[0_0_8px_currentColor] animate-pulse" style={{ animationDuration: '3s' }} />
                     <p className="text-xs tracking-[0.22em] uppercase text-muted-foreground mb-1">Active Stage</p>
                     <p className="font-space-grotesk text-lg sm:text-xl font-semibold bg-gradient-to-r from-primary via-primary/80 to-primary bg-clip-text">{activeStep.shortLabel}</p>
                   </div>
