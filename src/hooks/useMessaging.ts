@@ -706,21 +706,72 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
   }, [user, loading, conversations, setActiveConversationId]);
 
   const sendMessage = useCallback(async (conversationId: string, content: string, replyToId?: string) => {
-    if (!user || !content.trim()) {
+    const trimmedContent = content.trim();
+
+    if (!user || !trimmedContent) {
       logWarn('sendMessage: Invalid parameters', {
         hasUser: !!user,
-        hasContent: !!content.trim()
+        hasContent: !!trimmedContent
       });
       return;
     }
 
     // Use separate sending state so the input stays enabled
     setSending(true);
+    const optimisticId = `temp-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+    const optimisticTimestamp = new Date().toISOString();
+    const existingSender = (messagesRef.current[conversationId] || []).find(
+      (message) => message.sender_id === user.id
+    )?.sender;
+    const optimisticSender = existingSender || {
+      id: user.id,
+      full_name: user.user_metadata?.full_name || undefined,
+      avatar_url: user.user_metadata?.avatar_url || undefined
+    };
+
+    const optimisticMessage: Message = {
+      id: optimisticId,
+      conversation_id: conversationId,
+      sender_id: user.id,
+      content: trimmedContent,
+      message_type: 'text',
+      attachments: null,
+      is_read: false,
+      reply_to_id: replyToId,
+      created_at: optimisticTimestamp,
+      updated_at: optimisticTimestamp,
+      sender: optimisticSender
+    };
+
+    // Show message immediately in UI before waiting for network/realtime events.
+    setMessages(prev => {
+      const currentMessages = prev[conversationId] || [];
+      return {
+        ...prev,
+        [conversationId]: [...currentMessages, optimisticMessage]
+      };
+    });
+
+    // Keep active conversation order fresh immediately.
+    setConversations(prev => {
+      const index = prev.findIndex(conversation => conversation.id === conversationId);
+      if (index === -1) return prev;
+
+      const updatedConversation = {
+        ...prev[index],
+        last_message_at: optimisticTimestamp,
+        updated_at: optimisticTimestamp
+      };
+
+      const remaining = prev.filter((_, currentIndex) => currentIndex !== index);
+      return [updatedConversation, ...remaining];
+    });
+
     try {
       logInfo('sendMessage: Sending message', {
         conversationId,
         senderId: user.id,
-        contentLength: content.trim().length,
+        contentLength: trimmedContent.length,
         replyToId
       });
 
@@ -730,7 +781,7 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
           .insert({
             conversation_id: conversationId,
             sender_id: user.id,
-            content: content.trim(),
+            content: trimmedContent,
             message_type: 'text',
             reply_to_id: replyToId
           })
@@ -758,6 +809,38 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
         conversationId
       });
 
+      const persistedMessage: Message = {
+        id: data.id,
+        conversation_id: data.conversation_id,
+        sender_id: data.sender_id,
+        content: data.content,
+        message_type: data.message_type as 'text' | 'image' | 'file',
+        attachments: data.attachments,
+        is_read: data.is_read,
+        reply_to_id: data.reply_to_id,
+        created_at: data.created_at,
+        updated_at: data.updated_at,
+        sender: optimisticSender
+      };
+
+      // Replace optimistic message with persisted row and prevent duplicates if realtime already inserted it.
+      setMessages(prev => {
+        const currentMessages = prev[conversationId] || [];
+        const withoutOptimistic = currentMessages.filter((message) => message.id !== optimisticId);
+
+        if (withoutOptimistic.some((message) => message.id === persistedMessage.id)) {
+          return {
+            ...prev,
+            [conversationId]: withoutOptimistic
+          };
+        }
+
+        return {
+          ...prev,
+          [conversationId]: [...withoutOptimistic, persistedMessage]
+        };
+      });
+
       // Update conversation's last message timestamp
       const { error: updateError } = await safe.update(async () =>
         await supabase
@@ -765,6 +848,21 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
           .update({ last_message_at: new Date().toISOString() })
           .eq('id', conversationId)
       );
+
+      // Keep local ordering/timestamp in sync regardless of realtime latency.
+      setConversations(prev => {
+        const index = prev.findIndex(conversation => conversation.id === conversationId);
+        if (index === -1) return prev;
+
+        const updatedConversation = {
+          ...prev[index],
+          last_message_at: data.created_at || optimisticTimestamp,
+          updated_at: data.updated_at || optimisticTimestamp
+        };
+
+        const remaining = prev.filter((_, currentIndex) => currentIndex !== index);
+        return [updatedConversation, ...remaining];
+      });
 
       if (updateError) {
         logWarn('sendMessage: Failed to update conversation timestamp', {
@@ -776,6 +874,14 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
 
       return data;
     } catch (error) {
+      // Remove optimistic message if backend write failed.
+      setMessages(prev => ({
+        ...prev,
+        [conversationId]: (prev[conversationId] || []).filter(
+          (message) => message.id !== optimisticId
+        )
+      }));
+
       const appError = handleError(error);
       logError('sendMessage: Error sending message', appError, {
         conversationId,
