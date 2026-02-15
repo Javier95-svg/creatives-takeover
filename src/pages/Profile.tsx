@@ -706,8 +706,8 @@ const Profile = () => {
                               {profile.startup_links.waitlist && (
                                 <Button variant="outline" size="sm" asChild>
                                   <a href={profile.startup_links.waitlist} target="_blank" rel="noopener noreferrer">
-                                    <Users2 className="h-4 w-4 mr-2" />
-                                    Waitlist
+                                    <TrendingUp className="h-4 w-4 mr-2" />
+                                    Crunchbase
                                   </a>
                                 </Button>
                               )}

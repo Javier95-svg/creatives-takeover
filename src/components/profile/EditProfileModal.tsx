@@ -403,13 +403,13 @@ export const EditProfileModal = ({ open, onClose, profile, onSuccess }: EditProf
                   />
                 </div>
                 <div>
-                  <Label htmlFor="waitlist_url">Waitlist</Label>
+                  <Label htmlFor="waitlist_url">Crunchbase</Label>
                   <Input
                     id="waitlist_url"
                     type="url"
                     value={formData.waitlist_url}
                     onChange={(e) => setFormData({ ...formData, waitlist_url: e.target.value })}
-                    placeholder="https://..."
+                    placeholder="https://crunchbase.com/..."
                   />
                 </div>
                 <div>
@@ -440,7 +440,7 @@ export const EditProfileModal = ({ open, onClose, profile, onSuccess }: EditProf
               <h4 className="font-medium">Social Links</h4>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="github_url">GitHub URL</Label>
+                  <Label htmlFor="github_url">GitHub</Label>
                   <Input
                     id="github_url"
                     type="url"
