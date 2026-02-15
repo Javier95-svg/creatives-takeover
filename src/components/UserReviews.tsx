@@ -67,7 +67,7 @@ const cycleSteps: CycleStep[] = [
     shortLabel: "Networking",
     title: "Stage 6: Networking",
     description:
-      "In this stage, founders focus on building relationships that can accelerate growth. That means forming partnerships, joining relevant groups and communities in their industry, and actively putting themselves in the right rooms where opportunities happen.\n\nThey should also start exploring bigger support systems by applying to accelerators and private communities, and reaching out to investors to gauge interest. Because strong backing can significantly improve a startup’s chances, Creatives Takeover supports this step with networking-focused tools across Insighta and Community sections.",
+      "In this stage, founders focus on building relationships that can accelerate growth. That means forming partnerships, joining relevant groups or communities in their industry, and actively putting themselves in the right rooms where opportunities happen.\n\nThey should also start exploring bigger support systems by applying to accelerators, and reaching out to potential investors to gauge interest. Because strong backing can significantly improve a startup’s chances, Creatives Takeover supports this step with networking-focused tools across Insighta and Community.",
     icon: Users,
     color: "from-pink-500/20 to-pink-600/20"
   },
