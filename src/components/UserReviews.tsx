@@ -87,6 +87,10 @@ const UserReviews = () => {
   const [activeStepIndex, setActiveStepIndex] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(false);
 
+  useEffect(() => {
+    setIsAutoPlaying(false);
+  }, []);
+
   // Auto-play functionality
   useEffect(() => {
     if (!isAutoPlaying) return;
@@ -400,4 +404,3 @@ const UserReviews = () => {
 };
 
 export default UserReviews;
-
