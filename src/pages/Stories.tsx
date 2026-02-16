@@ -27,7 +27,7 @@ import {
   PaginationEllipsis,
 } from "@/components/ui/pagination";
 
-const ARTICLES_PER_PAGE = 18;
+const ARTICLES_PER_PAGE = 15;
 
 // Function to format hashtags for display in Explore Topics
 const formatHashtagForDisplay = (tag: string): string => {
