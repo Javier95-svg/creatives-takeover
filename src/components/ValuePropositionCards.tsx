@@ -62,7 +62,7 @@ const ValuePropositionCards = () => {
     {
       position: 3,
       icon: TrendingUp,
-      title: "Reach out to VCs and Accelerators",
+      title: "Access to VCs and Accelerators",
       subtitle: "Insighta",
       buttonLabel: "Fundraising Tools",
       description: "Raising money starts with knowing who to talk to. VC Search lets you explore a curated database of venture capital firms filtered by industry, stage, and check size so you can build a targeted list instead of pitching blind. Find your Angel connects you directly with angel investors who are actively looking to back early stage founders.\n\nPair your outreach with the Pitch Deck Analyzer to sharpen your presentation, Email Templates to craft messages that actually feel personal, and the Insighta Test to check your fundraising readiness. It's everything you need to walk into investor conversations prepared.",
