@@ -50,9 +50,9 @@ const ValuePropositionCards = () => {
     {
       position: 2,
       icon: GraduationCap,
-      title: "Discover & Join Accelerators",
-      subtitle: "Accelerator Hunt",
-      buttonLabel: "Find your Accelerator",
+      title: "A founder-focused social network",
+      subtitle: "Founder Profile",
+      buttonLabel: "Share your Journey",
       description: "Finding the right accelerator can change the trajectory of your startup, but sorting through programs on your own is overwhelming. Accelerator Hunt gives you a curated collection of top programs so you can filter by industry, funding stage, and location to find the ones that actually match where you are.\n\nEach profile breaks down what the program offers, what they look for in applicants, and how to apply. Whether you're eyeing Y Combinator, Techstars, or a niche program in your space, you'll have everything you need to put your best application forward.",
       cta: "Find Accelerators",
       link: "/insighta/accelerator-hunt",
