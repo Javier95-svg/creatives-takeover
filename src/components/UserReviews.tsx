@@ -3,8 +3,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
-  Lightbulb,
-  Pencil,
+  Fingerprint,
+  DraftingCompass,
   CheckCircle,
   Hammer,
   Rocket,
@@ -28,7 +28,7 @@ const cycleSteps: CycleStep[] = [
     title: "Stage 1: Identity",
     description:
       "In this stage, founders clarify the foundation of their startup by answering a few core questions:\n\nWhat specific problem are you solving?\nWho are you solving it for?\nWhat makes your solution different and more efficient?\nWhy are you the right person to build it?\n\nThe goal is to define your Ideal Customer Profile (ICP) and set clear, specific goals for what you want to achieve next.",
-    icon: Lightbulb,
+    icon: Fingerprint,
     color: "from-yellow-500/20 to-yellow-600/20"
   },
   {
@@ -36,7 +36,7 @@ const cycleSteps: CycleStep[] = [
     title: "Stage 2: Prototyping",
     description:
       "After defining your identity, the next step is to create a simple landing page that works as your waitlist. This page should clearly explain what your product is, who it is for, and the core problem it solves so visitors quickly understand the value.\n\nIt should also describe the key features you plan to offer and give a simple overview of how the product will work, without building the MVP yet. The goal is to make the idea feel real enough to test interest, collect sign-ups, and confirm there is market demand before investing time and money into development.",
-    icon: Pencil,
+    icon: DraftingCompass,
     color: "from-blue-500/20 to-blue-600/20"
   },
   {
