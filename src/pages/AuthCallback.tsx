@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useFeedbackCredits } from '@/hooks/useFeedbackCredits';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import type { EmailOtpType } from '@supabase/supabase-js';
 
 const AuthCallback = () => {
   const navigate = useNavigate();
@@ -29,15 +30,34 @@ const AuthCallback = () => {
           return;
         }
 
-        // Handle email confirmation token (from email confirmation link)
-        const token = searchParams.get('token');
-        const type = searchParams.get('type');
-        
-        if (token && type === 'signup') {
-          console.log('Email confirmation detected, verifying token...');
-          // Supabase automatically processes email confirmation tokens via URL hash
-          // We just need to wait for the session to be established
-          // The token is processed automatically when the page loads
+        // Handle email confirmation callback parameters.
+        // PKCE/email confirmation links often use token_hash + type.
+        const tokenHash = searchParams.get('token_hash');
+        const legacyToken = searchParams.get('token');
+        const callbackType = searchParams.get('type');
+        const isEmailConfirmation = !!callbackType && (callbackType === 'signup' || callbackType === 'email');
+
+        if (tokenHash && callbackType) {
+          const allowedTypes: EmailOtpType[] = ['signup', 'invite', 'magiclink', 'recovery', 'email_change', 'email'];
+          const otpType = callbackType as EmailOtpType;
+
+          if (allowedTypes.includes(otpType)) {
+            console.log('PKCE email confirmation detected, verifying token_hash...');
+            const { error: otpError } = await supabase.auth.verifyOtp({
+              token_hash: tokenHash,
+              type: otpType,
+            });
+
+            if (otpError) {
+              console.error('OTP verification error:', otpError);
+              setStatus('error');
+              toast.error('Email confirmation failed. Please request a new confirmation email.');
+              setTimeout(() => navigate('/login'), 3000);
+              return;
+            }
+          }
+        } else if (legacyToken && callbackType === 'signup') {
+          console.log('Legacy email confirmation token detected.');
           toast.success('Email confirmed successfully!');
         }
 
@@ -72,7 +92,7 @@ const AuthCallback = () => {
           setStatus('success');
           
           // Show appropriate success message
-          if (token && type === 'signup') {
+          if (isEmailConfirmation) {
             toast.success('Email confirmed! Welcome to Creatives Takeover!');
           } else {
             toast.success('Successfully signed in!');

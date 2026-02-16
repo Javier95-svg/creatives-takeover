@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState, useRef, useCallback } from 'react';
 import { User, Session, AuthError as SupabaseAuthError } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import { logError, logInfo } from '@/lib/logger';
+import { logError, logInfo, logWarn } from '@/lib/logger';
 
 interface AuthContextType {
   user: User | null;
@@ -46,11 +46,38 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const isAdmin = email.toLowerCase() === 'admin@creatives-takeover.com';
 
       // ── Step 1: Check if profile exists (SINGLE call) ──
-      const { data: existingProfile } = await supabase
+      const { data: existingProfileData, error: existingProfileError } = await supabase
         .from('profiles')
         .select('id, onboarding_completed, first_login_at')
         .eq('id', userId)
         .maybeSingle();
+      let existingProfile = existingProfileData;
+
+      if (existingProfileError) {
+        logWarn('Primary profile lookup failed; retrying with minimal projection', {
+          userId,
+          errorCode: existingProfileError.code,
+          errorMessage: existingProfileError.message,
+        });
+
+        const { data: fallbackProfile, error: fallbackProfileError } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('id', userId)
+          .maybeSingle();
+
+        if (fallbackProfileError) {
+          logError('Fallback profile lookup failed', fallbackProfileError, { userId });
+        }
+
+        existingProfile = fallbackProfile
+          ? ({
+            ...fallbackProfile,
+            onboarding_completed: null,
+            first_login_at: null,
+          } as typeof existingProfileData)
+          : null;
+      }
 
       let profileExists = !!existingProfile;
       let isNewProfile = false;
@@ -295,16 +322,29 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       const isAdmin = profileUser.email?.toLowerCase() === 'admin@creatives-takeover.com';
 
-      const { error } = await supabase
+      const profilePayload = {
+        id: profileUser.id,
+        full_name: fullName || '',
+        avatar_url: profileUser.user_metadata?.avatar_url || '',
+        date_of_birth: profileUser.user_metadata?.date_of_birth || null,
+        username: finalUsername,
+        subscription_tier: isAdmin ? 'professional' : 'free',
+      };
+
+      let { error } = await supabase
         .from('profiles')
-        .insert({
-          id: profileUser.id,
-          full_name: fullName || '',
-          avatar_url: profileUser.user_metadata?.avatar_url || '',
-          date_of_birth: profileUser.user_metadata?.date_of_birth || null,
-          username: finalUsername,
-          subscription_tier: isAdmin ? 'professional' : 'free',
+        .insert(profilePayload);
+
+      if (error && (error.code === 'PGRST204' || error.message?.toLowerCase().includes('date_of_birth'))) {
+        logWarn('Retrying profile creation without date_of_birth due schema mismatch', {
+          userId: profileUser.id,
+          errorCode: error.code,
+          errorMessage: error.message,
         });
+        const { date_of_birth: _omitDateOfBirth, ...fallbackPayload } = profilePayload;
+        const retryResult = await supabase.from('profiles').insert(fallbackPayload);
+        error = retryResult.error;
+      }
 
       if (error) {
         // Duplicate key = trigger already created it
@@ -337,6 +377,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
       }
     });
+
+    if (error) {
+      logError('Auth signUp failed', error, { email, redirectUrl });
+      return { error };
+    }
 
     if (!error) {
       try {
