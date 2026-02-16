@@ -16,6 +16,8 @@ import { useHapticFeedback } from "@/hooks/useHapticFeedback";
 import { logError } from "@/lib/logger";
 import { generateMentorSlug } from "@/utils/mentorSlug";
 import { TypingIndicator } from "./TypingIndicator";
+import { MessageReactions } from "./MessageReactions";
+import { usePresence } from "@/hooks/usePresence";
 
 interface MessagingInterfaceProps {
   initialConversationId?: string;
@@ -43,7 +45,9 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
     sendMessage,
     markAsRead,
     getUnreadCount,
-    deleteConversation
+    deleteConversation,
+    addReaction,
+    removeReaction
   } = useMessaging();
   
   const [newMessage, setNewMessage] = useState("");
@@ -59,7 +63,12 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
   const [mobileSheetOpen, setMobileSheetOpen] = useState(false);
   const [otherUserTyping, setOtherUserTyping] = useState(false);
   const typingTimeoutRef = useRef<NodeJS.Timeout>();
+  const [messageReactions, setMessageReactions] = useState<Record<string, Array<{ emoji: string; count: number; userReacted: boolean }>>>({});
   const { trigger: triggerHaptic } = useHapticFeedback();
+
+  // Get all participant IDs for presence tracking
+  const participantIds = conversations.flatMap(c => c.participants).filter(id => id !== user?.id);
+  const { presenceData } = usePresence(participantIds);
 
   // Track message count to detect new messages
   const messageCount = activeConversationId ? (messages[activeConversationId]?.length || 0) : 0;
@@ -197,6 +206,71 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
       supabase.removeChannel(channel);
     };
   }, [activeConversationId, user?.id]);
+
+  // Load and subscribe to reactions for active conversation
+  useEffect(() => {
+    if (!activeConversationId || !user) return;
+
+    const loadReactions = async () => {
+      const messageIds = activeMessages.map(m => m.id);
+      if (messageIds.length === 0) return;
+
+      try {
+        const { data, error } = await supabase
+          .from('message_reactions')
+          .select('*')
+          .in('message_id', messageIds);
+
+        if (error) throw error;
+
+        // Group reactions by message
+        const reactionsByMessage: Record<string, Array<{ emoji: string; count: number; userReacted: boolean }>> = {};
+
+        messageIds.forEach(msgId => {
+          const msgReactions = data?.filter(r => r.message_id === msgId) || [];
+          const groupedByEmoji: Record<string, { count: number; userReacted: boolean }> = {};
+
+          msgReactions.forEach(reaction => {
+            if (!groupedByEmoji[reaction.emoji]) {
+              groupedByEmoji[reaction.emoji] = { count: 0, userReacted: false };
+            }
+            groupedByEmoji[reaction.emoji].count++;
+            if (reaction.user_id === user.id) {
+              groupedByEmoji[reaction.emoji].userReacted = true;
+            }
+          });
+
+          reactionsByMessage[msgId] = Object.entries(groupedByEmoji).map(([emoji, data]) => ({
+            emoji,
+            ...data
+          }));
+        });
+
+        setMessageReactions(reactionsByMessage);
+      } catch (error) {
+        logError('Error loading reactions', error);
+      }
+    };
+
+    loadReactions();
+
+    // Subscribe to reaction changes
+    const channel = supabase
+      .channel(`reactions-${activeConversationId}`)
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'message_reactions'
+      }, () => {
+        // Reload reactions when changes occur
+        loadReactions();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [activeConversationId, user, activeMessages.length]);
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -393,63 +467,81 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
         isOwnMessage ? 'justify-end' : 'justify-start'
       }`}>
         {!isOwnMessage && (
-          <Avatar className="h-7 w-7 md:h-8 md:w-8 flex-shrink-0 self-end">
-            <AvatarImage
-              src={
-                participantProfiles[firstMessage.sender_id]?.avatar_url ||
-                firstMessage.sender?.avatar_url ||
-                undefined
-              }
-            />
-            <AvatarFallback>
-              {(participantProfiles[firstMessage.sender_id]?.full_name || firstMessage.sender?.full_name || '?').charAt(0)}
-            </AvatarFallback>
-          </Avatar>
+          <div className="relative">
+            <Avatar className="h-7 w-7 md:h-8 md:w-8 flex-shrink-0 self-end">
+              <AvatarImage
+                src={
+                  participantProfiles[firstMessage.sender_id]?.avatar_url ||
+                  firstMessage.sender?.avatar_url ||
+                  undefined
+                }
+              />
+              <AvatarFallback>
+                {(participantProfiles[firstMessage.sender_id]?.full_name || firstMessage.sender?.full_name || '?').charAt(0)}
+              </AvatarFallback>
+            </Avatar>
+            {/* Presence indicator */}
+            {presenceData[firstMessage.sender_id]?.status === 'online' && (
+              <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-background" />
+            )}
+          </div>
         )}
 
         <div className="flex flex-col gap-1 max-w-[75%] md:max-w-xs">
           {messages.map((message, idx) => (
-            <div
-              key={message.id}
-              className={`relative px-3 py-2 ${
-                isOwnMessage
-                  ? 'bg-primary text-primary-foreground rounded-2xl rounded-br-sm'
-                  : 'bg-muted rounded-2xl rounded-bl-sm'
-              }`}
-            >
-              {/* Speech bubble tail only on last message in group */}
-              {idx === messages.length - 1 && (
-                isOwnMessage ? (
-                  <div
-                    className="absolute bottom-0 -right-2 w-4 h-4 bg-primary"
-                    style={{ clipPath: 'polygon(0 0, 100% 0, 100% 100%)' }}
-                  />
-                ) : (
-                  <div
-                    className="absolute bottom-0 -left-2 w-4 h-4 bg-muted"
-                    style={{ clipPath: 'polygon(0 0, 100% 100%, 0 100%)' }}
-                  />
-                )
-              )}
+            <div key={message.id} className="group">
+              <div
+                className={`relative px-3 py-2 ${
+                  isOwnMessage
+                    ? 'bg-primary text-primary-foreground rounded-2xl rounded-br-sm'
+                    : 'bg-muted rounded-2xl rounded-bl-sm'
+                }`}
+              >
+                {/* Speech bubble tail only on last message in group */}
+                {idx === messages.length - 1 && (
+                  isOwnMessage ? (
+                    <div
+                      className="absolute bottom-0 -right-2 w-4 h-4 bg-primary"
+                      style={{ clipPath: 'polygon(0 0, 100% 0, 100% 100%)' }}
+                    />
+                  ) : (
+                    <div
+                      className="absolute bottom-0 -left-2 w-4 h-4 bg-muted"
+                      style={{ clipPath: 'polygon(0 0, 100% 100%, 0 100%)' }}
+                    />
+                  )
+                )}
 
-              <p className="text-sm break-words">{message.content}</p>
+                <p className="text-sm break-words">{message.content}</p>
 
-              {/* Timestamp and read receipt only on last message */}
-              {idx === messages.length - 1 && (
-                <div className="flex items-center gap-1 mt-1">
-                  <p className="text-xs opacity-70">
-                    {formatDistanceToNow(new Date(message.created_at))} ago
-                  </p>
-                  {isOwnMessage && (
-                    <span className="text-xs flex items-center">
-                      {message.is_read ? (
-                        <CheckCheck className="h-3 w-3 text-blue-500" />
-                      ) : (
-                        <Check className="h-3 w-3 opacity-70" />
-                      )}
-                    </span>
-                  )}
-                </div>
+                {/* Timestamp and read receipt only on last message */}
+                {idx === messages.length - 1 && (
+                  <div className="flex items-center gap-1 mt-1">
+                    <p className="text-xs opacity-70">
+                      {formatDistanceToNow(new Date(message.created_at))} ago
+                    </p>
+                    {isOwnMessage && (
+                      <span className="text-xs flex items-center">
+                        {message.is_read ? (
+                          <CheckCheck className="h-3 w-3 text-blue-500" />
+                        ) : (
+                          <Check className="h-3 w-3 opacity-70" />
+                        )}
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Message reactions */}
+              {messageReactions[message.id] && messageReactions[message.id].length > 0 && (
+                <MessageReactions
+                  messageId={message.id}
+                  reactions={messageReactions[message.id]}
+                  onAddReaction={(emoji) => addReaction(message.id, emoji)}
+                  onRemoveReaction={(emoji) => removeReaction(message.id, emoji)}
+                  className="mt-1 ml-1"
+                />
               )}
             </div>
           ))}
@@ -499,12 +591,20 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
                     onClick={() => onSelect(conversation.id)}
                   >
                     <div className="flex items-center gap-3 w-full">
-                      <Avatar className="h-8 w-8 flex-shrink-0">
-                        <AvatarImage src={getConversationAvatar(conversation) || undefined} />
-                        <AvatarFallback>
-                          {getConversationName(conversation).charAt(0).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
+                      <div className="relative">
+                        <Avatar className="h-8 w-8 flex-shrink-0">
+                          <AvatarImage src={getConversationAvatar(conversation) || undefined} />
+                          <AvatarFallback>
+                            {getConversationName(conversation).charAt(0).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        {(() => {
+                          const otherParticipantId = getOtherParticipant(conversation);
+                          return otherParticipantId && presenceData[otherParticipantId]?.status === 'online' && (
+                            <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-background" />
+                          );
+                        })()}
+                      </div>
                       
                       <div className="flex-1 text-left min-w-0">
                         <p className="font-medium text-sm truncate">
@@ -589,14 +689,21 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
                 const conversationName = getConversationName(activeConversation);
                 const conversationAvatar = getConversationAvatar(activeConversation);
 
+                const otherParticipantId = getOtherParticipant(activeConversation);
+
                 return (
                   <div className="flex items-center gap-2 flex-1 min-w-0">
-                    <Avatar className="h-8 w-8 flex-shrink-0">
-                      <AvatarImage src={conversationAvatar || undefined} />
-                      <AvatarFallback>
-                        {conversationName.charAt(0).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
+                    <div className="relative">
+                      <Avatar className="h-8 w-8 flex-shrink-0">
+                        <AvatarImage src={conversationAvatar || undefined} />
+                        <AvatarFallback>
+                          {conversationName.charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      {otherParticipantId && presenceData[otherParticipantId]?.status === 'online' && (
+                        <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-background" />
+                      )}
+                    </div>
                     <h4 className="font-semibold text-sm md:text-base truncate">
                       {conversationName}
                     </h4>

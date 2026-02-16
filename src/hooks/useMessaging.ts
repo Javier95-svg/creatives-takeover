@@ -1122,6 +1122,63 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
     }
   }, [user, conversations, activeConversationId, setActiveConversationId, loadConversationsFromServer]);
 
+  // Add reaction to a message
+  const addReaction = useCallback(async (messageId: string, emoji: string) => {
+    if (!user) {
+      logWarn('addReaction: User not authenticated');
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('message_reactions')
+        .insert({
+          message_id: messageId,
+          user_id: user.id,
+          emoji
+        });
+
+      if (error) {
+        logError('Error adding reaction', error);
+        toast.error('Failed to add reaction');
+        throw error;
+      }
+
+      logInfo('Reaction added successfully', { messageId, emoji });
+    } catch (error) {
+      logError('Error adding reaction', error);
+      toast.error('Failed to add reaction');
+    }
+  }, [user]);
+
+  // Remove reaction from a message
+  const removeReaction = useCallback(async (messageId: string, emoji: string) => {
+    if (!user) {
+      logWarn('removeReaction: User not authenticated');
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('message_reactions')
+        .delete()
+        .eq('message_id', messageId)
+        .eq('user_id', user.id)
+        .eq('emoji', emoji);
+
+      if (error) {
+        logError('Error removing reaction', error);
+        toast.error('Failed to remove reaction');
+        throw error;
+      }
+
+      logInfo('Reaction removed successfully', { messageId, emoji });
+    } catch (error) {
+      logError('Error removing reaction', error);
+      toast.error('Failed to remove reaction');
+    }
+  }, [user]);
+
   return {
     conversations,
     messages,
@@ -1138,6 +1195,8 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
     getUserIdByEmail,
     resolveMentorUserId,
     getUserIdByUsername,
-    getUsernameByUserId
+    getUsernameByUserId,
+    addReaction,
+    removeReaction
   };
 };
