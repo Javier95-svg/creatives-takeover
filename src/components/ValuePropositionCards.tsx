@@ -38,7 +38,7 @@ const ValuePropositionCards = () => {
     {
       position: 1,
       icon: Lightbulb,
-      title: "Build Your Product & Distribution System",
+      title: "Build Your Product & Validate Demand",
       subtitle: "BizMap AI",
       buttonLabel: "Build-Measure-Learn",
       description: "BizMap AI is your personal business planning partner that walks you through every stage of building a product and getting it into the right hands. From defining your ideal customer with ICP Builder to validating demand with PMF Lab, choosing your tech stack, and mapping out your go-to-market strategy, every tool works together to keep you moving forward.\n\nThink of it as having a co-founder who never sleeps. Chat with the Business Planner about any challenge, get tailored recommendations, and export polished plans when you need to share your vision with investors or partners.",
@@ -62,7 +62,7 @@ const ValuePropositionCards = () => {
     {
       position: 3,
       icon: TrendingUp,
-      title: "Connect with Angel Investors & VCs",
+      title: "Reach out to VCs and Accelerators",
       subtitle: "Insighta",
       buttonLabel: "Fundraising Tools",
       description: "Raising money starts with knowing who to talk to. VC Search lets you explore a curated database of venture capital firms filtered by industry, stage, and check size so you can build a targeted list instead of pitching blind. Find your Angel connects you directly with angel investors who are actively looking to back early stage founders.\n\nPair your outreach with the Pitch Deck Analyzer to sharpen your presentation, Email Templates to craft messages that actually feel personal, and the Insighta Test to check your fundraising readiness. It's everything you need to walk into investor conversations prepared.",
@@ -74,7 +74,7 @@ const ValuePropositionCards = () => {
     {
       position: 4,
       icon: Handshake,
-      title: "Mentorship and Co-Founder Network",
+      title: "Mentorship and Angel Investor Network",
       subtitle: "Community",
       buttonLabel: "Network Opportunities",
       description: "Building a business on your own doesn't mean you have to figure everything out alone. The Mentor Marketplace connects you with experienced founders and industry experts who offer guidance, honest feedback, and the kind of perspective that only comes from having been through it before.\n\nLooking for someone to build with? The Co-Founder Marketplace helps you find partners who complement your skills and share your ambition. Filter by industry, stage, and expertise to connect with people who get what you're working on and want to be part of the journey.",
@@ -86,7 +86,7 @@ const ValuePropositionCards = () => {
     {
       position: 5,
       icon: BookOpen,
-      title: "Stories + Prompt Library",
+      title: "Success Stories + Prompt Library",
       subtitle: "Get Inspired",
       buttonLabel: "Niche Content",
       description: "Great ideas often start with the right spark. The Prompt Library gives you a rich collection of business cases and startup scenarios across industries like AI, e-commerce, SaaS, and the creator economy, so you always have fresh starting points when you need inspiration or want to explore a new direction.\n\nFounder Stories brings you real experiences from entrepreneurs who've walked the path before you. No recycled advice or theory, just honest lessons, practical wins, and real struggles from people who understand what it takes to get something off the ground.",
@@ -98,7 +98,7 @@ const ValuePropositionCards = () => {
     {
       position: 6,
       icon: LayoutDashboard,
-      title: "100% Customizable",
+      title: "Customize your Experience",
       subtitle: "Dashboard: Prioritize Tasks",
       buttonLabel: "Execute Smartly",
       description: "Your dashboard is where everything comes together. Focus Funnel helps you cut through the noise and prioritize what actually moves the needle, while Decision Sprint gives you a structured way to evaluate ideas before committing. Core Metrics keeps your key numbers visible so you always know where you stand.\n\nWeekly Mission and Your Tasks keep you accountable with clear goals and action items, so you spend less time wondering what to do next and more time making real progress. It's your personal command center, designed to keep you focused and moving forward.",
