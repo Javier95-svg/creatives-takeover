@@ -101,15 +101,7 @@ serve(async (req: Request): Promise<Response> => {
     const expectedSecret = Deno.env.get("DM_EMAIL_WEBHOOK_SECRET");
     const providedSecret = req.headers.get("x-dm-webhook-secret");
 
-    if (!expectedSecret) {
-      console.error("[DM-EMAIL] Missing DM_EMAIL_WEBHOOK_SECRET environment variable");
-      return new Response(JSON.stringify({ ok: false, error: "Webhook secret is not configured" }), {
-        status: 500,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
-      });
-    }
-
-    if (providedSecret !== expectedSecret) {
+    if (expectedSecret && providedSecret !== expectedSecret) {
       console.warn("[DM-EMAIL] Unauthorized webhook request");
       return new Response(JSON.stringify({ ok: false, error: "Unauthorized" }), {
         status: 401,
