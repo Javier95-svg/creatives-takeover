@@ -67,7 +67,7 @@ const cycleSteps: CycleStep[] = [
     shortLabel: "Branding",
     title: "Stage 6: Branding",
     description:
-      "In this stage, founders focus on building visibility and trust that can accelerate growth. That means shaping a clear brand story, showing up consistently where their audience pays attention, and building credibility through partnerships, communities, and the right industry spaces where awareness turns into opportunity.\n\nThey should also start exploring bigger support systems by positioning their brand for scale through accelerators and early investor conversations that test market belief. Because recognition and clarity can significantly improve a startup's chances of earning attention, users, and backing, Creatives Takeover supports this step with branding and networking focused tools across Insighta and Community. ",
+      "In this stage, founders focus on building visibility and trust that can accelerate growth. That means shaping a clear brand story, showing up consistently where their audience gathers, and building credibility through partnerships, communities, and the right industry spaces where awareness turns into opportunity.\n\nThey should also start exploring bigger support systems by positioning their brand for scale through accelerators and early investor conversations that test market belief. Because recognition and clarity can significantly improve a startup's chances of earning attention, users, and backing, Creatives Takeover supports this step with networking focused tools across Insighta and Community.",
     icon: Megaphone,
     color: "from-pink-500/20 to-pink-600/20"
   },
