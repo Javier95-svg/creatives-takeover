@@ -8,7 +8,7 @@ import {
   CheckCircle,
   Hammer,
   Rocket,
-  Users,
+  Megaphone,
   TrendingUp,
   Play,
   Pause
@@ -64,11 +64,11 @@ const cycleSteps: CycleStep[] = [
     color: "from-purple-500/20 to-purple-600/20"
   },
   {
-    shortLabel: "Networking",
-    title: "Stage 6: Networking",
+    shortLabel: "Branding",
+    title: "Stage 6: Branding",
     description:
-      "In this stage, founders focus on building relationships that can accelerate growth. That means forming partnerships, joining relevant groups or communities in their industry, and actively putting themselves in the right rooms where opportunities happen.\n\nThey should also start exploring bigger support systems by applying to accelerators, and reaching out to potential investors to gauge interest. Because strong backing can significantly improve a startup’s chances, Creatives Takeover supports this step with networking-focused tools across Insighta and Community.",
-    icon: Users,
+      "In this stage, founders focus on building visibility and trust that can accelerate growth. That means shaping a clear brand story, showing up consistently where their audience pays attention, and building credibility through partnerships, communities, and the right industry spaces where awareness turns into opportunity.\n\nThey should also start exploring bigger support systems by positioning their brand for scale through accelerators and early investor conversations that test market belief. Because recognition and clarity can significantly improve a startup's chances of earning attention, users, and backing, Creatives Takeover supports this step with branding and networking focused tools across Insighta and Community. ",
+    icon: Megaphone,
     color: "from-pink-500/20 to-pink-600/20"
   },
   {
