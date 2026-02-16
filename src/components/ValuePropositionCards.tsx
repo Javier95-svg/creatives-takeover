@@ -53,7 +53,7 @@ const ValuePropositionCards = () => {
       title: "A founder-focused social network",
       subtitle: "Founder Profile",
       buttonLabel: "Share your Journey",
-      description: "Finding the right accelerator can change the trajectory of your startup, but sorting through programs on your own is overwhelming. Accelerator Hunt gives you a curated collection of top programs so you can filter by industry, funding stage, and location to find the ones that actually match where you are.\n\nEach profile breaks down what the program offers, what they look for in applicants, and how to apply. Whether you're eyeing Y Combinator, Techstars, or a niche program in your space, you'll have everything you need to put your best application forward.",
+      description: "At Creatives Takeover, you will have a founder where you can share posts, reels, and updates in a space built for builders. It is your personal home on the platform, a place to show who you are, what you are working on, and the progress you are making so people can follow your journey as it unfolds.\n\nYour profile also links to your startup, so anyone who finds you can instantly explore what you are building and the key details behind it. Share product demos, behind the scenes moments, milestones, launches, and lessons learned, and turn every update into visibility, trust, and new opportunities.",
       cta: "Find Accelerators",
       link: "/insighta/accelerator-hunt",
       image: "https://images.unsplash.com/photo-1531482615713-2afd69097998?w=800&h=600&fit=crop&q=80&fm=webp",
