@@ -43,7 +43,7 @@ export const SocialButtons = ({
     cancelFriendRequest
   } = useSocial(userId);
   
-  const { startConversation, getUsernameByUserId } = useMessaging({ autoLoad: false });
+  const { startConversation } = useMessaging({ autoLoad: false });
   const { sendPartnershipRequest } = useAccountabilityPartners();
   const [showPartnerDialog, setShowPartnerDialog] = useState(false);
   const [partnershipType, setPartnershipType] = useState<'sprint_buddy' | 'daily_accountability' | 'goal_tracker'>('sprint_buddy');
@@ -56,14 +56,9 @@ export const SocialButtons = ({
     try {
       const conversationId = await startConversation(userId);
       if (conversationId) {
-        // Get username and navigate to username-based route
-        const username = await getUsernameByUserId(userId);
-        if (username) {
-          navigate(`/messages/${username}`);
-        } else {
-          // Fallback to generic messages if username not found
-          navigate('/messages');
-        }
+        navigate(`/messages?conversationId=${conversationId}`);
+      } else {
+        toast.error('Failed to start conversation');
       }
     } catch (error) {
       console.error('Error starting conversation:', error);

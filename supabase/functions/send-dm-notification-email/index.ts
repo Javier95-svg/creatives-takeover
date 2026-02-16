@@ -101,7 +101,15 @@ serve(async (req: Request): Promise<Response> => {
     const expectedSecret = Deno.env.get("DM_EMAIL_WEBHOOK_SECRET");
     const providedSecret = req.headers.get("x-dm-webhook-secret");
 
-    if (expectedSecret && providedSecret !== expectedSecret) {
+    if (!expectedSecret) {
+      console.error("[DM-EMAIL] Missing DM_EMAIL_WEBHOOK_SECRET environment variable");
+      return new Response(JSON.stringify({ ok: false, error: "Webhook secret is not configured" }), {
+        status: 500,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    }
+
+    if (providedSecret !== expectedSecret) {
       console.warn("[DM-EMAIL] Unauthorized webhook request");
       return new Response(JSON.stringify({ ok: false, error: "Unauthorized" }), {
         status: 401,
@@ -195,6 +203,53 @@ serve(async (req: Request): Promise<Response> => {
       });
       return new Response(JSON.stringify({ ok: true, skipped: "self_message" }), {
         status: 200,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    }
+
+    const { data: conversationRow, error: conversationError } = await supabase
+      .from("conversations")
+      .select("id, participants, is_group")
+      .eq("id", conversationId)
+      .maybeSingle();
+
+    if (conversationError || !conversationRow) {
+      const reason = conversationError?.message || "Conversation not found";
+      await updateDelivery(messageId, recipientId, {
+        status: "failed",
+        last_error: reason,
+        metadataPatch: { stage: "fetch_conversation_failed" },
+      });
+      return new Response(JSON.stringify({ ok: false, error: reason }), {
+        status: 404,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    }
+
+    const participants = Array.isArray(conversationRow.participants)
+      ? (conversationRow.participants as string[])
+      : [];
+    const expectedRecipientId = participants.find((participantId) => participantId !== senderId) || null;
+    const isValidDirectConversation =
+      conversationRow.is_group === false &&
+      participants.length === 2 &&
+      participants.includes(senderId) &&
+      expectedRecipientId === recipientId;
+
+    if (!isValidDirectConversation) {
+      await updateDelivery(messageId, recipientId, {
+        status: "failed",
+        last_error: "Recipient does not match conversation participants",
+        metadataPatch: {
+          stage: "recipient_mismatch",
+          participants,
+          expectedRecipientId,
+          payloadRecipientId: recipientId,
+          payloadSenderId: senderId,
+        },
+      });
+      return new Response(JSON.stringify({ ok: false, error: "Recipient mismatch" }), {
+        status: 400,
         headers: { "Content-Type": "application/json", ...corsHeaders },
       });
     }

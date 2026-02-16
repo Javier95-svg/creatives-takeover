@@ -89,6 +89,8 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
     conversationIdsRef.current = new Set(conversations.map((conversation) => conversation.id));
   }, [conversations]);
 
+  const scopedConversationIds = conversations.map((conversation) => conversation.id).join('|');
+
   // Get user ID by email using database function with fallback
   const getUserIdByEmail = useCallback(async (email: string): Promise<string | null> => {
     if (!user) {
@@ -351,38 +353,49 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
       )
       .subscribe();
 
-    const messageSyncSubscription = supabase
-      .channel(`user-messages-sync-${user.id}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'messages'
-        },
-        (payload) => {
-          const payloadConversationId = (payload.new as { conversation_id?: string } | null)?.conversation_id
-            ?? (payload.old as { conversation_id?: string } | null)?.conversation_id;
-
-          console.log('[UNREAD_SYNC] Realtime message event received:', {
-            eventType: payload.eventType,
-            conversationId: payloadConversationId
-          });
-
-          if (payloadConversationId && conversationIdsRef.current.has(payloadConversationId)) {
-            loadUnreadCounts([payloadConversationId]);
-          } else {
-            loadConversationsFromServer();
-          }
-        }
-      )
-      .subscribe();
-
     return () => {
       supabase.removeChannel(conversationSubscription);
-      supabase.removeChannel(messageSyncSubscription);
     };
   }, [user, autoLoad, loadConversationsFromServer, loadUnreadCounts]);
+
+  // Scoped realtime sync: subscribe only to message events for conversations this user participates in.
+  useEffect(() => {
+    if (!user || !autoLoad || conversations.length === 0 || !scopedConversationIds) return;
+
+    const scopedChannels = conversations.map((conversation) =>
+      supabase
+        .channel(`user-messages-sync-${user.id}-${conversation.id}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'messages',
+            filter: `conversation_id=eq.${conversation.id}`
+          },
+          (payload) => {
+            console.log('[UNREAD_SYNC] Scoped message event received:', {
+              eventType: payload.eventType,
+              conversationId: conversation.id
+            });
+
+            loadUnreadCounts([conversation.id]);
+
+            // Keep sidebar ordering synchronized when conversations receive/lose messages.
+            if (payload.eventType === 'INSERT' || payload.eventType === 'DELETE') {
+              loadConversationsFromServer();
+            }
+          }
+        )
+        .subscribe()
+    );
+
+    return () => {
+      scopedChannels.forEach((channel) => {
+        supabase.removeChannel(channel);
+      });
+    };
+  }, [user, autoLoad, scopedConversationIds, loadUnreadCounts, loadConversationsFromServer]);
 
   useEffect(() => {
     if (user) return;
@@ -588,6 +601,11 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
       return null;
     }
 
+    if (participantId === user.id) {
+      toast.error('You cannot start a conversation with yourself.');
+      return null;
+    }
+
     setLoading(true);
     try {
       logInfo('startConversation: Starting conversation', {
@@ -609,8 +627,43 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
         return existingInMemory.id;
       }
 
-      // Query database to check if conversation already exists
-      // Query conversations where current user is a participant, then filter for exact match
+      // Primary path: atomic RPC backed by DB uniqueness.
+      const { data: rpcData, error: rpcError } = await safe.rpc(async () =>
+        await supabase.rpc('create_or_get_direct_conversation', {
+          p_other_user_id: participantId
+        })
+      );
+
+      if (!rpcError) {
+        const rpcConversation = rpcData as Conversation | null;
+
+        if (rpcConversation?.id) {
+          logInfo('startConversation: Resolved via atomic RPC', {
+            conversationId: rpcConversation.id
+          });
+
+          setConversations(prev => {
+            const withoutCurrent = prev.filter(conversation => conversation.id !== rpcConversation.id);
+            const merged = [rpcConversation, ...withoutCurrent];
+            return merged.sort((a, b) => {
+              const aTime = new Date(a.last_message_at || a.created_at).getTime();
+              const bTime = new Date(b.last_message_at || b.created_at).getTime();
+              return bTime - aTime;
+            });
+          });
+
+          setActiveConversationId(rpcConversation.id);
+          return rpcConversation.id;
+        }
+      } else {
+        // Graceful fallback while environments catch up with migrations.
+        logWarn('startConversation: Atomic RPC unavailable, falling back to legacy flow', {
+          code: rpcError.code,
+          message: rpcError.message
+        });
+      }
+
+      // Legacy fallback: query existing conversation.
       logInfo('startConversation: Checking database for existing conversation');
       const { data: existingConversations, error: queryError } = await safe.select(async () =>
         await supabase
@@ -648,7 +701,7 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
         }
       }
 
-      // Create new conversation
+      // Legacy fallback: create conversation.
       logInfo('startConversation: Creating new conversation', {
         participants: [user.id, participantId],
         is_group: false
