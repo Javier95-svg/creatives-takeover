@@ -607,7 +607,7 @@ const PostCard = React.memo<PostCardProps>(({ post }) => {
             {isAuthenticated && user && post.user_id === user.id && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="h-8 w-8 rounded-full flex-shrink-0" aria-label="Post menu">
+                  <Button variant="ghost" size="sm" className="min-h-[44px] min-w-[44px] rounded-full flex-shrink-0" aria-label="Post menu">
                     <MoreHorizontal className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>

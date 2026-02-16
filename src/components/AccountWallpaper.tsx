@@ -14,7 +14,7 @@ export const AccountWallpaper = () => {
 
       {/* Animated gradient orbs */}
       <div
-        className={`absolute top-[-10%] left-[20%] w-[600px] h-[600px] rounded-full transition-opacity duration-1000 ${
+        className={`absolute top-[-10%] left-[20%] w-[200px] h-[200px] sm:w-[300px] sm:h-[300px] md:w-[400px] md:h-[400px] lg:w-[600px] lg:h-[600px] rounded-full transition-opacity duration-1000 ${
           mounted ? 'opacity-100' : 'opacity-0'
         }`}
         style={{
@@ -25,7 +25,7 @@ export const AccountWallpaper = () => {
       />
 
       <div
-        className={`absolute bottom-[-15%] right-[15%] w-[800px] h-[800px] rounded-full transition-opacity duration-1000 ${
+        className={`absolute bottom-[-15%] right-[15%] w-[250px] h-[250px] sm:w-[400px] sm:h-[400px] md:w-[550px] md:h-[550px] lg:w-[800px] lg:h-[800px] rounded-full transition-opacity duration-1000 ${
           mounted ? 'opacity-100' : 'opacity-0'
         }`}
         style={{
@@ -37,7 +37,7 @@ export const AccountWallpaper = () => {
       />
 
       <div
-        className={`absolute top-[50%] left-[50%] -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] rounded-full transition-opacity duration-1000 ${
+        className={`absolute top-[50%] left-[50%] -translate-x-1/2 -translate-y-1/2 w-[150px] h-[150px] sm:w-[250px] sm:h-[250px] md:w-[300px] md:h-[300px] lg:w-[400px] lg:h-[400px] rounded-full transition-opacity duration-1000 ${
           mounted ? 'opacity-100' : 'opacity-0'
         }`}
         style={{

@@ -67,7 +67,7 @@ export const TaskModal = ({ open, onOpenChange, selectedDate, onTaskAdded }: Tas
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md max-w-[calc(100vw-2rem)]">
         <DialogHeader>
           <DialogTitle className="text-2xl flex items-center gap-2">
             <CalendarIcon className="w-6 h-6 text-primary" />

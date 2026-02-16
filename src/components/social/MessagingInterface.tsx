@@ -569,7 +569,7 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
         </h3>
       </div>
       
-      <ScrollArea className={isMobile ? "h-[calc(100vh-120px)]" : "h-[calc(600px-80px)]"}>
+      <ScrollArea className={isMobile ? "h-[calc(var(--vh,1vh)*100-120px)]" : "h-[calc(600px-80px)]"}>
         {conversations.length === 0 ? (
           <div className="p-4 text-center text-muted-foreground">
             <MessageCircle className="h-8 w-8 mx-auto mb-2 opacity-50" />
@@ -654,7 +654,7 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
       {/* Mobile Conversations Sheet */}
       {isMobile && (
         <Sheet open={mobileSheetOpen} onOpenChange={setMobileSheetOpen}>
-          <SheetContent side="left" className="w-[85vw] sm:w-[320px] p-0">
+          <SheetContent side="left" className="w-[85vw] sm:w-[320px] md:w-[400px] p-0">
             <SheetHeader className="sr-only">
               <SheetTitle>Conversations</SheetTitle>
             </SheetHeader>

@@ -226,7 +226,7 @@ const Navigation = () => {
                             <p>{item.tooltip}</p>
                           </TooltipContent>
                         </Tooltip>
-                        <DropdownMenuContent align="start" className="w-72">
+                        <DropdownMenuContent align="start" className="w-80 md:w-72 sm:w-64 max-w-[calc(100vw-2rem)]">
                           <DropdownMenuLabel>Lean Startup System</DropdownMenuLabel>
                           <DropdownMenuSeparator />
                           {bizMapSubmenu.map((subItem, idx) => {
@@ -285,7 +285,7 @@ const Navigation = () => {
                             <p>{item.tooltip}</p>
                           </TooltipContent>
                         </Tooltip>
-                        <DropdownMenuContent align="start" className="w-56">
+                        <DropdownMenuContent align="start" className="w-72 md:w-56 sm:w-full max-w-[calc(100vw-2rem)]">
                           <DropdownMenuLabel>Fundraising Tools</DropdownMenuLabel>
                           <DropdownMenuSeparator />
                           {insightaSubmenu.map((subItem) => {
@@ -333,7 +333,7 @@ const Navigation = () => {
                             <p>{item.tooltip}</p>
                           </TooltipContent>
                         </Tooltip>
-                        <DropdownMenuContent align="start" className="w-56">
+                        <DropdownMenuContent align="start" className="w-72 md:w-56 sm:w-full max-w-[calc(100vw-2rem)]">
                           <DropdownMenuLabel>Connect & Collaborate</DropdownMenuLabel>
                           <DropdownMenuSeparator />
                           {communitySubmenu.map((subItem) => {
@@ -381,7 +381,7 @@ const Navigation = () => {
                             <p>{item.tooltip}</p>
                           </TooltipContent>
                         </Tooltip>
-                        <DropdownMenuContent align="start" className="w-56">
+                        <DropdownMenuContent align="start" className="w-72 md:w-56 sm:w-full max-w-[calc(100vw-2rem)]">
                           <DropdownMenuLabel>Niche Content for Founders</DropdownMenuLabel>
                           <DropdownMenuSeparator />
                           {resourcesSubmenu.map((subItem) => {
