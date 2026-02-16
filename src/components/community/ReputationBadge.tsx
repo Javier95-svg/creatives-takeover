@@ -22,7 +22,7 @@ const ReputationBadge = ({ userId, showPoints = true, compact = false }: Reputat
         <Tooltip>
           <TooltipTrigger>
             <Badge variant="secondary" className="gap-1 text-xs">
-              <Sparkles className={`w-3 h-3 ${levelColor}`} />
+              <Sparkles className={`w-3.5 h-3.5 sm:w-3 sm:h-3 ${levelColor}`} />
               <span className={levelColor}>{reputation.level}</span>
             </Badge>
           </TooltipTrigger>
@@ -44,9 +44,9 @@ const ReputationBadge = ({ userId, showPoints = true, compact = false }: Reputat
           <div className="flex items-center gap-2">
             <Badge variant="secondary" className="gap-1.5">
               {reputation.level >= 5 ? (
-                <Trophy className={`w-3.5 h-3.5 ${levelColor}`} />
+                <Trophy className={`w-4 h-4 sm:w-3.5 sm:h-3.5 ${levelColor}`} />
               ) : (
-                <Sparkles className={`w-3.5 h-3.5 ${levelColor}`} />
+                <Sparkles className={`w-4 h-4 sm:w-3.5 sm:h-3.5 ${levelColor}`} />
               )}
               <span className={`font-semibold ${levelColor}`}>
                 {reputation.level_name}

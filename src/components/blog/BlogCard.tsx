@@ -58,11 +58,11 @@ const BlogCard = ({ post, className = "" }: BlogCardProps) => {
             />
             <button
               onClick={handleBookmark}
-              className="absolute top-3 right-3 p-2 bg-background/80 backdrop-blur-sm rounded-full hover:bg-background transition-colors z-10"
+              className="absolute top-3 right-3 p-2.5 min-h-[44px] min-w-[44px] bg-background/80 backdrop-blur-sm rounded-full hover:bg-background transition-colors z-10 flex items-center justify-center"
               aria-label="Bookmark article"
             >
-              <Bookmark 
-                className={`w-4 h-4 ${isBookmarked(post.id) ? 'fill-primary text-primary' : 'text-muted-foreground'}`} 
+              <Bookmark
+                className={`w-4 h-4 ${isBookmarked(post.id) ? 'fill-primary text-primary' : 'text-muted-foreground'}`}
               />
             </button>
           </div>

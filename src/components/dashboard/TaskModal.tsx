@@ -124,7 +124,7 @@ export const TaskModal = ({ open, onOpenChange, selectedDate, onTaskAdded }: Tas
                 type="time"
                 value={deadlineTime}
                 onChange={(e) => setDeadlineTime(e.target.value)}
-                className="pl-10"
+                className="pl-9 sm:pl-10"
                 required
               />
             </div>
