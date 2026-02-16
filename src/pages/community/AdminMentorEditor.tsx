@@ -91,7 +91,7 @@ const AdminMentorEditor = () => {
         picture: found.picture || null,
         bio: found.bio,
         hourly_rate: found.hourly_rate,
-        hourly_rate_per_hour: (found as any).hourly_rate_per_hour || 0,
+        hourly_rate_per_hour: found.hourly_rate_per_hour || 0,
         currency: (found.currency as MentorCurrency) || 'USD',
         expertise: found.expertise || [],
         universities: found.universities || [],

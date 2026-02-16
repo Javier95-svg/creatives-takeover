@@ -32,6 +32,7 @@ export interface Mentor {
   picture?: string; // Avatar/profile picture URL
   bio: string;
   hourly_rate: number; // In cents (e.g., 10000 = $100.00)
+  hourly_rate_per_hour?: number; // In cents (e.g., 15000 = $150.00/hour)
   currency?: MentorCurrency; // Currency code (e.g., 'USD', 'GBP', 'EUR'). Defaults to 'USD'.
   stripe_connected_account_id?: string; // Stripe Connect account ID
   expertise?: string[]; // Array of expertise areas/tags

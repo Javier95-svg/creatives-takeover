@@ -71,6 +71,7 @@ const formatErrorMessage = (error: any, defaultMessage: string): string => {
 const convertToMentor = (data: any): Mentor => {
   return {
     ...data,
+    hourly_rate_per_hour: data.hourly_rate_per_hour ?? 0,
     availability: (data.availability || []) as AvailabilitySlot[],
   };
 };
@@ -246,6 +247,7 @@ export const useMentors = () => {
         name: input.name,
         bio: input.bio,
         hourly_rate: input.hourly_rate,
+        hourly_rate_per_hour: input.hourly_rate_per_hour ?? 0,
         currency: input.currency || 'USD',
         // Do not auto-link mentor ownership to the currently logged-in admin.
         // `user_id` must only point to the mentor's own account, set explicitly later.
@@ -264,6 +266,8 @@ export const useMentors = () => {
       console.log('Creating mentor with data:', {
         fields: Object.keys(insertData),
         hasBio: !!insertData.bio,
+        hourly_rate: insertData.hourly_rate,
+        hourly_rate_per_hour: insertData.hourly_rate_per_hour,
         hasUniversities: !!insertData.universities,
         universities: insertData.universities
       });
@@ -339,6 +343,7 @@ export const useMentors = () => {
       if (input.picture !== undefined) cleanInput.picture = input.picture;
       if (input.bio !== undefined) cleanInput.bio = input.bio;
       if (input.hourly_rate !== undefined) cleanInput.hourly_rate = input.hourly_rate;
+      if (input.hourly_rate_per_hour !== undefined) cleanInput.hourly_rate_per_hour = input.hourly_rate_per_hour;
       if (input.currency !== undefined) cleanInput.currency = input.currency;
       if (input.stripe_connected_account_id !== undefined) cleanInput.stripe_connected_account_id = input.stripe_connected_account_id;
       if (input.expertise !== undefined) cleanInput.expertise = input.expertise;
@@ -355,6 +360,8 @@ export const useMentors = () => {
         id,
         fields: Object.keys(cleanInput),
         hasBio: cleanInput.bio !== undefined,
+        hourly_rate: cleanInput.hourly_rate,
+        hourly_rate_per_hour: cleanInput.hourly_rate_per_hour,
         hasUniversities: cleanInput.universities !== undefined,
         universities: cleanInput.universities
       });
