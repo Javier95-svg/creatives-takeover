@@ -75,6 +75,7 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
   const lastMessage = activeConversationId && messages[activeConversationId]?.length > 0
     ? messages[activeConversationId][messages[activeConversationId].length - 1]
     : null;
+  const activeMessages = activeConversationId ? messages[activeConversationId] || [] : [];
 
   // Auto-scroll to bottom when new messages arrive (only within ScrollArea, not the page)
   useEffect(() => {
@@ -406,8 +407,6 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
 
     return null;
   };
-
-  const activeMessages = activeConversationId ? messages[activeConversationId] || [] : [];
 
   const handleDeleteClick = (e: React.MouseEvent, conversationId: string) => {
     e.stopPropagation(); // Prevent selecting the conversation
