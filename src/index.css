@@ -1760,8 +1760,7 @@ All colors MUST be HSL.
   img {
     loading: lazy;
     decoding: async;
-    image-rendering: -webkit-optimize-contrast;
-    image-rendering: crisp-edges;
+    image-rendering: auto;
   }
   
   img[loading="eager"] {
@@ -2450,10 +2449,21 @@ img {
   animation: logo-breathing 3s ease-in-out infinite;
   transform-origin: center;
   will-change: transform, filter;
-  /* Smooth anti-aliased edges */
-  image-rendering: -webkit-optimize-contrast;
+  image-rendering: auto;
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
+}
+
+/* Normalize navbar logo rendering across engines (Chrome/Firefox/Safari/Edge). */
+.site-nav-logo {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  image-rendering: auto !important;
+  transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  -ms-interpolation-mode: bicubic;
 }
 
 /* Stories Wallpaper Animations */

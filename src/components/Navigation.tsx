@@ -170,7 +170,7 @@ const Navigation = () => {
                 <img
                   src={ctLogoPolished}
                   alt="Creatives Takeover Logo"
-                  className="h-10 w-auto max-w-full object-contain animate-logo-breathing nav-logo-hover"
+                  className="site-nav-logo animate-logo-breathing nav-logo-hover"
                   width={44}
                   height={44}
                   decoding="async"
