@@ -15,12 +15,12 @@ const BILLING_STORAGE_KEY = "ct_billing_details";
 // Stripe Payment Links mapping by tier and billing cycle
 const PAYMENT_LINKS: Record<string, Record<string, string>> = {
   creator: {
-    monthly: "https://pay.creatives-takeover.com/b/cNi00jbqh07ma6e5e30ZW07",
-    yearly: "https://pay.creatives-takeover.com/b/eVq28r1PHcU8a6efSH0ZW06",
+    monthly: "https://buy.stripe.com/aFacN67Sxg8T9b80bh0VO00",
+    yearly: "https://buy.stripe.com/3cIdRa7SxcWH1IG6zF0VO01",
   },
   professional: {
-    monthly: "https://pay.creatives-takeover.com/b/4gMaEXcul4nC0vEfSH0ZW05",
-    yearly: "https://pay.creatives-takeover.com/b/14A5kDfGx8DS5PY9uj0ZW04",
+    monthly: "https://buy.stripe.com/cNifZi0q5f4P7303nt0VO02",
+    yearly: "https://buy.stripe.com/4gMbJ2dcR09V1IGf6b0VO03",
   },
 };
 
