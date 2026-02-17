@@ -40,7 +40,6 @@ const Auth: React.FC = () => {
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [resendEmailLoading, setResendEmailLoading] = useState(false);
 
   // Handle redirect after successful login - wait for auth state to update
   useEffect(() => {
@@ -138,14 +137,10 @@ const Auth: React.FC = () => {
       return;
     }
 
-    // Redirect to callback handler for proper email confirmation handling
-    const emailRedirectUrl = `${window.location.origin}/auth/callback`;
-
     const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        emailRedirectTo: emailRedirectUrl,
         data: {
           full_name: `${firstName.trim()} ${lastName.trim()}`,
         }
@@ -156,14 +151,35 @@ const Auth: React.FC = () => {
       setError(error.message);
       setLoading(false);
     } else {
-      toast.success('Check your email to confirm your account!');
-      setActiveTab('login');
-      setLoading(false);
-      
-      // For signup, if redirect is a booking flow, save it for after email confirmation
-      if (searchParams.get('redirect')?.startsWith('/community/book/')) {
-        localStorage.setItem('pending_booking_redirect', '/community');
+      let { data: { session } } = await supabase.auth.getSession();
+
+      // Ensure account creation immediately logs in without email confirmation gating.
+      if (!session) {
+        const { error: autoSignInError } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+
+        if (autoSignInError) {
+          setError('Account created, but automatic sign in failed. Please sign in manually.');
+          setActiveTab('login');
+          setLoading(false);
+          return;
+        }
+
+        const { data: refreshedSessionData } = await supabase.auth.getSession();
+        session = refreshedSessionData.session;
       }
+
+      if (!session) {
+        setError('Account created, but session initialization is delayed. Please sign in.');
+        setActiveTab('login');
+        setLoading(false);
+        return;
+      }
+
+      toast.success('Account created successfully!');
+      setLoading(false);
     }
   };
 
@@ -211,35 +227,6 @@ const Auth: React.FC = () => {
     } catch (err) {
       console.error("Caught error:", err);
       toast.error(`Google sign-in failed: ${err instanceof Error ? err.message : 'Unknown error'}`);
-    }
-  };
-
-  // Google OAuth signup
-  const handleResendConfirmationEmail = async () => {
-    if (!email) {
-      toast.error('Please enter your email address first');
-      return;
-    }
-
-    setResendEmailLoading(true);
-    try {
-      const { error } = await supabase.auth.resend({
-        type: 'signup',
-        email: email,
-        options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
-        }
-      });
-
-      if (error) {
-        toast.error(error.message || 'Failed to resend confirmation email');
-      } else {
-        toast.success('Confirmation email sent! Please check your inbox.');
-      }
-    } catch (err) {
-      toast.error('Failed to resend confirmation email. Please try again.');
-    } finally {
-      setResendEmailLoading(false);
     }
   };
 
@@ -398,30 +385,6 @@ const Auth: React.FC = () => {
                     Forgot password?
                   </Link>
                 </div>
-                {error && error.includes('email') && error.includes('confirm') && (
-                  <div className="bg-muted/50 border border-border rounded-lg p-3 space-y-2">
-                    <p className="text-sm text-muted-foreground">
-                      Your email hasn't been confirmed yet. Check your inbox for the confirmation email.
-                    </p>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={handleResendConfirmationEmail}
-                      disabled={resendEmailLoading || !email}
-                      className="w-full"
-                    >
-                      {resendEmailLoading ? (
-                        <>
-                          <Loader2 className="mr-2 h-3 w-3 animate-spin" />
-                          Sending...
-                        </>
-                      ) : (
-                        'Resend Confirmation Email'
-                      )}
-                    </Button>
-                  </div>
-                )}
                 <Button type="submit" className="w-full" disabled={loading}>
                   {loading ? (
                     <>

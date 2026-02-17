@@ -178,17 +178,32 @@ const Signup = () => {
         console.error('Signup error:', error);
         toast.error(errorMessage);
       } else {
-        // Check if user needs to confirm email
-        const { data: { session } } = await supabase.auth.getSession();
+        let { data: { session } } = await supabase.auth.getSession();
+
+        // Ensure users are signed in immediately after signup.
+        if (!session) {
+          const { error: autoSignInError } = await supabase.auth.signInWithPassword({
+            email: formData.email,
+            password: formData.password,
+          });
+
+          if (autoSignInError) {
+            console.error('Auto sign-in after signup failed:', autoSignInError);
+            toast.error("Account created, but automatic sign in failed. Please sign in manually.");
+            navigate('/login');
+            return;
+          }
+
+          const { data: refreshedSessionData } = await supabase.auth.getSession();
+          session = refreshedSessionData.session;
+        }
 
         if (!session) {
-          // Email confirmation required
-          toast.success("Account created! Please check your email to confirm your account.");
-          // Don't redirect - let user know they need to confirm
+          toast.error("Account created, but session initialization is delayed. Please sign in.");
+          navigate('/login');
           return;
         }
 
-        // User is already logged in (email confirmation disabled or auto-confirmed)
         // Track conversion completion
         trackSignupCompleted(triggerType);
 

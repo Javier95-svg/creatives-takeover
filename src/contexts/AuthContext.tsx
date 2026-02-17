@@ -365,13 +365,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const signUp = async (email: string, password: string, fullName: string, dateOfBirth?: string) => {
-    const redirectUrl = `${window.location.origin}/auth/callback`;
-
     const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        emailRedirectTo: redirectUrl,
         data: {
           full_name: fullName || '',
           date_of_birth: dateOfBirth || null,
