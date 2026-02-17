@@ -20,6 +20,7 @@ import ThemeToggle from "@/components/ThemeToggle";
 import ctLogo from "@/assets/ct-logo.png";
 import { useDeviceType } from "@/hooks/use-device-type";
 import { TabletNavigation } from "@/components/navigation/TabletNavigation";
+import ctLogo from "@/assets/ct-logo.svg";
 import {
   DropdownMenu,
   DropdownMenuContent,
