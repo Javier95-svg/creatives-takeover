@@ -238,6 +238,45 @@ export type Database = {
           },
         ]
       }
+      angel_investors: {
+        Row: {
+          created_at: string | null
+          firm_name: string
+          id: string
+          investment_stages: string[] | null
+          is_active: boolean | null
+          linkedin_url: string | null
+          name: string
+          picture: string | null
+          updated_at: string | null
+          website_url: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          firm_name: string
+          id?: string
+          investment_stages?: string[] | null
+          is_active?: boolean | null
+          linkedin_url?: string | null
+          name: string
+          picture?: string | null
+          updated_at?: string | null
+          website_url?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          firm_name?: string
+          id?: string
+          investment_stages?: string[] | null
+          is_active?: boolean | null
+          linkedin_url?: string | null
+          name?: string
+          picture?: string | null
+          updated_at?: string | null
+          website_url?: string | null
+        }
+        Relationships: []
+      }
       articles: {
         Row: {
           author_avatar: string | null
@@ -3088,6 +3127,57 @@ export type Database = {
         }
         Relationships: []
       }
+      founder_milestones: {
+        Row: {
+          achieved_at: string
+          created_at: string | null
+          description: string | null
+          id: string
+          is_pinned: boolean | null
+          milestone_type: string | null
+          title: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          achieved_at?: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_pinned?: boolean | null
+          milestone_type?: string | null
+          title: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          achieved_at?: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_pinned?: boolean | null
+          milestone_type?: string | null
+          title?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "founder_milestones_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "active_subscriptions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "founder_milestones_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       founder_profiles: {
         Row: {
           available_resources: Json | null
@@ -3154,6 +3244,96 @@ export type Database = {
         }
         Relationships: []
       }
+      founder_skills: {
+        Row: {
+          created_at: string | null
+          id: string
+          proficiency_level: string | null
+          skill_category: string | null
+          skill_name: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          proficiency_level?: string | null
+          skill_category?: string | null
+          skill_name: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          proficiency_level?: string | null
+          skill_category?: string | null
+          skill_name?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "founder_skills_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "active_subscriptions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "founder_skills_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      founder_testimonials: {
+        Row: {
+          author_company: string | null
+          author_name: string
+          author_role: string | null
+          created_at: string | null
+          id: string
+          is_featured: boolean | null
+          testimonial_text: string
+          user_id: string
+        }
+        Insert: {
+          author_company?: string | null
+          author_name: string
+          author_role?: string | null
+          created_at?: string | null
+          id?: string
+          is_featured?: boolean | null
+          testimonial_text: string
+          user_id: string
+        }
+        Update: {
+          author_company?: string | null
+          author_name?: string
+          author_role?: string | null
+          created_at?: string | null
+          id?: string
+          is_featured?: boolean | null
+          testimonial_text?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "founder_testimonials_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "active_subscriptions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "founder_testimonials_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       friend_requests: {
         Row: {
           created_at: string
@@ -3181,6 +3361,27 @@ export type Database = {
           sender_id?: string
           status?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      function_idempotency: {
+        Row: {
+          created_at: string
+          id: string
+          result: Json | null
+          status: string | null
+        }
+        Insert: {
+          created_at?: string
+          id: string
+          result?: Json | null
+          status?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          result?: Json | null
+          status?: string | null
         }
         Relationships: []
       }
@@ -4185,6 +4386,36 @@ export type Database = {
           },
         ]
       }
+      mentor_user_link_backup: {
+        Row: {
+          backed_up_at: string
+          backup_id: number
+          mentor_id: string
+          mentor_name: string | null
+          old_user_email: string | null
+          old_user_full_name: string | null
+          old_user_id: string | null
+        }
+        Insert: {
+          backed_up_at?: string
+          backup_id?: never
+          mentor_id: string
+          mentor_name?: string | null
+          old_user_email?: string | null
+          old_user_full_name?: string | null
+          old_user_id?: string | null
+        }
+        Update: {
+          backed_up_at?: string
+          backup_id?: never
+          mentor_id?: string
+          mentor_name?: string | null
+          old_user_email?: string | null
+          old_user_full_name?: string | null
+          old_user_id?: string | null
+        }
+        Relationships: []
+      }
       mentors: {
         Row: {
           availability: Json | null
@@ -4263,6 +4494,101 @@ export type Database = {
         }
         Relationships: []
       }
+      message_email_notifications: {
+        Row: {
+          conversation_id: string
+          created_at: string
+          delivered_at: string | null
+          id: string
+          last_error: string | null
+          message_id: string
+          metadata: Json
+          net_request_id: number | null
+          recipient_id: string
+          resend_email_id: string | null
+          sender_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          conversation_id: string
+          created_at?: string
+          delivered_at?: string | null
+          id?: string
+          last_error?: string | null
+          message_id: string
+          metadata?: Json
+          net_request_id?: number | null
+          recipient_id: string
+          resend_email_id?: string | null
+          sender_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          conversation_id?: string
+          created_at?: string
+          delivered_at?: string | null
+          id?: string
+          last_error?: string | null
+          message_id?: string
+          metadata?: Json
+          net_request_id?: number | null
+          recipient_id?: string
+          resend_email_id?: string | null
+          sender_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "message_email_notifications_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "message_email_notifications_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      message_reactions: {
+        Row: {
+          created_at: string | null
+          emoji: string
+          id: string
+          message_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          emoji: string
+          id?: string
+          message_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          emoji?: string
+          id?: string
+          message_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "message_reactions_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       messages: {
         Row: {
           attachments: Json | null
@@ -4300,7 +4626,15 @@ export type Database = {
           sender_id?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_messages_conversation_id"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       notifications: {
         Row: {
@@ -4756,23 +5090,29 @@ export type Database = {
           creative_niche: string | null
           credit_balance: number
           credits: number | null
+          current_focus: string | null
           date_of_birth: string | null
           facebook_url: string | null
           followers_count: number
           following_count: number
           founder_journey_stage: string | null
+          founder_role: string | null
           friends_count: number
           full_name: string | null
           github_url: string | null
           id: string
           instagram_url: string | null
+          last_active_at: string | null
           last_activity_at: string | null
           last_checkin_date: string | null
           last_credit_reset_at: string
           linkedin_url: string | null
+          location: string | null
+          looking_for: string[] | null
           memory_preference: string | null
           monthly_credits: number | null
           onboarding_completed: boolean | null
+          positioning_line: string | null
           preferred_dashboard_mode: string | null
           preferred_dashboard_view: string | null
           profile_completion_percentage: number | null
@@ -4785,16 +5125,25 @@ export type Database = {
           quiz_looking_for_cofounder: string | null
           role: string | null
           sidebar_preferences: Json | null
+          startup_description: string | null
+          startup_industry: string[] | null
+          startup_links: Json | null
+          startup_logo_url: string | null
+          startup_name: string | null
+          startup_stage: string | null
+          startup_tagline: string | null
           stripe_customer_id: string | null
           subscribed: boolean | null
           subscription_end: string | null
           subscription_tier: string
           tiktok_url: string | null
+          traction_metrics: Json | null
+          traction_visible: boolean | null
           twitter_url: string | null
           updated_at: string
           use_classic_dashboard: boolean | null
           user_preferences: Json | null
-          username: string | null
+          username: string
           website_url: string | null
           youtube_url: string | null
         }
@@ -4811,23 +5160,29 @@ export type Database = {
           creative_niche?: string | null
           credit_balance?: number
           credits?: number | null
+          current_focus?: string | null
           date_of_birth?: string | null
           facebook_url?: string | null
           followers_count?: number
           following_count?: number
           founder_journey_stage?: string | null
+          founder_role?: string | null
           friends_count?: number
           full_name?: string | null
           github_url?: string | null
           id: string
           instagram_url?: string | null
+          last_active_at?: string | null
           last_activity_at?: string | null
           last_checkin_date?: string | null
           last_credit_reset_at?: string
           linkedin_url?: string | null
+          location?: string | null
+          looking_for?: string[] | null
           memory_preference?: string | null
           monthly_credits?: number | null
           onboarding_completed?: boolean | null
+          positioning_line?: string | null
           preferred_dashboard_mode?: string | null
           preferred_dashboard_view?: string | null
           profile_completion_percentage?: number | null
@@ -4840,16 +5195,25 @@ export type Database = {
           quiz_looking_for_cofounder?: string | null
           role?: string | null
           sidebar_preferences?: Json | null
+          startup_description?: string | null
+          startup_industry?: string[] | null
+          startup_links?: Json | null
+          startup_logo_url?: string | null
+          startup_name?: string | null
+          startup_stage?: string | null
+          startup_tagline?: string | null
           stripe_customer_id?: string | null
           subscribed?: boolean | null
           subscription_end?: string | null
           subscription_tier?: string
           tiktok_url?: string | null
+          traction_metrics?: Json | null
+          traction_visible?: boolean | null
           twitter_url?: string | null
           updated_at?: string
           use_classic_dashboard?: boolean | null
           user_preferences?: Json | null
-          username?: string | null
+          username: string
           website_url?: string | null
           youtube_url?: string | null
         }
@@ -4866,23 +5230,29 @@ export type Database = {
           creative_niche?: string | null
           credit_balance?: number
           credits?: number | null
+          current_focus?: string | null
           date_of_birth?: string | null
           facebook_url?: string | null
           followers_count?: number
           following_count?: number
           founder_journey_stage?: string | null
+          founder_role?: string | null
           friends_count?: number
           full_name?: string | null
           github_url?: string | null
           id?: string
           instagram_url?: string | null
+          last_active_at?: string | null
           last_activity_at?: string | null
           last_checkin_date?: string | null
           last_credit_reset_at?: string
           linkedin_url?: string | null
+          location?: string | null
+          looking_for?: string[] | null
           memory_preference?: string | null
           monthly_credits?: number | null
           onboarding_completed?: boolean | null
+          positioning_line?: string | null
           preferred_dashboard_mode?: string | null
           preferred_dashboard_view?: string | null
           profile_completion_percentage?: number | null
@@ -4895,16 +5265,25 @@ export type Database = {
           quiz_looking_for_cofounder?: string | null
           role?: string | null
           sidebar_preferences?: Json | null
+          startup_description?: string | null
+          startup_industry?: string[] | null
+          startup_links?: Json | null
+          startup_logo_url?: string | null
+          startup_name?: string | null
+          startup_stage?: string | null
+          startup_tagline?: string | null
           stripe_customer_id?: string | null
           subscribed?: boolean | null
           subscription_end?: string | null
           subscription_tier?: string
           tiktok_url?: string | null
+          traction_metrics?: Json | null
+          traction_visible?: boolean | null
           twitter_url?: string | null
           updated_at?: string
           use_classic_dashboard?: boolean | null
           user_preferences?: Json | null
-          username?: string | null
+          username?: string
           website_url?: string | null
           youtube_url?: string | null
         }
@@ -5267,6 +5646,39 @@ export type Database = {
           },
         ]
       }
+      signup_trigger_failures: {
+        Row: {
+          context: Json | null
+          created_at: string
+          email: string | null
+          error_code: string | null
+          error_message: string | null
+          id: number
+          raw_user_meta_data: Json | null
+          user_id: string | null
+        }
+        Insert: {
+          context?: Json | null
+          created_at?: string
+          email?: string | null
+          error_code?: string | null
+          error_message?: string | null
+          id?: number
+          raw_user_meta_data?: Json | null
+          user_id?: string | null
+        }
+        Update: {
+          context?: Json | null
+          created_at?: string
+          email?: string | null
+          error_code?: string | null
+          error_message?: string | null
+          id?: number
+          raw_user_meta_data?: Json | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       sprint_accountability: {
         Row: {
           accountability_partner_id: string | null
@@ -5527,6 +5939,54 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      startup_updates: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          media_urls: string[] | null
+          title: string
+          update_type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          media_urls?: string[] | null
+          title: string
+          update_type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          media_urls?: string[] | null
+          title?: string
+          update_type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "startup_updates_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "active_subscriptions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "startup_updates_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       stories_articles: {
         Row: {
@@ -6385,6 +6845,8 @@ export type Database = {
           is_active: boolean
           last_seen_at: string
           session_id: string
+          status: string
+          updated_at: string
           user_id: string
         }
         Insert: {
@@ -6394,6 +6856,8 @@ export type Database = {
           is_active?: boolean
           last_seen_at?: string
           session_id: string
+          status?: string
+          updated_at?: string
           user_id: string
         }
         Update: {
@@ -6403,6 +6867,8 @@ export type Database = {
           is_active?: boolean
           last_seen_at?: string
           session_id?: string
+          status?: string
+          updated_at?: string
           user_id?: string
         }
         Relationships: [
@@ -6411,6 +6877,54 @@ export type Database = {
             columns: ["session_id"]
             isOneToOne: false
             referencedRelation: "collaboration_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_reels: {
+        Row: {
+          caption: string | null
+          created_at: string
+          duration_seconds: number | null
+          id: string
+          thumbnail_url: string | null
+          updated_at: string
+          user_id: string
+          video_url: string
+        }
+        Insert: {
+          caption?: string | null
+          created_at?: string
+          duration_seconds?: number | null
+          id?: string
+          thumbnail_url?: string | null
+          updated_at?: string
+          user_id: string
+          video_url: string
+        }
+        Update: {
+          caption?: string | null
+          created_at?: string
+          duration_seconds?: number | null
+          id?: string
+          thumbnail_url?: string | null
+          updated_at?: string
+          user_id?: string
+          video_url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_reels_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "active_subscriptions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_reels_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -6942,7 +7456,39 @@ export type Database = {
         }
         Returns: undefined
       }
+      create_or_get_direct_conversation: {
+        Args: { p_other_user_id: string }
+        Returns: {
+          created_at: string
+          id: string
+          is_group: boolean
+          last_message_at: string | null
+          name: string | null
+          participants: string[]
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "conversations"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      deduct_credits_atomic: {
+        Args: {
+          p_amount: number
+          p_feature: string
+          p_metadata?: Json
+          p_session_id?: string
+          p_user_id: string
+        }
+        Returns: Json
+      }
       expire_subscriptions: { Args: never; Returns: number }
+      generate_profile_base_slug: {
+        Args: { fallback_user_id: string; full_name: string }
+        Returns: string
+      }
       get_conversations_for_summarization: {
         Args: { days_old?: number }
         Returns: {
@@ -7032,12 +7578,20 @@ export type Database = {
         }
         Returns: boolean
       }
+      idempotency_clear: { Args: { p_id: string }; Returns: undefined }
+      idempotency_get: { Args: { p_id: string }; Returns: Json }
+      idempotency_mark_completed: {
+        Args: { p_id: string; p_result: Json }
+        Returns: undefined
+      }
+      idempotency_try_begin: { Args: { p_id: string }; Returns: string }
       is_admin_user: { Args: never; Returns: boolean }
       is_community_active: { Args: { profile_id: string }; Returns: boolean }
       is_following: {
         Args: { profile_id: string; viewer_id: string }
         Returns: boolean
       }
+      is_reserved_profile_slug: { Args: { v: string }; Returns: boolean }
       is_subscription_active: { Args: { user_id: string }; Returns: boolean }
       match_knowledge_chunks: {
         Args: {
@@ -7052,6 +7606,7 @@ export type Database = {
           similarity: number
         }[]
       }
+      normalize_profile_part: { Args: { v: string }; Returns: string }
       refresh_admin_analytics: { Args: never; Returns: undefined }
       refresh_expired_trends: { Args: never; Returns: undefined }
       reset_community_limits: { Args: never; Returns: undefined }
@@ -7073,6 +7628,7 @@ export type Database = {
         }[]
       }
       trigger_memory_summarization: { Args: never; Returns: undefined }
+      unaccent: { Args: { "": string }; Returns: string }
       update_market_data_freshness: { Args: never; Returns: undefined }
       update_user_subscription: {
         Args: {
