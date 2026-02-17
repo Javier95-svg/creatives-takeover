@@ -178,11 +178,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         await Promise.all(parallelTasks);
       }
 
-      // ── Step 4: Handle onboarding redirect (admin never needs onboarding) ──
+      // Step 4: Handle onboarding redirect (admin never needs onboarding)
       if (!isAdmin) {
-        const onboardingCompleted = existingProfile?.onboarding_completed;
+        const shouldRedirectToOnboarding =
+          isNewProfile || existingProfile?.onboarding_completed === false;
 
-        if (onboardingCompleted === false) {
+        if (shouldRedirectToOnboarding) {
           const hasRedirected = sessionStorage.getItem(`onboarding_redirect_${userId}`);
           if (!hasRedirected && !window.location.pathname.includes('/onboarding')) {
             sessionStorage.setItem(`onboarding_redirect_${userId}`, 'true');
@@ -194,7 +195,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
               }
             }, 500);
           }
-        } else if (onboardingCompleted === true) {
+        } else if (existingProfile?.onboarding_completed === true) {
           sessionStorage.removeItem(`onboarding_redirect_${userId}`);
         }
       }

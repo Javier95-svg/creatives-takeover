@@ -2,8 +2,6 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
-import { useFeedbackCredits } from '@/hooks/useFeedbackCredits';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import type { EmailOtpType } from '@supabase/supabase-js';
@@ -11,8 +9,6 @@ import type { EmailOtpType } from '@supabase/supabase-js';
 const AuthCallback = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { user } = useAuth();
-  const { hasPendingCredits } = useFeedbackCredits();
   const [status, setStatus] = useState<'loading' | 'error' | 'success'>('loading');
 
   useEffect(() => {
@@ -118,7 +114,8 @@ const AuthCallback = () => {
           }
           
           // Get return URL from localStorage (saved before OAuth redirect)
-          let returnUrl = localStorage.getItem('oauth_return_url') || '/';
+          const fallbackReturnUrl = isEmailConfirmation ? '/onboarding' : '/';
+          let returnUrl = localStorage.getItem('oauth_return_url') || fallbackReturnUrl;
           const oauthSource = localStorage.getItem('oauth_source');
           
           // If return URL is a booking flow, redirect to /community instead
@@ -171,27 +168,6 @@ const AuthCallback = () => {
 
     handleAuthCallback();
   }, [navigate, searchParams]);
-
-  // If user is already authenticated from context, redirect immediately
-  useEffect(() => {
-    if (user && status === 'success') {
-      // Get return URL from localStorage
-      const returnUrl = localStorage.getItem('oauth_return_url') || '/';
-      
-      // Restore BizMap progress if it exists
-      const savedBizMapProgress = localStorage.getItem('oauth_bizmap_progress');
-      if (savedBizMapProgress) {
-        localStorage.setItem('bizmap_progress', savedBizMapProgress);
-        localStorage.removeItem('oauth_bizmap_progress');
-      }
-      
-      // Clean up OAuth-related localStorage
-      localStorage.removeItem('oauth_return_url');
-      localStorage.removeItem('oauth_source');
-      
-      navigate(returnUrl);
-    }
-  }, [user, navigate, status]);
 
   const getStatusMessage = () => {
     switch (status) {

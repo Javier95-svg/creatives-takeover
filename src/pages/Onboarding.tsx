@@ -7,13 +7,16 @@ import { Helmet } from 'react-helmet-async';
 import HomeWallpaper from '@/components/wallpapers/HomeWallpaper';
 
 const Onboarding = () => {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, loading: authLoading } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
     const checkOnboardingStatus = async () => {
+      if (authLoading) return;
+
       if (!isAuthenticated || !user) {
-        // If not authenticated, stay on page (user will sign up in Step 0)
+        // Onboarding requires an authenticated account.
+        navigate('/signup?return=/onboarding', { replace: true });
         return;
       }
 
@@ -38,7 +41,7 @@ const Onboarding = () => {
     };
 
     checkOnboardingStatus();
-  }, [user, isAuthenticated, navigate]);
+  }, [user, isAuthenticated, authLoading, navigate]);
 
   const handleComplete = () => {
     // Redirect to dashboard after onboarding completion

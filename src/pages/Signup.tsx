@@ -44,17 +44,38 @@ const Signup = () => {
     };
   });
 
-  // Redirect if already logged in
+  // Redirect authenticated users to the correct post-signup destination
   useEffect(() => {
-    if (user) {
-      // Check if user has saved progress from BizMap
-      const savedProgress = localStorage.getItem('bizmap_progress');
-      if (savedProgress && conversionSource.returnUrl.includes('dream2plan')) {
-        navigate(conversionSource.returnUrl);
-      } else {
-        navigate('/');
+    if (!user) return;
+
+    const redirectAuthenticatedUser = async () => {
+      try {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('onboarding_completed')
+          .eq('id', user.id)
+          .maybeSingle();
+
+        // New users should complete onboarding first.
+        if (profile?.onboarding_completed !== true) {
+          navigate('/onboarding', { replace: true });
+          return;
+        }
+
+        const savedProgress = localStorage.getItem('bizmap_progress');
+        if (savedProgress && conversionSource.returnUrl.includes('dream2plan')) {
+          navigate(conversionSource.returnUrl, { replace: true });
+          return;
+        }
+
+        navigate('/dashboard', { replace: true });
+      } catch (error) {
+        console.error('Error resolving signup redirect:', error);
+        navigate('/onboarding', { replace: true });
       }
-    }
+    };
+
+    redirectAuthenticatedUser();
   }, [user, navigate, conversionSource.returnUrl]);
 
   // Email validation regex
@@ -182,18 +203,9 @@ const Signup = () => {
 
         toast.success("Account created successfully! Redirecting...");
 
-        // Check for saved BizMap progress
-        const savedProgress = localStorage.getItem('bizmap_progress');
-        if (savedProgress && conversionSource.returnUrl.includes('dream2plan')) {
-          toast.success("Restoring your business plan...");
-          setTimeout(() => {
-            navigate('/onboarding');
-          }, 500);
-        } else {
-          setTimeout(() => {
-            navigate('/onboarding');
-          }, 500);
-        }
+        setTimeout(() => {
+          navigate('/onboarding', { replace: true });
+        }, 300);
       }
     } catch (error) {
       // Handle unexpected errors

@@ -139,13 +139,13 @@ const Auth: React.FC = () => {
     }
 
     // Redirect to callback handler for proper email confirmation handling
-    const redirectUrl = `${window.location.origin}/auth/callback`;
+    const emailRedirectUrl = `${window.location.origin}/auth/callback`;
 
     const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        emailRedirectTo: redirectUrl,
+        emailRedirectTo: emailRedirectUrl,
         data: {
           full_name: `${firstName.trim()} ${lastName.trim()}`,
         }
@@ -161,7 +161,7 @@ const Auth: React.FC = () => {
       setLoading(false);
       
       // For signup, if redirect is a booking flow, save it for after email confirmation
-      if (redirectUrl.startsWith('/community/book/')) {
+      if (searchParams.get('redirect')?.startsWith('/community/book/')) {
         localStorage.setItem('pending_booking_redirect', '/community');
       }
     }
