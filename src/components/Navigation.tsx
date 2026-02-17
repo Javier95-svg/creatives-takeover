@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import ctLogo from '@/assets/ct-logo.png';
 import { Menu, X, LogIn, LogOut, User, Settings, Gift, UserPlus, MessageCircle, Home, Bot, BookOpen, TrendingUp, Users as UsersIcon, FileText, Info, DollarSign, ChevronDown, Mail, Rocket, FlaskConical, Lightbulb, Target, Boxes, GraduationCap, Handshake, BarChart3, Filter, CheckSquare, LineChart, CalendarCheck, HeartHandshake, Sparkles } from "lucide-react";
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
@@ -167,9 +168,9 @@ const Navigation = () => {
             <div className="flex items-center border-0 flex-shrink-0 w-16 min-w-[4rem]">
               <Link to="/" className="flex items-center justify-center w-full" aria-label="Home">
                 <img
-                  src="/lovable-uploads/new-favicon.png"
+                  src={ctLogo}
                   alt="Creatives Takeover Logo"
-                  className="nav-logo-image nav-logo-hover"
+                  className="nav-logo-image nav-logo-hover animate-logo-breathing"
                   width={44}
                   height={44}
                   decoding="async"
