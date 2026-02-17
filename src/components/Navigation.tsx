@@ -17,6 +17,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { usePageAnalytics } from "@/hooks/usePageAnalytics";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import ThemeToggle from "@/components/ThemeToggle";
+import ctLogo from "@/assets/ct-logo.png";
 import { useDeviceType } from "@/hooks/use-device-type";
 import { TabletNavigation } from "@/components/navigation/TabletNavigation";
 import {
@@ -167,13 +168,9 @@ const Navigation = () => {
             <div className="flex items-center border-0 flex-shrink-0 w-16 min-w-[4rem]">
               <Link to="/" className="flex items-center justify-center w-full" aria-label="Home">
                 <img
-                  src="/lovable-uploads/new-favicon.png"
+                  src={ctLogo}
                   alt="Creatives Takeover Logo"
-                  className="nav-logo-image nav-logo-hover"
-                  width={44}
-                  height={44}
-                  decoding="async"
-                  fetchPriority="high"
+                  className="h-10 w-auto max-w-full object-contain animate-logo-breathing nav-logo-hover"
                 />
               </Link>
             </div>

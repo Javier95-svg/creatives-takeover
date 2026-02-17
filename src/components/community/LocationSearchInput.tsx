@@ -363,7 +363,7 @@ const LocationSearchInput: React.FC<LocationSearchInputProps> = ({
             <div className="max-h-60 overflow-y-auto p-1">
               {suggestions.map((suggestion) => (
                 <button
-                  key={suggestion.id}
+                  key="suggestion.id}
                   type="button"
                   className="flex w-full items-center gap-2 rounded-sm px-3 py-2 text-left text-base sm:text-sm hover:bg-muted"
                   onClick={() => selectSuggestion(suggestion)}

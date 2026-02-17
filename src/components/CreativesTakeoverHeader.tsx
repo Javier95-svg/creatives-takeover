@@ -20,7 +20,7 @@ const CreativesTakeoverHeader = () => {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/">
-            <img src={ctLogo} alt="Creatives Takeover" className="h-10 w-10 animate-logo-breathing nav-logo-hover" />
+            <img src={ctLogo} alt="Creatives Takeover" className="h-10 w-10" />
           </Link>
 
           {/* Desktop Navigation */}
