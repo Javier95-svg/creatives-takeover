@@ -1,5 +1,4 @@
 import { Button } from "@/components/ui/button";
-import ctLogo from '@/assets/ct-logo.png';
 import { Menu, X, LogIn, LogOut, User, Settings, Gift, UserPlus, MessageCircle, Home, Bot, BookOpen, TrendingUp, Users as UsersIcon, FileText, Info, DollarSign, ChevronDown, Mail, Rocket, FlaskConical, Lightbulb, Target, Boxes, GraduationCap, Handshake, BarChart3, Filter, CheckSquare, LineChart, CalendarCheck, HeartHandshake, Sparkles } from "lucide-react";
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
@@ -20,6 +19,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import ThemeToggle from "@/components/ThemeToggle";
 import { useDeviceType } from "@/hooks/use-device-type";
 import { TabletNavigation } from "@/components/navigation/TabletNavigation";
+import ctLogoPolished from "@/assets/ct-logo-polished-borders.png";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -168,9 +168,9 @@ const Navigation = () => {
             <div className="flex items-center border-0 flex-shrink-0 w-16 min-w-[4rem]">
               <Link to="/" className="flex items-center justify-center w-full" aria-label="Home">
                 <img
-                  src={ctLogo}
+                  src={ctLogoPolished}
                   alt="Creatives Takeover Logo"
-                  className="nav-logo-image nav-logo-hover animate-logo-breathing"
+                  className="h-10 w-auto max-w-full object-contain animate-logo-breathing nav-logo-hover"
                   width={44}
                   height={44}
                   decoding="async"
