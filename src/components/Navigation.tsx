@@ -17,7 +17,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { usePageAnalytics } from "@/hooks/usePageAnalytics";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import ThemeToggle from "@/components/ThemeToggle";
-import ctLogo from "@/assets/ct-logo.png";
+import ctLogo from "@/assets/ct-logo.svg";
 import { useDeviceType } from "@/hooks/use-device-type";
 import { TabletNavigation } from "@/components/navigation/TabletNavigation";
 import {
@@ -170,7 +170,11 @@ const Navigation = () => {
                 <img
                   src={ctLogo}
                   alt="Creatives Takeover Logo"
-                  className="h-10 w-auto max-w-full object-contain animate-logo-breathing nav-logo-hover"
+                  className="nav-logo-image nav-logo-hover"
+                  width={44}
+                  height={44}
+                  decoding="async"
+                  fetchPriority="high"
                 />
               </Link>
             </div>

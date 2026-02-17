@@ -2866,9 +2866,19 @@ img {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+.nav-logo-image {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  image-rendering: auto;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+}
+
 .nav-logo-hover:hover {
-  transform: scale(1.05);
-  filter: drop-shadow(0 4px 8px hsl(var(--primary) / 0.3));
+  transform: scale(1.03);
+  filter: drop-shadow(0 2px 6px hsl(var(--primary) / 0.2));
 }
 
 /* Dashboard CTA Pulse + Glow Animation */
