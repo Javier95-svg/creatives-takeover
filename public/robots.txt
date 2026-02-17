@@ -1,31 +1,56 @@
 User-agent: *
 Allow: /
-
-# Disallow admin and auth pages
 Disallow: /admin/
 Disallow: /auth/
 Disallow: /account
-Disallow: /profile
 Disallow: /messages
 Disallow: /dashboard
-
-# Disallow API endpoints
 Disallow: /api/
 
-# Allow all public pages
+# Explicitly allow AI crawlers on public pages
+User-agent: GPTBot
 Allow: /
-Allow: /dream2plan
-Allow: /pricing
-Allow: /services
-Allow: /news
-Allow: /community
-Allow: /resources
-Allow: /about
-Allow: /faq
-Allow: /contact
+Disallow: /admin/
+Disallow: /auth/
+Disallow: /account
+Disallow: /messages
+Disallow: /dashboard
+Disallow: /api/
 
-# Crawl-delay for bots
-Crawl-delay: 1
+User-agent: ChatGPT-User
+Allow: /
+Disallow: /admin/
+Disallow: /auth/
+Disallow: /account
+Disallow: /messages
+Disallow: /dashboard
+Disallow: /api/
 
-# Sitemap location
+User-agent: OAI-SearchBot
+Allow: /
+Disallow: /admin/
+Disallow: /auth/
+Disallow: /account
+Disallow: /messages
+Disallow: /dashboard
+Disallow: /api/
+
+User-agent: PerplexityBot
+Allow: /
+Disallow: /admin/
+Disallow: /auth/
+Disallow: /account
+Disallow: /messages
+Disallow: /dashboard
+Disallow: /api/
+
+User-agent: Perplexity-User
+Allow: /
+Disallow: /admin/
+Disallow: /auth/
+Disallow: /account
+Disallow: /messages
+Disallow: /dashboard
+Disallow: /api/
+
 Sitemap: https://creatives-takeover.com/sitemap.xml

@@ -1,0 +1,22 @@
+site: https://creatives-takeover.com
+name: Creatives Takeover
+description: All-in-one platform for founders and rookie entrepreneurs to build, validate, launch, and grow startups.
+
+public_pages:
+- /
+- /community
+- /stories
+- /pricing
+- /resources
+- /about
+- /faq
+
+private_pages:
+- /account
+- /dashboard
+- /messages
+- /admin
+- /auth
+
+sitemap: https://creatives-takeover.com/sitemap.xml
+robots: https://creatives-takeover.com/robots.txt
