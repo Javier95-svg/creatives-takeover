@@ -488,6 +488,21 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
     return elements;
   };
 
+  const getMessageReceiptState = (message: { id: string; is_read: boolean }) => {
+    // Optimistic client-side messages use temp IDs until backend persistence.
+    // This maps to "not received yet" (single check) in the UI.
+    if (message.id.startsWith('temp-')) {
+      return 'pending' as const;
+    }
+
+    if (message.is_read) {
+      return 'read' as const;
+    }
+
+    // Persisted but unread => delivered (double grey).
+    return 'delivered' as const;
+  };
+
   // Group messages by sender and time (within 5 minutes)
   const groupedMessages = activeMessages.reduce<typeof activeMessages[]>((groups, message, index) => {
     const prevMessage = activeMessages[index - 1];
@@ -570,15 +585,31 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
                     <p className="text-xs opacity-70">
                       {formatDistanceToNow(new Date(message.created_at))} ago
                     </p>
-                    {isOwnMessage && (
-                      <span className="text-xs flex items-center">
-                        {message.is_read ? (
-                          <CheckCheck className="h-3 w-3 text-blue-500" />
-                        ) : (
+                    {isOwnMessage && (() => {
+                      const receiptState = getMessageReceiptState(message);
+
+                      if (receiptState === 'read') {
+                        return (
+                          <span className="text-xs flex items-center" title="Read">
+                            <CheckCheck className="h-3 w-3 text-blue-500" />
+                          </span>
+                        );
+                      }
+
+                      if (receiptState === 'delivered') {
+                        return (
+                          <span className="text-xs flex items-center" title="Delivered">
+                            <CheckCheck className="h-3 w-3 text-muted-foreground" />
+                          </span>
+                        );
+                      }
+
+                      return (
+                        <span className="text-xs flex items-center" title="Sending">
                           <Check className="h-3 w-3 opacity-70" />
-                        )}
-                      </span>
-                    )}
+                        </span>
+                      );
+                    })()}
                   </div>
                 )}
               </div>
