@@ -15,7 +15,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import ScrollToTop from "./components/ScrollToTop";
 import ProUpgradeBanner from "@/components/ProUpgradeBanner";
 
-const FloatingFeedbackWidget = lazy(() => import("@/components/FloatingFeedbackWidget"));
+const PulseWidget = lazy(() => import("@/components/pulse/PulseWidget"));
 const MobileBottomNav = lazy(() =>
   import("@/components/mobile/MobileBottomNav").then((module) => ({
     default: module.MobileBottomNav,
@@ -107,14 +107,15 @@ const queryClient = new QueryClient({
   },
 });
 
-const FeedbackWidgetWrapper = () => {
+const PulseWidgetWrapper = () => {
   const location = useLocation();
 
-  // Show feedback widget on public pages
-  const publicPages = ['/', '/about', '/pricing', '/community', '/careers', '/insighta', '/demo'];
-  const showWidget = publicPages.includes(location.pathname) || location.pathname.startsWith('/insighta/');
+  // Show Pulse on all pages except auth flows and admin
+  const excludedPaths = ['/onboarding', '/auth', '/login', '/signup', '/forgot-password', '/reset-password'];
+  const isExcluded = excludedPaths.some(p => location.pathname.startsWith(p));
 
-  return showWidget ? <FloatingFeedbackWidget /> : null;
+  if (isExcluded) return null;
+  return <PulseWidget />;
 };
 
 function App() {
@@ -136,7 +137,7 @@ function App() {
                     <ScrollToTop />
                     <UpgradePromptProvider>
                       <ProUpgradeBanner />
-                      <FeedbackWidgetWrapper />
+                      <PulseWidgetWrapper />
                       <Routes>
                         <Route path="/" element={<Index />} />
                         <Route path="/about" element={<About />} />
