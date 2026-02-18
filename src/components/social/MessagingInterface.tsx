@@ -537,7 +537,7 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
           </div>
         )}
 
-        <div className="flex flex-col gap-1 max-w-[75%] md:max-w-xs">
+        <div className="flex flex-col gap-1 max-w-[88%] sm:max-w-[84%] md:max-w-[78%] lg:max-w-[72%] xl:max-w-[68%]">
           {messages.map((message, idx) => (
             <div key={message.id} className="group">
               <div
