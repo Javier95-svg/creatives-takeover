@@ -511,7 +511,7 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
                   )
                 )}
 
-                <p className="text-sm break-words">{message.content}</p>
+                <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
 
                 {/* Timestamp and read receipt only on last message */}
                 {idx === messages.length - 1 && (
