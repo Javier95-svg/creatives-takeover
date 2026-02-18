@@ -1,7 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Mentor, getCurrencySymbol } from "@/types/mentor";
+import { Mentor } from "@/types/mentor";
 import { Link, useNavigate } from "react-router-dom";
 import { Star, CheckCircle2, MessageCircle, Calendar, Heart, Linkedin } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -26,8 +26,6 @@ export const MentorCard = ({ mentor, className, priority = false }: MentorCardPr
   const { isAuthenticated, user } = useAuth();
   const { startConversation, resolveMentorUserId } = useMessaging({ autoLoad: false });
   const { deductCredits, ensureCredits } = useCreditActions();
-  const currencySymbol = getCurrencySymbol(mentor.currency);
-  const hourlyRate = ((mentor as any).hourly_rate_per_hour || 0) / 100;
   const mentorSlug = generateMentorSlug(mentor.name);
   const profileUrl = `/community/${mentorSlug}`;
 
@@ -357,15 +355,6 @@ export const MentorCard = ({ mentor, className, priority = false }: MentorCardPr
               <div className="text-sm text-muted-foreground">
                 Expertise: <span className="font-medium">{mentor.expertise.slice(0, 3).join(', ')}</span>
                 {mentor.expertise.length > 3 && '...'}
-              </div>
-            )}
-
-            {/* Pricing: Hourly Rate */}
-            {hourlyRate > 0 && (
-              <div className="text-xs lg:text-sm">
-                <span className="text-foreground font-semibold">
-                  {currencySymbol}{hourlyRate.toLocaleString()}<span className="text-muted-foreground font-normal">/hr</span>
-                </span>
               </div>
             )}
 
