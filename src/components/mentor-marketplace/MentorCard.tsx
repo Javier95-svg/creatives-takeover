@@ -89,6 +89,13 @@ export const MentorCard = ({ mentor, className, priority = false }: MentorCardPr
     if (mentor.name.toLowerCase().includes('rachel') && mentor.name.toLowerCase().includes('yenko')) {
       return 'USA';
     }
+    // Special case: Sophia Lopez Pimenta is from Brazil
+    if (
+      mentor.name.toLowerCase().includes('sophia') &&
+      (mentor.name.toLowerCase().includes('pimenta') || mentor.name.toLowerCase().includes('lopez'))
+    ) {
+      return 'Brazil';
+    }
     // Special case: Karolina Żurawska is from Poland
     if (mentor.name.toLowerCase().includes('karolina') && mentor.name.toLowerCase().includes('urawska')) {
       return 'Poland';
