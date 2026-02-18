@@ -437,6 +437,57 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
     }
   };
 
+  const renderMessageContent = (content: string) => {
+    const elements: JSX.Element[] = [];
+    const urlRegex = /https?:\/\/[^\s]+/gi;
+    let lastIndex = 0;
+    let match: RegExpExecArray | null;
+    let key = 0;
+
+    while ((match = urlRegex.exec(content)) !== null) {
+      const matchStart = match.index;
+      const rawUrl = match[0];
+
+      if (matchStart > lastIndex) {
+        elements.push(<span key={`text-${key++}`}>{content.slice(lastIndex, matchStart)}</span>);
+      }
+
+      let cleanUrl = rawUrl;
+      let trailingPunctuation = '';
+
+      while (cleanUrl.length > 0 && /[.,!?;:)\]]/.test(cleanUrl[cleanUrl.length - 1])) {
+        trailingPunctuation = cleanUrl[cleanUrl.length - 1] + trailingPunctuation;
+        cleanUrl = cleanUrl.slice(0, -1);
+      }
+
+      if (cleanUrl) {
+        elements.push(
+          <a
+            key={`link-${key++}`}
+            href={cleanUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline underline-offset-2 break-all hover:opacity-80"
+          >
+            {cleanUrl}
+          </a>
+        );
+      }
+
+      if (trailingPunctuation) {
+        elements.push(<span key={`punct-${key++}`}>{trailingPunctuation}</span>);
+      }
+
+      lastIndex = matchStart + rawUrl.length;
+    }
+
+    if (lastIndex < content.length) {
+      elements.push(<span key={`text-${key++}`}>{content.slice(lastIndex)}</span>);
+    }
+
+    return elements;
+  };
+
   // Group messages by sender and time (within 5 minutes)
   const groupedMessages = activeMessages.reduce<typeof activeMessages[]>((groups, message, index) => {
     const prevMessage = activeMessages[index - 1];
@@ -511,7 +562,7 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
                   )
                 )}
 
-                <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
+                <p className="text-sm whitespace-pre-wrap break-words">{renderMessageContent(message.content)}</p>
 
                 {/* Timestamp and read receipt only on last message */}
                 {idx === messages.length - 1 && (
