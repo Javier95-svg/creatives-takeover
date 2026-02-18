@@ -46,9 +46,8 @@ const Index = () => {
           .maybeSingle();
 
         if (profile) {
-          // Only redirect to onboarding if explicitly false
-          // Authenticated users can freely browse the homepage
-          if (profile.onboarding_completed === false) {
+          // Enforce onboarding for any non-completed state (false or null).
+          if (profile.onboarding_completed !== true) {
             navigate('/onboarding');
           }
         }

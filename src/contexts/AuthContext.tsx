@@ -181,7 +181,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       // Step 4: Handle onboarding redirect (admin never needs onboarding)
       if (!isAdmin) {
         const shouldRedirectToOnboarding =
-          isNewProfile || existingProfile?.onboarding_completed === false;
+          isNewProfile || existingProfile?.onboarding_completed !== true;
 
         if (shouldRedirectToOnboarding) {
           const hasRedirected = sessionStorage.getItem(`onboarding_redirect_${userId}`);
@@ -377,7 +377,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     });
 
     if (error) {
-      logError('Auth signUp failed', error, { email, redirectUrl });
+      logError('Auth signUp failed', error, { email });
       return { error };
     }
 
