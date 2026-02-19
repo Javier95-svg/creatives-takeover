@@ -14,6 +14,7 @@ import AuthWallpaper from '@/components/wallpapers/AuthWallpaper';
 import MobileFormOptimizer from '@/components/MobileFormOptimizer';
 import { useFeedbackCredits } from '@/hooks/useFeedbackCredits';
 import { useAuth } from '@/contexts/AuthContext';
+import { signUpWithFallback } from '@/lib/authSignup';
 
 const Auth: React.FC = () => {
   const navigate = useNavigate();
@@ -137,14 +138,10 @@ const Auth: React.FC = () => {
       return;
     }
 
-    const { error } = await supabase.auth.signUp({
+    const { error } = await signUpWithFallback({
       email,
       password,
-      options: {
-        data: {
-          full_name: `${firstName.trim()} ${lastName.trim()}`,
-        }
-      }
+      fullName: `${firstName.trim()} ${lastName.trim()}`,
     });
 
     if (error) {

@@ -57,6 +57,9 @@ verify_jwt = false
 [functions.send-dm-notification-email]
 verify_jwt = false
 
+[functions.signup-direct]
+verify_jwt = false
+
 [functions.market-data-aggregator]
 verify_jwt = false
 

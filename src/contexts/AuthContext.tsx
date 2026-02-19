@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, useRef, useCallback } f
 import { User, Session, AuthError as SupabaseAuthError } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { logError, logInfo, logWarn } from '@/lib/logger';
+import { signUpWithFallback } from '@/lib/authSignup';
 
 interface AuthContextType {
   user: User | null;
@@ -365,20 +366,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const signUp = async (email: string, password: string, fullName: string, dateOfBirth?: string) => {
-    const { error } = await supabase.auth.signUp({
+    const { error, usedDirectSignupFallback } = await signUpWithFallback({
       email,
       password,
-      options: {
-        data: {
-          full_name: fullName || '',
-          date_of_birth: dateOfBirth || null,
-        }
-      }
+      fullName,
+      dateOfBirth,
     });
 
     if (error) {
       logError('Auth signUp failed', error, { email });
       return { error };
+    }
+
+    if (usedDirectSignupFallback) {
+      logWarn('Used direct signup fallback due confirmation email delivery issue', { email });
     }
 
     if (!error) {
