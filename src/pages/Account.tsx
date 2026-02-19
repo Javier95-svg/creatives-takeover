@@ -21,6 +21,11 @@ import { AccountWallpaper } from "@/components/AccountWallpaper";
 import { ProfileCompletionTracker } from "@/components/ProfileCompletionTracker";
 import { OnboardingChecklist } from "@/components/OnboardingChecklist";
 import { trackActivity } from "@/lib/activity";
+import {
+  isUsernameAvailable,
+  normalizeUsernameInput,
+  validateUsername,
+} from "@/lib/username";
 
 const Account = () => {
   const { user } = useAuth();
@@ -38,8 +43,10 @@ const Account = () => {
   
   // Profile state
   const [fullName, setFullName] = useState("");
+  const [username, setUsername] = useState("");
   const [bio, setBio] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
+  const [usernameStatus, setUsernameStatus] = useState<"idle" | "checking" | "available" | "taken" | "invalid">("idle");
 
   // Password update state
   const [newPassword, setNewPassword] = useState("");
@@ -96,6 +103,7 @@ const Account = () => {
   // Track initial values for unsaved changes detection
   const [initialValues, setInitialValues] = useState({
     fullName: "",
+    username: "",
     bio: "",
     avatarUrl: "",
     twitterUrl: "",
@@ -126,6 +134,7 @@ const Account = () => {
         if (data) {
           const profileData = {
             fullName: data.full_name || "",
+            username: data.username || "",
             bio: data.bio || "",
             avatarUrl: data.avatar_url || "",
             twitterUrl: data.twitter_url || "",
@@ -138,6 +147,7 @@ const Account = () => {
           };
 
           setFullName(profileData.fullName);
+          setUsername(profileData.username);
           setAvatarUrl(profileData.avatarUrl);
           setBio(profileData.bio);
           setTwitterUrl(profileData.twitterUrl);
@@ -214,10 +224,50 @@ const Account = () => {
     };
   }, [user]);
 
+  useEffect(() => {
+    if (!user?.id) {
+      setUsernameStatus("idle");
+      return;
+    }
+    const currentUserId = user.id;
+
+    const normalized = normalizeUsernameInput(username);
+    if (!normalized) {
+      setUsernameStatus("idle");
+      return;
+    }
+
+    if (validateUsername(normalized)) {
+      setUsernameStatus("invalid");
+      return;
+    }
+
+    let cancelled = false;
+    const timeoutId = window.setTimeout(async () => {
+      setUsernameStatus("checking");
+      try {
+        const available = await isUsernameAvailable(normalized, currentUserId);
+        if (!cancelled) {
+          setUsernameStatus(available ? "available" : "taken");
+        }
+      } catch {
+        if (!cancelled) {
+          setUsernameStatus("idle");
+        }
+      }
+    }, 300);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timeoutId);
+    };
+  }, [username, user?.id]);
+
   // Check if there are unsaved changes
   const hasUnsavedChanges = () => {
     return (
       fullName !== initialValues.fullName ||
+      username !== initialValues.username ||
       bio !== initialValues.bio ||
       avatarUrl !== initialValues.avatarUrl ||
       twitterUrl !== initialValues.twitterUrl ||
@@ -254,7 +304,7 @@ const Account = () => {
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
-  }, [fullName, bio, avatarUrl, twitterUrl, linkedinUrl, instagramUrl, facebookUrl, youtubeUrl, githubUrl, websiteUrl, initialValues]);
+  }, [fullName, username, bio, avatarUrl, twitterUrl, linkedinUrl, instagramUrl, facebookUrl, youtubeUrl, githubUrl, websiteUrl, initialValues]);
 
   const resetPasswordVerificationFlow = () => {
     setPasswordStep("input");
@@ -349,24 +399,29 @@ const Account = () => {
     console.log('Starting profile update...', { userId: user.id, bio });
     setLoading(true);
     try {
-      // Update user metadata
-      const { error: authError } = await supabase.auth.updateUser({
-        data: {
-          full_name: fullName,
-          avatar_url: avatarUrl,
-        }
-      });
-
-      if (authError) {
-        console.error('Auth update error:', authError);
-        throw authError;
+      const normalizedUsername = normalizeUsernameInput(username);
+      const usernameError = validateUsername(normalizedUsername);
+      if (usernameError) {
+        throw new Error(usernameError);
       }
 
-      // Update profiles table
+      let usernameAvailable = true;
+      try {
+        usernameAvailable = await isUsernameAvailable(normalizedUsername, user.id);
+      } catch (availabilityError) {
+        console.warn("Username availability check failed during profile update", availabilityError);
+      }
+      if (!usernameAvailable) {
+        throw new Error("That username is already taken.");
+      }
+
+      // Update user metadata
+      // Update profiles table first so uniqueness/validation errors fail fast.
       const { data: updateData, error: profileError } = await supabase
         .from('profiles')
         .update({
           full_name: fullName,
+          username: normalizedUsername,
           avatar_url: avatarUrl,
           bio: bio,
           twitter_url: twitterUrl,
@@ -387,9 +442,25 @@ const Account = () => {
         throw profileError;
       }
 
+      const { error: authError } = await supabase.auth.updateUser({
+        data: {
+          full_name: fullName,
+          username: normalizedUsername,
+          avatar_url: avatarUrl,
+        }
+      });
+
+      if (authError) {
+        console.error('Auth update error:', authError);
+        throw authError;
+      }
+
+      setUsername(normalizedUsername);
+
       // Update initial values after successful save
       setInitialValues({
         fullName,
+        username: normalizedUsername,
         bio,
         avatarUrl,
         twitterUrl,
@@ -761,7 +832,40 @@ const Account = () => {
                     placeholder="Enter your full name"
                   />
                 </div>
-                
+
+                <div className="space-y-2">
+                  <Label htmlFor="username">Username</Label>
+                  <Input
+                    id="username"
+                    type="text"
+                    value={username}
+                    onChange={(e) => setUsername(normalizeUsernameInput(e.target.value))}
+                    placeholder="Choose your username"
+                    autoCapitalize="off"
+                    autoCorrect="off"
+                    spellCheck={false}
+                    autoComplete="username"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Public profile URL: <span className="font-medium">/profile/{username || "username"}</span>
+                  </p>
+                  {usernameStatus === "checking" && (
+                    <p className="text-xs text-muted-foreground">Checking username availability...</p>
+                  )}
+                  {usernameStatus === "available" && (
+                    <p className="text-xs text-muted-foreground">Username is available.</p>
+                  )}
+                  {usernameStatus === "taken" && (
+                    <p className="text-xs text-destructive">That username is already taken.</p>
+                  )}
+                  {usernameStatus === "invalid" && (
+                    <p className="text-xs text-destructive">{validateUsername(username)}</p>
+                  )}
+                  {usernameStatus === "idle" && username && (
+                    <p className="text-xs text-muted-foreground">Use lowercase letters, numbers, and underscores.</p>
+                  )}
+                </div>
+                 
                 <div className="space-y-2">
                   <div className="flex justify-between items-center">
                     <Label htmlFor="bio">Bio</Label>
@@ -1098,6 +1202,12 @@ const Account = () => {
               <div>
                 <Label className="text-sm font-medium text-muted-foreground">Email Address</Label>
                 <p className="text-sm mt-1">{user.email}</p>
+              </div>
+              <div>
+                <Label className="text-sm font-medium text-muted-foreground">Profile URL</Label>
+                <p className="text-sm mt-1">
+                  {username ? `/profile/${username}` : "Not set"}
+                </p>
               </div>
               <div>
                 <Label className="text-sm font-medium text-muted-foreground">Account Created</Label>

@@ -12,10 +12,14 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { trackActivity } from "@/lib/activity";
 import { useConversionTracking } from "@/hooks/useConversionTracking";
-import { SocialProof } from "@/components/SocialProof";
 import MobileFormOptimizer from "@/components/MobileFormOptimizer";
 import { mapSignUpError } from "@/lib/authErrors";
 import { MIN_PASSWORD_LENGTH, PASSWORD_LENGTH_ERROR } from "@/lib/passwordPolicy";
+import {
+  isUsernameAvailable,
+  normalizeUsernameInput,
+  validateUsername,
+} from "@/lib/username";
 import {
   appendReturnParam,
   buildOnboardingPath,
@@ -27,14 +31,17 @@ const Signup = () => {
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
+    username: "",
     email: "",
     password: ""
   });
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [usernameStatus, setUsernameStatus] = useState<"idle" | "checking" | "available" | "taken">("idle");
   const [errors, setErrors] = useState({
     firstName: "",
     lastName: "",
+    username: "",
     email: "",
     password: ""
   });
@@ -101,12 +108,46 @@ const Signup = () => {
   // Email validation regex
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+  useEffect(() => {
+    const normalized = normalizeUsernameInput(formData.username);
+    if (!normalized) {
+      setUsernameStatus("idle");
+      return;
+    }
+
+    if (validateUsername(normalized)) {
+      setUsernameStatus("idle");
+      return;
+    }
+
+    let cancelled = false;
+    const timeoutId = window.setTimeout(async () => {
+      setUsernameStatus("checking");
+      try {
+        const available = await isUsernameAvailable(normalized);
+        if (!cancelled) {
+          setUsernameStatus(available ? "available" : "taken");
+        }
+      } catch {
+        if (!cancelled) {
+          setUsernameStatus("idle");
+        }
+      }
+    }, 300);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timeoutId);
+    };
+  }, [formData.username]);
+
   // Handle input changes
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
+    const nextValue = name === "username" ? normalizeUsernameInput(value) : value;
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: nextValue
     }));
 
     // Clear errors when user starts typing
@@ -119,10 +160,11 @@ const Signup = () => {
   };
 
   // Form validation
-  const validateForm = () => {
+  const validateForm = async () => {
     const newErrors = {
       firstName: "",
       lastName: "",
+      username: "",
       email: "",
       password: ""
     };
@@ -130,6 +172,23 @@ const Signup = () => {
     // Name validation
     if (!formData.firstName.trim()) {
       newErrors.firstName = "First name is required";
+    }
+    if (!formData.lastName.trim()) {
+      newErrors.lastName = "Last name is required";
+    }
+
+    const usernameError = validateUsername(formData.username);
+    if (usernameError) {
+      newErrors.username = usernameError;
+    } else {
+      try {
+        const available = await isUsernameAvailable(formData.username);
+        if (!available) {
+          newErrors.username = "That username is already taken";
+        }
+      } catch (availabilityError) {
+        console.warn("Username availability check failed during signup validation", availabilityError);
+      }
     }
 
     // Email validation
@@ -147,14 +206,14 @@ const Signup = () => {
     }
 
     setErrors(newErrors);
-    return !newErrors.firstName && !newErrors.lastName && !newErrors.email && !newErrors.password;
+    return !newErrors.firstName && !newErrors.lastName && !newErrors.username && !newErrors.email && !newErrors.password;
   };
 
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!validateForm()) {
+    if (!await validateForm()) {
       return;
     }
 
@@ -173,7 +232,9 @@ const Signup = () => {
       const { error } = await signUp(
         formData.email,
         formData.password,
-        fullName
+        fullName,
+        undefined,
+        normalizeUsernameInput(formData.username),
       );
 
       if (error) {
@@ -350,6 +411,7 @@ const Signup = () => {
                         className={`pl-10 h-12 bg-background/50 backdrop-blur-sm border-2 transition-all duration-200 focus:border-primary focus:ring-2 focus:ring-primary/20 ${errors.firstName ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : ''}`}
                         disabled={isLoading}
                         autoComplete="given-name"
+                        required
                       />
                     </div>
                     {errors.firstName && (
@@ -359,7 +421,7 @@ const Signup = () => {
 
                   <div className="space-y-2">
                     <Label htmlFor="lastName" className="text-sm font-medium">
-                      Last Name (Optional)
+                      Last Name
                     </Label>
                     <Input
                       id="lastName"
@@ -371,11 +433,50 @@ const Signup = () => {
                       className={`h-12 bg-background/50 backdrop-blur-sm border-2 transition-all duration-200 focus:border-primary focus:ring-2 focus:ring-primary/20 ${errors.lastName ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : ''}`}
                       disabled={isLoading}
                       autoComplete="family-name"
+                      required
                     />
                     {errors.lastName && (
                       <p className="text-sm text-red-500 animate-fade-in">{errors.lastName}</p>
                     )}
                   </div>
+                </div>
+
+                {/* Username Field */}
+                <div className="space-y-2">
+                  <Label htmlFor="username" className="text-sm font-medium">
+                    Username
+                  </Label>
+                  <div className="relative">
+                    <Input
+                      id="username"
+                      name="username"
+                      type="text"
+                      value={formData.username}
+                      onChange={handleInputChange}
+                      placeholder="Choose your username"
+                      className={`h-12 bg-background/50 backdrop-blur-sm border-2 transition-all duration-200 focus:border-primary focus:ring-2 focus:ring-primary/20 ${errors.username ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : ''}`}
+                      disabled={isLoading}
+                      autoComplete="username"
+                      autoCapitalize="off"
+                      autoCorrect="off"
+                      spellCheck={false}
+                      required
+                    />
+                  </div>
+                  {!errors.username && formData.username && (
+                    <p className={`text-xs ${usernameStatus === "taken" ? "text-red-500" : "text-muted-foreground"}`}>
+                      {usernameStatus === "checking" && "Checking username availability..."}
+                      {usernameStatus === "available" && "Username is available"}
+                      {usernameStatus === "taken" && "That username is already taken"}
+                      {usernameStatus === "idle" && "Use lowercase letters, numbers, and underscores"}
+                    </p>
+                  )}
+                  {errors.username && (
+                    <p className="text-sm text-red-500 animate-fade-in">{errors.username}</p>
+                  )}
+                  <p className="text-xs text-muted-foreground">
+                    Your public profile will be at <span className="font-medium">/profile/{formData.username || "username"}</span>
+                  </p>
                 </div>
 
                 {/* Email Field */}
@@ -399,6 +500,7 @@ const Signup = () => {
                       autoCapitalize="off"
                       autoCorrect="off"
                       inputMode="email"
+                      required
                     />
                   </div>
                   {errors.email && (
@@ -425,6 +527,7 @@ const Signup = () => {
                       disabled={isLoading}
                       autoComplete="new-password"
                       minLength={MIN_PASSWORD_LENGTH}
+                      required
                     />
                     <button
                       type="button"

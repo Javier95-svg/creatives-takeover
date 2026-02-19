@@ -6,6 +6,7 @@ interface SignUpWithFallbackParams {
   password: string;
   fullName: string;
   dateOfBirth?: string;
+  username?: string;
 }
 
 interface DirectSignupResponse {
@@ -36,7 +37,10 @@ export async function signUpWithFallback({
   password,
   fullName,
   dateOfBirth,
+  username,
 }: SignUpWithFallbackParams): Promise<{ error: AuthError | null; usedDirectSignupFallback: boolean }> {
+  const normalizedUsername = (username || "").trim().toLowerCase();
+
   const { error } = await supabase.auth.signUp({
     email,
     password,
@@ -44,6 +48,7 @@ export async function signUpWithFallback({
       data: {
         full_name: fullName || "",
         date_of_birth: dateOfBirth || null,
+        username: normalizedUsername || null,
       },
     },
   });
@@ -62,6 +67,7 @@ export async function signUpWithFallback({
       password,
       fullName,
       dateOfBirth: dateOfBirth || null,
+      username: normalizedUsername || null,
     },
     headers: {
       "x-signup-fallback": "1",

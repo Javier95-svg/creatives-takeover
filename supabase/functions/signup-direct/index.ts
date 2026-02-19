@@ -19,6 +19,7 @@ interface SignupDirectBody {
   password?: string;
   fullName?: string;
   dateOfBirth?: string | null;
+  username?: string | null;
 }
 
 interface SignupDirectResponse {
@@ -163,6 +164,7 @@ serve(async (req: Request): Promise<Response> => {
   const password = payload.password || "";
   const fullName = payload.fullName?.trim() || "";
   const dateOfBirth = payload.dateOfBirth ?? null;
+  const username = payload.username?.trim().toLowerCase() || null;
 
   if (!email) {
     return jsonResponse({ ok: false, code: "EMAIL_REQUIRED", error: "Email is required." });
@@ -195,6 +197,7 @@ serve(async (req: Request): Promise<Response> => {
     user_metadata: {
       full_name: fullName,
       date_of_birth: dateOfBirth,
+      username,
     },
   });
 

@@ -3,6 +3,7 @@ import { User, Session, AuthError as SupabaseAuthError } from '@supabase/supabas
 import { supabase } from '@/integrations/supabase/client';
 import { logError, logInfo, logWarn } from '@/lib/logger';
 import { signUpWithFallback } from '@/lib/authSignup';
+import { VALIDATION } from '@/config/constants';
 import {
   buildOnboardingPath,
   getOnboardingReturn,
@@ -14,7 +15,13 @@ import {
 interface AuthContextType {
   user: User | null;
   session: Session | null;
-  signUp: (email: string, password: string, fullName: string, dateOfBirth?: string) => Promise<{ error: SupabaseAuthError | null }>;
+  signUp: (
+    email: string,
+    password: string,
+    fullName: string,
+    dateOfBirth?: string,
+    username?: string
+  ) => Promise<{ error: SupabaseAuthError | null }>;
   signIn: (email: string, password: string) => Promise<{ error: SupabaseAuthError | null }>;
   signOut: () => Promise<void>;
   loading: boolean;
@@ -287,6 +294,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           .replace(/[^a-z0-9]/g, '');
       };
 
+      const normalizePreferredUsername = (value: string): string => {
+        return value
+          .normalize('NFKD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .toLowerCase()
+          .replace(/\s+/g, '')
+          .replace(/[^a-z0-9_]/g, '')
+          .replace(/^_+|_+$/g, '')
+          .slice(0, VALIDATION.MAX_USERNAME_LENGTH);
+      };
+
       // Check if profile already exists (trigger may have created it)
       const { data: existingProfile } = await supabase
         .from('profiles')
@@ -299,11 +317,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         return false;
       }
 
-      // Generate username from full_name
-      let username = '';
+      // Prefer explicit username from signup metadata when available.
+      let username = normalizePreferredUsername(profileUser.user_metadata?.username || '');
       const fullName = profileUser.user_metadata?.full_name || '';
 
-      if (fullName) {
+      if (!username && fullName) {
         const nameParts = fullName.trim().split(/\s+/).filter((p: string) => p.length > 0);
         if (nameParts.length >= 2) {
           const firstName = normalizeUsernamePart(nameParts[0]);
@@ -318,10 +336,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         username = 'user' + profileUser.id.substring(0, 8);
       }
 
-      // Ensure username uniqueness (max 5 attempts to avoid infinite loop)
+      if (username.length < VALIDATION.MIN_USERNAME_LENGTH) {
+        username = 'user' + profileUser.id.substring(0, 8);
+      }
+
+      // Ensure username uniqueness (bounded attempts to avoid infinite loop).
       let finalUsername = username;
       let counter = 1;
-      const maxAttempts = 5;
+      const maxAttempts = 25;
 
       for (let i = 0; i < maxAttempts; i++) {
         const { data: existing } = await supabase
@@ -378,12 +400,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  const signUp = async (email: string, password: string, fullName: string, dateOfBirth?: string) => {
+  const signUp = async (
+    email: string,
+    password: string,
+    fullName: string,
+    dateOfBirth?: string,
+    username?: string
+  ) => {
     const { error, usedDirectSignupFallback } = await signUpWithFallback({
       email,
       password,
       fullName,
       dateOfBirth,
+      username,
     });
 
     if (error) {
