@@ -49,19 +49,36 @@ export async function isUsernameAvailable(
     return false;
   }
 
-  const { data, error } = await supabase
+  const { data: exactData, error: exactError } = await supabase
     .from("profiles")
     .select("id")
     .eq("username", normalized)
     .maybeSingle();
 
-  if (error && error.code !== "PGRST116") {
-    throw error;
+  if (exactError && exactError.code !== "PGRST116") {
+    throw exactError;
   }
 
-  if (!data) {
+  if (exactData) {
+    return !!currentUserId && exactData.id === currentUserId;
+  }
+
+  // Fallback to case-insensitive lookup to honor profiles_username_lower_unique_idx.
+  const escapedIlikePattern = normalized.replace(/([\\%_])/g, "\\$1");
+  const { data: insensitiveData, error: insensitiveError } = await supabase
+    .from("profiles")
+    .select("id")
+    .ilike("username", escapedIlikePattern)
+    .limit(1);
+
+  if (insensitiveError) {
+    throw insensitiveError;
+  }
+
+  const existingId = insensitiveData?.[0]?.id;
+  if (!existingId) {
     return true;
   }
 
-  return !!currentUserId && data.id === currentUserId;
+  return !!currentUserId && existingId === currentUserId;
 }

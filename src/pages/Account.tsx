@@ -483,7 +483,17 @@ const Account = () => {
       }
     } catch (error: any) {
       console.error('Update profile error:', error);
-      toast.error("Failed to update profile: " + error.message);
+      const errorMessage = String(error?.message || '').toLowerCase();
+      const isUsernameConflict =
+        error?.code === '23505' ||
+        errorMessage.includes('profiles_username_lower_unique_idx') ||
+        (errorMessage.includes('duplicate key value') && errorMessage.includes('username'));
+
+      if (isUsernameConflict) {
+        toast.error("That username is already taken. Please choose another one.");
+      } else {
+        toast.error("Failed to update profile: " + error.message);
+      }
     } finally {
       setLoading(false);
     }

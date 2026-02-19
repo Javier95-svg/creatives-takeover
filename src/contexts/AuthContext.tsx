@@ -346,13 +346,37 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const maxAttempts = 25;
 
       for (let i = 0; i < maxAttempts; i++) {
-        const { data: existing } = await supabase
+        const escapedIlikePattern = finalUsername.replace(/([\\%_])/g, '\\$1');
+        const { data: exactExisting } = await supabase
           .from('profiles')
           .select('id')
           .eq('username', finalUsername)
           .maybeSingle();
 
-        if (!existing) break;
+        if (exactExisting) {
+          finalUsername = username + counter.toString();
+          counter++;
+          continue;
+        }
+
+        const { data: caseInsensitiveExisting, error: caseInsensitiveLookupError } = await supabase
+          .from('profiles')
+          .select('id')
+          .ilike('username', escapedIlikePattern)
+          .limit(1);
+
+        if (caseInsensitiveLookupError) {
+          logWarn('Case-insensitive username lookup failed during profile bootstrap', {
+            userId: profileUser.id,
+            usernameCandidate: finalUsername,
+            errorCode: caseInsensitiveLookupError.code,
+            errorMessage: caseInsensitiveLookupError.message,
+          });
+          break;
+        }
+
+        if (!caseInsensitiveExisting || caseInsensitiveExisting.length === 0) break;
+
         finalUsername = username + counter.toString();
         counter++;
       }
