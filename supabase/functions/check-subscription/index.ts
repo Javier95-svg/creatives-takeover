@@ -47,13 +47,22 @@ serve(async (req) => {
 
     const proOverrideEmails = new Set([
       'admin@creatives-takeover.com',
+      'uneebkhanzada91@gmail.com',
+      'does@elevatedynamics.pt',
+      'adam@tiplo.ai',
       'apembertona@gmail.com',
-      'adam@tiplo.ai'
+    ]);
+
+    const proOverrideUserIds = new Set([
+      'f2fa28f8-7889-4397-b17b-478488435b84',
+      '15bba750-6594-4f48-a101-0c02a404835e',
+      'c6aba37d-847a-439e-848d-d6874b7d245a',
+      'b05d6111-0940-4403-a710-92901fcbf034',
     ]);
 
     // Check if this is a pro-override account - grant professional tier immediately
-    if (proOverrideEmails.has(user.email.toLowerCase())) {
-      logStep("Pro override account detected - granting professional tier", { email: user.email });
+    if (proOverrideEmails.has(user.email.toLowerCase()) || proOverrideUserIds.has(user.id)) {
+      logStep("Pro override account detected - granting professional tier", { email: user.email, userId: user.id });
       const professionalTier = 'professional';
       const professionalCredits = 150;
 
