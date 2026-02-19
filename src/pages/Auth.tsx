@@ -15,6 +15,9 @@ import MobileFormOptimizer from '@/components/MobileFormOptimizer';
 import { useFeedbackCredits } from '@/hooks/useFeedbackCredits';
 import { useAuth } from '@/contexts/AuthContext';
 import { signUpWithFallback } from '@/lib/authSignup';
+import { mapSignInError, mapSignUpError } from '@/lib/authErrors';
+import { MIN_PASSWORD_LENGTH, PASSWORD_LENGTH_ERROR } from '@/lib/passwordPolicy';
+import { persistOnboardingReturn, sanitizeReturnPath } from '@/lib/authRedirect';
 
 const Auth: React.FC = () => {
   const navigate = useNavigate();
@@ -27,7 +30,7 @@ const Auth: React.FC = () => {
 
   // Get redirect parameter from URL
   const searchParams = new URLSearchParams(location.search);
-  const redirectUrl = searchParams.get('redirect') || '/';
+  const redirectUrl = sanitizeReturnPath(searchParams.get('redirect') || searchParams.get('return'), '/dashboard');
   
   // Check for pending Calendly redirect
   const CALENDLY_REDIRECT_KEY = 'pending_calendly_redirect';
@@ -101,7 +104,7 @@ const Auth: React.FC = () => {
     });
 
     if (error) {
-      setError(error.message);
+      setError(mapSignInError(error));
       setLoading(false);
     } else {
       if (rememberMe) {
@@ -120,8 +123,8 @@ const Auth: React.FC = () => {
     setLoading(true);
     setError('');
 
-    if (!firstName.trim() || !lastName.trim()) {
-      setError('Both first name and last name are required');
+    if (!firstName.trim()) {
+      setError('First name is required');
       setLoading(false);
       return;
     }
@@ -132,20 +135,22 @@ const Auth: React.FC = () => {
       return;
     }
 
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters');
+    if (password.length < MIN_PASSWORD_LENGTH) {
+      setError(PASSWORD_LENGTH_ERROR);
       setLoading(false);
       return;
     }
 
+    persistOnboardingReturn(redirectUrl);
+
     const { error } = await signUpWithFallback({
       email,
       password,
-      fullName: `${firstName.trim()} ${lastName.trim()}`,
+      fullName: [firstName.trim(), lastName.trim()].filter(Boolean).join(' '),
     });
 
     if (error) {
-      setError(error.message);
+      setError(mapSignUpError(error));
       setLoading(false);
     } else {
       let { data: { session } } = await supabase.auth.getSession();
@@ -191,6 +196,7 @@ const Auth: React.FC = () => {
       // If redirect is a booking flow, go to /community instead
       const finalRedirect = redirectUrl.startsWith('/community/book/') ? '/community' : redirectUrl;
       localStorage.setItem('oauth_return_url', finalRedirect);
+      persistOnboardingReturn(finalRedirect);
       
       // Preserve Calendly redirect for OAuth callback
       if (pendingCalendlyUrl) {
@@ -234,6 +240,7 @@ const Auth: React.FC = () => {
       // If redirect is a booking flow, go to /community instead
       const finalRedirect = redirectUrl.startsWith('/community/book/') ? '/community' : redirectUrl;
       localStorage.setItem('oauth_return_url', finalRedirect);
+      persistOnboardingReturn(finalRedirect);
       
       toast("Redirecting to Google...");
       
@@ -451,7 +458,7 @@ const Auth: React.FC = () => {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="signup-lastname">Last Name</Label>
+                    <Label htmlFor="signup-lastname">Last Name (Optional)</Label>
                     <Input
                       id="signup-lastname"
                       name="lastName"
@@ -459,7 +466,6 @@ const Auth: React.FC = () => {
                       placeholder="Last name"
                       value={lastName}
                       onChange={(e) => setLastName(e.target.value)}
-                      required
                       disabled={loading}
                       autoComplete="family-name"
                     />
@@ -494,7 +500,7 @@ const Auth: React.FC = () => {
                       onChange={(e) => setPassword(e.target.value)}
                       required
                       disabled={loading}
-                      minLength={6}
+                      minLength={MIN_PASSWORD_LENGTH}
                       className="pr-10"
                       autoComplete="new-password"
                     />
@@ -524,7 +530,7 @@ const Auth: React.FC = () => {
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       required
                       disabled={loading}
-                      minLength={6}
+                      minLength={MIN_PASSWORD_LENGTH}
                       className="pr-10"
                       autoComplete="new-password"
                     />

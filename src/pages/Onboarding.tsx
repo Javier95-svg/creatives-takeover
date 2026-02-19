@@ -1,22 +1,35 @@
 import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { OnboardingForm } from '@/components/OnboardingForm';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Helmet } from 'react-helmet-async';
 import HomeWallpaper from '@/components/wallpapers/HomeWallpaper';
+import {
+  appendReturnParam,
+  consumeOnboardingReturn,
+  getOnboardingReturn,
+  persistOnboardingReturn,
+  sanitizeReturnPath,
+} from '@/lib/authRedirect';
 
 const Onboarding = () => {
   const { user, isAuthenticated, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const queryReturn = sanitizeReturnPath(searchParams.get('return'), '/dashboard');
+  const storedReturn = getOnboardingReturn('/dashboard');
+  const returnUrl = queryReturn !== '/dashboard' ? queryReturn : storedReturn;
 
   useEffect(() => {
     const checkOnboardingStatus = async () => {
       if (authLoading) return;
 
+      persistOnboardingReturn(returnUrl);
+
       if (!isAuthenticated || !user) {
         // Onboarding requires an authenticated account.
-        navigate('/signup?return=/onboarding', { replace: true });
+        navigate(appendReturnParam('/signup', returnUrl), { replace: true });
         return;
       }
 
@@ -31,8 +44,9 @@ const Onboarding = () => {
         // STRICT CHECK: Only redirect if onboarding_completed is explicitly true
         // This ensures users who completed onboarding NEVER see this page again
         if (profile?.onboarding_completed === true) {
-          // Already onboarded, immediately redirect to dashboard
-          navigate('/dashboard', { replace: true });
+          // Already onboarded, immediately redirect to intended destination.
+          const target = consumeOnboardingReturn(returnUrl);
+          navigate(target, { replace: true });
         }
       } catch (error) {
         console.error('Error checking onboarding status:', error);
@@ -41,11 +55,11 @@ const Onboarding = () => {
     };
 
     checkOnboardingStatus();
-  }, [user, isAuthenticated, authLoading, navigate]);
+  }, [user, isAuthenticated, authLoading, navigate, returnUrl]);
 
   const handleComplete = () => {
-    // Redirect to dashboard after onboarding completion
-    navigate('/dashboard');
+    const target = consumeOnboardingReturn(returnUrl);
+    navigate(target, { replace: true });
   };
 
   return (

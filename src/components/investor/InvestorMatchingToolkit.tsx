@@ -112,7 +112,7 @@ const InvestorMatchingToolkit = () => {
                 if (!user) {
                   return (
                     <>
-                      <Button size="lg" className="w-full sm:w-auto" onClick={() => navigate('/auth')}>
+                      <Button size="lg" className="w-full sm:w-auto" onClick={() => navigate('/login')}>
                         <Lock className="mr-2 h-5 w-5" />
                         Sign In to Browse Investors
                       </Button>

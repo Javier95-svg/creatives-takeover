@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import type { EmailOtpType } from '@supabase/supabase-js';
+import { appendReturnParam, persistOnboardingReturn, sanitizeReturnPath } from '@/lib/authRedirect';
 
 const AuthCallback = () => {
   const navigate = useNavigate();
@@ -14,6 +15,12 @@ const AuthCallback = () => {
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
+        const pendingReturn = sanitizeReturnPath(localStorage.getItem('oauth_return_url'), '/dashboard');
+        const redirectToLogin = (delay = 3000) => {
+          const loginPath = appendReturnParam('/login', pendingReturn);
+          setTimeout(() => navigate(loginPath), delay);
+        };
+
         // Check for error parameters from Google
         const error = searchParams.get('error');
         const errorDescription = searchParams.get('error_description');
@@ -22,7 +29,7 @@ const AuthCallback = () => {
           console.error('OAuth error from URL:', { error, errorDescription });
           setStatus('error');
           toast.error(errorDescription || 'Authentication failed');
-          setTimeout(() => navigate('/login'), 3000);
+          redirectToLogin();
           return;
         }
 
@@ -48,7 +55,7 @@ const AuthCallback = () => {
               console.error('OTP verification error:', otpError);
               setStatus('error');
               toast.error('Email confirmation failed. Please request a new confirmation email.');
-              setTimeout(() => navigate('/login'), 3000);
+              redirectToLogin();
               return;
             }
           }
@@ -65,7 +72,7 @@ const AuthCallback = () => {
             console.error('Code exchange error:', exchangeError);
             setStatus('error');
             toast.error('Authentication failed');
-            setTimeout(() => navigate('/login'), 3000);
+            redirectToLogin();
             return;
           }
         }
@@ -79,7 +86,7 @@ const AuthCallback = () => {
           console.error('Session error:', sessionError);
           setStatus('error');
           toast.error('Failed to establish session');
-          setTimeout(() => navigate('/login'), 3000);
+          redirectToLogin();
           return;
         }
 
@@ -114,8 +121,8 @@ const AuthCallback = () => {
           }
           
           // Get return URL from localStorage (saved before OAuth redirect)
-          const fallbackReturnUrl = isEmailConfirmation ? '/onboarding' : '/';
-          let returnUrl = localStorage.getItem('oauth_return_url') || fallbackReturnUrl;
+          const fallbackReturnUrl = isEmailConfirmation ? '/onboarding' : '/dashboard';
+          let returnUrl = sanitizeReturnPath(localStorage.getItem('oauth_return_url') || fallbackReturnUrl, '/dashboard');
           const oauthSource = localStorage.getItem('oauth_source');
           
           // If return URL is a booking flow, redirect to /community instead
@@ -133,6 +140,9 @@ const AuthCallback = () => {
           // Clean up OAuth-related localStorage
           localStorage.removeItem('oauth_return_url');
           localStorage.removeItem('oauth_source');
+
+          // Preserve post-onboarding intent for first-time users.
+          persistOnboardingReturn(returnUrl);
           
           // Track OAuth signup if source exists
           if (oauthSource && oauthSource !== 'direct') {
@@ -156,13 +166,14 @@ const AuthCallback = () => {
         } else {
           console.log('No session found, redirecting to login');
           setStatus('error');
-          setTimeout(() => navigate('/login'), 2000);
+          redirectToLogin(2000);
         }
       } catch (err) {
         console.error('Auth callback error:', err);
         setStatus('error');
         toast.error('Authentication failed');
-        setTimeout(() => navigate('/login'), 3000);
+        const pendingReturn = sanitizeReturnPath(localStorage.getItem('oauth_return_url'), '/dashboard');
+        setTimeout(() => navigate(appendReturnParam('/login', pendingReturn)), 3000);
       }
     };
 

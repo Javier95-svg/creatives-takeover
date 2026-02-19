@@ -63,6 +63,9 @@ export async function signUpWithFallback({
       fullName,
       dateOfBirth: dateOfBirth || null,
     },
+    headers: {
+      "x-signup-fallback": "1",
+    },
   });
 
   if (invokeError) {

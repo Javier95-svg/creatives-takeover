@@ -98,39 +98,6 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
         if (!formData.businessStage) {
           newErrors.businessStage = 'Please select your business stage';
         }
-        if (!formData.founderExperience) {
-          newErrors.founderExperience = 'Please select your founder experience';
-        }
-        if (!formData.timeCommitment) {
-          newErrors.timeCommitment = 'Please select your time commitment';
-        }
-        if (!formData.launchTimeline) {
-          newErrors.launchTimeline = 'Please select your launch timeline';
-        }
-        if (!formData.lookingForCofounder) {
-          newErrors.lookingForCofounder = 'Please indicate if you are looking for a co-founder';
-        }
-        break;
-      case 1:
-        if (!formData.primaryPain) {
-          newErrors.primaryPain = 'Please select your primary pain point';
-        }
-        if (!formData.decisionMakingProcess) {
-          newErrors.decisionMakingProcess = 'Please select your decision-making process';
-        }
-        break;
-      case 2:
-        if (!formData.communicationStyle) {
-          newErrors.communicationStyle = 'Please select your communication style';
-        }
-        if (!formData.commitmentLevel) {
-          newErrors.commitmentLevel = 'Please select your commitment level';
-        }
-        break;
-      case 3:
-        if (!formData.acceptedTerms) {
-          newErrors.acceptedTerms = 'You must accept the terms to continue';
-        }
         break;
       default:
         break;
@@ -194,11 +161,13 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
           business_stage: formData.businessStage,
           quiz_completed: true,
           quiz_completed_at: new Date().toISOString(),
-          quiz_is_first_startup: formData.founderExperience === 'first-time' ? 'yes' : 'no',
-          quiz_current_stage: formData.businessStage,
-          quiz_biggest_challenge: formData.primaryPain,
-          quiz_launch_timeline: formData.launchTimeline,
-          quiz_looking_for_cofounder: formData.lookingForCofounder,
+          quiz_is_first_startup: formData.founderExperience
+            ? (formData.founderExperience === 'first-time' ? 'yes' : 'no')
+            : null,
+          quiz_current_stage: formData.businessStage || null,
+          quiz_biggest_challenge: formData.primaryPain || null,
+          quiz_launch_timeline: formData.launchTimeline || null,
+          quiz_looking_for_cofounder: formData.lookingForCofounder || null,
           user_preferences: onboardingData,
         })
         .eq('id', user.id);
@@ -215,6 +184,44 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
     } catch (error) {
       console.error('Failed to save onboarding data:', error);
       toast.error('Failed to save onboarding data. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSkip = async () => {
+    if (!user) {
+      toast.error('Please sign in to continue');
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const skippedAt = new Date().toISOString();
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({
+          onboarding_completed: true,
+          business_stage: formData.businessStage || null,
+          quiz_completed: false,
+          user_preferences: {
+            onboardingSkippedAt: skippedAt,
+          },
+        })
+        .eq('id', user.id);
+
+      if (updateError) {
+        throw updateError;
+      }
+
+      toast.success('You can complete onboarding later from your account.');
+      if (onComplete) {
+        onComplete();
+      }
+    } catch (error) {
+      console.error('Failed to skip onboarding:', error);
+      toast.error('Failed to skip onboarding. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -273,7 +280,7 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
             </div>
 
             <div>
-              <Label className="text-base font-semibold mb-3 block font-space-grotesk">What's your founder experience? *</Label>
+              <Label className="text-base font-semibold mb-3 block font-space-grotesk">What's your founder experience?</Label>
               <RadioGroup
                 value={formData.founderExperience}
                 onValueChange={(value) => setFormData({ ...formData, founderExperience: value })}
@@ -296,7 +303,7 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
             </div>
 
             <div>
-              <Label className="text-base font-semibold mb-3 block font-space-grotesk">What's your time commitment? *</Label>
+              <Label className="text-base font-semibold mb-3 block font-space-grotesk">What's your time commitment?</Label>
               <RadioGroup
                 value={formData.timeCommitment}
                 onValueChange={(value) => setFormData({ ...formData, timeCommitment: value })}
@@ -319,7 +326,7 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
             </div>
 
             <div>
-              <Label className="text-base font-semibold mb-3 block font-space-grotesk">When do you want to launch? *</Label>
+              <Label className="text-base font-semibold mb-3 block font-space-grotesk">When do you want to launch?</Label>
               <RadioGroup
                 value={formData.launchTimeline}
                 onValueChange={(value) => setFormData({ ...formData, launchTimeline: value })}
@@ -346,7 +353,7 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
             </div>
 
             <div>
-              <Label className="text-base font-semibold mb-3 block font-space-grotesk">Are you looking for a co-founder? *</Label>
+              <Label className="text-base font-semibold mb-3 block font-space-grotesk">Are you looking for a co-founder?</Label>
               <RadioGroup
                 value={formData.lookingForCofounder}
                 onValueChange={(value) => setFormData({ ...formData, lookingForCofounder: value })}
@@ -377,7 +384,7 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
             </div>
 
             <div>
-              <Label className="text-base font-semibold mb-3 block font-space-grotesk">What's your primary pain point? *</Label>
+              <Label className="text-base font-semibold mb-3 block font-space-grotesk">What's your primary pain point?</Label>
               <RadioGroup
                 value={formData.primaryPain}
                 onValueChange={(value) => setFormData({ ...formData, primaryPain: value })}
@@ -418,7 +425,7 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
             </div>
 
             <div>
-              <Label className="text-base font-semibold mb-3 block font-space-grotesk">How do you typically make important decisions? *</Label>
+              <Label className="text-base font-semibold mb-3 block font-space-grotesk">How do you typically make important decisions?</Label>
               <RadioGroup
                 value={formData.decisionMakingProcess}
                 onValueChange={(value) => setFormData({ ...formData, decisionMakingProcess: value })}
@@ -457,7 +464,7 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
             </div>
 
             <div>
-              <Label className="text-base font-semibold mb-3 block font-space-grotesk">What's your preferred communication style? *</Label>
+              <Label className="text-base font-semibold mb-3 block font-space-grotesk">What's your preferred communication style?</Label>
               <RadioGroup
                 value={formData.communicationStyle}
                 onValueChange={(value) => setFormData({ ...formData, communicationStyle: value })}
@@ -480,7 +487,7 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
             </div>
 
             <div>
-              <Label className="text-base font-semibold mb-3 block font-space-grotesk">What's your commitment level? *</Label>
+              <Label className="text-base font-semibold mb-3 block font-space-grotesk">What's your commitment level?</Label>
               <RadioGroup
                 value={formData.commitmentLevel}
                 onValueChange={(value) => setFormData({ ...formData, commitmentLevel: value })}
@@ -531,7 +538,7 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
                   <Link to="/privacy-policy" className="text-[#32b8c6] hover:underline" target="_blank">
                     Privacy Policy
                   </Link>
-                  . *
+                  .
                 </Label>
               </div>
               {errors.acceptedTerms && <p className="text-sm text-destructive mt-1">{errors.acceptedTerms}</p>}
@@ -539,7 +546,7 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
 
             <div className="p-4 rounded-2xl bg-primary/5 border border-primary/20">
               <p className="text-sm text-muted-foreground">
-                <strong className="text-foreground">What's next?</strong> After you complete onboarding, you'll be taken to your personalized dashboard.
+                <strong className="text-foreground">What's next?</strong> Complete this setup or skip for now and start using your account immediately.
               </p>
             </div>
           </div>
@@ -573,7 +580,7 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
         </CardContent>
 
         <div className="px-6 pb-6 flex items-center justify-between gap-4">
-          <div>
+          <div className="flex items-center gap-2">
             {currentStep > 0 && (
               <Button
                 type="button"
@@ -586,6 +593,15 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
                 Back
               </Button>
             )}
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={handleSkip}
+              disabled={isLoading}
+              className="rounded-full"
+            >
+              Skip for now
+            </Button>
           </div>
 
           <div className="flex items-center gap-3">

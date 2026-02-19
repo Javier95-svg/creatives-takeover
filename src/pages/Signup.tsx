@@ -14,6 +14,14 @@ import { trackActivity } from "@/lib/activity";
 import { useConversionTracking } from "@/hooks/useConversionTracking";
 import { SocialProof } from "@/components/SocialProof";
 import MobileFormOptimizer from "@/components/MobileFormOptimizer";
+import { mapSignUpError } from "@/lib/authErrors";
+import { MIN_PASSWORD_LENGTH, PASSWORD_LENGTH_ERROR } from "@/lib/passwordPolicy";
+import {
+  appendReturnParam,
+  buildOnboardingPath,
+  persistOnboardingReturn,
+  sanitizeReturnPath,
+} from "@/lib/authRedirect";
 
 const Signup = () => {
   const [formData, setFormData] = useState({
@@ -38,11 +46,20 @@ const Signup = () => {
   // Get conversion source from URL
   const [conversionSource] = useState(() => {
     const params = new URLSearchParams(window.location.search);
+    const safeReturn = sanitizeReturnPath(params.get('return') || params.get('redirect'), '/dashboard');
+
     return {
       source: params.get('source') || 'direct',
-      returnUrl: params.get('return') || '/'
+      returnUrl: safeReturn,
     };
   });
+
+  const loginHref = (() => {
+    const basePath = conversionSource.source !== 'direct'
+      ? `/login?source=${encodeURIComponent(conversionSource.source)}`
+      : '/login';
+    return appendReturnParam(basePath, conversionSource.returnUrl);
+  })();
 
   // Redirect authenticated users to the correct post-signup destination
   useEffect(() => {
@@ -56,22 +73,25 @@ const Signup = () => {
           .eq('id', user.id)
           .maybeSingle();
 
-        // New users should complete onboarding first.
+        const targetAfterAuth = sanitizeReturnPath(conversionSource.returnUrl, '/dashboard');
+
+        // New users should complete onboarding first, then return to intent.
         if (profile?.onboarding_completed !== true) {
-          navigate('/onboarding', { replace: true });
+          persistOnboardingReturn(targetAfterAuth);
+          navigate(buildOnboardingPath(targetAfterAuth), { replace: true });
           return;
         }
 
         const savedProgress = localStorage.getItem('bizmap_progress');
-        if (savedProgress && conversionSource.returnUrl.includes('dream2plan')) {
-          navigate(conversionSource.returnUrl, { replace: true });
+        if (savedProgress && targetAfterAuth.includes('dream2plan')) {
+          navigate(targetAfterAuth, { replace: true });
           return;
         }
 
-        navigate('/dashboard', { replace: true });
+        navigate(targetAfterAuth, { replace: true });
       } catch (error) {
         console.error('Error resolving signup redirect:', error);
-        navigate('/onboarding', { replace: true });
+        navigate(buildOnboardingPath(conversionSource.returnUrl), { replace: true });
       }
     };
 
@@ -112,10 +132,6 @@ const Signup = () => {
       newErrors.firstName = "First name is required";
     }
 
-    if (!formData.lastName.trim()) {
-      newErrors.lastName = "Last name is required";
-    }
-
     // Email validation
     if (!formData.email.trim()) {
       newErrors.email = "Email is required";
@@ -126,8 +142,8 @@ const Signup = () => {
     // Password validation
     if (!formData.password.trim()) {
       newErrors.password = "Password is required";
-    } else if (formData.password.length < 6) {
-      newErrors.password = "Password must be at least 6 characters";
+    } else if (formData.password.length < MIN_PASSWORD_LENGTH) {
+      newErrors.password = PASSWORD_LENGTH_ERROR;
     }
 
     setErrors(newErrors);
@@ -151,7 +167,9 @@ const Signup = () => {
       // Track sign-up started
       trackSignupStarted(triggerType);
 
-      const fullName = `${formData.firstName.trim()} ${formData.lastName.trim()}`;
+      const fullName = [formData.firstName.trim(), formData.lastName.trim()].filter(Boolean).join(" ");
+      persistOnboardingReturn(conversionSource.returnUrl);
+
       const { error } = await signUp(
         formData.email,
         formData.password,
@@ -159,24 +177,8 @@ const Signup = () => {
       );
 
       if (error) {
-        // Handle specific error cases with user-friendly messages
-        let errorMessage = error.message || "Failed to create account. Please try again.";
-
-        // Check for common Supabase error codes and messages
-        if (error.message?.includes('database error') || error.message?.includes('saving new user')) {
-          errorMessage = "There was an issue creating your profile. Your account may have been created - please try signing in.";
-        } else if (error.message?.includes('User already registered') || error.message?.includes('already exists')) {
-          errorMessage = "An account with this email already exists. Please sign in instead.";
-        } else if (error.message?.includes('Email rate limit') || error.message?.includes('too many requests')) {
-          errorMessage = "Too many signup attempts. Please wait a few minutes and try again.";
-        } else if (error.message?.includes('Invalid email')) {
-          errorMessage = "Please enter a valid email address.";
-        } else if (error.message?.includes('Password')) {
-          errorMessage = "Password does not meet requirements. Please use a stronger password.";
-        }
-
         console.error('Signup error:', error);
-        toast.error(errorMessage);
+        toast.error(mapSignUpError(error));
       } else {
         let { data: { session } } = await supabase.auth.getSession();
 
@@ -219,7 +221,7 @@ const Signup = () => {
         toast.success("Account created successfully! Redirecting...");
 
         setTimeout(() => {
-          navigate('/onboarding', { replace: true });
+          navigate(buildOnboardingPath(conversionSource.returnUrl), { replace: true });
         }, 300);
       }
     } catch (error) {
@@ -250,9 +252,10 @@ const Signup = () => {
     try {
       console.log("Starting Google OAuth signup...");
 
-      // Save onboarding as return URL
-      localStorage.setItem('oauth_return_url', '/onboarding');
+      // Preserve post-auth intent and complete onboarding before final return.
+      localStorage.setItem('oauth_return_url', conversionSource.returnUrl);
       localStorage.setItem('oauth_source', conversionSource.source);
+      persistOnboardingReturn(conversionSource.returnUrl);
 
       // Also save BizMap progress if it exists
       const savedProgress = localStorage.getItem('bizmap_progress');
@@ -356,7 +359,7 @@ const Signup = () => {
 
                   <div className="space-y-2">
                     <Label htmlFor="lastName" className="text-sm font-medium">
-                      Last Name
+                      Last Name (Optional)
                     </Label>
                     <Input
                       id="lastName"
@@ -421,6 +424,7 @@ const Signup = () => {
                         }`}
                       disabled={isLoading}
                       autoComplete="new-password"
+                      minLength={MIN_PASSWORD_LENGTH}
                     />
                     <button
                       type="button"
@@ -436,7 +440,7 @@ const Signup = () => {
                     </button>
                   </div>
                   {!errors.password && formData.password.length > 0 && (
-                    <p className="text-xs text-muted-foreground">Use at least 8 characters</p>
+                    <p className="text-xs text-muted-foreground">Use at least {MIN_PASSWORD_LENGTH} characters</p>
                   )}
                   {errors.password && (
                     <p className="text-sm text-red-500 animate-fade-in">{errors.password}</p>
@@ -571,7 +575,7 @@ const Signup = () => {
           <p className="text-muted-foreground">
             Already have an account?{" "}
             <Link
-              to="/login"
+              to={loginHref}
               className="text-primary hover:text-primary/80 font-semibold transition-colors"
             >
               Sign in

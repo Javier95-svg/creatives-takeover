@@ -88,7 +88,7 @@ const MentorProfilePage = () => {
       // Store Calendly URL in localStorage for redirect after auth
       localStorage.setItem(CALENDLY_REDIRECT_KEY, calendlyUrl);
       // Redirect to auth page
-      navigate('/auth?redirect=/community');
+      navigate('/login?return=/community');
       return;
     }
 

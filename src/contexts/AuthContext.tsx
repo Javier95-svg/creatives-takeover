@@ -3,6 +3,13 @@ import { User, Session, AuthError as SupabaseAuthError } from '@supabase/supabas
 import { supabase } from '@/integrations/supabase/client';
 import { logError, logInfo, logWarn } from '@/lib/logger';
 import { signUpWithFallback } from '@/lib/authSignup';
+import {
+  buildOnboardingPath,
+  getOnboardingReturn,
+  ONBOARDING_RETURN_KEY,
+  persistOnboardingReturn,
+  sanitizeReturnPath,
+} from '@/lib/authRedirect';
 
 interface AuthContextType {
   user: User | null;
@@ -188,16 +195,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           const hasRedirected = sessionStorage.getItem(`onboarding_redirect_${userId}`);
           if (!hasRedirected && !window.location.pathname.includes('/onboarding')) {
             sessionStorage.setItem(`onboarding_redirect_${userId}`, 'true');
+            const currentPath = `${window.location.pathname}${window.location.search}`;
+            const safeCurrentPath = sanitizeReturnPath(currentPath, '/dashboard');
+            const preferredReturn = getOnboardingReturn(safeCurrentPath);
+            persistOnboardingReturn(preferredReturn);
+            const onboardingPath = buildOnboardingPath(preferredReturn);
             // Small delay to let UI settle
             setTimeout(() => {
               if (isMountedRef.current && !window.location.pathname.includes('/onboarding')) {
-                window.location.href = '/onboarding';
-                logInfo('Redirected first-time user to onboarding page', { userId });
+                window.location.href = onboardingPath;
+                logInfo('Redirected first-time user to onboarding page', { userId, onboardingPath });
               }
             }, 500);
           }
         } else if (existingProfile?.onboarding_completed === true) {
           sessionStorage.removeItem(`onboarding_redirect_${userId}`);
+          localStorage.removeItem(ONBOARDING_RETURN_KEY);
         }
       }
 

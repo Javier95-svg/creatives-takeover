@@ -123,7 +123,7 @@ export const MentorProfile = ({ mentor, onBookClick }: MentorProfileProps) => {
   const handleSendMessage = async () => {
     // Check if user is authenticated
     if (!isAuthenticated || !user) {
-      navigate('/auth');
+      navigate('/login');
       return;
     }
     const mentorUserId = await resolveMentorUserId({

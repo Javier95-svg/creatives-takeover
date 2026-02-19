@@ -142,7 +142,7 @@ export const MentorCard = ({ mentor, className, priority = false }: MentorCardPr
       // Store Calendly URL in localStorage for redirect after auth
       localStorage.setItem(CALENDLY_REDIRECT_KEY, calendlyUrl);
       // Redirect to auth page
-      navigate('/auth?redirect=/community');
+      navigate('/login?return=/community');
       return;
     }
 
@@ -195,7 +195,7 @@ export const MentorCard = ({ mentor, className, priority = false }: MentorCardPr
 
     // Check if user is authenticated
     if (!isAuthenticated || !user) {
-      navigate('/auth');
+      navigate('/login');
       return;
     }
     const mentorUserId = await resolveMentorUserId({

@@ -41,7 +41,7 @@ const BizMapJourneyHubPage = lazy(() => import("./pages/BizMapJourneyHubPage"));
 const Onboarding = lazy(() => import("./pages/Onboarding"));
 
 const Login = lazy(() => import("./pages/Login"));
-const Auth = lazy(() => import("./pages/Auth"));
+const AuthEntryRedirect = lazy(() => import("./pages/AuthEntryRedirect"));
 const AuthCallback = lazy(() => import("./pages/AuthCallback"));
 const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
@@ -182,7 +182,7 @@ function App() {
                         <Route path="/go-to-market" element={<ComingSoonPage title="GTM Strategist" description="Your AI-powered go-to-market command center. From ICP to launch strategy, build a GTM plan that actually converts." highlights={["Define target market, positioning, and messaging", "Select and prioritize high-impact acquisition channels", "Generate launch, pricing, and distribution strategies", "Actionable GTM plans tailored to your business stage"]} />} />
                         <Route path="/client-acquisition" element={<Navigate to="/go-to-market" replace />} />
 
-                        <Route path="/auth" element={<Auth />} />
+                        <Route path="/auth" element={<AuthEntryRedirect />} />
                         <Route path="/login" element={<Login />} />
                         <Route path="/signup" element={<Signup />} />
                         <Route path="/forgot-password" element={<ForgotPassword />} />

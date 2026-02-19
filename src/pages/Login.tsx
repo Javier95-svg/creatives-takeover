@@ -5,13 +5,15 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Eye, EyeOff, Mail, Lock, Sparkles, Shield } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { toast } from "sonner";
 import AuthWallpaper from "@/components/wallpapers/AuthWallpaper";
 import MobileFormOptimizer from "@/components/MobileFormOptimizer";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { mapSignInError } from "@/lib/authErrors";
+import { appendReturnParam, persistOnboardingReturn, sanitizeReturnPath } from "@/lib/authRedirect";
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -29,14 +31,23 @@ const Login = () => {
   const [loginError, setLoginError] = useState<string | null>(null);
   
   const { signIn, user } = useAuth();
+  const location = useLocation();
   const navigate = useNavigate();
+  const query = new URLSearchParams(location.search);
+  const source = query.get("source") || "direct";
+  const returnUrl = sanitizeReturnPath(query.get("return") || query.get("redirect"), "/dashboard");
+  const signupHref = appendReturnParam(
+    source !== 'direct' ? `/signup?source=${encodeURIComponent(source)}` : "/signup",
+    returnUrl
+  );
 
   // Handle redirect after successful login - wait for auth state to update
   useEffect(() => {
     if (user && window.location.pathname === '/login') {
-      navigate('/');
+      const postLoginTarget = returnUrl.startsWith('/community/book/') ? '/community' : returnUrl;
+      navigate(postLoginTarget);
     }
-  }, [user, navigate]);
+  }, [user, navigate, returnUrl]);
 
   // Prefill saved email if user opted to be remembered
   useEffect(() => {
@@ -84,8 +95,6 @@ const Login = () => {
     // Password validation
     if (!formData.password.trim()) {
       newErrors.password = "Password is required";
-    } else if (formData.password.length < 6) {
-      newErrors.password = "Password must be at least 6 characters";
     }
 
     setErrors(newErrors);
@@ -103,11 +112,13 @@ const Login = () => {
     setIsLoading(true);
     
     try {
+      persistOnboardingReturn(returnUrl);
       const { error } = await signIn(formData.email, formData.password);
       
       if (error) {
-        setLoginError(error.message || "Login failed. Please check your credentials.");
-        toast.error(error.message || "Login failed. Please check your credentials.");
+        const mappedError = mapSignInError(error);
+        setLoginError(mappedError);
+        toast.error(mappedError);
       } else {
         setLoginError(null);
         if (rememberMe) {
@@ -165,8 +176,9 @@ const Login = () => {
     try {
       console.log("Starting Google OAuth...");
       
-      // Save dashboard as return URL for after OAuth completes
-      localStorage.setItem('oauth_return_url', '/dashboard');
+      // Preserve post-auth destination for callback + onboarding flow.
+      localStorage.setItem('oauth_return_url', returnUrl);
+      persistOnboardingReturn(returnUrl);
       
       toast("Redirecting to Google...");
       
@@ -435,7 +447,7 @@ const Login = () => {
           <p className="text-muted-foreground">
             Don't have an account?{" "}
             <Link
-              to="/signup"
+              to={signupHref}
               className="text-primary hover:text-primary/80 font-semibold transition-colors"
             >
               Sign up for free
