@@ -90,6 +90,7 @@ export const useBizMapProgress = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [progress, setProgress] = useState<UserProgressRow | null>(null);
+  const [hasFullBizMapAccess, setHasFullBizMapAccess] = useState(false);
 
   const fetchCompletionSignals = useCallback(async (userId: string): Promise<CompletionSignals> => {
     const [
@@ -254,6 +255,7 @@ export const useBizMapProgress = () => {
   const initializeProgress = useCallback(async () => {
     if (!user) {
       setProgress(null);
+      setHasFullBizMapAccess(false);
       setLoading(false);
       return;
     }
@@ -262,15 +264,29 @@ export const useBizMapProgress = () => {
     setError(null);
 
     try {
-      const { data: existingData, error: selectError } = await supabase
-        .from(USER_PROGRESS_TABLE)
-        .select('*')
-        .eq('user_id', user.id)
-        .maybeSingle();
+      const [progressRes, profileRes] = await Promise.all([
+        supabase
+          .from(USER_PROGRESS_TABLE)
+          .select('*')
+          .eq('user_id', user.id)
+          .maybeSingle(),
+        supabase
+          .from('profiles')
+          .select('subscription_tier')
+          .eq('id', user.id)
+          .maybeSingle(),
+      ]);
+
+      const { data: existingData, error: selectError } = progressRes;
 
       if (selectError) {
         throw selectError;
       }
+
+      const subscriptionTier = String((profileRes.data as { subscription_tier?: string } | null)?.subscription_tier ?? '').toLowerCase();
+      const isAdmin = (user.email ?? '').toLowerCase() === 'admin@creatives-takeover.com';
+      const isProPlan = subscriptionTier === 'professional' || subscriptionTier === 'pro';
+      setHasFullBizMapAccess(isAdmin || isProPlan);
 
       let row = existingData as UserProgressRow | null;
 
@@ -314,7 +330,7 @@ export const useBizMapProgress = () => {
   const setCurrentStage = useCallback(
     async (stage: BizMapStage): Promise<boolean> => {
       if (!progress || !user) return false;
-      if (!isStageUnlocked(stage, progress.highest_unlocked_stage)) return false;
+      if (!hasFullBizMapAccess && !isStageUnlocked(stage, progress.highest_unlocked_stage)) return false;
 
       const { data, error: updateError } = await supabase
         .from(USER_PROGRESS_TABLE)
@@ -331,44 +347,46 @@ export const useBizMapProgress = () => {
       setProgress(data as UserProgressRow);
       return true;
     },
-    [progress, user],
+    [hasFullBizMapAccess, progress, user],
   );
 
   const stageState = useMemo(() => {
     const row = progress;
+    const effectiveHighestUnlocked = hasFullBizMapAccess ? 'LAUNCH' : row?.highest_unlocked_stage;
     return {
       IDENTITY: {
-        unlocked: row ? isStageUnlocked('IDENTITY', row.highest_unlocked_stage) : true,
+        unlocked: effectiveHighestUnlocked ? isStageUnlocked('IDENTITY', effectiveHighestUnlocked) : true,
         completed: !!row?.identity_completed_at,
         completedAt: row?.identity_completed_at ?? null,
       },
       PROTOTYPE: {
-        unlocked: row ? isStageUnlocked('PROTOTYPE', row.highest_unlocked_stage) : true,
+        unlocked: effectiveHighestUnlocked ? isStageUnlocked('PROTOTYPE', effectiveHighestUnlocked) : true,
         completed: !!row?.prototype_completed_at,
         completedAt: row?.prototype_completed_at ?? null,
       },
       VALIDATING: {
-        unlocked: row ? isStageUnlocked('VALIDATING', row.highest_unlocked_stage) : false,
+        unlocked: effectiveHighestUnlocked ? isStageUnlocked('VALIDATING', effectiveHighestUnlocked) : false,
         completed: !!row?.validating_completed_at,
         completedAt: row?.validating_completed_at ?? null,
       },
       BUILDING: {
-        unlocked: row ? isStageUnlocked('BUILDING', row.highest_unlocked_stage) : false,
+        unlocked: effectiveHighestUnlocked ? isStageUnlocked('BUILDING', effectiveHighestUnlocked) : false,
         completed: !!row?.building_completed_at,
         completedAt: row?.building_completed_at ?? null,
       },
       LAUNCH: {
-        unlocked: row ? isStageUnlocked('LAUNCH', row.highest_unlocked_stage) : false,
+        unlocked: effectiveHighestUnlocked ? isStageUnlocked('LAUNCH', effectiveHighestUnlocked) : false,
         completed: !!row?.launch_completed_at,
         completedAt: row?.launch_completed_at ?? null,
       },
     } as Record<BizMapStage, { unlocked: boolean; completed: boolean; completedAt: string | null }>;
-  }, [progress]);
+  }, [hasFullBizMapAccess, progress]);
 
   const isToolRouteUnlocked = useCallback(
     (route: string) => {
       const stage = getStageByRoute(route);
       if (!stage) return true;
+      if (user && hasFullBizMapAccess) return true;
       if (!user) {
         return isStageUnlocked(stage, DEFAULT_HIGHEST_UNLOCKED_STAGE);
       }
@@ -377,13 +395,14 @@ export const useBizMapProgress = () => {
       }
       return isStageUnlocked(stage, progress.highest_unlocked_stage);
     },
-    [progress, user],
+    [hasFullBizMapAccess, progress, user],
   );
 
   const getLockReasonForRoute = useCallback(
     (route: string) => {
       const stage = getStageByRoute(route);
       if (!stage) return null;
+      if (user && hasFullBizMapAccess) return null;
       if (!user) {
         if (isStageUnlocked(stage, DEFAULT_HIGHEST_UNLOCKED_STAGE)) return null;
         return `${getRequiredUnlockMessage(stage)} Start with Stage I and II, then sign in to continue progress.`;
@@ -395,7 +414,7 @@ export const useBizMapProgress = () => {
       if (isStageUnlocked(stage, progress.highest_unlocked_stage)) return null;
       return getRequiredUnlockMessage(stage);
     },
-    [progress, user],
+    [hasFullBizMapAccess, progress, user],
   );
 
   return {
@@ -404,7 +423,10 @@ export const useBizMapProgress = () => {
     progress,
     stageState,
     currentStage: progress?.current_stage ?? DEFAULT_CURRENT_STAGE,
-    highestUnlockedStage: progress?.highest_unlocked_stage ?? DEFAULT_HIGHEST_UNLOCKED_STAGE,
+    highestUnlockedStage: hasFullBizMapAccess
+      ? 'LAUNCH'
+      : (progress?.highest_unlocked_stage ?? DEFAULT_HIGHEST_UNLOCKED_STAGE),
+    hasFullBizMapAccess,
     refreshProgress,
     setCurrentStage,
     isToolRouteUnlocked,

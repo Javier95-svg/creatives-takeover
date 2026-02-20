@@ -16,7 +16,7 @@ interface StageRouteGuardProps {
 export default function StageRouteGuard({ route, children }: StageRouteGuardProps) {
   const { user } = useAuth();
   const location = useLocation();
-  const { loading, progress, getLockReasonForRoute } = useBizMapProgress();
+  const { loading, progress, getLockReasonForRoute, hasFullBizMapAccess } = useBizMapProgress();
   const hasNotifiedRef = useRef(false);
 
   const stage = getStageByRoute(route);
@@ -24,10 +24,11 @@ export default function StageRouteGuard({ route, children }: StageRouteGuardProp
 
   const unlocked = useMemo(() => {
     if (!stage) return true;
+    if (user && hasFullBizMapAccess) return true;
     if (!user) return isStageUnlocked(stage, DEFAULT_HIGHEST_UNLOCKED_STAGE);
     if (!progress) return isStageUnlocked(stage, DEFAULT_HIGHEST_UNLOCKED_STAGE);
     return isStageUnlocked(stage, progress.highest_unlocked_stage);
-  }, [progress, stage, user]);
+  }, [hasFullBizMapAccess, progress, stage, user]);
 
   useEffect(() => {
     if (loading || unlocked || hasNotifiedRef.current || !stage) return;
