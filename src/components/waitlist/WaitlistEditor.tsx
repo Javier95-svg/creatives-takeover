@@ -55,6 +55,20 @@ function maskEmail(email: string): string {
 
 const BASE_URL = 'https://creatives-takeover.com';
 
+// ── Right-panel wrapper shared across phases ──────────────────────────
+function PreviewPanel({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="flex-1 min-w-0 lg:sticky lg:top-6">
+      <p className="text-xs text-center text-muted-foreground mb-3 uppercase tracking-widest font-medium">
+        {label}
+      </p>
+      <div className="rounded-xl overflow-hidden border border-border shadow-lg max-h-[82vh] overflow-y-auto">
+        {children}
+      </div>
+    </div>
+  );
+}
+
 export default function WaitlistEditor() {
   const { user } = useAuth();
   const { refreshProgress } = useBizMapProgress();
@@ -137,14 +151,12 @@ export default function WaitlistEditor() {
   };
 
   const fetchAnalytics = async (pageId: string) => {
-    // Signup count
     const { count } = await (supabase as any)
       .from(SIGNUPS_TABLE)
       .select('*', { count: 'exact', head: true })
       .eq('waitlist_page_id', pageId);
     setSignupCount(count ?? 0);
 
-    // Recent 10 signups
     const { data: recent } = await (supabase as any)
       .from(SIGNUPS_TABLE)
       .select('id, email, first_name, created_at')
@@ -153,7 +165,6 @@ export default function WaitlistEditor() {
       .limit(10);
     setRecentSignups(recent ?? []);
 
-    // View count from the page row
     const { data: pageData } = await (supabase as any)
       .from(WAITLIST_TABLE)
       .select('view_count')
@@ -202,7 +213,7 @@ export default function WaitlistEditor() {
 
     await loadAllPages();
     setPhase('preview');
-    toast.success('Page generated! Edit any text by clicking on it.');
+    toast.success('Page generated! Edit any text by clicking on it in the preview.');
   };
 
   const handleContentChange = useCallback((field: string, value: string) => {
@@ -255,6 +266,7 @@ export default function WaitlistEditor() {
     setViewCount(0);
     setRecentSignups([]);
     setPhase('published');
+    if (pageId) fetchAnalytics(pageId);
     await loadAllPages();
     await refreshProgress();
     toast.success('Waitlist is live!');
@@ -270,7 +282,7 @@ export default function WaitlistEditor() {
     if (error) { toast.error('Failed to unpublish.'); return; }
     setPhase('preview');
     await loadAllPages();
-    toast.success('Page unpublished. It\'s now a draft.');
+    toast.success("Page unpublished. It's now a draft.");
   };
 
   const handleSaveContentEdits = async () => {
@@ -282,7 +294,6 @@ export default function WaitlistEditor() {
     toast.success('Changes saved.');
   };
 
-  // Slug editing
   const startSlugEdit = () => {
     setSlugDraft(currentSlug ?? '');
     setSlugAvailable(null);
@@ -394,37 +405,69 @@ export default function WaitlistEditor() {
 
   // ─────────────────────── INPUT PHASE ───────────────────────
   if (phase === 'input') {
+    // Placeholder content that updates live as the user types
+    const inputPreview: WaitlistContent = {
+      headline: productName
+        ? `Get early access to ${productName}`
+        : 'Your headline appears here',
+      subheadline: pitch
+        ? pitch
+        : 'Your one-line pitch becomes the subheadline — fill it in on the left to see it update.',
+      benefits: [
+        'First key benefit of your product',
+        'Second reason to join the waitlist early',
+        'Third compelling outcome for your users',
+      ],
+      socialProof: 'Your social proof quote will appear here — a line that builds trust.',
+      ctaText: 'Join the Waitlist',
+      emailPlaceholder: 'Enter your email address',
+    };
+
     return (
-      <div className="space-y-4">
-        <MyWaitlistsPanel />
-        <Card className="border-primary/20">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-primary" />
-              Generate Your Waitlist Page
-            </CardTitle>
-            <CardDescription>
-              Fill in 3 quick fields — AI builds your landing page copy instantly. Costs 3 credits.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-5">
-            <div className="space-y-2">
-              <Label htmlFor="wl-name">Product name</Label>
-              <Input id="wl-name" value={productName} onChange={(e) => setProductName(e.target.value)} placeholder="e.g. LaunchDesk" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="wl-pitch">One-line pitch</Label>
-              <Input id="wl-pitch" value={pitch} onChange={(e) => setPitch(e.target.value)} placeholder="What it does for whom — e.g. 'Helps solo founders close enterprise deals without a sales team'" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="wl-audience">Target audience <span className="text-muted-foreground text-xs">(optional)</span></Label>
-              <Input id="wl-audience" value={audience} onChange={(e) => setAudience(e.target.value)} placeholder="e.g. B2B SaaS founders pre-seed" />
-            </div>
-            <Button onClick={handleGenerate} disabled={isGenerating || !productName.trim() || !pitch.trim()} className="w-full sm:w-auto" size="lg">
-              {isGenerating ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Generating your page…</> : <><Sparkles className="w-4 h-4 mr-2" />Generate My Page (3 credits)</>}
-            </Button>
-          </CardContent>
-        </Card>
+      <div className="flex flex-col lg:flex-row gap-6 items-start">
+        {/* LEFT: form */}
+        <div className="w-full lg:w-[420px] flex-shrink-0 space-y-4">
+          <MyWaitlistsPanel />
+          <Card className="border-primary/20">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-primary" />
+                Generate Your Waitlist Page
+              </CardTitle>
+              <CardDescription>
+                Fill in 3 quick fields — AI builds your landing page copy instantly. Costs 3 credits.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-5">
+              <div className="space-y-2">
+                <Label htmlFor="wl-name">Product name</Label>
+                <Input id="wl-name" value={productName} onChange={(e) => setProductName(e.target.value)} placeholder="e.g. LaunchDesk" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="wl-pitch">One-line pitch</Label>
+                <Input id="wl-pitch" value={pitch} onChange={(e) => setPitch(e.target.value)} placeholder="What it does for whom — e.g. 'Helps solo founders close enterprise deals without a sales team'" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="wl-audience">Target audience <span className="text-muted-foreground text-xs">(optional)</span></Label>
+                <Input id="wl-audience" value={audience} onChange={(e) => setAudience(e.target.value)} placeholder="e.g. B2B SaaS founders pre-seed" />
+              </div>
+              <Button onClick={handleGenerate} disabled={isGenerating || !productName.trim() || !pitch.trim()} className="w-full" size="lg">
+                {isGenerating
+                  ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Generating your page…</>
+                  : <><Sparkles className="w-4 h-4 mr-2" />Generate My Page (3 credits)</>}
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* RIGHT: live preview */}
+        <PreviewPanel label="Live Preview">
+          <WaitlistPageTemplate
+            content={inputPreview}
+            productName={productName || 'Your Product'}
+            mode="public"
+          />
+        </PreviewPanel>
       </div>
     );
   }
@@ -432,59 +475,66 @@ export default function WaitlistEditor() {
   // ─────────────────────── PREVIEW PHASE ───────────────────────
   if (phase === 'preview' && content) {
     return (
-      <div className="space-y-4">
-        <MyWaitlistsPanel />
+      <div className="flex flex-col lg:flex-row gap-6 items-start">
+        {/* LEFT: controls */}
+        <div className="w-full lg:w-[380px] flex-shrink-0 space-y-4">
+          <MyWaitlistsPanel />
 
-        {/* Form config toggles */}
-        <Card className="border-border">
-          <CardContent className="pt-4 pb-4">
-            <div className="flex flex-wrap items-center gap-4">
-              <p className="text-sm font-medium mr-auto">Signup form options</p>
-              <label className="flex items-center gap-2 text-sm cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={!!content.collectFirstName}
-                  onChange={(e) => setContent((p) => p ? { ...p, collectFirstName: e.target.checked } : p)}
-                  className="rounded"
-                />
-                Collect first name
-              </label>
-              <label className="flex items-center gap-2 text-sm cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={!!content.collectConsent}
-                  onChange={(e) => setContent((p) => p ? { ...p, collectConsent: e.target.checked } : p)}
-                  className="rounded"
-                />
-                Show consent checkbox
-              </label>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-primary/20">
-          <CardContent className="pt-4 pb-4">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <p className="font-semibold text-sm">Preview — click any text to edit it</p>
-                <p className="text-xs text-muted-foreground">Your page looks exactly like this when published</p>
+          {/* Actions card */}
+          <Card className="border-primary/20">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base">Edit &amp; Publish</CardTitle>
+              <CardDescription>Click any text in the preview to edit it inline.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <p className="text-sm font-medium">Signup form options</p>
+                <label className="flex items-center gap-2 text-sm cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={!!content.collectFirstName}
+                    onChange={(e) => setContent((p) => p ? { ...p, collectFirstName: e.target.checked } : p)}
+                    className="rounded"
+                  />
+                  Collect first name
+                </label>
+                <label className="flex items-center gap-2 text-sm cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={!!content.collectConsent}
+                    onChange={(e) => setContent((p) => p ? { ...p, collectConsent: e.target.checked } : p)}
+                    className="rounded"
+                  />
+                  Show consent checkbox
+                </label>
               </div>
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm" onClick={() => { setContent(null); setPhase('input'); }}>
-                  <ArrowLeft className="w-4 h-4 mr-1" /> Regenerate
-                </Button>
-                <Button variant="ghost" size="sm" onClick={handleSaveContentEdits}>Save edits</Button>
-                <Button size="sm" onClick={handlePublish} disabled={isPublishing}>
-                  {isPublishing ? <><Loader2 className="w-4 h-4 mr-1 animate-spin" />Publishing…</> : <><Globe className="w-4 h-4 mr-1" />Publish Waitlist</>}
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
 
-        <div className="rounded-xl overflow-hidden border border-border shadow-lg">
-          <WaitlistPageTemplate content={content} productName={productName} mode="preview" onContentChange={handleContentChange} />
+              <div className="flex flex-col gap-2 pt-1">
+                <Button onClick={handlePublish} disabled={isPublishing} size="sm" className="w-full">
+                  {isPublishing
+                    ? <><Loader2 className="w-4 h-4 mr-1 animate-spin" />Publishing…</>
+                    : <><Globe className="w-4 h-4 mr-1" />Publish Waitlist</>}
+                </Button>
+                <div className="flex gap-2">
+                  <Button variant="ghost" size="sm" className="flex-1" onClick={handleSaveContentEdits}>Save edits</Button>
+                  <Button variant="outline" size="sm" className="flex-1" onClick={() => { setContent(null); setPhase('input'); }}>
+                    <ArrowLeft className="w-4 h-4 mr-1" /> Regenerate
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
+
+        {/* RIGHT: editable preview */}
+        <PreviewPanel label="Live Preview — click text to edit">
+          <WaitlistPageTemplate
+            content={content}
+            productName={productName}
+            mode="preview"
+            onContentChange={handleContentChange}
+          />
+        </PreviewPanel>
       </div>
     );
   }
@@ -495,124 +545,133 @@ export default function WaitlistEditor() {
     const conversionRate = viewCount > 0 ? ((signupCount / viewCount) * 100).toFixed(1) : '—';
 
     return (
-      <div className="space-y-5">
-        <MyWaitlistsPanel />
+      <div className="flex flex-col lg:flex-row gap-6 items-start">
+        {/* LEFT: analytics + controls */}
+        <div className="w-full lg:w-[400px] flex-shrink-0 space-y-4">
+          <MyWaitlistsPanel />
 
-        {/* Live URL card */}
-        <Card className="border-green-200 bg-green-50/50">
-          <CardContent className="pt-5 pb-5 space-y-4">
-            <div className="flex items-start gap-3">
-              <div className="w-9 h-9 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
-                <Globe className="w-4 h-4 text-green-600" />
+          {/* Live URL card */}
+          <Card className="border-green-200 bg-green-50/50">
+            <CardContent className="pt-5 pb-5 space-y-4">
+              <div className="flex items-start gap-3">
+                <div className="w-9 h-9 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
+                  <Globe className="w-4 h-4 text-green-600" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-green-900">Your waitlist is live</p>
+                  <p className="text-sm text-green-700 mt-0.5">Share this link to start collecting signups.</p>
+                </div>
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-semibold text-green-900">Your waitlist is live</p>
-                <p className="text-sm text-green-700 mt-0.5">Share this link to start collecting signups.</p>
-              </div>
-            </div>
 
-            {/* Slug editor */}
-            {editingSlug ? (
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground whitespace-nowrap">{BASE_URL}/w/</span>
-                <Input
-                  value={slugDraft}
-                  onChange={(e) => { setSlugDraft(e.target.value); checkSlugAvailability(e.target.value); }}
-                  className="h-8 text-sm flex-1"
-                  autoFocus
-                />
-                {slugChecking && <Loader2 className="w-4 h-4 animate-spin text-muted-foreground flex-shrink-0" />}
-                {!slugChecking && slugAvailable === true && <Check className="w-4 h-4 text-green-600 flex-shrink-0" />}
-                {!slugChecking && slugAvailable === false && <X className="w-4 h-4 text-red-500 flex-shrink-0" />}
-                <Button size="sm" className="h-8" onClick={saveSlug} disabled={slugAvailable === false || slugChecking}>Save</Button>
-                <Button size="sm" variant="ghost" className="h-8" onClick={() => setEditingSlug(false)}>Cancel</Button>
-              </div>
-            ) : (
-              <div className="flex items-center gap-2 bg-white border border-green-200 rounded-lg px-3 py-2">
-                <span className="text-sm text-gray-600 truncate flex-1">{liveUrl}</span>
-                <button onClick={() => copyUrl(liveUrl)} className="flex-shrink-0 text-indigo-600 hover:text-indigo-800 transition-colors" title="Copy link">
-                  <Copy className="w-4 h-4" />
-                </button>
-              </div>
-            )}
+              {/* Slug editor */}
+              {editingSlug ? (
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground whitespace-nowrap">/w/</span>
+                  <Input
+                    value={slugDraft}
+                    onChange={(e) => { setSlugDraft(e.target.value); checkSlugAvailability(e.target.value); }}
+                    className="h-8 text-sm flex-1"
+                    autoFocus
+                  />
+                  {slugChecking && <Loader2 className="w-4 h-4 animate-spin text-muted-foreground flex-shrink-0" />}
+                  {!slugChecking && slugAvailable === true && <Check className="w-4 h-4 text-green-600 flex-shrink-0" />}
+                  {!slugChecking && slugAvailable === false && <X className="w-4 h-4 text-red-500 flex-shrink-0" />}
+                  <Button size="sm" className="h-8" onClick={saveSlug} disabled={slugAvailable === false || slugChecking}>Save</Button>
+                  <Button size="sm" variant="ghost" className="h-8" onClick={() => setEditingSlug(false)}>Cancel</Button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 bg-white border border-green-200 rounded-lg px-3 py-2">
+                  <span className="text-sm text-gray-600 truncate flex-1">{liveUrl}</span>
+                  <button onClick={() => copyUrl(liveUrl)} className="flex-shrink-0 text-indigo-600 hover:text-indigo-800 transition-colors" title="Copy link">
+                    <Copy className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
 
-            <div className="flex flex-wrap gap-2">
-              <Button asChild size="sm"><a href={liveUrl} target="_blank" rel="noopener noreferrer"><Globe className="w-4 h-4 mr-1" />View page</a></Button>
-              <Button variant="outline" size="sm" onClick={() => setPhase('preview')}>Edit page</Button>
-              {!editingSlug && <Button variant="outline" size="sm" onClick={startSlugEdit}>Edit URL</Button>}
-              <Button variant="outline" size="sm" onClick={handleUnpublish}><EyeOff className="w-4 h-4 mr-1" />Unpublish</Button>
-              <Button variant="ghost" size="sm" onClick={resetToNew}><Plus className="w-3 h-3 mr-1" />New page</Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Analytics stats */}
-        <div className="grid grid-cols-3 gap-3">
-          <Card>
-            <CardContent className="pt-4 pb-4 text-center">
-              <Eye className="w-4 h-4 text-muted-foreground mx-auto mb-1" />
-              <p className="text-2xl font-black text-foreground">{viewCount}</p>
-              <p className="text-xs text-muted-foreground">page views</p>
+              <div className="flex flex-wrap gap-2">
+                <Button asChild size="sm"><a href={liveUrl} target="_blank" rel="noopener noreferrer"><Globe className="w-4 h-4 mr-1" />View page</a></Button>
+                <Button variant="outline" size="sm" onClick={() => setPhase('preview')}>Edit page</Button>
+                {!editingSlug && <Button variant="outline" size="sm" onClick={startSlugEdit}>Edit URL</Button>}
+                <Button variant="outline" size="sm" onClick={handleUnpublish}><EyeOff className="w-4 h-4 mr-1" />Unpublish</Button>
+                <Button variant="ghost" size="sm" onClick={resetToNew}><Plus className="w-3 h-3 mr-1" />New page</Button>
+              </div>
             </CardContent>
           </Card>
+
+          {/* Analytics stats */}
+          <div className="grid grid-cols-3 gap-3">
+            <Card>
+              <CardContent className="pt-4 pb-4 text-center">
+                <Eye className="w-4 h-4 text-muted-foreground mx-auto mb-1" />
+                <p className="text-2xl font-black text-foreground">{viewCount}</p>
+                <p className="text-xs text-muted-foreground">views</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-4 pb-4 text-center">
+                <Users className="w-4 h-4 text-indigo-500 mx-auto mb-1" />
+                <p className="text-2xl font-black text-indigo-700">{signupCount}</p>
+                <p className="text-xs text-muted-foreground">signups</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-4 pb-4 text-center">
+                <TrendingUp className="w-4 h-4 text-green-500 mx-auto mb-1" />
+                <p className="text-2xl font-black text-green-700">{conversionRate}{conversionRate !== '—' ? '%' : ''}</p>
+                <p className="text-xs text-muted-foreground">conversion</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Recent signups */}
           <Card>
-            <CardContent className="pt-4 pb-4 text-center">
-              <Users className="w-4 h-4 text-indigo-500 mx-auto mb-1" />
-              <p className="text-2xl font-black text-indigo-700">{signupCount}</p>
-              <p className="text-xs text-muted-foreground">signups</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-4 pb-4 text-center">
-              <TrendingUp className="w-4 h-4 text-green-500 mx-auto mb-1" />
-              <p className="text-2xl font-black text-green-700">{conversionRate}{conversionRate !== '—' ? '%' : ''}</p>
-              <p className="text-xs text-muted-foreground">conversion</p>
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-sm">Recent signups</CardTitle>
+                <div className="flex gap-2">
+                  <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => draftId && fetchAnalytics(draftId)}>Refresh</Button>
+                  <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={handleExportCSV}>
+                    <Download className="w-3 h-3" />Export CSV
+                  </Button>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="pt-0">
+              {recentSignups.length === 0 ? (
+                <p className="text-sm text-muted-foreground py-4 text-center">No signups yet. Share your link!</p>
+              ) : (
+                <div className="space-y-2">
+                  {recentSignups.map((s) => (
+                    <div key={s.id} className="flex items-center justify-between text-sm py-1.5 border-b border-border/50 last:border-0">
+                      <div>
+                        <span className="font-mono text-xs text-foreground">{maskEmail(s.email)}</span>
+                        {s.first_name && <span className="text-muted-foreground ml-2 text-xs">· {s.first_name}</span>}
+                      </div>
+                      <span className="text-xs text-muted-foreground">{new Date(s.created_at).toLocaleDateString()}</span>
+                    </div>
+                  ))}
+                  {signupCount > 10 && (
+                    <p className="text-xs text-muted-foreground text-center pt-1">
+                      Showing 10 of {signupCount}. Export CSV for the full list.
+                    </p>
+                  )}
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
 
-        {/* Recent signups */}
-        <Card>
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-sm">Recent signups</CardTitle>
-              <div className="flex gap-2">
-                <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => draftId && fetchAnalytics(draftId)}>Refresh</Button>
-                <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={handleExportCSV}>
-                  <Download className="w-3 h-3" />Export CSV
-                </Button>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="pt-0">
-            {recentSignups.length === 0 ? (
-              <p className="text-sm text-muted-foreground py-4 text-center">No signups yet. Share your link!</p>
-            ) : (
-              <div className="space-y-2">
-                {recentSignups.map((s) => (
-                  <div key={s.id} className="flex items-center justify-between text-sm py-1.5 border-b border-border/50 last:border-0">
-                    <div>
-                      <span className="font-mono text-xs text-foreground">{maskEmail(s.email)}</span>
-                      {s.first_name && <span className="text-muted-foreground ml-2 text-xs">· {s.first_name}</span>}
-                    </div>
-                    <span className="text-xs text-muted-foreground">{new Date(s.created_at).toLocaleDateString()}</span>
-                  </div>
-                ))}
-                {signupCount > 10 && (
-                  <p className="text-xs text-muted-foreground text-center pt-1">
-                    Showing 10 of {signupCount}. Export CSV for the full list.
-                  </p>
-                )}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Editable preview */}
+        {/* RIGHT: preview */}
         {content && (
-          <div className="rounded-xl overflow-hidden border border-border shadow-lg">
-            <WaitlistPageTemplate content={content} productName={productName} mode="preview" onContentChange={handleContentChange} signupCount={signupCount} />
-          </div>
+          <PreviewPanel label="Page Preview">
+            <WaitlistPageTemplate
+              content={content}
+              productName={productName}
+              mode="preview"
+              onContentChange={handleContentChange}
+              signupCount={signupCount}
+            />
+          </PreviewPanel>
         )}
       </div>
     );
