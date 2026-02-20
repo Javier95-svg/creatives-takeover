@@ -7,6 +7,14 @@ export interface WaitlistContent {
   socialProof: string;
   ctaText: string;
   emailPlaceholder: string;
+  collectFirstName?: boolean;
+  collectConsent?: boolean;
+}
+
+export interface SignupData {
+  email: string;
+  firstName?: string;
+  consent?: boolean;
 }
 
 interface WaitlistPageTemplateProps {
@@ -14,7 +22,7 @@ interface WaitlistPageTemplateProps {
   productName: string;
   mode: 'preview' | 'public';
   onContentChange?: (field: string, value: string) => void;
-  onEmailSubmit?: (email: string) => Promise<boolean>;
+  onEmailSubmit?: (data: SignupData) => Promise<boolean>;
   signupCount?: number;
 }
 
@@ -76,49 +84,104 @@ function EditableField({
 function EmailForm({
   ctaText,
   emailPlaceholder,
+  collectFirstName,
+  collectConsent,
   onSubmit,
 }: {
   ctaText: string;
   emailPlaceholder: string;
-  onSubmit: (email: string) => Promise<boolean>;
+  collectFirstName?: boolean;
+  collectConsent?: boolean;
+  onSubmit: (data: SignupData) => Promise<boolean>;
 }) {
   const [email, setEmail] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [consent, setConsent] = useState(false);
+  const [honeypot, setHoneypot] = useState(''); // should stay empty
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handle = async () => {
     if (!email.trim() || !email.includes('@')) return;
+    // Honeypot: bots fill this, humans don't
+    if (honeypot) { setSubmitted(true); return; }
     setLoading(true);
-    const ok = await onSubmit(email.trim());
+    const ok = await onSubmit({
+      email: email.trim(),
+      firstName: collectFirstName ? firstName.trim() || undefined : undefined,
+      consent: collectConsent ? consent : undefined,
+    });
     setLoading(false);
     if (ok) setSubmitted(true);
   };
 
   if (submitted) {
     return (
-      <div className="flex items-center gap-2 text-white font-medium text-lg">
-        <span className="text-2xl">✓</span> You're on the list. We'll be in touch.
+      <div className="space-y-3 text-center">
+        <div className="flex items-center justify-center gap-2 text-white font-medium text-lg">
+          <span className="text-2xl">✓</span> You're on the list. We'll be in touch.
+        </div>
+        <p className="text-white/60 text-sm">
+          Know someone who'd love this? Share the link with them.
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col sm:flex-row gap-3 max-w-md w-full mx-auto">
+    <div className="space-y-3 max-w-md w-full mx-auto">
+      {/* Honeypot — hidden from real users */}
       <input
-        type="email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        onKeyDown={(e) => e.key === 'Enter' && handle()}
-        placeholder={emailPlaceholder}
-        className="flex-1 rounded-lg px-4 py-3 text-gray-900 text-sm outline-none focus:ring-2 focus:ring-white/50"
+        type="text"
+        name="website"
+        value={honeypot}
+        onChange={(e) => setHoneypot(e.target.value)}
+        tabIndex={-1}
+        aria-hidden="true"
+        style={{ position: 'absolute', left: '-9999px', opacity: 0, pointerEvents: 'none' }}
       />
-      <button
-        onClick={handle}
-        disabled={loading}
-        className="bg-white text-indigo-700 font-semibold px-6 py-3 rounded-lg text-sm hover:bg-indigo-50 transition-colors disabled:opacity-60 whitespace-nowrap"
-      >
-        {loading ? 'Joining…' : ctaText}
-      </button>
+
+      {collectFirstName && (
+        <input
+          type="text"
+          value={firstName}
+          onChange={(e) => setFirstName(e.target.value)}
+          placeholder="Your first name"
+          className="w-full rounded-lg px-4 py-3 text-gray-900 text-sm outline-none focus:ring-2 focus:ring-white/50"
+        />
+      )}
+
+      <div className="flex flex-col sm:flex-row gap-3">
+        <input
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && handle()}
+          placeholder={emailPlaceholder}
+          className="flex-1 rounded-lg px-4 py-3 text-gray-900 text-sm outline-none focus:ring-2 focus:ring-white/50"
+        />
+        <button
+          onClick={handle}
+          disabled={loading}
+          className="bg-white text-indigo-700 font-semibold px-6 py-3 rounded-lg text-sm hover:bg-indigo-50 transition-colors disabled:opacity-60 whitespace-nowrap"
+        >
+          {loading ? 'Joining…' : ctaText}
+        </button>
+      </div>
+
+      {collectConsent && (
+        <label className="flex items-start gap-2 cursor-pointer text-left">
+          <input
+            type="checkbox"
+            checked={consent}
+            onChange={(e) => setConsent(e.target.checked)}
+            className="mt-0.5 rounded"
+          />
+          <span className="text-white/70 text-xs">
+            I agree to receive product updates and announcements. No spam, unsubscribe anytime.
+          </span>
+        </label>
+      )}
     </div>
   );
 }
@@ -182,6 +245,8 @@ export default function WaitlistPageTemplate({
           <EmailForm
             ctaText={content.ctaText}
             emailPlaceholder={content.emailPlaceholder}
+            collectFirstName={content.collectFirstName}
+            collectConsent={content.collectConsent}
             onSubmit={onEmailSubmit}
           />
         ) : (
@@ -253,6 +318,8 @@ export default function WaitlistPageTemplate({
           <EmailForm
             ctaText={content.ctaText}
             emailPlaceholder={content.emailPlaceholder}
+            collectFirstName={content.collectFirstName}
+            collectConsent={content.collectConsent}
             onSubmit={onEmailSubmit}
           />
         ) : (

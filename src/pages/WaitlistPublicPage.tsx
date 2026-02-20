@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import WaitlistPageTemplate, { WaitlistContent } from '@/components/waitlist/WaitlistPageTemplate';
+import WaitlistPageTemplate, { WaitlistContent, SignupData } from '@/components/waitlist/WaitlistPageTemplate';
 
 interface WaitlistPage {
   id: string;
@@ -39,23 +39,30 @@ export default function WaitlistPublicPage() {
         product_name: data.product_name ?? 'Product',
         ai_content: data.ai_content as WaitlistContent,
       });
+
+      // Increment view count (fire-and-forget)
+      (supabase as any).rpc('increment_waitlist_view', { page_id: data.id });
     };
 
     load();
   }, [slug]);
 
-  const handleEmailSubmit = async (email: string): Promise<boolean> => {
+  const handleEmailSubmit = async ({ email, firstName, consent }: SignupData): Promise<boolean> => {
     if (!page) return false;
 
     const { error } = await (supabase as any)
       .from('waitlist_signups')
-      .insert({ waitlist_page_id: page.id, email });
+      .insert({
+        waitlist_page_id: page.id,
+        email,
+        first_name: firstName ?? null,
+        consent: consent ?? false,
+      });
 
     if (error) {
       if (error.code === '23505') {
-        // Unique constraint — already signed up
         toast.info("You're already on this waitlist.");
-        return true; // Show success state anyway
+        return true;
       }
       toast.error('Something went wrong. Please try again.');
       return false;
