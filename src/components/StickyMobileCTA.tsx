@@ -2,9 +2,11 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 const StickyMobileCTA = () => {
   const [isVisible, setIsVisible] = useState(false);
+  const { isAuthenticated } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -17,7 +19,7 @@ const StickyMobileCTA = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  if (!isVisible) return null;
+  if (!isVisible || isAuthenticated) return null;
 
   return (
     <div className="fixed bottom-16 left-0 right-0 z-50 lg:hidden safe-area-inset">

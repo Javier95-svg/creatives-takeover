@@ -305,7 +305,7 @@ const DashboardPreview = () => {
               <div className="space-y-2">
                 <h2 className="text-2xl sm:text-3xl font-bold">Ready to Access Your Command Center?</h2>
                 <p className="text-muted-foreground max-w-2xl mx-auto">
-                  Join thousands of founders using our strategic planning hub to organize projects, track milestones, and execute with precision.
+                  Join 1,200+ founders using our strategic planning hub to organize projects, track milestones, and execute with precision.
                 </p>
               </div>
               
@@ -334,7 +334,7 @@ const DashboardPreview = () => {
               <div className="flex flex-wrap items-center justify-center gap-6 pt-4 text-sm text-muted-foreground">
                 <div className="flex items-center gap-2">
                   <Target className="w-4 h-4 text-primary" />
-                  <span>15,000+ Active Users</span>
+                  <span>1,200+ Active Users</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <TrendingUp className="w-4 h-4 text-[hsl(var(--green-primary))]" />

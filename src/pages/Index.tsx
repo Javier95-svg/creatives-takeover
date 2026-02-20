@@ -9,6 +9,8 @@ import AISpecializationTrends from "@/components/AISpecializationTrends";
 import StickyMobileCTA from "@/components/StickyMobileCTA";
 import { PullToRefresh } from "@/components/mobile/PullToRefresh";
 import { useIsMobile } from "@/hooks/use-mobile";
+import SignedInHome from "@/components/SignedInHome";
+import MemberExclusiveTeaser from "@/components/MemberExclusiveTeaser";
 
 import SEO, { createOrganizationSchema, createWebSiteSchema, createBreadcrumbSchema } from "@/components/SEO";
 import Footer from "@/components/Footer";
@@ -23,7 +25,7 @@ const HomeFAQ = lazy(() => import("@/components/HomeFAQ"));
 const Index = () => {
   const isMobile = useIsMobile();
   const navigate = useNavigate();
-  const { user, loading: authLoading } = useAuth();
+  const { user, isAuthenticated, loading: authLoading } = useAuth();
   // Track homepage analytics
   usePageAnalytics('/', 'Home - Creatives Takeover');
   
@@ -72,6 +74,26 @@ const Index = () => {
     ])
   ];
 
+  // Marketing page content (logged-out)
+  const marketingContent = (
+    <>
+      <Hero />
+      <EntrepreneurProblems />
+
+      <UserReviews />
+
+      <AISpecializationTrends />
+
+      <ValuePropositionCards />
+
+      <MemberExclusiveTeaser />
+
+      <Suspense fallback={<div className="h-96 animate-pulse bg-muted/20" />}>
+        <HomeFAQ />
+      </Suspense>
+    </>
+  );
+
   return (
     <div className="min-h-screen relative">
       <HomeWallpaper />
@@ -88,43 +110,20 @@ const Index = () => {
       />
       <Navigation />
       <main>
-        {isMobile ? (
+        {isAuthenticated && !authLoading ? (
+          <SignedInHome />
+        ) : isMobile ? (
           <PullToRefresh onRefresh={handleRefresh}>
-            <Hero />
-            <EntrepreneurProblems />
-             
-            <UserReviews />
-             
-            <AISpecializationTrends />
-             
-            <ValuePropositionCards />
-             
-            <Suspense fallback={<div className="h-96 animate-pulse bg-muted/20" />}>
-              <HomeFAQ />
-            </Suspense>
+            {marketingContent}
           </PullToRefresh>
         ) : (
-          <>
-            <Hero />
-            <EntrepreneurProblems />
-             
-            <UserReviews />
-             
-            <AISpecializationTrends />
-             
-            <ValuePropositionCards />
-             
-            <Suspense fallback={<div className="h-96 animate-pulse bg-muted/20" />}>
-              <HomeFAQ />
-            </Suspense>
-          </>
+          marketingContent
         )}
       </main>
       <Footer />
-      
-      {/* Sticky Mobile CTA - appears after scroll on mobile */}
+
+      {/* Sticky Mobile CTA - only shown to logged-out users */}
       <StickyMobileCTA />
-      
     </div>
   );
 };
