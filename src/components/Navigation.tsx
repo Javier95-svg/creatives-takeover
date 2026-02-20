@@ -68,7 +68,7 @@ const Navigation = () => {
     { name: "ICP Builder", href: "/icp-builder", icon: Target, description: "Define your ideal customer and niche" },
     { name: "PMF Lab", href: "/pmf-lab", icon: FlaskConical, description: "AI market analysis + validation" },
     { type: 'label', label: 'Build: Ship Your MVP' },
-    { name: "MVP Builder", href: "/mvp-builder", icon: Rocket, description: "From validated idea to working product" },
+    { name: "MVP Builder", href: "/mvp-builder", icon: Rocket, description: "From validated idea to working product (currently in Beta mode)" },
     { name: "Business Planner", href: "/bizmap-ai/chat", icon: Bot, description: "Your AI business partner for every stage" },
     { name: "Tech Stack Builder", href: "/tech-stack", icon: Boxes, description: "Choose your stack with budget calc" },
     { type: 'label', label: 'Measure: Get Traction' },
