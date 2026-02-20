@@ -1,7 +1,6 @@
 import SEO, { createBreadcrumbSchema } from '@/components/SEO';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
-import { Badge } from '@/components/ui/badge';
 import WaitlistEditor from '@/components/waitlist/WaitlistEditor';
 
 const structuredData = [
@@ -34,10 +33,9 @@ export default function WaitlistMakerPage() {
       <main className="py-20 px-4">
         <div className="container mx-auto max-w-4xl space-y-6">
           <div className="space-y-3 text-center">
-            <Badge className="bg-primary/10 text-primary border-primary/20">Stage II: PROTOTYPE</Badge>
             <h1 className="text-3xl md:text-5xl font-bold creatives-font takeover-gradient">Waitlist Maker</h1>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              Design your waitlist page visually, customize every detail, publish in minutes, and validate real demand before building.
+              Design your landing page, show what you have to offer, and validate real real demand before building.
             </p>
           </div>
 
