@@ -4,12 +4,9 @@ import solopreneurHeroMale from "@/assets/solopreneur-hero-male.jpg";
 import solopreneurHeroAsianTeen from "@/assets/solopreneur-hero-asian-teen.jpg";
 import solopreneurHeroGrandpa from "@/assets/solopreneur-hero-grandpa.jpg";
 import { ChevronDown } from "lucide-react";
-import AboutWallpaper from "@/components/wallpapers/AboutWallpaper";
 
 const AboutHero = () => {
   return <section className="relative pt-32 pb-20 overflow-hidden">
-      <AboutWallpaper />
-
       <div className="container mx-auto px-4 sm:px-6 relative z-10">
         <div className="max-w-6xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-8 sm:gap-12 items-center">

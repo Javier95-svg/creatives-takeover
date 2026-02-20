@@ -127,25 +127,6 @@ const ContactUs = () => {
       id="contact-us"
       className="scroll-mt-24 py-20 relative overflow-hidden"
     >
-      {/* Wallpaper Background - matching About page style */}
-      <div className="absolute inset-0 pointer-events-none">
-        {/* Base gradient */}
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-secondary/5" />
-
-        {/* Subtle circles */}
-        <div
-          className="absolute top-10 right-10 w-64 h-64 rounded-full bg-gradient-to-br from-primary/15 to-transparent blur-3xl animate-pulse"
-          style={{ animationDuration: "4s" }}
-        />
-        <div
-          className="absolute bottom-20 left-20 w-80 h-80 rounded-full bg-gradient-to-br from-secondary/10 to-transparent blur-3xl animate-pulse"
-          style={{ animationDuration: "5s", animationDelay: "1s" }}
-        />
-
-        {/* Overlay for readability */}
-        <div className="absolute inset-0 bg-gradient-to-b from-background/50 via-background/70 to-background/90" />
-      </div>
-
       <div className="container mx-auto px-6 relative z-10">
         {/* Header */}
         <header className="text-center max-w-3xl mx-auto mb-16 animate-slide-up">
