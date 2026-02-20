@@ -9,7 +9,6 @@ import AISpecializationTrends from "@/components/AISpecializationTrends";
 import StickyMobileCTA from "@/components/StickyMobileCTA";
 import { PullToRefresh } from "@/components/mobile/PullToRefresh";
 import { useIsMobile } from "@/hooks/use-mobile";
-import SignedInHome from "@/components/SignedInHome";
 
 import SEO, { createOrganizationSchema, createWebSiteSchema, createBreadcrumbSchema } from "@/components/SEO";
 import Footer from "@/components/Footer";
@@ -24,7 +23,7 @@ const HomeFAQ = lazy(() => import("@/components/HomeFAQ"));
 const Index = () => {
   const isMobile = useIsMobile();
   const navigate = useNavigate();
-  const { user, isAuthenticated, loading: authLoading } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   // Track homepage analytics
   usePageAnalytics('/', 'Home - Creatives Takeover');
   
@@ -107,9 +106,7 @@ const Index = () => {
       />
       <Navigation />
       <main>
-        {isAuthenticated && !authLoading ? (
-          <SignedInHome />
-        ) : isMobile ? (
+        {isMobile ? (
           <PullToRefresh onRefresh={handleRefresh}>
             {marketingContent}
           </PullToRefresh>
