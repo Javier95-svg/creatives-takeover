@@ -84,7 +84,7 @@ export default function BizMapJourneyHubPage() {
   return (
     <div className="min-h-screen bg-background">
       <SEO
-        title="BizMap AI - Guided Stage Journey"
+        title="BizMap AI - Startup Development Cycle"
         description="Progress through Identity, Prototype, Validation, Building, and Launch with smart unlocks and stage-aware actions."
         keywords="startup stages, product validation, waitlist, pmf, mvp, go-to-market"
         url="/bizmap-ai"

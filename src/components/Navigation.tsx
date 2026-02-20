@@ -241,7 +241,7 @@ const Navigation = () => {
                           </TooltipContent>
                         </Tooltip>
                         <DropdownMenuContent align="start" className="w-80 md:w-72 sm:w-64 max-w-[calc(100vw-2rem)]">
-                          <DropdownMenuLabel>Guided Stage Journey</DropdownMenuLabel>
+                          <DropdownMenuLabel>Startup Development Cycle</DropdownMenuLabel>
                           <DropdownMenuSeparator />
                           {bizMapSubmenu.map((subItem, idx) => {
                             if ('type' in subItem && subItem.type === 'label') {
