@@ -14,6 +14,7 @@ import { useVersionCheck } from "@/hooks/useVersionCheck";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import ScrollToTop from "./components/ScrollToTop";
 import ProUpgradeBanner from "@/components/ProUpgradeBanner";
+import SocialProofNotification from "@/components/SocialProofNotification";
 
 const PulseWidget = lazy(() => import("@/components/pulse/PulseWidget"));
 const MobileBottomNav = lazy(() =>
@@ -138,6 +139,7 @@ function App() {
                     <UpgradePromptProvider>
                       <ProUpgradeBanner />
                       <PulseWidgetWrapper />
+                      <SocialProofNotification />
                       <Routes>
                         <Route path="/" element={<Index />} />
                         <Route path="/about" element={<About />} />

@@ -10,7 +10,6 @@ import StickyMobileCTA from "@/components/StickyMobileCTA";
 import { PullToRefresh } from "@/components/mobile/PullToRefresh";
 import { useIsMobile } from "@/hooks/use-mobile";
 import SignedInHome from "@/components/SignedInHome";
-import MemberExclusiveTeaser from "@/components/MemberExclusiveTeaser";
 
 import SEO, { createOrganizationSchema, createWebSiteSchema, createBreadcrumbSchema } from "@/components/SEO";
 import Footer from "@/components/Footer";
@@ -85,8 +84,6 @@ const Index = () => {
       <AISpecializationTrends />
 
       <ValuePropositionCards />
-
-      <MemberExclusiveTeaser />
 
       <Suspense fallback={<div className="h-96 animate-pulse bg-muted/20" />}>
         <HomeFAQ />
