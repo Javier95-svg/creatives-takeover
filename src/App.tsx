@@ -98,6 +98,7 @@ const MvpJourney = lazy(() => import("./pages/journeys/MvpJourney"));
 const FirstCustomersJourney = lazy(() => import("./pages/journeys/FirstCustomersJourney"));
 const FindYourAngel = lazy(() => import("./pages/community/FindYourAngel"));
 const AdminAngelEditor = lazy(() => import("./pages/community/AdminAngelEditor"));
+const WaitlistPublicPage = lazy(() => import("./pages/WaitlistPublicPage"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -218,6 +219,7 @@ function App() {
                         <Route path="/creatives-takeover" element={<CreativesTakeover />} />
                         <Route path="/rag-test" element={<RAGTest />} />
                         <Route path="/test-phase1" element={<TestPhase1 />} />
+                        <Route path="/w/:slug" element={<WaitlistPublicPage />} />
                         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                         <Route path="*" element={<NotFound />} />
                       </Routes>

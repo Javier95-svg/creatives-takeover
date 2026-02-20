@@ -46,6 +46,9 @@ export const CREDIT_COSTS = {
 
   // Community Features
   DISCOVERY_CALL: 5,
+
+  // Waitlist Builder
+  WAITLIST_GENERATION: 3,
 } as const;
 
 // Type for credit cost feature names
