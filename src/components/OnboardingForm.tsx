@@ -72,9 +72,6 @@ const SECONDARY_PAIN_OPTIONS = [
 const STAGE_TO_PROFILE_BUSINESS_STAGE: Record<OnboardingBizMapStageSelection, string> = {
   stage_i: 'identity',
   stage_ii: 'prototype',
-  stage_iii: 'validating',
-  stage_iv: 'building',
-  stage_v: 'launch',
 };
 
 interface OnboardingFormProps {
@@ -324,19 +321,10 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
                   <RadioGroupItem value="stage_ii" id="stage-ii" />
                   <span className="flex-1">Stage II: Prototype (Waitlist Maker)</span>
                 </Label>
-                <Label htmlFor="stage-iii" className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60 cursor-pointer">
-                  <RadioGroupItem value="stage_iii" id="stage-iii" />
-                  <span className="flex-1">Stage III: Validating (PMF Lab)</span>
-                </Label>
-                <Label htmlFor="stage-iv" className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60 cursor-pointer">
-                  <RadioGroupItem value="stage_iv" id="stage-iv" />
-                  <span className="flex-1">Stage IV: Building (MVP Builder + Tech Stack)</span>
-                </Label>
-                <Label htmlFor="stage-v" className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60 cursor-pointer">
-                  <RadioGroupItem value="stage_v" id="stage-v" />
-                  <span className="flex-1">Stage V: Launch (GTM Strategist)</span>
-                </Label>
               </RadioGroup>
+              <p className="text-xs text-muted-foreground mt-2">
+                Stage III+ unlocks only after you complete Stage I and Stage II.
+              </p>
               {errors.businessStage && <p className="text-sm text-destructive mt-1">{errors.businessStage}</p>}
             </div>
 

@@ -204,7 +204,7 @@ export const useBizMapProgress = () => {
     };
 
     const completionUnlocked = getCompletionUnlockedStage(nextRow);
-    nextRow.highest_unlocked_stage = maxStage(nextRow.highest_unlocked_stage, completionUnlocked);
+    nextRow.highest_unlocked_stage = completionUnlocked;
 
     if (getStageIndex(nextRow.current_stage) > getStageIndex(nextRow.highest_unlocked_stage)) {
       nextRow.current_stage = nextRow.highest_unlocked_stage;
@@ -367,23 +367,35 @@ export const useBizMapProgress = () => {
 
   const isToolRouteUnlocked = useCallback(
     (route: string) => {
-      if (!progress) return true;
       const stage = getStageByRoute(route);
       if (!stage) return true;
+      if (!user) {
+        return isStageUnlocked(stage, DEFAULT_HIGHEST_UNLOCKED_STAGE);
+      }
+      if (!progress) {
+        return isStageUnlocked(stage, DEFAULT_HIGHEST_UNLOCKED_STAGE);
+      }
       return isStageUnlocked(stage, progress.highest_unlocked_stage);
     },
-    [progress],
+    [progress, user],
   );
 
   const getLockReasonForRoute = useCallback(
     (route: string) => {
-      if (!progress) return null;
       const stage = getStageByRoute(route);
       if (!stage) return null;
+      if (!user) {
+        if (isStageUnlocked(stage, DEFAULT_HIGHEST_UNLOCKED_STAGE)) return null;
+        return `${getRequiredUnlockMessage(stage)} Start with Stage I and II, then sign in to continue progress.`;
+      }
+      if (!progress) {
+        if (isStageUnlocked(stage, DEFAULT_HIGHEST_UNLOCKED_STAGE)) return null;
+        return getRequiredUnlockMessage(stage);
+      }
       if (isStageUnlocked(stage, progress.highest_unlocked_stage)) return null;
       return getRequiredUnlockMessage(stage);
     },
-    [progress],
+    [progress, user],
   );
 
   return {

@@ -256,7 +256,7 @@ const Navigation = () => {
                             const toolUnlocked = isToolRouteUnlocked(linkItem.href);
                             const lockReason = getLockReasonForRoute(linkItem.href);
 
-                            if (!toolUnlocked && user) {
+                            if (!toolUnlocked) {
                               return (
                                 <DropdownMenuItem key={linkItem.name} asChild>
                                   <button
@@ -649,7 +649,7 @@ const Navigation = () => {
                               const subUnlocked = isToolRouteUnlocked(sub.href);
                               const subLockReason = getLockReasonForRoute(sub.href);
 
-                              if (!subUnlocked && user && item.name === 'BizMap AI') {
+                              if (!subUnlocked && item.name === 'BizMap AI') {
                                 return (
                                   <button
                                     key={sub.name}
@@ -810,9 +810,15 @@ const Navigation = () => {
               <Button variant="outline" onClick={() => setLockedMenuItem(null)}>
                 Close
               </Button>
-              <Button asChild>
-                <Link to="/bizmap-ai">Open Stage Map</Link>
-              </Button>
+              {user ? (
+                <Button asChild>
+                  <Link to="/bizmap-ai">Open Stage Map</Link>
+                </Button>
+              ) : (
+                <Button asChild>
+                  <Link to={`/signup?return=${encodeURIComponent('/bizmap-ai')}`}>Sign Up</Link>
+                </Button>
+              )}
             </DialogFooter>
           </DialogContent>
         </Dialog>
