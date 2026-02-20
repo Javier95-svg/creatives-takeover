@@ -3,6 +3,9 @@ export type WaitlistAccent = 'indigo' | 'emerald' | 'rose' | 'orange' | 'sky';
 export type WaitlistLayout = 'centered' | 'split';
 export type WaitlistVariant = 'A' | 'B';
 export type WaitlistIntegrationProvider = 'none' | 'mailchimp' | 'convertkit';
+export type WaitlistTextAlign = 'left' | 'center';
+export type WaitlistFieldType = 'text' | 'textarea' | 'url';
+export type WaitlistDomainStatus = 'unconfigured' | 'pending' | 'verified' | 'failed';
 
 export interface WaitlistSocialLinks {
   website?: string;
@@ -19,6 +22,68 @@ export interface WaitlistTestimonial {
   quote: string;
   author: string;
   role?: string;
+}
+
+export interface WaitlistTypography {
+  headingFamily: string;
+  bodyFamily: string;
+  headingWeight: number;
+  bodyWeight: number;
+  headingSize: number;
+  subheadingSize: number;
+  bodySize: number;
+  letterSpacing: number;
+}
+
+export interface WaitlistColorPalette {
+  pageBackground: string;
+  sectionBackground: string;
+  textPrimary: string;
+  textSecondary: string;
+  buttonBackground: string;
+  buttonText: string;
+  borderColor: string;
+  inputBackground: string;
+  inputText: string;
+}
+
+export interface WaitlistSpacing {
+  sectionPaddingY: number;
+  contentMaxWidth: number;
+  cardRadius: number;
+}
+
+export interface WaitlistSectionVisibility {
+  problemSolution: boolean;
+  benefits: boolean;
+  howItWorks: boolean;
+  testimonials: boolean;
+  faq: boolean;
+}
+
+export interface WaitlistCustomField {
+  id: string;
+  label: string;
+  placeholder: string;
+  type: WaitlistFieldType;
+  required: boolean;
+  enabled: boolean;
+}
+
+export interface WaitlistDomainSetup {
+  domain: string;
+  verificationToken: string;
+  status: WaitlistDomainStatus;
+  lastCheckedAt?: string | null;
+  spfValid?: boolean;
+  dkimValid?: boolean;
+  verificationValid?: boolean;
+}
+
+export interface WaitlistEmailSetup {
+  senderName: string;
+  senderEmail: string;
+  replyToEmail: string;
 }
 
 export interface WaitlistContent {
@@ -42,10 +107,24 @@ export interface WaitlistContent {
   theme?: WaitlistTheme;
   accentColor?: WaitlistAccent;
   layout?: WaitlistLayout;
+  textAlign?: WaitlistTextAlign;
   logoUrl?: string;
   imageUrl?: string;
   socialLinks?: WaitlistSocialLinks;
   launchDate?: string | null;
+
+  typography?: WaitlistTypography;
+  colors?: WaitlistColorPalette;
+  spacing?: WaitlistSpacing;
+  sectionVisibility?: WaitlistSectionVisibility;
+
+  customFields?: WaitlistCustomField[];
+  successTitle?: string;
+  successMessage?: string;
+  successShareLabel?: string;
+
+  domainSetup?: WaitlistDomainSetup;
+  emailSetup?: WaitlistEmailSetup;
 
   abTestEnabled?: boolean;
   referralMessage?: string;
@@ -56,11 +135,18 @@ export interface WaitlistContent {
   confirmationEmailEnabled?: boolean;
 }
 
+export interface WaitlistSignupCustomFieldValue {
+  id: string;
+  label: string;
+  value: string;
+}
+
 export interface WaitlistSignupPayload {
   email: string;
   firstName?: string;
   consent?: boolean;
   honeypot?: string;
+  customFields?: WaitlistSignupCustomFieldValue[];
 }
 
 const DEFAULT_FAQ: WaitlistFaqItem[] = [
@@ -99,10 +185,26 @@ export const WAITLIST_ACCENT_PRESETS: Array<{ value: WaitlistAccent; label: stri
   { value: 'sky', label: 'Sky', hex: '#0284c7' },
 ];
 
+export const WAITLIST_FONT_PRESETS = [
+  { value: '"Sora", "Poppins", "Segoe UI", sans-serif', label: 'Sora' },
+  { value: '"Space Grotesk", "Sora", "Segoe UI", sans-serif', label: 'Space Grotesk' },
+  { value: '"Poppins", "Sora", "Segoe UI", sans-serif', label: 'Poppins' },
+  { value: '"Manrope", "Sora", "Segoe UI", sans-serif', label: 'Manrope' },
+  { value: '"DM Sans", "Poppins", "Segoe UI", sans-serif', label: 'DM Sans' },
+] as const;
+
+const WAITLIST_ALLOWED_FIELD_TYPES: WaitlistFieldType[] = ['text', 'textarea', 'url'];
+
 function sanitizeText(input: unknown, fallback = ''): string {
   if (typeof input !== 'string') return fallback;
   const trimmed = input.trim();
   return trimmed || fallback;
+}
+
+function clampNumber(value: unknown, fallback: number, min: number, max: number): number {
+  const parsed = Number(value);
+  if (Number.isNaN(parsed)) return fallback;
+  return Math.min(max, Math.max(min, parsed));
 }
 
 function sanitizeArray(input: unknown, fallback: string[], min = 0, max = 10): string[] {
@@ -144,6 +246,33 @@ function sanitizeTestimonials(input: unknown): WaitlistTestimonial[] {
   return items.length > 0 ? items.slice(0, 4) : DEFAULT_TESTIMONIALS;
 }
 
+function sanitizeCustomFields(input: unknown): WaitlistCustomField[] {
+  if (!Array.isArray(input)) return [];
+  const items = input
+    .map((raw, index) => {
+      const item = raw as Record<string, unknown>;
+      const id = sanitizeText(item.id, `custom_${index + 1}`);
+      const label = sanitizeText(item.label, `Field ${index + 1}`);
+      const placeholder = sanitizeText(item.placeholder, 'Type your answer');
+      const type = WAITLIST_ALLOWED_FIELD_TYPES.includes(item.type as WaitlistFieldType)
+        ? (item.type as WaitlistFieldType)
+        : 'text';
+
+      return {
+        id,
+        label,
+        placeholder,
+        type,
+        required: Boolean(item.required),
+        enabled: item.enabled !== false,
+      };
+    })
+    .filter((item) => item.enabled)
+    .slice(0, 8);
+
+  return items;
+}
+
 function normalizeTheme(input: unknown): WaitlistTheme {
   return input === 'light' ? 'light' : 'dark';
 }
@@ -157,9 +286,22 @@ function normalizeLayout(input: unknown): WaitlistLayout {
   return input === 'split' ? 'split' : 'centered';
 }
 
+function normalizeTextAlign(input: unknown): WaitlistTextAlign {
+  return input === 'left' ? 'left' : 'center';
+}
+
 function normalizeProvider(input: unknown): WaitlistIntegrationProvider {
   if (input === 'mailchimp' || input === 'convertkit') return input;
   return 'none';
+}
+
+function normalizeDomainStatus(input: unknown): WaitlistDomainStatus {
+  if (input === 'pending' || input === 'verified' || input === 'failed') return input;
+  return 'unconfigured';
+}
+
+export function createWaitlistFieldId(): string {
+  return `field_${Math.random().toString(36).slice(2, 9)}`;
 }
 
 export function getDefaultWaitlistContent(productName?: string): WaitlistContent {
@@ -193,10 +335,62 @@ export function getDefaultWaitlistContent(productName?: string): WaitlistContent
     theme: 'dark',
     accentColor: 'indigo',
     layout: 'centered',
+    textAlign: 'center',
     logoUrl: '',
     imageUrl: '',
     socialLinks: {},
     launchDate: null,
+    typography: {
+      headingFamily: WAITLIST_FONT_PRESETS[0].value,
+      bodyFamily: WAITLIST_FONT_PRESETS[3].value,
+      headingWeight: 800,
+      bodyWeight: 500,
+      headingSize: 52,
+      subheadingSize: 22,
+      bodySize: 16,
+      letterSpacing: 0,
+    },
+    colors: {
+      pageBackground: '#0f172a',
+      sectionBackground: '#111827',
+      textPrimary: '#f8fafc',
+      textSecondary: '#cbd5e1',
+      buttonBackground: '#ffffff',
+      buttonText: '#111827',
+      borderColor: '#334155',
+      inputBackground: '#ffffff',
+      inputText: '#111827',
+    },
+    spacing: {
+      sectionPaddingY: 72,
+      contentMaxWidth: 1120,
+      cardRadius: 16,
+    },
+    sectionVisibility: {
+      problemSolution: true,
+      benefits: true,
+      howItWorks: true,
+      testimonials: true,
+      faq: true,
+    },
+    customFields: [],
+    successTitle: 'You are on the list.',
+    successMessage: 'Thanks for joining. We will keep you updated.',
+    successShareLabel: 'Copy share link',
+    domainSetup: {
+      domain: '',
+      verificationToken: Math.random().toString(36).slice(2, 10),
+      status: 'unconfigured',
+      lastCheckedAt: null,
+      spfValid: false,
+      dkimValid: false,
+      verificationValid: false,
+    },
+    emailSetup: {
+      senderName: 'Creatives Takeover',
+      senderEmail: '',
+      replyToEmail: '',
+    },
     abTestEnabled: false,
     referralMessage: 'Know someone who would benefit? Share this page with them.',
     webhookUrl: '',
@@ -213,6 +407,16 @@ export function normalizeWaitlistContent(raw: unknown, productName?: string): Wa
   const benefits = sanitizeArray(input.benefits, fallback.benefits, 3, 5);
   const howItWorks = sanitizeArray(input.howItWorks, fallback.howItWorks, 3, 4);
   const trustItems = sanitizeArray(input.trustItems, fallback.trustItems, 2, 5);
+
+  const typographyRaw = (input.typography as Record<string, unknown> | undefined) ?? {};
+  const colorsRaw = (input.colors as Record<string, unknown> | undefined) ?? {};
+  const spacingRaw = (input.spacing as Record<string, unknown> | undefined) ?? {};
+  const sectionRaw = (input.sectionVisibility as Record<string, unknown> | undefined) ?? {};
+  const domainRaw = (input.domainSetup as Record<string, unknown> | undefined) ?? {};
+  const emailRaw = (input.emailSetup as Record<string, unknown> | undefined) ?? {};
+
+  const headingFamily = sanitizeText(typographyRaw.headingFamily, fallback.typography?.headingFamily);
+  const bodyFamily = sanitizeText(typographyRaw.bodyFamily, fallback.typography?.bodyFamily);
 
   return {
     headline: sanitizeText(input.headline, fallback.headline),
@@ -234,6 +438,7 @@ export function normalizeWaitlistContent(raw: unknown, productName?: string): Wa
     theme: normalizeTheme(input.theme),
     accentColor: normalizeAccent(input.accentColor),
     layout: normalizeLayout(input.layout),
+    textAlign: normalizeTextAlign(input.textAlign),
     logoUrl: sanitizeText(input.logoUrl, ''),
     imageUrl: sanitizeText(input.imageUrl, ''),
     socialLinks: {
@@ -242,6 +447,57 @@ export function normalizeWaitlistContent(raw: unknown, productName?: string): Wa
       linkedin: sanitizeText((input.socialLinks as Record<string, unknown> | undefined)?.linkedin, ''),
     },
     launchDate: sanitizeText(input.launchDate, '') || null,
+    typography: {
+      headingFamily,
+      bodyFamily,
+      headingWeight: clampNumber(typographyRaw.headingWeight, fallback.typography?.headingWeight ?? 800, 500, 900),
+      bodyWeight: clampNumber(typographyRaw.bodyWeight, fallback.typography?.bodyWeight ?? 500, 300, 700),
+      headingSize: clampNumber(typographyRaw.headingSize, fallback.typography?.headingSize ?? 52, 28, 74),
+      subheadingSize: clampNumber(typographyRaw.subheadingSize, fallback.typography?.subheadingSize ?? 22, 16, 36),
+      bodySize: clampNumber(typographyRaw.bodySize, fallback.typography?.bodySize ?? 16, 13, 22),
+      letterSpacing: clampNumber(typographyRaw.letterSpacing, fallback.typography?.letterSpacing ?? 0, -1, 4),
+    },
+    colors: {
+      pageBackground: sanitizeText(colorsRaw.pageBackground, fallback.colors?.pageBackground),
+      sectionBackground: sanitizeText(colorsRaw.sectionBackground, fallback.colors?.sectionBackground),
+      textPrimary: sanitizeText(colorsRaw.textPrimary, fallback.colors?.textPrimary),
+      textSecondary: sanitizeText(colorsRaw.textSecondary, fallback.colors?.textSecondary),
+      buttonBackground: sanitizeText(colorsRaw.buttonBackground, fallback.colors?.buttonBackground),
+      buttonText: sanitizeText(colorsRaw.buttonText, fallback.colors?.buttonText),
+      borderColor: sanitizeText(colorsRaw.borderColor, fallback.colors?.borderColor),
+      inputBackground: sanitizeText(colorsRaw.inputBackground, fallback.colors?.inputBackground),
+      inputText: sanitizeText(colorsRaw.inputText, fallback.colors?.inputText),
+    },
+    spacing: {
+      sectionPaddingY: clampNumber(spacingRaw.sectionPaddingY, fallback.spacing?.sectionPaddingY ?? 72, 36, 120),
+      contentMaxWidth: clampNumber(spacingRaw.contentMaxWidth, fallback.spacing?.contentMaxWidth ?? 1120, 760, 1280),
+      cardRadius: clampNumber(spacingRaw.cardRadius, fallback.spacing?.cardRadius ?? 16, 0, 32),
+    },
+    sectionVisibility: {
+      problemSolution: sectionRaw.problemSolution !== false,
+      benefits: sectionRaw.benefits !== false,
+      howItWorks: sectionRaw.howItWorks !== false,
+      testimonials: sectionRaw.testimonials !== false,
+      faq: sectionRaw.faq !== false,
+    },
+    customFields: sanitizeCustomFields(input.customFields),
+    successTitle: sanitizeText(input.successTitle, fallback.successTitle),
+    successMessage: sanitizeText(input.successMessage, fallback.successMessage),
+    successShareLabel: sanitizeText(input.successShareLabel, fallback.successShareLabel),
+    domainSetup: {
+      domain: sanitizeText(domainRaw.domain, ''),
+      verificationToken: sanitizeText(domainRaw.verificationToken, fallback.domainSetup?.verificationToken),
+      status: normalizeDomainStatus(domainRaw.status),
+      lastCheckedAt: sanitizeText(domainRaw.lastCheckedAt, '') || null,
+      spfValid: Boolean(domainRaw.spfValid),
+      dkimValid: Boolean(domainRaw.dkimValid),
+      verificationValid: Boolean(domainRaw.verificationValid),
+    },
+    emailSetup: {
+      senderName: sanitizeText(emailRaw.senderName, fallback.emailSetup?.senderName),
+      senderEmail: sanitizeText(emailRaw.senderEmail, ''),
+      replyToEmail: sanitizeText(emailRaw.replyToEmail, ''),
+    },
     abTestEnabled: Boolean(input.abTestEnabled),
     referralMessage: sanitizeText(input.referralMessage, fallback.referralMessage),
     webhookUrl: sanitizeText(input.webhookUrl, ''),

@@ -150,6 +150,7 @@ export default function WaitlistPublicPage() {
         firstName: form.firstName,
         consent: form.consent,
         honeypot: form.honeypot,
+        customFields: form.customFields ?? [],
         referralSource,
         referrer: document.referrer || undefined,
         userAgent: navigator.userAgent,

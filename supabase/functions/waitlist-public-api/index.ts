@@ -44,6 +44,11 @@ interface WaitlistPublicPayload {
   honeypot?: string;
   captchaToken?: string;
   referralSource?: string;
+  customFields?: Array<{
+    id?: string;
+    label?: string;
+    value?: string;
+  }>;
 }
 
 interface WaitlistPageRow {
@@ -57,6 +62,12 @@ interface WaitlistPageRow {
   integration_list_id: string | null;
   confirmation_email_enabled: boolean | null;
   referral_message: string | null;
+}
+
+interface NormalizedCustomField {
+  id: string;
+  label: string;
+  value: string;
 }
 
 function jsonResponse(body: Record<string, unknown>, status = 200): Response {
@@ -75,6 +86,31 @@ function sanitizeText(value: unknown): string {
 
 function normalizeEmail(email: string): string {
   return sanitizeText(email).toLowerCase();
+}
+
+function extractDomainFromEmail(email: string): string {
+  const normalized = normalizeEmail(email);
+  const parts = normalized.split("@");
+  return parts.length === 2 ? sanitizeText(parts[1]) : "";
+}
+
+function sanitizeCustomFields(input: unknown): NormalizedCustomField[] {
+  if (!Array.isArray(input)) return [];
+
+  return input
+    .map((raw, index) => {
+      const row = raw as Record<string, unknown>;
+      const label = sanitizeText(row?.label, `Field ${index + 1}`);
+      const value = sanitizeText(row?.value);
+      if (!value) return null;
+      return {
+        id: sanitizeText(row?.id, `field_${index + 1}`),
+        label,
+        value: value.slice(0, 1000),
+      };
+    })
+    .filter(Boolean)
+    .slice(0, 12) as NormalizedCustomField[];
 }
 
 function getVariant(value: unknown): "A" | "B" | null {
@@ -244,8 +280,30 @@ async function syncConvertKit(page: WaitlistPageRow, email: string, firstName: s
 async function sendConfirmationEmail(page: WaitlistPageRow, email: string, firstName: string): Promise<void> {
   if (!page.confirmation_email_enabled || !resendClient) return;
 
-  const fromEmail = sanitizeText(Deno.env.get("WAITLIST_FROM_EMAIL")) || "onboarding@resend.dev";
-  const fromName = sanitizeText(Deno.env.get("WAITLIST_FROM_NAME")) || "Creatives Takeover";
+  const aiContent = (page.ai_content || {}) as Record<string, unknown>;
+  const emailSetup = (aiContent.emailSetup || {}) as Record<string, unknown>;
+  const domainSetup = (aiContent.domainSetup || {}) as Record<string, unknown>;
+
+  const defaultFromEmail = sanitizeText(Deno.env.get("WAITLIST_FROM_EMAIL")) || "onboarding@resend.dev";
+  const defaultFromName = sanitizeText(Deno.env.get("WAITLIST_FROM_NAME")) || "Creatives Takeover";
+
+  const configuredSenderEmail = normalizeEmail(String(emailSetup.senderEmail || ""));
+  const configuredSenderName = sanitizeText(emailSetup.senderName, "");
+  const configuredReplyTo = normalizeEmail(String(emailSetup.replyToEmail || ""));
+  const configuredDomain = sanitizeText(domainSetup.domain, "").toLowerCase();
+  const domainStatus = sanitizeText(domainSetup.status, "");
+  const senderDomain = extractDomainFromEmail(configuredSenderEmail);
+
+  const canUseCustomSender =
+    domainStatus === "verified" &&
+    configuredSenderEmail &&
+    configuredDomain &&
+    senderDomain &&
+    (senderDomain === configuredDomain || senderDomain.endsWith(`.${configuredDomain}`));
+
+  const fromEmail = canUseCustomSender ? configuredSenderEmail : defaultFromEmail;
+  const fromName = configuredSenderName || defaultFromName;
+  const replyTo = configuredReplyTo || fromEmail;
   const productName = sanitizeText(page.product_name) || "our product";
   const name = firstName || "there";
 
@@ -265,6 +323,7 @@ async function sendConfirmationEmail(page: WaitlistPageRow, email: string, first
       to: [email],
       subject,
       html,
+      reply_to: replyTo,
     } as any);
   } catch (error) {
     console.error("[waitlist-public-api] Confirmation email failed", error);
@@ -295,6 +354,7 @@ async function handleTrackView(payload: WaitlistPublicPayload, req: Request): Pr
 
   const sessionId = sanitizeText(payload.sessionId) || crypto.randomUUID();
   const variant = getVariant(payload.variant);
+  const customFields = sanitizeCustomFields(payload.customFields);
   const referrer = sanitizeText(payload.referrer) || sanitizeText(req.headers.get("referer"));
   const userAgent = sanitizeText(payload.userAgent) || sanitizeText(req.headers.get("user-agent"));
   const ipRaw = getClientIp(req);
@@ -402,6 +462,7 @@ async function handleSignup(payload: WaitlistPublicPayload, req: Request): Promi
     referrer: referrer || null,
     user_agent: userAgent || null,
     ip_hash: ipHash,
+    custom_fields: customFields.length ? customFields : null,
   };
 
   const { error: signupError } = await supabaseAdmin.from("waitlist_signups").insert(insertPayload);
@@ -444,6 +505,7 @@ async function handleSignup(payload: WaitlistPublicPayload, req: Request): Promi
     firstName,
     consent,
     variant,
+    customFields,
     utm: payload.utm || {},
     referralSource: sanitizeText(payload.referralSource),
     occurredAt: new Date().toISOString(),

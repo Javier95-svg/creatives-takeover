@@ -37,7 +37,7 @@ export default function WaitlistMakerPage() {
             <Badge className="bg-primary/10 text-primary border-primary/20">Stage II: PROTOTYPE</Badge>
             <h1 className="text-3xl md:text-5xl font-bold creatives-font takeover-gradient">Waitlist Maker</h1>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              Describe your product in 3 fields — AI writes your landing page. Publish it, share the link, and watch signups roll in before you write a single line of code.
+              Design your waitlist page visually, customize every detail, publish in minutes, and validate real demand before building.
             </p>
           </div>
 
