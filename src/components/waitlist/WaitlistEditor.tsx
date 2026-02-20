@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useBizMapProgress } from '@/hooks/useBizMapProgress';
@@ -10,14 +10,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import {
   Sparkles, Globe, Copy, ArrowLeft, Loader2, Users,
-  Download, Eye, TrendingUp, Plus, ChevronRight, EyeOff, Check, X,
+  Download, Eye, TrendingUp, Plus, ChevronRight, EyeOff, Check, X, ShieldCheck,
 } from 'lucide-react';
 import WaitlistPageTemplate, { WaitlistContent } from './WaitlistPageTemplate';
+import { getDefaultWaitlistContent, normalizeWaitlistContent, WAITLIST_ACCENT_PRESETS } from '@/lib/waitlist';
 
 type EditorPhase = 'input' | 'preview' | 'published';
 
 const WAITLIST_TABLE = 'waitlist_pages' as any;
 const SIGNUPS_TABLE = 'waitlist_signups' as any;
+const EVENTS_TABLE = 'waitlist_events' as any;
 
 interface WaitlistPageRow {
   id: string;
@@ -27,6 +29,21 @@ interface WaitlistPageRow {
   status: string;
   title: string;
   view_count: number;
+  mark_ready_at?: string | null;
+  theme?: string | null;
+  accent_color?: string | null;
+  layout?: string | null;
+  logo_url?: string | null;
+  image_url?: string | null;
+  social_links?: Record<string, unknown> | null;
+  launch_date?: string | null;
+  webhook_url?: string | null;
+  integration_provider?: string | null;
+  integration_list_id?: string | null;
+  confirmation_email_enabled?: boolean | null;
+  ab_test_enabled?: boolean | null;
+  headline_variant_b?: string | null;
+  referral_message?: string | null;
 }
 
 interface SignupRow {
@@ -34,6 +51,17 @@ interface SignupRow {
   email: string;
   first_name: string | null;
   created_at: string;
+  variant?: 'A' | 'B' | null;
+  utm_source?: string | null;
+  referrer?: string | null;
+  consent?: boolean | null;
+}
+
+interface EventRow {
+  event_type: 'VIEW' | 'SIGNUP';
+  variant: 'A' | 'B' | null;
+  occurred_at: string;
+  utm_source?: string | null;
 }
 
 function generateSlug(productName: string): string {
@@ -54,6 +82,51 @@ function maskEmail(email: string): string {
 }
 
 const BASE_URL = 'https://creatives-takeover.com';
+
+function normalizeContentFromRow(row: WaitlistPageRow): WaitlistContent {
+  return normalizeWaitlistContent({
+    ...(row.ai_content || {}),
+    theme: row.theme,
+    accentColor: row.accent_color,
+    layout: row.layout,
+    logoUrl: row.logo_url,
+    imageUrl: row.image_url,
+    socialLinks: row.social_links,
+    launchDate: row.launch_date,
+    webhookUrl: row.webhook_url,
+    integrationProvider: row.integration_provider,
+    integrationListId: row.integration_list_id,
+    confirmationEmailEnabled: row.confirmation_email_enabled,
+    abTestEnabled: row.ab_test_enabled,
+    headlineVariantB: row.headline_variant_b,
+    referralMessage: row.referral_message,
+  }, row.product_name || 'Product');
+}
+
+function buildPagePayload(userId: string, productName: string, content: WaitlistContent) {
+  return {
+    user_id: userId,
+    product_name: productName.trim(),
+    title: content.headline,
+    value_proposition: content.subheadline,
+    cta_label: content.ctaText,
+    ai_content: content,
+    theme: content.theme,
+    accent_color: content.accentColor,
+    layout: content.layout,
+    logo_url: content.logoUrl || null,
+    image_url: content.imageUrl || null,
+    social_links: content.socialLinks || {},
+    launch_date: content.launchDate || null,
+    webhook_url: content.webhookUrl || null,
+    integration_provider: content.integrationProvider || 'none',
+    integration_list_id: content.integrationListId || null,
+    confirmation_email_enabled: !!content.confirmationEmailEnabled,
+    ab_test_enabled: !!content.abTestEnabled,
+    headline_variant_b: content.headlineVariantB || null,
+    referral_message: content.referralMessage || null,
+  };
+}
 
 // ── Right-panel wrapper shared across phases ──────────────────────────
 function PreviewPanel({ label, children }: { label: string; children: React.ReactNode }) {
@@ -76,6 +149,8 @@ export default function WaitlistEditor() {
   const [phase, setPhase] = useState<EditorPhase>('input');
   const [isGenerating, setIsGenerating] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isMarkingReady, setIsMarkingReady] = useState(false);
 
   // All user pages (for My Waitlists panel)
   const [allPages, setAllPages] = useState<WaitlistPageRow[]>([]);
@@ -87,11 +162,13 @@ export default function WaitlistEditor() {
   const [content, setContent] = useState<WaitlistContent | null>(null);
   const [draftId, setDraftId] = useState<string | null>(null);
   const [currentSlug, setCurrentSlug] = useState<string | null>(null);
+  const [markReadyAt, setMarkReadyAt] = useState<string | null>(null);
 
   // Analytics
   const [signupCount, setSignupCount] = useState(0);
   const [viewCount, setViewCount] = useState(0);
   const [recentSignups, setRecentSignups] = useState<SignupRow[]>([]);
+  const [events, setEvents] = useState<EventRow[]>([]);
 
   // Slug editing
   const [editingSlug, setEditingSlug] = useState(false);
@@ -100,11 +177,27 @@ export default function WaitlistEditor() {
   const [slugAvailable, setSlugAvailable] = useState<boolean | null>(null);
   const slugTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const isCompleted = useMemo(() => !!markReadyAt || signupCount > 0, [markReadyAt, signupCount]);
+  const variantMetrics = useMemo(() => {
+    const metrics = {
+      A: { views: 0, signups: 0 },
+      B: { views: 0, signups: 0 },
+    };
+
+    events.forEach((event) => {
+      if (event.variant !== 'A' && event.variant !== 'B') return;
+      if (event.event_type === 'VIEW') metrics[event.variant].views += 1;
+      if (event.event_type === 'SIGNUP') metrics[event.variant].signups += 1;
+    });
+
+    return metrics;
+  }, [events]);
+
   const loadAllPages = useCallback(async () => {
     if (!user) return;
     const { data } = await (supabase as any)
       .from(WAITLIST_TABLE)
-      .select('id, slug, product_name, ai_content, status, title, view_count')
+      .select('id, slug, product_name, ai_content, status, title, view_count, mark_ready_at, theme, accent_color, layout, logo_url, image_url, social_links, launch_date, webhook_url, integration_provider, integration_list_id, confirmation_email_enabled, ab_test_enabled, headline_variant_b, referral_message')
       .eq('user_id', user.id)
       .order('updated_at', { ascending: false });
     if (data) setAllPages(data as WaitlistPageRow[]);
@@ -119,7 +212,7 @@ export default function WaitlistEditor() {
       // Auto-load latest page
       const { data } = await (supabase as any)
         .from(WAITLIST_TABLE)
-        .select('id, slug, product_name, ai_content, status, title, view_count')
+        .select('id, slug, product_name, ai_content, status, title, view_count, mark_ready_at, theme, accent_color, layout, logo_url, image_url, social_links, launch_date, webhook_url, integration_provider, integration_list_id, confirmation_email_enabled, ab_test_enabled, headline_variant_b, referral_message')
         .eq('user_id', user.id)
         .order('updated_at', { ascending: false })
         .limit(1)
@@ -136,14 +229,15 @@ export default function WaitlistEditor() {
     setDraftId(row.id);
     setCurrentSlug(row.slug);
     setViewCount(row.view_count ?? 0);
+    setMarkReadyAt(row.mark_ready_at ?? null);
     if (row.product_name) setProductName(row.product_name);
 
     if (row.status === 'published' && row.slug && row.ai_content) {
-      setContent(row.ai_content);
+      setContent(normalizeContentFromRow(row));
       setPhase('published');
       fetchAnalytics(row.id);
     } else if (row.ai_content) {
-      setContent(row.ai_content);
+      setContent(normalizeContentFromRow(row));
       setPhase('preview');
     } else {
       setPhase('input');
@@ -159,7 +253,7 @@ export default function WaitlistEditor() {
 
     const { data: recent } = await (supabase as any)
       .from(SIGNUPS_TABLE)
-      .select('id, email, first_name, created_at')
+      .select('id, email, first_name, created_at, variant, utm_source, referrer, consent')
       .eq('waitlist_page_id', pageId)
       .order('created_at', { ascending: false })
       .limit(10);
@@ -167,10 +261,19 @@ export default function WaitlistEditor() {
 
     const { data: pageData } = await (supabase as any)
       .from(WAITLIST_TABLE)
-      .select('view_count')
+      .select('view_count, mark_ready_at')
       .eq('id', pageId)
       .single();
     setViewCount(pageData?.view_count ?? 0);
+    setMarkReadyAt(pageData?.mark_ready_at ?? null);
+
+    const { data: eventsData } = await (supabase as any)
+      .from(EVENTS_TABLE)
+      .select('event_type, variant, occurred_at, utm_source')
+      .eq('waitlist_page_id', pageId)
+      .order('occurred_at', { ascending: false })
+      .limit(1000);
+    setEvents(eventsData ?? []);
   };
 
   const handleGenerate = async () => {
@@ -191,16 +294,11 @@ export default function WaitlistEditor() {
       return;
     }
 
-    const generated = data.content as WaitlistContent;
+    const generated = normalizeWaitlistContent(data.content, productName);
     setContent(generated);
 
     const payload = {
-      user_id: user.id,
-      product_name: productName.trim(),
-      title: generated.headline,
-      value_proposition: generated.subheadline,
-      cta_label: generated.ctaText,
-      ai_content: generated,
+      ...buildPagePayload(user.id, productName, generated),
       status: 'draft',
     };
 
@@ -221,9 +319,15 @@ export default function WaitlistEditor() {
       if (!prev) return prev;
       if (field.startsWith('benefit_')) {
         const idx = parseInt(field.split('_')[1], 10);
-        const benefits = [...prev.benefits] as [string, string, string];
+        const benefits = [...prev.benefits];
         benefits[idx] = value;
         return { ...prev, benefits };
+      }
+      if (field.startsWith('how_')) {
+        const idx = parseInt(field.split('_')[1], 10);
+        const howItWorks = [...prev.howItWorks];
+        howItWorks[idx] = value;
+        return { ...prev, howItWorks };
       }
       return { ...prev, [field]: value };
     });
@@ -236,12 +340,7 @@ export default function WaitlistEditor() {
     const slug = currentSlug || generateSlug(productName);
 
     const payload = {
-      user_id: user.id,
-      product_name: productName.trim(),
-      title: content.headline,
-      value_proposition: content.subheadline,
-      cta_label: content.ctaText,
-      ai_content: content,
+      ...buildPagePayload(user.id, productName, content),
       slug,
       status: 'published',
       published_at: new Date().toISOString(),
@@ -276,22 +375,49 @@ export default function WaitlistEditor() {
     if (!draftId) return;
     const { error } = await (supabase as any)
       .from(WAITLIST_TABLE)
-      .update({ status: 'draft', published_at: null })
+      .update({ status: 'draft', published_at: null, mark_ready_at: null })
       .eq('id', draftId);
 
     if (error) { toast.error('Failed to unpublish.'); return; }
+    setMarkReadyAt(null);
     setPhase('preview');
     await loadAllPages();
+    await refreshProgress();
     toast.success("Page unpublished. It's now a draft.");
   };
 
   const handleSaveContentEdits = async () => {
-    if (!draftId || !content) return;
+    if (!draftId || !content || !user) return;
+    setIsSaving(true);
     await (supabase as any)
       .from(WAITLIST_TABLE)
-      .update({ ai_content: content, title: content.headline, cta_label: content.ctaText })
+      .update(buildPagePayload(user.id, productName, content))
       .eq('id', draftId);
+    setIsSaving(false);
+    await loadAllPages();
     toast.success('Changes saved.');
+  };
+
+  const handleMarkAsReady = async () => {
+    if (!draftId) return;
+    setIsMarkingReady(true);
+    const { data, error } = await (supabase as any)
+      .from(WAITLIST_TABLE)
+      .update({ mark_ready_at: new Date().toISOString() })
+      .eq('id', draftId)
+      .select('mark_ready_at')
+      .single();
+    setIsMarkingReady(false);
+
+    if (error) {
+      toast.error('Could not mark this prototype as ready.');
+      return;
+    }
+
+    setMarkReadyAt((data as { mark_ready_at: string }).mark_ready_at);
+    await refreshProgress();
+    await loadAllPages();
+    toast.success('Prototype marked as ready.');
   };
 
   const startSlugEdit = () => {
@@ -334,15 +460,23 @@ export default function WaitlistEditor() {
     if (!draftId) return;
     const { data, error } = await (supabase as any)
       .from(SIGNUPS_TABLE)
-      .select('email, first_name, created_at')
+      .select('email, first_name, created_at, variant, utm_source, referrer, consent')
       .eq('waitlist_page_id', draftId)
       .order('created_at', { ascending: true });
 
     if (error || !data?.length) { toast.info('No signups to export yet.'); return; }
 
-    const header = 'email,first_name,signed_up_at';
+    const header = 'email,first_name,signed_up_at,variant,utm_source,referrer,consent';
     const rows = (data as SignupRow[]).map((r) =>
-      [`"${r.email}"`, `"${r.first_name ?? ''}"`, `"${r.created_at}"`].join(',')
+      [
+        `"${r.email}"`,
+        `"${r.first_name ?? ''}"`,
+        `"${r.created_at}"`,
+        `"${r.variant ?? ''}"`,
+        `"${r.utm_source ?? ''}"`,
+        `"${(r.referrer ?? '').replace(/"/g, '""')}"`,
+        `"${r.consent ? 'true' : 'false'}"`,
+      ].join(',')
     );
     const csv = [header, ...rows].join('\n');
     const blob = new Blob([csv], { type: 'text/csv' });
@@ -358,12 +492,14 @@ export default function WaitlistEditor() {
     setContent(null);
     setDraftId(null);
     setCurrentSlug(null);
+    setMarkReadyAt(null);
     setProductName('');
     setPitch('');
     setAudience('');
     setSignupCount(0);
     setViewCount(0);
     setRecentSignups([]);
+    setEvents([]);
     setPhase('input');
   };
 
@@ -383,21 +519,24 @@ export default function WaitlistEditor() {
           </div>
         </CardHeader>
         <CardContent className="pt-0 space-y-1">
-          {allPages.map((p) => (
-            <button
-              key={p.id}
-              onClick={() => loadPageIntoEditor(p)}
-              className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-left text-sm transition-colors hover:bg-muted ${p.id === draftId ? 'bg-primary/5 border border-primary/20' : ''}`}
-            >
-              <span className="truncate font-medium">{p.product_name || p.title || 'Untitled'}</span>
-              <div className="flex items-center gap-2 flex-shrink-0 ml-2">
-                <Badge variant={p.status === 'published' ? 'default' : 'secondary'} className="text-xs py-0 px-1.5">
-                  {p.status === 'published' ? 'Live' : 'Draft'}
-                </Badge>
-                <ChevronRight className="w-3 h-3 text-muted-foreground" />
-              </div>
-            </button>
-          ))}
+          {allPages.map((p) => {
+            const statusLabel = p.mark_ready_at ? 'Completed' : p.status === 'published' ? 'Live' : 'Draft';
+            return (
+              <button
+                key={p.id}
+                onClick={() => loadPageIntoEditor(p)}
+                className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-left text-sm transition-colors hover:bg-muted ${p.id === draftId ? 'bg-primary/5 border border-primary/20' : ''}`}
+              >
+                <span className="truncate font-medium">{p.product_name || p.title || 'Untitled'}</span>
+                <div className="flex items-center gap-2 flex-shrink-0 ml-2">
+                  <Badge variant={statusLabel === 'Completed' ? 'default' : statusLabel === 'Live' ? 'secondary' : 'outline'} className="text-xs py-0 px-1.5">
+                    {statusLabel}
+                  </Badge>
+                  <ChevronRight className="w-3 h-3 text-muted-foreground" />
+                </div>
+              </button>
+            );
+          })}
         </CardContent>
       </Card>
     );
@@ -405,23 +544,8 @@ export default function WaitlistEditor() {
 
   // ─────────────────────── INPUT PHASE ───────────────────────
   if (phase === 'input') {
-    // Placeholder content that updates live as the user types
-    const inputPreview: WaitlistContent = {
-      headline: productName
-        ? `Get early access to ${productName}`
-        : 'Your headline appears here',
-      subheadline: pitch
-        ? pitch
-        : 'Your one-line pitch becomes the subheadline — fill it in on the left to see it update.',
-      benefits: [
-        'First key benefit of your product',
-        'Second reason to join the waitlist early',
-        'Third compelling outcome for your users',
-      ],
-      socialProof: 'Your social proof quote will appear here — a line that builds trust.',
-      ctaText: 'Join the Waitlist',
-      emailPlaceholder: 'Enter your email address',
-    };
+    const inputPreview = getDefaultWaitlistContent(productName || 'Your Product');
+    inputPreview.subheadline = pitch || inputPreview.subheadline;
 
     return (
       <div className="flex flex-col lg:flex-row gap-6 items-start">
@@ -507,16 +631,99 @@ export default function WaitlistEditor() {
                   />
                   Show consent checkbox
                 </label>
+                <label className="flex items-center gap-2 text-sm cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={!!content.consentRequired}
+                    onChange={(e) => setContent((p) => p ? { ...p, consentRequired: e.target.checked } : p)}
+                    className="rounded"
+                  />
+                  Require consent
+                </label>
+              </div>
+
+              <div className="space-y-2">
+                <p className="text-sm font-medium">Style</p>
+                <div className="flex gap-2">
+                  <Button size="sm" variant={content.theme === 'dark' ? 'default' : 'outline'} onClick={() => handleContentChange('theme', 'dark')}>Dark</Button>
+                  <Button size="sm" variant={content.theme === 'light' ? 'default' : 'outline'} onClick={() => handleContentChange('theme', 'light')}>Light</Button>
+                </div>
+                <div className="flex gap-2">
+                  <Button size="sm" variant={content.layout === 'centered' ? 'default' : 'outline'} onClick={() => handleContentChange('layout', 'centered')}>Centered</Button>
+                  <Button size="sm" variant={content.layout === 'split' ? 'default' : 'outline'} onClick={() => handleContentChange('layout', 'split')}>Split</Button>
+                </div>
+                <div className="flex flex-wrap gap-1">
+                  {WAITLIST_ACCENT_PRESETS.map((preset) => (
+                    <button
+                      key={preset.value}
+                      type="button"
+                      className={`px-2 py-1 rounded border text-xs ${content.accentColor === preset.value ? 'border-primary' : 'border-border'}`}
+                      onClick={() => handleContentChange('accentColor', preset.value)}
+                    >
+                      {preset.label}
+                    </button>
+                  ))}
+                </div>
+                <Input value={content.logoUrl || ''} onChange={(e) => handleContentChange('logoUrl', e.target.value)} placeholder="Logo URL" />
+                <Input value={content.imageUrl || ''} onChange={(e) => handleContentChange('imageUrl', e.target.value)} placeholder="Hero image URL" />
+                <Input type="date" value={content.launchDate || ''} onChange={(e) => handleContentChange('launchDate', e.target.value)} />
+                <Input value={content.socialLinks?.website || ''} onChange={(e) => setContent((p) => p ? { ...p, socialLinks: { ...p.socialLinks, website: e.target.value } } : p)} placeholder="Website URL" />
+                <Input value={content.socialLinks?.x || ''} onChange={(e) => setContent((p) => p ? { ...p, socialLinks: { ...p.socialLinks, x: e.target.value } } : p)} placeholder="X profile URL" />
+                <Input value={content.socialLinks?.linkedin || ''} onChange={(e) => setContent((p) => p ? { ...p, socialLinks: { ...p.socialLinks, linkedin: e.target.value } } : p)} placeholder="LinkedIn URL" />
+                <Input value={content.problemStatement} onChange={(e) => handleContentChange('problemStatement', e.target.value)} placeholder="Problem statement" />
+                <Input value={content.solutionSummary} onChange={(e) => handleContentChange('solutionSummary', e.target.value)} placeholder="Solution summary" />
+              </div>
+
+              <div className="space-y-2">
+                <p className="text-sm font-medium">A/B + integrations</p>
+                <label className="flex items-center gap-2 text-sm cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={!!content.abTestEnabled}
+                    onChange={(e) => setContent((p) => p ? { ...p, abTestEnabled: e.target.checked } : p)}
+                    className="rounded"
+                  />
+                  Enable headline A/B
+                </label>
+                {content.abTestEnabled ? (
+                  <Input value={content.headlineVariantB || ''} onChange={(e) => handleContentChange('headlineVariantB', e.target.value)} placeholder="Headline variant B" />
+                ) : null}
+                <Input value={content.referralMessage || ''} onChange={(e) => handleContentChange('referralMessage', e.target.value)} placeholder="Referral/share message" />
+                <Input value={content.webhookUrl || ''} onChange={(e) => handleContentChange('webhookUrl', e.target.value)} placeholder="Webhook URL (Zapier/Make)" />
+                <select
+                  className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+                  value={content.integrationProvider || 'none'}
+                  onChange={(e) => handleContentChange('integrationProvider', e.target.value)}
+                >
+                  <option value="none">No provider</option>
+                  <option value="mailchimp">Mailchimp</option>
+                  <option value="convertkit">ConvertKit</option>
+                </select>
+                {content.integrationProvider !== 'none' ? (
+                  <Input value={content.integrationListId || ''} onChange={(e) => handleContentChange('integrationListId', e.target.value)} placeholder="List/Form ID" />
+                ) : null}
+                <label className="flex items-center gap-2 text-sm cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={!!content.confirmationEmailEnabled}
+                    onChange={(e) => setContent((p) => p ? { ...p, confirmationEmailEnabled: e.target.checked } : p)}
+                    className="rounded"
+                  />
+                  Auto confirmation email
+                </label>
               </div>
 
               <div className="flex flex-col gap-2 pt-1">
                 <Button onClick={handlePublish} disabled={isPublishing} size="sm" className="w-full">
                   {isPublishing
-                    ? <><Loader2 className="w-4 h-4 mr-1 animate-spin" />Publishing…</>
+                    ? <><Loader2 className="w-4 h-4 mr-1 animate-spin" />Publishing...</>
                     : <><Globe className="w-4 h-4 mr-1" />Publish Waitlist</>}
                 </Button>
                 <div className="flex gap-2">
-                  <Button variant="ghost" size="sm" className="flex-1" onClick={handleSaveContentEdits}>Save edits</Button>
+                  <Button variant="ghost" size="sm" className="flex-1" onClick={handleSaveContentEdits} disabled={isSaving}>
+                    {isSaving ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : null}
+                    Save edits
+                  </Button>
                   <Button variant="outline" size="sm" className="flex-1" onClick={() => { setContent(null); setPhase('input'); }}>
                     <ArrowLeft className="w-4 h-4 mr-1" /> Regenerate
                   </Button>
@@ -542,7 +749,7 @@ export default function WaitlistEditor() {
   // ─────────────────────── PUBLISHED PHASE ───────────────────────
   if (phase === 'published' && currentSlug) {
     const liveUrl = `${BASE_URL}/w/${currentSlug}`;
-    const conversionRate = viewCount > 0 ? ((signupCount / viewCount) * 100).toFixed(1) : '—';
+    const conversionRate = viewCount > 0 ? ((signupCount / viewCount) * 100).toFixed(1) : '--';
 
     return (
       <div className="flex flex-col lg:flex-row gap-6 items-start">
@@ -558,7 +765,10 @@ export default function WaitlistEditor() {
                   <Globe className="w-4 h-4 text-green-600" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-green-900">Your waitlist is live</p>
+                  <div className="flex items-center gap-2">
+                    <p className="font-semibold text-green-900">Your waitlist is live</p>
+                    <Badge variant="outline">{isCompleted ? 'Completed' : 'Published'}</Badge>
+                  </div>
                   <p className="text-sm text-green-700 mt-0.5">Share this link to start collecting signups.</p>
                 </div>
               </div>
@@ -595,6 +805,17 @@ export default function WaitlistEditor() {
                 <Button variant="outline" size="sm" onClick={handleUnpublish}><EyeOff className="w-4 h-4 mr-1" />Unpublish</Button>
                 <Button variant="ghost" size="sm" onClick={resetToNew}><Plus className="w-3 h-3 mr-1" />New page</Button>
               </div>
+
+              {!markReadyAt ? (
+                <Button className="w-full" variant="secondary" onClick={handleMarkAsReady} disabled={isMarkingReady}>
+                  {isMarkingReady ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <ShieldCheck className="w-4 h-4 mr-2" />}
+                  Mark as Ready
+                </Button>
+              ) : (
+                <Badge className="w-full justify-center border-green-500/30 bg-green-500/10 text-green-700">
+                  Ready on {new Date(markReadyAt).toLocaleDateString()}
+                </Badge>
+              )}
             </CardContent>
           </Card>
 
@@ -617,11 +838,35 @@ export default function WaitlistEditor() {
             <Card>
               <CardContent className="pt-4 pb-4 text-center">
                 <TrendingUp className="w-4 h-4 text-green-500 mx-auto mb-1" />
-                <p className="text-2xl font-black text-green-700">{conversionRate}{conversionRate !== '—' ? '%' : ''}</p>
+                <p className="text-2xl font-black text-green-700">{conversionRate}{conversionRate !== '--' ? '%' : ''}</p>
                 <p className="text-xs text-muted-foreground">conversion</p>
               </CardContent>
             </Card>
           </div>
+
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm">A/B analytics</CardTitle>
+            </CardHeader>
+            <CardContent className="text-xs space-y-2">
+              <div className="grid grid-cols-2 gap-2">
+                <div className="rounded border p-2">
+                  <p className="font-semibold">Variant A</p>
+                  <p>{variantMetrics.A.views} views / {variantMetrics.A.signups} signups</p>
+                  <p className="text-muted-foreground">
+                    CVR: {variantMetrics.A.views > 0 ? ((variantMetrics.A.signups / variantMetrics.A.views) * 100).toFixed(1) : '--'}%
+                  </p>
+                </div>
+                <div className="rounded border p-2">
+                  <p className="font-semibold">Variant B</p>
+                  <p>{variantMetrics.B.views} views / {variantMetrics.B.signups} signups</p>
+                  <p className="text-muted-foreground">
+                    CVR: {variantMetrics.B.views > 0 ? ((variantMetrics.B.signups / variantMetrics.B.views) * 100).toFixed(1) : '--'}%
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Recent signups */}
           <Card>
@@ -646,6 +891,8 @@ export default function WaitlistEditor() {
                       <div>
                         <span className="font-mono text-xs text-foreground">{maskEmail(s.email)}</span>
                         {s.first_name && <span className="text-muted-foreground ml-2 text-xs">· {s.first_name}</span>}
+                        {s.variant && <span className="text-muted-foreground ml-2 text-[10px]">Variant {s.variant}</span>}
+                        {s.utm_source && <span className="text-muted-foreground ml-2 text-[10px]">{s.utm_source}</span>}
                       </div>
                       <span className="text-xs text-muted-foreground">{new Date(s.created_at).toLocaleDateString()}</span>
                     </div>

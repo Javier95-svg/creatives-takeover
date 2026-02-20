@@ -146,7 +146,7 @@ export const STAGE_TASKS: Record<BizMapStage, StageTaskTemplate[]> = {
   PROTOTYPE: [
     { id: 'prototype-value-prop', stage: 'PROTOTYPE', title: 'Write a one-line value proposition for the waitlist page', priority: 'high', route: '/waitlist' },
     { id: 'prototype-page-copy', stage: 'PROTOTYPE', title: 'Draft hero copy and core benefits', priority: 'medium', route: '/waitlist' },
-    { id: 'prototype-publish', stage: 'PROTOTYPE', title: 'Publish or export your waitlist page', priority: 'high', route: '/waitlist' },
+    { id: 'prototype-publish', stage: 'PROTOTYPE', title: 'Publish your waitlist and get one signup (or mark it ready)', priority: 'high', route: '/waitlist' },
   ],
   VALIDATING: [
     { id: 'validating-checklist', stage: 'VALIDATING', title: 'Save PMF validation checklist', priority: 'high', route: '/pmf-lab' },

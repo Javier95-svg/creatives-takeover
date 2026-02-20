@@ -38,6 +38,7 @@ interface CompletionSignals {
 
 const USER_PROGRESS_TABLE = 'user_progress' as any;
 const WAITLIST_TABLE = 'waitlist_pages' as any;
+const WAITLIST_SIGNUPS_TABLE = 'waitlist_signups' as any;
 const PMF_EVIDENCE_TABLE = 'pmf_validation_evidence' as any;
 const MVP_ARTIFACTS_TABLE = 'mvp_builder_artifacts' as any;
 const GTM_PLANS_TABLE = 'gtm_plans' as any;
@@ -95,7 +96,7 @@ export const useBizMapProgress = () => {
   const fetchCompletionSignals = useCallback(async (userId: string): Promise<CompletionSignals> => {
     const [
       icpLatestRes,
-      waitlistLatestRes,
+      waitlistPagesRes,
       pmfEvidenceRes,
       mvpLatestRes,
       techStackLatestRes,
@@ -111,12 +112,10 @@ export const useBizMapProgress = () => {
         .maybeSingle(),
       supabase
         .from(WAITLIST_TABLE)
-        .select('published_at, exported_at, created_at, status')
+        .select('id, published_at, exported_at, created_at, mark_ready_at, status')
         .eq('user_id', userId)
         .in('status', ['published', 'exported'])
-        .order('updated_at', { ascending: false })
-        .limit(1)
-        .maybeSingle(),
+        .order('updated_at', { ascending: false }),
       supabase
         .from(PMF_EVIDENCE_TABLE)
         .select('checklist_saved_at, interview_notes_count, survey_results_count, required_signals')
@@ -154,7 +153,14 @@ export const useBizMapProgress = () => {
         .maybeSingle(),
     ]);
 
-    const waitlistData = waitlistLatestRes.data as any;
+    const waitlistPages = (waitlistPagesRes.data as Array<{
+      id: string;
+      published_at: string | null;
+      exported_at: string | null;
+      created_at: string | null;
+      mark_ready_at: string | null;
+      status: string;
+    }> | null) ?? [];
     const pmfEvidenceData = pmfEvidenceRes.data as any;
     const mvpData = mvpLatestRes.data as any;
     const gtmData = gtmLatestRes.data as any;
@@ -170,10 +176,36 @@ export const useBizMapProgress = () => {
 
     const buildingCompleted = !!mvpData && !!techStackData;
 
+    let prototypeCompletedAt: string | null = null;
+    if (waitlistPages.length > 0) {
+      const readyAtDates = waitlistPages
+        .map((page) => page.mark_ready_at)
+        .filter((value): value is string => !!value);
+
+      if (readyAtDates.length > 0) {
+        prototypeCompletedAt = readyAtDates.sort((a, b) => new Date(b).getTime() - new Date(a).getTime())[0];
+      } else {
+        const pageIds = waitlistPages.map((page) => page.id);
+        if (pageIds.length > 0) {
+          const signupLatestRes = await supabase
+            .from(WAITLIST_SIGNUPS_TABLE)
+            .select('created_at')
+            .in('waitlist_page_id', pageIds)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+          const signupAt = (signupLatestRes.data as { created_at?: string } | null)?.created_at ?? null;
+          if (signupAt) {
+            prototypeCompletedAt = signupAt;
+          }
+        }
+      }
+    }
+
     return {
       identityCompletedAt: (icpLatestRes.data as any)?.created_at ?? null,
-      prototypeCompletedAt:
-        waitlistData?.published_at ?? waitlistData?.exported_at ?? (waitlistData ? waitlistData.created_at : null),
+      prototypeCompletedAt,
       validatingCompletedAt:
         validatingCompleted
           ? maxDate(
