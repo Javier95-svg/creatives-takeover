@@ -16,6 +16,8 @@ import { DashboardNavigationProvider } from '@/contexts/DashboardNavigationConte
 import { DashboardSidebar } from './DashboardSidebar';
 import { useActiveSection } from '@/hooks/useActiveSection';
 import { ReactNode } from 'react';
+import { BizMapStageTasks } from './BizMapStageTasks';
+import { useBizMapProgress } from '@/hooks/useBizMapProgress';
 
 // Internal wrapper component that uses the navigation context
 interface DashboardContentWrapperProps {
@@ -41,6 +43,7 @@ const DashboardContentWrapper = ({ dashboardMode, children }: DashboardContentWr
 export const PersonalizedDashboardV2 = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { currentStage } = useBizMapProgress();
   const { isInitializing } = useDashboardInitialization();
   const {
     data,
@@ -277,6 +280,13 @@ export const PersonalizedDashboardV2 = () => {
                           ? 'Your dashboard overview'
                           : 'Full control center'}
                     </p>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Current BizMap stage: <span className="font-semibold text-foreground">{currentStage}</span>
+                    </p>
+                  </div>
+
+                  <div id="bizmap-stage-tasks">
+                    <BizMapStageTasks />
                   </div>
 
                   {/* Dynamic View Based on Mode */}

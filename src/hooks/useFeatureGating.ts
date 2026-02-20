@@ -586,8 +586,9 @@ export function useFeatureGating() {
       creator: [
         '50 credits per month',
         'Dashboard (Full access: Focus Funnel, Decision Sprint, Core Metrics, Weekly Mission, Your Tasks)',
-        'BizMap AI Learn: ICP Builder & PMF Lab (full access)',
-        'BizMap AI Build: MVP Builder, Business Planner, Tech Stack Builder',
+        'BizMap AI Stages I-III: ICP Builder, Waitlist Maker, PMF Lab',
+        'BizMap AI Stage IV: MVP Builder (Beta) + Tech Stack Builder',
+        'Business Planner (Resources)',
         'Insighta: VC Search (25 views/month), Email Templates, Pitch Deck Analyzer, Insights Test',
         'Community: Find a Mentor, Find a Co-Founder',
         'Resources: Stories & Prompt Library (full access)',
@@ -596,9 +597,8 @@ export function useFeatureGating() {
       professional: [
         '150 credits per month',
         'Dashboard (Full access: All features)',
-        'BizMap AI Learn: ICP Builder & PMF Lab',
-        'BizMap AI Build: MVP Builder, Business Planner, Tech Stack Builder',
-        'BizMap AI Measure: GTM Strategist',
+        'BizMap AI Stages I-V: ICP Builder, Waitlist Maker, PMF Lab, MVP Builder (Beta), Tech Stack, GTM Strategist',
+        'Business Planner (Resources)',
         'Insighta: Unlimited VC Search, Accelerator Hunt, Email Templates, Advanced Pitch Deck Analyzer, Insights Test',
         'Community: Find a Mentor, Find a Co-Founder, Find your Angel',
         'Resources: Stories & Prompt Library (full + custom templates)',

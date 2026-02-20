@@ -27,6 +27,7 @@ import { DailyPriorities } from './DailyPriorities';
 import { QuickWins } from './QuickWins';
 import { RecentWins } from './RecentWins';
 import { FounderResources } from './FounderResources';
+import { BizMapStageTasks } from './BizMapStageTasks';
 
 export const PersonalizedDashboardClassic = () => {
   const { user } = useAuth();
@@ -271,6 +272,10 @@ export const PersonalizedDashboardClassic = () => {
               </CardContent>
             </Card>
           </div>
+        </div>
+
+        <div className="animate-fade-in-up opacity-0" style={{ animationDelay: '0.04s', animationFillMode: 'forwards' }}>
+          <BizMapStageTasks />
         </div>
 
         {/* Smart Recommendations */}

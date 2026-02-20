@@ -1,266 +1,239 @@
-import { useEffect } from "react";
-import { useNavigate, useSearchParams, Link } from "react-router-dom";
-import SEO, { createBreadcrumbSchema } from "@/components/SEO";
-import Navigation from "@/components/Navigation";
-import Footer from "@/components/Footer";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { useEffect, useMemo, useState } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import SEO, { createBreadcrumbSchema } from '@/components/SEO';
+import Navigation from '@/components/Navigation';
+import Footer from '@/components/Footer';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
-  Bot,
-  Search,
-  Hammer,
-  BarChart3,
-  FlaskConical,
-  Boxes,
-  BookOpen,
-} from "lucide-react";
-import { useJourneyStore } from "@/store/journeyStore";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { CheckCircle2, Circle, Lock, ArrowRight } from 'lucide-react';
+import { useBizMapProgress } from '@/hooks/useBizMapProgress';
 import {
-  useLeanStartupStore,
-  getPhaseCompletion,
-  isPhaseUnlocked,
-  getCurrentPhase,
-  getTransitionPrompt,
-  type Phase,
-} from "@/store/leanStartupStore";
-import { journeyDefinitions } from "@/data/journeys";
-import type { JourneySlug } from "@/types/journey";
-import LeanStartupCycle from "@/components/bizmap/LeanStartupCycle";
-import PhaseCard from "@/components/bizmap/PhaseCard";
-import PhaseTransitionBanner from "@/components/bizmap/PhaseTransitionBanner";
+  BIZMAP_STAGES,
+  getRequiredUnlockMessage,
+  getStageIndex,
+  getStageByRoute,
+  isStageUnlocked,
+  type BizMapToolDefinition,
+} from '@/lib/bizmapStages';
 
-// ---------------------------------------------------------------------------
-// Phase configuration
-// ---------------------------------------------------------------------------
-
-const PHASE_CONFIG: {
-  phase: Phase;
-  title: string;
-  description: string;
-  icon: typeof Search;
-  journey: { title: string; href: string; slug: JourneySlug; totalDays: number };
-  tools: { name: string; href: string; icon: typeof Search; id: string }[];
-}[] = [
-  {
-    phase: "learn",
-    title: "Learn",
-    description: "Clarify your niche before you build. Identify demand signals and confirm market need.",
-    icon: Search,
-    journey: { title: "ICP Builder", href: "/icp-builder", slug: "validate", totalDays: 7 },
-    tools: [
-      { name: "PMF Lab", href: "/pmf-lab", icon: FlaskConical, id: "pmf-lab" },
-      { name: "Prompt Library", href: "/prompt-library", icon: BookOpen, id: "prompt-library" },
-    ],
-  },
-  {
-    phase: "build",
-    title: "Build",
-    description: "Ship your MVP fast. Choose a stack, set scope, and deploy in 14 days.",
-    icon: Hammer,
-    journey: { title: "Ship MVP in 14 Days", href: "/mvp-builder", slug: "mvp", totalDays: 14 },
-    tools: [
-      { name: "Tech Stack Builder", href: "/tech-stack", icon: Boxes, id: "tech-stack" },
-      { name: "BizMap AI Chatbot", href: "/bizmap-ai", icon: Bot, id: "bizmap-chat" },
-    ],
-  },
-  {
-    phase: "measure",
-    title: "Measure",
-    description: "Get traction and iterate. Reach your first paying customers and track what matters.",
-    icon: BarChart3,
-    journey: {
-      title: "Get 5 Paying Users in 30 Days",
-      href: "/go-to-market",
-      slug: "first-customers",
-      totalDays: 30,
-    },
-    tools: [],
-  },
-];
-
-// ---------------------------------------------------------------------------
-// Helper: get journey % from journeyStore
-// ---------------------------------------------------------------------------
-
-function useJourneyPercent(slug: JourneySlug): { percent: number; started: boolean } {
-  const store = useJourneyStore();
-  const def = journeyDefinitions[slug];
-  const progress = store.journeys[slug];
-  const started = !!progress;
-
-  if (!started || !def) return { percent: 0, started };
-
-  const tasksPerDay: Record<number, number> = {};
-  def.days.forEach((d) => {
-    tasksPerDay[d.dayNumber] = d.tasks.length;
-  });
-
-  return {
-    percent: store.getJourneyCompletionPercent(slug, def.totalDays, tasksPerDay),
-    started,
-  };
+interface LockedToolState {
+  tool: BizMapToolDefinition;
+  message: string;
 }
-
-// ---------------------------------------------------------------------------
-// Page
-// ---------------------------------------------------------------------------
 
 export default function BizMapJourneyHubPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const leanStore = useLeanStartupStore();
+  const {
+    currentStage,
+    highestUnlockedStage,
+    stageState,
+    loading,
+    setCurrentStage,
+  } = useBizMapProgress();
 
-  // Redirect ?session= to chat
+  const [lockedTool, setLockedTool] = useState<LockedToolState | null>(null);
+
   useEffect(() => {
-    const sessionId = searchParams.get("session");
+    const sessionId = searchParams.get('session');
     if (sessionId) {
-      navigate(`/bizmap-ai?session=${sessionId}`, { replace: true });
+      navigate(`/bizmap-ai/chat?session=${sessionId}`, { replace: true });
     }
   }, [navigate, searchParams]);
 
-  // Read live state
-  const currentPhase = getCurrentPhase();
-  const transition = getTransitionPrompt();
+  const currentStageDef = useMemo(
+    () => BIZMAP_STAGES.find((stage) => stage.id === currentStage),
+    [currentStage],
+  );
 
-  // Journey progress for each phase
-  const validateProgress = useJourneyPercent("validate");
-  const mvpProgress = useJourneyPercent("mvp");
-  const customersProgress = useJourneyPercent("first-customers");
-
-  const journeyProgressMap: Record<JourneySlug, { percent: number; started: boolean }> = {
-    validate: validateProgress,
-    mvp: mvpProgress,
-    "first-customers": customersProgress,
-  };
+  const progressValue = useMemo(() => {
+    const completedStages = BIZMAP_STAGES.filter((stage) => stageState[stage.id]?.completed).length;
+    return Math.round((completedStages / BIZMAP_STAGES.length) * 100);
+  }, [stageState]);
 
   const structuredData = [
     {
-      "@context": "https://schema.org",
-      "@type": "WebPage",
-      name: "BizMap AI - Lean Startup System",
+      '@context': 'https://schema.org',
+      '@type': 'WebPage',
+      name: 'BizMap AI - Stage Journey',
       description:
-        "A cohesive system to validate your idea, ship an MVP, and reach your first paying customers using the Lean Startup Method.",
-      url: "https://creatives-takeover.com/bizmap-ai/hub",
+        'A 5-stage guided startup journey that progressively unlocks tools from ICP to GTM launch.',
+      url: 'https://creatives-takeover.com/bizmap-ai',
     },
     createBreadcrumbSchema([
-      { name: "Home", url: "/" },
-      { name: "BizMap AI", url: "/bizmap-ai" },
-      { name: "Lean Startup System", url: "/bizmap-ai/hub" },
+      { name: 'Home', url: '/' },
+      { name: 'BizMap AI', url: '/bizmap-ai' },
     ]),
   ];
+
+  const openLockedDialog = (tool: BizMapToolDefinition) => {
+    const stage = getStageByRoute(tool.route);
+    const message = stage ? getRequiredUnlockMessage(stage) : 'Complete prior stage work to unlock this tool.';
+    setLockedTool({ tool, message });
+  };
 
   return (
     <div className="min-h-screen bg-background">
       <SEO
-        title="BizMap AI - Lean Startup System"
-        description="Learn, Build, Measure, Iterate. A cohesive founder system to validate your idea, ship an MVP, and reach paying users."
-        keywords="lean startup, startup validation, MVP, founder journey, build measure learn"
-        url="/bizmap-ai/hub"
+        title="BizMap AI - Guided Stage Journey"
+        description="Progress through Identity, Prototype, Validation, Building, and Launch with smart unlocks and stage-aware actions."
+        keywords="startup stages, product validation, waitlist, pmf, mvp, go-to-market"
+        url="/bizmap-ai"
         structuredData={structuredData}
       />
       <Navigation />
 
-      <main>
-        <section className="py-20 px-4 relative overflow-hidden">
-          {/* Background animation */}
-          <div className="absolute inset-0 pointer-events-none overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-b from-background via-background/95 to-background" />
-            <div
-              className="absolute -top-40 -right-48 w-[55rem] h-[55rem] rounded-full opacity-70 blur-3xl animate-[spin_28s_linear_infinite]"
-              style={{
-                background:
-                  "radial-gradient(circle at 30% 30%, rgba(59, 130, 246, 0.2), transparent 60%), radial-gradient(circle at 70% 70%, rgba(34, 197, 94, 0.2), transparent 55%)",
-                animationDuration: "28s",
-              }}
-            />
-          </div>
+      <main className="py-20 px-4">
+        <div className="container mx-auto max-w-6xl space-y-8">
+          <section className="space-y-4 text-center">
+            <Badge className="bg-primary/10 text-primary border-primary/20 px-4 py-1">BizMap AI Guided Journey</Badge>
+            <h1 className="text-3xl md:text-5xl font-bold creatives-font takeover-gradient">5-Stage Founder System</h1>
+            <p className="text-muted-foreground max-w-3xl mx-auto">
+              Unlock one stage at a time. Complete required work to open the next stage and keep your dashboard aligned with what matters now.
+            </p>
 
-          <div className="container mx-auto max-w-6xl relative z-10 space-y-10">
-            {/* Hero */}
-            <div className="text-center space-y-5">
-              <div className="flex justify-center">
-                <Badge className="bg-primary/10 text-primary border-primary/20 px-4 py-1">
-                  The Lean Startup Method
-                </Badge>
+            <div className="mx-auto max-w-3xl rounded-xl border border-primary/20 bg-card/80 p-4 text-left">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm text-muted-foreground">Current stage</p>
+                  <p className="text-xl font-semibold">
+                    Stage {currentStageDef?.numeral}: {currentStageDef?.title}
+                  </p>
+                </div>
+                <Badge variant="secondary">{progressValue}% stages completed</Badge>
               </div>
-              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold takeover-gradient creatives-font">
-                Learn. Build. Measure. Iterate.
-              </h1>
-              <p className="text-lg sm:text-xl text-muted-foreground max-w-3xl mx-auto">
-                One connected system to take your idea from validation to revenue.
-                Every tool has a role. Every step moves you forward.
-              </p>
-              <LeanStartupCycle currentPhase={currentPhase} />
+              <div className="mt-4 flex flex-wrap gap-2">
+                {BIZMAP_STAGES.map((stage) => {
+                  const state = stageState[stage.id];
+                  const isActive = stage.id === currentStage;
+                  return (
+                    <button
+                      key={stage.id}
+                      type="button"
+                      onClick={() => setCurrentStage(stage.id)}
+                      disabled={!state?.unlocked}
+                      className={`rounded-full border px-3 py-1 text-xs transition-colors ${
+                        isActive
+                          ? 'border-primary bg-primary/10 text-primary'
+                          : state?.unlocked
+                            ? 'border-border text-foreground hover:bg-muted'
+                            : 'border-border/60 text-muted-foreground/60'
+                      }`}
+                    >
+                      {state?.completed ? <CheckCircle2 className="mr-1 inline h-3.5 w-3.5" /> : <Circle className="mr-1 inline h-3.5 w-3.5" />}
+                      Stage {stage.numeral}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
+          </section>
 
-            {/* Transition banner */}
-            {transition && (
-              <PhaseTransitionBanner
-                prompt={transition}
-                onDismiss={() =>
-                  leanStore.dismissTransition(`${transition.from}->${transition.to}`)
-                }
-              />
-            )}
+          <section className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+            {BIZMAP_STAGES.map((stage) => {
+              const isUnlocked = loading ? stage.order <= 2 : isStageUnlocked(stage.id, highestUnlockedStage);
+              const isCompleted = !!stageState[stage.id]?.completed;
 
-            {/* Phase cards */}
-            <div className="grid gap-6 md:grid-cols-3">
-              {PHASE_CONFIG.map((cfg) => {
-                const completion = getPhaseCompletion(cfg.phase);
-                const unlocked = isPhaseUnlocked(cfg.phase);
-                const jp = journeyProgressMap[cfg.journey.slug];
+              return (
+                <Card key={stage.id} className={`border ${isUnlocked ? 'border-primary/20' : 'border-border/60 opacity-85'}`}>
+                  <CardHeader>
+                    <div className="flex items-center justify-between gap-3">
+                      <CardTitle className="text-xl">
+                        Stage {stage.numeral}: {stage.title}
+                      </CardTitle>
+                      {isCompleted ? (
+                        <Badge className="bg-green-500/10 text-green-700 border-green-500/30">Completed</Badge>
+                      ) : isUnlocked ? (
+                        <Badge variant="secondary">Unlocked</Badge>
+                      ) : (
+                        <Badge variant="outline">
+                          <Lock className="mr-1 h-3.5 w-3.5" />
+                          Locked
+                        </Badge>
+                      )}
+                    </div>
+                    <CardDescription>{stage.description}</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {stage.tools.map((tool) => {
+                      const ToolIcon = tool.icon;
+                      const toolUnlocked = isUnlocked;
 
-                return (
-                  <PhaseCard
-                    key={cfg.phase}
-                    phase={cfg.phase}
-                    title={cfg.title}
-                    description={cfg.description}
-                    icon={cfg.icon}
-                    journey={{
-                      ...cfg.journey,
-                      journeyPercent: jp.percent,
-                      started: jp.started,
-                    }}
-                    tools={cfg.tools.map((t) => ({
-                      name: t.name,
-                      href: t.href,
-                      icon: t.icon,
-                      used: leanStore.phases[cfg.phase].toolsUsed.includes(t.id),
-                    }))}
-                    completionPercent={completion}
-                    isActive={currentPhase === cfg.phase}
-                    isLocked={!unlocked}
-                    onSkipAhead={() => leanStore.skipPhase(cfg.phase)}
-                  />
-                );
-              })}
+                      return (
+                        <div
+                          key={tool.id}
+                          className="rounded-lg border border-border/60 bg-background/70 p-3"
+                        >
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex items-start gap-3">
+                              <ToolIcon className="mt-0.5 h-4 w-4 text-primary" />
+                              <div>
+                                <p className="text-sm font-semibold">
+                                  {tool.name}
+                                  {tool.beta ? <Badge className="ml-2 bg-amber-500/10 text-amber-700 border-amber-500/30">Beta mode</Badge> : null}
+                                </p>
+                                <p className="mt-1 text-xs text-muted-foreground">{tool.description}</p>
+                              </div>
+                            </div>
+                            {toolUnlocked ? (
+                              <Button size="sm" variant="outline" asChild>
+                                <Link to={tool.route}>Open</Link>
+                              </Button>
+                            ) : (
+                              <Button size="sm" variant="outline" onClick={() => openLockedDialog(tool)}>
+                                Why locked?
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </section>
+
+          <section className="rounded-xl border border-primary/20 bg-card/80 p-6">
+            <h2 className="text-xl font-semibold">Unlock logic</h2>
+            <div className="mt-3 grid gap-2 text-sm text-muted-foreground md:grid-cols-2">
+              <p>New users start with Stage I and Stage II unlocked.</p>
+              <p>Complete Stage I + II to unlock Stage III.</p>
+              <p>Complete Stage III to unlock Stage IV.</p>
+              <p>Complete Stage IV to unlock Stage V.</p>
             </div>
-
-            {/* AI Assist - always available */}
-            <Card className="border-primary/20 bg-background/90">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Bot className="h-5 w-5 text-primary" />
-                  BizMap AI
-                </CardTitle>
-                <CardDescription>
-                  Available in every phase. Use the AI assistant to fill templates, rewrite copy,
-                  and pressure-test your assumptions.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button asChild>
-                  <Link to="/bizmap-ai">Open AI Assistant</Link>
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
-        </section>
+          </section>
+        </div>
       </main>
 
       <Footer />
+
+      <Dialog open={!!lockedTool} onOpenChange={(open) => !open && setLockedTool(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{lockedTool?.tool.name} is locked</DialogTitle>
+            <DialogDescription>{lockedTool?.message}</DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setLockedTool(null)}>Close</Button>
+            <Button asChild>
+              <Link to="/dashboard">
+                Go to dashboard
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Link>
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

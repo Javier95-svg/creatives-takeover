@@ -366,9 +366,39 @@ CRITICAL REQUIREMENTS:
       }
     }
 
+    let storedAnalysisId: string | null = null;
+    try {
+      const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+      const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+      const supabase = createClient(supabaseUrl, supabaseKey);
+
+      const { data: storedData, error: storeError } = await supabase
+        .from('icp_analysis_results')
+        .insert({
+          user_id: user.id,
+          business_description: businessDescription,
+          target_audience: targetAudience || null,
+          industry: industry || null,
+          analysis_data: analysisResult,
+          niche_score: analysisResult?.nicheScore?.overall ?? null,
+          verdict: analysisResult?.nicheScore?.verdict ?? null,
+        })
+        .select('id')
+        .single();
+
+      if (!storeError && storedData) {
+        storedAnalysisId = storedData.id;
+      } else {
+        console.warn('Failed to store ICP analysis result:', storeError);
+      }
+    } catch (storeError) {
+      console.warn('Error storing ICP analysis result:', storeError);
+    }
+
     return new Response(JSON.stringify({
       success: true,
       analysis: analysisResult,
+      analysisId: storedAnalysisId,
       creditsUsed: creditCost,
       newBalance: creditResult.newBalance
     }), {

@@ -18,6 +18,7 @@ import { useUpgradePrompt } from '@/contexts/UpgradePromptContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useBizMapProgress } from '@/hooks/useBizMapProgress';
 
 // Icon mapping
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -69,6 +70,7 @@ const TechStack: React.FC = () => {
   const { openUpgradePrompt } = useUpgradePrompt();
   const { toast } = useToast();
   const isMobile = useIsMobile();
+  const { refreshProgress } = useBizMapProgress();
   const [selectedProducts, setSelectedProducts] = useState<SelectedProducts>({});
   const [showBudget, setShowBudget] = useState(false);
   const [savedReports, setSavedReports] = useState<TechStackReport[]>([]);
@@ -309,6 +311,7 @@ const TechStack: React.FC = () => {
       setSavedReports((prev) => [data as TechStackReport, ...prev]);
       setReportName('');
       setSaveDialogOpen(false);
+      await refreshProgress();
       toast({
         title: 'Report saved',
         description: 'You can access it anytime from Saved Reports.'

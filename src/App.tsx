@@ -83,8 +83,12 @@ const MyBookings = lazy(() => import("./pages/community/MyBookings"));
 const AdminMentorEditor = lazy(() => import("./pages/community/AdminMentorEditor"));
 const PMFLabPage = lazy(() => import("./pages/PMFLabPage"));
 const ICPBuilderPage = lazy(() => import("./pages/IcpBuilderPage"));
+const WaitlistMakerPage = lazy(() => import("./pages/WaitlistMakerPage"));
 const ValidateJourneyPage = lazy(() => import("./pages/ValidateJourneyPage"));
 const TechStackPage = lazy(() => import("./pages/TechStackPage"));
+const MVPBuilderBetaPage = lazy(() => import("./pages/MVPBuilderBetaPage"));
+const GTMStrategistPage = lazy(() => import("./pages/GTMStrategistPage"));
+const StageRouteGuard = lazy(() => import("./components/bizmap/StageRouteGuard"));
 const FocusFunnel = lazy(() => import("./pages/FocusFunnel"));
 const CoreMetricsPage = lazy(() => import("./pages/CoreMetricsPage"));
 const WeeklyMissionPage = lazy(() => import("./pages/WeeklyMissionPage"));
@@ -92,7 +96,6 @@ const TasksPage = lazy(() => import("./pages/TasksPage"));
 const ValidateJourney = lazy(() => import("./pages/journeys/ValidateJourney"));
 const MvpJourney = lazy(() => import("./pages/journeys/MvpJourney"));
 const FirstCustomersJourney = lazy(() => import("./pages/journeys/FirstCustomersJourney"));
-const ComingSoonPage = lazy(() => import("./pages/ComingSoonPage"));
 const FindYourAngel = lazy(() => import("./pages/community/FindYourAngel"));
 const AdminAngelEditor = lazy(() => import("./pages/community/AdminAngelEditor"));
 
@@ -172,16 +175,18 @@ function App() {
                         <Route path="/terms" element={<Terms />} />
                         <Route path="/bizmap-ai" element={<BizMapJourneyHubPage />} />
                         <Route path="/bizmap-ai/chat" element={<Dream2Plan />} />
-                        <Route path="/pmf-lab" element={<PMFLabPage />} />
+                        <Route path="/pmf-lab" element={<StageRouteGuard route="/pmf-lab"><PMFLabPage /></StageRouteGuard>} />
                         <Route path="/bizmap-ai/pmf-lab" element={<Navigate to="/pmf-lab" replace />} />
-                        <Route path="/tech-stack" element={<TechStackPage />} />
+                        <Route path="/tech-stack" element={<StageRouteGuard route="/tech-stack"><TechStackPage /></StageRouteGuard>} />
                         <Route path="/bizmap-ai/tech-stack" element={<Navigate to="/tech-stack" replace />} />
-                        <Route path="/icp-builder" element={<ICPBuilderPage />} />
+                        <Route path="/icp-builder" element={<StageRouteGuard route="/icp-builder"><ICPBuilderPage /></StageRouteGuard>} />
                         <Route path="/bizmap-ai/icp-builder" element={<Navigate to="/icp-builder" replace />} />
+                        <Route path="/waitlist" element={<StageRouteGuard route="/waitlist"><WaitlistMakerPage /></StageRouteGuard>} />
+                        <Route path="/waitlist-builder" element={<Navigate to="/waitlist" replace />} />
                         <Route path="/decision-sprint" element={<ValidateJourneyPage />} />
                         <Route path="/validate" element={<ValidateJourney />} />
-                        <Route path="/mvp-builder" element={<ComingSoonPage title="MVP Builder" description="A 14-day guided sprint to take your validated idea from concept to deployed product. Daily build checkpoints, scope lock, and launch-ready templates." highlights={["Scope your MVP with AI-guided feature prioritization", "Tech stack selection matched to your budget and skills", "Landing page and payment integration templates", "Daily checkpoints to keep you shipping"]} />} />
-                        <Route path="/go-to-market" element={<ComingSoonPage title="GTM Strategist" description="Your AI-powered go-to-market command center. From ICP to launch strategy, build a GTM plan that actually converts." highlights={["Define target market, positioning, and messaging", "Select and prioritize high-impact acquisition channels", "Generate launch, pricing, and distribution strategies", "Actionable GTM plans tailored to your business stage"]} />} />
+                        <Route path="/mvp-builder" element={<StageRouteGuard route="/mvp-builder"><MVPBuilderBetaPage /></StageRouteGuard>} />
+                        <Route path="/go-to-market" element={<StageRouteGuard route="/go-to-market"><GTMStrategistPage /></StageRouteGuard>} />
                         <Route path="/client-acquisition" element={<Navigate to="/go-to-market" replace />} />
 
                         <Route path="/auth" element={<AuthEntryRedirect />} />

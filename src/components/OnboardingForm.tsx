@@ -9,10 +9,16 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
+import {
+  DEFAULT_CURRENT_STAGE,
+  DEFAULT_HIGHEST_UNLOCKED_STAGE,
+  onboardingSelectionToProgress,
+  type OnboardingBizMapStageSelection,
+} from '@/lib/bizmapStages';
 
 interface OnboardingData {
   // Step 1
-  businessStage: string;
+  businessStage: OnboardingBizMapStageSelection | '';
   founderExperience: string;
   timeCommitment: string;
   launchTimeline: string;
@@ -62,6 +68,14 @@ const SECONDARY_PAIN_OPTIONS = [
   { value: 'flying_blind', label: 'Flying blind - no data or metrics to guide decisions' },
   { value: 'competing_priorities', label: 'Competing priorities - product vs marketing vs fundraising' },
 ];
+
+const STAGE_TO_PROFILE_BUSINESS_STAGE: Record<OnboardingBizMapStageSelection, string> = {
+  stage_i: 'identity',
+  stage_ii: 'prototype',
+  stage_iii: 'validating',
+  stage_iv: 'building',
+  stage_v: 'launch',
+};
 
 interface OnboardingFormProps {
   onComplete?: () => void;
@@ -140,8 +154,16 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
     setIsLoading(true);
 
     try {
+      const selectedStage = formData.businessStage as OnboardingBizMapStageSelection;
+      const stageProgress = selectedStage
+        ? onboardingSelectionToProgress(selectedStage)
+        : {
+            currentStage: DEFAULT_CURRENT_STAGE,
+            highestUnlockedStage: DEFAULT_HIGHEST_UNLOCKED_STAGE,
+          };
+
       const onboardingData = {
-        businessStage: formData.businessStage,
+        businessStage: selectedStage || 'stage_i',
         founderExperience: formData.founderExperience,
         timeCommitment: formData.timeCommitment,
         launchTimeline: formData.launchTimeline,
@@ -158,13 +180,13 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
         .from('profiles')
         .update({
           onboarding_completed: true,
-          business_stage: formData.businessStage,
+          business_stage: selectedStage ? STAGE_TO_PROFILE_BUSINESS_STAGE[selectedStage] : 'identity',
           quiz_completed: true,
           quiz_completed_at: new Date().toISOString(),
           quiz_is_first_startup: formData.founderExperience
             ? (formData.founderExperience === 'first-time' ? 'yes' : 'no')
             : null,
-          quiz_current_stage: formData.businessStage || null,
+          quiz_current_stage: selectedStage || null,
           quiz_biggest_challenge: formData.primaryPain || null,
           quiz_launch_timeline: formData.launchTimeline || null,
           quiz_looking_for_cofounder: formData.lookingForCofounder || null,
@@ -174,6 +196,21 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
 
       if (updateError) {
         throw updateError;
+      }
+
+      const { error: progressError } = await supabase
+        .from('user_progress' as any)
+        .upsert(
+          {
+            user_id: user.id,
+            current_stage: stageProgress.currentStage,
+            highest_unlocked_stage: stageProgress.highestUnlockedStage,
+          },
+          { onConflict: 'user_id' },
+        );
+
+      if (progressError) {
+        throw progressError;
       }
 
       toast.success('Onboarding completed successfully!');
@@ -199,11 +236,18 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
 
     try {
       const skippedAt = new Date().toISOString();
+      const selectedStage = formData.businessStage as OnboardingBizMapStageSelection;
+      const stageProgress = selectedStage
+        ? onboardingSelectionToProgress(selectedStage)
+        : {
+            currentStage: DEFAULT_CURRENT_STAGE,
+            highestUnlockedStage: DEFAULT_HIGHEST_UNLOCKED_STAGE,
+          };
       const { error: updateError } = await supabase
         .from('profiles')
         .update({
           onboarding_completed: true,
-          business_stage: formData.businessStage || null,
+          business_stage: selectedStage ? STAGE_TO_PROFILE_BUSINESS_STAGE[selectedStage] : 'identity',
           quiz_completed: false,
           user_preferences: {
             onboardingSkippedAt: skippedAt,
@@ -213,6 +257,21 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
 
       if (updateError) {
         throw updateError;
+      }
+
+      const { error: progressError } = await supabase
+        .from('user_progress' as any)
+        .upsert(
+          {
+            user_id: user.id,
+            current_stage: stageProgress.currentStage,
+            highest_unlocked_stage: stageProgress.highestUnlockedStage,
+          },
+          { onConflict: 'user_id' },
+        );
+
+      if (progressError) {
+        throw progressError;
       }
 
       toast.success('You can complete onboarding later from your account.');
@@ -249,31 +308,33 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
             </div>
 
             <div>
-              <Label className="text-base font-semibold mb-3 block font-space-grotesk">What stage is your business at? *</Label>
+              <Label className="text-base font-semibold mb-3 block font-space-grotesk">Which BizMap stage are you currently in? *</Label>
               <RadioGroup
                 value={formData.businessStage}
-                onValueChange={(value) => setFormData({ ...formData, businessStage: value })}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, businessStage: value as OnboardingBizMapStageSelection })
+                }
                 className="space-y-2"
               >
-                <Label htmlFor="stage-idea" className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60 cursor-pointer">
-                  <RadioGroupItem value="idea" id="stage-idea" />
-                  <span className="flex-1">Just an idea</span>
+                <Label htmlFor="stage-i" className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60 cursor-pointer">
+                  <RadioGroupItem value="stage_i" id="stage-i" />
+                  <span className="flex-1">Stage I: Identity (ICP Builder)</span>
                 </Label>
-                <Label htmlFor="stage-validation" className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60 cursor-pointer">
-                  <RadioGroupItem value="validation" id="stage-validation" />
-                  <span className="flex-1">Validating the idea</span>
+                <Label htmlFor="stage-ii" className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60 cursor-pointer">
+                  <RadioGroupItem value="stage_ii" id="stage-ii" />
+                  <span className="flex-1">Stage II: Prototype (Waitlist Maker)</span>
                 </Label>
-                <Label htmlFor="stage-mvp" className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60 cursor-pointer">
-                  <RadioGroupItem value="mvp" id="stage-mvp" />
-                  <span className="flex-1">Building MVP</span>
+                <Label htmlFor="stage-iii" className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60 cursor-pointer">
+                  <RadioGroupItem value="stage_iii" id="stage-iii" />
+                  <span className="flex-1">Stage III: Validating (PMF Lab)</span>
                 </Label>
-                <Label htmlFor="stage-launched" className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60 cursor-pointer">
-                  <RadioGroupItem value="launched" id="stage-launched" />
-                  <span className="flex-1">Launched</span>
+                <Label htmlFor="stage-iv" className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60 cursor-pointer">
+                  <RadioGroupItem value="stage_iv" id="stage-iv" />
+                  <span className="flex-1">Stage IV: Building (MVP Builder + Tech Stack)</span>
                 </Label>
-                <Label htmlFor="stage-scaling" className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60 cursor-pointer">
-                  <RadioGroupItem value="scaling" id="stage-scaling" />
-                  <span className="flex-1">Scaling</span>
+                <Label htmlFor="stage-v" className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60 cursor-pointer">
+                  <RadioGroupItem value="stage_v" id="stage-v" />
+                  <span className="flex-1">Stage V: Launch (GTM Strategist)</span>
                 </Label>
               </RadioGroup>
               {errors.businessStage && <p className="text-sm text-destructive mt-1">{errors.businessStage}</p>}

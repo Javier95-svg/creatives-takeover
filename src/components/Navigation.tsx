@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Menu, X, LogIn, LogOut, User, Settings, Gift, UserPlus, MessageCircle, Home, Bot, BookOpen, TrendingUp, Users as UsersIcon, FileText, Info, DollarSign, ChevronDown, Mail, Rocket, FlaskConical, Lightbulb, Target, Boxes, GraduationCap, Handshake, BarChart3, Filter, CheckSquare, LineChart, CalendarCheck, HeartHandshake, Sparkles } from "lucide-react";
+import { Menu, X, LogIn, LogOut, User, Settings, Gift, UserPlus, MessageCircle, Home, Bot, BookOpen, TrendingUp, Users as UsersIcon, FileText, Info, DollarSign, ChevronDown, Mail, Rocket, FlaskConical, Lightbulb, Target, Boxes, GraduationCap, Handshake, BarChart3, Filter, CheckSquare, LineChart, CalendarCheck, HeartHandshake, Sparkles, Lock } from "lucide-react";
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -29,17 +29,29 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { useBizMapProgress } from "@/hooks/useBizMapProgress";
+import { BIZMAP_STAGES, BUSINESS_PLANNER_RESOURCE_ITEM } from "@/lib/bizmapStages";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [showFriendRequests, setShowFriendRequests] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string>("");
+  const [lockedMenuItem, setLockedMenuItem] = useState<{ name: string; reason: string } | null>(null);
   const { user, signOut, loading, isAuthenticated } = useAuth();
   const { pendingFriendRequests } = useSocial(user?.id || '');
   const { trackClick } = usePageAnalytics();
   const deviceType = useDeviceType();
   const location = useLocation();
+  const { isToolRouteUnlocked, getLockReasonForRoute } = useBizMapProgress();
   const { getTotalUnreadCount } = useMessaging({ autoLoad: true, suppressLoadErrors: true });
   const totalUnreadMessages = user ? getTotalUnreadCount() : 0;
 
@@ -57,23 +69,20 @@ const Navigation = () => {
     "Pricing": DollarSign,
   };
 
-  // BizMap AI submenu -- grouped by Lean Startup phase
+  // BizMap AI submenu -- grouped by guided stages
   type BizMapMenuItem =
     | { type: 'label'; label: string }
-    | { type: 'separator' }
     | { type?: undefined; name: string; href: string; icon: React.ComponentType<{ className?: string }>; description: string };
 
-  const bizMapSubmenu: BizMapMenuItem[] = [
-    { type: 'label', label: 'Learn: Validate Your Idea' },
-    { name: "ICP Builder", href: "/icp-builder", icon: Target, description: "Define your ideal customer and niche" },
-    { name: "PMF Lab", href: "/pmf-lab", icon: FlaskConical, description: "AI market analysis + validation" },
-    { type: 'label', label: 'Build: Ship Your MVP' },
-    { name: "MVP Builder", href: "/mvp-builder", icon: Rocket, description: "From validated idea to working product" },
-    { name: "Business Planner", href: "/bizmap-ai/chat", icon: Bot, description: "Your AI business partner for every stage" },
-    { name: "Tech Stack Builder", href: "/tech-stack", icon: Boxes, description: "Choose your stack with budget calc" },
-    { type: 'label', label: 'Measure: Get Traction' },
-    { name: "GTM Strategist", href: "/go-to-market", icon: DollarSign, description: "End-to-end go-to-market planner" },
-  ];
+  const bizMapSubmenu: BizMapMenuItem[] = BIZMAP_STAGES.flatMap((stage) => [
+    { type: 'label' as const, label: `Stage ${stage.numeral}: ${stage.title}` },
+    ...stage.tools.map((tool) => ({
+      name: tool.beta ? `${tool.name} (Beta)` : tool.name,
+      href: tool.route,
+      icon: tool.icon,
+      description: tool.description,
+    })),
+  ]);
 
   // Insighta submenu items
   const insightaSubmenu = [
@@ -95,6 +104,7 @@ const Navigation = () => {
   const resourcesSubmenu = [
     { name: "Stories", href: "/stories", icon: FileText, description: "Insights and articles for founders" },
     { name: "Prompt Library", href: "/prompt-library", icon: BookOpen, description: "60+ business cases and prompts" },
+    { name: BUSINESS_PLANNER_RESOURCE_ITEM.name, href: BUSINESS_PLANNER_RESOURCE_ITEM.route, icon: BUSINESS_PLANNER_RESOURCE_ITEM.icon, description: BUSINESS_PLANNER_RESOURCE_ITEM.description },
   ];
 
   // Fetch user avatar
@@ -231,7 +241,7 @@ const Navigation = () => {
                           </TooltipContent>
                         </Tooltip>
                         <DropdownMenuContent align="start" className="w-80 md:w-72 sm:w-64 max-w-[calc(100vw-2rem)]">
-                          <DropdownMenuLabel>Lean Startup System</DropdownMenuLabel>
+                          <DropdownMenuLabel>Guided Stage Journey</DropdownMenuLabel>
                           <DropdownMenuSeparator />
                           {bizMapSubmenu.map((subItem, idx) => {
                             if ('type' in subItem && subItem.type === 'label') {
@@ -241,11 +251,34 @@ const Navigation = () => {
                                 </DropdownMenuLabel>
                               );
                             }
-                            if ('type' in subItem && subItem.type === 'separator') {
-                              return <DropdownMenuSeparator key={idx} />;
-                            }
                             const linkItem = subItem as { name: string; href: string; icon: React.ComponentType<{ className?: string }>; description: string };
                             const SubIcon = linkItem.icon;
+                            const toolUnlocked = isToolRouteUnlocked(linkItem.href);
+                            const lockReason = getLockReasonForRoute(linkItem.href);
+
+                            if (!toolUnlocked && user) {
+                              return (
+                                <DropdownMenuItem key={linkItem.name} asChild>
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      setLockedMenuItem({
+                                        name: linkItem.name,
+                                        reason: lockReason || 'Complete previous stage requirements to unlock this tool.',
+                                      })
+                                    }
+                                    className="w-full cursor-pointer"
+                                  >
+                                    <Lock className="h-4 w-4 mr-2 text-muted-foreground" />
+                                    <div className="flex flex-col text-left">
+                                      <span className="font-medium text-muted-foreground">{linkItem.name}</span>
+                                      <span className="text-xs text-muted-foreground">{lockReason || 'Locked'}</span>
+                                    </div>
+                                  </button>
+                                </DropdownMenuItem>
+                              );
+                            }
+
                             return (
                               <DropdownMenuItem key={linkItem.name} asChild>
                                 <Link
@@ -613,6 +646,29 @@ const Navigation = () => {
                           <div className="ml-10 mr-2 mb-1 space-y-0.5">
                             {submenu.items.map((sub) => {
                               const SubIcon = sub.icon;
+                              const subUnlocked = isToolRouteUnlocked(sub.href);
+                              const subLockReason = getLockReasonForRoute(sub.href);
+
+                              if (!subUnlocked && user && item.name === 'BizMap AI') {
+                                return (
+                                  <button
+                                    key={sub.name}
+                                    type="button"
+                                    className="w-full flex items-center gap-2.5 px-3 py-2.5 min-h-[44px] touch-manipulation text-sm text-muted-foreground hover:bg-muted/50 active:bg-muted rounded-lg transition-colors"
+                                    onClick={() => {
+                                      setIsOpen(false);
+                                      setLockedMenuItem({
+                                        name: sub.name,
+                                        reason: subLockReason || 'Complete previous stage requirements to unlock this tool.',
+                                      });
+                                    }}
+                                  >
+                                    <Lock className="h-4 w-4 flex-shrink-0" />
+                                    <span className="text-left">{subLockReason || `${sub.name} is locked`}</span>
+                                  </button>
+                                );
+                              }
+
                               return (
                                 <Link
                                   key={sub.name}
@@ -743,6 +799,23 @@ const Navigation = () => {
           open={showFriendRequests}
           onOpenChange={setShowFriendRequests}
         />
+
+        <Dialog open={!!lockedMenuItem} onOpenChange={(open) => !open && setLockedMenuItem(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>{lockedMenuItem?.name} is locked</DialogTitle>
+              <DialogDescription>{lockedMenuItem?.reason}</DialogDescription>
+            </DialogHeader>
+            <DialogFooter className="gap-2">
+              <Button variant="outline" onClick={() => setLockedMenuItem(null)}>
+                Close
+              </Button>
+              <Button asChild>
+                <Link to="/bizmap-ai">Open Stage Map</Link>
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </nav>
     </TooltipProvider>
   );

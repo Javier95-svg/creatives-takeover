@@ -7,6 +7,8 @@ import { useLeanStartupStore } from "@/store/leanStartupStore";
 import { Loader2 } from "lucide-react";
 import type { PMFFormPrefillData } from "@/components/pmf/ProductMarketFitLab";
 import { getSafeLocalStorage } from "@/lib/safeStorage";
+import PMFValidationTracker from "@/components/pmf/PMFValidationTracker";
+import { useBizMapProgress } from "@/hooks/useBizMapProgress";
 
 // Lazy load the PMF Lab component
 const ProductMarketFitLab = lazy(() => import("@/components/pmf/ProductMarketFitLab"));
@@ -24,6 +26,7 @@ const DECISION_SIGNAL_LABELS: Record<string, string> = {
 export default function PMFLabPage() {
   const { trackPageVisit } = useReadingAnalytics();
   const { markToolUsed } = useLeanStartupStore();
+  const { refreshProgress } = useBizMapProgress();
   const [prefillData, setPrefillData] = useState<PMFFormPrefillData | null>(null);
 
   useEffect(() => { markToolUsed('pmf-lab'); }, [markToolUsed]);
@@ -150,6 +153,9 @@ export default function PMFLabPage() {
                 </div>
               }
             >
+              <div className="mb-6">
+                <PMFValidationTracker onSaved={refreshProgress} />
+              </div>
               <ProductMarketFitLab prefillData={prefillData ?? undefined} />
             </Suspense>
           </div>

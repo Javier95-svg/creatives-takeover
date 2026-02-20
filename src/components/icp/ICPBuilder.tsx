@@ -15,6 +15,7 @@ import ICPNicheProfile from './ICPNicheProfile';
 import ICPPainPoints from './ICPPainPoints';
 import ICPPositioning from './ICPPositioning';
 import ICPNicheScore from './ICPNicheScore';
+import { useBizMapProgress } from '@/hooks/useBizMapProgress';
 
 interface ICPAnalysis {
   nicheScore: {
@@ -102,6 +103,7 @@ const ICPBuilder: React.FC = () => {
   const { ensureCredits, handleCreditError } = useCreditActions();
   const { checkFeatureAccess } = useFeatureGating();
   const { openUpgradePrompt } = useUpgradePrompt();
+  const { refreshProgress } = useBizMapProgress();
 
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState<ICPAnalysis | null>(null);
@@ -182,6 +184,7 @@ const ICPBuilder: React.FC = () => {
       if (data?.success && data?.analysis) {
         setAnalysis(data.analysis);
         setActiveTab('profile');
+        await refreshProgress();
 
         toast({
           title: "ICP Analysis Complete!",
