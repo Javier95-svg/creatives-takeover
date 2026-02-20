@@ -999,12 +999,6 @@ export default function WaitlistEditor() {
 
           <section className="relative overflow-auto bg-[radial-gradient(circle_at_top,#eef2ff,transparent_45%),radial-gradient(circle_at_bottom,#cffafe,transparent_35%)] p-4 md:p-8">
             <div className="mx-auto max-w-[1100px] space-y-3">
-              <div className="flex flex-wrap items-center gap-2 text-xs">
-                <Badge variant="outline">Live preview</Badge>
-                <span className="text-muted-foreground">Changes update instantly as you edit in the panel.</span>
-                {content.customFields && content.customFields.length > 0 ? <Badge variant="secondary">Drag fields in Form tab to reorder</Badge> : null}
-              </div>
-
               <WaitlistPageTemplate content={content} productName={productName || 'Your Product'} mode="preview" onContentChange={updateTemplateField} signupCount={signupCount} />
             </div>
           </section>
