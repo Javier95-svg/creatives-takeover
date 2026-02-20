@@ -11,40 +11,41 @@ interface ActivityItem {
   avatarColor: string;
 }
 
-// Route-relevant activities — what fires depends on where the visitor currently is
+// Route-relevant activities — what fires depends on where the visitor currently is.
+// Copy focuses on what the user can GET, not just what someone did.
 const routeActivities: Record<string, ActivityItem[]> = {
   "/bizmap-ai": [
-    { initials: "MR", name: "Marcus", location: "Austin", action: "just mapped out his business plan with BizMap AI", avatarColor: "#6366f1" },
-    { initials: "AN", name: "Ana", location: "Lisbon", action: "validated her startup idea in under 10 minutes", avatarColor: "#ec4899" },
-    { initials: "TD", name: "Tomas", location: "Berlin", action: "just built his ICP with the AI co-founder", avatarColor: "#8b5cf6" },
+    { initials: "KA", name: "Kwame", location: "Accra, Ghana", action: "turned a rough idea into a full business plan — one session, no consultant needed", avatarColor: "#6366f1" },
+    { initials: "IS", name: "Isabela", location: "Curitiba, Brazil", action: "finally got clarity on who her real customer is. Said it took her 20 minutes", avatarColor: "#ec4899" },
+    { initials: "DV", name: "Dev", location: "Pune, India", action: "built his entire go-to-market strategy without spending a cent on an agency", avatarColor: "#8b5cf6" },
   ],
   "/community": [
-    { initials: "SC", name: "Sofia", location: "Barcelona", action: "connected with a co-founder right here", avatarColor: "#8b5cf6" },
-    { initials: "EL", name: "Elena", location: "Miami", action: "just found her accountability partner", avatarColor: "#f59e0b" },
-    { initials: "OA", name: "Omar", location: "Dubai", action: "got matched with a mentor in the community", avatarColor: "#10b981" },
+    { initials: "ZN", name: "Zara", location: "Nairobi, Kenya", action: "found the technical co-founder she'd been looking for — right here", avatarColor: "#8b5cf6" },
+    { initials: "JV", name: "Jovan", location: "Novi Sad, Serbia", action: "got connected with a mentor who's already built in his exact space", avatarColor: "#10b981" },
+    { initials: "CA", name: "Camila", location: "Medellín, Colombia", action: "met her accountability partner here. First check-in starts tomorrow", avatarColor: "#f59e0b" },
   ],
   "/insighta": [
-    { initials: "JD", name: "James", location: "New York", action: "secured an intro with a top VC through Insighta", avatarColor: "#ef4444" },
-    { initials: "RK", name: "Raj", location: "London", action: "found 12 relevant VCs for his seed round", avatarColor: "#10b981" },
-    { initials: "LM", name: "Laura", location: "Toronto", action: "got accepted into a top accelerator program", avatarColor: "#6366f1" },
+    { initials: "TF", name: "Tunde", location: "Ibadan, Nigeria", action: "found 9 VCs actively writing checks in his industry — didn't know they existed", avatarColor: "#ef4444" },
+    { initials: "NR", name: "Nadia", location: "Casablanca, Morocco", action: "identified the exact investors backing companies at her stage", avatarColor: "#10b981" },
+    { initials: "LG", name: "Luca", location: "Rotterdam, Netherlands", action: "got shortlisted for an accelerator that fits his business to a T", avatarColor: "#6366f1" },
   ],
   "/pricing": [
-    { initials: "CM", name: "Carlos", location: "Chicago", action: "just upgraded and unlocked all AI tools", avatarColor: "#f59e0b" },
-    { initials: "PW", name: "Priya", location: "Singapore", action: "started her free plan a moment ago", avatarColor: "#ec4899" },
+    { initials: "FA", name: "Fatima", location: "Lahore, Pakistan", action: "went Pro after realizing the tools were saving her hours every week", avatarColor: "#f59e0b" },
+    { initials: "SB", name: "Seb", location: "Ghent, Belgium", action: "unlocked the full AI suite — said it paid for itself within days", avatarColor: "#ec4899" },
   ],
   "/stories": [
-    { initials: "BT", name: "Bianca", location: "São Paulo", action: "just shared her founder story with the community", avatarColor: "#8b5cf6" },
-    { initials: "KN", name: "Kevin", location: "Lagos", action: "applied a strategy from here to land his first client", avatarColor: "#10b981" },
+    { initials: "AM", name: "Amir", location: "Tbilisi, Georgia", action: "used a founder's playbook from here to fix his pricing — doubled his close rate", avatarColor: "#8b5cf6" },
+    { initials: "NL", name: "Nora", location: "Galway, Ireland", action: "landed her first paying client using a strategy she read about here", avatarColor: "#10b981" },
   ],
   "/prompt-library": [
-    { initials: "YS", name: "Yuna", location: "Seoul", action: "saved 3 prompts for her GTM strategy", avatarColor: "#6366f1" },
-    { initials: "KN", name: "Kevin", location: "Lagos", action: "just used a prompt to write his pitch deck", avatarColor: "#10b981" },
+    { initials: "YA", name: "Yaw", location: "Kumasi, Ghana", action: "wrote his entire investor pitch using 2 prompts from this library", avatarColor: "#6366f1" },
+    { initials: "PT", name: "Preethi", location: "Hyderabad, India", action: "automated her outreach strategy using prompts she found here — 3x replies", avatarColor: "#10b981" },
   ],
   default: [
-    { initials: "MR", name: "Marcus", location: "Austin", action: "just joined and started his business plan", avatarColor: "#6366f1" },
-    { initials: "EL", name: "Elena", location: "Miami", action: "joined the community 2 minutes ago", avatarColor: "#f59e0b" },
-    { initials: "RK", name: "Raj", location: "London", action: "validated his startup idea today", avatarColor: "#10b981" },
-    { initials: "SC", name: "Sofia", location: "Barcelona", action: "connected with her co-founder here", avatarColor: "#8b5cf6" },
+    { initials: "KA", name: "Kwame", location: "Accra, Ghana", action: "went from idea to a structured plan in his first week — for free", avatarColor: "#6366f1" },
+    { initials: "CA", name: "Camila", location: "Medellín, Colombia", action: "stopped overthinking and started building. Said the first session changed everything", avatarColor: "#f59e0b" },
+    { initials: "ZN", name: "Zara", location: "Nairobi, Kenya", action: "got the clarity she needed to finally take the leap", avatarColor: "#10b981" },
+    { initials: "AM", name: "Amir", location: "Tbilisi, Georgia", action: "found the right people to build with — without cold messaging strangers", avatarColor: "#8b5cf6" },
   ],
 };
 
