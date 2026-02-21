@@ -14,6 +14,13 @@ interface DmEmailPayload {
   recipientId: string;
 }
 
+interface DeliveryAuthRow {
+  status: "pending" | "sending" | "sent" | "failed" | "skipped";
+  conversation_id: string;
+  sender_id: string;
+  recipient_id: string;
+}
+
 interface DeliveryUpdate {
   status: "pending" | "sending" | "sent" | "failed" | "skipped";
   last_error?: string | null;
@@ -22,13 +29,17 @@ interface DeliveryUpdate {
   metadataPatch?: Record<string, unknown>;
 }
 
-const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
-const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+function getEnv(name: string): string {
+  return (Deno.env.get(name) ?? "").trim();
+}
+
+const supabaseUrl = getEnv("SUPABASE_URL");
+const supabaseServiceKey = getEnv("SUPABASE_SERVICE_ROLE_KEY");
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
-const resendApiKey = Deno.env.get("RESEND_API_KEY");
+const resendApiKey = getEnv("RESEND_API_KEY");
 const resend = resendApiKey ? new Resend(resendApiKey) : null;
 
-const appUrl = (Deno.env.get("APP_URL") || "https://creatives-takeover.com").replace(/\/$/, "");
+const appUrl = (getEnv("APP_URL") || "https://creatives-takeover.com").replace(/\/$/, "");
 
 function escapeHtml(input: string): string {
   return input
@@ -37,6 +48,20 @@ function escapeHtml(input: string): string {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#39;");
+}
+
+function normalizeReplyTo(input: string): string | null {
+  const value = (input || "").trim();
+  if (!value) return null;
+
+  const plainEmailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const namedEmailRegex = /^[^<>]+<\s*[^\s@]+@[^\s@]+\.[^\s@]+\s*>$/;
+
+  if (plainEmailRegex.test(value) || namedEmailRegex.test(value)) {
+    return value;
+  }
+
+  return null;
 }
 
 function buildSnippet(input: string, maxLength = 220): string {
@@ -98,13 +123,9 @@ serve(async (req: Request): Promise<Response> => {
   }
 
   try {
-    const expectedSecret = Deno.env.get("DM_EMAIL_WEBHOOK_SECRET");
-    const providedSecret = req.headers.get("x-dm-webhook-secret");
-
-    if (expectedSecret && providedSecret !== expectedSecret) {
-      console.warn("[DM-EMAIL] Unauthorized webhook request");
-      return new Response(JSON.stringify({ ok: false, error: "Unauthorized" }), {
-        status: 401,
+    if (!supabaseUrl || !supabaseServiceKey) {
+      return new Response(JSON.stringify({ ok: false, error: "Supabase env vars are not configured" }), {
+        status: 500,
         headers: { "Content-Type": "application/json", ...corsHeaders },
       });
     }
@@ -116,6 +137,45 @@ serve(async (req: Request): Promise<Response> => {
       return new Response(JSON.stringify({ ok: false, error: "Missing required payload fields" }), {
         status: 400,
         headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    }
+
+    const expectedSecret = getEnv("DM_EMAIL_WEBHOOK_SECRET");
+    const providedSecret = req.headers.get("x-dm-webhook-secret");
+
+    if (expectedSecret && providedSecret !== expectedSecret) {
+      // Fallback auth path for queued DB-trigger calls where the app setting may be absent.
+      const { data: deliveryAuthRow } = await supabase
+        .from("message_email_notifications")
+        .select("status, conversation_id, sender_id, recipient_id")
+        .eq("message_id", messageId)
+        .eq("recipient_id", recipientId)
+        .maybeSingle();
+
+      const deliveryMatch = deliveryAuthRow as DeliveryAuthRow | null;
+      const canFallbackAuthorize =
+        !!deliveryMatch &&
+        ["pending", "sending", "failed"].includes(deliveryMatch.status) &&
+        deliveryMatch.conversation_id === conversationId &&
+        deliveryMatch.sender_id === senderId &&
+        deliveryMatch.recipient_id === recipientId;
+
+      if (!canFallbackAuthorize) {
+        console.warn("[DM-EMAIL] Unauthorized webhook request", {
+          messageId,
+          recipientId,
+          hasDeliveryRow: Boolean(deliveryMatch),
+        });
+        return new Response(JSON.stringify({ ok: false, error: "Unauthorized" }), {
+          status: 401,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        });
+      }
+
+      console.warn("[DM-EMAIL] Secret mismatch bypassed via queued-row verification", {
+        messageId,
+        recipientId,
+        status: deliveryMatch.status,
       });
     }
 
@@ -297,9 +357,21 @@ serve(async (req: Request): Promise<Response> => {
       });
     }
 
-    const fromEmail = Deno.env.get("FROM_EMAIL") || "onboarding@resend.dev";
-    const fromName = Deno.env.get("FROM_NAME") || "Creatives Takeover";
-    const replyTo = Deno.env.get("REPLY_TO_EMAIL");
+    const fromEmail = getEnv("FROM_EMAIL");
+    if (!fromEmail || !fromEmail.includes("@")) {
+      await updateDelivery(messageId, recipientId, {
+        status: "failed",
+        last_error: "FROM_EMAIL is not configured",
+        metadataPatch: { stage: "from_email_missing" },
+      });
+      return new Response(JSON.stringify({ ok: false, error: "FROM_EMAIL is not configured" }), {
+        status: 500,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    }
+
+    const fromName = getEnv("FROM_NAME") || "Creatives Takeover";
+    const replyTo = getEnv("REPLY_TO_EMAIL");
     const subject = `${senderName} sent you a new message`;
     const messagePreview = escapeHtml(buildSnippet(messageRow.content));
     const senderDisplayEscaped = escapeHtml(senderName);
@@ -335,8 +407,11 @@ serve(async (req: Request): Promise<Response> => {
       html,
     };
 
-    if (replyTo && replyTo.trim().length > 0) {
-      (sendPayload as { reply_to?: string }).reply_to = replyTo.trim();
+    const normalizedReplyTo = normalizeReplyTo(replyTo);
+    if (normalizedReplyTo) {
+      (sendPayload as { reply_to?: string }).reply_to = normalizedReplyTo;
+    } else if (replyTo) {
+      console.warn("[DM-EMAIL] Skipping invalid REPLY_TO_EMAIL value", { replyTo });
     }
 
     const emailResponse = await resend.emails.send(sendPayload as never);
