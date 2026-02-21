@@ -43,6 +43,7 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
     activeConversationId,
     setActiveConversationId,
     sendMessage,
+    deleteMessage,
     markAsRead,
     getUnreadCount,
     deleteConversation,
@@ -60,6 +61,8 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
   const [currentUserMentorAvatar, setCurrentUserMentorAvatar] = useState<string | null>(null);
   const [conversationToDelete, setConversationToDelete] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [messageToDelete, setMessageToDelete] = useState<{ messageId: string; conversationId: string } | null>(null);
+  const [isDeletingMessage, setIsDeletingMessage] = useState(false);
   const [mobileSheetOpen, setMobileSheetOpen] = useState(false);
   const [otherUserTyping, setOtherUserTyping] = useState(false);
   const typingTimeoutRef = useRef<NodeJS.Timeout>();
@@ -437,6 +440,28 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
     }
   };
 
+  const handleDeleteMessageClick = (e: React.MouseEvent, messageId: string) => {
+    e.stopPropagation();
+    if (!activeConversationId) return;
+    setMessageToDelete({ messageId, conversationId: activeConversationId });
+  };
+
+  const handleConfirmDeleteMessage = async () => {
+    if (!messageToDelete) return;
+
+    setIsDeletingMessage(true);
+    const success = await deleteMessage(messageToDelete.conversationId, messageToDelete.messageId);
+    setIsDeletingMessage(false);
+
+    if (success) {
+      setMessageToDelete(null);
+    }
+  };
+
+  const handleCancelDeleteMessage = () => {
+    setMessageToDelete(null);
+  };
+
   const renderMessageContent = (content: string) => {
     const elements: JSX.Element[] = [];
     const urlRegex = /https?:\/\/[^\s]+/gi;
@@ -578,6 +603,19 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
                 )}
 
                 <p className="text-sm whitespace-pre-wrap break-words">{renderMessageContent(message.content)}</p>
+
+                {isOwnMessage && !message.id.startsWith('temp-') && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={(e) => handleDeleteMessageClick(e, message.id)}
+                    className="absolute top-1 right-1 h-6 w-6 p-0 opacity-70 md:opacity-0 md:group-hover:opacity-100 transition-opacity text-primary-foreground/70 hover:text-primary-foreground hover:bg-primary-foreground/15"
+                    aria-label="Delete message"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
+                )}
 
                 {/* Timestamp and read receipt only on last message */}
                 {idx === messages.length - 1 && (
@@ -901,6 +939,34 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
               disabled={isDeleting}
             >
               {isDeleting ? "Deleting..." : "Delete"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Message Delete Confirmation Dialog */}
+      <Dialog open={!!messageToDelete} onOpenChange={handleCancelDeleteMessage}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Message</DialogTitle>
+            <DialogDescription>
+              Do you want to delete this message? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={handleCancelDeleteMessage}
+              disabled={isDeletingMessage}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleConfirmDeleteMessage}
+              disabled={isDeletingMessage}
+            >
+              {isDeletingMessage ? "Deleting..." : "Delete"}
             </Button>
           </DialogFooter>
         </DialogContent>

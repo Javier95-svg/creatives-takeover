@@ -949,6 +949,144 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
     }
   }, [user]);
 
+  const deleteMessage = useCallback(async (conversationId: string, messageId: string): Promise<boolean> => {
+    if (!user) {
+      toast.error('You must be logged in to delete messages');
+      return false;
+    }
+
+    if (!conversationId || !messageId || messageId.startsWith('temp-')) {
+      return false;
+    }
+
+    const currentConversationMessages = messagesRef.current[conversationId] || [];
+    const targetMessage = currentConversationMessages.find((message) => message.id === messageId);
+
+    if (!targetMessage) {
+      toast.error('Message not found');
+      return false;
+    }
+
+    if (targetMessage.sender_id !== user.id) {
+      toast.error('You can only delete messages you sent');
+      return false;
+    }
+
+    const nextConversationMessages = currentConversationMessages.filter((message) => message.id !== messageId);
+
+    // Optimistically remove message for immediate feedback.
+    setMessages((prev) => ({
+      ...prev,
+      [conversationId]: nextConversationMessages
+    }));
+    setUnreadCounts((prev) => ({
+      ...prev,
+      [conversationId]: nextConversationMessages.filter(
+        (message) => message.sender_id !== user.id && !message.is_read
+      ).length
+    }));
+
+    try {
+      const { data: deletedRows, error: deleteError } = await safe.delete(async () =>
+        await supabase
+          .from('messages')
+          .delete()
+          .eq('id', messageId)
+          .eq('conversation_id', conversationId)
+          .eq('sender_id', user.id)
+          .select('id')
+      );
+
+      if (deleteError) {
+        throw deleteError;
+      }
+
+      if (!deletedRows || deletedRows.length === 0) {
+        throw new Error('Message was not deleted');
+      }
+
+      // Keep conversation ordering accurate if the latest message was removed.
+      const { data: latestMessageRow, error: latestMessageError } = await safe.select(async () =>
+        await supabase
+          .from('messages')
+          .select('created_at')
+          .eq('conversation_id', conversationId)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle()
+      );
+
+      if (latestMessageError) {
+        logWarn('deleteMessage: Failed to fetch latest message after delete', {
+          conversationId,
+          error: latestMessageError.message
+        });
+      } else {
+        const nextLastMessageAt = latestMessageRow?.created_at ?? null;
+
+        const { error: updateConversationError } = await safe.update(async () =>
+          await supabase
+            .from('conversations')
+            .update({ last_message_at: nextLastMessageAt })
+            .eq('id', conversationId)
+        );
+
+        if (updateConversationError) {
+          logWarn('deleteMessage: Failed to update conversation timestamp', {
+            conversationId,
+            error: updateConversationError.message
+          });
+        }
+
+        setConversations((prev) => {
+          const index = prev.findIndex((conversation) => conversation.id === conversationId);
+          if (index === -1) return prev;
+
+          const updatedConversation = {
+            ...prev[index],
+            last_message_at: nextLastMessageAt || undefined,
+            updated_at: new Date().toISOString()
+          };
+
+          const remaining = prev.filter((_, currentIndex) => currentIndex !== index);
+          const merged = [updatedConversation, ...remaining];
+          return merged.sort((a, b) => {
+            const aTime = new Date(a.last_message_at || a.created_at).getTime();
+            const bTime = new Date(b.last_message_at || b.created_at).getTime();
+            return bTime - aTime;
+          });
+        });
+      }
+
+      await loadUnreadCounts([conversationId]);
+      await loadConversationsFromServer();
+      toast.success('Message deleted');
+      return true;
+    } catch (error) {
+      // Revert optimistic update on failure.
+      setMessages((prev) => ({
+        ...prev,
+        [conversationId]: currentConversationMessages
+      }));
+      setUnreadCounts((prev) => ({
+        ...prev,
+        [conversationId]: currentConversationMessages.filter(
+          (message) => message.sender_id !== user.id && !message.is_read
+        ).length
+      }));
+
+      const appError = handleError(error);
+      logError('deleteMessage: Error deleting message', appError, {
+        conversationId,
+        messageId,
+        userId: user.id
+      });
+
+      toast.error(getUserMessage(error));
+      return false;
+    }
+  }, [user, loadUnreadCounts, loadConversationsFromServer]);
+
   const markAsRead = useCallback(async (conversationId: string) => {
     if (!user) return;
 
@@ -1241,6 +1379,7 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
     setActiveConversationId,
     startConversation,
     sendMessage,
+    deleteMessage,
     markAsRead,
     getUnreadCount,
     getTotalUnreadCount,
