@@ -1,4 +1,4 @@
-import { Bot, Boxes, FlaskConical, Globe, Layers, Rocket, Target } from 'lucide-react';
+import { Bot, Boxes, FlaskConical, Globe, Layers, Rocket, Target, MessageSquare } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
 export const BIZMAP_STAGE_ORDER = [
@@ -236,5 +236,5 @@ export const BUSINESS_PLANNER_RESOURCE_ITEM = {
   name: 'Business Planner',
   route: '/bizmap-ai/chat',
   description: 'AI business planning assistant and launch co-pilot',
-  icon: Bot,
+  icon: MessageSquare,
 };
