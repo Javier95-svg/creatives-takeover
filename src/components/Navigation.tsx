@@ -102,9 +102,9 @@ const Navigation = () => {
 
   // Resources submenu items
   const resourcesSubmenu = [
-    { name: "Stories", href: "/stories", icon: FileText, description: "Insights and articles for founders" },
-    { name: "Prompt Library", href: "/prompt-library", icon: BookOpen, description: "60+ business cases and prompts" },
     { name: BUSINESS_PLANNER_RESOURCE_ITEM.name, href: BUSINESS_PLANNER_RESOURCE_ITEM.route, icon: BUSINESS_PLANNER_RESOURCE_ITEM.icon, description: BUSINESS_PLANNER_RESOURCE_ITEM.description },
+    { name: "Prompt Library", href: "/prompt-library", icon: BookOpen, description: "60+ business cases and prompts" },
+    { name: "Stories", href: "/stories", icon: FileText, description: "Insights and articles for founders" },
   ];
 
   // Fetch user avatar
@@ -419,7 +419,7 @@ const Navigation = () => {
                           </TooltipContent>
                         </Tooltip>
                         <DropdownMenuContent align="start" className="w-72 md:w-56 sm:w-full max-w-[calc(100vw-2rem)]">
-                          <DropdownMenuLabel>Niche Content for Founders</DropdownMenuLabel>
+                          <DropdownMenuLabel>Niche Tools for Founders</DropdownMenuLabel>
                           <DropdownMenuSeparator />
                           {resourcesSubmenu.map((subItem) => {
                             const SubIcon = subItem.icon;
