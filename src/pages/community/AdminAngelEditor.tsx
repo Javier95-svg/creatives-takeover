@@ -58,6 +58,7 @@ const AdminAngelEditor = () => {
     picture: null,
     firm_name: "",
     investment_stages: [],
+    email: null,
     website_url: null,
     linkedin_url: null,
     is_active: true,
@@ -88,6 +89,7 @@ const AdminAngelEditor = () => {
         picture: found.picture || null,
         firm_name: found.firm_name,
         investment_stages: found.investment_stages || [],
+        email: found.email || null,
         website_url: found.website_url || null,
         linkedin_url: found.linkedin_url || null,
         is_active: found.is_active !== false,
@@ -250,6 +252,7 @@ const AdminAngelEditor = () => {
         picture: formData.picture || null,
         firm_name: formData.firm_name,
         investment_stages: formData.investment_stages || [],
+        email: formData.email || null,
         website_url: formData.website_url || null,
         linkedin_url: formData.linkedin_url || null,
         is_active: formData.is_active !== undefined ? formData.is_active : true,
@@ -451,7 +454,23 @@ const AdminAngelEditor = () => {
               </div>
 
               {/* Links */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={formData.email || ""}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, email: e.target.value || null }))
+                    }
+                    placeholder="investor@example.com"
+                    className="mt-1"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Contact email
+                  </p>
+                </div>
                 <div>
                   <Label htmlFor="website_url">Website URL</Label>
                   <Input

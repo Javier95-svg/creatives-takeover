@@ -6,6 +6,7 @@ export interface AngelInvestor {
   picture?: string; // Profile picture URL
   firm_name: string; // Venture Capital Firm name
   investment_stages: string[]; // e.g. ["Pre-Seed", "Seed", "Series A"]
+  email?: string; // Contact email
   website_url?: string; // Firm or personal website
   linkedin_url?: string; // LinkedIn profile URL
   is_active: boolean;
@@ -18,6 +19,7 @@ export interface CreateAngelInput {
   picture?: string | null;
   firm_name: string;
   investment_stages: string[];
+  email?: string | null;
   website_url?: string | null;
   linkedin_url?: string | null;
   is_active?: boolean;
