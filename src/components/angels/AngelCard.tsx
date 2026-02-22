@@ -2,7 +2,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { AngelInvestor } from "@/types/angel";
-import { Linkedin, Globe, Building2 } from "lucide-react";
+import { Linkedin, Globe, Building2, Mail } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface AngelCardProps {
@@ -83,32 +83,44 @@ export const AngelCard = ({ angel, className, priority = false }: AngelCardProps
             )}
 
             {/* Social Links */}
-            <div className="flex items-center gap-4 pt-1">
-              {angel.website_url && (
-                <a
-                  href={angel.website_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors"
-                  aria-label="Website"
-                >
-                  <Globe className="h-4 w-4" />
-                  <span className="hidden sm:inline">Website</span>
-                </a>
-              )}
-              {angel.linkedin_url && (
-                <a
-                  href={angel.linkedin_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-blue-600 transition-colors"
-                  aria-label="LinkedIn"
-                >
-                  <Linkedin className="h-4 w-4" />
-                  <span className="hidden sm:inline">LinkedIn</span>
-                </a>
-              )}
-            </div>
+            {(angel.email || angel.website_url || angel.linkedin_url) && (
+              <div className="flex items-center gap-4 pt-1">
+                {angel.email && (
+                  <a
+                    href={`mailto:${angel.email}`}
+                    className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors"
+                    aria-label="Email"
+                  >
+                    <Mail className="h-4 w-4" />
+                    <span className="hidden sm:inline">Email</span>
+                  </a>
+                )}
+                {angel.website_url && (
+                  <a
+                    href={angel.website_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors"
+                    aria-label="Website"
+                  >
+                    <Globe className="h-4 w-4" />
+                    <span className="hidden sm:inline">Website</span>
+                  </a>
+                )}
+                {angel.linkedin_url && (
+                  <a
+                    href={angel.linkedin_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-blue-600 transition-colors"
+                    aria-label="LinkedIn"
+                  >
+                    <Linkedin className="h-4 w-4" />
+                    <span className="hidden sm:inline">LinkedIn</span>
+                  </a>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </CardContent>
