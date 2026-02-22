@@ -286,7 +286,12 @@ const Navigation = () => {
                                   onClick={() => trackClick(`${item.name} - ${linkItem.name}`, 'Navigation')}
                                   className="cursor-pointer"
                                 >
-                                  <SubIcon className="h-4 w-4 mr-2" />
+                                  <SubIcon
+                                    className={cn(
+                                      "h-4 w-4 mr-2",
+                                      subItem.href === BUSINESS_PLANNER_RESOURCE_ITEM.route && "h-[18px] w-[18px]"
+                                    )}
+                                  />
                                   <div className="flex flex-col">
                                     <span className="font-medium">{linkItem.name}</span>
                                     <span className="text-xs text-muted-foreground">{linkItem.description}</span>
@@ -676,7 +681,12 @@ const Navigation = () => {
                                   className="flex items-center gap-2.5 px-3 py-2.5 min-h-[44px] touch-manipulation text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50 active:bg-muted rounded-lg transition-colors"
                                   onClick={() => setIsOpen(false)}
                                 >
-                                  <SubIcon className="h-4 w-4 flex-shrink-0" />
+                                  <SubIcon
+                                    className={cn(
+                                      "h-4 w-4 flex-shrink-0",
+                                      sub.href === BUSINESS_PLANNER_RESOURCE_ITEM.route && "h-[18px] w-[18px]"
+                                    )}
+                                  />
                                   <span>{sub.name}</span>
                                 </Link>
                               );
