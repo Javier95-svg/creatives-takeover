@@ -95,18 +95,6 @@ export const AngelCard = ({ angel, className, priority = false }: AngelCardProps
                     <span className="hidden sm:inline">Email</span>
                   </a>
                 )}
-                {angel.website_url && (
-                  <a
-                    href={angel.website_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors"
-                    aria-label="Website"
-                  >
-                    <Globe className="h-4 w-4" />
-                    <span className="hidden sm:inline">Website</span>
-                  </a>
-                )}
                 {angel.linkedin_url && (
                   <a
                     href={angel.linkedin_url}
@@ -117,6 +105,18 @@ export const AngelCard = ({ angel, className, priority = false }: AngelCardProps
                   >
                     <Linkedin className="h-4 w-4" />
                     <span className="hidden sm:inline">LinkedIn</span>
+                  </a>
+                )}
+                {angel.website_url && (
+                  <a
+                    href={angel.website_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors"
+                    aria-label="Website"
+                  >
+                    <Globe className="h-4 w-4" />
+                    <span className="hidden sm:inline">Website</span>
                   </a>
                 )}
               </div>
