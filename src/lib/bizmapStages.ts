@@ -1,4 +1,4 @@
-import { Bot, Boxes, FlaskConical, Globe, Layers, Rocket, Target } from 'lucide-react';
+import { Bot, Boxes, Compass, FlaskConical, Globe, Layers, Rocket, Target } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
 export const BIZMAP_STAGE_ORDER = [
@@ -91,6 +91,14 @@ export const BIZMAP_TOOLS: BizMapToolDefinition[] = [
     stage: 'LAUNCH',
     description: 'Generate and save/export your go-to-market plan.',
     icon: Globe,
+  },
+  {
+    id: 'launch-directories',
+    name: 'Directories',
+    route: '/go-to-market?tab=directories',
+    stage: 'LAUNCH',
+    description: 'Find the best platforms to submit and promote your product launch.',
+    icon: Compass,
   },
 ];
 
