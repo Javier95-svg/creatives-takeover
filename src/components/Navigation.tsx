@@ -240,7 +240,7 @@ const Navigation = () => {
                             <p>{item.tooltip}</p>
                           </TooltipContent>
                         </Tooltip>
-                        <DropdownMenuContent align="start" className="w-80 md:w-72 sm:w-64 max-w-[calc(100vw-2rem)]">
+                        <DropdownMenuContent align="start" className="w-80 md:w-72 sm:w-64 max-w-[calc(100vw-2rem)] max-h-[min(520px,80vh)] overflow-y-auto overscroll-contain">
                           <DropdownMenuLabel>Startup Development Cycle</DropdownMenuLabel>
                           <DropdownMenuSeparator />
                           {bizMapSubmenu.map((subItem, idx) => {
