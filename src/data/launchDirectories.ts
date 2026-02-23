@@ -61,7 +61,7 @@ export const LAUNCH_DIRECTORIES: LaunchDirectory[] = [
     costType: 'free',
     category: 'aggregator',
     description:
-      'Peer-driven product launch platform where makers upvote each other's launches. Smaller audience than Product Hunt but higher reciprocity.',
+      "Peer-driven product launch platform where makers upvote each other's launches. Smaller audience than Product Hunt but higher reciprocity.",
     recommendation:
       'Best used alongside Product Hunt — cross-promote on the same day to stack discovery.',
     bestFor: 'Indie makers, side projects, SaaS tools',
@@ -171,7 +171,7 @@ export const LAUNCH_DIRECTORIES: LaunchDirectory[] = [
     description:
       'Global ranking directory of startups. Listing improves web presence and is indexed by search engines.',
     recommendation:
-      'Submit for the SEO backlink — it won't drive traffic directly but helps your domain authority.',
+      "Submit for the SEO backlink — it won't drive traffic directly but helps your domain authority.",
     bestFor: 'Any startup looking to improve SEO presence',
   },
   {
@@ -183,7 +183,7 @@ export const LAUNCH_DIRECTORIES: LaunchDirectory[] = [
     description:
       'Leading media and directory for European startups. Submission can lead to editorial coverage.',
     recommendation:
-      'If you're based in Europe or targeting the EU market, this is one of the most credible platforms to be listed on.',
+      "If you're based in Europe or targeting the EU market, this is one of the most credible platforms to be listed on.",
     bestFor: 'European startups, B2B SaaS, fintech, healthtech',
   },
   {
@@ -207,7 +207,7 @@ export const LAUNCH_DIRECTORIES: LaunchDirectory[] = [
     costType: 'free',
     category: 'community',
     description:
-      'The most influential tech community in the world. A "Show HN" post lets you share what you've built directly with engineers, founders, and investors.',
+      "The most influential tech community in the world. A \"Show HN\" post lets you share what you've built directly with engineers, founders, and investors.",
     recommendation:
       'Write a one-sentence "Show HN: [what it is]" title, engage every comment personally, and post between 9–11 AM ET on a weekday.',
     bestFor: 'Dev tools, technical SaaS, open-source, APIs',
@@ -245,7 +245,7 @@ export const LAUNCH_DIRECTORIES: LaunchDirectory[] = [
     description:
       'Developer community and blogging platform. Writing a detailed "how I built X" post around your launch drives qualified developer traffic.',
     recommendation:
-      'Publish a technical deep-dive or tutorial that naturally introduces your product — hard pitches don't work here.',
+      "Publish a technical deep-dive or tutorial that naturally introduces your product — hard pitches don't work here.",
     bestFor: 'Developer tools, open-source, APIs, technical SaaS',
   },
   {
@@ -271,7 +271,7 @@ export const LAUNCH_DIRECTORIES: LaunchDirectory[] = [
     description:
       'Multiple subreddits cover different aspects of building a startup. r/startups for building stories, r/SaaS for product launches, r/entrepreneur for general founder topics.',
     recommendation:
-      'Lead with value — share what you learned, not just what you built. Read each subreddit's rules before posting. Avoid overt promotion.',
+      "Lead with value — share what you learned, not just what you built. Read each subreddit's rules before posting. Avoid overt promotion.",
     bestFor: 'B2B SaaS, bootstrapped startups, founder stories',
   },
   {
