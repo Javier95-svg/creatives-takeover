@@ -95,7 +95,7 @@ export const BIZMAP_TOOLS: BizMapToolDefinition[] = [
   {
     id: 'launch-directories',
     name: 'Directories',
-    route: '/go-to-market?tab=directories',
+    route: '/directories',
     stage: 'LAUNCH',
     description: 'Find the best platforms to submit and promote your product launch.',
     icon: Compass,

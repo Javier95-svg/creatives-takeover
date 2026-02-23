@@ -87,6 +87,7 @@ const ValidateJourneyPage = lazy(() => import("./pages/ValidateJourneyPage"));
 const TechStackPage = lazy(() => import("./pages/TechStackPage"));
 const MVPBuilderBetaPage = lazy(() => import("./pages/MVPBuilderBetaPage"));
 const GTMStrategistPage = lazy(() => import("./pages/GTMStrategistPage"));
+const DirectoriesPage = lazy(() => import("./pages/DirectoriesPage"));
 const StageRouteGuard = lazy(() => import("./components/bizmap/StageRouteGuard"));
 const FocusFunnel = lazy(() => import("./pages/FocusFunnel"));
 const CoreMetricsPage = lazy(() => import("./pages/CoreMetricsPage"));
@@ -186,6 +187,7 @@ function App() {
                         <Route path="/validate" element={<ValidateJourney />} />
                         <Route path="/mvp-builder" element={<StageRouteGuard route="/mvp-builder"><MVPBuilderBetaPage /></StageRouteGuard>} />
                         <Route path="/go-to-market" element={<StageRouteGuard route="/go-to-market"><GTMStrategistPage /></StageRouteGuard>} />
+                        <Route path="/directories" element={<StageRouteGuard route="/go-to-market"><DirectoriesPage /></StageRouteGuard>} />
                         <Route path="/client-acquisition" element={<Navigate to="/go-to-market" replace />} />
 
                         <Route path="/auth" element={<AuthEntryRedirect />} />
