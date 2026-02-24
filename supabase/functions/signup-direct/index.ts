@@ -52,6 +52,17 @@ const defaultAllowedOrigins = [
 ].filter((origin): origin is string => !!origin);
 
 const allowedOrigins = configuredOrigins.length > 0 ? configuredOrigins : defaultAllowedOrigins;
+const allowedOriginHostnames = new Set(
+  allowedOrigins
+    .map((origin) => {
+      try {
+        return new URL(origin).hostname.toLowerCase();
+      } catch {
+        return null;
+      }
+    })
+    .filter((hostname): hostname is string => !!hostname),
+);
 
 function jsonResponse(body: SignupDirectResponse): Response {
   return new Response(JSON.stringify(body), {
@@ -89,7 +100,26 @@ function getRequestOrigin(req: Request): string | null {
 
 function isAllowedOrigin(origin: string | null): boolean {
   if (!origin) return false;
-  return allowedOrigins.includes(origin);
+
+  if (allowedOrigins.includes(origin)) return true;
+
+  try {
+    const hostname = new URL(origin).hostname.toLowerCase();
+
+    if (allowedOriginHostnames.has(hostname)) return true;
+
+    if (hostname === "creatives-takeover.com" || hostname.endsWith(".creatives-takeover.com")) {
+      return true;
+    }
+
+    if (hostname === "localhost" || hostname === "127.0.0.1") {
+      return true;
+    }
+
+    return false;
+  } catch {
+    return false;
+  }
 }
 
 function isRateLimited(key: string, limit: number): boolean {
@@ -156,7 +186,7 @@ serve(async (req: Request): Promise<Response> => {
   let payload: SignupDirectBody;
   try {
     payload = await req.json();
-  } catch (error) {
+  } catch {
     return jsonResponse({ ok: false, code: "INVALID_JSON", error: "Invalid request body." });
   }
 
