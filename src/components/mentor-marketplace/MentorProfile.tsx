@@ -70,9 +70,9 @@ export const MentorProfile = ({ mentor, onBookClick }: MentorProfileProps) => {
     if (mentor.name.toLowerCase().includes('dikshit') && mentor.name.toLowerCase().includes('kukreja')) {
       return 'India';
     }
-    // Special case: Delraj Singh Uppal is from India
+    // Special case: Delraj Singh Uppal is from United Kingdom
     if (mentor.name.toLowerCase().includes('delraj') && mentor.name.toLowerCase().includes('uppal')) {
-      return 'India';
+      return 'United Kingdom';
     }
     // Special case: Ceren Aslan is from Turkey
     if (mentor.name.toLowerCase().includes('ceren') && mentor.name.toLowerCase().includes('aslan')) {
