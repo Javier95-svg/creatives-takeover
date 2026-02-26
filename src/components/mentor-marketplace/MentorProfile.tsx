@@ -97,6 +97,10 @@ export const MentorProfile = ({ mentor, onBookClick }: MentorProfileProps) => {
     ) {
       return 'Brazil';
     }
+    // Special case: Matias Pancorvo is from Argentina
+    if (mentor.name.toLowerCase().includes('matias') && mentor.name.toLowerCase().includes('pancorvo')) {
+      return 'Argentina';
+    }
     // Special case: Karolina Żurawska is from Poland
     if (mentor.name.toLowerCase().includes('karolina') && mentor.name.toLowerCase().includes('urawska')) {
       return 'Poland';
