@@ -41,6 +41,8 @@ export const SAMUEL_STARKMAN_USERNAME = 'samuelstarkman'; // Username based on f
 
 // Nic M Rayce's email constant
 export const NIC_M_RAYCE_EMAIL = 'nicmrayce@gmail.com';
+export const SOPHIA_LOPEZ_PIMENTA_EMAIL = 'lopezpimenta@gmail.com';
+export const SOPHIA_LOPEZ_PIMENTA_USER_ID = '50695a54-30c6-4b57-969e-b2de733bcd73';
 
 // Karolina Żurawska's email constant
 export const KAROLINA_ZURAWSKA_EMAIL = 'kz.zurawska@gmail.com';
@@ -108,6 +110,13 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
     if (email.toLowerCase() === NIC_M_RAYCE_EMAIL.toLowerCase()) {
       logInfo('getUserIdByEmail: Looking up Nic M Rayce user ID', { email });
       // Will use RPC function or profile lookup below
+    }
+
+    if (email.toLowerCase() === SOPHIA_LOPEZ_PIMENTA_EMAIL.toLowerCase()) {
+      logInfo('getUserIdByEmail: Using known Sophia Lopez Pimenta user ID', {
+        userId: SOPHIA_LOPEZ_PIMENTA_USER_ID
+      });
+      return SOPHIA_LOPEZ_PIMENTA_USER_ID;
     }
 
     try {
@@ -201,14 +210,22 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
       return null;
     }
 
-    if (mentor.user_id && mentor.user_id.trim() !== '') {
-      return mentor.user_id;
-    }
-
     const mentorName = mentor.name?.trim();
     if (!mentorName) {
       logWarn('resolveMentorUserId: Missing mentor name');
       return null;
+    }
+
+    const mentorNameNormalized = normalizeIdentity(mentorName);
+    if (
+      mentorNameNormalized.includes('sophia') &&
+      (mentorNameNormalized.includes('pimenta') || mentorNameNormalized.includes('lopez'))
+    ) {
+      return SOPHIA_LOPEZ_PIMENTA_USER_ID;
+    }
+
+    if (mentor.user_id && mentor.user_id.trim() !== '') {
+      return mentor.user_id;
     }
 
     const mentorTokens = tokenizeIdentity(mentorName);
@@ -220,7 +237,6 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
     const firstToken = mentorTokens[0];
     const lastToken = mentorTokens[mentorTokens.length - 1];
     const searchTokens = Array.from(new Set([firstToken, lastToken].filter(Boolean)));
-    const mentorNameNormalized = normalizeIdentity(mentorName);
 
     try {
       const orClauses = searchTokens.flatMap((token) => [
