@@ -30,6 +30,13 @@ type ParticipantProfile = {
   mentor_slug: string | null;
 };
 
+const SOPHIA_LOPEZ_PIMENTA_USER_ID = '50695a54-30c6-4b57-969e-b2de733bcd73';
+
+const isSophiaMentorName = (name: string | null | undefined): boolean => {
+  const normalized = (name || '').toLowerCase();
+  return normalized.includes('sophia') && (normalized.includes('pimenta') || normalized.includes('lopez'));
+};
+
 export const MessagingInterface = ({ initialConversationId }: MessagingInterfaceProps) => {
   const { user } = useAuth();
   const deviceType = useDeviceType();
@@ -351,28 +358,69 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
         if (error) throw error;
         if (mentorError) throw mentorError;
 
-        if (data) {
-          const mentorMetaByUserId = new Map<string, { slug: string; picture: string | null }>();
-          (mentorData || []).forEach((mentor) => {
-            if (!mentor.user_id || !mentor.name) return;
-            mentorMetaByUserId.set(mentor.user_id, {
-              slug: generateMentorSlug(mentor.name),
-              picture: mentor.picture || null
-            });
-          });
+        let mergedMentorData = mentorData || [];
 
-          const newProfiles: Record<string, ParticipantProfile> = {};
-          data.forEach(profile => {
-            const mentorMeta = mentorMetaByUserId.get(profile.id);
-            newProfiles[profile.id] = {
-              full_name: profile.full_name || 'Unknown User',
-              // Use mentor profile picture whenever available to keep /messages consistent with mentor pages.
-              avatar_url: mentorMeta?.picture || profile.avatar_url,
-              username: profile.username || null,
-              mentor_slug: mentorMeta?.slug || null
-            };
-          });
+        // Fallback for mentors whose user_id is not linked yet (e.g. Sophia).
+        if (idsToFetch.includes(SOPHIA_LOPEZ_PIMENTA_USER_ID)) {
+          const hasSophiaByUserId = mergedMentorData.some(
+            (mentor) => mentor.user_id === SOPHIA_LOPEZ_PIMENTA_USER_ID
+          );
 
+          if (!hasSophiaByUserId) {
+            const { data: sophiaMentorData, error: sophiaMentorError } = await supabase
+              .from('mentors')
+              .select('user_id, name, picture')
+              .eq('is_active', true)
+              .ilike('name', '%sophia%')
+              .or('name.ilike.%pimenta%,name.ilike.%lopez%')
+              .limit(1);
+
+            if (sophiaMentorError) throw sophiaMentorError;
+
+            if (sophiaMentorData?.length) {
+              mergedMentorData = [...mergedMentorData, ...sophiaMentorData];
+            }
+          }
+        }
+
+        const mentorMetaByUserId = new Map<string, { name: string; slug: string; picture: string | null }>();
+        mergedMentorData.forEach((mentor) => {
+          if (!mentor.name) return;
+
+          const mentorUserId =
+            mentor.user_id ||
+            (isSophiaMentorName(mentor.name) ? SOPHIA_LOPEZ_PIMENTA_USER_ID : null);
+
+          if (!mentorUserId) return;
+
+          mentorMetaByUserId.set(mentorUserId, {
+            name: mentor.name,
+            slug: generateMentorSlug(mentor.name),
+            picture: mentor.picture || null
+          });
+        });
+
+        const profileById = new Map(
+          (data || []).map((profile) => [profile.id, profile])
+        );
+
+        const newProfiles: Record<string, ParticipantProfile> = {};
+        idsToFetch.forEach((participantId) => {
+          const profile = profileById.get(participantId);
+          const mentorMeta = mentorMetaByUserId.get(participantId);
+
+          if (!profile && !mentorMeta) return;
+
+          newProfiles[participantId] = {
+            full_name: profile?.full_name || mentorMeta?.name || 'Unknown User',
+            // Keep avatar aligned with mentor banner picture whenever available.
+            avatar_url: mentorMeta?.picture || profile?.avatar_url || null,
+            username: profile?.username || null,
+            mentor_slug: mentorMeta?.slug || null
+          };
+        });
+
+        if (Object.keys(newProfiles).length > 0) {
           setParticipantProfiles(prev => ({ ...prev, ...newProfiles }));
         }
       } catch (error) {
