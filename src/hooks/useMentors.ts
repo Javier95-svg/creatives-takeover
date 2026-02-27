@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { Mentor, AvailabilitySlot, MentorCurrency } from '@/types/mentor';
 import { generateMentorSlug } from '@/utils/mentorSlug';
+import { sortMentorsAlphabetically } from '@/utils/mentorSort';
 
 export interface CreateMentorInput {
   name: string;
@@ -126,7 +127,7 @@ export const useMentors = () => {
 
       if (error) throw error;
 
-      const result = (data || []).map(convertToMentor);
+      const result = sortMentorsAlphabetically((data || []).map(convertToMentor));
       return result;
     } catch (error: any) {
       console.error('Error fetching mentors:', {

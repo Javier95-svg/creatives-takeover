@@ -13,6 +13,7 @@ import { Mentor } from "@/types/mentor";
 import { useAuth } from "@/contexts/AuthContext";
 import { useMentors } from "@/hooks/useMentors";
 import { Search, ArrowLeft, Loader2, Users } from "lucide-react";
+import { sortMentorsAlphabetically } from "@/utils/mentorSort";
 
 const MentorDiscover = () => {
   const [searchParams] = useSearchParams();
@@ -131,7 +132,7 @@ const MentorDiscover = () => {
         break;
       case "alphabetical":
       default:
-        result = result.sort((a, b) => a.name.localeCompare(b.name));
+        result = sortMentorsAlphabetically(result);
         break;
     }
 

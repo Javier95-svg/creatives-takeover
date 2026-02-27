@@ -14,6 +14,7 @@ import { Users, Loader2, Search } from "lucide-react";
 import { Mentor } from "@/types/mentor";
 import { useMentors } from "@/hooks/useMentors";
 import { useAuth } from "@/contexts/AuthContext";
+import { sortMentorsAlphabetically } from "@/utils/mentorSort";
 
 import {
   Pagination,
@@ -206,7 +207,7 @@ const MentorMarketplaceHub = () => {
       case "alphabetical":
       default:
         // Sort alphabetically by name (A-Z)
-        result = result.sort((a, b) => a.name.localeCompare(b.name));
+        result = sortMentorsAlphabetically(result);
         break;
     }
 
