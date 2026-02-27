@@ -9,11 +9,17 @@ import { cn } from '@/lib/utils';
 import { AdvancedFieldsSection } from '@/components/pmf/AdvancedFieldsSection';
 
 export interface ICPInputFormData {
+  // Core required — 9 steps
   problemStatement: string;
+  painCost: string;
   targetAudience: string;
+  currentBehavior: string;
   solutionDifferentiator: string;
+  adoptionBarrier: string;
   founderEdge: string;
+  marketTiming: string;
   nextGoals: string;
+  // Advanced optional
   mainCompetitors: string;
   industry: string;
   revenueModel: string;
@@ -39,45 +45,89 @@ const REVENUE_MODELS = [
   'Licensing', 'Agency/Service', 'Consulting', 'Other',
 ];
 
-const STEPS = [
+const STEPS: Array<{
+  number: string;
+  field: keyof ICPInputFormData;
+  question: string;
+  placeholder: string;
+  hint: string;
+  analyticalObjective: string;
+}> = [
   {
     number: '01',
-    field: 'problemStatement' as keyof ICPInputFormData,
+    field: 'problemStatement',
     question: 'What specific problem are you solving?',
-    placeholder: "What painful gap or frustration does your startup address? Who experiences it, how often, and what does it cost them (time, money, stress)?",
-    hint: 'Be specific about the pain and who feels it most.',
+    placeholder: "Describe the painful gap or frustration your startup addresses. Who experiences it, how often, and in what context?",
+    hint: 'Be precise. Vague problems produce vague analyses.',
+    analyticalObjective: 'Defines the problem scope and pain specificity',
   },
   {
     number: '02',
-    field: 'targetAudience' as keyof ICPInputFormData,
-    question: 'Who are you solving it for?',
-    placeholder: "Describe the specific person or group you're building for. Include their role, context, key traits, and why this problem matters most to them.",
-    hint: 'The more specific, the better the analysis.',
+    field: 'painCost',
+    question: 'What does this problem actually cost your customer?',
+    placeholder: "Quantify the cost: hours lost per week, revenue missed, money wasted, stress caused, or opportunities blocked. e.g. 'A mid-market ops manager spends 6 hours/week on manual reconciliation — roughly $3K/month in wasted labor.'",
+    hint: 'Quantifying pain reveals urgency, anchors pricing, and validates opportunity size.',
+    analyticalObjective: 'Anchors pain intensity score and pricing ceiling',
   },
   {
     number: '03',
-    field: 'solutionDifferentiator' as keyof ICPInputFormData,
-    question: 'What makes your solution different and more efficient?',
-    placeholder: "How does your solution work differently from what exists today? What makes it faster, cheaper, simpler, or more effective than the current alternatives?",
-    hint: 'Focus on what makes you 10x better, not just slightly better.',
+    field: 'targetAudience',
+    question: 'Who exactly are you solving it for?',
+    placeholder: "Describe the specific person: their role, company size, industry, daily context, and why this problem hits them hardest. The more precise, the sharper the profile.",
+    hint: 'One segment done well beats five segments done poorly.',
+    analyticalObjective: 'Defines ICP boundaries and segment specificity',
   },
   {
     number: '04',
-    field: 'founderEdge' as keyof ICPInputFormData,
-    question: 'Why are you the right person to build this?',
-    placeholder: "What gives you an edge here? Domain expertise, lived experience with this problem, a unique network, proprietary insight, or a background that others in this space don't have.",
-    hint: 'Investors and customers care about founder-market fit.',
+    field: 'currentBehavior',
+    question: "What does your target customer currently do instead?",
+    placeholder: "What is their actual workaround today? e.g. 'They copy-paste between Excel and email', 'They hire a $5K/month consultant', 'They just don't do it and accept the loss.' Be behavioral, not just competitive.",
+    hint: "Behavioral substitutes reveal switching cost, inertia, and where your wedge is.",
+    analyticalObjective: 'Maps real switching cost and differentiation gap',
   },
   {
     number: '05',
-    field: 'nextGoals' as keyof ICPInputFormData,
+    field: 'solutionDifferentiator',
+    question: 'What makes your solution different and more efficient?',
+    placeholder: "How does your approach work differently from what exists? What makes it faster, cheaper, simpler, or more effective — and why is that hard to replicate?",
+    hint: 'Focus on structural advantages, not just feature lists.',
+    analyticalObjective: 'Surfaces differentiation depth and defensibility',
+  },
+  {
+    number: '06',
+    field: 'adoptionBarrier',
+    question: "What's the most credible reason your ideal customer would not buy?",
+    placeholder: "What objection, fear, or friction would stop your best-fit customer from switching? e.g. 'They've tried similar tools and failed', 'Budget is controlled by IT, not the team', 'They don't yet believe the ROI.'",
+    hint: 'Honest objection mapping sharpens positioning and de-risks go-to-market.',
+    analyticalObjective: 'Identifies adoption friction and positioning constraints',
+  },
+  {
+    number: '07',
+    field: 'founderEdge',
+    question: 'Why are you the right person to build this?',
+    placeholder: "What gives you an unfair advantage here? Domain expertise, lived experience with this problem, proprietary data or relationships, a network others can't access, or a background that gives you insight competitors lack.",
+    hint: 'Founder-market fit is a signal of speed, trust, and survivability.',
+    analyticalObjective: 'Assesses founder-market fit and execution credibility',
+  },
+  {
+    number: '08',
+    field: 'marketTiming',
+    question: 'Why now? What has changed to create this window?',
+    placeholder: "What shift — in technology, regulation, behavior, infrastructure, or culture — has made this problem newly solvable or newly urgent? e.g. 'LLMs made this 10x cheaper to build', 'Remote work created this category', 'New regulation forces compliance by Q3.'",
+    hint: 'Timing is a strategic variable. Great ideas at the wrong time fail.',
+    analyticalObjective: 'Evaluates market readiness, timing risk, and opportunity window',
+  },
+  {
+    number: '09',
+    field: 'nextGoals',
     question: 'What do you want to achieve next?',
-    placeholder: "e.g. Get my first 10 paying customers, validate PMF in 60 days, raise a pre-seed round, launch publicly on Product Hunt",
-    hint: 'Be specific. These goals will shape your action plan.',
+    placeholder: "e.g. Get my first 10 paying customers in 60 days, validate PMF before fundraising, reach $10K MRR by Q3, launch on Product Hunt next month.",
+    hint: 'Specific goals shape the action plan your analysis will generate.',
+    analyticalObjective: 'Aligns action plan to your immediate strategic horizon',
   },
 ];
 
-// Animates when step changes — force re-mount
+// Animates when step changes
 const StepView: React.FC<{ children: React.ReactNode; stepKey: number }> = ({ children, stepKey }) => {
   const [visible, setVisible] = useState(false);
   useEffect(() => {
@@ -100,9 +150,13 @@ const ICPInputForm: React.FC<ICPInputFormProps> = ({
 }) => {
   const [formData, setFormData] = useState<ICPInputFormData>({
     problemStatement: initialData?.problemStatement || '',
+    painCost: initialData?.painCost || '',
     targetAudience: initialData?.targetAudience || '',
+    currentBehavior: initialData?.currentBehavior || '',
     solutionDifferentiator: initialData?.solutionDifferentiator || '',
+    adoptionBarrier: initialData?.adoptionBarrier || '',
     founderEdge: initialData?.founderEdge || '',
+    marketTiming: initialData?.marketTiming || '',
     nextGoals: initialData?.nextGoals || '',
     mainCompetitors: initialData?.mainCompetitors || '',
     industry: initialData?.industry || '',
@@ -110,7 +164,7 @@ const ICPInputForm: React.FC<ICPInputFormProps> = ({
     currentTraction: initialData?.currentTraction || '',
   });
 
-  // 0–4 = steps, 5 = review
+  // 0–8 = steps, 9 = review
   const [currentStep, setCurrentStep] = useState(0);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -120,7 +174,6 @@ const ICPInputForm: React.FC<ICPInputFormProps> = ({
   const currentValue = step ? (formData[step.field] as string) : '';
   const canContinue = currentValue.trim().length > 0;
 
-  // Auto-focus textarea on step change
   useEffect(() => {
     if (!isReview) {
       const t = setTimeout(() => textareaRef.current?.focus(), 550);
@@ -144,9 +197,9 @@ const ICPInputForm: React.FC<ICPInputFormProps> = ({
 
   const handleSubmit = () => onSubmit(formData);
 
-  // ── Step Indicator ──────────────────────────────────────────
+  // ── Step Indicator ─────────────────────────────────────────────
   const StepIndicator = () => (
-    <div className="flex items-center justify-center gap-2 mb-8">
+    <div className="flex items-center justify-center gap-1 mb-8">
       {STEPS.map((s, i) => {
         const isDone = i < currentStep || isReview;
         const isActive = i === currentStep && !isReview;
@@ -157,9 +210,9 @@ const ICPInputForm: React.FC<ICPInputFormProps> = ({
               type="button"
               onClick={() => (isDone || isActive) && editStep(i)}
               className={cn(
-                'relative w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300',
+                'relative w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-bold transition-all duration-300 shrink-0',
                 isDone && hasValue
-                  ? 'bg-primary text-primary-foreground cursor-pointer shadow-md'
+                  ? 'bg-primary text-primary-foreground cursor-pointer shadow-sm'
                   : isActive
                   ? 'bg-primary/10 text-primary border-2 border-primary ring-2 ring-primary/20 cursor-default'
                   : 'bg-muted text-muted-foreground cursor-default',
@@ -167,7 +220,7 @@ const ICPInputForm: React.FC<ICPInputFormProps> = ({
               title={isDone ? `Edit: ${s.question}` : undefined}
             >
               {isDone && hasValue ? (
-                <CheckCircle2 className="w-4 h-4" />
+                <CheckCircle2 className="w-3.5 h-3.5" />
               ) : (
                 s.number
               )}
@@ -175,7 +228,7 @@ const ICPInputForm: React.FC<ICPInputFormProps> = ({
             {i < totalSteps - 1 && (
               <div
                 className={cn(
-                  'h-0.5 flex-1 max-w-[2rem] rounded-full transition-all duration-500',
+                  'h-0.5 flex-1 max-w-[1.25rem] rounded-full transition-all duration-500',
                   i < currentStep ? 'bg-primary' : 'bg-muted',
                 )}
               />
@@ -186,7 +239,7 @@ const ICPInputForm: React.FC<ICPInputFormProps> = ({
     </div>
   );
 
-  // ── Review screen ────────────────────────────────────────────
+  // ── Review screen ───────────────────────────────────────────────
   if (isReview) {
     return (
       <div className="space-y-6">
@@ -196,14 +249,11 @@ const ICPInputForm: React.FC<ICPInputFormProps> = ({
             <div className="text-center space-y-1 mb-6">
               <p className="text-xs font-mono text-primary/60 uppercase tracking-widest">Review</p>
               <h2 className="text-xl font-semibold">Your startup foundation</h2>
-              <p className="text-sm text-muted-foreground">Review your answers, then generate your ICP analysis.</p>
+              <p className="text-sm text-muted-foreground">Review all answers, then generate your ICP analysis.</p>
             </div>
 
             {STEPS.map((s, i) => (
-              <Card
-                key={i}
-                className="hover-lift border-border/60 group"
-              >
+              <Card key={i} className="hover-lift border-border/60 group">
                 <CardContent className="pt-4 pb-4">
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-start gap-3 flex-1 min-w-0">
@@ -237,12 +287,12 @@ const ICPInputForm: React.FC<ICPInputFormProps> = ({
             >
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="mainCompetitors">Main Competitors</Label>
+                  <Label htmlFor="mainCompetitors">Named Competitors</Label>
                   <Textarea
                     id="mainCompetitors"
                     value={formData.mainCompetitors}
                     onChange={(e) => setFormData(prev => ({ ...prev, mainCompetitors: e.target.value }))}
-                    placeholder="List your main competitors and what they offer."
+                    placeholder="List specific competitor products or companies, and what they offer."
                     rows={3}
                     className="resize-none"
                   />
@@ -273,7 +323,7 @@ const ICPInputForm: React.FC<ICPInputFormProps> = ({
                     id="currentTraction"
                     value={formData.currentTraction}
                     onChange={(e) => setFormData(prev => ({ ...prev, currentTraction: e.target.value }))}
-                    placeholder="Any early signals? Waitlist sign-ups, pilot users, interviews…"
+                    placeholder="Any early signals? Waitlist sign-ups, pilot users, paid customers, interviews…"
                     rows={3}
                     className="resize-none"
                   />
@@ -306,7 +356,7 @@ const ICPInputForm: React.FC<ICPInputFormProps> = ({
     );
   }
 
-  // ── Step screen ──────────────────────────────────────────────
+  // ── Step screen ─────────────────────────────────────────────────
   return (
     <div className="space-y-6">
       <StepIndicator />
@@ -321,6 +371,12 @@ const ICPInputForm: React.FC<ICPInputFormProps> = ({
             </div>
             <h2 className="text-xl md:text-2xl font-semibold leading-snug">{step.question}</h2>
             <p className="text-sm text-muted-foreground">{step.hint}</p>
+          </div>
+
+          {/* Analytical objective badge */}
+          <div className="inline-flex items-center gap-1.5 text-xs text-primary/70 bg-primary/5 border border-primary/10 rounded-full px-3 py-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-primary/40 shrink-0" />
+            {step.analyticalObjective}
           </div>
 
           {/* Textarea */}

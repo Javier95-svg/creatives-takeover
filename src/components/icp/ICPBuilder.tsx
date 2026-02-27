@@ -151,13 +151,17 @@ const ICPBuilder: React.FC = () => {
 
       const descriptionParts: string[] = [];
       descriptionParts.push(`Problem: ${formData.problemStatement}`);
+      descriptionParts.push(`Cost of Problem to Customer: ${formData.painCost}`);
       descriptionParts.push(`Target Customer: ${formData.targetAudience}`);
+      descriptionParts.push(`Current Customer Behavior / Workaround: ${formData.currentBehavior}`);
       descriptionParts.push(`Solution Differentiator: ${formData.solutionDifferentiator}`);
+      descriptionParts.push(`Adoption Barrier / Main Objection: ${formData.adoptionBarrier}`);
       descriptionParts.push(`Founder Edge: ${formData.founderEdge}`);
+      descriptionParts.push(`Market Timing / Why Now: ${formData.marketTiming}`);
       descriptionParts.push(`Next Goals: ${formData.nextGoals}`);
       if (formData.industry) descriptionParts.push(`Industry: ${formData.industry}`);
       if (formData.revenueModel) descriptionParts.push(`Revenue Model: ${formData.revenueModel}`);
-      if (formData.mainCompetitors) descriptionParts.push(`Main Competitors: ${formData.mainCompetitors}`);
+      if (formData.mainCompetitors) descriptionParts.push(`Named Competitors: ${formData.mainCompetitors}`);
       if (formData.currentTraction) descriptionParts.push(`Current Traction: ${formData.currentTraction}`);
 
       const businessDescription = descriptionParts.join('\n\n');
