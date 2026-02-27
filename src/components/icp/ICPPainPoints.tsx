@@ -73,7 +73,8 @@ const ICPPainPoints: React.FC<ICPPainPointsProps> = ({ painPoints }) => {
         {sorted.map((pain, index) => (
           <Card
             key={index}
-            className={cn("border-l-4", severityBorderColors[pain.severity])}
+            className={cn("border-l-4 hover-lift animate-fade-in-up", severityBorderColors[pain.severity])}
+            style={{ animationDelay: `${index * 80}ms`, animationFillMode: 'both' }}
           >
             <CardContent className="pt-6 space-y-4">
               <div className="flex items-start justify-between gap-3">

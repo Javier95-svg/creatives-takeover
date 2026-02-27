@@ -46,7 +46,7 @@ const ICPNicheProfile: React.FC<ICPNicheProfileProps> = ({ profile }) => {
   return (
     <div className="space-y-6">
       {/* Niche Overview */}
-      <Card className="border-2 border-primary/20 bg-primary/5">
+      <Card className="border-2 border-primary/20 bg-primary/5 animate-fade-in-up" style={{ animationDelay: '0ms', animationFillMode: 'both' }}>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Users className="w-5 h-5 text-primary" />
@@ -71,7 +71,7 @@ const ICPNicheProfile: React.FC<ICPNicheProfileProps> = ({ profile }) => {
       </Card>
 
       {/* Demographics */}
-      <Card>
+      <Card className="hover-lift animate-fade-in-up" style={{ animationDelay: '80ms', animationFillMode: 'both' }}>
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
             <MapPin className="w-4 h-4 text-primary" />
@@ -93,7 +93,7 @@ const ICPNicheProfile: React.FC<ICPNicheProfileProps> = ({ profile }) => {
       </Card>
 
       {/* Psychographics */}
-      <Card>
+      <Card className="hover-lift animate-fade-in-up" style={{ animationDelay: '160ms', animationFillMode: 'both' }}>
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
             <Heart className="w-4 h-4 text-primary" />
@@ -142,7 +142,7 @@ const ICPNicheProfile: React.FC<ICPNicheProfileProps> = ({ profile }) => {
       </Card>
 
       {/* Buying Behavior */}
-      <Card>
+      <Card className="hover-lift animate-fade-in-up" style={{ animationDelay: '240ms', animationFillMode: 'both' }}>
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
             <ShoppingBag className="w-4 h-4 text-primary" />
@@ -178,7 +178,7 @@ const ICPNicheProfile: React.FC<ICPNicheProfileProps> = ({ profile }) => {
       </Card>
 
       {/* Where to Find Them */}
-      <Card>
+      <Card className="hover-lift animate-fade-in-up" style={{ animationDelay: '320ms', animationFillMode: 'both' }}>
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
             <Globe className="w-4 h-4 text-primary" />

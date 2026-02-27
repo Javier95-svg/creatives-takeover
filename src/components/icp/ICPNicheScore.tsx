@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
@@ -31,6 +31,28 @@ interface ICPNicheScoreProps {
 }
 
 const ICPNicheScore: React.FC<ICPNicheScoreProps> = ({ score, actionPlan = [], nextGoals }) => {
+  // Animated counter: ticks from 0 → score.overall
+  const [displayScore, setDisplayScore] = useState(0);
+  const [barsVisible, setBarsVisible] = useState(false);
+
+  useEffect(() => {
+    setDisplayScore(0);
+    setBarsVisible(false);
+    let current = 0;
+    const target = score.overall;
+    const steps = 40;
+    const increment = target / steps;
+    const interval = setInterval(() => {
+      current = Math.min(current + increment, target);
+      setDisplayScore(Math.round(current));
+      if (current >= target) {
+        clearInterval(interval);
+        setBarsVisible(true);
+      }
+    }, 25);
+    return () => clearInterval(interval);
+  }, [score.overall]);
+
   const scoreColor =
     score.overall >= 70 ? 'text-green-600' :
     score.overall >= 50 ? 'text-yellow-600' :
@@ -73,11 +95,11 @@ const ICPNicheScore: React.FC<ICPNicheScoreProps> = ({ score, actionPlan = [], n
           <div className="flex flex-col items-center justify-center space-y-4">
             <div className="relative">
               <div className={cn(
-                "w-32 h-32 rounded-full flex items-center justify-center text-4xl font-bold",
+                "w-32 h-32 rounded-full flex items-center justify-center text-4xl font-bold transition-all duration-300",
                 scoreBgColor,
                 "text-white"
               )}>
-                {score.overall}
+                {displayScore}
               </div>
             </div>
             <Badge className={cn("text-sm px-4 py-1", verdictBadgeColor)}>
@@ -104,7 +126,11 @@ const ICPNicheScore: React.FC<ICPNicheScoreProps> = ({ score, actionPlan = [], n
               'text-red-600';
 
             return (
-              <div key={index} className="space-y-2">
+              <div
+                key={index}
+                className="space-y-2 animate-fade-in-up"
+                style={{ animationDelay: `${index * 100}ms`, animationFillMode: 'both' }}
+              >
                 <div className="flex items-center justify-between text-sm">
                   <div className="flex items-center gap-2">
                     <Icon className="w-4 h-4 text-muted-foreground" />
@@ -117,7 +143,11 @@ const ICPNicheScore: React.FC<ICPNicheScoreProps> = ({ score, actionPlan = [], n
                     {item.value}/100
                   </span>
                 </div>
-                <Progress value={item.value} className="h-2" />
+                <Progress
+                  value={barsVisible ? item.value : 0}
+                  className="h-2 transition-all duration-700"
+                  style={{ transitionDelay: `${index * 120}ms` }}
+                />
               </div>
             );
           })}

@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, Target, Users, AlertTriangle, Megaphone, BarChart3, FileText } from 'lucide-react';
+import { Loader2, Target, Users, AlertTriangle, Megaphone, BarChart3, FileText, CheckCircle2, Lock } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCredits } from '@/hooks/useCredits';
@@ -96,6 +97,13 @@ interface ICPAnalysis {
   }>;
 }
 
+const RESULT_TABS = [
+  { value: 'profile', icon: Users, label: 'Niche Profile', short: 'Niche' },
+  { value: 'painpoints', icon: AlertTriangle, label: 'Pain Points', short: 'Pains' },
+  { value: 'positioning', icon: Megaphone, label: 'Positioning', short: 'Position' },
+  { value: 'report', icon: BarChart3, label: 'Full Report', short: 'Report' },
+];
+
 const ICPBuilder: React.FC = () => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -109,6 +117,9 @@ const ICPBuilder: React.FC = () => {
   const [analysis, setAnalysis] = useState<ICPAnalysis | null>(null);
   const [activeTab, setActiveTab] = useState('input');
   const [lastGoals, setLastGoals] = useState<string>('');
+  const [analysisKey, setAnalysisKey] = useState(0);
+
+  const hasAnalysis = analysis !== null;
 
   const handleFormSubmit = async (formData: ICPInputFormData) => {
     if (!user) {
@@ -144,18 +155,10 @@ const ICPBuilder: React.FC = () => {
       descriptionParts.push(`Solution Differentiator: ${formData.solutionDifferentiator}`);
       descriptionParts.push(`Founder Edge: ${formData.founderEdge}`);
       descriptionParts.push(`Next Goals: ${formData.nextGoals}`);
-      if (formData.industry) {
-        descriptionParts.push(`Industry: ${formData.industry}`);
-      }
-      if (formData.revenueModel) {
-        descriptionParts.push(`Revenue Model: ${formData.revenueModel}`);
-      }
-      if (formData.mainCompetitors) {
-        descriptionParts.push(`Main Competitors: ${formData.mainCompetitors}`);
-      }
-      if (formData.currentTraction) {
-        descriptionParts.push(`Current Traction: ${formData.currentTraction}`);
-      }
+      if (formData.industry) descriptionParts.push(`Industry: ${formData.industry}`);
+      if (formData.revenueModel) descriptionParts.push(`Revenue Model: ${formData.revenueModel}`);
+      if (formData.mainCompetitors) descriptionParts.push(`Main Competitors: ${formData.mainCompetitors}`);
+      if (formData.currentTraction) descriptionParts.push(`Current Traction: ${formData.currentTraction}`);
 
       const businessDescription = descriptionParts.join('\n\n');
 
@@ -170,36 +173,32 @@ const ICPBuilder: React.FC = () => {
       });
 
       if (error) {
-        if (handleCreditError(error, data, 'ICP_ANALYSIS', { featureName: 'ICP Builder' })) {
-          return;
-        }
+        if (handleCreditError(error, data, 'ICP_ANALYSIS', { featureName: 'ICP Builder' })) return;
         throw error;
       }
 
       if (data?.creditError) {
-        if (handleCreditError(null, data, 'ICP_ANALYSIS', { featureName: 'ICP Builder' })) {
-          return;
-        }
+        if (handleCreditError(null, data, 'ICP_ANALYSIS', { featureName: 'ICP Builder' })) return;
       }
 
       if (data?.success && data?.analysis) {
         setAnalysis(data.analysis);
+        setAnalysisKey(k => k + 1);
         setActiveTab('profile');
         await refreshProgress();
-
         toast({
           title: "ICP Analysis Complete!",
-          description: `Your niche viability score is ${data.analysis.nicheScore?.overall || 'N/A'}/100 - ${data.analysis.nicheScore?.verdict || 'N/A'}. Review your detailed ICP below.`,
+          description: `Niche viability score: ${data.analysis.nicheScore?.overall || 'N/A'}/100 — ${data.analysis.nicheScore?.verdict || 'N/A'}.`,
         });
         await refreshBalance();
       } else {
         throw new Error(data?.error || 'Analysis failed');
       }
-    } catch (error) {
-      console.error('Error analyzing ICP:', error);
+    } catch (err) {
+      console.error('Error analyzing ICP:', err);
       toast({
         title: "Analysis Failed",
-        description: error instanceof Error ? error.message : "Failed to analyze ICP. Please try again.",
+        description: err instanceof Error ? err.message : "Failed to analyze ICP. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -208,16 +207,16 @@ const ICPBuilder: React.FC = () => {
   };
 
   const EmptyState = ({ message }: { message: string }) => (
-    <Card>
-      <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-        <Target className="w-12 h-12 text-muted-foreground mb-4 opacity-50" />
-        <h3 className="text-lg font-semibold mb-2">No Analysis Yet</h3>
-        <p className="text-muted-foreground mb-4 max-w-md">{message}</p>
-        <Button onClick={() => setActiveTab('input')}>
-          Go to Product Brief
-        </Button>
-      </CardContent>
-    </Card>
+    <div className="flex flex-col items-center justify-center py-16 text-center animate-fade-in-up">
+      <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
+        <Lock className="w-7 h-7 text-muted-foreground" />
+      </div>
+      <h3 className="text-base font-semibold mb-2">Run your analysis first</h3>
+      <p className="text-sm text-muted-foreground mb-5 max-w-xs">{message}</p>
+      <Button size="sm" onClick={() => setActiveTab('input')}>
+        Go to Foundation
+      </Button>
+    </div>
   );
 
   return (
@@ -235,75 +234,103 @@ const ICPBuilder: React.FC = () => {
         <CardContent>
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="adaptive-tabs grid w-full grid-cols-5">
-              <TabsTrigger value="input">
-                <FileText className="w-4 h-4 mr-2" />
-                <span className="hidden sm:inline">Product Brief</span>
+              {/* Foundation tab */}
+              <TabsTrigger value="input" className="gap-1.5">
+                {hasAnalysis ? (
+                  <CheckCircle2 className="w-4 h-4 text-green-500 shrink-0" />
+                ) : (
+                  <FileText className="w-4 h-4 shrink-0" />
+                )}
+                <span className="hidden sm:inline">Foundation</span>
                 <span className="sm:hidden">Brief</span>
               </TabsTrigger>
-              <TabsTrigger value="profile">
-                <Users className="w-4 h-4 mr-2" />
-                <span className="hidden sm:inline">Niche Profile</span>
-                <span className="sm:hidden">Niche</span>
-              </TabsTrigger>
-              <TabsTrigger value="painpoints">
-                <AlertTriangle className="w-4 h-4 mr-2" />
-                <span className="hidden sm:inline">Pain Points</span>
-                <span className="sm:hidden">Pains</span>
-              </TabsTrigger>
-              <TabsTrigger value="positioning">
-                <Megaphone className="w-4 h-4 mr-2" />
-                <span className="hidden sm:inline">Positioning</span>
-                <span className="sm:hidden">Position</span>
-              </TabsTrigger>
-              <TabsTrigger value="report">
-                <BarChart3 className="w-4 h-4 mr-2" />
-                <span className="hidden sm:inline">Full Report</span>
-                <span className="sm:hidden">Report</span>
-              </TabsTrigger>
+
+              {/* Result tabs — dimmed until analysis runs */}
+              {RESULT_TABS.map(({ value, icon: Icon, label, short }) => (
+                <TabsTrigger
+                  key={value}
+                  value={value}
+                  disabled={!hasAnalysis}
+                  className={cn('gap-1.5 transition-opacity duration-300', !hasAnalysis && 'opacity-40')}
+                >
+                  {!hasAnalysis ? (
+                    <Lock className="w-3.5 h-3.5 shrink-0" />
+                  ) : (
+                    <Icon className="w-4 h-4 shrink-0" />
+                  )}
+                  <span className="hidden sm:inline">{label}</span>
+                  <span className="sm:hidden">{short}</span>
+                </TabsTrigger>
+              ))}
             </TabsList>
 
-            <TabsContent value="input" className="mt-6">
-              <ICPInputForm
-                onSubmit={handleFormSubmit}
-                isSubmitting={isAnalyzing}
-              />
-            </TabsContent>
+            {/* Loading overlay */}
+            {isAnalyzing && (
+              <div className="flex flex-col items-center justify-center py-20 gap-4 animate-fade-in-up">
+                <div className="relative">
+                  <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Loader2 className="w-8 h-8 text-primary animate-spin" />
+                  </div>
+                  <div className="absolute inset-0 rounded-full animate-ping bg-primary/10" />
+                </div>
+                <div className="text-center space-y-1">
+                  <p className="font-medium">Analyzing your niche market…</p>
+                  <p className="text-sm text-muted-foreground">This takes about 20–30 seconds</p>
+                </div>
+              </div>
+            )}
 
-            <TabsContent value="profile" className="mt-6">
-              {analysis?.nicheProfile ? (
-                <ICPNicheProfile profile={analysis.nicheProfile} />
-              ) : (
-                <EmptyState message="Run an ICP analysis first to see your detailed niche profile. Go to the Product Brief tab and click 'Identify My ICP'." />
-              )}
-            </TabsContent>
+            {!isAnalyzing && (
+              <>
+                <TabsContent value="input" className="mt-6">
+                  <ICPInputForm onSubmit={handleFormSubmit} isSubmitting={isAnalyzing} />
+                </TabsContent>
 
-            <TabsContent value="painpoints" className="mt-6">
-              {analysis?.painPoints ? (
-                <ICPPainPoints painPoints={analysis.painPoints} />
-              ) : (
-                <EmptyState message="Run an ICP analysis first to see the niche pain points. Go to the Product Brief tab and click 'Identify My ICP'." />
-              )}
-            </TabsContent>
+                <TabsContent value="profile" className="mt-6">
+                  {analysis?.nicheProfile ? (
+                    <div key={analysisKey} className="animate-fade-in-up">
+                      <ICPNicheProfile profile={analysis.nicheProfile} />
+                    </div>
+                  ) : (
+                    <EmptyState message="Answer the 5 foundation questions and run your analysis to see the niche profile." />
+                  )}
+                </TabsContent>
 
-            <TabsContent value="positioning" className="mt-6">
-              {analysis?.positioningStrategy ? (
-                <ICPPositioning positioning={analysis.positioningStrategy} />
-              ) : (
-                <EmptyState message="Run an ICP analysis first to see your positioning strategy. Go to the Product Brief tab and click 'Identify My ICP'." />
-              )}
-            </TabsContent>
+                <TabsContent value="painpoints" className="mt-6">
+                  {analysis?.painPoints ? (
+                    <div key={analysisKey} className="animate-fade-in-up">
+                      <ICPPainPoints painPoints={analysis.painPoints} />
+                    </div>
+                  ) : (
+                    <EmptyState message="Run your ICP analysis to uncover the most critical pain points in your niche." />
+                  )}
+                </TabsContent>
 
-            <TabsContent value="report" className="mt-6">
-              {analysis?.nicheScore ? (
-                <ICPNicheScore
-                  score={analysis.nicheScore}
-                  actionPlan={analysis.actionPlan}
-                  nextGoals={lastGoals}
-                />
-              ) : (
-                <EmptyState message="Run an ICP analysis first to see the full report with niche viability score. Go to the Product Brief tab and click 'Identify My ICP'." />
-              )}
-            </TabsContent>
+                <TabsContent value="positioning" className="mt-6">
+                  {analysis?.positioningStrategy ? (
+                    <div key={analysisKey} className="animate-fade-in-up">
+                      <ICPPositioning positioning={analysis.positioningStrategy} />
+                    </div>
+                  ) : (
+                    <EmptyState message="Run your ICP analysis to get your positioning strategy and competitive angles." />
+                  )}
+                </TabsContent>
+
+                <TabsContent value="report" className="mt-6">
+                  {analysis?.nicheScore ? (
+                    <div key={analysisKey} className="animate-fade-in-up">
+                      <ICPNicheScore
+                        score={analysis.nicheScore}
+                        actionPlan={analysis.actionPlan}
+                        nextGoals={lastGoals}
+                      />
+                    </div>
+                  ) : (
+                    <EmptyState message="Run your ICP analysis to see the full viability report and action plan." />
+                  )}
+                </TabsContent>
+              </>
+            )}
           </Tabs>
         </CardContent>
       </Card>
