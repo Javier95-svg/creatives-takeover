@@ -108,6 +108,7 @@ const ICPBuilder: React.FC = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState<ICPAnalysis | null>(null);
   const [activeTab, setActiveTab] = useState('input');
+  const [lastGoals, setLastGoals] = useState<string>('');
 
   const handleFormSubmit = async (formData: ICPInputFormData) => {
     if (!user) {
@@ -135,11 +136,14 @@ const ICPBuilder: React.FC = () => {
 
     try {
       setIsAnalyzing(true);
+      setLastGoals(formData.nextGoals);
 
       const descriptionParts: string[] = [];
       descriptionParts.push(`Problem: ${formData.problemStatement}`);
-      descriptionParts.push(`Product/Service: ${formData.productDescription}`);
-      descriptionParts.push(`Target Audience: ${formData.targetAudience}`);
+      descriptionParts.push(`Target Customer: ${formData.targetAudience}`);
+      descriptionParts.push(`Solution Differentiator: ${formData.solutionDifferentiator}`);
+      descriptionParts.push(`Founder Edge: ${formData.founderEdge}`);
+      descriptionParts.push(`Next Goals: ${formData.nextGoals}`);
       if (formData.industry) {
         descriptionParts.push(`Industry: ${formData.industry}`);
       }
@@ -148,9 +152,6 @@ const ICPBuilder: React.FC = () => {
       }
       if (formData.mainCompetitors) {
         descriptionParts.push(`Main Competitors: ${formData.mainCompetitors}`);
-      }
-      if (formData.unfairAdvantage) {
-        descriptionParts.push(`Unfair Advantage: ${formData.unfairAdvantage}`);
       }
       if (formData.currentTraction) {
         descriptionParts.push(`Current Traction: ${formData.currentTraction}`);
@@ -164,7 +165,7 @@ const ICPBuilder: React.FC = () => {
           targetAudience: formData.targetAudience,
           industry: formData.industry || undefined,
           competitors: formData.mainCompetitors || undefined,
-          unfairAdvantage: formData.unfairAdvantage || undefined,
+          unfairAdvantage: formData.founderEdge || undefined,
         },
       });
 
@@ -297,6 +298,7 @@ const ICPBuilder: React.FC = () => {
                 <ICPNicheScore
                   score={analysis.nicheScore}
                   actionPlan={analysis.actionPlan}
+                  nextGoals={lastGoals}
                 />
               ) : (
                 <EmptyState message="Run an ICP analysis first to see the full report with niche viability score. Go to the Product Brief tab and click 'Identify My ICP'." />

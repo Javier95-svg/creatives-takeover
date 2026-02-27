@@ -2,7 +2,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { Target, CheckCircle2, AlertTriangle, ArrowRight, TrendingUp, Shield, Zap } from 'lucide-react';
+import { Target, CheckCircle2, AlertTriangle, ArrowRight, TrendingUp, Shield, Zap, Flag } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface ActionPlanItem {
@@ -27,9 +27,10 @@ interface NicheScore {
 interface ICPNicheScoreProps {
   score: NicheScore;
   actionPlan?: ActionPlanItem[];
+  nextGoals?: string;
 }
 
-const ICPNicheScore: React.FC<ICPNicheScoreProps> = ({ score, actionPlan = [] }) => {
+const ICPNicheScore: React.FC<ICPNicheScoreProps> = ({ score, actionPlan = [], nextGoals }) => {
   const scoreColor =
     score.overall >= 70 ? 'text-green-600' :
     score.overall >= 50 ? 'text-yellow-600' :
@@ -158,6 +159,21 @@ const ICPNicheScore: React.FC<ICPNicheScoreProps> = ({ score, actionPlan = [] })
           </div>
         </CardContent>
       </Card>
+
+      {/* Next Goals */}
+      {nextGoals && (
+        <Card className="border-primary/20 bg-primary/5">
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <Flag className="w-4 h-4 text-primary" />
+              Your Next Goals
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground whitespace-pre-line">{nextGoals}</p>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Action Plan */}
       {actionPlan.length > 0 && (

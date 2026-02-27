@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -12,10 +11,11 @@ import { AdvancedFieldsSection } from '@/components/pmf/AdvancedFieldsSection';
 
 export interface ICPInputFormData {
   problemStatement: string;
-  productDescription: string;
   targetAudience: string;
+  solutionDifferentiator: string;
+  founderEdge: string;
+  nextGoals: string;
   mainCompetitors: string;
-  unfairAdvantage: string;
   industry: string;
   revenueModel: string;
   currentTraction: string;
@@ -59,6 +59,14 @@ const REVENUE_MODELS = [
   'Other'
 ];
 
+const QUESTIONS = [
+  { number: '01', label: 'What specific problem are you solving?' },
+  { number: '02', label: 'Who are you solving it for?' },
+  { number: '03', label: 'What makes your solution different and more efficient?' },
+  { number: '04', label: 'Why are you the right person to build this?' },
+  { number: '05', label: 'What do you want to achieve next?' },
+];
+
 const ICPInputForm: React.FC<ICPInputFormProps> = ({
   initialData,
   onSubmit,
@@ -66,10 +74,11 @@ const ICPInputForm: React.FC<ICPInputFormProps> = ({
 }) => {
   const [formData, setFormData] = useState<ICPInputFormData>({
     problemStatement: initialData?.problemStatement || '',
-    productDescription: initialData?.productDescription || '',
     targetAudience: initialData?.targetAudience || '',
+    solutionDifferentiator: initialData?.solutionDifferentiator || '',
+    founderEdge: initialData?.founderEdge || '',
+    nextGoals: initialData?.nextGoals || '',
     mainCompetitors: initialData?.mainCompetitors || '',
-    unfairAdvantage: initialData?.unfairAdvantage || '',
     industry: initialData?.industry || '',
     revenueModel: initialData?.revenueModel || '',
     currentTraction: initialData?.currentTraction || '',
@@ -82,8 +91,10 @@ const ICPInputForm: React.FC<ICPInputFormProps> = ({
 
   const requiredFields = [
     formData.problemStatement,
-    formData.productDescription,
     formData.targetAudience,
+    formData.solutionDifferentiator,
+    formData.founderEdge,
+    formData.nextGoals,
   ];
   const completedRequired = requiredFields.filter(f => f.trim()).length;
   const completionPercentage = (completedRequired / requiredFields.length) * 100;
@@ -96,95 +107,105 @@ const ICPInputForm: React.FC<ICPInputFormProps> = ({
         <CardContent className="pt-6">
           <div className="space-y-2">
             <div className="flex items-center justify-between text-sm">
-              <span className="font-medium">Product Brief Completion</span>
+              <span className="font-medium">Foundation Completion</span>
               <span className="text-muted-foreground">{Math.round(completionPercentage)}%</span>
             </div>
             <Progress value={completionPercentage} className="h-2" />
             <p className="text-xs text-muted-foreground">
-              {completedRequired} of {requiredFields.length} required fields completed
+              {completedRequired} of {requiredFields.length} core questions answered
             </p>
           </div>
         </CardContent>
       </Card>
 
-      {/* Required Fields */}
-      <div className="space-y-4">
+      {/* Core Questions */}
+      <div className="space-y-5">
+        {/* Q1 */}
         <div className="space-y-2">
           <Label htmlFor="problemStatement" className="flex items-center gap-2">
-            Problem You're Solving <span className="text-destructive">*</span>
+            <span className="text-xs font-mono text-primary/60">{QUESTIONS[0].number}</span>
+            {QUESTIONS[0].label} <span className="text-destructive">*</span>
           </Label>
           <Textarea
             id="problemStatement"
             value={formData.problemStatement}
             onChange={(e) => setFormData(prev => ({ ...prev, problemStatement: e.target.value }))}
-            placeholder="What specific problem does your product/service solve? Who experiences this problem and how painful is it for them?"
+            placeholder="What painful gap or frustration does your startup address? Who experiences it, how often, and what does it cost them (time, money, stress)?"
             rows={4}
             className="resize-none"
             required
           />
-          <p className="text-xs text-muted-foreground">
-            Be specific about the pain point and who feels it most intensely.
-          </p>
         </div>
 
+        {/* Q2 */}
         <div className="space-y-2">
-          <Label htmlFor="productDescription" className="flex items-center gap-2">
-            Product / Service Description <span className="text-destructive">*</span>
+          <Label htmlFor="targetAudience" className="flex items-center gap-2">
+            <span className="text-xs font-mono text-primary/60">{QUESTIONS[1].number}</span>
+            {QUESTIONS[1].label} <span className="text-destructive">*</span>
           </Label>
           <Textarea
-            id="productDescription"
-            value={formData.productDescription}
-            onChange={(e) => setFormData(prev => ({ ...prev, productDescription: e.target.value }))}
-            placeholder="Describe your product or service. What does it do? How does it solve the problem? What makes it unique?"
+            id="targetAudience"
+            value={formData.targetAudience}
+            onChange={(e) => setFormData(prev => ({ ...prev, targetAudience: e.target.value }))}
+            placeholder="Describe the specific person or group you're building for. Include their role, context, key traits, and why this problem matters most to them."
+            rows={3}
+            className="resize-none"
+            required
+          />
+        </div>
+
+        {/* Q3 */}
+        <div className="space-y-2">
+          <Label htmlFor="solutionDifferentiator" className="flex items-center gap-2">
+            <span className="text-xs font-mono text-primary/60">{QUESTIONS[2].number}</span>
+            {QUESTIONS[2].label} <span className="text-destructive">*</span>
+          </Label>
+          <Textarea
+            id="solutionDifferentiator"
+            value={formData.solutionDifferentiator}
+            onChange={(e) => setFormData(prev => ({ ...prev, solutionDifferentiator: e.target.value }))}
+            placeholder="How does your solution work differently from what exists today? What makes it faster, cheaper, simpler, or more effective than the current alternatives?"
             rows={4}
             className="resize-none"
             required
           />
-          <p className="text-xs text-muted-foreground">
-            Include key features, how it works, and what makes it different from alternatives.
-          </p>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="space-y-2">
-            <Label htmlFor="targetAudience" className="flex items-center gap-2">
-              Current / Intended Target Audience <span className="text-destructive">*</span>
-            </Label>
-            <Input
-              id="targetAudience"
-              value={formData.targetAudience}
-              onChange={(e) => setFormData(prev => ({ ...prev, targetAudience: e.target.value }))}
-              placeholder="e.g., Solo founders, D2C brand owners, Freelance designers"
-              required
-            />
-            <p className="text-xs text-muted-foreground">
-              Who do you think your ideal customer is right now?
-            </p>
-          </div>
+        {/* Q4 */}
+        <div className="space-y-2">
+          <Label htmlFor="founderEdge" className="flex items-center gap-2">
+            <span className="text-xs font-mono text-primary/60">{QUESTIONS[3].number}</span>
+            {QUESTIONS[3].label} <span className="text-destructive">*</span>
+          </Label>
+          <Textarea
+            id="founderEdge"
+            value={formData.founderEdge}
+            onChange={(e) => setFormData(prev => ({ ...prev, founderEdge: e.target.value }))}
+            placeholder="What gives you an edge here? Domain expertise, lived experience with this problem, a unique network, proprietary insight, or a background that others in this space don't have."
+            rows={3}
+            className="resize-none"
+            required
+          />
+        </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="industry">
-              Industry
-            </Label>
-            <Select
-              value={formData.industry}
-              onValueChange={(value) => setFormData(prev => ({ ...prev, industry: value }))}
-            >
-              <SelectTrigger id="industry">
-                <SelectValue placeholder="Select your industry" />
-              </SelectTrigger>
-              <SelectContent>
-                {INDUSTRIES.map((ind) => (
-                  <SelectItem key={ind} value={ind}>
-                    {ind}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <p className="text-xs text-muted-foreground">
-              Helps provide industry-specific niche insights.
-            </p>
-          </div>
+        {/* Goals */}
+        <div className="space-y-2">
+          <Label htmlFor="nextGoals" className="flex items-center gap-2">
+            <span className="text-xs font-mono text-primary/60">{QUESTIONS[4].number}</span>
+            {QUESTIONS[4].label} <span className="text-destructive">*</span>
+          </Label>
+          <Textarea
+            id="nextGoals"
+            value={formData.nextGoals}
+            onChange={(e) => setFormData(prev => ({ ...prev, nextGoals: e.target.value }))}
+            placeholder="e.g. Get my first 10 paying customers, validate PMF in 60 days, raise a pre-seed round, launch publicly on Product Hunt"
+            rows={3}
+            className="resize-none"
+            required
+          />
+          <p className="text-xs text-muted-foreground">
+            Be specific. These goals will shape the action plan in your analysis.
+          </p>
         </div>
       </div>
 
@@ -193,7 +214,7 @@ const ICPInputForm: React.FC<ICPInputFormProps> = ({
         defaultOpen={false}
         completedCount={[
           formData.mainCompetitors,
-          formData.unfairAdvantage,
+          formData.industry,
           formData.revenueModel,
           formData.currentTraction
         ].filter(Boolean).length}
@@ -216,17 +237,24 @@ const ICPInputForm: React.FC<ICPInputFormProps> = ({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="unfairAdvantage">Your Unfair Advantage</Label>
-            <Textarea
-              id="unfairAdvantage"
-              value={formData.unfairAdvantage}
-              onChange={(e) => setFormData(prev => ({ ...prev, unfairAdvantage: e.target.value }))}
-              placeholder="What gives you an edge? (e.g., domain expertise, proprietary tech, unique access, network, speed)"
-              rows={3}
-              className="resize-none"
-            />
+            <Label htmlFor="industry">Industry</Label>
+            <Select
+              value={formData.industry}
+              onValueChange={(value) => setFormData(prev => ({ ...prev, industry: value }))}
+            >
+              <SelectTrigger id="industry">
+                <SelectValue placeholder="Select your industry" />
+              </SelectTrigger>
+              <SelectContent>
+                {INDUSTRIES.map((ind) => (
+                  <SelectItem key={ind} value={ind}>
+                    {ind}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <p className="text-xs text-muted-foreground">
-              What makes you uniquely positioned to win in this market?
+              Helps provide industry-specific niche insights.
             </p>
           </div>
 
@@ -277,10 +305,10 @@ const ICPInputForm: React.FC<ICPInputFormProps> = ({
               <AlertCircle className="w-5 h-5 text-yellow-600 mt-0.5" />
               <div className="flex-1">
                 <p className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
-                  Complete Required Fields
+                  Answer all 5 core questions
                 </p>
                 <p className="text-xs text-yellow-700 dark:text-yellow-300 mt-1">
-                  Please fill in all required fields (marked with *) to generate your ICP analysis.
+                  {completedRequired} of 5 answered. Complete all questions marked with * to generate your ICP analysis.
                 </p>
               </div>
             </div>
@@ -295,10 +323,10 @@ const ICPInputForm: React.FC<ICPInputFormProps> = ({
               <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5" />
               <div className="flex-1">
                 <p className="text-sm font-medium text-green-800 dark:text-green-200">
-                  Ready to Identify Your ICP
+                  Foundation complete — ready for analysis
                 </p>
                 <p className="text-xs text-green-700 dark:text-green-300 mt-1">
-                  All required fields are complete. Click "Identify My ICP" to receive your niche market analysis.
+                  All 5 core questions answered. Click "Identify My ICP" to receive your niche market analysis.
                 </p>
               </div>
             </div>
@@ -310,7 +338,7 @@ const ICPInputForm: React.FC<ICPInputFormProps> = ({
       <Button
         type="submit"
         disabled={!isFormValid || isSubmitting}
-        className="w-full"
+        className={cn("w-full", !isFormValid && "opacity-50")}
         size="lg"
       >
         {isSubmitting ? (
