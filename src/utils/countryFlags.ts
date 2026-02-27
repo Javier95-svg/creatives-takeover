@@ -95,6 +95,8 @@ export function getCountryFlag(country: string | null | undefined): string {
     'TURKEY': '🇹🇷',
     'RU': '🇷🇺',
     'RUSSIA': '🇷🇺',
+    'KZ': '🇰🇿',
+    'KAZAKHSTAN': '🇰🇿',
     'UA': '🇺🇦',
     'UKRAINE': '🇺🇦',
     'PK': '🇵🇰',

@@ -21,7 +21,7 @@ const MentorDiscover = () => {
   const { fetchMentors, loading } = useMentors();
   const [mentors, setMentors] = useState<Mentor[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [sortBy, setSortBy] = useState("recommended");
+  const [sortBy, setSortBy] = useState("alphabetical");
   
   const [filters, setFilters] = useState<MentorFilters>({
     expertise: [],
@@ -121,7 +121,6 @@ const MentorDiscover = () => {
         );
         break;
       case "recommended":
-      default:
         // Featured first, then by rating
         result = result.sort((a, b) => {
           const aFeatured = a.is_featured === true ? 1 : 0;
@@ -129,6 +128,10 @@ const MentorDiscover = () => {
           if (aFeatured !== bFeatured) return bFeatured - aFeatured;
           return (b.rating || 0) - (a.rating || 0);
         });
+        break;
+      case "alphabetical":
+      default:
+        result = result.sort((a, b) => a.name.localeCompare(b.name));
         break;
     }
 

@@ -122,8 +122,7 @@ export const useMentors = () => {
         .from('mentors')
         .select('*')
         .eq('is_active', true)
-        .order('is_featured', { ascending: false })
-        .order('created_at', { ascending: false });
+        .order('name', { ascending: true });
 
       if (error) throw error;
 
