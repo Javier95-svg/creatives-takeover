@@ -155,7 +155,6 @@ const ICPBuilder: React.FC = () => {
       descriptionParts.push(`Target Customer: ${formData.targetAudience}`);
       descriptionParts.push(`Current Customer Behavior / Workaround: ${formData.currentBehavior}`);
       descriptionParts.push(`Solution Differentiator: ${formData.solutionDifferentiator}`);
-      descriptionParts.push(`Adoption Barrier / Main Objection: ${formData.adoptionBarrier}`);
       descriptionParts.push(`Founder Edge: ${formData.founderEdge}`);
       descriptionParts.push(`Market Timing / Why Now: ${formData.marketTiming}`);
       descriptionParts.push(`Next Goals: ${formData.nextGoals}`);

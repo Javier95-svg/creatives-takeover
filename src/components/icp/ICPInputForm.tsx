@@ -9,13 +9,12 @@ import { cn } from '@/lib/utils';
 import { AdvancedFieldsSection } from '@/components/pmf/AdvancedFieldsSection';
 
 export interface ICPInputFormData {
-  // Core required — 9 steps
+  // Core required — 8 steps
   problemStatement: string;
   painCost: string;
   targetAudience: string;
   currentBehavior: string;
   solutionDifferentiator: string;
-  adoptionBarrier: string;
   founderEdge: string;
   marketTiming: string;
   nextGoals: string;
@@ -95,14 +94,6 @@ const STEPS: Array<{
   },
   {
     number: '06',
-    field: 'adoptionBarrier',
-    question: "What's the most credible reason your ideal customer would not buy?",
-    placeholder: "What objection, fear, or friction would stop your best-fit customer from switching? e.g. 'They've tried similar tools and failed', 'Budget is controlled by IT, not the team', 'They don't yet believe the ROI.'",
-    hint: 'Honest objection mapping sharpens positioning and de-risks go-to-market.',
-    analyticalObjective: 'Identifies adoption friction and positioning constraints',
-  },
-  {
-    number: '07',
     field: 'founderEdge',
     question: 'Why are you the right person to build this?',
     placeholder: "What gives you an unfair advantage here? Domain expertise, lived experience with this problem, proprietary data or relationships, a network others can't access, or a background that gives you insight competitors lack.",
@@ -110,7 +101,7 @@ const STEPS: Array<{
     analyticalObjective: 'Assesses founder-market fit and execution credibility',
   },
   {
-    number: '08',
+    number: '07',
     field: 'marketTiming',
     question: 'Why now? What has changed to create this window?',
     placeholder: "What shift — in technology, regulation, behavior, infrastructure, or culture — has made this problem newly solvable or newly urgent? e.g. 'LLMs made this 10x cheaper to build', 'Remote work created this category', 'New regulation forces compliance by Q3.'",
@@ -118,7 +109,7 @@ const STEPS: Array<{
     analyticalObjective: 'Evaluates market readiness, timing risk, and opportunity window',
   },
   {
-    number: '09',
+    number: '08',
     field: 'nextGoals',
     question: 'What do you want to achieve next?',
     placeholder: "e.g. Get my first 10 paying customers in 60 days, validate PMF before fundraising, reach $10K MRR by Q3, launch on Product Hunt next month.",
@@ -154,7 +145,6 @@ const ICPInputForm: React.FC<ICPInputFormProps> = ({
     targetAudience: initialData?.targetAudience || '',
     currentBehavior: initialData?.currentBehavior || '',
     solutionDifferentiator: initialData?.solutionDifferentiator || '',
-    adoptionBarrier: initialData?.adoptionBarrier || '',
     founderEdge: initialData?.founderEdge || '',
     marketTiming: initialData?.marketTiming || '',
     nextGoals: initialData?.nextGoals || '',
