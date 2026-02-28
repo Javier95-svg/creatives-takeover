@@ -47,6 +47,8 @@ export const DELRAJ_SINGH_UPPAL_EMAIL = 'd.singh@khalsa.com';
 export const DELRAJ_SINGH_UPPAL_USER_ID = '2cd4b8ec-5631-4de3-b480-d3c71de5d366';
 export const MATIAS_PANCORVO_EMAIL = 'pancorvomatias@gmail.com';
 export const MATIAS_PANCORVO_USER_ID = 'd4d2ec5d-75ca-482a-8126-2e5a9ff9b98c';
+export const DAIANA_TOKPAYEVA_EMAIL = 'daiana.tokpayeva@outlook.com';
+export const DAIANA_TOKPAYEVA_USER_ID = 'cc157118-0681-4600-a5fc-d37f5f4b4f31';
 
 // Karolina Żurawska's email constant
 export const KAROLINA_ZURAWSKA_EMAIL = 'kz.zurawska@gmail.com';
@@ -135,6 +137,13 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
         userId: MATIAS_PANCORVO_USER_ID
       });
       return MATIAS_PANCORVO_USER_ID;
+    }
+
+    if (email.toLowerCase() === DAIANA_TOKPAYEVA_EMAIL.toLowerCase()) {
+      logInfo('getUserIdByEmail: Using known Daiana Tokpayeva user ID', {
+        userId: DAIANA_TOKPAYEVA_USER_ID
+      });
+      return DAIANA_TOKPAYEVA_USER_ID;
     }
 
     try {
@@ -254,6 +263,13 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
       mentorNameNormalized.includes('pancorvo')
     ) {
       return MATIAS_PANCORVO_USER_ID;
+    }
+
+    if (
+      mentorNameNormalized.includes('daiana') &&
+      mentorNameNormalized.includes('tokpayeva')
+    ) {
+      return DAIANA_TOKPAYEVA_USER_ID;
     }
 
     if (mentor.user_id && mentor.user_id.trim() !== '') {
