@@ -9,7 +9,7 @@ const Footer = () => {
         <div className="grid gap-6 sm:gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
           <section aria-labelledby="footer-address">
             <p className="text-sm text-muted-foreground">
-              Creatives Takeover Ltd is a company registered in England and Wales (No. 16741912).
+              Creatives Takeover Ltd is a company registered in England and Wales (Company No. 16741912).
             </p>
             <h2 id="footer-address" className="mt-4 text-sm font-semibold tracking-wide text-foreground">Registered Office</h2>
             <address className="mt-3 text-sm text-muted-foreground not-italic">
