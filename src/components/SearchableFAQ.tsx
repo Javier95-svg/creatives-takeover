@@ -36,7 +36,7 @@ const SearchableFAQ = () => {
       id: 1,
       category: "Pricing",
       question: "What pricing plans do you offer?",
-      answer: "We offer three plans designed for different stages of your startup journey: Rookie (Free) with 25 credits/month for idea validation, Rising ($32.99/month or $300/year) with 50 credits/month for building your startup, and Pro ($74.99/month or $750/year) with 150 credits/month for scaling with unlimited access. Annual billing saves you approximately 25%.",
+      answer: "We offer three plans designed for different stages of building your startup from scratch: Rookie (Free) with 25 credits/month to validate and explore, Rising ($32.99/month or $300/year) with 50 credits/month to build with more momentum, and Pro ($74.99/month or $750/year) with 150 credits/month for founders who need deeper usage and faster execution. Annual billing saves you approximately 25%.",
       popular: true,
       tags: ["pricing", "plans", "subscription", "rookie", "rising", "pro"]
     },
@@ -44,7 +44,7 @@ const SearchableFAQ = () => {
       id: 2,
       category: "Pricing",
       question: "Is there a free plan available?",
-      answer: "Yes! Our Rookie plan is completely free forever—no credit card required. You get 25 credits per month, access to BizMap AI for business planning conversations, read-only access to PMF Lab, 5 VC profile views per month, basic Insighta Test, and community access. It's perfect for validating your startup idea before committing.",
+      answer: "Yes. Our Rookie plan is completely free forever, with no credit card required. You get 25 credits per month, access to BizMap AI, read-only access to PMF Lab, 5 VC profile views per month, basic Insighta Test, and community access. It is built for founders who want to start validating and building before paying for heavier usage.",
       popular: true,
       tags: ["free", "rookie", "no credit card", "credits"]
     },
@@ -68,7 +68,7 @@ const SearchableFAQ = () => {
       id: 5,
       category: "Pricing",
       question: "Do credits roll over to the next month?",
-      answer: "Credits do not roll over—they reset at the beginning of each billing cycle. This encourages regular use of the platform and ensures you're actively working on your startup. If you consistently run out of credits, consider upgrading to a higher tier for more monthly credits.",
+      answer: "Credits do not roll over. They reset at the beginning of each billing cycle. This encourages regular use of the platform and ensures you're actively working on your startup. If you consistently run out of credits, consider upgrading to a higher tier for more monthly credits.",
       popular: false,
       tags: ["credits", "rollover", "monthly", "reset"]
     },
@@ -102,7 +102,7 @@ const SearchableFAQ = () => {
       id: 9,
       category: "Community",
       question: "Is the community beginner-friendly?",
-      answer: "Absolutely! Our community welcomes founders at every stage—from those with just an idea to experienced entrepreneurs. The platform is designed to guide first-time founders through the entire startup journey with tools like BizMap AI that adapt to your experience level. Our Founder Stories feature includes content from both new and seasoned entrepreneurs.",
+      answer: "Absolutely. Our community welcomes founders at every stage, from those with just an idea to experienced entrepreneurs. The platform is designed to guide first-time founders through the entire startup journey with tools like BizMap AI that adapt to your experience level. Our Founder Stories feature includes content from both new and seasoned entrepreneurs.",
       popular: true,
       tags: ["beginner friendly", "first-time founders", "supportive", "learning"]
     },
@@ -120,7 +120,7 @@ const SearchableFAQ = () => {
       id: 11,
       category: "Features",
       question: "What is BizMap AI and how does it work?",
-      answer: "BizMap AI is your AI-powered co-founder that helps you plan and build your startup through natural conversation. It guides you through business planning, market analysis, go-to-market strategy, financial projections, and more. BizMap AI remembers your previous conversations and adapts its advice to your specific startup context. Each message costs 1 credit.",
+      answer: "BizMap AI is your AI-powered co-founder inside the Startup Development Cycle. It helps you move from rough idea to real startup through natural conversation: clarifying the problem, shaping the offer, validating demand, planning the MVP, and deciding what to do next. It remembers your previous conversations and adapts its guidance to your startup context. Each message costs 1 credit.",
       popular: true,
       tags: ["bizmap ai", "ai co-founder", "business planning", "conversation"]
     },
@@ -168,7 +168,7 @@ const SearchableFAQ = () => {
       id: 17,
       category: "Features",
       question: "What is Focus Funnel?",
-      answer: "Focus Funnel is your personal goal-setting and task management system designed for founders. It helps you break down your startup goals into actionable projects and daily tasks, keeping you focused on what matters most. Features include goal tracking, project management, task prioritization, and progress visualization—all designed to combat founder overwhelm.",
+      answer: "Focus Funnel is your founder execution system. It helps you turn startup goals into concrete projects and daily tasks so you do not get lost in idea overload. Features include goal tracking, project management, task prioritization, and progress visualization, all designed to keep you moving once you are inside the build and launch stages.",
       popular: false,
       tags: ["focus funnel", "goals", "tasks", "productivity", "planning"]
     },
@@ -202,7 +202,7 @@ const SearchableFAQ = () => {
       id: 21,
       category: "Credits",
       question: "Which features use the most credits?",
-      answer: "Premium AI analyses use the most credits: PMF Analysis (8 credits), Pitch Deck Analyzer (8 credits), Financial Analysis (8 credits), Fundraising Readiness Analysis (8 credits). Mid-tier features include Market Research (5 credits), Roadmap Generation (5 credits), and Insighta Tests (5 credits). BizMap AI chat messages are just 1 credit each, making it efficient for ongoing business planning.",
+      answer: "Premium AI analyses use the most credits: PMF Analysis (8 credits), Pitch Deck Analyzer (8 credits), Financial Analysis (8 credits), Fundraising Readiness Analysis (8 credits). Mid-tier features include Market Research (5 credits), Roadmap Generation (5 credits), and Insighta Tests (5 credits). BizMap AI chat messages are just 1 credit each, making it efficient for ongoing startup building and decision making.",
       popular: false,
       tags: ["credit costs", "features", "expensive", "affordable"]
     },
@@ -212,15 +212,15 @@ const SearchableFAQ = () => {
       id: 22,
       category: "Security",
       question: "How secure is my startup data?",
-      answer: "We use bank-level encryption (SSL/TLS) for all data transmission, secure cloud infrastructure hosted on Supabase and Vercel, and comply with GDPR regulations. Your business plans, financial projections, and strategic data are encrypted at rest and in transit. We never share your proprietary information with third parties or use it to train AI models.",
+      answer: "We use encryption for data in transit, secure cloud infrastructure, and access controls designed to keep your workspace private. Your startup notes, strategy, and planning data are protected at rest and in transit. We do not sell your proprietary information, and we do not use your private startup data as training material for public-facing AI experiences.",
       popular: true,
       tags: ["security", "encryption", "GDPR", "privacy", "data protection"]
     },
     {
       id: 23,
       category: "Security",
-      question: "Do you share my business ideas with others?",
-      answer: "Never. Your startup ideas, business plans, and all data remain completely confidential. We don't share, sell, or expose your information to other users, competitors, or third parties. Your conversations with BizMap AI and all generated content belong solely to you. We're founders too—we understand how critical confidentiality is.",
+      question: "Is my business idea safe?",
+      answer: "Yes. Your idea stays private unless you choose to share it. We do not share, sell, or expose your startup work to other users, competitors, or third parties. Your conversations, drafts, and planning data remain tied to your private workspace. And just as important, most startup success comes from execution, not from someone vaguely hearing an idea. We help you move faster while keeping your work protected.",
       popular: true,
       tags: ["privacy", "confidentiality", "business ideas", "ownership"]
     },

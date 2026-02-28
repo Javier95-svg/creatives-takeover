@@ -12,7 +12,7 @@ const FAQPage = () => {
     createFAQSchema([
       {
         question: "What is Creatives Takeover?",
-        answer: "Creatives Takeover is an AI-powered startup platform featuring BizMap AI, your AI co-founder that helps you go from idea to launch. Our tools include PMF Lab for product-market fit analysis, Pitch Deck Analyzer, VC Search for investor discovery, Insighta Test for landing page validation, and Focus Funnel for goal management."
+        answer: "Creatives Takeover is a founder support platform built to help people build startups from scratch. BizMap AI guides users through the Startup Development Cycle, while tools like PMF Lab, ICP Builder, Tech Stack Builder, Focus Funnel, VC Search, and the mentor and co-founder community help turn ideas into real execution."
       },
       {
         question: "How much does it cost?",
@@ -20,15 +20,19 @@ const FAQPage = () => {
       },
       {
         question: "What is the credit system?",
-        answer: "Credits power all AI features. BizMap AI chat costs 1 credit per message, analyses like PMF and Pitch Deck cost 8 credits, and features like Tech Stack Generation cost 3 credits. Credits refresh monthly based on your plan tier."
+        answer: "Credits power AI actions across the platform. BizMap AI chat costs 1 credit per message, deeper analysis tools like PMF Lab and Pitch Deck Analyzer cost more, and credits refresh monthly based on your plan tier."
       },
       {
         question: "What makes Creatives Takeover different?",
-        answer: "We combine AI intelligence with founder-focused tools: BizMap AI for strategic planning, PMF Lab for market validation, Pitch Deck Analyzer for fundraising prep, VC Search for investor matching, and Founder Stories for community support. All designed specifically for first-time founders and startup entrepreneurs."
+        answer: "Our moat is not generic business-plan generation. We help founders, indie hackers, and builders move from scratch to launch through a practical Startup Development Cycle supported by AI, founder tools, mentors, co-founders, and fundraising resources."
       },
       {
         question: "Can I try it for free?",
-        answer: "Yes! Our Rookie plan is free forever with 25 credits per month, no credit card required. You get access to BizMap AI, read-only PMF Lab, 5 VC profile views, basic Insighta Test, and community features. It's perfect for validating your startup idea."
+        answer: "Yes. Our Rookie plan is free forever with 25 credits per month and no credit card required. You get access to BizMap AI, read-only PMF Lab, 5 VC profile views, basic Insighta Test, and community features."
+      },
+      {
+        question: "Is my business idea safe?",
+        answer: "Yes. Your workspace is private by default. We do not share or sell your private startup work, and your data stays protected with secure infrastructure and access controls. More importantly, startup success comes from execution, customer understanding, and speed, not from someone casually hearing a rough idea."
       }
     ]),
     createBreadcrumbSchema([

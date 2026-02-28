@@ -36,9 +36,9 @@ export const chatbotFAQ: FAQItem[] = [
     id: 'what-is-bizmap',
     keywords: ['what is', 'bizmap', 'about', 'explain', 'what does', 'service'],
     synonyms: ['what does bizmap do', 'tell me about bizmap', 'bizmap platform'],
-    question: 'What is BizMap AI?',
-    answer: 'BizMap AI is an AI-powered business planning platform that transforms your ideas into comprehensive, actionable business plans in minutes. We use advanced AI to provide market analysis, validation experiments, and custom execution strategies.',
-    shortAnswer: 'An AI-powered platform that creates comprehensive business plans from your ideas in minutes.',
+    question: 'What is Creatives Takeover?',
+    answer: 'Creatives Takeover is a founder support platform built to help people build startups from scratch. BizMap AI is the guided AI workspace inside that journey, helping you move through the Startup Development Cycle with validation, decision support, and execution guidance.',
+    shortAnswer: 'A founder support platform that helps you build a startup from scratch with guided AI and execution tools.',
     category: FAQCategory.GENERAL,
     priority: 9,
     quickActions: [
@@ -49,7 +49,7 @@ export const chatbotFAQ: FAQItem[] = [
       views: 2847,
       helpful: 234,
       notHelpful: 12,
-      tags: ['platform', 'AI', 'business planning']
+      tags: ['platform', 'AI', 'startup development']
     }
   }),
   createFAQItem({
@@ -57,8 +57,8 @@ export const chatbotFAQ: FAQItem[] = [
     keywords: ['price', 'cost', 'pricing', 'how much', 'plans', 'subscription', 'free'],
     synonyms: ['what does it cost', 'subscription price', 'plan costs'],
     question: 'How much does it cost?',
-    answer: 'We offer flexible pricing plans starting with a free tier. Our Starter plan includes basic features, while Elite and Teams plans provide advanced AI analysis, unlimited business plans, and priority support.',
-    shortAnswer: 'Flexible plans from free tier to Elite and Teams with advanced features.',
+    answer: 'We offer a free Rookie plan plus paid Rising and Pro tiers, so founders can start validating and building before committing to heavier usage. The higher tiers unlock more monthly credits and deeper access across the startup-building workflow.',
+    shortAnswer: 'Rookie, Rising, and Pro plans give you different levels of monthly credits and startup-building access.',
     category: FAQCategory.PRICING,
     priority: 8,
     quickActions: [
@@ -76,9 +76,9 @@ export const chatbotFAQ: FAQItem[] = [
     id: 'how-it-works',
     keywords: ['how does', 'work', 'process', 'steps', 'guide', 'tutorial'],
     synonyms: ['how it functions', 'planning process', 'step by step'],
-    question: 'How does the business planning work?',
-    answer: 'Simply describe your business idea, and our AI analyzes it in 4 steps: Market Research, Validation Experiments, Business Model Design, and Execution Strategy. You get a comprehensive business plan in minutes, not weeks.',
-    shortAnswer: '4-step AI process: Research, Validation, Business Model, Execution Strategy.',
+    question: 'How does the Startup Development Cycle work?',
+    answer: 'The Startup Development Cycle helps you move from rough idea to real startup in stages: clarify the problem, validate demand, define the customer, shape the offer, decide what to build, and keep executing with focus. BizMap AI and the surrounding tools support each step so you keep moving instead of getting stuck in theory.',
+    shortAnswer: 'A guided startup-building process that takes you from rough idea to validated execution steps.',
     category: FAQCategory.PROCESS,
     priority: 8,
     quickActions: [
@@ -98,7 +98,7 @@ export const chatbotFAQ: FAQItem[] = [
     keywords: ['free', 'trial', 'demo', 'test', 'try', 'without paying'],
     synonyms: ['free version', 'trial period', 'demo version'],
     question: 'Can I try it for free?',
-    answer: 'Yes! We offer a free tier that includes basic business plan generation. You can also schedule a live demo to see the full platform in action with one of our experts.',
+    answer: 'Yes. Our free Rookie tier lets you explore the platform, use BizMap AI, access core validation tools, and start building before upgrading. You can also schedule a live demo to see the full platform in action.',
     shortAnswer: 'Yes! Free tier available plus live demo options.',
     category: FAQCategory.PRICING,
     priority: 7,
@@ -186,7 +186,7 @@ export const chatbotFAQ: FAQItem[] = [
       { text: 'See AI in Action', action: 'navigate', type: QuickActionType.NAVIGATE, href: '/bizmap-ai', priority: 1 },
       { text: 'Learn About Features', action: 'navigate', type: QuickActionType.NAVIGATE, href: '/services', priority: 2 }
     ],
-    followUpQuestions: ['How does the business planning work?', 'What is BizMap AI?'],
+    followUpQuestions: ['How does the Startup Development Cycle work?', 'What is Creatives Takeover?'],
     metadata: {
       views: 1089,
       helpful: 98,
@@ -197,22 +197,22 @@ export const chatbotFAQ: FAQItem[] = [
   // New enhanced FAQ items with business intelligence
   createFAQItem({
     id: 'business-plan-sections',
-    keywords: ['business plan', 'sections', 'structure', 'components', 'outline', 'template'],
-    synonyms: ['plan structure', 'business plan outline', 'plan components'],
-    question: 'What sections are included in a business plan?',
-    answer: 'A comprehensive business plan includes: Executive Summary, Company Description, Market Analysis, Organization & Management, Products & Services, Marketing & Sales Strategy, Financial Projections, and Implementation Timeline. Our AI ensures all sections are tailored to your specific industry and business model.',
-    shortAnswer: '8 key sections: Executive Summary, Company Description, Market Analysis, Organization, Products/Services, Marketing Strategy, Financial Projections, and Implementation Timeline.',
+    keywords: ['startup development cycle', 'stages', 'process', 'execution', 'mvp', 'validation'],
+    synonyms: ['startup process', 'build from scratch', 'how the cycle works'],
+    question: 'What does the Startup Development Cycle include?',
+    answer: 'The Startup Development Cycle covers the work founders actually need to do next: understanding the problem, validating demand, defining the customer, refining positioning, choosing the right stack, shaping the MVP, and building a realistic execution rhythm. It is designed to help you move from scratch to momentum, not just generate a polished document.',
+    shortAnswer: 'A guided cycle covering validation, customer clarity, positioning, MVP decisions, stack choices, and execution.',
     category: FAQCategory.PROCESS,
     priority: 8,
     quickActions: [
-      { text: 'Start Business Plan', action: 'navigate', type: QuickActionType.NAVIGATE, href: '/bizmap-ai', priority: 1 },
+      { text: 'Start Building', action: 'navigate', type: QuickActionType.NAVIGATE, href: '/bizmap-ai', priority: 1 },
       { text: 'View Template', action: 'navigate', type: QuickActionType.NAVIGATE, href: '/services', priority: 2 }
     ],
     metadata: {
       views: 1456,
       helpful: 134,
       notHelpful: 8,
-      tags: ['business plan', 'structure', 'template', 'sections']
+      tags: ['startup development', 'validation', 'execution', 'MVP']
     }
   }),
   createFAQItem({
@@ -259,9 +259,9 @@ export const chatbotFAQ: FAQItem[] = [
     id: 'data-security',
     keywords: ['security', 'privacy', 'data protection', 'confidential', 'safe', 'secure'],
     synonyms: ['data privacy', 'information security', 'confidentiality'],
-    question: 'How secure is my business data?',
-    answer: 'We use enterprise-grade security including end-to-end encryption, secure data centers, and strict access controls. Your business data is never shared with third parties without consent, and we comply with GDPR and other privacy regulations.',
-    shortAnswer: 'Enterprise-grade security with encryption, secure data centers, and GDPR compliance.',
+    question: 'Is my business idea safe?',
+    answer: 'Yes. Your workspace is private by default and protected with secure infrastructure, encryption, and access controls. We do not share or sell your private startup work. And in practical terms, ideas are rarely stolen into success - execution, customer understanding, and speed matter far more. Our goal is to help you move faster while keeping your work private.',
+    shortAnswer: 'Yes. Your startup work stays private, protected, and tied to your workspace.',
     category: FAQCategory.TECHNICAL,
     priority: 9,
     quickActions: [
