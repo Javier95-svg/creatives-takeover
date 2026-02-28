@@ -19,7 +19,7 @@ const Terms = () => {
         <Navigation />
         <main className="container mx-auto px-6 py-24">
           <header className="mb-16 text-center">
-            <h1 className="text-4xl md:text-6xl font-bold gradient-text creatives-font mb-6">
+            <h1 className="text-4xl md:text-6xl font-bold gradient-text creatives-font leading-tight pb-2 overflow-visible mb-6">
               Terms of Service
             </h1>
           </header>
