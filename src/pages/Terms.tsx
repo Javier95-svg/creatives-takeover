@@ -22,16 +22,6 @@ const Terms = () => {
             <h1 className="text-4xl md:text-6xl font-bold gradient-text creatives-font mb-6">
               Terms of Service
             </h1>
-            <div className="glass-card max-w-3xl mx-auto">
-              <p className="text-lg text-muted-foreground mb-2">Last updated: February 28, 2026</p>
-              <p className="text-foreground/80">
-                These Terms of Service ("Terms") form a legally binding agreement between you and
-                Creatives Takeover Ltd ("Company", "we", "us", or "our") governing your access to
-                and use of the Creatives Takeover platform, including our AI tools, startup
-                workflow features, founder community, messaging, subscriptions, mentor marketplace,
-                and related services.
-              </p>
-            </div>
           </header>
 
           <div className="max-w-4xl mx-auto space-y-8">
