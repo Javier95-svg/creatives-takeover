@@ -31,10 +31,57 @@ type ParticipantProfile = {
 };
 
 const SOPHIA_LOPEZ_PIMENTA_USER_ID = '50695a54-30c6-4b57-969e-b2de733bcd73';
+type MentorMeta = {
+  user_id: string | null;
+  name: string;
+  picture: string | null;
+};
 
 const isSophiaMentorName = (name: string | null | undefined): boolean => {
   const normalized = (name || '').toLowerCase();
   return normalized.includes('sophia') && (normalized.includes('pimenta') || normalized.includes('lopez'));
+};
+
+const normalizeIdentity = (value: string | null | undefined): string =>
+  (value || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]/g, '');
+
+const findMentorMetaForParticipant = (
+  participantId: string,
+  profile: { full_name: string | null; username: string | null } | undefined,
+  mentors: MentorMeta[]
+): MentorMeta | null => {
+  const mentorByUserId = mentors.find((mentor) => mentor.user_id === participantId);
+  if (mentorByUserId) {
+    return mentorByUserId;
+  }
+
+  const normalizedFullName = normalizeIdentity(profile?.full_name);
+  if (normalizedFullName) {
+    const mentorByName = mentors.find(
+      (mentor) => normalizeIdentity(mentor.name) === normalizedFullName
+    );
+    if (mentorByName) {
+      return mentorByName;
+    }
+  }
+
+  const normalizedUsername = normalizeIdentity(profile?.username);
+  if (normalizedUsername) {
+    const mentorByUsername = mentors.find(
+      (mentor) =>
+        normalizeIdentity(mentor.name) === normalizedUsername ||
+        normalizeIdentity(generateMentorSlug(mentor.name)) === normalizedUsername
+    );
+    if (mentorByUsername) {
+      return mentorByUsername;
+    }
+  }
+
+  return null;
 };
 
 export const MessagingInterface = ({ initialConversationId }: MessagingInterfaceProps) => {
@@ -146,15 +193,35 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
 
     const fetchCurrentUserMentorAvatar = async () => {
       try {
-        const { data, error } = await supabase
+        const { data: mentorByUserId, error } = await supabase
           .from('mentors')
-          .select('picture')
+          .select('name, picture')
           .eq('user_id', user.id)
           .eq('is_active', true)
           .maybeSingle();
 
         if (error) throw error;
-        setCurrentUserMentorAvatar(data?.picture || null);
+
+        if (mentorByUserId?.picture) {
+          setCurrentUserMentorAvatar(mentorByUserId.picture);
+          return;
+        }
+
+        const fallbackFullName = user.user_metadata?.full_name || user.user_metadata?.name || null;
+        if (!fallbackFullName) {
+          setCurrentUserMentorAvatar(null);
+          return;
+        }
+
+        const { data: mentorByName, error: mentorByNameError } = await supabase
+          .from('mentors')
+          .select('picture')
+          .eq('is_active', true)
+          .eq('name', fallbackFullName)
+          .maybeSingle();
+
+        if (mentorByNameError) throw mentorByNameError;
+        setCurrentUserMentorAvatar(mentorByName?.picture || null);
       } catch (error) {
         logError('Error fetching current user mentor avatar', error);
         setCurrentUserMentorAvatar(null);
@@ -352,53 +419,12 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
         const { data: mentorData, error: mentorError } = await supabase
           .from('mentors')
           .select('user_id, name, picture')
-          .in('user_id', idsToFetch)
           .eq('is_active', true);
 
         if (error) throw error;
         if (mentorError) throw mentorError;
 
-        let mergedMentorData = mentorData || [];
-
-        // Fallback for mentors whose user_id is not linked yet (e.g. Sophia).
-        if (idsToFetch.includes(SOPHIA_LOPEZ_PIMENTA_USER_ID)) {
-          const hasSophiaByUserId = mergedMentorData.some(
-            (mentor) => mentor.user_id === SOPHIA_LOPEZ_PIMENTA_USER_ID
-          );
-
-          if (!hasSophiaByUserId) {
-            const { data: sophiaMentorData, error: sophiaMentorError } = await supabase
-              .from('mentors')
-              .select('user_id, name, picture')
-              .eq('is_active', true)
-              .ilike('name', '%sophia%')
-              .or('name.ilike.%pimenta%,name.ilike.%lopez%')
-              .limit(1);
-
-            if (sophiaMentorError) throw sophiaMentorError;
-
-            if (sophiaMentorData?.length) {
-              mergedMentorData = [...mergedMentorData, ...sophiaMentorData];
-            }
-          }
-        }
-
-        const mentorMetaByUserId = new Map<string, { name: string; slug: string; picture: string | null }>();
-        mergedMentorData.forEach((mentor) => {
-          if (!mentor.name) return;
-
-          const mentorUserId =
-            mentor.user_id ||
-            (isSophiaMentorName(mentor.name) ? SOPHIA_LOPEZ_PIMENTA_USER_ID : null);
-
-          if (!mentorUserId) return;
-
-          mentorMetaByUserId.set(mentorUserId, {
-            name: mentor.name,
-            slug: generateMentorSlug(mentor.name),
-            picture: mentor.picture || null
-          });
-        });
+        const mergedMentorData = (mentorData || []) as MentorMeta[];
 
         const profileById = new Map(
           (data || []).map((profile) => [profile.id, profile])
@@ -407,7 +433,15 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
         const newProfiles: Record<string, ParticipantProfile> = {};
         idsToFetch.forEach((participantId) => {
           const profile = profileById.get(participantId);
-          const mentorMeta = mentorMetaByUserId.get(participantId);
+          let mentorMeta = findMentorMetaForParticipant(participantId, profile, mergedMentorData);
+
+          if (
+            !mentorMeta &&
+            participantId === SOPHIA_LOPEZ_PIMENTA_USER_ID
+          ) {
+            mentorMeta =
+              mergedMentorData.find((mentor) => isSophiaMentorName(mentor.name)) || null;
+          }
 
           if (!profile && !mentorMeta) return;
 
@@ -416,7 +450,7 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
             // Keep avatar aligned with mentor banner picture whenever available.
             avatar_url: mentorMeta?.picture || profile?.avatar_url || null,
             username: profile?.username || null,
-            mentor_slug: mentorMeta?.slug || null
+            mentor_slug: mentorMeta?.name ? generateMentorSlug(mentorMeta.name) : null
           };
         });
 
