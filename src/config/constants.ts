@@ -189,9 +189,8 @@ export const CREDIT_PACK_OPTIONS = [
 ] as const;
 
 // Stripe Payment Links for credit packs (one-time purchases)
-// TODO: Replace with actual Stripe Payment Link URLs after creating products in Stripe Dashboard
 export const CREDIT_PACK_PAYMENT_LINKS: Record<string, string> = {
-  pack_20: '',
+  pack_20: 'https://buy.stripe.com/dRm5kE4Gl9Kv8746zF0VO0h',
   pack_40: '',
   pack_60: '',
 };
