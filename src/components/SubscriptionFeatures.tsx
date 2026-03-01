@@ -1,20 +1,15 @@
-import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Bot,
   Users,
   TrendingUp,
-  Check,
   LayoutDashboard,
   Lightbulb
 } from "lucide-react";
 import { CREDIT_COSTS } from "@/config/constants";
 
 const SubscriptionFeatures = () => {
-  const [selectedTier, setSelectedTier] = useState<'free' | 'creator' | 'professional'>('creator');
-
   const creditBreakdown = {
     dashboard: [
       { name: "Focus Funnel", cost: 0, description: "Goal tracking and prioritization", badge: "FREE" },
@@ -58,24 +53,6 @@ const SubscriptionFeatures = () => {
     ],
   };
 
-  const usageExamples = {
-    free: {
-      credits: 25,
-      example: "25 AI chat messages OR 1 Market Research + 1 Launch Report + 15 chat messages OR 5 Discovery Calls",
-      typical: "Perfect for exploring ideas and validating concepts with Dashboard basics and mentor discovery calls",
-    },
-    creator: {
-      credits: 50,
-      example: "30 AI chat messages + 1 ICP Builder + 1 PMF analysis + 2 tech stacks + 1 pitch deck analyzer + 2 email templates OR 10 Discovery Calls",
-      typical: "Build your startup with comprehensive AI tools across Learn and Build phases, plus mentor discovery calls",
-    },
-    professional: {
-      credits: 150,
-      example: "100 AI messages + 1 GTM Strategist + 3 PMF analyses + 5 pitch deck analyses + 5 email templates + market research + MVP Builder OR 30 Discovery Calls",
-      typical: "Scale your operations with unlimited VC access, complete Measure phase tools, and extensive mentor discovery calls",
-    },
-  };
-
   return (
     <section className="relative py-section-mobile lg:py-section-desktop overflow-hidden" id="features">
       <div className="container mx-auto px-4 sm:px-6 relative z-10">
@@ -93,38 +70,6 @@ const SubscriptionFeatures = () => {
             Choose your plan based on what you need and how you work.
           </p>
         </div>
-
-        {/* Tier Selector Tabs */}
-        <Tabs value={selectedTier} onValueChange={(value) => setSelectedTier(value as 'free' | 'creator' | 'professional')} className="mb-12">
-          <TabsList className="grid w-full grid-cols-3 max-w-md mx-auto rounded-full border border-border/60 bg-background/70 p-1 shadow-sm backdrop-blur">
-            <TabsTrigger className="rounded-full text-sm font-medium font-poppins data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" value="free">Rookie (25)</TabsTrigger>
-            <TabsTrigger className="rounded-full text-sm font-medium font-poppins data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" value="creator">Rising (50)</TabsTrigger>
-            <TabsTrigger className="rounded-full text-sm font-medium font-poppins data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" value="professional">Pro (150)</TabsTrigger>
-          </TabsList>
-        </Tabs>
-
-        {/* Usage Example Card */}
-        <Card className="mb-12 max-w-4xl mx-auto rounded-2xl border-primary/30 bg-primary/5 shadow-md backdrop-blur">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Lightbulb className="h-5 w-5 text-primary" />
-              {selectedTier === 'free' ? 'Rookie' : selectedTier === 'creator' ? 'Rising' : 'Pro'} Plan Example Usage
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-baseline gap-2">
-              <Badge className="text-lg px-3 py-1">{usageExamples[selectedTier].credits} credits/month</Badge>
-            </div>
-            <div>
-              <p className="text-sm font-medium mb-2">Typical monthly usage:</p>
-              <p className="text-muted-foreground">{usageExamples[selectedTier].example}</p>
-            </div>
-            <div>
-              <p className="text-sm font-medium mb-2">Perfect for:</p>
-              <p className="text-muted-foreground">{usageExamples[selectedTier].typical}</p>
-            </div>
-          </CardContent>
-        </Card>
 
         {/* Credit Breakdown Grid - wider cards for readability */}
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 items-start">
