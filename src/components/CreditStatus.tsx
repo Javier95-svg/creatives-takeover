@@ -1,6 +1,5 @@
 import { Coins, AlertTriangle, CheckCircle, Info, TrendingUp } from "lucide-react";
 import { useCredits } from "@/hooks/useCredits";
-import { useSubscription } from "@/hooks/useSubscription";
 import { useFeatureGating } from "@/hooks/useFeatureGating";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -16,7 +15,6 @@ interface CreditStatusProps {
 
 export function CreditStatus({ requiredCredits, feature, showPurchaseLink = true }: CreditStatusProps) {
   const { balance, monthlyQuota, hasCredits } = useCredits();
-  const { subscriptionData } = useSubscription();
   const { currentTier } = useFeatureGating();
   
   const totalAvailable = balance + monthlyQuota;
@@ -92,6 +90,9 @@ export function CreditStatus({ requiredCredits, feature, showPurchaseLink = true
     if (featureLower.includes('roadmap')) {
       return ` Roadmap generation costs ${CREDIT_COSTS.ROADMAP_GENERATION} credits.`;
     }
+    if (featureLower.includes('waitlist')) {
+      return ` Publishing a waitlist page costs ${CREDIT_COSTS.WAITLIST_GENERATION} credits.`;
+    }
     if (featureLower.includes('market validation') || featureLower.includes('validation')) {
       return ` Market validation costs ${CREDIT_COSTS.MARKET_VALIDATION} credits.`;
     }
@@ -102,7 +103,7 @@ export function CreditStatus({ requiredCredits, feature, showPurchaseLink = true
       return ` Sprint task generation costs ${CREDIT_COSTS.SPRINT_TASK_GENERATION} credits.`;
     }
     if (featureLower.includes('pdf') || featureLower.includes('export')) {
-      return ` PDF export costs ${CREDIT_COSTS.PDF_EXPORT} credits.`;
+      return ` Report exports cost ${CREDIT_COSTS.PDF_EXPORT} credits.`;
     }
     if (featureLower.includes('chat') || featureLower.includes('message') || featureLower.includes('bizmap')) {
       return ` BizMap AI messages cost ${CREDIT_COSTS.AI_CHAT_MESSAGE} credit each.`;

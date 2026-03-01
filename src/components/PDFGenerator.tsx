@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
 import { CreditCostBadge } from "@/components/CreditCostTooltip";
 import { Button } from '@/components/ui/button';
-import { Download, FileText, Loader2, FileType } from 'lucide-react';
+import { Download, Loader2, FileType } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { useCreditActions } from '@/hooks/useCreditActions';
+import { CREDIT_COSTS } from '@/config/constants';
 import DOMPurify from 'dompurify';
 
 interface SuccessScore {
@@ -41,6 +44,8 @@ const PDFGenerator: React.FC<PDFGeneratorProps> = ({
   validationScore,
   className = ""
 }) => {
+  const { user } = useAuth();
+  const { deductCredits } = useCreditActions();
   const [isGenerating, setIsGenerating] = useState(false);
   const [isGeneratingWord, setIsGeneratingWord] = useState(false);
 
@@ -125,7 +130,7 @@ const PDFGenerator: React.FC<PDFGeneratorProps> = ({
           const fileName = `${businessName || 'Business'}_Launch_Report_${new Date().toISOString().split('T')[0]}.pdf`;
           pdf.save(fileName);
 
-          toast.success('PDF report generated successfully!');
+          toast.success(`PDF report generated successfully! (Used ${CREDIT_COSTS.PDF_EXPORT} credits)`);
         } finally {
           // Clean up temporary div
           document.body.removeChild(tempDiv);
@@ -146,8 +151,27 @@ const PDFGenerator: React.FC<PDFGeneratorProps> = ({
     setIsGeneratingWord(true);
 
     try {
+      if (!user) {
+        toast.error('Please sign in to export your report.');
+        return;
+      }
+
+      const creditsDeducted = await deductCredits('PDF_EXPORT', {
+        featureName: 'Word Export',
+        description: 'Export your report as a Word document.',
+        metadata: {
+          businessName,
+          format: 'docx',
+          reportLength: reportContent.length,
+        },
+      });
+
+      if (!creditsDeducted) {
+        return;
+      }
+
       // Lazy-load docx library
-      const { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } = await import('docx');
+      const { Document, Packer, Paragraph, HeadingLevel, AlignmentType } = await import('docx');
 
       // Convert markdown-style report to Word document structure
       const sections: any[] = [];
@@ -296,7 +320,7 @@ const PDFGenerator: React.FC<PDFGeneratorProps> = ({
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
 
-      toast.success('Word document generated successfully!');
+      toast.success(`Word document generated successfully! (Used ${CREDIT_COSTS.PDF_EXPORT} credits)`);
     } catch (error) {
       console.error('Error generating Word document:', error);
       toast.error('Failed to generate Word document. Please try again.');

@@ -224,9 +224,14 @@ serve(async (req) => {
       cold_email: CREDIT_COSTS.COLD_EMAIL_GENERATION,
       one_pager: CREDIT_COSTS.ONEPAGER_GENERATION
     };
+    const featureNameMap: Record<MaterialType, string> = {
+      pitch_deck: 'Pitch Deck Generation',
+      cold_email: 'Cold Email Generation',
+      one_pager: 'One-Pager Generation',
+    };
 
     const creditCost = creditCostMap[request.material_type];
-    const featureName = `${request.material_type.replace('_', ' ')} Generation`;
+    const featureName = featureNameMap[request.material_type];
     const idempotencyKey = await resolveCreditIdempotencyKey(req, {
       userId: user.id,
       feature: featureName,

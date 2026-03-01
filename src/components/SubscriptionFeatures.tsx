@@ -18,18 +18,17 @@ const SubscriptionFeatures = () => {
       { name: "Weekly Mission", cost: 0, description: "Weekly goal setting and tracking", badge: "FREE" },
       { name: "Your Tasks", cost: 0, description: "Task management and organization", badge: "FREE" },
       { name: "Roadmap Generation", cost: CREDIT_COSTS.ROADMAP_GENERATION, description: "Strategic business roadmap" },
-      { name: "Market Research", cost: CREDIT_COSTS.MARKET_RESEARCH, description: "In-depth market analysis and insights" },
-      { name: "Financial Analysis", cost: CREDIT_COSTS.FINANCIAL_ANALYSIS, description: "Financial projections and modeling" },
-      { name: "Business Insights", cost: CREDIT_COSTS.BUSINESS_INSIGHTS, description: "Custom business intelligence reports" },
     ],
     bizmap: [
       { name: "Business Planner (AI Chat)", cost: CREDIT_COSTS.AI_CHAT_MESSAGE, description: "Every message in Business Planning mode" },
       { name: "ICP Builder", cost: CREDIT_COSTS.ICP_ANALYSIS, description: "Define your ideal customer profile" },
+      { name: "Waitlist Maker", cost: CREDIT_COSTS.WAITLIST_GENERATION, description: "Publish your waitlist page and capture early signups" },
       { name: "Product-Market Fit Lab", cost: CREDIT_COSTS.PMF_ANALYSIS, description: "Complete PMF analysis with recommendations" },
       { name: "MVP Builder", cost: CREDIT_COSTS.LAUNCH_REPORT, description: "14-day MVP building sprint" },
       { name: "Tech Stack Builder", cost: CREDIT_COSTS.TECH_STACK_GENERATION, description: "Custom tech stack for your startup" },
       { name: "GTM Strategist", cost: CREDIT_COSTS.ROADMAP_GENERATION, description: "End-to-end go-to-market planning" },
       { name: "Launch Report", cost: CREDIT_COSTS.LAUNCH_REPORT, description: "Comprehensive business launch roadmap" },
+      { name: "Asset Generation", cost: CREDIT_COSTS.ASSET_GENERATION, description: "Generate outreach, social posts, and landing page assets" },
       { name: "Prompt Generation", cost: CREDIT_COSTS.PROMPT_GENERATION, description: "AI-generated custom prompts" },
     ],
     insighta: [
@@ -49,7 +48,8 @@ const SubscriptionFeatures = () => {
     ],
     resources: [
       { name: "Stories", cost: 0, description: "Read founder stories and insights", badge: "FREE" },
-      { name: "Prompt Library", cost: CREDIT_COSTS.PROMPT_GENERATION, description: "Browse prompts (generation costs credits)", badge: "VIEW FREE" },
+      { name: "Prompt Library", cost: CREDIT_COSTS.PROMPT_GENERATION, description: "Browse prompts free, then load or copy premium prompts with credits", badge: "VIEW FREE" },
+      { name: "Report Export", cost: CREDIT_COSTS.PDF_EXPORT, description: "Export your report as PDF or Word" },
     ],
   };
 

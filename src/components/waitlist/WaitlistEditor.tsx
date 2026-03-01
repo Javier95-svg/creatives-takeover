@@ -3,6 +3,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useBizMapProgress } from '@/hooks/useBizMapProgress';
+import { useCreditActions } from '@/hooks/useCreditActions';
+import { CREDIT_COSTS } from '@/config/constants';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -142,6 +144,7 @@ function textToLines(raw: string, min: number, max: number, fallback: string[]):
 export default function WaitlistEditor() {
   const { user } = useAuth();
   const { refreshProgress } = useBizMapProgress();
+  const { ensureCredits } = useCreditActions();
 
   const [activeTab, setActiveTab] = useState<BuilderTab>('content');
   const [allPages, setAllPages] = useState<WaitlistPageRow[]>([]);
@@ -384,6 +387,15 @@ export default function WaitlistEditor() {
       return;
     }
 
+    const requiredCredits = ensureCredits('WAITLIST_GENERATION', {
+      featureName: 'Waitlist Page Generation',
+      description: 'Publish your waitlist page and make it live for signups.',
+    });
+    if (requiredCredits === null) {
+      setIsPublishing(false);
+      return;
+    }
+
     const slug = currentSlug || generateSlug(productName || 'waitlist');
     const normalized = normalizeWaitlistContent(content, productName || 'Your Product');
 
@@ -400,7 +412,7 @@ export default function WaitlistEditor() {
     setIsPublishing(false);
 
     if (error) {
-      toast.error('Publish failed. Please try again.');
+      toast.error(error.message || 'Publish failed. Please try again.');
       return;
     }
 
@@ -410,7 +422,7 @@ export default function WaitlistEditor() {
     await fetchAnalytics(pageId);
     await loadAllPages();
     await refreshProgress();
-    toast.success('Waitlist published. Share your public URL.');
+    toast.success(`Waitlist published. Share your public URL. (Used ${requiredCredits} credits)`);
   };
 
   const handleUnpublish = async () => {
@@ -894,7 +906,9 @@ export default function WaitlistEditor() {
                       </div>
                     </div>
                   ) : (
-                    <div className="rounded-md border border-dashed p-3 text-xs text-muted-foreground">Publish your page to get a public URL.</div>
+                    <div className="rounded-md border border-dashed p-3 text-xs text-muted-foreground">
+                      Publish your page to get a public URL. Publishing costs {CREDIT_COSTS.WAITLIST_GENERATION} credits.
+                    </div>
                   )}
 
                   <div className="space-y-2">

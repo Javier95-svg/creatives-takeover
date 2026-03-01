@@ -2,6 +2,9 @@ import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { useCreditActions } from '@/hooks/useCreditActions';
+import { useCredits } from '@/hooks/useCredits';
+import { CREDIT_COSTS } from '@/config/constants';
 
 interface FounderOSIntegrationData {
   sessionId: string;
@@ -12,6 +15,8 @@ interface FounderOSIntegrationData {
 
 export const useFounderOSIntegration = () => {
   const { user } = useAuth();
+  const { ensureCredits, handleCreditError } = useCreditActions();
+  const { refreshBalance } = useCredits();
   const [validating, setValidating] = useState(false);
   const [generatingRoadmap, setGeneratingRoadmap] = useState(false);
   const [validationComplete, setValidationComplete] = useState(false);
@@ -25,6 +30,9 @@ export const useFounderOSIntegration = () => {
 
     setValidating(true);
     try {
+      const requiredCredits = ensureCredits('MARKET_VALIDATION', { featureName: 'Market Validation' });
+      if (requiredCredits === null) return false;
+
       const { data: result, error } = await supabase.functions.invoke('market-validation-engine', {
         body: {
           business_idea: data.businessIdea,
@@ -34,11 +42,24 @@ export const useFounderOSIntegration = () => {
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        if (handleCreditError(error, result, 'MARKET_VALIDATION', { featureName: 'Market Validation' })) {
+          return false;
+        }
+        throw error;
+      }
+
+      if (result?.error) {
+        if (handleCreditError(null, result, 'MARKET_VALIDATION', { featureName: 'Market Validation' })) {
+          return false;
+        }
+        throw new Error(result.error);
+      }
 
       if (result?.validation_score) {
         setValidationComplete(true);
-        toast.success(`Market Validation Complete! Score: ${result.validation_score.overall_validation_score}/100`);
+        toast.success(`Market Validation Complete! Score: ${result.validation_score.overall_validation_score}/100 (Used ${CREDIT_COSTS.MARKET_VALIDATION} credits)`);
+        await refreshBalance();
         return true;
       }
 
@@ -60,6 +81,9 @@ export const useFounderOSIntegration = () => {
 
     setGeneratingRoadmap(true);
     try {
+      const requiredCredits = ensureCredits('ROADMAP_GENERATION', { featureName: 'Roadmap Generation' });
+      if (requiredCredits === null) return false;
+
       const { data: result, error } = await supabase.functions.invoke('roadmap-task-generator', {
         body: {
           session_id: data.sessionId,
@@ -71,11 +95,24 @@ export const useFounderOSIntegration = () => {
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        if (handleCreditError(error, result, 'ROADMAP_GENERATION', { featureName: 'Roadmap Generation' })) {
+          return false;
+        }
+        throw error;
+      }
+
+      if (result?.error) {
+        if (handleCreditError(null, result, 'ROADMAP_GENERATION', { featureName: 'Roadmap Generation' })) {
+          return false;
+        }
+        throw new Error(result.error);
+      }
 
       if (result?.roadmap) {
         setRoadmapComplete(true);
-        toast.success(`30-Day Roadmap Created! ${result.tasks?.length || 0} tasks generated.`);
+        toast.success(`30-Day Roadmap Created! ${result.tasks?.length || 0} tasks generated. (Used ${requiredCredits} credits)`);
+        await refreshBalance();
         return true;
       }
 

@@ -20,7 +20,7 @@ const FAQPage = () => {
       },
       {
         question: "What is the credit system?",
-        answer: "Credits power AI actions across the platform. BizMap AI chat costs 1 credit per message, deeper analysis tools like PMF Lab and Pitch Deck Analyzer cost 10 credits each, and premium founder actions like Investor Matching cost 12 credits. Credits refresh monthly based on your plan tier. If you run out mid-month, you can buy extra credit packs (20, 40, or 60 credits) on any plan - purchased credits never expire and are used after your monthly quota."
+        answer: "Credits power AI actions across the platform. BizMap AI chat costs 1 credit per message, Prompt Generation costs 2 credits, Waitlist publishing costs 3 credits, Tech Stack and Email Templates cost 4 credits, Launch Reports and Roadmap Generation cost 6 credits, deeper analysis tools like PMF Lab and Pitch Deck Analyzer cost 10 credits, and premium founder actions like Investor Matching cost 12 credits. Credits refresh monthly based on your plan tier. If you run out mid-month, you can buy extra credit packs (20, 40, or 60 credits) on any plan - purchased credits never expire and are used after your monthly quota."
       },
       {
         question: "What makes Creatives Takeover different?",

@@ -186,7 +186,7 @@ const SearchableFAQ = () => {
       id: 19,
       category: "Credits",
       question: "How does the credit system work?",
-      answer: "Credits power all AI features on the platform. Each action has a specific credit cost: BizMap AI messages (1 credit), Launch Reports (6 credits), PMF Analysis (10 credits), Pitch Deck Analysis (10 credits), Insighta Tests (10 credits), Tech Stack Generation (4 credits), Cold Email Generation (4 credits), and Prompt Generation (2 credits). Credits refresh monthly based on your plan.",
+      answer: "Credits power all AI features on the platform. Each action has a specific credit cost: BizMap AI messages (1 credit), Prompt Generation (2 credits), Waitlist Page publishing (3 credits), Tech Stack Generation (4 credits), Email Template and Cold Email Generation (4 credits), Launch Reports (6 credits), PMF Analysis (10 credits), Pitch Deck Analysis (10 credits), Insighta Tests (10 credits), Market Validation (12 credits), and Investor Matching (12 credits). Credits refresh monthly based on your plan.",
       popular: true,
       tags: ["credits", "costs", "ai features", "monthly"]
     },
@@ -202,7 +202,7 @@ const SearchableFAQ = () => {
       id: 21,
       category: "Credits",
       question: "Which features use the most credits?",
-      answer: "Premium AI analyses use the most credits: PMF Analysis (10 credits), Pitch Deck Analyzer (10 credits), Financial Analysis (10 credits), and Fundraising Readiness Analysis (10 credits). The highest-value founder actions sit above that: Market Validation and Investor Matching cost 12 credits, and Discovery Calls cost 10 credits. Mid-tier features include Market Research (6 credits) and Roadmap Generation (6 credits). BizMap AI chat messages are just 1 credit each, making it efficient for ongoing startup building and decision making.",
+      answer: "Premium AI analyses use the most credits: PMF Analysis (10 credits), Pitch Deck Analyzer (10 credits), and Fundraising Readiness Analysis (10 credits). The highest-value founder actions sit above that: Market Validation and Investor Matching cost 12 credits, while Discovery Calls cost 10 credits. Mid-tier features include Launch Reports and Roadmap Generation at 6 credits, while Waitlist publishing is 3 credits and BizMap AI chat messages are just 1 credit each.",
       popular: false,
       tags: ["credit costs", "features", "expensive", "affordable"]
     },

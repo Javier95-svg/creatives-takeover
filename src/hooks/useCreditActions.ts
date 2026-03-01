@@ -25,6 +25,7 @@ const CREDIT_FEATURE_LABELS: Record<CreditFeature, string> = {
   SPRINT_TASK_GENERATION: 'Sprint Task Generation',
   ROADMAP_GENERATION: 'Roadmap Generation',
   TECH_STACK_GENERATION: 'Tech Stack Generation',
+  WAITLIST_GENERATION: 'Waitlist Page Generation',
   PDF_EXPORT: 'PDF Export',
   ADVANCED_ANALYTICS: 'Advanced Analytics',
   PITCH_DECK_ANALYZER: 'Pitch Deck Analyzer',

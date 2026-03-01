@@ -36,6 +36,9 @@ export const CREDIT_COSTS = {
   // Tech Stack Generator
   TECH_STACK_GENERATION: 4,
 
+  // Waitlist Maker
+  WAITLIST_GENERATION: 3,
+
   // Other Premium Features
   PDF_EXPORT: 2,
   ADVANCED_ANALYTICS: 6,
