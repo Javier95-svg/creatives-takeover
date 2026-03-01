@@ -67,7 +67,7 @@ const SubscriptionFeatures = () => {
             How Our Credit System Works
           </h2>
           <p className="text-lg sm:text-xl text-muted-foreground max-w-3xl mx-auto font-poppins">
-            Choose your plan based on what you need and how you work.
+            Every tool has a transparent credit cost — see exactly what each action uses before you spend a single credit.
           </p>
         </div>
 
