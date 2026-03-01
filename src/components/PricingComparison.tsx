@@ -53,7 +53,7 @@ const PricingComparison = () => {
         { feature: "Find a Mentor", free: "Browse only", creator: "Full access", professional: "Full + verified priority" },
         { feature: "Find a Co-Founder", free: "Browse only", creator: "Full access", professional: "Full + featured listings" },
         { feature: "Find your Angel", free: false, creator: false, professional: "Full access" },
-        { feature: "Discovery Calls", free: "5 credits/call", creator: "5 credits/call", professional: "5 credits/call" }
+        { feature: "Discovery Calls", free: "10 credits/call", creator: "10 credits/call", professional: "10 credits/call" }
       ]
     },
     {

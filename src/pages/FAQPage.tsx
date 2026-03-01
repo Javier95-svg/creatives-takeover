@@ -16,11 +16,11 @@ const FAQPage = () => {
       },
       {
         question: "How much does it cost?",
-        answer: "We offer three plans: Rookie (Free) with 25 credits/month for idea validation, Rising at $32.99/month with 100 credits for building your startup, and Pro at $74.99/month with 300 credits for scaling with unlimited access. Annual billing saves approximately 25%. You can also buy extra credit packs (10, 20, or 40 credits) on any plan — they never expire."
+        answer: "We offer three plans: Rookie (Free) with 25 credits/month for idea validation, Rising at $32.99/month with 100 credits for building your startup, and Pro at $74.99/month with 300 credits for scaling with unlimited access. Annual billing saves approximately 25%. You can also buy extra credit packs (20, 40, or 60 credits) on any plan - they never expire."
       },
       {
         question: "What is the credit system?",
-        answer: "Credits power AI actions across the platform. BizMap AI chat costs 1 credit per message, deeper analysis tools like PMF Lab and Pitch Deck Analyzer cost 8 credits each, and credits refresh monthly based on your plan tier. If you run out mid-month, you can buy extra credit packs (10, 20, or 40 credits) on any plan — purchased credits never expire and are used after your monthly quota."
+        answer: "Credits power AI actions across the platform. BizMap AI chat costs 1 credit per message, deeper analysis tools like PMF Lab and Pitch Deck Analyzer cost 10 credits each, and premium founder actions like Investor Matching cost 12 credits. Credits refresh monthly based on your plan tier. If you run out mid-month, you can buy extra credit packs (20, 40, or 60 credits) on any plan - purchased credits never expire and are used after your monthly quota."
       },
       {
         question: "What makes Creatives Takeover different?",

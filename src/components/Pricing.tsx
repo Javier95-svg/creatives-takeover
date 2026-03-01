@@ -80,7 +80,7 @@ const Pricing = () => {
         "VC Search: 5 views per month",
         "Stories: read-only",
         "Community access: limited",
-        "Discovery Calls: Book calls with mentors (5 credits per call)",
+        "Discovery Calls: Book calls with mentors (10 credits per call)",
       ],
       creator: [
         "100 credits per month",
@@ -89,7 +89,7 @@ const Pricing = () => {
         "Insighta: VC Search, Email Templates, Pitch Deck Analyzer, Insighta Test",
         "Community: Find a Mentor, Find a Co-Founder",
         "Stories and Prompt Library",
-        "Discovery Calls: Book calls with mentors (5 credits per call)",
+        "Discovery Calls: Book calls with mentors (10 credits per call)",
       ],
       professional: [
         "300 credits per month",
@@ -99,7 +99,7 @@ const Pricing = () => {
         "Community: Find a Mentor, Find a Co-Founder, Find your Angel",
         "Stories, Prompt Library, and custom templates",
         "Early access to new features",
-        "Discovery Calls: Book calls with mentors (5 credits per call)",
+        "Discovery Calls: Book calls with mentors (10 credits per call)",
       ],
     };
     return featureMap[tierName] || [];

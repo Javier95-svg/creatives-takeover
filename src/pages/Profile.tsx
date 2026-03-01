@@ -136,7 +136,7 @@ const Profile = () => {
       return;
     }
 
-    // Deduct credits for discovery call (5 credits) BEFORE opening Calendly
+    // Deduct credits for discovery call (10 credits) BEFORE opening Calendly
     // This ensures users are always charged when booking a call
     const creditsDeducted = await deductCredits('DISCOVERY_CALL', {
       featureName: 'Discovery Call',

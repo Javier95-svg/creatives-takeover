@@ -32,14 +32,7 @@ export function useFeatureGating() {
     const tier = subscriptionData.subscription_tier || 'free';
 
     switch (feature) {
-      // BizMap AI conversation limits
       case 'bizmap_conversation':
-        const conversationLimits = {
-          free: 10,
-          creator: 50,
-          professional: 150
-        };
-        
         if (!hasCredits(CREDIT_COSTS.AI_CHAT_MESSAGE)) {
           return { 
             hasAccess: false, 
@@ -229,7 +222,7 @@ export function useFeatureGating() {
       // Tech Stack Generator
       case 'tech_stack_generation':
         if (tier === 'free') {
-          // Free tier: 1 generation/month (3 credits)
+          // Free tier: 1 generation/month (4 credits)
           // Check will be done at component level for usage limits
           if (!hasCredits(CREDIT_COSTS.TECH_STACK_GENERATION)) {
             return {
@@ -258,7 +251,7 @@ export function useFeatureGating() {
             requiredTier: 'creator'
           };
         }
-        // Creator+ has full access (8 credits)
+        // Creator+ has full access (10 credits)
         if (!hasCredits(CREDIT_COSTS.PMF_ANALYSIS)) {
           return {
             hasAccess: false,
@@ -280,7 +273,7 @@ export function useFeatureGating() {
             requiredTier: 'creator'
           };
         }
-        // Creator+ has full access (8 credits)
+        // Creator+ has full access (10 credits)
         if (!hasCredits(CREDIT_COSTS.ICP_ANALYSIS)) {
           return {
             hasAccess: false,
@@ -292,7 +285,7 @@ export function useFeatureGating() {
       // Insighta Test (Fundraising Readiness Assessment)
       case 'insighta_test':
         if (tier === 'free') {
-          // Free tier: 1 assessment/month (8 credits)
+          // Free tier: 1 assessment/month (10 credits)
           // Check will be done at component level for usage limits
           if (!hasCredits(CREDIT_COSTS.FUNDRAISING_READINESS_ANALYSIS)) {
             return {
@@ -321,7 +314,7 @@ export function useFeatureGating() {
             requiredTier: 'professional'
           };
         }
-        // Professional tier has full matching (5 credits)
+        // Professional tier has full matching (12 credits)
         if (!hasCredits(CREDIT_COSTS.INVESTOR_MATCHING)) {
           return {
             hasAccess: false,
@@ -343,7 +336,7 @@ export function useFeatureGating() {
             requiredTier: 'creator'
           };
         }
-        // Creator+ has full access (8 credits)
+        // Creator+ has full access (10 credits)
         if (!hasCredits(CREDIT_COSTS.PITCH_DECK_ANALYZER)) {
           return {
             hasAccess: false,
@@ -361,7 +354,7 @@ export function useFeatureGating() {
             requiredTier: 'creator'
           };
         }
-        // Creator+ has full access (3 credits)
+        // Creator+ has full access (4 credits)
         if (!hasCredits(CREDIT_COSTS.EMAIL_TEMPLATE_GENERATION)) {
           return {
             hasAccess: false,
@@ -493,7 +486,7 @@ export function useFeatureGating() {
             requiredTier: 'creator'
           };
         }
-        // Creator+ has full access (5 credits)
+        // Creator+ has full access (6 credits)
         if (!hasCredits(CREDIT_COSTS.LAUNCH_REPORT)) {
           return {
             hasAccess: false,
@@ -511,7 +504,7 @@ export function useFeatureGating() {
             requiredTier: 'professional'
           };
         }
-        // Professional tier has full access (5 credits)
+        // Professional tier has full access (6 credits)
         if (!hasCredits(CREDIT_COSTS.ROADMAP_GENERATION)) {
           return {
             hasAccess: false,
@@ -544,7 +537,7 @@ export function useFeatureGating() {
         // Professional tier has full access (free, no credits)
         return { hasAccess: true };
 
-      // Discovery Calls with Mentors (Available to all tiers, costs 5 credits)
+      // Discovery Calls with Mentors (Available to all tiers, costs 10 credits)
       case 'discovery_calls_mentors':
         // All tiers can access, but need credits
         if (!hasCredits(CREDIT_COSTS.DISCOVERY_CALL)) {
@@ -565,8 +558,8 @@ export function useFeatureGating() {
     const tier = subscriptionData?.subscription_tier || 'free';
     const limits = {
       free: 10,
-      creator: 50,
-      professional: 150
+      creator: 100,
+      professional: 300
     };
     return limits[tier as keyof typeof limits] || 10;
   };

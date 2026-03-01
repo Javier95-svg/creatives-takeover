@@ -36,7 +36,7 @@ const SearchableFAQ = () => {
       id: 1,
       category: "Pricing",
       question: "What pricing plans do you offer?",
-      answer: "We offer three plans designed for different stages of building your startup from scratch: Rookie (Free) with 25 credits/month to validate and explore, Rising ($32.99/month or $300/year) with 100 credits/month to build with more momentum, and Pro ($74.99/month or $750/year) with 300 credits/month for founders who need deeper usage and faster execution. Annual billing saves you approximately 25%. Any plan can also purchase extra credit packs (10, 20, or 40 credits) for spike usage — they never expire.",
+      answer: "We offer three plans designed for different stages of building your startup from scratch: Rookie (Free) with 25 credits/month to validate and explore, Rising ($32.99/month or $300/year) with 100 credits/month to build with more momentum, and Pro ($74.99/month or $750/year) with 300 credits/month for founders who need deeper usage and faster execution. Annual billing saves you approximately 25%. Any plan can also purchase extra credit packs (20, 40, or 60 credits) for spike usage - they never expire.",
       popular: true,
       tags: ["pricing", "plans", "subscription", "rookie", "rising", "pro"]
     },
@@ -128,7 +128,7 @@ const SearchableFAQ = () => {
       id: 12,
       category: "Features",
       question: "What is PMF Lab?",
-      answer: "PMF Lab (Product-Market Fit Lab) helps you analyze and improve your product-market fit. It provides frameworks, assessments, and actionable insights to ensure you're building something customers actually want. Free users get read-only access to learn the concepts, while paid users can run full PMF analyses on their startups (8 credits per analysis).",
+      answer: "PMF Lab (Product-Market Fit Lab) helps you analyze and improve your product-market fit. It provides frameworks, assessments, and actionable insights to ensure you're building something customers actually want. Free users get read-only access to learn the concepts, while paid users can run full PMF analyses on their startups (10 credits per analysis).",
       popular: true,
       tags: ["pmf lab", "product-market fit", "analysis", "validation"]
     },
@@ -136,7 +136,7 @@ const SearchableFAQ = () => {
       id: 13,
       category: "Features",
       question: "How does the Pitch Deck Analyzer work?",
-      answer: "The Pitch Deck Analyzer uses AI to review your pitch deck and provide detailed feedback on structure, content, clarity, and investor appeal. It identifies strengths, weaknesses, and specific improvements to help you create a more compelling deck. Upload your deck, and receive comprehensive analysis (8 credits per analysis). Available on Rising and Pro plans.",
+      answer: "The Pitch Deck Analyzer uses AI to review your pitch deck and provide detailed feedback on structure, content, clarity, and investor appeal. It identifies strengths, weaknesses, and specific improvements to help you create a more compelling deck. Upload your deck, and receive comprehensive analysis (10 credits per analysis). Available on Rising and Pro plans.",
       popular: true,
       tags: ["pitch deck", "analyzer", "investor", "feedback"]
     },
@@ -152,7 +152,7 @@ const SearchableFAQ = () => {
       id: 15,
       category: "Features",
       question: "What is Insighta Test?",
-      answer: "Insighta Test is our landing page and value proposition testing tool. It helps you validate your messaging, identify unclear elements, and optimize your landing page for conversions. You can gather structured feedback and analytics to understand how potential customers perceive your startup. Free users get 1 test, paid users get unlimited tests (5 credits per test).",
+      answer: "Insighta Test is our landing page and value proposition testing tool. It helps you validate your messaging, identify unclear elements, and optimize your landing page for conversions. You can gather structured feedback and analytics to understand how potential customers perceive your startup. Free users get 1 test, paid users get unlimited tests (10 credits per test).",
       popular: false,
       tags: ["insighta", "landing page", "testing", "validation", "conversion"]
     },
@@ -176,7 +176,7 @@ const SearchableFAQ = () => {
       id: 18,
       category: "Features",
       question: "How does the Tech Stack Generator work?",
-      answer: "The Tech Stack Generator recommends the best technologies for your startup based on your product type, scale requirements, budget, and technical expertise. It provides detailed explanations for each recommendation, helping you make informed decisions about your technical infrastructure (3 credits per generation). Available on all paid plans.",
+      answer: "The Tech Stack Generator recommends the best technologies for your startup based on your product type, scale requirements, budget, and technical expertise. It provides detailed explanations for each recommendation, helping you make informed decisions about your technical infrastructure (4 credits per generation). Available on all paid plans.",
       popular: false,
       tags: ["tech stack", "technology", "recommendations", "development"]
     },
@@ -186,7 +186,7 @@ const SearchableFAQ = () => {
       id: 19,
       category: "Credits",
       question: "How does the credit system work?",
-      answer: "Credits power all AI features on the platform. Each action has a specific credit cost: BizMap AI messages (1 credit), Launch Reports (5 credits), PMF Analysis (8 credits), Pitch Deck Analysis (8 credits), Insighta Tests (5 credits), Tech Stack Generation (3 credits), Cold Email Generation (3 credits), and Prompt Generation (2 credits). Credits refresh monthly based on your plan.",
+      answer: "Credits power all AI features on the platform. Each action has a specific credit cost: BizMap AI messages (1 credit), Launch Reports (6 credits), PMF Analysis (10 credits), Pitch Deck Analysis (10 credits), Insighta Tests (10 credits), Tech Stack Generation (4 credits), Cold Email Generation (4 credits), and Prompt Generation (2 credits). Credits refresh monthly based on your plan.",
       popular: true,
       tags: ["credits", "costs", "ai features", "monthly"]
     },
@@ -202,7 +202,7 @@ const SearchableFAQ = () => {
       id: 21,
       category: "Credits",
       question: "Which features use the most credits?",
-      answer: "Premium AI analyses use the most credits: PMF Analysis (8 credits), Pitch Deck Analyzer (8 credits), Financial Analysis (8 credits), Fundraising Readiness Analysis (8 credits). Mid-tier features include Market Research (5 credits), Roadmap Generation (5 credits), and Insighta Tests (5 credits). BizMap AI chat messages are just 1 credit each, making it efficient for ongoing startup building and decision making.",
+      answer: "Premium AI analyses use the most credits: PMF Analysis (10 credits), Pitch Deck Analyzer (10 credits), Financial Analysis (10 credits), and Fundraising Readiness Analysis (10 credits). The highest-value founder actions sit above that: Market Validation and Investor Matching cost 12 credits, and Discovery Calls cost 10 credits. Mid-tier features include Market Research (6 credits) and Roadmap Generation (6 credits). BizMap AI chat messages are just 1 credit each, making it efficient for ongoing startup building and decision making.",
       popular: false,
       tags: ["credit costs", "features", "expensive", "affordable"]
     },

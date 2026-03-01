@@ -112,7 +112,7 @@ const MentorProfilePage = () => {
       return;
     }
 
-    // Deduct credits for discovery call (5 credits) AFTER opening Calendly
+    // Deduct credits for discovery call (10 credits) AFTER opening Calendly
     // Credits were already verified above, so this should succeed
     try {
       const creditsDeducted = await deductCredits('DISCOVERY_CALL', {

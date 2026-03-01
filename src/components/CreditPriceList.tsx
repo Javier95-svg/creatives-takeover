@@ -8,7 +8,8 @@ export function CreditPriceList() {
         { name: "Market Research", cost: CREDIT_COSTS.MARKET_RESEARCH },
         { name: "Market Validation", cost: CREDIT_COSTS.MARKET_VALIDATION },
         { name: "Financial Analysis", cost: CREDIT_COSTS.FINANCIAL_ANALYSIS },
-        { name: "Pitch Deck & One-Pager", cost: CREDIT_COSTS.PITCH_DECK_GENERATION },
+        { name: "Pitch Deck Generation", cost: CREDIT_COSTS.PITCH_DECK_GENERATION },
+        { name: "One-Pager Generation", cost: CREDIT_COSTS.ONEPAGER_GENERATION },
         { name: "Investor Matching", cost: CREDIT_COSTS.INVESTOR_MATCHING },
         { name: "Roadmap Generation", cost: CREDIT_COSTS.ROADMAP_GENERATION },
         { name: "Sprint Task", cost: CREDIT_COSTS.SPRINT_TASK_GENERATION },
@@ -22,7 +23,7 @@ export function CreditPriceList() {
         <div className="space-y-1 text-xs text-muted-foreground">
             {prices.map((item) => (
                 <div key={item.name} className="flex items-center justify-between">
-                    <span>• {item.name}:</span>
+                    <span>- {item.name}:</span>
                     <span className="font-medium flex items-center gap-0.5">
                         {item.cost} <Coins className="h-3 w-3 inline" />
                     </span>
