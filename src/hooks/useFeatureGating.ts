@@ -584,7 +584,7 @@ export function useFeatureGating() {
         'Community access (limited)'
       ],
       creator: [
-        '50 credits per month',
+        '100 credits per month',
         'Dashboard (Full access: Focus Funnel, Decision Sprint, Core Metrics, Weekly Mission, Your Tasks)',
         'BizMap AI Stages I-III: ICP Builder, Waitlist Maker, PMF Lab',
         'BizMap AI Stage IV: MVP Builder (Beta) + Tech Stack Builder',
@@ -595,7 +595,7 @@ export function useFeatureGating() {
         'Priority support'
       ],
       professional: [
-        '150 credits per month',
+        '300 credits per month',
         'Dashboard (Full access: All features)',
         'BizMap AI Stages I-V: ICP Builder, Waitlist Maker, PMF Lab, MVP Builder (Beta), Tech Stack, GTM Strategist',
         'Business Planner (Resources)',

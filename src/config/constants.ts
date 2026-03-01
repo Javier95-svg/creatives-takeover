@@ -177,9 +177,24 @@ export const SUBSCRIPTION_TIERS = {
 // Monthly credit allocation per tier
 export const TIER_MONTHLY_CREDITS = {
   free: 25,
-  creator: 50,
-  professional: 150,
+  creator: 100,
+  professional: 300,
 } as const;
+
+// One-time credit add-on packs (available to all tiers)
+export const CREDIT_PACK_OPTIONS = [
+  { id: 'pack_10', credits: 10, price: 7.99, label: 'Starter Pack' },
+  { id: 'pack_20', credits: 20, price: 14.99, label: 'Boost Pack' },
+  { id: 'pack_40', credits: 40, price: 24.99, label: 'Power Pack' },
+] as const;
+
+// Stripe Payment Links for credit packs (one-time purchases)
+// TODO: Replace with actual Stripe Payment Link URLs after creating products in Stripe Dashboard
+export const CREDIT_PACK_PAYMENT_LINKS: Record<string, string> = {
+  pack_10: '',
+  pack_20: '',
+  pack_40: '',
+};
 
 // VC View Limits per tier (monthly)
 export const VC_VIEW_LIMITS = {
@@ -242,7 +257,7 @@ export const TIER_DETAILS = {
     name: 'Creator',
     subtitle: 'Build',
     price: 32.99,
-    credits: 50,
+    credits: 100,
     vcViewLimit: 25,
     description: 'Build your startup with AI-powered tools',
   },
@@ -250,7 +265,7 @@ export const TIER_DETAILS = {
     name: 'Professional',
     subtitle: 'Scale',
     price: 74.99,
-    credits: 150,
+    credits: 300,
     vcViewLimit: -1, // unlimited
     description: 'Scale with unlimited access and premium features',
   },

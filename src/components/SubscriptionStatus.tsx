@@ -1,4 +1,4 @@
-import { Crown, Calendar, CreditCard, RefreshCw, Settings } from "lucide-react";
+import { Crown, Calendar, CreditCard, RefreshCw, Settings, Zap } from "lucide-react";
 import { useSubscription } from "@/hooks/useSubscription";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -126,20 +126,27 @@ export function SubscriptionStatus({ variant = "card" }: SubscriptionStatusProps
               </div>
             )}
 
-            <div className="flex gap-2 pt-2">
-              <Button 
-                size="sm" 
-                variant="outline" 
+            <div className="flex gap-2 pt-2 flex-wrap">
+              <Button
+                size="sm"
+                variant="outline"
                 onClick={refreshSubscription}
                 className="gap-2"
               >
                 <RefreshCw className="h-3 w-3" />
                 Refresh
               </Button>
-              
+
+              <Button size="sm" variant="outline" asChild className="gap-2">
+                <Link to="/pricing#credit-packs">
+                  <Zap className="h-3 w-3" />
+                  Buy Credits
+                </Link>
+              </Button>
+
               {subscriptionData?.subscribed ? (
-                <Button 
-                  size="sm" 
+                <Button
+                  size="sm"
                   onClick={openCustomerPortal}
                   className="gap-2"
                 >
@@ -228,6 +235,12 @@ export function SubscriptionStatus({ variant = "card" }: SubscriptionStatusProps
             <Button size="sm" variant="outline" onClick={openCustomerPortal} className="w-full">
               Manage Subscription
             </Button>
+            <Button size="sm" variant="ghost" className="w-full gap-1" asChild>
+              <Link to="/pricing#credit-packs">
+                <Zap className="h-3 w-3" />
+                Buy Extra Credits
+              </Link>
+            </Button>
           </div>
         ) : (
           <div className="space-y-2">
@@ -236,6 +249,12 @@ export function SubscriptionStatus({ variant = "card" }: SubscriptionStatusProps
             </p>
             <Button size="sm" className="w-full" asChild>
               <Link to="/pricing">View Plans</Link>
+            </Button>
+            <Button size="sm" variant="ghost" className="w-full gap-1" asChild>
+              <Link to="/pricing#credit-packs">
+                <Zap className="h-3 w-3" />
+                Buy Extra Credits
+              </Link>
             </Button>
           </div>
         )}

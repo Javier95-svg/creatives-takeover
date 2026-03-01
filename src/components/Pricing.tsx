@@ -2,10 +2,11 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Star, Crown, Check } from "lucide-react";
+import { Star, Crown, Check, Zap } from "lucide-react";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { CREDIT_PACK_OPTIONS, CREDIT_PACK_PAYMENT_LINKS } from "@/config/constants";
 
 // Stripe Payment Links mapping by tier and billing cycle
 const PAYMENT_LINKS: Record<string, Record<string, string>> = {
@@ -82,7 +83,7 @@ const Pricing = () => {
         "Discovery Calls: Book calls with mentors (5 credits per call)",
       ],
       creator: [
-        "50 credits per month",
+        "100 credits per month",
         "Full Dashboard access",
         "BizMap AI: ICP Builder, PMF Lab, MVP Builder, Business Planner, Tech Stack Builder",
         "Insighta: VC Search, Email Templates, Pitch Deck Analyzer, Insighta Test",
@@ -91,7 +92,7 @@ const Pricing = () => {
         "Discovery Calls: Book calls with mentors (5 credits per call)",
       ],
       professional: [
-        "150 credits per month",
+        "300 credits per month",
         "Full Dashboard access",
         "BizMap AI: All tools including GTM Strategist",
         "Insighta: Unlimited VC Search, Accelerator Hunt, Email Templates, Pitch Deck Analyzer, Insighta Test",
@@ -161,6 +162,27 @@ const Pricing = () => {
     toast.success("Opening secure checkout in a new tab...");
   };
 
+  const handleBuyCreditPack = (packId: string) => {
+    if (!user) {
+      window.location.href = "/auth";
+      return;
+    }
+
+    const paymentLink = CREDIT_PACK_PAYMENT_LINKS[packId];
+    if (!paymentLink) {
+      toast.info("Credit pack checkout will be available shortly. Stay tuned!");
+      return;
+    }
+
+    const checkoutWindow = window.open(paymentLink, "_blank", "noopener,noreferrer");
+    if (!checkoutWindow) {
+      toast.error("Please allow popups to open checkout in a new tab.");
+      return;
+    }
+
+    toast.success("Opening secure checkout in a new tab...");
+  };
+
   if (loading) {
     return (
       <section className="relative py-section-mobile lg:py-section-desktop overflow-hidden">
@@ -202,7 +224,7 @@ const Pricing = () => {
           </div>
 
           {/* Pricing Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 max-w-7xl mx-auto items-start">
+          <div id="pricing-plans" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 max-w-7xl mx-auto items-start">
             {tiers.map((tier, index) => {
               const { cta } = getTitleAndCTA(tier.tier_name);
               const features = getFeatures(tier.tier_name);
@@ -298,6 +320,64 @@ const Pricing = () => {
                 </div>
               );
             })}
+          </div>
+
+          {/* Credit Add-On Packs */}
+          <div id="credit-packs" className="mt-20 max-w-4xl mx-auto">
+            <div className="text-center mb-10">
+              <Badge variant="secondary" className="rounded-full bg-primary/10 text-primary border-primary/20 font-medium mb-4">
+                <Zap className="w-3 h-3 mr-1 inline" />
+                Extra Credits
+              </Badge>
+              <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight mb-3 font-space-grotesk">
+                Need more credits? Top up anytime.
+              </h2>
+              <p className="text-muted-foreground font-poppins text-sm sm:text-base max-w-xl mx-auto">
+                Available on any plan. Purchased credits never expire and are used after your monthly quota runs out.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {CREDIT_PACK_OPTIONS.map((pack, index) => (
+                <div
+                  key={pack.id}
+                  className={`relative rounded-2xl border border-border/60 bg-card/80 p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl flex flex-col backdrop-blur ${index === 1 ? "border-primary/60 ring-1 ring-primary/30" : ""}`}
+                >
+                  {index === 1 && (
+                    <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                      <Badge className="px-3 py-1 text-xs font-medium bg-primary text-primary-foreground">
+                        Most Popular
+                      </Badge>
+                    </div>
+                  )}
+                  <div className="text-center mb-4">
+                    <div className="text-3xl font-semibold tracking-tight font-space-grotesk mb-1">
+                      {pack.credits} credits
+                    </div>
+                    <div className="text-2xl font-semibold font-space-grotesk tabular-nums">
+                      ${pack.price.toFixed(2)}
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1 font-poppins">
+                      ${(pack.price / pack.credits).toFixed(2)} per credit · never expire
+                    </p>
+                  </div>
+                  <p className="text-sm font-medium text-center text-muted-foreground mb-4 font-poppins">
+                    {pack.label}
+                  </p>
+                  <Button
+                    onClick={() => handleBuyCreditPack(pack.id)}
+                    variant={index === 1 ? "default" : "outline"}
+                    className="w-full rounded-full font-semibold font-poppins"
+                  >
+                    Buy {pack.credits} Credits
+                  </Button>
+                </div>
+              ))}
+            </div>
+
+            <p className="text-center text-xs text-muted-foreground mt-6 font-poppins">
+              Credits are added to your persistent balance instantly after payment. Monthly plan credits reset each billing cycle — purchased credits don't.
+            </p>
           </div>
 
         </div>

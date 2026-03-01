@@ -36,7 +36,7 @@ const SearchableFAQ = () => {
       id: 1,
       category: "Pricing",
       question: "What pricing plans do you offer?",
-      answer: "We offer three plans designed for different stages of building your startup from scratch: Rookie (Free) with 25 credits/month to validate and explore, Rising ($32.99/month or $300/year) with 50 credits/month to build with more momentum, and Pro ($74.99/month or $750/year) with 150 credits/month for founders who need deeper usage and faster execution. Annual billing saves you approximately 25%.",
+      answer: "We offer three plans designed for different stages of building your startup from scratch: Rookie (Free) with 25 credits/month to validate and explore, Rising ($32.99/month or $300/year) with 100 credits/month to build with more momentum, and Pro ($74.99/month or $750/year) with 300 credits/month for founders who need deeper usage and faster execution. Annual billing saves you approximately 25%. Any plan can also purchase extra credit packs (10, 20, or 40 credits) for spike usage — they never expire.",
       popular: true,
       tags: ["pricing", "plans", "subscription", "rookie", "rising", "pro"]
     },
@@ -60,7 +60,7 @@ const SearchableFAQ = () => {
       id: 4,
       category: "Pricing",
       question: "What's the difference between Rising and Pro plans?",
-      answer: "Rising ($32.99/month) gives you 50 credits, full BizMap AI access, PMF Lab, Pitch Deck Analyzer, AI Email Templates, 25 VC profile views/month, and priority support. Pro ($74.99/month) includes 150 credits, unlimited VC searches, advanced analytics, custom email templates, featured community profile, 24-hour priority support, and early access to new features like investor matching.",
+      answer: "Rising ($32.99/month) gives you 100 credits, full BizMap AI access, PMF Lab, Pitch Deck Analyzer, AI Email Templates, 25 VC profile views/month, and priority support. Pro ($74.99/month) includes 300 credits, unlimited VC searches, advanced analytics, custom email templates, featured community profile, 24-hour priority support, and early access to new features like investor matching.",
       popular: true,
       tags: ["rising", "pro", "comparison", "features"]
     },

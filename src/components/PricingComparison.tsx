@@ -12,7 +12,7 @@ const PricingComparison = () => {
     {
       category: "Credits",
       items: [
-        { feature: "Monthly Credits", free: "25 Credits", creator: "50 Credits", professional: "150 Credits" }
+        { feature: "Monthly Credits", free: "25 Credits", creator: "100 Credits", professional: "300 Credits" }
       ]
     },
     {
@@ -31,7 +31,7 @@ const PricingComparison = () => {
       items: [
         { feature: "ICP Builder", free: "Read-only", creator: "Full access", professional: "Full access" },
         { feature: "PMF Lab", free: "Read-only", creator: "Full access", professional: "Full access" },
-        { feature: "Business Planner", free: "25 messages", creator: "50 messages", professional: "150 messages" },
+        { feature: "Business Planner", free: "25 messages", creator: "100 messages", professional: "300 messages" },
         { feature: "MVP Builder", free: false, creator: "Full access", professional: "Full access" },
         { feature: "Tech Stack Builder", free: "View only", creator: "Full access", professional: "Advanced" },
         { feature: "GTM Strategist", free: false, creator: false, professional: "Full access" }

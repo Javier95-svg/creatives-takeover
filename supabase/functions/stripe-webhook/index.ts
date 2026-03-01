@@ -73,10 +73,17 @@ serve(async (req) => {
   }
 });
 
+// Credit pack definitions (must match credit_packs table and CREDIT_PACK_OPTIONS in constants.ts)
+const CREDIT_PACK_CREDITS: Record<string, number> = {
+  pack_10: 10,
+  pack_20: 20,
+  pack_40: 40,
+};
+
 async function handleCheckoutCompleted(session: any, supabaseAdmin: any) {
   console.log("[Checkout] Processing checkout.session.completed");
 
-  const { customer, customer_details, metadata } = session;
+  const { customer, customer_details, metadata, mode } = session;
   const customerEmail = customer_details?.email;
 
   if (!customerEmail) {
@@ -84,7 +91,13 @@ async function handleCheckoutCompleted(session: any, supabaseAdmin: any) {
     return;
   }
 
-  // Get tier and billing cycle from metadata (set in payment link)
+  // Route to credit pack handler for one-time purchases
+  if (mode === 'payment') {
+    await handleCreditPackPurchase(session, supabaseAdmin);
+    return;
+  }
+
+  // Subscription checkout
   const tier = metadata?.tier; // 'creator' or 'professional'
   const billingCycle = metadata?.billing_cycle; // 'monthly' or 'yearly'
 
@@ -96,7 +109,6 @@ async function handleCheckoutCompleted(session: any, supabaseAdmin: any) {
 
   console.log(`[Checkout] Updating subscription for ${customerEmail} to ${tier} (${billingCycle})`);
 
-  // Call the database function to update user subscription
   const { data, error } = await supabaseAdmin.rpc("update_user_subscription", {
     customer_email_param: customerEmail,
     tier_param: tier,
@@ -115,6 +127,81 @@ async function handleCheckoutCompleted(session: any, supabaseAdmin: any) {
   }
 
   console.log(`[Checkout] Successfully updated subscription for ${customerEmail}`);
+}
+
+async function handleCreditPackPurchase(session: any, supabaseAdmin: any) {
+  console.log("[CreditPack] Processing one-time credit pack purchase");
+
+  const { metadata, customer_details, id: stripeSessionId } = session;
+  const customerEmail = customer_details?.email;
+  const packId = metadata?.pack_id;
+  const userId = metadata?.user_id;
+
+  if (!packId || !CREDIT_PACK_CREDITS[packId]) {
+    console.error("[CreditPack] Invalid or missing pack_id in metadata:", metadata);
+    return;
+  }
+
+  const creditsToAdd = CREDIT_PACK_CREDITS[packId];
+
+  // Resolve user_id from metadata or fall back to email lookup
+  let resolvedUserId = userId;
+  if (!resolvedUserId && customerEmail) {
+    const { data: profile } = await supabaseAdmin
+      .from("profiles")
+      .select("id")
+      .eq("email", customerEmail)
+      .single();
+    resolvedUserId = profile?.id;
+  }
+
+  if (!resolvedUserId) {
+    console.error("[CreditPack] Could not resolve user for email:", customerEmail);
+    return;
+  }
+
+  // Atomic increment via RPC
+  const { error: rpcError } = await supabaseAdmin.rpc("increment_credit_balance", {
+    p_user_id: resolvedUserId,
+    p_amount: creditsToAdd,
+  });
+
+  if (rpcError) {
+    // Fallback: direct update with read-modify-write
+    console.warn("[CreditPack] RPC increment failed, using fallback:", rpcError.message);
+    const { data: currentCredits } = await supabaseAdmin
+      .from("user_credits")
+      .select("balance")
+      .eq("user_id", resolvedUserId)
+      .single();
+
+    const newBalance = (currentCredits?.balance ?? 0) + creditsToAdd;
+    const { error: fallbackError } = await supabaseAdmin
+      .from("user_credits")
+      .update({ balance: newBalance })
+      .eq("user_id", resolvedUserId);
+
+    if (fallbackError) {
+      console.error("[CreditPack] Fallback credit update failed:", fallbackError);
+      throw fallbackError;
+    }
+  }
+
+  // Log the purchase transaction
+  await supabaseAdmin.from("credit_transactions").insert({
+    user_id: resolvedUserId,
+    amount: creditsToAdd,
+    tx_type: "purchase",
+    reason: `Credit pack purchase: ${packId} (${creditsToAdd} credits)`,
+    feature: "Credit Pack",
+    metadata: {
+      packId,
+      stripeSessionId,
+      customerEmail,
+    },
+  });
+
+  console.log(`[CreditPack] Added ${creditsToAdd} credits to user ${resolvedUserId} (pack: ${packId})`);
 }
 
 async function handleSubscriptionChange(subscription: any, supabaseAdmin: any) {

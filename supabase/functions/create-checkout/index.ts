@@ -125,9 +125,9 @@ serve(withErrorBoundary(async (req: Request) => {
     const pricingMap: Record<string, { amount: number; name: string }> = {
       basic: { amount: 999, name: "Basic Plan - 50 Credits/month" },
       starter: { amount: 999, name: "Starter Plan - 50 Credits/month" },
-      creator: { amount: 1999, name: "Creator Plan - 50 Credits/month" },
+      creator: { amount: 1999, name: "Creator Plan - 100 Credits/month" },
       premium: { amount: 1999, name: "Premium Plan - 150 Credits/month" },
-      professional: { amount: 3999, name: "Professional Plan - 150 Credits/month" },
+      professional: { amount: 3999, name: "Professional Plan - 300 Credits/month" },
       elite: { amount: 3999, name: "Elite Plan - 150 Credits/month" },
       teams: { amount: 5999, name: "Teams Plan - 500 Credits/month" },
       enterprise: { amount: 5999, name: "Enterprise Plan - 500 Credits/month" }
