@@ -338,16 +338,9 @@ const Pricing = () => {
               {CREDIT_PACK_OPTIONS.map((pack, index) => (
                 <div
                   key={pack.id}
-                  style={{ animationDelay: `${index * 100}ms` }}
-                  className={`relative rounded-2xl border border-border/60 bg-card/80 p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl flex flex-col backdrop-blur animate-fade-in ${index === 1 ? "border-primary/60 ring-1 ring-primary/30" : ""}`}
+                  style={{ animationDelay: `${index * 150}ms`, animationFillMode: 'both' }}
+                  className="relative rounded-2xl border border-green-500/50 bg-card/80 p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:border-green-500/80 flex flex-col backdrop-blur animate-fade-in"
                 >
-                  {index === 1 && (
-                    <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                      <Badge className="px-3 py-1 text-xs font-medium bg-primary text-primary-foreground">
-                        Most Popular
-                      </Badge>
-                    </div>
-                  )}
                   <div className="text-center mb-4">
                     <div className="text-3xl font-semibold tracking-tight font-space-grotesk mb-1">
                       {pack.credits} credits
@@ -364,8 +357,8 @@ const Pricing = () => {
                   </p>
                   <Button
                     onClick={() => handleBuyCreditPack(pack.id)}
-                    variant={index === 1 ? "default" : "outline"}
-                    className="w-full rounded-full font-semibold font-poppins"
+                    variant="outline"
+                    className="w-full rounded-full font-semibold font-poppins border-green-500/50 hover:border-green-500 hover:bg-green-500/10"
                   >
                     Buy {pack.credits} Credits
                   </Button>
