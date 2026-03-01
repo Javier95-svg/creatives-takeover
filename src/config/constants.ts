@@ -183,9 +183,9 @@ export const TIER_MONTHLY_CREDITS = {
 
 // One-time credit add-on packs (available to all tiers)
 export const CREDIT_PACK_OPTIONS = [
-  { id: 'pack_20', credits: 20, price: 7.99, label: 'Starter Pack' },
-  { id: 'pack_40', credits: 40, price: 14.99, label: 'Boost Pack' },
-  { id: 'pack_60', credits: 60, price: 24.99, label: 'Power Pack' },
+  { id: 'pack_20', credits: 20, price: 8.00, label: 'Starter Pack' },
+  { id: 'pack_40', credits: 40, price: 16.00, label: 'Boost Pack' },
+  { id: 'pack_60', credits: 60, price: 24.00, label: 'Power Pack' },
 ] as const;
 
 // Stripe Payment Links for credit packs (one-time purchases)
