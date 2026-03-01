@@ -192,7 +192,7 @@ export const CREDIT_PACK_OPTIONS = [
 export const CREDIT_PACK_PAYMENT_LINKS: Record<string, string> = {
   pack_20: 'https://buy.stripe.com/dRm5kE4Gl9Kv8746zF0VO0h',
   pack_40: 'https://buy.stripe.com/aFa4gAegV8Grafc3nt0VO0i',
-  pack_60: '',
+  pack_60: 'https://buy.stripe.com/8x29AUc8N1dZevsgaf0VO0j',
 };
 
 // VC View Limits per tier (monthly)
