@@ -72,22 +72,32 @@ const Hero = () => {
 
   // Preload critical hero images (top row - positions 1 and 2) for faster loading
   useEffect(() => {
-    const isValidImageHref = (href?: string) => {
+    const normalizeImageHref = (href?: string) => {
       if (!href) return false;
       const trimmed = href.trim();
       if (!trimmed) return false;
       if (trimmed === 'undefined' || trimmed === 'null') return false;
-      return true;
+      try {
+        return new URL(trimmed, window.location.origin).toString();
+      } catch {
+        return false;
+      }
     };
 
-    const topRowImages = heroImages.filter(img => img.position <= 2 && isValidImageHref(img.image_url));
+    const topRowImages = heroImages
+      .filter(img => img.position <= 2)
+      .map((img) => ({
+        ...img,
+        preloadHref: normalizeImageHref(img.image_url),
+      }))
+      .filter((img) => Boolean(img.preloadHref));
 
     if (topRowImages.length === 0) return;
 
     // Extract storage domain from first image URL for preconnect
     try {
-      const firstImageUrl = topRowImages[0]?.image_url;
-      if (isValidImageHref(firstImageUrl) && typeof document !== 'undefined' && document.head) {
+      const firstImageUrl = topRowImages[0]?.preloadHref;
+      if (firstImageUrl && typeof document !== 'undefined' && document.head) {
         const imageUrl = new URL(firstImageUrl);
         const storageDomain = imageUrl.origin;
 
@@ -111,21 +121,23 @@ const Hero = () => {
       topRowImages.forEach((image) => {
         const linkId = `hero-preload-${image.position}`;
         let preloadLink = document.getElementById(linkId) as HTMLLinkElement;
-        
+
+        if (!image.preloadHref) {
+          if (preloadLink) preloadLink.remove();
+          return;
+        }
+
         if (!preloadLink) {
           preloadLink = document.createElement('link');
           preloadLink.id = linkId;
           preloadLink.setAttribute('rel', 'preload');
           preloadLink.setAttribute('as', 'image');
+          preloadLink.setAttribute('href', image.preloadHref);
           document.head.appendChild(preloadLink);
-        }
-        
-        if (isValidImageHref(image.image_url)) {
-          preloadLink.setAttribute('href', image.image_url);
         } else {
-          preloadLink.remove();
-          return;
+          preloadLink.setAttribute('href', image.preloadHref);
         }
+
         // Add fetchpriority for critical images
         if (image.position <= 2) {
           preloadLink.setAttribute('fetchpriority', 'high');
