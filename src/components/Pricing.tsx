@@ -332,16 +332,14 @@ const Pricing = () => {
               <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight mb-3 font-space-grotesk">
                 Need more credits? Top up anytime.
               </h2>
-              <p className="text-muted-foreground font-poppins text-sm sm:text-base max-w-xl mx-auto">
-                Available on any plan. Purchased credits never expire and are used after your monthly quota runs out.
-              </p>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {CREDIT_PACK_OPTIONS.map((pack, index) => (
                 <div
                   key={pack.id}
-                  className={`relative rounded-2xl border border-border/60 bg-card/80 p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl flex flex-col backdrop-blur ${index === 1 ? "border-primary/60 ring-1 ring-primary/30" : ""}`}
+                  style={{ animationDelay: `${index * 100}ms` }}
+                  className={`relative rounded-2xl border border-border/60 bg-card/80 p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl flex flex-col backdrop-blur animate-fade-in ${index === 1 ? "border-primary/60 ring-1 ring-primary/30" : ""}`}
                 >
                   {index === 1 && (
                     <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
