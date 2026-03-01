@@ -191,7 +191,7 @@ export const CREDIT_PACK_OPTIONS = [
 // Stripe Payment Links for credit packs (one-time purchases)
 export const CREDIT_PACK_PAYMENT_LINKS: Record<string, string> = {
   pack_20: 'https://buy.stripe.com/dRm5kE4Gl9Kv8746zF0VO0h',
-  pack_40: '',
+  pack_40: 'https://buy.stripe.com/aFa4gAegV8Grafc3nt0VO0i',
   pack_60: '',
 };
 
