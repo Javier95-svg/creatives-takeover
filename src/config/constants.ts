@@ -24,10 +24,10 @@ export const CREDIT_COSTS = {
   ICP_ANALYSIS: 8,
 
   // Investor Matching & Outreach
-  INVESTOR_MATCHING: 5,
-  PITCH_DECK_GENERATION: 8,
+  INVESTOR_MATCHING: 8,
+  PITCH_DECK_GENERATION: 10,
   COLD_EMAIL_GENERATION: 3,
-  ONEPAGER_GENERATION: 3,
+  ONEPAGER_GENERATION: 4,
 
   // Sprint & Task Features
   SPRINT_TASK_GENERATION: 2,
@@ -37,7 +37,7 @@ export const CREDIT_COSTS = {
   TECH_STACK_GENERATION: 3,
 
   // Other Premium Features
-  PDF_EXPORT: 3,
+  PDF_EXPORT: 2,
   ADVANCED_ANALYTICS: 5,
 
   // New Features (Phase 3)
