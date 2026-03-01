@@ -63,9 +63,9 @@ CREATE TABLE IF NOT EXISTS public.credit_packs (
 -- 4. Insert the three credit pack options
 INSERT INTO public.credit_packs (id, credits, price_cents, label, active)
 VALUES
-  ('pack_10', 10, 799, 'Starter Pack', true),
-  ('pack_20', 20, 1499, 'Boost Pack', true),
-  ('pack_40', 40, 2499, 'Power Pack', true)
+  ('pack_20', 20, 799, 'Starter Pack', true),
+  ('pack_40', 40, 1499, 'Boost Pack', true),
+  ('pack_60', 60, 2499, 'Power Pack', true)
 ON CONFLICT (id) DO UPDATE SET
   credits = EXCLUDED.credits,
   price_cents = EXCLUDED.price_cents,

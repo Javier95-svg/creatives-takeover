@@ -75,9 +75,9 @@ serve(async (req) => {
 
 // Credit pack definitions (must match credit_packs table and CREDIT_PACK_OPTIONS in constants.ts)
 const CREDIT_PACK_CREDITS: Record<string, number> = {
-  pack_10: 10,
   pack_20: 20,
   pack_40: 40,
+  pack_60: 60,
 };
 
 async function handleCheckoutCompleted(session: any, supabaseAdmin: any) {
