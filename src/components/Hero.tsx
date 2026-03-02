@@ -437,7 +437,10 @@ const Hero = () => {
             {/* Main Headline */}
             <h1
               className="font-space-grotesk text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-semibold mb-4 sm:mb-6 leading-tight tracking-tight"
-              style={{ textShadow: '0 0 40px hsl(var(--primary) / 0.15)' }}
+              style={{
+                textShadow: '0 0 18px hsl(var(--primary) / 0.18), 0 0 42px hsl(var(--primary) / 0.10)',
+                filter: 'drop-shadow(0 0 10px hsl(var(--primary) / 0.10))'
+              }}
             >
               <span className="text-primary">Build Your Startup</span> from Scratch
             </h1>
@@ -469,7 +472,7 @@ const Hero = () => {
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-center justify-center px-4 sm:px-0">
                 <Button size="lg" className="w-full sm:w-auto min-h-[44px] touch-manipulation" asChild>
                   <Link to="/signup" onClick={handlePrimaryCTAClick}>
-                    Join Today
+                    Start Now
                     <ArrowRight className="w-4 h-4" />
                   </Link>
                 </Button>
