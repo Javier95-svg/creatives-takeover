@@ -162,8 +162,8 @@ const Footer = () => {
               </a>
             </div>
 
-            {/* SaaSHub Badge */}
-            <div className="mt-4">
+            <div className="mt-4 flex flex-wrap items-center gap-4">
+              {/* SaaSHub Badge */}
               <a 
                 href='https://www.saashub.com/creatives-takeover?utm_source=badge&utm_campaign=badge&utm_content=creatives-takeover&badge_variant=color&badge_kind=approved' 
                 target='_blank'
@@ -177,10 +177,8 @@ const Footer = () => {
                   style={{ maxWidth: '150px' }}
                 />
               </a>
-            </div>
 
-            {/* FoundrList Badge */}
-            <div className="mt-4">
+              {/* FoundrList Badge */}
               <a
                 href="https://www.foundrlist.com/product/creativestakeover-2"
                 target="_blank"
