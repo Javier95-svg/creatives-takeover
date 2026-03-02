@@ -178,6 +178,24 @@ const Footer = () => {
                 />
               </a>
             </div>
+
+            {/* FoundrList Badge */}
+            <div className="mt-4">
+              <a
+                href="https://www.foundrlist.com/product/creativestakeover-2"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Live on FoundrList"
+              >
+                <img
+                  src="https://www.foundrlist.com/api/badge/creativestakeover-2"
+                  alt="Live on FoundrList"
+                  width="160"
+                  height="64"
+                  className="hover:opacity-80 transition-opacity"
+                />
+              </a>
+            </div>
           </nav>
         </div>
 
