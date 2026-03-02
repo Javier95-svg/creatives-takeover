@@ -162,19 +162,19 @@ const Footer = () => {
               </a>
             </div>
 
-            <div className="mt-4 flex flex-wrap items-center gap-4">
+            <div className="mt-4 flex items-center gap-3 flex-nowrap overflow-x-auto pb-1">
               {/* SaaSHub Badge */}
               <a 
                 href='https://www.saashub.com/creatives-takeover?utm_source=badge&utm_campaign=badge&utm_content=creatives-takeover&badge_variant=color&badge_kind=approved' 
                 target='_blank'
                 rel="noopener noreferrer"
                 aria-label="Approved on SaaSHub"
+                className="shrink-0"
               >
                 <img 
                   src="https://cdn-b.saashub.com/img/badges/approved-color.png?v=1" 
                   alt="Creatives Takeover badge" 
-                  className="hover:opacity-80 transition-opacity"
-                  style={{ maxWidth: '150px' }}
+                  className="hover:opacity-80 transition-opacity w-[130px] h-auto"
                 />
               </a>
 
@@ -184,13 +184,14 @@ const Footer = () => {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Live on FoundrList"
+                className="shrink-0"
               >
                 <img
                   src="https://www.foundrlist.com/api/badge/creativestakeover-2"
                   alt="Live on FoundrList"
                   width="160"
                   height="64"
-                  className="hover:opacity-80 transition-opacity"
+                  className="hover:opacity-80 transition-opacity w-[138px] h-auto"
                 />
               </a>
             </div>
