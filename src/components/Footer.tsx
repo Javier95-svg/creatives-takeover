@@ -164,19 +164,36 @@ const Footer = () => {
 
             <div className="mt-4 flex items-center gap-3 flex-nowrap overflow-x-auto pb-1">
               {/* SaaSHub Badge */}
-              <a 
-                href='https://www.saashub.com/creatives-takeover?utm_source=badge&utm_campaign=badge&utm_content=creatives-takeover&badge_variant=color&badge_kind=approved' 
-                target='_blank'
-                rel="noopener noreferrer"
-                aria-label="Approved on SaaSHub"
-                className="shrink-0"
-              >
-                <img 
-                  src="https://cdn-b.saashub.com/img/badges/approved-color.png?v=1" 
-                  alt="Creatives Takeover badge" 
-                  className="hover:opacity-80 transition-opacity w-[130px] h-auto"
-                />
-              </a>
+              <div className="shrink-0 flex flex-col gap-2">
+                <a 
+                  href='https://www.saashub.com/creatives-takeover?utm_source=badge&utm_campaign=badge&utm_content=creatives-takeover&badge_variant=color&badge_kind=approved' 
+                  target='_blank'
+                  rel="noopener noreferrer"
+                  aria-label="Approved on SaaSHub"
+                  className="shrink-0"
+                >
+                  <img 
+                    src="https://cdn-b.saashub.com/img/badges/approved-color.png?v=1" 
+                    alt="Creatives Takeover badge" 
+                    className="hover:opacity-80 transition-opacity w-[130px] h-auto"
+                  />
+                </a>
+
+                <a
+                  href="https://fazier.com/launches/creatives-takeover.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Launched on Fazier"
+                  className="shrink-0"
+                >
+                  <img
+                    src="https://fazier.com/api/v1//public/badges/launch_badges.svg?badge_type=launched&theme=dark"
+                    width="120"
+                    alt="Fazier badge"
+                    className="hover:opacity-80 transition-opacity"
+                  />
+                </a>
+              </div>
 
               {/* FoundrList Badge */}
               <a
