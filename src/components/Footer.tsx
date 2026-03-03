@@ -162,9 +162,8 @@ const Footer = () => {
               </a>
             </div>
 
-            <div className="mt-4 flex items-center gap-3 flex-nowrap overflow-x-auto pb-1">
-              {/* SaaSHub Badge */}
-              <div className="shrink-0 flex flex-col gap-2">
+            <div className="mt-4 space-y-3">
+              <div className="flex items-center gap-3 flex-nowrap overflow-x-auto pb-1">
                 <a 
                   href='https://www.saashub.com/creatives-takeover?utm_source=badge&utm_campaign=badge&utm_content=creatives-takeover&badge_variant=color&badge_kind=approved' 
                   target='_blank'
@@ -180,6 +179,24 @@ const Footer = () => {
                 </a>
 
                 <a
+                  href="https://www.foundrlist.com/product/creativestakeover-2"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Live on FoundrList"
+                  className="shrink-0"
+                >
+                  <img
+                    src="https://www.foundrlist.com/api/badge/creativestakeover-2"
+                    alt="Live on FoundrList"
+                    width="160"
+                    height="64"
+                    className="hover:opacity-80 transition-opacity w-[138px] h-auto"
+                  />
+                </a>
+              </div>
+
+              <div className="flex items-center gap-3 flex-nowrap overflow-x-auto pb-1">
+                <a
                   href="https://fazier.com/launches/creatives-takeover.com"
                   target="_blank"
                   rel="noopener noreferrer"
@@ -193,24 +210,22 @@ const Footer = () => {
                     className="hover:opacity-80 transition-opacity"
                   />
                 </a>
-              </div>
 
-              {/* FoundrList Badge */}
-              <a
-                href="https://www.foundrlist.com/product/creativestakeover-2"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Live on FoundrList"
-                className="shrink-0"
-              >
-                <img
-                  src="https://www.foundrlist.com/api/badge/creativestakeover-2"
-                  alt="Live on FoundrList"
-                  width="160"
-                  height="64"
-                  className="hover:opacity-80 transition-opacity w-[138px] h-auto"
-                />
-              </a>
+                <a
+                  href="https://fazier.com/launches/creatives-takeover.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Featured on Fazier"
+                  className="shrink-0"
+                >
+                  <img
+                    src="https://fazier.com/api/v1//public/badges/launch_badges.svg?badge_type=featured&theme=light"
+                    width="250"
+                    alt="Fazier badge"
+                    className="hover:opacity-80 transition-opacity"
+                  />
+                </a>
+              </div>
             </div>
           </nav>
         </div>
