@@ -64,6 +64,23 @@ const allowedOriginHostnames = new Set(
     .filter((hostname): hostname is string => !!hostname),
 );
 
+function normalizeUsername(value?: string | null): string | null {
+  const normalized = (value || "")
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/\s+/g, "")
+    .replace(/[^a-z0-9_]/g, "")
+    .replace(/^_+|_+$/g, "")
+    .slice(0, 30);
+
+  if (!normalized || normalized.length < 3) {
+    return null;
+  }
+
+  return normalized;
+}
+
 function jsonResponse(body: SignupDirectResponse): Response {
   return new Response(JSON.stringify(body), {
     status: 200,
@@ -194,7 +211,7 @@ serve(async (req: Request): Promise<Response> => {
   const password = payload.password || "";
   const fullName = payload.fullName?.trim() || "";
   const dateOfBirth = payload.dateOfBirth ?? null;
-  const username = payload.username?.trim().toLowerCase() || null;
+  const username = normalizeUsername(payload.username);
 
   if (!email) {
     return jsonResponse({ ok: false, code: "EMAIL_REQUIRED", error: "Email is required." });
@@ -218,6 +235,33 @@ serve(async (req: Request): Promise<Response> => {
       code: "WEAK_PASSWORD",
       error: `Password must be at least ${MIN_PASSWORD_LENGTH} characters.`,
     });
+  }
+
+  if (username) {
+    const { data: usernameAvailable, error: usernameError } = await supabaseAdmin.rpc(
+      "is_username_available",
+      {
+        candidate: username,
+        current_user_id: null,
+      },
+    );
+
+    if (usernameError) {
+      console.error("[signup-direct] username availability lookup failed:", usernameError);
+      return jsonResponse({
+        ok: false,
+        code: "USERNAME_CHECK_FAILED",
+        error: "Could not validate the username right now. Please try again.",
+      });
+    }
+
+    if (usernameAvailable !== true) {
+      return jsonResponse({
+        ok: false,
+        code: "USERNAME_TAKEN",
+        error: "That username is already taken. Please choose another one.",
+      });
+    }
   }
 
   const { data, error } = await supabaseAdmin.auth.admin.createUser({

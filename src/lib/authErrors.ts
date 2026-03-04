@@ -14,6 +14,10 @@ export function mapSignUpError(error: AuthError | null): string {
     return "An account with this email already exists. Please sign in instead.";
   }
 
+  if (message.includes("username") && message.includes("taken")) {
+    return "That username is already taken. Please choose another one.";
+  }
+
   if (message.includes("too many") || message.includes("rate limit")) {
     return "Too many signup attempts. Please wait a few minutes and try again.";
   }

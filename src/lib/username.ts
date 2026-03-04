@@ -49,9 +49,21 @@ export async function isUsernameAvailable(
     return false;
   }
 
+  const { data: availability, error: rpcError } = await supabase.rpc(
+    "is_username_available",
+    {
+      candidate: normalized,
+      current_user_id: currentUserId ?? null,
+    }
+  );
+
+  if (!rpcError && typeof availability === "boolean") {
+    return availability;
+  }
+
   const { data: exactData, error: exactError } = await supabase
     .from("profiles")
-    .select("id")
+    .select("id, username")
     .eq("username", normalized)
     .maybeSingle();
 
@@ -59,26 +71,9 @@ export async function isUsernameAvailable(
     throw exactError;
   }
 
-  if (exactData) {
-    return !!currentUserId && exactData.id === currentUserId;
-  }
-
-  // Fallback to case-insensitive lookup to honor profiles_username_lower_unique_idx.
-  const escapedIlikePattern = normalized.replace(/([\\%_])/g, "\\$1");
-  const { data: insensitiveData, error: insensitiveError } = await supabase
-    .from("profiles")
-    .select("id")
-    .ilike("username", escapedIlikePattern)
-    .limit(1);
-
-  if (insensitiveError) {
-    throw insensitiveError;
-  }
-
-  const existingId = insensitiveData?.[0]?.id;
-  if (!existingId) {
+  if (!exactData) {
     return true;
   }
 
-  return !!currentUserId && existingId === currentUserId;
+  return !!currentUserId && exactData.id === currentUserId;
 }

@@ -59,7 +59,7 @@ function toAuthError(message: string): AuthError {
 
 function shouldReturnDirectSignupError(code?: string): boolean {
   if (!code) return false;
-  return ["USER_EXISTS", "INVALID_EMAIL", "WEAK_PASSWORD", "RATE_LIMITED"].includes(code);
+  return ["USER_EXISTS", "INVALID_EMAIL", "WEAK_PASSWORD", "RATE_LIMITED", "USERNAME_TAKEN"].includes(code);
 }
 
 async function tryDirectSignup(params: SignUpWithFallbackParams): Promise<{
