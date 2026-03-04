@@ -6,7 +6,7 @@ import { useLocation } from "react-router-dom";
 const ProUpgradeBanner = () => {
     const { isAuthenticated, loading } = useAuth();
     const location = useLocation();
-    const hideForAuthRoutes = location.pathname === '/login' || location.pathname === '/signup' || location.pathname === '/auth';
+    const hideForAuthRoutes = location.pathname === '/login' || location.pathname === '/signup' || location.pathname === '/auth' || location.pathname.startsWith('/mvp-builder');
     const showBanner = !loading && isAuthenticated && !hideForAuthRoutes;
 
     useEffect(() => {
