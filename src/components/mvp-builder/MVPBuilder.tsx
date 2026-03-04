@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils';
 type MobileTab = 'chat' | 'preview';
 
 export const MVPBuilder: React.FC = () => {
-  const { messages, currentHtml, isGenerating, projectName, setProjectName, sendMessage, resetProject } =
+  const { messages, currentHtml, isGenerating, projectName, projectId, setProjectName, sendMessage, resetProject } =
     useMVPBuilder();
 
   const [mobileTab, setMobileTab] = useState<MobileTab>('chat');
@@ -81,7 +81,7 @@ export const MVPBuilder: React.FC = () => {
               mobileTab !== 'preview' ? 'hidden md:block' : 'block'
             )}
           >
-            <MVPBuilderPreview html={currentHtml} isGenerating={isGenerating} />
+            <MVPBuilderPreview html={currentHtml} isGenerating={isGenerating} projectId={projectId} />
           </div>
         </div>
       </div>

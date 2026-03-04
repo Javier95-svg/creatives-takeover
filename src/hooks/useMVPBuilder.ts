@@ -18,6 +18,7 @@ interface PersistedSession {
   messages: MVPMessage[];
   currentHtml: string | null;
   projectName: string;
+  projectId: string;
 }
 
 // ── Constants ────────────────────────────────────────────────────────────────
@@ -35,6 +36,7 @@ export function useMVPBuilder() {
   const [currentHtml, setCurrentHtml] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [projectName, setProjectName] = useState('Name Your App');
+  const [projectId, setProjectId] = useState<string>(() => crypto.randomUUID());
 
   // Abort controller ref to cancel in-flight requests
   const abortRef = useRef<AbortController | null>(null);
@@ -55,6 +57,7 @@ export function useMVPBuilder() {
       setMessages(cleanMessages);
       setCurrentHtml(session.currentHtml ?? null);
       setProjectName(session.projectName ?? 'Name Your App');
+      if (session.projectId) setProjectId(session.projectId);
     } catch {
       // Corrupt data — ignore
     }
@@ -62,12 +65,13 @@ export function useMVPBuilder() {
 
   // Save to localStorage whenever state changes
   const persist = useCallback(
-    (msgs: MVPMessage[], html: string | null, name: string) => {
+    (msgs: MVPMessage[], html: string | null, name: string, pid: string) => {
       try {
         const session: PersistedSession = {
           messages: msgs.map((m) => ({ ...m, isStreaming: false })),
           currentHtml: html,
           projectName: name,
+          projectId: pid,
         };
         localStorage.setItem(STORAGE_KEY, JSON.stringify(session));
       } catch {
@@ -200,7 +204,7 @@ export function useMVPBuilder() {
                 );
                 setMessages(finalMessages);
                 if (newHtml) setCurrentHtml(newHtml);
-                persist(finalMessages, newHtml ?? currentHtml, projectName);
+                persist(finalMessages, newHtml ?? currentHtml, projectName, projectId);
                 return;
               } else if (event.type === 'error') {
                 const errMsg = (event.error as string) ?? 'Something went wrong.';
@@ -251,6 +255,7 @@ export function useMVPBuilder() {
       isGenerating,
       user,
       projectName,
+      projectId,
       ensureCredits,
       handleCreditError,
       persist,
@@ -261,16 +266,18 @@ export function useMVPBuilder() {
 
   const resetProject = useCallback(() => {
     abortRef.current?.abort();
+    const newId = crypto.randomUUID();
     setMessages([]);
     setCurrentHtml(null);
     setProjectName('Name Your App');
+    setProjectId(newId);
     setIsGenerating(false);
     localStorage.removeItem(STORAGE_KEY);
   }, []);
 
   // Persist project name changes (always, even on an empty session)
   useEffect(() => {
-    persist(messages, currentHtml, projectName);
+    persist(messages, currentHtml, projectName, projectId);
   }, [projectName]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return {
@@ -278,6 +285,7 @@ export function useMVPBuilder() {
     currentHtml,
     isGenerating,
     projectName,
+    projectId,
     setProjectName,
     sendMessage,
     resetProject,
