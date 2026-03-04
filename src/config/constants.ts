@@ -50,6 +50,10 @@ export const CREDIT_COSTS = {
 
   // Community Features
   DISCOVERY_CALL: 10,
+
+  // AI App Builder (Lovable-style conversational app generator)
+  APP_BUILDER_GENERATE: 8,  // Initial app generation from prompt
+  APP_BUILDER_REFINE: 3,    // Each iterative refinement
 } as const;
 
 // Type for credit cost feature names

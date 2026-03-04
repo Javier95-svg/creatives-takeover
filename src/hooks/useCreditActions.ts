@@ -31,6 +31,10 @@ const CREDIT_FEATURE_LABELS: Record<CreditFeature, string> = {
   PITCH_DECK_ANALYZER: 'Pitch Deck Analyzer',
   EMAIL_TEMPLATE_GENERATION: 'Email Template Generation',
   PROMPT_GENERATION: 'Prompt Generation',
+  ICP_ANALYSIS: 'ICP Builder',
+  DISCOVERY_CALL: 'Discovery Call',
+  APP_BUILDER_GENERATE: 'AI App Builder — Generate',
+  APP_BUILDER_REFINE: 'AI App Builder — Refine',
 };
 
 type CreditActionOptions = {
