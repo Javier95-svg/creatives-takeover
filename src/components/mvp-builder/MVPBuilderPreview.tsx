@@ -1,9 +1,11 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { RefreshCw, Download, Copy, Monitor, Smartphone, Check, Loader2, Wand2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+
+const LOADING_STEPS = ['Thinking...', 'Writing HTML...', 'Adding styles...', 'Almost ready...'];
 
 interface MVPBuilderPreviewProps {
   html: string | null;
@@ -14,6 +16,18 @@ export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({ html, isGe
   const [previewKey, setPreviewKey] = useState(0);
   const [viewMode, setViewMode] = useState<'desktop' | 'mobile'>('desktop');
   const [copied, setCopied] = useState(false);
+  const [loadingStep, setLoadingStep] = useState(0);
+
+  useEffect(() => {
+    if (!isGenerating) {
+      setLoadingStep(0);
+      return;
+    }
+    const id = setInterval(() => {
+      setLoadingStep((s) => (s + 1) % LOADING_STEPS.length);
+    }, 1500);
+    return () => clearInterval(id);
+  }, [isGenerating]);
 
   const handleRefresh = () => setPreviewKey((k) => k + 1);
 
@@ -41,43 +55,56 @@ export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({ html, isGe
     }
   }, [html]);
 
+  const statusBadge = isGenerating ? (
+    <span className="flex items-center gap-1.5 text-xs text-amber-500 font-medium">
+      <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse shrink-0" />
+      Building...
+    </span>
+  ) : html ? (
+    <span className="flex items-center gap-1.5 text-xs text-emerald-500 font-medium">
+      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 shrink-0" />
+      Ready
+    </span>
+  ) : (
+    <span className="text-xs text-muted-foreground font-medium">Preview</span>
+  );
+
   return (
     <TooltipProvider>
       <div className="flex flex-col h-full min-h-0">
         {/* Toolbar */}
-        <div className="flex items-center justify-between px-3 h-10 border-b border-border/50 bg-background/80 shrink-0">
-          <div className="flex items-center gap-1">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant={viewMode === 'desktop' ? 'secondary' : 'ghost'}
-                  size="icon"
-                  className="h-7 w-7"
-                  onClick={() => setViewMode('desktop')}
-                >
-                  <Monitor className="h-3.5 w-3.5" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Desktop view</TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant={viewMode === 'mobile' ? 'secondary' : 'ghost'}
-                  size="icon"
-                  className="h-7 w-7"
-                  onClick={() => setViewMode('mobile')}
-                >
-                  <Smartphone className="h-3.5 w-3.5" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Mobile view (375px)</TooltipContent>
-            </Tooltip>
+        <div className="flex items-center justify-between px-3 h-10 border-b border-border/40 bg-background/80 shrink-0">
+          {/* Pill viewport toggle */}
+          <div className="flex items-center bg-muted rounded-full p-0.5">
+            <button
+              onClick={() => setViewMode('desktop')}
+              className={cn(
+                'h-6 w-7 rounded-full flex items-center justify-center transition-all duration-200',
+                viewMode === 'desktop'
+                  ? 'bg-background shadow-sm text-foreground'
+                  : 'text-muted-foreground hover:text-foreground'
+              )}
+            >
+              <Monitor className="h-3.5 w-3.5" />
+            </button>
+            <button
+              onClick={() => setViewMode('mobile')}
+              className={cn(
+                'h-6 w-7 rounded-full flex items-center justify-center transition-all duration-200',
+                viewMode === 'mobile'
+                  ? 'bg-background shadow-sm text-foreground'
+                  : 'text-muted-foreground hover:text-foreground'
+              )}
+            >
+              <Smartphone className="h-3.5 w-3.5" />
+            </button>
           </div>
 
-          <span className="text-xs text-muted-foreground font-medium">Preview</span>
+          {/* Status badge */}
+          {statusBadge}
 
-          <div className="flex items-center gap-1">
+          {/* Grouped action buttons */}
+          <div className="flex items-center gap-0.5 bg-muted/50 rounded-lg px-1 py-0.5">
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
@@ -102,7 +129,7 @@ export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({ html, isGe
                   disabled={!html}
                 >
                   {copied ? (
-                    <Check className="h-3.5 w-3.5 text-green-500" />
+                    <Check className="h-3.5 w-3.5 text-emerald-500" />
                   ) : (
                     <Copy className="h-3.5 w-3.5" />
                   )}
@@ -131,15 +158,23 @@ export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({ html, isGe
         {/* Preview area */}
         <div
           className={cn(
-            'flex-1 min-h-0 flex items-center justify-center bg-muted/20 overflow-hidden',
-            viewMode === 'mobile' ? 'p-4' : 'p-0'
+            'flex-1 min-h-0 flex items-center justify-center overflow-hidden',
+            viewMode === 'mobile' ? 'p-4 bg-muted/20' : 'p-0 bg-muted/10'
           )}
+          style={
+            !html
+              ? {
+                  backgroundImage:
+                    'radial-gradient(circle, hsl(var(--border)/0.6) 1px, transparent 1px)',
+                  backgroundSize: '24px 24px',
+                }
+              : undefined
+          }
         >
           {!html && !isGenerating && (
-            /* Empty state */
             <div className="flex flex-col items-center gap-3 text-center px-8 py-12 select-none">
-              <div className="h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center">
-                <Wand2 className="h-8 w-8 text-primary/60" />
+              <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/15 flex items-center justify-center">
+                <Wand2 className="h-8 w-8 text-primary/50" />
               </div>
               <div className="space-y-1">
                 <p className="text-sm font-medium text-muted-foreground">
@@ -153,11 +188,10 @@ export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({ html, isGe
           )}
 
           {!html && isGenerating && (
-            /* Generating skeleton */
             <div className="flex flex-col items-center gap-4 text-center px-8 py-12">
               <Loader2 className="h-10 w-10 text-primary animate-spin" />
               <div className="space-y-1">
-                <p className="text-sm font-medium">Building your app...</p>
+                <p className="text-sm font-medium">{LOADING_STEPS[loadingStep]}</p>
                 <p className="text-xs text-muted-foreground">
                   This usually takes 15–30 seconds
                 </p>
