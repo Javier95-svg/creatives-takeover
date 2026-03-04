@@ -50,11 +50,11 @@ export const MVPBuilderHeader: React.FC<MVPBuilderHeaderProps> = ({
     <header className="flex items-center justify-between px-4 h-12 border-b border-border/50 bg-background/95 backdrop-blur-sm col-span-2 shrink-0">
       {/* Left: back link */}
       <Link
-        to="/dashboard"
+        to="/"
         className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
       >
         <ArrowLeft className="h-4 w-4" />
-        Dashboard
+        Platform
       </Link>
 
       {/* Center: editable project name */}
