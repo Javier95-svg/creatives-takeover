@@ -268,11 +268,9 @@ export function useMVPBuilder() {
     localStorage.removeItem(STORAGE_KEY);
   }, []);
 
-  // Persist project name changes
+  // Persist project name changes (always, even on an empty session)
   useEffect(() => {
-    if (messages.length > 0 || currentHtml) {
-      persist(messages, currentHtml, projectName);
-    }
+    persist(messages, currentHtml, projectName);
   }, [projectName]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return {
