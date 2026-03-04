@@ -33,7 +33,7 @@ export const MentorProfile = ({ mentor, onBookClick }: MentorProfileProps) => {
     ? mentor.bio.substring(0, bioMaxLength) + '...'
     : mentor.bio;
   
-  // Get country flag - special cases for known mentor nationalities
+  // Get country flag - special cases for mentors whose nationality is not set in the database yet
   const getNationality = () => {
     if (mentor.nationality) {
       return mentor.nationality;
@@ -112,6 +112,10 @@ export const MentorProfile = ({ mentor, onBookClick }: MentorProfileProps) => {
     // Special case: Ricardo Quiroga is from UAE
     if (mentor.name.toLowerCase().includes('ricardo') && mentor.name.toLowerCase().includes('quiroga')) {
       return 'UAE';
+    }
+    // Special case: Katie Brett is from South Africa
+    if (mentor.name.toLowerCase().includes('katie') && mentor.name.toLowerCase().includes('brett')) {
+      return 'South Africa';
     }
     return null;
   };

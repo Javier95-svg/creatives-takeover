@@ -38,7 +38,7 @@ export const MentorCard = ({ mentor, className, priority = false }: MentorCardPr
   const rating = mentor.rating || 0;
   const reviewCount = mentor.review_count || 0;
 
-  // Get country flag - special cases for Samuel (American), Nic M Rayce (Singapore), Irfan Ahmad Malik (Pakistan), Gonzalo Wangüemert (Spain), Marc Bright (Great Britain), Vashti Joseph (France), Ramona Chihaia (Romania), Dikshit Kukreja (India), Karolina Żurawska (Poland), and Ricardo Quiroga (UAE)
+  // Get country flag - special cases for mentors whose nationality is not set in the database yet
   const getNationality = () => {
     if (mentor.nationality) {
       return mentor.nationality;
@@ -117,6 +117,10 @@ export const MentorCard = ({ mentor, className, priority = false }: MentorCardPr
     // Special case: Ricardo Quiroga is from UAE
     if (mentor.name.toLowerCase().includes('ricardo') && mentor.name.toLowerCase().includes('quiroga')) {
       return 'UAE';
+    }
+    // Special case: Katie Brett is from South Africa
+    if (mentor.name.toLowerCase().includes('katie') && mentor.name.toLowerCase().includes('brett')) {
+      return 'South Africa';
     }
     return null;
   };
