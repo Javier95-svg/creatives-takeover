@@ -34,7 +34,7 @@ export function useMVPBuilder() {
   const [messages, setMessages] = useState<MVPMessage[]>([]);
   const [currentHtml, setCurrentHtml] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [projectName, setProjectName] = useState('Untitled App');
+  const [projectName, setProjectName] = useState('Name Your App');
 
   // Abort controller ref to cancel in-flight requests
   const abortRef = useRef<AbortController | null>(null);
@@ -54,7 +54,7 @@ export function useMVPBuilder() {
       }));
       setMessages(cleanMessages);
       setCurrentHtml(session.currentHtml ?? null);
-      setProjectName(session.projectName ?? 'Untitled App');
+      setProjectName(session.projectName ?? 'Name Your App');
     } catch {
       // Corrupt data — ignore
     }
@@ -263,7 +263,7 @@ export function useMVPBuilder() {
     abortRef.current?.abort();
     setMessages([]);
     setCurrentHtml(null);
-    setProjectName('Untitled App');
+    setProjectName('Name Your App');
     setIsGenerating(false);
     localStorage.removeItem(STORAGE_KEY);
   }, []);
