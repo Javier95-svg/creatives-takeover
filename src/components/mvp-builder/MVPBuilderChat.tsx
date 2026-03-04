@@ -95,7 +95,7 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
                 <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-primary/25 to-primary/5 border border-primary/20 shadow-lg shadow-primary/10 flex items-center justify-center mx-auto">
                   <Wand2 className="h-7 w-7 text-primary/70" />
                 </div>
-                <p className="text-lg font-semibold">What will you build today?</p>
+                <p className="text-lg font-semibold">What are we building today?</p>
                 <p className="text-xs text-muted-foreground/70">
                   Describe your app or pick a template below
                 </p>
