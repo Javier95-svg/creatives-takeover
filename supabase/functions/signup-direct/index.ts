@@ -238,13 +238,11 @@ serve(async (req: Request): Promise<Response> => {
   }
 
   if (username) {
-    const { data: usernameAvailable, error: usernameError } = await supabaseAdmin.rpc(
-      "is_username_available",
-      {
-        candidate: username,
-        current_user_id: null,
-      },
-    );
+    const { data: existingUsername, error: usernameError } = await supabaseAdmin
+      .from("profiles")
+      .select("id")
+      .eq("username", username)
+      .limit(1);
 
     if (usernameError) {
       console.error("[signup-direct] username availability lookup failed:", usernameError);
@@ -255,7 +253,7 @@ serve(async (req: Request): Promise<Response> => {
       });
     }
 
-    if (usernameAvailable !== true) {
+    if (existingUsername && existingUsername.length > 0) {
       return jsonResponse({
         ok: false,
         code: "USERNAME_TAKEN",
