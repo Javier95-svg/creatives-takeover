@@ -133,12 +133,12 @@ export default function MVPBuilderBetaPage() {
       '@type': 'WebPage',
       name: 'MVP Builder (Beta mode)',
       description: 'Save MVP scope and spec to move through Stage IV of BizMap AI.',
-      url: 'https://creatives-takeover.com/mvp-builder',
+      url: 'https://creatives-takeover.com/mvp-scope',
     },
     createBreadcrumbSchema([
       { name: 'Home', url: '/' },
       { name: 'BizMap AI', url: '/bizmap-ai' },
-      { name: 'MVP Builder', url: '/mvp-builder' },
+      { name: 'MVP Builder', url: '/mvp-scope' },
     ]),
   ];
 
@@ -148,7 +148,7 @@ export default function MVPBuilderBetaPage() {
         title="MVP Builder (Beta mode) - Creatives Takeover"
         description="Scope your MVP and save your build spec to progress through Stage IV."
         keywords="mvp builder, product scope, build plan"
-        url="/mvp-builder"
+        url="/mvp-scope"
         structuredData={structuredData}
       />
       <Navigation />

@@ -146,7 +146,7 @@ const Navigation = () => {
   const navItems = [
     { name: "Home", href: "/", tooltip: "Return to homepage", icon: Home },
     { name: "BizMap AI", href: "/bizmap-ai", tooltip: "AI Co-Founder that creates your business plan", icon: Bot },
-    { name: "App Builder", href: "/app-builder", tooltip: "Build functional apps from natural language prompts", icon: Wand2 },
+    { name: "App Builder", href: "/mvp-builder", tooltip: "Build functional apps from natural language prompts", icon: Wand2 },
     { name: "Community", href: "/community", tooltip: "Connect with fellow creative entrepreneurs", icon: UsersIcon },
     { name: "Insighta", href: "/insighta", tooltip: "Funding opportunities and investment resources", icon: TrendingUp },
     { name: "Resources", href: "/stories", tooltip: "Stories, prompts, and learning resources", icon: FileText },

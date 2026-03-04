@@ -117,7 +117,7 @@ const PulseWidgetWrapper = () => {
   const location = useLocation();
 
   // Show Pulse on all pages except auth flows, admin, and full-screen builders
-  const excludedPaths = ['/onboarding', '/auth', '/login', '/signup', '/forgot-password', '/reset-password', '/app-builder'];
+  const excludedPaths = ['/onboarding', '/auth', '/login', '/signup', '/forgot-password', '/reset-password', '/mvp-builder'];
   const isExcluded = excludedPaths.some(p => location.pathname.startsWith(p));
 
   if (isExcluded) return null;
@@ -186,7 +186,8 @@ function App() {
                         <Route path="/waitlist-builder" element={<Navigate to="/waitlist" replace />} />
                         <Route path="/decision-sprint" element={<ValidateJourneyPage />} />
                         <Route path="/validate" element={<ValidateJourney />} />
-                        <Route path="/mvp-builder" element={<StageRouteGuard route="/mvp-builder"><MVPBuilderBetaPage /></StageRouteGuard>} />
+                        <Route path="/mvp-builder" element={<AppBuilderPage />} />
+                        <Route path="/mvp-scope" element={<StageRouteGuard route="/mvp-scope"><MVPBuilderBetaPage /></StageRouteGuard>} />
                         <Route path="/go-to-market" element={<StageRouteGuard route="/go-to-market"><GTMStrategistPage /></StageRouteGuard>} />
                         <Route path="/directories" element={<StageRouteGuard route="/go-to-market"><DirectoriesPage /></StageRouteGuard>} />
                         <Route path="/client-acquisition" element={<Navigate to="/go-to-market" replace />} />
@@ -221,7 +222,6 @@ function App() {
                         <Route path="/rag-test" element={<RAGTest />} />
                         <Route path="/test-phase1" element={<TestPhase1 />} />
                         <Route path="/w/:slug" element={<WaitlistPublicPage />} />
-                        <Route path="/app-builder" element={<AppBuilderPage />} />
                         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                         <Route path="*" element={<NotFound />} />
                       </Routes>

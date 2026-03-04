@@ -12,7 +12,7 @@ export const journeyDefinitions: Record<JourneySlug, JourneyDefinition> = {
 /** Slug-to-route mapping for journey pages */
 export const journeyRoutes: Record<JourneySlug, string> = {
   validate: '/validate',
-  mvp: '/mvp-builder',
+  mvp: '/mvp-scope',
   'first-customers': '/go-to-market',
 };
 

@@ -190,7 +190,7 @@ export function getTransitionPrompt(): TransitionPrompt | null {
         to: 'build',
         message: "You've validated your idea. Ready to build your MVP?",
         ctaLabel: 'Start MVP Sprint',
-        ctaHref: '/mvp-builder',
+        ctaHref: '/mvp-scope',
       },
       'build->measure': {
         from: 'build',

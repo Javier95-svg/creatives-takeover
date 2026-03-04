@@ -8,7 +8,7 @@ export default function AppBuilderPage() {
         title="App Builder — Creatives Takeover"
         description="Build functional web apps by simply describing what you want. AI-powered vibe coding — describe, preview, iterate."
         keywords="ai app builder, vibe coding, no-code, mvp builder, web app generator"
-        url="/app-builder"
+        url="/mvp-builder"
       />
       <MVPBuilder />
     </>

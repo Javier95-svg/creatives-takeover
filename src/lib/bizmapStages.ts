@@ -70,7 +70,7 @@ export const BIZMAP_TOOLS: BizMapToolDefinition[] = [
   {
     id: 'mvp-builder',
     name: 'MVP Builder',
-    route: '/mvp-builder',
+    route: '/mvp-scope',
     stage: 'BUILDING',
     description: 'Scope your MVP delivery plan and saved build spec.',
     icon: Rocket,
@@ -162,9 +162,9 @@ export const STAGE_TASKS: Record<BizMapStage, StageTaskTemplate[]> = {
     { id: 'validating-hypothesis', stage: 'VALIDATING', title: 'Define your top PMF hypotheses and risks', priority: 'medium', route: '/pmf-lab' },
   ],
   BUILDING: [
-    { id: 'building-scope', stage: 'BUILDING', title: 'Save MVP scope and product spec', priority: 'high', route: '/mvp-builder' },
+    { id: 'building-scope', stage: 'BUILDING', title: 'Save MVP scope and product spec', priority: 'high', route: '/mvp-scope' },
     { id: 'building-stack', stage: 'BUILDING', title: 'Save Tech Stack recommendation', priority: 'high', route: '/tech-stack' },
-    { id: 'building-estimate', stage: 'BUILDING', title: 'Estimate budget and build timeline', priority: 'medium', route: '/mvp-builder' },
+    { id: 'building-estimate', stage: 'BUILDING', title: 'Estimate budget and build timeline', priority: 'medium', route: '/mvp-scope' },
   ],
   LAUNCH: [
     { id: 'launch-channels', stage: 'LAUNCH', title: 'Define first distribution channels', priority: 'high', route: '/go-to-market' },
