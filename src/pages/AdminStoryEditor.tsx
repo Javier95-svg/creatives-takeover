@@ -56,7 +56,7 @@ const AdminStoryEditor = () => {
   useEffect(() => {
     if (!isAdmin) {
       toast.error("Only admins can access this page");
-      navigate("/stories");
+      navigate("/newspaper");
       return;
     }
 
@@ -228,7 +228,7 @@ const AdminStoryEditor = () => {
           { duration: 8000 }
         );
       }
-      navigate(`/stories/${result.slug}`);
+      navigate(`/newspaper/${result.slug}`);
     }
   };
 
@@ -238,7 +238,7 @@ const AdminStoryEditor = () => {
     if (confirm("Are you sure you want to delete this story?")) {
       const success = await deleteStory(article.id);
       if (success) {
-        navigate("/stories");
+        navigate("/newspaper");
       }
     }
   };
@@ -259,7 +259,7 @@ const AdminStoryEditor = () => {
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-4">
-              <Button variant="ghost" size="sm" onClick={() => navigate("/stories")}>
+              <Button variant="ghost" size="sm" onClick={() => navigate("/newspaper")}>
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Back
               </Button>

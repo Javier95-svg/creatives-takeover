@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Menu, X, LogIn, LogOut, User, Settings, Gift, UserPlus, MessageCircle, Home, Bot, BookOpen, TrendingUp, Users as UsersIcon, FileText, Info, DollarSign, ChevronDown, Mail, Rocket, FlaskConical, Lightbulb, Target, Boxes, GraduationCap, Handshake, BarChart3, Filter, CheckSquare, LineChart, CalendarCheck, HeartHandshake, Sparkles, Lock } from "lucide-react";
+import { Menu, X, LogIn, LogOut, User, Settings, Gift, UserPlus, MessageCircle, Home, Bot, BookOpen, TrendingUp, Users as UsersIcon, FileText, Info, DollarSign, ChevronDown, Mail, Rocket, FlaskConical, Lightbulb, Target, Boxes, GraduationCap, Handshake, BarChart3, Filter, CheckSquare, LineChart, CalendarCheck, HeartHandshake, Sparkles, Lock, MoreHorizontal } from "lucide-react";
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -30,7 +30,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { useBizMapProgress } from "@/hooks/useBizMapProgress";
-import { BIZMAP_STAGES, BUSINESS_PLANNER_RESOURCE_ITEM } from "@/lib/bizmapStages";
+import { BIZMAP_STAGES } from "@/lib/bizmapStages";
 import {
   Dialog,
   DialogContent,
@@ -60,13 +60,11 @@ const Navigation = () => {
 
   // Icon mapping for navigation items
   const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
-    "Home": Home,
-    "BizMap AI": Bot,
-    "Insighta": TrendingUp,
+    "My Journey": Bot,
+    "Fundraising": TrendingUp,
     "Community": UsersIcon,
-    "Resources": FileText,
-    "About Us": Info,
     "Pricing": DollarSign,
+    "More": MoreHorizontal,
   };
 
   // BizMap AI submenu -- grouped by guided stages
@@ -98,13 +96,6 @@ const Navigation = () => {
     { name: "Find a Mentor", href: "/community", icon: GraduationCap, description: "Connect with experienced mentors" },
     { name: "Find a Co-Founder", href: "/community/co-founders", icon: Handshake, description: "Meet your business soulmate" },
     { name: "Find your Angel", href: "/community/angels", icon: Sparkles, description: "Connect with angel investors" },
-  ];
-
-  // Resources submenu items
-  const resourcesSubmenu = [
-    { name: BUSINESS_PLANNER_RESOURCE_ITEM.name, href: BUSINESS_PLANNER_RESOURCE_ITEM.route, icon: BUSINESS_PLANNER_RESOURCE_ITEM.icon, description: BUSINESS_PLANNER_RESOURCE_ITEM.description },
-    { name: "Prompt Library", href: "/prompt-library", icon: BookOpen, description: "60+ business cases and prompts" },
-    { name: "Stories", href: "/stories", icon: FileText, description: "Insights and articles for founders" },
   ];
 
   // Fetch user avatar
@@ -144,13 +135,18 @@ const Navigation = () => {
   };
 
   const navItems = [
-    { name: "Home", href: "/", tooltip: "Return to homepage", icon: Home },
-    { name: "BizMap AI", href: "/bizmap-ai", tooltip: "AI Co-Founder that creates your business plan", icon: Bot },
-    { name: "Community", href: "/community", tooltip: "Connect with fellow creative entrepreneurs", icon: UsersIcon },
-    { name: "Insighta", href: "/insighta", tooltip: "Funding opportunities and investment resources", icon: TrendingUp },
-    { name: "Resources", href: "/stories", tooltip: "Stories, prompts, and learning resources", icon: FileText },
-    { name: "About Us", href: "/about", tooltip: "Learn about our mission and team", icon: Info },
-    { name: "Pricing", href: "/pricing", tooltip: "View plans and pricing options", icon: DollarSign }
+    { name: "My Journey", href: "/bizmap-ai", tooltip: "Your 5-stage startup development path", icon: Bot },
+    { name: "Community", href: "/community", tooltip: "Connect with mentors, co-founders, and angels", icon: UsersIcon },
+    { name: "Fundraising", href: "/insighta", tooltip: "VCs, accelerators, pitch deck tools, and more", icon: TrendingUp },
+    { name: "Pricing", href: "/pricing", tooltip: "View plans and pricing options", icon: DollarSign },
+    { name: "More", href: "#", tooltip: "Resources and about us", icon: MoreHorizontal },
+  ];
+
+  // More submenu — Resources + About Us consolidated
+  const moreSubmenu = [
+    { name: "Prompt Library", href: "/prompt-library", icon: BookOpen, description: "60+ business cases and prompts" },
+    { name: "Newspaper", href: "/newspaper", icon: FileText, description: "Insights and articles for founders" },
+    { name: "About Us", href: "/about", icon: Info, description: "Our mission and team" },
   ];
 
   // Check if a nav item is active
@@ -208,18 +204,18 @@ const Navigation = () => {
 
                   // Color-code navigation items semantically
                   let colorClass = '';
-                  if (item.name === 'BizMap AI' || item.name === 'Prompt Library') {
+                  if (item.name === 'My Journey') {
                     colorClass = 'hover:text-planning';
-                  } else if (item.name === 'Community' || item.name === 'Stories' || item.name === 'About Us') {
+                  } else if (item.name === 'Community' || item.name === 'More') {
                     colorClass = 'hover:text-action';
-                  } else if (item.name === 'Insighta' || item.name === 'Pricing') {
+                  } else if (item.name === 'Fundraising' || item.name === 'Pricing') {
                     colorClass = 'hover:text-growth';
                   } else {
                     colorClass = 'hover:text-primary';
                   }
 
-                  // Special handling for BizMap AI with dropdown
-                  if (item.name === 'BizMap AI') {
+                  // Special handling for My Journey (BizMap AI) with dropdown
+                  if (item.name === 'My Journey') {
                     return (
                       <DropdownMenu key={item.name}>
                         <Tooltip>
@@ -228,8 +224,8 @@ const Navigation = () => {
                               "relative flex items-center gap-1 px-3 py-2 rounded-lg transition-all duration-250 whitespace-nowrap font-medium text-sm outline-none",
                               "nav-item-hover-effect",
                               active
-                                ? "text-foreground bg-primary/5 nav-active-indicator active"
-                                : `text-muted-foreground ${colorClass}`
+                                ? "text-foreground bg-primary/10 nav-active-indicator active"
+                                : `text-primary bg-primary/8 ${colorClass}`
                             )}>
                               {Icon && <Icon className="h-4 w-4 flex-shrink-0" />}
                               <span className="tracking-wide">{item.name}</span>
@@ -241,6 +237,16 @@ const Navigation = () => {
                           </TooltipContent>
                         </Tooltip>
                         <DropdownMenuContent align="start" className="w-80 md:w-72 sm:w-64 max-w-[calc(100vw-2rem)] max-h-[min(520px,80vh)] overflow-y-auto overscroll-contain">
+                          <DropdownMenuItem asChild>
+                            <Link to="/bizmap-ai" onClick={() => trackClick('My Journey - Stage Map', 'Navigation')} className="cursor-pointer">
+                              <Rocket className="h-4 w-4 mr-2 text-primary" />
+                              <div className="flex flex-col">
+                                <span className="font-semibold text-primary">Stage Map — Start Here</span>
+                                <span className="text-xs text-muted-foreground">See your full 5-stage startup journey</span>
+                              </div>
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
                           <DropdownMenuLabel>Startup Development Cycle</DropdownMenuLabel>
                           <DropdownMenuSeparator />
                           {bizMapSubmenu.map((subItem, idx) => {
@@ -286,12 +292,7 @@ const Navigation = () => {
                                   onClick={() => trackClick(`${item.name} - ${linkItem.name}`, 'Navigation')}
                                   className="cursor-pointer"
                                 >
-                                  <SubIcon
-                                    className={cn(
-                                      "h-4 w-4 mr-2",
-                                      subItem.href === BUSINESS_PLANNER_RESOURCE_ITEM.route && "h-[18px] w-[18px]"
-                                    )}
-                                  />
+                                  <SubIcon className="h-4 w-4 mr-2" />
                                   <div className="flex flex-col">
                                     <span className="font-medium">{linkItem.name}</span>
                                     <span className="text-xs text-muted-foreground">{linkItem.description}</span>
@@ -305,8 +306,8 @@ const Navigation = () => {
                     );
                   }
 
-                  // Special handling for Insighta with dropdown
-                  if (item.name === 'Insighta') {
+                  // Special handling for Fundraising (Insighta) with dropdown
+                  if (item.name === 'Fundraising') {
                     return (
                       <DropdownMenu key={item.name}>
                         <Tooltip>
@@ -401,8 +402,8 @@ const Navigation = () => {
                     );
                   }
 
-                  // Special handling for Resources with dropdown
-                  if (item.name === 'Resources') {
+                  // Special handling for More (Resources + About Us) with dropdown
+                  if (item.name === 'More') {
                     return (
                       <DropdownMenu key={item.name}>
                         <Tooltip>
@@ -424,9 +425,9 @@ const Navigation = () => {
                           </TooltipContent>
                         </Tooltip>
                         <DropdownMenuContent align="start" className="w-72 md:w-56 sm:w-full max-w-[calc(100vw-2rem)]">
-                          <DropdownMenuLabel>Niche Tools for Founders</DropdownMenuLabel>
+                          <DropdownMenuLabel>More</DropdownMenuLabel>
                           <DropdownMenuSeparator />
-                          {resourcesSubmenu.map((subItem) => {
+                          {moreSubmenu.map((subItem) => {
                             const SubIcon = subItem.icon;
                             return (
                               <DropdownMenuItem key={subItem.name} asChild>
@@ -623,10 +624,10 @@ const Navigation = () => {
 
                     // Determine submenu for this item
                     const submenuMap: Record<string, { items: typeof insightaSubmenu }> = {
-                      'BizMap AI': { items: bizMapSubmenu.filter((s): s is { name: string; href: string; icon: React.ComponentType<{ className?: string }>; description: string } => !('type' in s)) },
-                      'Insighta': { items: insightaSubmenu },
+                      'My Journey': { items: bizMapSubmenu.filter((s): s is { name: string; href: string; icon: React.ComponentType<{ className?: string }>; description: string } => !('type' in s)) },
+                      'Fundraising': { items: insightaSubmenu },
                       'Community': { items: communitySubmenu },
-                      'Resources': { items: resourcesSubmenu },
+                      'More': { items: moreSubmenu },
                     };
                     const submenu = submenuMap[item.name];
 
@@ -681,12 +682,7 @@ const Navigation = () => {
                                   className="flex items-center gap-2.5 px-3 py-2.5 min-h-[44px] touch-manipulation text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50 active:bg-muted rounded-lg transition-colors"
                                   onClick={() => setIsOpen(false)}
                                 >
-                                  <SubIcon
-                                    className={cn(
-                                      "h-4 w-4 flex-shrink-0",
-                                      sub.href === BUSINESS_PLANNER_RESOURCE_ITEM.route && "h-[18px] w-[18px]"
-                                    )}
-                                  />
+                                  <SubIcon className="h-4 w-4 flex-shrink-0" />
                                   <span>{sub.name}</span>
                                 </Link>
                               );

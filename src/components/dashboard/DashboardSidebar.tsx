@@ -7,7 +7,6 @@ import {
   Sparkles,
   Users,
   BookOpen,
-  MessageSquare,
   Command,
   Zap,
   FlaskConical,
@@ -95,7 +94,6 @@ export const DashboardSidebar = ({ dashboardMode: _dashboardMode }: DashboardSid
 
   // Build tools items based on user preferences
   const toolsItems = [
-    sidebarPreferences.showBizMapAI && { path: '/bizmap-ai/chat', label: 'BizMap AI', icon: MessageSquare, prefKey: 'showBizMapAI' as const },
     sidebarPreferences.showPMFLab && { path: '/pmf-lab', label: 'PMF Lab', icon: FlaskConical, prefKey: 'showPMFLab' as const },
     sidebarPreferences.showPromptLibrary && { path: '/prompt-library', label: 'Prompt Library', icon: Library, prefKey: 'showPromptLibrary' as const },
     sidebarPreferences.showTechStack && { path: '/tech-stack', label: 'Tech Stack Builder', icon: Zap, prefKey: 'showTechStack' as const },
@@ -104,7 +102,7 @@ export const DashboardSidebar = ({ dashboardMode: _dashboardMode }: DashboardSid
     sidebarPreferences.showPitchDeckAnalyzer && { path: '/insighta/pitch-deck-analyzer', label: 'Pitch Deck Analyzer', icon: ClipboardList, prefKey: 'showPitchDeckAnalyzer' as const },
     sidebarPreferences.showInsightaTest && { path: '/insighta/test', label: 'Insighta Test', icon: Sparkles, prefKey: 'showInsightaTest' as const },
     sidebarPreferences.showCommunity && { path: '/community', label: 'Find a Mentor', icon: Users, prefKey: 'showCommunity' as const },
-    sidebarPreferences.showRead && { path: '/stories', label: 'Read', icon: BookOpen, prefKey: 'showRead' as const },
+    sidebarPreferences.showRead && { path: '/newspaper', label: 'Read', icon: BookOpen, prefKey: 'showRead' as const },
   ].filter(Boolean) as { path: string; label: string; icon: any; prefKey: keyof typeof defaultSidebarPreferences }[];
 
   const removeTool = async (prefKey: keyof typeof defaultSidebarPreferences) => {

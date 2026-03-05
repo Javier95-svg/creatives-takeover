@@ -52,7 +52,7 @@ export function generateRSSFeed(
   baseUrl: string = 'https://creatives-takeover.com'
 ): string {
   const now = new Date();
-  const feedUrl = `${baseUrl}/stories/rss.xml`;
+  const feedUrl = `${baseUrl}/newspaper/rss.xml`;
   const siteUrl = baseUrl;
   
   // Build RSS items
@@ -61,7 +61,7 @@ export function generateRSSFeed(
       ? new Date(story.published_at) 
       : new Date(story.created_at);
     
-    const storyUrl = `${baseUrl}/stories/${story.slug}`;
+    const storyUrl = `${baseUrl}/newspaper/${story.slug}`;
     const description = escapeXML(story.excerpt || story.title || '');
     const title = escapeXML(story.title);
     
@@ -87,7 +87,7 @@ export function generateRSSFeed(
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Creatives Takeover Stories</title>
-    <link>${siteUrl}/stories</link>
+    <link>${siteUrl}/newspaper</link>
     <description>Expert stories, insights, and articles about entrepreneurship, startups, marketing, and business growth from Creatives Takeover.</description>
     <language>en-US</language>
     <lastBuildDate>${formatRSSDate(now)}</lastBuildDate>
@@ -97,7 +97,7 @@ export function generateRSSFeed(
     <image>
       <url>${baseUrl}/lovable-uploads/new-favicon.png</url>
       <title>Creatives Takeover Stories</title>
-      <link>${siteUrl}/stories</link>
+      <link>${siteUrl}/newspaper</link>
     </image>
 ${items}
   </channel>

@@ -22,7 +22,7 @@ const StoryTagPage = () => {
 
   useEffect(() => {
     if (!tagSlug) {
-      navigate("/stories", { replace: true });
+      navigate("/newspaper", { replace: true });
       return;
     }
 
@@ -77,7 +77,7 @@ const StoryTagPage = () => {
       } catch (error) {
         if (!signal.aborted) {
           console.error('Error loading tag stories:', error);
-          navigate("/stories", { replace: true });
+          navigate("/newspaper", { replace: true });
         }
       }
     };
@@ -95,7 +95,7 @@ const StoryTagPage = () => {
     return null;
   }
 
-  const tagUrl = `/stories/tags/${tagSlug}`;
+  const tagUrl = `/newspaper/tags/${tagSlug}`;
   const baseUrl = window.location.origin;
   const fullUrl = `${baseUrl}${tagUrl}`;
   
@@ -129,10 +129,10 @@ const StoryTagPage = () => {
         "position": index + 1,
         "item": {
           "@type": "Article",
-          "@id": `https://creatives-takeover.com/stories/${story.slug}`,
+          "@id": `https://creatives-takeover.com/newspaper/${story.slug}`,
           "headline": story.title,
           "description": story.excerpt || story.title,
-          "url": `https://creatives-takeover.com/stories/${story.slug}`
+          "url": `https://creatives-takeover.com/newspaper/${story.slug}`
         }
       }))
     }
@@ -142,7 +142,7 @@ const StoryTagPage = () => {
     collectionPageSchema,
     createBreadcrumbSchema([
       { name: 'Home', url: '/' },
-      { name: 'Stories', url: '/stories' },
+      { name: 'Stories', url: '/newspaper' },
       { name: `${tagDisplay} Stories`, url: tagUrl }
     ])
   ];
@@ -184,7 +184,7 @@ const StoryTagPage = () => {
             {/* Back Button */}
             <div className="mb-6">
               <Button variant="ghost" asChild>
-                <Link to="/stories" className="flex items-center gap-2">
+                <Link to="/newspaper" className="flex items-center gap-2">
                   <ArrowLeft className="w-4 h-4" />
                   Back to Stories
                 </Link>
@@ -230,7 +230,7 @@ const StoryTagPage = () => {
                   No stories found with tag "{tagDisplay}"
                 </p>
                 <Button variant="outline" asChild>
-                  <Link to="/stories">Browse All Stories</Link>
+                  <Link to="/newspaper">Browse All Stories</Link>
                 </Button>
               </div>
             ) : (

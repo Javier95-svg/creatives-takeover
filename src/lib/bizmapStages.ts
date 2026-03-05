@@ -1,4 +1,4 @@
-import { Bot, Boxes, Compass, FlaskConical, Globe, Layers, Rocket, Target } from 'lucide-react';
+import { Boxes, Compass, FlaskConical, Globe, Layers, Rocket, Target } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
 export const BIZMAP_STAGE_ORDER = [
@@ -239,10 +239,3 @@ export function onboardingSelectionToProgress(selection: OnboardingBizMapStageSe
       return { currentStage: DEFAULT_CURRENT_STAGE, highestUnlockedStage: DEFAULT_HIGHEST_UNLOCKED_STAGE };
   }
 }
-
-export const BUSINESS_PLANNER_RESOURCE_ITEM = {
-  name: 'Business Planner',
-  route: '/bizmap-ai/chat',
-  description: 'AI business planning assistant and launch co-pilot',
-  icon: Bot,
-};
