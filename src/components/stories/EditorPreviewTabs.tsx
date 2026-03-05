@@ -140,7 +140,7 @@ export const EditorPreviewTabs = ({
             <label className="text-sm font-medium">URL (Slug)</label>
             <div className="mt-1 p-3 bg-muted rounded border">
               <p className="text-sm font-mono">
-                {typeof window !== 'undefined' ? window.location.origin : 'https://creatives-takeover.com'}/stories/{formData.slug || (formData.title ? formData.title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') : "article-slug")}
+                {typeof window !== 'undefined' ? window.location.origin : 'https://creatives-takeover.com'}/newspaper/{formData.slug || (formData.title ? formData.title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') : "article-slug")}
               </p>
             </div>
           </div>

@@ -67,7 +67,7 @@ const Stories = () => {
     if (selectedTag && activeTab === "published") {
       // Redirect to clean URL format
       const tagSlug = slugifyTag(`#${selectedTag}`);
-      navigate(`/stories/tags/${tagSlug}`, { replace: true });
+      navigate(`/newspaper/tags/${tagSlug}`, { replace: true });
     }
   }, [selectedTag, activeTab, navigate]);
 
@@ -247,14 +247,14 @@ const Stories = () => {
           content="Discover expert stories, insights, and articles about turning ideas into reality. Learn from successful entrepreneurs and creative professionals."
         />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://creatives-takeover.com/stories" />
+        <meta property="og:url" content="https://creatives-takeover.com/newspaper" />
         <meta property="og:site_name" content="Creatives Takeover" />
         <meta name="twitter:card" content="summary" />
         <meta name="twitter:title" content="Stories | Creatives Takeover" />
         <meta name="twitter:description" content="Discover expert stories, insights, and articles about turning ideas into reality." />
         <meta name="twitter:site" content="@CreativesTakeover" />
-        <link rel="canonical" href="https://creatives-takeover.com/stories" />
-        <link rel="alternate" type="application/rss+xml" title="Creatives Takeover Stories RSS Feed" href="https://creatives-takeover.com/stories/rss.xml" />
+        <link rel="canonical" href="https://creatives-takeover.com/newspaper" />
+        <link rel="alternate" type="application/rss+xml" title="Creatives Takeover Stories RSS Feed" href="https://creatives-takeover.com/newspaper/rss.xml" />
       </Helmet>
 
       <div className="min-h-screen bg-background">
@@ -289,7 +289,7 @@ const Stories = () => {
                         className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors text-sm px-3 py-1"
                         onClick={() => {
                           const tagSlug = slugifyTag(tag);
-                          navigate(`/stories/tags/${tagSlug}`);
+                          navigate(`/newspaper/tags/${tagSlug}`);
                         }}
                       >
                         <Hash className="w-3 h-3 mr-1" />
@@ -309,7 +309,7 @@ const Stories = () => {
             <div className="mb-8">
               <div className="flex items-center justify-between mb-4">
                 {isAdmin && (
-                  <Link to="/stories/admin/new">
+                  <Link to="/newspaper/admin/new">
                     <Button>Create Story</Button>
                   </Link>
                 )}
@@ -362,7 +362,7 @@ const Stories = () => {
                   <p className="text-muted-foreground text-lg mb-4">
                     No drafts saved yet
                   </p>
-                  <Link to="/stories/admin/new">
+                  <Link to="/newspaper/admin/new">
                     <Button>Create Your First Draft</Button>
                   </Link>
                 </div>
@@ -411,7 +411,7 @@ const Stories = () => {
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => navigate(`/stories/admin/edit/${draft.id}`)}
+                              onClick={() => navigate(`/newspaper/admin/edit/${draft.id}`)}
                               className="flex items-center gap-2"
                             >
                               <Edit className="w-4 h-4" />
@@ -501,7 +501,7 @@ const Stories = () => {
                     </Button>
                   )}
                   {isAdmin && !selectedTag && (
-                    <Link to="/stories/admin/new">
+                    <Link to="/newspaper/admin/new">
                       <Button className="mt-4">Create Your First Post</Button>
                     </Link>
                   )}
@@ -520,7 +520,7 @@ const Stories = () => {
                             onClick={(e) => {
                               e.preventDefault();
                               e.stopPropagation();
-                              navigate(`/stories/admin/edit/${story.id}`);
+                              navigate(`/newspaper/admin/edit/${story.id}`);
                             }}
                             className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-background/90 backdrop-blur-sm hover:bg-background z-10"
                             aria-label={`Edit ${story.title}`}

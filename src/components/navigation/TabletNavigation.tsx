@@ -25,7 +25,7 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   "Prompt Library": BookOpen,
   "Insighta": TrendingUp,
   "Community": Users,
-  "Stories": FileText,
+  "More": FileText,
   "About Us": Info,
   "Pricing": DollarSign,
 };

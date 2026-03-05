@@ -161,8 +161,14 @@ function App() {
                         <Route path="/community/admin/new" element={<AdminMentorEditor />} />
                         <Route path="/community/admin/edit/:id" element={<AdminMentorEditor />} />
                         <Route path="/community/:slug" element={<MentorProfilePage />} />
-                        <Route path="/stories" element={<Stories />} />
-                        <Route path="/stories/rss.xml" element={<StoriesRSS />} />
+                        <Route path="/newspaper" element={<Stories />} />
+                        <Route path="/newspaper/rss.xml" element={<StoriesRSS />} />
+                        <Route path="/newspaper/tags/:tagSlug" element={<StoryTagPage />} />
+                        <Route path="/newspaper/:slug" element={<StoryArticle />} />
+                        <Route path="/newspaper/admin/new" element={<AdminStoryEditor />} />
+                        <Route path="/newspaper/admin/edit/:id" element={<AdminStoryEditor />} />
+                        <Route path="/stories" element={<Navigate to="/newspaper" replace />} />
+                        <Route path="/stories/rss.xml" element={<Navigate to="/newspaper/rss.xml" replace />} />
                         <Route path="/stories/tags/:tagSlug" element={<StoryTagPage />} />
                         <Route path="/stories/:slug" element={<StoryArticle />} />
                         <Route path="/stories/admin/new" element={<AdminStoryEditor />} />
