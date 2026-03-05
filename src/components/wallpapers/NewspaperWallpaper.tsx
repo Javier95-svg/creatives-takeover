@@ -1,84 +1,77 @@
 const NewspaperWallpaper = () => (
-  <>
-    <div className="fixed inset-0 -z-10 bg-background" />
-
-    {/* Editorial tone gradient */}
+  <div aria-hidden className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
+    {/* Warm editorial base tint */}
     <div
-      className="fixed inset-0 -z-10"
+      className="absolute inset-0"
       style={{
         backgroundImage:
-          "linear-gradient(160deg, hsl(var(--background)) 0%, hsl(var(--background)) 35%, hsl(var(--muted) / 0.45) 100%)",
+          "linear-gradient(145deg, hsl(var(--background)) 0%, hsl(var(--muted) / 0.55) 52%, hsl(var(--background)) 100%)",
       }}
     />
 
-    {/* Paper grain texture */}
+    {/* Strong newspaper columns */}
     <div
-      className="fixed inset-0 -z-10 opacity-30 dark:opacity-15"
+      className="absolute inset-0 opacity-65 dark:opacity-35"
       style={{
         backgroundImage:
-          "radial-gradient(hsl(var(--foreground) / 0.08) 0.45px, transparent 0.45px)",
-        backgroundSize: "3px 3px",
+          "repeating-linear-gradient(to right, transparent 0, transparent 17rem, hsl(var(--border) / 0.95) 17rem, hsl(var(--border) / 0.95) 17.12rem)",
       }}
     />
 
-    {/* Newspaper column separators */}
+    {/* Print texture lines */}
     <div
-      className="fixed inset-0 -z-10 opacity-35 dark:opacity-20"
+      className="absolute inset-0 opacity-35 dark:opacity-18"
       style={{
         backgroundImage:
-          "repeating-linear-gradient(to right, transparent 0, transparent 20rem, hsl(var(--border) / 0.9) 20rem, hsl(var(--border) / 0.9) 20.1rem)",
+          "repeating-linear-gradient(to bottom, hsl(var(--foreground) / 0.2) 0, hsl(var(--foreground) / 0.2) 1px, transparent 1px, transparent 8px)",
       }}
     />
 
-    {/* Printed text lines impression */}
+    {/* Masthead accent strips */}
     <div
-      className="fixed inset-0 -z-10 opacity-25 dark:opacity-10"
+      className="absolute top-[9%] left-[-12%] h-20 w-[62vw] opacity-35 dark:opacity-22"
       style={{
-        backgroundImage:
-          "repeating-linear-gradient(to bottom, hsl(var(--foreground) / 0.22) 0, hsl(var(--foreground) / 0.22) 1px, transparent 1px, transparent 9px)",
-        maskImage:
-          "linear-gradient(to bottom, transparent 0%, black 12%, black 88%, transparent 100%)",
+        transform: "rotate(-6deg)",
+        background:
+          "linear-gradient(90deg, hsl(var(--primary) / 0.55), hsl(var(--accent) / 0.3), transparent)",
+      }}
+    />
+    <div
+      className="absolute top-[45%] right-[-14%] h-16 w-[56vw] opacity-35 dark:opacity-22"
+      style={{
+        transform: "rotate(5deg)",
+        background:
+          "linear-gradient(270deg, hsl(var(--secondary) / 0.5), hsl(var(--primary) / 0.24), transparent)",
       }}
     />
 
-    {/* Editorial highlight bars */}
-    <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
-      <div
-        className="absolute top-[14%] left-[-12%] h-16 w-[55vw] rounded-sm opacity-20 dark:opacity-15"
-        style={{
-          background:
-            "linear-gradient(90deg, hsl(var(--primary) / 0.45), hsl(var(--accent) / 0.25), transparent)",
-          transform: "rotate(-5deg)",
-        }}
-      />
-      <div
-        className="absolute top-[52%] right-[-16%] h-14 w-[50vw] rounded-sm opacity-20 dark:opacity-14"
-        style={{
-          background:
-            "linear-gradient(270deg, hsl(var(--secondary) / 0.45), hsl(var(--primary) / 0.2), transparent)",
-          transform: "rotate(4deg)",
-        }}
-      />
+    {/* Floating headline cards for section uniqueness */}
+    <div className="absolute top-[18%] left-[8%] hidden md:block rounded-md border border-border/70 bg-background/70 px-4 py-2 shadow-lg rotate-[-5deg]">
+      <span className="text-xs font-semibold tracking-[0.12em] text-foreground/70">FOUNDER EDITION</span>
+    </div>
+    <div className="absolute top-[62%] right-[10%] hidden md:block rounded-md border border-border/70 bg-background/70 px-4 py-2 shadow-lg rotate-[4deg]">
+      <span className="text-xs font-semibold tracking-[0.12em] text-foreground/70">TREND DESK</span>
     </div>
 
-    {/* Section-unique ambient glow */}
+    {/* Grain */}
     <div
-      className="fixed inset-0 -z-10 opacity-25 dark:opacity-20 animate-[spin_90s_linear_infinite]"
+      className="absolute inset-0 opacity-25 dark:opacity-14"
       style={{
         backgroundImage:
-          "conic-gradient(from 35deg at 72% 20%, hsl(var(--primary) / 0.2), transparent 35%, hsl(var(--accent) / 0.16) 60%, transparent 80%)",
+          "radial-gradient(hsl(var(--foreground) / 0.09) 0.4px, transparent 0.4px)",
+        backgroundSize: "2.8px 2.8px",
       }}
     />
 
     {/* Readability veil */}
     <div
-      className="fixed inset-0 -z-10"
+      className="absolute inset-0"
       style={{
         backgroundImage:
-          "linear-gradient(to bottom, hsl(var(--background) / 0.6) 0%, hsl(var(--background) / 0.78) 100%)",
+          "linear-gradient(to bottom, hsl(var(--background) / 0.56) 0%, hsl(var(--background) / 0.74) 100%)",
       }}
     />
-  </>
+  </div>
 );
 
 export default NewspaperWallpaper;
