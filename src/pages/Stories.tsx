@@ -271,42 +271,19 @@ const Stories = () => {
           {!selectedTag && activeTab === "published" && (
             <section className="relative z-10 -mt-8 mb-8">
               <div className="container mx-auto px-6 max-w-7xl">
-                <div className="p-6 border rounded-lg bg-muted/30">
-                  <div className="relative flex items-center justify-center">
-                    <h3 className="text-lg font-semibold text-center">Find your Story</h3>
-                    {searchQuery && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="absolute right-0"
-                        onClick={() => {
-                          setSearchInput("");
-                          const params = new URLSearchParams(searchParams);
-                          params.delete("q");
-                          params.set("page", "1");
-                          setSearchParams(params);
-                        }}
-                      >
-                        Clear Search
-                      </Button>
-                    )}
+                <div className="mx-auto max-w-3xl">
+                  <div className="relative">
+                    <div className="pointer-events-none absolute -inset-1 rounded-2xl bg-gradient-to-r from-primary/30 via-secondary/25 to-accent/30 blur-sm" />
+                    <div className="relative rounded-2xl border border-border/70 bg-background/90 backdrop-blur-md shadow-[0_12px_30px_-12px_rgba(0,0,0,0.35)]">
+                      <Search className="w-5 h-5 text-muted-foreground absolute left-4 top-1/2 -translate-y-1/2" />
+                      <Input
+                        value={searchInput}
+                        onChange={(e) => setSearchInput(e.target.value)}
+                        placeholder="Search by keyword, topic, or hashtag..."
+                        className="h-14 border-0 bg-transparent pl-12 pr-4 text-base placeholder:text-muted-foreground/80 focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-0"
+                      />
+                    </div>
                   </div>
-
-                  <div className="relative mt-4">
-                    <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
-                    <Input
-                      value={searchInput}
-                      onChange={(e) => setSearchInput(e.target.value)}
-                      placeholder="Search by keyword, topic, or hashtag..."
-                      className="pl-10"
-                    />
-                  </div>
-
-                  <p className="text-sm text-muted-foreground mt-4">
-                    {searchQuery
-                      ? `Showing ${filteredStories.length} ${filteredStories.length === 1 ? 'result' : 'results'} for "${searchQuery}"`
-                      : `${filteredStories.length} ${filteredStories.length === 1 ? 'article' : 'articles'} published. Start typing to find content you care about.`}
-                  </p>
                 </div>
               </div>
             </section>
