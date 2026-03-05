@@ -81,6 +81,90 @@ export const useStories = () => {
     }
   }, []);
 
+  // Search published stories by title, excerpt, slug, and hashtags
+  const searchStories = useCallback(async (query: string): Promise<StoryArticle[]> => {
+    const trimmedQuery = query.trim();
+    if (!trimmedQuery) {
+      return fetchStories();
+    }
+
+    try {
+      setLoading(true);
+
+      const escapedQuery = trimmedQuery.replace(/[%_]/g, '');
+      const likePattern = `%${escapedQuery}%`;
+      const normalizedHashtag = normalizeHashtag(trimmedQuery);
+      const queryWithoutHash = trimmedQuery.replace(/^#+/, '').toLowerCase();
+
+      const baseSelect = () =>
+        supabase
+          .from('stories_articles')
+          .select('*')
+          .eq('status', 'published')
+          .not('linkedin_post_url', 'is', null);
+
+      const [titleRes, excerptRes, slugRes, hashtagRes] = await Promise.all([
+        baseSelect().ilike('title', likePattern).order('published_at', { ascending: false }),
+        baseSelect().ilike('excerpt', likePattern).order('published_at', { ascending: false }),
+        baseSelect().ilike('slug', likePattern).order('published_at', { ascending: false }),
+        baseSelect().contains('hashtags', [normalizedHashtag]).order('published_at', { ascending: false }),
+      ]);
+
+      const errors = [titleRes.error, excerptRes.error, slugRes.error, hashtagRes.error].filter(Boolean);
+      if (errors.length > 0) {
+        throw errors[0];
+      }
+
+      const merged = new Map<string, StoryArticle>();
+      [titleRes.data, excerptRes.data, slugRes.data, hashtagRes.data].forEach((collection) => {
+        (collection || []).forEach((story) => {
+          merged.set(story.id, story as StoryArticle);
+        });
+      });
+
+      const stories = Array.from(merged.values());
+
+      const ranked = stories.sort((a, b) => {
+        const score = (story: StoryArticle) => {
+          const title = (story.title || '').toLowerCase();
+          const excerpt = (story.excerpt || '').toLowerCase();
+          const slug = (story.slug || '').toLowerCase();
+          const tags = (story.hashtags || []).map((tag) => normalizeHashtag(tag).toLowerCase());
+          const normalizedQueryLower = normalizedHashtag.toLowerCase();
+
+          let relevance = 0;
+
+          if (title.includes(queryWithoutHash)) relevance += 8;
+          if (excerpt.includes(queryWithoutHash)) relevance += 5;
+          if (slug.includes(queryWithoutHash)) relevance += 4;
+          if (tags.some((tag) => tag === normalizedQueryLower)) relevance += 9;
+          if (tags.some((tag) => tag.includes(queryWithoutHash))) relevance += 4;
+
+          const published = story.published_at ? new Date(story.published_at) : new Date(story.created_at);
+          const ageInDays = Math.max(0, (Date.now() - published.getTime()) / (1000 * 60 * 60 * 24));
+          const recencyBoost = Math.max(0, 2 - ageInDays / 180);
+
+          return relevance + recencyBoost;
+        };
+
+        const scoreDiff = score(b) - score(a);
+        if (scoreDiff !== 0) return scoreDiff;
+
+        const dateA = a.published_at ? new Date(a.published_at).getTime() : new Date(a.created_at).getTime();
+        const dateB = b.published_at ? new Date(b.published_at).getTime() : new Date(b.created_at).getTime();
+        return dateB - dateA;
+      });
+
+      return ranked;
+    } catch (error: any) {
+      console.error('Error searching stories:', error);
+      toast.error('Failed to search stories');
+      return [];
+    } finally {
+      setLoading(false);
+    }
+  }, [fetchStories]);
+
   // Fetch single story by slug
   const fetchStoryBySlug = useCallback(async (slug: string): Promise<StoryArticle | null> => {
     try {
@@ -376,6 +460,7 @@ export const useStories = () => {
     loading,
     isAdmin,
     fetchStories,
+    searchStories,
     fetchStoryBySlug,
     fetchStoryById,
     fetchDrafts,

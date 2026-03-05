@@ -9,8 +9,9 @@ import HomeWallpaper from "@/components/wallpapers/HomeWallpaper";
 import { useStories } from "@/hooks/useStories";
 import { StoryArticle } from "@/hooks/useStories";
 import { Badge } from "@/components/ui/badge";
-import { Hash, X, FileText, Edit, Calendar } from "lucide-react";
+import { Hash, X, FileText, Edit, Calendar, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -29,36 +30,18 @@ import {
 
 const ARTICLES_PER_PAGE = 15;
 
-// Function to format hashtags for display in Explore Topics
-const formatHashtagForDisplay = (tag: string): string => {
-  const tagWithoutHash = tag.replace('#', '').toLowerCase();
-  
-  // Transform specific hashtags
-  if (tagWithoutHash === 'startuplessons') {
-    return 'StartupLessons';
-  }
-  if (tagWithoutHash === 'gotomarket') {
-    return 'GoToMarket';
-  }
-  if (tagWithoutHash === 'resilience') {
-    return 'Resilience';
-  }
-  
-  // Default: return tag without hash, preserving original casing
-  return tag.replace('#', '');
-};
-
 const Stories = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const selectedTag = searchParams.get("tag");
+  const searchQuery = searchParams.get("q")?.trim() || "";
   const activeTab = searchParams.get("tab") || "published";
   const currentPage = parseInt(searchParams.get("page") || "1", 10);
-  const { fetchStories, fetchDrafts, loading, isAdmin } = useStories();
+  const { fetchStories, searchStories, fetchDrafts, loading, isAdmin } = useStories();
   const { user } = useAuth();
   const [stories, setStories] = useState<StoryArticle[]>([]);
   const [drafts, setDrafts] = useState<StoryArticle[]>([]);
-  const [allTags, setAllTags] = useState<string[]>([]);
+  const [searchInput, setSearchInput] = useState(searchQuery);
   const abortControllerRef = useRef<AbortController | null>(null);
   const isMountedRef = useRef(true);
 
@@ -70,6 +53,34 @@ const Stories = () => {
       navigate(`/newspaper/tags/${tagSlug}`, { replace: true });
     }
   }, [selectedTag, activeTab, navigate]);
+
+  useEffect(() => {
+    setSearchInput(searchQuery);
+  }, [searchQuery]);
+
+  useEffect(() => {
+    if (activeTab !== "published" || selectedTag) {
+      return;
+    }
+
+    const cleanedInput = searchInput.trim();
+    if (cleanedInput === searchQuery) {
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      const params = new URLSearchParams(searchParams);
+      if (cleanedInput) {
+        params.set("q", cleanedInput);
+      } else {
+        params.delete("q");
+      }
+      params.set("page", "1");
+      setSearchParams(params, { replace: true });
+    }, 350);
+
+    return () => clearTimeout(timer);
+  }, [activeTab, searchInput, searchParams, searchQuery, selectedTag, setSearchParams]);
 
   useEffect(() => {
     // Abort previous request if any
@@ -95,33 +106,14 @@ const Stories = () => {
         } else {
           // Only load stories if no tag is selected (otherwise redirect will handle it)
           if (!selectedTag) {
-            const data = await fetchStories();
+            const data = searchQuery
+              ? await searchStories(searchQuery)
+              : await fetchStories();
             if (signal.aborted || !isMountedRef.current) {
               return;
             }
             
             setStories(data);
-            
-            // Extract tags and count frequency to determine most important tags
-            const tagCounts = new Map<string, number>();
-            data.forEach((story) => {
-              story.hashtags?.forEach((tag) => {
-                tagCounts.set(tag, (tagCounts.get(tag) || 0) + 1);
-              });
-            });
-            // Sort by frequency (descending), then alphabetically, and take top 8
-            const sortedTags = Array.from(tagCounts.entries())
-              .sort((a, b) => {
-                // First sort by frequency (descending)
-                if (b[1] !== a[1]) {
-                  return b[1] - a[1];
-                }
-                // If frequency is equal, sort alphabetically
-                return a[0].localeCompare(b[0]);
-              })
-              .map(([tag]) => tag)
-              .slice(0, 8);
-            setAllTags(sortedTags);
           }
         }
       } catch (error) {
@@ -132,7 +124,6 @@ const Stories = () => {
             setDrafts([]);
           } else {
             setStories([]);
-            setAllTags([]);
           }
         }
       }
@@ -146,14 +137,23 @@ const Stories = () => {
         abortControllerRef.current.abort();
       }
     };
-  }, [selectedTag, activeTab, fetchStories, fetchDrafts, isAdmin]);
+  }, [selectedTag, activeTab, searchQuery, fetchStories, searchStories, fetchDrafts, isAdmin]);
 
   const clearTagFilter = () => {
-    setSearchParams({ tab: activeTab, page: "1" });
+    const params = new URLSearchParams(searchParams);
+    params.delete("tag");
+    params.set("page", "1");
+    setSearchParams(params);
   };
 
   const handleTabChange = (value: string) => {
-    setSearchParams({ tab: value, page: "1" });
+    const params = new URLSearchParams(searchParams);
+    params.set("tab", value);
+    params.set("page", "1");
+    if (value !== "published") {
+      params.delete("q");
+    }
+    setSearchParams(params);
   };
 
   const handlePageChange = (page: number) => {
@@ -267,36 +267,45 @@ const Stories = () => {
             <StoriesHero />
           </section>
 
-          {/* Explore Topics Section - Right after hero */}
-          {allTags.length > 0 && !selectedTag && activeTab === "published" && (
+          {/* Search Section - Right after hero */}
+          {!selectedTag && activeTab === "published" && (
             <section className="relative z-10 -mt-8 mb-8">
               <div className="container mx-auto px-6 max-w-7xl">
                 <div className="p-6 border rounded-lg bg-muted/30">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold">Explore Topics</h3>
-                    <span className="text-sm text-muted-foreground">
-                      {filteredStories.length} {filteredStories.length === 1 ? 'article' : 'articles'} published
-                    </span>
-                  </div>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Browse stories by topic to find insights relevant to your interests
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {allTags.slice(0, 8).map((tag) => (
-                      <Badge
-                        key={tag}
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <h3 className="text-lg font-semibold">Search Articles</h3>
+                    {searchQuery && (
+                      <Button
                         variant="outline"
-                        className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors text-sm px-3 py-1"
+                        size="sm"
                         onClick={() => {
-                          const tagSlug = slugifyTag(tag);
-                          navigate(`/newspaper/tags/${tagSlug}`);
+                          setSearchInput("");
+                          const params = new URLSearchParams(searchParams);
+                          params.delete("q");
+                          params.set("page", "1");
+                          setSearchParams(params);
                         }}
                       >
-                        <Hash className="w-3 h-3 mr-1" />
-                        {formatHashtagForDisplay(tag)}
-                      </Badge>
-                    ))}
+                        Clear Search
+                      </Button>
+                    )}
                   </div>
+
+                  <div className="relative mt-4">
+                    <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
+                    <Input
+                      value={searchInput}
+                      onChange={(e) => setSearchInput(e.target.value)}
+                      placeholder="Search by keyword, topic, or hashtag..."
+                      className="pl-10"
+                    />
+                  </div>
+
+                  <p className="text-sm text-muted-foreground mt-4">
+                    {searchQuery
+                      ? `Showing ${filteredStories.length} ${filteredStories.length === 1 ? 'result' : 'results'} for "${searchQuery}"`
+                      : `${filteredStories.length} ${filteredStories.length === 1 ? 'article' : 'articles'} published. Start typing to find content you care about.`}
+                  </p>
                 </div>
               </div>
             </section>
@@ -491,10 +500,26 @@ const Stories = () => {
               ) : stories.length === 0 ? (
                 <div className="text-center py-16">
                   <p className="text-muted-foreground text-lg mb-4">
-                    {selectedTag
+                    {searchQuery
+                      ? `No articles found for "${searchQuery}"`
+                      : selectedTag
                       ? `No LinkedIn posts found with tag "${selectedTag}"`
                       : "No LinkedIn posts published yet"}
                   </p>
+                  {searchQuery && (
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setSearchInput("");
+                        const params = new URLSearchParams(searchParams);
+                        params.delete("q");
+                        params.set("page", "1");
+                        setSearchParams(params);
+                      }}
+                    >
+                      Clear search
+                    </Button>
+                  )}
                   {selectedTag && (
                     <Button variant="outline" onClick={clearTagFilter}>
                       Clear filter
