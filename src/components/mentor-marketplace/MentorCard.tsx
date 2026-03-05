@@ -122,6 +122,14 @@ export const MentorCard = ({ mentor, className, priority = false }: MentorCardPr
     if (mentor.name.toLowerCase().includes('katie') && mentor.name.toLowerCase().includes('brett')) {
       return 'South Africa';
     }
+    // Special case: Johnny Bou Malhab is from Lebanon
+    if (
+      mentor.name.toLowerCase().includes('johnny') &&
+      mentor.name.toLowerCase().includes('bou') &&
+      mentor.name.toLowerCase().includes('malhab')
+    ) {
+      return 'Lebanon';
+    }
     return null;
   };
 

@@ -103,6 +103,8 @@ export function getCountryFlag(country: string | null | undefined): string {
     'PAKISTAN': '🇵🇰',
     'RO': '🇷🇴',
     'ROMANIA': '🇷🇴',
+    'LB': '🇱🇧',
+    'LEBANON': '🇱🇧',
   };
   
   // Check direct match
