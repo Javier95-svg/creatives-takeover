@@ -1,7 +1,7 @@
 import { useTypingAnimation } from "@/hooks/useTypingAnimation";
 
 const StoriesHero = () => {
-  const fullText = "Welcome to the Creatives Takeover Newspaper, where we publish founder stories, startup case studies, and thoughtful deep dives into the technologies shaping what gets built next. Explore real lessons from wins, failures, pivots, and breakthroughs, with insights you can actually apply whether you are validating an idea, launching a product, or scaling a team. Stay close to what is working in the startup world right now, understand the trends behind the headlines, and sharpen your thinking so you can move faster, make better decisions, and spot what is coming before it goes mainstream.";
+  const fullText = "Welcome to the Creatives Takeover Newspaper, where we share founder stories, startup case studies, and deep dives into emerging tech. Learn from real wins, failures, pivots, and breakthroughs, with insights you can apply as you build and grow. Stay close to what is working now, spot trends early, and sharpen your thinking before they go mainstream.";
   
   const { displayedText, isTyping } = useTypingAnimation({ 
     text: fullText, 
