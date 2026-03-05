@@ -21,14 +21,13 @@ interface TabletNavigationProps {
 // Icon mapping for navigation items
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   "Home": Home,
-  "My Journey": Bot,
+  "BizMap AI": Bot,
   "Prompt Library": BookOpen,
-  "Fundraising": TrendingUp,
+  "Insighta": TrendingUp,
   "Community": Users,
-  "Newspaper": FileText,
+  "Stories": FileText,
   "About Us": Info,
   "Pricing": DollarSign,
-  "More": Info,
 };
 
 export const TabletNavigation: React.FC<TabletNavigationProps> = ({
@@ -50,11 +49,11 @@ export const TabletNavigation: React.FC<TabletNavigationProps> = ({
           
           // Color-code navigation items semantically
           let colorClass = '';
-          if (item.name === 'My Journey') {
+          if (item.name === 'BizMap AI' || item.name === 'Prompt Library') {
             colorClass = 'hover:text-planning';
-          } else if (item.name === 'Community' || item.name === 'More') {
+          } else if (item.name === 'Community' || item.name === 'Stories' || item.name === 'About Us') {
             colorClass = 'hover:text-action';
-          } else if (item.name === 'Fundraising' || item.name === 'Pricing') {
+          } else if (item.name === 'Insighta' || item.name === 'Pricing') {
             colorClass = 'hover:text-growth';
           } else {
             colorClass = 'hover:text-foreground';

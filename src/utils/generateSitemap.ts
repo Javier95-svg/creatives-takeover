@@ -89,7 +89,7 @@ export function generateStoryEntries(
     const formattedLastmod = new Date(lastmod).toISOString().split('T')[0];
     
     return `  <url>
-    <loc>${baseUrl}/newspaper/${story.slug}</loc>
+    <loc>${baseUrl}/stories/${story.slug}</loc>
     <lastmod>${formattedLastmod}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
@@ -119,7 +119,7 @@ export function generateTagEntries(
     const formattedLastmod = new Date(tagEntry.lastmod).toISOString().split('T')[0];
     
     return `  <url>
-    <loc>${baseUrl}/newspaper/tags/${tagSlug}</loc>
+    <loc>${baseUrl}/stories/tags/${tagSlug}</loc>
     <lastmod>${formattedLastmod}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
@@ -148,7 +148,7 @@ export function generateSitemap(
 
   // Add Stories listing page
   staticEntries.push(`  <url>
-    <loc>${baseUrl}/newspaper</loc>
+    <loc>${baseUrl}/stories</loc>
     <lastmod>${now}</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>

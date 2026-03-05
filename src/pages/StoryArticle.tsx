@@ -115,7 +115,7 @@ const StoryArticle = () => {
       setLoading(false);
 
       if (!data) {
-        navigate("/newspaper", { replace: true });
+        navigate("/stories", { replace: true });
         return;
       }
 
@@ -234,7 +234,7 @@ const StoryArticle = () => {
   // Use LinkedIn OG image if available, otherwise fallback to banner or default
   const ogImage = linkedInOgImage || article.banner_image_url || "";
   const ogImageUrl = ogImage ? (ogImage.startsWith('http') ? ogImage : `${window.location.origin}${ogImage}`) : '';
-  const articleUrl = `${window.location.origin}/newspaper/${article.slug}`;
+  const articleUrl = `${window.location.origin}/stories/${article.slug}`;
 
   return (
     <>
@@ -304,20 +304,20 @@ const StoryArticle = () => {
                 author: "Creatives Takeover",
                 publishedTime: article.published_at ? new Date(article.published_at).toISOString() : new Date(article.created_at).toISOString(),
                 modifiedTime: article.updated_at ? new Date(article.updated_at).toISOString() : undefined,
-                url: `/newspaper/${article.slug}`,
+                url: `/stories/${article.slug}`,
                 keywords: article.hashtags || [],
                 articleSection: articleSection,
               }),
-              "@id": `https://creatives-takeover.com/newspaper/${article.slug}`,
+              "@id": `https://creatives-takeover.com/stories/${article.slug}`,
               "mainEntity": {
                 "@type": "WebPage",
-                "@id": `https://creatives-takeover.com/newspaper/${article.slug}`
+                "@id": `https://creatives-takeover.com/stories/${article.slug}`
               }
             },
             createBreadcrumbSchema([
               { name: 'Home', url: '/' },
-              { name: 'Stories', url: '/newspaper' },
-              { name: article.title, url: `/newspaper/${article.slug}` }
+              { name: 'Stories', url: '/stories' },
+              { name: article.title, url: `/stories/${article.slug}` }
             ]),
             // ImageObject schema for banner image
             ...(ogImageUrl ? [{
@@ -364,7 +364,7 @@ const StoryArticle = () => {
             {/* Back Button and Admin Edit Button */}
             <div className="mb-6 flex items-center justify-between">
               <Button variant="ghost" asChild>
-                <Link to="/newspaper" className="flex items-center gap-2">
+                <Link to="/stories" className="flex items-center gap-2">
                   <ArrowLeft className="w-4 h-4" />
                   Back to Stories
                 </Link>
@@ -372,7 +372,7 @@ const StoryArticle = () => {
               {user?.email?.toLowerCase() === "admin@creatives-takeover.com" && article && (
                 <Button
                   variant="outline"
-                  onClick={() => navigate(`/newspaper/admin/edit/${article.id}`)}
+                  onClick={() => navigate(`/stories/admin/edit/${article.id}`)}
                   className="flex items-center gap-2"
                 >
                   <Edit className="w-4 h-4" />
@@ -393,7 +393,7 @@ const StoryArticle = () => {
                       className="cursor-pointer"
                       onClick={() => {
                         const tagSlug = slugifyTag(tag);
-                        navigate(`/newspaper/tags/${tagSlug}`);
+                        navigate(`/stories/tags/${tagSlug}`);
                       }}
                     >
                       <Hash className="w-3 h-3 mr-1" />
@@ -525,7 +525,7 @@ const StoryArticle = () => {
                         key={index}
                         variant="outline"
                         size="sm"
-                        onClick={() => navigate(`/newspaper/tags/${tagSlug}`)}
+                        onClick={() => navigate(`/stories/tags/${tagSlug}`)}
                         className="flex items-center gap-2"
                       >
                         <Hash className="w-3 h-3" />

@@ -79,7 +79,7 @@ export const RelatedTags = ({ currentTag, limit = 5 }: RelatedTagsProps) => {
             className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors"
             onClick={() => {
               const tagSlug = slugifyTag(tag);
-              navigate(`/newspaper/tags/${tagSlug}`);
+              navigate(`/stories/tags/${tagSlug}`);
             }}
           >
             <Hash className="w-3 h-3 mr-1" />

@@ -91,7 +91,7 @@ const ValuePropositionCards = () => {
       buttonLabel: "Niche Content",
       description: "Great ideas often start with the right spark. The Prompt Library gives you a rich collection of business cases and startup scenarios across industries like AI, e-commerce, SaaS, and the creator economy, so you always have fresh starting points when you need inspiration or want to explore a new direction.\n\nFounder Stories brings you real experiences from entrepreneurs who've walked the path before you. No recycled advice or theory, just honest lessons, practical wins, and real struggles from people who understand what it takes to get something off the ground.",
       cta: "Read Stories",
-      link: "/newspaper",
+      link: "/stories",
       image: "https://images.unsplash.com/photo-1456324504439-367cee3b3c32?w=800&h=600&fit=crop&q=80&fm=webp",
       imageAlt: "Founder reading and learning from content"
     },

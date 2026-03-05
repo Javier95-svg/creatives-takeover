@@ -14,7 +14,7 @@ interface StoryCardProps {
 const StoryCardComponent = ({ article, featured = false }: StoryCardProps) => {
   const navigate = useNavigate();
   // Use LinkedIn URL if available, otherwise fallback to article detail page
-  const linkUrl = article.linkedin_post_url || `/newspaper/${article.slug}`;
+  const linkUrl = article.linkedin_post_url || `/stories/${article.slug}`;
   const isExternalLink = !!article.linkedin_post_url;
 
   return (
@@ -75,7 +75,7 @@ const StoryCardComponent = ({ article, featured = false }: StoryCardProps) => {
                     e.preventDefault();
                     e.stopPropagation();
                     const tagSlug = slugifyTag(tag);
-                    navigate(`/newspaper/tags/${tagSlug}`);
+                    navigate(`/stories/tags/${tagSlug}`);
                   }}
                 >
                   <Hash className="w-3 h-3 mr-1" />
