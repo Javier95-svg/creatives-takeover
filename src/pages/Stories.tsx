@@ -5,7 +5,7 @@ import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { StoryCard } from "@/components/stories/StoryCard";
 import StoriesHero from "@/components/stories/StoriesHero";
-import HomeWallpaper from "@/components/wallpapers/HomeWallpaper";
+import NewspaperWallpaper from "@/components/wallpapers/NewspaperWallpaper";
 import { useStories } from "@/hooks/useStories";
 import { StoryArticle } from "@/hooks/useStories";
 import { Badge } from "@/components/ui/badge";
@@ -258,7 +258,7 @@ const Stories = () => {
       </Helmet>
 
       <div className="min-h-screen bg-background">
-        <HomeWallpaper />
+        <NewspaperWallpaper />
         <Navigation />
 
         <main className="relative pb-16">
