@@ -7,7 +7,7 @@ import MissionVision from "@/components/MissionVision";
 import MeetTheTeam from "@/components/MeetTheTeam";
 
 import ContactUs from "@/components/ContactUs";
-import AboutWallpaper from "@/components/wallpapers/AboutWallpaper";
+import HomeWallpaper from "@/components/wallpapers/HomeWallpaper";
 
 const About = () => {
   // Structured data for About page
@@ -31,7 +31,7 @@ const About = () => {
         structuredData={structuredData}
       />
       <div className="relative min-h-screen overflow-hidden">
-        <AboutWallpaper />
+        <HomeWallpaper />
         <div className="relative z-10">
           <Navigation />
           <AboutHero />
