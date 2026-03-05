@@ -272,12 +272,13 @@ const Stories = () => {
             <section className="relative z-10 -mt-8 mb-8">
               <div className="container mx-auto px-6 max-w-7xl">
                 <div className="p-6 border rounded-lg bg-muted/30">
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <h3 className="text-lg font-semibold">Search Articles</h3>
+                  <div className="relative flex items-center justify-center">
+                    <h3 className="text-lg font-semibold text-center">Find your Story</h3>
                     {searchQuery && (
                       <Button
                         variant="outline"
                         size="sm"
+                        className="absolute right-0"
                         onClick={() => {
                           setSearchInput("");
                           const params = new URLSearchParams(searchParams);
