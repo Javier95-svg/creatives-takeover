@@ -102,8 +102,8 @@ const Navigation = () => {
 
   // Resources submenu items
   const resourcesSubmenu = [
-    { name: "Prompt Library", href: "/prompt-library", icon: BookOpen, description: "60+ business cases and prompts" },
     { name: "Newspaper", href: "/newspaper", icon: FileText, description: "Insights and articles for founders" },
+    { name: "Prompt Library", href: "/prompt-library", icon: BookOpen, description: "60+ business cases and prompts" },
   ];
 
   // Fetch user avatar
