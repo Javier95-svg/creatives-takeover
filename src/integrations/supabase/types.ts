@@ -241,6 +241,7 @@ export type Database = {
       angel_investors: {
         Row: {
           created_at: string | null
+          email: string | null
           firm_name: string
           id: string
           investment_stages: string[] | null
@@ -253,6 +254,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
+          email?: string | null
           firm_name: string
           id?: string
           investment_stages?: string[] | null
@@ -265,6 +267,7 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
+          email?: string | null
           firm_name?: string
           id?: string
           investment_stages?: string[] | null
@@ -274,6 +277,36 @@ export type Database = {
           picture?: string | null
           updated_at?: string | null
           website_url?: string | null
+        }
+        Relationships: []
+      }
+      app_builder_projects: {
+        Row: {
+          created_at: string
+          html: string | null
+          id: string
+          messages: Json
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          html?: string | null
+          id?: string
+          messages?: Json
+          name?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          html?: string | null
+          id?: string
+          messages?: Json
+          name?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -444,6 +477,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      bizmap_task_progress: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          id: string
+          is_completed: boolean
+          stage: Database["public"]["Enums"]["bizmap_stage"]
+          task_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          is_completed?: boolean
+          stage: Database["public"]["Enums"]["bizmap_stage"]
+          task_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          is_completed?: boolean
+          stage?: Database["public"]["Enums"]["bizmap_stage"]
+          task_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       business_insights_cache: {
         Row: {
@@ -1930,6 +1996,39 @@ export type Database = {
           name?: string | null
           participants?: string[]
           updated_at?: string
+        }
+        Relationships: []
+      }
+      credit_packs: {
+        Row: {
+          active: boolean
+          created_at: string
+          credits: number
+          id: string
+          label: string
+          price_cents: number
+          stripe_payment_link: string | null
+          stripe_price_id: string | null
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          credits: number
+          id: string
+          label: string
+          price_cents: number
+          stripe_payment_link?: string | null
+          stripe_price_id?: string | null
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          credits?: number
+          id?: string
+          label?: string
+          price_cents?: number
+          stripe_payment_link?: string | null
+          stripe_price_id?: string | null
         }
         Relationships: []
       }
@@ -3556,6 +3655,42 @@ export type Database = {
         }
         Relationships: []
       }
+      gtm_plans: {
+        Row: {
+          created_at: string
+          exported_at: string | null
+          id: string
+          plan_content: Json
+          plan_title: string
+          saved_at: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          exported_at?: string | null
+          id?: string
+          plan_content?: Json
+          plan_title: string
+          saved_at?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          exported_at?: string | null
+          id?: string
+          plan_content?: Json
+          plan_title?: string
+          saved_at?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       hero_images: {
         Row: {
           alt_text: string | null
@@ -4636,6 +4771,42 @@ export type Database = {
           },
         ]
       }
+      mvp_builder_artifacts: {
+        Row: {
+          created_at: string
+          id: string
+          saved_at: string | null
+          scope_summary: string
+          scope_title: string
+          spec_json: Json
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          saved_at?: string | null
+          scope_summary: string
+          scope_title: string
+          spec_json?: Json
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          saved_at?: string | null
+          scope_summary?: string
+          scope_title?: string
+          spec_json?: Json
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           comment_id: string | null
@@ -4915,6 +5086,39 @@ export type Database = {
           user_rating?: number | null
           verdict?: string | null
           weaknesses?: string[] | null
+        }
+        Relationships: []
+      }
+      pmf_validation_evidence: {
+        Row: {
+          checklist_saved_at: string | null
+          created_at: string
+          interview_notes_count: number
+          required_signals: number
+          survey_results_count: number
+          updated_at: string
+          user_id: string
+          validation_checklist: Json
+        }
+        Insert: {
+          checklist_saved_at?: string | null
+          created_at?: string
+          interview_notes_count?: number
+          required_signals?: number
+          survey_results_count?: number
+          updated_at?: string
+          user_id: string
+          validation_checklist?: Json
+        }
+        Update: {
+          checklist_saved_at?: string | null
+          created_at?: string
+          interview_notes_count?: number
+          required_signals?: number
+          survey_results_count?: number
+          updated_at?: string
+          user_id?: string
+          validation_checklist?: Json
         }
         Relationships: []
       }
@@ -6881,6 +7085,45 @@ export type Database = {
           },
         ]
       }
+      user_progress: {
+        Row: {
+          building_completed_at: string | null
+          created_at: string
+          current_stage: Database["public"]["Enums"]["bizmap_stage"]
+          highest_unlocked_stage: Database["public"]["Enums"]["bizmap_stage"]
+          identity_completed_at: string | null
+          launch_completed_at: string | null
+          prototype_completed_at: string | null
+          updated_at: string
+          user_id: string
+          validating_completed_at: string | null
+        }
+        Insert: {
+          building_completed_at?: string | null
+          created_at?: string
+          current_stage?: Database["public"]["Enums"]["bizmap_stage"]
+          highest_unlocked_stage?: Database["public"]["Enums"]["bizmap_stage"]
+          identity_completed_at?: string | null
+          launch_completed_at?: string | null
+          prototype_completed_at?: string | null
+          updated_at?: string
+          user_id: string
+          validating_completed_at?: string | null
+        }
+        Update: {
+          building_completed_at?: string | null
+          created_at?: string
+          current_stage?: Database["public"]["Enums"]["bizmap_stage"]
+          highest_unlocked_stage?: Database["public"]["Enums"]["bizmap_stage"]
+          identity_completed_at?: string | null
+          launch_completed_at?: string | null
+          prototype_completed_at?: string | null
+          updated_at?: string
+          user_id?: string
+          validating_completed_at?: string | null
+        }
+        Relationships: []
+      }
       user_reels: {
         Row: {
           caption: string | null
@@ -7194,6 +7437,241 @@ export type Database = {
             columns: ["vc_id"]
             isOneToOne: false
             referencedRelation: "investors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      waitlist_events: {
+        Row: {
+          event_type: string
+          id: string
+          ip_hash: string | null
+          metadata: Json
+          occurred_at: string
+          referrer: string | null
+          session_id: string | null
+          user_agent: string | null
+          utm_campaign: string | null
+          utm_content: string | null
+          utm_medium: string | null
+          utm_source: string | null
+          utm_term: string | null
+          variant: string | null
+          waitlist_page_id: string
+        }
+        Insert: {
+          event_type: string
+          id?: string
+          ip_hash?: string | null
+          metadata?: Json
+          occurred_at?: string
+          referrer?: string | null
+          session_id?: string | null
+          user_agent?: string | null
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
+          variant?: string | null
+          waitlist_page_id: string
+        }
+        Update: {
+          event_type?: string
+          id?: string
+          ip_hash?: string | null
+          metadata?: Json
+          occurred_at?: string
+          referrer?: string | null
+          session_id?: string | null
+          user_agent?: string | null
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
+          variant?: string | null
+          waitlist_page_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "waitlist_events_waitlist_page_id_fkey"
+            columns: ["waitlist_page_id"]
+            isOneToOne: false
+            referencedRelation: "waitlist_pages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      waitlist_pages: {
+        Row: {
+          ab_test_enabled: boolean | null
+          accent_color: string | null
+          ai_content: Json | null
+          confirmation_email_enabled: boolean | null
+          created_at: string
+          cta_label: string
+          exported_at: string | null
+          headline_variant_b: string | null
+          id: string
+          image_url: string | null
+          integration_list_id: string | null
+          integration_provider: string | null
+          launch_date: string | null
+          layout: string | null
+          logo_url: string | null
+          mark_ready_at: string | null
+          metadata: Json
+          product_name: string | null
+          published_at: string | null
+          published_url: string | null
+          referral_message: string | null
+          slug: string | null
+          social_links: Json | null
+          status: string
+          target_audience: string | null
+          theme: string | null
+          title: string
+          updated_at: string
+          user_id: string
+          value_proposition: string
+          view_count: number | null
+          webhook_url: string | null
+        }
+        Insert: {
+          ab_test_enabled?: boolean | null
+          accent_color?: string | null
+          ai_content?: Json | null
+          confirmation_email_enabled?: boolean | null
+          created_at?: string
+          cta_label?: string
+          exported_at?: string | null
+          headline_variant_b?: string | null
+          id?: string
+          image_url?: string | null
+          integration_list_id?: string | null
+          integration_provider?: string | null
+          launch_date?: string | null
+          layout?: string | null
+          logo_url?: string | null
+          mark_ready_at?: string | null
+          metadata?: Json
+          product_name?: string | null
+          published_at?: string | null
+          published_url?: string | null
+          referral_message?: string | null
+          slug?: string | null
+          social_links?: Json | null
+          status?: string
+          target_audience?: string | null
+          theme?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+          value_proposition: string
+          view_count?: number | null
+          webhook_url?: string | null
+        }
+        Update: {
+          ab_test_enabled?: boolean | null
+          accent_color?: string | null
+          ai_content?: Json | null
+          confirmation_email_enabled?: boolean | null
+          created_at?: string
+          cta_label?: string
+          exported_at?: string | null
+          headline_variant_b?: string | null
+          id?: string
+          image_url?: string | null
+          integration_list_id?: string | null
+          integration_provider?: string | null
+          launch_date?: string | null
+          layout?: string | null
+          logo_url?: string | null
+          mark_ready_at?: string | null
+          metadata?: Json
+          product_name?: string | null
+          published_at?: string | null
+          published_url?: string | null
+          referral_message?: string | null
+          slug?: string | null
+          social_links?: Json | null
+          status?: string
+          target_audience?: string | null
+          theme?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+          value_proposition?: string
+          view_count?: number | null
+          webhook_url?: string | null
+        }
+        Relationships: []
+      }
+      waitlist_signups: {
+        Row: {
+          consent: boolean | null
+          created_at: string | null
+          email: string
+          email_normalized: string
+          first_name: string | null
+          id: string
+          ip_hash: string | null
+          referral_source: string | null
+          referrer: string | null
+          user_agent: string | null
+          utm_campaign: string | null
+          utm_content: string | null
+          utm_medium: string | null
+          utm_source: string | null
+          utm_term: string | null
+          variant: string | null
+          waitlist_page_id: string
+        }
+        Insert: {
+          consent?: boolean | null
+          created_at?: string | null
+          email: string
+          email_normalized: string
+          first_name?: string | null
+          id?: string
+          ip_hash?: string | null
+          referral_source?: string | null
+          referrer?: string | null
+          user_agent?: string | null
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
+          variant?: string | null
+          waitlist_page_id: string
+        }
+        Update: {
+          consent?: boolean | null
+          created_at?: string | null
+          email?: string
+          email_normalized?: string
+          first_name?: string | null
+          id?: string
+          ip_hash?: string | null
+          referral_source?: string | null
+          referrer?: string | null
+          user_agent?: string | null
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
+          variant?: string | null
+          waitlist_page_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "waitlist_signups_waitlist_page_id_fkey"
+            columns: ["waitlist_page_id"]
+            isOneToOne: false
+            referencedRelation: "waitlist_pages"
             referencedColumns: ["id"]
           },
         ]
@@ -7585,6 +8063,11 @@ export type Database = {
         Returns: undefined
       }
       idempotency_try_begin: { Args: { p_id: string }; Returns: string }
+      increment_credit_balance: {
+        Args: { p_amount: number; p_user_id: string }
+        Returns: Json
+      }
+      increment_waitlist_view: { Args: { page_id: string }; Returns: undefined }
       is_admin_user: { Args: never; Returns: boolean }
       is_community_active: { Args: { profile_id: string }; Returns: boolean }
       is_following: {
@@ -7593,6 +8076,10 @@ export type Database = {
       }
       is_reserved_profile_slug: { Args: { v: string }; Returns: boolean }
       is_subscription_active: { Args: { user_id: string }; Returns: boolean }
+      is_username_available: {
+        Args: { candidate: string; current_user_id?: string }
+        Returns: boolean
+      }
       match_knowledge_chunks: {
         Args: {
           match_count?: number
@@ -7646,6 +8133,12 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
+      bizmap_stage:
+        | "IDENTITY"
+        | "PROTOTYPE"
+        | "VALIDATING"
+        | "BUILDING"
+        | "LAUNCH"
       commitment_status: "active" | "achieved" | "failed" | "withdrawn"
       credit_tx_type:
         | "grant"
@@ -7782,6 +8275,13 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "moderator", "user"],
+      bizmap_stage: [
+        "IDENTITY",
+        "PROTOTYPE",
+        "VALIDATING",
+        "BUILDING",
+        "LAUNCH",
+      ],
       commitment_status: ["active", "achieved", "failed", "withdrawn"],
       credit_tx_type: [
         "grant",
