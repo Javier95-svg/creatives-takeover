@@ -54,7 +54,7 @@ const CreateCoFounderPost = () => {
     setLoading(true);
     try {
       // Create co-founder post
-      const { data: postData, error } = await supabase
+      const { error } = await supabase
         .from('cofounder_posts')
         .insert({
           user_id: user.id,
@@ -68,32 +68,9 @@ const CreateCoFounderPost = () => {
           equity_range: equity,
           additional_info: additionalInfo,
           status: 'active',
-        })
-        .select()
-        .single();
+        });
 
       if (error) throw error;
-
-      // Create notification for the user that their post is now live
-      try {
-        await supabase
-          .from('community_notifications')
-          .insert({
-            user_id: user.id,
-            actor_id: user.id,
-            notification_type: 'post_published',
-            post_id: postData?.id,
-            read: false,
-            metadata: {
-              post_type: 'cofounder',
-              project_name: projectName,
-              message: 'Your co-founder post is now live!'
-            }
-          });
-      } catch (notifError) {
-        console.error('Error creating notification:', notifError);
-        // Don't fail the whole operation if notification fails
-      }
 
       toast.success('Co-founder post created successfully! Your post is now live.');
 

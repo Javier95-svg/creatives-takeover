@@ -41,6 +41,27 @@ export const NotificationBell = () => {
       return;
     }
 
+    if (notification.notification_type === 'mentor_banner_created') {
+      navigate('/community');
+      return;
+    }
+
+    if (notification.notification_type === 'angel_banner_created') {
+      navigate('/community/angels');
+      return;
+    }
+
+    if (notification.notification_type === 'cofounder_post_created') {
+      navigate('/community/co-founders');
+      return;
+    }
+
+    if (notification.notification_type === 'newspaper_article_published') {
+      const storySlug = notification.metadata?.slug;
+      navigate(storySlug ? `/newspaper/${storySlug}` : '/newspaper');
+      return;
+    }
+
     // Navigate to profile for follow requests
     if (notification.notification_type === 'follow_request') {
       navigate(actorProfilePath || '/community');
@@ -87,6 +108,22 @@ export const NotificationBell = () => {
         return `${actor.name} shared your post`;
       case 'post_published':
         return metadata?.message || 'Your co-founder post is now live!';
+      case 'mentor_banner_created':
+        return metadata?.mentor_name
+          ? `New mentor banner: ${metadata.mentor_name}`
+          : 'A new mentor banner was published';
+      case 'angel_banner_created':
+        return metadata?.name
+          ? `New angel investor banner: ${metadata.name}`
+          : 'A new angel investor banner was published';
+      case 'cofounder_post_created':
+        return metadata?.project_name
+          ? `${actor.name} posted: ${metadata.project_name}`
+          : `${actor.name} created a new co-founder post`;
+      case 'newspaper_article_published':
+        return metadata?.title
+          ? `Newspaper update: ${metadata.title}`
+          : 'A new newspaper article was published';
       case 'follow_request':
         return `${actor.name} sent you a follow request`;
       case 'follower_new_picture':
