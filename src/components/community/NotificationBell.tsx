@@ -10,7 +10,7 @@ import {
   DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { useCommunityNotifications } from '@/hooks/useCommunityNotifications';
+import { useCommunityNotifications, type CommunityNotification } from '@/hooks/useCommunityNotifications';
 import { useAuth } from '@/contexts/AuthContext';
 import { formatDistanceToNow } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
@@ -23,7 +23,7 @@ export const NotificationBell = () => {
   // Filter out message notifications - they're handled separately in the messages icon
   const systemNotifications = notifications.filter(n => n.notification_type !== 'message');
 
-  const handleNotificationClick = async (notification: any) => {
+  const handleNotificationClick = async (notification: CommunityNotification) => {
     await markAsRead(notification.id);
     const actorProfilePath = notification.actor?.username
       ? `/profile/${notification.actor.username}`
@@ -92,7 +92,7 @@ export const NotificationBell = () => {
     }
   };
 
-  const getNotificationText = (notification: any) => {
+  const getNotificationText = (notification: CommunityNotification) => {
     const { notification_type, actor, metadata } = notification;
 
     switch (notification_type) {
@@ -114,8 +114,8 @@ export const NotificationBell = () => {
           : 'A new mentor banner was published';
       case 'angel_banner_created':
         return metadata?.name
-          ? `New angel investor banner: ${metadata.name}`
-          : 'A new angel investor banner was published';
+          ? `New investor joins our network: ${metadata.name}`
+          : 'A new investor joined our network';
       case 'cofounder_post_created':
         return metadata?.project_name
           ? `${actor.name} posted: ${metadata.project_name}`
@@ -135,6 +135,20 @@ export const NotificationBell = () => {
       default:
         return `${actor.name} interacted with your post`;
     }
+  };
+
+  const getNotificationImage = (notification: CommunityNotification) => {
+    const metadata = notification?.metadata || {};
+
+    if (notification.notification_type === 'angel_banner_created') {
+      return metadata.image_url || metadata.picture || notification.actor.avatar;
+    }
+
+    if (notification.notification_type === 'newspaper_article_published') {
+      return metadata.image_url || metadata.banner_image_url || notification.actor.avatar;
+    }
+
+    return notification.actor.avatar;
   };
 
   return (
@@ -183,7 +197,7 @@ export const NotificationBell = () => {
                 }`}
               >
                 <img
-                  src={notification.actor.avatar}
+                  src={getNotificationImage(notification)}
                   alt={notification.actor.name}
                   className="w-8 h-8 rounded-full flex-shrink-0"
                 />
