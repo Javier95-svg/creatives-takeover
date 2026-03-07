@@ -11,6 +11,32 @@ const corsHeaders = {
 const AI_GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
 const DEFAULT_MODEL = "google/gemini-3-flash";
 const FALLBACK_MODEL = "google/gemini-2.5-flash";
+const MAX_COMBO_MODELS = 4;
+const SUPPORTED_MODELS = [
+  "google/gemini-3-flash",
+  "google/gemini-3-pro",
+  "google/nano-banana-pro",
+  "google/gemini-2.5-pro",
+  "google/gemini-2.5-flash",
+  "google/gemini-2.5-flash-lite",
+  "google/gemini-2.5-flash-image",
+  "openai/gpt-5.2",
+  "openai/gpt-5-2025-08-07",
+  "openai/gpt-5-mini-2025-08-07",
+  "openai/gpt-5-nano-2025-08-07",
+] as const;
+const SUPPORTED_MODEL_SET = new Set<string>(SUPPORTED_MODELS);
+const HTML_CAPABLE_MODEL_SET = new Set<string>([
+  "google/gemini-3-flash",
+  "google/gemini-3-pro",
+  "google/gemini-2.5-pro",
+  "google/gemini-2.5-flash",
+  "google/gemini-2.5-flash-lite",
+  "openai/gpt-5.2",
+  "openai/gpt-5-2025-08-07",
+  "openai/gpt-5-mini-2025-08-07",
+  "openai/gpt-5-nano-2025-08-07",
+]);
 
 // ── System prompts ──────────────────────────────────────────────────────────
 
@@ -82,6 +108,21 @@ function extractExplanation(fullText: string): string {
   return raw.replace(/```[\s\S]*?```/g, "").trim();
 }
 
+function normalizeSelectedModels(raw: unknown): string[] {
+  if (!Array.isArray(raw)) return [DEFAULT_MODEL];
+  const unique = Array.from(
+    new Set(raw.filter((item): item is string => typeof item === "string"))
+  )
+    .filter((model) => SUPPORTED_MODEL_SET.has(model))
+    .slice(0, MAX_COMBO_MODELS);
+  return unique.length > 0 ? unique : [DEFAULT_MODEL];
+}
+
+function getFallbackCandidates(primaryModel: string): string[] {
+  const candidates = [primaryModel, DEFAULT_MODEL, FALLBACK_MODEL, "openai/gpt-5-mini-2025-08-07"];
+  return Array.from(new Set(candidates));
+}
+
 // ── SSE helpers ─────────────────────────────────────────────────────────────
 
 function enc(obj: unknown): Uint8Array {
@@ -139,6 +180,51 @@ async function requestModelStream(
   }
 }
 
+async function requestModelCompletion(
+  apiKey: string,
+  model: string,
+  systemPrompt: string,
+  messages: Array<{ role: "user" | "assistant"; content: string }>
+): Promise<string | null> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 60000);
+  try {
+    const response = await fetch(AI_GATEWAY_URL, {
+      method: "POST",
+      signal: controller.signal,
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model,
+        messages: [{ role: "system", content: systemPrompt }, ...messages],
+        temperature: 0.2,
+        max_tokens: 2400,
+        stream: false,
+      }),
+    });
+
+    if (!response.ok) return null;
+    const data = await response.json();
+    const content = data?.choices?.[0]?.message?.content;
+    if (typeof content === "string") return content;
+    if (Array.isArray(content)) {
+      return content
+        .map((part: Record<string, unknown>) =>
+          typeof part?.text === "string" ? part.text : ""
+        )
+        .join("")
+        .trim();
+    }
+    return null;
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
 // ── Main handler ────────────────────────────────────────────────────────────
 
 serve(async (req: Request) => {
@@ -158,6 +244,7 @@ serve(async (req: Request) => {
   let currentHtml: string | null;
   let conversationHistory: Array<{ role: string; content: string }>;
   let userId: string | null;
+  let selectedModelsRaw: unknown;
 
   try {
     const body = await req.json();
@@ -167,9 +254,12 @@ serve(async (req: Request) => {
       ? body.conversationHistory
       : [];
     userId = body.userId ?? null;
+    selectedModelsRaw = body.selectedModels;
   } catch {
     return errorStream("Invalid request body", "BAD_REQUEST");
   }
+
+  const selectedModels = normalizeSelectedModels(selectedModelsRaw);
 
   if (!userMessage.trim()) {
     return errorStream("userMessage is required", "BAD_REQUEST");
@@ -222,73 +312,91 @@ serve(async (req: Request) => {
       `Current app HTML (edit this exact app):\n<html-source>\n${currentHtml}\n</html-source>\n\nUser request:\n${userMessage}`;
   }
 
+  // Resolve selected model set (single or multi-model combo)
+  const textCapableModels = selectedModels.filter((model) =>
+    HTML_CAPABLE_MODEL_SET.has(model)
+  );
+  const skippedImageModels = selectedModels.filter(
+    (model) => !HTML_CAPABLE_MODEL_SET.has(model)
+  );
+  const requestedPrimaryModel = textCapableModels[0] ?? DEFAULT_MODEL;
+  const advisorModels = textCapableModels.slice(1, MAX_COMBO_MODELS);
+
+  // For multi-model mode, gather concise advisor notes and inject into final request context.
+  if (advisorModels.length > 0) {
+    const advisorMessages = [
+      ...recentHistory,
+      { role: "user" as const, content: userContent },
+    ];
+    const advisorOutputs = await Promise.all(
+      advisorModels.map(async (model) => {
+        const raw = await requestModelCompletion(
+          lovableApiKey,
+          model,
+          systemPrompt,
+          advisorMessages
+        );
+        if (!raw) return null;
+        const explanation = extractExplanation(raw) || raw;
+        return `Advisor (${model}): ${explanation.slice(0, 1200)}`;
+      })
+    );
+
+    const advisorNotes = advisorOutputs.filter(
+      (note): note is string => typeof note === "string" && note.length > 0
+    );
+    if (advisorNotes.length > 0) {
+      userContent +=
+        `\n\nMulti-model collaboration notes:\n` +
+        advisorNotes.join("\n\n") +
+        `\n\nUse these notes if useful, then produce a single final result using the required response format.`;
+    }
+  }
+
+  if (skippedImageModels.length > 0) {
+    userContent +=
+      `\n\nImage-focused models selected: ${skippedImageModels.join(", ")}.` +
+      ` Prioritize stronger visual polish and image-friendly layout decisions while still returning a full HTML app.`;
+  }
+
   const messages = [
     ...recentHistory,
     { role: "user" as const, content: userContent },
   ];
 
-  // ── Stream from AI gateway (Gemini 3 Flash default) ───────────────────
-  let selectedModel = DEFAULT_MODEL;
-  let aiResponse: Response;
-  try {
-    aiResponse = await requestModelStream(
-      lovableApiKey,
-      selectedModel,
-      systemPrompt,
-      messages
-    );
-  } catch (err) {
-    console.error("AI gateway request failed:", err);
-    if (userId) {
-      await refundCredits(userId, creditCost, creditFeature, "AI gateway request failed").catch(
-        () => {}
-      );
-    }
-    return errorStream(
-      "AI service temporarily unavailable. Credits have been refunded. Please try again.",
-      "AI_ERROR"
-    );
-  }
+  // ── Stream from AI gateway using requested primary, then fallback chain ─
+  const modelCandidates = getFallbackCandidates(requestedPrimaryModel);
+  let selectedModel = modelCandidates[0];
+  let aiResponse: Response | null = null;
 
-  if (!aiResponse.ok) {
-    const primaryErr = await aiResponse.text();
-    console.error("AI gateway primary model error:", aiResponse.status, primaryErr);
-
-    selectedModel = FALLBACK_MODEL;
+  for (const candidate of modelCandidates) {
+    selectedModel = candidate;
     try {
-      aiResponse = await requestModelStream(
+      const attempt = await requestModelStream(
         lovableApiKey,
-        selectedModel,
+        candidate,
         systemPrompt,
         messages
       );
-    } catch (err) {
-      console.error("AI gateway fallback request failed:", err);
-      if (userId) {
-        await refundCredits(
-          userId,
-          creditCost,
-          creditFeature,
-          "AI gateway fallback request failed"
-        ).catch(() => {});
+      if (attempt.ok) {
+        aiResponse = attempt;
+        break;
       }
-      return errorStream(
-        "AI service temporarily unavailable. Credits have been refunded. Please try again.",
-        "AI_ERROR"
-      );
+
+      const errText = await attempt.text();
+      console.error("AI gateway model attempt failed:", candidate, attempt.status, errText);
+    } catch (err) {
+      console.error("AI gateway request failed:", candidate, err);
     }
   }
 
-  if (!aiResponse.ok) {
-    const fallbackErr = await aiResponse.text();
-    console.error("AI gateway fallback model error:", aiResponse.status, fallbackErr);
-
+  if (!aiResponse) {
     if (userId) {
       await refundCredits(
         userId,
         creditCost,
         creditFeature,
-        "AI gateway error (primary + fallback)"
+        "AI gateway error (all model attempts failed)"
       ).catch(() => {});
     }
 
@@ -403,7 +511,9 @@ serve(async (req: Request) => {
         }
       }
 
-      await writer.write(enc({ type: "complete", model: selectedModel }));
+      await writer.write(
+        enc({ type: "complete", model: selectedModel, requestedModels: selectedModels })
+      );
       await writer.write(encDone());
     } catch (err) {
       console.error("Stream processing error:", err);

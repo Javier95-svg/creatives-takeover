@@ -2,16 +2,10 @@ import React from 'react';
 import { Sparkles } from 'lucide-react';
 import { StreamingMessage } from '@/components/chatbot/StreamingMessage';
 import type { MVPMessage } from '@/hooks/useMVPBuilder';
+import { getMVPModelLabel } from '@/data/mvpModels';
 
 interface MVPMessageItemProps {
   message: MVPMessage;
-}
-
-function formatModelName(model?: string): string | null {
-  if (!model) return null;
-  if (model === 'google/gemini-3-flash') return 'Gemini 3 Flash';
-  if (model === 'google/gemini-2.5-flash') return 'Gemini 2.5 Flash';
-  return model;
 }
 
 export const MVPMessageItem: React.FC<MVPMessageItemProps> = ({ message }) => {
@@ -28,7 +22,7 @@ export const MVPMessageItem: React.FC<MVPMessageItemProps> = ({ message }) => {
   }
 
   const showTypingDots = message.isStreaming && !message.content;
-  const modelLabel = formatModelName(message.model);
+  const modelLabel = getMVPModelLabel(message.model);
 
   return (
     <div className="flex items-start gap-2 mb-4">

@@ -4,6 +4,10 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useCreditActions } from '@/hooks/useCreditActions';
 import { createIdempotencyKey } from '@/lib/idempotency';
 import { toast } from 'sonner';
+import {
+  MVP_DEFAULT_MODEL,
+  sanitizeMVPModelSelection,
+} from '@/data/mvpModels';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -28,6 +32,7 @@ interface PersistedSession {
   projectName: string;
   projectId: string;
   promptHistory: MVPPromptHistoryItem[];
+  selectedModels: string[];
 }
 
 function extractHtmlFromText(fullText: string): string | null {
@@ -54,6 +59,7 @@ export function useMVPBuilder() {
   const [projectName, setProjectName] = useState('Name Your App');
   const [projectId, setProjectId] = useState<string>(() => crypto.randomUUID());
   const [promptHistory, setPromptHistory] = useState<MVPPromptHistoryItem[]>([]);
+  const [selectedModels, setSelectedModelsState] = useState<string[]>([MVP_DEFAULT_MODEL]);
 
   // Abort controller ref to cancel in-flight requests
   const abortRef = useRef<AbortController | null>(null);
@@ -92,6 +98,7 @@ export function useMVPBuilder() {
             )
         : [];
       setPromptHistory(restoredHistory);
+      setSelectedModelsState(sanitizeMVPModelSelection(session.selectedModels));
     } catch {
       // Corrupt data — ignore
     }
@@ -104,7 +111,8 @@ export function useMVPBuilder() {
       html: string | null,
       name: string,
       pid: string,
-      history: MVPPromptHistoryItem[]
+      history: MVPPromptHistoryItem[],
+      models: string[]
     ) => {
       try {
         const session: PersistedSession = {
@@ -113,6 +121,7 @@ export function useMVPBuilder() {
           projectName: name,
           projectId: pid,
           promptHistory: history,
+          selectedModels: models,
         };
         localStorage.setItem(STORAGE_KEY, JSON.stringify(session));
       } catch {
@@ -195,6 +204,7 @@ export function useMVPBuilder() {
             currentHtml: currentHtml,
             conversationHistory,
             userId: user?.id ?? null,
+            selectedModels,
           }),
         });
 
@@ -243,13 +253,20 @@ export function useMVPBuilder() {
                 (a, b) =>
                   new Date(b.committedAt).getTime() - new Date(a.committedAt).getTime()
               );
-              persist(finalMessages, finalHtml, projectName, projectId, next);
+              persist(finalMessages, finalHtml, projectName, projectId, next, selectedModels);
               return next;
             });
             return;
           }
 
-          persist(finalMessages, finalHtml, projectName, projectId, promptHistory);
+          persist(
+            finalMessages,
+            finalHtml,
+            projectName,
+            projectId,
+            promptHistory,
+            selectedModels
+          );
         };
 
         const read = async () => {
@@ -365,8 +382,13 @@ export function useMVPBuilder() {
       handleCreditError,
       persist,
       promptHistory,
+      selectedModels,
     ]
   );
+
+  const setSelectedModels = useCallback((models: string[]) => {
+    setSelectedModelsState(sanitizeMVPModelSelection(models));
+  }, []);
 
   // ── Reset ─────────────────────────────────────────────────────────────────
 
@@ -378,14 +400,15 @@ export function useMVPBuilder() {
     setProjectName('Name Your App');
     setProjectId(newId);
     setPromptHistory([]);
+    setSelectedModelsState([MVP_DEFAULT_MODEL]);
     setIsGenerating(false);
     localStorage.removeItem(STORAGE_KEY);
   }, []);
 
-  // Persist project name changes (always, even on an empty session)
+  // Persist project name/model changes (always, even on an empty session)
   useEffect(() => {
-    persist(messages, currentHtml, projectName, projectId, promptHistory);
-  }, [projectName]); // eslint-disable-line react-hooks/exhaustive-deps
+    persist(messages, currentHtml, projectName, projectId, promptHistory, selectedModels);
+  }, [projectName, selectedModels]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return {
     messages,
@@ -394,7 +417,9 @@ export function useMVPBuilder() {
     projectName,
     projectId,
     promptHistory,
+    selectedModels,
     setProjectName,
+    setSelectedModels,
     sendMessage,
     resetProject,
   };

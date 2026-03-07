@@ -9,7 +9,19 @@ import { cn } from '@/lib/utils';
 type MobileTab = 'chat' | 'preview';
 
 export const MVPBuilder: React.FC = () => {
-  const { messages, currentHtml, isGenerating, projectName, projectId, promptHistory, setProjectName, sendMessage, resetProject } =
+  const {
+    messages,
+    currentHtml,
+    isGenerating,
+    projectName,
+    projectId,
+    promptHistory,
+    selectedModels,
+    setProjectName,
+    setSelectedModels,
+    sendMessage,
+    resetProject,
+  } =
     useMVPBuilder();
 
   const [mobileTab, setMobileTab] = useState<MobileTab>('chat');
@@ -67,6 +79,8 @@ export const MVPBuilder: React.FC = () => {
             <MVPBuilderChat
               messages={messages}
               promptHistory={promptHistory}
+              selectedModels={selectedModels}
+              onSelectedModelsChange={setSelectedModels}
               onSend={sendMessage}
               isGenerating={isGenerating}
             />
