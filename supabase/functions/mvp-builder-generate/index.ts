@@ -1,5 +1,4 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { checkAndDeductCredits, refundCredits } from "../_shared/credit-deduction.ts";
 import { CREDIT_COSTS } from "../_shared/credit-constants.ts";
 
@@ -140,17 +139,11 @@ serve(async (req: Request) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   const lovableApiKey = Deno.env.get("LOVABLE_API_KEY");
 
   if (!lovableApiKey) {
     return errorStream("LOVABLE_API_KEY not configured", "CONFIGURATION_ERROR");
   }
-
-  const supabase = createClient(supabaseUrl, serviceRoleKey, {
-    auth: { persistSession: false },
-  });
 
   // ── Parse request ──────────────────────────────────────────────────────
 
