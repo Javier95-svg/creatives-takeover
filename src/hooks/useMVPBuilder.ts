@@ -22,6 +22,13 @@ interface PersistedSession {
   projectId: string;
 }
 
+function extractHtmlFromText(fullText: string): string | null {
+  const start = fullText.indexOf('<html-output>');
+  const end = fullText.indexOf('</html-output>');
+  if (start === -1 || end === -1) return null;
+  return fullText.slice(start + '<html-output>'.length, end).trim();
+}
+
 // ── Constants ────────────────────────────────────────────────────────────────
 
 const STREAM_URL = 'https://rcjlaybjnozqbsoxzboa.supabase.co/functions/v1/mvp-builder-generate';
@@ -105,6 +112,11 @@ export function useMVPBuilder() {
       abortRef.current?.abort();
       const controller = new AbortController();
       abortRef.current = controller;
+      let didTimeout = false;
+      const timeoutId = window.setTimeout(() => {
+        didTimeout = true;
+        controller.abort();
+      }, 120000);
 
       // Build optimistic UI
       const userMsg: MVPMessage = {
@@ -163,11 +175,37 @@ export function useMVPBuilder() {
         let streamedContent = '';
         let newHtml: string | null = null;
         let completedModel: string | null = null;
+        let finalized = false;
+
+        const finalizeResponse = () => {
+          if (finalized) return;
+          finalized = true;
+
+          const fallbackHtml = extractHtmlFromText(streamedContent);
+          const finalHtml = newHtml ?? fallbackHtml ?? currentHtml;
+
+          const finalMessages = nextMessages.map((m) =>
+            m.id === assistantMsg.id
+              ? {
+                  ...m,
+                  content: streamedContent || 'Done!',
+                  isStreaming: false,
+                  ...(completedModel ? { model: completedModel } : {}),
+                }
+              : m
+          );
+          setMessages(finalMessages);
+          if (newHtml ?? fallbackHtml) setCurrentHtml(newHtml ?? fallbackHtml);
+          persist(finalMessages, finalHtml, projectName, projectId);
+        };
 
         const read = async () => {
           while (true) {
             const { done, value } = await reader.read();
-            if (done) break;
+            if (done) {
+              finalizeResponse();
+              break;
+            }
 
             buffer += decoder.decode(value, { stream: true });
             const lines = buffer.split('\n');
@@ -176,7 +214,10 @@ export function useMVPBuilder() {
             for (const line of lines) {
               if (!line.startsWith('data: ')) continue;
               const raw = line.slice(6).trim();
-              if (raw === '[DONE]') return;
+              if (raw === '[DONE]') {
+                finalizeResponse();
+                return;
+              }
 
               let event: Record<string, unknown>;
               try {
@@ -199,20 +240,7 @@ export function useMVPBuilder() {
                 newHtml = event.html;
               } else if (event.type === 'complete') {
                 completedModel = typeof event.model === 'string' ? event.model : null;
-                // Finalize
-                const finalMessages = nextMessages.map((m) =>
-                  m.id === assistantMsg.id
-                    ? {
-                        ...m,
-                        content: streamedContent || 'Done!',
-                        isStreaming: false,
-                        ...(completedModel ? { model: completedModel } : {}),
-                      }
-                    : m
-                );
-                setMessages(finalMessages);
-                if (newHtml) setCurrentHtml(newHtml);
-                persist(finalMessages, newHtml ?? currentHtml, projectName, projectId);
+                finalizeResponse();
                 return;
               } else if (event.type === 'error') {
                 const errMsg = (event.error as string) ?? 'Something went wrong.';
@@ -238,7 +266,22 @@ export function useMVPBuilder() {
 
         await read();
       } catch (err: unknown) {
-        if ((err as Error)?.name === 'AbortError') return;
+        if ((err as Error)?.name === 'AbortError') {
+          if (!didTimeout) return;
+          toast.error('Request timed out. Please try a simpler prompt.');
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.id === assistantMsg.id
+                ? {
+                    ...m,
+                    content: '⚠️ Request timed out. Please try a shorter or simpler prompt.',
+                    isStreaming: false,
+                  }
+                : m
+            )
+          );
+          return;
+        }
         console.error('App Builder stream error:', err);
         toast.error('Connection error. Please try again.');
         setMessages((prev) =>
@@ -253,6 +296,7 @@ export function useMVPBuilder() {
           )
         );
       } finally {
+        clearTimeout(timeoutId);
         setIsGenerating(false);
         abortRef.current = null;
       }

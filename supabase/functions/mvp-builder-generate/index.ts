@@ -116,20 +116,27 @@ async function requestModelStream(
   systemPrompt: string,
   messages: Array<{ role: "user" | "assistant"; content: string }>
 ): Promise<Response> {
-  return fetch(AI_GATEWAY_URL, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model,
-      messages: [{ role: "system", content: systemPrompt }, ...messages],
-      temperature: 0.2,
-      max_tokens: 7000,
-      stream: true,
-    }),
-  });
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 90000);
+  try {
+    return await fetch(AI_GATEWAY_URL, {
+      method: "POST",
+      signal: controller.signal,
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model,
+        messages: [{ role: "system", content: systemPrompt }, ...messages],
+        temperature: 0.2,
+        max_tokens: 7000,
+        stream: true,
+      }),
+    });
+  } finally {
+    clearTimeout(timeoutId);
+  }
 }
 
 // ── Main handler ────────────────────────────────────────────────────────────
@@ -302,9 +309,10 @@ serve(async (req: Request) => {
     let buffer = "";
     let fullText = "";
     let streamedExplanationUntil = 0;
+    let sawDone = false;
 
     try {
-      while (true) {
+      while (!sawDone) {
         const { done, value } = await reader.read();
         if (done) break;
 
@@ -315,7 +323,10 @@ serve(async (req: Request) => {
         for (const line of lines) {
           if (!line.startsWith("data: ")) continue;
           const raw = line.slice(6).trim();
-          if (raw === "[DONE]") continue;
+          if (raw === "[DONE]") {
+            sawDone = true;
+            break;
+          }
 
           let event: Record<string, unknown>;
           try {
