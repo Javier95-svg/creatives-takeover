@@ -57,8 +57,7 @@ export const NotificationBell = () => {
     }
 
     if (notification.notification_type === 'newspaper_article_published') {
-      const storySlug = notification.metadata?.slug;
-      navigate(storySlug ? `/newspaper/${storySlug}` : '/newspaper');
+      navigate('/newspaper');
       return;
     }
 
