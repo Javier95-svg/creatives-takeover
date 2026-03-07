@@ -1,10 +1,11 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Send, Loader2, CheckSquare, Layout, Hash, User, BarChart3, DollarSign, Wand2 } from 'lucide-react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import { Send, Loader2, CheckSquare, Layout, Hash, User, BarChart3, DollarSign, Wand2, History, RotateCcw, Clock3 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { MVPMessageItem } from './MVPMessageItem';
-import type { MVPMessage } from '@/hooks/useMVPBuilder';
+import type { MVPMessage, MVPPromptHistoryItem } from '@/hooks/useMVPBuilder';
 
 // ── Quick-start templates ────────────────────────────────────────────────────
 
@@ -51,19 +52,29 @@ const TEMPLATES = [
 
 interface MVPBuilderChatProps {
   messages: MVPMessage[];
+  promptHistory: MVPPromptHistoryItem[];
   onSend: (prompt: string) => void;
   isGenerating: boolean;
 }
 
 export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
   messages,
+  promptHistory,
   onSend,
   isGenerating,
 }) => {
   const [input, setInput] = useState('');
+  const [historyOpen, setHistoryOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const isEmpty = messages.length === 0;
+  const sortedHistory = useMemo(
+    () =>
+      [...promptHistory].sort(
+        (a, b) => new Date(b.committedAt).getTime() - new Date(a.committedAt).getTime()
+      ),
+    [promptHistory]
+  );
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -83,8 +94,48 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
     }
   };
 
+  const formatHistoryDateTime = (iso: string) => {
+    const date = new Date(iso);
+    if (Number.isNaN(date.getTime())) return iso;
+    return date.toLocaleString(undefined, {
+      year: 'numeric',
+      month: 'short',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+    });
+  };
+
+  const handleRestorePrompt = (prompt: string) => {
+    setInput(prompt);
+    setHistoryOpen(false);
+    requestAnimationFrame(() => textareaRef.current?.focus());
+  };
+
+  const handleReusePrompt = (prompt: string) => {
+    if (isGenerating) return;
+    onSend(prompt);
+    setHistoryOpen(false);
+  };
+
   return (
     <div className="flex flex-col h-full min-h-0">
+      <div className="px-3 pt-2 pb-1 shrink-0 flex items-center justify-between">
+        <p className="text-[11px] font-medium text-muted-foreground">Prompt Sidebar</p>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="h-7 px-2 text-xs gap-1.5"
+          onClick={() => setHistoryOpen(true)}
+        >
+          <History className="h-3.5 w-3.5" />
+          View History
+          <span className="text-[10px] text-muted-foreground">({sortedHistory.length})</span>
+        </Button>
+      </div>
+
       {/* Message list */}
       <ScrollArea className="flex-1 min-h-0">
         <div className="p-4">
@@ -165,6 +216,77 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
           Natural language works best: idea + features + workflow · Enter to send · Shift+Enter for new line
         </p>
       </div>
+
+      <Sheet open={historyOpen} onOpenChange={setHistoryOpen}>
+        <SheetContent side="right" className="w-[95vw] sm:max-w-md p-0">
+          <div className="flex h-full flex-col">
+            <SheetHeader className="px-4 py-4 border-b border-border/50">
+              <SheetTitle className="text-base">Prompt History</SheetTitle>
+              <SheetDescription>
+                Most recent first. Stored for this MVP project session.
+              </SheetDescription>
+            </SheetHeader>
+
+            <ScrollArea className="flex-1">
+              <div className="p-4 space-y-3">
+                {sortedHistory.length === 0 ? (
+                  <div className="rounded-xl border border-dashed border-border/60 bg-muted/30 p-4 text-xs text-muted-foreground">
+                    No committed prompts yet. Generate or refine your MVP to build history.
+                  </div>
+                ) : (
+                  sortedHistory.map((item) => (
+                    <div
+                      key={item.id}
+                      className="rounded-xl border border-border/60 bg-card/60 p-3 space-y-2"
+                    >
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                          <Clock3 className="h-3.5 w-3.5" />
+                          {formatHistoryDateTime(item.committedAt)}
+                        </div>
+                        {item.commitRef && (
+                          <p className="text-[11px] text-muted-foreground">
+                            Ref: <span className="font-mono">{item.commitRef}</span>
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="rounded-md border border-border/50 bg-background/70 p-2 max-h-36 overflow-y-auto">
+                        <p className="text-xs whitespace-pre-wrap break-words text-foreground/90">
+                          {item.prompt}
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="h-7 text-xs"
+                          onClick={() => handleRestorePrompt(item.prompt)}
+                        >
+                          <RotateCcw className="h-3.5 w-3.5 mr-1" />
+                          Restore
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          className="h-7 text-xs"
+                          onClick={() => handleReusePrompt(item.prompt)}
+                          disabled={isGenerating}
+                        >
+                          <Send className="h-3.5 w-3.5 mr-1" />
+                          Reuse
+                        </Button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </ScrollArea>
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 };

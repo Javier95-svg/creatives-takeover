@@ -15,11 +15,19 @@ export interface MVPMessage {
   model?: string;
 }
 
+export interface MVPPromptHistoryItem {
+  id: string;
+  prompt: string;
+  committedAt: string;
+  commitRef?: string;
+}
+
 interface PersistedSession {
   messages: MVPMessage[];
   currentHtml: string | null;
   projectName: string;
   projectId: string;
+  promptHistory: MVPPromptHistoryItem[];
 }
 
 function extractHtmlFromText(fullText: string): string | null {
@@ -45,6 +53,7 @@ export function useMVPBuilder() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [projectName, setProjectName] = useState('Name Your App');
   const [projectId, setProjectId] = useState<string>(() => crypto.randomUUID());
+  const [promptHistory, setPromptHistory] = useState<MVPPromptHistoryItem[]>([]);
 
   // Abort controller ref to cancel in-flight requests
   const abortRef = useRef<AbortController | null>(null);
@@ -66,6 +75,23 @@ export function useMVPBuilder() {
       setCurrentHtml(session.currentHtml ?? null);
       setProjectName(session.projectName ?? 'Name Your App');
       if (session.projectId) setProjectId(session.projectId);
+      const restoredHistory = Array.isArray(session.promptHistory)
+        ? session.promptHistory
+            .filter(
+              (item): item is MVPPromptHistoryItem =>
+                Boolean(
+                  item &&
+                    typeof item.id === 'string' &&
+                    typeof item.prompt === 'string' &&
+                    typeof item.committedAt === 'string'
+                )
+            )
+            .sort(
+              (a, b) =>
+                new Date(b.committedAt).getTime() - new Date(a.committedAt).getTime()
+            )
+        : [];
+      setPromptHistory(restoredHistory);
     } catch {
       // Corrupt data — ignore
     }
@@ -73,13 +99,20 @@ export function useMVPBuilder() {
 
   // Save to localStorage whenever state changes
   const persist = useCallback(
-    (msgs: MVPMessage[], html: string | null, name: string, pid: string) => {
+    (
+      msgs: MVPMessage[],
+      html: string | null,
+      name: string,
+      pid: string,
+      history: MVPPromptHistoryItem[]
+    ) => {
       try {
         const session: PersistedSession = {
           messages: msgs.map((m) => ({ ...m, isStreaming: false })),
           currentHtml: html,
           projectName: name,
           projectId: pid,
+          promptHistory: history,
         };
         localStorage.setItem(STORAGE_KEY, JSON.stringify(session));
       } catch {
@@ -183,6 +216,7 @@ export function useMVPBuilder() {
 
           const fallbackHtml = extractHtmlFromText(streamedContent);
           const finalHtml = newHtml ?? fallbackHtml ?? currentHtml;
+          const hasCommittedBuild = Boolean(newHtml ?? fallbackHtml);
 
           const finalMessages = nextMessages.map((m) =>
             m.id === assistantMsg.id
@@ -195,8 +229,27 @@ export function useMVPBuilder() {
               : m
           );
           setMessages(finalMessages);
-          if (newHtml ?? fallbackHtml) setCurrentHtml(newHtml ?? fallbackHtml);
-          persist(finalMessages, finalHtml, projectName, projectId);
+          if (hasCommittedBuild) setCurrentHtml(newHtml ?? fallbackHtml);
+
+          if (hasCommittedBuild) {
+            const historyEntry: MVPPromptHistoryItem = {
+              id: crypto.randomUUID(),
+              prompt,
+              committedAt: new Date().toISOString(),
+              commitRef: `build-${assistantMsg.id.slice(0, 8)}`,
+            };
+            setPromptHistory((prev) => {
+              const next = [historyEntry, ...prev].sort(
+                (a, b) =>
+                  new Date(b.committedAt).getTime() - new Date(a.committedAt).getTime()
+              );
+              persist(finalMessages, finalHtml, projectName, projectId, next);
+              return next;
+            });
+            return;
+          }
+
+          persist(finalMessages, finalHtml, projectName, projectId, promptHistory);
         };
 
         const read = async () => {
@@ -311,6 +364,7 @@ export function useMVPBuilder() {
       ensureCredits,
       handleCreditError,
       persist,
+      promptHistory,
     ]
   );
 
@@ -323,13 +377,14 @@ export function useMVPBuilder() {
     setCurrentHtml(null);
     setProjectName('Name Your App');
     setProjectId(newId);
+    setPromptHistory([]);
     setIsGenerating(false);
     localStorage.removeItem(STORAGE_KEY);
   }, []);
 
   // Persist project name changes (always, even on an empty session)
   useEffect(() => {
-    persist(messages, currentHtml, projectName, projectId);
+    persist(messages, currentHtml, projectName, projectId, promptHistory);
   }, [projectName]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return {
@@ -338,6 +393,7 @@ export function useMVPBuilder() {
     isGenerating,
     projectName,
     projectId,
+    promptHistory,
     setProjectName,
     sendMessage,
     resetProject,
