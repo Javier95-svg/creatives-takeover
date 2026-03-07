@@ -96,6 +96,9 @@ export const MVPBuilderHeader: React.FC<MVPBuilderHeaderProps> = ({
 
         {/* Right: credits pill + new project */}
         <div className="relative flex items-center gap-2">
+          <span className="hidden md:flex items-center gap-1.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 text-[11px] px-2 py-0.5 rounded-full font-medium">
+            Gemini 3 Flash
+          </span>
           <span className="hidden sm:flex items-center gap-1.5 bg-primary/15 border border-primary/25 text-primary text-xs px-2.5 py-0.5 rounded-full font-medium backdrop-blur-sm">
             <span className="h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
             {totalCredits} credits

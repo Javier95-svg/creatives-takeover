@@ -6,7 +6,7 @@ export default function AppBuilderPage() {
     <>
       <SEO
         title="App Builder — Creatives Takeover"
-        description="Build functional web apps by simply describing what you want. AI-powered vibe coding — describe, preview, iterate."
+        description="Build and iterate MVPs through natural-language prompts. Describe your idea, features, and workflows, then get a structured MVP output and live preview fast."
         keywords="ai app builder, vibe coding, no-code, mvp builder, web app generator"
         url="/mvp-builder"
       />

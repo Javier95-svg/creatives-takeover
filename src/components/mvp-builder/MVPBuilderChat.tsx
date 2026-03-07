@@ -97,7 +97,7 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
                 </div>
                 <p className="text-lg font-semibold">What are we building today?</p>
                 <p className="text-xs text-muted-foreground/70">
-                  Describe your app or pick a template below
+                  Describe your product idea, key features, and workflow in plain language
                 </p>
               </div>
 
@@ -141,7 +141,7 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
               onKeyDown={handleKeyDown}
               placeholder={
                 isEmpty
-                  ? 'Describe the app you want to build...'
+                  ? 'Describe your MVP idea, core features, and user flow...'
                   : 'Describe a change to make...'
               }
               className="min-h-[44px] max-h-28 resize-none text-sm leading-relaxed py-2.5 border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1"
@@ -162,7 +162,7 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
           </div>
         </div>
         <p className="text-[10px] text-muted-foreground/60 mt-1.5 text-right">
-          Enter to send · Shift+Enter for new line
+          Natural language works best: idea + features + workflow · Enter to send · Shift+Enter for new line
         </p>
       </div>
     </div>

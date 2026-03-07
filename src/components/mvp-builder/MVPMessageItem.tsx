@@ -7,6 +7,13 @@ interface MVPMessageItemProps {
   message: MVPMessage;
 }
 
+function formatModelName(model?: string): string | null {
+  if (!model) return null;
+  if (model === 'google/gemini-3-flash') return 'Gemini 3 Flash';
+  if (model === 'google/gemini-2.5-flash') return 'Gemini 2.5 Flash';
+  return model;
+}
+
 export const MVPMessageItem: React.FC<MVPMessageItemProps> = ({ message }) => {
   const isUser = message.role === 'user';
 
@@ -21,6 +28,7 @@ export const MVPMessageItem: React.FC<MVPMessageItemProps> = ({ message }) => {
   }
 
   const showTypingDots = message.isStreaming && !message.content;
+  const modelLabel = formatModelName(message.model);
 
   return (
     <div className="flex items-start gap-2 mb-4">
@@ -38,11 +46,18 @@ export const MVPMessageItem: React.FC<MVPMessageItemProps> = ({ message }) => {
             <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/60 animate-bounce [animation-delay:300ms]" />
           </div>
         ) : (
-          <StreamingMessage
-            content={message.content}
-            isComplete={!message.isStreaming}
-            isBot={true}
-          />
+          <>
+            <StreamingMessage
+              content={message.content}
+              isComplete={!message.isStreaming}
+              isBot={true}
+            />
+            {modelLabel && !message.isStreaming && (
+              <p className="mt-2 text-[10px] text-muted-foreground/70">
+                Model used: {modelLabel}
+              </p>
+            )}
+          </>
         )}
       </div>
     </div>

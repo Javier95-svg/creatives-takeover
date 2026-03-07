@@ -9,11 +9,15 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, idempotency-key",
 };
 
+const AI_GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
+const DEFAULT_MODEL = "google/gemini-3-flash";
+const FALLBACK_MODEL = "google/gemini-2.5-flash";
+
 // ── System prompts ──────────────────────────────────────────────────────────
 
-const GENERATE_SYSTEM_PROMPT = `You are an expert full-stack web developer and UX designer specialising in building beautiful, functional web applications.
+const GENERATE_SYSTEM_PROMPT = `You are an expert MVP web app builder focused on speed, clarity, and usability.
 
-Your task is to generate a COMPLETE, self-contained HTML file that implements exactly what the user describes.
+Your task is to generate a COMPLETE, self-contained HTML file for the user's product idea, features, and workflow.
 
 STRICT RULES:
 1. Output ONE file: valid HTML with embedded <style> and <script> blocks.
@@ -21,22 +25,27 @@ STRICT RULES:
 3. Use Chart.js via CDN if the user needs charts: <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 4. Persist data with localStorage — no backend required.
 5. Mobile-responsive layout with CSS Grid / Flexbox.
-6. Professional design: clean typography, clear hierarchy, subtle shadows, smooth micro-animations.
+6. Professional design: clean typography, clear hierarchy, subtle shadows.
 7. Hover states and focus styles for all interactive elements.
 8. Graceful empty states when there is no data yet.
 9. Fully functional — every button and form must do something.
-10. Do NOT include any markdown fences, code blocks, or explanatory text OUTSIDE the <html-output> tags.
+10. Prioritize fast runtime and simple implementation: lightweight JavaScript and clear UI labels.
+11. Do NOT include markdown fences or extra wrapper tags around the HTML output.
 
 RESPONSE FORMAT:
-- First write a ONE-sentence description of what you built (plain text, no markdown).
-- Then immediately output the full HTML wrapped EXACTLY like this (no extra whitespace before/after):
+- First write a short plain-text "MVP Snapshot" with EXACTLY these 4 lines:
+MVP Snapshot: <one sentence product summary>
+Core Features: <comma-separated feature list>
+Primary Workflow: <one sentence user flow>
+Next Iteration: <one sentence improvement suggestion>
+- Then immediately output the full HTML wrapped EXACTLY like this:
 <html-output>
 <!DOCTYPE html>
 ...complete HTML file...
 </html>
 </html-output>`;
 
-const REFINE_SYSTEM_PROMPT = `You are an expert web developer refining an existing web application.
+const REFINE_SYSTEM_PROMPT = `You are an expert MVP web app builder refining an existing app.
 
 The user will describe a change. Your job:
 1. Understand EXACTLY what they want to add, change, or remove.
@@ -44,9 +53,13 @@ The user will describe a change. Your job:
 3. Keep the same overall design language unless the user asks otherwise.
 4. Maintain localStorage key compatibility (don't rename keys).
 5. The app must still be complete and self-contained after your edit.
+6. Keep implementation lightweight and easy to iterate.
 
 RESPONSE FORMAT:
-- First write a ONE-sentence summary of the change you made (plain text).
+- First write a short plain-text "Update Summary" with EXACTLY these 3 lines:
+Change Applied: <one sentence summary>
+What Stayed Stable: <one sentence summary>
+How to Prompt Next: <one sentence suggestion>
 - Then immediately output the FULL updated HTML wrapped EXACTLY like this:
 <html-output>
 <!DOCTYPE html>
@@ -98,6 +111,28 @@ function errorStream(message: string, errorCode?: string): Response {
   });
 }
 
+async function requestModelStream(
+  apiKey: string,
+  model: string,
+  systemPrompt: string,
+  messages: Array<{ role: "user" | "assistant"; content: string }>
+): Promise<Response> {
+  return fetch(AI_GATEWAY_URL, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model,
+      messages: [{ role: "system", content: systemPrompt }, ...messages],
+      temperature: 0.2,
+      max_tokens: 7000,
+      stream: true,
+    }),
+  });
+}
+
 // ── Main handler ────────────────────────────────────────────────────────────
 
 serve(async (req: Request) => {
@@ -107,10 +142,10 @@ serve(async (req: Request) => {
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-  const anthropicKey = Deno.env.get("ANTHROPIC_API_KEY");
+  const lovableApiKey = Deno.env.get("LOVABLE_API_KEY");
 
-  if (!anthropicKey) {
-    return errorStream("ANTHROPIC_API_KEY not configured", "CONFIGURATION_ERROR");
+  if (!lovableApiKey) {
+    return errorStream("LOVABLE_API_KEY not configured", "CONFIGURATION_ERROR");
   }
 
   const supabase = createClient(supabaseUrl, serviceRoleKey, {
@@ -168,14 +203,14 @@ serve(async (req: Request) => {
     }
   }
 
-  // ── Build messages for Anthropic ───────────────────────────────────────
+  // ── Build messages for model call ──────────────────────────────────────
 
   const systemPrompt = isFirstGeneration
     ? GENERATE_SYSTEM_PROMPT
     : REFINE_SYSTEM_PROMPT;
 
-  // Keep last 6 turns for context (3 user + 3 assistant)
-  const recentHistory = conversationHistory.slice(-6).map((m) => ({
+  // Keep last 4 turns for speed-focused context (2 user + 2 assistant)
+  const recentHistory = conversationHistory.slice(-4).map((m) => ({
     role: m.role === "user" ? "user" : ("assistant" as "user" | "assistant"),
     content: m.content,
   }));
@@ -184,7 +219,7 @@ serve(async (req: Request) => {
   let userContent = userMessage;
   if (!isFirstGeneration && currentHtml) {
     userContent =
-      `Here is the current app code:\n\`\`\`html\n${currentHtml}\n\`\`\`\n\nUser request: ${userMessage}`;
+      `Current app HTML (edit this exact app):\n<html-source>\n${currentHtml}\n</html-source>\n\nUser request:\n${userMessage}`;
   }
 
   const messages = [
@@ -192,34 +227,69 @@ serve(async (req: Request) => {
     { role: "user" as const, content: userContent },
   ];
 
-  // ── Stream from Anthropic ──────────────────────────────────────────────
-
-  const anthropicRes = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "x-api-key": anthropicKey,
-      "anthropic-version": "2023-06-01",
-      "content-type": "application/json",
-    },
-    body: JSON.stringify({
-      model: "claude-sonnet-4-20250514",
-      max_tokens: 8192,
-      temperature: 0.3,
-      system: systemPrompt,
-      messages,
-      stream: true,
-    }),
-  });
-
-  if (!anthropicRes.ok) {
-    const errText = await anthropicRes.text();
-    console.error("Anthropic API error:", anthropicRes.status, errText);
-
-    // Refund credits on API failure
+  // ── Stream from AI gateway (Gemini 3 Flash default) ───────────────────
+  let selectedModel = DEFAULT_MODEL;
+  let aiResponse: Response;
+  try {
+    aiResponse = await requestModelStream(
+      lovableApiKey,
+      selectedModel,
+      systemPrompt,
+      messages
+    );
+  } catch (err) {
+    console.error("AI gateway request failed:", err);
     if (userId) {
-      await refundCredits(userId, creditCost, creditFeature, "Anthropic API error").catch(
+      await refundCredits(userId, creditCost, creditFeature, "AI gateway request failed").catch(
         () => {}
       );
+    }
+    return errorStream(
+      "AI service temporarily unavailable. Credits have been refunded. Please try again.",
+      "AI_ERROR"
+    );
+  }
+
+  if (!aiResponse.ok) {
+    const primaryErr = await aiResponse.text();
+    console.error("AI gateway primary model error:", aiResponse.status, primaryErr);
+
+    selectedModel = FALLBACK_MODEL;
+    try {
+      aiResponse = await requestModelStream(
+        lovableApiKey,
+        selectedModel,
+        systemPrompt,
+        messages
+      );
+    } catch (err) {
+      console.error("AI gateway fallback request failed:", err);
+      if (userId) {
+        await refundCredits(
+          userId,
+          creditCost,
+          creditFeature,
+          "AI gateway fallback request failed"
+        ).catch(() => {});
+      }
+      return errorStream(
+        "AI service temporarily unavailable. Credits have been refunded. Please try again.",
+        "AI_ERROR"
+      );
+    }
+  }
+
+  if (!aiResponse.ok) {
+    const fallbackErr = await aiResponse.text();
+    console.error("AI gateway fallback model error:", aiResponse.status, fallbackErr);
+
+    if (userId) {
+      await refundCredits(
+        userId,
+        creditCost,
+        creditFeature,
+        "AI gateway error (primary + fallback)"
+      ).catch(() => {});
     }
 
     return errorStream(
@@ -228,16 +298,17 @@ serve(async (req: Request) => {
     );
   }
 
-  // ── Proxy Anthropic SSE → our SSE format ──────────────────────────────
+  // ── Proxy gateway SSE → our SSE format ────────────────────────────────
 
   const { readable, writable } = new TransformStream<Uint8Array, Uint8Array>();
   const writer = writable.getWriter();
 
   (async () => {
-    const reader = anthropicRes.body!.getReader();
+    const reader = aiResponse.body!.getReader();
     const decoder = new TextDecoder();
     let buffer = "";
-    let fullText = ""; // accumulate to extract HTML at end
+    let fullText = "";
+    let streamedExplanationUntil = 0;
 
     try {
       while (true) {
@@ -260,45 +331,55 @@ serve(async (req: Request) => {
             continue;
           }
 
-          if (
-            event.type === "content_block_delta" &&
-            (event.delta as any)?.type === "text_delta"
-          ) {
-            const chunk = (event.delta as any).text as string;
-            fullText += chunk;
+          const chunk = (event.choices as Array<Record<string, unknown>> | undefined)?.[0]
+            ?.delta as Record<string, unknown> | undefined;
+          const content = chunk?.content;
 
-            // Stream explanation text only (before <html-output> tag)
-            const htmlStart = fullText.indexOf("<html-output>");
-            if (htmlStart === -1) {
-              // Still in explanation — stream the chunk
-              await writer.write(enc({ type: "delta", content: chunk }));
-            } else if (fullText.indexOf("<html-output>") > 0) {
-              // We just crossed the boundary — stream any trailing explanation text
-              const explanationChunk = chunk.slice(
-                0,
-                Math.max(0, htmlStart - (fullText.length - chunk.length))
-              );
+          if (typeof content === "string" && content) {
+            const beforeLength = fullText.length;
+            const previousHtmlStart = fullText.indexOf("<html-output>");
+            const previousBoundary =
+              previousHtmlStart === -1 ? beforeLength : previousHtmlStart;
+
+            const nextText = fullText + content;
+            const nextHtmlStart = nextText.indexOf("<html-output>");
+            const nextBoundary = nextHtmlStart === -1 ? nextText.length : nextHtmlStart;
+
+            if (nextBoundary > previousBoundary) {
+              const explanationChunk = nextText.slice(previousBoundary, nextBoundary);
               if (explanationChunk) {
                 await writer.write(enc({ type: "delta", content: explanationChunk }));
               }
-              // Now in code territory — don't stream raw HTML tokens
+            } else if (nextBoundary > streamedExplanationUntil) {
+              const explanationChunk = nextText.slice(streamedExplanationUntil, nextBoundary);
+              if (explanationChunk) {
+                await writer.write(enc({ type: "delta", content: explanationChunk }));
+              }
             }
+
+            fullText = nextText;
+            streamedExplanationUntil = nextBoundary;
+          } else if (
+            typeof event.error === "object" &&
+            event.error !== null &&
+            typeof (event.error as Record<string, unknown>).message === "string"
+          ) {
+            throw new Error((event.error as Record<string, unknown>).message as string);
+          } else if (typeof event.error === "string") {
+            throw new Error(event.error);
           }
         }
       }
 
-      // ── Emit extracted HTML ────────────────────────────────────────────
       const html = extractHtml(fullText);
       const explanation = extractExplanation(fullText);
 
       if (html) {
-        // Emit explanation as a complete message if we couldn't stream it incrementally
-        if (!explanation && fullText.startsWith("<html-output>")) {
-          await writer.write(enc({ type: "delta", content: "Your app is ready!" }));
+        if (!explanation.trim()) {
+          await writer.write(enc({ type: "delta", content: "Your MVP is ready." }));
         }
         await writer.write(enc({ type: "code", html }));
       } else {
-        // No valid HTML found — treat entire response as explanation (shouldn't happen normally)
         console.warn("No <html-output> tag found in AI response");
         await writer.write(
           enc({
@@ -308,7 +389,6 @@ serve(async (req: Request) => {
           })
         );
 
-        // Refund on bad output
         if (userId) {
           await refundCredits(
             userId,
@@ -319,7 +399,7 @@ serve(async (req: Request) => {
         }
       }
 
-      await writer.write(enc({ type: "complete" }));
+      await writer.write(enc({ type: "complete", model: selectedModel }));
       await writer.write(encDone());
     } catch (err) {
       console.error("Stream processing error:", err);

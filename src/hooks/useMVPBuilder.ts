@@ -12,6 +12,7 @@ export interface MVPMessage {
   role: 'user' | 'assistant';
   content: string;
   isStreaming?: boolean;
+  model?: string;
 }
 
 interface PersistedSession {
@@ -161,6 +162,7 @@ export function useMVPBuilder() {
         let buffer = '';
         let streamedContent = '';
         let newHtml: string | null = null;
+        let completedModel: string | null = null;
 
         const read = async () => {
           while (true) {
@@ -196,10 +198,16 @@ export function useMVPBuilder() {
               } else if (event.type === 'code' && typeof event.html === 'string') {
                 newHtml = event.html;
               } else if (event.type === 'complete') {
+                completedModel = typeof event.model === 'string' ? event.model : null;
                 // Finalize
                 const finalMessages = nextMessages.map((m) =>
                   m.id === assistantMsg.id
-                    ? { ...m, content: streamedContent || 'Done!', isStreaming: false }
+                    ? {
+                        ...m,
+                        content: streamedContent || 'Done!',
+                        isStreaming: false,
+                        ...(completedModel ? { model: completedModel } : {}),
+                      }
                     : m
                 );
                 setMessages(finalMessages);

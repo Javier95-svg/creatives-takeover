@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { MVPBuilderDomainPanel } from './MVPBuilderDomainPanel';
 
-const LOADING_STEPS = ['Thinking...', 'Writing HTML...', 'Adding styles...', 'Almost ready...'];
+const LOADING_STEPS = ['Understanding prompt...', 'Structuring MVP output...', 'Writing HTML...', 'Almost ready...'];
 
 type PreviewTab = 'preview' | 'domain';
 
