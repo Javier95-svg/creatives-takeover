@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
 import { Badge } from '@/components/ui/badge';
@@ -9,7 +9,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { format, isSameDay } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { TaskModal } from './TaskModal';
-import { DeadlineConfirmationDialog } from './DeadlineConfirmationDialog';
 
 interface Task {
   id: string;
@@ -36,14 +35,6 @@ export const TaskCalendar = () => {
   const hasLoadedRef = useRef(false);
   
   useEffect(() => {
-    // Only fetch if we haven't loaded before or if user changed
-    if (user && !hasLoadedRef.current) {
-      fetchData();
-      hasLoadedRef.current = true;
-    }
-  }, [user]);
-
-  useEffect(() => {
     if (date) {
       const dateTasks = tasks.filter(task => 
         isSameDay(new Date(task.task_date), date)
@@ -52,7 +43,7 @@ export const TaskCalendar = () => {
     }
   }, [date, tasks]);
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     if (!user) return;
 
     try {
@@ -78,7 +69,15 @@ export const TaskCalendar = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    // Only fetch if we haven't loaded before or if user changed
+    if (user && !hasLoadedRef.current) {
+      fetchData();
+      hasLoadedRef.current = true;
+    }
+  }, [user, fetchData]);
 
   const toggleTaskComplete = async (taskId: string, currentStatus: boolean) => {
     try {
@@ -115,8 +114,6 @@ export const TaskCalendar = () => {
 
   return (
     <>
-      {user && <DeadlineConfirmationDialog userId={user.id} />}
-      
       <Card className="backdrop-blur-sm bg-card/95 transition-all duration-300 hover:shadow-lg">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">

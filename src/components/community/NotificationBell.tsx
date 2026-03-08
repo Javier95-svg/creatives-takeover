@@ -85,6 +85,11 @@ export const NotificationBell = () => {
       return;
     }
 
+    if (notification.notification_type === 'task_deadline_expired') {
+      navigate('/tasks');
+      return;
+    }
+
     // Navigate to the post for community notifications
     if (notification.post_id) {
       navigate(`/community?post=${notification.post_id}`);
@@ -131,6 +136,10 @@ export const NotificationBell = () => {
         return `${actor.name} shared a reel`;
       case 'follower_startup_update':
         return `${actor.name} posted a startup update`;
+      case 'task_deadline_expired':
+        return metadata?.task_text
+          ? `Deadline reached: ${metadata.task_text}`
+          : 'A task deadline has been reached';
       default:
         return `${actor.name} interacted with your post`;
     }

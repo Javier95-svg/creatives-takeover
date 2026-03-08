@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -25,16 +25,20 @@ interface DeadlineConfirmationDialogProps {
 export const DeadlineConfirmationDialog = ({ userId }: DeadlineConfirmationDialogProps) => {
   const [overdueTask, setOverdueTask] = useState<Task | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
+  const hasOpenDialogRef = useRef(false);
 
   useEffect(() => {
-    checkForOverdueTasks();
-    // Check every minute for overdue tasks
-    const interval = setInterval(checkForOverdueTasks, 60000);
-    return () => clearInterval(interval);
-  }, [userId]);
+    hasOpenDialogRef.current = !!overdueTask;
+  }, [overdueTask]);
 
-  const checkForOverdueTasks = async () => {
+  const checkForOverdueTasks = useCallback(async () => {
     try {
+      // Create one-time system notifications for newly expired tasks.
+      await supabase.rpc('notify_task_deadline_expired' as never, { p_user_id: userId } as never);
+
+      // Keep the currently open dialog stable until user acts.
+      if (hasOpenDialogRef.current) return;
+
       const { data, error } = await supabase
         .from('daily_tasks')
         .select('id, task_text, deadline_time')
@@ -54,7 +58,14 @@ export const DeadlineConfirmationDialog = ({ userId }: DeadlineConfirmationDialo
     } catch (error) {
       console.error('Error checking overdue tasks:', error);
     }
-  };
+  }, [userId]);
+
+  useEffect(() => {
+    checkForOverdueTasks();
+    // Check every minute for overdue tasks
+    const interval = setInterval(checkForOverdueTasks, 60000);
+    return () => clearInterval(interval);
+  }, [checkForOverdueTasks]);
 
   const handleComplete = async () => {
     if (!overdueTask) return;

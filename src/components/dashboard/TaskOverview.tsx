@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle, Circle, ListTodo } from 'lucide-react';
@@ -7,6 +7,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { HelpTooltip } from '@/components/ui/HelpTooltip';
+import { format } from 'date-fns';
+import { DeadlineConfirmationDialog } from './DeadlineConfirmationDialog';
 
 interface Task {
   id: string;
@@ -14,6 +16,7 @@ interface Task {
   priority: string;
   is_completed: boolean;
   task_date: string;
+  deadline_time: string | null;
 }
 
 // Generate contextual subtitle and description based on task text
@@ -66,21 +69,13 @@ export const TaskOverview = () => {
 
   const hasLoadedRef = useRef(false);
   
-  useEffect(() => {
-    // Only fetch if we haven't loaded before or if user changed
-    if (user && !hasLoadedRef.current) {
-      fetchTasks();
-      hasLoadedRef.current = true;
-    }
-  }, [user]);
-
-  const fetchTasks = async () => {
+  const fetchTasks = useCallback(async () => {
     if (!user) return;
 
     try {
       const { data, error } = await supabase
         .from('daily_tasks')
-        .select('*')
+        .select('id, task_text, priority, is_completed, task_date, deadline_time')
         .eq('user_id', user.id)
         .eq('is_completed', false)
         .order('priority', { ascending: false })
@@ -94,7 +89,15 @@ export const TaskOverview = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    // Only fetch if we haven't loaded before or if user changed
+    if (user && !hasLoadedRef.current) {
+      fetchTasks();
+      hasLoadedRef.current = true;
+    }
+  }, [user, fetchTasks]);
 
   const toggleTaskComplete = async (taskId: string) => {
     try {
@@ -131,132 +134,146 @@ export const TaskOverview = () => {
 
   if (loading) {
     return (
-      <Card className="backdrop-blur-sm bg-card/95">
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-base">
-            <ListTodo className="h-5 w-5 text-primary" />
-            Task Overview
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="animate-pulse space-y-3">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="h-16 bg-muted rounded-lg" />
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+      <>
+        {user && <DeadlineConfirmationDialog userId={user.id} />}
+        <Card className="backdrop-blur-sm bg-card/95">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <ListTodo className="h-5 w-5 text-primary" />
+              Task Overview
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="animate-pulse space-y-3">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="h-16 bg-muted rounded-lg" />
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </>
     );
   }
 
   if (tasks.length === 0) {
     return (
-      <Card className="backdrop-blur-sm bg-card/95">
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-base">
-            <ListTodo className="h-5 w-5 text-primary" />
-            Task Overview
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center py-8 space-y-4">
-            <div className="w-12 h-12 mx-auto bg-primary/10 rounded-lg flex items-center justify-center">
-              <ListTodo className="w-6 h-6 text-primary" />
+      <>
+        {user && <DeadlineConfirmationDialog userId={user.id} />}
+        <Card className="backdrop-blur-sm bg-card/95">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <ListTodo className="h-5 w-5 text-primary" />
+              Task Overview
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-center py-8 space-y-4">
+              <div className="w-12 h-12 mx-auto bg-primary/10 rounded-lg flex items-center justify-center">
+                <ListTodo className="w-6 h-6 text-primary" />
+              </div>
+              <div className="space-y-2">
+                <p className="font-semibold text-sm">No tasks yet</p>
+                <p className="text-xs text-muted-foreground">
+                  Add tasks to start tracking your progress with deadlines
+                </p>
+              </div>
+              <Link to="/dashboard">
+                <Button size="sm" variant="outline">
+                  Add Task
+                </Button>
+              </Link>
             </div>
-            <div className="space-y-2">
-              <p className="font-semibold text-sm">No tasks yet</p>
-              <p className="text-xs text-muted-foreground">
-                Add tasks to start tracking your progress
-              </p>
-            </div>
-            <Link to="/dashboard">
-              <Button size="sm" variant="outline">
-                Add Task
-              </Button>
-            </Link>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </>
     );
   }
 
   return (
-    <Card className="backdrop-blur-sm bg-card/95 transition-all duration-300 hover:shadow-lg">
-      <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-base">
-          <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center transition-transform duration-300">
-            <ListTodo className="h-4 w-4 text-primary" />
-          </div>
-          Task Overview
-          <HelpTooltip
-            content="Your daily priorities and tasks. Click a task to mark it complete. Tasks are organized by priority to help you focus on what matters most."
-            side="right"
-          />
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-3">
-          {tasks.slice(0, 4).map((task, index) => {
-            const { subtitle, description } = generateTaskContext(task.task_text, task.priority);
-            
-            return (
-              <div
-                key={task.id}
-                className="flex items-start gap-3 p-4 bg-muted/30 rounded-lg border border-border/50 hover:border-primary/30 hover:shadow-md hover:scale-[1.01] transition-all duration-300 cursor-pointer animate-fade-in-up opacity-0"
-                style={{ animationDelay: `${index * 0.08}s`, animationFillMode: 'forwards' }}
-                onClick={() => toggleTaskComplete(task.id)}
-              >
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  toggleTaskComplete(task.id);
-                }}
-                className="mt-0.5 flex-shrink-0 transition-all duration-300 hover:scale-125"
-              >
-                {task.is_completed ? (
-                  <CheckCircle className="w-4 h-4 text-[hsl(var(--green-primary))] transition-transform duration-300" />
-                ) : (
-                  <Circle className="w-4 h-4 text-muted-foreground/30 transition-transform duration-300" />
-                )}
-              </button>
-                <div className="flex-1 min-w-0 pr-3">
-                  {/* Task Title */}
-                  <div className="text-sm font-semibold text-foreground mb-1 leading-tight">
-                    {task.task_text}
-                  </div>
-                  {/* Subtitle */}
-                  <div className="text-xs text-muted-foreground leading-relaxed">
-                    {subtitle}
-                  </div>
-                </div>
-                {/* Right Side: Priority and Description */}
-                <div className="flex flex-col items-end gap-2 flex-shrink-0 min-w-[130px]">
-                  <Badge
-                    variant="outline"
-                    className={`text-xs font-medium ${getPriorityColor(task.priority)}`}
-                  >
-                    {task.priority}
-                  </Badge>
-                  <p className="text-xs text-muted-foreground text-right leading-relaxed max-w-[140px]">
-                    {description}
-                  </p>
-                </div>
-              </div>
-            );
-          })}
-          {tasks.length > 4 && (
-            <div className="pt-2 border-t border-border/50">
-              <div className="flex items-center justify-between text-xs text-muted-foreground">
-                <span>{totalCount} tasks total</span>
-                <span className="text-[hsl(var(--green-primary))] font-semibold">
-                  {completedCount} completed
-                </span>
-              </div>
+    <>
+      {user && <DeadlineConfirmationDialog userId={user.id} />}
+      <Card className="backdrop-blur-sm bg-card/95 transition-all duration-300 hover:shadow-lg">
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center transition-transform duration-300">
+              <ListTodo className="h-4 w-4 text-primary" />
             </div>
-          )}
-        </div>
-      </CardContent>
-    </Card>
+            Task Overview
+            <HelpTooltip
+              content="Your daily priorities and tasks. Click a task to mark it complete. Tasks are organized by priority to help you focus on what matters most."
+              side="right"
+            />
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            {tasks.slice(0, 4).map((task, index) => {
+              const { subtitle, description } = generateTaskContext(task.task_text, task.priority);
+              const hasDeadline = !!task.deadline_time;
+              const isOverdue = !!task.deadline_time && new Date(task.deadline_time).getTime() < Date.now();
+
+              return (
+                <div
+                  key={task.id}
+                  className="flex items-start gap-3 p-4 bg-muted/30 rounded-lg border border-border/50 hover:border-primary/30 hover:shadow-md hover:scale-[1.01] transition-all duration-300 cursor-pointer animate-fade-in-up opacity-0"
+                  style={{ animationDelay: `${index * 0.08}s`, animationFillMode: 'forwards' }}
+                  onClick={() => toggleTaskComplete(task.id)}
+                >
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleTaskComplete(task.id);
+                  }}
+                  className="mt-0.5 flex-shrink-0 transition-all duration-300 hover:scale-125"
+                >
+                  {task.is_completed ? (
+                    <CheckCircle className="w-4 h-4 text-[hsl(var(--green-primary))] transition-transform duration-300" />
+                  ) : (
+                    <Circle className="w-4 h-4 text-muted-foreground/30 transition-transform duration-300" />
+                  )}
+                </button>
+                  <div className="flex-1 min-w-0 pr-3">
+                    {/* Task Title */}
+                    <div className="text-sm font-semibold text-foreground mb-1 leading-tight">
+                      {task.task_text}
+                    </div>
+                    {/* Subtitle */}
+                    <div className="text-xs text-muted-foreground leading-relaxed">
+                      {subtitle}
+                    </div>
+                    <div className={`text-xs mt-1 ${isOverdue ? 'text-[hsl(var(--red-primary))] font-medium' : 'text-muted-foreground'}`}>
+                      {hasDeadline ? `Deadline: ${format(new Date(task.deadline_time as string), 'PPp')}` : 'Deadline: Not set'}
+                    </div>
+                  </div>
+                  {/* Right Side: Priority and Description */}
+                  <div className="flex flex-col items-end gap-2 flex-shrink-0 min-w-[130px]">
+                    <Badge
+                      variant="outline"
+                      className={`text-xs font-medium ${getPriorityColor(task.priority)}`}
+                    >
+                      {task.priority}
+                    </Badge>
+                    <p className="text-xs text-muted-foreground text-right leading-relaxed max-w-[140px]">
+                      {description}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
+            {tasks.length > 4 && (
+              <div className="pt-2 border-t border-border/50">
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span>{totalCount} tasks total</span>
+                  <span className="text-[hsl(var(--green-primary))] font-semibold">
+                    {completedCount} completed
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    </>
   );
 };
 
