@@ -56,7 +56,6 @@ export const useCommitments = (sprintId?: string) => {
       setCommitments((data as SprintCommitment[]) || []);
     } catch (error) {
       logError('Error fetching commitments', error);
-      toast({ title: 'Error', description: 'Failed to load commitments', variant: 'destructive' });
     } finally {
       setLoading(false);
     }
