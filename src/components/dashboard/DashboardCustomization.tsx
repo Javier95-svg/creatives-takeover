@@ -17,7 +17,6 @@ import {
 } from '@/components/ui/dialog';
 
 interface SidebarPreferences {
-  showBizMapAI: boolean;
   showICPBuilder: boolean;
   showWaitlistMaker: boolean;
   showPMFLab: boolean;
@@ -43,7 +42,6 @@ type LegacySidebarPreferences = Partial<SidebarPreferences> & {
 };
 
 const DEFAULT_PREFERENCES: SidebarPreferences = {
-  showBizMapAI: true,
   showICPBuilder: true,
   showWaitlistMaker: true,
   showPMFLab: false,
@@ -184,13 +182,6 @@ export const DashboardCustomization = () => {
                 <CardDescription>Business planning and execution submenu</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <ToggleItem
-                  id="bizmap-ai"
-                  title="BizMap AI"
-                  description="Main AI business advisor"
-                  checked={preferences.showBizMapAI}
-                  onToggle={() => togglePreference('showBizMapAI')}
-                />
                 <ToggleItem
                   id="icp-builder"
                   title="ICP Builder"

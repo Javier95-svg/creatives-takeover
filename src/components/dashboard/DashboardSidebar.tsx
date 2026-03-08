@@ -7,7 +7,6 @@ import {
   Sparkles,
   Users,
   BookOpen,
-  MessageSquare,
   Command,
   Zap,
   FlaskConical,
@@ -47,7 +46,6 @@ interface DashboardSidebarProps {
 }
 
 interface SidebarPreferences {
-  showBizMapAI: boolean;
   showICPBuilder: boolean;
   showWaitlistMaker: boolean;
   showPMFLab: boolean;
@@ -73,7 +71,6 @@ type LegacySidebarPreferences = Partial<SidebarPreferences> & {
 };
 
 const defaultSidebarPreferences: SidebarPreferences = {
-  showBizMapAI: true,
   showICPBuilder: true,
   showWaitlistMaker: true,
   showPMFLab: false,
@@ -157,7 +154,6 @@ export const DashboardSidebar = ({ dashboardMode: _dashboardMode }: DashboardSid
   ];
 
   const toolsItems: ToolItem[] = [
-    sidebarPreferences.showBizMapAI && { path: '/bizmap-ai/chat', label: 'BizMap AI', icon: MessageSquare, prefKey: 'showBizMapAI' },
     sidebarPreferences.showICPBuilder && { path: '/icp-builder', label: 'ICP Builder', icon: Target, prefKey: 'showICPBuilder' },
     sidebarPreferences.showWaitlistMaker && { path: '/waitlist', label: 'Waitlist Maker', icon: ClipboardList, prefKey: 'showWaitlistMaker' },
     sidebarPreferences.showPMFLab && { path: '/pmf-lab', label: 'PMF Lab', icon: FlaskConical, prefKey: 'showPMFLab' },
