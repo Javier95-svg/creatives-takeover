@@ -1,11 +1,5 @@
-import { SmartFocusCard } from '../decision-engine/SmartFocusCard';
-import { WeeklyMissionPanel } from '../decision-engine/WeeklyMissionPanel';
-import { TaskOverview } from '../TaskOverview';
 import { MonthlyRevenueTarget } from '../MonthlyRevenueTarget';
 import { CoreMetrics } from '../CoreMetrics';
-import { QuickWins } from '../QuickWins';
-import { FocusFunnelWidget } from '@/components/focus-funnel/FocusFunnelWidget';
-import { DecisionSprintCard } from '../DecisionSprintCard';
 import { TodaysMissionWidget } from '../TodaysMissionWidget';
 import { BizMapJourneyProgress } from '../BizMapJourneyProgress';
 import { CommunityActivityCard } from '../CommunityActivityCard';
@@ -14,7 +8,6 @@ import { ContentProgressCard } from '../ContentProgressCard';
 import { SmartNextActions } from '../SmartNextActions';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Flame, Target, Calendar, CheckCircle2 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 
 interface DashboardModeViewProps {
   streak: number;
@@ -33,32 +26,10 @@ export function DashboardModeView({
   tasksCompletedThisWeek,
   totalTasksThisWeek,
 }: DashboardModeViewProps) {
-  const navigate = useNavigate();
-
   return (
     <div className="space-y-6">
-      {/* Hero Section: Smart Focus + Weekly Mission Side by Side */}
-      <div className="grid gap-6 lg:grid-cols-2">
-        <div id="dashboard-focus">
-          <SmartFocusCard />
-        </div>
-        <div id="weekly-mission">
-          <WeeklyMissionPanel />
-        </div>
-      </div>
-
-      <div className="grid gap-6 lg:grid-cols-[1.6fr_1fr]">
-        <div id="focus-funnel">
-          <FocusFunnelWidget onOpenAIPartner={() => navigate('/focus-funnel')} />
-        </div>
-        <div id="decision-sprint">
-          <DecisionSprintCard />
-        </div>
-      </div>
-
-      {/* Metrics Grid - 4 Cards */}
+      {/* Metrics Strip — status at a glance */}
       <div className="grid gap-4 md:grid-cols-4">
-        {/* Today's Tasks */}
         <Card className="border-border/70 bg-card/80 backdrop-blur-sm shadow-sm hover:shadow-md">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Today</CardTitle>
@@ -72,7 +43,6 @@ export function DashboardModeView({
           </CardContent>
         </Card>
 
-        {/* This Week */}
         <Card className="border-border/70 bg-card/80 backdrop-blur-sm shadow-sm hover:shadow-md">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">This Week</CardTitle>
@@ -86,7 +56,6 @@ export function DashboardModeView({
           </CardContent>
         </Card>
 
-        {/* Mission Progress */}
         <Card className="border-border/70 bg-card/80 backdrop-blur-sm shadow-sm hover:shadow-md">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Mission</CardTitle>
@@ -98,7 +67,6 @@ export function DashboardModeView({
           </CardContent>
         </Card>
 
-        {/* Streak */}
         <Card className="border-border/70 bg-card/80 backdrop-blur-sm shadow-sm hover:shadow-md">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Streak</CardTitle>
@@ -114,12 +82,22 @@ export function DashboardModeView({
         </Card>
       </div>
 
-      {/* BizMap Journey Progress */}
+      {/* BizMap Journey — where am I in my startup journey? */}
       <div id="journey-progress">
         <BizMapJourneyProgress />
       </div>
 
-      {/* Revenue & Metrics Section */}
+      {/* Today's action plan — mission + next actions side by side */}
+      <div className="grid gap-6 lg:grid-cols-5">
+        <div className="lg:col-span-3" id="todays-mission">
+          <TodaysMissionWidget />
+        </div>
+        <div className="lg:col-span-2" id="smart-actions">
+          <SmartNextActions />
+        </div>
+      </div>
+
+      {/* Business health — revenue & core metrics */}
       <div className="grid gap-6 lg:grid-cols-2">
         <div id="monthly-revenue">
           <MonthlyRevenueTarget />
@@ -127,11 +105,6 @@ export function DashboardModeView({
         <div id="core-metrics">
           <CoreMetrics />
         </div>
-      </div>
-
-      {/* Today's Mission — unified task hub */}
-      <div id="todays-mission">
-        <TodaysMissionWidget />
       </div>
 
       {/* Platform Activity — cross-section integration */}
@@ -146,22 +119,6 @@ export function DashboardModeView({
           <ContentProgressCard />
         </div>
       </div>
-
-      {/* Smart Next Actions & Tasks */}
-      <div className="grid gap-6 lg:grid-cols-2">
-        <div id="smart-actions">
-          <SmartNextActions />
-        </div>
-        <div id="your-tasks">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-space-grotesk text-lg font-semibold tracking-tight">Your Tasks</h3>
-            <p className="text-xs text-muted-foreground">Manage your daily work</p>
-          </div>
-          <TaskOverview />
-        </div>
-      </div>
     </div>
   );
 }
-
-
