@@ -35,7 +35,7 @@ const DashboardContentWrapper = ({ dashboardMode, children }: DashboardContentWr
     dashboardMode === 'focus'
       ? ['dashboard-focus', 'focus-funnel', 'decision-sprint', 'weekly-mission', 'core-metrics', 'your-tasks']
       : dashboardMode === 'dashboard'
-        ? ['dashboard-focus', 'focus-funnel', 'decision-sprint', 'weekly-mission', 'monthly-revenue', 'core-metrics', 'active-projects', 'quick-wins', 'your-tasks']
+        ? ['dashboard-focus', 'priority-radar', 'next-actions', 'command-links', 'insight-brief']
         : ['dashboard-focus', 'focus-funnel', 'decision-sprint', 'weekly-mission', 'monthly-revenue', 'core-metrics', 'ai-insights', 'business-health', 'active-projects', 'calendar-view', 'quick-wins', 'your-tasks', 'gmail-integration'];
 
   // Initialize active section tracking (now inside the provider)
@@ -187,6 +187,8 @@ export const PersonalizedDashboardV2 = () => {
       totalTasksThisWeek: 20,
       activeSprints: data?.stats?.activeSprints || 0,
       completedSessions: data?.stats?.completedSessions || 0,
+      currentStage,
+      recommendations: data?.recommendations || [],
     };
   };
 
@@ -282,7 +284,7 @@ export const PersonalizedDashboardV2 = () => {
                       {dashboardMode === 'focus'
                         ? 'Here\'s your focus for today'
                         : dashboardMode === 'dashboard'
-                          ? 'Your dashboard overview'
+                          ? 'Your central command center for priorities and next moves'
                           : 'Full control center'}
                     </p>
                     <p className="text-xs text-muted-foreground mt-2">
@@ -290,9 +292,11 @@ export const PersonalizedDashboardV2 = () => {
                     </p>
                   </div>
 
-                  <div id="bizmap-stage-tasks">
-                    <BizMapStageTasks />
-                  </div>
+                  {dashboardMode !== 'dashboard' && (
+                    <div id="bizmap-stage-tasks">
+                      <BizMapStageTasks />
+                    </div>
+                  )}
 
                   {/* Dynamic View Based on Mode */}
                   {dashboardMode === 'focus' && <FocusModeView {...metrics} />}
