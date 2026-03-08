@@ -1,6 +1,12 @@
 import { SmartFocusCard } from '../decision-engine/SmartFocusCard';
 import { WeeklyMissionPanel } from '../decision-engine/WeeklyMissionPanel';
 import { TaskOverview } from '../TaskOverview';
+import { BizMapJourneyProgress } from '../BizMapJourneyProgress';
+import { TodaysMissionWidget } from '../TodaysMissionWidget';
+import { CommunityActivityCard } from '../CommunityActivityCard';
+import { InsightaActivityCard } from '../InsightaActivityCard';
+import { ContentProgressCard } from '../ContentProgressCard';
+import { SmartNextActions } from '../SmartNextActions';
 import { TaskCalendar } from '../TaskCalendar';
 import { SmartRecommendations } from '@/components/smart/SmartRecommendations';
 import { MonthlyRevenueTarget } from '../MonthlyRevenueTarget';
@@ -122,6 +128,16 @@ export function ControlCenterView({
         </Card>
       </div>
 
+      {/* BizMap Journey Progress */}
+      <div id="journey-progress">
+        <BizMapJourneyProgress />
+      </div>
+
+      {/* Today's Mission — unified task hub */}
+      <div id="todays-mission">
+        <TodaysMissionWidget />
+      </div>
+
       {/* Revenue & Core Metrics */}
       <div className="grid gap-6 lg:grid-cols-2">
         <div id="monthly-revenue">
@@ -129,6 +145,19 @@ export function ControlCenterView({
         </div>
         <div id="core-metrics">
           <CoreMetrics />
+        </div>
+      </div>
+
+      {/* Platform Activity — cross-section integration */}
+      <div id="platform-activity">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="font-space-grotesk text-lg font-semibold tracking-tight">Platform Activity</h3>
+          <p className="text-xs text-muted-foreground">Your activity across sections</p>
+        </div>
+        <div className="grid gap-6 lg:grid-cols-3">
+          <CommunityActivityCard />
+          <InsightaActivityCard />
+          <ContentProgressCard />
         </div>
       </div>
 
@@ -146,7 +175,7 @@ export function ControlCenterView({
         </div>
       </div>
 
-      {/* Task Management - Calendar + Quick Wins */}
+      {/* Task Management - Calendar + Smart Next Actions */}
       <div className="grid gap-6 lg:grid-cols-2">
         <div id="calendar-view">
           <div className="flex items-center justify-between mb-4">
@@ -155,8 +184,8 @@ export function ControlCenterView({
           </div>
           <TaskCalendar />
         </div>
-        <div id="quick-wins">
-          <QuickWins />
+        <div id="smart-actions">
+          <SmartNextActions />
         </div>
       </div>
 

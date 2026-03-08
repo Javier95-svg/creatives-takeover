@@ -6,6 +6,12 @@ import { CoreMetrics } from '../CoreMetrics';
 import { QuickWins } from '../QuickWins';
 import { FocusFunnelWidget } from '@/components/focus-funnel/FocusFunnelWidget';
 import { DecisionSprintCard } from '../DecisionSprintCard';
+import { TodaysMissionWidget } from '../TodaysMissionWidget';
+import { BizMapJourneyProgress } from '../BizMapJourneyProgress';
+import { CommunityActivityCard } from '../CommunityActivityCard';
+import { InsightaActivityCard } from '../InsightaActivityCard';
+import { ContentProgressCard } from '../ContentProgressCard';
+import { SmartNextActions } from '../SmartNextActions';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Flame, Target, Calendar, CheckCircle2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -108,6 +114,11 @@ export function DashboardModeView({
         </Card>
       </div>
 
+      {/* BizMap Journey Progress */}
+      <div id="journey-progress">
+        <BizMapJourneyProgress />
+      </div>
+
       {/* Revenue & Metrics Section */}
       <div className="grid gap-6 lg:grid-cols-2">
         <div id="monthly-revenue">
@@ -118,10 +129,28 @@ export function DashboardModeView({
         </div>
       </div>
 
-      {/* Quick Wins & Tasks */}
+      {/* Today's Mission — unified task hub */}
+      <div id="todays-mission">
+        <TodaysMissionWidget />
+      </div>
+
+      {/* Platform Activity — cross-section integration */}
+      <div id="platform-activity">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="font-space-grotesk text-lg font-semibold tracking-tight">Platform Activity</h3>
+          <p className="text-xs text-muted-foreground">Your activity across sections</p>
+        </div>
+        <div className="grid gap-6 lg:grid-cols-3">
+          <CommunityActivityCard />
+          <InsightaActivityCard />
+          <ContentProgressCard />
+        </div>
+      </div>
+
+      {/* Smart Next Actions & Tasks */}
       <div className="grid gap-6 lg:grid-cols-2">
-        <div id="quick-wins">
-          <QuickWins />
+        <div id="smart-actions">
+          <SmartNextActions />
         </div>
         <div id="your-tasks">
           <div className="flex items-center justify-between mb-4">

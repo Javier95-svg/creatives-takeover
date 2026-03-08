@@ -1,5 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
+import { TaskCountContext } from './PersonalizedDashboardV2';
 import {
   Target,
   Calendar,
@@ -118,6 +119,7 @@ export const DashboardSidebar = ({ dashboardMode: _dashboardMode }: DashboardSid
   const location = useLocation();
   const { setOpenMobile, isMobile } = useSidebar();
   const { user } = useAuth();
+  const incompleteTaskCount = useContext(TaskCountContext);
   const [sidebarPreferences, setSidebarPreferences] = useState<SidebarPreferences>(defaultSidebarPreferences);
 
   useEffect(() => {
@@ -207,16 +209,24 @@ export const DashboardSidebar = ({ dashboardMode: _dashboardMode }: DashboardSid
           <SidebarGroupLabel>Dashboard</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {dashboardNavItems.map((item) => (
-                <SidebarMenuItem key={item.path}>
-                  <SidebarMenuButton asChild isActive={location.pathname === item.path} tooltip={item.label}>
-                    <Link to={item.path} onClick={handleNavClick}>
-                      <item.icon className="h-4 w-4" />
-                      <span>{item.label}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+              {dashboardNavItems.map((item) => {
+                const isTasksItem = item.path === '/tasks';
+                return (
+                  <SidebarMenuItem key={item.path}>
+                    <SidebarMenuButton asChild isActive={location.pathname === item.path} tooltip={item.label}>
+                      <Link to={item.path} onClick={handleNavClick} className="flex items-center gap-2 w-full">
+                        <item.icon className="h-4 w-4 shrink-0" />
+                        <span className="flex-1">{item.label}</span>
+                        {isTasksItem && incompleteTaskCount > 0 && (
+                          <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[10px] font-semibold text-primary-foreground group-data-[collapsible=icon]:hidden">
+                            {incompleteTaskCount > 99 ? '99+' : incompleteTaskCount}
+                          </span>
+                        )}
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

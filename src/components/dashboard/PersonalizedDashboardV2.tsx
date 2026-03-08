@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, createContext, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usePersonalizedDashboard } from '@/hooks/usePersonalizedDashboard';
 import { ArrowRight } from 'lucide-react';
@@ -18,6 +18,10 @@ import { useActiveSection } from '@/hooks/useActiveSection';
 import { ReactNode } from 'react';
 import { BizMapStageTasks } from './BizMapStageTasks';
 import { useBizMapProgress } from '@/hooks/useBizMapProgress';
+import { useUnifiedTasks } from '@/hooks/useUnifiedTasks';
+
+/** Exposes the total incomplete task count to child components (e.g. sidebar badge) */
+export const TaskCountContext = createContext<number>(0);
 
 // Internal wrapper component that uses the navigation context
 interface DashboardContentWrapperProps {
@@ -45,6 +49,7 @@ export const PersonalizedDashboardV2 = () => {
   const navigate = useNavigate();
   const { currentStage } = useBizMapProgress();
   const { isInitializing } = useDashboardInitialization();
+  const { completedToday, totalToday } = useUnifiedTasks();
   const {
     data,
     loading,
@@ -173,11 +178,10 @@ export const PersonalizedDashboardV2 = () => {
 
   // Calculate metrics for the views
   const calculateMetrics = () => {
-    // Mock data - will be replaced with actual data from hooks
     return {
       streak: currentStreak,
-      tasksCompletedToday: 3,
-      totalTasksToday: 5,
+      tasksCompletedToday: completedToday,
+      totalTasksToday: totalToday,
       weeklyProgress: 65,
       tasksCompletedThisWeek: 12,
       totalTasksThisWeek: 20,
@@ -215,6 +219,7 @@ export const PersonalizedDashboardV2 = () => {
   const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
 
   return (
+    <TaskCountContext.Provider value={totalToday - completedToday}>
     <ErrorBoundary>
       <SidebarProvider>
         <DashboardNavigationProvider>
@@ -314,6 +319,7 @@ export const PersonalizedDashboardV2 = () => {
         </DashboardNavigationProvider>
       </SidebarProvider>
     </ErrorBoundary>
+    </TaskCountContext.Provider>
   );
 };
 

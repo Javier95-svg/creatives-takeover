@@ -1,9 +1,9 @@
 import { SmartFocusCard } from '../decision-engine/SmartFocusCard';
 import { WeeklyMissionPanel } from '../decision-engine/WeeklyMissionPanel';
-import { TaskOverview } from '../TaskOverview';
 import { CoreMetrics } from '../CoreMetrics';
 import { FocusFunnelWidget } from '@/components/focus-funnel/FocusFunnelWidget';
 import { DecisionSprintCard } from '../DecisionSprintCard';
+import { TodaysMissionWidget } from '../TodaysMissionWidget';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Flame, Target, Calendar } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -110,12 +110,8 @@ export function FocusModeView({
         <CoreMetrics />
       </div>
 
-      <div id="your-tasks">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="font-space-grotesk text-lg font-semibold tracking-tight">Your Tasks</h3>
-          <p className="text-xs text-muted-foreground">Keep momentum on key actions</p>
-        </div>
-        <TaskOverview />
+      <div id="todays-mission">
+        <TodaysMissionWidget compact />
       </div>
 
       {/* Minimal Footer Message */}

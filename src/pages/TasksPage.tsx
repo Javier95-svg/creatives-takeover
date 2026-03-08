@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
-import { TaskOverview } from '@/components/dashboard/TaskOverview';
+import { FullTaskManager } from '@/components/dashboard/FullTaskManager';
 import { useLeanStartupStore } from '@/store/leanStartupStore';
 
 const TasksPage = () => {
@@ -9,12 +9,10 @@ const TasksPage = () => {
 
   return (
     <DashboardLayout
-      title="Your Tasks"
-      subtitle="Manage and complete your daily tasks"
+      title="Task Manager"
+      subtitle="All your tasks across BizMap, daily goals, community challenges, and commitments"
     >
-      <div className="space-y-6">
-        <TaskOverview />
-      </div>
+      <FullTaskManager />
     </DashboardLayout>
   );
 };
