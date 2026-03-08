@@ -157,7 +157,7 @@ export const useNextBestActions = (): NextAction[] => {
       result.push({
         id: 'evening-reflection',
         title: 'Log your progress for today',
-        description: 'Reflect on what you accomplished and set tomorrow's intentions.',
+        description: "Reflect on what you accomplished and set tomorrow's intentions.",
         actionRoute: '/dashboard',
         category: 'daily',
         estimatedMinutes: 5,
