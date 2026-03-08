@@ -141,7 +141,7 @@ export const useNextBestActions = (): NextAction[] => {
     if (hour >= 6 && hour < 12 && result.length < 5) {
       result.push({
         id: 'morning-priorities',
-        title: 'Set today's top 3 priorities',
+        title: "Set today's top 3 priorities",
         description: 'Start your morning with clear focus. Define your top priorities for the day.',
         actionRoute: '/dashboard',
         category: 'daily',
