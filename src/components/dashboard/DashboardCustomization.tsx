@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -18,29 +18,85 @@ import {
 
 interface SidebarPreferences {
   showBizMapAI: boolean;
+  showICPBuilder: boolean;
+  showWaitlistMaker: boolean;
   showPMFLab: boolean;
-  showPromptLibrary: boolean;
+  showMVPBuilder: boolean;
   showTechStack: boolean;
-  showInsightaTest: boolean;
+  showGTMStrategist: boolean;
+  showDirectories: boolean;
+  showFindMentor: boolean;
+  showFindCoFounder: boolean;
+  showFindAngel: boolean;
   showVCSearch: boolean;
+  showAcceleratorHunt: boolean;
   showEmailTemplates: boolean;
   showPitchDeckAnalyzer: boolean;
-  showCommunity: boolean;
-  showRead: boolean;
+  showInsightaTest: boolean;
+  showNewspaper: boolean;
+  showPromptLibrary: boolean;
 }
+
+type LegacySidebarPreferences = Partial<SidebarPreferences> & {
+  showCommunity?: boolean;
+  showRead?: boolean;
+};
 
 const DEFAULT_PREFERENCES: SidebarPreferences = {
   showBizMapAI: true,
+  showICPBuilder: true,
+  showWaitlistMaker: true,
   showPMFLab: false,
-  showPromptLibrary: false,
+  showMVPBuilder: false,
   showTechStack: false,
-  showInsightaTest: false,
+  showGTMStrategist: false,
+  showDirectories: false,
+  showFindMentor: true,
+  showFindCoFounder: true,
+  showFindAngel: true,
   showVCSearch: false,
+  showAcceleratorHunt: false,
   showEmailTemplates: false,
   showPitchDeckAnalyzer: false,
-  showCommunity: true,
-  showRead: true,
+  showInsightaTest: false,
+  showNewspaper: true,
+  showPromptLibrary: false,
 };
+
+const normalizePreferences = (raw: LegacySidebarPreferences | null | undefined): SidebarPreferences => {
+  const merged: SidebarPreferences = {
+    ...DEFAULT_PREFERENCES,
+    ...(raw || {}),
+  };
+
+  if (raw && typeof raw.showFindMentor === 'undefined' && typeof raw.showCommunity === 'boolean') {
+    merged.showFindMentor = raw.showCommunity;
+  }
+
+  if (raw && typeof raw.showNewspaper === 'undefined' && typeof raw.showRead === 'boolean') {
+    merged.showNewspaper = raw.showRead;
+  }
+
+  return merged;
+};
+
+interface ToggleItemProps {
+  id: string;
+  title: string;
+  description: string;
+  checked: boolean;
+  onToggle: () => void;
+}
+
+const ToggleItem = ({ id, title, description, checked, onToggle }: ToggleItemProps) => (
+  <div className="flex items-center justify-between">
+    <div className="space-y-0.5">
+      <Label htmlFor={id} className="font-medium">{title}</Label>
+      <p className="text-sm text-muted-foreground">{description}</p>
+    </div>
+    <Switch id={id} checked={checked} onCheckedChange={onToggle} />
+  </div>
+);
 
 export const DashboardCustomization = () => {
   const { user } = useAuth();
@@ -48,11 +104,7 @@ export const DashboardCustomization = () => {
   const [saving, setSaving] = useState(false);
   const [preferences, setPreferences] = useState<SidebarPreferences>(DEFAULT_PREFERENCES);
 
-  useEffect(() => {
-    loadPreferences();
-  }, [user]);
-
-  const loadPreferences = async () => {
+  const loadPreferences = useCallback(async () => {
     if (!user) return;
 
     setLoading(true);
@@ -64,16 +116,17 @@ export const DashboardCustomization = () => {
         .single();
 
       if (error) throw error;
-
-      if (data?.sidebar_preferences) {
-        setPreferences({ ...DEFAULT_PREFERENCES, ...data.sidebar_preferences });
-      }
+      setPreferences(normalizePreferences(data?.sidebar_preferences as LegacySidebarPreferences));
     } catch (error) {
       console.error('Error loading preferences:', error);
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    loadPreferences();
+  }, [loadPreferences]);
 
   const savePreferences = async () => {
     if (!user) return;
@@ -88,8 +141,6 @@ export const DashboardCustomization = () => {
       if (error) throw error;
 
       toast.success('Dashboard preferences saved!');
-
-      // Reload the page to apply changes
       setTimeout(() => {
         window.location.reload();
       }, 500);
@@ -102,7 +153,7 @@ export const DashboardCustomization = () => {
   };
 
   const togglePreference = (key: keyof SidebarPreferences) => {
-    setPreferences(prev => ({ ...prev, [key]: !prev[key] }));
+    setPreferences((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
   return (
@@ -127,158 +178,170 @@ export const DashboardCustomization = () => {
           </div>
         ) : (
           <div className="space-y-6">
-            {/* BizMap AI Tools */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">BizMap AI Suite</CardTitle>
-                <CardDescription>AI-powered business planning tools</CardDescription>
+                <CardTitle className="text-lg">BizMap AI</CardTitle>
+                <CardDescription>Business planning and execution submenu</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label htmlFor="bizmap-ai" className="font-medium">BizMap AI</Label>
-                    <p className="text-sm text-muted-foreground">Main AI business advisor</p>
-                  </div>
-                  <Switch
-                    id="bizmap-ai"
-                    checked={preferences.showBizMapAI}
-                    onCheckedChange={() => togglePreference('showBizMapAI')}
-                  />
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label htmlFor="pmf-lab" className="font-medium">PMF Lab</Label>
-                    <p className="text-sm text-muted-foreground">Product-Market Fit analysis</p>
-                  </div>
-                  <Switch
-                    id="pmf-lab"
-                    checked={preferences.showPMFLab}
-                    onCheckedChange={() => togglePreference('showPMFLab')}
-                  />
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label htmlFor="prompt-library" className="font-medium">Prompt Library</Label>
-                    <p className="text-sm text-muted-foreground">Curated prompts for founders</p>
-                  </div>
-                  <Switch
-                    id="prompt-library"
-                    checked={preferences.showPromptLibrary}
-                    onCheckedChange={() => togglePreference('showPromptLibrary')}
-                  />
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label htmlFor="tech-stack" className="font-medium">Tech Stack Builder</Label>
-                    <p className="text-sm text-muted-foreground">AI-powered tech recommendations</p>
-                  </div>
-                  <Switch
-                    id="tech-stack"
-                    checked={preferences.showTechStack}
-                    onCheckedChange={() => togglePreference('showTechStack')}
-                  />
-                </div>
+                <ToggleItem
+                  id="bizmap-ai"
+                  title="BizMap AI"
+                  description="Main AI business advisor"
+                  checked={preferences.showBizMapAI}
+                  onToggle={() => togglePreference('showBizMapAI')}
+                />
+                <ToggleItem
+                  id="icp-builder"
+                  title="ICP Builder"
+                  description="Define your ideal customer profile"
+                  checked={preferences.showICPBuilder}
+                  onToggle={() => togglePreference('showICPBuilder')}
+                />
+                <ToggleItem
+                  id="waitlist-maker"
+                  title="Waitlist Maker"
+                  description="Create and publish your waitlist page"
+                  checked={preferences.showWaitlistMaker}
+                  onToggle={() => togglePreference('showWaitlistMaker')}
+                />
+                <ToggleItem
+                  id="pmf-lab"
+                  title="PMF Lab"
+                  description="Product-Market Fit validation"
+                  checked={preferences.showPMFLab}
+                  onToggle={() => togglePreference('showPMFLab')}
+                />
+                <ToggleItem
+                  id="mvp-builder"
+                  title="MVP Builder"
+                  description="Define your MVP scope and plan"
+                  checked={preferences.showMVPBuilder}
+                  onToggle={() => togglePreference('showMVPBuilder')}
+                />
+                <ToggleItem
+                  id="tech-stack"
+                  title="Tech Stack"
+                  description="Get technical stack recommendations"
+                  checked={preferences.showTechStack}
+                  onToggle={() => togglePreference('showTechStack')}
+                />
+                <ToggleItem
+                  id="gtm-strategist"
+                  title="GTM Strategist"
+                  description="Build your go-to-market strategy"
+                  checked={preferences.showGTMStrategist}
+                  onToggle={() => togglePreference('showGTMStrategist')}
+                />
+                <ToggleItem
+                  id="directories"
+                  title="Directories"
+                  description="Discover launch and distribution directories"
+                  checked={preferences.showDirectories}
+                  onToggle={() => togglePreference('showDirectories')}
+                />
               </CardContent>
             </Card>
 
-            {/* Insighta Tools */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Insighta Suite</CardTitle>
-                <CardDescription>Fundraising tools and investor insights</CardDescription>
+                <CardTitle className="text-lg">Community</CardTitle>
+                <CardDescription>Community submenu</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label htmlFor="vc-search" className="font-medium">VC Search</Label>
-                    <p className="text-sm text-muted-foreground">Explore firms and investors</p>
-                  </div>
-                  <Switch
-                    id="vc-search"
-                    checked={preferences.showVCSearch}
-                    onCheckedChange={() => togglePreference('showVCSearch')}
-                  />
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label htmlFor="email-templates" className="font-medium">Email Templates</Label>
-                    <p className="text-sm text-muted-foreground">Outreach templates for fundraising</p>
-                  </div>
-                  <Switch
-                    id="email-templates"
-                    checked={preferences.showEmailTemplates}
-                    onCheckedChange={() => togglePreference('showEmailTemplates')}
-                  />
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label htmlFor="pitch-deck" className="font-medium">Pitch Deck Analyzer</Label>
-                    <p className="text-sm text-muted-foreground">Get feedback on your deck</p>
-                  </div>
-                  <Switch
-                    id="pitch-deck"
-                    checked={preferences.showPitchDeckAnalyzer}
-                    onCheckedChange={() => togglePreference('showPitchDeckAnalyzer')}
-                  />
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label htmlFor="insighta-test" className="font-medium">Insighta Test</Label>
-                    <p className="text-sm text-muted-foreground">Fundraising readiness check</p>
-                  </div>
-                  <Switch
-                    id="insighta-test"
-                    checked={preferences.showInsightaTest}
-                    onCheckedChange={() => togglePreference('showInsightaTest')}
-                  />
-                </div>
+                <ToggleItem
+                  id="find-mentor"
+                  title="Find a Mentor"
+                  description="Connect with experienced mentors"
+                  checked={preferences.showFindMentor}
+                  onToggle={() => togglePreference('showFindMentor')}
+                />
+                <ToggleItem
+                  id="find-cofounder"
+                  title="Find a Co-Founder"
+                  description="Meet collaborators for your startup"
+                  checked={preferences.showFindCoFounder}
+                  onToggle={() => togglePreference('showFindCoFounder')}
+                />
+                <ToggleItem
+                  id="find-angel"
+                  title="Find your Angel"
+                  description="Connect with angel investors"
+                  checked={preferences.showFindAngel}
+                  onToggle={() => togglePreference('showFindAngel')}
+                />
               </CardContent>
             </Card>
 
-            {/* Community & Resources */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Community & Learning</CardTitle>
-                <CardDescription>Connect with founders and learn</CardDescription>
+                <CardTitle className="text-lg">Insighta</CardTitle>
+                <CardDescription>Fundraising and investor intelligence submenu</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label htmlFor="community" className="font-medium">Find a Mentor</Label>
-                    <p className="text-sm text-muted-foreground">Connect with experienced mentors</p>
-                  </div>
-                  <Switch
-                    id="community"
-                    checked={preferences.showCommunity}
-                    onCheckedChange={() => togglePreference('showCommunity')}
-                  />
-                </div>
+                <ToggleItem
+                  id="vc-search"
+                  title="VC Search"
+                  description="Browse venture capital firms"
+                  checked={preferences.showVCSearch}
+                  onToggle={() => togglePreference('showVCSearch')}
+                />
+                <ToggleItem
+                  id="accelerator-hunt"
+                  title="Accelerator Hunt"
+                  description="Find top accelerator programs"
+                  checked={preferences.showAcceleratorHunt}
+                  onToggle={() => togglePreference('showAcceleratorHunt')}
+                />
+                <ToggleItem
+                  id="email-templates"
+                  title="Email Templates"
+                  description="Use outreach templates for fundraising"
+                  checked={preferences.showEmailTemplates}
+                  onToggle={() => togglePreference('showEmailTemplates')}
+                />
+                <ToggleItem
+                  id="pitch-deck"
+                  title="Pitch Deck Analyzer"
+                  description="Get feedback on your pitch deck"
+                  checked={preferences.showPitchDeckAnalyzer}
+                  onToggle={() => togglePreference('showPitchDeckAnalyzer')}
+                />
+                <ToggleItem
+                  id="insighta-test"
+                  title="Insighta Test"
+                  description="Measure fundraising readiness"
+                  checked={preferences.showInsightaTest}
+                  onToggle={() => togglePreference('showInsightaTest')}
+                />
+              </CardContent>
+            </Card>
 
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label htmlFor="read" className="font-medium">Read</Label>
-                    <p className="text-sm text-muted-foreground">Stories, articles, and resources</p>
-                  </div>
-                  <Switch
-                    id="read"
-                    checked={preferences.showRead}
-                    onCheckedChange={() => togglePreference('showRead')}
-                  />
-                </div>
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">More</CardTitle>
+                <CardDescription>Resources and learning submenu</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <ToggleItem
+                  id="newspaper"
+                  title="Newspaper"
+                  description="Read stories and founder insights"
+                  checked={preferences.showNewspaper}
+                  onToggle={() => togglePreference('showNewspaper')}
+                />
+                <ToggleItem
+                  id="prompt-library"
+                  title="Prompt Library"
+                  description="Explore curated prompts and cases"
+                  checked={preferences.showPromptLibrary}
+                  onToggle={() => togglePreference('showPromptLibrary')}
+                />
               </CardContent>
             </Card>
 
             <div className="flex justify-end gap-2 pt-4">
-              <Button
-                onClick={savePreferences}
-                disabled={saving}
-              >
+              <Button onClick={savePreferences} disabled={saving}>
                 {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Save Preferences
               </Button>

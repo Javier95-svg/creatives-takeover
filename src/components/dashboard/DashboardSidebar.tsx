@@ -18,6 +18,11 @@ import {
   Home,
   BarChart3,
   Trash2,
+  Rocket,
+  LineChart,
+  Filter,
+  Handshake,
+  type LucideIcon,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -41,23 +46,82 @@ interface DashboardSidebarProps {
   dashboardMode: DashboardMode;
 }
 
+interface SidebarPreferences {
+  showBizMapAI: boolean;
+  showICPBuilder: boolean;
+  showWaitlistMaker: boolean;
+  showPMFLab: boolean;
+  showMVPBuilder: boolean;
+  showTechStack: boolean;
+  showGTMStrategist: boolean;
+  showDirectories: boolean;
+  showFindMentor: boolean;
+  showFindCoFounder: boolean;
+  showFindAngel: boolean;
+  showVCSearch: boolean;
+  showAcceleratorHunt: boolean;
+  showEmailTemplates: boolean;
+  showPitchDeckAnalyzer: boolean;
+  showInsightaTest: boolean;
+  showNewspaper: boolean;
+  showPromptLibrary: boolean;
+}
+
+type LegacySidebarPreferences = Partial<SidebarPreferences> & {
+  showCommunity?: boolean;
+  showRead?: boolean;
+};
+
+const defaultSidebarPreferences: SidebarPreferences = {
+  showBizMapAI: true,
+  showICPBuilder: true,
+  showWaitlistMaker: true,
+  showPMFLab: false,
+  showMVPBuilder: false,
+  showTechStack: false,
+  showGTMStrategist: false,
+  showDirectories: false,
+  showFindMentor: true,
+  showFindCoFounder: true,
+  showFindAngel: true,
+  showVCSearch: false,
+  showAcceleratorHunt: false,
+  showEmailTemplates: false,
+  showPitchDeckAnalyzer: false,
+  showInsightaTest: false,
+  showNewspaper: true,
+  showPromptLibrary: false,
+};
+
+const normalizePreferences = (raw: LegacySidebarPreferences | null | undefined): SidebarPreferences => {
+  const merged: SidebarPreferences = {
+    ...defaultSidebarPreferences,
+    ...(raw || {}),
+  };
+
+  if (raw && typeof raw.showFindMentor === 'undefined' && typeof raw.showCommunity === 'boolean') {
+    merged.showFindMentor = raw.showCommunity;
+  }
+
+  if (raw && typeof raw.showNewspaper === 'undefined' && typeof raw.showRead === 'boolean') {
+    merged.showNewspaper = raw.showRead;
+  }
+
+  return merged;
+};
+
+interface ToolItem {
+  path: string;
+  label: string;
+  icon: LucideIcon;
+  prefKey: keyof SidebarPreferences;
+}
+
 export const DashboardSidebar = ({ dashboardMode: _dashboardMode }: DashboardSidebarProps) => {
   const location = useLocation();
   const { setOpenMobile, isMobile } = useSidebar();
   const { user } = useAuth();
-  const defaultSidebarPreferences = {
-    showBizMapAI: true,
-    showPMFLab: false,
-    showPromptLibrary: false,
-    showTechStack: false,
-    showInsightaTest: false,
-    showVCSearch: false,
-    showEmailTemplates: false,
-    showPitchDeckAnalyzer: false,
-    showCommunity: true,
-    showRead: true,
-  };
-  const [sidebarPreferences, setSidebarPreferences] = useState(defaultSidebarPreferences);
+  const [sidebarPreferences, setSidebarPreferences] = useState<SidebarPreferences>(defaultSidebarPreferences);
 
   useEffect(() => {
     const loadPreferences = async () => {
@@ -70,7 +134,7 @@ export const DashboardSidebar = ({ dashboardMode: _dashboardMode }: DashboardSid
         .single();
 
       if (data?.sidebar_preferences) {
-        setSidebarPreferences({ ...defaultSidebarPreferences, ...data.sidebar_preferences });
+        setSidebarPreferences(normalizePreferences(data.sidebar_preferences as LegacySidebarPreferences));
       }
     };
 
@@ -83,7 +147,6 @@ export const DashboardSidebar = ({ dashboardMode: _dashboardMode }: DashboardSid
     }
   };
 
-  // Route-based navigation items
   const dashboardNavItems = [
     { path: '/dashboard', label: 'Home', icon: Home },
     { path: '/focus-funnel', label: 'Focus Funnel', icon: Target },
@@ -93,22 +156,29 @@ export const DashboardSidebar = ({ dashboardMode: _dashboardMode }: DashboardSid
     { path: '/tasks', label: 'Your Tasks', icon: CheckSquare },
   ];
 
-  // Build tools items based on user preferences
-  const toolsItems = [
-    sidebarPreferences.showBizMapAI && { path: '/bizmap-ai/chat', label: 'BizMap AI', icon: MessageSquare, prefKey: 'showBizMapAI' as const },
-    sidebarPreferences.showPMFLab && { path: '/pmf-lab', label: 'PMF Lab', icon: FlaskConical, prefKey: 'showPMFLab' as const },
-    sidebarPreferences.showPromptLibrary && { path: '/prompt-library', label: 'Prompt Library', icon: Library, prefKey: 'showPromptLibrary' as const },
-    sidebarPreferences.showTechStack && { path: '/tech-stack', label: 'Tech Stack Builder', icon: Zap, prefKey: 'showTechStack' as const },
-    sidebarPreferences.showVCSearch && { path: '/insighta/vc-search', label: 'VC Search', icon: FileSearch, prefKey: 'showVCSearch' as const },
-    sidebarPreferences.showEmailTemplates && { path: '/insighta/email-templates', label: 'Email Templates', icon: Mail, prefKey: 'showEmailTemplates' as const },
-    sidebarPreferences.showPitchDeckAnalyzer && { path: '/insighta/pitch-deck-analyzer', label: 'Pitch Deck Analyzer', icon: ClipboardList, prefKey: 'showPitchDeckAnalyzer' as const },
-    sidebarPreferences.showInsightaTest && { path: '/insighta/test', label: 'Insighta Test', icon: Sparkles, prefKey: 'showInsightaTest' as const },
-    sidebarPreferences.showCommunity && { path: '/community', label: 'Find a Mentor', icon: Users, prefKey: 'showCommunity' as const },
-    sidebarPreferences.showRead && { path: '/newspaper', label: 'Read', icon: BookOpen, prefKey: 'showRead' as const },
-  ].filter(Boolean) as { path: string; label: string; icon: any; prefKey: keyof typeof defaultSidebarPreferences }[];
+  const toolsItems: ToolItem[] = [
+    sidebarPreferences.showBizMapAI && { path: '/bizmap-ai/chat', label: 'BizMap AI', icon: MessageSquare, prefKey: 'showBizMapAI' },
+    sidebarPreferences.showICPBuilder && { path: '/icp-builder', label: 'ICP Builder', icon: Target, prefKey: 'showICPBuilder' },
+    sidebarPreferences.showWaitlistMaker && { path: '/waitlist', label: 'Waitlist Maker', icon: ClipboardList, prefKey: 'showWaitlistMaker' },
+    sidebarPreferences.showPMFLab && { path: '/pmf-lab', label: 'PMF Lab', icon: FlaskConical, prefKey: 'showPMFLab' },
+    sidebarPreferences.showMVPBuilder && { path: '/mvp-builder', label: 'MVP Builder', icon: Rocket, prefKey: 'showMVPBuilder' },
+    sidebarPreferences.showTechStack && { path: '/tech-stack', label: 'Tech Stack', icon: Zap, prefKey: 'showTechStack' },
+    sidebarPreferences.showGTMStrategist && { path: '/go-to-market', label: 'GTM Strategist', icon: LineChart, prefKey: 'showGTMStrategist' },
+    sidebarPreferences.showDirectories && { path: '/directories', label: 'Directories', icon: Filter, prefKey: 'showDirectories' },
+    sidebarPreferences.showFindMentor && { path: '/community', label: 'Find a Mentor', icon: Users, prefKey: 'showFindMentor' },
+    sidebarPreferences.showFindCoFounder && { path: '/community/co-founders', label: 'Find a Co-Founder', icon: Handshake, prefKey: 'showFindCoFounder' },
+    sidebarPreferences.showFindAngel && { path: '/community/angels', label: 'Find your Angel', icon: Sparkles, prefKey: 'showFindAngel' },
+    sidebarPreferences.showVCSearch && { path: '/insighta/vc-search', label: 'VC Search', icon: FileSearch, prefKey: 'showVCSearch' },
+    sidebarPreferences.showAcceleratorHunt && { path: '/insighta/accelerator-hunt', label: 'Accelerator Hunt', icon: Rocket, prefKey: 'showAcceleratorHunt' },
+    sidebarPreferences.showEmailTemplates && { path: '/insighta/email-templates', label: 'Email Templates', icon: Mail, prefKey: 'showEmailTemplates' },
+    sidebarPreferences.showPitchDeckAnalyzer && { path: '/insighta/pitch-deck-analyzer', label: 'Pitch Deck Analyzer', icon: BarChart3, prefKey: 'showPitchDeckAnalyzer' },
+    sidebarPreferences.showInsightaTest && { path: '/insighta/test', label: 'Insighta Test', icon: Sparkles, prefKey: 'showInsightaTest' },
+    sidebarPreferences.showNewspaper && { path: '/newspaper', label: 'Newspaper', icon: BookOpen, prefKey: 'showNewspaper' },
+    sidebarPreferences.showPromptLibrary && { path: '/prompt-library', label: 'Prompt Library', icon: Library, prefKey: 'showPromptLibrary' },
+  ].filter(Boolean) as ToolItem[];
 
-  const removeTool = async (prefKey: keyof typeof defaultSidebarPreferences) => {
-    const updatedPreferences = { ...sidebarPreferences, [prefKey]: false };
+  const removeTool = async (prefKey: keyof SidebarPreferences) => {
+    const updatedPreferences: SidebarPreferences = { ...sidebarPreferences, [prefKey]: false };
     setSidebarPreferences(updatedPreferences);
 
     if (user) {
@@ -137,18 +207,13 @@ export const DashboardSidebar = ({ dashboardMode: _dashboardMode }: DashboardSid
       </SidebarHeader>
 
       <SidebarContent>
-        {/* Dashboard Navigation */}
         <SidebarGroup>
           <SidebarGroupLabel>Dashboard</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {dashboardNavItems.map((item) => (
                 <SidebarMenuItem key={item.path}>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={location.pathname === item.path}
-                    tooltip={item.label}
-                  >
+                  <SidebarMenuButton asChild isActive={location.pathname === item.path} tooltip={item.label}>
                     <Link to={item.path} onClick={handleNavClick}>
                       <item.icon className="h-4 w-4" />
                       <span>{item.label}</span>
@@ -160,7 +225,6 @@ export const DashboardSidebar = ({ dashboardMode: _dashboardMode }: DashboardSid
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* Tools & Support */}
         <SidebarGroup>
           <SidebarGroupLabel>Tools</SidebarGroupLabel>
           <SidebarGroupContent>
@@ -169,7 +233,7 @@ export const DashboardSidebar = ({ dashboardMode: _dashboardMode }: DashboardSid
                 <SidebarMenuItem key={item.path}>
                   <div className="flex items-center w-full group/tool">
                     <SidebarMenuButton asChild tooltip={item.label} className="flex-1">
-                      <Link to={item.path}>
+                      <Link to={item.path} onClick={handleNavClick}>
                         <item.icon className="h-4 w-4" />
                         <span>{item.label}</span>
                       </Link>
@@ -192,7 +256,6 @@ export const DashboardSidebar = ({ dashboardMode: _dashboardMode }: DashboardSid
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* Customize */}
         <SidebarGroup>
           <SidebarGroupLabel>Personalize</SidebarGroupLabel>
           <SidebarGroupContent>
