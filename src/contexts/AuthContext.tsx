@@ -63,7 +63,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       // ── Step 1: Check if profile exists (SINGLE call) ──
       const { data: existingProfileData, error: existingProfileError } = await supabase
         .from('profiles')
-        .select('id, onboarding_completed, first_login_at')
+        .select('id, onboarding_completed')
         .eq('id', userId)
         .maybeSingle();
       let existingProfile = existingProfileData;
@@ -89,7 +89,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           ? ({
             ...fallbackProfile,
             onboarding_completed: null,
-            first_login_at: null,
           } as typeof existingProfileData)
           : null;
       }
@@ -143,18 +142,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 { onConflict: 'email' }
               ),
           ]).catch(err => logError('Failed to update admin tier', err, { userId }))
-        );
-      }
-
-      // Update first_login_at if never set
-      if (existingProfile && !existingProfile.first_login_at) {
-        parallelTasks.push(
-          supabase
-            .from('profiles')
-            .update({ first_login_at: new Date().toISOString() })
-            .eq('id', userId)
-            .then(() => {})
-            .catch(err => logError('Failed to update first_login_at', err, { userId }))
         );
       }
 
