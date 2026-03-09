@@ -3,7 +3,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { MentorProfile as MentorProfileType, getCurrencySymbol } from "@/types/mentor";
-import { Star, Calendar, MessageCircle, CheckCircle2, Heart, Users, Linkedin } from "lucide-react";
+import { Star, Calendar, MessageCircle, CheckCircle2, Users, Linkedin } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { getCountryFlag } from "@/utils/countryFlags";
@@ -337,19 +337,27 @@ export const MentorProfile = ({ mentor, onBookClick }: MentorProfileProps) => {
               )}
             </div>
 
-            {/* Expertise Tags */}
+            {/* Expertise Areas */}
             {mentor.expertise && mentor.expertise.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {mentor.expertise.slice(0, 5).map((skill) => (
-                  <Badge key={skill} variant="secondary" className="text-xs">
-                    {skill}
-                  </Badge>
-                ))}
-                {mentor.expertise.length > 5 && (
-                  <Badge variant="secondary" className="text-xs">
-                    +{mentor.expertise.length - 5} more
-                  </Badge>
-                )}
+              <div className="rounded-lg border border-primary/30 bg-primary/5 p-4">
+                <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-primary/85">
+                  Expertise Areas
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {mentor.expertise.slice(0, 6).map((skill) => (
+                    <Badge
+                      key={skill}
+                      className="border border-primary/30 bg-primary/90 text-xs font-semibold text-primary-foreground hover:bg-primary"
+                    >
+                      {skill}
+                    </Badge>
+                  ))}
+                  {mentor.expertise.length > 6 && (
+                    <Badge className="border border-primary/40 bg-background text-xs font-semibold text-primary hover:bg-primary/10">
+                      +{mentor.expertise.length - 6} more
+                    </Badge>
+                  )}
+                </div>
               </div>
             )}
 
@@ -385,15 +393,6 @@ export const MentorProfile = ({ mentor, onBookClick }: MentorProfileProps) => {
                 </div>
           </div>
 
-          {/* Right: Heart */}
-          <div className="flex-shrink-0 flex flex-col items-center lg:items-end justify-start">
-            <button 
-              className="p-2 hover:bg-muted rounded-md transition-all duration-200 hover:scale-110 self-end lg:self-start"
-              aria-label="Favorite"
-            >
-              <Heart className="h-5 w-5 text-muted-foreground hover:text-primary transition-colors" />
-            </button>
-          </div>
         </div>
       </CardContent>
 

@@ -3,7 +3,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Mentor } from "@/types/mentor";
 import { Link, useNavigate } from "react-router-dom";
-import { Star, CheckCircle2, MessageCircle, Calendar, Heart, Linkedin } from "lucide-react";
+import { Star, CheckCircle2, MessageCircle, Calendar, Linkedin } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { getCountryFlag } from "@/utils/countryFlags";
@@ -394,11 +394,27 @@ export const MentorCard = ({ mentor, className, priority = false }: MentorCardPr
               {reviewCount > 0 && <span>{reviewCount} reviews</span>}
             </div>
 
-            {/* Expertise/Languages */}
+            {/* Expertise Areas */}
             {mentor.expertise && mentor.expertise.length > 0 && (
-              <div className="text-sm text-muted-foreground">
-                Expertise: <span className="font-medium">{mentor.expertise.slice(0, 3).join(', ')}</span>
-                {mentor.expertise.length > 3 && '...'}
+              <div className="rounded-lg border border-primary/30 bg-primary/5 p-3">
+                <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-primary/85">
+                  Expertise Areas
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {mentor.expertise.slice(0, 4).map((skill) => (
+                    <span
+                      key={skill}
+                      className="inline-flex items-center rounded-full bg-primary px-2.5 py-1 text-xs font-semibold text-primary-foreground"
+                    >
+                      {skill}
+                    </span>
+                  ))}
+                  {mentor.expertise.length > 4 && (
+                    <span className="inline-flex items-center rounded-full border border-primary/40 bg-background px-2.5 py-1 text-xs font-semibold text-primary">
+                      +{mentor.expertise.length - 4} more
+                    </span>
+                  )}
+                </div>
               </div>
             )}
 
@@ -424,12 +440,6 @@ export const MentorCard = ({ mentor, className, priority = false }: MentorCardPr
             </div>
           </div>
 
-          {/* Right: Heart */}
-          <div className="flex-shrink-0 flex flex-col items-end justify-start">
-            <button className="p-2 hover:bg-muted rounded-md transition-all duration-200 hover:scale-110">
-              <Heart className="h-5 w-5 text-muted-foreground hover:text-primary transition-colors" />
-            </button>
-          </div>
         </div>
       </CardContent>
     </Card>
