@@ -22,8 +22,9 @@ import { handleError } from "@/lib/errors";
 
 const EXPERTISE_OPTIONS = [
   "Product Development",
-  "Marketing & Growth",
-  "Sales & Business Development",
+  "Growth Marketing",
+  "Sales",
+  "Business Development",
   "Fundraising",
   "Operations",
   "Strategy",
