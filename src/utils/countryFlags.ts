@@ -105,6 +105,10 @@ export function getCountryFlag(country: string | null | undefined): string {
     'ROMANIA': '🇷🇴',
     'LB': '🇱🇧',
     'LEBANON': '🇱🇧',
+    'BA': '🇧🇦',
+    'BOSNIA': '🇧🇦',
+    'BOSNIA AND HERZEGOVINA': '🇧🇦',
+    'BOSNIA & HERZEGOVINA': '🇧🇦',
   };
   
   // Check direct match
