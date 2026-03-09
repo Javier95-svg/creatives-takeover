@@ -114,8 +114,8 @@ export const NotificationBell = () => {
         return metadata?.message || 'Your co-founder post is now live!';
       case 'mentor_banner_created':
         return metadata?.mentor_name
-          ? `New mentor banner: ${metadata.mentor_name}`
-          : 'A new mentor banner was published';
+          ? `New consultant joins our network: ${metadata.mentor_name}`
+          : 'A new consultant joined our network';
       case 'angel_banner_created':
         return metadata?.name
           ? `New investor joins our network: ${metadata.name}`
@@ -147,6 +147,10 @@ export const NotificationBell = () => {
 
   const getNotificationImage = (notification: CommunityNotification) => {
     const metadata = notification?.metadata || {};
+
+    if (notification.notification_type === 'mentor_banner_created') {
+      return metadata.image_url || metadata.picture || notification.actor.avatar;
+    }
 
     if (notification.notification_type === 'angel_banner_created') {
       return metadata.image_url || metadata.picture || notification.actor.avatar;
