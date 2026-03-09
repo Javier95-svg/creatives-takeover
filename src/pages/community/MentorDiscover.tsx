@@ -14,6 +14,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useMentors } from "@/hooks/useMentors";
 import { Search, ArrowLeft, Loader2, Users } from "lucide-react";
 import { sortMentorsAlphabetically } from "@/utils/mentorSort";
+import { normalizeMentorExpertiseList } from "@/utils/mentorExpertise";
 
 const MentorDiscover = () => {
   const [searchParams] = useSearchParams();
@@ -38,7 +39,7 @@ const MentorDiscover = () => {
       const expertise = decodeURIComponent(expertiseParam);
       setFilters((prev) => ({
         ...prev,
-        expertise: [expertise],
+        expertise: normalizeMentorExpertiseList([expertise]),
       }));
     }
   }, []);
@@ -48,11 +49,15 @@ const MentorDiscover = () => {
     const expertiseParam = searchParams.get("expertise");
     if (expertiseParam) {
       const expertise = decodeURIComponent(expertiseParam);
+      const normalizedExpertise = normalizeMentorExpertiseList([expertise]);
       setFilters((prev) => {
-        if (!prev.expertise.includes(expertise)) {
+        const isSameSelection =
+          prev.expertise.length === normalizedExpertise.length &&
+          prev.expertise.every((item) => normalizedExpertise.includes(item));
+        if (!isSameSelection) {
           return {
             ...prev,
-            expertise: [expertise],
+            expertise: normalizedExpertise,
           };
         }
         return prev;
@@ -85,8 +90,9 @@ const MentorDiscover = () => {
 
       // Expertise filter
       if (filters.expertise.length > 0) {
+        const mentorExpertise = normalizeMentorExpertiseList(mentor.expertise);
         const hasExpertise = filters.expertise.some((e) =>
-          mentor.expertise?.includes(e)
+          mentorExpertise.includes(e)
         );
         if (!hasExpertise) return false;
       }
@@ -142,7 +148,7 @@ const MentorDiscover = () => {
   const allExpertise = useMemo(() => {
     const expertiseSet = new Set<string>();
     mentors.forEach((m) => {
-      m.expertise?.forEach((e) => expertiseSet.add(e));
+      normalizeMentorExpertiseList(m.expertise).forEach((e) => expertiseSet.add(e));
     });
     return Array.from(expertiseSet).sort();
   }, [mentors]);

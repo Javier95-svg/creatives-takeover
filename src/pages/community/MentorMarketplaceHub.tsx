@@ -15,6 +15,7 @@ import { Mentor } from "@/types/mentor";
 import { useMentors } from "@/hooks/useMentors";
 import { useAuth } from "@/contexts/AuthContext";
 import { sortMentorsAlphabetically } from "@/utils/mentorSort";
+import { normalizeMentorExpertiseList } from "@/utils/mentorExpertise";
 
 import {
   Pagination,
@@ -52,7 +53,7 @@ const MentorMarketplaceHub = () => {
       const expertise = decodeURIComponent(expertiseParam);
       setFilters((prev) => ({
         ...prev,
-        expertise: [expertise],
+        expertise: normalizeMentorExpertiseList([expertise]),
       }));
       // Clear the query parameter after setting the filter
       setSearchParams({}, { replace: true });
@@ -158,8 +159,9 @@ const MentorMarketplaceHub = () => {
 
       // Expertise filter
       if (filters.expertise.length > 0) {
+        const mentorExpertise = normalizeMentorExpertiseList(mentor.expertise);
         const hasExpertise = filters.expertise.some((e) =>
-          mentor.expertise?.includes(e)
+          mentorExpertise.includes(e)
         );
         if (!hasExpertise) return false;
       }
@@ -232,7 +234,7 @@ const MentorMarketplaceHub = () => {
   const allExpertise = useMemo(() => {
     const expertiseSet = new Set<string>();
     mentors.forEach((m) => {
-      m.expertise?.forEach((e) => expertiseSet.add(e));
+      normalizeMentorExpertiseList(m.expertise).forEach((e) => expertiseSet.add(e));
     });
     const result = Array.from(expertiseSet).sort();
     return result;
