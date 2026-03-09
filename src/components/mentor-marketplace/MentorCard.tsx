@@ -396,7 +396,7 @@ export const MentorCard = ({ mentor, className, priority = false }: MentorCardPr
 
             {/* Expertise Areas */}
             {mentor.expertise && mentor.expertise.length > 0 && (
-              <div className="rounded-lg border border-primary/30 bg-primary/5 p-3">
+              <div>
                 <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-primary/85">
                   Expertise Areas
                 </p>
