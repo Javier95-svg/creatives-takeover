@@ -41,7 +41,7 @@ type MessageReaction = {
   userReacted: boolean;
 };
 
-const QUICK_REACTIONS = ['❤️', '👍', '😂', '😮', '😢', '🙏'] as const;
+const QUICK_REACTIONS = ['❤️', '👍', '😂', '😮', '😢', '🙏', '🔥', '👏', '🎉', '🤔', '👀', '💯'] as const;
 const LONG_PRESS_MS = 320;
 
 const isSophiaMentorName = (name: string | null | undefined): boolean => {
@@ -814,7 +814,7 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
                     data-reaction-menu
                     className={`absolute z-20 ${
                       isOwnMessage ? 'right-0' : 'left-0'
-                    } -top-11 flex items-center gap-1 rounded-full border border-border/60 bg-background px-2 py-1 shadow-lg`}
+                    } bottom-full mb-2 flex max-w-[260px] flex-wrap items-center gap-1 rounded-2xl border border-border/60 bg-background px-2 py-1 shadow-lg md:max-w-[360px]`}
                   >
                     {QUICK_REACTIONS.map((emoji) => (
                       <button
