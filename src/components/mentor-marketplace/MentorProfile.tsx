@@ -141,6 +141,10 @@ export const MentorProfile = ({ mentor, onBookClick }: MentorProfileProps) => {
     ) {
       return 'United Kingdom';
     }
+    // Special case: Vivian Ubochi is from Nigeria
+    if (mentor.name.toLowerCase().includes('vivian') && mentor.name.toLowerCase().includes('ubochi')) {
+      return 'Nigeria';
+    }
     // Special case: Johnny Bou Malhab is from Lebanon
     if (
       mentor.name.toLowerCase().includes('johnny') &&
