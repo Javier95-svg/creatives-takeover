@@ -809,30 +809,6 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
                     : 'bg-muted rounded-2xl rounded-bl-sm'
                 }`}
               >
-                {activeReactionMenuMessageId === message.id && (
-                  <div
-                    data-reaction-menu
-                    className={`absolute z-20 ${
-                      isOwnMessage ? 'right-0' : 'left-0'
-                    } bottom-full mb-2 flex max-w-[260px] flex-wrap items-center gap-1 rounded-2xl border border-border/60 bg-background px-2 py-1 shadow-lg md:max-w-[360px]`}
-                  >
-                    {QUICK_REACTIONS.map((emoji) => (
-                      <button
-                        key={`${message.id}-${emoji}`}
-                        type="button"
-                        className="h-8 w-8 rounded-full text-base transition-transform hover:scale-110 active:scale-95"
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          handleQuickReactionSelect(message.id, emoji);
-                        }}
-                        aria-label={`React with ${emoji}`}
-                      >
-                        {emoji}
-                      </button>
-                    ))}
-                  </div>
-                )}
-
                 {/* Speech bubble tail only on last message in group */}
                 {idx === messages.length - 1 && (
                   isOwnMessage ? (
@@ -897,6 +873,30 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
                   </div>
                 )}
               </div>
+
+              {activeReactionMenuMessageId === message.id && (
+                <div className={`mt-1 flex ${isOwnMessage ? 'justify-end' : 'justify-start'}`}>
+                  <div
+                    data-reaction-menu
+                    className="flex max-w-[260px] flex-wrap items-center gap-1 rounded-2xl border border-border/60 bg-background px-2 py-1 shadow-lg md:max-w-[360px]"
+                  >
+                    {QUICK_REACTIONS.map((emoji) => (
+                      <button
+                        key={`${message.id}-${emoji}`}
+                        type="button"
+                        className="h-8 w-8 rounded-full text-base transition-transform hover:scale-110 active:scale-95"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          handleQuickReactionSelect(message.id, emoji);
+                        }}
+                        aria-label={`React with ${emoji}`}
+                      >
+                        {emoji}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Message reactions */}
               {messageReactions[message.id] && messageReactions[message.id].length > 0 && (
