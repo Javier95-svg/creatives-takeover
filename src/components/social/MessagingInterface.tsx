@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -11,7 +10,7 @@ import { useMessaging, Conversation } from "@/hooks/useMessaging";
 import { useAuth } from "@/contexts/AuthContext";
 import { formatDistanceToNow } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
-import { useDeviceType, useIsMobile } from "@/hooks/use-device-type";
+import { useDeviceType } from "@/hooks/use-device-type";
 import { useHapticFeedback } from "@/hooks/useHapticFeedback";
 import { logError } from "@/lib/logger";
 import { generateMentorSlug } from "@/utils/mentorSlug";
@@ -36,6 +35,14 @@ type MentorMeta = {
   name: string;
   picture: string | null;
 };
+type MessageReaction = {
+  emoji: string;
+  count: number;
+  userReacted: boolean;
+};
+
+const QUICK_REACTIONS = ['❤️', '👍', '😂', '😮', '😢', '🙏'] as const;
+const LONG_PRESS_MS = 320;
 
 const isSophiaMentorName = (name: string | null | undefined): boolean => {
   const normalized = (name || '').toLowerCase();
@@ -120,7 +127,9 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
   const [mobileSheetOpen, setMobileSheetOpen] = useState(false);
   const [otherUserTyping, setOtherUserTyping] = useState(false);
   const typingTimeoutRef = useRef<NodeJS.Timeout>();
-  const [messageReactions, setMessageReactions] = useState<Record<string, Array<{ emoji: string; count: number; userReacted: boolean }>>>({});
+  const [messageReactions, setMessageReactions] = useState<Record<string, MessageReaction[]>>({});
+  const [activeReactionMenuMessageId, setActiveReactionMenuMessageId] = useState<string | null>(null);
+  const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
   const { trigger: triggerHaptic } = useHapticFeedback();
 
   // Get all participant IDs for presence tracking
@@ -133,6 +142,8 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
     ? messages[activeConversationId][messages[activeConversationId].length - 1]
     : null;
   const activeMessages = activeConversationId ? messages[activeConversationId] || [] : [];
+  const currentUserId = user?.id ?? null;
+  const messageIdsKey = activeMessages.map((message) => message.id).join('|');
 
   // Auto-scroll to bottom when new messages arrive (only within ScrollArea, not the page)
   useEffect(() => {
@@ -285,13 +296,49 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
     };
   }, [activeConversationId, user?.id]);
 
+  const clearLongPressTimer = useCallback(() => {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+  }, []);
+
+  useEffect(() => {
+    setActiveReactionMenuMessageId(null);
+    clearLongPressTimer();
+  }, [activeConversationId, clearLongPressTimer]);
+
+  useEffect(() => {
+    const handleOutsideReactionMenuClick = (event: MouseEvent | TouchEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (!target) return;
+
+      if (target.closest('[data-reaction-menu]') || target.closest('[data-reaction-trigger]')) {
+        return;
+      }
+
+      setActiveReactionMenuMessageId(null);
+    };
+
+    document.addEventListener('mousedown', handleOutsideReactionMenuClick);
+    document.addEventListener('touchstart', handleOutsideReactionMenuClick);
+
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideReactionMenuClick);
+      document.removeEventListener('touchstart', handleOutsideReactionMenuClick);
+    };
+  }, []);
+
   // Load and subscribe to reactions for active conversation
   useEffect(() => {
-    if (!activeConversationId || !user) return;
+    if (!activeConversationId || !currentUserId) return;
 
     const loadReactions = async () => {
-      const messageIds = activeMessages.map(m => m.id);
-      if (messageIds.length === 0) return;
+      const messageIds = messageIdsKey ? messageIdsKey.split('|') : [];
+      if (messageIds.length === 0) {
+        setMessageReactions({});
+        return;
+      }
 
       try {
         const { data, error } = await supabase
@@ -302,23 +349,23 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
         if (error) throw error;
 
         // Group reactions by message
-        const reactionsByMessage: Record<string, Array<{ emoji: string; count: number; userReacted: boolean }>> = {};
+        const reactionsByMessage: Record<string, MessageReaction[]> = {};
 
-        messageIds.forEach(msgId => {
-          const msgReactions = data?.filter(r => r.message_id === msgId) || [];
+        messageIds.forEach((messageId) => {
+          const msgReactions = data?.filter((reaction) => reaction.message_id === messageId) || [];
           const groupedByEmoji: Record<string, { count: number; userReacted: boolean }> = {};
 
-          msgReactions.forEach(reaction => {
+          msgReactions.forEach((reaction) => {
             if (!groupedByEmoji[reaction.emoji]) {
               groupedByEmoji[reaction.emoji] = { count: 0, userReacted: false };
             }
             groupedByEmoji[reaction.emoji].count++;
-            if (reaction.user_id === user.id) {
+            if (reaction.user_id === currentUserId) {
               groupedByEmoji[reaction.emoji].userReacted = true;
             }
           });
 
-          reactionsByMessage[msgId] = Object.entries(groupedByEmoji).map(([emoji, data]) => ({
+          reactionsByMessage[messageId] = Object.entries(groupedByEmoji).map(([emoji, data]) => ({
             emoji,
             ...data
           }));
@@ -348,7 +395,7 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [activeConversationId, user, activeMessages.length]);
+  }, [activeConversationId, currentUserId, messageIdsKey]);
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -544,6 +591,89 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
     setMessageToDelete(null);
   };
 
+  const updateMessageReactionState = useCallback((messageId: string, emoji: string, shouldAdd: boolean) => {
+    setMessageReactions((prev) => {
+      const current = prev[messageId] || [];
+      const existing = current.find((reaction) => reaction.emoji === emoji);
+
+      let nextReactions: MessageReaction[];
+      if (shouldAdd) {
+        if (existing) {
+          nextReactions = current.map((reaction) =>
+            reaction.emoji === emoji
+              ? { ...reaction, count: reaction.count + (reaction.userReacted ? 0 : 1), userReacted: true }
+              : reaction
+          );
+        } else {
+          nextReactions = [...current, { emoji, count: 1, userReacted: true }];
+        }
+      } else {
+        if (!existing) {
+          nextReactions = current;
+        } else if (existing.count <= 1) {
+          nextReactions = current.filter((reaction) => reaction.emoji !== emoji);
+        } else {
+          nextReactions = current.map((reaction) =>
+            reaction.emoji === emoji
+              ? { ...reaction, count: Math.max(0, reaction.count - 1), userReacted: false }
+              : reaction
+          );
+        }
+      }
+
+      return {
+        ...prev,
+        [messageId]: nextReactions
+      };
+    });
+  }, []);
+
+  const handleReactionToggle = useCallback(async (messageId: string, emoji: string) => {
+    const existing = (messageReactions[messageId] || []).find((reaction) => reaction.emoji === emoji);
+    const userReacted = !!existing?.userReacted;
+    const shouldAdd = !userReacted;
+
+    updateMessageReactionState(messageId, emoji, shouldAdd);
+
+    if (shouldAdd) {
+      await addReaction(messageId, emoji);
+      return;
+    }
+
+    await removeReaction(messageId, emoji);
+  }, [addReaction, messageReactions, removeReaction, updateMessageReactionState]);
+
+  const handleOpenReactionMenu = useCallback((messageId: string) => {
+    setActiveReactionMenuMessageId((current) => (current === messageId ? null : messageId));
+  }, []);
+
+  const handleReactionMenuTap = useCallback((event: React.MouseEvent, messageId: string) => {
+    const target = event.target as HTMLElement;
+    if (target.closest('a') || target.closest('button')) {
+      return;
+    }
+
+    handleOpenReactionMenu(messageId);
+  }, [handleOpenReactionMenu]);
+
+  const handleMessageTouchStart = useCallback((event: React.TouchEvent, messageId: string) => {
+    const target = event.target as HTMLElement;
+    if (target.closest('a') || target.closest('button')) {
+      return;
+    }
+
+    clearLongPressTimer();
+    longPressTimerRef.current = setTimeout(() => {
+      triggerHaptic('medium');
+      setActiveReactionMenuMessageId(messageId);
+    }, LONG_PRESS_MS);
+  }, [clearLongPressTimer, triggerHaptic]);
+
+  const handleQuickReactionSelect = useCallback(async (messageId: string, emoji: string) => {
+    setActiveReactionMenuMessageId(null);
+    await handleReactionToggle(messageId, emoji);
+  }, [handleReactionToggle]);
+
   const renderMessageContent = (content: string) => {
     const elements: JSX.Element[] = [];
     const urlRegex = /https?:\/\/[^\s]+/gi;
@@ -663,12 +793,46 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
           {messages.map((message, idx) => (
             <div key={message.id} className="group">
               <div
+                data-reaction-trigger
+                onContextMenu={(event) => {
+                  event.preventDefault();
+                  setActiveReactionMenuMessageId(message.id);
+                }}
+                onClick={(event) => handleReactionMenuTap(event, message.id)}
+                onTouchStart={(event) => handleMessageTouchStart(event, message.id)}
+                onTouchMove={clearLongPressTimer}
+                onTouchEnd={clearLongPressTimer}
+                onTouchCancel={clearLongPressTimer}
                 className={`relative px-3 py-2 ${
                   isOwnMessage
                     ? 'bg-primary text-primary-foreground rounded-2xl rounded-br-sm'
                     : 'bg-muted rounded-2xl rounded-bl-sm'
                 }`}
               >
+                {activeReactionMenuMessageId === message.id && (
+                  <div
+                    data-reaction-menu
+                    className={`absolute z-20 ${
+                      isOwnMessage ? 'right-0' : 'left-0'
+                    } -top-11 flex items-center gap-1 rounded-full border border-border/60 bg-background px-2 py-1 shadow-lg`}
+                  >
+                    {QUICK_REACTIONS.map((emoji) => (
+                      <button
+                        key={`${message.id}-${emoji}`}
+                        type="button"
+                        className="h-8 w-8 rounded-full text-base transition-transform hover:scale-110 active:scale-95"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          handleQuickReactionSelect(message.id, emoji);
+                        }}
+                        aria-label={`React with ${emoji}`}
+                      >
+                        {emoji}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
                 {/* Speech bubble tail only on last message in group */}
                 {idx === messages.length - 1 && (
                   isOwnMessage ? (
@@ -737,10 +901,9 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
               {/* Message reactions */}
               {messageReactions[message.id] && messageReactions[message.id].length > 0 && (
                 <MessageReactions
-                  messageId={message.id}
                   reactions={messageReactions[message.id]}
-                  onAddReaction={(emoji) => addReaction(message.id, emoji)}
-                  onRemoveReaction={(emoji) => removeReaction(message.id, emoji)}
+                  onAddReaction={(emoji) => handleReactionToggle(message.id, emoji)}
+                  onRemoveReaction={(emoji) => handleReactionToggle(message.id, emoji)}
                   className="mt-1 ml-1"
                 />
               )}
