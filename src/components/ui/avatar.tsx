@@ -30,8 +30,8 @@ const AvatarImage = React.forwardRef<
 >(({ className, loading = "lazy", decoding = "async", fetchPriority, ...props }, ref) => (
   <AvatarPrimitive.Image
     ref={ref}
-    className={cn("aspect-square h-full w-full", className)}
-    // @ts-ignore - native img attributes
+    className={cn("aspect-square h-full w-full object-cover object-center", className)}
+    // @ts-expect-error - native img attributes
     loading={loading}
     decoding={decoding}
     fetchpriority={fetchPriority}

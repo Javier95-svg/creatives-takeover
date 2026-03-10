@@ -10,6 +10,7 @@ import {
   DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useCommunityNotifications, type CommunityNotification } from '@/hooks/useCommunityNotifications';
 import { useAuth } from '@/contexts/AuthContext';
 import { formatDistanceToNow } from 'date-fns';
@@ -208,11 +209,15 @@ export const NotificationBell = () => {
                   !notification.read ? 'bg-primary/5' : ''
                 }`}
               >
-                <img
-                  src={getNotificationImage(notification)}
-                  alt={notification.actor.name}
-                  className="w-8 h-8 rounded-full flex-shrink-0"
-                />
+                <Avatar className="h-8 w-8 flex-shrink-0">
+                  <AvatarImage
+                    src={getNotificationImage(notification)}
+                    alt={notification.actor.name}
+                  />
+                  <AvatarFallback>
+                    {(notification.actor.name || '?').charAt(0).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm">{getNotificationText(notification)}</p>
                   <p className="text-xs text-muted-foreground mt-1">
