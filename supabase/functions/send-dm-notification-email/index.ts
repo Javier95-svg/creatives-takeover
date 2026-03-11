@@ -434,10 +434,11 @@ serve(async (req: Request): Promise<Response> => {
     await updateDelivery(messageId, recipientId, {
       status: "sent",
       resend_email_id: resendEmailId,
-      delivered_at: new Date().toISOString(),
+      delivered_at: null,
       last_error: null,
       metadataPatch: {
         stage: "sent",
+        accepted_by_provider_at_iso: new Date().toISOString(),
         recipientEmail,
         senderName,
       },

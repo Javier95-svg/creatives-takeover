@@ -57,6 +57,9 @@ verify_jwt = false
 [functions.send-dm-notification-email]
 verify_jwt = false
 
+[functions.resend-email-events]
+verify_jwt = false
+
 [functions.signup-direct]
 verify_jwt = false
 
@@ -89,3 +92,6 @@ verify_jwt = true
 
 [functions.community-feedback-analyzer]
 verify_jwt = true
+
+[functions.github-integration]
+verify_jwt = false
