@@ -29,6 +29,19 @@ interface DeliveryUpdate {
   metadataPatch?: Record<string, unknown>;
 }
 
+interface ResendErrorDetails {
+  statusCode: number | null;
+  name: string | null;
+  message: string;
+}
+
+interface ResendSendAttemptResult {
+  resendEmailId: string | null;
+  finalError: string | null;
+  attempts: number;
+  retryErrors: string[];
+}
+
 function getEnv(name: string): string {
   return (Deno.env.get(name) ?? "").trim();
 }
@@ -77,6 +90,162 @@ function resolveDisplayName(profile?: { full_name?: string | null; username?: st
   const username = profile?.username?.trim();
   if (username) return username;
   return fallback;
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function parseBoundedInt(rawValue: string, fallback: number, min: number, max: number): number {
+  const parsed = Number.parseInt(rawValue, 10);
+  if (!Number.isFinite(parsed)) return fallback;
+  return Math.max(min, Math.min(max, parsed));
+}
+
+function normalizeResendError(rawError: unknown): ResendErrorDetails {
+  if (rawError && typeof rawError === "object") {
+    const value = rawError as { statusCode?: unknown; status?: unknown; name?: unknown; message?: unknown };
+    const statusCandidate = value.statusCode ?? value.status;
+    const statusCode = typeof statusCandidate === "number" ? statusCandidate : null;
+    const name = typeof value.name === "string" ? value.name : null;
+    const message =
+      typeof value.message === "string"
+        ? value.message
+        : (() => {
+          try {
+            return JSON.stringify(rawError);
+          } catch {
+            return String(rawError);
+          }
+        })();
+
+    return { statusCode, name, message };
+  }
+
+  if (rawError instanceof Error) {
+    return {
+      statusCode: null,
+      name: rawError.name || null,
+      message: rawError.message || "Unknown error",
+    };
+  }
+
+  return {
+    statusCode: null,
+    name: null,
+    message: typeof rawError === "string" ? rawError : "Unknown error",
+  };
+}
+
+function isRetryableResendError(error: ResendErrorDetails): boolean {
+  if (error.statusCode === 429) return true;
+  if (error.statusCode !== null && error.statusCode >= 500) return true;
+
+  const lowerName = (error.name || "").toLowerCase();
+  const lowerMessage = error.message.toLowerCase();
+
+  if (lowerName.includes("rate_limit")) return true;
+  if (lowerMessage.includes("too many requests")) return true;
+  if (lowerMessage.includes("rate limit")) return true;
+  if (lowerMessage.includes("timeout")) return true;
+  if (lowerMessage.includes("temporarily unavailable")) return true;
+  if (lowerMessage.includes("connection")) return true;
+
+  return false;
+}
+
+function computeRetryDelayMs(error: ResendErrorDetails, attempt: number): number {
+  const exponential = Math.min(8000, 350 * Math.pow(2, Math.max(0, attempt - 1)));
+  const rateLimitFloor = error.statusCode === 429 ? 1200 : 0;
+  const baseDelay = Math.max(exponential, rateLimitFloor);
+  const jitter = Math.floor(Math.random() * 180);
+  return baseDelay + jitter;
+}
+
+async function sendEmailWithRetry(
+  resendClient: Resend,
+  sendPayload: Record<string, unknown>,
+  maxAttempts: number,
+): Promise<ResendSendAttemptResult> {
+  const retryErrors: string[] = [];
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    try {
+      const emailResponse = await resendClient.emails.send(sendPayload as never);
+      const resendEmailId = emailResponse?.data?.id ?? null;
+      const resendError = emailResponse?.error;
+
+      if (resendEmailId) {
+        return {
+          resendEmailId,
+          finalError: null,
+          attempts: attempt,
+          retryErrors,
+        };
+      }
+
+      const normalized = normalizeResendError(resendError ?? "Resend did not return an email ID");
+      const reason = JSON.stringify({
+        statusCode: normalized.statusCode,
+        name: normalized.name,
+        message: normalized.message,
+      });
+
+      retryErrors.push(reason);
+
+      if (attempt >= maxAttempts || !isRetryableResendError(normalized)) {
+        return {
+          resendEmailId: null,
+          finalError: reason,
+          attempts: attempt,
+          retryErrors,
+        };
+      }
+
+      const delayMs = computeRetryDelayMs(normalized, attempt);
+      console.warn("[DM-EMAIL] Resend attempt failed, retrying", {
+        attempt,
+        maxAttempts,
+        delayMs,
+        reason,
+      });
+      await sleep(delayMs);
+    } catch (error: unknown) {
+      const normalized = normalizeResendError(error);
+      const reason = JSON.stringify({
+        statusCode: normalized.statusCode,
+        name: normalized.name,
+        message: normalized.message,
+      });
+
+      retryErrors.push(reason);
+
+      if (attempt >= maxAttempts || !isRetryableResendError(normalized)) {
+        return {
+          resendEmailId: null,
+          finalError: reason,
+          attempts: attempt,
+          retryErrors,
+        };
+      }
+
+      const delayMs = computeRetryDelayMs(normalized, attempt);
+      console.warn("[DM-EMAIL] Resend attempt threw error, retrying", {
+        attempt,
+        maxAttempts,
+        delayMs,
+        reason,
+      });
+      await sleep(delayMs);
+    }
+  }
+
+  return {
+    resendEmailId: null,
+    finalError: "Retry loop exhausted",
+    attempts: maxAttempts,
+    retryErrors,
+  };
 }
 
 async function updateDelivery(messageId: string, recipientId: string, update: DeliveryUpdate): Promise<void> {
@@ -414,16 +583,21 @@ serve(async (req: Request): Promise<Response> => {
       console.warn("[DM-EMAIL] Skipping invalid REPLY_TO_EMAIL value", { replyTo });
     }
 
-    const emailResponse = await resend.emails.send(sendPayload as never);
-    const resendEmailId = emailResponse?.data?.id ?? null;
-    const resendError = emailResponse?.error;
+    const maxSendAttempts = parseBoundedInt(getEnv("DM_EMAIL_MAX_SEND_ATTEMPTS"), 5, 1, 8);
+    const sendResult = await sendEmailWithRetry(resend, sendPayload, maxSendAttempts);
+    const resendEmailId = sendResult.resendEmailId;
 
-    if (resendError || !resendEmailId) {
-      const reason = resendError ? JSON.stringify(resendError) : "Resend did not return an email ID";
+    if (!resendEmailId) {
+      const reason = sendResult.finalError ?? "Resend did not return an email ID";
       await updateDelivery(messageId, recipientId, {
         status: "failed",
         last_error: reason,
-        metadataPatch: { stage: "resend_failed" },
+        metadataPatch: {
+          stage: "resend_failed",
+          resend_attempts: sendResult.attempts,
+          resend_retry_errors: sendResult.retryErrors,
+          resend_max_attempts: maxSendAttempts,
+        },
       });
       return new Response(JSON.stringify({ ok: false, error: reason }), {
         status: 502,
@@ -439,6 +613,9 @@ serve(async (req: Request): Promise<Response> => {
       metadataPatch: {
         stage: "sent",
         accepted_by_provider_at_iso: new Date().toISOString(),
+        resend_attempts: sendResult.attempts,
+        resend_retry_errors: sendResult.retryErrors,
+        resend_max_attempts: maxSendAttempts,
         recipientEmail,
         senderName,
       },
