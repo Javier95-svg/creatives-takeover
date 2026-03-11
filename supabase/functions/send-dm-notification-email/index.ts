@@ -357,16 +357,16 @@ serve(async (req: Request): Promise<Response> => {
       });
     }
 
-    const fromEmail = getEnv("FROM_EMAIL");
-    if (!fromEmail || !fromEmail.includes("@")) {
-      await updateDelivery(messageId, recipientId, {
-        status: "failed",
-        last_error: "FROM_EMAIL is not configured",
-        metadataPatch: { stage: "from_email_missing" },
-      });
-      return new Response(JSON.stringify({ ok: false, error: "FROM_EMAIL is not configured" }), {
-        status: 500,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
+    const configuredFromEmail = getEnv("FROM_EMAIL");
+    const fromEmail =
+      configuredFromEmail && configuredFromEmail.includes("@")
+        ? configuredFromEmail
+        : "onboarding@resend.dev";
+
+    if (!configuredFromEmail || !configuredFromEmail.includes("@")) {
+      console.warn("[DM-EMAIL] Invalid or missing FROM_EMAIL, using fallback", {
+        configuredFromEmail,
+        fallbackFromEmail: fromEmail,
       });
     }
 
