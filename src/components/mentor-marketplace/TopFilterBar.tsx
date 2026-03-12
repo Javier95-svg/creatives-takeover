@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -19,6 +18,7 @@ import {
 import { X, ChevronDown } from "lucide-react";
 import { MentorFilters } from "./FilterSidebar";
 import { cn } from "@/lib/utils";
+import { TIMEZONE_OPTIONS } from "@/utils/mentorTimezone";
 
 interface TopFilterBarProps {
   filters: MentorFilters;
@@ -59,15 +59,25 @@ export const TopFilterBar = ({
     onFiltersChange({
       expertise: [],
       coachingFormat: [],
+      timezone: null,
+    });
+  };
+
+  const handleTimezoneChange = (value: string) => {
+    onFiltersChange({
+      ...filters,
+      timezone: value === "any" ? null : value,
     });
   };
 
   const hasActiveFilters =
     filters.expertise.length > 0 ||
-    filters.coachingFormat.length > 0;
+    filters.coachingFormat.length > 0 ||
+    !!filters.timezone;
 
   const expertiseCount = filters.expertise.length;
   const coachingFormatCount = filters.coachingFormat.length;
+  const hasTimezoneFilter = !!filters.timezone;
 
   return (
     <div className="responsive-filter-row flex flex-wrap items-center gap-3 mb-6">
@@ -196,6 +206,26 @@ export const TopFilterBar = ({
           </div>
         </PopoverContent>
       </Popover>
+
+      {/* Time Zone Filter */}
+      <Select value={filters.timezone ?? "any"} onValueChange={handleTimezoneChange}>
+        <SelectTrigger
+          className={cn(
+            "h-9 w-[140px]",
+            hasTimezoneFilter && "border-primary bg-primary/5"
+          )}
+        >
+          <SelectValue placeholder="Time zone" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="any">Time zone (Any)</SelectItem>
+          {TIMEZONE_OPTIONS.map((timezone) => (
+            <SelectItem key={timezone.value} value={timezone.value}>
+              {timezone.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
 
       {/* Clear All */}
       {hasActiveFilters && (

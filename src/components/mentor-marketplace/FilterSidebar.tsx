@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 export interface MentorFilters {
   expertise: string[];
   coachingFormat: string[]; // "8 Week Coaching Program" or "Hourly Rate Basis"
+  timezone: string | null; // Selected GMT offset value (e.g., "-5", "0", "1")
 }
 
 interface FilterSidebarProps {
@@ -75,12 +76,14 @@ export const FilterSidebar = ({
     onFiltersChange({
       expertise: [],
       coachingFormat: [],
+      timezone: null,
     });
   };
 
   const hasActiveFilters =
     filters.expertise.length > 0 ||
-    filters.coachingFormat.length > 0;
+    filters.coachingFormat.length > 0 ||
+    !!filters.timezone;
 
   return (
     <Card className={cn("sticky top-4", className)}>

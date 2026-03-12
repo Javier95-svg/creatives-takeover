@@ -15,6 +15,7 @@ import { useMentors } from "@/hooks/useMentors";
 import { Search, ArrowLeft, Loader2, Users } from "lucide-react";
 import { sortMentorsAlphabetically } from "@/utils/mentorSort";
 import { normalizeMentorExpertiseList } from "@/utils/mentorExpertise";
+import { isMentorWithinTimezoneRange, parseTimezoneOffset } from "@/utils/mentorTimezone";
 
 const MentorDiscover = () => {
   const [searchParams] = useSearchParams();
@@ -28,6 +29,7 @@ const MentorDiscover = () => {
   const [filters, setFilters] = useState<MentorFilters>({
     expertise: [],
     coachingFormat: [],
+    timezone: null,
   });
 
   useEffect(() => {
@@ -77,6 +79,8 @@ const MentorDiscover = () => {
   };
 
   const filteredMentors = useMemo(() => {
+    const selectedTimezoneOffset = parseTimezoneOffset(filters.timezone);
+
     let result = mentors.filter((mentor) => {
       // Search filter
       if (searchQuery) {
@@ -104,6 +108,17 @@ const MentorDiscover = () => {
         const mentorFormat = isMarcBright ? 'Hourly Rate Basis' : '8 Week Coaching Program';
         const hasFormat = filters.coachingFormat.includes(mentorFormat);
         if (!hasFormat) return false;
+      }
+
+      // Time zone filter (exact or +/- 1 hour)
+      if (filters.timezone) {
+        if (selectedTimezoneOffset === null) return false;
+        const isWithinRange = isMentorWithinTimezoneRange(
+          mentor,
+          selectedTimezoneOffset,
+          1
+        );
+        if (!isWithinRange) return false;
       }
 
       return true;
