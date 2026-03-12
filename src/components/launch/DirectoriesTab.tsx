@@ -59,14 +59,6 @@ export default function DirectoriesTab() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h2 className="text-xl font-bold">Launch Directories</h2>
-        <p className="text-sm text-muted-foreground mt-1">
-          {LAUNCH_DIRECTORIES.length} platforms where you can submit and promote your startup. Filter by type or cost, then click to visit.
-        </p>
-      </div>
-
       {/* Filters */}
       <div className="space-y-3">
         {/* Search */}
