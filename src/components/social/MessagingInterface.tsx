@@ -30,6 +30,7 @@ type ParticipantProfile = {
 };
 
 const SOPHIA_LOPEZ_PIMENTA_USER_ID = '50695a54-30c6-4b57-969e-b2de733bcd73';
+const ARTUR_SINDARSKY_USER_ID = '1f0fe62a-7744-4153-bfcf-4f20b6e820d3';
 type MentorMeta = {
   user_id: string | null;
   name: string;
@@ -47,6 +48,11 @@ const LONG_PRESS_MS = 320;
 const isSophiaMentorName = (name: string | null | undefined): boolean => {
   const normalized = (name || '').toLowerCase();
   return normalized.includes('sophia') && (normalized.includes('pimenta') || normalized.includes('lopez'));
+};
+
+const isArturMentorName = (name: string | null | undefined): boolean => {
+  const normalized = (name || '').toLowerCase();
+  return normalized.includes('artur') && normalized.includes('sindarsky');
 };
 
 const normalizeIdentity = (value: string | null | undefined): string =>
@@ -488,6 +494,14 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
           ) {
             mentorMeta =
               mergedMentorData.find((mentor) => isSophiaMentorName(mentor.name)) || null;
+          }
+
+          if (
+            !mentorMeta &&
+            participantId === ARTUR_SINDARSKY_USER_ID
+          ) {
+            mentorMeta =
+              mergedMentorData.find((mentor) => isArturMentorName(mentor.name)) || null;
           }
 
           if (!profile && !mentorMeta) return;
