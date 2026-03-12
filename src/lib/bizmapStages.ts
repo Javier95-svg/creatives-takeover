@@ -74,7 +74,6 @@ export const BIZMAP_TOOLS: BizMapToolDefinition[] = [
     stage: 'BUILDING',
     description: 'Scope your MVP delivery plan and saved build spec.',
     icon: Rocket,
-    beta: true,
   },
   {
     id: 'tech-stack',
@@ -123,7 +122,7 @@ export const BIZMAP_STAGES: BizMapStageDefinition[] = [
     id: 'VALIDATING',
     order: 3,
     numeral: 'III',
-    title: 'VALIDATING',
+    title: 'VALIDATION',
     description: 'Run validation loops and gather enough evidence to proceed.',
     tools: BIZMAP_TOOLS.filter((tool) => tool.stage === 'VALIDATING'),
   },
