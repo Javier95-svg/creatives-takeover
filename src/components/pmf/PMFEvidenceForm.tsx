@@ -53,6 +53,16 @@ const NumberInput = ({ label, value, onChange, min = 0 }: {
   </div>
 );
 
+// ─── Animated section card ─────────────────────────────────────────────────────
+const SectionCard = ({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) => (
+  <div
+    className="bg-card border rounded-lg p-6 space-y-4 animate-fade-in"
+    style={{ animationDelay: `${delay}ms`, animationFillMode: 'both' }}
+  >
+    {children}
+  </div>
+);
+
 // ─── Props ────────────────────────────────────────────────────────────────────
 interface PMFEvidenceFormProps {
   onSubmit: (answers: PMFEvidenceAnswers) => void;
@@ -121,20 +131,9 @@ const PMFEvidenceForm: React.FC<PMFEvidenceFormProps> = ({ onSubmit, isSubmittin
 
   return (
     <form onSubmit={handleSubmit} className="max-w-3xl mx-auto space-y-6">
-      {/* Header */}
-      <div className="text-center space-y-2 pb-2">
-        <div className="flex items-center justify-center gap-2">
-          <FlaskConical className="w-6 h-6 text-primary" />
-          <h1 className="text-2xl font-bold">PMF Evidence Analyzer</h1>
-          <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">~5 min</span>
-        </div>
-        <p className="text-sm text-muted-foreground max-w-lg mx-auto">
-          Paste in what you actually heard — the AI will tell you if it's strong enough to build.
-        </p>
-      </div>
 
       {/* Section 1 — What did you test? */}
-      <div className="bg-card border rounded-lg p-6 space-y-4">
+      <SectionCard delay={0}>
         <SectionHeader
           num="01"
           title="What did you test?"
@@ -160,10 +159,10 @@ const PMFEvidenceForm: React.FC<PMFEvidenceFormProps> = ({ onSubmit, isSubmittin
         {testTypes.length === 0 && (
           <p className="text-xs text-muted-foreground">Select at least one method to continue.</p>
         )}
-      </div>
+      </SectionCard>
 
       {/* Section 2 — Scale */}
-      <div className="bg-card border rounded-lg p-6 space-y-4">
+      <SectionCard delay={80}>
         <SectionHeader
           num="02"
           title="Scale"
@@ -203,10 +202,10 @@ const PMFEvidenceForm: React.FC<PMFEvidenceFormProps> = ({ onSubmit, isSubmittin
             />
           )}
         </div>
-      </div>
+      </SectionCard>
 
       {/* Section 3 — What you heard */}
-      <div className="bg-card border rounded-lg p-6 space-y-4">
+      <SectionCard delay={160}>
         <SectionHeader
           num="03"
           title="What you heard"
@@ -245,10 +244,10 @@ const PMFEvidenceForm: React.FC<PMFEvidenceFormProps> = ({ onSubmit, isSubmittin
             className="text-sm min-h-[70px] resize-none"
           />
         </div>
-      </div>
+      </SectionCard>
 
       {/* Section 4 — Demand signals */}
-      <div className="bg-card border rounded-lg p-6 space-y-4">
+      <SectionCard delay={240}>
         <SectionHeader
           num="04"
           title="Demand signals"
@@ -263,10 +262,10 @@ const PMFEvidenceForm: React.FC<PMFEvidenceFormProps> = ({ onSubmit, isSubmittin
         <p className="text-xs text-muted-foreground">
           Total demand behaviors: <span className="font-medium text-foreground">{askedAboutPricing + joinedWaitlist + sharedWithSomeone + offeredToPay}</span>
         </p>
-      </div>
+      </SectionCard>
 
       {/* Section 5 — Founder reflection */}
-      <div className="bg-card border rounded-lg p-6 space-y-4">
+      <SectionCard delay={320}>
         <SectionHeader
           num="05"
           title="Founder reflection"
@@ -307,10 +306,13 @@ const PMFEvidenceForm: React.FC<PMFEvidenceFormProps> = ({ onSubmit, isSubmittin
             <span>Very confident</span>
           </div>
         </div>
-      </div>
+      </SectionCard>
 
       {/* Submit */}
-      <div className="flex flex-col items-end gap-2 pb-8">
+      <div
+        className="flex flex-col items-end gap-2 pb-8 animate-fade-in"
+        style={{ animationDelay: '400ms', animationFillMode: 'both' }}
+      >
         {!isValid && (
           <p className="text-xs text-muted-foreground">
             Select at least one test type and enter your conversation count to continue.

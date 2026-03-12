@@ -52,33 +52,58 @@ export default function PMFLabPage() {
       />
       <Navigation />
 
-      <main className="py-20 px-4">
-        <div className="container mx-auto max-w-5xl">
-
-          {/* Phase A — Evidence Form */}
-          {phase === 'intake' && (
-            <PMFEvidenceForm
-              onSubmit={runAnalysis}
-              isSubmitting={false}
+      <main>
+        <section className="py-20 px-4 relative overflow-hidden">
+          {/* Background — same as original PMF Lab */}
+          <div className="absolute inset-0 pointer-events-none overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-b from-background via-background/95 to-background" />
+            <div
+              className="absolute -top-40 -right-48 w-[55rem] h-[55rem] rounded-full opacity-70 blur-3xl"
+              style={{
+                background:
+                  'radial-gradient(circle at 30% 30%, rgba(139, 92, 246, 0.3), transparent 60%), radial-gradient(circle at 70% 70%, rgba(236, 72, 153, 0.35), transparent 55%)',
+                animation: 'spin 28s linear infinite',
+              }}
             />
-          )}
+          </div>
 
-          {/* Phase B — Scoring Loader */}
-          {phase === 'analyzing' && <PMFScoringLoader />}
+          <div className="container mx-auto max-w-5xl relative z-10">
+            {/* Page header — shown on intake phase only */}
+            {phase === 'intake' && (
+              <div className="text-center mb-12 sm:mb-16 animate-fade-in">
+                <h1
+                  className="text-4xl sm:text-5xl md:text-6xl font-bold mb-3 leading-tight pb-2 creatives-font"
+                  style={{ color: '#38bdf8' }}
+                >
+                  Product Market Fit Lab
+                </h1>
+              </div>
+            )}
 
-          {/* Phase C — PMF Readiness Report */}
-          {phase === 'results' && analysis && (
-            <PMFReadinessReport
-              analysis={analysis}
-              isSaving={isSaving}
-              isExporting={isExporting}
-              onSave={saveReport}
-              onExport={exportReport}
-              onReanalyze={resetToIntake}
-            />
-          )}
+            {/* Phase A — Evidence Form */}
+            {phase === 'intake' && (
+              <PMFEvidenceForm
+                onSubmit={runAnalysis}
+                isSubmitting={false}
+              />
+            )}
 
-        </div>
+            {/* Phase B — Scoring Loader */}
+            {phase === 'analyzing' && <PMFScoringLoader />}
+
+            {/* Phase C — PMF Readiness Report */}
+            {phase === 'results' && analysis && (
+              <PMFReadinessReport
+                analysis={analysis}
+                isSaving={isSaving}
+                isExporting={isExporting}
+                onSave={saveReport}
+                onExport={exportReport}
+                onReanalyze={resetToIntake}
+              />
+            )}
+          </div>
+        </section>
       </main>
 
       <Footer />
