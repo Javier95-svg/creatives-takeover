@@ -74,7 +74,7 @@ export default function PMFLabPage() {
                 <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-3 sm:mb-4 takeover-gradient creatives-font leading-tight pb-2">
                   PMF Lab
                 </h1>
-                <p className="text-lg sm:text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed px-4" style={{ animationDelay: '0.2s' }}>
+                <p className="text-lg sm:text-xl md:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed px-4" style={{ animationDelay: '0.2s' }}>
                   Submit the real feedback you collected from potential customers and find out if your evidence is strong enough to start building your MVP.
                 </p>
               </div>
