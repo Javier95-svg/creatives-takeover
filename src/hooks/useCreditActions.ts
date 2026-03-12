@@ -36,6 +36,7 @@ const CREDIT_FEATURE_LABELS: Record<CreditFeature, string> = {
   APP_BUILDER_GENERATE: 'AI App Builder — Generate',
   APP_BUILDER_REFINE: 'AI App Builder — Refine',
   GTM_ANALYSIS: 'GTM Strategy Analysis',
+  PMF_SCORING: 'PMF Evidence Analysis',
 };
 
 type CreditActionOptions = {

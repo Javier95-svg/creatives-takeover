@@ -56,6 +56,9 @@ export const CREDIT_COSTS = {
 
   // GTM Strategist
   GTM_ANALYSIS: 10,
+
+  // PMF Lab — Evidence Scorer
+  PMF_SCORING: 8,
 } as const;
 
 // Type for credit cost feature names
