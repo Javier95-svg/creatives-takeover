@@ -88,7 +88,6 @@ const TechStackPage = lazy(() => import("./pages/TechStackPage"));
 const MVPBuilderBetaPage = lazy(() => import("./pages/MVPBuilderBetaPage"));
 const GTMStrategistPage = lazy(() => import("./pages/GTMStrategistPage"));
 const DirectoriesPage = lazy(() => import("./pages/DirectoriesPage"));
-const StageRouteGuard = lazy(() => import("./components/bizmap/StageRouteGuard"));
 const FocusFunnel = lazy(() => import("./pages/FocusFunnel"));
 const CoreMetricsPage = lazy(() => import("./pages/CoreMetricsPage"));
 const WeeklyMissionPage = lazy(() => import("./pages/WeeklyMissionPage"));
@@ -182,20 +181,20 @@ function App() {
                         <Route path="/terms" element={<Terms />} />
                         <Route path="/bizmap-ai" element={<BizMapJourneyHubPage />} />
                         <Route path="/bizmap-ai/chat" element={<Dream2Plan />} />
-                        <Route path="/pmf-lab" element={<StageRouteGuard route="/pmf-lab"><PMFLabPage /></StageRouteGuard>} />
+                        <Route path="/pmf-lab" element={<PMFLabPage />} />
                         <Route path="/bizmap-ai/pmf-lab" element={<Navigate to="/pmf-lab" replace />} />
-                        <Route path="/tech-stack" element={<StageRouteGuard route="/tech-stack"><TechStackPage /></StageRouteGuard>} />
+                        <Route path="/tech-stack" element={<TechStackPage />} />
                         <Route path="/bizmap-ai/tech-stack" element={<Navigate to="/tech-stack" replace />} />
-                        <Route path="/icp-builder" element={<StageRouteGuard route="/icp-builder"><ICPBuilderPage /></StageRouteGuard>} />
+                        <Route path="/icp-builder" element={<ICPBuilderPage />} />
                         <Route path="/bizmap-ai/icp-builder" element={<Navigate to="/icp-builder" replace />} />
-                        <Route path="/waitlist" element={<StageRouteGuard route="/waitlist"><WaitlistMakerPage /></StageRouteGuard>} />
+                        <Route path="/waitlist" element={<WaitlistMakerPage />} />
                         <Route path="/waitlist-builder" element={<Navigate to="/waitlist" replace />} />
                         <Route path="/decision-sprint" element={<ValidateJourneyPage />} />
                         <Route path="/validate" element={<ValidateJourney />} />
                         <Route path="/mvp-builder" element={<AppBuilderPage />} />
-                        <Route path="/mvp-scope" element={<StageRouteGuard route="/mvp-scope"><MVPBuilderBetaPage /></StageRouteGuard>} />
-                        <Route path="/go-to-market" element={<StageRouteGuard route="/go-to-market"><GTMStrategistPage /></StageRouteGuard>} />
-                        <Route path="/directories" element={<StageRouteGuard route="/go-to-market"><DirectoriesPage /></StageRouteGuard>} />
+                        <Route path="/mvp-scope" element={<MVPBuilderBetaPage />} />
+                        <Route path="/go-to-market" element={<GTMStrategistPage />} />
+                        <Route path="/directories" element={<DirectoriesPage />} />
                         <Route path="/client-acquisition" element={<Navigate to="/go-to-market" replace />} />
 
                         <Route path="/auth" element={<AuthEntryRedirect />} />
