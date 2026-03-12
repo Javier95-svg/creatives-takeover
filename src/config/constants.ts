@@ -54,6 +54,9 @@ export const CREDIT_COSTS = {
   // AI App Builder (Lovable-style conversational app generator)
   APP_BUILDER_GENERATE: 8,  // Initial app generation from prompt
   APP_BUILDER_REFINE: 3,    // Each iterative refinement
+
+  // GTM Strategist
+  GTM_ANALYSIS: 10,
 } as const;
 
 // Type for credit cost feature names

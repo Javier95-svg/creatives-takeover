@@ -1,230 +1,163 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import SEO, { createBreadcrumbSchema } from '@/components/SEO';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
-import { useBizMapProgress } from '@/hooks/useBizMapProgress';
+import { Separator } from '@/components/ui/separator';
+import { useGTMStrategist } from '@/hooks/useGTMStrategist';
+import { useLeanStartupStore } from '@/store/leanStartupStore';
+import GTMIntakeForm from '@/components/gtm/GTMIntakeForm';
+import GTMAnalysisLoader from '@/components/gtm/GTMAnalysisLoader';
+import GTMBriefHeader from '@/components/gtm/GTMBriefHeader';
+import GTMBriefSidebar from '@/components/gtm/GTMBriefSidebar';
+import GTMChannelCard from '@/components/gtm/GTMChannelCard';
+import GTMPositioningBlock from '@/components/gtm/GTMPositioningBlock';
+import GTMMessagingBlock from '@/components/gtm/GTMMessagingBlock';
+import GTMActionPlan from '@/components/gtm/GTMActionPlan';
+import GTMLaunchChecklist from '@/components/gtm/GTMLaunchChecklist';
+import GTMMetricsBlock from '@/components/gtm/GTMMetricsBlock';
 
-const GTM_TABLE = 'gtm_plans' as any;
-
-interface GTMPlan {
-  id: string;
-  plan_title: string;
-  plan_content: {
-    channels?: string[];
-    launchChecklist?: string[];
-    metrics?: string[];
-  };
-}
-
-function splitLines(value: string): string[] {
-  return value
-    .split('\n')
-    .map((item) => item.trim())
-    .filter(Boolean);
-}
+const structuredData = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'WebPage',
+    name: 'GTM Strategist',
+    description: 'AI-powered go-to-market strategy tool for early-stage founders. Get opinionated channel recommendations, positioning, messaging, and a 30-day action plan.',
+    url: 'https://creatives-takeover.com/go-to-market',
+  },
+  createBreadcrumbSchema([
+    { name: 'Home', url: '/' },
+    { name: 'BizMap AI', url: '/bizmap-ai' },
+    { name: 'GTM Strategist', url: '/go-to-market' },
+  ]),
+];
 
 export default function GTMStrategistPage() {
-  const { user } = useAuth();
-  const { refreshProgress } = useBizMapProgress();
-
-  const [planId, setPlanId] = useState<string | null>(null);
-  const [isSaving, setIsSaving] = useState(false);
-  const [form, setForm] = useState({
-    title: '',
-    channels: '',
-    launchChecklist: '',
-    metrics: '',
-  });
+  const { markToolUsed } = useLeanStartupStore();
 
   useEffect(() => {
-    const loadPlan = async () => {
-      if (!user) return;
+    markToolUsed('gtm-strategist');
+  }, [markToolUsed]);
 
-      const { data } = await supabase
-        .from(GTM_TABLE)
-        .select('id, plan_title, plan_content')
-        .eq('user_id', user.id)
-        .order('updated_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      if (!data) return;
-
-      const plan = data as GTMPlan;
-      setPlanId(plan.id);
-      setForm({
-        title: plan.plan_title,
-        channels: (plan.plan_content?.channels || []).join('\n'),
-        launchChecklist: (plan.plan_content?.launchChecklist || []).join('\n'),
-        metrics: (plan.plan_content?.metrics || []).join('\n'),
-      });
-    };
-
-    loadPlan();
-  }, [user]);
-
-  const savePlan = async (status: 'draft' | 'saved' | 'exported') => {
-    if (!user) {
-      toast.error('Sign in to save your GTM plan.');
-      return;
-    }
-
-    if (!form.title.trim()) {
-      toast.error('Add a plan title first.');
-      return;
-    }
-
-    setIsSaving(true);
-
-    const payload = {
-      user_id: user.id,
-      plan_title: form.title.trim(),
-      plan_content: {
-        channels: splitLines(form.channels),
-        launchChecklist: splitLines(form.launchChecklist),
-        metrics: splitLines(form.metrics),
-      },
-      status,
-      saved_at: status === 'saved' || status === 'exported' ? new Date().toISOString() : null,
-      exported_at: status === 'exported' ? new Date().toISOString() : null,
-    };
-
-    const query = planId
-      ? supabase.from(GTM_TABLE).update(payload).eq('id', planId).select('id').single()
-      : supabase.from(GTM_TABLE).insert(payload).select('id').single();
-
-    const { data, error } = await query;
-
-    if (error) {
-      console.error('Failed to save GTM plan:', error);
-      toast.error('Unable to save GTM plan right now.');
-      setIsSaving(false);
-      return;
-    }
-
-    if (!planId) {
-      setPlanId((data as { id: string })?.id ?? null);
-    }
-
-    if (status === 'draft') {
-      toast.success('GTM draft saved.');
-    } else if (status === 'saved') {
-      toast.success('GTM plan saved.');
-      await refreshProgress();
-    } else {
-      toast.success('GTM plan exported. Stage V marked complete.');
-      await refreshProgress();
-    }
-
-    setIsSaving(false);
-  };
-
-  const structuredData = [
-    {
-      '@context': 'https://schema.org',
-      '@type': 'WebPage',
-      name: 'GTM Strategist',
-      description: 'Build and save your go-to-market plan to complete Stage V.',
-      url: 'https://creatives-takeover.com/go-to-market',
-    },
-    createBreadcrumbSchema([
-      { name: 'Home', url: '/' },
-      { name: 'BizMap AI', url: '/bizmap-ai' },
-      { name: 'GTM Strategist', url: '/go-to-market' },
-    ]),
-  ];
+  const {
+    phase,
+    analysis,
+    isSaving,
+    isExporting,
+    prefillData,
+    runAnalysis,
+    savePlan,
+    exportPlan,
+    resetToIntake,
+  } = useGTMStrategist();
 
   return (
     <div className="min-h-screen bg-background">
       <SEO
-        title="GTM Strategist - Creatives Takeover"
-        description="Define channels, launch checklist, and KPIs in one save/exportable GTM plan."
-        keywords="go to market, gtm strategy, launch checklist"
+        title="GTM Strategist — Creatives Takeover"
+        description="Get an opinionated go-to-market strategy with channel recommendations, positioning, messaging, and a 30-day action plan tailored to your business."
+        keywords="go to market strategy, gtm channels, startup marketing, first customers, founder marketing"
         url="/go-to-market"
         structuredData={structuredData}
       />
       <Navigation />
 
       <main className="py-20 px-4">
-        <div className="container mx-auto max-w-5xl space-y-6">
-          <div className="space-y-3 text-center">
-            <Badge className="bg-primary/10 text-primary border-primary/20">Stage V: LAUNCH</Badge>
-            <h1 className="text-3xl md:text-5xl font-bold creatives-font takeover-gradient">GTM Strategist</h1>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
-              Define channels, launch checklist, and KPIs in one save/exportable GTM plan.
-            </p>
-          </div>
+        <div className="container mx-auto max-w-5xl">
 
-          <Card className="border-primary/20">
-            <CardHeader>
-              <CardTitle>Go-to-Market Plan</CardTitle>
-              <CardDescription>
-                Define channels, launch checklist, and metrics. Saving or exporting marks Stage V complete.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="gtm-title">Plan title</Label>
-                <Input
-                  id="gtm-title"
-                  value={form.title}
-                  onChange={(event) => setForm((prev) => ({ ...prev, title: event.target.value }))}
-                  placeholder="Example: Q2 launch plan for B2B waitlist conversion"
-                />
-              </div>
+          {/* Phase A — Intake Wizard */}
+          {phase === 'intake' && (
+            <GTMIntakeForm
+              prefillData={prefillData}
+              onSubmit={runAnalysis}
+              isSubmitting={false}
+            />
+          )}
 
-              <div className="grid gap-4 md:grid-cols-3">
-                <div className="space-y-2">
-                  <Label htmlFor="gtm-channels">Channels (one per line)</Label>
-                  <Textarea
-                    id="gtm-channels"
-                    value={form.channels}
-                    onChange={(event) => setForm((prev) => ({ ...prev, channels: event.target.value }))}
-                    placeholder="LinkedIn outreach&#10;Founder communities&#10;Email waitlist"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="gtm-checklist">Launch checklist (one per line)</Label>
-                  <Textarea
-                    id="gtm-checklist"
-                    value={form.launchChecklist}
-                    onChange={(event) => setForm((prev) => ({ ...prev, launchChecklist: event.target.value }))}
-                    placeholder="Finalize landing page&#10;Set onboarding emails&#10;Run beta cohort"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="gtm-metrics">Metrics (one per line)</Label>
-                  <Textarea
-                    id="gtm-metrics"
-                    value={form.metrics}
-                    onChange={(event) => setForm((prev) => ({ ...prev, metrics: event.target.value }))}
-                    placeholder="Waitlist conversion rate&#10;CAC&#10;Week-1 activation"
-                  />
-                </div>
-              </div>
+          {/* Phase B — Analysis Loading */}
+          {phase === 'analyzing' && <GTMAnalysisLoader />}
 
-              <div className="flex flex-wrap gap-2">
-                <Button variant="outline" onClick={() => savePlan('draft')} disabled={isSaving}>
-                  Save Draft
-                </Button>
-                <Button onClick={() => savePlan('saved')} disabled={isSaving}>
-                  Save GTM Plan
-                </Button>
-                <Button variant="secondary" onClick={() => savePlan('exported')} disabled={isSaving}>
-                  Save & Export
-                </Button>
+          {/* Phase C — GTM Brief Results */}
+          {phase === 'results' && analysis && (
+            <div className="space-y-8">
+              <GTMBriefHeader
+                planTitle={analysis.planTitle}
+                summaryInsight={analysis.summaryInsight}
+                isSaving={isSaving}
+                isExporting={isExporting}
+                onSave={() => savePlan('saved')}
+                onExport={exportPlan}
+                onRegenerate={resetToIntake}
+              />
+
+              <div className="flex gap-8 items-start">
+                {/* Sticky sidebar (desktop only) */}
+                <GTMBriefSidebar />
+
+                {/* Main content */}
+                <div className="flex-1 min-w-0 space-y-12">
+
+                  <section id="channels" className="space-y-4 scroll-mt-6">
+                    <h2 className="text-lg font-bold text-muted-foreground uppercase tracking-wider text-xs">
+                      Recommended Channels ({analysis.channels.length})
+                    </h2>
+                    <div className="space-y-4">
+                      {analysis.channels.map((ch, i) => (
+                        <GTMChannelCard key={ch.channel} channel={ch} rank={i + 1} />
+                      ))}
+                    </div>
+                  </section>
+
+                  <Separator />
+
+                  <section id="positioning" className="scroll-mt-6">
+                    <GTMPositioningBlock positioning={analysis.positioning} />
+                  </section>
+
+                  <Separator />
+
+                  <section id="messaging" className="scroll-mt-6">
+                    <GTMMessagingBlock messaging={analysis.messaging} />
+                  </section>
+
+                  <Separator />
+
+                  <section id="action-plan" className="scroll-mt-6">
+                    <GTMActionPlan actionPlan={analysis.actionPlan} />
+                  </section>
+
+                  <Separator />
+
+                  <section id="checklist" className="scroll-mt-6">
+                    <GTMLaunchChecklist checklist={analysis.launchChecklist} />
+                  </section>
+
+                  <Separator />
+
+                  <section id="metrics" className="scroll-mt-6">
+                    <GTMMetricsBlock metrics={analysis.metrics} />
+                  </section>
+
+                  {/* Bottom save CTA */}
+                  <div className="flex flex-wrap gap-3 pt-4 pb-8">
+                    <button
+                      onClick={() => savePlan('saved')}
+                      disabled={isSaving}
+                      className="flex-1 sm:flex-none px-6 py-2.5 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
+                    >
+                      {isSaving ? 'Saving…' : 'Save Plan & Complete Stage V'}
+                    </button>
+                    <button
+                      onClick={exportPlan}
+                      disabled={isExporting}
+                      className="flex-1 sm:flex-none px-6 py-2.5 border border-border rounded-lg text-sm font-medium hover:bg-muted transition-colors disabled:opacity-50"
+                    >
+                      {isExporting ? 'Exporting…' : 'Export PDF'}
+                    </button>
+                  </div>
+                </div>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          )}
         </div>
       </main>
 

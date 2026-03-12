@@ -35,6 +35,7 @@ const CREDIT_FEATURE_LABELS: Record<CreditFeature, string> = {
   DISCOVERY_CALL: 'Discovery Call',
   APP_BUILDER_GENERATE: 'AI App Builder — Generate',
   APP_BUILDER_REFINE: 'AI App Builder — Refine',
+  GTM_ANALYSIS: 'GTM Strategy Analysis',
 };
 
 type CreditActionOptions = {
