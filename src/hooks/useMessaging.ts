@@ -61,6 +61,8 @@ export const CAROLINA_BARTHALOT_EMAIL = 'carolinabarthalot@gmail.com';
 export const CAROLINA_BARTHALOT_USER_ID = '1b0d63d2-13b8-4829-b5a9-75a7bb2f313b';
 export const LUCAS_ANNARATTONE_EMAIL = 'lannarattone@gmail.com';
 export const LUCAS_ANNARATTONE_USER_ID = '089e99ca-18d6-43f5-9687-f60c2d76b2f8';
+export const ARTUR_SINDARSKY_EMAIL = 'arturpatser@gmail.com';
+export const ARTUR_SINDARSKY_USER_ID = '1f0fe62a-7744-4153-bfcf-4f20b6e820d3';
 export const SHARON_PRAISE_AKPUNNE_EMAIL = 'sharonpraiseakpunne1@gmail.com';
 export const SHARON_PRAISE_AKPUNNE_USER_ID = '77283f92-7d90-45e2-97aa-3ec500781656';
 export const VIVIAN_UBOCHI_EMAIL = 'vivian@gooroconsulting.com';
@@ -202,6 +204,13 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
         userId: LUCAS_ANNARATTONE_USER_ID
       });
       return LUCAS_ANNARATTONE_USER_ID;
+    }
+
+    if (email.toLowerCase() === ARTUR_SINDARSKY_EMAIL.toLowerCase()) {
+      logInfo('getUserIdByEmail: Using known Artur Sindarsky user ID', {
+        userId: ARTUR_SINDARSKY_USER_ID
+      });
+      return ARTUR_SINDARSKY_USER_ID;
     }
 
     if (email.toLowerCase() === SHARON_PRAISE_AKPUNNE_EMAIL.toLowerCase()) {
@@ -385,6 +394,13 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
       mentorNameNormalized.includes('annarattone')
     ) {
       return LUCAS_ANNARATTONE_USER_ID;
+    }
+
+    if (
+      mentorNameNormalized.includes('artur') &&
+      mentorNameNormalized.includes('sindarsky')
+    ) {
+      return ARTUR_SINDARSKY_USER_ID;
     }
 
     if (
