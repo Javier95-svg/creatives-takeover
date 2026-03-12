@@ -462,7 +462,7 @@ const GTMIntakeForm: React.FC<GTMIntakeFormProps> = ({ prefillData, onSubmit, is
       <div className="text-center space-y-2 pb-2">
         <p className="text-xs text-muted-foreground uppercase tracking-widest font-mono">GTM Strategist · ~4 minutes</p>
         <h1 className="text-2xl md:text-3xl font-bold creatives-font takeover-gradient">Build your GTM brief</h1>
-        <p className="text-sm text-muted-foreground">8 targeted questions → an opinionated strategy built for your exact situation.</p>
+        <p className="text-lg sm:text-xl md:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed px-4">8 targeted questions → an opinionated strategy built for your exact situation.</p>
       </div>
 
       <StepIndicator />

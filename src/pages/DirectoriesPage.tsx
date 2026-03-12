@@ -38,7 +38,7 @@ export default function DirectoriesPage() {
             <h1 className="text-3xl md:text-5xl font-bold creatives-font takeover-gradient">
               Launch Directories
             </h1>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
+            <p className="text-lg sm:text-xl md:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed px-4">
               Discover the best platforms to submit, share, and promote your startup launch.
             </p>
           </div>

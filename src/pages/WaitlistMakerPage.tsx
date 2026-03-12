@@ -34,7 +34,7 @@ export default function WaitlistMakerPage() {
         <div className="container mx-auto max-w-4xl space-y-6">
           <div className="space-y-3 text-center">
             <h1 className="text-3xl md:text-5xl font-bold creatives-font takeover-gradient">Waitlist Maker</h1>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
+            <p className="text-lg sm:text-xl md:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed px-4">
               Design your landing page, show what you have to offer, and validate real real demand before building.
             </p>
           </div>

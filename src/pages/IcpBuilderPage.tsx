@@ -73,11 +73,8 @@ export default function ICPBuilderPage() {
               <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-3 sm:mb-4 takeover-gradient creatives-font animate-fade-in leading-tight pb-2">
                 ICP Builder
               </h1>
-              <p className="text-lg sm:text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed animate-fade-in px-4" style={{ animationDelay: '0.3s' }}>
-                Identify your ideal customer and specific niche market.
-                <span className="gradient-text font-semibold" style={{ lineHeight: 'inherit', marginLeft: '0.25rem' }}>
-                  Get a positioning strategy that makes you stand out.
-                </span>
+              <p className="text-lg sm:text-xl md:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed animate-fade-in px-4" style={{ animationDelay: '0.3s' }}>
+                Identify your ideal customer and specific niche market. Get a positioning strategy that makes you stand out.
               </p>
             </div>
 
