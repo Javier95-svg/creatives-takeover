@@ -15,6 +15,7 @@ import GTMMessagingBlock from '@/components/gtm/GTMMessagingBlock';
 import GTMActionPlan from '@/components/gtm/GTMActionPlan';
 import GTMLaunchChecklist from '@/components/gtm/GTMLaunchChecklist';
 import GTMMetricsBlock from '@/components/gtm/GTMMetricsBlock';
+import GTMStrategistWallpaper from '@/components/wallpapers/GTMStrategistWallpaper';
 
 const structuredData = [
   {
@@ -51,7 +52,7 @@ export default function GTMStrategistPage() {
   } = useGTMStrategist();
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="relative min-h-screen overflow-hidden bg-background">
       <SEO
         title="GTM Strategist — Creatives Takeover"
         description="Get an opinionated go-to-market strategy with channel recommendations, positioning, messaging, and a 30-day action plan tailored to your business."
@@ -59,10 +60,12 @@ export default function GTMStrategistPage() {
         url="/go-to-market"
         structuredData={structuredData}
       />
-      <Navigation />
+      <GTMStrategistWallpaper />
+      <div className="relative z-10">
+        <Navigation />
 
-      <main className="py-20 px-4">
-        <div className="container mx-auto max-w-5xl">
+        <main className="py-20 px-4">
+          <div className="container mx-auto max-w-5xl">
 
           {/* Phase A — Intake Wizard */}
           {phase === 'intake' && (
@@ -158,10 +161,11 @@ export default function GTMStrategistPage() {
               </div>
             </div>
           )}
-        </div>
-      </main>
+          </div>
+        </main>
 
-      <Footer />
+        <Footer />
+      </div>
     </div>
   );
 }
