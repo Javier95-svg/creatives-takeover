@@ -95,20 +95,26 @@ export default function ICPBuilderPage() {
                 </div>
 
                 <div className="grid gap-3 sm:grid-cols-3">
-                  <div className="rounded-3xl border border-border/60 bg-white/80 p-4 shadow-sm backdrop-blur dark:bg-slate-950/60">
-                    <Target className="mb-3 h-5 w-5 text-sky-600" />
+                  <div className="group stagger-item hover-lift rounded-3xl border border-border/60 bg-white/80 p-4 shadow-sm backdrop-blur dark:bg-slate-950/60">
+                    <Target className="mb-3 h-5 w-5 text-sky-600 transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:scale-105" />
                     <p className="text-sm font-semibold">Pick the first ICP</p>
-                    <p className="mt-1 text-sm text-muted-foreground">Choose one segment worth pursuing now, not a vague market.</p>
+                    <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+                      Answer five core questions and the tool recommends the one customer segment you should target first, not a vague market.
+                    </p>
                   </div>
-                  <div className="rounded-3xl border border-border/60 bg-white/80 p-4 shadow-sm backdrop-blur dark:bg-slate-950/60">
-                    <Compass className="mb-3 h-5 w-5 text-emerald-600" />
+                  <div className="group stagger-item hover-lift rounded-3xl border border-border/60 bg-white/80 p-4 shadow-sm backdrop-blur dark:bg-slate-950/60">
+                    <Compass className="mb-3 h-5 w-5 text-emerald-600 transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:scale-105" />
                     <p className="text-sm font-semibold">Sharpen your wedge</p>
-                    <p className="mt-1 text-sm text-muted-foreground">Anchor on the pain, switching behavior, and reason to care.</p>
+                    <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+                      It clarifies the pain, current workaround, and why your solution wins so your positioning becomes sharper and easier to explain.
+                    </p>
                   </div>
-                  <div className="rounded-3xl border border-border/60 bg-white/80 p-4 shadow-sm backdrop-blur dark:bg-slate-950/60">
-                    <TestTubeDiagonal className="mb-3 h-5 w-5 text-orange-600" />
+                  <div className="group stagger-item hover-lift rounded-3xl border border-border/60 bg-white/80 p-4 shadow-sm backdrop-blur dark:bg-slate-950/60">
+                    <TestTubeDiagonal className="mb-3 h-5 w-5 text-orange-600 transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:scale-105" />
                     <p className="text-sm font-semibold">Validate fast</p>
-                    <p className="mt-1 text-sm text-muted-foreground">Leave with experiments you can run over the next 2 to 4 weeks.</p>
+                    <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+                      You leave with decision confidence, priority pain points, and practical experiments to test before you spend more time or money.
+                    </p>
                   </div>
                 </div>
               </div>
