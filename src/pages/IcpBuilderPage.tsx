@@ -90,7 +90,7 @@ export default function ICPBuilderPage() {
                     <span className="takeover-gradient creatives-font">ICP Builder</span>
                   </h1>
                   <p className="mx-auto max-w-2xl text-center text-lg leading-relaxed text-foreground/80 sm:text-xl">
-                    Define the first customer you should target, the pain worth winning, and the validation steps that move your startup forward.
+                    Define the niche you should target, the pain point worth solving, and the validation steps that will define your business model.
                   </p>
                 </div>
 
