@@ -4,7 +4,7 @@ import Footer from "@/components/Footer";
 import { lazy, Suspense, useEffect } from "react";
 import { useReadingAnalytics } from "@/hooks/useReadingAnalytics";
 import { useLeanStartupStore } from "@/store/leanStartupStore";
-import { Compass, Loader2, Sparkles, Target, TestTubeDiagonal } from "lucide-react";
+import { Compass, Loader2, Target, TestTubeDiagonal } from "lucide-react";
 
 const ICPBuilder = lazy(() => import("@/components/icp/ICPBuilder"));
 
@@ -85,16 +85,12 @@ export default function ICPBuilderPage() {
           <div className="container relative z-10 mx-auto max-w-6xl">
             <div className="mb-12 lg:mb-16">
               <div className="space-y-6">
-                <div className="inline-flex items-center gap-2 rounded-full border border-sky-500/20 bg-white/70 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-sky-700 shadow-sm backdrop-blur dark:bg-slate-950/60 dark:text-sky-300">
-                  <Sparkles className="h-3.5 w-3.5" />
-                  Founder Clarity Tool
-                </div>
                 <div className="space-y-4">
                   <h1 className="pb-2 font-bold leading-[0.95] text-4xl sm:text-5xl md:text-6xl lg:text-7xl">
                     <span className="takeover-gradient creatives-font">ICP Builder</span>
                   </h1>
                   <p className="max-w-3xl text-lg leading-relaxed text-foreground/80 sm:text-xl">
-                    Define the first customer you should target, the pain worth winning, and the validation steps that move your startup forward.
+                    Pick your first ICP, sharpen your wedge, and validate what matters next.
                   </p>
                 </div>
 
