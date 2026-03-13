@@ -370,7 +370,7 @@ const Navigation = () => {
                           </TooltipContent>
                         </Tooltip>
                         <DropdownMenuContent align="start" className="w-72 md:w-56 sm:w-full max-w-[calc(100vw-2rem)]">
-                          <DropdownMenuLabel>Connect & Collaborate</DropdownMenuLabel>
+                          <DropdownMenuLabel>Connect & Collaborate 🌐</DropdownMenuLabel>
                           <DropdownMenuSeparator />
                           {communitySubmenu.map((subItem) => {
                             const SubIcon = subItem.icon;
