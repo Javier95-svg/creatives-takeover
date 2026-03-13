@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   AlertTriangle,
@@ -11,7 +11,6 @@ import {
   Loader2,
   Lock,
   Megaphone,
-  Target,
   TestTubeDiagonal,
   Users,
 } from 'lucide-react';
@@ -274,60 +273,6 @@ const ICPBuilder: React.FC = () => {
   return (
     <div className="space-y-6">
       <Card className="overflow-hidden rounded-[2rem] border border-border/70 bg-white/80 shadow-[0_28px_90px_-40px_rgba(15,23,42,0.4)] backdrop-blur dark:bg-slate-950/75">
-        <div className="border-b border-border/60 bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.12),transparent_40%),radial-gradient(circle_at_top_right,rgba(34,197,94,0.1),transparent_38%)]">
-          <CardHeader className="space-y-5 pb-6">
-            <div className="flex flex-wrap items-start justify-between gap-4">
-              <div className="space-y-2">
-                <div className="inline-flex items-center gap-2 rounded-full border border-sky-500/20 bg-sky-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-sky-700 dark:text-sky-300">
-                  <Target className="h-3.5 w-3.5" />
-                  Decision-First Flow
-                </div>
-                <CardTitle className="flex items-center gap-2 text-2xl">
-                  ICP Builder
-                </CardTitle>
-                <CardDescription className="max-w-2xl text-sm leading-relaxed text-foreground/70">
-                  Clarify your first customer, the pain worth winning, your wedge, and the next validation steps that matter.
-                </CardDescription>
-              </div>
-
-              <div className="grid min-w-[240px] gap-3 sm:grid-cols-3">
-                {[
-                  ['5', 'core questions'],
-                  ['1', 'best-fit ICP'],
-                  ['4+', 'validation tests'],
-                ].map(([value, label]) => (
-                  <div key={label} className="rounded-2xl border border-border/60 bg-background/80 px-4 py-3 text-center shadow-sm">
-                    <p className="text-xl font-semibold">{value}</p>
-                    <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">{label}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="grid gap-3 lg:grid-cols-3">
-              {[
-                {
-                  title: 'Foundation brief',
-                  text: 'Capture the sharpest version of the problem, customer, and wedge.',
-                },
-                {
-                  title: 'Decision memo',
-                  text: 'See which segment to target first and what not to chase yet.',
-                },
-                {
-                  title: 'Validation plan',
-                  text: 'Leave with experiments and milestones that reduce uncertainty fast.',
-                },
-              ].map((item) => (
-                <div key={item.title} className="rounded-2xl border border-border/60 bg-background/75 px-4 py-3">
-                  <p className="text-sm font-semibold">{item.title}</p>
-                  <p className="mt-1 text-sm text-muted-foreground">{item.text}</p>
-                </div>
-              ))}
-            </div>
-          </CardHeader>
-        </div>
-
         <CardContent className="pt-6">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="adaptive-tabs icp-tabs-shell grid h-auto min-h-0 w-full grid-cols-2 items-stretch gap-2 overflow-visible rounded-[1.5rem] border border-border/60 bg-muted/40 p-2 lg:grid-cols-6">
