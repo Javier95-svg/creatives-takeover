@@ -162,21 +162,6 @@ const Footer = () => {
               </a>
             </div>
 
-            <div className="mt-4">
-              <a
-                href="https://www.betterlaunch.co"
-                target="_blank"
-                rel="nofollow noopener noreferrer"
-                aria-label="Featured on Better Launch"
-              >
-                <img
-                  src="https://www.betterlaunch.co/badge.svg"
-                  alt="Featured on Better Launch"
-                  style={{ width: "200px", height: "auto" }}
-                />
-              </a>
-            </div>
-
             <div className="mt-4 space-y-3">
               <div className="flex items-center gap-3 flex-nowrap overflow-x-auto pb-1">
                 <a 
