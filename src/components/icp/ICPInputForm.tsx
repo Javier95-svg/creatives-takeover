@@ -9,10 +9,6 @@ import {
   ChevronLeft,
   ChevronRight,
   Edit2,
-  Eye,
-  FileSearch,
-  Gauge,
-  Lightbulb,
   Loader2,
   Sparkles,
   Target,
@@ -109,26 +105,6 @@ const CORE_STEPS: Array<{
   },
 ];
 
-const buildWorkingHypothesis = (formData: ICPInputFormData) => {
-  const lines: string[] = [];
-  if (formData.targetAudience) {
-    lines.push(`Customer: ${formData.targetAudience}`);
-  }
-  if (formData.problemStatement) {
-    lines.push(`Problem: ${formData.problemStatement}`);
-  }
-  if (formData.currentBehavior) {
-    lines.push(`Current behavior: ${formData.currentBehavior}`);
-  }
-  if (formData.solutionDifferentiator) {
-    lines.push(`Wedge: ${formData.solutionDifferentiator}`);
-  }
-  if (formData.marketTiming) {
-    lines.push(`Why now: ${formData.marketTiming}`);
-  }
-  return lines;
-};
-
 const StepView: React.FC<{ children: React.ReactNode; stepKey: number }> = ({ children, stepKey }) => {
   const [visible, setVisible] = useState(false);
 
@@ -173,7 +149,6 @@ const ICPInputForm: React.FC<ICPInputFormProps> = ({
   const step = CORE_STEPS[currentStep];
   const currentValue = step ? (formData[step.field] as string) : '';
   const canContinue = currentValue.trim().length > 0;
-  const workingHypothesis = buildWorkingHypothesis(formData);
   const completedOptionalCount = [
     formData.painCost,
     formData.founderEdge,
@@ -442,7 +417,7 @@ const ICPInputForm: React.FC<ICPInputFormProps> = ({
     <div className="space-y-6">
       <StepIndicator />
       <StepView stepKey={currentStep}>
-        <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+        <div className="space-y-6">
           <div className="space-y-6">
             <div className="rounded-[1.75rem] border border-border/60 bg-background/85 p-6 shadow-sm">
               <div className="space-y-4">
@@ -534,65 +509,6 @@ const ICPInputForm: React.FC<ICPInputFormProps> = ({
                 )}
               </Button>
             </div>
-          </div>
-
-          <div className="space-y-4 lg:sticky lg:top-24 lg:self-start">
-            <Card className="rounded-[1.75rem] border-primary/20 bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.12),transparent_40%),rgba(14,165,233,0.05)] shadow-sm">
-              <CardContent className="pt-6">
-                <div className="mb-4 flex items-center gap-2">
-                  <FileSearch className="h-4 w-4 text-primary" />
-                  <p className="text-sm font-semibold">Working ICP thesis</p>
-                </div>
-                {workingHypothesis.length > 0 ? (
-                  <ul className="space-y-3">
-                    {workingHypothesis.map((line, index) => (
-                      <li key={index} className="rounded-2xl border border-border/50 bg-background/70 px-4 py-3 text-sm text-foreground/75">
-                        {line}
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="text-sm text-muted-foreground">
-                    Your answers will turn into a clearer customer, problem, and wedge statement as you move through the brief.
-                  </p>
-                )}
-              </CardContent>
-            </Card>
-
-            <Card className="rounded-[1.75rem] border border-border/60 shadow-sm">
-              <CardContent className="pt-6">
-                <div className="mb-3 flex items-center gap-2">
-                  <Gauge className="h-4 w-4 text-primary" />
-                  <p className="text-sm font-semibold">What you are building toward</p>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  A decision-first output that tells you who to target first, what pain to anchor on, what not to chase yet, and which validation tests to run next.
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="rounded-[1.75rem] border border-border/60 shadow-sm">
-              <CardContent className="pt-6">
-                <div className="mb-3 flex items-center gap-2">
-                  <Lightbulb className="h-4 w-4 text-primary" />
-                  <p className="text-sm font-semibold">Quality bar</p>
-                </div>
-                <ul className="space-y-2 text-sm text-muted-foreground">
-                  <li className="flex items-start gap-2">
-                    <Eye className="mt-0.5 h-3.5 w-3.5 text-primary" />
-                    <span>Name one role, not many audiences.</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <Eye className="mt-0.5 h-3.5 w-3.5 text-primary" />
-                    <span>Describe current behavior, not ideal behavior.</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <Eye className="mt-0.5 h-3.5 w-3.5 text-primary" />
-                    <span>Explain why your wedge matters now.</span>
-                  </li>
-                </ul>
-              </CardContent>
-            </Card>
           </div>
         </div>
       </StepView>

@@ -4,7 +4,7 @@ import Footer from "@/components/Footer";
 import { lazy, Suspense, useEffect } from "react";
 import { useReadingAnalytics } from "@/hooks/useReadingAnalytics";
 import { useLeanStartupStore } from "@/store/leanStartupStore";
-import { ArrowRight, Compass, Loader2, Sparkles, Target, TestTubeDiagonal } from "lucide-react";
+import { Compass, Loader2, Sparkles, Target, TestTubeDiagonal } from "lucide-react";
 
 const ICPBuilder = lazy(() => import("@/components/icp/ICPBuilder"));
 
@@ -83,7 +83,7 @@ export default function ICPBuilderPage() {
           </div>
 
           <div className="container relative z-10 mx-auto max-w-6xl">
-            <div className="mb-12 grid items-start gap-10 lg:mb-16 lg:grid-cols-[1.15fr_0.85fr]">
+            <div className="mb-12 lg:mb-16">
               <div className="space-y-6">
                 <div className="inline-flex items-center gap-2 rounded-full border border-sky-500/20 bg-white/70 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-sky-700 shadow-sm backdrop-blur dark:bg-slate-950/60 dark:text-sky-300">
                   <Sparkles className="h-3.5 w-3.5" />
@@ -114,32 +114,6 @@ export default function ICPBuilderPage() {
                     <p className="text-sm font-semibold">Validate fast</p>
                     <p className="mt-1 text-sm text-muted-foreground">Leave with experiments you can run over the next 2 to 4 weeks.</p>
                   </div>
-                </div>
-              </div>
-
-              <div className="rounded-[2rem] border border-border/60 bg-white/80 p-6 shadow-[0_24px_80px_-32px_rgba(15,23,42,0.35)] backdrop-blur dark:bg-slate-950/70">
-                <div className="mb-6 flex items-center justify-between">
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.24em] text-muted-foreground">What You Get</p>
-                    <p className="mt-2 text-2xl font-semibold">A decision memo for your startup</p>
-                  </div>
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-sky-500/10 text-sky-600">
-                    <ArrowRight className="h-5 w-5" />
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  {[
-                    "A recommended first customer segment with confidence level",
-                    "A clearer statement of the pain and wedge worth winning",
-                    "Proof-oriented positioning and objection handling",
-                    "Concrete validation experiments and milestones",
-                  ].map((item) => (
-                    <div key={item} className="flex items-start gap-3 rounded-2xl border border-border/50 bg-background/70 px-4 py-3">
-                      <div className="mt-0.5 h-2.5 w-2.5 rounded-full bg-sky-500" />
-                      <p className="text-sm text-foreground/80">{item}</p>
-                    </div>
-                  ))}
                 </div>
               </div>
             </div>

@@ -39,6 +39,19 @@
     line-height: 1.2;
   }
 
+  .adaptive-tabs.icp-tabs-shell {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    align-items: stretch;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  .adaptive-tabs.icp-tabs-shell > [role="tab"] {
+    min-width: 0 !important;
+    white-space: normal !important;
+    line-height: 1.2 !important;
+  }
+
   .responsive-chat-frame {
     height: min(70vh, 48rem) !important;
     min-height: 30rem;
@@ -150,6 +163,22 @@
     flex: 0 0 auto;
     min-width: max-content;
     white-space: nowrap;
+  }
+
+  .adaptive-tabs.icp-tabs-shell {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 0.5rem;
+    overflow: visible !important;
+    height: auto !important;
+    padding: 0.5rem;
+  }
+
+  .adaptive-tabs.icp-tabs-shell > [role="tab"] {
+    flex: initial !important;
+    min-width: 0 !important;
+    white-space: normal !important;
+    line-height: 1.2 !important;
   }
 
   .responsive-chat-frame {

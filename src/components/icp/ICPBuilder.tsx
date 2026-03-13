@@ -35,7 +35,7 @@ import { ICPAnalysis } from './types';
 const RESULT_TABS = [
   { value: 'decision', icon: Compass, label: 'Decision', short: 'Decision' },
   { value: 'customer', icon: Users, label: 'Customer', short: 'Customer' },
-  { value: 'painpoints', icon: AlertTriangle, label: 'Pains', short: 'Pains' },
+  { value: 'painpoints', icon: AlertTriangle, label: 'Pain Points', short: 'Pain Points' },
   { value: 'positioning', icon: Megaphone, label: 'Positioning', short: 'Position' },
   { value: 'validation', icon: TestTubeDiagonal, label: 'Validation', short: 'Validate' },
 ];
@@ -330,10 +330,10 @@ const ICPBuilder: React.FC = () => {
 
         <CardContent className="pt-6">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="adaptive-tabs grid w-full grid-cols-2 gap-2 rounded-[1.5rem] border border-border/60 bg-muted/40 p-2 lg:grid-cols-6">
+            <TabsList className="adaptive-tabs icp-tabs-shell grid h-auto min-h-0 w-full grid-cols-2 items-stretch gap-2 overflow-visible rounded-[1.5rem] border border-border/60 bg-muted/40 p-2 lg:grid-cols-6">
               <TabsTrigger
                 value="input"
-                className="gap-2 rounded-[1.1rem] px-3 py-3 data-[state=active]:bg-background data-[state=active]:shadow-sm"
+                className="icp-tab-trigger gap-2 rounded-[1.1rem] px-3 py-3 text-center leading-tight whitespace-normal min-h-[3.25rem] data-[state=active]:bg-background data-[state=active]:shadow-sm"
               >
                 {hasAnalysis ? (
                   <CheckCircle2 className="h-4 w-4 shrink-0 text-green-500" />
@@ -350,7 +350,7 @@ const ICPBuilder: React.FC = () => {
                   value={value}
                   disabled={!hasAnalysis}
                   className={cn(
-                    'gap-2 rounded-[1.1rem] px-3 py-3 transition-all data-[state=active]:bg-background data-[state=active]:shadow-sm',
+                    'icp-tab-trigger gap-2 rounded-[1.1rem] px-3 py-3 text-center leading-tight whitespace-normal min-h-[3.25rem] transition-all data-[state=active]:bg-background data-[state=active]:shadow-sm',
                     !hasAnalysis && 'opacity-45'
                   )}
                 >
@@ -362,7 +362,7 @@ const ICPBuilder: React.FC = () => {
             </TabsList>
 
             {hasAnalysis && !isAnalyzing && analysis?.recommendation && (
-              <div className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-[1.5rem] border border-sky-500/15 bg-sky-500/[0.07] px-4 py-4">
+              <div className="icp-recommendation-strip mt-5 flex flex-wrap items-center justify-between gap-3 rounded-[1.5rem] border border-sky-500/15 bg-sky-500/[0.07] px-4 py-4">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-700 dark:text-sky-300">Current recommendation</p>
                   <p className="mt-1 text-sm font-semibold">{analysis.recommendation.primaryIcp}</p>
@@ -401,7 +401,7 @@ const ICPBuilder: React.FC = () => {
 
                 <TabsContent value="decision" className="mt-6">
                   {analysis?.recommendation ? (
-                    <div key={analysisKey} className="animate-fade-in-up">
+                    <div key={analysisKey} className="animate-fade-in-up icp-result-panel">
                       <ICPDecisionSummary recommendation={analysis.recommendation} />
                     </div>
                   ) : (
@@ -411,7 +411,7 @@ const ICPBuilder: React.FC = () => {
 
                 <TabsContent value="customer" className="mt-6">
                   {analysis?.customerProfile ? (
-                    <div key={analysisKey} className="animate-fade-in-up">
+                    <div key={analysisKey} className="animate-fade-in-up icp-result-panel">
                       <ICPCustomerProfile profile={analysis.customerProfile} />
                     </div>
                   ) : (
@@ -421,7 +421,7 @@ const ICPBuilder: React.FC = () => {
 
                 <TabsContent value="painpoints" className="mt-6">
                   {analysis?.painPoints ? (
-                    <div key={analysisKey} className="animate-fade-in-up">
+                    <div key={analysisKey} className="animate-fade-in-up icp-result-panel">
                       <ICPPainPoints painPoints={analysis.painPoints} />
                     </div>
                   ) : (
@@ -431,7 +431,7 @@ const ICPBuilder: React.FC = () => {
 
                 <TabsContent value="positioning" className="mt-6">
                   {analysis?.positioning ? (
-                    <div key={analysisKey} className="animate-fade-in-up">
+                    <div key={analysisKey} className="animate-fade-in-up icp-result-panel">
                       <ICPPositioning positioning={analysis.positioning} />
                     </div>
                   ) : (
@@ -441,7 +441,7 @@ const ICPBuilder: React.FC = () => {
 
                 <TabsContent value="validation" className="mt-6">
                   {analysis?.validationPlan ? (
-                    <div key={analysisKey} className="animate-fade-in-up">
+                    <div key={analysisKey} className="animate-fade-in-up icp-result-panel">
                       <ICPValidationPlan plan={analysis.validationPlan} />
                     </div>
                   ) : (
