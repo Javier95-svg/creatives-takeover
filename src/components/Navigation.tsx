@@ -322,7 +322,7 @@ const Navigation = () => {
                           </TooltipContent>
                         </Tooltip>
                         <DropdownMenuContent align="start" className="w-72 md:w-56 sm:w-full max-w-[calc(100vw-2rem)]">
-                          <DropdownMenuLabel>Fundraising Tools</DropdownMenuLabel>
+                          <DropdownMenuLabel>Fundraising Tools 💸</DropdownMenuLabel>
                           <DropdownMenuSeparator />
                           {insightaSubmenu.map((subItem) => {
                             const SubIcon = subItem.icon;
