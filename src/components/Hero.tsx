@@ -447,7 +447,7 @@ const Hero = () => {
 
             {/* Subheadline - Improved readability */}
             <p className="font-space-grotesk text-sm sm:text-base md:text-lg text-muted-foreground mb-6 sm:mb-8 max-w-xl mx-auto leading-relaxed px-2 sm:px-0">
-              We blend technology, strategy, and community to empower individuals to build and launch startups with minimal friction. Our platform provides business development, expert support, and access to fundraising.
+              We are a vertical AI platform for early-stage startup founders. Our goal is to empower individuals to launch and build startups with minimal friction.
             </p>
             
             {/* Enhanced CTA Section */}
