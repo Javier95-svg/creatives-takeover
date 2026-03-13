@@ -86,10 +86,10 @@ export default function ICPBuilderPage() {
             <div className="mb-12 lg:mb-16">
               <div className="space-y-6">
                 <div className="space-y-4">
-                  <h1 className="pb-2 font-bold leading-[0.95] text-4xl sm:text-5xl md:text-6xl lg:text-7xl">
+                  <h1 className="pb-2 text-center font-bold leading-[0.95] text-4xl sm:text-5xl md:text-6xl lg:text-7xl">
                     <span className="takeover-gradient creatives-font">ICP Builder</span>
                   </h1>
-                  <p className="max-w-2xl text-lg leading-relaxed text-foreground/80 sm:text-xl">
+                  <p className="mx-auto max-w-2xl text-center text-lg leading-relaxed text-foreground/80 sm:text-xl">
                     Define the first customer you should target, the pain worth winning, and the validation steps that move your startup forward.
                   </p>
                 </div>
