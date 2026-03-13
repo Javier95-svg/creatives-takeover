@@ -4,6 +4,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/contexts/AuthContext';
 import {
   CheckCircle2,
   ChevronLeft,
@@ -37,6 +38,16 @@ interface ICPInputFormProps {
   isSubmitting?: boolean;
 }
 
+interface ICPDraftPayload {
+  version: number;
+  currentStep: number;
+  formData: ICPInputFormData;
+  updatedAt: number;
+}
+
+const ICP_DRAFT_VERSION = 1;
+const ICP_DRAFT_STORAGE_PREFIX = 'icp_builder_draft';
+
 const INDUSTRIES = [
   'Technology/SaaS', 'E-commerce/Retail', 'Healthcare', 'Education',
   'Finance/Fintech', 'Real Estate', 'Food & Beverage', 'Fitness/Wellness',
@@ -49,6 +60,35 @@ const REVENUE_MODELS = [
   'One-time Purchase', 'Commission/Transaction Fee', 'Advertising',
   'Licensing', 'Agency/Service', 'Consulting', 'Other',
 ];
+
+const createFormData = (initialData?: Partial<ICPInputFormData>): ICPInputFormData => ({
+  problemStatement: initialData?.problemStatement || '',
+  targetAudience: initialData?.targetAudience || '',
+  currentBehavior: initialData?.currentBehavior || '',
+  solutionDifferentiator: initialData?.solutionDifferentiator || '',
+  marketTiming: initialData?.marketTiming || '',
+  painCost: initialData?.painCost || '',
+  founderEdge: initialData?.founderEdge || '',
+  nextGoals: initialData?.nextGoals || '',
+  mainCompetitors: initialData?.mainCompetitors || '',
+  industry: initialData?.industry || '',
+  revenueModel: initialData?.revenueModel || '',
+  currentTraction: initialData?.currentTraction || '',
+});
+
+const getDraftStorageKey = (userId?: string) => `${ICP_DRAFT_STORAGE_PREFIX}:${userId || 'anonymous'}`;
+
+const hasAnyDraftContent = (formData: ICPInputFormData) =>
+  Object.values(formData).some((value) => value.trim().length > 0);
+
+const formatSavedTime = (timestamp: number | null) => {
+  if (!timestamp) return null;
+
+  return new Intl.DateTimeFormat(undefined, {
+    hour: 'numeric',
+    minute: '2-digit',
+  }).format(timestamp);
+};
 
 const CORE_STEPS: Array<{
   number: string;
@@ -126,29 +166,20 @@ const ICPInputForm: React.FC<ICPInputFormProps> = ({
   onSubmit,
   isSubmitting = false,
 }) => {
-  const [formData, setFormData] = useState<ICPInputFormData>({
-    problemStatement: initialData?.problemStatement || '',
-    targetAudience: initialData?.targetAudience || '',
-    currentBehavior: initialData?.currentBehavior || '',
-    solutionDifferentiator: initialData?.solutionDifferentiator || '',
-    marketTiming: initialData?.marketTiming || '',
-    painCost: initialData?.painCost || '',
-    founderEdge: initialData?.founderEdge || '',
-    nextGoals: initialData?.nextGoals || '',
-    mainCompetitors: initialData?.mainCompetitors || '',
-    industry: initialData?.industry || '',
-    revenueModel: initialData?.revenueModel || '',
-    currentTraction: initialData?.currentTraction || '',
-  });
-
+  const { user } = useAuth();
+  const [formData, setFormData] = useState<ICPInputFormData>(createFormData(initialData));
   const [currentStep, setCurrentStep] = useState(0);
+  const [saveState, setSaveState] = useState<'idle' | 'restored' | 'saving' | 'saved'>('idle');
+  const [lastSavedAt, setLastSavedAt] = useState<number | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const hasHydratedDraft = useRef(false);
 
   const totalSteps = CORE_STEPS.length;
   const isReview = currentStep === totalSteps;
   const step = CORE_STEPS[currentStep];
   const currentValue = step ? (formData[step.field] as string) : '';
   const canContinue = currentValue.trim().length > 0;
+  const storageKey = getDraftStorageKey(user?.id);
   const completedOptionalCount = [
     formData.painCost,
     formData.founderEdge,
@@ -165,6 +196,69 @@ const ICPInputForm: React.FC<ICPInputFormProps> = ({
       return () => clearTimeout(timer);
     }
   }, [currentStep, isReview]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    try {
+      const rawDraft = window.localStorage.getItem(storageKey);
+      if (!rawDraft) {
+        hasHydratedDraft.current = true;
+        return;
+      }
+
+      const parsedDraft = JSON.parse(rawDraft) as Partial<ICPDraftPayload>;
+      if (parsedDraft.version !== ICP_DRAFT_VERSION || !parsedDraft.formData) {
+        hasHydratedDraft.current = true;
+        return;
+      }
+
+      setFormData(createFormData(parsedDraft.formData));
+      setCurrentStep(
+        typeof parsedDraft.currentStep === 'number'
+          ? Math.min(Math.max(parsedDraft.currentStep, 0), totalSteps)
+          : 0
+      );
+      setLastSavedAt(typeof parsedDraft.updatedAt === 'number' ? parsedDraft.updatedAt : null);
+      setSaveState('restored');
+    } catch (error) {
+      console.error('Failed to restore ICP Builder draft:', error);
+    } finally {
+      hasHydratedDraft.current = true;
+    }
+  }, [storageKey, totalSteps]);
+
+  useEffect(() => {
+    if (!hasHydratedDraft.current || typeof window === 'undefined') return;
+
+    if (!hasAnyDraftContent(formData) && currentStep === 0) {
+      window.localStorage.removeItem(storageKey);
+      setSaveState('idle');
+      setLastSavedAt(null);
+      return;
+    }
+
+    setSaveState('saving');
+
+    const timer = window.setTimeout(() => {
+      const payload: ICPDraftPayload = {
+        version: ICP_DRAFT_VERSION,
+        currentStep,
+        formData,
+        updatedAt: Date.now(),
+      };
+
+      try {
+        window.localStorage.setItem(storageKey, JSON.stringify(payload));
+        setSaveState('saved');
+        setLastSavedAt(payload.updatedAt);
+      } catch (error) {
+        console.error('Failed to save ICP Builder draft:', error);
+      }
+    }, 300);
+
+    return () => window.clearTimeout(timer);
+  }, [currentStep, formData, storageKey]);
 
   const setField = (field: keyof ICPInputFormData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -188,6 +282,15 @@ const ICPInputForm: React.FC<ICPInputFormProps> = ({
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Core Brief</p>
           <p className="mt-1 text-sm text-foreground/80">Answer the five questions that most directly shape customer clarity.</p>
+          <p className="mt-2 text-xs text-muted-foreground">
+            {saveState === 'restored' && lastSavedAt
+              ? `Draft restored · ${formatSavedTime(lastSavedAt)}`
+              : saveState === 'saving'
+                ? 'Saving progress...'
+                : saveState === 'saved' && lastSavedAt
+                  ? `Progress saved · ${formatSavedTime(lastSavedAt)}`
+                  : 'Progress autosaves in this browser.'}
+          </p>
         </div>
         <div className="rounded-2xl bg-muted px-3 py-2 text-right">
           <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Progress</p>
