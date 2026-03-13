@@ -4,7 +4,7 @@ import Footer from "@/components/Footer";
 import { lazy, Suspense, useEffect } from "react";
 import { useReadingAnalytics } from "@/hooks/useReadingAnalytics";
 import { useLeanStartupStore } from "@/store/leanStartupStore";
-import { Loader2 } from "lucide-react";
+import { ArrowRight, Compass, Loader2, Sparkles, Target, TestTubeDiagonal } from "lucide-react";
 
 const ICPBuilder = lazy(() => import("@/components/icp/ICPBuilder"));
 
@@ -23,7 +23,7 @@ export default function ICPBuilderPage() {
       "@context": "https://schema.org",
       "@type": "WebPage",
       "name": "ICP Builder - Identify Your Ideal Customer",
-      "description": "Identify your ideal customer profile and niche market. Get detailed pain point analysis and positioning strategy to stand out.",
+      "description": "Clarify your first ideal customer profile, sharpen your startup positioning, and get concrete validation steps.",
       "url": "https://creatives-takeover.com/icp-builder",
       "publisher": {
         "@type": "Organization",
@@ -45,7 +45,7 @@ export default function ICPBuilderPage() {
     <div className="min-h-screen bg-background">
       <SEO
         title="ICP Builder - Creatives Takeover"
-        description="Identify your ideal customer profile and niche market with AI-powered insights, pain point analysis, and positioning strategy."
+        description="Clarify your first ideal customer profile, sharpen your positioning, and get concrete validation steps for your startup."
         keywords="ICP, ideal customer profile, niche market, target market, customer persona, positioning strategy, pain points"
         url="/icp-builder"
         structuredData={structuredData}
@@ -53,34 +53,100 @@ export default function ICPBuilderPage() {
       <Navigation />
 
       <main>
-        <section className="py-20 px-4 relative overflow-hidden" data-section="icp-builder">
-          {/* Background styling */}
+        <section className="relative overflow-hidden px-4 py-20" data-section="icp-builder">
           <div className="absolute inset-0 pointer-events-none overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-b from-background via-background/95 to-background" />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(14,165,233,0.12),transparent_30%),radial-gradient(circle_at_85%_20%,rgba(34,197,94,0.12),transparent_28%),linear-gradient(180deg,rgba(248,250,252,0.98),rgba(248,250,252,0.92))] dark:bg-[radial-gradient(circle_at_top_left,rgba(14,165,233,0.18),transparent_30%),radial-gradient(circle_at_85%_20%,rgba(34,197,94,0.14),transparent_28%),linear-gradient(180deg,rgba(2,6,23,0.96),rgba(2,6,23,0.98))]" />
             <div
-              className="absolute -top-40 -right-48 w-[55rem] h-[55rem] rounded-full opacity-70 blur-3xl animate-[spin_28s_linear_infinite]"
+              className="absolute inset-0 opacity-[0.08]"
+              style={{
+                backgroundImage:
+                  "linear-gradient(rgba(15,23,42,0.8) 1px, transparent 1px), linear-gradient(90deg, rgba(15,23,42,0.8) 1px, transparent 1px)",
+                backgroundSize: "36px 36px",
+                maskImage: "linear-gradient(180deg, rgba(0,0,0,0.45), rgba(0,0,0,0.02))",
+              }}
+            />
+            <div
+              className="absolute -right-48 -top-40 h-[55rem] w-[55rem] rounded-full opacity-70 blur-3xl animate-[spin_28s_linear_infinite]"
               style={{
                 background:
                   'radial-gradient(circle at 30% 30%, rgba(59, 130, 246, 0.3), transparent 60%), radial-gradient(circle at 70% 70%, rgba(16, 185, 129, 0.35), transparent 55%)',
                 animationDuration: '28s'
               }}
             />
+            <div
+              className="absolute -bottom-32 -left-20 h-[28rem] w-[28rem] rounded-full blur-3xl"
+              style={{
+                background:
+                  'radial-gradient(circle at center, rgba(249, 115, 22, 0.12), transparent 62%)',
+              }}
+            />
           </div>
 
-          <div className="container mx-auto max-w-5xl relative z-10">
-            {/* Page Header */}
-            <div className="text-center mb-12 sm:mb-16">
-              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-3 sm:mb-4 takeover-gradient creatives-font animate-fade-in leading-tight pb-2">
-                ICP Builder
-              </h1>
-              <p className="text-lg sm:text-xl md:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed animate-fade-in px-4" style={{ animationDelay: '0.3s' }}>
-                Identify your ideal customer and specific niche market. Get a positioning strategy that makes you stand out.
-              </p>
+          <div className="container relative z-10 mx-auto max-w-6xl">
+            <div className="mb-12 grid items-start gap-10 lg:mb-16 lg:grid-cols-[1.15fr_0.85fr]">
+              <div className="space-y-6">
+                <div className="inline-flex items-center gap-2 rounded-full border border-sky-500/20 bg-white/70 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-sky-700 shadow-sm backdrop-blur dark:bg-slate-950/60 dark:text-sky-300">
+                  <Sparkles className="h-3.5 w-3.5" />
+                  Founder Clarity Tool
+                </div>
+                <div className="space-y-4">
+                  <h1 className="pb-2 font-bold leading-[0.95] text-4xl sm:text-5xl md:text-6xl lg:text-7xl">
+                    <span className="takeover-gradient creatives-font">ICP Builder</span>
+                  </h1>
+                  <p className="max-w-3xl text-lg leading-relaxed text-foreground/80 sm:text-xl">
+                    Define the first customer you should target, the pain worth winning, and the validation steps that move your startup forward.
+                  </p>
+                </div>
+
+                <div className="grid gap-3 sm:grid-cols-3">
+                  <div className="rounded-3xl border border-border/60 bg-white/80 p-4 shadow-sm backdrop-blur dark:bg-slate-950/60">
+                    <Target className="mb-3 h-5 w-5 text-sky-600" />
+                    <p className="text-sm font-semibold">Pick the first ICP</p>
+                    <p className="mt-1 text-sm text-muted-foreground">Choose one segment worth pursuing now, not a vague market.</p>
+                  </div>
+                  <div className="rounded-3xl border border-border/60 bg-white/80 p-4 shadow-sm backdrop-blur dark:bg-slate-950/60">
+                    <Compass className="mb-3 h-5 w-5 text-emerald-600" />
+                    <p className="text-sm font-semibold">Sharpen your wedge</p>
+                    <p className="mt-1 text-sm text-muted-foreground">Anchor on the pain, switching behavior, and reason to care.</p>
+                  </div>
+                  <div className="rounded-3xl border border-border/60 bg-white/80 p-4 shadow-sm backdrop-blur dark:bg-slate-950/60">
+                    <TestTubeDiagonal className="mb-3 h-5 w-5 text-orange-600" />
+                    <p className="text-sm font-semibold">Validate fast</p>
+                    <p className="mt-1 text-sm text-muted-foreground">Leave with experiments you can run over the next 2 to 4 weeks.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-[2rem] border border-border/60 bg-white/80 p-6 shadow-[0_24px_80px_-32px_rgba(15,23,42,0.35)] backdrop-blur dark:bg-slate-950/70">
+                <div className="mb-6 flex items-center justify-between">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.24em] text-muted-foreground">What You Get</p>
+                    <p className="mt-2 text-2xl font-semibold">A decision memo for your startup</p>
+                  </div>
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-sky-500/10 text-sky-600">
+                    <ArrowRight className="h-5 w-5" />
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  {[
+                    "A recommended first customer segment with confidence level",
+                    "A clearer statement of the pain and wedge worth winning",
+                    "Proof-oriented positioning and objection handling",
+                    "Concrete validation experiments and milestones",
+                  ].map((item) => (
+                    <div key={item} className="flex items-start gap-3 rounded-2xl border border-border/50 bg-background/70 px-4 py-3">
+                      <div className="mt-0.5 h-2.5 w-2.5 rounded-full bg-sky-500" />
+                      <p className="text-sm text-foreground/80">{item}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
 
             <Suspense
               fallback={
-                <div className="flex flex-col items-center justify-center py-20 space-y-4">
+                <div className="flex flex-col items-center justify-center space-y-4 rounded-[2rem] border border-border/60 bg-white/80 py-20 shadow-sm backdrop-blur dark:bg-slate-950/70">
                   <Loader2 className="h-8 w-8 animate-spin text-primary" />
                   <p className="text-muted-foreground">Loading ICP Builder...</p>
                 </div>

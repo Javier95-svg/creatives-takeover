@@ -1,24 +1,34 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { CheckCircle2, ChevronLeft, ChevronRight, Loader2, Target, Edit2 } from 'lucide-react';
+import {
+  CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
+  Edit2,
+  Eye,
+  FileSearch,
+  Gauge,
+  Lightbulb,
+  Loader2,
+  Sparkles,
+  Target,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { AdvancedFieldsSection } from '@/components/pmf/AdvancedFieldsSection';
 
 export interface ICPInputFormData {
-  // Core required — 8 steps
   problemStatement: string;
-  painCost: string;
   targetAudience: string;
   currentBehavior: string;
   solutionDifferentiator: string;
-  founderEdge: string;
   marketTiming: string;
+  painCost: string;
+  founderEdge: string;
   nextGoals: string;
-  // Advanced optional
   mainCompetitors: string;
   industry: string;
   revenueModel: string;
@@ -44,91 +54,92 @@ const REVENUE_MODELS = [
   'Licensing', 'Agency/Service', 'Consulting', 'Other',
 ];
 
-const STEPS: Array<{
+const CORE_STEPS: Array<{
   number: string;
   field: keyof ICPInputFormData;
   question: string;
   placeholder: string;
   hint: string;
-  analyticalObjective: string;
+  unlocks: string;
 }> = [
   {
     number: '01',
     field: 'problemStatement',
-    question: 'What specific problem are you solving?',
-    placeholder: "Describe the painful gap or frustration your startup addresses. Who experiences it, how often, and in what context?",
-    hint: 'Be precise. Vague problems produce vague analyses.',
-    analyticalObjective: 'Defines the problem scope and pain specificity',
+    question: 'What painful, specific problem are you solving?',
+    placeholder:
+      "Describe the job that keeps breaking. Include the moment it shows up, what gets delayed or lost, and why it matters enough to change behavior.",
+    hint: 'Avoid broad category language. Name the painful moment, not the market.',
+    unlocks: 'Defines the job to be done and the pain you need to win.',
   },
   {
     number: '02',
-    field: 'painCost',
-    question: 'What does this problem actually cost your customer?',
-    placeholder: "Quantify the cost: hours lost per week, revenue missed, money wasted, stress caused, or opportunities blocked. e.g. 'A mid-market ops manager spends 6 hours/week on manual reconciliation — roughly $3K/month in wasted labor.'",
-    hint: 'Quantifying pain reveals urgency, anchors pricing, and validates opportunity size.',
-    analyticalObjective: 'Anchors pain intensity score and pricing ceiling',
+    field: 'targetAudience',
+    question: 'Who feels this problem most acutely?',
+    placeholder:
+      "Describe one concrete segment: role, company type, team size, workflow context, and what makes this problem expensive or annoying for them right now.",
+    hint: 'A narrow first segment is a strength, not a weakness.',
+    unlocks: 'Sets the first ICP instead of a vague audience.',
   },
   {
     number: '03',
-    field: 'targetAudience',
-    question: 'Who exactly are you solving it for?',
-    placeholder: "Describe the specific person: their role, company size, industry, daily context, and why this problem hits them hardest. The more precise, the sharper the profile.",
-    hint: 'One segment done well beats five segments done poorly.',
-    analyticalObjective: 'Defines ICP boundaries and segment specificity',
+    field: 'currentBehavior',
+    question: 'What do they do today instead of using you?',
+    placeholder:
+      "Describe the real workaround: spreadsheets, agencies, manual ops, internal tools, doing nothing, or stitching multiple products together.",
+    hint: 'Behavior beats competitor lists because it reveals inertia and switching cost.',
+    unlocks: 'Shows the incumbent behavior you must replace.',
   },
   {
     number: '04',
-    field: 'currentBehavior',
-    question: "What does your target customer currently do instead?",
-    placeholder: "What is their actual workaround today? e.g. 'They copy-paste between Excel and email', 'They hire a $5K/month consultant', 'They just don't do it and accept the loss.' Be behavioral, not just competitive.",
-    hint: "Behavioral substitutes reveal switching cost, inertia, and where your wedge is.",
-    analyticalObjective: 'Maps real switching cost and differentiation gap',
+    field: 'solutionDifferentiator',
+    question: 'Why is your approach structurally better?',
+    placeholder:
+      "Explain why your solution is better in a way that matters: faster time-to-value, lower cost, lower effort, better accuracy, better workflow fit, stronger trust, or a wedge others do not have.",
+    hint: 'Focus on structural advantage, not feature volume.',
+    unlocks: 'Clarifies your wedge and the reason to switch.',
   },
   {
     number: '05',
-    field: 'solutionDifferentiator',
-    question: 'What makes your solution different and more efficient?',
-    placeholder: "How does your approach work differently from what exists? What makes it faster, cheaper, simpler, or more effective — and why is that hard to replicate?",
-    hint: 'Focus on structural advantages, not just feature lists.',
-    analyticalObjective: 'Surfaces differentiation depth and defensibility',
-  },
-  {
-    number: '06',
-    field: 'founderEdge',
-    question: 'Why are you the right person to build this?',
-    placeholder: "What gives you an unfair advantage here? Domain expertise, lived experience with this problem, proprietary data or relationships, a network others can't access, or a background that gives you insight competitors lack.",
-    hint: 'Founder-market fit is a signal of speed, trust, and survivability.',
-    analyticalObjective: 'Assesses founder-market fit and execution credibility',
-  },
-  {
-    number: '07',
     field: 'marketTiming',
-    question: 'Why now? What has changed to create this window?',
-    placeholder: "What shift — in technology, regulation, behavior, infrastructure, or culture — has made this problem newly solvable or newly urgent? e.g. 'LLMs made this 10x cheaper to build', 'Remote work created this category', 'New regulation forces compliance by Q3.'",
-    hint: 'Timing is a strategic variable. Great ideas at the wrong time fail.',
-    analyticalObjective: 'Evaluates market readiness, timing risk, and opportunity window',
-  },
-  {
-    number: '08',
-    field: 'nextGoals',
-    question: 'What do you want to achieve next?',
-    placeholder: "e.g. Get my first 10 paying customers in 60 days, validate PMF before fundraising, reach $10K MRR by Q3, launch on Product Hunt next month.",
-    hint: 'Specific goals shape the action plan your analysis will generate.',
-    analyticalObjective: 'Aligns action plan to your immediate strategic horizon',
+    question: 'Why is this the right moment to solve it?',
+    placeholder:
+      "Describe what changed: buyer behavior, regulation, new infrastructure, AI cost curve, distribution shift, or a market event that makes this more urgent or more possible now.",
+    hint: 'Timing matters because a good idea can still be mistimed.',
+    unlocks: 'Tests whether the market window is real or imagined.',
   },
 ];
 
-// Animates when step changes
+const buildWorkingHypothesis = (formData: ICPInputFormData) => {
+  const lines: string[] = [];
+  if (formData.targetAudience) {
+    lines.push(`Customer: ${formData.targetAudience}`);
+  }
+  if (formData.problemStatement) {
+    lines.push(`Problem: ${formData.problemStatement}`);
+  }
+  if (formData.currentBehavior) {
+    lines.push(`Current behavior: ${formData.currentBehavior}`);
+  }
+  if (formData.solutionDifferentiator) {
+    lines.push(`Wedge: ${formData.solutionDifferentiator}`);
+  }
+  if (formData.marketTiming) {
+    lines.push(`Why now: ${formData.marketTiming}`);
+  }
+  return lines;
+};
+
 const StepView: React.FC<{ children: React.ReactNode; stepKey: number }> = ({ children, stepKey }) => {
   const [visible, setVisible] = useState(false);
+
   useEffect(() => {
     setVisible(false);
-    const t = setTimeout(() => setVisible(true), 20);
-    return () => clearTimeout(t);
+    const timer = setTimeout(() => setVisible(true), 20);
+    return () => clearTimeout(timer);
   }, [stepKey]);
 
   return (
-    <div className={cn('transition-all duration-500', visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4')}>
+    <div className={cn('transition-all duration-500', visible ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0')}>
       {children}
     </div>
   );
@@ -141,12 +152,12 @@ const ICPInputForm: React.FC<ICPInputFormProps> = ({
 }) => {
   const [formData, setFormData] = useState<ICPInputFormData>({
     problemStatement: initialData?.problemStatement || '',
-    painCost: initialData?.painCost || '',
     targetAudience: initialData?.targetAudience || '',
     currentBehavior: initialData?.currentBehavior || '',
     solutionDifferentiator: initialData?.solutionDifferentiator || '',
-    founderEdge: initialData?.founderEdge || '',
     marketTiming: initialData?.marketTiming || '',
+    painCost: initialData?.painCost || '',
+    founderEdge: initialData?.founderEdge || '',
     nextGoals: initialData?.nextGoals || '',
     mainCompetitors: initialData?.mainCompetitors || '',
     industry: initialData?.industry || '',
@@ -154,104 +165,135 @@ const ICPInputForm: React.FC<ICPInputFormProps> = ({
     currentTraction: initialData?.currentTraction || '',
   });
 
-  // 0–8 = steps, 9 = review
   const [currentStep, setCurrentStep] = useState(0);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const totalSteps = STEPS.length;
+  const totalSteps = CORE_STEPS.length;
   const isReview = currentStep === totalSteps;
-  const step = STEPS[currentStep];
+  const step = CORE_STEPS[currentStep];
   const currentValue = step ? (formData[step.field] as string) : '';
   const canContinue = currentValue.trim().length > 0;
+  const workingHypothesis = buildWorkingHypothesis(formData);
+  const completedOptionalCount = [
+    formData.painCost,
+    formData.founderEdge,
+    formData.nextGoals,
+    formData.mainCompetitors,
+    formData.industry,
+    formData.revenueModel,
+    formData.currentTraction,
+  ].filter(Boolean).length;
 
   useEffect(() => {
     if (!isReview) {
-      const t = setTimeout(() => textareaRef.current?.focus(), 550);
-      return () => clearTimeout(t);
+      const timer = setTimeout(() => textareaRef.current?.focus(), 450);
+      return () => clearTimeout(timer);
     }
   }, [currentStep, isReview]);
 
-  const handleFieldChange = (value: string) => {
-    setFormData(prev => ({ ...prev, [step.field]: value }));
+  const setField = (field: keyof ICPInputFormData, value: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   const goNext = () => {
-    if (currentStep < totalSteps) setCurrentStep(s => s + 1);
+    if (currentStep < totalSteps) {
+      setCurrentStep((prev) => prev + 1);
+    }
   };
 
   const goBack = () => {
-    if (currentStep > 0) setCurrentStep(s => s - 1);
+    if (currentStep > 0) {
+      setCurrentStep((prev) => prev - 1);
+    }
   };
 
-  const editStep = (index: number) => setCurrentStep(index);
-
-  const handleSubmit = () => onSubmit(formData);
-
-  // ── Step Indicator ─────────────────────────────────────────────
   const StepIndicator = () => (
-    <div className="flex items-center justify-center gap-1 mb-8">
-      {STEPS.map((s, i) => {
-        const isDone = i < currentStep || isReview;
-        const isActive = i === currentStep && !isReview;
-        const hasValue = (formData[s.field] as string).trim().length > 0;
+    <div className="mb-8 rounded-[1.5rem] border border-border/60 bg-background/80 p-4 shadow-sm">
+      <div className="mb-4 flex items-center justify-between gap-4">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Core Brief</p>
+          <p className="mt-1 text-sm text-foreground/80">Answer the five questions that most directly shape customer clarity.</p>
+        </div>
+        <div className="rounded-2xl bg-muted px-3 py-2 text-right">
+          <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Progress</p>
+          <p className="text-sm font-semibold">{Math.min(currentStep + (isReview ? 0 : 1), totalSteps)} / {totalSteps}</p>
+        </div>
+      </div>
+      <div className="flex items-center justify-center gap-1">
+      {CORE_STEPS.map((item, index) => {
+        const isDone = index < currentStep || isReview;
+        const isActive = index === currentStep && !isReview;
+        const hasValue = (formData[item.field] as string).trim().length > 0;
         return (
-          <React.Fragment key={i}>
+          <React.Fragment key={item.field}>
             <button
               type="button"
-              onClick={() => (isDone || isActive) && editStep(i)}
+              onClick={() => (isDone || isActive) && setCurrentStep(index)}
               className={cn(
-                'relative w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-bold transition-all duration-300 shrink-0',
+                'relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[11px] font-bold transition-all duration-300',
                 isDone && hasValue
-                  ? 'bg-primary text-primary-foreground cursor-pointer shadow-sm'
+                  ? 'cursor-pointer bg-primary text-primary-foreground shadow-sm'
                   : isActive
-                  ? 'bg-primary/10 text-primary border-2 border-primary ring-2 ring-primary/20 cursor-default'
-                  : 'bg-muted text-muted-foreground cursor-default',
+                    ? 'cursor-default border-2 border-primary bg-primary/10 text-primary ring-2 ring-primary/20'
+                    : 'cursor-default border border-border/60 bg-muted/70 text-muted-foreground',
               )}
-              title={isDone ? `Edit: ${s.question}` : undefined}
+              title={isDone ? `Edit: ${item.question}` : undefined}
             >
-              {isDone && hasValue ? (
-                <CheckCircle2 className="w-3.5 h-3.5" />
-              ) : (
-                s.number
-              )}
+              {isDone && hasValue ? <CheckCircle2 className="h-3.5 w-3.5" /> : item.number}
             </button>
-            {i < totalSteps - 1 && (
+            {index < totalSteps - 1 && (
               <div
                 className={cn(
-                  'h-0.5 flex-1 max-w-[1.25rem] rounded-full transition-all duration-500',
-                  i < currentStep ? 'bg-primary' : 'bg-muted',
+                  'h-0.5 max-w-[1.35rem] flex-1 rounded-full transition-all duration-500',
+                  index < currentStep ? 'bg-primary' : 'bg-muted',
                 )}
               />
             )}
           </React.Fragment>
         );
       })}
+      </div>
     </div>
   );
 
-  // ── Review screen ───────────────────────────────────────────────
   if (isReview) {
     return (
       <div className="space-y-6">
         <StepIndicator />
         <StepView stepKey={totalSteps}>
-          <div className="space-y-4">
-            <div className="text-center space-y-1 mb-6">
-              <p className="text-xs font-mono text-primary/60 uppercase tracking-widest">Review</p>
-              <h2 className="text-xl font-semibold">Your startup foundation</h2>
-              <p className="text-sm text-muted-foreground">Review all answers, then generate your ICP analysis.</p>
+          <div className="space-y-6">
+            <div className="text-center">
+              <p className="mb-1 text-xs font-mono uppercase tracking-widest text-primary/60">Review</p>
+              <h2 className="text-2xl font-semibold">Your current ICP thesis</h2>
+              <p className="mt-2 text-sm text-muted-foreground">
+                The core questions are complete. Add optional precision only if it meaningfully improves confidence.
+              </p>
             </div>
 
-            {STEPS.map((s, i) => (
-              <Card key={i} className="hover-lift border-border/60 group">
-                <CardContent className="pt-4 pb-4">
+            <Card className="rounded-[1.75rem] border-primary/20 bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.12),transparent_42%),rgba(14,165,233,0.05)]">
+              <CardContent className="pt-6">
+                <div className="flex items-start gap-3">
+                  <Sparkles className="mt-0.5 h-5 w-5 text-primary" />
+                  <div className="space-y-2">
+                    <p className="font-medium">What the analysis will do</p>
+                    <p className="text-sm text-muted-foreground">
+                      Recommend the first ICP to pursue, explain why that segment wins, define your wedge, and give you validation experiments instead of a generic report.
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {CORE_STEPS.map((item, index) => (
+              <Card key={item.field} className="group rounded-[1.5rem] border-border/60 shadow-sm">
+                <CardContent className="pt-4">
                   <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-start gap-3 flex-1 min-w-0">
-                      <span className="text-xs font-mono text-primary/50 mt-0.5 shrink-0">{s.number}</span>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs text-muted-foreground mb-1">{s.question}</p>
-                        <p className="text-sm font-medium text-foreground whitespace-pre-wrap break-words">
-                          {(formData[s.field] as string) || <span className="text-muted-foreground italic">Not answered</span>}
+                    <div className="flex min-w-0 flex-1 items-start gap-3">
+                      <span className="mt-0.5 shrink-0 text-xs font-mono text-primary/50">{item.number}</span>
+                      <div className="min-w-0 flex-1">
+                        <p className="mb-1 text-xs text-muted-foreground">{item.question}</p>
+                        <p className="whitespace-pre-wrap break-words text-sm font-medium text-foreground">
+                          {(formData[item.field] as string) || <span className="italic text-muted-foreground">Not answered</span>}
                         </p>
                       </div>
                     </div>
@@ -259,61 +301,111 @@ const ICPInputForm: React.FC<ICPInputFormProps> = ({
                       type="button"
                       variant="ghost"
                       size="sm"
-                      className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity h-7 w-7 p-0"
-                      onClick={() => editStep(i)}
+                      className="h-7 w-7 shrink-0 p-0 opacity-0 transition-opacity group-hover:opacity-100"
+                      onClick={() => setCurrentStep(index)}
                     >
-                      <Edit2 className="w-3.5 h-3.5" />
+                      <Edit2 className="h-3.5 w-3.5" />
                     </Button>
                   </div>
                 </CardContent>
               </Card>
             ))}
 
-            {/* Advanced optional fields */}
             <AdvancedFieldsSection
-              defaultOpen={false}
-              completedCount={[formData.mainCompetitors, formData.industry, formData.revenueModel, formData.currentTraction].filter(Boolean).length}
-              totalCount={4}
+              defaultOpen={completedOptionalCount > 0}
+              completedCount={completedOptionalCount}
+              totalCount={7}
             >
               <div className="space-y-4">
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="painCost">How expensive is the problem?</Label>
+                    <Textarea
+                      id="painCost"
+                      value={formData.painCost}
+                      onChange={(e) => setField('painCost', e.target.value)}
+                      placeholder="Time lost, money lost, blocked outcomes, stress, compliance risk, team drag..."
+                      rows={4}
+                      className="resize-none"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="founderEdge">Why are you credible to solve this?</Label>
+                    <Textarea
+                      id="founderEdge"
+                      value={formData.founderEdge}
+                      onChange={(e) => setField('founderEdge', e.target.value)}
+                      placeholder="Lived experience, domain expertise, network access, data, technical edge, trust..."
+                      rows={4}
+                      className="resize-none"
+                    />
+                  </div>
+                </div>
+
                 <div className="space-y-2">
-                  <Label htmlFor="mainCompetitors">Named Competitors</Label>
+                  <Label htmlFor="nextGoals">What decision or milestone matters next?</Label>
                   <Textarea
-                    id="mainCompetitors"
-                    value={formData.mainCompetitors}
-                    onChange={(e) => setFormData(prev => ({ ...prev, mainCompetitors: e.target.value }))}
-                    placeholder="List specific competitor products or companies, and what they offer."
+                    id="nextGoals"
+                    value={formData.nextGoals}
+                    onChange={(e) => setField('nextGoals', e.target.value)}
+                    placeholder="Examples: get 10 interviews in 2 weeks, validate willingness to pay, close 3 design partners, land first 5 paying customers."
                     rows={3}
                     className="resize-none"
                   />
                 </div>
-                <div className="grid gap-4 sm:grid-cols-2">
+
+                <div className="space-y-2">
+                  <Label htmlFor="mainCompetitors">Named competitors or alternatives</Label>
+                  <Textarea
+                    id="mainCompetitors"
+                    value={formData.mainCompetitors}
+                    onChange={(e) => setField('mainCompetitors', e.target.value)}
+                    placeholder="Specific tools, agencies, internal processes, or manual workarounds your customer already uses."
+                    rows={3}
+                    className="resize-none"
+                  />
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="industry">Industry</Label>
-                    <Select value={formData.industry} onValueChange={(v) => setFormData(prev => ({ ...prev, industry: v }))}>
-                      <SelectTrigger id="industry"><SelectValue placeholder="Select industry" /></SelectTrigger>
+                    <Select value={formData.industry} onValueChange={(value) => setField('industry', value)}>
+                      <SelectTrigger id="industry">
+                        <SelectValue placeholder="Select industry" />
+                      </SelectTrigger>
                       <SelectContent>
-                        {INDUSTRIES.map(ind => <SelectItem key={ind} value={ind}>{ind}</SelectItem>)}
+                        {INDUSTRIES.map((industry) => (
+                          <SelectItem key={industry} value={industry}>
+                            {industry}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="revenueModel">Revenue Model</Label>
-                    <Select value={formData.revenueModel} onValueChange={(v) => setFormData(prev => ({ ...prev, revenueModel: v }))}>
-                      <SelectTrigger id="revenueModel"><SelectValue placeholder="Select model" /></SelectTrigger>
+                    <Label htmlFor="revenueModel">Revenue model</Label>
+                    <Select value={formData.revenueModel} onValueChange={(value) => setField('revenueModel', value)}>
+                      <SelectTrigger id="revenueModel">
+                        <SelectValue placeholder="Select revenue model" />
+                      </SelectTrigger>
                       <SelectContent>
-                        {REVENUE_MODELS.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}
+                        {REVENUE_MODELS.map((model) => (
+                          <SelectItem key={model} value={model}>
+                            {model}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
                 </div>
+
                 <div className="space-y-2">
-                  <Label htmlFor="currentTraction">Current Traction</Label>
+                  <Label htmlFor="currentTraction">What evidence do you already have?</Label>
                   <Textarea
                     id="currentTraction"
                     value={formData.currentTraction}
-                    onChange={(e) => setFormData(prev => ({ ...prev, currentTraction: e.target.value }))}
-                    placeholder="Any early signals? Waitlist sign-ups, pilot users, paid customers, interviews…"
+                    onChange={(e) => setField('currentTraction', e.target.value)}
+                    placeholder="Interviews, waitlist signups, paid pilots, retained customers, usage patterns, referrals, response rates..."
                     rows={3}
                     className="resize-none"
                   />
@@ -323,20 +415,20 @@ const ICPInputForm: React.FC<ICPInputFormProps> = ({
 
             <div className="flex gap-3 pt-2">
               <Button type="button" variant="outline" onClick={goBack} className="gap-2">
-                <ChevronLeft className="w-4 h-4" />
+                <ChevronLeft className="h-4 w-4" />
                 Back
               </Button>
-              <Button
-                type="button"
-                onClick={handleSubmit}
-                disabled={isSubmitting}
-                className="flex-1 btn-magnetic gap-2"
-                size="lg"
-              >
+              <Button type="button" onClick={() => onSubmit(formData)} disabled={isSubmitting} className="flex-1 gap-2" size="lg">
                 {isSubmitting ? (
-                  <><Loader2 className="w-4 h-4 animate-spin" />Analyzing Your Niche Market...</>
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Building Your ICP Decision
+                  </>
                 ) : (
-                  <><Target className="w-4 h-4" />Identify My ICP</>
+                  <>
+                    <Target className="h-4 w-4" />
+                    Generate ICP Decision
+                  </>
                 )}
               </Button>
             </div>
@@ -346,78 +438,161 @@ const ICPInputForm: React.FC<ICPInputFormProps> = ({
     );
   }
 
-  // ── Step screen ─────────────────────────────────────────────────
   return (
     <div className="space-y-6">
       <StepIndicator />
       <StepView stepKey={currentStep}>
-        <div className="space-y-6">
-          {/* Question header */}
-          <div className="space-y-3">
-            <div className="flex items-center gap-3">
-              <span className="text-4xl font-bold font-mono text-primary/20 leading-none select-none">{step.number}</span>
-              <div className="h-px flex-1 bg-gradient-to-r from-primary/20 to-transparent" />
-              <span className="text-xs text-muted-foreground tabular-nums">{currentStep + 1} of {totalSteps}</span>
+        <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+          <div className="space-y-6">
+            <div className="rounded-[1.75rem] border border-border/60 bg-background/85 p-6 shadow-sm">
+              <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <span className="select-none text-4xl font-bold leading-none text-primary/20">{step.number}</span>
+                <div className="h-px flex-1 bg-gradient-to-r from-primary/20 to-transparent" />
+                <span className="text-xs tabular-nums text-muted-foreground">{currentStep + 1} of {totalSteps}</span>
+              </div>
+                <h2 className="text-2xl font-semibold leading-snug md:text-[2rem]">{step.question}</h2>
+                <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground">{step.hint}</p>
+                <div className="inline-flex items-center gap-1.5 rounded-full border border-primary/10 bg-primary/5 px-3 py-1 text-xs text-primary/80">
+                  <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary/40" />
+                  {step.unlocks}
+                </div>
+              </div>
             </div>
-            <h2 className="text-xl md:text-2xl font-semibold leading-snug">{step.question}</h2>
-            <p className="text-sm text-muted-foreground">{step.hint}</p>
-          </div>
 
-          {/* Analytical objective badge */}
-          <div className="inline-flex items-center gap-1.5 text-xs text-primary/70 bg-primary/5 border border-primary/10 rounded-full px-3 py-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-primary/40 shrink-0" />
-            {step.analyticalObjective}
-          </div>
+            <Card className="rounded-[1.75rem] border border-border/60 shadow-sm">
+              <CardContent className="space-y-4 pt-6">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Founder input</p>
+                    <p className="mt-1 text-sm text-foreground/70">Answer in plain language. Precision beats polish.</p>
+                  </div>
+                  <div className="rounded-full bg-muted px-3 py-1.5 text-xs text-muted-foreground">
+                    {currentValue.trim().length} characters
+                  </div>
+                </div>
 
-          {/* Textarea */}
-          <div className="space-y-2">
-            <Textarea
-              ref={textareaRef}
-              value={currentValue}
-              onChange={(e) => handleFieldChange(e.target.value)}
-              placeholder={step.placeholder}
-              rows={5}
-              className={cn(
-                'resize-none text-base transition-all duration-200',
-                'focus:ring-2 focus:ring-primary/30 focus:border-primary/60',
-                canContinue && 'border-primary/30',
+                <div className="space-y-2">
+              <Textarea
+                ref={textareaRef}
+                value={currentValue}
+                onChange={(e) => setField(step.field, e.target.value)}
+                placeholder={step.placeholder}
+                rows={8}
+                className={cn(
+                  'resize-none rounded-[1.35rem] border-border/60 bg-muted/20 p-5 text-base leading-relaxed transition-all duration-200',
+                  'focus:border-primary/60 focus:ring-2 focus:ring-primary/30',
+                  canContinue && 'border-primary/30 shadow-[0_0_0_1px_rgba(14,165,233,0.08)]',
+                )}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && (e.metaKey || e.ctrlKey) && canContinue) {
+                    goNext();
+                  }
+                }}
+              />
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <p className="text-xs text-muted-foreground">Cmd/Ctrl + Enter to continue</p>
+                    <p className="text-right text-xs text-muted-foreground">
+                      {canContinue ? (
+                        <span className="inline-flex items-center justify-end gap-1 text-green-600 dark:text-green-400">
+                          <CheckCircle2 className="h-3 w-3" />
+                          Ready to move on
+                        </span>
+                      ) : (
+                        <span>Add enough detail to make the next decision obvious.</span>
+                      )}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <div className="flex gap-3">
+              {currentStep > 0 && (
+                <Button type="button" variant="outline" onClick={goBack} className="gap-2">
+                  <ChevronLeft className="h-4 w-4" />
+                  Back
+                </Button>
               )}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && (e.metaKey || e.ctrlKey) && canContinue) goNext();
-              }}
-            />
-            <p className="text-xs text-muted-foreground text-right">
-              {canContinue ? (
-                <span className="text-green-600 dark:text-green-400 flex items-center justify-end gap-1">
-                  <CheckCircle2 className="w-3 h-3" /> Ready
-                </span>
-              ) : (
-                <span>Cmd/Ctrl + Enter to continue</span>
-              )}
-            </p>
-          </div>
-
-          {/* Navigation */}
-          <div className="flex gap-3">
-            {currentStep > 0 && (
-              <Button type="button" variant="outline" onClick={goBack} className="gap-2">
-                <ChevronLeft className="w-4 h-4" />
-                Back
+              <Button
+                type="button"
+                onClick={goNext}
+                disabled={!canContinue}
+                className={cn('flex-1 gap-2', currentStep === 0 && 'w-full')}
+                size="lg"
+              >
+                {currentStep === totalSteps - 1 ? (
+                  <>
+                    Review ICP Thesis
+                    <ChevronRight className="h-4 w-4" />
+                  </>
+                ) : (
+                  <>
+                    Continue
+                    <ChevronRight className="h-4 w-4" />
+                  </>
+                )}
               </Button>
-            )}
-            <Button
-              type="button"
-              onClick={goNext}
-              disabled={!canContinue}
-              className={cn('flex-1 gap-2 btn-magnetic', currentStep === 0 && 'w-full')}
-              size="lg"
-            >
-              {currentStep === totalSteps - 1 ? (
-                <>Review Answers <ChevronRight className="w-4 h-4" /></>
-              ) : (
-                <>Continue <ChevronRight className="w-4 h-4" /></>
-              )}
-            </Button>
+            </div>
+          </div>
+
+          <div className="space-y-4 lg:sticky lg:top-24 lg:self-start">
+            <Card className="rounded-[1.75rem] border-primary/20 bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.12),transparent_40%),rgba(14,165,233,0.05)] shadow-sm">
+              <CardContent className="pt-6">
+                <div className="mb-4 flex items-center gap-2">
+                  <FileSearch className="h-4 w-4 text-primary" />
+                  <p className="text-sm font-semibold">Working ICP thesis</p>
+                </div>
+                {workingHypothesis.length > 0 ? (
+                  <ul className="space-y-3">
+                    {workingHypothesis.map((line, index) => (
+                      <li key={index} className="rounded-2xl border border-border/50 bg-background/70 px-4 py-3 text-sm text-foreground/75">
+                        {line}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    Your answers will turn into a clearer customer, problem, and wedge statement as you move through the brief.
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card className="rounded-[1.75rem] border border-border/60 shadow-sm">
+              <CardContent className="pt-6">
+                <div className="mb-3 flex items-center gap-2">
+                  <Gauge className="h-4 w-4 text-primary" />
+                  <p className="text-sm font-semibold">What you are building toward</p>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  A decision-first output that tells you who to target first, what pain to anchor on, what not to chase yet, and which validation tests to run next.
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="rounded-[1.75rem] border border-border/60 shadow-sm">
+              <CardContent className="pt-6">
+                <div className="mb-3 flex items-center gap-2">
+                  <Lightbulb className="h-4 w-4 text-primary" />
+                  <p className="text-sm font-semibold">Quality bar</p>
+                </div>
+                <ul className="space-y-2 text-sm text-muted-foreground">
+                  <li className="flex items-start gap-2">
+                    <Eye className="mt-0.5 h-3.5 w-3.5 text-primary" />
+                    <span>Name one role, not many audiences.</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Eye className="mt-0.5 h-3.5 w-3.5 text-primary" />
+                    <span>Describe current behavior, not ideal behavior.</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Eye className="mt-0.5 h-3.5 w-3.5 text-primary" />
+                    <span>Explain why your wedge matters now.</span>
+                  </li>
+                </ul>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </StepView>

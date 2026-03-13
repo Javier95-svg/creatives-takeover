@@ -1,74 +1,55 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Target, Megaphone, Shield, ChevronDown, ChevronUp, Sparkles, Crosshair } from 'lucide-react';
-import { cn } from '@/lib/utils';
-
-interface CompetitivePosition {
-  competitor: string;
-  theirPositioning: string;
-  yourAdvantage: string;
-  differentiationAngle: string;
-}
-
-interface MessagingFramework {
-  headline: string;
-  subheadline: string;
-  keyMessages: string[];
-  toneOfVoice: string;
-}
-
-interface PositioningStrategy {
-  positioningStatement: string;
-  uniqueValueProposition: string;
-  keyDifferentiators: string[];
-  messagingFramework: MessagingFramework;
-  competitivePositioning: CompetitivePosition[];
-  brandPersonality: string[];
-}
+import { Megaphone, Shield, Sparkles, Target } from 'lucide-react';
+import { ICPAnalysis } from './types';
 
 interface ICPPositioningProps {
-  positioning: PositioningStrategy;
+  positioning: ICPAnalysis['positioning'];
 }
 
 const ICPPositioning: React.FC<ICPPositioningProps> = ({ positioning }) => {
-  const [expandedCompetitor, setExpandedCompetitor] = useState<number | null>(null);
+  const differentiators = positioning.differentiators.length > 0 ? positioning.differentiators : ['No differentiators were generated yet.'];
+  const messagePillars = positioning.messagePillars.length > 0 ? positioning.messagePillars : ['No message pillars were generated yet.'];
+  const proofPoints = positioning.proofPoints.length > 0 ? positioning.proofPoints : ['No proof points were generated yet.'];
 
   return (
     <div className="space-y-6">
-      {/* Positioning Statement */}
-      <Card className="border-2 border-primary/20 bg-primary/5">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Crosshair className="w-5 h-5 text-primary" />
-            Positioning Statement
+      <Card className="overflow-hidden rounded-[1.9rem] border border-primary/20 bg-[radial-gradient(circle_at_top_left,rgba(168,85,247,0.12),transparent_42%),rgba(14,165,233,0.05)] shadow-[0_20px_60px_-36px_rgba(14,165,233,0.42)]">
+        <CardHeader className="space-y-5 pb-0">
+          <div className="inline-flex w-fit items-center gap-2 rounded-full border border-sky-500/20 bg-white/80 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-sky-700 dark:bg-slate-950/60 dark:text-sky-300">
+            <Megaphone className="h-3.5 w-3.5" />
+            Positioning system
+          </div>
+          <CardTitle className="flex items-center gap-2 text-xl sm:text-2xl">
+            <Target className="h-5 w-5 text-primary" />
+            One-Line Positioning
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <blockquote className="text-base italic border-l-4 border-primary pl-4 py-2">
-            "{positioning.positioningStatement}"
+        <CardContent className="space-y-5 pt-6">
+          <p className="text-2xl font-semibold leading-tight sm:text-3xl">{positioning.oneLiner}</p>
+          <blockquote className="rounded-[1.35rem] border border-border/60 bg-background/80 px-5 py-4 text-sm italic leading-relaxed text-muted-foreground">
+            {positioning.positioningStatement}
           </blockquote>
         </CardContent>
       </Card>
 
-      {/* Unique Value Proposition */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-primary" />
-            Unique Value Proposition
+      <Card className="rounded-[1.75rem] border border-border/60 shadow-sm">
+        <CardHeader className="pb-2">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Sparkles className="h-4 w-4 text-primary" />
+            Value Proposition
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <p className="text-sm">{positioning.uniqueValueProposition}</p>
+          <p className="text-sm">{positioning.valueProposition}</p>
           <div>
-            <p className="text-xs font-medium text-muted-foreground mb-2">Key Differentiators</p>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Differentiators</p>
             <div className="space-y-2">
-              {positioning.keyDifferentiators.map((diff, i) => (
-                <div key={i} className="flex items-start gap-2 p-2 rounded-lg bg-green-50 dark:bg-green-900/10">
-                  <Shield className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
-                  <span className="text-sm">{diff}</span>
+              {differentiators.map((item, index) => (
+                <div key={index} className="flex items-start gap-3 rounded-[1.2rem] border border-emerald-200/60 bg-emerald-50/80 p-4 dark:border-emerald-900/40 dark:bg-emerald-900/10">
+                  <Shield className="mt-0.5 h-4 w-4 flex-shrink-0 text-green-600" />
+                  <span className="text-sm">{item}</span>
                 </div>
               ))}
             </div>
@@ -76,115 +57,56 @@ const ICPPositioning: React.FC<ICPPositioningProps> = ({ positioning }) => {
         </CardContent>
       </Card>
 
-      {/* Messaging Framework */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base flex items-center gap-2">
-            <Megaphone className="w-4 h-4 text-primary" />
-            Messaging Framework
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="p-4 rounded-lg bg-muted/50 space-y-2">
-            <div>
-              <p className="text-xs font-medium text-muted-foreground mb-1">Headline</p>
-              <p className="text-lg font-bold">{positioning.messagingFramework.headline}</p>
-            </div>
-            <div>
-              <p className="text-xs font-medium text-muted-foreground mb-1">Subheadline</p>
-              <p className="text-sm text-muted-foreground">{positioning.messagingFramework.subheadline}</p>
-            </div>
-          </div>
-
-          <div>
-            <p className="text-xs font-medium text-muted-foreground mb-2">Key Messages</p>
-            <div className="space-y-2">
-              {positioning.messagingFramework.keyMessages.map((msg, i) => (
-                <div key={i} className="flex items-start gap-2 text-sm">
-                  <span className="flex-shrink-0 w-5 h-5 rounded-full bg-primary/10 text-primary text-xs flex items-center justify-center font-medium mt-0.5">
-                    {i + 1}
-                  </span>
-                  <span>{msg}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="p-3 rounded-lg bg-muted/50">
-            <p className="text-xs font-medium text-muted-foreground mb-1">Tone of Voice</p>
-            <p className="text-sm">{positioning.messagingFramework.toneOfVoice}</p>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Competitive Positioning */}
-      {positioning.competitivePositioning && positioning.competitivePositioning.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">
-              <Target className="w-4 h-4 text-primary" />
-              Competitive Positioning Map
+      <div className="grid gap-6 lg:grid-cols-2">
+        <Card className="rounded-[1.75rem] border border-border/60 shadow-sm">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Megaphone className="h-4 w-4 text-primary" />
+              Message Pillars
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {positioning.competitivePositioning.map((comp, index) => (
-              <div key={index} className="border rounded-lg overflow-hidden">
-                <button
-                  type="button"
-                  onClick={() => setExpandedCompetitor(expandedCompetitor === index ? null : index)}
-                  className="w-full flex items-center justify-between p-3 hover:bg-muted/50 transition-colors text-left"
-                >
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium text-sm">{comp.competitor}</span>
-                    <Badge variant="outline" className="text-xs">vs You</Badge>
-                  </div>
-                  {expandedCompetitor === index ? (
-                    <ChevronUp className="w-4 h-4 text-muted-foreground" />
-                  ) : (
-                    <ChevronDown className="w-4 h-4 text-muted-foreground" />
-                  )}
-                </button>
-                {expandedCompetitor === index && (
-                  <div className="p-3 pt-0 space-y-3 border-t">
-                    <div className="grid gap-3 sm:grid-cols-2 mt-3">
-                      <div className="p-3 rounded-lg bg-muted/50">
-                        <p className="text-xs font-medium text-muted-foreground mb-1">Their Positioning</p>
-                        <p className="text-sm">{comp.theirPositioning}</p>
-                      </div>
-                      <div className="p-3 rounded-lg bg-green-50 dark:bg-green-900/10">
-                        <p className="text-xs font-medium text-green-700 dark:text-green-400 mb-1">Your Advantage</p>
-                        <p className="text-sm">{comp.yourAdvantage}</p>
-                      </div>
-                    </div>
-                    <div className="p-3 rounded-lg bg-primary/5">
-                      <p className="text-xs font-medium text-primary mb-1">Differentiation Angle</p>
-                      <p className="text-sm">{comp.differentiationAngle}</p>
-                    </div>
-                  </div>
-                )}
+            {messagePillars.map((pillar, index) => (
+              <div key={index} className="flex items-start gap-3 rounded-[1.15rem] border border-border/50 bg-background/70 px-4 py-3 text-sm">
+                <span className="mt-0.5 flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-xs font-medium text-primary">
+                  {index + 1}
+                </span>
+                <span>{pillar}</span>
               </div>
             ))}
           </CardContent>
         </Card>
-      )}
 
-      {/* Brand Personality */}
-      {positioning.brandPersonality && positioning.brandPersonality.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-primary" />
-              Recommended Brand Personality
-            </CardTitle>
+        <Card className="rounded-[1.75rem] border border-border/60 shadow-sm">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">Proof To Back The Claim</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-2">
-              {positioning.brandPersonality.map((trait, i) => (
-                <Badge key={i} variant="secondary" className="text-sm px-3 py-1">
-                  {trait}
+              {proofPoints.map((point, index) => (
+                <Badge key={index} variant="outline" className="rounded-full border-border/60 bg-background/80 px-3 py-1 text-xs">
+                  {point}
                 </Badge>
               ))}
             </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {positioning.objections.length > 0 && (
+        <Card className="rounded-[1.75rem] border border-border/60 shadow-sm">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">Likely Objections To Handle</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {positioning.objections.map((item, index) => (
+              <div key={index} className="rounded-[1.2rem] border border-border/60 bg-background/80 p-4">
+                <p className="mb-1 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Objection</p>
+                <p className="mb-3 text-sm">{item.objection}</p>
+                <p className="mb-1 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Response</p>
+                <p className="text-sm text-muted-foreground">{item.response}</p>
+              </div>
+            ))}
           </CardContent>
         </Card>
       )}
