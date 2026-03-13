@@ -240,7 +240,7 @@ const Navigation = () => {
                           </TooltipContent>
                         </Tooltip>
                         <DropdownMenuContent align="start" className="w-80 md:w-72 sm:w-64 max-w-[calc(100vw-2rem)] max-h-[min(520px,80vh)] overflow-y-auto overscroll-contain">
-                          <DropdownMenuLabel>Validate. Build. Launch.</DropdownMenuLabel>
+                          <DropdownMenuLabel>Validate ✅ Build 🛠️ Launch 🚀</DropdownMenuLabel>
                           <DropdownMenuSeparator />
                           {bizMapSubmenu.map((subItem, idx) => {
                             if ('type' in subItem && subItem.type === 'label') {
