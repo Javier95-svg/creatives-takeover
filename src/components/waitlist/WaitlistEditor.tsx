@@ -980,20 +980,20 @@ export default function WaitlistEditor() {
         <div className="grid min-h-[820px] lg:grid-cols-[380px_minmax(0,1fr)]">
           <aside className="border-r border-slate-200/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.94),rgba(248,250,252,0.94))] backdrop-blur">
             <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as BuilderTab)} className="h-full flex flex-col">
-              <div className="border-b border-slate-200/80 bg-white/90 p-4 backdrop-blur">
+              <div className="border-b border-white/10 bg-[linear-gradient(180deg,rgba(15,23,42,0.96),rgba(30,41,59,0.96))] p-4 text-white backdrop-blur">
                 <div className="mb-4 space-y-2">
-                  <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-600">Design controls</p>
+                  <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-200">Design controls</p>
                   <div>
-                    <h3 className="text-lg font-semibold text-slate-950">Edit like a landing page studio</h3>
-                    <p className="text-sm text-slate-500">Move tab by tab through content, visual styling, forms, launch settings, and performance.</p>
+                    <h3 className="text-lg font-semibold text-white">Edit like a landing page studio</h3>
+                    <p className="text-sm text-slate-200/80">Move tab by tab through content, visual styling, forms, launch settings, and performance.</p>
                   </div>
                 </div>
-                <TabsList className="grid h-auto w-full grid-cols-5 gap-1 rounded-[20px] bg-slate-100 p-1.5 shadow-inner">
-                  <TabsTrigger value="content" className="rounded-2xl px-2 py-2 text-[11px] font-semibold data-[state=active]:bg-white data-[state=active]:text-slate-950 data-[state=active]:shadow-sm">Content</TabsTrigger>
-                  <TabsTrigger value="style" className="rounded-2xl px-2 py-2 text-[11px] font-semibold data-[state=active]:bg-white data-[state=active]:text-slate-950 data-[state=active]:shadow-sm">Style</TabsTrigger>
-                  <TabsTrigger value="form" className="rounded-2xl px-2 py-2 text-[11px] font-semibold data-[state=active]:bg-white data-[state=active]:text-slate-950 data-[state=active]:shadow-sm">Form</TabsTrigger>
-                  <TabsTrigger value="launch" className="rounded-2xl px-2 py-2 text-[11px] font-semibold data-[state=active]:bg-white data-[state=active]:text-slate-950 data-[state=active]:shadow-sm">Launch</TabsTrigger>
-                  <TabsTrigger value="analytics" className="rounded-2xl px-2 py-2 text-[11px] font-semibold data-[state=active]:bg-white data-[state=active]:text-slate-950 data-[state=active]:shadow-sm">Analytics</TabsTrigger>
+                <TabsList className="grid h-auto w-full grid-cols-5 gap-1 rounded-[20px] bg-white/8 p-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
+                  <TabsTrigger value="content" className="rounded-2xl px-2 py-2 text-[11px] font-semibold text-white/75 data-[state=active]:bg-white data-[state=active]:text-slate-950 data-[state=active]:shadow-sm">Content</TabsTrigger>
+                  <TabsTrigger value="style" className="rounded-2xl px-2 py-2 text-[11px] font-semibold text-white/75 data-[state=active]:bg-white data-[state=active]:text-slate-950 data-[state=active]:shadow-sm">Style</TabsTrigger>
+                  <TabsTrigger value="form" className="rounded-2xl px-2 py-2 text-[11px] font-semibold text-white/75 data-[state=active]:bg-white data-[state=active]:text-slate-950 data-[state=active]:shadow-sm">Form</TabsTrigger>
+                  <TabsTrigger value="launch" className="rounded-2xl px-2 py-2 text-[11px] font-semibold text-white/75 data-[state=active]:bg-white data-[state=active]:text-slate-950 data-[state=active]:shadow-sm">Launch</TabsTrigger>
+                  <TabsTrigger value="analytics" className="rounded-2xl px-2 py-2 text-[11px] font-semibold text-white/75 data-[state=active]:bg-white data-[state=active]:text-slate-950 data-[state=active]:shadow-sm">Analytics</TabsTrigger>
                 </TabsList>
               </div>
 
