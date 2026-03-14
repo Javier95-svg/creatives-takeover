@@ -38,7 +38,7 @@ const MENTOR_HIGHLIGHTS = [
   },
   {
     title: "1:1 working sessions",
-    description: "Use each call to pressure test a decision, not just collect generic advice.",
+    description: "Use each call to get closer to your business goals, not just generic advice.",
     icon: Users,
   },
   {
