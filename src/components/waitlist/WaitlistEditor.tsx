@@ -26,6 +26,7 @@ const SIGNUPS_TABLE = 'waitlist_signups' as any;
 const EVENTS_TABLE = 'waitlist_events' as any;
 const BASE_URL = typeof window !== 'undefined' ? window.location.origin : 'https://creatives-takeover.com';
 const GUEST_DRAFT_STORAGE_KEY = 'waitlist_builder_guest_draft_v1';
+const LAST_EDITOR_STORAGE_KEY = 'waitlist_builder_last_editor_v1';
 
 interface WaitlistPageRow {
   id: string;
@@ -68,6 +69,16 @@ interface EventRow {
   event_type: 'VIEW' | 'SIGNUP';
   variant: 'A' | 'B' | null;
   occurred_at: string;
+}
+
+interface StoredWaitlistEditorState {
+  productName?: string;
+  slugDraft?: string;
+  content?: WaitlistContent;
+  savedAt?: string | null;
+  status?: 'draft' | 'published';
+  draftId?: string | null;
+  currentSlug?: string | null;
 }
 
 function generateSlug(productName: string): string {
@@ -161,23 +172,85 @@ function textToLines(raw: string, min: number, max: number, fallback: string[]):
   return cleaned;
 }
 
+function readStoredWaitlistEditorState(): StoredWaitlistEditorState | null {
+  if (typeof window === 'undefined') return null;
+
+  const raw = window.localStorage.getItem(LAST_EDITOR_STORAGE_KEY);
+  if (!raw) return null;
+
+  try {
+    const parsed = JSON.parse(raw) as StoredWaitlistEditorState;
+    if (!parsed?.content) return null;
+
+    return {
+      productName: parsed.productName || '',
+      slugDraft: sanitizeSlug(parsed.slugDraft || ''),
+      content: normalizeWaitlistContent(parsed.content, parsed.productName || 'Your Product'),
+      savedAt: parsed.savedAt || null,
+      status: parsed.status === 'published' ? 'published' : 'draft',
+      draftId: parsed.draftId || null,
+      currentSlug: parsed.currentSlug || sanitizeSlug(parsed.slugDraft || '') || null,
+    };
+  } catch {
+    return null;
+  }
+}
+
+function readGuestBrowserDraft(): {
+  productName: string;
+  slugDraft: string;
+  content: WaitlistContent;
+  savedAt: string | null;
+} | null {
+  if (typeof window === 'undefined') return null;
+
+  const raw = window.localStorage.getItem(GUEST_DRAFT_STORAGE_KEY);
+  if (!raw) return null;
+
+  try {
+    const parsed = JSON.parse(raw) as StoredWaitlistEditorState;
+    if (!parsed?.content) return null;
+
+    return {
+      productName: parsed.productName || '',
+      slugDraft: sanitizeSlug(parsed.slugDraft || ''),
+      content: normalizeWaitlistContent(parsed.content, parsed.productName || 'Your Product'),
+      savedAt: parsed.savedAt || null,
+    };
+  } catch {
+    return null;
+  }
+}
+
 export default function WaitlistEditor() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { refreshProgress } = useBizMapProgress();
   const { ensureCredits } = useCreditActions();
+  const initialStoredStateRef = useRef<StoredWaitlistEditorState | null>(readStoredWaitlistEditorState());
+  const initialGuestDraftRef = useRef(readGuestBrowserDraft());
+  const initialState = initialStoredStateRef.current ?? (initialGuestDraftRef.current ? {
+    productName: initialGuestDraftRef.current.productName,
+    slugDraft: initialGuestDraftRef.current.slugDraft,
+    content: initialGuestDraftRef.current.content,
+    savedAt: initialGuestDraftRef.current.savedAt,
+    status: 'draft' as const,
+    draftId: null,
+    currentSlug: initialGuestDraftRef.current.slugDraft || null,
+  } : null);
+  const initialContent = initialState?.content ?? getDefaultWaitlistContent('Your Product');
 
   const [activeTab, setActiveTab] = useState<BuilderTab>('content');
   const [previewDevice, setPreviewDevice] = useState<PreviewDevice>('desktop');
   const [allPages, setAllPages] = useState<WaitlistPageRow[]>([]);
 
-  const [productName, setProductName] = useState('');
-  const [content, setContent] = useState<WaitlistContent>(getDefaultWaitlistContent('Your Product'));
-  const [benefitsDraft, setBenefitsDraft] = useState(linesToText(getDefaultWaitlistContent('Your Product').benefits));
-  const [howItWorksDraft, setHowItWorksDraft] = useState(linesToText(getDefaultWaitlistContent('Your Product').howItWorks));
+  const [productName, setProductName] = useState(initialState?.productName || '');
+  const [content, setContent] = useState<WaitlistContent>(initialContent);
+  const [benefitsDraft, setBenefitsDraft] = useState(linesToText(initialContent.benefits));
+  const [howItWorksDraft, setHowItWorksDraft] = useState(linesToText(initialContent.howItWorks));
 
-  const [draftId, setDraftId] = useState<string | null>(null);
-  const [currentSlug, setCurrentSlug] = useState<string | null>(null);
-  const [status, setStatus] = useState<'draft' | 'published'>('draft');
+  const [draftId, setDraftId] = useState<string | null>(initialState?.draftId || null);
+  const [currentSlug, setCurrentSlug] = useState<string | null>(initialState?.currentSlug || null);
+  const [status, setStatus] = useState<'draft' | 'published'>(initialState?.status === 'published' ? 'published' : 'draft');
   const [markReadyAt, setMarkReadyAt] = useState<string | null>(null);
 
   const [viewCount, setViewCount] = useState(0);
@@ -189,12 +262,21 @@ export default function WaitlistEditor() {
   const [isPublishing, setIsPublishing] = useState(false);
   const [isMarkingReady, setIsMarkingReady] = useState(false);
   const [isCheckingSlug, setIsCheckingSlug] = useState(false);
-  const [isInitializing, setIsInitializing] = useState(true);
-  const [slugDraft, setSlugDraft] = useState('');
+  const [isHydrating, setIsHydrating] = useState(false);
+  const [slugDraft, setSlugDraft] = useState(initialState?.slugDraft || '');
   const [slugAvailable, setSlugAvailable] = useState<boolean | null>(null);
   const [isCheckingDns, setIsCheckingDns] = useState(false);
-  const [lastSavedSnapshot, setLastSavedSnapshot] = useState('');
-  const [lastSavedAt, setLastSavedAt] = useState<string | null>(null);
+  const [lastSavedSnapshot, setLastSavedSnapshot] = useState(
+    initialState
+      ? buildEditorSnapshot(
+          initialState.productName || '',
+          initialContent,
+          initialState.slugDraft || initialState.currentSlug || '',
+          initialState.status === 'published' ? 'published' : 'draft'
+        )
+      : ''
+  );
+  const [lastSavedAt, setLastSavedAt] = useState<string | null>(initialState?.savedAt || null);
   const [restorableGuestDraft, setRestorableGuestDraft] = useState<{
     productName: string;
     slugDraft: string;
@@ -326,33 +408,10 @@ export default function WaitlistEditor() {
 
   useEffect(() => {
     const initialize = async () => {
-      setIsInitializing(true);
+      if (authLoading) return;
 
-      const browserDraft = (() => {
-        if (typeof window === 'undefined') return null;
-        const raw = window.localStorage.getItem(GUEST_DRAFT_STORAGE_KEY);
-        if (!raw) return null;
-
-        try {
-          const parsed = JSON.parse(raw) as {
-            productName?: string;
-            slugDraft?: string;
-            content?: WaitlistContent;
-            savedAt?: string;
-          };
-
-          if (!parsed?.content) return null;
-
-          return {
-            productName: parsed.productName || '',
-            slugDraft: sanitizeSlug(parsed.slugDraft || ''),
-            content: normalizeWaitlistContent(parsed.content, parsed.productName || 'Your Product'),
-            savedAt: parsed.savedAt || null,
-          };
-        } catch {
-          return null;
-        }
-      })();
+      setIsHydrating(true);
+      const browserDraft = readGuestBrowserDraft();
 
       if (!user) {
         if (browserDraft) {
@@ -379,19 +438,21 @@ export default function WaitlistEditor() {
         setEvents([]);
         setAllPages([]);
         setRestorableGuestDraft(browserDraft);
-        setIsInitializing(false);
+        setIsHydrating(false);
         return;
       }
 
-      await loadAllPages();
-
-      const { data } = await (supabase as any)
-        .from(WAITLIST_TABLE)
-        .select('id, slug, product_name, ai_content, status, title, view_count, mark_ready_at, theme, accent_color, layout, logo_url, image_url, social_links, launch_date, webhook_url, integration_provider, integration_list_id, confirmation_email_enabled, ab_test_enabled, headline_variant_b, referral_message')
-        .eq('user_id', user.id)
-        .order('updated_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
+      const [_, latestPageResult] = await Promise.all([
+        loadAllPages(),
+        (supabase as any)
+          .from(WAITLIST_TABLE)
+          .select('id, slug, product_name, ai_content, status, title, view_count, mark_ready_at, theme, accent_color, layout, logo_url, image_url, social_links, launch_date, webhook_url, integration_provider, integration_list_id, confirmation_email_enabled, ab_test_enabled, headline_variant_b, referral_message')
+          .eq('user_id', user.id)
+          .order('updated_at', { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+      ]);
+      const { data } = latestPageResult as { data: WaitlistPageRow | null };
 
       if (!data) {
         if (browserDraft) {
@@ -413,21 +474,31 @@ export default function WaitlistEditor() {
           });
         }
         setRestorableGuestDraft(browserDraft);
-        setIsInitializing(false);
+        setIsHydrating(false);
         return;
       }
 
       loadPageIntoEditor(data as WaitlistPageRow);
       await fetchAnalytics((data as WaitlistPageRow).id);
       setRestorableGuestDraft(browserDraft);
-      setIsInitializing(false);
+      setIsHydrating(false);
     };
 
-    initialize();
-  }, [applyDraftState, fetchAnalytics, loadAllPages, loadPageIntoEditor, user]);
+    void initialize();
+  }, [applyDraftState, authLoading, fetchAnalytics, loadAllPages, loadPageIntoEditor, user]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
+
+    window.localStorage.setItem(LAST_EDITOR_STORAGE_KEY, JSON.stringify({
+      productName,
+      slugDraft,
+      currentSlug,
+      draftId,
+      status,
+      content,
+      savedAt: lastSavedAt || new Date().toISOString(),
+    }));
 
     if (isGuest) {
       window.localStorage.setItem(GUEST_DRAFT_STORAGE_KEY, JSON.stringify({
@@ -442,7 +513,7 @@ export default function WaitlistEditor() {
     if (!restorableGuestDraft) {
       window.localStorage.removeItem(GUEST_DRAFT_STORAGE_KEY);
     }
-  }, [content, isGuest, productName, restorableGuestDraft, slugDraft]);
+  }, [content, currentSlug, draftId, isGuest, lastSavedAt, productName, restorableGuestDraft, slugDraft, status]);
 
   useEffect(() => {
     const handleBeforeUnload = (event: BeforeUnloadEvent) => {
@@ -803,30 +874,25 @@ export default function WaitlistEditor() {
   };
 
   useEffect(() => {
-    if (isGuest || isInitializing || status !== 'draft' || !hasUnsavedChanges) return;
+    if (isGuest || authLoading || status !== 'draft' || !hasUnsavedChanges) return;
 
     const timer = window.setTimeout(() => {
       void persistWaitlist('draft', 'autosave');
     }, 1500);
 
     return () => window.clearTimeout(timer);
-  }, [hasUnsavedChanges, isGuest, isInitializing, persistWaitlist, status]);
+  }, [authLoading, hasUnsavedChanges, isGuest, persistWaitlist, status]);
 
   const conversionRate = viewCount > 0 ? `${((signupCount / viewCount) * 100).toFixed(1)}%` : '--';
 
-  if (isInitializing) {
-    return (
-      <Card>
-        <CardContent className="flex items-center justify-center py-12 text-sm text-muted-foreground">
-          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          Loading your waitlist builder...
-        </CardContent>
-      </Card>
-    );
-  }
-
   return (
     <div className="space-y-6">
+      {isHydrating ? (
+        <div className="flex items-center gap-2 rounded-2xl border border-sky-300/15 bg-sky-500/10 px-4 py-2 text-sm text-sky-100">
+          <Loader2 className="h-4 w-4 animate-spin" />
+          Syncing your latest waitlist data...
+        </div>
+      ) : null}
       <Card className="border-0 bg-[linear-gradient(135deg,rgba(15,23,42,0.96),rgba(30,41,59,0.95)_45%,rgba(14,165,233,0.26)_100%)] shadow-[0_30px_90px_rgba(15,23,42,0.28)]">
         <CardContent className="p-4 md:p-5">
           <div className="flex flex-wrap items-center gap-2">

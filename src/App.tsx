@@ -15,6 +15,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import ScrollToTop from "./components/ScrollToTop";
 import ProUpgradeBanner from "@/components/ProUpgradeBanner";
 import BizMapGuestTeaserDialog from "@/components/bizmap/BizMapGuestTeaserDialog";
+import WaitlistMakerPage from "./pages/WaitlistMakerPage";
 
 const PulseWidget = lazy(() => import("@/components/pulse/PulseWidget"));
 const MobileBottomNav = lazy(() =>
@@ -83,7 +84,6 @@ const MyBookings = lazy(() => import("./pages/community/MyBookings"));
 const AdminMentorEditor = lazy(() => import("./pages/community/AdminMentorEditor"));
 const PMFLabPage = lazy(() => import("./pages/PMFLabPage"));
 const ICPBuilderPage = lazy(() => import("./pages/IcpBuilderPage"));
-const WaitlistMakerPage = lazy(() => import("./pages/WaitlistMakerPage"));
 const ValidateJourneyPage = lazy(() => import("./pages/ValidateJourneyPage"));
 const TechStackPage = lazy(() => import("./pages/TechStackPage"));
 const MVPBuilderBetaPage = lazy(() => import("./pages/MVPBuilderBetaPage"));
