@@ -36,9 +36,6 @@ export default function WaitlistMakerPage() {
         <main className="px-4 py-16 md:py-20">
           <div className="container mx-auto max-w-[1580px] space-y-8">
             <div className="space-y-4 px-2 text-center lg:max-w-4xl lg:text-left">
-              <div className="inline-flex items-center rounded-full border border-primary/20 bg-background/70 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.28em] text-primary shadow-sm backdrop-blur">
-                Landing Page Studio
-              </div>
               <h1 className="text-4xl font-bold creatives-font takeover-gradient md:text-6xl">Waitlist Maker</h1>
               <p className="text-lg text-muted-foreground md:text-xl leading-relaxed">
                 Design your landing page, show what you have to offer, and validate real demand before building.
