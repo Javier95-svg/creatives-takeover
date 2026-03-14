@@ -29,7 +29,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { AngelCard } from "@/components/angels/AngelCard";
-import { Sparkles, Loader2, Edit, Search, ChevronDown, X, Lock, Crown, ArrowLeft } from "lucide-react";
+import { Sparkles, Loader2, Edit, Search, ChevronDown, X, Lock, Crown, ArrowRight } from "lucide-react";
 import { AngelInvestor } from "@/types/angel";
 import { useAngels } from "@/hooks/useAngels";
 import { useAuth } from "@/contexts/AuthContext";
@@ -48,6 +48,24 @@ import {
 } from "@/components/ui/pagination";
 
 const ANGELS_PER_PAGE = 10;
+
+const ANGEL_HIGHLIGHTS = [
+  {
+    title: "Stage-aware search",
+    description: "Shortlist investors by pre-seed and seed relevance instead of browsing random firms.",
+    icon: Sparkles,
+  },
+  {
+    title: "Focused profiles",
+    description: "Review investor names, firms, and fit signals before deciding who belongs on your list.",
+    icon: Search,
+  },
+  {
+    title: "Raise with intention",
+    description: "Build a tighter shortlist and approach investors with a clearer sense of who you want to target.",
+    icon: ArrowRight,
+  },
+];
 
 
 const INVESTMENT_STAGE_OPTIONS = [
@@ -279,7 +297,7 @@ const FindYourAngel = () => {
     }
   }, [currentPage, totalPages, searchParams, setSearchParams]);
 
-  const descriptionText = "Find and connect with Angel Investors or Venture Capitalists who believe in bold ideas and back them early. Browse investor profiles, explore their focus areas and investment stages, and take the first step toward building a relationship that could fund your vision.\n\nWhether you are raising your first pre-seed round or looking for a strategic partner at the seed stage, this is where you start.";
+  const descriptionText = "Browse angel investors and early-stage VCs, filter by stage, and build a sharper shortlist for the round you are actually raising.";
 
   return (
     <>
@@ -294,217 +312,236 @@ const FindYourAngel = () => {
         <HomeWallpaper />
         <Navigation />
         <div className="pt-16 relative z-10">
-          {/* Back to Community link (fix 1a) */}
-          <div className="container mx-auto px-4 sm:px-6 pt-4">
-            <Button variant="ghost" size="sm" asChild>
-              <Link to="/community" className="flex items-center gap-2">
-                <ArrowLeft className="h-4 w-4" />
-                Back to Community
-              </Link>
-            </Button>
-          </div>
-
           {/* Hero Section */}
-          <section className="relative py-16 lg:py-28">
-            <div className="container mx-auto px-4 sm:px-6">
-              <div className="max-w-4xl mx-auto text-center">
-                {/* Title */}
-                <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-6 takeover-title creatives-font">
-                  <span className="gradient-unified animate-text-flicker">
-                    Find your Angel
-                  </span>
-                </h1>
+          <section className="relative py-10 lg:py-14">
+            <div className="container mx-auto max-w-6xl px-4 sm:px-6">
+              <div className="rounded-[2rem] border border-border/60 bg-white/80 p-5 shadow-sm backdrop-blur dark:bg-slate-950/70 sm:p-8">
+                <div className="flex flex-col gap-6">
+                  <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+                    <div className="space-y-5">
+                      <span className="inline-flex items-center rounded-full border border-sky-500/20 bg-sky-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-sky-700 dark:text-sky-200">
+                        Community marketplace
+                      </span>
 
-                {/* Description with zoom-in effect */}
-                <div className="max-w-3xl mx-auto mb-8 relative animate-zoom-in">
-                  <p
-                    className="text-base sm:text-lg md:text-xl text-foreground/90 leading-relaxed"
-                    style={{
-                      whiteSpace: 'pre-line',
-                      fontFamily: "'Space Grotesk', 'Poppins', sans-serif",
-                    }}
-                  >
-                    {descriptionText}
-                  </p>
+                      <div className="max-w-3xl space-y-3">
+                        <h1 className="text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
+                          <span className="gradient-unified creatives-font">
+                            Find your Angel
+                          </span>
+                        </h1>
+                        <p
+                          className="max-w-2xl text-base leading-relaxed text-foreground/80 sm:text-lg"
+                          style={{ fontFamily: "'Space Grotesk', 'Poppins', sans-serif" }}
+                        >
+                          {descriptionText}
+                        </p>
+                      </div>
+                    </div>
+
+                    {isAdmin && (
+                      <Button asChild className="self-start rounded-full">
+                        <Link to="/community/angels/admin/new">
+                          Create Angel Investor
+                        </Link>
+                      </Button>
+                    )}
+                  </div>
+
+                  <div className="grid gap-3 md:grid-cols-3">
+                    {ANGEL_HIGHLIGHTS.map((item) => {
+                      const Icon = item.icon;
+
+                      return (
+                        <div
+                          key={item.title}
+                          className="rounded-3xl border border-border/60 bg-background/70 p-4 shadow-sm dark:bg-slate-900/70"
+                        >
+                          <Icon className="mb-3 h-5 w-5 text-sky-600 dark:text-sky-300" />
+                          <p className="text-sm font-semibold">{item.title}</p>
+                          <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+                            {item.description}
+                          </p>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  <div className="rounded-[1.75rem] border border-border/60 bg-background/80 p-4 shadow-sm dark:bg-slate-900/75 sm:p-5">
+                    <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+                      <div className="relative w-full xl:max-w-md">
+                        {isPro ? (
+                          <>
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Input
+                              placeholder="Search investors by name, firm, or stage"
+                              value={searchQuery}
+                              onChange={handleSearchChange}
+                              aria-label="Search angel investors by name, firm, or stage"
+                              className="h-11 min-h-[44px] w-full rounded-full border-border/70 bg-background pl-10 text-base md:text-sm"
+                            />
+                          </>
+                        ) : (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <div className="relative opacity-60">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                <Input
+                                  placeholder="Search investors by name, firm, or stage"
+                                  disabled
+                                  aria-label="Search angel investors (upgrade to unlock)"
+                                  className="pointer-events-none h-11 min-h-[44px] w-full rounded-full border-border/70 bg-background pl-10 text-base md:text-sm"
+                                />
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Upgrade to Professional to unlock search</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        )}
+                      </div>
+                      <p className="text-sm leading-relaxed text-muted-foreground xl:max-w-sm xl:text-right">
+                        Filter by investment stage, sort your shortlist, and focus on investors that match your raise.
+                      </p>
+                    </div>
+
+                    {!isPro && (
+                      <div className="mt-4 rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-900 dark:text-amber-100">
+                        Professional unlocks investor search, filters, sorting, and full profile access.
+                      </div>
+                    )}
+
+                    <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+                      <div className="flex flex-wrap items-center gap-3">
+                        {isPro ? (
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button
+                                variant="outline"
+                                className={cn(
+                                  "h-9 rounded-full",
+                                  selectedStages.length > 0 && "border-primary bg-primary/5"
+                                )}
+                              >
+                                Investment Stage
+                                {selectedStages.length > 0 && (
+                                  <Badge variant="secondary" className="ml-2 h-5 px-1.5">
+                                    {selectedStages.length}
+                                  </Badge>
+                                )}
+                                <ChevronDown className="ml-2 h-4 w-4" />
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-64" align="start">
+                              <div className="space-y-4">
+                                <div className="flex items-center justify-between">
+                                  <Label className="font-semibold">Investment Stage</Label>
+                                  {selectedStages.length > 0 && (
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={clearStageFilter}
+                                    >
+                                      Clear
+                                    </Button>
+                                  )}
+                                </div>
+                                <Separator />
+                                <div className="space-y-2">
+                                  {INVESTMENT_STAGE_OPTIONS.map((stage) => (
+                                    <div
+                                      key={stage}
+                                      className="flex items-center space-x-2"
+                                    >
+                                      <Checkbox
+                                        id={`filter-stage-${stage}`}
+                                        checked={selectedStages.includes(stage)}
+                                        onCheckedChange={() => handleStageToggle(stage)}
+                                      />
+                                      <Label
+                                        htmlFor={`filter-stage-${stage}`}
+                                        className="flex-1 cursor-pointer font-normal"
+                                      >
+                                        {stage}
+                                      </Label>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            </PopoverContent>
+                          </Popover>
+                        ) : (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="outline"
+                                className="h-9 rounded-full opacity-50 cursor-not-allowed"
+                                disabled
+                              >
+                                Investment Stage
+                                <ChevronDown className="ml-2 h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Upgrade to Professional to unlock filters</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        )}
+
+                        {hasActiveFilters && isPro && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={clearAllFilters}
+                            className="h-9 rounded-full text-muted-foreground hover:text-foreground"
+                          >
+                            <X className="mr-1 h-4 w-4" />
+                            Clear all
+                          </Button>
+                        )}
+                      </div>
+
+                      <div className="sm:ml-auto flex items-center gap-2">
+                        <span className="text-sm text-muted-foreground">Sort by:</span>
+                        {isPro ? (
+                          <Select value={sortBy} onValueChange={handleSortChange}>
+                            <SelectTrigger className="h-9 w-[180px] rounded-full">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="alphabetical">Alphabetical (A-Z)</SelectItem>
+                              <SelectItem value="newest">Newest first</SelectItem>
+                              <SelectItem value="oldest">Oldest first</SelectItem>
+                              <SelectItem value="firm">By firm name</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        ) : (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <div className="cursor-not-allowed opacity-50">
+                                <Select value="alphabetical" disabled>
+                                  <SelectTrigger className="pointer-events-none h-9 w-[180px] rounded-full">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                </Select>
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Upgrade to Professional to unlock sorting</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        )}
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
           </section>
 
           {/* Angel Investors Section */}
-          <section id="angel-grid" className="container mx-auto px-4 py-12 relative z-10">
-            {/* Admin Create Button */}
-            {isAdmin && (
-              <div className="mb-6 flex justify-end">
-                <Button asChild>
-                  <Link to="/community/angels/admin/new">
-                    Create Angel Investor
-                  </Link>
-                </Button>
-              </div>
-            )}
-
-            {/* Search Bar (fix 6b: aria-label, fix 2a: disabled for non-Pro) */}
-            <div className="mb-6">
-              {isPro ? (
-                <div className="relative w-full max-w-md mx-auto md:mx-0">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search by name or keyword"
-                    value={searchQuery}
-                    onChange={handleSearchChange}
-                    aria-label="Search angel investors by name or keyword"
-                    className="pl-10 h-11 w-full min-h-[44px] text-base md:text-sm"
-                  />
-                </div>
-              ) : (
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div className="relative w-full max-w-md mx-auto md:mx-0 opacity-50 cursor-not-allowed">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        placeholder="Search by name or keyword"
-                        disabled
-                        aria-label="Search angel investors (upgrade to unlock)"
-                        className="pl-10 h-11 w-full min-h-[44px] text-base md:text-sm pointer-events-none"
-                      />
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Upgrade to Professional to unlock search</p>
-                  </TooltipContent>
-                </Tooltip>
-              )}
-            </div>
-
-            {/* Investment Stage Filter Bar (fix 3a: responsive layout) */}
-            <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3 mb-6">
-              <div className="flex flex-wrap items-center gap-3">
-                {isPro ? (
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className={cn(
-                          "h-9",
-                          selectedStages.length > 0 && "border-primary bg-primary/5"
-                        )}
-                      >
-                        Investment Stage
-                        {selectedStages.length > 0 && (
-                          <Badge variant="secondary" className="ml-2 h-5 px-1.5">
-                            {selectedStages.length}
-                          </Badge>
-                        )}
-                        <ChevronDown className="h-4 w-4 ml-2" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-64" align="start">
-                      <div className="space-y-4">
-                        <div className="flex items-center justify-between">
-                          <Label className="font-semibold">Investment Stage</Label>
-                          {selectedStages.length > 0 && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={clearStageFilter}
-                            >
-                              Clear
-                            </Button>
-                          )}
-                        </div>
-                        <Separator />
-                        <div className="space-y-2">
-                          {INVESTMENT_STAGE_OPTIONS.map((stage) => (
-                            <div
-                              key={stage}
-                              className="flex items-center space-x-2"
-                            >
-                              <Checkbox
-                                id={`filter-stage-${stage}`}
-                                checked={selectedStages.includes(stage)}
-                                onCheckedChange={() => handleStageToggle(stage)}
-                              />
-                              <Label
-                                htmlFor={`filter-stage-${stage}`}
-                                className="font-normal cursor-pointer flex-1"
-                              >
-                                {stage}
-                              </Label>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </PopoverContent>
-                  </Popover>
-                ) : (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className="h-9 opacity-50 cursor-not-allowed"
-                        disabled
-                      >
-                        Investment Stage
-                        <ChevronDown className="h-4 w-4 ml-2" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Upgrade to Professional to unlock filters</p>
-                    </TooltipContent>
-                  </Tooltip>
-                )}
-
-                {/* Clear All Filters */}
-                {hasActiveFilters && isPro && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={clearAllFilters}
-                    className="h-9 text-muted-foreground hover:text-foreground"
-                  >
-                    <X className="h-4 w-4 mr-1" />
-                    Clear all
-                  </Button>
-                )}
-              </div>
-
-              {/* Sort (fix 3a: full-width on mobile) */}
-              <div className="sm:ml-auto flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">Sort by:</span>
-                {isPro ? (
-                  <Select value={sortBy} onValueChange={handleSortChange}>
-                    <SelectTrigger className="w-[180px] h-9">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="alphabetical">Alphabetical (A-Z)</SelectItem>
-                      <SelectItem value="newest">Newest first</SelectItem>
-                      <SelectItem value="oldest">Oldest first</SelectItem>
-                      <SelectItem value="firm">By firm name</SelectItem>
-                    </SelectContent>
-                  </Select>
-                ) : (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <div className="opacity-50 cursor-not-allowed">
-                        <Select value="alphabetical" disabled>
-                          <SelectTrigger className="w-[180px] h-9 pointer-events-none">
-                            <SelectValue />
-                          </SelectTrigger>
-                        </Select>
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Upgrade to Professional to unlock sorting</p>
-                    </TooltipContent>
-                  </Tooltip>
-                )}
-              </div>
-            </div>
-
+          <section id="angel-grid" className="container mx-auto max-w-6xl px-4 pb-12 pt-2 relative z-10 sm:px-6">
             {/* Results Count (fix 2b: hide exact count for non-Pro) */}
-            <div className="mb-4">
+            <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               {loading ? (
                 <div className="flex items-center gap-2">
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -519,6 +556,9 @@ const FindYourAngel = () => {
                   {angels.length} angel investor{angels.length !== 1 ? 's' : ''} found
                 </p>
               )}
+              <p className="text-sm text-muted-foreground">
+                Use the directory to build a tighter investor shortlist before you start outbound.
+              </p>
             </div>
 
             {/* Angel Investor Cards Grid */}

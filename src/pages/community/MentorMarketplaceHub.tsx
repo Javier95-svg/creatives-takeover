@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { MentorCard } from "@/components/mentor-marketplace/MentorCard";
 import { TopFilterBar } from "@/components/mentor-marketplace/TopFilterBar";
 import { MentorFilters } from "@/components/mentor-marketplace/FilterSidebar";
-import { Users, Loader2, Search } from "lucide-react";
+import { Users, Loader2, Search, GraduationCap, ArrowRight } from "lucide-react";
 import { Mentor } from "@/types/mentor";
 import { useMentors } from "@/hooks/useMentors";
 import { useAuth } from "@/contexts/AuthContext";
@@ -29,6 +29,24 @@ import {
 } from "@/components/ui/pagination";
 
 const MENTORS_PER_PAGE = 10;
+
+const MENTOR_HIGHLIGHTS = [
+  {
+    title: "Founder mentors",
+    description: "Talk with builders who have already shipped, raised, or coached at the earliest stages.",
+    icon: GraduationCap,
+  },
+  {
+    title: "1:1 working sessions",
+    description: "Use each call to pressure test a decision, not just collect generic advice.",
+    icon: Users,
+  },
+  {
+    title: "Concrete next steps",
+    description: "Leave with sharper priorities, founder-specific feedback, and a clearer execution plan.",
+    icon: ArrowRight,
+  },
+];
 
 const MentorMarketplaceHub = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -255,7 +273,7 @@ const MentorMarketplaceHub = () => {
     return result;
   }, [mentors]);
 
-  const descriptionText = "Work with startup mentors from all over the globe who have built, launched, and raised at the earliest stages. Expect clear, grounded advice that fits the reality of pre seed founders, not theory from later stage playbooks. \n\nBook focused one to one sessions, stress test your roadmap, pitch, and go to market, and leave each call with a short list of concrete next steps. Move from uncertainty to a plan you can actually execute, with someone beside you who has already been through it.";
+  const descriptionText = "Book focused sessions with startup mentors who can help you sharpen your roadmap, challenge your assumptions, and move faster with clearer next steps.";
 
   return (
     <>
@@ -271,75 +289,98 @@ const MentorMarketplaceHub = () => {
         <Navigation />
         <div className="pt-16 relative z-10">
           {/* Hero Section */}
-          <section className="relative py-20 lg:py-32">
-            <div className="container mx-auto px-4 sm:px-6">
-              <div className="max-w-4xl mx-auto text-center">
-                {/* Title */}
-                <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-6 takeover-title creatives-font">
-                  <span className="gradient-unified animate-text-flicker">
-                    Connect. Learn. Grow.
-                  </span>
-                </h1>
-                
-                {/* Description with zoom-in effect */}
-                <div className="max-w-3xl mx-auto mb-8 animate-zoom-in">
-                  <p 
-                    className="text-base sm:text-lg md:text-xl text-foreground/90 leading-relaxed" 
-                    style={{ 
-                      whiteSpace: 'pre-line',
-                      fontFamily: "'Space Grotesk', 'Poppins', sans-serif"
-                    }}
-                  >
-                    {descriptionText}
-                  </p>
-                </div>
+          <section className="relative py-10 lg:py-14">
+            <div className="container mx-auto max-w-6xl px-4 sm:px-6">
+              <div className="rounded-[2rem] border border-border/60 bg-white/80 p-5 shadow-sm backdrop-blur dark:bg-slate-950/70 sm:p-8">
+                <div className="flex flex-col gap-6">
+                  <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+                    <div className="space-y-5">
+                      <span className="inline-flex items-center rounded-full border border-sky-500/20 bg-sky-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-sky-700 dark:text-sky-200">
+                        Community marketplace
+                      </span>
 
+                      <div className="max-w-3xl space-y-3">
+                        <h1 className="text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
+                          <span className="gradient-unified creatives-font">
+                            Find a Mentor
+                          </span>
+                        </h1>
+                        <p
+                          className="max-w-2xl text-base leading-relaxed text-foreground/80 sm:text-lg"
+                          style={{ fontFamily: "'Space Grotesk', 'Poppins', sans-serif" }}
+                        >
+                          {descriptionText}
+                        </p>
+                      </div>
+                    </div>
+
+                    {isAdmin && (
+                      <Button asChild className="self-start rounded-full">
+                        <Link to="/community/admin/new">
+                          Create Mentor
+                        </Link>
+                      </Button>
+                    )}
+                  </div>
+
+                  <div className="grid gap-3 md:grid-cols-3">
+                    {MENTOR_HIGHLIGHTS.map((item) => {
+                      const Icon = item.icon;
+
+                      return (
+                        <div
+                          key={item.title}
+                          className="rounded-3xl border border-border/60 bg-background/70 p-4 shadow-sm dark:bg-slate-900/70"
+                        >
+                          <Icon className="mb-3 h-5 w-5 text-sky-600 dark:text-sky-300" />
+                          <p className="text-sm font-semibold">{item.title}</p>
+                          <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+                            {item.description}
+                          </p>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  <div className="rounded-[1.75rem] border border-border/60 bg-background/80 p-4 shadow-sm dark:bg-slate-900/75 sm:p-5">
+                    <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+                      <div className="relative w-full xl:max-w-md">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          placeholder="Search mentors by name, expertise, or keyword"
+                          value={searchQuery}
+                          onChange={handleSearchChange}
+                          aria-label="Search mentors by name, expertise, or keyword"
+                          className="h-11 min-h-[44px] w-full rounded-full border-border/70 bg-background pl-10 text-base md:text-sm"
+                        />
+                      </div>
+                      <p className="text-sm leading-relaxed text-muted-foreground xl:max-w-sm xl:text-right">
+                        Filter by expertise, stage, timezone, and session format to reach the right mentor faster.
+                      </p>
+                    </div>
+
+                    <div className="mt-4">
+                      <TopFilterBar
+                        filters={filters}
+                        onFiltersChange={handleFiltersChange}
+                        availableExpertise={allExpertise}
+                        availableStages={["Idea Stage", "Pre-Seed", "Seed", "Series A"]}
+                        priceRangeMax={500000}
+                        mentorCount={filteredMentors.length}
+                        onSortChange={handleSortChange}
+                        sortBy={sortBy}
+                      />
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </section>
 
           {/* Mentors Section with Filters */}
-          <section id="mentor-grid" className="container mx-auto px-4 py-12 relative z-10">
-            {/* Admin Create Button */}
-            {isAdmin && (
-              <div className="mb-6 flex justify-end">
-                <Button asChild>
-                  <Link to="/community/admin/new">
-                    Create Mentor
-                  </Link>
-                </Button>
-              </div>
-            )}
-
-            {/* Search Bar */}
-            <div className="mb-6">
-              <div className="relative w-full max-w-md mx-auto md:mx-0">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search by name or keyword"
-                  value={searchQuery}
-                  onChange={handleSearchChange}
-                  className="pl-10 h-11 w-full min-h-[44px] text-base md:text-sm"
-                />
-              </div>
-            </div>
-
-            {/* Top Filter Bar */}
-            <div className="mb-6">
-              <TopFilterBar
-                filters={filters}
-                onFiltersChange={handleFiltersChange}
-                availableExpertise={allExpertise}
-                availableStages={["Idea Stage", "Pre-Seed", "Seed", "Series A"]}
-                priceRangeMax={500000}
-                mentorCount={filteredMentors.length}
-                onSortChange={handleSortChange}
-                sortBy={sortBy}
-              />
-            </div>
-
+          <section id="mentor-grid" className="container mx-auto max-w-6xl px-4 pb-12 pt-2 relative z-10 sm:px-6">
             {/* Results Count */}
-            <div className="mb-4">
+            <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               {loading ? (
                 <div className="flex items-center gap-2">
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -347,9 +388,12 @@ const MentorMarketplaceHub = () => {
                 </div>
               ) : (
                 <p className="text-sm text-muted-foreground">
-                  {filteredMentors.length} mentor{filteredMentors.length !== 1 ? 's' : ''} found
+                  {filteredMentors.length} mentor{filteredMentors.length !== 1 ? 's' : ''} ready to review
                 </p>
               )}
+              <p className="text-sm text-muted-foreground">
+                Browse profiles, compare strengths, and book the call that unblocks your next step.
+              </p>
             </div>
 
             {/* Mentor Cards Grid */}
