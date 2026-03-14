@@ -837,7 +837,7 @@ export default function WaitlistEditor() {
               {isSaving ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Save className="w-4 h-4 mr-1" />}
               Save draft
             </Button>
-            <Button size="sm" onClick={status === 'published' ? handleSave : handlePublish} disabled={isPublishing || (status !== 'published' && Boolean(publishBlockingReason))} className="bg-white text-slate-950 hover:bg-slate-100">
+            <Button size="sm" onClick={status === 'published' ? handleSave : handlePublish} disabled={isPublishing || (status !== 'published' && Boolean(publishBlockingReason))} className="border border-sky-300/30 bg-sky-500 text-white hover:bg-sky-400">
               {isPublishing ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Globe className="w-4 h-4 mr-1" />}
               Publish
             </Button>
@@ -884,7 +884,7 @@ export default function WaitlistEditor() {
                   </Button>
                   <Button
                     size="sm"
-                    className="bg-white text-slate-950 hover:bg-slate-100"
+                    className="border border-sky-300/30 bg-sky-500 text-white hover:bg-sky-400"
                     onClick={() => {
                       if (!hasUnsavedChanges || window.confirm('Your draft is saved in this browser. Continue to create an account?')) {
                         window.location.href = '/signup?return=/waitlist';
@@ -976,9 +976,9 @@ export default function WaitlistEditor() {
         ) : null}
       </div>
 
-      <div className="overflow-hidden rounded-[32px] border border-white/80 bg-white/75 shadow-[0_30px_90px_rgba(15,23,42,0.12)] backdrop-blur-xl">
+      <div className="overflow-hidden rounded-[32px] border border-white/10 bg-[linear-gradient(135deg,rgba(2,6,23,0.96),rgba(15,23,42,0.96)_40%,rgba(30,41,59,0.94))] shadow-[0_30px_90px_rgba(2,6,23,0.42)] backdrop-blur-xl">
         <div className="grid min-h-[820px] lg:grid-cols-[380px_minmax(0,1fr)]">
-          <aside className="border-r border-slate-200/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.94),rgba(248,250,252,0.94))] backdrop-blur">
+          <aside className="border-r border-white/10 bg-[linear-gradient(180deg,rgba(2,6,23,0.98),rgba(15,23,42,0.96)_50%,rgba(30,41,59,0.94))] backdrop-blur">
             <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as BuilderTab)} className="h-full flex flex-col">
               <div className="border-b border-white/10 bg-[linear-gradient(180deg,rgba(15,23,42,0.96),rgba(30,41,59,0.96))] p-4 text-white backdrop-blur">
                 <div className="mb-4 space-y-2">
@@ -989,20 +989,20 @@ export default function WaitlistEditor() {
                   </div>
                 </div>
                 <TabsList className="grid h-auto w-full grid-cols-5 gap-1 rounded-[20px] bg-white/8 p-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
-                  <TabsTrigger value="content" className="rounded-2xl px-2 py-2 text-[11px] font-semibold text-white/75 data-[state=active]:bg-white data-[state=active]:text-slate-950 data-[state=active]:shadow-sm">Content</TabsTrigger>
-                  <TabsTrigger value="style" className="rounded-2xl px-2 py-2 text-[11px] font-semibold text-white/75 data-[state=active]:bg-white data-[state=active]:text-slate-950 data-[state=active]:shadow-sm">Style</TabsTrigger>
-                  <TabsTrigger value="form" className="rounded-2xl px-2 py-2 text-[11px] font-semibold text-white/75 data-[state=active]:bg-white data-[state=active]:text-slate-950 data-[state=active]:shadow-sm">Form</TabsTrigger>
-                  <TabsTrigger value="launch" className="rounded-2xl px-2 py-2 text-[11px] font-semibold text-white/75 data-[state=active]:bg-white data-[state=active]:text-slate-950 data-[state=active]:shadow-sm">Launch</TabsTrigger>
-                  <TabsTrigger value="analytics" className="rounded-2xl px-2 py-2 text-[11px] font-semibold text-white/75 data-[state=active]:bg-white data-[state=active]:text-slate-950 data-[state=active]:shadow-sm">Analytics</TabsTrigger>
+                  <TabsTrigger value="content" className="rounded-2xl px-2 py-2 text-[11px] font-semibold text-white/75 data-[state=active]:bg-sky-300 data-[state=active]:text-slate-950 data-[state=active]:shadow-sm">Content</TabsTrigger>
+                  <TabsTrigger value="style" className="rounded-2xl px-2 py-2 text-[11px] font-semibold text-white/75 data-[state=active]:bg-sky-300 data-[state=active]:text-slate-950 data-[state=active]:shadow-sm">Style</TabsTrigger>
+                  <TabsTrigger value="form" className="rounded-2xl px-2 py-2 text-[11px] font-semibold text-white/75 data-[state=active]:bg-sky-300 data-[state=active]:text-slate-950 data-[state=active]:shadow-sm">Form</TabsTrigger>
+                  <TabsTrigger value="launch" className="rounded-2xl px-2 py-2 text-[11px] font-semibold text-white/75 data-[state=active]:bg-sky-300 data-[state=active]:text-slate-950 data-[state=active]:shadow-sm">Launch</TabsTrigger>
+                  <TabsTrigger value="analytics" className="rounded-2xl px-2 py-2 text-[11px] font-semibold text-white/75 data-[state=active]:bg-sky-300 data-[state=active]:text-slate-950 data-[state=active]:shadow-sm">Analytics</TabsTrigger>
                 </TabsList>
               </div>
 
               <div className="flex-1 overflow-y-auto p-4">
-                <TabsContent value="content" className="mt-0 space-y-4 [&>div]:rounded-[24px] [&>div]:border [&>div]:border-slate-200/80 [&>div]:bg-white/95 [&>div]:p-4 [&>div]:shadow-[0_12px_30px_rgba(15,23,42,0.05)]">
+                <TabsContent value="content" className="mt-0 space-y-4 text-white [&>div]:rounded-[24px] [&>div]:border [&>div]:border-white/10 [&>div]:bg-[linear-gradient(180deg,rgba(15,23,42,0.94),rgba(30,41,59,0.9))] [&>div]:p-4 [&>div]:shadow-[0_18px_40px_rgba(2,6,23,0.35)] [&_input]:border-white/15 [&_input]:bg-white/5 [&_input]:text-white [&_input]:placeholder:text-slate-400 [&_label]:text-white [&_textarea]:border-white/15 [&_textarea]:bg-white/5 [&_textarea]:text-white [&_textarea]:placeholder:text-slate-400]">
                   <div className="space-y-2">
-                    <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-600">Content</p>
-                    <h4 className="text-lg font-semibold text-slate-950">Shape the landing page story</h4>
-                    <p className="text-sm text-slate-500">Write the messaging, proof, and narrative the visitor experiences from hero to CTA.</p>
+                    <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-200">Content</p>
+                    <h4 className="text-lg font-semibold text-white">Shape the landing page story</h4>
+                    <p className="text-sm text-slate-300">Write the messaging, proof, and narrative the visitor experiences from hero to CTA.</p>
                   </div>
                   <div className="space-y-2">
                     <Label>Waitlist name</Label>
@@ -1026,7 +1026,7 @@ export default function WaitlistEditor() {
                       onBlur={(event) => updateContent({ benefits: textToLines(event.target.value, 3, 5, content.benefits) })}
                       rows={4}
                     />
-                    <p className="text-xs text-muted-foreground">Use 3 to 5 lines. Validation applies when you leave the field.</p>
+                    <p className="text-xs text-slate-300">Use 3 to 5 lines. Validation applies when you leave the field.</p>
                   </div>
 
                   <div className="space-y-2">
@@ -1037,7 +1037,7 @@ export default function WaitlistEditor() {
                       onBlur={(event) => updateContent({ howItWorks: textToLines(event.target.value, 3, 4, content.howItWorks) })}
                       rows={4}
                     />
-                    <p className="text-xs text-muted-foreground">Use 3 to 4 steps. Validation applies when you leave the field.</p>
+                    <p className="text-xs text-slate-300">Use 3 to 4 steps. Validation applies when you leave the field.</p>
                   </div>
 
                   <div className="space-y-2"><Label>Logo URL</Label><Input value={content.logoUrl || ''} onChange={(event) => updateContent({ logoUrl: event.target.value })} /></div>
@@ -1046,34 +1046,34 @@ export default function WaitlistEditor() {
                   <div className="space-y-2"><Label>Referral message</Label><Textarea value={content.referralMessage || ''} onChange={(event) => updateContent({ referralMessage: event.target.value })} rows={2} /></div>
                 </TabsContent>
 
-                <TabsContent value="style" className="mt-0 space-y-4 [&>div]:rounded-[24px] [&>div]:border [&>div]:border-slate-200/80 [&>div]:bg-white/95 [&>div]:p-4 [&>div]:shadow-[0_12px_30px_rgba(15,23,42,0.05)]">
+                <TabsContent value="style" className="mt-0 space-y-4 text-white [&>div]:rounded-[24px] [&>div]:border [&>div]:border-white/10 [&>div]:bg-[linear-gradient(180deg,rgba(15,23,42,0.94),rgba(30,41,59,0.9))] [&>div]:p-4 [&>div]:shadow-[0_18px_40px_rgba(2,6,23,0.35)] [&_button]:text-white [&_input]:border-white/15 [&_input]:bg-white/5 [&_input]:text-white [&_label]:text-white [&_select]:border-white/15 [&_select]:bg-slate-950 [&_select]:text-white]">
                   <div className="space-y-2">
-                    <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-600">Style</p>
-                    <h4 className="text-lg font-semibold text-slate-950">Tune the visual system</h4>
-                    <p className="text-sm text-slate-500">Switch themes, adjust layout, and fine-tune the palette so the page feels intentional before launch.</p>
+                    <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-200">Style</p>
+                    <h4 className="text-lg font-semibold text-white">Tune the visual system</h4>
+                    <p className="text-sm text-slate-300">Switch themes, adjust layout, and fine-tune the palette so the page feels intentional before launch.</p>
                   </div>
                   <div className="space-y-2">
                     <Label>Theme</Label>
                     <div className="flex gap-2">
-                      <Button size="sm" variant={content.theme === 'dark' ? 'default' : 'outline'} onClick={() => applyThemePreset('dark')} className="flex-1">Dark</Button>
-                      <Button size="sm" variant={content.theme === 'light' ? 'default' : 'outline'} onClick={() => applyThemePreset('light')} className="flex-1">Light</Button>
+                      <Button size="sm" variant={content.theme === 'dark' ? 'default' : 'outline'} onClick={() => applyThemePreset('dark')} className={content.theme === 'dark' ? 'flex-1 bg-sky-500 text-white hover:bg-sky-400' : 'flex-1 border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white'}>Dark</Button>
+                      <Button size="sm" variant={content.theme === 'light' ? 'default' : 'outline'} onClick={() => applyThemePreset('light')} className={content.theme === 'light' ? 'flex-1 bg-sky-500 text-white hover:bg-sky-400' : 'flex-1 border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white'}>Light</Button>
                     </div>
-                    <p className="text-xs text-muted-foreground">Switching theme applies a matching default palette. You can still fine-tune colors below.</p>
+                    <p className="text-xs text-slate-300">Switching theme applies a matching default palette. You can still fine-tune colors below.</p>
                   </div>
 
                   <div className="space-y-2">
                     <Label>Layout</Label>
                     <div className="flex gap-2">
-                      <Button size="sm" variant={content.layout === 'centered' ? 'default' : 'outline'} onClick={() => updateContent({ layout: 'centered' })} className="flex-1">Centered</Button>
-                      <Button size="sm" variant={content.layout === 'split' ? 'default' : 'outline'} onClick={() => updateContent({ layout: 'split' })} className="flex-1">Split</Button>
+                      <Button size="sm" variant={content.layout === 'centered' ? 'default' : 'outline'} onClick={() => updateContent({ layout: 'centered' })} className={content.layout === 'centered' ? 'flex-1 bg-sky-500 text-white hover:bg-sky-400' : 'flex-1 border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white'}>Centered</Button>
+                      <Button size="sm" variant={content.layout === 'split' ? 'default' : 'outline'} onClick={() => updateContent({ layout: 'split' })} className={content.layout === 'split' ? 'flex-1 bg-sky-500 text-white hover:bg-sky-400' : 'flex-1 border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white'}>Split</Button>
                     </div>
                   </div>
 
                   <div className="space-y-2">
                     <Label>Text alignment</Label>
                     <div className="flex gap-2">
-                      <Button size="sm" variant={content.textAlign === 'left' ? 'default' : 'outline'} onClick={() => updateContent({ textAlign: 'left' })} className="flex-1">Left</Button>
-                      <Button size="sm" variant={content.textAlign === 'center' ? 'default' : 'outline'} onClick={() => updateContent({ textAlign: 'center' })} className="flex-1">Center</Button>
+                      <Button size="sm" variant={content.textAlign === 'left' ? 'default' : 'outline'} onClick={() => updateContent({ textAlign: 'left' })} className={content.textAlign === 'left' ? 'flex-1 bg-sky-500 text-white hover:bg-sky-400' : 'flex-1 border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white'}>Left</Button>
+                      <Button size="sm" variant={content.textAlign === 'center' ? 'default' : 'outline'} onClick={() => updateContent({ textAlign: 'center' })} className={content.textAlign === 'center' ? 'flex-1 bg-sky-500 text-white hover:bg-sky-400' : 'flex-1 border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white'}>Center</Button>
                     </div>
                   </div>
 
@@ -1085,7 +1085,7 @@ export default function WaitlistEditor() {
                           key={preset.value}
                           type="button"
                           onClick={() => updateContent({ accentColor: preset.value })}
-                          className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs ${content.accentColor === preset.value ? 'border-primary bg-primary/10' : 'border-border'}`}
+                          className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs ${content.accentColor === preset.value ? 'border-sky-300 bg-sky-300/15 text-white' : 'border-white/15 bg-white/5 text-white/85'}`}
                         >
                           <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: preset.hex }} />{preset.label}
                         </button>
@@ -1095,10 +1095,10 @@ export default function WaitlistEditor() {
 
                   <div className="space-y-2">
                     <Label>Typography</Label>
-                    <select className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={content.typography?.headingFamily} onChange={(event) => updateContent({ typography: { ...content.typography!, headingFamily: event.target.value } })}>
+                    <select className="w-full rounded-md border border-white/15 bg-slate-950 px-3 py-2 text-sm text-white" value={content.typography?.headingFamily} onChange={(event) => updateContent({ typography: { ...content.typography!, headingFamily: event.target.value } })}>
                       {WAITLIST_FONT_PRESETS.map((font) => <option key={font.value} value={font.value}>{font.label} (Headings)</option>)}
                     </select>
-                    <select className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={content.typography?.bodyFamily} onChange={(event) => updateContent({ typography: { ...content.typography!, bodyFamily: event.target.value } })}>
+                    <select className="w-full rounded-md border border-white/15 bg-slate-950 px-3 py-2 text-sm text-white" value={content.typography?.bodyFamily} onChange={(event) => updateContent({ typography: { ...content.typography!, bodyFamily: event.target.value } })}>
                       {WAITLIST_FONT_PRESETS.map((font) => <option key={`${font.value}-body`} value={font.value}>{font.label} (Body)</option>)}
                     </select>
                     <div className="space-y-1"><Label className="text-xs">Heading size: {content.typography?.headingSize}px</Label><input type="range" min={28} max={74} value={content.typography?.headingSize} onChange={(event) => updateContent({ typography: { ...content.typography!, headingSize: Number(event.target.value) } })} className="w-full" /></div>
@@ -1122,7 +1122,7 @@ export default function WaitlistEditor() {
                       ].map((item) => (
                         <div key={item.key} className="space-y-1">
                           <Label className="text-xs">{item.label}</Label>
-                          <input type="color" value={(content.colors as any)?.[item.key]} onChange={(event) => updateContent({ colors: { ...content.colors!, [item.key]: event.target.value } })} className="h-9 w-full rounded border border-input bg-background" />
+                          <input type="color" value={(content.colors as any)?.[item.key]} onChange={(event) => updateContent({ colors: { ...content.colors!, [item.key]: event.target.value } })} className="h-9 w-full rounded border border-white/15 bg-slate-950" />
                         </div>
                       ))}
                     </div>
@@ -1148,11 +1148,11 @@ export default function WaitlistEditor() {
                   </div>
                 </TabsContent>
 
-                <TabsContent value="form" className="mt-0 space-y-4 [&>div]:rounded-[24px] [&>div]:border [&>div]:border-slate-200/80 [&>div]:bg-white/95 [&>div]:p-4 [&>div]:shadow-[0_12px_30px_rgba(15,23,42,0.05)]">
+                <TabsContent value="form" className="mt-0 space-y-4 text-white [&>div]:rounded-[24px] [&>div]:border [&>div]:border-white/10 [&>div]:bg-[linear-gradient(180deg,rgba(15,23,42,0.94),rgba(30,41,59,0.9))] [&>div]:p-4 [&>div]:shadow-[0_18px_40px_rgba(2,6,23,0.35)] [&_input]:border-white/15 [&_input]:bg-white/5 [&_input]:text-white [&_input]:placeholder:text-slate-400 [&_label]:text-white [&_textarea]:border-white/15 [&_textarea]:bg-white/5 [&_textarea]:text-white [&_textarea]:placeholder:text-slate-400 [&_select]:border-white/15 [&_select]:bg-slate-950 [&_select]:text-white]">
                   <div className="space-y-2">
-                    <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-600">Form</p>
-                    <h4 className="text-lg font-semibold text-slate-950">Craft the signup experience</h4>
-                    <p className="text-sm text-slate-500">Decide what to collect, how the CTA reads, and what the visitor sees after signing up.</p>
+                    <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-200">Form</p>
+                    <h4 className="text-lg font-semibold text-white">Craft the signup experience</h4>
+                    <p className="text-sm text-slate-300">Decide what to collect, how the CTA reads, and what the visitor sees after signing up.</p>
                   </div>
                   <div className="space-y-2"><Label>CTA button label</Label><Input value={content.ctaText} onChange={(event) => updateContent({ ctaText: event.target.value })} /></div>
                   <div className="space-y-2"><Label>Email placeholder</Label><Input value={content.emailPlaceholder} onChange={(event) => updateContent({ emailPlaceholder: event.target.value })} /></div>
@@ -1162,7 +1162,7 @@ export default function WaitlistEditor() {
                     <label className="flex items-center justify-between rounded-md border px-3 py-2 text-sm"><span>Collect first name</span><input type="checkbox" checked={Boolean(content.collectFirstName)} onChange={(event) => updateContent({ collectFirstName: event.target.checked })} /></label>
                     <label className="flex items-center justify-between rounded-md border px-3 py-2 text-sm"><span>Show consent checkbox</span><input type="checkbox" checked={Boolean(content.collectConsent)} onChange={(event) => updateContent({ collectConsent: event.target.checked })} /></label>
                     <label className="flex items-center justify-between rounded-md border px-3 py-2 text-sm"><span>Require consent</span><input type="checkbox" checked={Boolean(content.consentRequired)} onChange={(event) => updateContent({ consentRequired: event.target.checked })} /></label>
-                    {content.consentRequired ? <p className="text-xs text-muted-foreground">Required consent automatically keeps the checkbox visible on the public form.</p> : null}
+                    {content.consentRequired ? <p className="text-xs text-slate-300">Required consent automatically keeps the checkbox visible on the public form.</p> : null}
                   </div>
 
                   <div className="space-y-2">
@@ -1171,6 +1171,7 @@ export default function WaitlistEditor() {
                       <Button
                         size="sm"
                         variant="outline"
+                        className="border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white"
                         onClick={() => updateContent({ customFields: [...(content.customFields || []), { id: createWaitlistFieldId(), label: 'Custom question', placeholder: 'Type your answer', type: 'text', required: false, enabled: true }] })}
                       >
                         <Plus className="w-4 h-4 mr-1" /> Add field
@@ -1178,14 +1179,14 @@ export default function WaitlistEditor() {
                     </div>
 
                     {(content.customFields?.length || 0) === 0 ? (
-                      <p className="text-xs text-muted-foreground rounded-md border border-dashed p-3">Add optional fields to capture context like company size, current stack, or role.</p>
+                      <p className="text-xs text-slate-300 rounded-md border border-dashed border-white/15 bg-white/5 p-3">Add optional fields to capture context like company size, current stack, or role.</p>
                     ) : (
                       <SortableList
                         items={content.customFields || []}
                         onReorder={(items) => updateContent({ customFields: items })}
                         className="space-y-2"
                         renderItem={(field) => (
-                          <div className="rounded-md border p-2 space-y-2 bg-background">
+                          <div className="rounded-md border border-white/10 bg-slate-950/60 p-2 space-y-2">
                             <div className="grid grid-cols-[1fr_auto] gap-2">
                               <Input value={field.label} onChange={(event) => updateContent({ customFields: (content.customFields || []).map((item) => item.id === field.id ? { ...item, label: event.target.value } : item) })} placeholder="Field label" />
                               <Button size="icon" variant="ghost" onClick={() => updateContent({ customFields: (content.customFields || []).filter((item) => item.id !== field.id) })}><Trash2 className="w-4 h-4" /></Button>
@@ -1194,7 +1195,7 @@ export default function WaitlistEditor() {
                             <Input value={field.placeholder} onChange={(event) => updateContent({ customFields: (content.customFields || []).map((item) => item.id === field.id ? { ...item, placeholder: event.target.value } : item) })} placeholder="Placeholder" />
 
                             <div className="grid grid-cols-2 gap-2">
-                              <select className="h-9 rounded-md border border-input bg-background px-2 text-sm" value={field.type} onChange={(event) => updateContent({ customFields: (content.customFields || []).map((item) => item.id === field.id ? { ...item, type: event.target.value as any } : item) })}>
+                              <select className="h-9 rounded-md border border-white/15 bg-slate-950 px-2 text-sm text-white" value={field.type} onChange={(event) => updateContent({ customFields: (content.customFields || []).map((item) => item.id === field.id ? { ...item, type: event.target.value as any } : item) })}>
                                 <option value="text">Text</option>
                                 <option value="textarea">Textarea</option>
                                 <option value="url">URL</option>
@@ -1214,11 +1215,11 @@ export default function WaitlistEditor() {
                     <Input value={content.successShareLabel || ''} onChange={(event) => updateContent({ successShareLabel: event.target.value })} placeholder="Share button label" />
                   </div>
                 </TabsContent>
-                <TabsContent value="launch" className="mt-0 space-y-4 [&>div]:rounded-[24px] [&>div]:border [&>div]:border-slate-200/80 [&>div]:bg-white/95 [&>div]:p-4 [&>div]:shadow-[0_12px_30px_rgba(15,23,42,0.05)] [&>label]:rounded-[24px] [&>label]:border [&>label]:border-slate-200/80 [&>label]:bg-white/95 [&>label]:px-4 [&>label]:py-3 [&>label]:shadow-[0_12px_30px_rgba(15,23,42,0.05)]">
+                <TabsContent value="launch" className="mt-0 space-y-4 text-white [&>div]:rounded-[24px] [&>div]:border [&>div]:border-white/10 [&>div]:bg-[linear-gradient(180deg,rgba(15,23,42,0.94),rgba(30,41,59,0.9))] [&>div]:p-4 [&>div]:shadow-[0_18px_40px_rgba(2,6,23,0.35)] [&>label]:rounded-[24px] [&>label]:border [&>label]:border-white/10 [&>label]:bg-[linear-gradient(180deg,rgba(15,23,42,0.94),rgba(30,41,59,0.9))] [&>label]:px-4 [&>label]:py-3 [&>label]:shadow-[0_18px_40px_rgba(2,6,23,0.35)] [&_input]:border-white/15 [&_input]:bg-white/5 [&_input]:text-white [&_input]:placeholder:text-slate-400 [&_label]:text-white [&_select]:border-white/15 [&_select]:bg-slate-950 [&_select]:text-white]">
                   <div className="space-y-2">
-                    <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-600">Launch</p>
-                    <h4 className="text-lg font-semibold text-slate-950">Publish with confidence</h4>
-                    <p className="text-sm text-slate-500">Handle the share URL, delivery settings, DNS checks, and go-live readiness from one panel.</p>
+                    <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-200">Launch</p>
+                    <h4 className="text-lg font-semibold text-white">Publish with confidence</h4>
+                    <p className="text-sm text-slate-300">Handle the share URL, delivery settings, DNS checks, and go-live readiness from one panel.</p>
                   </div>
                   <div className="space-y-2">
                     <Label>Launch checklist</Label>
@@ -1228,12 +1229,12 @@ export default function WaitlistEditor() {
                         { title: 'Slug', description: slugAvailable === false ? 'Choose another slug before publishing.' : slugDraft || currentSlug ? 'Your page slug is ready.' : 'A slug will be generated automatically if left empty.', complete: slugAvailable !== false },
                         { title: 'Publish', description: status === 'published' ? 'This waitlist is live and shareable.' : `Publishing costs ${CREDIT_COSTS.WAITLIST_GENERATION} credits and exposes your public URL.`, complete: status === 'published' },
                       ].map((step) => (
-                        <div key={step.title} className="rounded-md border px-3 py-2 text-sm">
+                        <div key={step.title} className="rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm">
                           <div className="flex items-center gap-2">
                             {step.complete ? <Check className="h-4 w-4 text-emerald-600" /> : <AlertTriangle className="h-4 w-4 text-amber-500" />}
                             <span className="font-medium">{step.title}</span>
                           </div>
-                          <p className="mt-1 text-xs text-muted-foreground">{step.description}</p>
+                          <p className="mt-1 text-xs text-slate-300">{step.description}</p>
                         </div>
                       ))}
                     </div>
@@ -1242,7 +1243,7 @@ export default function WaitlistEditor() {
                   <div className="space-y-2">
                     <Label>Public slug</Label>
                     <Input value={slugDraft} onChange={(event) => checkSlugAvailability(event.target.value)} placeholder="my-waitlist-page" />
-                    <div className="text-xs text-muted-foreground flex items-center gap-2">
+                    <div className="flex items-center gap-2 text-xs text-slate-300">
                       {isCheckingSlug ? <Loader2 className="w-3 h-3 animate-spin" /> : null}
                       {slugAvailable === true ? <Check className="w-3 h-3 text-green-600" /> : null}
                       {slugAvailable === false ? <AlertTriangle className="w-3 h-3 text-red-500" /> : null}
@@ -1252,15 +1253,15 @@ export default function WaitlistEditor() {
 
                   {status === 'published' && liveUrl ? (
                     <div className="rounded-md border p-3 text-sm space-y-2">
-                      <p className="text-xs text-muted-foreground">Live public URL</p>
+                      <p className="text-xs text-slate-300">Live public URL</p>
                       <p className="font-mono text-xs break-all">{liveUrl}</p>
                       <div className="flex gap-2">
-                        <Button size="sm" variant="outline" onClick={copyUrl}><Copy className="w-4 h-4 mr-1" />Copy</Button>
-                        <Button size="sm" asChild><a href={liveUrl} target="_blank" rel="noreferrer"><Eye className="w-4 h-4 mr-1" />Open</a></Button>
+                        <Button size="sm" variant="outline" className="border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white" onClick={copyUrl}><Copy className="w-4 h-4 mr-1" />Copy</Button>
+                        <Button size="sm" className="bg-sky-500 text-white hover:bg-sky-400" asChild><a href={liveUrl} target="_blank" rel="noreferrer"><Eye className="w-4 h-4 mr-1" />Open</a></Button>
                       </div>
                     </div>
                   ) : (
-                    <div className="rounded-md border border-dashed p-3 text-xs text-muted-foreground space-y-1">
+                    <div className="rounded-md border border-dashed border-white/15 bg-white/5 p-3 text-xs text-slate-300 space-y-1">
                       <p>Your waitlist is still in draft.</p>
                       <p>{reservedUrl ? `Reserved URL after publish: ${reservedUrl}` : 'A public URL will be created once you publish.'}</p>
                     </div>
@@ -1275,7 +1276,7 @@ export default function WaitlistEditor() {
                   <div className="space-y-2">
                     <Label>Integrations</Label>
                     <Input value={content.webhookUrl || ''} onChange={(event) => updateContent({ webhookUrl: event.target.value })} placeholder="Webhook URL (Zapier, Make, custom endpoint)" />
-                    <select className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={content.integrationProvider || 'none'} onChange={(event) => updateContent({ integrationProvider: event.target.value as any })}>
+                    <select className="w-full rounded-md border border-white/15 bg-slate-950 px-3 py-2 text-sm text-white" value={content.integrationProvider || 'none'} onChange={(event) => updateContent({ integrationProvider: event.target.value as any })}>
                       <option value="none">No email provider</option>
                       <option value="mailchimp">Mailchimp</option>
                       <option value="convertkit">ConvertKit</option>
@@ -1291,21 +1292,21 @@ export default function WaitlistEditor() {
                   <div className="space-y-2">
                     <Label>Email sending domain (optional)</Label>
                     <Input value={content.domainSetup?.domain || ''} onChange={(event) => updateContent({ domainSetup: { ...content.domainSetup!, domain: event.target.value.toLowerCase().trim(), status: event.target.value ? 'pending' : 'unconfigured' } })} placeholder="updates.yourstartup.com" />
-                    <p className="text-xs text-muted-foreground">This only verifies a sender domain for confirmation emails. Public waitlist pages still use the `/w/slug` URL.</p>
+                    <p className="text-xs text-slate-300">This only verifies a sender domain for confirmation emails. Public waitlist pages still use the `/w/slug` URL.</p>
                   </div>
 
                   <div className="space-y-2"><Label>Sender email</Label><Input value={content.emailSetup?.senderEmail || ''} onChange={(event) => updateContent({ emailSetup: { ...content.emailSetup!, senderEmail: event.target.value } })} placeholder="hello@updates.yourstartup.com" /></div>
                   <div className="space-y-2"><Label>Sender name</Label><Input value={content.emailSetup?.senderName || ''} onChange={(event) => updateContent({ emailSetup: { ...content.emailSetup!, senderName: event.target.value } })} placeholder="Your startup name" /></div>
                   <div className="space-y-2"><Label>Reply-to email</Label><Input value={content.emailSetup?.replyToEmail || ''} onChange={(event) => updateContent({ emailSetup: { ...content.emailSetup!, replyToEmail: event.target.value } })} placeholder="founder@yourstartup.com" /></div>
 
-                  <Card className="border-dashed">
-                    <CardHeader className="pb-3"><CardTitle className="text-sm">DNS setup guide</CardTitle></CardHeader>
-                    <CardContent className="space-y-2 text-xs">
+                  <Card className="border border-dashed border-white/15 bg-white/5 text-white shadow-none">
+                    <CardHeader className="pb-3"><CardTitle className="text-sm text-white">DNS setup guide</CardTitle></CardHeader>
+                    <CardContent className="space-y-2 text-xs text-slate-200">
                       <p>Add these DNS records in your domain provider:</p>
-                      <div className="rounded border p-2 font-mono">TXT @ ct-waitlist-verification={content.domainSetup?.verificationToken}</div>
-                      <div className="rounded border p-2 font-mono">TXT @ v=spf1 include:_spf.resend.com ~all</div>
-                      <div className="rounded border p-2 font-mono">CNAME ct1._domainkey ct1._domainkey.resend.com</div>
-                      <p className="text-muted-foreground">After adding DNS records, click Validate DNS. Propagation can take a few minutes.</p>
+                      <div className="rounded border border-white/15 bg-slate-950/60 p-2 font-mono text-slate-100">TXT @ ct-waitlist-verification={content.domainSetup?.verificationToken}</div>
+                      <div className="rounded border border-white/15 bg-slate-950/60 p-2 font-mono text-slate-100">TXT @ v=spf1 include:_spf.resend.com ~all</div>
+                      <div className="rounded border border-white/15 bg-slate-950/60 p-2 font-mono text-slate-100">CNAME ct1._domainkey ct1._domainkey.resend.com</div>
+                      <p className="text-slate-300">After adding DNS records, click Validate DNS. Propagation can take a few minutes.</p>
                     </CardContent>
                   </Card>
 
@@ -1313,14 +1314,14 @@ export default function WaitlistEditor() {
                     <div className="flex items-center justify-between"><span>Verification TXT</span>{content.domainSetup?.verificationValid ? <Unlock className="w-4 h-4 text-emerald-600" /> : <Lock className="w-4 h-4 text-amber-500" />}</div>
                     <div className="flex items-center justify-between"><span>SPF</span>{content.domainSetup?.spfValid ? <Unlock className="w-4 h-4 text-emerald-600" /> : <Lock className="w-4 h-4 text-amber-500" />}</div>
                     <div className="flex items-center justify-between"><span>DKIM</span>{content.domainSetup?.dkimValid ? <Unlock className="w-4 h-4 text-emerald-600" /> : <Lock className="w-4 h-4 text-amber-500" />}</div>
-                    <p className="text-muted-foreground">Status: <strong>{content.domainSetup?.status || 'unconfigured'}</strong></p>
-                    {content.domainSetup?.lastCheckedAt ? <p className="text-muted-foreground">Last checked: {new Date(content.domainSetup.lastCheckedAt).toLocaleString()}</p> : null}
+                    <p className="text-slate-300">Status: <strong className="text-white">{content.domainSetup?.status || 'unconfigured'}</strong></p>
+                    {content.domainSetup?.lastCheckedAt ? <p className="text-slate-300">Last checked: {new Date(content.domainSetup.lastCheckedAt).toLocaleString()}</p> : null}
                   </div>
 
-                  <Button className="w-full" variant="outline" onClick={handleValidateDomain} disabled={isCheckingDns}>{isCheckingDns ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Sparkles className="w-4 h-4 mr-2" />}Validate DNS</Button>
+                  <Button className="w-full border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white" variant="outline" onClick={handleValidateDomain} disabled={isCheckingDns}>{isCheckingDns ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Sparkles className="w-4 h-4 mr-2" />}Validate DNS</Button>
 
                   {!markReadyAt ? (
-                    <Button className="w-full" variant="secondary" onClick={handleMarkAsReady} disabled={!draftId || isMarkingReady || isGuest}>
+                    <Button className="w-full bg-slate-800 text-white hover:bg-slate-700" variant="secondary" onClick={handleMarkAsReady} disabled={!draftId || isMarkingReady || isGuest}>
                       {isMarkingReady ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <ShieldCheck className="w-4 h-4 mr-2" />}Mark as Ready
                     </Button>
                   ) : (
@@ -1328,19 +1329,19 @@ export default function WaitlistEditor() {
                   )}
                 </TabsContent>
 
-                <TabsContent value="analytics" className="mt-0 space-y-4 [&>div]:rounded-[24px] [&>div]:border [&>div]:border-slate-200/80 [&>div]:bg-white/95 [&>div]:p-4 [&>div]:shadow-[0_12px_30px_rgba(15,23,42,0.05)]">
+                <TabsContent value="analytics" className="mt-0 space-y-4 text-white [&>div]:rounded-[24px] [&>div]:border [&>div]:border-white/10 [&>div]:bg-[linear-gradient(180deg,rgba(15,23,42,0.94),rgba(30,41,59,0.9))] [&>div]:p-4 [&>div]:shadow-[0_18px_40px_rgba(2,6,23,0.35)] [&_label]:text-white]">
                   <div className="space-y-2">
-                    <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-600">Analytics</p>
-                    <h4 className="text-lg font-semibold text-slate-950">Read the signal</h4>
-                    <p className="text-sm text-slate-500">Watch views, signups, and recent leads without leaving the builder.</p>
+                    <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-200">Analytics</p>
+                    <h4 className="text-lg font-semibold text-white">Read the signal</h4>
+                    <p className="text-sm text-slate-300">Watch views, signups, and recent leads without leaving the builder.</p>
                   </div>
                   <div className="grid grid-cols-3 gap-2">
-                    <div className="rounded border p-2 text-center"><Eye className="w-4 h-4 mx-auto text-muted-foreground" /><p className="text-xl font-bold">{viewCount}</p><p className="text-[11px] text-muted-foreground">Views</p></div>
-                    <div className="rounded border p-2 text-center"><Users className="w-4 h-4 mx-auto text-indigo-600" /><p className="text-xl font-bold text-indigo-700">{signupCount}</p><p className="text-[11px] text-muted-foreground">Signups</p></div>
-                    <div className="rounded border p-2 text-center"><Sparkles className="w-4 h-4 mx-auto text-green-600" /><p className="text-xl font-bold text-green-700">{conversionRate}</p><p className="text-[11px] text-muted-foreground">CVR</p></div>
+                    <div className="rounded border border-white/10 bg-white/5 p-2 text-center"><Eye className="w-4 h-4 mx-auto text-slate-300" /><p className="text-xl font-bold text-white">{viewCount}</p><p className="text-[11px] text-slate-300">Views</p></div>
+                    <div className="rounded border border-white/10 bg-white/5 p-2 text-center"><Users className="w-4 h-4 mx-auto text-indigo-300" /><p className="text-xl font-bold text-indigo-200">{signupCount}</p><p className="text-[11px] text-slate-300">Signups</p></div>
+                    <div className="rounded border border-white/10 bg-white/5 p-2 text-center"><Sparkles className="w-4 h-4 mx-auto text-green-300" /><p className="text-xl font-bold text-green-200">{conversionRate}</p><p className="text-[11px] text-slate-300">CVR</p></div>
                   </div>
 
-                  <div className="rounded border p-3 text-xs space-y-2">
+                  <div className="rounded border border-white/10 bg-white/5 p-3 text-xs space-y-2">
                     <p className="font-medium">A/B performance</p>
                     <p>Variant A: {variantMetrics.A.views} views / {variantMetrics.A.signups} signups</p>
                     <p>Variant B: {variantMetrics.B.views} views / {variantMetrics.B.signups} signups</p>
@@ -1349,19 +1350,19 @@ export default function WaitlistEditor() {
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <Label>Recent signups</Label>
-                      <Button size="sm" variant="outline" onClick={async () => { if (draftId) await fetchAnalytics(draftId); }} disabled={!draftId}>Refresh</Button>
+                      <Button size="sm" variant="outline" className="border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white" onClick={async () => { if (draftId) await fetchAnalytics(draftId); }} disabled={!draftId}>Refresh</Button>
                     </div>
 
                     {recentSignups.length === 0 ? (
-                      <p className="text-xs text-muted-foreground rounded border border-dashed p-3">No signups yet. Publish and share your link.</p>
+                      <p className="text-xs text-slate-300 rounded border border-dashed border-white/15 bg-white/5 p-3">No signups yet. Publish and share your link.</p>
                     ) : (
                       <div className="space-y-2 max-h-[260px] overflow-y-auto pr-1">
                         {recentSignups.map((signup) => (
-                          <div key={signup.id} className="rounded border p-2 text-xs">
+                          <div key={signup.id} className="rounded border border-white/10 bg-white/5 p-2 text-xs">
                             <p className="font-mono">{maskEmail(signup.email)}</p>
-                            <p className="text-muted-foreground">{signup.first_name ? `${signup.first_name} - ` : ''}{new Date(signup.created_at).toLocaleDateString()}</p>
+                            <p className="text-slate-300">{signup.first_name ? `${signup.first_name} - ` : ''}{new Date(signup.created_at).toLocaleDateString()}</p>
                             {signup.custom_fields && signup.custom_fields.length > 0 ? (
-                              <div className="mt-1 text-muted-foreground space-y-0.5">
+                              <div className="mt-1 text-slate-300 space-y-0.5">
                                 {signup.custom_fields.slice(0, 3).map((field) => <p key={`${signup.id}-${field.id}`}>{field.label}: {field.value || '-'}</p>)}
                               </div>
                             ) : null}
@@ -1378,24 +1379,24 @@ export default function WaitlistEditor() {
           <section
             className="relative overflow-auto p-4 md:p-8"
             style={{
-              backgroundColor: '#f5efe3',
-              backgroundImage: 'radial-gradient(rgba(15,23,42,0.08) 1px, transparent 1px), linear-gradient(180deg, rgba(255,255,255,0.55), rgba(248,250,252,0.88))',
+              backgroundColor: '#020617',
+              backgroundImage: 'radial-gradient(rgba(148,163,184,0.14) 1px, transparent 1px), linear-gradient(180deg, rgba(15,23,42,0.94), rgba(2,6,23,0.98))',
               backgroundSize: '22px 22px, 100% 100%',
             }}
           >
             <div className="mx-auto max-w-[1180px] space-y-4">
-              <div className="flex flex-col gap-3 rounded-[28px] border border-white/80 bg-white/75 px-5 py-4 shadow-[0_18px_60px_rgba(15,23,42,0.08)] backdrop-blur md:flex-row md:items-center md:justify-between">
+              <div className="flex flex-col gap-3 rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(15,23,42,0.94),rgba(30,41,59,0.88))] px-5 py-4 text-white shadow-[0_18px_60px_rgba(2,6,23,0.28)] backdrop-blur md:flex-row md:items-center md:justify-between">
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-600">Preview canvas</p>
-                  <p className="mt-2 text-sm font-medium text-slate-950">Review the public page before publishing.</p>
-                  <p className="text-xs text-slate-500">This stage mirrors the public waitlist. Switch frames to test how the landing page reads on desktop and mobile.</p>
+                  <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-200">Preview canvas</p>
+                  <p className="mt-2 text-sm font-medium text-white">Review the public page before publishing.</p>
+                  <p className="text-xs text-slate-300">This stage mirrors the public waitlist. Switch frames to test how the landing page reads on desktop and mobile.</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Button size="sm" variant={previewDevice === 'desktop' ? 'default' : 'outline'} onClick={() => setPreviewDevice('desktop')} className={previewDevice === 'desktop' ? '' : 'border-slate-300 bg-white'}>
+                  <Button size="sm" variant={previewDevice === 'desktop' ? 'default' : 'outline'} onClick={() => setPreviewDevice('desktop')} className={previewDevice === 'desktop' ? 'bg-sky-500 text-white hover:bg-sky-400' : 'border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white'}>
                     <Monitor className="mr-1 h-4 w-4" />
                     Desktop
                   </Button>
-                  <Button size="sm" variant={previewDevice === 'mobile' ? 'default' : 'outline'} onClick={() => setPreviewDevice('mobile')} className={previewDevice === 'mobile' ? '' : 'border-slate-300 bg-white'}>
+                  <Button size="sm" variant={previewDevice === 'mobile' ? 'default' : 'outline'} onClick={() => setPreviewDevice('mobile')} className={previewDevice === 'mobile' ? 'bg-sky-500 text-white hover:bg-sky-400' : 'border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white'}>
                     <MonitorSmartphone className="mr-1 h-4 w-4" />
                     Mobile
                   </Button>
@@ -1403,8 +1404,8 @@ export default function WaitlistEditor() {
               </div>
 
               <div className={previewDevice === 'mobile' ? 'mx-auto max-w-[420px]' : ''}>
-                <div className="rounded-[34px] border border-white/80 bg-white p-3 shadow-[0_28px_100px_rgba(15,23,42,0.16)]">
-                  <div className="mb-3 flex items-center justify-between rounded-[24px] border border-slate-200/80 bg-slate-50/90 px-4 py-3">
+                <div className="rounded-[34px] border border-white/10 bg-[linear-gradient(180deg,rgba(15,23,42,0.96),rgba(30,41,59,0.92))] p-3 shadow-[0_28px_100px_rgba(2,6,23,0.4)]">
+                  <div className="mb-3 flex items-center justify-between rounded-[24px] border border-white/10 bg-slate-950/70 px-4 py-3 text-white">
                     <div className="flex items-center gap-3">
                       <div className="flex items-center gap-1.5">
                         <span className="h-2.5 w-2.5 rounded-full bg-rose-400" />
@@ -1412,11 +1413,11 @@ export default function WaitlistEditor() {
                         <span className="h-2.5 w-2.5 rounded-full bg-emerald-400" />
                       </div>
                       <div>
-                        <p className="text-sm font-medium text-slate-950">{productName.trim() || 'Untitled waitlist'}</p>
-                        <p className="text-xs text-slate-500">{previewDevice === 'mobile' ? 'Mobile artboard' : 'Desktop artboard'}</p>
+                        <p className="text-sm font-medium text-white">{productName.trim() || 'Untitled waitlist'}</p>
+                        <p className="text-xs text-slate-300">{previewDevice === 'mobile' ? 'Mobile artboard' : 'Desktop artboard'}</p>
                       </div>
                     </div>
-                    <Badge variant="outline" className="border-slate-300 bg-white text-slate-600">
+                    <Badge variant="outline" className="border-white/15 bg-white/5 text-slate-200">
                       {status === 'published' ? 'Live-ready' : 'Draft preview'}
                     </Badge>
                   </div>
