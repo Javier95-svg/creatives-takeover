@@ -13,7 +13,12 @@ test('extractProjectFromText parses structured project output', () => {
 {
   "projectName": "Launch Board",
   "framework": "static-html",
+  "projectType": "dashboard",
   "entryFile": "index.html",
+  "summary": "A launch planning dashboard for early-stage teams.",
+  "dependencies": [
+    { "name": "Chart.js", "source": "cdn", "url": "https://cdn.jsdelivr.net/npm/chart.js", "purpose": "Charts" }
+  ],
   "files": [
     { "path": "index.html", "content": "<!DOCTYPE html><html><head><link rel=\\"stylesheet\\" href=\\"styles.css\\"></head><body><script src=\\"app.js\\"></script></body></html>" },
     { "path": "styles.css", "content": "body { color: red; }" },
@@ -26,6 +31,9 @@ test('extractProjectFromText parses structured project output', () => {
 
   assert.ok(project);
   assert.equal(project?.projectName, 'Launch Board');
+  assert.equal(project?.projectType, 'dashboard');
+  assert.equal(project?.summary, 'A launch planning dashboard for early-stage teams.');
+  assert.equal(project?.dependencies[0]?.name, 'Chart.js');
   assert.equal(project?.files.length, 3);
   assert.equal(project?.entryFile, 'index.html');
 });

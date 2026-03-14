@@ -23,7 +23,13 @@ import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { MVPBuilderDomainPanel } from './MVPBuilderDomainPanel';
 import { MVPBuilderCodePanel } from './MVPBuilderCodePanel';
-import type { MVPPreviewResult, MVPProjectFile } from '@/lib/mvp-builder/project';
+import type {
+  MVPPreviewResult,
+  MVPProjectDependency,
+  MVPProjectFile,
+  MVPProjectSnapshot,
+  MVPProjectType,
+} from '@/lib/mvp-builder/project';
 
 const LOADING_STEPS = [
   'Understanding prompt...',
@@ -40,6 +46,10 @@ interface MVPBuilderPreviewProps {
   projectId: string;
   projectFiles: MVPProjectFile[];
   baselineFiles: MVPProjectFile[];
+  projectType: MVPProjectType;
+  projectSummary: string;
+  projectDependencies: MVPProjectDependency[];
+  projectSnapshots: MVPProjectSnapshot[];
   previewState: MVPPreviewResult;
   entryFilePath: string;
   selectedCodeFilePath: string | null;
@@ -49,6 +59,8 @@ interface MVPBuilderPreviewProps {
   onSaveCodeFile: (path: string, content: string) => void;
   onResetCodeFile: (path: string) => void;
   onResetProjectCode: () => void;
+  onCreateSnapshot: () => void;
+  onRestoreSnapshot: (snapshotId: string) => void;
   onSelectEntryFile: (path: string) => void;
 }
 
@@ -58,6 +70,10 @@ export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({
   projectId,
   projectFiles,
   baselineFiles,
+  projectType,
+  projectSummary,
+  projectDependencies,
+  projectSnapshots,
   previewState,
   entryFilePath,
   selectedCodeFilePath,
@@ -67,6 +83,8 @@ export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({
   onSaveCodeFile,
   onResetCodeFile,
   onResetProjectCode,
+  onCreateSnapshot,
+  onRestoreSnapshot,
   onSelectEntryFile,
 }) => {
   const [previewKey, setPreviewKey] = useState(0);
@@ -292,6 +310,10 @@ export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({
             <MVPBuilderCodePanel
               files={projectFiles}
               baselineFiles={baselineFiles}
+              projectType={projectType}
+              projectSummary={projectSummary}
+              projectDependencies={projectDependencies}
+              projectSnapshots={projectSnapshots}
               selectedFilePath={selectedCodeFilePath}
               entryFilePath={entryFilePath}
               codeChanges={codeChanges}
@@ -300,6 +322,8 @@ export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({
               onSaveFile={onSaveCodeFile}
               onResetFile={onResetCodeFile}
               onResetProject={onResetProjectCode}
+              onCreateSnapshot={onCreateSnapshot}
+              onRestoreSnapshot={onRestoreSnapshot}
               onSelectEntryFile={onSelectEntryFile}
             />
           </div>
@@ -307,64 +331,6 @@ export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({
 
           {activeTab === 'preview' && (
           <div className="flex min-h-0 flex-1 flex-col">
-            <div className="border-b border-border/40 bg-muted/20 px-4 py-3">
-              <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
-                <div className="rounded-2xl border border-border/60 bg-background/90 px-4 py-3">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-                    Preview mode
-                  </p>
-                  <p className="mt-1 text-sm font-medium text-foreground">
-                    {previewState.canPreview && html ? 'Live static preview' : 'Code-only fallback'}
-                  </p>
-                </div>
-                <div className="rounded-2xl border border-border/60 bg-background/90 px-4 py-3">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-                    Entry file
-                  </p>
-                  <p className="mt-1 truncate text-sm font-medium text-foreground">
-                    {entryFilePath || 'Not selected'}
-                  </p>
-                </div>
-                <div className="rounded-2xl border border-border/60 bg-background/90 px-4 py-3">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-                    Project files
-                  </p>
-                  <p className="mt-1 text-sm font-medium text-foreground">
-                    {projectFiles.length} total
-                  </p>
-                </div>
-                <div className="rounded-2xl border border-border/60 bg-background/90 px-4 py-3">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-                    Unsaved code changes
-                  </p>
-                  <p className="mt-1 text-sm font-medium text-foreground">
-                    {codeChanges.length}
-                  </p>
-                </div>
-              </div>
-
-              {(previewState.warnings.length > 0 || previewState.errors.length > 0) && (
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {previewState.warnings.map((warning) => (
-                    <div
-                      key={warning}
-                      className="rounded-full border border-border/60 bg-background/90 px-3 py-1 text-xs text-muted-foreground"
-                    >
-                      Warning: {warning}
-                    </div>
-                  ))}
-                  {previewState.errors.map((error) => (
-                    <div
-                      key={error}
-                      className="rounded-full border border-amber-500/25 bg-amber-500/10 px-3 py-1 text-xs text-amber-700"
-                    >
-                      Preview blocker: {error}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
           <div
             className={cn(
               'flex flex-1 min-h-0 items-center justify-center overflow-hidden',

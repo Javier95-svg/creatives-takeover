@@ -1,4 +1,18 @@
 export type MVPProjectFramework = 'static-html' | 'code-only';
+export type MVPProjectType =
+  | 'web-app'
+  | 'landing-page'
+  | 'dashboard'
+  | 'marketplace'
+  | 'directory'
+  | 'internal-tool';
+
+export interface MVPProjectDependency {
+  name: string;
+  source: 'browser' | 'cdn';
+  url?: string;
+  purpose?: string;
+}
 
 export interface MVPProjectFile {
   path: string;
@@ -9,8 +23,19 @@ export interface MVPProjectFile {
 export interface MVPProjectArtifact {
   projectName: string;
   framework: MVPProjectFramework;
+  projectType: MVPProjectType;
   entryFile: string;
+  summary: string;
+  dependencies: MVPProjectDependency[];
   files: MVPProjectFile[];
+}
+
+export interface MVPProjectSnapshot {
+  id: string;
+  label: string;
+  createdAt: string;
+  source: 'generated' | 'manual' | 'imported' | 'restore' | 'commit';
+  artifact: MVPProjectArtifact;
 }
 
 export interface MVPPreviewResult {
@@ -29,7 +54,10 @@ interface RawProjectFile {
 interface RawProjectArtifact {
   projectName?: unknown;
   framework?: unknown;
+  projectType?: unknown;
   entryFile?: unknown;
+  summary?: unknown;
+  dependencies?: unknown;
   files?: unknown;
 }
 
@@ -270,9 +298,51 @@ function sanitizeRawProject(raw: RawProjectArtifact, fallbackName = 'Generated A
         ? raw.projectName.trim()
         : fallbackName,
     framework: raw.framework === 'code-only' ? 'code-only' : 'static-html',
+    projectType: sanitizeProjectType(raw.projectType),
     entryFile,
+    summary:
+      typeof raw.summary === 'string' && raw.summary.trim()
+        ? raw.summary.trim()
+        : 'Generated with MVP Builder.',
+    dependencies: normalizeProjectDependencies(raw.dependencies),
     files,
   };
+}
+
+function sanitizeProjectType(raw: unknown): MVPProjectType {
+  switch (raw) {
+    case 'landing-page':
+    case 'dashboard':
+    case 'marketplace':
+    case 'directory':
+    case 'internal-tool':
+      return raw;
+    default:
+      return 'web-app';
+  }
+}
+
+function normalizeProjectDependencies(raw: unknown): MVPProjectDependency[] {
+  if (!Array.isArray(raw)) return [];
+
+  return raw
+    .map((dependency) => {
+      const candidate = dependency as Record<string, unknown>;
+      if (typeof candidate?.name !== 'string' || !candidate.name.trim()) {
+        return null;
+      }
+
+      return {
+        name: candidate.name.trim(),
+        source: candidate.source === 'cdn' ? 'cdn' : 'browser',
+        url: typeof candidate.url === 'string' && candidate.url.trim() ? candidate.url.trim() : undefined,
+        purpose:
+          typeof candidate.purpose === 'string' && candidate.purpose.trim()
+            ? candidate.purpose.trim()
+            : undefined,
+      };
+    })
+    .filter((dependency): dependency is MVPProjectDependency => Boolean(dependency));
 }
 
 function extractTaggedContent(fullText: string, startTag: string, endTag: string): string | null {
@@ -313,7 +383,10 @@ export function createProjectFromHtml(
   return {
     projectName,
     framework: 'static-html',
+    projectType: 'web-app',
     entryFile: 'index.html',
+    summary: 'Generated with MVP Builder.',
+    dependencies: [],
     files: normalizeProjectFiles([
       {
         path: 'index.html',
@@ -329,7 +402,10 @@ export function serializeProjectForPrompt(project: MVPProjectArtifact): string {
     {
       projectName: project.projectName,
       framework: project.framework,
+      projectType: project.projectType,
       entryFile: project.entryFile,
+      summary: project.summary,
+      dependencies: project.dependencies,
       files: project.files.map((file) => ({
         path: file.path,
         content: file.content,

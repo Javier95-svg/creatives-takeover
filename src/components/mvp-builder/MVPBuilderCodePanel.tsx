@@ -13,11 +13,21 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
-import type { MVPProjectFile } from '@/lib/mvp-builder/project';
+import type {
+  MVPProjectDependency,
+  MVPProjectFile,
+  MVPProjectSnapshot,
+  MVPProjectType,
+} from '@/lib/mvp-builder/project';
+import { getMVPProjectTypeLabel } from '@/data/mvpProjectTypes';
 
 interface MVPBuilderCodePanelProps {
   files: MVPProjectFile[];
   baselineFiles: MVPProjectFile[];
+  projectType: MVPProjectType;
+  projectSummary: string;
+  projectDependencies: MVPProjectDependency[];
+  projectSnapshots: MVPProjectSnapshot[];
   selectedFilePath: string | null;
   entryFilePath: string;
   codeChanges: Array<{ path: string; status: 'added' | 'modified' }>;
@@ -26,12 +36,18 @@ interface MVPBuilderCodePanelProps {
   onSaveFile: (path: string, content: string) => void;
   onResetFile: (path: string) => void;
   onResetProject: () => void;
+  onCreateSnapshot: () => void;
+  onRestoreSnapshot: (snapshotId: string) => void;
   onSelectEntryFile: (path: string) => void;
 }
 
 export const MVPBuilderCodePanel: React.FC<MVPBuilderCodePanelProps> = ({
   files,
   baselineFiles,
+  projectType,
+  projectSummary,
+  projectDependencies,
+  projectSnapshots,
   selectedFilePath,
   entryFilePath,
   codeChanges,
@@ -40,6 +56,8 @@ export const MVPBuilderCodePanel: React.FC<MVPBuilderCodePanelProps> = ({
   onSaveFile,
   onResetFile,
   onResetProject,
+  onCreateSnapshot,
+  onRestoreSnapshot,
   onSelectEntryFile,
 }) => {
   const [drafts, setDrafts] = useState<Record<string, string>>({});
@@ -378,6 +396,43 @@ export const MVPBuilderCodePanel: React.FC<MVPBuilderCodePanelProps> = ({
           <div className="bg-muted/20 px-4 py-4">
             <div className="rounded-2xl border border-border/60 bg-background/90 p-4">
               <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                Project manifest
+              </p>
+              <div className="mt-3 space-y-3 text-sm text-foreground">
+                <div className="flex items-center justify-between">
+                  <span>Project type</span>
+                  <span className="font-medium">{getMVPProjectTypeLabel(projectType)}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span>Dependencies</span>
+                  <span className="font-medium">{projectDependencies.length}</span>
+                </div>
+                <div className="rounded-xl border border-border/60 bg-muted/30 px-3 py-3 text-sm text-muted-foreground">
+                  {projectSummary}
+                </div>
+                {projectDependencies.length > 0 && (
+                  <div className="space-y-2">
+                    {projectDependencies.map((dependency) => (
+                      <div
+                        key={`${dependency.name}-${dependency.url ?? dependency.source}`}
+                        className="rounded-xl border border-border/60 bg-muted/30 px-3 py-2"
+                      >
+                        <p className="text-sm font-medium text-foreground">{dependency.name}</p>
+                        <p className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
+                          {dependency.source}
+                        </p>
+                        {dependency.purpose && (
+                          <p className="mt-1 text-xs text-muted-foreground">{dependency.purpose}</p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="mt-4 rounded-2xl border border-border/60 bg-background/90 p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
                 Code state
               </p>
               <div className="mt-3 space-y-3 text-sm text-foreground">
@@ -400,6 +455,56 @@ export const MVPBuilderCodePanel: React.FC<MVPBuilderCodePanelProps> = ({
                   <span className="font-medium">{Object.keys(drafts).length}</span>
                 </div>
               </div>
+            </div>
+
+            <div className="mt-4 rounded-2xl border border-border/60 bg-background/90 p-4">
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                  Snapshots
+                </p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 gap-1.5 text-xs"
+                  onClick={onCreateSnapshot}
+                >
+                  <Save className="h-3.5 w-3.5" />
+                  Create snapshot
+                </Button>
+              </div>
+              {projectSnapshots.length === 0 ? (
+                <p className="mt-3 text-sm text-muted-foreground">
+                  No snapshots yet. Create one before risky manual edits.
+                </p>
+              ) : (
+                <div className="mt-3 space-y-2">
+                  {projectSnapshots.slice(0, 5).map((snapshot) => (
+                    <div
+                      key={snapshot.id}
+                      className="rounded-xl border border-border/60 bg-muted/30 px-3 py-3"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-medium text-foreground">
+                            {snapshot.label}
+                          </p>
+                          <p className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
+                            {snapshot.source} · {new Date(snapshot.createdAt).toLocaleString()}
+                          </p>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-7 px-2 text-xs"
+                          onClick={() => onRestoreSnapshot(snapshot.id)}
+                        >
+                          Restore
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div className="mt-4 rounded-2xl border border-border/60 bg-background/90 p-4">

@@ -66,7 +66,12 @@ Next Iteration: <one sentence improvement suggestion>
 {
   "projectName": "Short project name",
   "framework": "static-html",
+  "projectType": "web-app",
   "entryFile": "index.html",
+  "summary": "One-sentence summary of the generated product.",
+  "dependencies": [
+    { "name": "Browser APIs", "source": "browser", "purpose": "Core interactions" }
+  ],
   "files": [
     { "path": "index.html", "content": "<!DOCTYPE html>..." },
     { "path": "styles.css", "content": "..." },
@@ -95,7 +100,10 @@ How to Prompt Next: <one sentence suggestion>
 {
   "projectName": "Short project name",
   "framework": "static-html",
+  "projectType": "web-app",
   "entryFile": "index.html",
+  "summary": "One-sentence summary of the generated product.",
+  "dependencies": [],
   "files": [
     { "path": "index.html", "content": "<!DOCTYPE html>..." }
   ]
@@ -139,7 +147,10 @@ function buildLegacyProjectFromHtml(html: string) {
   return {
     projectName: "Generated App",
     framework: "static-html",
+    projectType: "web-app",
     entryFile: "index.html",
+    summary: "Generated with MVP Builder.",
+    dependencies: [],
     files: [
       {
         path: "index.html",
@@ -157,7 +168,15 @@ function extractProject(fullText: string) {
       const parsed = JSON.parse(rawProject) as {
         projectName?: unknown;
         framework?: unknown;
+        projectType?: unknown;
         entryFile?: unknown;
+        summary?: unknown;
+        dependencies?: Array<{
+          name?: unknown;
+          source?: unknown;
+          url?: unknown;
+          purpose?: unknown;
+        }>;
         files?: Array<{ path?: unknown; content?: unknown }>;
       };
 
@@ -182,10 +201,43 @@ function extractProject(fullText: string) {
               ? parsed.projectName.trim()
               : "Generated App",
           framework: parsed.framework === "code-only" ? "code-only" : "static-html",
+          projectType:
+            parsed.projectType === "landing-page" ||
+            parsed.projectType === "dashboard" ||
+            parsed.projectType === "marketplace" ||
+            parsed.projectType === "directory" ||
+            parsed.projectType === "internal-tool"
+              ? parsed.projectType
+              : "web-app",
           entryFile:
             typeof parsed.entryFile === "string" && parsed.entryFile.trim()
               ? normalizeProjectPath(parsed.entryFile)
               : files[0].path,
+          summary:
+            typeof parsed.summary === "string" && parsed.summary.trim()
+              ? parsed.summary.trim()
+              : "Generated with MVP Builder.",
+          dependencies: Array.isArray(parsed.dependencies)
+            ? parsed.dependencies
+                .map((dependency) => {
+                  if (typeof dependency?.name !== "string" || !dependency.name.trim()) {
+                    return null;
+                  }
+                  return {
+                    name: dependency.name.trim(),
+                    source: dependency.source === "cdn" ? "cdn" : "browser",
+                    url:
+                      typeof dependency.url === "string" && dependency.url.trim()
+                        ? dependency.url.trim()
+                        : undefined,
+                    purpose:
+                      typeof dependency.purpose === "string" && dependency.purpose.trim()
+                        ? dependency.purpose.trim()
+                        : undefined,
+                  };
+                })
+                .filter(Boolean)
+            : [],
           files,
         };
       }
@@ -352,6 +404,7 @@ serve(async (req: Request) => {
   let conversationHistory: Array<{ role: string; content: string }>;
   let userId: string | null;
   let selectedModelsRaw: unknown;
+  let preferredProjectType: string | null;
 
   try {
     const body = await req.json();
@@ -362,6 +415,7 @@ serve(async (req: Request) => {
       : [];
     userId = body.userId ?? null;
     selectedModelsRaw = body.selectedModels;
+    preferredProjectType = typeof body.preferredProjectType === "string" ? body.preferredProjectType : null;
   } catch {
     return errorStream("Invalid request body", "BAD_REQUEST");
   }
@@ -418,13 +472,18 @@ serve(async (req: Request) => {
 
   // For refinements, inject the current HTML as context
   let userContent = userMessage;
+  const projectTypeInstruction = preferredProjectType
+    ? `Preferred project type: ${preferredProjectType}. Honor this unless the request strongly contradicts it.`
+    : "";
   if (!isFirstGeneration && currentProject) {
     userContent =
       `Current project files (edit this exact project):\n<project-source>\n${JSON.stringify(
         currentProject,
         null,
         2
-      )}\n</project-source>\n\nUser request:\n${userMessage}`;
+      )}\n</project-source>\n\n${projectTypeInstruction}\n\nUser request:\n${userMessage}`;
+  } else if (projectTypeInstruction) {
+    userContent = `${projectTypeInstruction}\n\nUser request:\n${userMessage}`;
   }
 
   // Resolve selected model set (single or multi-model combo)

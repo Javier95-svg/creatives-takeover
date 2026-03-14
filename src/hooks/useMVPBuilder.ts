@@ -9,6 +9,10 @@ import {
   sanitizeMVPModelSelection,
 } from '@/data/mvpModels';
 import {
+  MVP_DEFAULT_PROJECT_TYPE,
+  sanitizeMVPProjectType,
+} from '@/data/mvpProjectTypes';
+import {
   buildPreviewFromProject,
   createProjectFromHtml,
   detectProjectFileLanguage,
@@ -19,8 +23,10 @@ import {
   pickProjectEntryFile,
   type MVPPreviewResult,
   type MVPProjectArtifact,
+  type MVPProjectSnapshot,
   type MVPProjectFile,
   type MVPProjectFramework,
+  type MVPProjectType,
 } from '@/lib/mvp-builder/project';
 
 export interface MVPMessage {
@@ -106,6 +112,8 @@ interface PersistedSession {
   projectId: string;
   promptHistory: MVPPromptHistoryItem[];
   selectedModels: string[];
+  selectedProjectType?: MVPProjectType;
+  projectSnapshots?: MVPProjectSnapshot[];
   githubRepoSession?: GitHubRepoSession | null;
   githubPendingChanges?: GitHubFileChange[];
   githubCommitHistory?: GitHubCommitRecord[];
@@ -126,6 +134,47 @@ function sortHistory(items: MVPPromptHistoryItem[]): MVPPromptHistoryItem[] {
 
 function shortSha(sha: string): string {
   return sha.slice(0, 8);
+}
+
+function normalizeSnapshotArtifact(artifact: MVPProjectArtifact): MVPProjectArtifact {
+  const normalizedFiles = normalizeProjectFiles(artifact.files);
+  return {
+    ...artifact,
+    projectType: sanitizeMVPProjectType(artifact.projectType),
+    summary:
+      typeof artifact.summary === 'string' && artifact.summary.trim()
+        ? artifact.summary.trim()
+        : 'Generated with MVP Builder.',
+    dependencies: Array.isArray(artifact.dependencies) ? artifact.dependencies : [],
+    files: normalizedFiles,
+    entryFile:
+      pickProjectEntryFile(normalizedFiles, artifact.entryFile) ??
+      normalizedFiles[0]?.path ??
+      'index.html',
+  };
+}
+
+function createProjectSnapshot(
+  artifact: MVPProjectArtifact,
+  label: string,
+  source: MVPProjectSnapshot['source']
+): MVPProjectSnapshot {
+  return {
+    id: crypto.randomUUID(),
+    label,
+    createdAt: new Date().toISOString(),
+    source,
+    artifact: normalizeSnapshotArtifact(artifact),
+  };
+}
+
+function mergeSnapshots(
+  previous: MVPProjectSnapshot[],
+  nextSnapshot: MVPProjectSnapshot,
+  limit = 12
+): MVPProjectSnapshot[] {
+  const deduped = [nextSnapshot, ...previous.filter((snapshot) => snapshot.label !== nextSnapshot.label)];
+  return deduped.slice(0, limit);
 }
 
 function applyChangesToFiles(
@@ -172,7 +221,10 @@ function createProjectArtifactFromRepo(
   return {
     projectName: name,
     framework: pickProjectEntryFile(projectFiles, preferredEntryFile) ? 'static-html' : 'code-only',
+    projectType: 'web-app',
     entryFile: pickProjectEntryFile(projectFiles, preferredEntryFile) ?? projectFiles[0]?.path ?? 'index.html',
+    summary: 'Imported from GitHub.',
+    dependencies: [],
     files: projectFiles,
   };
 }
@@ -191,6 +243,12 @@ export function useMVPBuilder() {
   const [projectFiles, setProjectFiles] = useState<MVPProjectFile[]>([]);
   const [entryFilePath, setEntryFilePathState] = useState<string>('index.html');
   const [projectFramework, setProjectFramework] = useState<MVPProjectFramework>('static-html');
+  const [selectedProjectType, setSelectedProjectTypeState] =
+    useState<MVPProjectType>(MVP_DEFAULT_PROJECT_TYPE);
+  const [projectSummary, setProjectSummary] = useState('Generated with MVP Builder.');
+  const [projectDependencies, setProjectDependencies] = useState<
+    MVPProjectArtifact['dependencies']
+  >([]);
   const [currentHtml, setCurrentHtml] = useState<string | null>(null);
   const [previewState, setPreviewState] = useState<MVPPreviewResult>({
     html: null,
@@ -201,6 +259,7 @@ export function useMVPBuilder() {
   });
   const [selectedCodeFilePath, setSelectedCodeFilePath] = useState<string | null>(null);
   const [lastGeneratedProject, setLastGeneratedProject] = useState<MVPProjectArtifact | null>(null);
+  const [projectSnapshots, setProjectSnapshots] = useState<MVPProjectSnapshot[]>([]);
   const [isShowingPreviewFallback, setIsShowingPreviewFallback] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [projectName, setProjectName] = useState('Name Your App');
@@ -268,20 +327,15 @@ export function useMVPBuilder() {
         allowFallback?: boolean;
         setAsBaseline?: boolean;
         preserveProjectName?: boolean;
+        preserveProjectType?: boolean;
       }
     ) => {
-      const normalizedFiles = normalizeProjectFiles(artifact.files);
-      const nextArtifact: MVPProjectArtifact = {
-        ...artifact,
-        files: normalizedFiles,
-        entryFile:
-          pickProjectEntryFile(normalizedFiles, artifact.entryFile) ??
-          normalizedFiles[0]?.path ??
-          'index.html',
-      };
+      const nextArtifact = normalizeSnapshotArtifact(artifact);
 
       setProjectFiles(nextArtifact.files);
       setProjectFramework(nextArtifact.framework);
+      setProjectSummary(nextArtifact.summary);
+      setProjectDependencies(nextArtifact.dependencies);
       setSelectedCodeFilePath((prev) => {
         if (prev && nextArtifact.files.some((file) => file.path === prev)) return prev;
         return nextArtifact.files[0]?.path ?? null;
@@ -289,6 +343,9 @@ export function useMVPBuilder() {
 
       if (!options?.preserveProjectName && nextArtifact.projectName.trim()) {
         setProjectName(nextArtifact.projectName);
+      }
+      if (!options?.preserveProjectType) {
+        setSelectedProjectTypeState(nextArtifact.projectType);
       }
 
       if (options?.setAsBaseline) {
@@ -306,6 +363,19 @@ export function useMVPBuilder() {
     setPromptHistory((prev) => sortHistory([entry, ...prev]));
   }, []);
 
+  const addProjectSnapshot = useCallback(
+    (
+      artifact: MVPProjectArtifact,
+      label: string,
+      source: MVPProjectSnapshot['source']
+    ) => {
+      const snapshot = createProjectSnapshot(artifact, label, source);
+      setProjectSnapshots((prev) => mergeSnapshots(prev, snapshot));
+      return snapshot;
+    },
+    []
+  );
+
   const persist = useCallback(
     (
       msgs: MVPMessage[],
@@ -315,6 +385,8 @@ export function useMVPBuilder() {
       pid: string,
       history: MVPPromptHistoryItem[],
       models: string[],
+      projectType: MVPProjectType,
+      snapshots: MVPProjectSnapshot[],
       repoSession: GitHubRepoSession | null,
       pendingChanges: GitHubFileChange[],
       commitHistory: GitHubCommitRecord[],
@@ -332,6 +404,8 @@ export function useMVPBuilder() {
           projectId: pid,
           promptHistory: history,
           selectedModels: models,
+          selectedProjectType: projectType,
+          projectSnapshots: snapshots,
           githubRepoSession: repoSession,
           githubPendingChanges: pendingChanges,
           githubCommitHistory: commitHistory,
@@ -377,12 +451,35 @@ export function useMVPBuilder() {
           : []
       );
       setSelectedModelsState(sanitizeMVPModelSelection(session.selectedModels));
+      setSelectedProjectTypeState(sanitizeMVPProjectType(session.selectedProjectType));
       setGitHubRepoSession(session.githubRepoSession ?? null);
       setGitHubPendingChanges(Array.isArray(session.githubPendingChanges) ? session.githubPendingChanges : []);
       setGitHubCommitHistory(Array.isArray(session.githubCommitHistory) ? session.githubCommitHistory : []);
       setLastGitHubPrompt(session.lastGitHubPrompt ?? null);
       setSuggestedGitHubCommitMessage(session.suggestedGitHubCommitMessage ?? null);
       setSelectedCodeFilePath(session.selectedCodeFilePath ?? null);
+      setProjectSnapshots(
+        Array.isArray(session.projectSnapshots)
+          ? session.projectSnapshots
+              .map((snapshot) => {
+                if (
+                  !snapshot ||
+                  typeof snapshot.id !== 'string' ||
+                  typeof snapshot.label !== 'string' ||
+                  typeof snapshot.createdAt !== 'string' ||
+                  !snapshot.artifact
+                ) {
+                  return null;
+                }
+
+                return {
+                  ...snapshot,
+                  artifact: normalizeSnapshotArtifact(snapshot.artifact),
+                } as MVPProjectSnapshot;
+              })
+              .filter((snapshot): snapshot is MVPProjectSnapshot => Boolean(snapshot))
+          : []
+      );
 
       const restoredProject =
         session.currentProject ??
@@ -395,6 +492,7 @@ export function useMVPBuilder() {
           allowFallback: false,
           setAsBaseline: false,
           preserveProjectName: true,
+          preserveProjectType: false,
         });
       } else {
         setProjectFiles([]);
@@ -404,15 +502,7 @@ export function useMVPBuilder() {
 
       if (session.lastGeneratedProject) {
         setLastGeneratedProject({
-          ...session.lastGeneratedProject,
-          files: normalizeProjectFiles(session.lastGeneratedProject.files),
-          entryFile:
-            pickProjectEntryFile(
-              normalizeProjectFiles(session.lastGeneratedProject.files),
-              session.lastGeneratedProject.entryFile
-            ) ??
-            normalizeProjectFiles(session.lastGeneratedProject.files)[0]?.path ??
-            'index.html',
+          ...normalizeSnapshotArtifact(session.lastGeneratedProject),
         });
       }
     } catch {
@@ -428,7 +518,10 @@ export function useMVPBuilder() {
         ? {
             projectName,
             framework: projectFramework,
+            projectType: selectedProjectType,
             entryFile: entryFilePath,
+            summary: projectSummary,
+            dependencies: projectDependencies,
             files: projectFiles,
           }
         : null,
@@ -436,6 +529,8 @@ export function useMVPBuilder() {
       projectId,
       promptHistory,
       selectedModels,
+      selectedProjectType,
+      projectSnapshots,
       githubRepoSession,
       githubPendingChanges,
       githubCommitHistory,
@@ -449,11 +544,15 @@ export function useMVPBuilder() {
     currentHtml,
     projectFiles,
     projectFramework,
+    selectedProjectType,
     entryFilePath,
+    projectSummary,
+    projectDependencies,
     projectName,
     projectId,
     promptHistory,
     selectedModels,
+    projectSnapshots,
     githubRepoSession,
     githubPendingChanges,
     githubCommitHistory,
@@ -715,6 +814,11 @@ export function useMVPBuilder() {
             preserveProjectName: false,
           }
         );
+        addProjectSnapshot(
+          createProjectArtifactFromRepo(result.repository.name, session.files),
+          `Imported ${result.repository.name}`,
+          'imported'
+        );
 
         await loadGitHubCommitHistory(session.fullName, session.branch);
         toast.success(`Imported ${session.fullName} (${session.branch})`);
@@ -726,7 +830,7 @@ export function useMVPBuilder() {
         setIsGitHubBusy(false);
       }
     },
-    [applyProjectArtifact, callGitHubFunction, loadGitHubCommitHistory]
+    [addProjectSnapshot, applyProjectArtifact, callGitHubFunction, loadGitHubCommitHistory]
   );
 
   const discardGitHubChanges = useCallback(() => {
@@ -815,6 +919,11 @@ export function useMVPBuilder() {
             preserveProjectName: true,
           }
         );
+        addProjectSnapshot(
+          createProjectArtifactFromRepo(githubRepoSession.name, updatedFiles, entryFilePath),
+          result.pullRequest?.html_url ? 'Committed PR-ready changes' : 'Committed GitHub changes',
+          'commit'
+        );
         appendPromptHistory({
           id: crypto.randomUUID(),
           prompt: lastGitHubPrompt || result.commit.message,
@@ -845,6 +954,7 @@ export function useMVPBuilder() {
     },
     [
       appendPromptHistory,
+      addProjectSnapshot,
       applyProjectArtifact,
       callGitHubFunction,
       entryFilePath,
@@ -1077,7 +1187,10 @@ export function useMVPBuilder() {
                 ? {
                     projectName,
                     framework: projectFramework,
+                    projectType: selectedProjectType,
                     entryFile: entryFilePath,
+                    summary: projectSummary,
+                    dependencies: projectDependencies,
                     files: projectFiles.map((file) => ({
                       path: file.path,
                       content: file.content,
@@ -1087,6 +1200,7 @@ export function useMVPBuilder() {
             conversationHistory,
             userId: user?.id ?? null,
             selectedModels,
+            preferredProjectType: selectedProjectType,
           }),
         });
 
@@ -1127,7 +1241,13 @@ export function useMVPBuilder() {
               allowFallback: false,
               setAsBaseline: true,
               preserveProjectName: projectName !== 'Name Your App',
+              preserveProjectType: false,
             });
+            addProjectSnapshot(
+              committedProject,
+              messages.length === 0 ? 'Initial generated build' : 'Generated refinement',
+              'generated'
+            );
             appendPromptHistory({
               id: crypto.randomUUID(),
               prompt,
@@ -1243,6 +1363,7 @@ export function useMVPBuilder() {
     },
     [
       appendPromptHistory,
+      addProjectSnapshot,
       applyProjectArtifact,
       entryFilePath,
       ensureCredits,
@@ -1253,9 +1374,12 @@ export function useMVPBuilder() {
       isGitHubBusy,
       messages,
       projectFiles,
+      projectDependencies,
       projectFramework,
       projectName,
+      projectSummary,
       selectedModels,
+      selectedProjectType,
       user,
     ]
   );
@@ -1271,6 +1395,10 @@ export function useMVPBuilder() {
     },
     [projectFiles, refreshPreview]
   );
+
+  const setSelectedProjectType = useCallback((projectType: MVPProjectType) => {
+    setSelectedProjectTypeState(sanitizeMVPProjectType(projectType));
+  }, []);
 
   const updateProjectFile = useCallback(
     (path: string, content: string) => {
@@ -1380,6 +1508,48 @@ export function useMVPBuilder() {
     toast.success('Reset the project code to the last saved build.');
   }, [applyProjectArtifact, githubRepoSession, lastGeneratedProject]);
 
+  const createManualSnapshot = useCallback(() => {
+    if (projectFiles.length === 0) return;
+
+    const artifact = normalizeSnapshotArtifact({
+      projectName,
+      framework: projectFramework,
+      projectType: selectedProjectType,
+      entryFile: entryFilePath,
+      summary: projectSummary,
+      dependencies: projectDependencies,
+      files: projectFiles,
+    });
+    addProjectSnapshot(artifact, 'Manual snapshot', 'manual');
+    toast.success('Created a project snapshot.');
+  }, [
+    addProjectSnapshot,
+    entryFilePath,
+    projectDependencies,
+    projectFiles,
+    projectFramework,
+    projectName,
+    projectSummary,
+    selectedProjectType,
+  ]);
+
+  const restoreProjectSnapshot = useCallback(
+    (snapshotId: string) => {
+      const snapshot = projectSnapshots.find((item) => item.id === snapshotId);
+      if (!snapshot) return;
+
+      applyProjectArtifact(snapshot.artifact, {
+        allowFallback: false,
+        setAsBaseline: false,
+        preserveProjectName: false,
+        preserveProjectType: false,
+      });
+      addProjectSnapshot(snapshot.artifact, `Restored ${snapshot.label}`, 'restore');
+      toast.success(`Restored snapshot: ${snapshot.label}`);
+    },
+    [addProjectSnapshot, applyProjectArtifact, projectSnapshots]
+  );
+
   const setSelectedModels = useCallback((models: string[]) => {
     setSelectedModelsState(sanitizeMVPModelSelection(models));
   }, []);
@@ -1391,6 +1561,9 @@ export function useMVPBuilder() {
     setProjectFiles([]);
     setEntryFilePathState('index.html');
     setProjectFramework('static-html');
+    setSelectedProjectTypeState(MVP_DEFAULT_PROJECT_TYPE);
+    setProjectSummary('Generated with MVP Builder.');
+    setProjectDependencies([]);
     setCurrentHtml(null);
     setPreviewState({
       html: null,
@@ -1401,6 +1574,7 @@ export function useMVPBuilder() {
     });
     setSelectedCodeFilePath(null);
     setLastGeneratedProject(null);
+    setProjectSnapshots([]);
     setIsShowingPreviewFallback(false);
     lastStablePreviewHtmlRef.current = null;
     setProjectName('Name Your App');
@@ -1428,10 +1602,14 @@ export function useMVPBuilder() {
     projectFiles,
     entryFilePath,
     projectFramework,
+    selectedProjectType,
+    projectSummary,
+    projectDependencies,
     currentHtml,
     previewState,
     selectedCodeFilePath,
     lastGeneratedProject,
+    projectSnapshots,
     codeChanges,
     isShowingPreviewFallback,
     isGenerating,
@@ -1448,11 +1626,14 @@ export function useMVPBuilder() {
     isGitHubBusy,
     suggestedGitHubCommitMessage,
     setProjectName,
+    setSelectedProjectType,
     setSelectedCodeFilePath,
     setEntryFilePath,
     updateProjectFile,
     resetProjectFile,
     resetProjectCode,
+    createManualSnapshot,
+    restoreProjectSnapshot,
     setSelectedModels,
     sendMessage,
     resetProject,

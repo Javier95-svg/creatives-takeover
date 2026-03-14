@@ -41,6 +41,11 @@ import {
   MVP_MODEL_OPTIONS,
   getMVPModelLabel,
 } from '@/data/mvpModels';
+import {
+  MVP_PROJECT_TYPE_OPTIONS,
+  getMVPProjectTypeLabel,
+} from '@/data/mvpProjectTypes';
+import type { MVPProjectType } from '@/lib/mvp-builder/project';
 import { cn } from '@/lib/utils';
 
 // ── Quick-start templates ────────────────────────────────────────────────────
@@ -242,6 +247,7 @@ interface MVPBuilderChatProps {
   messages: MVPMessage[];
   promptHistory: MVPPromptHistoryItem[];
   selectedModels: string[];
+  selectedProjectType: MVPProjectType;
   githubConnection: GitHubConnectionState;
   githubRepositories: GitHubRepositorySummary[];
   githubBranches: string[];
@@ -251,6 +257,7 @@ interface MVPBuilderChatProps {
   isGitHubBusy: boolean;
   suggestedGitHubCommitMessage: string | null;
   onSelectedModelsChange: (models: string[]) => void;
+  onProjectTypeChange: (projectType: MVPProjectType) => void;
   onSend: (prompt: string) => void;
   onConnectGitHub: () => void | Promise<void>;
   onDisconnectGitHub: () => void | Promise<void>;
@@ -274,6 +281,7 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
   messages,
   promptHistory,
   selectedModels,
+  selectedProjectType,
   githubConnection,
   githubRepositories,
   githubBranches,
@@ -283,6 +291,7 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
   isGitHubBusy,
   suggestedGitHubCommitMessage,
   onSelectedModelsChange,
+  onProjectTypeChange,
   onSend,
   onConnectGitHub,
   onDisconnectGitHub,
@@ -459,6 +468,17 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
       <div className="px-3 pt-2 pb-1 shrink-0 flex items-center justify-between gap-2">
         <p className="text-[11px] font-medium text-muted-foreground">Builder controls</p>
         <div className="flex items-center gap-1 flex-wrap justify-end">
+          <select
+            value={selectedProjectType}
+            onChange={(event) => onProjectTypeChange(event.target.value as MVPProjectType)}
+            className="h-7 rounded-full border border-border bg-background px-3 text-xs text-foreground outline-none focus:ring-2 focus:ring-primary/30"
+          >
+            {MVP_PROJECT_TYPE_OPTIONS.map((option) => (
+              <option key={option.id} value={option.id}>
+                {option.label}
+              </option>
+            ))}
+          </select>
           {!githubConnection.connected && (
             <Button
               type="button"
@@ -515,6 +535,9 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
       <div className="px-3 pb-1">
         <p className="text-[10px] text-muted-foreground truncate">
           Active: {selectedModelLabels.join(' + ')}
+        </p>
+        <p className="text-[10px] text-muted-foreground truncate">
+          Project type: {getMVPProjectTypeLabel(selectedProjectType)}
         </p>
         {githubConnection.connected && (
           <p className="text-[10px] text-muted-foreground truncate">

@@ -18,6 +18,10 @@ export const MVPBuilder: React.FC = () => {
     codeChanges,
     isShowingPreviewFallback,
     lastGeneratedProject,
+    selectedProjectType,
+    projectSummary,
+    projectDependencies,
+    projectSnapshots,
     currentHtml,
     isGenerating,
     projectName,
@@ -33,11 +37,14 @@ export const MVPBuilder: React.FC = () => {
     isGitHubBusy,
     suggestedGitHubCommitMessage,
     setProjectName,
+    setSelectedProjectType,
     setSelectedCodeFilePath,
     setEntryFilePath,
     updateProjectFile,
     resetProjectFile,
     resetProjectCode,
+    createManualSnapshot,
+    restoreProjectSnapshot,
     setSelectedModels,
     sendMessage,
     resetProject,
@@ -110,6 +117,7 @@ export const MVPBuilder: React.FC = () => {
               messages={messages}
               promptHistory={promptHistory}
               selectedModels={selectedModels}
+              selectedProjectType={selectedProjectType}
               githubConnection={githubConnection}
               githubRepositories={githubRepositories}
               githubBranches={githubBranches}
@@ -119,6 +127,7 @@ export const MVPBuilder: React.FC = () => {
               isGitHubBusy={isGitHubBusy}
               suggestedGitHubCommitMessage={suggestedGitHubCommitMessage}
               onSelectedModelsChange={setSelectedModels}
+              onProjectTypeChange={setSelectedProjectType}
               onSend={sendMessage}
               onConnectGitHub={connectGitHub}
               onDisconnectGitHub={disconnectGitHub}
@@ -149,6 +158,10 @@ export const MVPBuilder: React.FC = () => {
               projectId={projectId}
               projectFiles={projectFiles}
               baselineFiles={lastGeneratedProject?.files ?? []}
+              projectType={selectedProjectType}
+              projectSummary={projectSummary}
+              projectDependencies={projectDependencies}
+              projectSnapshots={projectSnapshots}
               previewState={previewState}
               entryFilePath={entryFilePath}
               selectedCodeFilePath={selectedCodeFilePath}
@@ -158,6 +171,8 @@ export const MVPBuilder: React.FC = () => {
               onSaveCodeFile={updateProjectFile}
               onResetCodeFile={resetProjectFile}
               onResetProjectCode={resetProjectCode}
+              onCreateSnapshot={createManualSnapshot}
+              onRestoreSnapshot={restoreProjectSnapshot}
               onSelectEntryFile={setEntryFilePath}
             />
           </div>
