@@ -32,8 +32,8 @@ const MENTORS_PER_PAGE = 10;
 
 const MENTOR_HIGHLIGHTS = [
   {
-    title: "Founder mentors",
-    description: "Talk with builders who have already shipped, raised, or coached at the earliest stages.",
+    title: "Startup experts",
+    description: "Talk with advisors who have already shipped, raised, or coached at the earliest stages.",
     icon: GraduationCap,
   },
   {
@@ -292,12 +292,13 @@ const MentorMarketplaceHub = () => {
               <div className="rounded-[2rem] border border-border/60 bg-white/80 p-5 shadow-sm backdrop-blur dark:bg-slate-950/70 sm:p-8">
                 <div className="flex flex-col gap-6">
                   <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-                    <div className="space-y-5">
-                      <div className="max-w-3xl">
-                        <h1 className="text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
+                    <div className="space-y-5 lg:flex-1">
+                      <div className="max-w-3xl lg:mx-auto">
+                        <h1 className="flex items-center justify-center gap-3 text-center text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
                           <span className="gradient-unified creatives-font">
                             Find a Mentor
                           </span>
+                          <GraduationCap className="h-8 w-8 text-sky-600 dark:text-sky-300 sm:h-10 sm:w-10" />
                         </h1>
                       </div>
                     </div>
@@ -343,7 +344,7 @@ const MentorMarketplaceHub = () => {
                         />
                       </div>
                       <p className="text-sm leading-relaxed text-muted-foreground xl:max-w-sm xl:text-right">
-                        Filter by expertise, stage, timezone, and session format to reach the right mentor faster.
+                        Filter by area of expertise, coaching format or timezone.
                       </p>
                     </div>
 
