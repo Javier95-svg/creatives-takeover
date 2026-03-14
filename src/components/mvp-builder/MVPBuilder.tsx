@@ -17,6 +17,7 @@ export const MVPBuilder: React.FC = () => {
     selectedCodeFilePath,
     codeChanges,
     isShowingPreviewFallback,
+    lastGeneratedProject,
     currentHtml,
     isGenerating,
     projectName,
@@ -147,6 +148,7 @@ export const MVPBuilder: React.FC = () => {
               isGenerating={isGenerating}
               projectId={projectId}
               projectFiles={projectFiles}
+              baselineFiles={lastGeneratedProject?.files ?? []}
               previewState={previewState}
               entryFilePath={entryFilePath}
               selectedCodeFilePath={selectedCodeFilePath}

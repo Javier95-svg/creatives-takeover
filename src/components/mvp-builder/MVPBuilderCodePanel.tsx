@@ -1,5 +1,14 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { Code2, FileCode2, RotateCcw, Save, TriangleAlert, Download, Eye } from 'lucide-react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  Code2,
+  FileCode2,
+  RotateCcw,
+  Save,
+  TriangleAlert,
+  Download,
+  Eye,
+  Layers3,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
@@ -8,6 +17,7 @@ import type { MVPProjectFile } from '@/lib/mvp-builder/project';
 
 interface MVPBuilderCodePanelProps {
   files: MVPProjectFile[];
+  baselineFiles: MVPProjectFile[];
   selectedFilePath: string | null;
   entryFilePath: string;
   codeChanges: Array<{ path: string; status: 'added' | 'modified' }>;
@@ -21,6 +31,7 @@ interface MVPBuilderCodePanelProps {
 
 export const MVPBuilderCodePanel: React.FC<MVPBuilderCodePanelProps> = ({
   files,
+  baselineFiles,
   selectedFilePath,
   entryFilePath,
   codeChanges,
@@ -57,6 +68,47 @@ export const MVPBuilderCodePanel: React.FC<MVPBuilderCodePanelProps> = ({
     () => new Map(codeChanges.map((change) => [change.path, change.status])),
     [codeChanges]
   );
+  const baselineFileMap = useMemo(
+    () => new Map(baselineFiles.map((file) => [file.path, file])),
+    [baselineFiles]
+  );
+  const selectedBaselineFile = selectedFile
+    ? baselineFileMap.get(selectedFile.path) ?? null
+    : null;
+  const selectedChangeStatus = selectedFile
+    ? changedPathSet.get(selectedFile.path) ?? null
+    : null;
+
+  const selectedDiffStats = useMemo(() => {
+    if (!selectedFile || !selectedBaselineFile) {
+      return {
+        added: selectedFile ? currentDraft.split('\n').length : 0,
+        removed: 0,
+        changed: selectedFile ? Number(Boolean(selectedChangeStatus)) : 0,
+      };
+    }
+
+    const currentLines = currentDraft.split('\n');
+    const baselineLines = selectedBaselineFile.content.split('\n');
+    const maxLength = Math.max(currentLines.length, baselineLines.length);
+    let added = 0;
+    let removed = 0;
+    let changed = 0;
+
+    for (let index = 0; index < maxLength; index += 1) {
+      const currentLine = currentLines[index];
+      const baselineLine = baselineLines[index];
+      if (baselineLine === undefined && currentLine !== undefined) {
+        added += 1;
+      } else if (currentLine === undefined && baselineLine !== undefined) {
+        removed += 1;
+      } else if (currentLine !== baselineLine) {
+        changed += 1;
+      }
+    }
+
+    return { added, removed, changed };
+  }, [currentDraft, selectedBaselineFile, selectedChangeStatus, selectedFile]);
 
   const handleDraftChange = (value: string) => {
     if (!selectedFile) return;
@@ -66,7 +118,7 @@ export const MVPBuilderCodePanel: React.FC<MVPBuilderCodePanelProps> = ({
     }));
   };
 
-  const handleSave = () => {
+  const handleSave = useCallback(() => {
     if (!selectedFile) return;
     onSaveFile(selectedFile.path, currentDraft);
     setDrafts((prev) => {
@@ -74,7 +126,7 @@ export const MVPBuilderCodePanel: React.FC<MVPBuilderCodePanelProps> = ({
       delete next[selectedFile.path];
       return next;
     });
-  };
+  }, [currentDraft, onSaveFile, selectedFile]);
 
   const handleResetFile = () => {
     if (!selectedFile) return;
@@ -85,6 +137,16 @@ export const MVPBuilderCodePanel: React.FC<MVPBuilderCodePanelProps> = ({
       return next;
     });
   };
+
+  const handleSaveAll = useCallback(() => {
+    const draftEntries = Object.entries(drafts);
+    if (draftEntries.length === 0) return;
+
+    for (const [path, content] of draftEntries) {
+      onSaveFile(path, content);
+    }
+    setDrafts({});
+  }, [drafts, onSaveFile]);
 
   const handleCopy = async () => {
     if (!selectedFile) return;
@@ -113,6 +175,28 @@ export const MVPBuilderCodePanel: React.FC<MVPBuilderCodePanelProps> = ({
     link.click();
     URL.revokeObjectURL(url);
   };
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (!(event.metaKey || event.ctrlKey) || event.key.toLowerCase() !== 's') {
+        return;
+      }
+
+      event.preventDefault();
+
+      if (Object.keys(drafts).length > 1) {
+        handleSaveAll();
+        return;
+      }
+
+      if (isDirty) {
+        handleSave();
+      }
+    };
+
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [drafts, handleSave, handleSaveAll, isDirty]);
 
   if (files.length === 0) {
     return (
@@ -231,6 +315,16 @@ export const MVPBuilderCodePanel: React.FC<MVPBuilderCodePanelProps> = ({
                 variant="outline"
                 size="sm"
                 className="h-8 gap-1.5 text-xs"
+                onClick={handleSaveAll}
+                disabled={Object.keys(drafts).length === 0 || isGenerating}
+              >
+                <Layers3 className="h-3.5 w-3.5" />
+                Save all
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 gap-1.5 text-xs"
                 onClick={handleCopy}
                 disabled={!selectedFile}
               >
@@ -301,7 +395,50 @@ export const MVPBuilderCodePanel: React.FC<MVPBuilderCodePanelProps> = ({
                     {selectedFile ? 'Updates on save' : 'Waiting for file'}
                   </span>
                 </div>
+                <div className="flex items-center justify-between">
+                  <span>Dirty files</span>
+                  <span className="font-medium">{Object.keys(drafts).length}</span>
+                </div>
               </div>
+            </div>
+
+            <div className="mt-4 rounded-2xl border border-border/60 bg-background/90 p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                Selected file diff
+              </p>
+              {!selectedFile ? (
+                <p className="mt-3 text-sm text-muted-foreground">
+                  Select a file to compare it against the last saved build.
+                </p>
+              ) : !selectedBaselineFile ? (
+                <p className="mt-3 text-sm text-muted-foreground">
+                  This file is new in the current project and has no saved baseline yet.
+                </p>
+              ) : !selectedChangeStatus ? (
+                <p className="mt-3 text-sm text-muted-foreground">
+                  This file matches the last saved build.
+                </p>
+              ) : (
+                <div className="mt-3 space-y-3">
+                  <div className="grid grid-cols-3 gap-2 text-center">
+                    <div className="rounded-xl border border-border/60 bg-muted/30 px-2 py-3">
+                      <p className="text-lg font-semibold text-foreground">{selectedDiffStats.added}</p>
+                      <p className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">Added</p>
+                    </div>
+                    <div className="rounded-xl border border-border/60 bg-muted/30 px-2 py-3">
+                      <p className="text-lg font-semibold text-foreground">{selectedDiffStats.changed}</p>
+                      <p className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">Changed</p>
+                    </div>
+                    <div className="rounded-xl border border-border/60 bg-muted/30 px-2 py-3">
+                      <p className="text-lg font-semibold text-foreground">{selectedDiffStats.removed}</p>
+                      <p className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">Removed</p>
+                    </div>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Compared with the last generated or imported baseline for <span className="font-medium text-foreground">{selectedFile.path}</span>.
+                  </p>
+                </div>
+              )}
             </div>
 
             <div className="mt-4 rounded-2xl border border-border/60 bg-background/90 p-4">

@@ -39,6 +39,7 @@ interface MVPBuilderPreviewProps {
   isGenerating: boolean;
   projectId: string;
   projectFiles: MVPProjectFile[];
+  baselineFiles: MVPProjectFile[];
   previewState: MVPPreviewResult;
   entryFilePath: string;
   selectedCodeFilePath: string | null;
@@ -56,6 +57,7 @@ export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({
   isGenerating,
   projectId,
   projectFiles,
+  baselineFiles,
   previewState,
   entryFilePath,
   selectedCodeFilePath,
@@ -289,6 +291,7 @@ export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({
           <div className="min-h-0 flex-1">
             <MVPBuilderCodePanel
               files={projectFiles}
+              baselineFiles={baselineFiles}
               selectedFilePath={selectedCodeFilePath}
               entryFilePath={entryFilePath}
               codeChanges={codeChanges}
@@ -302,7 +305,66 @@ export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({
           </div>
         )}
 
-        {activeTab === 'preview' && (
+          {activeTab === 'preview' && (
+          <div className="flex min-h-0 flex-1 flex-col">
+            <div className="border-b border-border/40 bg-muted/20 px-4 py-3">
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
+                <div className="rounded-2xl border border-border/60 bg-background/90 px-4 py-3">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                    Preview mode
+                  </p>
+                  <p className="mt-1 text-sm font-medium text-foreground">
+                    {previewState.canPreview && html ? 'Live static preview' : 'Code-only fallback'}
+                  </p>
+                </div>
+                <div className="rounded-2xl border border-border/60 bg-background/90 px-4 py-3">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                    Entry file
+                  </p>
+                  <p className="mt-1 truncate text-sm font-medium text-foreground">
+                    {entryFilePath || 'Not selected'}
+                  </p>
+                </div>
+                <div className="rounded-2xl border border-border/60 bg-background/90 px-4 py-3">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                    Project files
+                  </p>
+                  <p className="mt-1 text-sm font-medium text-foreground">
+                    {projectFiles.length} total
+                  </p>
+                </div>
+                <div className="rounded-2xl border border-border/60 bg-background/90 px-4 py-3">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                    Unsaved code changes
+                  </p>
+                  <p className="mt-1 text-sm font-medium text-foreground">
+                    {codeChanges.length}
+                  </p>
+                </div>
+              </div>
+
+              {(previewState.warnings.length > 0 || previewState.errors.length > 0) && (
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {previewState.warnings.map((warning) => (
+                    <div
+                      key={warning}
+                      className="rounded-full border border-border/60 bg-background/90 px-3 py-1 text-xs text-muted-foreground"
+                    >
+                      Warning: {warning}
+                    </div>
+                  ))}
+                  {previewState.errors.map((error) => (
+                    <div
+                      key={error}
+                      className="rounded-full border border-amber-500/25 bg-amber-500/10 px-3 py-1 text-xs text-amber-700"
+                    >
+                      Preview blocker: {error}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
           <div
             className={cn(
               'flex flex-1 min-h-0 items-center justify-center overflow-hidden',
@@ -347,6 +409,12 @@ export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({
                     <p className="mt-2 text-sm text-muted-foreground">
                       This project&apos;s code is available in the Code tab, but the preview renderer can only run static HTML, CSS, and plain JavaScript right now.
                     </p>
+                    <div className="mt-4">
+                      <Button size="sm" className="gap-1.5" onClick={() => setActiveTab('code')}>
+                        <Code2 className="h-3.5 w-3.5" />
+                        Open Code tab
+                      </Button>
+                    </div>
                     {previewState.errors.length > 0 && (
                       <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
                         {previewState.errors.map((error) => (
@@ -419,6 +487,7 @@ export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({
                 />
               </div>
             )}
+          </div>
           </div>
         )}
       </div>
