@@ -318,19 +318,15 @@ const FindYourAngel = () => {
               <div className="rounded-[2rem] border border-border/60 bg-white/80 p-5 shadow-sm backdrop-blur dark:bg-slate-950/70 sm:p-8">
                 <div className="flex flex-col gap-6">
                   <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-                    <div className="space-y-5">
-                      <span className="inline-flex items-center rounded-full border border-sky-500/20 bg-sky-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-sky-700 dark:text-sky-200">
-                        Community marketplace
-                      </span>
-
-                      <div className="max-w-3xl space-y-3">
-                        <h1 className="text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
+                    <div className="space-y-5 lg:flex-1">
+                      <div className="max-w-3xl space-y-3 lg:mx-auto">
+                        <h1 className="text-center text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
                           <span className="gradient-unified creatives-font">
                             Find your Angel
                           </span>
                         </h1>
                         <p
-                          className="max-w-2xl text-base leading-relaxed text-foreground/80 sm:text-lg"
+                          className="mx-auto max-w-2xl text-center text-base leading-relaxed text-foreground/80 sm:text-lg"
                           style={{ fontFamily: "'Space Grotesk', 'Poppins', sans-serif" }}
                         >
                           {descriptionText}
