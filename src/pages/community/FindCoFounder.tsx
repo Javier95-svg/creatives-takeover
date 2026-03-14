@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
+import CommunityCofoundersWallpaper from "@/components/wallpapers/CommunityCofoundersWallpaper";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -149,11 +150,13 @@ const FindCoFounder = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navigation />
+    <div className="min-h-screen bg-background relative">
+      <CommunityCofoundersWallpaper />
+      <div className="relative z-10">
+        <Navigation />
 
-      {/* Hero Section */}
-      <section className="pt-24 pb-16 px-6">
+        {/* Hero Section */}
+        <section className="pt-24 pb-16 px-6">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12">
             <div className="inline-flex items-center gap-2 mb-4 px-4 py-2 rounded-full bg-primary/10 border border-primary/20">
@@ -402,9 +405,10 @@ const FindCoFounder = () => {
           </div>
 
         </div>
-      </section>
+        </section>
 
-      <Footer />
+        <Footer />
+      </div>
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>

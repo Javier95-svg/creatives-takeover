@@ -3,7 +3,7 @@ import { Helmet } from "react-helmet-async";
 import { Link, useSearchParams } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
-import HomeWallpaper from "@/components/wallpapers/HomeWallpaper";
+import CommunityMentorsWallpaper from "@/components/wallpapers/CommunityMentorsWallpaper";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -285,7 +285,7 @@ const MentorMarketplaceHub = () => {
         />
       </Helmet>
       <div className="min-h-screen bg-background relative">
-        <HomeWallpaper />
+        <CommunityMentorsWallpaper />
         <Navigation />
         <div className="pt-16 relative z-10">
           {/* Hero Section */}
