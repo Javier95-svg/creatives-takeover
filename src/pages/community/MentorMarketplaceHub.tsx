@@ -294,11 +294,10 @@ const MentorMarketplaceHub = () => {
                   <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
                     <div className="space-y-5 lg:flex-1">
                       <div className="max-w-3xl lg:mx-auto">
-                        <h1 className="flex items-center justify-center gap-3 text-center text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
+                        <h1 className="text-center text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
                           <span className="gradient-unified creatives-font">
                             Find a Mentor
                           </span>
-                          <GraduationCap className="h-8 w-8 text-sky-600 dark:text-sky-300 sm:h-10 sm:w-10" />
                         </h1>
                       </div>
                     </div>
@@ -377,11 +376,11 @@ const MentorMarketplaceHub = () => {
                 </div>
               ) : (
                 <p className="text-sm text-muted-foreground">
-                  {filteredMentors.length} mentor{filteredMentors.length !== 1 ? 's' : ''} ready to review
+                  {filteredMentors.length} mentor{filteredMentors.length !== 1 ? 's' : ''} ready to support
                 </p>
               )}
               <p className="text-sm text-muted-foreground">
-                Browse profiles, compare strengths, and book the call that unblocks your next step.
+                Building an international network for a global audience💙
               </p>
             </div>
 
