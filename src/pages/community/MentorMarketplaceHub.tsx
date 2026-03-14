@@ -43,7 +43,7 @@ const MENTOR_HIGHLIGHTS = [
   },
   {
     title: "Concrete next steps",
-    description: "Leave with sharper priorities, founder-specific feedback, and a clearer execution plan.",
+    description: "Leave with specific priorities, founder-specific feedback, and a clear execution plan.",
     icon: ArrowRight,
   },
 ];
