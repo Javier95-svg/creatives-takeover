@@ -297,8 +297,6 @@ const FindYourAngel = () => {
     }
   }, [currentPage, totalPages, searchParams, setSearchParams]);
 
-  const descriptionText = "Browse angel investors and early-stage VCs, filter by stage, and build a sharper shortlist for the round you are actually raising.";
-
   return (
     <>
       <Helmet>
@@ -319,18 +317,12 @@ const FindYourAngel = () => {
                 <div className="flex flex-col gap-6">
                   <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
                     <div className="space-y-5 lg:flex-1">
-                      <div className="max-w-3xl space-y-3 lg:mx-auto">
+                      <div className="max-w-3xl lg:mx-auto">
                         <h1 className="text-center text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
                           <span className="gradient-unified creatives-font">
                             Find your Angel
                           </span>
                         </h1>
-                        <p
-                          className="mx-auto max-w-2xl text-center text-base leading-relaxed text-foreground/80 sm:text-lg"
-                          style={{ fontFamily: "'Space Grotesk', 'Poppins', sans-serif" }}
-                        >
-                          {descriptionText}
-                        </p>
                       </div>
                     </div>
 
@@ -363,7 +355,7 @@ const FindYourAngel = () => {
                   </div>
 
                   <div className="rounded-[1.75rem] border border-border/60 bg-background/80 p-4 shadow-sm dark:bg-slate-900/75 sm:p-5">
-                    <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+                    <div className="flex flex-col gap-3">
                       <div className="relative w-full xl:max-w-md">
                         {isPro ? (
                           <>
@@ -395,9 +387,6 @@ const FindYourAngel = () => {
                           </Tooltip>
                         )}
                       </div>
-                      <p className="text-sm leading-relaxed text-muted-foreground xl:max-w-sm xl:text-right">
-                        Filter by investment stage, sort your shortlist, and focus on investors that match your raise.
-                      </p>
                     </div>
 
                     {!isPro && (
