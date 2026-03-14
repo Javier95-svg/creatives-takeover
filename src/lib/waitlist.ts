@@ -193,6 +193,31 @@ export const WAITLIST_FONT_PRESETS = [
   { value: '"DM Sans", "Poppins", "Segoe UI", sans-serif', label: 'DM Sans' },
 ] as const;
 
+export const WAITLIST_THEME_PRESETS: Record<WaitlistTheme, WaitlistColorPalette> = {
+  dark: {
+    pageBackground: '#0f172a',
+    sectionBackground: '#111827',
+    textPrimary: '#f8fafc',
+    textSecondary: '#cbd5e1',
+    buttonBackground: '#ffffff',
+    buttonText: '#111827',
+    borderColor: '#334155',
+    inputBackground: '#ffffff',
+    inputText: '#111827',
+  },
+  light: {
+    pageBackground: '#f8fafc',
+    sectionBackground: '#ffffff',
+    textPrimary: '#0f172a',
+    textSecondary: '#475569',
+    buttonBackground: '#0f172a',
+    buttonText: '#f8fafc',
+    borderColor: '#cbd5e1',
+    inputBackground: '#ffffff',
+    inputText: '#0f172a',
+  },
+};
+
 const WAITLIST_ALLOWED_FIELD_TYPES: WaitlistFieldType[] = ['text', 'textarea', 'url'];
 
 function sanitizeText(input: unknown, fallback = ''): string {
@@ -350,17 +375,7 @@ export function getDefaultWaitlistContent(productName?: string): WaitlistContent
       bodySize: 16,
       letterSpacing: 0,
     },
-    colors: {
-      pageBackground: '#0f172a',
-      sectionBackground: '#111827',
-      textPrimary: '#f8fafc',
-      textSecondary: '#cbd5e1',
-      buttonBackground: '#ffffff',
-      buttonText: '#111827',
-      borderColor: '#334155',
-      inputBackground: '#ffffff',
-      inputText: '#111827',
-    },
+    colors: WAITLIST_THEME_PRESETS.dark,
     spacing: {
       sectionPaddingY: 72,
       contentMaxWidth: 1120,
@@ -509,4 +524,8 @@ export function normalizeWaitlistContent(raw: unknown, productName?: string): Wa
 
 export function getAccentHex(accent: WaitlistAccent): string {
   return WAITLIST_ACCENT_PRESETS.find((item) => item.value === accent)?.hex ?? '#4f46e5';
+}
+
+export function getWaitlistThemePalette(theme: WaitlistTheme): WaitlistColorPalette {
+  return WAITLIST_THEME_PRESETS[theme];
 }

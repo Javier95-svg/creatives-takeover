@@ -14,16 +14,18 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { SortableList } from '@/components/ui/sortable-list';
-import { AlertTriangle, Check, Copy, Download, Eye, Globe, Loader2, Lock, Plus, Save, ShieldCheck, Sparkles, Trash2, Unlock, Users } from 'lucide-react';
+import { AlertTriangle, Check, Copy, Download, Eye, Globe, Loader2, Lock, Monitor, MonitorSmartphone, Plus, Save, ShieldCheck, Sparkles, Trash2, Unlock, Users } from 'lucide-react';
 import WaitlistPageTemplate, { WaitlistContent } from './WaitlistPageTemplate';
-import { WAITLIST_ACCENT_PRESETS, WAITLIST_FONT_PRESETS, createWaitlistFieldId, getDefaultWaitlistContent, normalizeWaitlistContent } from '@/lib/waitlist';
+import { WAITLIST_ACCENT_PRESETS, WAITLIST_FONT_PRESETS, createWaitlistFieldId, getDefaultWaitlistContent, getWaitlistThemePalette, normalizeWaitlistContent } from '@/lib/waitlist';
 
-type BuilderTab = 'content' | 'style' | 'form' | 'publish' | 'domain' | 'analytics';
+type BuilderTab = 'content' | 'style' | 'form' | 'launch' | 'analytics';
+type PreviewDevice = 'desktop' | 'mobile';
 
 const WAITLIST_TABLE = 'waitlist_pages' as any;
 const SIGNUPS_TABLE = 'waitlist_signups' as any;
 const EVENTS_TABLE = 'waitlist_events' as any;
 const BASE_URL = typeof window !== 'undefined' ? window.location.origin : 'https://creatives-takeover.com';
+const GUEST_DRAFT_STORAGE_KEY = 'waitlist_builder_guest_draft_v1';
 
 interface WaitlistPageRow {
   id: string;
@@ -79,6 +81,10 @@ function generateSlug(productName: string): string {
   return `${base || 'waitlist'}-${random}`;
 }
 
+function sanitizeSlug(value: string): string {
+  return value.toLowerCase().trim().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '').slice(0, 50);
+}
+
 function maskEmail(email: string): string {
   const [local, domain] = email.split('@');
   if (!local || !domain) return email;
@@ -131,6 +137,20 @@ function buildPagePayload(userId: string, productName: string, content: Waitlist
   };
 }
 
+function buildEditorSnapshot(
+  productName: string,
+  content: WaitlistContent,
+  slugDraft: string,
+  status: 'draft' | 'published'
+): string {
+  return JSON.stringify({
+    productName: productName.trim(),
+    slugDraft: sanitizeSlug(slugDraft),
+    status,
+    content: normalizeWaitlistContent(content, productName.trim() || 'Your Product'),
+  });
+}
+
 function linesToText(items: string[]): string {
   return items.join('\n');
 }
@@ -147,10 +167,13 @@ export default function WaitlistEditor() {
   const { ensureCredits } = useCreditActions();
 
   const [activeTab, setActiveTab] = useState<BuilderTab>('content');
+  const [previewDevice, setPreviewDevice] = useState<PreviewDevice>('desktop');
   const [allPages, setAllPages] = useState<WaitlistPageRow[]>([]);
 
   const [productName, setProductName] = useState('');
   const [content, setContent] = useState<WaitlistContent>(getDefaultWaitlistContent('Your Product'));
+  const [benefitsDraft, setBenefitsDraft] = useState(linesToText(getDefaultWaitlistContent('Your Product').benefits));
+  const [howItWorksDraft, setHowItWorksDraft] = useState(linesToText(getDefaultWaitlistContent('Your Product').howItWorks));
 
   const [draftId, setDraftId] = useState<string | null>(null);
   const [currentSlug, setCurrentSlug] = useState<string | null>(null);
@@ -166,15 +189,38 @@ export default function WaitlistEditor() {
   const [isPublishing, setIsPublishing] = useState(false);
   const [isMarkingReady, setIsMarkingReady] = useState(false);
   const [isCheckingSlug, setIsCheckingSlug] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(true);
   const [slugDraft, setSlugDraft] = useState('');
   const [slugAvailable, setSlugAvailable] = useState<boolean | null>(null);
   const [isCheckingDns, setIsCheckingDns] = useState(false);
+  const [lastSavedSnapshot, setLastSavedSnapshot] = useState('');
+  const [lastSavedAt, setLastSavedAt] = useState<string | null>(null);
+  const [restorableGuestDraft, setRestorableGuestDraft] = useState<{
+    productName: string;
+    slugDraft: string;
+    content: WaitlistContent;
+    savedAt: string;
+  } | null>(null);
 
   const slugTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const isGuest = !user;
   const isCompleted = useMemo(() => Boolean(markReadyAt) || signupCount > 0, [markReadyAt, signupCount]);
-  const liveUrl = currentSlug ? `${BASE_URL}/w/${currentSlug}` : null;
+  const reservedUrl = currentSlug ? `${BASE_URL}/w/${currentSlug}` : null;
+  const liveUrl = status === 'published' && currentSlug ? `${BASE_URL}/w/${currentSlug}` : null;
+  const currentSnapshot = useMemo(
+    () => buildEditorSnapshot(productName, content, slugDraft || currentSlug || '', status),
+    [content, currentSlug, productName, slugDraft, status]
+  );
+  const hasUnsavedChanges = Boolean(lastSavedSnapshot) && currentSnapshot !== lastSavedSnapshot;
+  const publishBlockingReason = useMemo(() => {
+    if (!productName.trim()) return 'Add a project name before publishing.';
+    if (!content.headline.trim()) return 'Add a headline before publishing.';
+    if (!content.subheadline.trim()) return 'Add a subheadline before publishing.';
+    if (slugAvailable === false) return 'Choose an available public slug before publishing.';
+    if (content.consentRequired && !content.collectConsent) return 'Show the consent checkbox if consent is required.';
+    return null;
+  }, [content.collectConsent, content.consentRequired, content.headline, content.subheadline, productName, slugAvailable]);
 
   const variantMetrics = useMemo(() => {
     const metrics = { A: { views: 0, signups: 0 }, B: { views: 0, signups: 0 } };
@@ -190,17 +236,46 @@ export default function WaitlistEditor() {
     toast.info(`Sign in or create an account to ${actionLabel}.`);
   }, []);
 
-  const loadPageIntoEditor = useCallback((row: WaitlistPageRow) => {
-    const normalized = normalizeContentFromRow(row);
-    setDraftId(row.id);
-    setCurrentSlug(row.slug);
-    setSlugDraft(row.slug ?? '');
-    setProductName(row.product_name || '');
+  const applyDraftState = useCallback((next: {
+    productName: string;
+    content: WaitlistContent;
+    draftId: string | null;
+    currentSlug: string | null;
+    status: 'draft' | 'published';
+    markReadyAt?: string | null;
+    viewCount?: number;
+    savedAt?: string | null;
+  }) => {
+    const normalized = normalizeWaitlistContent(next.content, next.productName || 'Your Product');
+    const nextSlugDraft = next.currentSlug || '';
+    const snapshot = buildEditorSnapshot(next.productName, normalized, nextSlugDraft, next.status);
+
+    setProductName(next.productName);
     setContent(normalized);
-    setStatus(row.status === 'published' ? 'published' : 'draft');
-    setViewCount(row.view_count ?? 0);
-    setMarkReadyAt(row.mark_ready_at ?? null);
+    setBenefitsDraft(linesToText(normalized.benefits));
+    setHowItWorksDraft(linesToText(normalized.howItWorks));
+    setDraftId(next.draftId);
+    setCurrentSlug(next.currentSlug);
+    setSlugDraft(nextSlugDraft);
+    setStatus(next.status);
+    setMarkReadyAt(next.markReadyAt ?? null);
+    setViewCount(next.viewCount ?? 0);
+    setLastSavedSnapshot(snapshot);
+    setLastSavedAt(next.savedAt ?? new Date().toISOString());
+    setSlugAvailable(null);
   }, []);
+
+  const loadPageIntoEditor = useCallback((row: WaitlistPageRow) => {
+    applyDraftState({
+      productName: row.product_name || '',
+      content: normalizeContentFromRow(row),
+      draftId: row.id,
+      currentSlug: row.slug,
+      status: row.status === 'published' ? 'published' : 'draft',
+      markReadyAt: row.mark_ready_at ?? null,
+      viewCount: row.view_count ?? 0,
+    });
+  }, [applyDraftState]);
 
   const loadAllPages = useCallback(async () => {
     if (!user) {
@@ -251,19 +326,60 @@ export default function WaitlistEditor() {
 
   useEffect(() => {
     const initialize = async () => {
+      setIsInitializing(true);
+
+      const browserDraft = (() => {
+        if (typeof window === 'undefined') return null;
+        const raw = window.localStorage.getItem(GUEST_DRAFT_STORAGE_KEY);
+        if (!raw) return null;
+
+        try {
+          const parsed = JSON.parse(raw) as {
+            productName?: string;
+            slugDraft?: string;
+            content?: WaitlistContent;
+            savedAt?: string;
+          };
+
+          if (!parsed?.content) return null;
+
+          return {
+            productName: parsed.productName || '',
+            slugDraft: sanitizeSlug(parsed.slugDraft || ''),
+            content: normalizeWaitlistContent(parsed.content, parsed.productName || 'Your Product'),
+            savedAt: parsed.savedAt || null,
+          };
+        } catch {
+          return null;
+        }
+      })();
+
       if (!user) {
-        const empty = getDefaultWaitlistContent('Your Product');
-        setProductName('');
-        setContent(empty);
-        setDraftId(null);
-        setCurrentSlug(null);
-        setStatus('draft');
-        setMarkReadyAt(null);
+        if (browserDraft) {
+          applyDraftState({
+            productName: browserDraft.productName,
+            content: browserDraft.content,
+            draftId: null,
+            currentSlug: browserDraft.slugDraft || null,
+            status: 'draft',
+            savedAt: browserDraft.savedAt,
+          });
+        } else {
+          applyDraftState({
+            productName: '',
+            content: getDefaultWaitlistContent('Your Product'),
+            draftId: null,
+            currentSlug: null,
+            status: 'draft',
+          });
+        }
         setSignupCount(0);
         setViewCount(0);
         setRecentSignups([]);
         setEvents([]);
         setAllPages([]);
+        setRestorableGuestDraft(browserDraft);
+        setIsInitializing(false);
         return;
       }
 
@@ -278,35 +394,113 @@ export default function WaitlistEditor() {
         .maybeSingle();
 
       if (!data) {
-        setProductName('');
-        setContent(getDefaultWaitlistContent('Your Product'));
+        if (browserDraft) {
+          applyDraftState({
+            productName: browserDraft.productName,
+            content: browserDraft.content,
+            draftId: null,
+            currentSlug: browserDraft.slugDraft || null,
+            status: 'draft',
+            savedAt: browserDraft.savedAt,
+          });
+        } else {
+          applyDraftState({
+            productName: '',
+            content: getDefaultWaitlistContent('Your Product'),
+            draftId: null,
+            currentSlug: null,
+            status: 'draft',
+          });
+        }
+        setRestorableGuestDraft(browserDraft);
+        setIsInitializing(false);
         return;
       }
 
       loadPageIntoEditor(data as WaitlistPageRow);
       await fetchAnalytics((data as WaitlistPageRow).id);
+      setRestorableGuestDraft(browserDraft);
+      setIsInitializing(false);
     };
 
     initialize();
-  }, [fetchAnalytics, loadAllPages, loadPageIntoEditor, user]);
+  }, [applyDraftState, fetchAnalytics, loadAllPages, loadPageIntoEditor, user]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    if (isGuest) {
+      window.localStorage.setItem(GUEST_DRAFT_STORAGE_KEY, JSON.stringify({
+        productName,
+        slugDraft,
+        content,
+        savedAt: new Date().toISOString(),
+      }));
+      return;
+    }
+
+    if (!restorableGuestDraft) {
+      window.localStorage.removeItem(GUEST_DRAFT_STORAGE_KEY);
+    }
+  }, [content, isGuest, productName, restorableGuestDraft, slugDraft]);
+
+  useEffect(() => {
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      if (!hasUnsavedChanges) return;
+      event.preventDefault();
+      event.returnValue = '';
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [hasUnsavedChanges]);
+
+  useEffect(() => {
+    setBenefitsDraft(linesToText(content.benefits));
+  }, [content.benefits]);
+
+  useEffect(() => {
+    setHowItWorksDraft(linesToText(content.howItWorks));
+  }, [content.howItWorks]);
+
   const resetToNew = () => {
-    const empty = getDefaultWaitlistContent('Your Product');
-    setProductName('');
-    setContent(empty);
-    setDraftId(null);
-    setCurrentSlug(null);
-    setSlugDraft('');
-    setStatus('draft');
-    setMarkReadyAt(null);
+    if (hasUnsavedChanges && !window.confirm('Discard your unsaved waitlist changes and start a new draft?')) {
+      return;
+    }
+
+    applyDraftState({
+      productName: '',
+      content: getDefaultWaitlistContent('Your Product'),
+      draftId: null,
+      currentSlug: null,
+      status: 'draft',
+    });
     setSignupCount(0);
     setViewCount(0);
     setRecentSignups([]);
     setEvents([]);
     setActiveTab('content');
+    setPreviewDevice('desktop');
   };
 
   const updateContent = (patch: Partial<WaitlistContent>) => {
-    setContent((prev) => ({ ...prev, ...patch }));
+    setContent((prev) => {
+      const merged = { ...prev, ...patch };
+      if (patch.collectConsent === false) {
+        merged.consentRequired = false;
+      }
+      if (patch.consentRequired) {
+        merged.collectConsent = true;
+      }
+      return merged;
+    });
+  };
+
+  const applyThemePreset = (theme: 'dark' | 'light') => {
+    updateContent({
+      theme,
+      colors: getWaitlistThemePalette(theme),
+    });
   };
 
   const updateTemplateField = useCallback((field: string, value: string) => {
@@ -329,48 +523,87 @@ export default function WaitlistEditor() {
     });
   }, []);
 
-  const ensureSavedDraft = useCallback(async (): Promise<string | null> => {
+  const persistWaitlist = useCallback(async (nextStatus: 'draft' | 'published', mode: 'manual' | 'autosave' | 'publish' | 'live-update' = 'manual'): Promise<string | null> => {
     if (!user) {
-      promptSignIn('save your waitlist');
+      promptSignIn(nextStatus === 'published' ? 'publish your waitlist' : 'save your waitlist');
+      return null;
+    }
+
+    if (nextStatus === 'published' && publishBlockingReason) {
+      toast.error(publishBlockingReason);
       return null;
     }
 
     const trimmedName = productName.trim() || 'Untitled Startup';
     const normalized = normalizeWaitlistContent(content, trimmedName);
+    const resolvedSlug = sanitizeSlug(slugDraft || currentSlug || '') || generateSlug(trimmedName);
 
-    setIsSaving(true);
+    if (mode === 'publish') setIsPublishing(true);
+    else setIsSaving(true);
 
     const payload = {
       ...buildPagePayload(user.id, trimmedName, normalized),
-      status,
-      slug: currentSlug || generateSlug(trimmedName),
+      status: nextStatus,
+      slug: resolvedSlug,
+      published_at: nextStatus === 'published' ? new Date().toISOString() : null,
     };
 
     const query = draftId
-      ? (supabase as any).from(WAITLIST_TABLE).update(payload).eq('id', draftId).select('id, slug').single()
-      : (supabase as any).from(WAITLIST_TABLE).insert(payload).select('id, slug').single();
+      ? (supabase as any)
+          .from(WAITLIST_TABLE)
+          .update(payload)
+          .eq('id', draftId)
+          .select('id, slug, status')
+          .single()
+      : (supabase as any)
+          .from(WAITLIST_TABLE)
+          .insert(payload)
+          .select('id, slug, status')
+          .single();
 
     const { data, error } = await query;
     setIsSaving(false);
+    setIsPublishing(false);
 
     if (error || !data) {
-      toast.error('Could not save your page. Please try again.');
+      toast.error(error?.message || 'Could not save your page. Please try again.');
       return null;
     }
 
-    const saved = data as { id: string; slug: string | null };
+    const saved = data as { id: string; slug: string | null; status: string };
     setDraftId(saved.id);
     setCurrentSlug(saved.slug);
     setSlugDraft(saved.slug || '');
     setContent(normalized);
+    setStatus(saved.status === 'published' ? 'published' : 'draft');
+    setLastSavedSnapshot(buildEditorSnapshot(trimmedName, normalized, saved.slug || '', saved.status === 'published' ? 'published' : 'draft'));
+    setLastSavedAt(new Date().toISOString());
+    if (typeof window !== 'undefined') {
+      window.localStorage.removeItem(GUEST_DRAFT_STORAGE_KEY);
+    }
+    setRestorableGuestDraft(null);
     await loadAllPages();
+
+    if (mode !== 'autosave' && mode !== 'publish') {
+      const actionLabel =
+        mode === 'live-update'
+            ? 'Live waitlist updated.'
+            : 'Draft saved.';
+      toast.success(actionLabel);
+    }
+
     return saved.id;
-  }, [content, currentSlug, draftId, loadAllPages, productName, promptSignIn, status, user]);
+  }, [content, currentSlug, draftId, loadAllPages, productName, promptSignIn, publishBlockingReason, slugDraft, user]);
 
   const handleSave = async () => {
-    const id = await ensureSavedDraft();
-    if (!id) return;
-    toast.success('Changes saved.');
+    if (status === 'published') {
+      const shouldUpdateLive = window.confirm('This waitlist is live. Updating now will change the public page immediately. Continue?');
+      if (!shouldUpdateLive) return;
+      await persistWaitlist('published', 'live-update');
+      return;
+    }
+
+    await persistWaitlist('draft', 'manual');
   };
 
   const handlePublish = async () => {
@@ -379,48 +612,19 @@ export default function WaitlistEditor() {
       return;
     }
 
-    setIsPublishing(true);
-
-    const pageId = await ensureSavedDraft();
-    if (!pageId) {
-      setIsPublishing(false);
-      return;
-    }
-
     const requiredCredits = ensureCredits('WAITLIST_GENERATION', {
       featureName: 'Waitlist Page Generation',
       description: 'Publish your waitlist page and make it live for signups.',
     });
     if (requiredCredits === null) {
-      setIsPublishing(false);
       return;
     }
 
-    const slug = currentSlug || generateSlug(productName || 'waitlist');
-    const normalized = normalizeWaitlistContent(content, productName || 'Your Product');
-
-    const { error } = await (supabase as any)
-      .from(WAITLIST_TABLE)
-      .update({
-        ...buildPagePayload(user.id, productName || 'Untitled Startup', normalized),
-        slug,
-        status: 'published',
-        published_at: new Date().toISOString(),
-      })
-      .eq('id', pageId);
-
-    setIsPublishing(false);
-
-    if (error) {
-      toast.error(error.message || 'Publish failed. Please try again.');
+    const pageId = await persistWaitlist('published', 'publish');
+    if (!pageId) {
       return;
     }
-
-    setStatus('published');
-    setCurrentSlug(slug);
-    setSlugDraft(slug);
     await fetchAnalytics(pageId);
-    await loadAllPages();
     await refreshProgress();
     toast.success(`Waitlist published. Share your public URL. (Used ${requiredCredits} credits)`);
   };
@@ -440,6 +644,8 @@ export default function WaitlistEditor() {
 
     setStatus('draft');
     setMarkReadyAt(null);
+    setLastSavedSnapshot(buildEditorSnapshot(productName, content, currentSlug || '', 'draft'));
+    setLastSavedAt(new Date().toISOString());
     await loadAllPages();
     await refreshProgress();
     toast.success('Page moved back to draft.');
@@ -471,7 +677,7 @@ export default function WaitlistEditor() {
   };
 
   const copyUrl = () => {
-    if (!liveUrl) {
+    if (status !== 'published' || !liveUrl) {
       toast.info('Publish your page first to copy the public URL.');
       return;
     }
@@ -479,15 +685,22 @@ export default function WaitlistEditor() {
   };
 
   const checkSlugAvailability = (value: string) => {
-    const slug = value.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+    const slug = sanitizeSlug(value);
     setSlugDraft(slug);
 
-    if (!slug || slug === currentSlug || !user) {
+    if (slugTimer.current) clearTimeout(slugTimer.current);
+
+    if (!slug || !user) {
       setSlugAvailable(null);
+      setIsCheckingSlug(false);
       return;
     }
 
-    if (slugTimer.current) clearTimeout(slugTimer.current);
+    if (slug === currentSlug) {
+      setSlugAvailable(true);
+      setIsCheckingSlug(false);
+      return;
+    }
 
     setIsCheckingSlug(true);
     slugTimer.current = setTimeout(async () => {
@@ -501,28 +714,6 @@ export default function WaitlistEditor() {
       setSlugAvailable(!data);
       setIsCheckingSlug(false);
     }, 450);
-  };
-
-  const saveSlug = async () => {
-    if (!draftId || !slugDraft || !user) return;
-    if (slugAvailable === false) {
-      toast.error('This slug is already taken.');
-      return;
-    }
-
-    const { error } = await (supabase as any)
-      .from(WAITLIST_TABLE)
-      .update({ slug: slugDraft })
-      .eq('id', draftId);
-
-    if (error) {
-      toast.error('Unable to update slug.');
-      return;
-    }
-
-    setCurrentSlug(slugDraft);
-    await loadAllPages();
-    toast.success('URL updated.');
   };
 
   const handleExportCSV = async () => {
@@ -611,6 +802,16 @@ export default function WaitlistEditor() {
     else toast.info('DNS records are not fully verified yet. Keep records active and retry.');
   };
 
+  useEffect(() => {
+    if (isGuest || isInitializing || status !== 'draft' || !hasUnsavedChanges) return;
+
+    const timer = window.setTimeout(() => {
+      void persistWaitlist('draft', 'autosave');
+    }, 1500);
+
+    return () => window.clearTimeout(timer);
+  }, [hasUnsavedChanges, isGuest, isInitializing, persistWaitlist, status]);
+
   const statusBadge = useMemo(() => {
     if (isCompleted) return <Badge className="bg-green-600 text-white">Completed</Badge>;
     if (status === 'published') return <Badge className="bg-emerald-600 text-white">Published</Badge>;
@@ -618,6 +819,17 @@ export default function WaitlistEditor() {
   }, [isCompleted, status]);
 
   const conversionRate = viewCount > 0 ? `${((signupCount / viewCount) * 100).toFixed(1)}%` : '--';
+
+  if (isInitializing) {
+    return (
+      <Card>
+        <CardContent className="flex items-center justify-center py-12 text-sm text-muted-foreground">
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          Loading your waitlist builder...
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <div className="space-y-5">
@@ -630,26 +842,115 @@ export default function WaitlistEditor() {
                 {statusBadge}
                 {content.domainSetup?.status === 'verified' ? <Badge variant="outline" className="border-emerald-400/60 text-emerald-700">Domain Verified</Badge> : null}
               </div>
-              <p className="text-sm text-muted-foreground">Canva-style visual editor: customize everything live, then publish and capture signups.</p>
+              <p className="text-sm text-muted-foreground">Shape your waitlist in draft, validate the preview, then publish when you are ready to collect real signups.</p>
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
               <Button variant="outline" onClick={resetToNew} size="sm"><Plus className="w-4 h-4 mr-1" /> New</Button>
-              <Button variant="outline" onClick={copyUrl} size="sm" disabled={!liveUrl}><Copy className="w-4 h-4 mr-1" /> Copy link</Button>
+              <Button variant="outline" onClick={copyUrl} size="sm" disabled={!liveUrl}><Copy className="w-4 h-4 mr-1" /> Copy live link</Button>
               <Button variant="outline" onClick={handleExportCSV} size="sm" disabled={isGuest || !draftId}><Download className="w-4 h-4 mr-1" /> Export CSV</Button>
-              <Button variant="outline" onClick={handleSave} size="sm" disabled={isSaving}>{isSaving ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Save className="w-4 h-4 mr-1" />}Save</Button>
+              <Button variant="outline" onClick={handleSave} size="sm" disabled={isSaving || isPublishing}>
+                {isSaving ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Save className="w-4 h-4 mr-1" />}
+                {status === 'published' ? 'Update live page' : 'Save draft'}
+              </Button>
               {status === 'published'
                 ? <Button variant="destructive" size="sm" onClick={handleUnpublish} disabled={isGuest || !draftId}>Unpublish</Button>
-                : <Button size="sm" onClick={handlePublish} disabled={isPublishing}>{isPublishing ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Globe className="w-4 h-4 mr-1" />}Publish</Button>}
+                : <Button size="sm" onClick={handlePublish} disabled={isPublishing || Boolean(publishBlockingReason)}>
+                    {isPublishing ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Globe className="w-4 h-4 mr-1" />}
+                    Publish
+                  </Button>}
             </div>
           </div>
 
+          {status === 'published' ? (
+            <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm">
+              <p className="font-medium text-emerald-700">This waitlist is live.</p>
+              <p className="text-muted-foreground">Edits in the builder stay local until you click <strong>Update live page</strong>.</p>
+            </div>
+          ) : (
+            <div className="rounded-lg border border-border/70 bg-muted/30 px-4 py-3 text-sm">
+              <p className="font-medium">Draft mode</p>
+              <p className="text-muted-foreground">The builder autosaves your draft. Your public page only exists after publishing.</p>
+            </div>
+          )}
+
+          {hasUnsavedChanges ? (
+            <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-950">
+              Unsaved changes in progress.
+              <span className="ml-1 text-amber-900/80">
+                {status === 'published' ? 'Review them, then update the live page when ready.' : 'Autosave is active for this draft.'}
+              </span>
+            </div>
+          ) : lastSavedAt ? (
+            <p className="text-xs text-muted-foreground">Last saved {new Date(lastSavedAt).toLocaleString()}.</p>
+          ) : null}
+
           {isGuest ? (
             <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 text-sm flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-muted-foreground">You can design freely. Sign in when you are ready to save, publish, and collect real signups.</p>
+              <p className="text-muted-foreground">Your browser draft is being preserved locally. Sign in when you are ready to save, publish, and collect real signups.</p>
               <div className="flex gap-2">
-                <Button variant="outline" size="sm" asChild><a href="/login?return=/waitlist">Log in</a></Button>
-                <Button size="sm" asChild><a href="/signup?return=/waitlist">Create account</a></Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    if (!hasUnsavedChanges || window.confirm('Your draft is saved in this browser. Continue to log in?')) {
+                      window.location.href = '/login?return=/waitlist';
+                    }
+                  }}
+                >
+                  Log in
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    if (!hasUnsavedChanges || window.confirm('Your draft is saved in this browser. Continue to create an account?')) {
+                      window.location.href = '/signup?return=/waitlist';
+                    }
+                  }}
+                >
+                  Create account
+                </Button>
+              </div>
+            </div>
+          ) : null}
+
+          {!isGuest && restorableGuestDraft ? (
+            <div className="rounded-lg border border-border/70 bg-background px-4 py-3 text-sm flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <div>
+                <p className="font-medium">Browser draft available</p>
+                <p className="text-muted-foreground">You have an unsaved local waitlist draft from {restorableGuestDraft.savedAt ? new Date(restorableGuestDraft.savedAt).toLocaleString() : 'this browser'}.</p>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    if (hasUnsavedChanges && !window.confirm('Replace the current editor contents with your browser draft?')) {
+                      return;
+                    }
+                    applyDraftState({
+                      productName: restorableGuestDraft.productName,
+                      content: restorableGuestDraft.content,
+                      draftId: null,
+                      currentSlug: restorableGuestDraft.slugDraft || null,
+                      status: 'draft',
+                      savedAt: restorableGuestDraft.savedAt,
+                    });
+                    setActiveTab('content');
+                  }}
+                >
+                  Restore browser draft
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    window.localStorage.removeItem(GUEST_DRAFT_STORAGE_KEY);
+                    setRestorableGuestDraft(null);
+                  }}
+                >
+                  Dismiss
+                </Button>
               </div>
             </div>
           ) : null}
@@ -665,6 +966,9 @@ export default function WaitlistEditor() {
                   const nextId = event.target.value;
                   const selected = allPages.find((page) => page.id === nextId);
                   if (!selected) return;
+                  if (hasUnsavedChanges && !window.confirm('Switch waitlists and discard your unsaved changes?')) {
+                    return;
+                  }
                   loadPageIntoEditor(selected);
                   await fetchAnalytics(selected.id);
                 }}
@@ -683,12 +987,11 @@ export default function WaitlistEditor() {
           <aside className="border-r bg-background/90 backdrop-blur">
             <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as BuilderTab)} className="h-full flex flex-col">
               <div className="p-3 border-b">
-                <TabsList className="w-full grid grid-cols-3 gap-1 h-auto bg-muted p-1">
+                <TabsList className="w-full grid grid-cols-5 gap-1 h-auto bg-muted p-1">
                   <TabsTrigger value="content" className="text-xs">Content</TabsTrigger>
                   <TabsTrigger value="style" className="text-xs">Style</TabsTrigger>
                   <TabsTrigger value="form" className="text-xs">Form</TabsTrigger>
-                  <TabsTrigger value="publish" className="text-xs">Publish</TabsTrigger>
-                  <TabsTrigger value="domain" className="text-xs">Domain</TabsTrigger>
+                  <TabsTrigger value="launch" className="text-xs">Launch</TabsTrigger>
                   <TabsTrigger value="analytics" className="text-xs">Analytics</TabsTrigger>
                 </TabsList>
               </div>
@@ -711,12 +1014,24 @@ export default function WaitlistEditor() {
 
                   <div className="space-y-2">
                     <Label>Benefits (one per line)</Label>
-                    <Textarea value={linesToText(content.benefits)} onChange={(event) => updateContent({ benefits: textToLines(event.target.value, 3, 5, content.benefits) })} rows={4} />
+                    <Textarea
+                      value={benefitsDraft}
+                      onChange={(event) => setBenefitsDraft(event.target.value)}
+                      onBlur={(event) => updateContent({ benefits: textToLines(event.target.value, 3, 5, content.benefits) })}
+                      rows={4}
+                    />
+                    <p className="text-xs text-muted-foreground">Use 3 to 5 lines. Validation applies when you leave the field.</p>
                   </div>
 
                   <div className="space-y-2">
                     <Label>How it works (one step per line)</Label>
-                    <Textarea value={linesToText(content.howItWorks)} onChange={(event) => updateContent({ howItWorks: textToLines(event.target.value, 3, 4, content.howItWorks) })} rows={4} />
+                    <Textarea
+                      value={howItWorksDraft}
+                      onChange={(event) => setHowItWorksDraft(event.target.value)}
+                      onBlur={(event) => updateContent({ howItWorks: textToLines(event.target.value, 3, 4, content.howItWorks) })}
+                      rows={4}
+                    />
+                    <p className="text-xs text-muted-foreground">Use 3 to 4 steps. Validation applies when you leave the field.</p>
                   </div>
 
                   <div className="space-y-2"><Label>Logo URL</Label><Input value={content.logoUrl || ''} onChange={(event) => updateContent({ logoUrl: event.target.value })} /></div>
@@ -729,9 +1044,10 @@ export default function WaitlistEditor() {
                   <div className="space-y-2">
                     <Label>Theme</Label>
                     <div className="flex gap-2">
-                      <Button size="sm" variant={content.theme === 'dark' ? 'default' : 'outline'} onClick={() => updateContent({ theme: 'dark' })} className="flex-1">Dark</Button>
-                      <Button size="sm" variant={content.theme === 'light' ? 'default' : 'outline'} onClick={() => updateContent({ theme: 'light' })} className="flex-1">Light</Button>
+                      <Button size="sm" variant={content.theme === 'dark' ? 'default' : 'outline'} onClick={() => applyThemePreset('dark')} className="flex-1">Dark</Button>
+                      <Button size="sm" variant={content.theme === 'light' ? 'default' : 'outline'} onClick={() => applyThemePreset('light')} className="flex-1">Light</Button>
                     </div>
+                    <p className="text-xs text-muted-foreground">Switching theme applies a matching default palette. You can still fine-tune colors below.</p>
                   </div>
 
                   <div className="space-y-2">
@@ -830,6 +1146,7 @@ export default function WaitlistEditor() {
                     <label className="flex items-center justify-between rounded-md border px-3 py-2 text-sm"><span>Collect first name</span><input type="checkbox" checked={Boolean(content.collectFirstName)} onChange={(event) => updateContent({ collectFirstName: event.target.checked })} /></label>
                     <label className="flex items-center justify-between rounded-md border px-3 py-2 text-sm"><span>Show consent checkbox</span><input type="checkbox" checked={Boolean(content.collectConsent)} onChange={(event) => updateContent({ collectConsent: event.target.checked })} /></label>
                     <label className="flex items-center justify-between rounded-md border px-3 py-2 text-sm"><span>Require consent</span><input type="checkbox" checked={Boolean(content.consentRequired)} onChange={(event) => updateContent({ consentRequired: event.target.checked })} /></label>
+                    {content.consentRequired ? <p className="text-xs text-muted-foreground">Required consent automatically keeps the checkbox visible on the public form.</p> : null}
                   </div>
 
                   <div className="space-y-2">
@@ -881,24 +1198,40 @@ export default function WaitlistEditor() {
                     <Input value={content.successShareLabel || ''} onChange={(event) => updateContent({ successShareLabel: event.target.value })} placeholder="Share button label" />
                   </div>
                 </TabsContent>
-                <TabsContent value="publish" className="space-y-4 mt-0">
+                <TabsContent value="launch" className="space-y-4 mt-0">
+                  <div className="space-y-2">
+                    <Label>Launch checklist</Label>
+                    <div className="grid gap-2">
+                      {[
+                        { title: 'Draft', description: draftId ? 'Draft exists and can be recovered.' : 'Create your first draft to reserve a page record.', complete: Boolean(draftId) },
+                        { title: 'Slug', description: slugAvailable === false ? 'Choose another slug before publishing.' : slugDraft || currentSlug ? 'Your page slug is ready.' : 'A slug will be generated automatically if left empty.', complete: slugAvailable !== false },
+                        { title: 'Publish', description: status === 'published' ? 'This waitlist is live and shareable.' : `Publishing costs ${CREDIT_COSTS.WAITLIST_GENERATION} credits and exposes your public URL.`, complete: status === 'published' },
+                      ].map((step) => (
+                        <div key={step.title} className="rounded-md border px-3 py-2 text-sm">
+                          <div className="flex items-center gap-2">
+                            {step.complete ? <Check className="h-4 w-4 text-emerald-600" /> : <AlertTriangle className="h-4 w-4 text-amber-500" />}
+                            <span className="font-medium">{step.title}</span>
+                          </div>
+                          <p className="mt-1 text-xs text-muted-foreground">{step.description}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
                   <div className="space-y-2">
                     <Label>Public slug</Label>
-                    <div className="flex gap-2">
-                      <Input value={slugDraft} onChange={(event) => checkSlugAvailability(event.target.value)} placeholder="my-waitlist-page" />
-                      <Button variant="outline" onClick={saveSlug} disabled={!draftId || slugAvailable === false || isCheckingSlug}>Save</Button>
-                    </div>
+                    <Input value={slugDraft} onChange={(event) => checkSlugAvailability(event.target.value)} placeholder="my-waitlist-page" />
                     <div className="text-xs text-muted-foreground flex items-center gap-2">
                       {isCheckingSlug ? <Loader2 className="w-3 h-3 animate-spin" /> : null}
                       {slugAvailable === true ? <Check className="w-3 h-3 text-green-600" /> : null}
                       {slugAvailable === false ? <AlertTriangle className="w-3 h-3 text-red-500" /> : null}
-                      {slugAvailable === true ? 'Slug is available.' : slugAvailable === false ? 'Slug is already taken.' : 'Save draft first to reserve this slug.'}
+                      {slugAvailable === true ? 'This slug is available and will save with your draft.' : slugAvailable === false ? 'This slug is already taken.' : 'Draft saves and publishing will persist this slug automatically.'}
                     </div>
                   </div>
 
-                  {liveUrl ? (
+                  {status === 'published' && liveUrl ? (
                     <div className="rounded-md border p-3 text-sm space-y-2">
-                      <p className="text-xs text-muted-foreground">Live URL</p>
+                      <p className="text-xs text-muted-foreground">Live public URL</p>
                       <p className="font-mono text-xs break-all">{liveUrl}</p>
                       <div className="flex gap-2">
                         <Button size="sm" variant="outline" onClick={copyUrl}><Copy className="w-4 h-4 mr-1" />Copy</Button>
@@ -906,10 +1239,17 @@ export default function WaitlistEditor() {
                       </div>
                     </div>
                   ) : (
-                    <div className="rounded-md border border-dashed p-3 text-xs text-muted-foreground">
-                      Publish your page to get a public URL. Publishing costs {CREDIT_COSTS.WAITLIST_GENERATION} credits.
+                    <div className="rounded-md border border-dashed p-3 text-xs text-muted-foreground space-y-1">
+                      <p>Your waitlist is still in draft.</p>
+                      <p>{reservedUrl ? `Reserved URL after publish: ${reservedUrl}` : 'A public URL will be created once you publish.'}</p>
                     </div>
                   )}
+
+                  {publishBlockingReason ? (
+                    <div className="rounded-md border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-950">
+                      {publishBlockingReason}
+                    </div>
+                  ) : null}
 
                   <div className="space-y-2">
                     <Label>Integrations</Label>
@@ -927,20 +1267,10 @@ export default function WaitlistEditor() {
                     <input type="checkbox" checked={Boolean(content.confirmationEmailEnabled)} onChange={(event) => updateContent({ confirmationEmailEnabled: event.target.checked })} />
                   </label>
 
-                  {!markReadyAt ? (
-                    <Button className="w-full" variant="secondary" onClick={handleMarkAsReady} disabled={!draftId || isMarkingReady || isGuest}>
-                      {isMarkingReady ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <ShieldCheck className="w-4 h-4 mr-2" />}Mark as Ready
-                    </Button>
-                  ) : (
-                    <Badge className="w-full justify-center border-green-500/30 bg-green-500/10 text-green-700">Ready on {new Date(markReadyAt).toLocaleDateString()}</Badge>
-                  )}
-                </TabsContent>
-
-                <TabsContent value="domain" className="space-y-4 mt-0">
                   <div className="space-y-2">
-                    <Label>Custom domain</Label>
+                    <Label>Email sending domain (optional)</Label>
                     <Input value={content.domainSetup?.domain || ''} onChange={(event) => updateContent({ domainSetup: { ...content.domainSetup!, domain: event.target.value.toLowerCase().trim(), status: event.target.value ? 'pending' : 'unconfigured' } })} placeholder="updates.yourstartup.com" />
-                    <p className="text-xs text-muted-foreground">Use a subdomain dedicated to waitlist emails and verification.</p>
+                    <p className="text-xs text-muted-foreground">This only verifies a sender domain for confirmation emails. Public waitlist pages still use the `/w/slug` URL.</p>
                   </div>
 
                   <div className="space-y-2"><Label>Sender email</Label><Input value={content.emailSetup?.senderEmail || ''} onChange={(event) => updateContent({ emailSetup: { ...content.emailSetup!, senderEmail: event.target.value } })} placeholder="hello@updates.yourstartup.com" /></div>
@@ -967,6 +1297,14 @@ export default function WaitlistEditor() {
                   </div>
 
                   <Button className="w-full" variant="outline" onClick={handleValidateDomain} disabled={isCheckingDns}>{isCheckingDns ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Sparkles className="w-4 h-4 mr-2" />}Validate DNS</Button>
+
+                  {!markReadyAt ? (
+                    <Button className="w-full" variant="secondary" onClick={handleMarkAsReady} disabled={!draftId || isMarkingReady || isGuest}>
+                      {isMarkingReady ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <ShieldCheck className="w-4 h-4 mr-2" />}Mark as Ready
+                    </Button>
+                  ) : (
+                    <Badge className="w-full justify-center border-green-500/30 bg-green-500/10 text-green-700">Ready on {new Date(markReadyAt).toLocaleDateString()}</Badge>
+                  )}
                 </TabsContent>
 
                 <TabsContent value="analytics" className="space-y-4 mt-0">
@@ -1013,7 +1351,25 @@ export default function WaitlistEditor() {
 
           <section className="relative overflow-auto bg-[radial-gradient(circle_at_top,#eef2ff,transparent_45%),radial-gradient(circle_at_bottom,#cffafe,transparent_35%)] p-4 md:p-8">
             <div className="mx-auto max-w-[1100px] space-y-3">
-              <WaitlistPageTemplate content={content} productName={productName || 'Your Product'} mode="preview" onContentChange={updateTemplateField} signupCount={signupCount} />
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm font-medium">Preview</p>
+                  <p className="text-xs text-muted-foreground">Review the public page before publishing. Switch to mobile to validate the phone layout.</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button size="sm" variant={previewDevice === 'desktop' ? 'default' : 'outline'} onClick={() => setPreviewDevice('desktop')}>
+                    <Monitor className="mr-1 h-4 w-4" />
+                    Desktop
+                  </Button>
+                  <Button size="sm" variant={previewDevice === 'mobile' ? 'default' : 'outline'} onClick={() => setPreviewDevice('mobile')}>
+                    <MonitorSmartphone className="mr-1 h-4 w-4" />
+                    Mobile
+                  </Button>
+                </div>
+              </div>
+              <div className={previewDevice === 'mobile' ? 'mx-auto max-w-[420px]' : ''}>
+                <WaitlistPageTemplate content={content} productName={productName || 'Your Product'} mode="preview" onContentChange={updateTemplateField} signupCount={signupCount} />
+              </div>
             </div>
           </section>
         </div>

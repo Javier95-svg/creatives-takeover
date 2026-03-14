@@ -80,8 +80,10 @@ function jsonResponse(body: Record<string, unknown>, status = 200): Response {
   });
 }
 
-function sanitizeText(value: unknown): string {
-  return typeof value === "string" ? value.trim() : "";
+function sanitizeText(value: unknown, fallback = ""): string {
+  if (typeof value !== "string") return fallback;
+  const trimmed = value.trim();
+  return trimmed || fallback;
 }
 
 function normalizeEmail(email: string): string {

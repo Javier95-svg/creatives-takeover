@@ -1,4 +1,4 @@
-import { CSSProperties, useMemo, useRef, useState } from 'react';
+import { CSSProperties, useEffect, useMemo, useRef, useState } from 'react';
 import {
   WaitlistContent,
   WaitlistSignupPayload,
@@ -10,6 +10,19 @@ import {
 
 export type { WaitlistContent } from '@/lib/waitlist';
 export type SignupData = WaitlistSignupPayload;
+
+interface WaitlistFormState {
+  email: string;
+  firstName: string;
+  consent: boolean;
+  honeypot: string;
+  fieldValues: Record<string, string>;
+  submitted: boolean;
+  duplicate: boolean;
+  errorMessage: string;
+  loading: boolean;
+  resolvedReferralMessage: string;
+}
 
 interface WaitlistPageTemplateProps {
   content: WaitlistContent;
@@ -99,11 +112,13 @@ function EmailForm({
   successMessage,
   successShareLabel,
   onSubmit,
-  referralMessage,
   publicUrl,
   activeVariant,
   palette,
   radius,
+  instanceId,
+  state,
+  setState,
 }: {
   ctaText: string;
   emailPlaceholder: string;
@@ -115,66 +130,77 @@ function EmailForm({
   successMessage: string;
   successShareLabel: string;
   onSubmit: (data: SignupData) => Promise<{ ok: boolean; duplicate?: boolean; referralMessage?: string }>;
-  referralMessage?: string;
   publicUrl?: string;
   activeVariant?: WaitlistVariant;
   palette: WaitlistContent['colors'];
   radius: number;
+  instanceId: string;
+  state: WaitlistFormState;
+  setState: React.Dispatch<React.SetStateAction<WaitlistFormState>>;
 }) {
-  const [email, setEmail] = useState('');
-  const [firstName, setFirstName] = useState('');
-  const [consent, setConsent] = useState(false);
-  const [honeypot, setHoneypot] = useState('');
-  const [submitted, setSubmitted] = useState(false);
-  const [errorMessage, setErrorMessage] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [resolvedReferralMessage, setResolvedReferralMessage] = useState(
-    referralMessage || 'Share this page with one founder friend.',
-  );
-  const [fieldValues, setFieldValues] = useState<Record<string, string>>({});
-
   const visibleFields = customFields.filter((field) => field.enabled);
+  const emailId = `${instanceId}-email`;
+  const firstNameId = `${instanceId}-first-name`;
+  const consentId = `${instanceId}-consent`;
+  const errorId = `${instanceId}-error`;
+  const statusId = `${instanceId}-status`;
 
-  const handleSubmit = async () => {
-    setErrorMessage('');
+  const updateField = (field: keyof WaitlistFormState, value: string | boolean) => {
+    setState((prev) => ({
+      ...prev,
+      [field]: value,
+      errorMessage: '',
+    }));
+  };
 
-    if (!email.trim() || !email.includes('@')) {
-      setErrorMessage('Enter a valid email address.');
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setState((prev) => ({ ...prev, errorMessage: '' }));
+
+    if (!state.email.trim() || !state.email.includes('@')) {
+      setState((prev) => ({ ...prev, errorMessage: 'Enter a valid email address.' }));
       return;
     }
 
-    const requiredField = visibleFields.find((field) => field.required && !fieldValues[field.id]?.trim());
+    const requiredField = visibleFields.find((field) => field.required && !state.fieldValues[field.id]?.trim());
     if (requiredField) {
-      setErrorMessage(`Please complete ${requiredField.label}.`);
+      setState((prev) => ({ ...prev, errorMessage: `Please complete ${requiredField.label}.` }));
       return;
     }
 
-    if (collectConsent && consentRequired && !consent) {
-      setErrorMessage('Please provide consent to continue.');
+    if (collectConsent && consentRequired && !state.consent) {
+      setState((prev) => ({ ...prev, errorMessage: 'Please provide consent to continue.' }));
       return;
     }
 
-    setLoading(true);
+    setState((prev) => ({ ...prev, loading: true }));
     const result = await onSubmit({
-      email: email.trim(),
-      firstName: collectFirstName ? (firstName.trim() || undefined) : undefined,
-      consent: collectConsent ? consent : undefined,
-      honeypot,
+      email: state.email.trim(),
+      firstName: collectFirstName ? (state.firstName.trim() || undefined) : undefined,
+      consent: collectConsent ? state.consent : undefined,
+      honeypot: state.honeypot,
       customFields: visibleFields.map((field) => ({
         id: field.id,
         label: field.label,
-        value: fieldValues[field.id] || '',
+        value: state.fieldValues[field.id] || '',
       })),
     });
-    setLoading(false);
 
     if (result.ok) {
-      if (result.referralMessage) {
-        setResolvedReferralMessage(result.referralMessage);
-      }
-      setSubmitted(true);
+      setState((prev) => ({
+        ...prev,
+        loading: false,
+        submitted: true,
+        duplicate: Boolean(result.duplicate),
+        resolvedReferralMessage: result.referralMessage || prev.resolvedReferralMessage,
+        errorMessage: '',
+      }));
     } else {
-      setErrorMessage('Could not complete signup. Please try again.');
+      setState((prev) => ({
+        ...prev,
+        loading: false,
+        errorMessage: 'Could not complete signup. Please try again.',
+      }));
     }
   };
 
@@ -199,19 +225,26 @@ function EmailForm({
     borderRadius: `${Math.max(radius - 2, 10)}px`,
   };
 
-  if (submitted) {
+  if (state.submitted) {
     return (
       <div
         className="space-y-3 p-5 text-center"
+        role="status"
+        aria-live="polite"
+        id={statusId}
         style={{
           borderRadius: `${radius}px`,
           border: `1px solid ${palette?.borderColor || '#334155'}`,
-          backgroundColor: 'rgba(15, 23, 42, 0.25)',
+          backgroundColor: palette?.sectionBackground || 'rgba(15, 23, 42, 0.25)',
         }}
       >
-        <p className="text-lg font-semibold" style={{ color: palette?.textPrimary || '#f8fafc' }}>{successTitle}</p>
-        <p className="text-sm" style={{ color: palette?.textSecondary || '#cbd5e1' }}>{successMessage}</p>
-        <p className="text-xs" style={{ color: palette?.textSecondary || '#cbd5e1' }}>{resolvedReferralMessage}</p>
+        <p className="text-lg font-semibold" style={{ color: palette?.textPrimary || '#f8fafc' }}>
+          {state.duplicate ? 'You are already on the list.' : successTitle}
+        </p>
+        <p className="text-sm" style={{ color: palette?.textSecondary || '#cbd5e1' }}>
+          {state.duplicate ? 'We already have your signup and will keep you updated.' : successMessage}
+        </p>
+        <p className="text-xs" style={{ color: palette?.textSecondary || '#cbd5e1' }}>{state.resolvedReferralMessage}</p>
         {referralUrl ? (
           <button
             type="button"
@@ -227,90 +260,115 @@ function EmailForm({
   }
 
   return (
-    <div className="mx-auto w-full max-w-2xl space-y-3">
+    <form className="mx-auto w-full max-w-2xl space-y-3" noValidate onSubmit={handleSubmit} aria-describedby={state.errorMessage ? errorId : undefined}>
       <input
         type="text"
         name="website"
-        value={honeypot}
-        onChange={(event) => setHoneypot(event.target.value)}
+        value={state.honeypot}
+        onChange={(event) => updateField('honeypot', event.target.value)}
         tabIndex={-1}
         aria-hidden="true"
         style={{ position: 'absolute', left: '-9999px', opacity: 0 }}
       />
 
       {collectFirstName ? (
-        <input
-          type="text"
-          value={firstName}
-          onChange={(event) => setFirstName(event.target.value)}
-          placeholder="Your first name"
-          className="w-full border px-4 py-3 text-sm outline-none"
-          style={inputStyle}
-        />
+        <div className="space-y-1.5 text-left">
+          <label htmlFor={firstNameId} className="text-xs font-medium" style={{ color: palette?.textSecondary || '#cbd5e1' }}>
+            First name
+          </label>
+          <input
+            id={firstNameId}
+            type="text"
+            value={state.firstName}
+            onChange={(event) => updateField('firstName', event.target.value)}
+            placeholder="Your first name"
+            className="w-full border px-4 py-3 text-sm outline-none"
+            style={inputStyle}
+          />
+        </div>
       ) : null}
 
       {visibleFields.map((field) => {
+        const fieldId = `${instanceId}-${field.id}`;
         const commonProps = {
-          value: fieldValues[field.id] || '',
+          id: fieldId,
+          value: state.fieldValues[field.id] || '',
           onChange: (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
             const value = event.target.value;
-            setFieldValues((prev) => ({ ...prev, [field.id]: value }));
+            setState((prev) => ({
+              ...prev,
+              errorMessage: '',
+              fieldValues: { ...prev.fieldValues, [field.id]: value },
+            }));
           },
           placeholder: field.placeholder || field.label,
           className: 'w-full border px-4 py-3 text-sm outline-none',
           style: inputStyle,
         };
 
-        if (field.type === 'textarea') {
-          return <textarea key={field.id} rows={3} {...commonProps} />;
-        }
-
-        return <input key={field.id} type={field.type === 'url' ? 'url' : 'text'} {...commonProps} />;
+        return (
+          <div key={field.id} className="space-y-1.5 text-left">
+            <label htmlFor={fieldId} className="text-xs font-medium" style={{ color: palette?.textSecondary || '#cbd5e1' }}>
+              {field.label}{field.required ? ' *' : ''}
+            </label>
+            {field.type === 'textarea'
+              ? <textarea rows={3} {...commonProps} />
+              : <input type={field.type === 'url' ? 'url' : 'text'} {...commonProps} />}
+          </div>
+        );
       })}
 
-      <div className="flex flex-col gap-3 sm:flex-row">
-        <input
-          type="email"
-          value={email}
-          onChange={(event) => setEmail(event.target.value)}
-          onKeyDown={(event) => {
-            if (event.key === 'Enter') {
-              event.preventDefault();
-              handleSubmit();
-            }
-          }}
-          placeholder={emailPlaceholder}
-          className="flex-1 border px-4 py-3 text-sm outline-none"
-          style={inputStyle}
-        />
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+        <div className="flex-1 space-y-1.5 text-left">
+          <label htmlFor={emailId} className="text-xs font-medium" style={{ color: palette?.textSecondary || '#cbd5e1' }}>
+            Email address
+          </label>
+          <input
+            id={emailId}
+            type="email"
+            value={state.email}
+            onChange={(event) => updateField('email', event.target.value)}
+            placeholder={emailPlaceholder}
+            className="w-full border px-4 py-3 text-sm outline-none"
+            style={inputStyle}
+            aria-invalid={Boolean(state.errorMessage)}
+            aria-describedby={state.errorMessage ? errorId : undefined}
+          />
+        </div>
         <button
-          type="button"
-          disabled={loading}
-          onClick={handleSubmit}
+          type="submit"
+          disabled={state.loading}
           className="px-6 py-3 text-sm font-semibold transition-opacity disabled:opacity-60"
           style={buttonStyle}
         >
-          {loading ? 'Joining...' : ctaText}
+          {state.loading ? 'Joining...' : ctaText}
         </button>
       </div>
 
       {collectConsent ? (
-        <label className="flex items-start gap-2 text-left text-xs" style={{ color: palette?.textSecondary || '#cbd5e1' }}>
-          <input
-            type="checkbox"
-            checked={consent}
-            onChange={(event) => setConsent(event.target.checked)}
-            className="mt-0.5"
-          />
-          <span>
-            I agree to receive updates and product announcements.
-            {consentRequired ? ' (Required)' : ' (Optional)'}
-          </span>
-        </label>
+        <div className="space-y-1.5 text-left">
+          <label htmlFor={consentId} className="flex items-start gap-2 text-xs" style={{ color: palette?.textSecondary || '#cbd5e1' }}>
+            <input
+              id={consentId}
+              type="checkbox"
+              checked={state.consent}
+              onChange={(event) => updateField('consent', event.target.checked)}
+              className="mt-0.5"
+            />
+            <span>
+              I agree to receive updates and product announcements.
+              {consentRequired ? ' (Required)' : ' (Optional)'}
+            </span>
+          </label>
+        </div>
       ) : null}
 
-      {errorMessage ? <p className="text-xs text-red-200">{errorMessage}</p> : null}
-    </div>
+      {state.errorMessage ? (
+        <p id={errorId} className="rounded-md border border-red-300/50 bg-red-500/10 px-3 py-2 text-xs text-left text-red-100" role="alert">
+          {state.errorMessage}
+        </p>
+      ) : null}
+    </form>
   );
 }
 
@@ -321,6 +379,29 @@ const ACCENT_GRADIENTS: Record<string, string> = {
   orange: 'linear-gradient(135deg, #7c2d12 0%, #c2410c 45%, #fb923c 100%)',
   sky: 'linear-gradient(135deg, #075985 0%, #0369a1 45%, #38bdf8 100%)',
 };
+
+const LIGHT_ACCENT_GRADIENTS: Record<string, string> = {
+  indigo: 'linear-gradient(135deg, #eef2ff 0%, #e0e7ff 45%, #c7d2fe 100%)',
+  emerald: 'linear-gradient(135deg, #ecfdf5 0%, #d1fae5 45%, #a7f3d0 100%)',
+  rose: 'linear-gradient(135deg, #fff1f2 0%, #ffe4e6 45%, #fecdd3 100%)',
+  orange: 'linear-gradient(135deg, #fff7ed 0%, #ffedd5 45%, #fed7aa 100%)',
+  sky: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 45%, #bae6fd 100%)',
+};
+
+function createInitialFormState(referralMessage?: string): WaitlistFormState {
+  return {
+    email: '',
+    firstName: '',
+    consent: false,
+    honeypot: '',
+    fieldValues: {},
+    submitted: false,
+    duplicate: false,
+    errorMessage: '',
+    loading: false,
+    resolvedReferralMessage: referralMessage || 'Share this page with one founder friend.',
+  };
+}
 
 export default function WaitlistPageTemplate({
   content,
@@ -335,9 +416,12 @@ export default function WaitlistPageTemplate({
   const editable = mode === 'preview';
   const change = onContentChange ?? (() => undefined);
   const normalized = normalizeWaitlistContent(content, productName);
+  const [formState, setFormState] = useState<WaitlistFormState>(() => createInitialFormState(normalized.referralMessage));
 
   const accentHex = getAccentHex(normalized.accentColor || 'indigo');
-  const heroBackground = ACCENT_GRADIENTS[normalized.accentColor || 'indigo'] || ACCENT_GRADIENTS.indigo;
+  const heroBackground = (normalized.theme === 'light'
+    ? LIGHT_ACCENT_GRADIENTS[normalized.accentColor || 'indigo']
+    : ACCENT_GRADIENTS[normalized.accentColor || 'indigo']) || ACCENT_GRADIENTS.indigo;
 
   const palette = normalized.colors || normalizeWaitlistContent({}, productName).colors!;
   const typography = normalized.typography || normalizeWaitlistContent({}, productName).typography!;
@@ -347,6 +431,11 @@ export default function WaitlistPageTemplate({
   const alignCenter = normalized.textAlign !== 'left';
   const textAlignClass = alignCenter ? 'text-center' : 'text-left';
   const sectionPadding = `${spacing.sectionPaddingY}px`;
+
+  useEffect(() => {
+    if (mode !== 'public') return;
+    setFormState(createInitialFormState(normalized.referralMessage));
+  }, [mode, normalized.referralMessage, productName, publicUrl]);
 
   const sectionStyle: CSSProperties = {
     borderColor: palette.borderColor,
@@ -368,7 +457,7 @@ export default function WaitlistPageTemplate({
     );
   };
 
-  const renderFormSection = () => {
+  const renderFormSection = (instanceId: string) => {
     const fields = normalized.customFields?.filter((field) => field.enabled) || [];
 
     if (mode === 'public' && onEmailSubmit) {
@@ -384,11 +473,13 @@ export default function WaitlistPageTemplate({
           successMessage={normalized.successMessage || 'Thanks for joining. We will keep you updated.'}
           successShareLabel={normalized.successShareLabel || 'Copy share link'}
           onSubmit={onEmailSubmit}
-          referralMessage={normalized.referralMessage}
           publicUrl={publicUrl}
           activeVariant={activeVariant}
           palette={palette}
           radius={spacing.cardRadius}
+          instanceId={instanceId}
+          state={formState}
+          setState={setFormState}
         />
       );
     }
@@ -542,7 +633,7 @@ export default function WaitlistPageTemplate({
         </div>
 
         <div className="mx-auto mt-10" style={{ maxWidth: `${Math.min(spacing.contentMaxWidth, 960)}px` }}>
-          {renderFormSection()}
+          {renderFormSection('waitlist-hero-form')}
         </div>
 
         {signupCount && signupCount > 0 ? (
@@ -700,7 +791,7 @@ export default function WaitlistPageTemplate({
         <div className={`mx-auto max-w-3xl ${textAlignClass}`}>
           <h2 className="text-2xl font-bold" style={{ fontFamily: typography.headingFamily }}>Ready to validate demand?</h2>
           <p className="mt-2 text-sm" style={{ color: palette.textSecondary }}>{normalized.referralMessage}</p>
-          <div className="mt-6">{renderFormSection()}</div>
+          <div className="mt-6">{renderFormSection('waitlist-footer-form')}</div>
 
           {normalized.socialLinks && (normalized.socialLinks.website || normalized.socialLinks.x || normalized.socialLinks.linkedin) ? (
             <div className="mt-6 flex justify-center gap-4 text-xs">

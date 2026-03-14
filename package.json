@@ -8,7 +8,8 @@
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:waitlist": "node --experimental-strip-types --test tests/waitlist-model.test.ts"
   },
   "dependencies": {
     "@capacitor/android": "^7.4.3",
