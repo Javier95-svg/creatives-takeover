@@ -846,33 +846,34 @@ export default function WaitlistEditor() {
       </Card>
 
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_360px]">
-        <Card className="border border-slate-200/80 bg-white/90 shadow-[0_20px_50px_rgba(15,23,42,0.06)]">
-          <CardContent className="space-y-3 p-4 text-slate-950">
+        <Card className="border border-white/12 bg-[linear-gradient(180deg,rgba(15,23,42,0.94),rgba(30,41,59,0.94))] shadow-[0_20px_50px_rgba(15,23,42,0.18)]">
+          <CardContent className="space-y-3 p-4 text-white">
             <div className="space-y-1">
-              <Label htmlFor="waitlist-name" className="text-slate-950">Waitlist name</Label>
+              <Label htmlFor="waitlist-name" className="text-white">Waitlist name</Label>
               <Input
                 id="waitlist-name"
                 value={productName}
                 onChange={(event) => setProductName(event.target.value)}
                 placeholder="Name this waitlist"
-                className="border-slate-300 bg-white text-slate-950 placeholder:text-slate-400"
+                className="border-white/15 bg-white/10 text-white placeholder:text-slate-300"
               />
-              <p className="text-xs text-slate-600">This name appears in My Waitlists and becomes the default title for the page.</p>
+              <p className="text-xs text-slate-200/80">This name appears in My Waitlists and becomes the default title for the page.</p>
             </div>
 
             {hasUnsavedChanges ? (
-              <p className="text-xs text-amber-700">Unsaved changes in progress.</p>
+              <p className="text-xs text-amber-200">Unsaved changes in progress.</p>
             ) : lastSavedAt ? (
-              <p className="text-xs text-slate-600">Last saved {new Date(lastSavedAt).toLocaleString()}.</p>
+              <p className="text-xs text-slate-200/80">Last saved {new Date(lastSavedAt).toLocaleString()}.</p>
             ) : null}
 
             {isGuest ? (
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <p className="text-slate-600">Your browser draft is being preserved locally. Sign in when you are ready to save, publish, and collect real signups.</p>
+              <div className="rounded-2xl border border-white/12 bg-white/6 px-4 py-3 text-sm flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-slate-200/85">Your browser draft is being preserved locally. Sign in when you are ready to save, publish, and collect real signups.</p>
                 <div className="flex gap-2">
                   <Button
                     variant="outline"
                     size="sm"
+                    className="border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white"
                     onClick={() => {
                       if (!hasUnsavedChanges || window.confirm('Your draft is saved in this browser. Continue to log in?')) {
                         window.location.href = '/login?return=/waitlist';
@@ -883,6 +884,7 @@ export default function WaitlistEditor() {
                   </Button>
                   <Button
                     size="sm"
+                    className="bg-white text-slate-950 hover:bg-slate-100"
                     onClick={() => {
                       if (!hasUnsavedChanges || window.confirm('Your draft is saved in this browser. Continue to create an account?')) {
                         window.location.href = '/signup?return=/waitlist';
@@ -896,15 +898,16 @@ export default function WaitlistEditor() {
             ) : null}
 
             {!isGuest && restorableGuestDraft ? (
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <div className="rounded-2xl border border-white/12 bg-white/6 px-4 py-3 text-sm flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                 <div>
-                  <p className="font-medium text-slate-950">Browser draft available</p>
-                  <p className="text-slate-600">You have an unsaved local waitlist draft from {restorableGuestDraft.savedAt ? new Date(restorableGuestDraft.savedAt).toLocaleString() : 'this browser'}.</p>
+                  <p className="font-medium text-white">Browser draft available</p>
+                  <p className="text-slate-200/80">You have an unsaved local waitlist draft from {restorableGuestDraft.savedAt ? new Date(restorableGuestDraft.savedAt).toLocaleString() : 'this browser'}.</p>
                 </div>
                 <div className="flex gap-2">
                   <Button
                     variant="outline"
                     size="sm"
+                    className="border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white"
                     onClick={() => {
                       if (hasUnsavedChanges && !window.confirm('Replace the current editor contents with your browser draft?')) {
                         return;
@@ -925,6 +928,7 @@ export default function WaitlistEditor() {
                   <Button
                     variant="ghost"
                     size="sm"
+                    className="text-white hover:bg-white/10 hover:text-white"
                     onClick={() => {
                       window.localStorage.removeItem(GUEST_DRAFT_STORAGE_KEY);
                       setRestorableGuestDraft(null);
@@ -939,12 +943,12 @@ export default function WaitlistEditor() {
         </Card>
 
         {user && allPages.length > 0 ? (
-          <Card className="border border-slate-200/80 bg-white/90 shadow-[0_20px_50px_rgba(15,23,42,0.06)]">
-            <CardContent className="space-y-2 p-4 text-slate-950">
-              <Label htmlFor="waitlist-selector" className="text-slate-950">My Waitlists</Label>
+          <Card className="border border-white/12 bg-[linear-gradient(180deg,rgba(15,23,42,0.94),rgba(30,41,59,0.94))] shadow-[0_20px_50px_rgba(15,23,42,0.18)]">
+            <CardContent className="space-y-2 p-4 text-white">
+              <Label htmlFor="waitlist-selector" className="text-white">My Waitlists</Label>
               <select
                 id="waitlist-selector"
-                className="h-11 w-full rounded-2xl border border-slate-300 bg-white px-4 text-sm text-slate-950"
+                className="h-11 w-full rounded-2xl border border-white/15 bg-white/10 px-4 text-sm text-white"
                 value={draftId || ''}
                 onChange={async (event) => {
                   const nextId = event.target.value;
@@ -966,7 +970,7 @@ export default function WaitlistEditor() {
                   );
                 })}
               </select>
-              <p className="text-xs text-slate-600">Use the Waitlist name field to rename the current waitlist.</p>
+              <p className="text-xs text-slate-200/80">Use the Waitlist name field to rename the current waitlist.</p>
             </CardContent>
           </Card>
         ) : null}
