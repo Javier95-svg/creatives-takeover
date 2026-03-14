@@ -1,22 +1,72 @@
-import React, { useState, useCallback, useEffect } from 'react';
-import { RefreshCw, Download, Copy, Monitor, Smartphone, Check, Loader2, Wand2, Globe } from 'lucide-react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  RefreshCw,
+  Download,
+  Copy,
+  Monitor,
+  Smartphone,
+  Check,
+  Loader2,
+  Wand2,
+  Globe,
+  Code2,
+  TriangleAlert,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { MVPBuilderDomainPanel } from './MVPBuilderDomainPanel';
+import { MVPBuilderCodePanel } from './MVPBuilderCodePanel';
+import type { MVPPreviewResult, MVPProjectFile } from '@/lib/mvp-builder/project';
 
-const LOADING_STEPS = ['Understanding prompt...', 'Structuring MVP output...', 'Writing HTML...', 'Almost ready...'];
+const LOADING_STEPS = [
+  'Understanding prompt...',
+  'Planning file structure...',
+  'Writing the build...',
+  'Almost ready...',
+];
 
-type PreviewTab = 'preview' | 'domain';
+type PreviewTab = 'preview' | 'code' | 'domain';
 
 interface MVPBuilderPreviewProps {
   html: string | null;
   isGenerating: boolean;
   projectId: string;
+  projectFiles: MVPProjectFile[];
+  previewState: MVPPreviewResult;
+  entryFilePath: string;
+  selectedCodeFilePath: string | null;
+  codeChanges: Array<{ path: string; status: 'added' | 'modified' }>;
+  isShowingPreviewFallback: boolean;
+  onSelectCodeFile: (path: string) => void;
+  onSaveCodeFile: (path: string, content: string) => void;
+  onResetCodeFile: (path: string) => void;
+  onResetProjectCode: () => void;
+  onSelectEntryFile: (path: string) => void;
 }
 
-export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({ html, isGenerating, projectId }) => {
+export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({
+  html,
+  isGenerating,
+  projectId,
+  projectFiles,
+  previewState,
+  entryFilePath,
+  selectedCodeFilePath,
+  codeChanges,
+  isShowingPreviewFallback,
+  onSelectCodeFile,
+  onSaveCodeFile,
+  onResetCodeFile,
+  onResetProjectCode,
+  onSelectEntryFile,
+}) => {
   const [previewKey, setPreviewKey] = useState(0);
   const [viewMode, setViewMode] = useState<'desktop' | 'mobile'>('desktop');
   const [copied, setCopied] = useState(false);
@@ -29,62 +79,70 @@ export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({ html, isGe
       return;
     }
     const id = setInterval(() => {
-      setLoadingStep((s) => (s + 1) % LOADING_STEPS.length);
-    }, 1500);
+      setLoadingStep((step) => (step + 1) % LOADING_STEPS.length);
+    }, 1400);
     return () => clearInterval(id);
   }, [isGenerating]);
 
-  const handleRefresh = () => setPreviewKey((k) => k + 1);
+  const htmlEntryOptions = useMemo(
+    () => projectFiles.filter((file) => file.path.toLowerCase().endsWith('.html')),
+    [projectFiles]
+  );
+
+  const handleRefresh = () => setPreviewKey((key) => key + 1);
 
   const handleExport = useCallback(() => {
     if (!html) return;
     const blob = new Blob([html], { type: 'text/html' });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'app.html';
-    a.click();
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = entryFilePath || 'preview.html';
+    link.click();
     URL.revokeObjectURL(url);
-    toast.success('HTML file downloaded');
-  }, [html]);
+    toast.success('Preview HTML downloaded');
+  }, [entryFilePath, html]);
 
   const handleCopy = useCallback(async () => {
     if (!html) return;
     try {
       await navigator.clipboard.writeText(html);
       setCopied(true);
-      toast.success('Code copied to clipboard');
-      setTimeout(() => setCopied(false), 2000);
+      toast.success('Preview HTML copied');
+      setTimeout(() => setCopied(false), 1800);
     } catch {
-      toast.error('Could not copy to clipboard');
+      toast.error('Could not copy the preview HTML');
     }
   }, [html]);
 
   const statusBadge = isGenerating ? (
-    <span className="flex items-center gap-1.5 text-xs text-amber-500 font-medium">
+    <span className="flex items-center gap-1.5 text-xs font-medium text-amber-500">
       <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse shrink-0" />
       Building...
     </span>
-  ) : html ? (
-    <span className="flex items-center gap-1.5 text-xs text-emerald-500 font-medium">
+  ) : previewState.canPreview && html ? (
+    <span className="flex items-center gap-1.5 text-xs font-medium text-emerald-500">
       <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 shrink-0" />
-      Ready
+      Preview ready
+    </span>
+  ) : projectFiles.length > 0 ? (
+    <span className="flex items-center gap-1.5 text-xs font-medium text-amber-600">
+      <TriangleAlert className="h-3 w-3" />
+      Code-only preview
     </span>
   ) : (
-    <span className="text-xs text-muted-foreground font-medium">Preview</span>
+    <span className="text-xs font-medium text-muted-foreground">Workspace</span>
   );
 
   return (
     <TooltipProvider>
-      <div className="flex flex-col h-full min-h-0">
-        {/* Toolbar */}
-        <div className="flex items-center justify-between px-3 h-10 border-b border-border/40 bg-background/80 shrink-0">
-          {/* Left: tab switcher (Preview / Domain) */}
-          <div className="flex items-center bg-muted rounded-full p-0.5">
+      <div className="flex h-full min-h-0 flex-col">
+        <div className="flex items-center justify-between border-b border-border/40 bg-background/80 px-3 h-10 shrink-0">
+          <div className="flex items-center rounded-full bg-muted p-0.5">
             <button
               onClick={() => setActiveTab('preview')}
               className={cn(
-                'h-6 px-3 rounded-full flex items-center gap-1.5 text-xs font-medium transition-all duration-200',
+                'h-6 rounded-full px-3 text-xs font-medium transition-all duration-200 flex items-center gap-1.5',
                 activeTab === 'preview'
                   ? 'bg-background shadow-sm text-foreground'
                   : 'text-muted-foreground hover:text-foreground'
@@ -94,9 +152,21 @@ export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({ html, isGe
               Preview
             </button>
             <button
+              onClick={() => setActiveTab('code')}
+              className={cn(
+                'h-6 rounded-full px-3 text-xs font-medium transition-all duration-200 flex items-center gap-1.5',
+                activeTab === 'code'
+                  ? 'bg-background shadow-sm text-foreground'
+                  : 'text-muted-foreground hover:text-foreground'
+              )}
+            >
+              <Code2 className="h-3 w-3" />
+              Code
+            </button>
+            <button
               onClick={() => setActiveTab('domain')}
               className={cn(
-                'h-6 px-3 rounded-full flex items-center gap-1.5 text-xs font-medium transition-all duration-200',
+                'h-6 rounded-full px-3 text-xs font-medium transition-all duration-200 flex items-center gap-1.5',
                 activeTab === 'domain'
                   ? 'bg-background shadow-sm text-foreground'
                   : 'text-muted-foreground hover:text-foreground'
@@ -107,18 +177,29 @@ export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({ html, isGe
             </button>
           </div>
 
-          {/* Center: status badge (preview tab only) */}
-          {activeTab === 'preview' && statusBadge}
+          {statusBadge}
 
-          {/* Right: preview controls (preview tab) or empty spacer (domain tab) */}
           {activeTab === 'preview' ? (
-            <div className="flex items-center gap-0.5">
-              {/* Viewport toggle pill */}
-              <div className="flex items-center bg-muted rounded-full p-0.5 mr-1">
+            <div className="flex items-center gap-1">
+              {htmlEntryOptions.length > 1 && (
+                <select
+                  value={entryFilePath}
+                  onChange={(event) => onSelectEntryFile(event.target.value)}
+                  className="mr-2 h-7 rounded-full border border-border bg-muted/70 px-3 text-xs text-foreground outline-none focus:ring-2 focus:ring-primary/30"
+                >
+                  {htmlEntryOptions.map((file) => (
+                    <option key={file.path} value={file.path}>
+                      {file.path}
+                    </option>
+                  ))}
+                </select>
+              )}
+
+              <div className="mr-1 flex items-center rounded-full bg-muted p-0.5">
                 <button
                   onClick={() => setViewMode('desktop')}
                   className={cn(
-                    'h-6 w-7 rounded-full flex items-center justify-center transition-all duration-200',
+                    'flex h-6 w-7 items-center justify-center rounded-full transition-all duration-200',
                     viewMode === 'desktop'
                       ? 'bg-background shadow-sm text-foreground'
                       : 'text-muted-foreground hover:text-foreground'
@@ -129,7 +210,7 @@ export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({ html, isGe
                 <button
                   onClick={() => setViewMode('mobile')}
                   className={cn(
-                    'h-6 w-7 rounded-full flex items-center justify-center transition-all duration-200',
+                    'flex h-6 w-7 items-center justify-center rounded-full transition-all duration-200',
                     viewMode === 'mobile'
                       ? 'bg-background shadow-sm text-foreground'
                       : 'text-muted-foreground hover:text-foreground'
@@ -139,8 +220,7 @@ export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({ html, isGe
                 </button>
               </div>
 
-              {/* Action buttons */}
-              <div className="flex items-center gap-0.5 bg-muted/50 rounded-lg px-1 py-0.5">
+              <div className="flex items-center gap-0.5 rounded-lg bg-muted/50 px-1 py-0.5">
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
@@ -171,43 +251,62 @@ export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({ html, isGe
                       )}
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent>Copy HTML</TooltipContent>
+                  <TooltipContent>Copy preview HTML</TooltipContent>
                 </Tooltip>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="h-7 gap-1.5 text-xs px-2"
+                      className="h-7 gap-1.5 px-2 text-xs"
                       onClick={handleExport}
                       disabled={!html}
                     >
                       <Download className="h-3.5 w-3.5" />
-                      Export
+                      Export HTML
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent>Download as .html file</TooltipContent>
+                  <TooltipContent>Download the rendered preview HTML</TooltipContent>
                 </Tooltip>
               </div>
             </div>
+          ) : activeTab === 'code' ? (
+            <div className="text-xs text-muted-foreground">
+              {projectFiles.length} files
+            </div>
           ) : (
-            <div className="w-24" /> /* spacer to keep toolbar balanced */
+            <div className="w-24" />
           )}
         </div>
 
-        {/* Domain panel */}
         {activeTab === 'domain' && (
-          <div className="flex-1 min-h-0 overflow-y-auto">
+          <div className="min-h-0 flex-1 overflow-y-auto">
             <MVPBuilderDomainPanel projectId={projectId} />
           </div>
         )}
 
-        {/* Preview area */}
+        {activeTab === 'code' && (
+          <div className="min-h-0 flex-1">
+            <MVPBuilderCodePanel
+              files={projectFiles}
+              selectedFilePath={selectedCodeFilePath}
+              entryFilePath={entryFilePath}
+              codeChanges={codeChanges}
+              isGenerating={isGenerating}
+              onSelectFile={onSelectCodeFile}
+              onSaveFile={onSaveCodeFile}
+              onResetFile={onResetCodeFile}
+              onResetProject={onResetProjectCode}
+              onSelectEntryFile={onSelectEntryFile}
+            />
+          </div>
+        )}
+
         {activeTab === 'preview' && (
           <div
             className={cn(
-              'flex-1 min-h-0 flex items-center justify-center overflow-hidden',
-              viewMode === 'mobile' ? 'p-4 bg-muted/20' : 'p-0 bg-muted/10'
+              'flex flex-1 min-h-0 items-center justify-center overflow-hidden',
+              viewMode === 'mobile' ? 'bg-muted/20 p-4' : 'bg-muted/10 p-0'
             )}
             style={
               !html
@@ -219,29 +318,54 @@ export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({ html, isGe
                 : undefined
             }
           >
-            {!html && !isGenerating && (
-              <div className="flex flex-col items-center gap-3 text-center px-8 py-12 select-none">
-                <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/15 flex items-center justify-center">
+            {!html && !isGenerating && projectFiles.length === 0 && (
+              <div className="select-none px-8 py-12 text-center">
+                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border border-primary/15 bg-gradient-to-br from-primary/20 to-primary/5">
                   <Wand2 className="h-8 w-8 text-primary/50" />
                 </div>
-                <div className="space-y-1">
+                <div className="mt-4 space-y-1">
                   <p className="text-sm font-medium text-muted-foreground">
-                    Your app will appear here
+                    Your product will appear here
                   </p>
-                  <p className="text-xs text-muted-foreground/60">
-                    Describe what you want to build in the chat
+                  <p className="text-xs text-muted-foreground/70">
+                    Describe what you want to build in the chat to generate code and a live preview.
                   </p>
                 </div>
               </div>
             )}
 
+            {!html && !isGenerating && projectFiles.length > 0 && (
+              <div className="mx-6 max-w-xl rounded-3xl border border-border/60 bg-background/95 p-6 text-left shadow-sm">
+                <div className="flex items-start gap-3">
+                  <div className="mt-0.5 rounded-2xl bg-amber-500/10 p-2 text-amber-600">
+                    <TriangleAlert className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-semibold text-foreground">
+                      Preview needs a static HTML entry file
+                    </h3>
+                    <p className="mt-2 text-sm text-muted-foreground">
+                      This project&apos;s code is available in the Code tab, but the preview renderer can only run static HTML, CSS, and plain JavaScript right now.
+                    </p>
+                    {previewState.errors.length > 0 && (
+                      <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
+                        {previewState.errors.map((error) => (
+                          <li key={error}>• {error}</li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
             {!html && isGenerating && (
-              <div className="flex flex-col items-center gap-4 text-center px-8 py-12">
-                <Loader2 className="h-10 w-10 text-primary animate-spin" />
-                <div className="space-y-1">
+              <div className="px-8 py-12 text-center">
+                <Loader2 className="mx-auto h-10 w-10 animate-spin text-primary" />
+                <div className="mt-4 space-y-1">
                   <p className="text-sm font-medium">{LOADING_STEPS[loadingStep]}</p>
                   <p className="text-xs text-muted-foreground">
-                    This usually takes 15–30 seconds
+                    This usually takes 15-30 seconds
                   </p>
                 </div>
               </div>
@@ -251,23 +375,44 @@ export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({ html, isGe
               <div
                 className={cn(
                   'relative h-full transition-all duration-300',
-                  viewMode === 'desktop' ? 'w-full' : 'w-[375px] shadow-2xl rounded-xl overflow-hidden'
+                  viewMode === 'desktop'
+                    ? 'w-full'
+                    : 'w-[375px] overflow-hidden rounded-xl shadow-2xl'
                 )}
               >
+                {(previewState.warnings.length > 0 || isShowingPreviewFallback) && (
+                  <div className="absolute left-4 right-4 top-4 z-20 space-y-2">
+                    {isShowingPreviewFallback && (
+                      <div className="rounded-2xl border border-amber-500/25 bg-background/95 px-4 py-3 text-sm text-amber-700 shadow-lg backdrop-blur">
+                        Showing the last working preview because the latest code cannot be rendered safely yet.
+                      </div>
+                    )}
+                    {previewState.warnings.map((warning) => (
+                      <div
+                        key={warning}
+                        className="rounded-2xl border border-border/60 bg-background/95 px-4 py-3 text-sm text-muted-foreground shadow-lg backdrop-blur"
+                      >
+                        {warning}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
                 {isGenerating && (
-                  <div className="absolute inset-0 bg-background/60 backdrop-blur-sm z-10 flex items-center justify-center rounded-xl">
+                  <div className="absolute inset-0 z-10 flex items-center justify-center rounded-xl bg-background/60 backdrop-blur-sm">
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <Loader2 className="h-4 w-4 animate-spin" />
-                      Updating…
+                      Updating preview...
                     </div>
                   </div>
                 )}
+
                 <iframe
                   key={previewKey}
                   srcDoc={html}
                   sandbox="allow-scripts allow-forms allow-modals allow-popups"
                   className={cn(
-                    'w-full h-full border-0',
+                    'h-full w-full border-0',
                     viewMode === 'mobile' && 'rounded-xl'
                   )}
                   title="App Preview"

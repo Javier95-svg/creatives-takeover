@@ -40,22 +40,20 @@ const HTML_CAPABLE_MODEL_SET = new Set<string>([
 
 // ── System prompts ──────────────────────────────────────────────────────────
 
-const GENERATE_SYSTEM_PROMPT = `You are an expert MVP web app builder focused on speed, clarity, and usability.
+const GENERATE_SYSTEM_PROMPT = `You are an expert MVP web app builder focused on production-minded, editable code.
 
-Your task is to generate a COMPLETE, self-contained HTML file for the user's product idea, features, and workflow.
+Your task is to generate a COMPLETE small web product for the user's idea as a structured project that can be previewed and manually edited.
 
 STRICT RULES:
-1. Output ONE file: valid HTML with embedded <style> and <script> blocks.
-2. Use Tailwind CSS via CDN: <script src="https://cdn.tailwindcss.com"></script>
-3. Use Chart.js via CDN if the user needs charts: <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-4. Persist data with localStorage — no backend required.
-5. Mobile-responsive layout with CSS Grid / Flexbox.
-6. Professional design: clean typography, clear hierarchy, subtle shadows.
-7. Hover states and focus styles for all interactive elements.
-8. Graceful empty states when there is no data yet.
-9. Fully functional — every button and form must do something.
-10. Prioritize fast runtime and simple implementation: lightweight JavaScript and clear UI labels.
-11. Do NOT include markdown fences or extra wrapper tags around the HTML output.
+1. Return a project with real files. Default to index.html, styles.css, and app.js unless the request clearly needs a different static file layout.
+2. Only use static HTML, CSS, and plain browser JavaScript that runs without a build step. No React, no TypeScript, no package managers, no backend code, no framework-only syntax.
+3. Keep the code readable and trustworthy. Clear names, small functions, and only brief comments where necessary.
+4. Persist meaningful user data with localStorage when useful.
+5. Mobile-responsive layout with strong UX defaults, clear hierarchy, and accessible labels.
+6. Every button, form, tab, and filter must do something real.
+7. Include empty states, validation states, and at least basic success feedback.
+8. Use lightweight external CDNs only when they materially help the app and still run directly in a browser.
+9. Do NOT wrap the JSON in markdown fences.
 
 RESPONSE FORMAT:
 - First write a short plain-text "MVP Snapshot" with EXACTLY these 4 lines:
@@ -63,34 +61,46 @@ MVP Snapshot: <one sentence product summary>
 Core Features: <comma-separated feature list>
 Primary Workflow: <one sentence user flow>
 Next Iteration: <one sentence improvement suggestion>
-- Then immediately output the full HTML wrapped EXACTLY like this:
-<html-output>
-<!DOCTYPE html>
-...complete HTML file...
-</html>
-</html-output>`;
+- Then immediately output the full project wrapped EXACTLY like this:
+<project-output>
+{
+  "projectName": "Short project name",
+  "framework": "static-html",
+  "entryFile": "index.html",
+  "files": [
+    { "path": "index.html", "content": "<!DOCTYPE html>..." },
+    { "path": "styles.css", "content": "..." },
+    { "path": "app.js", "content": "..." }
+  ]
+}
+</project-output>`;
 
-const REFINE_SYSTEM_PROMPT = `You are an expert MVP web app builder refining an existing app.
+const REFINE_SYSTEM_PROMPT = `You are an expert MVP web app builder refining an existing project.
 
 The user will describe a change. Your job:
 1. Understand EXACTLY what they want to add, change, or remove.
-2. Make ONLY the requested change — preserve all other functionality unchanged.
-3. Keep the same overall design language unless the user asks otherwise.
-4. Maintain localStorage key compatibility (don't rename keys).
-5. The app must still be complete and self-contained after your edit.
-6. Keep implementation lightweight and easy to iterate.
+2. Make ONLY the requested change unless the current code is broken and needs a minimal fix to support it.
+3. Preserve file paths, localStorage keys, and working functionality whenever possible.
+4. Return the FULL updated project, not a partial patch.
+5. Keep the project static-browser compatible: HTML, CSS, and plain JavaScript only.
+6. Keep the code easy to trust and edit manually.
 
 RESPONSE FORMAT:
 - First write a short plain-text "Update Summary" with EXACTLY these 3 lines:
 Change Applied: <one sentence summary>
 What Stayed Stable: <one sentence summary>
 How to Prompt Next: <one sentence suggestion>
-- Then immediately output the FULL updated HTML wrapped EXACTLY like this:
-<html-output>
-<!DOCTYPE html>
-...complete updated HTML file...
-</html>
-</html-output>`;
+- Then immediately output the FULL updated project wrapped EXACTLY like this:
+<project-output>
+{
+  "projectName": "Short project name",
+  "framework": "static-html",
+  "entryFile": "index.html",
+  "files": [
+    { "path": "index.html", "content": "<!DOCTYPE html>..." }
+  ]
+}
+</project-output>`;
 
 // ── HTML extraction ─────────────────────────────────────────────────────────
 
@@ -101,8 +111,98 @@ function extractHtml(fullText: string): string | null {
   return fullText.slice(start + "<html-output>".length, end).trim();
 }
 
+function normalizeProjectPath(path: string): string {
+  return path
+    .replace(/\\/g, "/")
+    .replace(/^\.\/+/, "")
+    .split("/")
+    .reduce<string[]>((parts, segment) => {
+      if (!segment || segment === ".") return parts;
+      if (segment === "..") {
+        parts.pop();
+        return parts;
+      }
+      parts.push(segment);
+      return parts;
+    }, [])
+    .join("/");
+}
+
+function extractProjectJson(fullText: string): string | null {
+  const start = fullText.indexOf("<project-output>");
+  const end = fullText.indexOf("</project-output>");
+  if (start === -1 || end === -1) return null;
+  return fullText.slice(start + "<project-output>".length, end).trim();
+}
+
+function buildLegacyProjectFromHtml(html: string) {
+  return {
+    projectName: "Generated App",
+    framework: "static-html",
+    entryFile: "index.html",
+    files: [
+      {
+        path: "index.html",
+        content: html,
+      },
+    ],
+  };
+}
+
+function extractProject(fullText: string) {
+  const rawProject = extractProjectJson(fullText);
+
+  if (rawProject) {
+    try {
+      const parsed = JSON.parse(rawProject) as {
+        projectName?: unknown;
+        framework?: unknown;
+        entryFile?: unknown;
+        files?: Array<{ path?: unknown; content?: unknown }>;
+      };
+
+      const files = Array.isArray(parsed.files)
+        ? parsed.files
+            .map((file) => {
+              if (typeof file?.path !== "string" || typeof file?.content !== "string") {
+                return null;
+              }
+              return {
+                path: normalizeProjectPath(file.path),
+                content: file.content,
+              };
+            })
+            .filter((file): file is { path: string; content: string } => Boolean(file && file.path))
+        : [];
+
+      if (files.length > 0) {
+        return {
+          projectName:
+            typeof parsed.projectName === "string" && parsed.projectName.trim()
+              ? parsed.projectName.trim()
+              : "Generated App",
+          framework: parsed.framework === "code-only" ? "code-only" : "static-html",
+          entryFile:
+            typeof parsed.entryFile === "string" && parsed.entryFile.trim()
+              ? normalizeProjectPath(parsed.entryFile)
+              : files[0].path,
+          files,
+        };
+      }
+    } catch {
+      // fall back to legacy html extraction below
+    }
+  }
+
+  const html = extractHtml(fullText);
+  return html ? buildLegacyProjectFromHtml(html) : null;
+}
+
 function extractExplanation(fullText: string): string {
-  const start = fullText.indexOf("<html-output>");
+  const projectStart = fullText.indexOf("<project-output>");
+  const htmlStart = fullText.indexOf("<html-output>");
+  const candidates = [projectStart, htmlStart].filter((value) => value >= 0);
+  const start = candidates.length > 0 ? Math.min(...candidates) : -1;
   const raw = start > 0 ? fullText.slice(0, start).trim() : fullText.trim();
   // Remove any stray markdown fences
   return raw.replace(/```[\s\S]*?```/g, "").trim();
@@ -241,7 +341,14 @@ serve(async (req: Request) => {
   // ── Parse request ──────────────────────────────────────────────────────
 
   let userMessage: string;
-  let currentHtml: string | null;
+  let currentProject:
+    | {
+        projectName?: string;
+        framework?: string;
+        entryFile?: string;
+        files?: Array<{ path?: string; content?: string }>;
+      }
+    | null;
   let conversationHistory: Array<{ role: string; content: string }>;
   let userId: string | null;
   let selectedModelsRaw: unknown;
@@ -249,7 +356,7 @@ serve(async (req: Request) => {
   try {
     const body = await req.json();
     userMessage = body.userMessage ?? "";
-    currentHtml = body.currentHtml ?? null;
+    currentProject = body.currentProject ?? null;
     conversationHistory = Array.isArray(body.conversationHistory)
       ? body.conversationHistory
       : [];
@@ -267,7 +374,11 @@ serve(async (req: Request) => {
 
   // ── Credit deduction ───────────────────────────────────────────────────
 
-  const isFirstGeneration = currentHtml === null;
+  const hasExistingProject =
+    Boolean(currentProject) &&
+    Array.isArray(currentProject?.files) &&
+    currentProject!.files!.length > 0;
+  const isFirstGeneration = !hasExistingProject;
   const creditFeature = isFirstGeneration ? "APP_BUILDER_GENERATE" : "APP_BUILDER_REFINE";
   const creditCost = isFirstGeneration
     ? CREDIT_COSTS.APP_BUILDER_GENERATE
@@ -307,9 +418,13 @@ serve(async (req: Request) => {
 
   // For refinements, inject the current HTML as context
   let userContent = userMessage;
-  if (!isFirstGeneration && currentHtml) {
+  if (!isFirstGeneration && currentProject) {
     userContent =
-      `Current app HTML (edit this exact app):\n<html-source>\n${currentHtml}\n</html-source>\n\nUser request:\n${userMessage}`;
+      `Current project files (edit this exact project):\n<project-source>\n${JSON.stringify(
+        currentProject,
+        null,
+        2
+      )}\n</project-source>\n\nUser request:\n${userMessage}`;
   }
 
   // Resolve selected model set (single or multi-model combo)
@@ -356,7 +471,7 @@ serve(async (req: Request) => {
   if (skippedImageModels.length > 0) {
     userContent +=
       `\n\nImage-focused models selected: ${skippedImageModels.join(", ")}.` +
-      ` Prioritize stronger visual polish and image-friendly layout decisions while still returning a full HTML app.`;
+      ` Prioritize stronger visual polish and image-friendly layout decisions while still returning a full static project.`;
   }
 
   const messages = [
@@ -449,13 +564,26 @@ serve(async (req: Request) => {
 
           if (typeof content === "string" && content) {
             const beforeLength = fullText.length;
+            const previousProjectStart = fullText.indexOf("<project-output>");
             const previousHtmlStart = fullText.indexOf("<html-output>");
+            const previousBoundaryCandidates = [previousProjectStart, previousHtmlStart].filter(
+              (value) => value >= 0
+            );
             const previousBoundary =
-              previousHtmlStart === -1 ? beforeLength : previousHtmlStart;
+              previousBoundaryCandidates.length > 0
+                ? Math.min(...previousBoundaryCandidates)
+                : beforeLength;
 
             const nextText = fullText + content;
+            const nextProjectStart = nextText.indexOf("<project-output>");
             const nextHtmlStart = nextText.indexOf("<html-output>");
-            const nextBoundary = nextHtmlStart === -1 ? nextText.length : nextHtmlStart;
+            const nextBoundaryCandidates = [nextProjectStart, nextHtmlStart].filter(
+              (value) => value >= 0
+            );
+            const nextBoundary =
+              nextBoundaryCandidates.length > 0
+                ? Math.min(...nextBoundaryCandidates)
+                : nextText.length;
 
             if (nextBoundary > previousBoundary) {
               const explanationChunk = nextText.slice(previousBoundary, nextBoundary);
@@ -483,16 +611,16 @@ serve(async (req: Request) => {
         }
       }
 
-      const html = extractHtml(fullText);
+      const project = extractProject(fullText);
       const explanation = extractExplanation(fullText);
 
-      if (html) {
+      if (project) {
         if (!explanation.trim()) {
           await writer.write(enc({ type: "delta", content: "Your MVP is ready." }));
         }
-        await writer.write(enc({ type: "code", html }));
+        await writer.write(enc({ type: "project", project }));
       } else {
-        console.warn("No <html-output> tag found in AI response");
+        console.warn("No <project-output> or <html-output> tag found in AI response");
         await writer.write(
           enc({
             type: "delta",
@@ -506,7 +634,7 @@ serve(async (req: Request) => {
             userId,
             creditCost,
             creditFeature,
-            "No HTML output generated"
+            "No project output generated"
           ).catch(() => {});
         }
       }

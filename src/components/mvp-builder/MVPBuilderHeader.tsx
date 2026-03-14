@@ -4,16 +4,19 @@ import { ArrowLeft, Plus, Pencil, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useCredits } from '@/hooks/useCredits';
+import { getMVPModelLabel } from '@/data/mvpModels';
 
 interface MVPBuilderHeaderProps {
   projectName: string;
   setProjectName: (name: string) => void;
+  selectedModels: string[];
   onNewProject: () => void;
 }
 
 export const MVPBuilderHeader: React.FC<MVPBuilderHeaderProps> = ({
   projectName,
   setProjectName,
+  selectedModels,
   onNewProject,
 }) => {
   const [isEditing, setIsEditing] = useState(false);
@@ -22,6 +25,8 @@ export const MVPBuilderHeader: React.FC<MVPBuilderHeaderProps> = ({
   const { balance, monthlyQuota } = useCredits();
 
   const totalCredits = (balance ?? 0) + (monthlyQuota ?? 0);
+  const primaryModelLabel = getMVPModelLabel(selectedModels[0]) ?? 'AI model';
+  const additionalModels = Math.max(selectedModels.length - 1, 0);
 
   useEffect(() => {
     if (isEditing) {
@@ -97,7 +102,8 @@ export const MVPBuilderHeader: React.FC<MVPBuilderHeaderProps> = ({
         {/* Right: credits pill + new project */}
         <div className="relative flex items-center gap-2">
           <span className="hidden md:flex items-center gap-1.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 text-[11px] px-2 py-0.5 rounded-full font-medium">
-            Gemini 3 Flash
+            {primaryModelLabel}
+            {additionalModels > 0 ? ` +${additionalModels}` : ''}
           </span>
           <span className="hidden sm:flex items-center gap-1.5 bg-primary/15 border border-primary/25 text-primary text-xs px-2.5 py-0.5 rounded-full font-medium backdrop-blur-sm">
             <span className="h-1.5 w-1.5 rounded-full bg-primary shrink-0" />

@@ -11,16 +11,44 @@ type MobileTab = 'chat' | 'preview';
 export const MVPBuilder: React.FC = () => {
   const {
     messages,
+    projectFiles,
+    entryFilePath,
+    previewState,
+    selectedCodeFilePath,
+    codeChanges,
+    isShowingPreviewFallback,
     currentHtml,
     isGenerating,
     projectName,
     projectId,
     promptHistory,
     selectedModels,
+    githubConnection,
+    githubRepositories,
+    githubBranches,
+    githubRepoSession,
+    githubPendingChanges,
+    githubCommitHistory,
+    isGitHubBusy,
+    suggestedGitHubCommitMessage,
     setProjectName,
+    setSelectedCodeFilePath,
+    setEntryFilePath,
+    updateProjectFile,
+    resetProjectFile,
+    resetProjectCode,
     setSelectedModels,
     sendMessage,
     resetProject,
+    connectGitHub,
+    disconnectGitHub,
+    loadGitHubRepositories,
+    loadGitHubBranches,
+    importGitHubRepository,
+    discardGitHubChanges,
+    commitGitHubChanges,
+    rollbackGitHubCommit,
+    loadGitHubCommitHistory,
   } =
     useMVPBuilder();
 
@@ -32,6 +60,7 @@ export const MVPBuilder: React.FC = () => {
       <MVPBuilderHeader
         projectName={projectName}
         setProjectName={setProjectName}
+        selectedModels={selectedModels}
         onNewProject={resetProject}
       />
 
@@ -80,8 +109,25 @@ export const MVPBuilder: React.FC = () => {
               messages={messages}
               promptHistory={promptHistory}
               selectedModels={selectedModels}
+              githubConnection={githubConnection}
+              githubRepositories={githubRepositories}
+              githubBranches={githubBranches}
+              githubRepoSession={githubRepoSession}
+              githubPendingChanges={githubPendingChanges}
+              githubCommitHistory={githubCommitHistory}
+              isGitHubBusy={isGitHubBusy}
+              suggestedGitHubCommitMessage={suggestedGitHubCommitMessage}
               onSelectedModelsChange={setSelectedModels}
               onSend={sendMessage}
+              onConnectGitHub={connectGitHub}
+              onDisconnectGitHub={disconnectGitHub}
+              onLoadGitHubRepositories={loadGitHubRepositories}
+              onLoadGitHubBranches={loadGitHubBranches}
+              onImportGitHubRepository={importGitHubRepository}
+              onDiscardGitHubChanges={discardGitHubChanges}
+              onCommitGitHubChanges={commitGitHubChanges}
+              onRollbackGitHubCommit={rollbackGitHubCommit}
+              onRefreshGitHubCommitHistory={loadGitHubCommitHistory}
               isGenerating={isGenerating}
             />
           </div>
@@ -96,7 +142,22 @@ export const MVPBuilder: React.FC = () => {
               mobileTab !== 'preview' ? 'hidden md:block' : 'block'
             )}
           >
-            <MVPBuilderPreview html={currentHtml} isGenerating={isGenerating} projectId={projectId} />
+            <MVPBuilderPreview
+              html={currentHtml}
+              isGenerating={isGenerating}
+              projectId={projectId}
+              projectFiles={projectFiles}
+              previewState={previewState}
+              entryFilePath={entryFilePath}
+              selectedCodeFilePath={selectedCodeFilePath}
+              codeChanges={codeChanges}
+              isShowingPreviewFallback={isShowingPreviewFallback}
+              onSelectCodeFile={setSelectedCodeFilePath}
+              onSaveCodeFile={updateProjectFile}
+              onResetCodeFile={resetProjectFile}
+              onResetProjectCode={resetProjectCode}
+              onSelectEntryFile={setEntryFilePath}
+            />
           </div>
         </div>
       </div>

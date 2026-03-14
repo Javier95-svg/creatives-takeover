@@ -9,6 +9,7 @@
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
+    "test:mvp-builder": "node --experimental-strip-types --test tests/mvp-builder-project.test.ts",
     "test:waitlist": "node --experimental-strip-types --test tests/waitlist-model.test.ts"
   },
   "dependencies": {

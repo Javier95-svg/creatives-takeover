@@ -1,16 +1,47 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
-import { Send, Loader2, CheckSquare, Layout, Hash, User, BarChart3, DollarSign, Wand2, History, RotateCcw, Clock3, Bot, Check } from 'lucide-react';
+import {
+  Send,
+  Loader2,
+  CheckSquare,
+  Layout,
+  Hash,
+  User,
+  BarChart3,
+  DollarSign,
+  Wand2,
+  History,
+  RotateCcw,
+  Clock3,
+  Bot,
+  Check,
+  Github,
+  GitBranch,
+  GitCommitHorizontal,
+  ExternalLink,
+  RefreshCw,
+  Undo2,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Badge } from '@/components/ui/badge';
 import { MVPMessageItem } from './MVPMessageItem';
-import type { MVPMessage, MVPPromptHistoryItem } from '@/hooks/useMVPBuilder';
+import type {
+  MVPMessage,
+  MVPPromptHistoryItem,
+  GitHubConnectionState,
+  GitHubRepositorySummary,
+  GitHubRepoSession,
+  GitHubFileChange,
+  GitHubCommitRecord,
+} from '@/hooks/useMVPBuilder';
 import {
   MVP_DEFAULT_MODEL,
   MVP_MODEL_OPTIONS,
   getMVPModelLabel,
 } from '@/data/mvpModels';
+import { cn } from '@/lib/utils';
 
 // ── Quick-start templates ────────────────────────────────────────────────────
 
@@ -53,14 +84,189 @@ const TEMPLATES = [
   },
 ] as const;
 
-// ── Component ────────────────────────────────────────────────────────────────
+const DIFF_PREVIEW_LINE_LIMIT = 140;
+const DIFF_CONTEXT_LINES = 3;
+
+type DiffPreviewLine = {
+  type: 'context' | 'add' | 'remove';
+  text: string;
+  oldLine: number | null;
+  newLine: number | null;
+};
+
+function splitContentLines(value: string | undefined): string[] {
+  if (typeof value !== 'string') return [];
+  return value.replace(/\r\n/g, '\n').split('\n');
+}
+
+function limitDiffLines(lines: DiffPreviewLine[]) {
+  if (lines.length <= DIFF_PREVIEW_LINE_LIMIT) {
+    return { lines, truncated: false };
+  }
+  return {
+    lines: lines.slice(0, DIFF_PREVIEW_LINE_LIMIT),
+    truncated: true,
+  };
+}
+
+function buildDiffPreview(change: GitHubFileChange) {
+  const oldLines = splitContentLines(change.previousContent);
+  const newLines = splitContentLines(change.content);
+
+  if (change.action === 'create') {
+    const safeLines = newLines.length > 0 ? newLines : [''];
+    return limitDiffLines(
+      safeLines.map((line, index) => ({
+        type: 'add' as const,
+        text: line,
+        oldLine: null,
+        newLine: index + 1,
+      }))
+    );
+  }
+
+  if (change.action === 'delete') {
+    const safeLines = oldLines.length > 0 ? oldLines : [''];
+    return limitDiffLines(
+      safeLines.map((line, index) => ({
+        type: 'remove' as const,
+        text: line,
+        oldLine: index + 1,
+        newLine: null,
+      }))
+    );
+  }
+
+  let start = 0;
+  while (
+    start < oldLines.length &&
+    start < newLines.length &&
+    oldLines[start] === newLines[start]
+  ) {
+    start += 1;
+  }
+
+  let oldEnd = oldLines.length - 1;
+  let newEnd = newLines.length - 1;
+  while (
+    oldEnd >= start &&
+    newEnd >= start &&
+    oldLines[oldEnd] === newLines[newEnd]
+  ) {
+    oldEnd -= 1;
+    newEnd -= 1;
+  }
+
+  const lines: DiffPreviewLine[] = [];
+
+  if (start > oldEnd && start > newEnd) {
+    const safeLines = newLines.length > 0 ? newLines : oldLines;
+    const preview = safeLines.slice(0, DIFF_CONTEXT_LINES * 2 + 1);
+    return {
+      lines: preview.map((line, index) => ({
+        type: 'context' as const,
+        text: line,
+        oldLine: index + 1,
+        newLine: index + 1,
+      })),
+      truncated: safeLines.length > preview.length,
+    };
+  }
+
+  const beforeStart = Math.max(0, start - DIFF_CONTEXT_LINES);
+  for (let i = beforeStart; i < start; i += 1) {
+    lines.push({
+      type: 'context',
+      text: oldLines[i] ?? '',
+      oldLine: i + 1,
+      newLine: i + 1,
+    });
+  }
+
+  for (let i = start; i <= oldEnd; i += 1) {
+    lines.push({
+      type: 'remove',
+      text: oldLines[i] ?? '',
+      oldLine: i + 1,
+      newLine: null,
+    });
+  }
+
+  for (let i = start; i <= newEnd; i += 1) {
+    lines.push({
+      type: 'add',
+      text: newLines[i] ?? '',
+      oldLine: null,
+      newLine: i + 1,
+    });
+  }
+
+  const afterOldStart = oldEnd + 1;
+  const afterNewStart = newEnd + 1;
+  const afterCount = Math.min(
+    DIFF_CONTEXT_LINES,
+    Math.min(oldLines.length - afterOldStart, newLines.length - afterNewStart)
+  );
+
+  for (let offset = 0; offset < afterCount; offset += 1) {
+    lines.push({
+      type: 'context',
+      text: newLines[afterNewStart + offset] ?? '',
+      oldLine: afterOldStart + offset + 1,
+      newLine: afterNewStart + offset + 1,
+    });
+  }
+
+  return limitDiffLines(lines);
+}
+
+function formatLineNumber(value: number | null): string {
+  return value === null ? '' : String(value);
+}
+
+function formatDateTime(iso: string | null | undefined): string {
+  if (!iso) return 'Unknown date';
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return iso;
+  return date.toLocaleString(undefined, {
+    year: 'numeric',
+    month: 'short',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+  });
+}
 
 interface MVPBuilderChatProps {
   messages: MVPMessage[];
   promptHistory: MVPPromptHistoryItem[];
   selectedModels: string[];
+  githubConnection: GitHubConnectionState;
+  githubRepositories: GitHubRepositorySummary[];
+  githubBranches: string[];
+  githubRepoSession: GitHubRepoSession | null;
+  githubPendingChanges: GitHubFileChange[];
+  githubCommitHistory: GitHubCommitRecord[];
+  isGitHubBusy: boolean;
+  suggestedGitHubCommitMessage: string | null;
   onSelectedModelsChange: (models: string[]) => void;
   onSend: (prompt: string) => void;
+  onConnectGitHub: () => void | Promise<void>;
+  onDisconnectGitHub: () => void | Promise<void>;
+  onLoadGitHubRepositories: () => void | Promise<void>;
+  onLoadGitHubBranches: (fullName: string) => void | Promise<void>;
+  onImportGitHubRepository: (fullName: string, branch?: string) => void | Promise<void>;
+  onDiscardGitHubChanges: () => void;
+  onCommitGitHubChanges: (options?: {
+    createPullRequest?: boolean;
+    targetBranch?: string;
+    prTitle?: string;
+    prBody?: string;
+    commitMessage?: string;
+  }) => void | Promise<unknown>;
+  onRollbackGitHubCommit: (sha: string) => void | Promise<void>;
+  onRefreshGitHubCommitHistory: (fullName?: string, branch?: string) => void | Promise<void>;
   isGenerating: boolean;
 }
 
@@ -68,13 +274,35 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
   messages,
   promptHistory,
   selectedModels,
+  githubConnection,
+  githubRepositories,
+  githubBranches,
+  githubRepoSession,
+  githubPendingChanges,
+  githubCommitHistory,
+  isGitHubBusy,
+  suggestedGitHubCommitMessage,
   onSelectedModelsChange,
   onSend,
+  onConnectGitHub,
+  onDisconnectGitHub,
+  onLoadGitHubRepositories,
+  onLoadGitHubBranches,
+  onImportGitHubRepository,
+  onDiscardGitHubChanges,
+  onCommitGitHubChanges,
+  onRollbackGitHubCommit,
+  onRefreshGitHubCommitHistory,
   isGenerating,
 }) => {
   const [input, setInput] = useState('');
   const [historyOpen, setHistoryOpen] = useState(false);
   const [modelsOpen, setModelsOpen] = useState(false);
+  const [githubOpen, setGithubOpen] = useState(false);
+  const [selectedRepo, setSelectedRepo] = useState('');
+  const [selectedBranch, setSelectedBranch] = useState('');
+  const [prBranchName, setPrBranchName] = useState('');
+  const [commitMessage, setCommitMessage] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const isEmpty = messages.length === 0;
@@ -89,6 +317,61 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
     () => selectedModels.map((id) => getMVPModelLabel(id) ?? id),
     [selectedModels]
   );
+  const selectedRepoMeta = useMemo(
+    () => githubRepositories.find((repo) => repo.fullName === selectedRepo) ?? null,
+    [githubRepositories, selectedRepo]
+  );
+  const availableBranches = useMemo(() => {
+    if (githubBranches.length > 0) return githubBranches;
+    if (selectedRepoMeta?.defaultBranch) return [selectedRepoMeta.defaultBranch];
+    return ['main'];
+  }, [githubBranches, selectedRepoMeta?.defaultBranch]);
+  const pendingDiffs = useMemo(
+    () =>
+      githubPendingChanges.map((change, index) => ({
+        id: `${change.path}-${index}`,
+        change,
+        preview: buildDiffPreview(change),
+      })),
+    [githubPendingChanges]
+  );
+
+  useEffect(() => {
+    if (githubOpen && githubConnection.connected && githubRepositories.length === 0) {
+      onLoadGitHubRepositories();
+    }
+  }, [githubConnection.connected, githubOpen, githubRepositories.length, onLoadGitHubRepositories]);
+
+  useEffect(() => {
+    if (githubOpen && githubRepoSession) {
+      onRefreshGitHubCommitHistory(githubRepoSession.fullName, githubRepoSession.branch);
+    }
+  }, [githubOpen, githubRepoSession, onRefreshGitHubCommitHistory]);
+
+  useEffect(() => {
+    if (!githubRepoSession) return;
+    setSelectedRepo(githubRepoSession.fullName);
+    setSelectedBranch(githubRepoSession.branch);
+    setPrBranchName(`mvp/${Date.now()}`);
+  }, [githubRepoSession]);
+
+  useEffect(() => {
+    if (selectedRepo || githubRepositories.length === 0) return;
+    const first = githubRepositories[0];
+    setSelectedRepo(first.fullName);
+    setSelectedBranch(first.defaultBranch || 'main');
+  }, [githubRepositories, selectedRepo]);
+
+  useEffect(() => {
+    if (!selectedRepo) return;
+    onLoadGitHubBranches(selectedRepo);
+  }, [onLoadGitHubBranches, selectedRepo]);
+
+  useEffect(() => {
+    if (suggestedGitHubCommitMessage) {
+      setCommitMessage(suggestedGitHubCommitMessage);
+    }
+  }, [suggestedGitHubCommitMessage]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -96,29 +379,16 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
 
   const handleSend = useCallback(() => {
     const trimmed = input.trim();
-    if (!trimmed || isGenerating) return;
+    if (!trimmed || isGenerating || isGitHubBusy) return;
     onSend(trimmed);
     setInput('');
-  }, [input, isGenerating, onSend]);
+  }, [input, isGenerating, isGitHubBusy, onSend]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSend();
     }
-  };
-
-  const formatHistoryDateTime = (iso: string) => {
-    const date = new Date(iso);
-    if (Number.isNaN(date.getTime())) return iso;
-    return date.toLocaleString(undefined, {
-      year: 'numeric',
-      month: 'short',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-    });
   };
 
   const handleRestorePrompt = (prompt: string) => {
@@ -128,7 +398,7 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
   };
 
   const handleReusePrompt = (prompt: string) => {
-    if (isGenerating) return;
+    if (isGenerating || isGitHubBusy) return;
     onSend(prompt);
     setHistoryOpen(false);
   };
@@ -145,11 +415,66 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
     onSelectedModelsChange([modelId]);
   };
 
+  const handleRepoChange = (fullName: string) => {
+    setSelectedRepo(fullName);
+    const repo = githubRepositories.find((item) => item.fullName === fullName);
+    setSelectedBranch(repo?.defaultBranch || 'main');
+  };
+
+  const handleImportRepository = async () => {
+    if (!selectedRepo) return;
+    await onImportGitHubRepository(selectedRepo, selectedBranch || undefined);
+  };
+
+  const handleCommitToBranch = async () => {
+    if (!githubRepoSession) return;
+    await onCommitGitHubChanges({
+      createPullRequest: false,
+      targetBranch: githubRepoSession.branch,
+      commitMessage: commitMessage || undefined,
+    });
+  };
+
+  const handleCreatePullRequest = async () => {
+    if (!githubRepoSession || !prBranchName.trim()) return;
+    await onCommitGitHubChanges({
+      createPullRequest: true,
+      targetBranch: prBranchName.trim(),
+      prTitle: `MVP Builder update: ${githubRepoSession.name}`,
+      prBody: 'Automated changes from /mvp-builder prompt workflow.',
+      commitMessage: commitMessage || undefined,
+    });
+  };
+
+  const handleRollback = async (sha: string) => {
+    const ok = window.confirm(
+      `Create a rollback commit to ${sha.slice(0, 8)} on ${githubRepoSession?.branch ?? 'current branch'}?`
+    );
+    if (!ok) return;
+    await onRollbackGitHubCommit(sha);
+  };
+
   return (
     <div className="flex flex-col h-full min-h-0">
-      <div className="px-3 pt-2 pb-1 shrink-0 flex items-center justify-between">
-        <p className="text-[11px] font-medium text-muted-foreground">Prompt Sidebar</p>
-        <div className="flex items-center gap-1">
+      <div className="px-3 pt-2 pb-1 shrink-0 flex items-center justify-between gap-2">
+        <p className="text-[11px] font-medium text-muted-foreground">Builder controls</p>
+        <div className="flex items-center gap-1 flex-wrap justify-end">
+          {!githubConnection.connected && (
+            <Button
+              type="button"
+              size="sm"
+              className="h-7 px-2 text-xs gap-1.5"
+              onClick={onConnectGitHub}
+              disabled={isGitHubBusy}
+            >
+              {isGitHubBusy ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Github className="h-3.5 w-3.5" />
+              )}
+              Connect GitHub
+            </Button>
+          )}
           <Button
             type="button"
             variant="ghost"
@@ -166,10 +491,23 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
             variant="ghost"
             size="sm"
             className="h-7 px-2 text-xs gap-1.5"
+            onClick={() => setGithubOpen(true)}
+          >
+            <Github className="h-3.5 w-3.5" />
+            GitHub
+            <span className="text-[10px] text-muted-foreground">
+              ({githubPendingChanges.length})
+            </span>
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="h-7 px-2 text-xs gap-1.5"
             onClick={() => setHistoryOpen(true)}
           >
             <History className="h-3.5 w-3.5" />
-            View History
+            Prompt Log
             <span className="text-[10px] text-muted-foreground">({sortedHistory.length})</span>
           </Button>
         </div>
@@ -178,6 +516,16 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
         <p className="text-[10px] text-muted-foreground truncate">
           Active: {selectedModelLabels.join(' + ')}
         </p>
+        {githubConnection.connected && (
+          <p className="text-[10px] text-muted-foreground truncate">
+            GitHub: @{githubConnection.profile?.login ?? 'connected'}
+          </p>
+        )}
+        {githubRepoSession && (
+          <p className="text-[10px] text-muted-foreground truncate">
+            Repo: {githubRepoSession.fullName} ({githubRepoSession.branch})
+          </p>
+        )}
       </div>
 
       {/* Message list */}
@@ -203,7 +551,7 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
                     <button
                       key={t.label}
                       onClick={() => onSend(t.prompt)}
-                      disabled={isGenerating}
+                      disabled={isGenerating || isGitHubBusy}
                       className="flex items-center gap-2 rounded-xl border border-border/60 bg-card hover:bg-muted/60 hover:border-primary/40 hover:shadow-sm px-3 py-2.5 text-xs font-medium transition-all duration-150 text-left disabled:opacity-50"
                     >
                       <Icon className="h-3.5 w-3.5 text-primary/70 shrink-0" />
@@ -237,14 +585,16 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
               placeholder={
                 isEmpty
                   ? 'Describe your MVP idea, core features, and user flow...'
+                  : githubRepoSession
+                  ? 'Describe repository changes to implement...'
                   : 'Describe a change to make...'
               }
               className="min-h-[44px] max-h-28 resize-none text-sm leading-relaxed py-2.5 border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1"
-              disabled={isGenerating}
+              disabled={isGenerating || isGitHubBusy}
             />
             <Button
               onClick={handleSend}
-              disabled={!input.trim() || isGenerating}
+              disabled={!input.trim() || isGenerating || isGitHubBusy}
               size="icon"
               className="h-9 w-9 rounded-xl shrink-0"
             >
@@ -360,13 +710,406 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
         </SheetContent>
       </Sheet>
 
+      <Sheet open={githubOpen} onOpenChange={setGithubOpen}>
+        <SheetContent side="right" className="w-[98vw] sm:max-w-2xl p-0">
+          <div className="flex h-full flex-col">
+            <SheetHeader className="px-4 py-4 border-b border-border/50">
+              <SheetTitle className="text-base">GitHub Integration</SheetTitle>
+              <SheetDescription>
+                Connect your GitHub account, import a repository/branch, preview file diffs, then commit/push or open a Pull Request.
+              </SheetDescription>
+            </SheetHeader>
+
+            <ScrollArea className="flex-1">
+              <div className="p-4 space-y-4">
+                <div className="rounded-xl border border-border/60 bg-card/70 p-3 space-y-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="space-y-1">
+                      <p className="text-sm font-medium">Connection</p>
+                      {githubConnection.connected ? (
+                        <p className="text-xs text-muted-foreground">
+                          Connected as @{githubConnection.profile?.login ?? 'github-user'}
+                        </p>
+                      ) : (
+                        <p className="text-xs text-muted-foreground">
+                          Connect GitHub to import repositories into the MVP Builder.
+                        </p>
+                      )}
+                    </div>
+                    {githubConnection.connected ? (
+                      <Badge variant="secondary">Connected</Badge>
+                    ) : (
+                      <Badge variant="outline">Not connected</Badge>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    {githubConnection.connected ? (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        className="h-8 text-xs"
+                        onClick={onDisconnectGitHub}
+                        disabled={isGitHubBusy}
+                      >
+                        {isGitHubBusy ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                          <Github className="h-3.5 w-3.5" />
+                        )}
+                        Disconnect GitHub
+                      </Button>
+                    ) : (
+                      <Button
+                        type="button"
+                        size="sm"
+                        className="h-8 text-xs"
+                        onClick={onConnectGitHub}
+                        disabled={isGitHubBusy}
+                      >
+                        {isGitHubBusy ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                          <Github className="h-3.5 w-3.5" />
+                        )}
+                        Connect GitHub
+                      </Button>
+                    )}
+                  </div>
+                </div>
+
+                {githubConnection.connected && (
+                  <>
+                    <div className="rounded-xl border border-border/60 bg-card/70 p-3 space-y-3">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-sm font-medium">Import Repository</p>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="ghost"
+                          className="h-7 px-2 text-xs"
+                          onClick={onLoadGitHubRepositories}
+                          disabled={isGitHubBusy}
+                        >
+                          {isGitHubBusy ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          ) : (
+                            <RefreshCw className="h-3.5 w-3.5" />
+                          )}
+                          Refresh repos
+                        </Button>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <label className="space-y-1.5">
+                          <span className="text-[11px] uppercase tracking-wide text-muted-foreground">
+                            Repository
+                          </span>
+                          <select
+                            value={selectedRepo}
+                            onChange={(event) => handleRepoChange(event.target.value)}
+                            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                            disabled={isGitHubBusy}
+                          >
+                            <option value="">Select repository</option>
+                            {githubRepositories.map((repo) => (
+                              <option key={repo.id} value={repo.fullName}>
+                                {repo.fullName}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+
+                        <label className="space-y-1.5">
+                          <span className="text-[11px] uppercase tracking-wide text-muted-foreground">
+                            Branch
+                          </span>
+                          <select
+                            value={selectedBranch}
+                            onChange={(event) => setSelectedBranch(event.target.value)}
+                            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                            disabled={isGitHubBusy || !selectedRepo}
+                          >
+                            {availableBranches.map((branch) => (
+                              <option key={branch} value={branch}>
+                                {branch}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <Button
+                          type="button"
+                          size="sm"
+                          className="h-8 text-xs"
+                          onClick={handleImportRepository}
+                          disabled={!selectedRepo || isGitHubBusy}
+                        >
+                          {isGitHubBusy ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          ) : (
+                            <GitBranch className="h-3.5 w-3.5" />
+                          )}
+                          Import Repository
+                        </Button>
+                      </div>
+
+                      {githubRepoSession && (
+                        <div className="rounded-md border border-border/50 bg-background/70 p-2.5 text-xs space-y-1">
+                          <p className="text-foreground">
+                            Active repo: <span className="font-medium">{githubRepoSession.fullName}</span>
+                          </p>
+                          <p className="text-muted-foreground">
+                            Branch: {githubRepoSession.branch} · Files imported: {githubRepoSession.files.length}
+                          </p>
+                          {githubRepoSession.htmlUrl && (
+                            <a
+                              href={githubRepoSession.htmlUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="inline-flex items-center gap-1 text-primary hover:underline"
+                            >
+                              Open repository
+                              <ExternalLink className="h-3.5 w-3.5" />
+                            </a>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="rounded-xl border border-border/60 bg-card/70 p-3 space-y-3">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-sm font-medium">Pending File Diff Preview</p>
+                        <Badge variant="outline">{githubPendingChanges.length} files</Badge>
+                      </div>
+
+                      {pendingDiffs.length === 0 ? (
+                        <div className="rounded-md border border-dashed border-border/60 bg-muted/30 p-3 text-xs text-muted-foreground">
+                          No pending code changes. Submit a prompt while a repository is imported to generate a diff preview.
+                        </div>
+                      ) : (
+                        <div className="space-y-3">
+                          {pendingDiffs.map(({ id, change, preview }) => (
+                            <div key={id} className="rounded-md border border-border/50 bg-background/70 p-2.5 space-y-2">
+                              <div className="flex items-center justify-between gap-2 flex-wrap">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <Badge
+                                    variant="outline"
+                                    className={cn(
+                                      change.action === 'create' && 'border-emerald-300 text-emerald-700',
+                                      change.action === 'update' && 'border-amber-300 text-amber-700',
+                                      change.action === 'delete' && 'border-red-300 text-red-700'
+                                    )}
+                                  >
+                                    {change.action.toUpperCase()}
+                                  </Badge>
+                                  <code className="text-xs bg-muted/60 px-1.5 py-0.5 rounded">
+                                    {change.path}
+                                  </code>
+                                </div>
+                                {change.reason && (
+                                  <span className="text-[11px] text-muted-foreground">{change.reason}</span>
+                                )}
+                              </div>
+
+                              <div className="rounded-md border border-border/50 overflow-hidden">
+                                <div className="grid grid-cols-[58px_58px_auto] gap-2 px-2 py-1 text-[10px] uppercase tracking-wide text-muted-foreground bg-muted/40 border-b border-border/40">
+                                  <span>Old</span>
+                                  <span>New</span>
+                                  <span>Content</span>
+                                </div>
+                                <ScrollArea className="max-h-56">
+                                  <div className="font-mono text-[11px]">
+                                    {preview.lines.map((line, lineIndex) => (
+                                      <div
+                                        key={`${id}-${lineIndex}`}
+                                        className={cn(
+                                          'grid grid-cols-[58px_58px_auto] gap-2 px-2 py-0.5 border-b border-border/20 last:border-b-0',
+                                          line.type === 'add' && 'bg-emerald-500/10',
+                                          line.type === 'remove' && 'bg-red-500/10'
+                                        )}
+                                      >
+                                        <span className="text-muted-foreground/80 text-right pr-1">
+                                          {formatLineNumber(line.oldLine)}
+                                        </span>
+                                        <span className="text-muted-foreground/80 text-right pr-1">
+                                          {formatLineNumber(line.newLine)}
+                                        </span>
+                                        <span className="whitespace-pre-wrap break-all">
+                                          {line.type === 'add' ? '+' : line.type === 'remove' ? '-' : ' '}
+                                          {line.text || ' '}
+                                        </span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </ScrollArea>
+                                {preview.truncated && (
+                                  <p className="px-2 py-1 text-[10px] text-muted-foreground border-t border-border/40 bg-muted/30">
+                                    Diff preview truncated for performance.
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="rounded-xl border border-border/60 bg-card/70 p-3 space-y-3">
+                      <p className="text-sm font-medium">Commit / Push / Pull Request</p>
+
+                      <label className="space-y-1.5 block">
+                        <span className="text-[11px] uppercase tracking-wide text-muted-foreground">
+                          Commit message
+                        </span>
+                        <Textarea
+                          value={commitMessage}
+                          onChange={(event) => setCommitMessage(event.target.value)}
+                          placeholder="Describe this repository update..."
+                          className="min-h-[74px] text-sm"
+                          disabled={isGitHubBusy}
+                        />
+                      </label>
+
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Button
+                          type="button"
+                          size="sm"
+                          className="h-8 text-xs"
+                          onClick={handleCommitToBranch}
+                          disabled={!githubRepoSession || githubPendingChanges.length === 0 || isGitHubBusy}
+                        >
+                          {isGitHubBusy ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          ) : (
+                            <GitCommitHorizontal className="h-3.5 w-3.5" />
+                          )}
+                          Commit + Push
+                        </Button>
+
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          className="h-8 text-xs"
+                          onClick={onDiscardGitHubChanges}
+                          disabled={githubPendingChanges.length === 0 || isGitHubBusy}
+                        >
+                          Discard Pending
+                        </Button>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-2">
+                        <input
+                          value={prBranchName}
+                          onChange={(event) => setPrBranchName(event.target.value)}
+                          placeholder="new branch name (e.g. mvp/feature-update)"
+                          className="h-8 rounded-md border border-input bg-background px-3 text-xs outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                          disabled={isGitHubBusy}
+                        />
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="secondary"
+                          className="h-8 text-xs"
+                          onClick={handleCreatePullRequest}
+                          disabled={
+                            !githubRepoSession ||
+                            !prBranchName.trim() ||
+                            githubPendingChanges.length === 0 ||
+                            isGitHubBusy
+                          }
+                        >
+                          Create Branch + PR
+                        </Button>
+                      </div>
+                    </div>
+
+                    <div className="rounded-xl border border-border/60 bg-card/70 p-3 space-y-3">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-sm font-medium">Recent GitHub Commits</p>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="ghost"
+                          className="h-7 px-2 text-xs"
+                          onClick={() =>
+                            onRefreshGitHubCommitHistory(
+                              githubRepoSession?.fullName,
+                              githubRepoSession?.branch
+                            )
+                          }
+                          disabled={!githubRepoSession || isGitHubBusy}
+                        >
+                          <RefreshCw className="h-3.5 w-3.5" />
+                          Refresh
+                        </Button>
+                      </div>
+
+                      {githubCommitHistory.length === 0 ? (
+                        <div className="rounded-md border border-dashed border-border/60 bg-muted/30 p-3 text-xs text-muted-foreground">
+                          No commits loaded for this branch yet.
+                        </div>
+                      ) : (
+                        <div className="space-y-2">
+                          {githubCommitHistory.map((commit) => (
+                            <div key={commit.sha} className="rounded-md border border-border/50 bg-background/70 p-2.5 space-y-1.5">
+                              <div className="flex items-start justify-between gap-2">
+                                <div className="space-y-1 min-w-0">
+                                  <p className="text-xs font-medium truncate">{commit.message}</p>
+                                  <p className="text-[11px] text-muted-foreground truncate">
+                                    {commit.shortSha} · {formatDateTime(commit.committedAt)}
+                                    {commit.author ? ` · ${commit.author}` : ''}
+                                  </p>
+                                </div>
+                                <div className="flex items-center gap-1 shrink-0">
+                                  {commit.url && (
+                                    <a
+                                      href={commit.url}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-[11px] hover:bg-muted"
+                                    >
+                                      Open
+                                      <ExternalLink className="h-3 w-3" />
+                                    </a>
+                                  )}
+                                  <Button
+                                    type="button"
+                                    size="sm"
+                                    variant="outline"
+                                    className="h-7 px-2 text-[11px]"
+                                    onClick={() => handleRollback(commit.sha)}
+                                    disabled={isGitHubBusy}
+                                  >
+                                    <Undo2 className="h-3.5 w-3.5" />
+                                    Rollback
+                                  </Button>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </>
+                )}
+              </div>
+            </ScrollArea>
+          </div>
+        </SheetContent>
+      </Sheet>
+
       <Sheet open={historyOpen} onOpenChange={setHistoryOpen}>
         <SheetContent side="right" className="w-[95vw] sm:max-w-md p-0">
           <div className="flex h-full flex-col">
             <SheetHeader className="px-4 py-4 border-b border-border/50">
-              <SheetTitle className="text-base">Prompt History</SheetTitle>
+              <SheetTitle className="text-base">Prompt Log</SheetTitle>
               <SheetDescription>
-                Most recent first. Stored for this MVP project session.
+                Most recent first. This tracks prompt activity and linked GitHub commits. Code snapshots live in the Code tab.
               </SheetDescription>
             </SheetHeader>
 
@@ -374,7 +1117,7 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
               <div className="p-4 space-y-3">
                 {sortedHistory.length === 0 ? (
                   <div className="rounded-xl border border-dashed border-border/60 bg-muted/30 p-4 text-xs text-muted-foreground">
-                    No committed prompts yet. Generate or refine your MVP to build history.
+                    No prompts yet. Generate or refine your MVP to start the prompt log.
                   </div>
                 ) : (
                   sortedHistory.map((item) => (
@@ -385,12 +1128,43 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
                       <div className="space-y-1">
                         <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
                           <Clock3 className="h-3.5 w-3.5" />
-                          {formatHistoryDateTime(item.committedAt)}
+                          {formatDateTime(item.committedAt)}
                         </div>
+                        {item.branch && (
+                          <p className="text-[11px] text-muted-foreground">
+                            Branch: <span className="font-mono">{item.branch}</span>
+                          </p>
+                        )}
                         {item.commitRef && (
                           <p className="text-[11px] text-muted-foreground">
                             Ref: <span className="font-mono">{item.commitRef}</span>
                           </p>
+                        )}
+                        {(item.commitUrl || item.pullRequestUrl) && (
+                          <div className="flex items-center gap-2 flex-wrap">
+                            {item.commitUrl && (
+                              <a
+                                href={item.commitUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex items-center gap-1 text-[11px] text-primary hover:underline"
+                              >
+                                GitHub commit
+                                <ExternalLink className="h-3 w-3" />
+                              </a>
+                            )}
+                            {item.pullRequestUrl && (
+                              <a
+                                href={item.pullRequestUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex items-center gap-1 text-[11px] text-primary hover:underline"
+                              >
+                                Pull request
+                                <ExternalLink className="h-3 w-3" />
+                              </a>
+                            )}
+                          </div>
                         )}
                       </div>
 
@@ -416,7 +1190,7 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
                           size="sm"
                           className="h-7 text-xs"
                           onClick={() => handleReusePrompt(item.prompt)}
-                          disabled={isGenerating}
+                          disabled={isGenerating || isGitHubBusy}
                         >
                           <Send className="h-3.5 w-3.5 mr-1" />
                           Reuse
