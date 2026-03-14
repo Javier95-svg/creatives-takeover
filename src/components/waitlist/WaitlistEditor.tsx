@@ -534,7 +534,7 @@ export default function WaitlistEditor() {
       return null;
     }
 
-    const trimmedName = productName.trim() || 'Untitled Startup';
+    const trimmedName = productName.trim() || 'Untitled Waitlist';
     const normalized = normalizeWaitlistContent(content, trimmedName);
     const resolvedSlug = sanitizeSlug(slugDraft || currentSlug || '') || generateSlug(trimmedName);
 
@@ -812,12 +812,6 @@ export default function WaitlistEditor() {
     return () => window.clearTimeout(timer);
   }, [hasUnsavedChanges, isGuest, isInitializing, persistWaitlist, status]);
 
-  const statusBadge = useMemo(() => {
-    if (isCompleted) return <Badge className="bg-green-600 text-white">Completed</Badge>;
-    if (status === 'published') return <Badge className="bg-emerald-600 text-white">Published</Badge>;
-    return <Badge variant="secondary">Draft</Badge>;
-  }, [isCompleted, status]);
-
   const conversionRate = viewCount > 0 ? `${((signupCount / viewCount) * 100).toFixed(1)}%` : '--';
 
   if (isInitializing) {
@@ -833,165 +827,123 @@ export default function WaitlistEditor() {
 
   return (
     <div className="space-y-6">
-      <Card className="overflow-hidden border-0 bg-[linear-gradient(135deg,rgba(15,23,42,0.96),rgba(30,41,59,0.95)_45%,rgba(14,165,233,0.26)_100%)] text-white shadow-[0_30px_90px_rgba(15,23,42,0.28)]">
-        <CardContent className="relative space-y-6 p-6 md:p-8">
-          <div className="pointer-events-none absolute inset-y-0 right-0 hidden w-1/2 bg-[radial-gradient(circle_at_top_right,rgba(125,211,252,0.32),transparent_55%),radial-gradient(circle_at_bottom,rgba(56,189,248,0.18),transparent_40%)] lg:block" />
+      <Card className="border-0 bg-[linear-gradient(135deg,rgba(15,23,42,0.96),rgba(30,41,59,0.95)_45%,rgba(14,165,233,0.26)_100%)] shadow-[0_30px_90px_rgba(15,23,42,0.28)]">
+        <CardContent className="p-4 md:p-5">
+          <div className="flex flex-wrap items-center gap-2">
+            <Button variant="outline" onClick={resetToNew} size="sm" className="border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white"><Plus className="w-4 h-4 mr-1" /> New</Button>
+            <Button variant="outline" onClick={copyUrl} size="sm" disabled={!liveUrl} className="border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white disabled:text-white/40"><Copy className="w-4 h-4 mr-1" /> Copy live link</Button>
+            <Button variant="outline" onClick={handleExportCSV} size="sm" disabled={isGuest || !draftId} className="border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white disabled:text-white/40"><Download className="w-4 h-4 mr-1" /> Export CSV</Button>
+            <Button variant="outline" onClick={handleSave} size="sm" disabled={isSaving || isPublishing} className="border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white disabled:text-white/40">
+              {isSaving ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Save className="w-4 h-4 mr-1" />}
+              Save draft
+            </Button>
+            <Button size="sm" onClick={status === 'published' ? handleSave : handlePublish} disabled={isPublishing || (status !== 'published' && Boolean(publishBlockingReason))} className="bg-white text-slate-950 hover:bg-slate-100">
+              {isPublishing ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Globe className="w-4 h-4 mr-1" />}
+              Publish
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
-          <div className="relative flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
-            <div className="space-y-2">
-              <div className="flex flex-wrap items-center gap-2">
-                <Badge className="border-white/15 bg-white/10 text-white">Waitlist Builder</Badge>
-                {statusBadge}
-                {content.domainSetup?.status === 'verified' ? <Badge variant="outline" className="border-emerald-300/40 bg-emerald-400/10 text-emerald-100">Domain Verified</Badge> : null}
-              </div>
-              <div className="space-y-3">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.32em] text-sky-200/80">Creator Studio</p>
-                  <h2 className="mt-2 text-2xl font-semibold tracking-tight md:text-3xl">
-                    {productName.trim() || 'Untitled waitlist'}
-                  </h2>
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_360px]">
+        <Card className="border border-slate-200/80 bg-white/90 shadow-[0_20px_50px_rgba(15,23,42,0.06)]">
+          <CardContent className="space-y-3 p-4">
+            <div className="space-y-1">
+              <Label htmlFor="waitlist-name">Waitlist name</Label>
+              <Input
+                id="waitlist-name"
+                value={productName}
+                onChange={(event) => setProductName(event.target.value)}
+                placeholder="Name this waitlist"
+              />
+              <p className="text-xs text-muted-foreground">This name appears in My Waitlists and becomes the default title for the page.</p>
+            </div>
+
+            {hasUnsavedChanges ? (
+              <p className="text-xs text-amber-700">Unsaved changes in progress.</p>
+            ) : lastSavedAt ? (
+              <p className="text-xs text-muted-foreground">Last saved {new Date(lastSavedAt).toLocaleString()}.</p>
+            ) : null}
+
+            {isGuest ? (
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-muted-foreground">Your browser draft is being preserved locally. Sign in when you are ready to save, publish, and collect real signups.</p>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      if (!hasUnsavedChanges || window.confirm('Your draft is saved in this browser. Continue to log in?')) {
+                        window.location.href = '/login?return=/waitlist';
+                      }
+                    }}
+                  >
+                    Log in
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      if (!hasUnsavedChanges || window.confirm('Your draft is saved in this browser. Continue to create an account?')) {
+                        window.location.href = '/signup?return=/waitlist';
+                      }
+                    }}
+                  >
+                    Create account
+                  </Button>
                 </div>
-                <p className="max-w-2xl text-sm leading-relaxed text-slate-200">
-                  Build the page like a landing page designer: edit the story on the left, review the staged artboard on the right, and publish only when the experience feels ready.
-                </p>
               </div>
-            </div>
+            ) : null}
 
-            <div className="relative flex flex-wrap items-center gap-2 xl:max-w-[420px] xl:justify-end">
-              <Button variant="outline" onClick={resetToNew} size="sm" className="border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white"><Plus className="w-4 h-4 mr-1" /> New</Button>
-              <Button variant="outline" onClick={copyUrl} size="sm" disabled={!liveUrl} className="border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white disabled:text-white/40"><Copy className="w-4 h-4 mr-1" /> Copy live link</Button>
-              <Button variant="outline" onClick={handleExportCSV} size="sm" disabled={isGuest || !draftId} className="border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white disabled:text-white/40"><Download className="w-4 h-4 mr-1" /> Export CSV</Button>
-              <Button variant="outline" onClick={handleSave} size="sm" disabled={isSaving || isPublishing} className="border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white disabled:text-white/40">
-                {isSaving ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Save className="w-4 h-4 mr-1" />}
-                {status === 'published' ? 'Update live page' : 'Save draft'}
-              </Button>
-              {status === 'published'
-                ? <Button variant="destructive" size="sm" onClick={handleUnpublish} disabled={isGuest || !draftId}>Unpublish</Button>
-                : <Button size="sm" onClick={handlePublish} disabled={isPublishing || Boolean(publishBlockingReason)} className="bg-white text-slate-950 hover:bg-slate-100">
-                    {isPublishing ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Globe className="w-4 h-4 mr-1" />}
-                    Publish
-                  </Button>}
-            </div>
-          </div>
-
-          <div className="relative grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-            {[
-              { label: 'Mode', value: status === 'published' ? 'Live page' : 'Draft only', detail: status === 'published' ? 'Edits stay staged until you update' : 'Autosave keeps this draft safe' },
-              { label: 'Preview', value: previewDevice === 'mobile' ? 'Mobile frame' : 'Desktop canvas', detail: 'Switch views to QA before sharing' },
-              { label: 'Audience', value: `${signupCount}`, detail: signupCount === 1 ? 'person joined so far' : 'people joined so far' },
-              { label: 'Conversion', value: conversionRate, detail: `${viewCount} recorded views` },
-            ].map((metric) => (
-              <div key={metric.label} className="rounded-[24px] border border-white/12 bg-white/8 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-sky-100/70">{metric.label}</p>
-                <p className="mt-3 text-2xl font-semibold tracking-tight">{metric.value}</p>
-                <p className="mt-1 text-xs text-slate-200/80">{metric.detail}</p>
+            {!isGuest && restorableGuestDraft ? (
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <p className="font-medium text-slate-950">Browser draft available</p>
+                  <p className="text-muted-foreground">You have an unsaved local waitlist draft from {restorableGuestDraft.savedAt ? new Date(restorableGuestDraft.savedAt).toLocaleString() : 'this browser'}.</p>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      if (hasUnsavedChanges && !window.confirm('Replace the current editor contents with your browser draft?')) {
+                        return;
+                      }
+                      applyDraftState({
+                        productName: restorableGuestDraft.productName,
+                        content: restorableGuestDraft.content,
+                        draftId: null,
+                        currentSlug: restorableGuestDraft.slugDraft || null,
+                        status: 'draft',
+                        savedAt: restorableGuestDraft.savedAt,
+                      });
+                      setActiveTab('content');
+                    }}
+                  >
+                    Restore browser draft
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      window.localStorage.removeItem(GUEST_DRAFT_STORAGE_KEY);
+                      setRestorableGuestDraft(null);
+                    }}
+                  >
+                    Dismiss
+                  </Button>
+                </div>
               </div>
-            ))}
-          </div>
+            ) : null}
+          </CardContent>
+        </Card>
 
-          {status === 'published' ? (
-            <div className="relative rounded-[24px] border border-emerald-300/25 bg-emerald-400/10 px-5 py-4 text-sm backdrop-blur">
-              <p className="font-medium text-emerald-50">This waitlist is live.</p>
-              <p className="text-emerald-50/80">Edits in the builder stay local until you click <strong>Update live page</strong>.</p>
-            </div>
-          ) : (
-            <div className="relative rounded-[24px] border border-white/12 bg-white/6 px-5 py-4 text-sm backdrop-blur">
-              <p className="font-medium text-white">Draft mode</p>
-              <p className="text-slate-200/80">The builder autosaves your draft. Your public page only exists after publishing.</p>
-            </div>
-          )}
-
-          {hasUnsavedChanges ? (
-            <div className="rounded-[24px] border border-amber-300/25 bg-amber-300/10 px-5 py-4 text-sm text-amber-50 backdrop-blur">
-              Unsaved changes in progress.
-              <span className="ml-1 text-amber-50/85">
-                {status === 'published' ? 'Review them, then update the live page when ready.' : 'Autosave is active for this draft.'}
-              </span>
-            </div>
-          ) : lastSavedAt ? (
-            <p className="text-xs text-slate-200/75">Last saved {new Date(lastSavedAt).toLocaleString()}.</p>
-          ) : null}
-
-          {isGuest ? (
-            <div className="rounded-[24px] border border-white/12 bg-white/6 p-4 text-sm flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between backdrop-blur">
-              <p className="text-slate-200/85">Your browser draft is being preserved locally. Sign in when you are ready to save, publish, and collect real signups.</p>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white"
-                  onClick={() => {
-                    if (!hasUnsavedChanges || window.confirm('Your draft is saved in this browser. Continue to log in?')) {
-                      window.location.href = '/login?return=/waitlist';
-                    }
-                  }}
-                >
-                  Log in
-                </Button>
-                <Button
-                  size="sm"
-                  className="bg-white text-slate-950 hover:bg-slate-100"
-                  onClick={() => {
-                    if (!hasUnsavedChanges || window.confirm('Your draft is saved in this browser. Continue to create an account?')) {
-                      window.location.href = '/signup?return=/waitlist';
-                    }
-                  }}
-                >
-                  Create account
-                </Button>
-              </div>
-            </div>
-          ) : null}
-
-          {!isGuest && restorableGuestDraft ? (
-            <div className="rounded-[24px] border border-white/12 bg-white/6 px-4 py-4 text-sm flex flex-col gap-3 md:flex-row md:items-center md:justify-between backdrop-blur">
-              <div>
-                <p className="font-medium text-white">Browser draft available</p>
-                <p className="text-slate-200/80">You have an unsaved local waitlist draft from {restorableGuestDraft.savedAt ? new Date(restorableGuestDraft.savedAt).toLocaleString() : 'this browser'}.</p>
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white"
-                  onClick={() => {
-                    if (hasUnsavedChanges && !window.confirm('Replace the current editor contents with your browser draft?')) {
-                      return;
-                    }
-                    applyDraftState({
-                      productName: restorableGuestDraft.productName,
-                      content: restorableGuestDraft.content,
-                      draftId: null,
-                      currentSlug: restorableGuestDraft.slugDraft || null,
-                      status: 'draft',
-                      savedAt: restorableGuestDraft.savedAt,
-                    });
-                    setActiveTab('content');
-                  }}
-                >
-                  Restore browser draft
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-white hover:bg-white/10 hover:text-white"
-                  onClick={() => {
-                    window.localStorage.removeItem(GUEST_DRAFT_STORAGE_KEY);
-                    setRestorableGuestDraft(null);
-                  }}
-                >
-                  Dismiss
-                </Button>
-              </div>
-            </div>
-          ) : null}
-
-          {user && allPages.length > 0 ? (
-            <div className="grid gap-2 rounded-[24px] border border-white/12 bg-white/6 p-4 backdrop-blur">
-              <Label htmlFor="waitlist-selector" className="text-slate-100">My Waitlists</Label>
+        {user && allPages.length > 0 ? (
+          <Card className="border border-slate-200/80 bg-white/90 shadow-[0_20px_50px_rgba(15,23,42,0.06)]">
+            <CardContent className="space-y-2 p-4">
+              <Label htmlFor="waitlist-selector">My Waitlists</Label>
               <select
                 id="waitlist-selector"
-                className="h-11 rounded-2xl border border-white/12 bg-white/10 px-4 text-sm text-white"
+                className="h-11 w-full rounded-2xl border border-input bg-background px-4 text-sm"
                 value={draftId || ''}
                 onChange={async (event) => {
                   const nextId = event.target.value;
@@ -1005,14 +957,20 @@ export default function WaitlistEditor() {
                 }}
               >
                 <option value="" disabled>Select a waitlist</option>
-                {allPages.map((page) => (
-                  <option key={page.id} value={page.id}>{(page.product_name || page.title || 'Untitled')} - {page.mark_ready_at ? 'Completed' : page.status === 'published' ? 'Published' : 'Draft'}</option>
-                ))}
+                {allPages.map((page, index) => {
+                  const pageName = page.product_name?.trim() || page.title?.trim() || `Waitlist ${index + 1}`;
+                  const pageState = page.mark_ready_at ? 'Completed' : page.status === 'published' ? 'Published' : 'Draft';
+                  return (
+                    <option key={page.id} value={page.id}>{pageName} - {pageState}</option>
+                  );
+                })}
               </select>
-            </div>
-          ) : null}
-        </CardContent>
-      </Card>
+              <p className="text-xs text-muted-foreground">Use the Waitlist name field to rename the current waitlist.</p>
+            </CardContent>
+          </Card>
+        ) : null}
+      </div>
+
       <div className="overflow-hidden rounded-[32px] border border-white/80 bg-white/75 shadow-[0_30px_90px_rgba(15,23,42,0.12)] backdrop-blur-xl">
         <div className="grid min-h-[820px] lg:grid-cols-[380px_minmax(0,1fr)]">
           <aside className="border-r border-slate-200/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.94),rgba(248,250,252,0.94))] backdrop-blur">
@@ -1042,11 +1000,11 @@ export default function WaitlistEditor() {
                     <p className="text-sm text-slate-500">Write the messaging, proof, and narrative the visitor experiences from hero to CTA.</p>
                   </div>
                   <div className="space-y-2">
-                    <Label>Project name</Label>
+                    <Label>Waitlist name</Label>
                     <Input
                       value={productName}
                       onChange={(event) => setProductName(event.target.value)}
-                      placeholder="Your startup name"
+                      placeholder="Name this waitlist"
                     />
                   </div>
 
