@@ -296,7 +296,7 @@ const MentorMarketplaceHub = () => {
                       <div className="max-w-3xl lg:mx-auto">
                         <h1 className="text-center text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
                           <span className="gradient-unified creatives-font">
-                            Find your Mentor
+                            Find a Mentor
                           </span>
                         </h1>
                       </div>
@@ -318,9 +318,9 @@ const MentorMarketplaceHub = () => {
                       return (
                         <div
                           key={item.title}
-                          className="rounded-3xl border border-border/60 bg-background/70 p-4 shadow-sm dark:bg-slate-900/70"
+                          className="group stagger-item hover-lift rounded-3xl border border-border/60 bg-background/70 p-4 shadow-sm transition-all duration-500 dark:bg-slate-900/70"
                         >
-                          <Icon className="mb-3 h-5 w-5 text-sky-600 dark:text-sky-300" />
+                          <Icon className="mb-3 h-5 w-5 text-sky-600 transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:scale-105 dark:text-sky-300" />
                           <p className="text-sm font-semibold">{item.title}</p>
                           <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
                             {item.description}
