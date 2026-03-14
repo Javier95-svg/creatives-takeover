@@ -847,27 +847,28 @@ export default function WaitlistEditor() {
 
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_360px]">
         <Card className="border border-slate-200/80 bg-white/90 shadow-[0_20px_50px_rgba(15,23,42,0.06)]">
-          <CardContent className="space-y-3 p-4">
+          <CardContent className="space-y-3 p-4 text-slate-950">
             <div className="space-y-1">
-              <Label htmlFor="waitlist-name">Waitlist name</Label>
+              <Label htmlFor="waitlist-name" className="text-slate-950">Waitlist name</Label>
               <Input
                 id="waitlist-name"
                 value={productName}
                 onChange={(event) => setProductName(event.target.value)}
                 placeholder="Name this waitlist"
+                className="border-slate-300 bg-white text-slate-950 placeholder:text-slate-400"
               />
-              <p className="text-xs text-muted-foreground">This name appears in My Waitlists and becomes the default title for the page.</p>
+              <p className="text-xs text-slate-600">This name appears in My Waitlists and becomes the default title for the page.</p>
             </div>
 
             {hasUnsavedChanges ? (
               <p className="text-xs text-amber-700">Unsaved changes in progress.</p>
             ) : lastSavedAt ? (
-              <p className="text-xs text-muted-foreground">Last saved {new Date(lastSavedAt).toLocaleString()}.</p>
+              <p className="text-xs text-slate-600">Last saved {new Date(lastSavedAt).toLocaleString()}.</p>
             ) : null}
 
             {isGuest ? (
               <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <p className="text-muted-foreground">Your browser draft is being preserved locally. Sign in when you are ready to save, publish, and collect real signups.</p>
+                <p className="text-slate-600">Your browser draft is being preserved locally. Sign in when you are ready to save, publish, and collect real signups.</p>
                 <div className="flex gap-2">
                   <Button
                     variant="outline"
@@ -898,7 +899,7 @@ export default function WaitlistEditor() {
               <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                 <div>
                   <p className="font-medium text-slate-950">Browser draft available</p>
-                  <p className="text-muted-foreground">You have an unsaved local waitlist draft from {restorableGuestDraft.savedAt ? new Date(restorableGuestDraft.savedAt).toLocaleString() : 'this browser'}.</p>
+                  <p className="text-slate-600">You have an unsaved local waitlist draft from {restorableGuestDraft.savedAt ? new Date(restorableGuestDraft.savedAt).toLocaleString() : 'this browser'}.</p>
                 </div>
                 <div className="flex gap-2">
                   <Button
@@ -939,11 +940,11 @@ export default function WaitlistEditor() {
 
         {user && allPages.length > 0 ? (
           <Card className="border border-slate-200/80 bg-white/90 shadow-[0_20px_50px_rgba(15,23,42,0.06)]">
-            <CardContent className="space-y-2 p-4">
-              <Label htmlFor="waitlist-selector">My Waitlists</Label>
+            <CardContent className="space-y-2 p-4 text-slate-950">
+              <Label htmlFor="waitlist-selector" className="text-slate-950">My Waitlists</Label>
               <select
                 id="waitlist-selector"
-                className="h-11 w-full rounded-2xl border border-input bg-background px-4 text-sm"
+                className="h-11 w-full rounded-2xl border border-slate-300 bg-white px-4 text-sm text-slate-950"
                 value={draftId || ''}
                 onChange={async (event) => {
                   const nextId = event.target.value;
@@ -965,7 +966,7 @@ export default function WaitlistEditor() {
                   );
                 })}
               </select>
-              <p className="text-xs text-muted-foreground">Use the Waitlist name field to rename the current waitlist.</p>
+              <p className="text-xs text-slate-600">Use the Waitlist name field to rename the current waitlist.</p>
             </CardContent>
           </Card>
         ) : null}
