@@ -273,8 +273,6 @@ const MentorMarketplaceHub = () => {
     return result;
   }, [mentors]);
 
-  const descriptionText = "Book focused sessions with startup mentors who can help you sharpen your roadmap, challenge your assumptions, and move faster with clearer next steps.";
-
   return (
     <>
       <Helmet>
@@ -295,22 +293,12 @@ const MentorMarketplaceHub = () => {
                 <div className="flex flex-col gap-6">
                   <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
                     <div className="space-y-5">
-                      <span className="inline-flex items-center rounded-full border border-sky-500/20 bg-sky-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-sky-700 dark:text-sky-200">
-                        Community marketplace
-                      </span>
-
-                      <div className="max-w-3xl space-y-3">
+                      <div className="max-w-3xl">
                         <h1 className="text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
                           <span className="gradient-unified creatives-font">
                             Find a Mentor
                           </span>
                         </h1>
-                        <p
-                          className="max-w-2xl text-base leading-relaxed text-foreground/80 sm:text-lg"
-                          style={{ fontFamily: "'Space Grotesk', 'Poppins', sans-serif" }}
-                        >
-                          {descriptionText}
-                        </p>
                       </div>
                     </div>
 
