@@ -832,66 +832,94 @@ export default function WaitlistEditor() {
   }
 
   return (
-    <div className="space-y-5">
-      <Card>
-        <CardContent className="pt-5 pb-5 space-y-4">
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+    <div className="space-y-6">
+      <Card className="overflow-hidden border-0 bg-[linear-gradient(135deg,rgba(15,23,42,0.96),rgba(30,41,59,0.95)_45%,rgba(14,165,233,0.26)_100%)] text-white shadow-[0_30px_90px_rgba(15,23,42,0.28)]">
+        <CardContent className="relative space-y-6 p-6 md:p-8">
+          <div className="pointer-events-none absolute inset-y-0 right-0 hidden w-1/2 bg-[radial-gradient(circle_at_top_right,rgba(125,211,252,0.32),transparent_55%),radial-gradient(circle_at_bottom,rgba(56,189,248,0.18),transparent_40%)] lg:block" />
+
+          <div className="relative flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
             <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <Badge className="bg-primary/10 text-primary border-primary/20">Waitlist Builder</Badge>
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge className="border-white/15 bg-white/10 text-white">Waitlist Builder</Badge>
                 {statusBadge}
-                {content.domainSetup?.status === 'verified' ? <Badge variant="outline" className="border-emerald-400/60 text-emerald-700">Domain Verified</Badge> : null}
+                {content.domainSetup?.status === 'verified' ? <Badge variant="outline" className="border-emerald-300/40 bg-emerald-400/10 text-emerald-100">Domain Verified</Badge> : null}
               </div>
-              <p className="text-sm text-muted-foreground">Shape your waitlist in draft, validate the preview, then publish when you are ready to collect real signups.</p>
+              <div className="space-y-3">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.32em] text-sky-200/80">Creator Studio</p>
+                  <h2 className="mt-2 text-2xl font-semibold tracking-tight md:text-3xl">
+                    {productName.trim() || 'Untitled waitlist'}
+                  </h2>
+                </div>
+                <p className="max-w-2xl text-sm leading-relaxed text-slate-200">
+                  Build the page like a landing page designer: edit the story on the left, review the staged artboard on the right, and publish only when the experience feels ready.
+                </p>
+              </div>
             </div>
 
-            <div className="flex flex-wrap items-center gap-2">
-              <Button variant="outline" onClick={resetToNew} size="sm"><Plus className="w-4 h-4 mr-1" /> New</Button>
-              <Button variant="outline" onClick={copyUrl} size="sm" disabled={!liveUrl}><Copy className="w-4 h-4 mr-1" /> Copy live link</Button>
-              <Button variant="outline" onClick={handleExportCSV} size="sm" disabled={isGuest || !draftId}><Download className="w-4 h-4 mr-1" /> Export CSV</Button>
-              <Button variant="outline" onClick={handleSave} size="sm" disabled={isSaving || isPublishing}>
+            <div className="relative flex flex-wrap items-center gap-2 xl:max-w-[420px] xl:justify-end">
+              <Button variant="outline" onClick={resetToNew} size="sm" className="border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white"><Plus className="w-4 h-4 mr-1" /> New</Button>
+              <Button variant="outline" onClick={copyUrl} size="sm" disabled={!liveUrl} className="border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white disabled:text-white/40"><Copy className="w-4 h-4 mr-1" /> Copy live link</Button>
+              <Button variant="outline" onClick={handleExportCSV} size="sm" disabled={isGuest || !draftId} className="border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white disabled:text-white/40"><Download className="w-4 h-4 mr-1" /> Export CSV</Button>
+              <Button variant="outline" onClick={handleSave} size="sm" disabled={isSaving || isPublishing} className="border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white disabled:text-white/40">
                 {isSaving ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Save className="w-4 h-4 mr-1" />}
                 {status === 'published' ? 'Update live page' : 'Save draft'}
               </Button>
               {status === 'published'
                 ? <Button variant="destructive" size="sm" onClick={handleUnpublish} disabled={isGuest || !draftId}>Unpublish</Button>
-                : <Button size="sm" onClick={handlePublish} disabled={isPublishing || Boolean(publishBlockingReason)}>
+                : <Button size="sm" onClick={handlePublish} disabled={isPublishing || Boolean(publishBlockingReason)} className="bg-white text-slate-950 hover:bg-slate-100">
                     {isPublishing ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Globe className="w-4 h-4 mr-1" />}
                     Publish
                   </Button>}
             </div>
           </div>
 
+          <div className="relative grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+            {[
+              { label: 'Mode', value: status === 'published' ? 'Live page' : 'Draft only', detail: status === 'published' ? 'Edits stay staged until you update' : 'Autosave keeps this draft safe' },
+              { label: 'Preview', value: previewDevice === 'mobile' ? 'Mobile frame' : 'Desktop canvas', detail: 'Switch views to QA before sharing' },
+              { label: 'Audience', value: `${signupCount}`, detail: signupCount === 1 ? 'person joined so far' : 'people joined so far' },
+              { label: 'Conversion', value: conversionRate, detail: `${viewCount} recorded views` },
+            ].map((metric) => (
+              <div key={metric.label} className="rounded-[24px] border border-white/12 bg-white/8 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-sky-100/70">{metric.label}</p>
+                <p className="mt-3 text-2xl font-semibold tracking-tight">{metric.value}</p>
+                <p className="mt-1 text-xs text-slate-200/80">{metric.detail}</p>
+              </div>
+            ))}
+          </div>
+
           {status === 'published' ? (
-            <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm">
-              <p className="font-medium text-emerald-700">This waitlist is live.</p>
-              <p className="text-muted-foreground">Edits in the builder stay local until you click <strong>Update live page</strong>.</p>
+            <div className="relative rounded-[24px] border border-emerald-300/25 bg-emerald-400/10 px-5 py-4 text-sm backdrop-blur">
+              <p className="font-medium text-emerald-50">This waitlist is live.</p>
+              <p className="text-emerald-50/80">Edits in the builder stay local until you click <strong>Update live page</strong>.</p>
             </div>
           ) : (
-            <div className="rounded-lg border border-border/70 bg-muted/30 px-4 py-3 text-sm">
-              <p className="font-medium">Draft mode</p>
-              <p className="text-muted-foreground">The builder autosaves your draft. Your public page only exists after publishing.</p>
+            <div className="relative rounded-[24px] border border-white/12 bg-white/6 px-5 py-4 text-sm backdrop-blur">
+              <p className="font-medium text-white">Draft mode</p>
+              <p className="text-slate-200/80">The builder autosaves your draft. Your public page only exists after publishing.</p>
             </div>
           )}
 
           {hasUnsavedChanges ? (
-            <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-950">
+            <div className="rounded-[24px] border border-amber-300/25 bg-amber-300/10 px-5 py-4 text-sm text-amber-50 backdrop-blur">
               Unsaved changes in progress.
-              <span className="ml-1 text-amber-900/80">
+              <span className="ml-1 text-amber-50/85">
                 {status === 'published' ? 'Review them, then update the live page when ready.' : 'Autosave is active for this draft.'}
               </span>
             </div>
           ) : lastSavedAt ? (
-            <p className="text-xs text-muted-foreground">Last saved {new Date(lastSavedAt).toLocaleString()}.</p>
+            <p className="text-xs text-slate-200/75">Last saved {new Date(lastSavedAt).toLocaleString()}.</p>
           ) : null}
 
           {isGuest ? (
-            <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 text-sm flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-muted-foreground">Your browser draft is being preserved locally. Sign in when you are ready to save, publish, and collect real signups.</p>
+            <div className="rounded-[24px] border border-white/12 bg-white/6 p-4 text-sm flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between backdrop-blur">
+              <p className="text-slate-200/85">Your browser draft is being preserved locally. Sign in when you are ready to save, publish, and collect real signups.</p>
               <div className="flex gap-2">
                 <Button
                   variant="outline"
                   size="sm"
+                  className="border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white"
                   onClick={() => {
                     if (!hasUnsavedChanges || window.confirm('Your draft is saved in this browser. Continue to log in?')) {
                       window.location.href = '/login?return=/waitlist';
@@ -902,6 +930,7 @@ export default function WaitlistEditor() {
                 </Button>
                 <Button
                   size="sm"
+                  className="bg-white text-slate-950 hover:bg-slate-100"
                   onClick={() => {
                     if (!hasUnsavedChanges || window.confirm('Your draft is saved in this browser. Continue to create an account?')) {
                       window.location.href = '/signup?return=/waitlist';
@@ -915,15 +944,16 @@ export default function WaitlistEditor() {
           ) : null}
 
           {!isGuest && restorableGuestDraft ? (
-            <div className="rounded-lg border border-border/70 bg-background px-4 py-3 text-sm flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div className="rounded-[24px] border border-white/12 bg-white/6 px-4 py-4 text-sm flex flex-col gap-3 md:flex-row md:items-center md:justify-between backdrop-blur">
               <div>
-                <p className="font-medium">Browser draft available</p>
-                <p className="text-muted-foreground">You have an unsaved local waitlist draft from {restorableGuestDraft.savedAt ? new Date(restorableGuestDraft.savedAt).toLocaleString() : 'this browser'}.</p>
+                <p className="font-medium text-white">Browser draft available</p>
+                <p className="text-slate-200/80">You have an unsaved local waitlist draft from {restorableGuestDraft.savedAt ? new Date(restorableGuestDraft.savedAt).toLocaleString() : 'this browser'}.</p>
               </div>
               <div className="flex gap-2">
                 <Button
                   variant="outline"
                   size="sm"
+                  className="border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white"
                   onClick={() => {
                     if (hasUnsavedChanges && !window.confirm('Replace the current editor contents with your browser draft?')) {
                       return;
@@ -944,6 +974,7 @@ export default function WaitlistEditor() {
                 <Button
                   variant="ghost"
                   size="sm"
+                  className="text-white hover:bg-white/10 hover:text-white"
                   onClick={() => {
                     window.localStorage.removeItem(GUEST_DRAFT_STORAGE_KEY);
                     setRestorableGuestDraft(null);
@@ -956,11 +987,11 @@ export default function WaitlistEditor() {
           ) : null}
 
           {user && allPages.length > 0 ? (
-            <div className="grid gap-2">
-              <Label htmlFor="waitlist-selector">My Waitlists</Label>
+            <div className="grid gap-2 rounded-[24px] border border-white/12 bg-white/6 p-4 backdrop-blur">
+              <Label htmlFor="waitlist-selector" className="text-slate-100">My Waitlists</Label>
               <select
                 id="waitlist-selector"
-                className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+                className="h-11 rounded-2xl border border-white/12 bg-white/10 px-4 text-sm text-white"
                 value={draftId || ''}
                 onChange={async (event) => {
                   const nextId = event.target.value;
@@ -982,22 +1013,34 @@ export default function WaitlistEditor() {
           ) : null}
         </CardContent>
       </Card>
-      <div className="rounded-2xl border overflow-hidden bg-muted/10">
-        <div className="grid min-h-[760px] lg:grid-cols-[360px_minmax(0,1fr)]">
-          <aside className="border-r bg-background/90 backdrop-blur">
+      <div className="overflow-hidden rounded-[32px] border border-white/80 bg-white/75 shadow-[0_30px_90px_rgba(15,23,42,0.12)] backdrop-blur-xl">
+        <div className="grid min-h-[820px] lg:grid-cols-[380px_minmax(0,1fr)]">
+          <aside className="border-r border-slate-200/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.94),rgba(248,250,252,0.94))] backdrop-blur">
             <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as BuilderTab)} className="h-full flex flex-col">
-              <div className="p-3 border-b">
-                <TabsList className="w-full grid grid-cols-5 gap-1 h-auto bg-muted p-1">
-                  <TabsTrigger value="content" className="text-xs">Content</TabsTrigger>
-                  <TabsTrigger value="style" className="text-xs">Style</TabsTrigger>
-                  <TabsTrigger value="form" className="text-xs">Form</TabsTrigger>
-                  <TabsTrigger value="launch" className="text-xs">Launch</TabsTrigger>
-                  <TabsTrigger value="analytics" className="text-xs">Analytics</TabsTrigger>
+              <div className="border-b border-slate-200/80 bg-white/90 p-4 backdrop-blur">
+                <div className="mb-4 space-y-2">
+                  <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-600">Design controls</p>
+                  <div>
+                    <h3 className="text-lg font-semibold text-slate-950">Edit like a landing page studio</h3>
+                    <p className="text-sm text-slate-500">Move tab by tab through content, visual styling, forms, launch settings, and performance.</p>
+                  </div>
+                </div>
+                <TabsList className="grid h-auto w-full grid-cols-5 gap-1 rounded-[20px] bg-slate-100 p-1.5 shadow-inner">
+                  <TabsTrigger value="content" className="rounded-2xl px-2 py-2 text-[11px] font-semibold data-[state=active]:bg-white data-[state=active]:text-slate-950 data-[state=active]:shadow-sm">Content</TabsTrigger>
+                  <TabsTrigger value="style" className="rounded-2xl px-2 py-2 text-[11px] font-semibold data-[state=active]:bg-white data-[state=active]:text-slate-950 data-[state=active]:shadow-sm">Style</TabsTrigger>
+                  <TabsTrigger value="form" className="rounded-2xl px-2 py-2 text-[11px] font-semibold data-[state=active]:bg-white data-[state=active]:text-slate-950 data-[state=active]:shadow-sm">Form</TabsTrigger>
+                  <TabsTrigger value="launch" className="rounded-2xl px-2 py-2 text-[11px] font-semibold data-[state=active]:bg-white data-[state=active]:text-slate-950 data-[state=active]:shadow-sm">Launch</TabsTrigger>
+                  <TabsTrigger value="analytics" className="rounded-2xl px-2 py-2 text-[11px] font-semibold data-[state=active]:bg-white data-[state=active]:text-slate-950 data-[state=active]:shadow-sm">Analytics</TabsTrigger>
                 </TabsList>
               </div>
 
               <div className="flex-1 overflow-y-auto p-4">
-                <TabsContent value="content" className="space-y-4 mt-0">
+                <TabsContent value="content" className="mt-0 space-y-4 [&>div]:rounded-[24px] [&>div]:border [&>div]:border-slate-200/80 [&>div]:bg-white/95 [&>div]:p-4 [&>div]:shadow-[0_12px_30px_rgba(15,23,42,0.05)]">
+                  <div className="space-y-2">
+                    <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-600">Content</p>
+                    <h4 className="text-lg font-semibold text-slate-950">Shape the landing page story</h4>
+                    <p className="text-sm text-slate-500">Write the messaging, proof, and narrative the visitor experiences from hero to CTA.</p>
+                  </div>
                   <div className="space-y-2">
                     <Label>Project name</Label>
                     <Input
@@ -1040,7 +1083,12 @@ export default function WaitlistEditor() {
                   <div className="space-y-2"><Label>Referral message</Label><Textarea value={content.referralMessage || ''} onChange={(event) => updateContent({ referralMessage: event.target.value })} rows={2} /></div>
                 </TabsContent>
 
-                <TabsContent value="style" className="space-y-4 mt-0">
+                <TabsContent value="style" className="mt-0 space-y-4 [&>div]:rounded-[24px] [&>div]:border [&>div]:border-slate-200/80 [&>div]:bg-white/95 [&>div]:p-4 [&>div]:shadow-[0_12px_30px_rgba(15,23,42,0.05)]">
+                  <div className="space-y-2">
+                    <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-600">Style</p>
+                    <h4 className="text-lg font-semibold text-slate-950">Tune the visual system</h4>
+                    <p className="text-sm text-slate-500">Switch themes, adjust layout, and fine-tune the palette so the page feels intentional before launch.</p>
+                  </div>
                   <div className="space-y-2">
                     <Label>Theme</Label>
                     <div className="flex gap-2">
@@ -1137,7 +1185,12 @@ export default function WaitlistEditor() {
                   </div>
                 </TabsContent>
 
-                <TabsContent value="form" className="space-y-4 mt-0">
+                <TabsContent value="form" className="mt-0 space-y-4 [&>div]:rounded-[24px] [&>div]:border [&>div]:border-slate-200/80 [&>div]:bg-white/95 [&>div]:p-4 [&>div]:shadow-[0_12px_30px_rgba(15,23,42,0.05)]">
+                  <div className="space-y-2">
+                    <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-600">Form</p>
+                    <h4 className="text-lg font-semibold text-slate-950">Craft the signup experience</h4>
+                    <p className="text-sm text-slate-500">Decide what to collect, how the CTA reads, and what the visitor sees after signing up.</p>
+                  </div>
                   <div className="space-y-2"><Label>CTA button label</Label><Input value={content.ctaText} onChange={(event) => updateContent({ ctaText: event.target.value })} /></div>
                   <div className="space-y-2"><Label>Email placeholder</Label><Input value={content.emailPlaceholder} onChange={(event) => updateContent({ emailPlaceholder: event.target.value })} /></div>
 
@@ -1198,7 +1251,12 @@ export default function WaitlistEditor() {
                     <Input value={content.successShareLabel || ''} onChange={(event) => updateContent({ successShareLabel: event.target.value })} placeholder="Share button label" />
                   </div>
                 </TabsContent>
-                <TabsContent value="launch" className="space-y-4 mt-0">
+                <TabsContent value="launch" className="mt-0 space-y-4 [&>div]:rounded-[24px] [&>div]:border [&>div]:border-slate-200/80 [&>div]:bg-white/95 [&>div]:p-4 [&>div]:shadow-[0_12px_30px_rgba(15,23,42,0.05)] [&>label]:rounded-[24px] [&>label]:border [&>label]:border-slate-200/80 [&>label]:bg-white/95 [&>label]:px-4 [&>label]:py-3 [&>label]:shadow-[0_12px_30px_rgba(15,23,42,0.05)]">
+                  <div className="space-y-2">
+                    <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-600">Launch</p>
+                    <h4 className="text-lg font-semibold text-slate-950">Publish with confidence</h4>
+                    <p className="text-sm text-slate-500">Handle the share URL, delivery settings, DNS checks, and go-live readiness from one panel.</p>
+                  </div>
                   <div className="space-y-2">
                     <Label>Launch checklist</Label>
                     <div className="grid gap-2">
@@ -1307,7 +1365,12 @@ export default function WaitlistEditor() {
                   )}
                 </TabsContent>
 
-                <TabsContent value="analytics" className="space-y-4 mt-0">
+                <TabsContent value="analytics" className="mt-0 space-y-4 [&>div]:rounded-[24px] [&>div]:border [&>div]:border-slate-200/80 [&>div]:bg-white/95 [&>div]:p-4 [&>div]:shadow-[0_12px_30px_rgba(15,23,42,0.05)]">
+                  <div className="space-y-2">
+                    <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-600">Analytics</p>
+                    <h4 className="text-lg font-semibold text-slate-950">Read the signal</h4>
+                    <p className="text-sm text-slate-500">Watch views, signups, and recent leads without leaving the builder.</p>
+                  </div>
                   <div className="grid grid-cols-3 gap-2">
                     <div className="rounded border p-2 text-center"><Eye className="w-4 h-4 mx-auto text-muted-foreground" /><p className="text-xl font-bold">{viewCount}</p><p className="text-[11px] text-muted-foreground">Views</p></div>
                     <div className="rounded border p-2 text-center"><Users className="w-4 h-4 mx-auto text-indigo-600" /><p className="text-xl font-bold text-indigo-700">{signupCount}</p><p className="text-[11px] text-muted-foreground">Signups</p></div>
@@ -1349,26 +1412,53 @@ export default function WaitlistEditor() {
             </Tabs>
           </aside>
 
-          <section className="relative overflow-auto bg-[radial-gradient(circle_at_top,#eef2ff,transparent_45%),radial-gradient(circle_at_bottom,#cffafe,transparent_35%)] p-4 md:p-8">
-            <div className="mx-auto max-w-[1100px] space-y-3">
-              <div className="flex items-center justify-between gap-3">
+          <section
+            className="relative overflow-auto p-4 md:p-8"
+            style={{
+              backgroundColor: '#f5efe3',
+              backgroundImage: 'radial-gradient(rgba(15,23,42,0.08) 1px, transparent 1px), linear-gradient(180deg, rgba(255,255,255,0.55), rgba(248,250,252,0.88))',
+              backgroundSize: '22px 22px, 100% 100%',
+            }}
+          >
+            <div className="mx-auto max-w-[1180px] space-y-4">
+              <div className="flex flex-col gap-3 rounded-[28px] border border-white/80 bg-white/75 px-5 py-4 shadow-[0_18px_60px_rgba(15,23,42,0.08)] backdrop-blur md:flex-row md:items-center md:justify-between">
                 <div>
-                  <p className="text-sm font-medium">Preview</p>
-                  <p className="text-xs text-muted-foreground">Review the public page before publishing. Switch to mobile to validate the phone layout.</p>
+                  <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-600">Preview canvas</p>
+                  <p className="mt-2 text-sm font-medium text-slate-950">Review the public page before publishing.</p>
+                  <p className="text-xs text-slate-500">This stage mirrors the public waitlist. Switch frames to test how the landing page reads on desktop and mobile.</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Button size="sm" variant={previewDevice === 'desktop' ? 'default' : 'outline'} onClick={() => setPreviewDevice('desktop')}>
+                  <Button size="sm" variant={previewDevice === 'desktop' ? 'default' : 'outline'} onClick={() => setPreviewDevice('desktop')} className={previewDevice === 'desktop' ? '' : 'border-slate-300 bg-white'}>
                     <Monitor className="mr-1 h-4 w-4" />
                     Desktop
                   </Button>
-                  <Button size="sm" variant={previewDevice === 'mobile' ? 'default' : 'outline'} onClick={() => setPreviewDevice('mobile')}>
+                  <Button size="sm" variant={previewDevice === 'mobile' ? 'default' : 'outline'} onClick={() => setPreviewDevice('mobile')} className={previewDevice === 'mobile' ? '' : 'border-slate-300 bg-white'}>
                     <MonitorSmartphone className="mr-1 h-4 w-4" />
                     Mobile
                   </Button>
                 </div>
               </div>
+
               <div className={previewDevice === 'mobile' ? 'mx-auto max-w-[420px]' : ''}>
-                <WaitlistPageTemplate content={content} productName={productName || 'Your Product'} mode="preview" onContentChange={updateTemplateField} signupCount={signupCount} />
+                <div className="rounded-[34px] border border-white/80 bg-white p-3 shadow-[0_28px_100px_rgba(15,23,42,0.16)]">
+                  <div className="mb-3 flex items-center justify-between rounded-[24px] border border-slate-200/80 bg-slate-50/90 px-4 py-3">
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-1.5">
+                        <span className="h-2.5 w-2.5 rounded-full bg-rose-400" />
+                        <span className="h-2.5 w-2.5 rounded-full bg-amber-400" />
+                        <span className="h-2.5 w-2.5 rounded-full bg-emerald-400" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-slate-950">{productName.trim() || 'Untitled waitlist'}</p>
+                        <p className="text-xs text-slate-500">{previewDevice === 'mobile' ? 'Mobile artboard' : 'Desktop artboard'}</p>
+                      </div>
+                    </div>
+                    <Badge variant="outline" className="border-slate-300 bg-white text-slate-600">
+                      {status === 'published' ? 'Live-ready' : 'Draft preview'}
+                    </Badge>
+                  </div>
+                  <WaitlistPageTemplate content={content} productName={productName || 'Your Product'} mode="preview" onContentChange={updateTemplateField} signupCount={signupCount} />
+                </div>
               </div>
             </div>
           </section>
