@@ -2,6 +2,7 @@
 import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import FounderJourneyVideo from "./FounderJourneyVideo";
+import { Home, FileSearch, Zap } from "lucide-react";
 
 const EntrepreneurProblems = () => {
   // Timeline items representing the founder's journey with bottlenecks and pathways
@@ -87,7 +88,7 @@ const EntrepreneurProblems = () => {
     if (index === 0) {
       return {
         to: "/icp-builder",
-        title: "Define your Niche",
+        title: "Define your ICP",
         description: step.pathway,
         icon: Target,
       };
@@ -116,7 +117,7 @@ const EntrepreneurProblems = () => {
         to: "/dashboard",
         title: "Explore Dashboard",
         description: step.pathway,
-        icon: LayoutDashboard,
+        icon: Home,
       };
     }
 
@@ -125,16 +126,16 @@ const EntrepreneurProblems = () => {
         to: "/insighta/vc-search",
         title: step.pathway,
         description: "Open the investor search tool and start exploring aligned funding opportunities.",
-        icon: Rocket,
+        icon: FileSearch,
       };
     }
 
     if (index === 5) {
       return {
         to: "/tech-stack",
-        title: step.pathway,
+        title: "Tech Stack Builder",
         description: "Compare options and shape a stack that fits your stage, team, and product direction.",
-        icon: Code,
+        icon: Zap,
       };
     }
 
