@@ -29,7 +29,7 @@ const Onboarding = () => {
 
       if (!isAuthenticated || !user) {
         // Onboarding requires an authenticated account.
-        navigate(appendReturnParam('/signup', returnUrl), { replace: true });
+        navigate(appendReturnParam('/login', returnUrl), { replace: true });
         return;
       }
 

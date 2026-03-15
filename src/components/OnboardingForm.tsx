@@ -101,6 +101,33 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
   const totalSteps = 4;
   const progress = ((currentStep + 1) / totalSteps) * 100;
 
+  const waitForProfile = async (userId: string) => {
+    const maxAttempts = 20;
+    const retryDelayMs = 250;
+
+    for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', userId)
+        .maybeSingle();
+
+      if (error) {
+        throw error;
+      }
+
+      if (profile) {
+        return true;
+      }
+
+      if (attempt < maxAttempts - 1) {
+        await new Promise((resolve) => window.setTimeout(resolve, retryDelayMs));
+      }
+    }
+
+    return false;
+  };
+
   const validateStep = (step: number): boolean => {
     const newErrors: Partial<Record<keyof OnboardingData, string>> = {};
 
@@ -108,6 +135,11 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
       case 0:
         if (!formData.businessStage) {
           newErrors.businessStage = 'Please select your business stage';
+        }
+        break;
+      case 3:
+        if (!formData.acceptedTerms) {
+          newErrors.acceptedTerms = 'Please accept the Terms of Service and Privacy Policy';
         }
         break;
       default:
@@ -151,6 +183,11 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
     setIsLoading(true);
 
     try {
+      const profileReady = await waitForProfile(user.id);
+      if (!profileReady) {
+        throw new Error('PROFILE_NOT_READY');
+      }
+
       const selectedStage = formData.businessStage as OnboardingBizMapStageSelection;
       const stageProgress = selectedStage
         ? onboardingSelectionToProgress(selectedStage)
@@ -173,7 +210,7 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
         onboardingCompletedAt: new Date().toISOString(),
       };
 
-      const { error: updateError } = await supabase
+      const { data: updatedProfile, error: updateError } = await supabase
         .from('profiles')
         .update({
           onboarding_completed: true,
@@ -189,10 +226,16 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
           quiz_looking_for_cofounder: formData.lookingForCofounder || null,
           user_preferences: onboardingData,
         })
-        .eq('id', user.id);
+        .eq('id', user.id)
+        .select('id')
+        .maybeSingle();
 
       if (updateError) {
         throw updateError;
+      }
+
+      if (!updatedProfile) {
+        throw new Error('PROFILE_UPDATE_NOOP');
       }
 
       const { error: progressError } = await supabase
@@ -217,7 +260,11 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
       }
     } catch (error) {
       console.error('Failed to save onboarding data:', error);
-      toast.error('Failed to save onboarding data. Please try again.');
+      if (error instanceof Error && (error.message === 'PROFILE_NOT_READY' || error.message === 'PROFILE_UPDATE_NOOP')) {
+        toast.error('Your account is still finishing setup. Please wait a moment and try again.');
+      } else {
+        toast.error('Failed to save onboarding data. Please try again.');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -232,6 +279,11 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
     setIsLoading(true);
 
     try {
+      const profileReady = await waitForProfile(user.id);
+      if (!profileReady) {
+        throw new Error('PROFILE_NOT_READY');
+      }
+
       const skippedAt = new Date().toISOString();
       const selectedStage = formData.businessStage as OnboardingBizMapStageSelection;
       const stageProgress = selectedStage
@@ -240,7 +292,7 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
             currentStage: DEFAULT_CURRENT_STAGE,
             highestUnlockedStage: DEFAULT_HIGHEST_UNLOCKED_STAGE,
           };
-      const { error: updateError } = await supabase
+      const { data: updatedProfile, error: updateError } = await supabase
         .from('profiles')
         .update({
           onboarding_completed: true,
@@ -250,10 +302,16 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
             onboardingSkippedAt: skippedAt,
           },
         })
-        .eq('id', user.id);
+        .eq('id', user.id)
+        .select('id')
+        .maybeSingle();
 
       if (updateError) {
         throw updateError;
+      }
+
+      if (!updatedProfile) {
+        throw new Error('PROFILE_UPDATE_NOOP');
       }
 
       const { error: progressError } = await supabase
@@ -277,7 +335,11 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
       }
     } catch (error) {
       console.error('Failed to skip onboarding:', error);
-      toast.error('Failed to skip onboarding. Please try again.');
+      if (error instanceof Error && (error.message === 'PROFILE_NOT_READY' || error.message === 'PROFILE_UPDATE_NOOP')) {
+        toast.error('Your account is still finishing setup. Please wait a moment and try again.');
+      } else {
+        toast.error('Failed to skip onboarding. Please try again.');
+      }
     } finally {
       setIsLoading(false);
     }
