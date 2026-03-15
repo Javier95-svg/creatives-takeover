@@ -9,8 +9,8 @@ const EntrepreneurProblems = () => {
     {
       phase: "The Starting Point",
       challenge: "Scattered ideas without a clear direction",
-      insight: "Too many ideas, but no clear direction forward.",
-      pathway: "",
+      insight: "Founders often face a flood of ideas but struggle to prioritize or organize them into a clear plan. This lack of focus leads to confusion, indecision, and slow progress, as they bounce between concepts without a unified strategy, making it difficult to move the business forward. Without a clear roadmap, they risk losing momentum and missing key opportunities that are critical for growth.",
+      pathway: "BizMap AI guides you from scattered thoughts to a strategic plan—clarifying your market, competitors, and next steps in one conversation.",
       icon: Lightbulb,
       accentColor: "blue", // Planning
     },
@@ -128,7 +128,9 @@ const EntrepreneurProblems = () => {
                   <div className="md:hidden flex gap-6">
                     {/* Icon or Video */}
                     <div className={index === 0 || index === 1 || index === 2 || index === 3 || index === 4 || index === 5 || index === 6 ? "w-full" : "flex-shrink-0"}>
-                      {index === 1 ? (
+                      {index === 0 ? (
+                        <FounderJourneyVideo position={0} />
+                      ) : index === 1 ? (
                         <FounderJourneyVideo position={1} />
                       ) : index === 2 ? (
                         <FounderJourneyVideo position={2} />
@@ -157,10 +159,21 @@ const EntrepreneurProblems = () => {
                       <h3 className={`font-space-grotesk text-xl font-semibold mb-3 text-foreground ${index === 0 ? 'whitespace-nowrap' : ''} ${index === 2 || index === 4 ? 'text-left' : ''} ${index === 5 || index === 6 ? 'text-center' : ''}`}>
                         {step.challenge}
                       </h3>
-                      <p className={`mb-4 text-[15px] font-normal leading-7 text-foreground/75 sm:text-base ${index === 0 || index === 4 || index === 6 ? 'text-left' : ''}`}>
+                      <p className={`text-sm text-muted-foreground mb-4 leading-relaxed ${index === 0 || index === 4 || index === 6 ? 'text-left' : ''}`}>
                         {step.insight}
                       </p>
-                      {index === 1 ? (
+                      {index === 0 ? (
+                        <div className="flex justify-center">
+                          <Link
+                            to="/icp-builder"
+                            className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-5 py-2.5 text-base font-medium text-foreground hover:border-primary/50 hover:bg-primary/5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
+                          >
+                            <span className="font-semibold text-foreground flex items-center gap-2 text-base">
+                              Define your Niche <Target className="h-5 w-5" />
+                            </span>
+                          </Link>
+                        </div>
+                      ) : index === 1 ? (
                         <div className="flex justify-center">
                           <Link 
                             to="/pmf-lab" 
@@ -249,10 +262,21 @@ const EntrepreneurProblems = () => {
                         <h3 className={`font-space-grotesk text-2xl font-semibold mb-4 text-foreground ${index === 0 ? 'whitespace-nowrap' : ''} ${index === 2 || index === 4 ? 'text-left' : ''} ${index === 5 || index === 6 ? 'text-center' : ''}`}>
                           {step.challenge}
                         </h3>
-                        <p className={`mb-5 text-[15px] font-normal leading-7 text-foreground/75 sm:text-base ${index === 0 || index === 4 || index === 6 ? 'text-left' : ''}`}>
+                        <p className={`text-sm text-muted-foreground mb-5 leading-relaxed ${index === 0 || index === 4 || index === 6 ? 'text-left' : ''}`}>
                           {step.insight}
                         </p>
-                        {index === 1 ? (
+                        {index === 0 ? (
+                          <div className="flex justify-center">
+                            <Link
+                              to="/icp-builder"
+                              className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-5 py-2.5 text-base font-medium text-foreground hover:border-primary/50 hover:bg-primary/5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
+                            >
+                              <span className="font-semibold text-foreground flex items-center gap-2 text-base">
+                                Define your Niche <Target className="h-5 w-5" />
+                              </span>
+                            </Link>
+                          </div>
+                        ) : index === 1 ? (
                           <div className="flex justify-center">
                             <Link 
                             to="/pmf-lab" 
@@ -331,9 +355,9 @@ const EntrepreneurProblems = () => {
                     {/* Center Icon or Video (for all rows with GIF frames) */}
                     <div className="flex justify-center relative z-10">
                       {index === 0 ? (
-                        /* Regular Icon for First Row */
-                        <div className={`w-16 h-16 rounded-full flex items-center justify-center ${accentClasses.icon} shadow-sm bg-background transition-colors`}>
-                          <Icon className="w-9 h-9" />
+                        /* GIF Frame for First Row */
+                        <div className="w-full md:max-w-2xl lg:max-w-3xl xl:max-w-4xl ml-2 lg:ml-4">
+                          <FounderJourneyVideo position={0} />
                         </div>
                       ) : index === 1 ? (
                         /* GIF Frame for Second Row */
@@ -384,10 +408,21 @@ const EntrepreneurProblems = () => {
                         <h3 className={`font-space-grotesk text-2xl font-semibold mb-4 text-foreground ${index === 0 ? 'whitespace-nowrap' : ''} ${index === 2 || index === 4 ? 'text-left' : ''} ${index === 5 || index === 6 ? 'text-center' : ''}`}>
                           {step.challenge}
                         </h3>
-                        <p className={`mb-5 text-[15px] font-normal leading-7 text-foreground/75 sm:text-base ${index === 4 || index === 6 ? 'text-left' : ''}`}>
+                        <p className={`text-sm text-muted-foreground mb-5 leading-relaxed ${index === 4 || index === 6 ? 'text-left' : ''}`}>
                           {step.insight}
                         </p>
-                        {index === 1 ? (
+                        {index === 0 ? (
+                          <div className="flex justify-center">
+                            <Link
+                              to="/icp-builder"
+                              className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-5 py-2.5 text-base font-medium text-foreground hover:border-primary/50 hover:bg-primary/5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
+                            >
+                              <span className="font-semibold text-foreground flex items-center gap-2 text-base">
+                                Define your Niche <Target className="h-5 w-5" />
+                              </span>
+                            </Link>
+                          </div>
+                        ) : index === 1 ? (
                           <div className="flex justify-center">
                             <Link 
                               to="/pmf-lab" 
