@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import FounderJourneyVideo from "./FounderJourneyVideo";
 import { Home, FileSearch, Zap } from "lucide-react";
+import { GraduationCap, Boxes } from "lucide-react";
 
 const EntrepreneurProblems = () => {
   // Timeline items representing the founder's journey with bottlenecks and pathways
@@ -108,7 +109,7 @@ const EntrepreneurProblems = () => {
         to: "/community",
         title: "Find a Mentor",
         description: "Community gives you access to our global mentorship network, ideal for founders seeking expert advice to grow faster and avoid common mistakes.",
-        icon: Users,
+        icon: GraduationCap,
       };
     }
 
@@ -126,7 +127,7 @@ const EntrepreneurProblems = () => {
         to: "/insighta/vc-search",
         title: step.pathway,
         description: "VC Search lets you explore a curated database of venture capital firms and accelerators to kickstart your fundraising journey.",
-        icon: FileSearch,
+        icon: Users,
       };
     }
 
@@ -135,7 +136,7 @@ const EntrepreneurProblems = () => {
         to: "/tech-stack",
         title: "Tech Stack Builder",
         description: "Pick the best tools across 7 product categories, each with 4 options, while estimating your monthly and annual budget.",
-        icon: Zap,
+        icon: Boxes,
       };
     }
 
