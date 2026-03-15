@@ -9,7 +9,7 @@ const EntrepreneurProblems = () => {
     {
       phase: "The Starting Point",
       challenge: "Scattered ideas without a clear direction",
-      insight: "Founders often face a flood of ideas but struggle to prioritize or organize them into a clear plan. This lack of focus leads to confusion, indecision, and slow progress, as they bounce between concepts without a unified strategy, making it difficult to move the business forward. Without a clear roadmap, they risk losing momentum and missing key opportunities that are critical for growth.",
+      insight: "Founders often have many ideas but struggle to turn them into a clear, focused plan. This creates confusion, delays decisions, and slows progress as they move between concepts without a solid strategy. Without a clear roadmap, they can lose momentum and miss important opportunities for growth.",
       pathway: "BizMap AI guides you from scattered thoughts to a strategic plan—clarifying your market, competitors, and next steps in one conversation.",
       icon: Lightbulb,
       accentColor: "blue", // Planning
@@ -159,21 +159,10 @@ const EntrepreneurProblems = () => {
                       <h3 className={`font-space-grotesk text-xl font-semibold mb-3 text-foreground ${index === 0 ? 'whitespace-nowrap' : ''} ${index === 2 || index === 4 ? 'text-left' : ''} ${index === 5 || index === 6 ? 'text-center' : ''}`}>
                         {step.challenge}
                       </h3>
-                      <p className={`text-sm text-muted-foreground mb-4 leading-relaxed ${index === 0 || index === 4 || index === 6 ? 'text-left' : ''}`}>
+                      <p className={`mb-4 text-[15px] font-normal leading-7 text-foreground/75 sm:text-base ${index === 0 || index === 4 || index === 6 ? 'text-left' : ''}`}>
                         {step.insight}
                       </p>
-                      {index === 0 ? (
-                        <div className="flex justify-center">
-                          <Link
-                            to="/icp-builder"
-                            className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-5 py-2.5 text-base font-medium text-foreground hover:border-primary/50 hover:bg-primary/5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
-                          >
-                            <span className="font-semibold text-foreground flex items-center gap-2 text-base">
-                              Define your Niche <Target className="h-5 w-5" />
-                            </span>
-                          </Link>
-                        </div>
-                      ) : index === 1 ? (
+                      {index === 1 ? (
                         <div className="flex justify-center">
                           <Link 
                             to="/pmf-lab" 
@@ -262,21 +251,10 @@ const EntrepreneurProblems = () => {
                         <h3 className={`font-space-grotesk text-2xl font-semibold mb-4 text-foreground ${index === 0 ? 'whitespace-nowrap' : ''} ${index === 2 || index === 4 ? 'text-left' : ''} ${index === 5 || index === 6 ? 'text-center' : ''}`}>
                           {step.challenge}
                         </h3>
-                        <p className={`text-sm text-muted-foreground mb-5 leading-relaxed ${index === 0 || index === 4 || index === 6 ? 'text-left' : ''}`}>
+                        <p className={`mb-5 text-[15px] font-normal leading-7 text-foreground/75 sm:text-base ${index === 0 || index === 4 || index === 6 ? 'text-left' : ''}`}>
                           {step.insight}
                         </p>
-                        {index === 0 ? (
-                          <div className="flex justify-center">
-                            <Link
-                              to="/icp-builder"
-                              className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-5 py-2.5 text-base font-medium text-foreground hover:border-primary/50 hover:bg-primary/5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
-                            >
-                              <span className="font-semibold text-foreground flex items-center gap-2 text-base">
-                                Define your Niche <Target className="h-5 w-5" />
-                              </span>
-                            </Link>
-                          </div>
-                        ) : index === 1 ? (
+                        {index === 1 ? (
                           <div className="flex justify-center">
                             <Link 
                             to="/pmf-lab" 
@@ -408,21 +386,10 @@ const EntrepreneurProblems = () => {
                         <h3 className={`font-space-grotesk text-2xl font-semibold mb-4 text-foreground ${index === 0 ? 'whitespace-nowrap' : ''} ${index === 2 || index === 4 ? 'text-left' : ''} ${index === 5 || index === 6 ? 'text-center' : ''}`}>
                           {step.challenge}
                         </h3>
-                        <p className={`text-sm text-muted-foreground mb-5 leading-relaxed ${index === 4 || index === 6 ? 'text-left' : ''}`}>
+                        <p className={`mb-5 text-[15px] font-normal leading-7 text-foreground/75 sm:text-base ${index === 4 || index === 6 ? 'text-left' : ''}`}>
                           {step.insight}
                         </p>
-                        {index === 0 ? (
-                          <div className="flex justify-center">
-                            <Link
-                              to="/icp-builder"
-                              className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-5 py-2.5 text-base font-medium text-foreground hover:border-primary/50 hover:bg-primary/5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
-                            >
-                              <span className="font-semibold text-foreground flex items-center gap-2 text-base">
-                                Define your Niche <Target className="h-5 w-5" />
-                              </span>
-                            </Link>
-                          </div>
-                        ) : index === 1 ? (
+                        {index === 1 ? (
                           <div className="flex justify-center">
                             <Link 
                               to="/pmf-lab" 
