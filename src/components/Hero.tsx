@@ -470,7 +470,7 @@ const Hero = () => {
                 </div>
             ) : (
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-center justify-center px-4 sm:px-0">
-                <Button size="lg" className="w-full sm:w-auto min-h-[44px] touch-manipulation" asChild>
+                <Button size="lg" className="w-full sm:w-[180px] min-h-[44px] justify-center touch-manipulation" asChild>
                   <Link to="/signup" onClick={handlePrimaryCTAClick}>
                     Start Now
                     <ArrowRight className="w-4 h-4" />
@@ -480,7 +480,7 @@ const Hero = () => {
                 <Button 
                   variant="outline"
                   size="lg" 
-                  className="w-full sm:w-auto min-h-[44px] touch-manipulation" 
+                  className="w-full sm:w-[180px] min-h-[44px] justify-center touch-manipulation" 
                   onClick={(e) => {
                     e.preventDefault();
                     handleSecondaryCTAClick(e as any);
