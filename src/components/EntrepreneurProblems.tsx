@@ -83,6 +83,107 @@ const EntrepreneurProblems = () => {
     return classes[color as keyof typeof classes] || classes.blue;
   };
 
+  const renderPathwayAction = (step: (typeof journeySteps)[number], index: number) => {
+    if (index === 0) {
+      return (
+        <Link
+          to="/icp-builder"
+          className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-5 py-2.5 text-base font-medium text-foreground hover:border-primary/50 hover:bg-primary/5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
+        >
+          <span className="font-semibold text-foreground flex items-center gap-2 text-base">
+            Define your Niche <Target className="h-5 w-5" />
+          </span>
+        </Link>
+      );
+    }
+
+    if (index === 1) {
+      return (
+        <Link
+          to="/pmf-lab"
+          className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-5 py-2.5 text-base font-medium text-foreground hover:border-primary/50 hover:bg-primary/5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
+        >
+          <span className="font-semibold text-foreground flex items-center gap-2 text-base">
+            Try PMF Lab <FlaskConical className="h-5 w-5" />
+          </span>
+        </Link>
+      );
+    }
+
+    if (index === 2) {
+      return (
+        <Link
+          to="/community"
+          className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-5 py-2.5 text-base font-medium text-foreground hover:border-primary/50 hover:bg-primary/5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
+        >
+          <span className="font-semibold text-foreground flex items-center gap-2 text-base">
+            Find a Mentor <Users className="h-5 w-5" />
+          </span>
+        </Link>
+      );
+    }
+
+    if (index === 3) {
+      return (
+        <Link
+          to="/dashboard"
+          className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-5 py-2.5 text-base font-medium text-foreground hover:border-primary/50 hover:bg-primary/5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
+        >
+          <span className="font-semibold text-foreground flex items-center gap-2 text-base">
+            <LayoutDashboard className="h-5 w-5" /> Explore Dashboard
+          </span>
+        </Link>
+      );
+    }
+
+    if (index === 4) {
+      return (
+        <Link
+          to="/insighta/vc-search"
+          className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-5 py-2.5 text-base font-medium text-foreground hover:border-primary/50 hover:bg-primary/5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
+        >
+          <span className="font-semibold text-foreground flex items-center gap-2 text-base">
+            {step.pathway} <Rocket className="h-5 w-5" />
+          </span>
+        </Link>
+      );
+    }
+
+    if (index === 5) {
+      return (
+        <Link
+          to="/tech-stack"
+          className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-5 py-2.5 text-base font-medium text-foreground hover:border-primary/50 hover:bg-primary/5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
+        >
+          <span className="font-semibold text-foreground flex items-center gap-2 text-base">
+            {step.pathway} <Code className="h-5 w-5" />
+          </span>
+        </Link>
+      );
+    }
+
+    if (index === 6) {
+      return (
+        <Link
+          to="/community/co-founders"
+          className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-5 py-2.5 text-base font-medium text-foreground hover:border-primary/50 hover:bg-primary/5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
+        >
+          <span className="font-semibold text-foreground flex items-center gap-2 text-base">
+            {step.pathway} <Handshake className="h-5 w-5" />
+          </span>
+        </Link>
+      );
+    }
+
+    return (
+      <div className="rounded-md border border-border bg-background/80 p-4">
+        <p className="text-sm text-foreground/90 leading-relaxed">
+          {step.pathway}
+        </p>
+      </div>
+    );
+  };
+
   return (
     <section className="py-20 lg:py-28 relative font-poppins" aria-labelledby="journey-heading">
 
@@ -110,107 +211,102 @@ const EntrepreneurProblems = () => {
             {journeySteps.map((step, index) => {
               const Icon = step.icon;
               const accentClasses = getAccentClasses(step.accentColor);
-              const hasVideoRow = index <= 6;
+              const isEven = index % 2 === 0;
 
               return (
                 <div
                   key={index}
                   className="relative"
                 >
-                  <div className="mx-auto flex max-w-4xl flex-col items-center text-center">
-                    <div className="mb-4 flex justify-center">
-                      <span className="inline-flex items-center rounded-full border border-green-300 dark:border-green-700 bg-green-100 dark:bg-green-900/30 px-2.5 py-0.5 text-[11px] font-medium text-green-700 dark:text-green-400">
-                        {step.phase}
-                      </span>
+                  {/* Mobile Layout */}
+                  <div className="md:hidden space-y-5">
+                    <div className="text-center">
+                      <div className="mb-3 flex justify-center">
+                        <span className="inline-flex items-center rounded-full border border-green-300 dark:border-green-700 bg-green-100 dark:bg-green-900/30 px-2.5 py-0.5 text-[11px] font-medium text-green-700 dark:text-green-400">
+                          {step.phase}
+                        </span>
+                      </div>
+                      <h3 className="font-space-grotesk text-xl font-semibold text-foreground">
+                        {step.challenge}
+                      </h3>
                     </div>
-                    <h3 className="mb-6 max-w-3xl font-space-grotesk text-xl font-semibold text-foreground sm:text-2xl">
-                      {step.challenge}
-                    </h3>
 
-                    <div className="relative z-10 flex w-full justify-center">
-                      {hasVideoRow ? (
-                        <div className="w-full">
-                          <FounderJourneyVideo position={index} />
-                        </div>
+                    <div className="w-full">
+                      {index <= 6 ? (
+                        <FounderJourneyVideo position={index} />
                       ) : (
-                        <div className={`w-16 h-16 rounded-full flex items-center justify-center ${accentClasses.icon} shadow-sm bg-background transition-colors`}>
-                          <Icon className="w-9 h-9" />
+                        <div className={`mx-auto w-14 h-14 rounded-full flex items-center justify-center ${accentClasses.icon} shadow-sm transition-colors`}>
+                          <Icon className="w-7 h-7" />
                         </div>
                       )}
                     </div>
 
-                    <div className="mt-6 flex justify-center">
-                      {index === 0 ? (
-                        <Link
-                          to="/icp-builder"
-                          className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-5 py-2.5 text-base font-medium text-foreground hover:border-primary/50 hover:bg-primary/5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
-                        >
-                          <span className="font-semibold text-foreground flex items-center gap-2 text-base">
-                            Define your Niche <Target className="h-5 w-5" />
-                          </span>
-                        </Link>
-                      ) : index === 1 ? (
-                        <Link
-                          to="/pmf-lab"
-                          className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-5 py-2.5 text-base font-medium text-foreground hover:border-primary/50 hover:bg-primary/5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
-                        >
-                          <span className="font-semibold text-foreground flex items-center gap-2 text-base">
-                            Try PMF Lab <FlaskConical className="h-5 w-5" />
-                          </span>
-                        </Link>
-                      ) : index === 2 ? (
-                        <Link
-                          to="/community"
-                          className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-5 py-2.5 text-base font-medium text-foreground hover:border-primary/50 hover:bg-primary/5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
-                        >
-                          <span className="font-semibold text-foreground flex items-center gap-2 text-base">
-                            Find a Mentor <Users className="h-5 w-5" />
-                          </span>
-                        </Link>
-                      ) : index === 3 ? (
-                        <Link
-                          to="/dashboard"
-                          className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-5 py-2.5 text-base font-medium text-foreground hover:border-primary/50 hover:bg-primary/5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
-                        >
-                          <span className="font-semibold text-foreground flex items-center gap-2 text-base">
-                            <LayoutDashboard className="h-5 w-5" /> Explore Dashboard
-                          </span>
-                        </Link>
-                      ) : index === 4 ? (
-                        <Link
-                          to="/insighta/vc-search"
-                          className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-5 py-2.5 text-base font-medium text-foreground hover:border-primary/50 hover:bg-primary/5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
-                        >
-                          <span className="font-semibold text-foreground flex items-center gap-2 text-base">
-                            {step.pathway} <Rocket className="h-5 w-5" />
-                          </span>
-                        </Link>
-                      ) : index === 5 ? (
-                        <Link
-                          to="/tech-stack"
-                          className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-5 py-2.5 text-base font-medium text-foreground hover:border-primary/50 hover:bg-primary/5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
-                        >
-                          <span className="font-semibold text-foreground flex items-center gap-2 text-base">
-                            {step.pathway} <Code className="h-5 w-5" />
-                          </span>
-                        </Link>
-                      ) : index === 6 ? (
-                        <Link
-                          to="/community/co-founders"
-                          className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-5 py-2.5 text-base font-medium text-foreground hover:border-primary/50 hover:bg-primary/5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
-                        >
-                          <span className="font-semibold text-foreground flex items-center gap-2 text-base">
-                            {step.pathway} <Handshake className="h-5 w-5" />
-                          </span>
-                        </Link>
-                      ) : (
-                        <div className="rounded-md border border-border bg-background/80 p-4">
-                          <p className="text-sm text-foreground/90 leading-relaxed">
-                            {step.pathway}
-                          </p>
-                        </div>
-                      )}
+                    <div className="flex justify-center">
+                      {renderPathwayAction(step, index)}
                     </div>
+                  </div>
+
+                  {/* Desktop Layout (Alternating) */}
+                  <div className="hidden md:grid md:grid-cols-2 md:gap-6 lg:gap-8 items-center">
+                    {isEven ? (
+                      <>
+                        <div className={`${index === 0 ? 'md:pr-8 lg:pr-16 xl:pr-20' : 'md:pr-6 lg:pr-10 xl:pr-12'} flex justify-center`}>
+                          {renderPathwayAction(step, index)}
+                        </div>
+
+                        <div className="relative z-10">
+                          <div className="mb-4 text-center">
+                            <div className="mb-3 flex justify-center">
+                              <span className="inline-flex items-center rounded-full border border-green-300 dark:border-green-700 bg-green-100 dark:bg-green-900/30 px-2.5 py-0.5 text-[11px] font-medium text-green-700 dark:text-green-400">
+                                {step.phase}
+                              </span>
+                            </div>
+                            <h3 className="font-space-grotesk text-2xl font-semibold text-foreground">
+                              {step.challenge}
+                            </h3>
+                          </div>
+
+                          {index <= 6 ? (
+                            <div className="w-full md:max-w-2xl lg:max-w-3xl xl:max-w-4xl ml-2 lg:ml-4">
+                              <FounderJourneyVideo position={index} />
+                            </div>
+                          ) : (
+                            <div className={`w-16 h-16 rounded-full flex items-center justify-center ${accentClasses.icon} shadow-sm bg-background transition-colors`}>
+                              <Icon className="w-9 h-9" />
+                            </div>
+                          )}
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="relative z-10">
+                          <div className="mb-4 text-center">
+                            <div className="mb-3 flex justify-center">
+                              <span className="inline-flex items-center rounded-full border border-green-300 dark:border-green-700 bg-green-100 dark:bg-green-900/30 px-2.5 py-0.5 text-[11px] font-medium text-green-700 dark:text-green-400">
+                                {step.phase}
+                              </span>
+                            </div>
+                            <h3 className="font-space-grotesk text-2xl font-semibold text-foreground">
+                              {step.challenge}
+                            </h3>
+                          </div>
+
+                          {index <= 6 ? (
+                            <div className="w-full md:max-w-2xl lg:max-w-3xl xl:max-w-4xl mr-2 lg:mr-4">
+                              <FounderJourneyVideo position={index} />
+                            </div>
+                          ) : (
+                            <div className={`w-16 h-16 rounded-full flex items-center justify-center ${accentClasses.icon} shadow-sm bg-background transition-colors`}>
+                              <Icon className="w-9 h-9" />
+                            </div>
+                          )}
+                        </div>
+
+                        <div className={`${index === 1 ? 'md:pl-8 lg:pl-16 xl:pl-20' : 'md:pl-6 lg:pl-10 xl:pl-12'} flex justify-center`}>
+                          {renderPathwayAction(step, index)}
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
               );
