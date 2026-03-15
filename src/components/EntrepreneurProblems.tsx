@@ -83,104 +83,113 @@ const EntrepreneurProblems = () => {
     return classes[color as keyof typeof classes] || classes.blue;
   };
 
-  const renderPathwayAction = (step: (typeof journeySteps)[number], index: number) => {
+  const getPathwayAction = (step: (typeof journeySteps)[number], index: number) => {
     if (index === 0) {
-      return (
-        <Link
-          to="/icp-builder"
-          className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-5 py-2.5 text-base font-medium text-foreground hover:border-primary/50 hover:bg-primary/5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
-        >
-          <span className="font-semibold text-foreground flex items-center gap-2 text-base">
-            Define your Niche <Target className="h-5 w-5" />
-          </span>
-        </Link>
-      );
+      return {
+        to: "/icp-builder",
+        title: "Define your Niche",
+        description: step.pathway,
+        icon: Target,
+      };
     }
 
     if (index === 1) {
-      return (
-        <Link
-          to="/pmf-lab"
-          className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-5 py-2.5 text-base font-medium text-foreground hover:border-primary/50 hover:bg-primary/5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
-        >
-          <span className="font-semibold text-foreground flex items-center gap-2 text-base">
-            Try PMF Lab <FlaskConical className="h-5 w-5" />
-          </span>
-        </Link>
-      );
+      return {
+        to: "/pmf-lab",
+        title: "Try PMF Lab",
+        description: step.pathway,
+        icon: FlaskConical,
+      };
     }
 
     if (index === 2) {
-      return (
-        <Link
-          to="/community"
-          className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-5 py-2.5 text-base font-medium text-foreground hover:border-primary/50 hover:bg-primary/5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
-        >
-          <span className="font-semibold text-foreground flex items-center gap-2 text-base">
-            Find a Mentor <Users className="h-5 w-5" />
-          </span>
-        </Link>
-      );
+      return {
+        to: "/community",
+        title: "Find a Mentor",
+        description: step.pathway,
+        icon: Users,
+      };
     }
 
     if (index === 3) {
-      return (
-        <Link
-          to="/dashboard"
-          className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-5 py-2.5 text-base font-medium text-foreground hover:border-primary/50 hover:bg-primary/5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
-        >
-          <span className="font-semibold text-foreground flex items-center gap-2 text-base">
-            <LayoutDashboard className="h-5 w-5" /> Explore Dashboard
-          </span>
-        </Link>
-      );
+      return {
+        to: "/dashboard",
+        title: "Explore Dashboard",
+        description: step.pathway,
+        icon: LayoutDashboard,
+      };
     }
 
     if (index === 4) {
-      return (
-        <Link
-          to="/insighta/vc-search"
-          className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-5 py-2.5 text-base font-medium text-foreground hover:border-primary/50 hover:bg-primary/5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
-        >
-          <span className="font-semibold text-foreground flex items-center gap-2 text-base">
-            {step.pathway} <Rocket className="h-5 w-5" />
-          </span>
-        </Link>
-      );
+      return {
+        to: "/insighta/vc-search",
+        title: step.pathway,
+        description: "Open the investor search tool and start exploring aligned funding opportunities.",
+        icon: Rocket,
+      };
     }
 
     if (index === 5) {
-      return (
-        <Link
-          to="/tech-stack"
-          className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-5 py-2.5 text-base font-medium text-foreground hover:border-primary/50 hover:bg-primary/5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
-        >
-          <span className="font-semibold text-foreground flex items-center gap-2 text-base">
-            {step.pathway} <Code className="h-5 w-5" />
-          </span>
-        </Link>
-      );
+      return {
+        to: "/tech-stack",
+        title: step.pathway,
+        description: "Compare options and shape a stack that fits your stage, team, and product direction.",
+        icon: Code,
+      };
     }
 
     if (index === 6) {
-      return (
-        <Link
-          to="/community/co-founders"
-          className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-5 py-2.5 text-base font-medium text-foreground hover:border-primary/50 hover:bg-primary/5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
-        >
-          <span className="font-semibold text-foreground flex items-center gap-2 text-base">
-            {step.pathway} <Handshake className="h-5 w-5" />
-          </span>
-        </Link>
-      );
+      return {
+        to: "/community/co-founders",
+        title: step.pathway,
+        description: "Browse potential partners and reduce the solo load with someone who complements your strengths.",
+        icon: Handshake,
+      };
     }
 
+    return null;
+  };
+
+  const renderPathwayAction = (
+    step: (typeof journeySteps)[number],
+    index: number,
+    className = "",
+  ) => {
+    const action = getPathwayAction(step, index);
+
+    if (!action) {
+      return null;
+    }
+
+    const ActionIcon = action.icon;
+
     return (
-      <div className="rounded-md border border-border bg-background/80 p-4">
-        <p className="text-sm text-foreground/90 leading-relaxed">
-          {step.pathway}
-        </p>
-      </div>
+      <Link
+        to={action.to}
+        className={`group relative block w-full overflow-hidden rounded-lg border-4 border-border bg-background/95 shadow-xl transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/50 hover:bg-primary/5 ${className}`}
+        style={{ aspectRatio: 256 / 135 }}
+      >
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.16),transparent_55%)]" />
+        <div className="relative flex h-full flex-col justify-between p-5 sm:p-6">
+          <div className="flex items-start justify-between gap-4">
+            <div className="rounded-lg bg-primary/10 p-2.5 text-primary">
+              <ActionIcon className="h-6 w-6" />
+            </div>
+            <span className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+              Open
+            </span>
+          </div>
+
+          <div className="space-y-2">
+            <h4 className="font-space-grotesk text-xl font-semibold leading-tight text-foreground">
+              {action.title}
+            </h4>
+            <p className="line-clamp-3 text-sm leading-relaxed text-muted-foreground">
+              {action.description}
+            </p>
+          </div>
+        </div>
+      </Link>
     );
   };
 
@@ -242,7 +251,7 @@ const EntrepreneurProblems = () => {
                     </div>
 
                     <div className="flex justify-center">
-                      {renderPathwayAction(step, index)}
+                      {renderPathwayAction(step, index, "max-w-3xl")}
                     </div>
                   </div>
 
