@@ -296,7 +296,7 @@ const MentorMarketplaceHub = () => {
                       <div className="max-w-3xl lg:mx-auto">
                         <h1 className="text-center text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
                           <span className="gradient-unified creatives-font">
-                            Find a Mentor
+                            Connect. Learn. Grow.
                           </span>
                         </h1>
                       </div>
