@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowRight, Sparkles, LayoutDashboard, User, Users, DollarSign, Play, Image as ImageIcon, Upload, Loader2 } from "lucide-react";
+import { ArrowRight, Sparkles, LayoutDashboard, User, Users, DollarSign, Cpu, Image as ImageIcon, Upload, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useConversionTracking } from "@/hooks/useConversionTracking";
@@ -486,7 +486,7 @@ const Hero = () => {
                     handleSecondaryCTAClick(e as any);
                   }}
                 >
-                  <Play className="w-4 h-4" />
+                  <Cpu className="w-4 h-4" />
                   Our System
                 </Button>
               </div>
