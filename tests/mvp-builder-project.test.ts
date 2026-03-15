@@ -64,38 +64,26 @@ Next Iteration: add analytics
   assert.match(preview.html ?? '', /window\.__previewReady = true/);
 });
 
-test('buildPreviewFromProject bootstraps a sandbox for React-style projects', () => {
+test('buildPreviewFromProject rejects bundler-only projects cleanly', () => {
   const preview = buildPreviewFromProject(
     [
       {
         path: 'index.html',
-          content:
+        content:
           '<!DOCTYPE html><html><body><script type="module" src="src/main.tsx"></script></body></html>',
         language: 'html',
       },
       {
-        path: 'package.json',
-        content: '{"dependencies":{"react":"^18.3.1","react-dom":"^18.3.1"}}',
-        language: 'json',
-      },
-      {
         path: 'src/main.tsx',
-        content: 'import { createRoot } from "react-dom/client"; import App from "./App"; createRoot(document.body).render(App());',
-        language: 'tsx',
-      },
-      {
-        path: 'src/App.tsx',
-        content: 'export default function App() { return <main>Hello</main>; }',
+        content: 'import App from "./App"; console.log(App);',
         language: 'tsx',
       },
     ],
     'index.html'
   );
 
-  assert.equal(preview.canPreview, true);
-  assert.equal(preview.runtimeMode, 'sandbox');
-  assert.match(preview.html ?? '', /@babel\/standalone/);
-  assert.match(preview.html ?? '', /esm\.sh/);
+  assert.equal(preview.canPreview, false);
+  assert.ok(preview.errors.some((error) => error.includes('requires a framework bundler')));
 });
 
 test('legacy html sessions still migrate into a project', () => {

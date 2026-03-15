@@ -423,36 +423,26 @@ function injectBridgeScript(html: string): string {
   return `${bridgeScript}${html}`;
 }
 
-function inlineLocalStyles(
-  html: string,
-  entryFile: string,
+export function buildPreviewFromProject(
   files: MVPProjectFile[],
-  warnings: string[]
-): string {
-  return html.replace(
-    /<link\b([^>]*?)href=(["'])([^"'#]+)\2([^>]*)>/gi,
-    (match, _beforeHref, _quote, href) => {
-      if (isRemoteAsset(href)) return match;
-      const resolved = joinProjectPath(entryFile, href);
-      const asset = findFile(files, resolved);
-      if (!asset) {
-        warnings.push(`Missing asset: ${resolved}`);
-        return match;
-      }
-      if (asset.language !== 'css') {
-        warnings.push(`Preview kept external asset "${resolved}" because it is not a CSS file.`);
-        return match;
-      }
-      return `<style data-source="${asset.path}">\n${asset.content}\n</style>`;
-    }
-  );
-}
-
-function buildStaticPreviewHtml(
-  files: MVPProjectFile[],
-  entryFile: string
+  preferredEntryFile?: string | null
 ): MVPPreviewResult {
-  const sourceFile = findFile(files, entryFile);
+  const normalizedFiles = normalizeProjectFiles(files);
+  const entryFile = pickProjectEntryFile(normalizedFiles, preferredEntryFile);
+
+  if (!entryFile) {
+    return {
+      html: null,
+      entryFile: null,
+      canPreview: false,
+      warnings: [],
+      errors: ['No HTML entry file was found. Preview supports static HTML projects right now.'],
+      runtimeMode: 'none',
+      consoleHints: [],
+    };
+  }
+
+  const sourceFile = findFile(normalizedFiles, entryFile);
   if (!sourceFile) {
     return {
       html: null,
@@ -469,33 +459,57 @@ function buildStaticPreviewHtml(
   const warnings: string[] = [];
   const errors: string[] = [];
 
-  html = inlineLocalStyles(html, entryFile, files, warnings);
+  html = html.replace(
+    /<link\b([^>]*?)href=(["'])([^"'#]+)\2([^>]*)>/gi,
+    (match, _beforeHref, _quote, href) => {
+      if (isRemoteAsset(href)) return match;
+
+      const resolved = joinProjectPath(entryFile, href);
+      const asset = findFile(normalizedFiles, resolved);
+      if (!asset) {
+        warnings.push(`Missing asset: ${resolved}`);
+        return match;
+      }
+
+      if (asset.language !== 'css') {
+        warnings.push(`Preview kept external asset "${resolved}" because it is not a CSS file.`);
+        return match;
+      }
+
+      return `<style data-source="${asset.path}">\n${asset.content}\n</style>`;
+    }
+  );
 
   html = html.replace(
     /<script\b([^>]*?)src=(["'])([^"'#]+)\2([^>]*)>\s*<\/script>/gi,
     (match, beforeSrc, _quote, src, afterSrc) => {
       if (isRemoteAsset(src)) return match;
 
-      const attrs = `${beforeSrc}${afterSrc}`.toLowerCase();
-      if (attrs.includes('type="module"')) {
-        errors.push(`Preview routes ${src} through the runtime sandbox because it is an ES module.`);
-        return match;
-      }
-
       const resolved = joinProjectPath(entryFile, src);
-      const asset = findFile(files, resolved);
+      const asset = findFile(normalizedFiles, resolved);
       if (!asset) {
         warnings.push(`Missing script: ${resolved}`);
         return match;
       }
 
-      if (!['javascript', 'text'].includes(asset.language)) {
-        warnings.push(`Preview kept external script "${resolved}" because it is not a plain JS file.`);
+      if (!['javascript', 'typescript', 'jsx', 'tsx', 'text'].includes(asset.language)) {
+        warnings.push(`Preview kept external script "${resolved}" because it is not a JS-like file.`);
         return match;
       }
 
-      const attrsWithoutSrc = `${beforeSrc}${afterSrc}`.replace(/\s+/g, ' ').trim();
-      const attrText = attrsWithoutSrc ? ` ${attrsWithoutSrc}` : '';
+      if (
+        ['typescript', 'tsx', 'jsx'].includes(asset.language) ||
+        /from\s+['"]\.[^'"]+['"]/.test(asset.content) ||
+        /import\s*\(\s*['"]\.[^'"]+['"]\s*\)/.test(asset.content)
+      ) {
+        errors.push(
+          `Preview cannot run ${asset.path} because it requires a framework bundler or module graph.`
+        );
+        return match;
+      }
+
+      const attrs = `${beforeSrc}${afterSrc}`.replace(/\s+/g, ' ').trim();
+      const attrText = attrs ? ` ${attrs}` : '';
       return `<script${attrText}>\n${asset.content}\n</script>`;
     }
   );
@@ -519,448 +533,7 @@ function buildStaticPreviewHtml(
     warnings,
     errors,
     runtimeMode: 'static',
-    consoleHints: ['Static preview can run plain HTML, CSS, and browser JavaScript directly.'],
-  };
-}
-
-function escapeForInlineScript(value: string): string {
-  return value
-    .replace(/</g, '\\u003c')
-    .replace(/\u2028/g, '\\u2028')
-    .replace(/\u2029/g, '\\u2029');
-}
-
-function buildSandboxHtml(
-  files: MVPProjectFile[],
-  framework: MVPProjectFramework,
-  entryFile: string | null,
-  preferredEntryFile?: string | null
-): MVPPreviewResult {
-  const normalizedFiles = normalizeProjectFiles(files);
-  const warnings: string[] = [];
-  const errors: string[] = [];
-  const fileDependencies = extractProjectDependenciesFromFiles(normalizedFiles);
-  let htmlEntry = pickProjectEntryFile(normalizedFiles, preferredEntryFile);
-  let moduleEntries: string[] = [];
-  const virtualFiles: Record<string, string> = {};
-
-  if (htmlEntry) {
-    const htmlFile = findFile(normalizedFiles, htmlEntry);
-    if (htmlFile) {
-      moduleEntries = extractLocalModuleEntriesFromHtml(htmlFile.content, htmlFile.path);
-    }
-  }
-
-  if (framework === 'next-like') {
-    const pageEntry = pickNextPageEntry(normalizedFiles);
-    if (!pageEntry) {
-      return {
-        html: null,
-        entryFile: htmlEntry,
-        canPreview: false,
-        warnings,
-        errors: ['Could not find app/page.* or pages/index.* for the Next-style preview runtime.'],
-        runtimeMode: 'none',
-        consoleHints: [],
-      };
-    }
-
-    virtualFiles['__ct_runtime__/next-entry.tsx'] = `import React from 'react';
-import { createRoot } from 'react-dom/client';
-import PageModule from '../${pageEntry}';
-const View = PageModule?.default ?? PageModule;
-const root = document.getElementById('root');
-if (!root) {
-  throw new Error('The runtime root element could not be found.');
-}
-createRoot(root).render(React.createElement(View));`;
-    virtualFiles['__ct_runtime__/shims/next-link.js'] = `import React from 'react';
-export default function Link({ href = '#', children, ...props }) {
-  return React.createElement('a', { href, ...props }, children);
-}`;
-    virtualFiles['__ct_runtime__/shims/next-image.js'] = `import React from 'react';
-export default function Image({ src = '', alt = '', ...props }) {
-  return React.createElement('img', { src, alt, ...props });
-}`;
-    virtualFiles['__ct_runtime__/shims/next-head.js'] = `import React from 'react';
-export default function Head({ children }) {
-  return React.createElement(React.Fragment, null, children);
-}`;
-    virtualFiles['__ct_runtime__/shims/next-navigation.js'] = `export function useRouter() {
-  return {
-    push: (url) => window.history.pushState({}, '', url),
-    replace: (url) => window.history.replaceState({}, '', url),
-    back: () => window.history.back(),
-    refresh: () => window.location.reload(),
-    prefetch: async () => undefined,
-  };
-}
-export function usePathname() {
-  return window.location.pathname;
-}
-export function useSearchParams() {
-  return new URLSearchParams(window.location.search);
-}`;
-    moduleEntries = ['__ct_runtime__/next-entry.tsx'];
-    htmlEntry = htmlEntry ?? '__ct_runtime__/index.html';
-  } else if (moduleEntries.length === 0) {
-    const runtimeEntry = pickRuntimeModuleEntry(normalizedFiles);
-    if (runtimeEntry) {
-      moduleEntries = [runtimeEntry];
-    }
-  }
-
-  if (moduleEntries.length === 0) {
-    return {
-      html: null,
-      entryFile: htmlEntry ?? entryFile,
-      canPreview: false,
-      warnings,
-      errors: ['No runtime entry module was found for this project.'],
-      runtimeMode: 'none',
-      consoleHints: [],
-    };
-  }
-
-  let baseHtml =
-    htmlEntry && findFile(normalizedFiles, htmlEntry)
-      ? findFile(normalizedFiles, htmlEntry)!.content
-      : '<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head><body><div id="root"></div></body></html>';
-
-  if (htmlEntry && findFile(normalizedFiles, htmlEntry)) {
-    baseHtml = inlineLocalStyles(baseHtml, htmlEntry, normalizedFiles, warnings);
-    baseHtml = baseHtml.replace(
-      /<script\b([^>]*?)src=(["'])([^"'#]+)\2([^>]*)>\s*<\/script>/gi,
-      (match, beforeSrc, _quote, src, afterSrc) => {
-        if (isRemoteAsset(src)) return match;
-        const attrs = `${beforeSrc}${afterSrc}`.toLowerCase();
-        if (attrs.includes('type="module"')) {
-          return '';
-        }
-        return match;
-      }
-    );
-  }
-
-  if (!/id=(["'])root\1/i.test(baseHtml) && (framework === 'react-vite' || framework === 'next-like')) {
-    baseHtml = /<\/body>/i.test(baseHtml)
-      ? baseHtml.replace(/<\/body>/i, '<div id="root"></div></body>')
-      : `${baseHtml}<div id="root"></div>`;
-  }
-
-  const runtimeFiles = normalizeProjectFiles([
-    ...normalizedFiles,
-    ...Object.entries(virtualFiles).map(([path, content]) => ({
-      path,
-      content,
-      language: detectProjectFileLanguage(path),
-    })),
-  ]);
-
-  const dependencies = mergeProjectDependencies(
-    fileDependencies,
-    framework === 'react-vite' || framework === 'next-like'
-      ? [
-          { name: 'react', source: 'npm', version: '18', purpose: 'Component runtime' },
-          { name: 'react-dom', source: 'npm', version: '18', purpose: 'DOM renderer' },
-        ]
-      : []
-  );
-
-  const runtimeBootstrap = `<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-<script type="module">
-${createRuntimeBootstrap(runtimeFiles, moduleEntries, dependencies, framework)}
-</script>`;
-
-  const bridgeHtml = injectBridgeScript(baseHtml);
-  const html = /<\/body>/i.test(bridgeHtml)
-    ? bridgeHtml.replace(/<\/body>/i, `${runtimeBootstrap}</body>`)
-    : `${bridgeHtml}${runtimeBootstrap}`;
-
-  return {
-    html,
-    entryFile: htmlEntry ?? entryFile,
-    canPreview: true,
-    warnings,
-    errors,
-    runtimeMode: 'sandbox',
-    consoleHints: [
-      'Runtime sandbox resolves npm packages through esm.sh.',
-      'The console below shows transpile, import, and runtime errors.',
-    ],
-  };
-}
-
-function createRuntimeBootstrap(
-  files: MVPProjectFile[],
-  entryModules: string[],
-  dependencies: MVPProjectDependency[],
-  framework: MVPProjectFramework
-): string {
-  const filesJson = escapeForInlineScript(
-    JSON.stringify(
-      files.map((file) => ({
-        path: file.path,
-        content: file.content,
-        language: file.language,
-      }))
-    )
-  );
-  const dependenciesJson = escapeForInlineScript(JSON.stringify(dependencies));
-  const entryModulesJson = escapeForInlineScript(JSON.stringify(entryModules));
-
-  return `const FILES = ${filesJson};
-const DEPENDENCIES = ${dependenciesJson};
-const ENTRY_MODULES = ${entryModulesJson};
-const FRAMEWORK = ${JSON.stringify(framework)};
-const runtimeChannel = window.__CT_MVP_SEND__ || (() => undefined);
-const fileMap = new Map(FILES.map((file) => [file.path, file]));
-const compiledUrlCache = new Map();
-const dependencyMap = new Map(DEPENDENCIES.map((dependency) => [dependency.name, dependency]));
-
-function emit(type, payload) {
-  try {
-    runtimeChannel(type, payload);
-  } catch {}
-}
-
-function emitBuild(level, message) {
-  emit('build-log', { level, message });
-}
-
-function normalizePath(value) {
-  return value
-    .replace(/\\\\/g, '/')
-    .replace(/^\\.\\//, '')
-    .split('/')
-    .reduce((parts, segment) => {
-      if (!segment || segment === '.') return parts;
-      if (segment === '..') {
-        parts.pop();
-        return parts;
-      }
-      parts.push(segment);
-      return parts;
-    }, [])
-    .join('/');
-}
-
-function dirname(value) {
-  const normalized = normalizePath(value);
-  const index = normalized.lastIndexOf('/');
-  return index === -1 ? '' : normalized.slice(0, index);
-}
-
-function joinPath(from, to) {
-  if (!to) return normalizePath(from);
-  if (to.startsWith('/')) return normalizePath(to.slice(1));
-  const base = dirname(from);
-  return normalizePath(base ? \`\${base}/\${to}\` : to);
-}
-
-function resolveLocalPath(from, to) {
-  const direct = joinPath(from, to);
-  if (fileMap.has(direct)) return direct;
-
-  const attempts = [
-    \`\${direct}.ts\`,
-    \`\${direct}.tsx\`,
-    \`\${direct}.js\`,
-    \`\${direct}.jsx\`,
-    \`\${direct}.css\`,
-    \`\${direct}.json\`,
-    \`\${direct}/index.ts\`,
-    \`\${direct}/index.tsx\`,
-    \`\${direct}/index.js\`,
-    \`\${direct}/index.jsx\`,
-  ];
-
-  for (const attempt of attempts) {
-    if (fileMap.has(attempt)) return attempt;
-  }
-
-  return direct;
-}
-
-function getRootPackage(specifier) {
-  if (specifier.startsWith('@')) {
-    return specifier.split('/').slice(0, 2).join('/');
-  }
-  return specifier.split('/')[0];
-}
-
-function withVersion(specifier, version) {
-  if (!version) return specifier;
-  const root = getRootPackage(specifier);
-  const suffix = specifier.slice(root.length);
-  return \`\${root}@\${version}\${suffix}\`;
-}
-
-async function resolveBareImport(specifier) {
-  if (specifier === 'next/link') return compileModule('__ct_runtime__/shims/next-link.js');
-  if (specifier === 'next/image') return compileModule('__ct_runtime__/shims/next-image.js');
-  if (specifier === 'next/head') return compileModule('__ct_runtime__/shims/next-head.js');
-  if (specifier === 'next/navigation') return compileModule('__ct_runtime__/shims/next-navigation.js');
-
-  const root = getRootPackage(specifier);
-  const dependency = dependencyMap.get(root);
-  const version = dependency?.version?.replace(/^[\\^~]/, '') || '';
-  const versioned = withVersion(specifier, version);
-  return \`https://esm.sh/\${versioned}?dev\`;
-}
-
-async function replaceSpecifiers(source, importerPath) {
-  const resolvers = [
-    /(\\bimport\\s+[^'"]*?\\sfrom\\s*["'])([^"']+)(["'])/g,
-    /(\\bexport\\s+[^'"]*?\\sfrom\\s*["'])([^"']+)(["'])/g,
-    /(\\bimport\\s*\\(\\s*["'])([^"']+)(["']\\s*\\))/g,
-    /(\\bimport\\s*["'])([^"']+)(["'])/g,
-  ];
-
-  let output = source;
-  for (const pattern of resolvers) {
-    const matches = Array.from(output.matchAll(pattern));
-    const replacements = new Map();
-    for (const match of matches) {
-      const specifier = match[2];
-      if (replacements.has(specifier)) continue;
-      if (specifier.startsWith('.') || specifier.startsWith('/')) {
-        const resolved = resolveLocalPath(importerPath, specifier);
-        replacements.set(specifier, await compileModule(resolved));
-      } else {
-        replacements.set(specifier, await resolveBareImport(specifier));
-      }
-    }
-    output = output.replace(pattern, (full, prefix, specifier, suffix) => {
-      const resolved = replacements.get(specifier) || specifier;
-      return \`\${prefix}\${resolved}\${suffix}\`;
-    });
-  }
-
-  return output;
-}
-
-function cssModuleSource(path, cssText) {
-  return \`const styleId = 'ct-mvp-style-' + \${JSON.stringify(path)};
-let styleTag = document.querySelector('style[data-ct-mvp-style="' + styleId + '"]');
-if (!styleTag) {
-  styleTag = document.createElement('style');
-  styleTag.setAttribute('data-ct-mvp-style', styleId);
-  styleTag.textContent = \${JSON.stringify(cssText)};
-  document.head.appendChild(styleTag);
-}
-export default \${JSON.stringify(cssText)};\`;
-}
-
-async function transpileModule(path, source, language) {
-  const rewrittenSource = await replaceSpecifiers(source, path);
-  if (language === 'css') {
-    return cssModuleSource(path, source);
-  }
-  if (language === 'json') {
-    return \`export default \${source.trim() || '{}'};\`;
-  }
-  if (!['javascript', 'typescript', 'tsx', 'jsx', 'text'].includes(language)) {
-    return rewrittenSource;
-  }
-
-  const presets = [];
-  presets.push(['env', { targets: { esmodules: true }, modules: false }]);
-  if (language === 'jsx' || language === 'tsx') {
-    presets.push(['react', { runtime: 'automatic' }]);
-  }
-  if (language === 'typescript' || language === 'tsx') {
-    presets.push('typescript');
-  }
-
-  if (presets.length === 0) {
-    return rewrittenSource;
-  }
-
-  const result = window.Babel.transform(rewrittenSource, {
-    filename: path,
-    sourceType: 'module',
-    presets,
-    babelrc: false,
-    configFile: false,
-    comments: false,
-  });
-  return result.code;
-}
-
-async function compileModule(path) {
-  const normalizedPath = normalizePath(path);
-  if (compiledUrlCache.has(normalizedPath)) {
-    return compiledUrlCache.get(normalizedPath);
-  }
-
-  const file = fileMap.get(normalizedPath);
-  if (!file) {
-    throw new Error(\`Missing file in runtime sandbox: \${normalizedPath}\`);
-  }
-
-  emitBuild('info', \`Compiling \${normalizedPath}\`);
-  const code = await transpileModule(normalizedPath, file.content, file.language);
-  const url = URL.createObjectURL(new Blob([code], { type: 'text/javascript' }));
-  compiledUrlCache.set(normalizedPath, url);
-  return url;
-}
-
-async function boot() {
-  emitBuild('info', FRAMEWORK === 'static-html' ? 'Starting static runtime.' : \`Starting \${FRAMEWORK} runtime sandbox.\`);
-  if (DEPENDENCIES.length > 0) {
-    emitBuild('info', \`Resolving \${DEPENDENCIES.length} package dependencies through npm CDN.\`);
-  }
-
-  for (const entry of ENTRY_MODULES) {
-    const moduleUrl = await compileModule(entry);
-    await import(moduleUrl);
-  }
-
-  emitBuild('info', 'Preview runtime is ready.');
-}
-
-boot().catch((error) => {
-  const message = error?.stack || error?.message || String(error);
-  emitBuild('error', message);
-  throw error;
-});`;
-}
-
-export function buildPreviewFromProject(
-  files: MVPProjectFile[],
-  preferredEntryFile?: string | null
-): MVPPreviewResult {
-  const normalizedFiles = normalizeProjectFiles(files);
-  const framework = inferProjectFramework(normalizedFiles);
-  const entryFile = pickProjectEntryFile(normalizedFiles, preferredEntryFile);
-
-  if (framework === 'static-html' && entryFile) {
-    const htmlFile = findFile(normalizedFiles, entryFile);
-    const moduleEntries = htmlFile
-      ? extractLocalModuleEntriesFromHtml(htmlFile.content, htmlFile.path)
-      : [];
-    if (moduleEntries.length === 0) {
-      return buildStaticPreviewHtml(normalizedFiles, entryFile);
-    }
-  }
-
-  if (framework === 'react-vite' || framework === 'next-like') {
-    return buildSandboxHtml(normalizedFiles, framework, entryFile, preferredEntryFile);
-  }
-
-  if (framework === 'static-html' && entryFile) {
-    return buildSandboxHtml(normalizedFiles, 'react-vite', entryFile, preferredEntryFile);
-  }
-
-  return {
-    html: null,
-    entryFile,
-    canPreview: false,
-    warnings: [],
-    errors: ['No previewable entry file was found. Open the Code tab to inspect the project.'],
-    runtimeMode: 'none',
-    consoleHints: [],
+    consoleHints: ['Static preview is active for this project. Plain browser logs will appear below.'],
   };
 }
 
