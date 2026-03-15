@@ -118,7 +118,7 @@ const EntrepreneurProblems = () => {
         to: "/dashboard",
         title: "Explore Dashboard",
         description: "Dashboard serves as your central task manager, helping you track progress and stay accountable with smart deadlines and reminders.",
-        icon: Home,
+        icon: LayoutDashboard,
       };
     }
 
