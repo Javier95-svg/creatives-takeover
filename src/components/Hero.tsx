@@ -388,7 +388,7 @@ const Hero = () => {
       if (typeof document === 'undefined' || typeof window === 'undefined') return;
       
       // Find the target section
-      const targetSection = document.getElementById('what-you-get');
+      const targetSection = document.getElementById('startup-development-cycle');
       if (targetSection) {
         // Get the navigation bar height (typically 64px for h-16)
         const navHeight = 64;
@@ -404,7 +404,7 @@ const Hero = () => {
         setTimeout(() => {
           if (typeof document === 'undefined' || typeof window === 'undefined') return;
           
-          const targetSection = document.getElementById('what-you-get');
+          const targetSection = document.getElementById('startup-development-cycle');
           if (targetSection) {
             const navHeight = 64;
             const targetPosition = targetSection.getBoundingClientRect().top + window.pageYOffset - navHeight;
@@ -487,7 +487,7 @@ const Hero = () => {
                   }}
                 >
                   <Play className="w-4 h-4" />
-                  Explore Features
+                  Our System
                 </Button>
               </div>
               )}

@@ -138,7 +138,7 @@ const UserReviews = () => {
   };
 
   return (
-    <section className="section-shell overflow-hidden">
+    <section id="startup-development-cycle" className="section-shell overflow-hidden">
       <div className="container mx-auto px-4 sm:px-6">
         <div className="text-center mb-16 sm:mb-20 px-6 sm:px-8 lg:px-12">
           <Badge variant="outline" className="mb-5 text-xs uppercase tracking-wide text-muted-foreground animate-in fade-in slide-in-from-top duration-700">
