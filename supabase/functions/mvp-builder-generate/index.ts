@@ -45,19 +45,18 @@ const GENERATE_SYSTEM_PROMPT = `You are an expert MVP web app builder focused on
 Your task is to generate a COMPLETE small web product for the user's idea as a structured project that can be previewed and manually edited.
 
 STRICT RULES:
-1. Return a project with real files. Default to static-html unless the user explicitly asks for React, Vite, Next, TSX, JSX, or a component-based framework architecture.
-2. Use either:
-   - static-html for dashboards, landing pages, admin panels, and browser tools whenever possible
-   - react-vite only when the user explicitly asks for a React/Vite-style codebase
-   - next-like only for client-side page/app router demos without server code
-3. React/Vite projects should include package.json, index.html, and a src/ entry (for example src/main.tsx and src/App.tsx). Next-like projects should include package.json and either app/page.tsx or pages/index.tsx.
-4. Keep the code readable and trustworthy. Clear names, small functions, and only brief comments where necessary.
-5. Persist meaningful user data with localStorage when useful.
-6. Mobile-responsive layout with strong UX defaults, clear hierarchy, and accessible labels.
-7. Every button, form, tab, and filter must do something real.
-8. Include empty states, validation states, and at least basic success feedback.
-9. Do not add backend code, shell scripts, or native dependencies. Keep everything client-side and previewable.
-10. Do NOT wrap the JSON in markdown fences.
+1. Return a project with real files. Default to static-html unless the user explicitly asks for React, Vite, Next, TSX, JSX, or a component-based framework architecture as the output format.
+2. Prefer static-html for dashboards, landing pages, admin panels, SaaS tools, browser tools, internal tools, and MVP demos. These should normally ship as index.html + styles.css + app.js so the live preview works immediately.
+3. Use react-vite only when the user explicitly asks for a React/Vite-style codebase. Use next-like only for client-side page/app router demos without server code.
+4. React/Vite projects should include package.json, index.html, and a src/ entry (for example src/main.tsx and src/App.tsx). Next-like projects should include package.json and either app/page.tsx or pages/index.tsx.
+5. Keep the code readable and trustworthy. Clear names, small functions, and only brief comments where necessary.
+6. Persist meaningful user data with localStorage when useful.
+7. Mobile-responsive layout with strong UX defaults, clear hierarchy, and accessible labels.
+8. Every button, form, tab, and filter must do something real.
+9. Include empty states, validation states, and at least basic success feedback.
+10. Do not add backend code, shell scripts, or native dependencies. Keep everything client-side and previewable.
+11. If there is any doubt, choose static-html over a framework so the product can preview immediately.
+12. Do NOT wrap the JSON in markdown fences.
 
 RESPONSE FORMAT:
 - First write a short plain-text "MVP Snapshot" with EXACTLY these 4 lines:
@@ -91,8 +90,8 @@ The user will describe a change. Your job:
 2. Make ONLY the requested change unless the current code is broken and needs a minimal fix to support it.
 3. Preserve file paths, localStorage keys, and working functionality whenever possible.
 4. Return the FULL updated project, not a partial patch.
-5. Preserve the current framework unless the user explicitly asks to switch. Supported previewable frameworks are static-html, react-vite, and next-like client demos, but prefer static-html when reliability is more important than framework choice.
-6. Keep the code easy to trust and edit manually.
+5. Preserve the current framework only when it is already preview-safe or the user explicitly asks to keep it. If the current project uses TSX, JSX, module entrypoints, React, Vite, or Next-style files and the user did not explicitly ask for that framework, migrate it to static-html so it previews reliably.
+ 6. Keep the code easy to trust and edit manually.
 
 RESPONSE FORMAT:
 - First write a short plain-text "Update Summary" with EXACTLY these 3 lines:
@@ -103,17 +102,18 @@ How to Prompt Next: <one sentence suggestion>
 <project-output>
 {
   "projectName": "Short project name",
-  "framework": "react-vite",
-  "projectType": "web-app",
-  "entryFile": "src/main.tsx",
-  "summary": "One-sentence summary of the generated product.",
-  "dependencies": [],
-  "files": [
-    { "path": "index.html", "content": "<!DOCTYPE html>..." },
-    { "path": "src/main.tsx", "content": "..." }
-  ]
-}
-</project-output>`;
+    "framework": "static-html",
+    "projectType": "web-app",
+    "entryFile": "index.html",
+    "summary": "One-sentence summary of the generated product.",
+    "dependencies": [],
+    "files": [
+      { "path": "index.html", "content": "<!DOCTYPE html>..." },
+      { "path": "styles.css", "content": "..." },
+      { "path": "app.js", "content": "..." }
+    ]
+  }
+  </project-output>`;
 
 // ── HTML extraction ─────────────────────────────────────────────────────────
 
@@ -507,7 +507,9 @@ serve(async (req: Request) => {
     ? `Preferred project type: ${preferredProjectType}. Honor this unless the request strongly contradicts it.`
     : "";
   const frameworkInstruction = preferredFramework
-    ? `Preferred framework: ${preferredFramework}. For landing pages and simple brochure flows prefer static-html. For richer app flows prefer react-vite. Only use next-like for client-side page demos.`
+    ? preferredFramework === "static-html"
+      ? "Preferred framework: static-html. Keep the project directly previewable with plain HTML, CSS, and browser JavaScript. If the current project uses TSX, JSX, or module bundling, convert it to static-html."
+      : `Preferred framework: ${preferredFramework}. Only use this framework because the user explicitly asked for it. Keep the output client-side and previewable.`
     : "";
   if (!isFirstGeneration && currentProject) {
     userContent =
