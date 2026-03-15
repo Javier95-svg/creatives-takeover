@@ -601,6 +601,90 @@ export const techStackData: TechStackData = [
         logo: 'https://logo.clearbit.com/hunter.io'
       }
     ]
+  },
+  {
+    id: 'crm',
+    name: 'CRM',
+    description: 'Customer relationship management tools help you organize leads, track deals, manage pipelines, and keep sales follow-up moving. A strong CRM becomes the operating system for your revenue process.',
+    icon: 'Users',
+    products: [
+      {
+        id: 'hubspot-crm',
+        name: 'HubSpot',
+        description: 'A widely adopted CRM with contact management, pipeline tracking, and marketing integrations that fit startups and growing teams.',
+        pros: [
+          'Free CRM entry point with upgrade path',
+          'Easy to use and onboard teams quickly',
+          'Strong marketing and automation ecosystem',
+          'Large integration marketplace'
+        ],
+        cons: [
+          'Paid upgrades can get expensive as you scale',
+          'Advanced automation is locked behind higher tiers',
+          'Can feel opinionated for custom workflows',
+          'Seat-based pricing adds up for larger teams'
+        ],
+        price: 'Free / $15 per seat/month',
+        logo: 'https://logo.clearbit.com/hubspot.com'
+      },
+      {
+        id: 'salesforce-crm',
+        name: 'Salesforce',
+        description: 'An enterprise-grade CRM platform built for customizable sales workflows, reporting, and large-scale customer operations.',
+        pros: [
+          'Highly customizable for complex sales teams',
+          'Massive ecosystem and AppExchange integrations',
+          'Strong reporting and forecasting capabilities',
+          'Trusted enterprise standard'
+        ],
+        cons: [
+          'Steeper learning curve than simpler CRMs',
+          'Implementation often requires more setup time',
+          'Costs rise quickly with add-ons and seats',
+          'Can be overkill for early-stage startups'
+        ],
+        price: 'Free / $25 per user/month',
+        logo: 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/salesforce.svg'
+      },
+      {
+        id: 'zoho-crm',
+        name: 'Zoho CRM',
+        description: 'A flexible CRM for startups and SMBs that combines deal tracking, workflow automation, and multi-channel communication.',
+        pros: [
+          'Affordable compared with many CRM competitors',
+          'Broad feature set for growing teams',
+          'Good automation and workflow tools',
+          'Fits well inside the wider Zoho ecosystem'
+        ],
+        cons: [
+          'Interface can feel less polished than peers',
+          'Advanced setup takes some configuration work',
+          'Learning the ecosystem can take time',
+          'Some integrations are less seamless than top-tier rivals'
+        ],
+        price: 'Free / $14 per user/month',
+        logo: 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/zoho.svg'
+      },
+      {
+        id: 'pipedrive-crm',
+        name: 'Pipedrive',
+        description: 'A sales-focused CRM known for visual pipelines, straightforward usability, and fast setup for teams that need to move deals efficiently.',
+        pros: [
+          'Very intuitive pipeline management',
+          'Quick setup for lean sales teams',
+          'Strong activity and deal tracking',
+          'Good fit for outbound and SMB workflows'
+        ],
+        cons: [
+          'Less robust for complex enterprise needs',
+          'Advanced features require higher plans',
+          'Limited all-in-one marketing depth',
+          'Can need extra tools for broader operations'
+        ],
+        price: '$14 per user/month',
+        logo: 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/pipedrive.svg'
+      }
+    ]
   }
 ];
 

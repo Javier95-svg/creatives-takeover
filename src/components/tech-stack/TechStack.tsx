@@ -956,6 +956,7 @@ const BudgetDisplay: React.FC<BudgetDisplayProps> = ({
     const payments = selectedProductDetails.find(item => item.category === 'Payments')?.product;
     const email = selectedProductDetails.find(item => item.category === 'Email')?.product;
     const leadGen = selectedProductDetails.find(item => item.category === 'Lead Generation')?.product;
+    const crm = selectedProductDetails.find(item => item.category === 'CRM')?.product;
 
     // Next.js + Vercel integration
     if (frontend?.name === 'Next.js' && hosting?.name === 'Vercel') {
@@ -1071,8 +1072,8 @@ const BudgetDisplay: React.FC<BudgetDisplayProps> = ({
     if (leadGen?.name === 'Apollo.io' || leadGen?.name === 'Hunter') {
       integrations.push({
         title: `${leadGen.name} Lead Enrichment Workflow`,
-        description: 'Set up automated workflows to enrich leads from your app with contact data. Sync enriched leads to your CRM or send to email sequences.',
-        tools: [leadGen.name, email?.name || 'Email Service'],
+        description: `Set up automated workflows to enrich leads from your app with contact data. Sync enriched leads to ${crm?.name || 'your CRM'} or send them into ${email?.name || 'email'} sequences.`,
+        tools: [leadGen.name, crm?.name || 'CRM', email?.name || 'Email Service'],
         difficulty: 'advanced',
         benefits: [
           'Automated lead enrichment',

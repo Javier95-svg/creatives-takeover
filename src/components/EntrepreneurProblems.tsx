@@ -135,7 +135,7 @@ const EntrepreneurProblems = () => {
       return {
         to: "/tech-stack",
         title: "Tech Stack Builder",
-        description: "Pick the best tools across 7 product categories, each with 4 options, while estimating your monthly and annual budget.",
+        description: "Pick the best tools across 8 product categories, each with 4 options, while estimating your monthly and annual budget.",
         icon: Boxes,
       };
     }
