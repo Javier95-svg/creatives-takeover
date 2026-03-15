@@ -143,7 +143,7 @@ const EntrepreneurProblems = () => {
       return {
         to: "/community/co-founders",
         title: step.pathway,
-        description: "Browse potential partners and reduce the solo load with someone who complements your strengths.",
+        description: "The Co-Founder tab lets you post when you’re seeking a co-founder, instantly notifying all platform users to spark quick matches.",
         icon: Handshake,
       };
     }
