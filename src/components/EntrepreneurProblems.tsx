@@ -125,7 +125,7 @@ const EntrepreneurProblems = () => {
       return {
         to: "/insighta/vc-search",
         title: step.pathway,
-        description: "Open the investor search tool and start exploring aligned funding opportunities.",
+        description: "VC Search lets you explore a curated database of venture capital firms and accelerators to kickstart your fundraising journey.",
         icon: FileSearch,
       };
     }
