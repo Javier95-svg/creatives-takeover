@@ -89,7 +89,7 @@ const EntrepreneurProblems = () => {
       return {
         to: "/icp-builder",
         title: "Define your ICP",
-        description: step.pathway,
+        description: "ICP Builder guides you to define your ideal customer profile and niche market with actionable positioning strategies and pain point analysis.",
         icon: Target,
       };
     }
