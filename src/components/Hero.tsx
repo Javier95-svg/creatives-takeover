@@ -472,7 +472,7 @@ const Hero = () => {
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-center justify-center px-4 sm:px-0">
                 <Button size="lg" className="w-full sm:w-[180px] min-h-[44px] justify-center touch-manipulation" asChild>
                   <Link to="/signup" onClick={handlePrimaryCTAClick}>
-                    Start Now
+                    Start Today
                     <ArrowRight className="w-4 h-4" />
                   </Link>
                 </Button>
