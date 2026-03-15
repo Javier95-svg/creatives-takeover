@@ -480,7 +480,7 @@ const ValuePropositionCards = () => {
                             </div>
                           </div>
 
-                          <div className="text-base leading-relaxed text-foreground/85 space-y-4">
+                          <div className="font-poppins text-sm sm:text-[15px] leading-7 text-foreground/80 space-y-4">
                             {card.description.split('\n\n').map((paragraph, idx) => (
                               <p key={idx}>{paragraph}</p>
                             ))}
