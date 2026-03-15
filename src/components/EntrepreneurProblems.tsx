@@ -177,9 +177,6 @@ const EntrepreneurProblems = () => {
             <div className="rounded-lg bg-primary/10 p-2.5 text-primary">
               <ActionIcon className="h-6 w-6" />
             </div>
-            <span className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-              Open
-            </span>
           </div>
 
           <div className="space-y-2">
