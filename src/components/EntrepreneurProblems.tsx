@@ -107,7 +107,7 @@ const EntrepreneurProblems = () => {
       return {
         to: "/community",
         title: "Find a Mentor",
-        description: "Community gives you access to our international mentorship network, perfect for founders seeking professional advice to accelerate growth and avoid common pitfalls.",
+        description: "Community gives you access to our global mentorship network, ideal for founders seeking expert advice to grow faster and avoid common mistakes.",
         icon: Users,
       };
     }
