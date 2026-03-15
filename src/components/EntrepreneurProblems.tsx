@@ -256,25 +256,25 @@ const EntrepreneurProblems = () => {
                   </div>
 
                   {/* Desktop Layout (Alternating) */}
-                  <div className="hidden md:grid md:grid-cols-2 md:gap-6 lg:gap-8 items-center">
+                  <div className="hidden md:grid md:grid-cols-2 md:grid-rows-[auto_1fr] md:gap-x-6 md:gap-y-4 lg:gap-x-8">
                     {isEven ? (
                       <>
-                        <div className={`${index === 0 ? 'md:pr-8 lg:pr-16 xl:pr-20' : 'md:pr-6 lg:pr-10 xl:pr-12'} flex justify-center`}>
+                        <div className="md:col-start-2 md:row-start-1 text-center">
+                          <div className="mb-3 flex justify-center">
+                            <span className="inline-flex items-center rounded-full border border-green-300 dark:border-green-700 bg-green-100 dark:bg-green-900/30 px-2.5 py-0.5 text-[11px] font-medium text-green-700 dark:text-green-400">
+                              {step.phase}
+                            </span>
+                          </div>
+                          <h3 className="font-space-grotesk text-2xl font-semibold text-foreground">
+                            {step.challenge}
+                          </h3>
+                        </div>
+
+                        <div className={`${index === 0 ? 'md:pr-8 lg:pr-16 xl:pr-20' : 'md:pr-6 lg:pr-10 xl:pr-12'} md:col-start-1 md:row-start-2 self-center flex justify-center`}>
                           {renderPathwayAction(step, index)}
                         </div>
 
-                        <div className="relative z-10">
-                          <div className="mb-4 text-center">
-                            <div className="mb-3 flex justify-center">
-                              <span className="inline-flex items-center rounded-full border border-green-300 dark:border-green-700 bg-green-100 dark:bg-green-900/30 px-2.5 py-0.5 text-[11px] font-medium text-green-700 dark:text-green-400">
-                                {step.phase}
-                              </span>
-                            </div>
-                            <h3 className="font-space-grotesk text-2xl font-semibold text-foreground">
-                              {step.challenge}
-                            </h3>
-                          </div>
-
+                        <div className="relative z-10 md:col-start-2 md:row-start-2 self-center">
                           {index <= 6 ? (
                             <div className="w-full md:max-w-2xl lg:max-w-3xl xl:max-w-4xl ml-2 lg:ml-4">
                               <FounderJourneyVideo position={index} />
@@ -288,18 +288,18 @@ const EntrepreneurProblems = () => {
                       </>
                     ) : (
                       <>
-                        <div className="relative z-10">
-                          <div className="mb-4 text-center">
-                            <div className="mb-3 flex justify-center">
-                              <span className="inline-flex items-center rounded-full border border-green-300 dark:border-green-700 bg-green-100 dark:bg-green-900/30 px-2.5 py-0.5 text-[11px] font-medium text-green-700 dark:text-green-400">
-                                {step.phase}
-                              </span>
-                            </div>
-                            <h3 className="font-space-grotesk text-2xl font-semibold text-foreground">
-                              {step.challenge}
-                            </h3>
+                        <div className="md:col-start-1 md:row-start-1 text-center">
+                          <div className="mb-3 flex justify-center">
+                            <span className="inline-flex items-center rounded-full border border-green-300 dark:border-green-700 bg-green-100 dark:bg-green-900/30 px-2.5 py-0.5 text-[11px] font-medium text-green-700 dark:text-green-400">
+                              {step.phase}
+                            </span>
                           </div>
+                          <h3 className="font-space-grotesk text-2xl font-semibold text-foreground">
+                            {step.challenge}
+                          </h3>
+                        </div>
 
+                        <div className="relative z-10 md:col-start-1 md:row-start-2 self-center">
                           {index <= 6 ? (
                             <div className="w-full md:max-w-2xl lg:max-w-3xl xl:max-w-4xl mr-2 lg:mr-4">
                               <FounderJourneyVideo position={index} />
@@ -311,7 +311,7 @@ const EntrepreneurProblems = () => {
                           )}
                         </div>
 
-                        <div className={`${index === 1 ? 'md:pl-8 lg:pl-16 xl:pl-20' : 'md:pl-6 lg:pl-10 xl:pl-12'} flex justify-center`}>
+                        <div className={`${index === 1 ? 'md:pl-8 lg:pl-16 xl:pl-20' : 'md:pl-6 lg:pl-10 xl:pl-12'} md:col-start-2 md:row-start-2 self-center flex justify-center`}>
                           {renderPathwayAction(step, index)}
                         </div>
                       </>
