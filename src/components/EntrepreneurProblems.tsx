@@ -134,7 +134,7 @@ const EntrepreneurProblems = () => {
       return {
         to: "/tech-stack",
         title: "Tech Stack Builder",
-        description: "Compare options and shape a stack that fits your stage, team, and product direction.",
+        description: "Tech Stack Builder helps you choose tools across 7 product categories, each with 4 options, while estimating your personalized monthly and annual budget.",
         icon: Zap,
       };
     }
