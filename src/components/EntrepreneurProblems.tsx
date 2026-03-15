@@ -9,8 +9,8 @@ const EntrepreneurProblems = () => {
     {
       phase: "The Starting Point",
       challenge: "Scattered ideas without a clear direction",
-      insight: "Founders often have many ideas but struggle to turn them into a clear, focused plan. This creates confusion, delays decisions, and slows progress as they move between concepts without a solid strategy. Without a clear roadmap, they can lose momentum and miss important opportunities for growth.",
-      pathway: "BizMap AI guides you from scattered thoughts to a strategic plan—clarifying your market, competitors, and next steps in one conversation.",
+      insight: "Too many ideas, but no clear direction forward.",
+      pathway: "",
       icon: Lightbulb,
       accentColor: "blue", // Planning
     },
@@ -128,9 +128,7 @@ const EntrepreneurProblems = () => {
                   <div className="md:hidden flex gap-6">
                     {/* Icon or Video */}
                     <div className={index === 0 || index === 1 || index === 2 || index === 3 || index === 4 || index === 5 || index === 6 ? "w-full" : "flex-shrink-0"}>
-                      {index === 0 ? (
-                        <FounderJourneyVideo position={0} />
-                      ) : index === 1 ? (
+                      {index === 1 ? (
                         <FounderJourneyVideo position={1} />
                       ) : index === 2 ? (
                         <FounderJourneyVideo position={2} />
@@ -333,9 +331,9 @@ const EntrepreneurProblems = () => {
                     {/* Center Icon or Video (for all rows with GIF frames) */}
                     <div className="flex justify-center relative z-10">
                       {index === 0 ? (
-                        /* GIF Frame for First Row */
-                        <div className="w-full md:max-w-2xl lg:max-w-3xl xl:max-w-4xl ml-2 lg:ml-4">
-                          <FounderJourneyVideo position={0} />
+                        /* Regular Icon for First Row */
+                        <div className={`w-16 h-16 rounded-full flex items-center justify-center ${accentClasses.icon} shadow-sm bg-background transition-colors`}>
+                          <Icon className="w-9 h-9" />
                         </div>
                       ) : index === 1 ? (
                         /* GIF Frame for Second Row */
