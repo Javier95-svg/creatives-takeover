@@ -107,7 +107,7 @@ const EntrepreneurProblems = () => {
       return {
         to: "/community",
         title: "Find a Mentor",
-        description: step.pathway,
+        description: "Community gives you access to our international mentorship network, perfect for founders seeking professional advice to accelerate growth and avoid common pitfalls.",
         icon: Users,
       };
     }
