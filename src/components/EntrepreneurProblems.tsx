@@ -98,7 +98,7 @@ const EntrepreneurProblems = () => {
       return {
         to: "/pmf-lab",
         title: "Try PMF Lab",
-        description: step.pathway,
+        description: "PMF Lab assesses feedback from founders' landing page or waitlist shares, scoring 1-100 on market embrace probability.",
         icon: FlaskConical,
       };
     }
