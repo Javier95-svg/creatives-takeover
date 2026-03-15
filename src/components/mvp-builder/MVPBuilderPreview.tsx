@@ -27,6 +27,7 @@ import type {
   MVPPreviewResult,
   MVPProjectDependency,
   MVPProjectFile,
+  MVPProjectFramework,
   MVPProjectSnapshot,
   MVPProjectType,
 } from '@/lib/mvp-builder/project';
@@ -40,12 +41,20 @@ const LOADING_STEPS = [
 
 type PreviewTab = 'preview' | 'code' | 'domain';
 
+interface RuntimeConsoleEntry {
+  id: string;
+  level: 'log' | 'info' | 'warn' | 'error';
+  label: string;
+  message: string;
+}
+
 interface MVPBuilderPreviewProps {
   html: string | null;
   isGenerating: boolean;
   projectId: string;
   projectFiles: MVPProjectFile[];
   baselineFiles: MVPProjectFile[];
+  projectFramework: MVPProjectFramework;
   projectType: MVPProjectType;
   projectSummary: string;
   projectDependencies: MVPProjectDependency[];
@@ -70,6 +79,7 @@ export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({
   projectId,
   projectFiles,
   baselineFiles,
+  projectFramework,
   projectType,
   projectSummary,
   projectDependencies,
@@ -92,6 +102,8 @@ export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({
   const [copied, setCopied] = useState(false);
   const [loadingStep, setLoadingStep] = useState(0);
   const [activeTab, setActiveTab] = useState<PreviewTab>('preview');
+  const [consoleEntries, setConsoleEntries] = useState<RuntimeConsoleEntry[]>([]);
+  const [runtimeError, setRuntimeError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isGenerating) {
@@ -103,6 +115,72 @@ export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({
     }, 1400);
     return () => clearInterval(id);
   }, [isGenerating]);
+
+  useEffect(() => {
+    setConsoleEntries([]);
+    setRuntimeError(null);
+  }, [html, previewKey, projectId]);
+
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      const payload = event.data;
+      if (!payload || payload.source !== 'ct-mvp-builder-runtime') return;
+
+      if (payload.type === 'build-log') {
+        const level =
+          payload.payload?.level === 'warn' || payload.payload?.level === 'error'
+            ? payload.payload.level
+            : 'info';
+        const message =
+          typeof payload.payload?.message === 'string'
+            ? payload.payload.message
+            : 'Build event';
+        setConsoleEntries((prev) => [
+          ...prev.slice(-59),
+          { id: crypto.randomUUID(), level, label: 'Build', message },
+        ]);
+        if (level === 'error') {
+          setRuntimeError(message);
+        }
+        return;
+      }
+
+      if (payload.type === 'runtime-error') {
+        const message =
+          typeof payload.payload?.message === 'string'
+            ? payload.payload.message
+            : 'Runtime error';
+        setRuntimeError(message);
+        setConsoleEntries((prev) => [
+          ...prev.slice(-59),
+          { id: crypto.randomUUID(), level: 'error', label: 'Runtime', message },
+        ]);
+        return;
+      }
+
+      if (payload.type === 'console') {
+        const level =
+          payload.payload?.level === 'warn' || payload.payload?.level === 'error'
+            ? payload.payload.level
+            : payload.payload?.level === 'info'
+            ? 'info'
+            : 'log';
+        const args = Array.isArray(payload.payload?.args) ? payload.payload.args : [];
+        setConsoleEntries((prev) => [
+          ...prev.slice(-59),
+          {
+            id: crypto.randomUUID(),
+            level,
+            label: 'Console',
+            message: args.join(' '),
+          },
+        ]);
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, []);
 
   const htmlEntryOptions = useMemo(
     () => projectFiles.filter((file) => file.path.toLowerCase().endsWith('.html')),
@@ -143,7 +221,7 @@ export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({
   ) : previewState.canPreview && html ? (
     <span className="flex items-center gap-1.5 text-xs font-medium text-emerald-500">
       <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 shrink-0" />
-      Preview ready
+      {previewState.runtimeMode === 'sandbox' ? 'Sandbox ready' : 'Preview ready'}
     </span>
   ) : projectFiles.length > 0 ? (
     <span className="flex items-center gap-1.5 text-xs font-medium text-amber-600">
@@ -310,6 +388,7 @@ export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({
             <MVPBuilderCodePanel
               files={projectFiles}
               baselineFiles={baselineFiles}
+              projectFramework={projectFramework}
               projectType={projectType}
               projectSummary={projectSummary}
               projectDependencies={projectDependencies}
@@ -329,23 +408,23 @@ export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({
           </div>
         )}
 
-          {activeTab === 'preview' && (
+        {activeTab === 'preview' && (
           <div className="flex min-h-0 flex-1 flex-col">
-          <div
-            className={cn(
-              'flex flex-1 min-h-0 items-center justify-center overflow-hidden',
-              viewMode === 'mobile' ? 'bg-muted/20 p-4' : 'bg-muted/10 p-0'
-            )}
-            style={
-              !html
-                ? {
-                    backgroundImage:
-                      'radial-gradient(circle, hsl(var(--border)/0.6) 1px, transparent 1px)',
-                    backgroundSize: '24px 24px',
-                  }
-                : undefined
-            }
-          >
+            <div
+              className={cn(
+                'flex flex-1 min-h-0 items-center justify-center overflow-hidden',
+                viewMode === 'mobile' ? 'bg-muted/20 p-4' : 'bg-muted/10 p-0'
+              )}
+              style={
+                !html
+                  ? {
+                      backgroundImage:
+                        'radial-gradient(circle, hsl(var(--border)/0.6) 1px, transparent 1px)',
+                      backgroundSize: '24px 24px',
+                    }
+                  : undefined
+              }
+            >
             {!html && !isGenerating && projectFiles.length === 0 && (
               <div className="select-none px-8 py-12 text-center">
                 <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border border-primary/15 bg-gradient-to-br from-primary/20 to-primary/5">
@@ -370,10 +449,10 @@ export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({
                   </div>
                   <div>
                     <h3 className="text-sm font-semibold text-foreground">
-                      Preview needs a static HTML entry file
+                      Preview needs a runtime entry
                     </h3>
                     <p className="mt-2 text-sm text-muted-foreground">
-                      This project&apos;s code is available in the Code tab, but the preview renderer can only run static HTML, CSS, and plain JavaScript right now.
+                      This project&apos;s code is available in the Code tab, but the builder could not find a previewable HTML or framework entry point yet.
                     </p>
                     <div className="mt-4">
                       <Button size="sm" className="gap-1.5" onClick={() => setActiveTab('code')}>
@@ -432,6 +511,14 @@ export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({
                   </div>
                 )}
 
+                {runtimeError && !isGenerating && (
+                  <div className="absolute left-4 right-4 top-4 z-20">
+                    <div className="rounded-2xl border border-red-500/25 bg-background/95 px-4 py-3 text-sm text-red-700 shadow-lg backdrop-blur">
+                      {runtimeError}
+                    </div>
+                  </div>
+                )}
+
                 {isGenerating && (
                   <div className="absolute inset-0 z-10 flex items-center justify-center rounded-xl bg-background/60 backdrop-blur-sm">
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -453,7 +540,72 @@ export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({
                 />
               </div>
             )}
-          </div>
+            </div>
+            <div className="border-t border-border/40 bg-background/85 px-4 py-3">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                    Runtime Console
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {previewState.runtimeMode === 'sandbox'
+                      ? 'Build and runtime events for the in-browser sandbox appear here.'
+                      : 'Preview hints and runtime logs appear here.'}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  {previewState.consoleHints[0] && (
+                    <span className="hidden max-w-xs truncate text-xs text-muted-foreground md:inline">
+                      {previewState.consoleHints[0]}
+                    </span>
+                  )}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 px-3 text-xs"
+                    onClick={() => {
+                      setConsoleEntries([]);
+                      setRuntimeError(null);
+                    }}
+                  >
+                    Clear
+                  </Button>
+                </div>
+              </div>
+              <div className="mt-3 max-h-40 overflow-y-auto rounded-2xl border border-border/60 bg-muted/20">
+                {consoleEntries.length === 0 ? (
+                  <div className="px-4 py-4 text-sm text-muted-foreground">
+                    {isGenerating
+                      ? 'Waiting for the current build to finish...'
+                      : previewState.runtimeMode === 'sandbox'
+                      ? 'No runtime events yet. Build output will appear here once the sandbox starts.'
+                      : 'No runtime events yet.'}
+                  </div>
+                ) : (
+                  <div className="divide-y divide-border/40">
+                    {consoleEntries.map((entry) => (
+                      <div key={entry.id} className="flex gap-3 px-4 py-3 text-sm">
+                        <span
+                          className={cn(
+                            'mt-0.5 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em]',
+                            entry.level === 'error'
+                              ? 'bg-red-500/10 text-red-700'
+                              : entry.level === 'warn'
+                              ? 'bg-amber-500/10 text-amber-700'
+                              : 'bg-primary/10 text-primary'
+                          )}
+                        >
+                          {entry.label}
+                        </span>
+                        <p className="min-w-0 flex-1 break-words text-muted-foreground">
+                          {entry.message}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         )}
       </div>

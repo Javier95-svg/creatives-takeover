@@ -13,6 +13,7 @@ export const MVPBuilder: React.FC = () => {
     messages,
     projectFiles,
     entryFilePath,
+    projectFramework,
     previewState,
     selectedCodeFilePath,
     codeChanges,
@@ -158,6 +159,7 @@ export const MVPBuilder: React.FC = () => {
               projectId={projectId}
               projectFiles={projectFiles}
               baselineFiles={lastGeneratedProject?.files ?? []}
+              projectFramework={projectFramework}
               projectType={selectedProjectType}
               projectSummary={projectSummary}
               projectDependencies={projectDependencies}

@@ -16,8 +16,10 @@ import {
   buildPreviewFromProject,
   createProjectFromHtml,
   detectProjectFileLanguage,
+  extractProjectDependenciesFromFiles,
   extractProjectFromText,
   getChangedProjectFiles,
+  inferProjectFramework,
   normalizeProjectFiles,
   normalizeProjectPath,
   pickProjectEntryFile,
@@ -138,14 +140,20 @@ function shortSha(sha: string): string {
 
 function normalizeSnapshotArtifact(artifact: MVPProjectArtifact): MVPProjectArtifact {
   const normalizedFiles = normalizeProjectFiles(artifact.files);
+  const inferredFramework = inferProjectFramework(normalizedFiles, artifact.framework);
+  const fileDependencies = extractProjectDependenciesFromFiles(normalizedFiles);
   return {
     ...artifact,
+    framework: inferredFramework,
     projectType: sanitizeMVPProjectType(artifact.projectType),
     summary:
       typeof artifact.summary === 'string' && artifact.summary.trim()
         ? artifact.summary.trim()
         : 'Generated with MVP Builder.',
-    dependencies: Array.isArray(artifact.dependencies) ? artifact.dependencies : [],
+    dependencies:
+      Array.isArray(artifact.dependencies) && artifact.dependencies.length > 0
+        ? artifact.dependencies
+        : fileDependencies,
     files: normalizedFiles,
     entryFile:
       pickProjectEntryFile(normalizedFiles, artifact.entryFile) ??
@@ -218,13 +226,19 @@ function createProjectArtifactFromRepo(
   preferredEntryFile?: string | null
 ): MVPProjectArtifact {
   const projectFiles = mapRepoFilesToProjectFiles(files);
+  const inferredFramework = inferProjectFramework(projectFiles);
+  const entryFile =
+    pickProjectEntryFile(projectFiles, preferredEntryFile) ??
+    preferredEntryFile ??
+    projectFiles[0]?.path ??
+    'index.html';
   return {
     projectName: name,
-    framework: pickProjectEntryFile(projectFiles, preferredEntryFile) ? 'static-html' : 'code-only',
+    framework: inferredFramework,
     projectType: 'web-app',
-    entryFile: pickProjectEntryFile(projectFiles, preferredEntryFile) ?? projectFiles[0]?.path ?? 'index.html',
+    entryFile,
     summary: 'Imported from GitHub.',
-    dependencies: [],
+    dependencies: extractProjectDependenciesFromFiles(projectFiles),
     files: projectFiles,
   };
 }
@@ -256,6 +270,8 @@ export function useMVPBuilder() {
     canPreview: false,
     warnings: [],
     errors: [],
+    runtimeMode: 'none',
+    consoleHints: [],
   });
   const [selectedCodeFilePath, setSelectedCodeFilePath] = useState<string | null>(null);
   const [lastGeneratedProject, setLastGeneratedProject] = useState<MVPProjectArtifact | null>(null);
@@ -498,6 +514,15 @@ export function useMVPBuilder() {
         setProjectFiles([]);
         setProjectFramework('static-html');
         setCurrentHtml(null);
+        setPreviewState({
+          html: null,
+          entryFile: null,
+          canPreview: false,
+          warnings: [],
+          errors: [],
+          runtimeMode: 'none',
+          consoleHints: [],
+        });
       }
 
       if (session.lastGeneratedProject) {
@@ -1161,6 +1186,12 @@ export function useMVPBuilder() {
         role: message.role,
         content: message.content,
       }));
+      const preferredFramework =
+        projectFiles.length > 0
+          ? projectFramework
+          : selectedProjectType === 'landing-page'
+          ? 'static-html'
+          : 'react-vite';
 
       try {
         const {
@@ -1201,6 +1232,7 @@ export function useMVPBuilder() {
             userId: user?.id ?? null,
             selectedModels,
             preferredProjectType: selectedProjectType,
+            preferredFramework,
           }),
         });
 
@@ -1299,8 +1331,14 @@ export function useMVPBuilder() {
                   typeof nextProject.projectName === 'string' && nextProject.projectName.trim()
                     ? nextProject.projectName
                     : projectName,
-                framework: nextProject.framework === 'code-only' ? 'code-only' : 'static-html',
+                framework: inferProjectFramework(
+                  normalizeProjectFiles(nextProject.files || []),
+                  nextProject.framework
+                ),
                 entryFile: nextProject.entryFile,
+                projectType: nextProject.projectType,
+                summary: nextProject.summary,
+                dependencies: nextProject.dependencies,
                 files: normalizeProjectFiles(nextProject.files || []),
               };
             } else if (event.type === 'complete') {
@@ -1430,6 +1468,13 @@ export function useMVPBuilder() {
       }
 
       setProjectFiles(nextFiles);
+      setProjectFramework(inferProjectFramework(nextFiles, projectFramework));
+      setProjectDependencies((prev) => {
+        const fileDependencies = extractProjectDependenciesFromFiles(nextFiles);
+        return fileDependencies.length > 0 || normalizedPath === 'package.json'
+          ? fileDependencies
+          : prev;
+      });
       refreshPreview(nextFiles, entryFilePath || normalizedPath, {
         allowFallback: true,
       });
@@ -1454,7 +1499,7 @@ export function useMVPBuilder() {
         });
       }
     },
-    [entryFilePath, githubRepoSession, projectFiles, refreshPreview]
+    [entryFilePath, githubRepoSession, projectFiles, projectFramework, refreshPreview]
   );
 
   const resetProjectFile = useCallback(
@@ -1571,6 +1616,8 @@ export function useMVPBuilder() {
       canPreview: false,
       warnings: [],
       errors: [],
+      runtimeMode: 'none',
+      consoleHints: [],
     });
     setSelectedCodeFilePath(null);
     setLastGeneratedProject(null);

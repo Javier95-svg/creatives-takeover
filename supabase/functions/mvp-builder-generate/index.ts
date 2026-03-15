@@ -45,14 +45,17 @@ const GENERATE_SYSTEM_PROMPT = `You are an expert MVP web app builder focused on
 Your task is to generate a COMPLETE small web product for the user's idea as a structured project that can be previewed and manually edited.
 
 STRICT RULES:
-1. Return a project with real files. Default to index.html, styles.css, and app.js unless the request clearly needs a different static file layout.
-2. Only use static HTML, CSS, and plain browser JavaScript that runs without a build step. No React, no TypeScript, no package managers, no backend code, no framework-only syntax.
+1. Return a project with real files. Use either:
+   - static-html for landing pages and simple browser tools
+   - react-vite for richer app-like products
+   - next-like only for client-side page/app router demos without server code
+2. React/Vite projects should include package.json, index.html, and a src/ entry (for example src/main.tsx and src/App.tsx). Next-like projects should include package.json and either app/page.tsx or pages/index.tsx.
 3. Keep the code readable and trustworthy. Clear names, small functions, and only brief comments where necessary.
 4. Persist meaningful user data with localStorage when useful.
 5. Mobile-responsive layout with strong UX defaults, clear hierarchy, and accessible labels.
 6. Every button, form, tab, and filter must do something real.
 7. Include empty states, validation states, and at least basic success feedback.
-8. Use lightweight external CDNs only when they materially help the app and still run directly in a browser.
+8. Do not add backend code, shell scripts, or native dependencies. Keep everything client-side and previewable.
 9. Do NOT wrap the JSON in markdown fences.
 
 RESPONSE FORMAT:
@@ -65,17 +68,19 @@ Next Iteration: <one sentence improvement suggestion>
 <project-output>
 {
   "projectName": "Short project name",
-  "framework": "static-html",
+  "framework": "react-vite",
   "projectType": "web-app",
-  "entryFile": "index.html",
+  "entryFile": "src/main.tsx",
   "summary": "One-sentence summary of the generated product.",
   "dependencies": [
-    { "name": "Browser APIs", "source": "browser", "purpose": "Core interactions" }
+    { "name": "react", "source": "npm", "version": "^18.3.1", "purpose": "UI runtime" },
+    { "name": "react-dom", "source": "npm", "version": "^18.3.1", "purpose": "DOM rendering" }
   ],
   "files": [
+    { "path": "package.json", "content": "{\\"dependencies\\":{\\"react\\":\\"^18.3.1\\",\\"react-dom\\":\\"^18.3.1\\"}}" },
     { "path": "index.html", "content": "<!DOCTYPE html>..." },
-    { "path": "styles.css", "content": "..." },
-    { "path": "app.js", "content": "..." }
+    { "path": "src/main.tsx", "content": "..." },
+    { "path": "src/App.tsx", "content": "..." }
   ]
 }
 </project-output>`;
@@ -87,7 +92,7 @@ The user will describe a change. Your job:
 2. Make ONLY the requested change unless the current code is broken and needs a minimal fix to support it.
 3. Preserve file paths, localStorage keys, and working functionality whenever possible.
 4. Return the FULL updated project, not a partial patch.
-5. Keep the project static-browser compatible: HTML, CSS, and plain JavaScript only.
+5. Preserve the current framework unless the user explicitly asks to switch. Supported previewable frameworks are static-html, react-vite, and next-like client demos.
 6. Keep the code easy to trust and edit manually.
 
 RESPONSE FORMAT:
@@ -99,13 +104,14 @@ How to Prompt Next: <one sentence suggestion>
 <project-output>
 {
   "projectName": "Short project name",
-  "framework": "static-html",
+  "framework": "react-vite",
   "projectType": "web-app",
-  "entryFile": "index.html",
+  "entryFile": "src/main.tsx",
   "summary": "One-sentence summary of the generated product.",
   "dependencies": [],
   "files": [
-    { "path": "index.html", "content": "<!DOCTYPE html>..." }
+    { "path": "index.html", "content": "<!DOCTYPE html>..." },
+    { "path": "src/main.tsx", "content": "..." }
   ]
 }
 </project-output>`;
@@ -174,6 +180,7 @@ function extractProject(fullText: string) {
         dependencies?: Array<{
           name?: unknown;
           source?: unknown;
+          version?: unknown;
           url?: unknown;
           purpose?: unknown;
         }>;
@@ -200,7 +207,12 @@ function extractProject(fullText: string) {
             typeof parsed.projectName === "string" && parsed.projectName.trim()
               ? parsed.projectName.trim()
               : "Generated App",
-          framework: parsed.framework === "code-only" ? "code-only" : "static-html",
+          framework:
+            parsed.framework === "react-vite" ||
+            parsed.framework === "next-like" ||
+            parsed.framework === "code-only"
+              ? parsed.framework
+              : "static-html",
           projectType:
             parsed.projectType === "landing-page" ||
             parsed.projectType === "dashboard" ||
@@ -225,7 +237,16 @@ function extractProject(fullText: string) {
                   }
                   return {
                     name: dependency.name.trim(),
-                    source: dependency.source === "cdn" ? "cdn" : "browser",
+                    source:
+                      dependency.source === "cdn"
+                        ? "cdn"
+                        : dependency.source === "npm"
+                        ? "npm"
+                        : "browser",
+                    version:
+                      typeof dependency.version === "string" && dependency.version.trim()
+                        ? dependency.version.trim()
+                        : undefined,
                     url:
                       typeof dependency.url === "string" && dependency.url.trim()
                         ? dependency.url.trim()
@@ -397,7 +418,16 @@ serve(async (req: Request) => {
     | {
         projectName?: string;
         framework?: string;
+        projectType?: string;
         entryFile?: string;
+        summary?: string;
+        dependencies?: Array<{
+          name?: string;
+          source?: string;
+          version?: string;
+          url?: string;
+          purpose?: string;
+        }>;
         files?: Array<{ path?: string; content?: string }>;
       }
     | null;
@@ -405,6 +435,7 @@ serve(async (req: Request) => {
   let userId: string | null;
   let selectedModelsRaw: unknown;
   let preferredProjectType: string | null;
+  let preferredFramework: string | null;
 
   try {
     const body = await req.json();
@@ -416,6 +447,7 @@ serve(async (req: Request) => {
     userId = body.userId ?? null;
     selectedModelsRaw = body.selectedModels;
     preferredProjectType = typeof body.preferredProjectType === "string" ? body.preferredProjectType : null;
+    preferredFramework = typeof body.preferredFramework === "string" ? body.preferredFramework : null;
   } catch {
     return errorStream("Invalid request body", "BAD_REQUEST");
   }
@@ -475,15 +507,18 @@ serve(async (req: Request) => {
   const projectTypeInstruction = preferredProjectType
     ? `Preferred project type: ${preferredProjectType}. Honor this unless the request strongly contradicts it.`
     : "";
+  const frameworkInstruction = preferredFramework
+    ? `Preferred framework: ${preferredFramework}. For landing pages and simple brochure flows prefer static-html. For richer app flows prefer react-vite. Only use next-like for client-side page demos.`
+    : "";
   if (!isFirstGeneration && currentProject) {
     userContent =
       `Current project files (edit this exact project):\n<project-source>\n${JSON.stringify(
         currentProject,
         null,
         2
-      )}\n</project-source>\n\n${projectTypeInstruction}\n\nUser request:\n${userMessage}`;
-  } else if (projectTypeInstruction) {
-    userContent = `${projectTypeInstruction}\n\nUser request:\n${userMessage}`;
+      )}\n</project-source>\n\n${projectTypeInstruction}\n${frameworkInstruction}\n\nUser request:\n${userMessage}`;
+  } else if (projectTypeInstruction || frameworkInstruction) {
+    userContent = `${projectTypeInstruction}\n${frameworkInstruction}\n\nUser request:\n${userMessage}`;
   }
 
   // Resolve selected model set (single or multi-model combo)

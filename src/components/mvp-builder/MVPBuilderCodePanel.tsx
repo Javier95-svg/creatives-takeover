@@ -16,6 +16,7 @@ import { cn } from '@/lib/utils';
 import type {
   MVPProjectDependency,
   MVPProjectFile,
+  MVPProjectFramework,
   MVPProjectSnapshot,
   MVPProjectType,
 } from '@/lib/mvp-builder/project';
@@ -24,6 +25,7 @@ import { getMVPProjectTypeLabel } from '@/data/mvpProjectTypes';
 interface MVPBuilderCodePanelProps {
   files: MVPProjectFile[];
   baselineFiles: MVPProjectFile[];
+  projectFramework: MVPProjectFramework;
   projectType: MVPProjectType;
   projectSummary: string;
   projectDependencies: MVPProjectDependency[];
@@ -44,6 +46,7 @@ interface MVPBuilderCodePanelProps {
 export const MVPBuilderCodePanel: React.FC<MVPBuilderCodePanelProps> = ({
   files,
   baselineFiles,
+  projectFramework,
   projectType,
   projectSummary,
   projectDependencies,
@@ -400,6 +403,10 @@ export const MVPBuilderCodePanel: React.FC<MVPBuilderCodePanelProps> = ({
               </p>
               <div className="mt-3 space-y-3 text-sm text-foreground">
                 <div className="flex items-center justify-between">
+                  <span>Framework</span>
+                  <span className="font-medium">{projectFramework}</span>
+                </div>
+                <div className="flex items-center justify-between">
                   <span>Project type</span>
                   <span className="font-medium">{getMVPProjectTypeLabel(projectType)}</span>
                 </div>
@@ -419,7 +426,9 @@ export const MVPBuilderCodePanel: React.FC<MVPBuilderCodePanelProps> = ({
                       >
                         <p className="text-sm font-medium text-foreground">{dependency.name}</p>
                         <p className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
-                          {dependency.source}
+                          {dependency.version
+                            ? `${dependency.source} · ${dependency.version}`
+                            : dependency.source}
                         </p>
                         {dependency.purpose && (
                           <p className="mt-1 text-xs text-muted-foreground">{dependency.purpose}</p>
