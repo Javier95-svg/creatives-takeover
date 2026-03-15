@@ -138,6 +138,35 @@ function shortSha(sha: string): string {
   return sha.slice(0, 8);
 }
 
+function resolvePreferredFramework(
+  prompt: string,
+  selectedProjectType: MVPProjectType,
+  existingFramework?: MVPProjectFramework | null
+): MVPProjectFramework {
+  if (existingFramework) {
+    return existingFramework;
+  }
+
+  const normalizedPrompt = prompt.toLowerCase();
+  if (/\bnext\.?js\b|\bnext\b|\bapp router\b|\bpage router\b/.test(normalizedPrompt)) {
+    return 'next-like';
+  }
+
+  if (
+    /\breact\b|\bvite\b|\btsx\b|\bjsx\b|\bcomponent\b|\bsingle[- ]page\b|\bspa\b/.test(
+      normalizedPrompt
+    )
+  ) {
+    return 'react-vite';
+  }
+
+  if (selectedProjectType === 'landing-page') {
+    return 'static-html';
+  }
+
+  return 'static-html';
+}
+
 function normalizeSnapshotArtifact(artifact: MVPProjectArtifact): MVPProjectArtifact {
   const normalizedFiles = normalizeProjectFiles(artifact.files);
   const inferredFramework = inferProjectFramework(normalizedFiles, artifact.framework);
@@ -1189,9 +1218,7 @@ export function useMVPBuilder() {
       const preferredFramework =
         projectFiles.length > 0
           ? projectFramework
-          : selectedProjectType === 'landing-page'
-          ? 'static-html'
-          : 'react-vite';
+          : resolvePreferredFramework(prompt, selectedProjectType);
 
       try {
         const {
