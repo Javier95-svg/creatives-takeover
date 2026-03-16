@@ -5,7 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import type { EmailOtpType } from '@supabase/supabase-js';
-import { appendReturnParam, persistOnboardingReturn, sanitizeReturnPath } from '@/lib/authRedirect';
+import { appendReturnParam, buildOnboardingPath, persistOnboardingReturn, sanitizeReturnPath } from '@/lib/authRedirect';
 
 const AuthCallback = () => {
   const navigate = useNavigate();
@@ -149,18 +149,34 @@ const AuthCallback = () => {
             try {
               const { trackActivity } = await import('@/lib/activity');
               await trackActivity('user:signup_oauth', { provider: 'google', source: oauthSource });
-            } catch {}
+            } catch (trackingError) {
+              console.warn('Failed to track OAuth signup source:', trackingError);
+            }
           }
           
-          // Navigate to return URL or check for BizMap progress
-          if (returnUrl.includes('dream2plan') || savedBizMapProgress) {
+          const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('onboarding_completed')
+            .eq('id', session.user.id)
+            .maybeSingle();
+
+          if (profileError) {
+            console.error('Error resolving onboarding status after auth callback:', profileError);
+          }
+
+          const destination = profile?.onboarding_completed === true
+            ? returnUrl
+            : buildOnboardingPath(returnUrl);
+
+          // Navigate to return URL or route incomplete users through onboarding first
+          if (destination.includes('dream2plan') || (destination === returnUrl && savedBizMapProgress)) {
             toast.success("Restoring your business plan...");
             setTimeout(() => {
-              navigate(returnUrl);
+              navigate(destination);
             }, 500);
           } else {
             setTimeout(() => {
-              navigate(returnUrl);
+              navigate(destination);
             }, 500);
           }
         } else {
