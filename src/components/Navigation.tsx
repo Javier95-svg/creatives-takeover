@@ -400,15 +400,14 @@ const Navigation = () => {
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <DropdownMenuTrigger className={cn(
-                              "relative flex items-center gap-1 px-3 py-2 rounded-lg transition-all duration-250 whitespace-nowrap font-medium text-sm outline-none",
-                              "nav-item-hover-effect",
+                              navTriggerBaseClass,
                               active
-                                ? "text-foreground bg-primary/5 nav-active-indicator active"
-                                : `text-muted-foreground ${colorClass}`
+                                ? navTriggerActiveClass
+                                : navTriggerInactiveClass
                             )}>
-                              {Icon && <Icon className="h-4 w-4 flex-shrink-0" />}
+                              {Icon && <Icon className="h-4 w-4 flex-shrink-0 opacity-70 transition-opacity group-hover:opacity-100" />}
                               <span className="tracking-wide">{item.name}</span>
-                              <ChevronDown className="h-3 w-3 ml-0.5" />
+                              <ChevronDown className="h-3 w-3 ml-0.5 opacity-60" />
                             </DropdownMenuTrigger>
                           </TooltipTrigger>
                           <TooltipContent>
