@@ -476,35 +476,37 @@ const Navigation = () => {
               ) : user ? (
                 <div className="flex items-center gap-2.5 self-center">
                   <CreditDisplay variant="navigation" showPurchaseButton={true} />
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setShowFriendRequests(true)}
-                    className={cn(navActionButtonClass, "touch-manipulation")}
-                  >
-                    <UserPlus className="w-5 h-5" />
-                    {pendingFriendRequests.length > 0 && (
-                      <Badge variant="destructive" className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs animate-pulse">
-                        {pendingFriendRequests.length}
-                      </Badge>
-                    )}
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    asChild
-                    className={cn(navActionButtonClass, "touch-manipulation")}
-                  >
-                    <Link to="/messages">
-                      <MessageCircle className="w-5 h-5" />
-                      {totalUnreadMessages > 0 && (
-                        <Badge variant="destructive" className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs">
-                          {totalUnreadMessages > 9 ? '9+' : totalUnreadMessages}
+                  <div className="flex items-center gap-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setShowFriendRequests(true)}
+                      className={cn(navActionButtonClass, "touch-manipulation")}
+                    >
+                      <UserPlus className="w-5 h-5" />
+                      {pendingFriendRequests.length > 0 && (
+                        <Badge variant="destructive" className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs animate-pulse">
+                          {pendingFriendRequests.length}
                         </Badge>
                       )}
-                    </Link>
-                  </Button>
-                  <NotificationBell />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      asChild
+                      className={cn(navActionButtonClass, "touch-manipulation")}
+                    >
+                      <Link to="/messages">
+                        <MessageCircle className="w-5 h-5" />
+                        {totalUnreadMessages > 0 && (
+                          <Badge variant="destructive" className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs">
+                            {totalUnreadMessages > 9 ? '9+' : totalUnreadMessages}
+                          </Badge>
+                        )}
+                      </Link>
+                    </Button>
+                    <NotificationBell />
+                  </div>
                   <ThemeToggle />
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
