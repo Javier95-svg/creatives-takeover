@@ -13,6 +13,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import SEO, { createOrganizationSchema, createWebSiteSchema, createBreadcrumbSchema } from "@/components/SEO";
 import Footer from "@/components/Footer";
 import { usePageAnalytics } from "@/hooks/usePageAnalytics";
+import HomeRevealSection from "@/components/home/HomeRevealSection";
 import HomeWallpaper from "@/components/wallpapers/HomeWallpaper";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -76,17 +77,27 @@ const Index = () => {
   const marketingContent = (
     <>
       <Hero />
-      <EntrepreneurProblems />
+      <HomeRevealSection staggerChildren>
+        <EntrepreneurProblems />
+      </HomeRevealSection>
 
-      <UserReviews />
+      <HomeRevealSection delay={80} staggerChildren>
+        <UserReviews />
+      </HomeRevealSection>
 
-      <AISpecializationTrends />
+      <HomeRevealSection delay={120} staggerChildren>
+        <AISpecializationTrends />
+      </HomeRevealSection>
 
-      <ValuePropositionCards />
+      <HomeRevealSection delay={160} staggerChildren>
+        <ValuePropositionCards />
+      </HomeRevealSection>
 
-      <Suspense fallback={<div className="h-96 animate-pulse bg-muted/20" />}>
-        <HomeFAQ />
-      </Suspense>
+      <HomeRevealSection delay={200} staggerChildren>
+        <Suspense fallback={<div className="h-96 animate-pulse bg-muted/20" />}>
+          <HomeFAQ />
+        </Suspense>
+      </HomeRevealSection>
     </>
   );
 

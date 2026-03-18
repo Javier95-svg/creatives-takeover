@@ -3218,6 +3218,50 @@ img {
     transform: translateY(0);
   }
 
+  .home-reveal-section {
+    opacity: 0;
+    transform: translateY(32px);
+    transition:
+      opacity 700ms cubic-bezier(0.22, 1, 0.36, 1),
+      transform 700ms cubic-bezier(0.22, 1, 0.36, 1);
+    will-change: opacity, transform;
+  }
+
+  .home-reveal-section.revealed {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .home-reveal-section.home-reveal-stagger > * {
+    opacity: 0;
+    transform: translateY(22px);
+    transition:
+      opacity 620ms cubic-bezier(0.22, 1, 0.36, 1),
+      transform 620ms cubic-bezier(0.22, 1, 0.36, 1);
+    will-change: opacity, transform;
+  }
+
+  .home-reveal-section.home-reveal-stagger.revealed > * {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .home-reveal-section.home-reveal-stagger.revealed > *:nth-child(1) {
+    transition-delay: 80ms;
+  }
+
+  .home-reveal-section.home-reveal-stagger.revealed > *:nth-child(2) {
+    transition-delay: 160ms;
+  }
+
+  .home-reveal-section.home-reveal-stagger.revealed > *:nth-child(3) {
+    transition-delay: 240ms;
+  }
+
+  .home-reveal-section.home-reveal-stagger.revealed > *:nth-child(4) {
+    transition-delay: 320ms;
+  }
+
   /* Smooth Gradient Text Animation */
   @keyframes gradientShift {
     0% {
@@ -3353,14 +3397,21 @@ img {
   }
 
   /* Reduced motion support */
-  @media (prefers-reduced-motion: reduce) {
-    .flickering-lightbulb,
-    .lightbulb-bulb,
-    .lightbulb-filament,
-    .lightbulb-glow,
-    .lightbulb-base {
-      animation: none !important;
-    }
+@media (prefers-reduced-motion: reduce) {
+  .flickering-lightbulb,
+  .lightbulb-bulb,
+  .lightbulb-filament,
+  .lightbulb-glow,
+  .lightbulb-base {
+    animation: none !important;
   }
+
+  .home-reveal-section,
+  .home-reveal-section.home-reveal-stagger > * {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+}
 
 }
