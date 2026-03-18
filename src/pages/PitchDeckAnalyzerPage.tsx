@@ -85,7 +85,7 @@ export default function PitchDeckAnalyzerPage() {
           />
         </div>
 
-        <section className="py-20 px-4 relative z-10" data-section="pitch-deck-analyzer">
+        <section className="px-4 pt-28 pb-20 md:pt-32 lg:pt-36 relative z-10" data-section="pitch-deck-analyzer">
           <div className="container mx-auto max-w-5xl">
             {!analysis ? (
               <>

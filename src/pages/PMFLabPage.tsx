@@ -53,7 +53,7 @@ export default function PMFLabPage() {
       <Navigation />
 
       <main>
-        <section className="py-20 px-4 relative overflow-hidden">
+        <section className="px-4 pt-28 pb-20 md:pt-32 lg:pt-36 relative overflow-hidden">
           {/* Background — same as original PMF Lab */}
           <div className="absolute inset-0 pointer-events-none overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-b from-background via-background/95 to-background" />

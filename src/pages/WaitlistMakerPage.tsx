@@ -33,7 +33,7 @@ export default function WaitlistMakerPage() {
       <div className="relative z-10">
         <Navigation />
 
-        <main className="px-4 py-16 md:py-20">
+        <main className="px-4 pt-28 pb-16 md:pt-32 md:pb-20 lg:pt-36">
           <div className="container mx-auto max-w-[1580px] space-y-8">
             <div className="mx-auto max-w-4xl space-y-4 px-2 text-center">
               <h1 className="pb-2 text-center font-bold leading-[0.95] text-4xl sm:text-5xl md:text-6xl lg:text-7xl">

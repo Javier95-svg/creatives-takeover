@@ -33,7 +33,7 @@ export default function DirectoriesPage() {
       <div className="relative z-10">
         <Navigation />
 
-        <main className="py-20 px-4">
+        <main className="px-4 pt-28 pb-20 md:pt-32 lg:pt-36">
           <div className="container mx-auto max-w-5xl space-y-6">
             <div className="space-y-3 text-center">
               <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold creatives-font takeover-gradient leading-tight pb-2">

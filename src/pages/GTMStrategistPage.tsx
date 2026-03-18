@@ -64,7 +64,7 @@ export default function GTMStrategistPage() {
       <div className="relative z-10">
         <Navigation />
 
-        <main className="py-20 px-4">
+        <main className="px-4 pt-28 pb-20 md:pt-32 lg:pt-36">
           <div className="container mx-auto max-w-5xl">
 
           {/* Phase A — Intake Wizard */}

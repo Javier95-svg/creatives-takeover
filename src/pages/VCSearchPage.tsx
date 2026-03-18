@@ -50,7 +50,7 @@ export default function VCSearchPage() {
       <Navigation />
 
       <main>
-        <section className="py-20 px-4 relative overflow-hidden" data-section="vc-search">
+        <section className="px-4 pt-28 pb-20 md:pt-32 lg:pt-36 relative overflow-hidden" data-section="vc-search">
           <VCWallpaper />
 
           <div className="container mx-auto max-w-5xl relative z-10">
