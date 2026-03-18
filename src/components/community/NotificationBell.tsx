@@ -15,6 +15,7 @@ import { useCommunityNotifications, type CommunityNotification } from '@/hooks/u
 import { useAuth } from '@/contexts/AuthContext';
 import { formatDistanceToNow } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
+import { cn } from '@/lib/utils';
 
 export const NotificationBell = () => {
   const { user } = useAuth();
@@ -167,7 +168,7 @@ export const NotificationBell = () => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative">
+        <Button variant="ghost" size="icon" className="relative nav-action-button h-10 w-10">
           <Bell className="w-4 h-4" />
           {unreadCount > 0 && (
             <Badge 
@@ -179,7 +180,7 @@ export const NotificationBell = () => {
           )}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-80 bg-background border shadow-lg z-50">
+      <DropdownMenuContent align="end" className={cn("nav-dropdown-surface z-50 w-80")}>
         <DropdownMenuLabel className="flex justify-between items-center">
           <span>Notifications</span>
           {unreadCount > 0 && (

@@ -46,7 +46,7 @@ const Navigation = () => {
   const [showFriendRequests, setShowFriendRequests] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string>("");
   const [lockedMenuItem, setLockedMenuItem] = useState<{ name: string; reason: string } | null>(null);
-  const { user, signOut, loading, isAuthenticated } = useAuth();
+  const { user, signOut, loading } = useAuth();
   const { pendingFriendRequests } = useSocial(user?.id || '');
   const { trackClick } = usePageAnalytics();
   const deviceType = useDeviceType();
@@ -160,22 +160,35 @@ const Navigation = () => {
     return location.pathname.startsWith(href);
   };
 
+  const navTriggerBaseClass =
+    "group relative flex items-center gap-2 px-3.5 py-2 rounded-xl whitespace-nowrap font-medium text-sm outline-none nav-item-hover-effect";
+  const navTriggerActiveClass =
+    "text-foreground bg-background/78 shadow-[inset_0_0_0_1px_hsl(var(--border)/0.78)] nav-active-indicator active";
+  const navTriggerInactiveClass = "text-muted-foreground/90 hover:text-foreground";
+  const navDropdownClass =
+    "nav-dropdown-surface max-w-[calc(100vw-2rem)]";
+  const navActionButtonClass =
+    "nav-action-button relative h-10 w-10 rounded-[14px] text-muted-foreground hover:text-foreground";
+
   return (
     <TooltipProvider delayDuration={200}>
       <nav
         style={{ top: 'var(--banner-height, 0)' } as React.CSSProperties}
-        className={cn(
-          "fixed left-0 right-0 z-50 border-b transition-all duration-300",
-          scrolled
-            ? "bg-background/95 backdrop-blur-lg shadow-sm border-border/70"
-            : "bg-background/85 backdrop-blur-md border-border/60"
-        )}
+        className="fixed left-0 right-0 z-50 transition-all duration-300"
       >
-        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-12 border-0">
-          <div className="flex items-center h-16 md:h-18 border-0">
+        <div className="max-w-[1600px] mx-auto px-3 sm:px-5 lg:px-8 pt-3">
+          <div
+            className={cn(
+              "rounded-[22px] border transition-all duration-300 backdrop-blur-xl",
+              scrolled
+                ? "bg-background/88 border-border/75 shadow-[0_18px_40px_-24px_hsl(var(--foreground)/0.24)]"
+                : "bg-background/74 border-border/60 shadow-[0_10px_26px_-20px_hsl(var(--foreground)/0.18)]"
+            )}
+          >
+          <div className="flex items-center h-16 md:h-[70px] px-3 sm:px-4 lg:px-6 border-0">
             {/* Logo with Enhanced Hover Effects - Fixed width to prevent layout shifts */}
             <div className="flex items-center border-0 flex-shrink-0 w-16 min-w-[4rem]">
-              <Link to="/" className="flex items-center justify-center w-full" aria-label="Home">
+              <Link to="/" className="flex items-center justify-center w-full rounded-xl" aria-label="Home">
                 <img
                   src={ctLogoPolished}
                   alt="Creatives Takeover Logo"
@@ -200,22 +213,10 @@ const Navigation = () => {
 
             {/* Desktop Navigation */}
             {deviceType === 'desktop' && (
-              <div className="flex items-center justify-evenly flex-1 pl-8 lg:pl-12 pr-8 lg:pr-16 !border-0 gap-1">
+              <div className="flex items-center justify-center flex-1 pl-6 lg:pl-10 pr-6 lg:pr-10 !border-0 gap-1.5">
                 {navItems.map((item) => {
                   const Icon = item.icon || iconMap[item.name];
                   const active = isActive(item.href);
-
-                  // Color-code navigation items semantically
-                  let colorClass = '';
-                  if (item.name === 'BizMap AI' || item.name === 'Prompt Library') {
-                    colorClass = 'hover:text-planning';
-                  } else if (item.name === 'Community' || item.name === 'Stories' || item.name === 'About Us') {
-                    colorClass = 'hover:text-action';
-                  } else if (item.name === 'Insighta' || item.name === 'Pricing') {
-                    colorClass = 'hover:text-growth';
-                  } else {
-                    colorClass = 'hover:text-primary';
-                  }
 
                   // Special handling for BizMap AI with dropdown
                   if (item.name === 'BizMap AI') {
@@ -224,22 +225,21 @@ const Navigation = () => {
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <DropdownMenuTrigger className={cn(
-                              "relative flex items-center gap-1 px-3 py-2 rounded-lg transition-all duration-250 whitespace-nowrap font-medium text-sm outline-none",
-                              "nav-item-hover-effect",
+                              navTriggerBaseClass,
                               active
-                                ? "text-foreground bg-primary/5 nav-active-indicator active"
-                                : `text-muted-foreground ${colorClass}`
+                                ? navTriggerActiveClass
+                                : navTriggerInactiveClass
                             )}>
-                              {Icon && <Icon className="h-4 w-4 flex-shrink-0" />}
+                              {Icon && <Icon className="h-4 w-4 flex-shrink-0 opacity-70 transition-opacity group-hover:opacity-100" />}
                               <span className="tracking-wide">{item.name}</span>
-                              <ChevronDown className="h-3 w-3 ml-0.5" />
+                              <ChevronDown className="h-3 w-3 ml-0.5 opacity-60" />
                             </DropdownMenuTrigger>
                           </TooltipTrigger>
                           <TooltipContent>
                             <p>{item.tooltip}</p>
                           </TooltipContent>
                         </Tooltip>
-                        <DropdownMenuContent align="start" className="w-80 md:w-72 sm:w-64 max-w-[calc(100vw-2rem)] max-h-[min(520px,80vh)] overflow-y-auto overscroll-contain">
+                        <DropdownMenuContent align="start" className={cn("w-80 md:w-72 sm:w-64 max-h-[min(520px,80vh)] overflow-y-auto overscroll-contain", navDropdownClass)}>
                           <DropdownMenuLabel>Validate ✅ Build 🛠️ Launch 🚀</DropdownMenuLabel>
                           <DropdownMenuSeparator />
                           {bizMapSubmenu.map((subItem, idx) => {
@@ -306,22 +306,21 @@ const Navigation = () => {
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <DropdownMenuTrigger className={cn(
-                              "relative flex items-center gap-1 px-3 py-2 rounded-lg transition-all duration-250 whitespace-nowrap font-medium text-sm outline-none",
-                              "nav-item-hover-effect",
+                              navTriggerBaseClass,
                               active
-                                ? "text-foreground bg-primary/5 nav-active-indicator active"
-                                : `text-muted-foreground ${colorClass}`
+                                ? navTriggerActiveClass
+                                : navTriggerInactiveClass
                             )}>
-                              {Icon && <Icon className="h-4 w-4 flex-shrink-0" />}
+                              {Icon && <Icon className="h-4 w-4 flex-shrink-0 opacity-70 transition-opacity group-hover:opacity-100" />}
                               <span className="tracking-wide">{item.name}</span>
-                              <ChevronDown className="h-3 w-3 ml-0.5" />
+                              <ChevronDown className="h-3 w-3 ml-0.5 opacity-60" />
                             </DropdownMenuTrigger>
                           </TooltipTrigger>
                           <TooltipContent>
                             <p>{item.tooltip}</p>
                           </TooltipContent>
                         </Tooltip>
-                        <DropdownMenuContent align="start" className="w-72 md:w-56 sm:w-full max-w-[calc(100vw-2rem)]">
+                        <DropdownMenuContent align="start" className={cn("w-72 md:w-56 sm:w-full", navDropdownClass)}>
                           <DropdownMenuLabel>Fundraising Tools 💸</DropdownMenuLabel>
                           <DropdownMenuSeparator />
                           {insightaSubmenu.map((subItem) => {
@@ -354,22 +353,21 @@ const Navigation = () => {
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <DropdownMenuTrigger className={cn(
-                              "relative flex items-center gap-1 px-3 py-2 rounded-lg transition-all duration-250 whitespace-nowrap font-medium text-sm outline-none",
-                              "nav-item-hover-effect",
+                              navTriggerBaseClass,
                               active
-                                ? "text-foreground bg-primary/5 nav-active-indicator active"
-                                : `text-muted-foreground ${colorClass}`
+                                ? navTriggerActiveClass
+                                : navTriggerInactiveClass
                             )}>
-                              {Icon && <Icon className="h-4 w-4 flex-shrink-0" />}
+                              {Icon && <Icon className="h-4 w-4 flex-shrink-0 opacity-70 transition-opacity group-hover:opacity-100" />}
                               <span className="tracking-wide">{item.name}</span>
-                              <ChevronDown className="h-3 w-3 ml-0.5" />
+                              <ChevronDown className="h-3 w-3 ml-0.5 opacity-60" />
                             </DropdownMenuTrigger>
                           </TooltipTrigger>
                           <TooltipContent>
                             <p>{item.tooltip}</p>
                           </TooltipContent>
                         </Tooltip>
-                        <DropdownMenuContent align="start" className="w-72 md:w-56 sm:w-full max-w-[calc(100vw-2rem)]">
+                        <DropdownMenuContent align="start" className={cn("w-72 md:w-56 sm:w-full", navDropdownClass)}>
                           <DropdownMenuLabel>Connect & Collaborate 🌐</DropdownMenuLabel>
                           <DropdownMenuSeparator />
                           {communitySubmenu.map((subItem) => {
@@ -450,17 +448,16 @@ const Navigation = () => {
                           to={item.href}
                           onClick={() => trackClick(item.name, 'Navigation')}
                           className={cn(
-                            "relative flex items-center gap-1.5 px-3 py-2 rounded-lg transition-all duration-250 whitespace-nowrap font-medium text-sm",
-                            "nav-item-hover-effect",
+                            navTriggerBaseClass,
                             active
-                              ? "text-foreground bg-primary/5 nav-active-indicator active"
-                              : `text-muted-foreground ${colorClass}`,
+                              ? navTriggerActiveClass
+                              : navTriggerInactiveClass,
                             item.name === 'BizMap AI' && 'relative'
                           )}
                           onMouseEnter={item.name === 'BizMap AI' ? bizMapHover.handleMouseEnter : undefined}
                           onMouseLeave={item.name === 'BizMap AI' ? bizMapHover.handleMouseLeave : undefined}
                         >
-                          {Icon && <Icon className="h-4 w-4 flex-shrink-0" />}
+                          {Icon && <Icon className="h-4 w-4 flex-shrink-0 opacity-70 transition-opacity group-hover:opacity-100" />}
                           <span className="tracking-wide">{item.name}</span>
                         </Link>
                       </TooltipTrigger>
@@ -478,13 +475,13 @@ const Navigation = () => {
               {loading ? (
                 <div className="w-8 h-8 animate-pulse bg-muted rounded-full" />
               ) : user ? (
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 rounded-[18px] border border-border/65 bg-background/72 px-2 py-1.5 shadow-sm backdrop-blur-xl">
                   <CreditDisplay variant="navigation" showPurchaseButton={true} />
                   <Button
                     variant="ghost"
                     size="icon"
                     onClick={() => setShowFriendRequests(true)}
-                    className="relative h-11 w-11 transition-all duration-200 hover:bg-muted/50 hover:scale-110 touch-manipulation"
+                    className={cn(navActionButtonClass, "touch-manipulation")}
                   >
                     <UserPlus className="w-5 h-5" />
                     {pendingFriendRequests.length > 0 && (
@@ -497,7 +494,7 @@ const Navigation = () => {
                     variant="ghost"
                     size="icon"
                     asChild
-                    className="relative h-11 w-11 transition-all duration-200 hover:bg-muted/50 hover:scale-110 touch-manipulation"
+                    className={cn(navActionButtonClass, "touch-manipulation")}
                   >
                     <Link to="/messages">
                       <MessageCircle className="w-5 h-5" />
@@ -512,8 +509,8 @@ const Navigation = () => {
                   <ThemeToggle />
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <button className="cursor-pointer outline-none focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-full transition-all duration-200 hover:scale-110">
-                        <Avatar className="h-11 w-11 hover:ring-2 hover:ring-primary transition-all">
+                      <button className={cn("cursor-pointer outline-none focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 nav-action-button h-10 w-10 rounded-[14px]")}>
+                        <Avatar className="h-10 w-10">
                           <AvatarImage src={avatarUrl} alt={user.user_metadata?.full_name || 'User'} />
                           <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
                             {(user.user_metadata?.full_name || user.email || 'U')[0].toUpperCase()}
@@ -521,7 +518,7 @@ const Navigation = () => {
                         </Avatar>
                       </button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuContent align="end" className={cn("w-56", navDropdownClass)}>
                       <DropdownMenuLabel className="font-normal">
                         <div className="flex flex-col space-y-1">
                           <p className="text-sm font-medium leading-none">
@@ -560,9 +557,9 @@ const Navigation = () => {
                   </DropdownMenu>
                 </div>
               ) : (
-                <div className="flex items-center space-x-3">
+                <div className="flex items-center gap-2 rounded-[18px] border border-border/65 bg-background/72 px-2 py-1.5 shadow-sm backdrop-blur-xl">
                   <ThemeToggle />
-                  <Button variant="ghost" size="sm" asChild className="transition-all duration-200 hover:scale-105">
+                  <Button variant="ghost" size="sm" asChild className="rounded-xl px-3.5 text-muted-foreground hover:text-foreground hover:bg-background/80">
                     <Link to="/login" className="flex items-center gap-2">
                       <LogIn className="w-4 h-4" />
                       Sign In
@@ -570,7 +567,7 @@ const Navigation = () => {
                   </Button>
                   <Button
                     size="sm"
-                    className="bg-gradient-unified hover:opacity-90 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 font-semibold px-4"
+                    className="rounded-xl bg-gradient-unified hover:opacity-95 text-primary-foreground shadow-[0_10px_22px_-14px_hsl(var(--primary)/0.55)] transition-all duration-300 font-semibold px-4"
                     asChild
                   >
                     <Link to="/signup">Sign Up</Link>
@@ -581,7 +578,7 @@ const Navigation = () => {
 
             {/* Mobile Menu Button */}
             <button
-              className="md:hidden flex items-center justify-center min-h-[44px] min-w-[44px] touch-manipulation !border-0 active:opacity-70 transition-opacity"
+              className="md:hidden flex items-center justify-center min-h-[44px] min-w-[44px] rounded-xl border border-border/55 bg-background/72 touch-manipulation active:opacity-70 transition-opacity shadow-sm"
               onClick={() => setIsOpen(!isOpen)}
               aria-label={isOpen ? "Close menu" : "Open menu"}
               aria-expanded={isOpen}
@@ -601,7 +598,7 @@ const Navigation = () => {
 
           {/* Mobile Navigation */}
           {isOpen && (
-            <div className="md:hidden fixed top-16 left-0 right-0 bottom-0 bg-background border-t border-border animate-mobile-drawer safe-area-inset z-50 shadow-2xl">
+            <div className="md:hidden fixed top-[76px] left-3 right-3 bottom-3 bg-background/96 border border-border/70 rounded-[22px] animate-mobile-drawer safe-area-inset z-50 shadow-2xl backdrop-blur-xl overflow-hidden">
               <div className="px-2 pt-2 pb-safe space-y-1 max-h-[calc(100vh-64px)] overflow-y-auto">
                 {/* Theme Toggle at top of mobile menu */}
                 <div className="px-4 py-3 border-b border-border sticky top-0 bg-background z-10">
@@ -783,6 +780,7 @@ const Navigation = () => {
               </div>
             </div>
           )}
+          </div>
         </div>
 
         {/* Hover-triggered Campaign Popup */}
