@@ -103,7 +103,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen relative">
-      <HomeWallpaper />
+      <HomeWallpaper variant="home" />
       <SEO
         title="Creatives Takeover"
         description="Turn your creative idea into a real business. Get AI-powered planning, community support, and funding resources designed for creative entrepreneurs. Start building today."
