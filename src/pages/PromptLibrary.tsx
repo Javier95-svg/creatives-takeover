@@ -234,7 +234,7 @@ const PromptLibrary = () => {
         <PromptLibraryWallpaper />
         <div className="relative z-10">
           <Navigation />
-          <div className="pt-16 sm:pt-20 pb-12 sm:pb-16 px-4">
+          <div className="px-4 pt-28 pb-12 md:pt-32 lg:pt-36 sm:pb-16">
             <div className="max-w-5xl mx-auto">
               <Button
                 variant="outline"
@@ -416,7 +416,7 @@ const PromptLibrary = () => {
       <PromptLibraryWallpaper />
       <div className="relative z-10">
         <Navigation />
-        <div className="pt-16 sm:pt-20 pb-12 sm:pb-16 px-4">
+        <div className="px-4 pt-28 pb-12 md:pt-32 lg:pt-36 sm:pb-16">
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-8 sm:mb-12">
               <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 takeover-gradient creatives-font leading-tight pb-2 overflow-visible">
