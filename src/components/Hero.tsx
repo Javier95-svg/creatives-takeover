@@ -436,18 +436,18 @@ const Hero = () => {
           <div className="text-center flex flex-col justify-center">
             {/* Main Headline */}
             <h1
-              className="font-space-grotesk text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-semibold mb-4 sm:mb-6 leading-tight tracking-tight"
+              className="font-space-grotesk text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-semibold mb-4 sm:mb-6 leading-tight tracking-tight max-w-3xl mx-auto"
               style={{
                 textShadow: '0 0 18px hsl(var(--primary) / 0.18), 0 0 42px hsl(var(--primary) / 0.10)',
                 filter: 'drop-shadow(0 0 10px hsl(var(--primary) / 0.10))'
               }}
             >
-              <span className="text-primary">Build Your Startup</span> from Scratch
+              <span className="text-primary">Turn Your Startup Idea</span> Into a Launch Plan
             </h1>
 
             {/* Subheadline - Improved readability */}
-            <p className="font-space-grotesk text-sm sm:text-base md:text-lg text-muted-foreground mb-6 sm:mb-8 max-w-xl mx-auto leading-relaxed px-2 sm:px-0">
-              We are a vertical AI platform for early-stage startup founders. Our goal is to empower individuals to launch and build startups with minimal friction.
+            <p className="font-space-grotesk text-sm sm:text-base md:text-lg text-muted-foreground mb-6 sm:mb-8 max-w-2xl mx-auto leading-relaxed px-2 sm:px-0">
+              Build, validate, and launch with AI tools, founder workflows, mentors, and fundraising resources designed for early-stage founders.
             </p>
             
             {/* Enhanced CTA Section */}
@@ -487,9 +487,31 @@ const Hero = () => {
                   }}
                 >
                   <Cpu className="w-4 h-4" />
-                  Our System
+                  How It Works
                 </Button>
               </div>
+              )}
+
+              {!isAuthenticated && (
+                <div className="mt-4 sm:mt-5 space-y-3 px-4 sm:px-0">
+                  <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3">
+                    <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-background/70 px-3 py-1.5 text-xs sm:text-sm text-muted-foreground shadow-sm">
+                      <Sparkles className="h-3.5 w-3.5 text-primary" />
+                      AI planning tools
+                    </div>
+                    <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-background/70 px-3 py-1.5 text-xs sm:text-sm text-muted-foreground shadow-sm">
+                      <Users className="h-3.5 w-3.5 text-primary" />
+                      Founder community
+                    </div>
+                    <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-background/70 px-3 py-1.5 text-xs sm:text-sm text-muted-foreground shadow-sm">
+                      <DollarSign className="h-3.5 w-3.5 text-primary" />
+                      Funding resources
+                    </div>
+                  </div>
+                  <p className="text-xs sm:text-sm text-muted-foreground/90 max-w-xl mx-auto leading-relaxed">
+                    Built for early-stage founders who need structure, clarity, and momentum.
+                  </p>
+                </div>
               )}
             </div>
           </div>
