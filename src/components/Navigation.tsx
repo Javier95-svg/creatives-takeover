@@ -474,7 +474,7 @@ const Navigation = () => {
               {loading ? (
                 <div className="w-8 h-8 animate-pulse bg-muted rounded-full" />
               ) : user ? (
-                <div className="mr-1 lg:mr-2 flex items-center gap-2.5 self-center">
+                <div className="flex items-center gap-2.5 self-center">
                   <CreditDisplay variant="navigation" showPurchaseButton={true} />
                   <Button
                     variant="ghost"
@@ -508,8 +508,8 @@ const Navigation = () => {
                   <ThemeToggle />
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <button className={cn("cursor-pointer self-center outline-none focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 nav-action-button h-11 w-11 rounded-[16px]")}>
-                        <Avatar className="h-11 w-11">
+                      <button className={cn("cursor-pointer self-center outline-none focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 nav-action-button h-[42px] w-[42px] rounded-[15px]")}>
+                        <Avatar className="h-[42px] w-[42px]">
                           <AvatarImage src={avatarUrl} alt={user.user_metadata?.full_name || 'User'} />
                           <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
                             {(user.user_metadata?.full_name || user.email || 'U')[0].toUpperCase()}
