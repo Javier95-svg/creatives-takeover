@@ -556,7 +556,7 @@ const Navigation = () => {
                   </DropdownMenu>
                 </div>
               ) : (
-                <div className="flex items-center gap-2 rounded-[18px] border border-border/65 bg-background/72 px-2 py-1.5 shadow-sm backdrop-blur-xl">
+                <div className="flex items-center gap-2">
                   <ThemeToggle />
                   <Button variant="ghost" size="sm" asChild className="rounded-xl px-3.5 text-muted-foreground hover:text-foreground hover:bg-background/80">
                     <Link to="/login" className="flex items-center gap-2">
