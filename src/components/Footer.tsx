@@ -132,8 +132,8 @@ const Footer = () => {
         </div>
 
         <section className="mt-8 border-t border-border/70 pt-8">
-          <div className="space-y-4">
-            <div className="flex flex-wrap items-center gap-3">
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <div className="flex flex-col gap-3">
               <a
                 href="https://www.producthunt.com/products/creatives-takeover?utm_source=badge-follow&utm_medium=badge&utm_source=badge-creatives-takeover"
                 target="_blank"
@@ -150,6 +150,23 @@ const Footer = () => {
                 />
               </a>
 
+              <a
+                href="https://fazier.com/launches/creatives-takeover.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Featured on Fazier"
+                className="shrink-0"
+              >
+                <img
+                  src="https://fazier.com/api/v1//public/badges/launch_badges.svg?badge_type=featured&theme=light"
+                  width="250"
+                  alt="Fazier badge"
+                  className="hover:opacity-80 transition-opacity"
+                />
+              </a>
+            </div>
+
+            <div className="flex flex-col gap-3">
               <a
                 href="https://peerpush.net/p/creatives-takeover"
                 target="_blank"
@@ -178,7 +195,9 @@ const Footer = () => {
                   className="hover:opacity-80 transition-opacity"
                 />
               </a>
+            </div>
 
+            <div className="flex flex-col gap-3">
               <a
                 href="https://www.saashub.com/creatives-takeover?utm_source=badge&utm_campaign=badge&utm_content=creatives-takeover&badge_variant=color&badge_kind=approved"
                 target="_blank"
@@ -210,7 +229,7 @@ const Footer = () => {
               </a>
             </div>
 
-            <div className="flex flex-wrap items-center gap-3">
+            <div className="flex flex-col gap-3">
               <a
                 href="https://fazier.com/launches/creatives-takeover.com"
                 target="_blank"
@@ -221,21 +240,6 @@ const Footer = () => {
                 <img
                   src="https://fazier.com/api/v1//public/badges/launch_badges.svg?badge_type=launched&theme=dark"
                   width="120"
-                  alt="Fazier badge"
-                  className="hover:opacity-80 transition-opacity"
-                />
-              </a>
-
-              <a
-                href="https://fazier.com/launches/creatives-takeover.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Featured on Fazier"
-                className="shrink-0"
-              >
-                <img
-                  src="https://fazier.com/api/v1//public/badges/launch_badges.svg?badge_type=featured&theme=light"
-                  width="250"
                   alt="Fazier badge"
                   className="hover:opacity-80 transition-opacity"
                 />
