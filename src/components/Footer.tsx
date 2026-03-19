@@ -213,21 +213,6 @@ const Footer = () => {
               </a>
 
               <a
-                href="https://fazier.com/launches/creatives-takeover.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Launched on Fazier"
-                className="shrink-0"
-              >
-                <img
-                  src="https://fazier.com/api/v1//public/badges/launch_badges.svg?badge_type=launched&theme=dark"
-                  width="120"
-                  alt="Fazier badge"
-                  className="hover:opacity-80 transition-opacity"
-                />
-              </a>
-
-              <a
                 href="https://www.foundrlist.com/product/creativestakeover-2"
                 target="_blank"
                 rel="noopener noreferrer"
