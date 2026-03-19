@@ -447,7 +447,7 @@ const Hero = () => {
 
             {/* Subheadline - Improved readability */}
             <p className="font-space-grotesk text-sm sm:text-base md:text-lg text-muted-foreground mb-6 sm:mb-8 max-w-xl mx-auto leading-relaxed px-2 sm:px-0">
-              We’re a vertical AI platform designed to help early-stage founders transform raw ideas into revenue-ready startups. By combining intelligent tools, proven frameworks, and a curated community, we bring structure and clarity to the chaotic early stages of building a business. We aim to accelerate and simplify startup development in the post-AI era.
+              We’re a vertical AI platform helping early stage founders turn ideas into revenue ready startups through tools, frameworks, and community, accelerating and simplifying startup building in the post AI era.
             </p>
             
             {/* Enhanced CTA Section */}
