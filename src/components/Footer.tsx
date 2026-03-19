@@ -131,10 +131,9 @@ const Footer = () => {
           </nav>
         </div>
 
-        <section aria-labelledby="footer-badges" className="mt-8 border-t border-border/70 pt-8">
-          <h2 id="footer-badges" className="text-sm font-semibold tracking-wide text-foreground">Badges</h2>
-          <div className="mt-4 space-y-4">
-            <div className="flex items-center gap-3 flex-nowrap overflow-x-auto pb-1">
+        <section className="mt-8 border-t border-border/70 pt-8">
+          <div className="space-y-4">
+            <div className="flex flex-wrap items-center gap-3">
               <a
                 href="https://www.producthunt.com/products/creatives-takeover?utm_source=badge-follow&utm_medium=badge&utm_source=badge-creatives-takeover"
                 target="_blank"
@@ -209,7 +208,9 @@ const Footer = () => {
                   className="hover:opacity-80 transition-opacity w-[138px] h-auto"
                 />
               </a>
+            </div>
 
+            <div className="flex flex-wrap items-center gap-3">
               <a
                 href="https://fazier.com/launches/creatives-takeover.com"
                 target="_blank"
