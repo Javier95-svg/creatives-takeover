@@ -107,6 +107,8 @@ export function getCountryFlag(country: string | null | undefined): string {
     'PAKISTAN': '🇵🇰',
     'RO': '🇷🇴',
     'ROMANIA': '🇷🇴',
+    'AM': '🇦🇲',
+    'ARMENIA': '🇦🇲',
     'LB': '🇱🇧',
     'LEBANON': '🇱🇧',
     'BA': '🇧🇦',

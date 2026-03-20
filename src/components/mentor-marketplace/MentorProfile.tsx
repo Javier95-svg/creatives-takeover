@@ -165,6 +165,10 @@ export const MentorProfile = ({ mentor, onBookClick }: MentorProfileProps) => {
     ) {
       return 'Lebanon';
     }
+    // Special case: Albert Hovhannisyan is from Armenia
+    if (mentor.name.toLowerCase().includes('albert') && mentor.name.toLowerCase().includes('hovhannisyan')) {
+      return 'Armenia';
+    }
     return null;
   };
   const nationality = getNationality();
