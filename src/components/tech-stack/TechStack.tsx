@@ -63,9 +63,9 @@ interface IntegrationSuggestion {
 const TechStack: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { subscriptionData } = useSubscription();
+  const { subscriptionData, loading: subscriptionLoading } = useSubscription();
   const { checkFeatureAccess } = useFeatureGating();
-  const { refreshBalance } = useCredits();
+  const { refreshBalance, loading: creditsLoading } = useCredits();
   const { deductCredits } = useCreditActions();
   const { openUpgradePrompt } = useUpgradePrompt();
   const { toast } = useToast();
@@ -81,7 +81,7 @@ const TechStack: React.FC = () => {
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewReport, setPreviewReport] = useState<TechStackReport | null>(null);
 
-  const currentTier = subscriptionData.subscription_tier?.toLowerCase() || 'free';
+  const currentTier = (subscriptionData.subscription_tier || 'free').toLowerCase();
   useEffect(() => {
     if (!user) {
       setSavedReports([]);
@@ -189,7 +189,23 @@ const TechStack: React.FC = () => {
       return;
     }
 
+    if (subscriptionLoading || creditsLoading) {
+      toast({
+        title: "Checking access",
+        description: "Please wait a moment for your plan and credit balance to finish loading.",
+      });
+      return;
+    }
+
     const featureAccess = checkFeatureAccess('tech_stack_generation');
+    if (featureAccess.isLoading) {
+      toast({
+        title: "Checking access",
+        description: "Please wait a moment for your plan and credit balance to finish loading.",
+      });
+      return;
+    }
+
     if (!featureAccess.hasAccess) {
       openUpgradePrompt({
         reason: 'feature',
@@ -550,6 +566,7 @@ const TechStack: React.FC = () => {
                   size="lg"
                   className={`w-full sm:w-auto min-w-[140px] ${!canGenerateBudget ? 'opacity-70' : ''}`}
                   aria-disabled={!canGenerateBudget}
+                  disabled={Boolean(user) && (subscriptionLoading || creditsLoading)}
                 >
                   {!user ? (
                     <>
@@ -559,7 +576,11 @@ const TechStack: React.FC = () => {
                   ) : (
                     <>
                       <Calculator className="w-4 h-4 mr-2" />
-                      {currentTier === 'free' ? 'Generate (1/month)' : 'Generate Budget'}
+                      {subscriptionLoading || creditsLoading
+                        ? 'Loading access...'
+                        : currentTier === 'free'
+                          ? 'Generate (1/month)'
+                          : 'Generate Budget'}
                       <CreditCostBadge feature="TECH_STACK_GENERATION" className="ml-2 bg-background/20 text-primary-foreground" />
                     </>
                   )}

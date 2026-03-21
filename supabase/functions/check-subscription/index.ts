@@ -59,10 +59,57 @@ serve(async (req) => {
       'b05d6111-0940-4403-a710-92901fcbf034',
     ]);
 
-    const isAdminEmail = user.email.toLowerCase() === 'admin@creatives-takeover.com';
+    const normalizedEmail = user.email.toLowerCase();
+    const isAdminEmail = normalizedEmail === 'admin@creatives-takeover.com';
+
+    // Admin should keep professional feature access even without an active Stripe subscription.
+    // Unlike other override accounts, preserve the existing balance/quota instead of inflating credits.
+    if (isAdminEmail) {
+      logStep("Admin account detected - preserving professional tier access", { email: user.email, userId: user.id });
+
+      await supabaseService.from("subscribers").upsert({
+        email: user.email,
+        user_id: user.id,
+        stripe_customer_id: null,
+        subscribed: true,
+        subscription_tier: 'professional',
+        subscription_end: null,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'user_id' });
+
+      const { data: creditRow } = await supabaseService
+        .from("user_credits")
+        .select("balance, monthly_quota")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      const nextBalance = Math.max(Number(creditRow?.balance ?? 0), 5);
+      const nextQuota = Math.max(Number(creditRow?.monthly_quota ?? 0), 5);
+
+      await supabaseService.from("user_credits").upsert({
+        user_id: user.id,
+        subscription_tier: 'professional',
+        balance: nextBalance,
+        monthly_quota: nextQuota,
+        last_credit_grant: new Date().toISOString()
+      }, { onConflict: 'user_id' });
+
+      await supabaseService.from("profiles").update({
+        subscription_tier: 'professional'
+      }).eq('id', user.id);
+
+      return new Response(JSON.stringify({
+        subscribed: true,
+        subscription_tier: 'professional',
+        subscription_end: null
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
+    }
 
     // Check if this is a pro-override account - grant professional tier immediately
-    if (!isAdminEmail && (proOverrideEmails.has(user.email.toLowerCase()) || proOverrideUserIds.has(user.id))) {
+    if (proOverrideEmails.has(normalizedEmail) || proOverrideUserIds.has(user.id)) {
       logStep("Pro override account detected - granting professional tier", { email: user.email, userId: user.id });
       const professionalTier = 'professional';
       const professionalCredits = 300;
