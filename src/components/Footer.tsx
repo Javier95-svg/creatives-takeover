@@ -188,12 +188,9 @@ const Footer = () => {
                 aria-label="Listed on Needle Directory"
                 className="shrink-0"
               >
-                <img
-                  src="https://api.useneedle.net/directory/badge/creatives-takeover.svg"
-                  alt="Listed on Needle Directory"
-                  height="44"
-                  className="hover:opacity-80 transition-opacity"
-                />
+                <span className="inline-flex h-11 items-center rounded-full border border-border/60 bg-background px-4 text-sm font-medium text-foreground transition-opacity hover:opacity-80">
+                  Listed on Needle Directory
+                </span>
               </a>
             </div>
 

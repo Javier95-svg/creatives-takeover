@@ -5,6 +5,11 @@ import { useBizMapProgress } from '@/hooks/useBizMapProgress';
 import { useCreditActions } from '@/hooks/useCreditActions';
 import { toast } from 'sonner';
 import { PMF_REQUIRED_SIGNALS } from '@/lib/bizmapStages';
+import {
+  getPmfResultsTableName,
+  handlePmfResultsTableError,
+  isPmfResultsTableAvailable,
+} from '@/lib/pmfResultsTable';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -62,7 +67,7 @@ export interface PMFReadinessAnalysis {
 
 type Phase = 'intake' | 'analyzing' | 'results';
 
-const PMF_RESULTS_TABLE = 'pmf_analysis_results' as any;
+const PMF_RESULTS_TABLE = getPmfResultsTableName();
 const PMF_EVIDENCE_TABLE = 'pmf_validation_evidence' as any;
 
 // ─── Hook ─────────────────────────────────────────────────────────────────────
@@ -86,14 +91,20 @@ export function usePMFLab() {
 
   const loadExistingAnalysis = useCallback(async () => {
     if (!user) return;
+    if (!isPmfResultsTableAvailable()) return;
     try {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from(PMF_RESULTS_TABLE)
         .select('id, analysis_data')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle();
+
+      if (error) {
+        if (handlePmfResultsTableError(error)) return;
+        throw error;
+      }
 
       if (!data) return;
 
@@ -105,6 +116,7 @@ export function usePMFLab() {
         setPhase('results');
       }
     } catch (err) {
+      if (handlePmfResultsTableError(err)) return;
       console.warn('Failed to load existing PMF analysis:', err);
     }
   }, [user]);
@@ -154,11 +166,15 @@ export function usePMFLab() {
     setIsSaving(true);
     try {
       // Update pmf_analysis_results with saved status
-      if (analysisId) {
-        await supabase
+      if (analysisId && isPmfResultsTableAvailable()) {
+        const { error: reportError } = await supabase
           .from(PMF_RESULTS_TABLE)
           .update({ saved_at: new Date().toISOString() })
           .eq('id', analysisId);
+
+        if (reportError && !handlePmfResultsTableError(reportError)) {
+          throw reportError;
+        }
       }
 
       // Write to pmf_validation_evidence to trigger Stage III completion

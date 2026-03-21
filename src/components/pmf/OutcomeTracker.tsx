@@ -8,6 +8,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { CheckCircle2, Target, Calendar } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import {
+  getPmfResultsTableName,
+  handlePmfResultsTableError,
+  isPmfResultsTableAvailable,
+} from '@/lib/pmfResultsTable';
 
 interface OutcomeTrackerProps {
   analysisId: string;
@@ -55,6 +60,15 @@ const OutcomeTracker: React.FC<OutcomeTrackerProps> = ({
     try {
       setIsSubmitting(true);
 
+      if (!isPmfResultsTableAvailable()) {
+        toast({
+          title: "Outcome tracking unavailable",
+          description: "PMF history storage is not enabled in this environment yet.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       const outcomeDetails: any = {};
       if (revenue) outcomeDetails.revenue = parseFloat(revenue);
       if (customers) outcomeDetails.customerCount = parseInt(customers);
@@ -64,7 +78,7 @@ const OutcomeTracker: React.FC<OutcomeTrackerProps> = ({
       if (predictedVerdict) outcomeDetails.predictedVerdict = predictedVerdict;
 
       const { error } = await supabase
-        .from('pmf_analysis_results')
+        .from(getPmfResultsTableName())
         .update({
           actual_outcome: outcome,
           outcome_date: outcomeDate || new Date().toISOString(),
@@ -72,7 +86,17 @@ const OutcomeTracker: React.FC<OutcomeTrackerProps> = ({
         })
         .eq('id', analysisId);
 
-      if (error) throw error;
+      if (error) {
+        if (handlePmfResultsTableError(error)) {
+          toast({
+            title: "Outcome tracking unavailable",
+            description: "PMF history storage is not enabled in this environment yet.",
+            variant: "destructive",
+          });
+          return;
+        }
+        throw error;
+      }
 
       setSubmitted(true);
       toast({

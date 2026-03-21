@@ -12,6 +12,11 @@ import {
   maxStage,
   type BizMapStage,
 } from '@/lib/bizmapStages';
+import {
+  getPmfResultsTableName,
+  handlePmfResultsTableError,
+  isPmfResultsTableAvailable,
+} from '@/lib/pmfResultsTable';
 
 interface UserProgressRow {
   user_id: string;
@@ -41,7 +46,7 @@ const PMF_EVIDENCE_TABLE = 'pmf_validation_evidence' as any;
 const MVP_ARTIFACTS_TABLE = 'mvp_builder_artifacts' as any;
 const GTM_PLANS_TABLE = 'gtm_plans' as any;
 const ICP_RESULTS_TABLE = 'icp_analysis_results' as any;
-const PMF_RESULTS_TABLE = 'pmf_analysis_results' as any;
+const PMF_RESULTS_TABLE = getPmfResultsTableName();
 const TECH_STACK_TABLE = 'tech_stack_reports';
 
 function normalizeStage(value: unknown, fallback: BizMapStage): BizMapStage {
@@ -141,14 +146,20 @@ export const useBizMapProgress = () => {
         .order('updated_at', { ascending: false })
         .limit(1)
         .maybeSingle(),
-      supabase
-        .from(PMF_RESULTS_TABLE)
-        .select('created_at')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle(),
+      isPmfResultsTableAvailable()
+        ? supabase
+            .from(PMF_RESULTS_TABLE)
+            .select('created_at')
+            .eq('user_id', userId)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle()
+        : Promise.resolve({ data: null, error: null }),
     ]);
+
+    if (pmfLatestRes?.error) {
+      handlePmfResultsTableError(pmfLatestRes.error);
+    }
 
     const waitlistPages = (waitlistPagesRes.data as Array<{
       id: string;

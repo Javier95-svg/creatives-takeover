@@ -10,6 +10,11 @@ import OutcomeTracker from './OutcomeTracker';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import {
+  getPmfResultsTableName,
+  handlePmfResultsTableError,
+  isPmfResultsTableAvailable,
+} from '@/lib/pmfResultsTable';
 
 interface PMFAnalysis {
   pmfScore: {
@@ -286,9 +291,18 @@ const PMFScore: React.FC<PMFScoreProps> = ({ score, nextSteps = [], analysis, an
 
     try {
       setIsSubmittingFeedback(true);
-      
+
+      if (!isPmfResultsTableAvailable()) {
+        toast({
+          title: "Feedback unavailable",
+          description: "PMF history storage is not enabled in this environment yet.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       const { error } = await supabase
-        .from('pmf_analysis_results')
+        .from(getPmfResultsTableName())
         .update({
           user_accuracy_rating: rating,
           user_feedback_text: feedbackText || null,
@@ -296,7 +310,17 @@ const PMFScore: React.FC<PMFScoreProps> = ({ score, nextSteps = [], analysis, an
         })
         .eq('id', analysisId);
 
-      if (error) throw error;
+      if (error) {
+        if (handlePmfResultsTableError(error)) {
+          toast({
+            title: "Feedback unavailable",
+            description: "PMF history storage is not enabled in this environment yet.",
+            variant: "destructive",
+          });
+          return;
+        }
+        throw error;
+      }
 
       setFeedbackSubmitted(true);
       toast({
