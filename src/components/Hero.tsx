@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowRight, Sparkles, LayoutDashboard, User, Users, DollarSign, Cpu, Image as ImageIcon, Upload, Loader2 } from "lucide-react";
+import { ArrowRight, LayoutDashboard, User, Cpu, Image as ImageIcon, Upload, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useConversionTracking } from "@/hooks/useConversionTracking";
@@ -14,16 +14,79 @@ interface HeroImage {
   alt_text: string | null;
 }
 
+const HERO_IMAGE_CACHE_KEY = "homepage-hero-images:v1";
+
+function normalizeImageUrl(href?: string): string | null {
+  if (!href) return null;
+  const trimmed = href.trim();
+  if (!trimmed || trimmed === "undefined" || trimmed === "null") return null;
+
+  try {
+    return new URL(trimmed, window.location.origin).toString();
+  } catch {
+    return null;
+  }
+}
+
+function getOptimizedHeroImageUrl(imageUrl: string, width: number, height: number): string {
+  if (imageUrl.startsWith("data:") || imageUrl.startsWith("blob:")) {
+    return imageUrl;
+  }
+
+  const normalized = normalizeImageUrl(imageUrl);
+  if (!normalized) return imageUrl;
+
+  try {
+    const url = new URL(normalized);
+    const publicPrefix = "/storage/v1/object/public/";
+    const publicIndex = url.pathname.indexOf(publicPrefix);
+
+    if (publicIndex === -1) {
+      return normalized;
+    }
+
+    const objectPath = url.pathname.slice(publicIndex + publicPrefix.length);
+    url.pathname = `/storage/v1/render/image/public/${objectPath}`;
+    url.searchParams.set("width", String(width));
+    url.searchParams.set("height", String(height));
+    url.searchParams.set("resize", "cover");
+    url.searchParams.set("quality", "75");
+    return url.toString();
+  } catch {
+    return normalized;
+  }
+}
+
+function getHeroImageSrcSet(imageUrl: string): string | undefined {
+  if (!imageUrl || imageUrl.startsWith("data:") || imageUrl.startsWith("blob:")) {
+    return undefined;
+  }
+
+  return [
+    `${getOptimizedHeroImageUrl(imageUrl, 320, 320)} 320w`,
+    `${getOptimizedHeroImageUrl(imageUrl, 640, 640)} 640w`,
+    `${getOptimizedHeroImageUrl(imageUrl, 960, 960)} 960w`,
+  ].join(", ");
+}
+
 const Hero = () => {
   const { isAuthenticated, user } = useAuth();
-  const { trackTriggerView, trackEngagement, trackSignupStarted } = useConversionTracking();
+  const { trackTriggerView, trackEngagement } = useConversionTracking();
   const heroRef = useRef<HTMLElement>(null);
   const hasTrackedView = useRef(false);
-  const [heroImages, setHeroImages] = useState<HeroImage[]>([]);
+  const [heroImages, setHeroImages] = useState<HeroImage[]>(() => {
+    if (typeof window === "undefined") return [];
+
+    try {
+      const cached = window.sessionStorage.getItem(HERO_IMAGE_CACHE_KEY);
+      return cached ? (JSON.parse(cached) as HeroImage[]) : [];
+    } catch {
+      return [];
+    }
+  });
   const [uploading, setUploading] = useState<number | null>(null);
   const [optimisticPreviews, setOptimisticPreviews] = useState<Record<number, string>>({});
   const fileInputRefs = useRef<Record<number, HTMLInputElement | null>>({});
-  const imageLoadStartTimes = useRef<Map<number, number>>(new Map());
   
   const isAdmin = user?.email?.toLowerCase() === 'admin@creatives-takeover.com';
 
@@ -61,6 +124,7 @@ const Hero = () => {
 
         if (data && data.length > 0) {
           setHeroImages(data);
+          window.sessionStorage.setItem(HERO_IMAGE_CACHE_KEY, JSON.stringify(data));
         }
       } catch (error) {
         console.error('Error fetching hero images:', error);
@@ -72,23 +136,11 @@ const Hero = () => {
 
   // Preload critical hero images (top row - positions 1 and 2) for faster loading
   useEffect(() => {
-    const normalizeImageHref = (href?: string) => {
-      if (!href) return false;
-      const trimmed = href.trim();
-      if (!trimmed) return false;
-      if (trimmed === 'undefined' || trimmed === 'null') return false;
-      try {
-        return new URL(trimmed, window.location.origin).toString();
-      } catch {
-        return false;
-      }
-    };
-
     const topRowImages = heroImages
       .filter(img => img.position <= 2)
       .map((img) => ({
         ...img,
-        preloadHref: normalizeImageHref(img.image_url),
+        preloadHref: normalizeImageUrl(getOptimizedHeroImageUrl(img.image_url, 640, 640)),
       }))
       .filter((img) => Boolean(img.preloadHref));
 
@@ -111,7 +163,7 @@ const Hero = () => {
           document.head.appendChild(preconnectLink);
         }
       }
-    } catch (e) {
+    } catch {
       // If URL parsing fails, skip preconnect
       // Silently fail - not critical for functionality
     }
@@ -211,7 +263,7 @@ const Hero = () => {
       const fileExt = file.name.split('.').pop() || 'jpg';
       const fileName = `${position}/${Date.now()}.${fileExt}`;
 
-      const { data: uploadData, error: uploadError } = await supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from('hero-images')
         .upload(fileName, file, {
           cacheControl: '3600',
@@ -344,6 +396,7 @@ const Hero = () => {
   useEffect(() => {
     if (hasTrackedView.current) return;
 
+    const currentHeroRef = heroRef.current;
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -359,13 +412,13 @@ const Hero = () => {
       { threshold: 0.5 }
     );
 
-    if (heroRef.current) {
-      observer.observe(heroRef.current);
+    if (currentHeroRef) {
+      observer.observe(currentHeroRef);
     }
 
     return () => {
-      if (heroRef.current) {
-        observer.unobserve(heroRef.current);
+      if (currentHeroRef) {
+        observer.unobserve(currentHeroRef);
       }
     };
   }, [trackTriggerView, isAuthenticated]);
@@ -418,10 +471,6 @@ const Hero = () => {
     }, 10);
   };
 
-  const handleTertiaryCTAClick = () => {
-    trackSignupStarted('hero-tertiary-cta');
-  };
-  
   return (
     <section
       ref={heroRef}
@@ -481,9 +530,8 @@ const Hero = () => {
                   variant="outline"
                   size="lg" 
                   className="w-full sm:w-[180px] min-h-[44px] justify-center touch-manipulation" 
-                  onClick={(e) => {
-                    e.preventDefault();
-                    handleSecondaryCTAClick(e as any);
+                  onClick={(event) => {
+                    handleSecondaryCTAClick(event);
                   }}
                 >
                   <Cpu className="w-4 h-4" />
@@ -504,10 +552,11 @@ const Hero = () => {
                 const image = heroImages.find(img => img.position === position);
                 // Top row (positions 1 and 2) - no default fallback images, must be uploaded
                 const imageSrc = optimisticPreview || image?.image_url || '';
+                const optimizedImageSrc = getOptimizedHeroImageUrl(imageSrc, 640, 640);
+                const imageSrcSet = getHeroImageSrcSet(imageSrc);
                 const altText = image?.alt_text || `Hero image ${position}`;
                 const isUploadingPosition = uploading === position;
-                // Load all images eagerly for faster display
-                const shouldLoadEagerly = true;
+                const isTopRow = position <= 2;
 
                 if (!imageSrc) {
                   return (
@@ -571,16 +620,17 @@ const Hero = () => {
                     className="relative rounded-xl overflow-hidden border border-border/60 bg-muted/30 group"
                   >
                     <img
-                      src={imageSrc}
+                      src={optimizedImageSrc}
+                      srcSet={imageSrcSet}
                       alt={altText}
                       className="w-full h-auto object-cover aspect-square"
-                      loading={shouldLoadEagerly ? "eager" : "lazy"}
-                      fetchPriority={shouldLoadEagerly ? "high" : "auto"}
+                      loading="eager"
+                      fetchPriority={isTopRow ? "high" : "low"}
                       decoding="async"
                       width="800"
                       height="800"
                       sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 400px"
-                      key={optimisticPreview ? `optimistic-${position}-${Date.now()}` : `stable-${position}`}
+                      key={`${position}-${optimisticPreview ? "optimistic" : "stable"}-${imageSrc}`}
                     />
                     {isAdmin && (
                       <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/40">
