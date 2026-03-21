@@ -139,7 +139,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
               .from('subscribers')
               .upsert(
                 { user_id: userId, email, subscribed: true, subscription_tier: 'professional' },
-                { onConflict: 'email' }
+                { onConflict: 'user_id' }
               ),
           ]).catch(err => logError('Failed to update admin tier', err, { userId }))
         );

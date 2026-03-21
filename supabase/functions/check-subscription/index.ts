@@ -75,7 +75,7 @@ serve(async (req) => {
         subscription_tier: professionalTier,
         subscription_end: null,
         updated_at: new Date().toISOString(),
-      }, { onConflict: 'email' });
+      }, { onConflict: 'user_id' });
 
       // Fetch current credits to avoid reducing balances
       const { data: creditRow } = await supabaseService
@@ -126,7 +126,7 @@ serve(async (req) => {
         subscription_tier: 'free',
         subscription_end: null,
         updated_at: new Date().toISOString(),
-      }, { onConflict: 'email' });
+      }, { onConflict: 'user_id' });
 
       return new Response(JSON.stringify({ 
         subscribed: false, 
@@ -185,7 +185,7 @@ serve(async (req) => {
       subscription_tier: subscriptionTier,
       subscription_end: subscriptionEnd,
       updated_at: new Date().toISOString(),
-    }, { onConflict: 'email' });
+    }, { onConflict: 'user_id' });
 
     // Update user_credits table with subscription tier
     await supabaseService.from("user_credits").upsert({
