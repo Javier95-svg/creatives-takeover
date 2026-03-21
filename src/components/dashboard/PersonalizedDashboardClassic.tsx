@@ -28,6 +28,7 @@ import { QuickWins } from './QuickWins';
 import { RecentWins } from './RecentWins';
 import { FounderResources } from './FounderResources';
 import { BizMapStageTasks } from './BizMapStageTasks';
+import { getLocalDateString, wasDailyGoalPromptSkipped } from '@/lib/dailyGoalPrompt';
 
 export const PersonalizedDashboardClassic = () => {
   const { user } = useAuth();
@@ -41,7 +42,6 @@ export const PersonalizedDashboardClassic = () => {
 
   const [showDailyGoal, setShowDailyGoal] = useState(false);
   const [modalMode, setModalMode] = useState<'morning' | 'evening'>('morning');
-  const [hasCheckedInToday, setHasCheckedInToday] = useState(false);
   const [todaysCheckInId, setTodaysCheckInId] = useState<string | null>(null);
   const [currentStreak, setCurrentStreak] = useState(0);
   
@@ -64,7 +64,7 @@ export const PersonalizedDashboardClassic = () => {
     }
 
     const checkDailyCheckIn = async () => {
-      const today = new Date().toISOString().split('T')[0];
+      const today = getLocalDateString();
       const currentHour = new Date().getHours();
       
       const { data: todayCheckIn } = await supabase
@@ -74,8 +74,6 @@ export const PersonalizedDashboardClassic = () => {
         .eq('check_in_date', today)
         .maybeSingle();
 
-      setHasCheckedInToday(!!todayCheckIn);
-      
       if (todayCheckIn) {
         setTodaysCheckInId(todayCheckIn.id);
         
@@ -107,14 +105,20 @@ export const PersonalizedDashboardClassic = () => {
         }
 
         // Show evening reflection if after 6 PM and haven't reflected yet
-        if (currentHour >= 18 && todayCheckIn.goal_achieved === null) {
+        if (
+          currentHour >= 18 &&
+          todayCheckIn.goal_achieved === null &&
+          !wasDailyGoalPromptSkipped(user.id, 'evening', today)
+        ) {
           setModalMode('evening');
           setShowDailyGoal(true);
         }
       } else {
         // Show morning goal modal if haven't checked in
-        setModalMode('morning');
-        setShowDailyGoal(true);
+        if (!wasDailyGoalPromptSkipped(user.id, 'morning', today)) {
+          setModalMode('morning');
+          setShowDailyGoal(true);
+        }
       }
       
       lastFetchTimeRef.current = Date.now();
@@ -233,7 +237,6 @@ export const PersonalizedDashboardClassic = () => {
           mode={modalMode}
           todaysCheckInId={todaysCheckInId || undefined}
           onCheckInComplete={() => {
-            setHasCheckedInToday(true);
             if (modalMode === 'morning') {
               setCurrentStreak(prev => prev + 1);
             }

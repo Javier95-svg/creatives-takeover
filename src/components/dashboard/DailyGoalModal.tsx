@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -8,6 +8,7 @@ import { Flame, Loader2, CheckCircle2, XCircle } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { clearDailyGoalPromptSkipped, getLocalDateString, markDailyGoalPromptSkipped } from '@/lib/dailyGoalPrompt';
 
 type ModalMode = 'morning' | 'evening';
 
@@ -36,6 +37,7 @@ export const DailyGoalModal = ({
   const [energyLevelEnd, setEnergyLevelEnd] = useState<number>(3);
   const [tomorrowFocus, setTomorrowFocus] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const today = getLocalDateString();
 
   const handleSubmit = async () => {
     if (mode === 'morning' && !goal.trim()) return;
@@ -53,7 +55,7 @@ export const DailyGoalModal = ({
           .insert({
             user_id: user.id,
             sprint_id: '00000000-0000-0000-0000-000000000000',
-            check_in_date: new Date().toISOString().split('T')[0],
+            check_in_date: today,
             progress_summary: goal.trim(),
             streak_count: newStreak,
             completed_tasks: [],
@@ -89,6 +91,7 @@ export const DailyGoalModal = ({
         toast.success(message);
       }
 
+      clearDailyGoalPromptSkipped(user.id, mode, today);
       onOpenChange(false);
       setGoal('');
       setGoalAchieved(null);
@@ -97,12 +100,28 @@ export const DailyGoalModal = ({
       setEnergyLevelEnd(3);
       setTomorrowFocus('');
       onCheckInComplete?.();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error saving check-in:', error);
       toast.error('Failed to save. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleSkip = () => {
+    if (!user) {
+      onOpenChange(false);
+      return;
+    }
+
+    markDailyGoalPromptSkipped(user.id, mode, today);
+    setGoal('');
+    setGoalAchieved(null);
+    setWhatWentWell('');
+    setWhatBlockedYou('');
+    setEnergyLevelEnd(3);
+    setTomorrowFocus('');
+    onOpenChange(false);
   };
 
   const isMorning = mode === 'morning';
@@ -231,7 +250,7 @@ export const DailyGoalModal = ({
           <div className="flex gap-2 justify-end">
             <Button
               variant="outline"
-              onClick={() => onOpenChange(false)}
+              onClick={handleSkip}
               disabled={isSubmitting}
             >
               {isMorning ? 'Skip Today' : 'Skip Reflection'}

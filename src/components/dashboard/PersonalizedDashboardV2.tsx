@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, createContext, useContext } from 'react';
+import React, { useEffect, useState, useRef, createContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usePersonalizedDashboard } from '@/hooks/usePersonalizedDashboard';
 import { ArrowRight } from 'lucide-react';
@@ -19,6 +19,7 @@ import { ReactNode } from 'react';
 import { BizMapStageTasks } from './BizMapStageTasks';
 import { useBizMapProgress } from '@/hooks/useBizMapProgress';
 import { useUnifiedTasks } from '@/hooks/useUnifiedTasks';
+import { getLocalDateString, wasDailyGoalPromptSkipped } from '@/lib/dailyGoalPrompt';
 
 /** Exposes the total incomplete task count to child components (e.g. sidebar badge) */
 export const TaskCountContext = createContext<number>(0);
@@ -58,7 +59,6 @@ export const PersonalizedDashboardV2 = () => {
 
   const [showDailyGoal, setShowDailyGoal] = useState(false);
   const [modalMode, setModalMode] = useState<'morning' | 'evening'>('morning');
-  const [hasCheckedInToday, setHasCheckedInToday] = useState(false);
   const [todaysCheckInId, setTodaysCheckInId] = useState<string | null>(null);
   const [currentStreak, setCurrentStreak] = useState(0);
   const [dashboardMode, setDashboardMode] = useState<DashboardMode>('dashboard');
@@ -112,7 +112,7 @@ export const PersonalizedDashboardV2 = () => {
     }
 
     const checkDailyCheckIn = async () => {
-      const today = new Date().toISOString().split('T')[0];
+      const today = getLocalDateString();
       const currentHour = new Date().getHours();
 
       const { data: todayCheckIn } = await supabase
@@ -121,8 +121,6 @@ export const PersonalizedDashboardV2 = () => {
         .eq('user_id', user.id)
         .eq('check_in_date', today)
         .maybeSingle();
-
-      setHasCheckedInToday(!!todayCheckIn);
 
       if (todayCheckIn) {
         setTodaysCheckInId(todayCheckIn.id);
@@ -155,14 +153,20 @@ export const PersonalizedDashboardV2 = () => {
         }
 
         // Show evening reflection if after 6 PM and haven't reflected yet
-        if (currentHour >= 18 && todayCheckIn.goal_achieved === null) {
+        if (
+          currentHour >= 18 &&
+          todayCheckIn.goal_achieved === null &&
+          !wasDailyGoalPromptSkipped(user.id, 'evening', today)
+        ) {
           setModalMode('evening');
           setShowDailyGoal(true);
         }
       } else {
         // Show morning goal modal if haven't checked in
-        setModalMode('morning');
-        setShowDailyGoal(true);
+        if (!wasDailyGoalPromptSkipped(user.id, 'morning', today)) {
+          setModalMode('morning');
+          setShowDailyGoal(true);
+        }
       }
 
       lastFetchTimeRef.current = Date.now();
@@ -312,7 +316,6 @@ export const PersonalizedDashboardV2 = () => {
                   mode={modalMode}
                   todaysCheckInId={todaysCheckInId}
                   onCheckInComplete={async () => {
-                    setHasCheckedInToday(true);
                     hasInitializedRef.current = false;
                     lastFetchTimeRef.current = 0;
                   }}
