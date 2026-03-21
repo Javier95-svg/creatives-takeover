@@ -7,8 +7,10 @@ const CREDIT_COSTS = {
   PMF_SCORING: 8,
 } as const;
 
+const ADMIN_EMAIL = 'admin@creatives-takeover.com';
+
 // ─── Inlined: getUserFromAuth ─────────────────────────────────────────────────
-async function getUserFromAuth(req: Request): Promise<{ id: string } | null> {
+async function getUserFromAuth(req: Request): Promise<{ id: string; email?: string | null } | null> {
   const supabaseUrl = Deno.env.get('SUPABASE_URL');
   const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
   if (!supabaseUrl || !serviceRoleKey) return null;
@@ -20,7 +22,7 @@ async function getUserFromAuth(req: Request): Promise<{ id: string } | null> {
   try {
     const { data: { user }, error } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''));
     if (error || !user) return null;
-    return { id: user.id };
+    return { id: user.id, email: user.email };
   } catch {
     return null;
   }
@@ -184,13 +186,15 @@ serve(async (req) => {
     }
 
     const creditCost = CREDIT_COSTS.PMF_SCORING;
-    const creditResult = await checkAndDeductCredits(
-      user.id,
-      creditCost,
-      'PMF Evidence Analysis',
-      undefined,
-      { testTypes: body.testTypes }
-    );
+    const creditResult = user.email?.toLowerCase() === ADMIN_EMAIL
+      ? { success: true }
+      : await checkAndDeductCredits(
+          user.id,
+          creditCost,
+          'PMF Evidence Analysis',
+          undefined,
+          { testTypes: body.testTypes }
+        );
 
     if (!creditResult.success) {
       return new Response(JSON.stringify({

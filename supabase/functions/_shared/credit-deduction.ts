@@ -1,5 +1,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
 
+const ADMIN_EMAIL = 'admin@creatives-takeover.com';
+
 /**
  * Shared credit deduction utility for edge functions
  * Provides consistent credit checking and deduction across all features
@@ -82,6 +84,28 @@ export async function checkAndDeductCredits(
         success: false,
         error: 'Invalid credit amount',
         errorCode: 'DEDUCTION_FAILED'
+      }, false);
+    }
+
+    const { data: adminUserData, error: adminUserError } = await supabase.auth.admin.getUserById(userId);
+    const isAdmin =
+      !adminUserError &&
+      typeof adminUserData?.user?.email === 'string' &&
+      adminUserData.user.email.toLowerCase() === ADMIN_EMAIL;
+
+    if (isAdmin) {
+      const { data: currentCredits } = await supabase
+        .from('user_credits')
+        .select('balance, monthly_quota')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      return await returnWithIdempotency({
+        success: true,
+        newBalance: currentCredits?.balance ?? 0,
+        newQuota: currentCredits?.monthly_quota ?? 0,
+        usedFromQuota: 0,
+        usedFromBalance: 0
       }, false);
     }
 
@@ -438,7 +462,7 @@ export async function getCreditBalanceAndQuota(userId: string): Promise<{ balanc
  * @param req - Request object with Authorization header
  * @returns User object or null if not authenticated
  */
-export async function getUserFromAuth(req: Request): Promise<{ id: string } | null> {
+export async function getUserFromAuth(req: Request): Promise<{ id: string; email?: string | null } | null> {
   const supabaseUrl = Deno.env.get('SUPABASE_URL');
   const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
@@ -464,7 +488,7 @@ export async function getUserFromAuth(req: Request): Promise<{ id: string } | nu
       return null;
     }
 
-    return { id: user.id };
+    return { id: user.id, email: user.email };
   } catch (error) {
     console.error('Error getting user from auth:', error);
     return null;

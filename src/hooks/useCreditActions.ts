@@ -6,6 +6,7 @@ import { useUpgradePrompt } from '@/contexts/UpgradePromptContext';
 import { CREDIT_COSTS, CreditFeature, getCreditCost } from '@/config/constants';
 import { toast } from 'sonner';
 import { createIdempotencyKey } from '@/lib/idempotency';
+import { isAdminEmail } from '@/lib/admin';
 
 const CREDIT_FEATURE_LABELS: Record<CreditFeature, string> = {
   LAUNCH_REPORT: 'Launch Report Generation',
@@ -70,12 +71,17 @@ export const useCreditActions = () => {
   const { user } = useAuth();
   const { hasCredits, refreshBalance, loading: creditsLoading } = useCredits();
   const { openUpgradePrompt } = useUpgradePrompt();
+  const isAdmin = isAdminEmail(user?.email);
 
   const ensureCredits = useCallback(
     (feature: CreditFeature, options: CreditActionOptions = {}) => {
       if (!user) {
         toast.error('Please sign in to use this feature.');
         return null;
+      }
+
+      if (isAdmin) {
+        return 0;
       }
 
       if (creditsLoading) {
@@ -101,11 +107,12 @@ export const useCreditActions = () => {
 
       return requiredCredits;
     },
-    [creditsLoading, hasCredits, openUpgradePrompt, user]
+    [creditsLoading, hasCredits, isAdmin, openUpgradePrompt, user]
   );
 
   const handleCreditError = useCallback(
     (error: any, data: any, feature: CreditFeature, options: CreditActionOptions = {}) => {
+      if (isAdmin) return true;
       if (!isCreditError(error, data)) return false;
       const requiredCredits = resolveCreditCost(
         feature,
@@ -120,7 +127,7 @@ export const useCreditActions = () => {
       });
       return true;
     },
-    [openUpgradePrompt]
+    [isAdmin, openUpgradePrompt]
   );
 
   const deductCredits = useCallback(
@@ -128,6 +135,10 @@ export const useCreditActions = () => {
       if (!user) {
         toast.error('Please sign in to use this feature.');
         return false;
+      }
+
+      if (isAdmin) {
+        return true;
       }
 
       const requiredCredits = ensureCredits(feature, options);
@@ -164,7 +175,7 @@ export const useCreditActions = () => {
       await refreshBalance();
       return true;
     },
-    [ensureCredits, handleCreditError, refreshBalance, user]
+    [ensureCredits, handleCreditError, isAdmin, refreshBalance, user]
   );
 
   return {

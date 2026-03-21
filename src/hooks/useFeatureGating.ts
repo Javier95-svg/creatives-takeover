@@ -2,6 +2,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useSubscription } from './useSubscription';
 import { useCredits } from './useCredits';
 import { CREDIT_COSTS } from '@/config/constants';
+import { isAdminEmail } from '@/lib/admin';
 
 export interface FeatureAccess {
   hasAccess: boolean;
@@ -18,6 +19,10 @@ export function useFeatureGating() {
   const checkFeatureAccess = (feature: string): FeatureAccess => {
     if (!user) {
       return { hasAccess: false, message: 'Please sign in to access this feature' };
+    }
+
+    if (isAdminEmail(user.email)) {
+      return { hasAccess: true };
     }
 
     if (subscriptionLoading || creditsLoading) {
@@ -551,6 +556,10 @@ export function useFeatureGating() {
   };
 
   const getConversationLimit = (): number => {
+    if (isAdminEmail(user?.email)) {
+      return 300;
+    }
+
     const tier = subscriptionData?.subscription_tier || 'free';
     const limits = {
       free: 10,
@@ -599,14 +608,16 @@ export function useFeatureGating() {
     return featureMap[tierName] || [];
   };
 
-  const currentTierValue = subscriptionData?.subscription_tier || 'free';
+  const currentTierValue = isAdminEmail(user?.email)
+    ? 'professional'
+    : (subscriptionData?.subscription_tier || 'free');
 
   return {
     checkFeatureAccess,
     getConversationLimit,
     getTierFeatures,
     currentTier: currentTierValue,
-    isSubscribed: subscriptionData?.subscribed || false,
-    hasCredits: (amount: number) => hasCredits(amount)
+    isSubscribed: isAdminEmail(user?.email) ? true : (subscriptionData?.subscribed || false),
+    hasCredits: (amount: number) => (isAdminEmail(user?.email) ? true : hasCredits(amount))
   };
 }

@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { ADMIN_SUBSCRIPTION, isAdminEmail } from '@/lib/admin';
 
 const BILLING_STORAGE_KEY = 'ct_billing_details';
 
@@ -47,6 +48,21 @@ const DEFAULT_SUBSCRIPTION: SubscriptionData = {
   subscribed: false,
   subscription_tier: 'free',
   subscription_end: null,
+};
+
+const normalizeSubscriptionData = (
+  email: string | null | undefined,
+  data?: Partial<SubscriptionData> | null
+): SubscriptionData => {
+  if (isAdminEmail(email)) {
+    return { ...ADMIN_SUBSCRIPTION };
+  }
+
+  return {
+    subscribed: Boolean(data?.subscribed),
+    subscription_tier: String(data?.subscription_tier ?? 'free').toLowerCase(),
+    subscription_end: data?.subscription_end ?? null,
+  };
 };
 
 export function useSubscription() {
@@ -95,13 +111,14 @@ export function useSubscription() {
 
   const fetchSubscription = async (): Promise<SubscriptionData> => {
     if (!user) return DEFAULT_SUBSCRIPTION;
+    if (isAdminEmail(user.email)) return { ...ADMIN_SUBSCRIPTION };
 
     try {
       const sessionResp = await supabase.auth.getSession();
       const accessToken = sessionResp?.data?.session?.access_token;
 
       if (!accessToken) {
-        return DEFAULT_SUBSCRIPTION;
+        return normalizeSubscriptionData(user.email, DEFAULT_SUBSCRIPTION);
       }
 
       const { data, error } = await supabase.functions.invoke('check-subscription', {
@@ -112,21 +129,17 @@ export function useSubscription() {
 
       if (error) {
         console.error('Error from check-subscription function:', error);
-        return DEFAULT_SUBSCRIPTION;
+        return normalizeSubscriptionData(user.email, DEFAULT_SUBSCRIPTION);
       }
 
       if (data) {
-        return {
-          subscribed: Boolean(data.subscribed),
-          subscription_tier: String(data.subscription_tier ?? 'free').toLowerCase(),
-          subscription_end: data.subscription_end ?? null
-        };
+        return normalizeSubscriptionData(user.email, data as Partial<SubscriptionData>);
       }
     } catch (error) {
       console.error('Error checking subscription:', error);
     }
 
-    return DEFAULT_SUBSCRIPTION;
+    return normalizeSubscriptionData(user.email, DEFAULT_SUBSCRIPTION);
   };
 
   const tiersQuery = useQuery({
@@ -145,7 +158,9 @@ export function useSubscription() {
   });
 
   const tiers = tiersQuery.data ?? [];
-  const subscriptionData = user ? (subscriptionQuery.data ?? DEFAULT_SUBSCRIPTION) : DEFAULT_SUBSCRIPTION;
+  const subscriptionData = user
+    ? normalizeSubscriptionData(user.email, subscriptionQuery.data ?? DEFAULT_SUBSCRIPTION)
+    : DEFAULT_SUBSCRIPTION;
   const loading = tiersQuery.isLoading || subscriptionQuery.isLoading || actionLoading;
 
   const checkSubscription = async () => {
