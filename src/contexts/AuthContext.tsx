@@ -118,32 +118,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         return;
       }
 
-      // ── Step 3: Run admin updates + first-login update in PARALLEL ──
+      // ── Step 3: Run first-login updates in PARALLEL ──
       const parallelTasks: Promise<any>[] = [];
-
-      // Admin tier updates (batched into one Promise.all)
-      if (isAdmin) {
-        parallelTasks.push(
-          Promise.all([
-            supabase
-              .from('profiles')
-              .update({ subscription_tier: 'professional' })
-              .eq('id', userId),
-            supabase
-              .from('user_credits')
-              .upsert(
-                { user_id: userId, subscription_tier: 'professional' },
-                { onConflict: 'user_id' }
-              ),
-            supabase
-              .from('subscribers')
-              .upsert(
-                { user_id: userId, email, subscribed: true, subscription_tier: 'professional' },
-                { onConflict: 'user_id' }
-              ),
-          ]).catch(err => logError('Failed to update admin tier', err, { userId }))
-        );
-      }
 
       // New profile: initialize credits
       if (isNewProfile) {
@@ -345,15 +321,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         counter++;
       }
 
-      const isAdmin = profileUser.email?.toLowerCase() === 'admin@creatives-takeover.com';
-
       const profilePayload = {
         id: profileUser.id,
         full_name: fullName || '',
         avatar_url: profileUser.user_metadata?.avatar_url || '',
         date_of_birth: profileUser.user_metadata?.date_of_birth || null,
         username: finalUsername,
-        subscription_tier: isAdmin ? 'professional' : 'free',
+        subscription_tier: 'free',
       };
 
       let { error } = await supabase

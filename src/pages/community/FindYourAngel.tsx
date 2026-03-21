@@ -94,7 +94,7 @@ const FindYourAngel = () => {
   const { currentTier } = useFeatureGating();
   const { openUpgradePrompt } = useUpgradePrompt();
   const { fetchAngels, loading } = useAngels();
-  const isPro = isAdmin || currentTier === 'professional';
+  const isPro = currentTier === 'professional';
   const [angels, setAngels] = useState<AngelInvestor[]>([]);
 
   // Initialize state from URL params (fix 4b: persist filters in URL)

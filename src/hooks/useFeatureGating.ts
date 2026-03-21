@@ -20,11 +20,6 @@ export function useFeatureGating() {
       return { hasAccess: false, message: 'Please sign in to access this feature' };
     }
 
-    // Grant all features to admin account
-    if (user.email?.toLowerCase() === 'admin@creatives-takeover.com') {
-      return { hasAccess: true };
-    }
-
     if (subscriptionLoading || creditsLoading) {
       return { hasAccess: true, isLoading: true };
     }
@@ -43,7 +38,7 @@ export function useFeatureGating() {
         return { hasAccess: true };
 
       // Community features
-      case 'community_posting':
+      case 'community_posting': {
         // Allow specific email addresses to post regardless of tier
         const allowedCommunityPosters = [
           'tyler.jacob.tennant517@gmail.com',
@@ -60,6 +55,7 @@ export function useFeatureGating() {
           message: 'Upgrade to Creator tier or higher to create posts in the community',
           requiredTier: 'creator'
         };
+      }
 
       case 'community_commenting':
         if (['creator', 'professional'].includes(tier)) {

@@ -261,54 +261,36 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Get user email to check if admin
-    let isAdmin = false;
-    try {
-      const { data: authUser, error: authError } = await supabase.auth.admin.getUserById(user.id);
-      if (!authError && authUser?.user?.email) {
-        const userEmail = authUser.user.email.toLowerCase();
-        isAdmin = userEmail === 'admin@creatives-takeover.com';
-      }
-    } catch (error) {
-      console.error('Error checking admin status:', error);
-      // Continue without admin bypass if check fails
-    }
-
-    // Credit cost defined outside admin check for refund availability
+    // Credit cost defined outside the AI-processing block for refund availability
     const creditCost = CREDIT_COSTS.MARKET_VALIDATION;
 
-    // Skip credit check for admin account
-    if (!isAdmin) {
-      const idempotencyKey = await resolveCreditIdempotencyKey(req, {
-        userId: user.id,
-        feature: 'Market Validation',
-        sessionId: session_id,
-        requestFingerprint: { business_idea, industry, target_market },
-      });
+    const idempotencyKey = await resolveCreditIdempotencyKey(req, {
+      userId: user.id,
+      feature: 'Market Validation',
+      sessionId: session_id,
+      requestFingerprint: { business_idea, industry, target_market },
+    });
 
-      // Check and deduct credits before processing
-      const creditCheck = await checkAndDeductCredits(
-        user.id,
-        creditCost,
-        'Market Validation',
-        session_id,
-        { business_idea, industry, target_market, idempotencyKey }
+    // Check and deduct credits before processing
+    const creditCheck = await checkAndDeductCredits(
+      user.id,
+      creditCost,
+      'Market Validation',
+      session_id,
+      { business_idea, industry, target_market, idempotencyKey }
+    );
+
+    if (!creditCheck.success) {
+      return new Response(
+        JSON.stringify({ 
+          error: creditCheck.error || 'Insufficient credits',
+          required: creditCost
+        }),
+        { 
+          status: creditCheck.errorCode === 'INSUFFICIENT_CREDITS' ? 402 : 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
       );
-
-      if (!creditCheck.success) {
-        return new Response(
-          JSON.stringify({ 
-            error: creditCheck.error || 'Insufficient credits',
-            required: creditCost
-          }),
-          { 
-            status: creditCheck.errorCode === 'INSUFFICIENT_CREDITS' ? 402 : 400,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-          }
-        );
-      }
-    } else {
-      console.log('Admin account detected - skipping credit check for market validation');
     }
 
     // Use Lovable AI to analyze market potential
@@ -593,11 +575,8 @@ Provide a comprehensive market validation analysis.`
     );
 
     } catch (aiError) {
-      // Refund credits on AI processing failure (only if credits were deducted)
-      if (!isAdmin) {
-        const err = aiError instanceof Error ? aiError : new Error(String(aiError));
-        await refundCredits(user.id, creditCost, 'Market Validation', 'Refund: AI processing failed', { error: err.message });
-      }
+      const err = aiError instanceof Error ? aiError : new Error(String(aiError));
+      await refundCredits(user.id, creditCost, 'Market Validation', 'Refund: AI processing failed', { error: err.message });
       throw aiError;
     }
 

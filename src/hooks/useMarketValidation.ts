@@ -56,15 +56,9 @@ export const useMarketValidation = () => {
     }) => {
       if (!user) throw new Error('User not authenticated');
 
-      // Check if admin account - skip credit check
-      const isAdmin = user.email?.toLowerCase() === 'admin@creatives-takeover.com';
-      
-      // Check credits before proceeding (skip for admin)
-      if (!isAdmin) {
-        const requiredCredits = ensureCredits('MARKET_VALIDATION', { featureName: 'Market Validation' });
-        if (requiredCredits === null) {
-          throw new Error('Insufficient credits');
-        }
+      const requiredCredits = ensureCredits('MARKET_VALIDATION', { featureName: 'Market Validation' });
+      if (requiredCredits === null) {
+        throw new Error('Insufficient credits');
       }
 
       const { data, error } = await supabase.functions.invoke('market-validation-engine', {
@@ -77,14 +71,14 @@ export const useMarketValidation = () => {
       });
 
       if (error) {
-        if (!isAdmin && handleCreditError(error, data, 'MARKET_VALIDATION', { featureName: 'Market Validation' })) {
+        if (handleCreditError(error, data, 'MARKET_VALIDATION', { featureName: 'Market Validation' })) {
           throw new Error('Insufficient credits');
         }
         throw error;
       }
 
       if (data?.error) {
-        if (!isAdmin && handleCreditError(null, data, 'MARKET_VALIDATION', { featureName: 'Market Validation' })) {
+        if (handleCreditError(null, data, 'MARKET_VALIDATION', { featureName: 'Market Validation' })) {
           throw new Error('Insufficient credits');
         }
         throw new Error(data.error);
@@ -94,13 +88,8 @@ export const useMarketValidation = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['market-validation'] });
-      const isAdmin = user?.email?.toLowerCase() === 'admin@creatives-takeover.com';
-      if (isAdmin) {
-        toast.success('Market validation completed! (Admin - no credits used)');
-      } else {
-        toast.success(`Market validation completed! (Used ${CREDIT_COSTS.MARKET_VALIDATION} credits)`);
-        refreshBalance();
-      }
+      toast.success(`Market validation completed! (Used ${CREDIT_COSTS.MARKET_VALIDATION} credits)`);
+      refreshBalance();
     },
     onError: (error) => {
       const errorMessage = error instanceof Error ? error.message : 'Failed to validate market';

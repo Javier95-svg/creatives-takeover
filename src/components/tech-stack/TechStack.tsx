@@ -82,8 +82,6 @@ const TechStack: React.FC = () => {
   const [previewReport, setPreviewReport] = useState<TechStackReport | null>(null);
 
   const currentTier = subscriptionData.subscription_tier?.toLowerCase() || 'free';
-  const isAdmin = user?.email?.toLowerCase() === 'admin@creatives-takeover.com';
-
   useEffect(() => {
     if (!user) {
       setSavedReports([]);
@@ -191,15 +189,6 @@ const TechStack: React.FC = () => {
       return;
     }
 
-    if (isAdmin) {
-      setShowBudget(true);
-      toast({
-        title: "Budget Generated!",
-        description: "Scroll down to view your tech stack budget and integration guide.",
-      });
-      return;
-    }
-
     const featureAccess = checkFeatureAccess('tech_stack_generation');
     if (!featureAccess.hasAccess) {
       openUpgradePrompt({
@@ -211,49 +200,47 @@ const TechStack: React.FC = () => {
       return;
     }
 
-    if (!isAdmin) {
-      if (currentTier === 'free') {
-        try {
-          const { data: usageData, error: usageError } = await supabase
-            .rpc('get_feature_usage', {
-              p_user_id: user.id,
-              p_feature_name: 'tech_stack_generations'
-            });
-
-          if (!usageError && usageData) {
-            const usage = usageData as { current_usage: number; limit: number; remaining: number };
-            if (usage.remaining <= 0 && usage.limit > 0) {
-              openUpgradePrompt({
-                reason: 'limit',
-                limit: usage.limit,
-                limitLabel: 'Tech Stack generations',
-                featureName: 'Tech Stack Generator',
-                requiredTier: 'creator',
-                description: "You've used your free Tech Stack generation this month.",
-              });
-              return;
-            }
-          }
-        } catch (error) {
-          console.warn('Failed to check Tech Stack usage', error);
-        }
-      }
-
-      const deducted = await deductCredits('TECH_STACK_GENERATION', {
-        featureName: 'Tech Stack Generation',
-        metadata: { selectedCategories: techStackData.length }
-      });
-      if (!deducted) return;
-
+    if (currentTier === 'free') {
       try {
-        await supabase.rpc('check_and_increment_usage', {
-          p_user_id: user.id,
-          p_feature_name: 'tech_stack_generations',
-          p_increment_by: 1
-        });
+        const { data: usageData, error: usageError } = await supabase
+          .rpc('get_feature_usage', {
+            p_user_id: user.id,
+            p_feature_name: 'tech_stack_generations'
+          });
+
+        if (!usageError && usageData) {
+          const usage = usageData as { current_usage: number; limit: number; remaining: number };
+          if (usage.remaining <= 0 && usage.limit > 0) {
+            openUpgradePrompt({
+              reason: 'limit',
+              limit: usage.limit,
+              limitLabel: 'Tech Stack generations',
+              featureName: 'Tech Stack Generator',
+              requiredTier: 'creator',
+              description: "You've used your free Tech Stack generation this month.",
+            });
+            return;
+          }
+        }
       } catch (error) {
-        console.warn('Failed to update Tech Stack usage', error);
+        console.warn('Failed to check Tech Stack usage', error);
       }
+    }
+
+    const deducted = await deductCredits('TECH_STACK_GENERATION', {
+      featureName: 'Tech Stack Generation',
+      metadata: { selectedCategories: techStackData.length }
+    });
+    if (!deducted) return;
+
+    try {
+      await supabase.rpc('check_and_increment_usage', {
+        p_user_id: user.id,
+        p_feature_name: 'tech_stack_generations',
+        p_increment_by: 1
+      });
+    } catch (error) {
+      console.warn('Failed to update Tech Stack usage', error);
     }
 
     setShowBudget(true);
@@ -261,7 +248,7 @@ const TechStack: React.FC = () => {
       title: "Budget Generated!",
       description: "Scroll down to view your tech stack budget and integration guide.",
     });
-    if (!isAdmin) await refreshBalance();
+    await refreshBalance();
   };
 
   const handleSaveReport = async () => {
