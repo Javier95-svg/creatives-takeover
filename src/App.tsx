@@ -32,6 +32,7 @@ const Analytics = lazy(() =>
 const Index = lazy(() => import("./pages/Index"));
 const About = lazy(() => import("./pages/About"));
 const PricingPage = lazy(() => import("./pages/PricingPage"));
+const SubscriptionSuccess = lazy(() => import("./pages/SubscriptionSuccess"));
 const CommunityPage = lazy(() => import("./pages/CommunityPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Careers = lazy(() => import("./pages/Careers"));
@@ -149,6 +150,7 @@ function App() {
                         <Route path="/" element={<Index />} />
                         <Route path="/about" element={<About />} />
                         <Route path="/pricing" element={<PricingPage />} />
+                        <Route path="/subscription-success" element={<SubscriptionSuccess />} />
                         <Route path="/community" element={<CommunityPage />} />
                         <Route path="/community/mentors/:id" element={<MentorProfilePage />} />
                         <Route path="/community/book/:id" element={<MentorBookingPage />} />

@@ -9,12 +9,6 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, idempotency-key",
 };
 
-// Helper logging function for debugging
-const logStep = (step: string, details?: any) => {
-  const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
-  console.log(`[CREATE-CHECKOUT] ${step}${detailsStr}`);
-};
-
 type PrefillInput = {
   name?: string;
   email?: string;
@@ -26,6 +20,26 @@ type PrefillInput = {
     postal_code?: string;
     country?: string;
   };
+};
+
+type BillingCycle = "monthly" | "yearly";
+type PurchaseType = "subscription" | "credit_pack";
+
+const SUBSCRIPTION_PRICING: Record<string, Record<BillingCycle, { amount: number; name: string; credits: number }>> = {
+  creator: {
+    monthly: { amount: 3299, name: "Rising Plan", credits: 100 },
+    yearly: { amount: 30000, name: "Rising Plan", credits: 100 },
+  },
+  professional: {
+    monthly: { amount: 7499, name: "Pro Plan", credits: 300 },
+    yearly: { amount: 75000, name: "Pro Plan", credits: 300 },
+  },
+};
+
+const CREDIT_PACKS: Record<string, { amount: number; credits: number; name: string }> = {
+  pack_20: { amount: 800, credits: 20, name: "Starter Pack" },
+  pack_40: { amount: 1600, credits: 40, name: "Boost Pack" },
+  pack_60: { amount: 2400, credits: 60, name: "Power Pack" },
 };
 
 const sanitizeString = (value: unknown): string | undefined => {
@@ -83,19 +97,73 @@ const buildStripeAddress = (
   return Object.keys(stripeAddress).length > 0 ? stripeAddress : undefined;
 };
 
+const normalizePurchaseType = (value: unknown): PurchaseType => {
+  const normalized = sanitizeString(value)?.toLowerCase();
+  return normalized === "credit_pack" ? "credit_pack" : "subscription";
+};
+
+const normalizeBillingCycle = (value: unknown): BillingCycle => {
+  const normalized = sanitizeString(value)?.toLowerCase();
+  return normalized === "yearly" ? "yearly" : "monthly";
+};
+
+const buildMetadata = (base: Record<string, string | undefined>): Record<string, string> =>
+  Object.fromEntries(
+    Object.entries(base).filter((entry): entry is [string, string] => typeof entry[1] === "string" && entry[1].length > 0)
+  );
+
+const findOrCreateCustomer = async (
+  stripe: Stripe,
+  user: { id: string; email: string; user_metadata?: Record<string, unknown> | null },
+  prefillData: PrefillInput
+) => {
+  const customers = await stripe.customers.list({ email: user.email, limit: 1 });
+  const updatedAddress = buildStripeAddress(prefillData.address);
+
+  if (customers.data.length > 0) {
+    const customer = customers.data[0];
+    const updatePayload: Stripe.CustomerUpdateParams = {
+      metadata: {
+        ...(customer.metadata ?? {}),
+        supabase_user_id: user.id,
+      },
+    };
+
+    if (prefillData.name) {
+      updatePayload.name = prefillData.name;
+    }
+    if (updatedAddress) {
+      updatePayload.address = updatedAddress;
+    }
+
+    await stripe.customers.update(customer.id, updatePayload);
+    logInfo("stripe:customer_found", { customerId: customer.id });
+    return customer.id;
+  }
+
+  const newCustomer = await stripe.customers.create({
+    email: prefillData.email ?? user.email,
+    name: prefillData.name,
+    address: updatedAddress,
+    metadata: {
+      supabase_user_id: user.id,
+    },
+  });
+  logInfo("stripe:customer_created", { customerId: newCustomer.id });
+  return newCustomer.id;
+};
+
 serve(withErrorBoundary(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
-  return withIdempotency(req, 'create-checkout', async () => {
-    logInfo('create-checkout:start');
+  return withIdempotency(req, "create-checkout", async () => {
+    logInfo("create-checkout:start");
 
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
-    logInfo('stripe:key_verified');
 
-    // Create Supabase client with anon key for user authentication
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_ANON_KEY") ?? ""
@@ -103,47 +171,30 @@ serve(withErrorBoundary(async (req: Request) => {
 
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) throw new Error("No authorization header provided");
-    logInfo('auth:header_found');
 
     const token = authHeader.replace("Bearer ", "");
     const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
     if (userError) throw new Error(`Authentication error: ${userError.message}`);
     const user = userData.user;
     if (!user?.email) throw new Error("User not authenticated or email not available");
-    logInfo('auth:user_authenticated', { userId: user.id, email: user.email });
+    logInfo("auth:user_authenticated", { userId: user.id, email: user.email });
 
-    // Get request body
     let body: Record<string, unknown> = {};
     try {
       body = await req.json();
     } catch (error) {
-      logError('request:parse_failed', error);
+      logError("request:parse_failed", error);
     }
 
-    const requestedTier = (sanitizeString(body.tier) ?? "").toLowerCase();
-
-    const pricingMap: Record<string, { amount: number; name: string }> = {
-      basic: { amount: 999, name: "Basic Plan - 50 Credits/month" },
-      starter: { amount: 999, name: "Starter Plan - 50 Credits/month" },
-      creator: { amount: 1999, name: "Creator Plan - 100 Credits/month" },
-      premium: { amount: 1999, name: "Premium Plan - 150 Credits/month" },
-      professional: { amount: 3999, name: "Professional Plan - 300 Credits/month" },
-      elite: { amount: 3999, name: "Elite Plan - 150 Credits/month" },
-      teams: { amount: 5999, name: "Teams Plan - 500 Credits/month" },
-      enterprise: { amount: 5999, name: "Enterprise Plan - 500 Credits/month" }
-    };
-
-    const pricing = pricingMap[requestedTier];
-    if (!pricing) {
-      throw new Error("Valid subscription tier is required");
-    }
-    logInfo('tier:validated', { tier: requestedTier, price_cents: pricing.amount });
+    const purchaseType = normalizePurchaseType(body.purchaseType);
+    const billingCycle = normalizeBillingCycle(body.billingCycle);
+    const requestedTier = sanitizeString(body.tier)?.toLowerCase();
+    const requestedPackId = sanitizeString(body.packId)?.toLowerCase();
 
     let prefillData: PrefillInput = sanitizePrefillInput(body.prefill) ?? {};
     const metadataName = sanitizeString(
       (user.user_metadata as Record<string, unknown> | null)?.full_name
     );
-
     if (!prefillData.email) {
       prefillData.email = user.email;
     }
@@ -152,56 +203,91 @@ serve(withErrorBoundary(async (req: Request) => {
     }
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
+    const customerId = await findOrCreateCustomer(stripe, {
+      id: user.id,
+      email: user.email,
+      user_metadata: user.user_metadata as Record<string, unknown> | null,
+    }, prefillData);
 
-    // Check if customer already exists
-    const customers = await stripe.customers.list({ email: user.email, limit: 1 });
-    let customerId: string | undefined;
-    if (customers.data.length > 0) {
-      customerId = customers.data[0].id;
-      logInfo('stripe:customer_found', { customerId });
-
-      const updatePayload: Stripe.CustomerUpdateParams = {};
-      if (prefillData.name) {
-        updatePayload.name = prefillData.name;
-      }
-      const updatedAddress = buildStripeAddress(prefillData.address);
-      if (updatedAddress) {
-        updatePayload.address = updatedAddress;
-      }
-
-      if (Object.keys(updatePayload).length > 0) {
-        await stripe.customers.update(customerId, updatePayload);
-        logInfo('stripe:customer_updated', { fields: Object.keys(updatePayload) });
-      }
-    } else {
-      logInfo('stripe:new_customer');
-      const newCustomer = await stripe.customers.create({
-        email: prefillData.email ?? user.email,
-        name: prefillData.name,
-        address: buildStripeAddress(prefillData.address),
-        metadata: {
-          supabase_user_id: user.id,
-        },
-      });
-      customerId = newCustomer.id;
-      logInfo('stripe:customer_created', { customerId });
-    }
-
-
-    // Create checkout session
     const origin =
       req.headers.get("origin") ??
       Deno.env.get("SITE_URL") ??
       "https://creatives-takeover.com";
 
-    logInfo('prefill:applied', {
-      hasName: Boolean(prefillData.name),
-      hasAddress: Boolean(prefillData.address),
+    if (purchaseType === "credit_pack") {
+      if (!requestedPackId || !CREDIT_PACKS[requestedPackId]) {
+        throw new Error("Valid credit pack is required");
+      }
+
+      const pack = CREDIT_PACKS[requestedPackId];
+      const metadata = buildMetadata({
+        purchase_type: "credit_pack",
+        pack_id: requestedPackId,
+        user_id: user.id,
+        user_email: user.email,
+      });
+
+      const session = await stripe.checkout.sessions.create({
+        customer: customerId,
+        client_reference_id: user.id,
+        mode: "payment",
+        billing_address_collection: "auto",
+        customer_update: {
+          address: "auto",
+          name: "auto",
+        },
+        line_items: [
+          {
+            price_data: {
+              currency: "usd",
+              product_data: {
+                name: `${pack.name} (${pack.credits} Credits)`,
+                description: `${pack.credits} top-up credits for Creatives Takeover`,
+              },
+              unit_amount: pack.amount,
+            },
+            quantity: 1,
+          },
+        ],
+        payment_intent_data: {
+          metadata,
+        },
+        metadata,
+        success_url: `${origin}/subscription-success?purchase_type=credit_pack&pack_id=${requestedPackId}&session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${origin}/pricing#credit-packs`,
+      });
+
+      logInfo("checkout:credit_pack_created", {
+        sessionId: session.id,
+        packId: requestedPackId,
+        userId: user.id,
+      });
+
+      return new Response(JSON.stringify({ url: session.url }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
+    }
+
+    if (!requestedTier || !SUBSCRIPTION_PRICING[requestedTier]?.[billingCycle]) {
+      throw new Error("Valid subscription tier is required");
+    }
+
+    const pricing = SUBSCRIPTION_PRICING[requestedTier][billingCycle];
+    const metadata = buildMetadata({
+      purchase_type: "subscription",
+      tier: requestedTier,
+      subscription_tier: requestedTier,
+      billing_cycle: billingCycle,
+      user_id: user.id,
+      user_email: user.email,
+      billing_name: prefillData.name,
+      billing_country: prefillData.address?.country,
     });
 
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
-      customer_email: customerId ? undefined : (prefillData.email ?? user.email),
+      client_reference_id: user.id,
       billing_address_collection: "auto",
       customer_update: {
         address: "auto",
@@ -213,33 +299,33 @@ serve(withErrorBoundary(async (req: Request) => {
             currency: "usd",
             product_data: {
               name: pricing.name,
-              description: `BizMap AI ${requestedTier.charAt(0).toUpperCase() + requestedTier.slice(1)} subscription with monthly credit allocation`,
+              description: `${pricing.credits} monthly credits with ${billingCycle} billing`,
             },
             unit_amount: pricing.amount,
-            recurring: { interval: "month" },
+            recurring: { interval: billingCycle === "yearly" ? "year" : "month" },
           },
           quantity: 1,
         },
       ],
       mode: "subscription",
-      success_url: `${origin}/subscription-success?tier=${requestedTier}`,
-      cancel_url: `${origin}/pricing`,
-      metadata: {
-        user_id: user.id,
-        user_email: user.email,
-        subscription_tier: requestedTier,
-        ...(prefillData.name ? { billing_name: prefillData.name } : {}),
-        ...(prefillData.address?.country
-          ? { billing_country: prefillData.address.country }
-          : {}),
+      metadata,
+      subscription_data: {
+        metadata,
       },
+      success_url: `${origin}/subscription-success?purchase_type=subscription&tier=${requestedTier}&billing_cycle=${billingCycle}&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${origin}/pricing`,
     });
 
-    logInfo('checkout:created', { sessionId: session.id });
+    logInfo("checkout:subscription_created", {
+      sessionId: session.id,
+      tier: requestedTier,
+      billingCycle,
+      userId: user.id,
+    });
 
     return new Response(JSON.stringify({ url: session.url }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });
   });
-}, { fn: 'create-checkout' }));
+}, { fn: "create-checkout" }));

@@ -5,34 +5,10 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Star, Crown, Check, Zap } from "lucide-react";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useAuth } from "@/contexts/AuthContext";
-import { toast } from "sonner";
-import { CREDIT_PACK_OPTIONS, CREDIT_PACK_PAYMENT_LINKS } from "@/config/constants";
-
-// Stripe Payment Links mapping by tier and billing cycle
-const PAYMENT_LINKS: Record<string, Record<string, string>> = {
-  creator: {
-    monthly: "https://buy.stripe.com/aFacN67Sxg8T9b80bh0VO00",
-    yearly: "https://buy.stripe.com/3cIdRa7SxcWH1IG6zF0VO01",
-  },
-  professional: {
-    monthly: "https://buy.stripe.com/cNifZi0q5f4P7303nt0VO02",
-    yearly: "https://buy.stripe.com/4gMbJ2dcR09V1IGf6b0VO03",
-  },
-};
-
-// Get payment link for a given tier and billing cycle
-const getPaymentLink = (
-  tierName: string,
-  billingCycle: "monthly" | "yearly"
-): string | null => {
-  const normalizedTier = tierName.trim().toLowerCase();
-  const links = PAYMENT_LINKS[normalizedTier];
-  if (!links) return null;
-  return links[billingCycle] || null;
-};
+import { CREDIT_PACK_OPTIONS } from "@/config/constants";
 
 const Pricing = () => {
-  const { tiers, loading, subscriptionData } = useSubscription();
+  const { tiers, loading, actionLoading, subscriptionData, createCheckout, createCreditPackCheckout } = useSubscription();
   const { user } = useAuth();
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
 
@@ -134,7 +110,7 @@ const Pricing = () => {
     return details[tierName] || { title: "Get Started", cta: "Subscribe" };
   };
 
-  const handleSubscribe = (tierName: string) => {
+  const handleSubscribe = async (tierName: string) => {
     if (tierName === "free") {
       if (!user) {
         window.location.href = "/auth";
@@ -147,40 +123,16 @@ const Pricing = () => {
       return;
     }
 
-    const paymentLink = getPaymentLink(tierName, billingCycle);
-    if (!paymentLink) {
-      toast.error("Unable to find payment link for this plan. Please try again.");
-      return;
-    }
-
-    const checkoutWindow = window.open(paymentLink, "_blank", "noopener,noreferrer");
-    if (!checkoutWindow) {
-      toast.error("Please allow popups to open checkout in a new tab.");
-      return;
-    }
-
-    toast.success("Opening secure checkout in a new tab...");
+    await createCheckout(tierName, undefined, billingCycle);
   };
 
-  const handleBuyCreditPack = (packId: string) => {
+  const handleBuyCreditPack = async (packId: string) => {
     if (!user) {
       window.location.href = "/auth";
       return;
     }
 
-    const paymentLink = CREDIT_PACK_PAYMENT_LINKS[packId];
-    if (!paymentLink) {
-      toast.info("Credit pack checkout will be available shortly. Stay tuned!");
-      return;
-    }
-
-    const checkoutWindow = window.open(paymentLink, "_blank", "noopener,noreferrer");
-    if (!checkoutWindow) {
-      toast.error("Please allow popups to open checkout in a new tab.");
-      return;
-    }
-
-    toast.success("Opening secure checkout in a new tab...");
+    await createCreditPackCheckout(packId);
   };
 
   if (loading) {
@@ -307,7 +259,7 @@ const Pricing = () => {
 
                   <Button
                     onClick={() => handleSubscribe(tier.tier_name)}
-                    disabled={!!(isCurrentPlan && user)}
+                    disabled={!!(isCurrentPlan && user) || actionLoading}
                     className={`w-full rounded-full py-3 px-4 font-semibold font-poppins transition-all shadow-sm hover:shadow-md ${isCurrentPlan
                       ? "bg-green-600 text-white cursor-default hover:bg-green-700"
                       : isPopular
@@ -358,6 +310,7 @@ const Pricing = () => {
                   <Button
                     onClick={() => handleBuyCreditPack(pack.id)}
                     variant="outline"
+                    disabled={actionLoading}
                     className="w-full rounded-full font-semibold font-poppins border-green-500/50 hover:border-green-500 hover:bg-green-500/10"
                   >
                     Buy {pack.credits} Credits

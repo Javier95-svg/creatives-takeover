@@ -33,6 +33,8 @@ export interface CheckoutPrefill {
   };
 }
 
+export type CheckoutBillingCycle = 'monthly' | 'yearly';
+
 type StoredBillingDetails = Partial<{
   fullName: string;
   email: string;
@@ -161,14 +163,23 @@ export function useSubscription() {
   const subscriptionData = user
     ? normalizeSubscriptionData(user.email, subscriptionQuery.data ?? DEFAULT_SUBSCRIPTION)
     : DEFAULT_SUBSCRIPTION;
-  const loading = tiersQuery.isLoading || subscriptionQuery.isLoading || actionLoading;
+  const loading = tiersQuery.isLoading || subscriptionQuery.isLoading;
 
   const checkSubscription = async () => {
     if (!user) return;
     await subscriptionQuery.refetch();
   };
 
-  const createCheckout = async (tier: string, prefill?: CheckoutPrefill) => {
+  const openCheckout = (url: string) => {
+    if (typeof window === 'undefined') return;
+    window.location.assign(url);
+  };
+
+  const createCheckout = async (
+    tier: string,
+    prefill?: CheckoutPrefill,
+    billingCycle: CheckoutBillingCycle = 'monthly'
+  ) => {
     if (!user) {
       toast.error('Please sign in to subscribe');
       return null;
@@ -289,7 +300,16 @@ export function useSubscription() {
         return null;
       }
 
-      const payload: { tier: string; prefill?: CheckoutPrefill } = { tier };
+      const payload: {
+        purchaseType: 'subscription';
+        tier: string;
+        billingCycle: CheckoutBillingCycle;
+        prefill?: CheckoutPrefill;
+      } = {
+        purchaseType: 'subscription',
+        tier,
+        billingCycle,
+      };
       if (resolvedPrefill) {
         payload.prefill = resolvedPrefill;
       }
@@ -308,7 +328,7 @@ export function useSubscription() {
       }
 
       if (data && data.url) {
-        window.open(data.url, '_blank');
+        openCheckout(data.url);
         return data.url;
       }
 
@@ -318,6 +338,54 @@ export function useSubscription() {
     } catch (error) {
       console.error('Error creating checkout:', error);
       toast.error('Failed to create checkout session');
+      return null;
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const createCreditPackCheckout = async (packId: string) => {
+    if (!user) {
+      toast.error('Please sign in to purchase credits');
+      return null;
+    }
+
+    try {
+      setActionLoading(true);
+      const sessionResp = await supabase.auth.getSession();
+      const accessToken = sessionResp?.data?.session?.access_token;
+      if (!accessToken) {
+        toast.error('Unable to create checkout: no auth session');
+        return null;
+      }
+
+      const { data, error } = await supabase.functions.invoke('create-checkout', {
+        body: {
+          purchaseType: 'credit_pack',
+          packId,
+        },
+        headers: {
+          Authorization: `Bearer ${accessToken}`
+        }
+      });
+
+      if (error) {
+        console.error('create-checkout credit pack function error:', error);
+        toast.error('Failed to create credit pack checkout session');
+        return null;
+      }
+
+      if (data?.url) {
+        openCheckout(data.url);
+        return data.url;
+      }
+
+      console.error('create-checkout credit pack: no URL returned', data);
+      toast.error('Failed to create credit pack checkout session');
+      return null;
+    } catch (error) {
+      console.error('Error creating credit pack checkout:', error);
+      toast.error('Failed to create credit pack checkout session');
       return null;
     } finally {
       setActionLoading(false);
@@ -431,7 +499,9 @@ export function useSubscription() {
     subscriptionData,
     tiers,
     loading,
+    actionLoading,
     createCheckout,
+    createCreditPackCheckout,
     openCustomerPortal,
     checkSubscription,
     getTierInfo,

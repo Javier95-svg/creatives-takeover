@@ -45,14 +45,26 @@ serve(async (req) => {
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
     
-    // Find Stripe customer
-    const customers = await stripe.customers.list({ email: user.email, limit: 1 });
-    if (customers.data.length === 0) {
-      throw new Error("No Stripe customer found for this user. Please subscribe first.");
+    let customerId: string | undefined;
+
+    const { data: subscriber } = await supabaseService
+      .from("subscribers")
+      .select("stripe_customer_id")
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    if (typeof subscriber?.stripe_customer_id === "string" && subscriber.stripe_customer_id.length > 0) {
+      customerId = subscriber.stripe_customer_id;
+      logStep("Found Stripe customer from subscribers", { customerId });
+    } else {
+      const customers = await stripe.customers.list({ email: user.email, limit: 1 });
+      if (customers.data.length === 0) {
+        throw new Error("No Stripe customer found for this user. Please subscribe first.");
+      }
+
+      customerId = customers.data[0].id;
+      logStep("Found Stripe customer by email", { customerId });
     }
-    
-    const customerId = customers.data[0].id;
-    logStep("Found Stripe customer", { customerId });
 
     const origin = req.headers.get("origin") || "https://your-domain.com";
     

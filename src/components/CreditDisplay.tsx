@@ -1,7 +1,7 @@
 import { Coins, Loader2, Plus } from "lucide-react";
 import { useCredits } from "@/hooks/useCredits";
 import { useSubscription } from "@/hooks/useSubscription";
-import { CREDIT_PACK_PAYMENT_LINKS, TIER_MONTHLY_CREDITS } from "@/config/constants";
+import { CREDIT_PACK_OPTIONS, TIER_MONTHLY_CREDITS } from "@/config/constants";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -25,7 +25,7 @@ interface CreditDisplayProps {
 
 export function CreditDisplay({ variant = "navigation", showPurchaseButton = false }: CreditDisplayProps) {
   const { balance, monthlyQuota, loading, refreshBalance } = useCredits();
-  const { subscriptionData } = useSubscription();
+  const { subscriptionData, actionLoading, createCreditPackCheckout } = useSubscription();
   const navigate = useNavigate();
   const { user } = useAuth();
 
@@ -103,21 +103,18 @@ export function CreditDisplay({ variant = "navigation", showPurchaseButton = fal
                 <Progress value={progressValue} className="h-2" />
 
                 <div className="grid gap-2">
-                  <Button size="sm" className="w-full" asChild>
-                    <a href={CREDIT_PACK_PAYMENT_LINKS.pack_20} target="_blank" rel="noreferrer">
-                      Top Up 20 Credits
-                    </a>
-                  </Button>
-                  <Button size="sm" className="w-full" variant="outline" asChild>
-                    <a href={CREDIT_PACK_PAYMENT_LINKS.pack_40} target="_blank" rel="noreferrer">
-                      Top Up 40 Credits
-                    </a>
-                  </Button>
-                  <Button size="sm" className="w-full" variant="outline" asChild>
-                    <a href={CREDIT_PACK_PAYMENT_LINKS.pack_60} target="_blank" rel="noreferrer">
-                      Top Up 60 Credits
-                    </a>
-                  </Button>
+                  {CREDIT_PACK_OPTIONS.map((pack, index) => (
+                    <Button
+                      key={pack.id}
+                      size="sm"
+                      className="w-full"
+                      variant={index === 0 ? "default" : "outline"}
+                      disabled={actionLoading}
+                      onClick={() => createCreditPackCheckout(pack.id)}
+                    >
+                      Top Up {pack.credits} Credits
+                    </Button>
+                  ))}
                 </div>
               </div>
 
