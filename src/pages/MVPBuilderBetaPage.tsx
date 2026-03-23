@@ -12,6 +12,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useBizMapProgress } from '@/hooks/useBizMapProgress';
+import { Link } from 'react-router-dom';
+import { ArrowRight, CheckCircle2, CircleDashed, Loader2 } from 'lucide-react';
 
 const MVP_ARTIFACTS_TABLE = 'mvp_builder_artifacts' as any;
 
@@ -19,6 +21,9 @@ interface MvpArtifact {
   id: string;
   scope_title: string;
   scope_summary: string;
+  status: 'draft' | 'saved';
+  saved_at: string | null;
+  updated_at: string;
   spec_json: {
     mustHaveFeatures?: string[];
     outOfScope?: string[];
@@ -33,10 +38,20 @@ function splitLines(value: string): string[] {
     .filter(Boolean);
 }
 
+function formatDateTime(value: string | null): string | null {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return date.toLocaleString();
+}
+
 export default function MVPBuilderBetaPage() {
   const { user } = useAuth();
-  const { refreshProgress } = useBizMapProgress();
+  const { refreshProgress, stageState } = useBizMapProgress();
   const [artifactId, setArtifactId] = useState<string | null>(null);
+  const [artifactStatus, setArtifactStatus] = useState<'draft' | 'saved' | null>(null);
+  const [lastSavedAt, setLastSavedAt] = useState<string | null>(null);
+  const [isLoadingArtifact, setIsLoadingArtifact] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [form, setForm] = useState({
     scopeTitle: '',
@@ -48,27 +63,52 @@ export default function MVPBuilderBetaPage() {
 
   useEffect(() => {
     const loadLatestArtifact = async () => {
-      if (!user) return;
+      if (!user) {
+        setArtifactId(null);
+        setArtifactStatus(null);
+        setLastSavedAt(null);
+        setForm({
+          scopeTitle: '',
+          scopeSummary: '',
+          mustHaveFeatures: '',
+          outOfScope: '',
+          deliveryTimeline: '',
+        });
+        return;
+      }
 
-      const { data } = await supabase
+      setIsLoadingArtifact(true);
+
+      const { data, error } = await supabase
         .from(MVP_ARTIFACTS_TABLE)
-        .select('id, scope_title, scope_summary, spec_json')
+        .select('id, scope_title, scope_summary, status, saved_at, updated_at, spec_json')
         .eq('user_id', user.id)
         .order('updated_at', { ascending: false })
         .limit(1)
         .maybeSingle();
 
-      if (!data) return;
+      if (error) {
+        console.error('Failed to load MVP artifact:', error);
+        toast.error('Unable to load your last MVP scope right now.');
+        setIsLoadingArtifact(false);
+        return;
+      }
 
-      const artifact = data as MvpArtifact;
-      setArtifactId(artifact.id);
-      setForm({
-        scopeTitle: artifact.scope_title,
-        scopeSummary: artifact.scope_summary,
-        mustHaveFeatures: (artifact.spec_json?.mustHaveFeatures || []).join('\n'),
-        outOfScope: (artifact.spec_json?.outOfScope || []).join('\n'),
-        deliveryTimeline: artifact.spec_json?.deliveryTimeline || '',
-      });
+      if (data) {
+        const artifact = data as MvpArtifact;
+        setArtifactId(artifact.id);
+        setArtifactStatus(artifact.status);
+        setLastSavedAt(artifact.saved_at ?? artifact.updated_at ?? null);
+        setForm({
+          scopeTitle: artifact.scope_title,
+          scopeSummary: artifact.scope_summary,
+          mustHaveFeatures: (artifact.spec_json?.mustHaveFeatures || []).join('\n'),
+          outOfScope: (artifact.spec_json?.outOfScope || []).join('\n'),
+          deliveryTimeline: artifact.spec_json?.deliveryTimeline || '',
+        });
+      }
+
+      setIsLoadingArtifact(false);
     };
 
     loadLatestArtifact();
@@ -116,6 +156,8 @@ export default function MVPBuilderBetaPage() {
     if (!artifactId) {
       setArtifactId((data as { id: string })?.id ?? null);
     }
+    setArtifactStatus(status);
+    setLastSavedAt(payload.saved_at ?? new Date().toISOString());
 
     if (status === 'saved') {
       toast.success('MVP scope saved. Stage IV completion check updated.');
@@ -142,6 +184,10 @@ export default function MVPBuilderBetaPage() {
     ]),
   ];
 
+  const stageIvComplete = stageState.BUILDING.completed;
+  const lastSavedLabel = formatDateTime(lastSavedAt);
+  const formDisabled = !user || isLoadingArtifact || isSaving;
+
   return (
     <div className="min-h-screen bg-background">
       <SEO
@@ -163,6 +209,45 @@ export default function MVPBuilderBetaPage() {
             </p>
           </div>
 
+          <Card className="border-border/60 bg-muted/20">
+            <CardContent className="flex flex-col gap-4 py-6 md:flex-row md:items-center md:justify-between">
+              <div className="space-y-3">
+                <div className="flex flex-wrap items-center gap-2">
+                  <Badge variant={stageIvComplete ? 'default' : 'secondary'}>
+                    {stageIvComplete ? 'Stage IV complete' : 'Stage IV in progress'}
+                  </Badge>
+                  <Badge variant="outline">
+                    {artifactStatus === 'saved' ? 'MVP spec saved' : artifactStatus === 'draft' ? 'Draft only' : 'No MVP scope saved yet'}
+                  </Badge>
+                </div>
+                <div className="space-y-1 text-sm text-muted-foreground">
+                  <p>
+                    Save your MVP scope here, then save your Tech Stack selection to complete Stage IV.
+                  </p>
+                  {lastSavedLabel && <p>Last saved: {lastSavedLabel}</p>}
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {!user && (
+                  <>
+                    <Button asChild>
+                      <Link to="/login">Sign In</Link>
+                    </Button>
+                    <Button asChild variant="outline">
+                      <Link to="/signup">Create Account</Link>
+                    </Button>
+                  </>
+                )}
+                <Button asChild variant="outline">
+                  <Link to="/tech-stack">
+                    Open Tech Stack
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
           <Card className="border-primary/20">
             <CardHeader>
               <CardTitle>Scope Spec</CardTitle>
@@ -171,6 +256,28 @@ export default function MVPBuilderBetaPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+              {isLoadingArtifact ? (
+                <div className="flex items-center gap-2 rounded-lg border border-border/60 bg-muted/20 px-4 py-3 text-sm text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Loading your latest MVP scope...
+                </div>
+              ) : (
+                <div className="flex flex-wrap items-center gap-2 rounded-lg border border-border/60 bg-muted/20 px-4 py-3 text-sm text-muted-foreground">
+                  {artifactStatus === 'saved' ? (
+                    <CheckCircle2 className="h-4 w-4 text-green-600" />
+                  ) : (
+                    <CircleDashed className="h-4 w-4" />
+                  )}
+                  <span>
+                    {artifactStatus === 'saved'
+                      ? 'This MVP scope is saved and counts toward Stage IV.'
+                      : artifactStatus === 'draft'
+                        ? 'You have a draft. Save the MVP spec when it is ready to count toward Stage IV.'
+                        : 'No MVP scope has been saved yet.'}
+                  </span>
+                </div>
+              )}
+
               <div className="space-y-2">
                 <Label htmlFor="scope-title">Scope title</Label>
                 <Input
@@ -178,6 +285,7 @@ export default function MVPBuilderBetaPage() {
                   value={form.scopeTitle}
                   onChange={(event) => setForm((prev) => ({ ...prev, scopeTitle: event.target.value }))}
                   placeholder="Example: MVP for creator invoicing workflow"
+                  disabled={formDisabled}
                 />
               </div>
 
@@ -188,6 +296,7 @@ export default function MVPBuilderBetaPage() {
                   value={form.scopeSummary}
                   onChange={(event) => setForm((prev) => ({ ...prev, scopeSummary: event.target.value }))}
                   placeholder="What this MVP includes, for who, and the expected business outcome."
+                  disabled={formDisabled}
                 />
               </div>
 
@@ -199,6 +308,7 @@ export default function MVPBuilderBetaPage() {
                     value={form.mustHaveFeatures}
                     onChange={(event) => setForm((prev) => ({ ...prev, mustHaveFeatures: event.target.value }))}
                     placeholder="Signup\nCore workflow\nBasic analytics"
+                    disabled={formDisabled}
                   />
                 </div>
                 <div className="space-y-2">
@@ -208,6 +318,7 @@ export default function MVPBuilderBetaPage() {
                     value={form.outOfScope}
                     onChange={(event) => setForm((prev) => ({ ...prev, outOfScope: event.target.value }))}
                     placeholder="Advanced admin panel\nComplex integrations"
+                    disabled={formDisabled}
                   />
                 </div>
               </div>
@@ -219,15 +330,30 @@ export default function MVPBuilderBetaPage() {
                   value={form.deliveryTimeline}
                   onChange={(event) => setForm((prev) => ({ ...prev, deliveryTimeline: event.target.value }))}
                   placeholder="Example: 3 weeks with 2 engineers"
+                  disabled={formDisabled}
                 />
               </div>
 
               <div className="flex flex-wrap gap-2">
-                <Button variant="outline" onClick={() => saveArtifact('draft')} disabled={isSaving}>
-                  Save Draft
+                <Button variant="outline" onClick={() => saveArtifact('draft')} disabled={formDisabled}>
+                  {isSaving ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    'Save Draft'
+                  )}
                 </Button>
-                <Button onClick={() => saveArtifact('saved')} disabled={isSaving}>
-                  Save MVP Spec
+                <Button onClick={() => saveArtifact('saved')} disabled={formDisabled}>
+                  {isSaving ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    'Save MVP Spec'
+                  )}
                 </Button>
               </div>
             </CardContent>
