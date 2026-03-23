@@ -56,29 +56,29 @@ const STEPS = [
 
 const SMART_QUESTION_SETS = [
   [
-    'Did the founder show the Stage II landing page during the interview?',
-    'What customer segment was most represented in this test round?',
-    'Was the feedback based on real conversation, outreach, or only passive signups?',
+    'Did you show your landing page during the interview and pitch your solution?',
+    'Which customer segment did you interview most in this round?',
+    'Did this evidence come from real conversations, outreach replies, or only passive signups?',
   ],
   [
-    'How many interviews were completed versus how many people were just contacted?',
-    'Did anyone ask about pricing, commitment, or implementation timing?',
-    'Would a founder with this evidence feel confident betting time and money on building?',
+    'How many full interviews did you complete versus how many people did you only contact?',
+    'Did anyone ask you about pricing, commitment, or implementation timing?',
+    'Based on this evidence, would you feel confident spending time and money on building yet?',
   ],
   [
-    'What problem felt urgent enough that people already use a workaround today?',
-    'What objections kept showing up across multiple interviews?',
-    'What feature or capability did users repeatedly say was missing before they would adopt?',
+    'What problem sounded urgent enough that people are already using a workaround today?',
+    'What objections kept coming up across multiple interviews?',
+    'What feature or capability did people repeatedly say was missing before they would adopt your product?',
   ],
   [
-    'Who joined the waitlist, asked follow-up questions, or shared the product with others?',
+    'Who joined your waitlist, asked follow-up questions, or shared the product with someone else?',
     'What behavior suggests real buying intent instead of polite encouragement?',
-    'Which actions are strongest: pricing questions, signups, referrals, or pre-commitment?',
+    'Which actions were strongest in your test: pricing questions, signups, referrals, or pre-commitment?',
   ],
   [
-    'What would make the founder iterate before building again?',
-    `If the score comes in below 75, what should improve before another round of ${PMF_REQUIRED_SIGNALS} interviews?`,
-    'What evidence would make the founder confident enough to move into Building?',
+    'What would make you iterate before building again?',
+    `If your score comes in below 75, what should you improve before another round of ${PMF_REQUIRED_SIGNALS} interviews?`,
+    'What evidence would make you confident enough to move into Building?',
   ],
 ];
 
