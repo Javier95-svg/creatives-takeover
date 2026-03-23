@@ -7,9 +7,7 @@ import { usePMFLab } from '@/hooks/usePMFLab';
 import PMFEvidenceForm from '@/components/pmf/PMFEvidenceForm';
 import PMFScoringLoader from '@/components/pmf/PMFScoringLoader';
 import PMFReadinessReport from '@/components/pmf/PMFReadinessReport';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
-import { ArrowRight, BrainCircuit, FlaskConical, Lightbulb, MessageSquareQuote, Rocket } from 'lucide-react';
+import { ArrowRight, Rocket } from 'lucide-react';
 import { PMF_REQUIRED_SIGNALS } from '@/lib/bizmapStages';
 
 const structuredData = [
@@ -44,24 +42,6 @@ export default function PMFLabPage() {
     exportReport,
     resetToIntake,
   } = usePMFLab();
-
-  const workflowCards = [
-    {
-      title: 'Stage II Input',
-      description: 'Use the landing page you already created in Prototyping as the asset you show in customer interviews.',
-      icon: Lightbulb,
-    },
-    {
-      title: `${PMF_REQUIRED_SIGNALS} Founder Interviews`,
-      description: 'Log each interview with the segment, main feedback, objections, missing features, and buying intent before you commit time or money to building.',
-      icon: MessageSquareQuote,
-    },
-    {
-      title: 'AI PMF Decision',
-      description: 'Get a score from 1 to 100, a clear explanation, and a next-step decision tied to the Building stage.',
-      icon: BrainCircuit,
-    },
-  ];
 
   const ruleCards = [
     {
@@ -109,7 +89,6 @@ export default function PMFLabPage() {
           <div className="container mx-auto max-w-5xl relative z-10">
             <div className="mb-12 space-y-8 animate-fade-in">
               <div className="text-center space-y-4">
-                <Badge className="border-primary/20 bg-primary/10 text-primary">Stage III: VALIDATION</Badge>
                 <div className="space-y-3">
                   <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold takeover-gradient creatives-font leading-tight pb-2">
                     PMF Lab
@@ -122,22 +101,6 @@ export default function PMFLabPage() {
 
               {phase === 'intake' && (
                 <>
-                  <div className="grid gap-4 md:grid-cols-3">
-                    {workflowCards.map(({ title, description, icon: Icon }) => (
-                      <Card key={title} className="border-border/60 bg-background/80 backdrop-blur">
-                        <CardContent className="space-y-4 p-5">
-                          <div className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10 text-primary">
-                            <Icon className="h-5 w-5" />
-                          </div>
-                          <div className="space-y-2">
-                            <h2 className="text-base font-semibold">{title}</h2>
-                            <p className="text-sm leading-relaxed text-muted-foreground">{description}</p>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-
                   <div className="grid gap-4 md:grid-cols-2">
                     {ruleCards.map(({ label, title, description, icon: Icon, tone }) => (
                       <div key={title} className={`rounded-2xl border p-5 ${tone}`}>
