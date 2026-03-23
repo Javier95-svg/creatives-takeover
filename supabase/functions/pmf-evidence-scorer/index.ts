@@ -146,6 +146,7 @@ interface PMFEvidenceAnswers {
   testTypes: string[];
   peopleReached: number;
   conversationCount: number;
+  interviews: PMFInterviewLog[];
   strongInterestCount: number;
   willingnessToPaySignal: 'yes' | 'no' | 'not_tested';
   willingnessToPayDetail?: string;
@@ -159,6 +160,24 @@ interface PMFEvidenceAnswers {
   founderUncertainties: string;
   whatWouldChangeMind: string;
   confidenceLevel: number;
+}
+
+interface PMFInterviewLog {
+  id: string;
+  intervieweeName: string;
+  basicProfile: string;
+  segment: string;
+  mainFeedback: string;
+  objections: string;
+  missingFeatures: string;
+  interestLevel: number;
+  buyingIntent: 'low' | 'medium' | 'high' | 'ready_to_pay';
+  landingPageShown: boolean;
+  solutionPitched: boolean;
+  askedAboutPricing: boolean;
+  joinedWaitlist: boolean;
+  referredSomeone: boolean;
+  offeredToPay: boolean;
 }
 
 // ─── Main handler ─────────────────────────────────────────────────────────────
@@ -179,7 +198,10 @@ serve(async (req) => {
     const body: PMFEvidenceAnswers = await req.json();
 
     // Basic validation
-    if (!body.testTypes?.length || body.conversationCount < 1) {
+    const interviews = Array.isArray(body.interviews) ? body.interviews : [];
+    const loggedInterviewCount = interviews.length || body.conversationCount || 0;
+
+    if (!body.testTypes?.length || loggedInterviewCount < 1) {
       return new Response(JSON.stringify({ error: 'Missing required evidence fields' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -212,20 +234,44 @@ serve(async (req) => {
     const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
     if (!openaiApiKey) throw new Error('OpenAI API key not configured');
 
-    const demandTotal = (body.askedAboutPricing || 0) + (body.joinedWaitlist || 0) +
-                        (body.sharedWithSomeone || 0) + (body.offeredToPay || 0);
+    const derivedStrongInterestCount = interviews.filter(
+      (item) => item.interestLevel >= 4 || item.buyingIntent === 'high' || item.buyingIntent === 'ready_to_pay'
+    ).length;
+    const derivedAskedAboutPricing = interviews.filter((item) => item.askedAboutPricing).length;
+    const derivedJoinedWaitlist = interviews.filter((item) => item.joinedWaitlist).length;
+    const derivedSharedWithSomeone = interviews.filter((item) => item.referredSomeone).length;
+    const derivedOfferedToPay = interviews.filter((item) => item.offeredToPay).length;
+    const strongInterestCount = interviews.length > 0 ? derivedStrongInterestCount : (body.strongInterestCount || 0);
+    const askedAboutPricing = interviews.length > 0 ? derivedAskedAboutPricing : (body.askedAboutPricing || 0);
+    const joinedWaitlist = interviews.length > 0 ? derivedJoinedWaitlist : (body.joinedWaitlist || 0);
+    const sharedWithSomeone = interviews.length > 0 ? derivedSharedWithSomeone : (body.sharedWithSomeone || 0);
+    const offeredToPay = interviews.length > 0 ? derivedOfferedToPay : (body.offeredToPay || 0);
+    const demandTotal = askedAboutPricing + joinedWaitlist + sharedWithSomeone + offeredToPay;
     const wtpDetail = body.willingnessToPaySignal === 'yes' && body.willingnessToPayDetail
       ? body.willingnessToPayDetail
       : body.willingnessToPaySignal === 'no' ? 'No WTP signal observed'
       : 'Not tested yet';
+    const interviewLogSummary = interviews.length > 0
+      ? interviews.map((interview, index) => (
+          `${index + 1}. ${interview.intervieweeName} | Segment: ${interview.segment} | Profile: ${interview.basicProfile}\n` +
+          `   Main feedback: ${interview.mainFeedback}\n` +
+          `   Objections: ${interview.objections}\n` +
+          `   Missing features: ${interview.missingFeatures}\n` +
+          `   Interest level: ${interview.interestLevel}/5 | Buying intent: ${interview.buyingIntent}\n` +
+          `   Landing page shown: ${interview.landingPageShown ? 'yes' : 'no'} | Solution pitched: ${interview.solutionPitched ? 'yes' : 'no'}\n` +
+          `   Demand behaviors: pricing=${interview.askedAboutPricing ? 'yes' : 'no'}, waitlist=${interview.joinedWaitlist ? 'yes' : 'no'}, referral=${interview.referredSomeone ? 'yes' : 'no'}, pay=${interview.offeredToPay ? 'yes' : 'no'}`
+        )).join('\n\n')
+      : 'No structured interview records provided.';
 
     const systemPrompt = `You are PMF Lab, a rigorous PMF (Product-Market Fit) evidence evaluator inside a startup development platform. Founders use you in Stage III: Validation, after they already created a landing page in Stage II: Prototyping. Your job is to evaluate the QUALITY of customer-demand evidence — not the idea itself — and produce a PMF score from 0 to 100.
 
 IMPORTANT PRODUCT RULES:
 • PMF Lab is designed around real founder interviews plus landing-page feedback.
+• Use the structured interview log as the PRIMARY source of truth. Treat high-level founder summaries as supporting context only.
 • The founder should complete at least ${MIN_INTERVIEWS_FOR_READY} interviews before moving to Building.
 • If conversationCount is below ${MIN_INTERVIEWS_FOR_READY}, the result may still be useful directionally, but you MUST NOT recommend moving to Building.
 • If conversationCount is below ${MIN_INTERVIEWS_FOR_READY}, overallScore MUST be capped at 74 and recommendedAction MUST be "iterate_before_building".
+• If the founder logs many interviews but the records are thin, vague, repetitive, or missing objections/missing-feature detail, lower the score for evidence quality.
 
 SCORING RUBRIC — five dimensions, each 0–20 points:
 
@@ -317,10 +363,13 @@ OUTPUT: Return ONLY valid JSON matching this exact schema:
 
 Validation methods used: ${body.testTypes.join(', ')}
 People reached/contacted: ${body.peopleReached}
-Actual conversations/responses: ${body.conversationCount}
-People expressing strong interest: ${body.strongInterestCount}
+Actual conversations/responses: ${loggedInterviewCount}
+People expressing strong interest: ${strongInterestCount}
 Willingness to pay signal: ${wtpDetail}
 Minimum interview threshold to move to Building: ${MIN_INTERVIEWS_FOR_READY}
+
+STRUCTURED INTERVIEW LOG:
+${interviewLogSummary}
 
 WHAT THEY HEARD:
 Most painful quote/pattern: "${body.mostPainfulQuote}"
@@ -328,10 +377,10 @@ What people do today to solve this and how urgent it feels: "${body.urgencyProxy
 Repeated objections, missing features, or consistency observation: "${body.consistencyNote}"
 
 DEMAND SIGNALS:
-• Asked about pricing: ${body.askedAboutPricing}
-• Joined waitlist or signed up: ${body.joinedWaitlist}
-• Shared with someone else: ${body.sharedWithSomeone}
-• Offered to pay or pre-commit: ${body.offeredToPay}
+• Asked about pricing: ${askedAboutPricing}
+• Joined waitlist or signed up: ${joinedWaitlist}
+• Shared with someone else: ${sharedWithSomeone}
+• Offered to pay or pre-commit: ${offeredToPay}
 Total demand behaviors: ${demandTotal}
 
 FOUNDER REFLECTION:

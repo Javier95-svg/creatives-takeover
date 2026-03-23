@@ -41,6 +41,16 @@ const PMFReadinessReport: React.FC<PMFReadinessReportProps> = ({
   const improvementsBeforeRetest = analysis.improvementsBeforeRetest?.length
     ? analysis.improvementsBeforeRetest
     : analysis.recommendations.slice(0, 3).map((item) => item.action);
+  const loggedInterviews = analysis.evidenceAnswers?.interviews ?? [];
+  const interviewSegments = Array.from(new Set(
+    loggedInterviews.map((item) => item.segment.trim()).filter(Boolean)
+  ));
+  const highIntentInterviews = loggedInterviews.filter(
+    (item) => item.interestLevel >= 4 || item.buyingIntent === 'high' || item.buyingIntent === 'ready_to_pay'
+  ).length;
+  const landingPageCoverage = loggedInterviews.filter(
+    (item) => item.landingPageShown && item.solutionPitched
+  ).length;
 
   const thresholdBanner = isReady
     ? {
@@ -121,6 +131,25 @@ const PMFReadinessReport: React.FC<PMFReadinessReportProps> = ({
       <div className={cn('flex items-start gap-3 rounded-lg border p-4', thresholdBanner.bg)}>
         <ThresholdIcon className={cn('w-5 h-5 shrink-0 mt-0.5', thresholdBanner.iconColor)} />
         <p className="text-sm leading-relaxed">{thresholdBanner.message}</p>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-4">
+        <div className="rounded-2xl border border-border/60 bg-background/70 p-4">
+          <p className="text-xs text-muted-foreground">Logged interviews</p>
+          <p className="mt-2 text-2xl font-semibold">{loggedInterviews.length}</p>
+        </div>
+        <div className="rounded-2xl border border-border/60 bg-background/70 p-4">
+          <p className="text-xs text-muted-foreground">High-intent interviews</p>
+          <p className="mt-2 text-2xl font-semibold">{highIntentInterviews}</p>
+        </div>
+        <div className="rounded-2xl border border-border/60 bg-background/70 p-4">
+          <p className="text-xs text-muted-foreground">Landing page shown + pitched</p>
+          <p className="mt-2 text-2xl font-semibold">{landingPageCoverage}</p>
+        </div>
+        <div className="rounded-2xl border border-border/60 bg-background/70 p-4">
+          <p className="text-xs text-muted-foreground">Segments covered</p>
+          <p className="mt-2 text-2xl font-semibold">{interviewSegments.length}</p>
+        </div>
       </div>
 
       <Separator />

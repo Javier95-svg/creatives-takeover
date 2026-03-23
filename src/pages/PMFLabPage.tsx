@@ -53,7 +53,7 @@ export default function PMFLabPage() {
     },
     {
       title: `${PMF_REQUIRED_SIGNALS} Founder Interviews`,
-      description: 'Capture structured notes from real conversations before you commit time or money to building.',
+      description: 'Log each interview with the segment, main feedback, objections, missing features, and buying intent before you commit time or money to building.',
       icon: MessageSquareQuote,
     },
     {

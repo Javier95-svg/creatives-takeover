@@ -17,6 +17,7 @@ export interface PMFEvidenceAnswers {
   testTypes: string[];
   peopleReached: number;
   conversationCount: number;
+  interviews: PMFInterviewLog[];
   strongInterestCount: number;
   willingnessToPaySignal: 'yes' | 'no' | 'not_tested';
   willingnessToPayDetail?: string;
@@ -30,6 +31,24 @@ export interface PMFEvidenceAnswers {
   founderUncertainties: string;
   whatWouldChangeMind: string;
   confidenceLevel: number;
+}
+
+export interface PMFInterviewLog {
+  id: string;
+  intervieweeName: string;
+  basicProfile: string;
+  segment: string;
+  mainFeedback: string;
+  objections: string;
+  missingFeatures: string;
+  interestLevel: number;
+  buyingIntent: 'low' | 'medium' | 'high' | 'ready_to_pay';
+  landingPageShown: boolean;
+  solutionPitched: boolean;
+  askedAboutPricing: boolean;
+  joinedWaitlist: boolean;
+  referredSomeone: boolean;
+  offeredToPay: boolean;
 }
 
 export interface PMFDimension {
@@ -185,7 +204,9 @@ export function usePMFLab() {
       }
 
       // Write to pmf_validation_evidence to trigger Stage III completion
-      const conversationCount = analysis.evidenceAnswers?.conversationCount ?? 0;
+      const conversationCount = analysis.evidenceAnswers?.interviews?.length
+        ?? analysis.evidenceAnswers?.conversationCount
+        ?? 0;
       const { error: evidenceError } = await supabase
         .from(PMF_EVIDENCE_TABLE)
         .upsert({
