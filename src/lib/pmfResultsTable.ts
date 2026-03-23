@@ -1,7 +1,25 @@
 const PMF_RESULTS_TABLE = 'pmf_analysis_results' as any;
+const PMF_RESULTS_TABLE_CACHE_KEY = 'ct:pmf_results_table_missing';
 
-let pmfResultsTableMissing = false;
-let loggedMissingTableWarning = false;
+const readCachedMissingState = (): boolean => {
+  if (typeof window === 'undefined') return false;
+  try {
+    return window.sessionStorage.getItem(PMF_RESULTS_TABLE_CACHE_KEY) === '1';
+  } catch {
+    return false;
+  }
+};
+
+const cacheMissingState = () => {
+  if (typeof window === 'undefined') return;
+  try {
+    window.sessionStorage.setItem(PMF_RESULTS_TABLE_CACHE_KEY, '1');
+  } catch {
+    // Ignore storage failures and keep the in-memory fallback.
+  }
+};
+
+let pmfResultsTableMissing = readCachedMissingState();
 
 const getErrorText = (error: unknown): string => {
   if (!error) return '';
@@ -37,11 +55,7 @@ export const handlePmfResultsTableError = (error: unknown): boolean => {
   if (!isPmfResultsTableMissingError(error)) return false;
 
   pmfResultsTableMissing = true;
-
-  if (!loggedMissingTableWarning) {
-    loggedMissingTableWarning = true;
-    console.warn('pmf_analysis_results is unavailable in this environment; PMF history features are disabled.');
-  }
+  cacheMissingState();
 
   return true;
 };
