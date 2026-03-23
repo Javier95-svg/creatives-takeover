@@ -76,7 +76,7 @@ const STEPS = [
 
 const SMART_QUESTION_SETS = [
   [
-    'How did you test your Stage II landing page or concept in this validation round?',
+    'How did you test your landing page in this validation round?',
     'How many people did you reach to source these interviews?',
     'Which customer segments are you trying to validate before you build?',
   ],
