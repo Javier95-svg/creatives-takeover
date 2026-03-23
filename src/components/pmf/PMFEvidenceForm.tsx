@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import type { PMFEvidenceAnswers } from '@/hooks/usePMFLab';
+import { PMF_REQUIRED_SIGNALS } from '@/lib/bizmapStages';
 
 const TEST_TYPES = [
   'Landing page',
@@ -23,35 +24,63 @@ const TEST_TYPES = [
 const STEPS = [
   {
     number: '01',
-    title: 'What did you test?',
-    hint: "Select the validation methods you've already run.",
-    objective: 'Establishes breadth of your PMF validation process',
+    title: 'Validation setup',
+    hint: 'Tell PMF Lab how you tested your Stage II landing page with real customers.',
+    objective: 'Defines what evidence the AI should trust when it scores demand',
   },
   {
     number: '02',
-    title: 'Validation scale and depth',
-    hint: 'Capture response volume and willingness-to-pay evidence.',
-    objective: 'Quantifies evidence quality and market pull',
+    title: 'Interview volume and buying intent',
+    hint: `Capture interview count, depth, and whether anyone showed willingness to pay across your ${PMF_REQUIRED_SIGNALS}-interview goal.`,
+    objective: 'Measures whether you have enough signal before moving to Building',
   },
   {
     number: '03',
-    title: 'What users actually said',
-    hint: 'Add real quotes or repeated patterns from conversations.',
-    objective: 'Measures pain clarity and signal consistency',
+    title: 'Pain, objections, and missing features',
+    hint: 'Record what users actually said, what blocked them, and what they felt was missing.',
+    objective: 'Extracts the specific insight PMF Lab will use for iteration decisions',
   },
   {
     number: '04',
-    title: 'Behavior-based demand signals',
-    hint: 'Count concrete actions, not polite interest.',
-    objective: 'Captures behavioral proof of demand',
+    title: 'Action-based demand signals',
+    hint: 'Count concrete actions, not compliments or polite curiosity.',
+    objective: 'Separates real demand from weak interest',
   },
   {
     number: '05',
-    title: 'Founder reflection',
-    hint: 'Surface uncertainty and confidence before deciding to build.',
-    objective: 'Assesses decision quality and self-awareness',
+    title: 'Founder decision check',
+    hint: 'Force clarity on what would make you build versus what still needs to change.',
+    objective: 'Keeps the final recommendation grounded and honest',
   },
 ] as const;
+
+const SMART_QUESTION_SETS = [
+  [
+    'Did the founder show the Stage II landing page during the interview?',
+    'What customer segment was most represented in this test round?',
+    'Was the feedback based on real conversation, outreach, or only passive signups?',
+  ],
+  [
+    'How many interviews were completed versus how many people were just contacted?',
+    'Did anyone ask about pricing, commitment, or implementation timing?',
+    'Would a founder with this evidence feel confident betting time and money on building?',
+  ],
+  [
+    'What problem felt urgent enough that people already use a workaround today?',
+    'What objections kept showing up across multiple interviews?',
+    'What feature or capability did users repeatedly say was missing before they would adopt?',
+  ],
+  [
+    'Who joined the waitlist, asked follow-up questions, or shared the product with others?',
+    'What behavior suggests real buying intent instead of polite encouragement?',
+    'Which actions are strongest: pricing questions, signups, referrals, or pre-commitment?',
+  ],
+  [
+    'What would make the founder iterate before building again?',
+    `If the score comes in below 75, what should improve before another round of ${PMF_REQUIRED_SIGNALS} interviews?`,
+    'What evidence would make the founder confident enough to move into Building?',
+  ],
+];
 
 const NumberInput = ({ label, value, onChange, min = 0 }: {
   label: string;
@@ -109,6 +138,8 @@ const PMFEvidenceForm: React.FC<PMFEvidenceFormProps> = ({ onSubmit, isSubmittin
   const totalSteps = STEPS.length;
   const isReview = currentStep === totalSteps;
   const step = STEPS[currentStep];
+  const interviewProgress = Math.min(100, Math.round((conversationCount / PMF_REQUIRED_SIGNALS) * 100));
+  const interviewsRemaining = Math.max(0, PMF_REQUIRED_SIGNALS - conversationCount);
 
   const toggleTestType = (type: string) => {
     setTestTypes((prev) =>
@@ -116,7 +147,7 @@ const PMFEvidenceForm: React.FC<PMFEvidenceFormProps> = ({ onSubmit, isSubmittin
     );
   };
 
-  const isValid = testTypes.length > 0 && conversationCount >= 1;
+  const isValid = testTypes.length > 0 && conversationCount >= PMF_REQUIRED_SIGNALS;
 
   const stepHasValue = (index: number) => {
     if (index === 0) return testTypes.length > 0;
@@ -253,10 +284,30 @@ const PMFEvidenceForm: React.FC<PMFEvidenceFormProps> = ({ onSubmit, isSubmittin
     if (currentStep === 1) {
       return (
         <div className="space-y-5">
+          <div className="rounded-2xl border border-primary/15 bg-primary/5 p-4">
+            <div className="flex items-center justify-between gap-3 text-sm">
+              <div>
+                <p className="font-semibold text-foreground">Interview target progress</p>
+                <p className="text-muted-foreground">
+                  PMF Lab expects at least {PMF_REQUIRED_SIGNALS} founder interviews before it makes a build / iterate recommendation.
+                </p>
+              </div>
+              <div className="text-right">
+                <p className="text-lg font-semibold text-primary">{conversationCount}/{PMF_REQUIRED_SIGNALS}</p>
+                <p className="text-xs text-muted-foreground">
+                  {interviewsRemaining === 0 ? 'Target reached' : `${interviewsRemaining} interviews left`}
+                </p>
+              </div>
+            </div>
+            <div className="mt-3 h-2 overflow-hidden rounded-full bg-primary/10">
+              <div className="h-full rounded-full bg-primary transition-all duration-500" style={{ width: `${interviewProgress}%` }} />
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <NumberInput label="People reached / contacted" value={peopleReached} onChange={setPeopleReached} />
-            <NumberInput label="Conversations / responses" value={conversationCount} onChange={setConversationCount} />
-            <NumberInput label="Expressed strong interest" value={strongInterestCount} onChange={setStrongInterestCount} />
+            <NumberInput label={`Completed interviews (goal: ${PMF_REQUIRED_SIGNALS})`} value={conversationCount} onChange={setConversationCount} />
+            <NumberInput label="People who showed strong interest" value={strongInterestCount} onChange={setStrongInterestCount} />
           </div>
 
           <div className="space-y-2">
@@ -287,8 +338,10 @@ const PMFEvidenceForm: React.FC<PMFEvidenceFormProps> = ({ onSubmit, isSubmittin
               />
             )}
           </div>
-          {conversationCount < 1 && (
-            <p className="text-xs text-muted-foreground">Add at least 1 conversation/response to continue.</p>
+          {conversationCount < PMF_REQUIRED_SIGNALS && (
+            <p className="text-xs text-muted-foreground">
+              You can keep filling the workflow, but PMF Lab will not unlock final AI analysis until you log at least {PMF_REQUIRED_SIGNALS} interviews.
+            </p>
           )}
         </div>
       );
@@ -298,7 +351,7 @@ const PMFEvidenceForm: React.FC<PMFEvidenceFormProps> = ({ onSubmit, isSubmittin
       return (
         <div className="space-y-4">
           <div className="space-y-1.5">
-            <Label className="text-xs text-muted-foreground">Most painful thing you heard (quote or pattern)</Label>
+            <Label className="text-xs text-muted-foreground">Most painful thing you heard (quote or repeated pattern)</Label>
             <Textarea
               placeholder={'"I spend 90 minutes every project chasing feedback through email threads"'}
               value={mostPainfulQuote}
@@ -307,18 +360,18 @@ const PMFEvidenceForm: React.FC<PMFEvidenceFormProps> = ({ onSubmit, isSubmittin
             />
           </div>
           <div className="space-y-1.5">
-            <Label className="text-xs text-muted-foreground">What do they do today to solve this without you? (urgency proxy)</Label>
+            <Label className="text-xs text-muted-foreground">What do they do today without you, and what did that reveal about urgency or buying intent?</Label>
             <Textarea
-              placeholder="e.g. Most use Google Docs + email threads. A few are paying for Notion workflows."
+              placeholder="e.g. Most still use Google Docs + email threads. Two already pay for a clunky alternative because the problem is urgent enough."
               value={urgencyProxy}
               onChange={(e) => setUrgencyProxy(e.target.value)}
               className="text-sm min-h-[80px] resize-none"
             />
           </div>
           <div className="space-y-1.5">
-            <Label className="text-xs text-muted-foreground">Did different people say similar things? (consistency check)</Label>
+            <Label className="text-xs text-muted-foreground">What objections or missing features kept repeating across interviews?</Label>
             <Textarea
-              placeholder="e.g. 5 out of 7 described the same email chaos problem without being prompted."
+              placeholder="e.g. 9 out of 16 said the value proposition was clear, but 6 said they would need Slack integration before switching. The top objection was trust in setup complexity."
               value={consistencyNote}
               onChange={(e) => setConsistencyNote(e.target.value)}
               className="text-sm min-h-[70px] resize-none"
@@ -350,18 +403,18 @@ const PMFEvidenceForm: React.FC<PMFEvidenceFormProps> = ({ onSubmit, isSubmittin
     return (
       <div className="space-y-4">
         <div className="space-y-1.5">
-          <Label className="text-xs text-muted-foreground">What am I still unsure about?</Label>
+          <Label className="text-xs text-muted-foreground">What am I still unsure about before building?</Label>
           <Textarea
-            placeholder="e.g. Not sure if they'd pay monthly or one-time. Don't know if agencies vs solos respond differently."
+            placeholder="e.g. I still do not know whether agencies or solo founders feel the strongest pain, and I am unsure if willingness to pay is high enough without integrations."
             value={founderUncertainties}
             onChange={(e) => setFounderUncertainties(e.target.value)}
             className="text-sm min-h-[80px] resize-none"
           />
         </div>
         <div className="space-y-1.5">
-          <Label className="text-xs text-muted-foreground">What would change my mind about building this?</Label>
+          <Label className="text-xs text-muted-foreground">What evidence would make me iterate before building again?</Label>
           <Textarea
-            placeholder="e.g. If 3 more interviews showed a different pain, or if nobody opens a pricing page."
+            placeholder="e.g. If the next 10 interviews keep raising the same missing integration, or if nobody asks about pricing after the landing-page rewrite, I should iterate before building."
             value={whatWouldChangeMind}
             onChange={(e) => setWhatWouldChangeMind(e.target.value)}
             className="text-sm min-h-[70px] resize-none"
@@ -413,10 +466,10 @@ const PMFEvidenceForm: React.FC<PMFEvidenceFormProps> = ({ onSubmit, isSubmittin
   ];
 
   if (isReview) {
-    return (
-      <form onSubmit={handleSubmit} className="max-w-4xl mx-auto">
-        <Card className="border-border/60">
-          <CardHeader>
+      return (
+        <form onSubmit={handleSubmit} className="max-w-4xl mx-auto">
+          <Card className="border-border/60">
+            <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <FlaskConical className="w-5 h-5 text-primary" />
               PMF Lab
@@ -425,11 +478,15 @@ const PMFEvidenceForm: React.FC<PMFEvidenceFormProps> = ({ onSubmit, isSubmittin
               Review your evidence and generate your PMF readiness analysis.
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-6">
-            <StepIndicator />
+            <CardContent className="space-y-6">
+              <StepIndicator />
 
-            <StepView stepKey={totalSteps}>
-              <div className="space-y-4">
+              <div className="rounded-2xl border border-primary/15 bg-primary/5 px-4 py-3 text-sm text-muted-foreground">
+                PMF Lab will only issue a final Stage III decision once you reach at least {PMF_REQUIRED_SIGNALS} interviews. Below that, you still have directional evidence, but not enough to justify moving into Building.
+              </div>
+
+              <StepView stepKey={totalSteps}>
+                <div className="space-y-4">
                 <div className="text-center space-y-1 mb-6">
                   <p className="text-xs font-mono text-primary/60 uppercase tracking-widest">Review</p>
                   <h2 className="text-xl font-semibold">Your PMF evidence brief</h2>
@@ -480,14 +537,14 @@ const PMFEvidenceForm: React.FC<PMFEvidenceFormProps> = ({ onSubmit, isSubmittin
                     ) : (
                       <>
                         <FlaskConical className="w-4 h-4" />
-                        Analyze My Evidence
+                        Analyze Interview Evidence
                       </>
                     )}
                   </Button>
                 </div>
                 {!isValid && (
                   <p className="text-xs text-muted-foreground text-right">
-                    Add at least one test type and 1 conversation to analyze.
+                    Add at least one test type and {PMF_REQUIRED_SIGNALS} completed interviews to unlock AI scoring.
                   </p>
                 )}
               </div>
@@ -507,10 +564,25 @@ const PMFEvidenceForm: React.FC<PMFEvidenceFormProps> = ({ onSubmit, isSubmittin
             PMF Lab
           </CardTitle>
           <CardDescription>
-            Submit your validation evidence step-by-step, then generate a PMF readiness report.
+            Turn raw founder interviews into a PMF score, decision, and clear next step before you start building.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
+          <div className="grid gap-3 md:grid-cols-3">
+            <div className="rounded-2xl border border-border/60 bg-muted/20 p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary/70">Input</p>
+              <p className="mt-2 text-sm text-muted-foreground">Show your Stage II landing page in interviews and record what people say in a structured way.</p>
+            </div>
+            <div className="rounded-2xl border border-border/60 bg-muted/20 p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary/70">Decision Rule</p>
+              <p className="mt-2 text-sm text-muted-foreground">PMF Lab recommends Building only when the score reaches 75+ with enough interview depth.</p>
+            </div>
+            <div className="rounded-2xl border border-border/60 bg-muted/20 p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary/70">AI Output</p>
+              <p className="mt-2 text-sm text-muted-foreground">You get score meaning, objections, missing features, buying intent signals, and the next action.</p>
+            </div>
+          </div>
+
           <StepIndicator />
 
           <StepView stepKey={currentStep}>
@@ -530,6 +602,17 @@ const PMFEvidenceForm: React.FC<PMFEvidenceFormProps> = ({ onSubmit, isSubmittin
               <div className="inline-flex items-center gap-1.5 text-xs text-primary/70 bg-primary/5 border border-primary/10 rounded-full px-3 py-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-primary/40 shrink-0" />
                 {step.objective}
+              </div>
+
+              <div className="rounded-2xl border border-border/60 bg-muted/20 p-4 space-y-2">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Smart questions PMF Lab wants answered here</p>
+                <ul className="space-y-2">
+                  {SMART_QUESTION_SETS[currentStep].map((question) => (
+                    <li key={question} className="text-sm text-muted-foreground">
+                      {question}
+                    </li>
+                  ))}
+                </ul>
               </div>
 
               {renderCurrentStep()}

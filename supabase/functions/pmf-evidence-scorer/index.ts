@@ -6,6 +6,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
 const CREDIT_COSTS = {
   PMF_SCORING: 8,
 } as const;
+const MIN_INTERVIEWS_FOR_READY = 25;
 
 const ADMIN_EMAIL = 'admin@creatives-takeover.com';
 
@@ -218,7 +219,13 @@ serve(async (req) => {
       : body.willingnessToPaySignal === 'no' ? 'No WTP signal observed'
       : 'Not tested yet';
 
-    const systemPrompt = `You are a rigorous PMF (Product-Market Fit) evidence evaluator. Founders bring you real validation evidence they have collected. Your job is to evaluate the QUALITY of that evidence — not the idea itself — and produce a PMF Readiness Score from 0 to 100.
+    const systemPrompt = `You are PMF Lab, a rigorous PMF (Product-Market Fit) evidence evaluator inside a startup development platform. Founders use you in Stage III: Validation, after they already created a landing page in Stage II: Prototyping. Your job is to evaluate the QUALITY of customer-demand evidence — not the idea itself — and produce a PMF score from 0 to 100.
+
+IMPORTANT PRODUCT RULES:
+• PMF Lab is designed around real founder interviews plus landing-page feedback.
+• The founder should complete at least ${MIN_INTERVIEWS_FOR_READY} interviews before moving to Building.
+• If conversationCount is below ${MIN_INTERVIEWS_FOR_READY}, the result may still be useful directionally, but you MUST NOT recommend moving to Building.
+• If conversationCount is below ${MIN_INTERVIEWS_FOR_READY}, overallScore MUST be capped at 74 and recommendedAction MUST be "iterate_before_building".
 
 SCORING RUBRIC — five dimensions, each 0–20 points:
 
@@ -259,6 +266,10 @@ VERDICT RULES:
 • 50–74: verdict = "partial", verdictLabel = "Partial Validation"
 • 0–49: verdict = "weak", verdictLabel = "Insufficient Evidence"
 
+DECISION RULES:
+• If overallScore >= 75 and conversationCount >= ${MIN_INTERVIEWS_FOR_READY}: recommendedAction = "move_to_building", recommendedActionTitle = "Move to Building"
+• Otherwise: recommendedAction = "iterate_before_building", recommendedActionTitle = "Iterate Before Building"
+
 RECOMMENDATION RULES:
 • Generate 3–5 recommendations ordered by urgency
 • For any dimension < 8: priority = "critical" (blocking — must resolve before building)
@@ -274,6 +285,9 @@ OUTPUT: Return ONLY valid JSON matching this exact schema:
   "verdict": "ready" | "partial" | "weak",
   "verdictLabel": "Strong Validation" | "Partial Validation" | "Insufficient Evidence",
   "summaryInsight": "string — 2–3 sentences of honest, direct assessment of the evidence quality",
+  "scoreMeaning": "string — explain plainly what this score means for the founder right now",
+  "recommendedAction": "move_to_building" | "iterate_before_building",
+  "recommendedActionTitle": "Move to Building" | "Iterate Before Building",
   "dimensions": {
     "painClarity":          { "score": number, "explanation": "string — 1–2 sentences on what evidence supports or hurts this score" },
     "urgency":              { "score": number, "explanation": "string" },
@@ -283,6 +297,10 @@ OUTPUT: Return ONLY valid JSON matching this exact schema:
   },
   "strengths": ["string", "string"],
   "gaps": ["string", "string"],
+  "missingFeatures": ["string — what users think is missing before they would adopt or buy"],
+  "commonObjections": ["string — recurring objections, concerns, or blockers"],
+  "buyingSignals": ["string — strongest evidence of real demand or intent"],
+  "improvementsBeforeRetest": ["string — what the founder should improve before running the next interview round"],
   "recommendations": [
     {
       "priority": "critical" | "important" | "nice",
@@ -302,11 +320,12 @@ People reached/contacted: ${body.peopleReached}
 Actual conversations/responses: ${body.conversationCount}
 People expressing strong interest: ${body.strongInterestCount}
 Willingness to pay signal: ${wtpDetail}
+Minimum interview threshold to move to Building: ${MIN_INTERVIEWS_FOR_READY}
 
 WHAT THEY HEARD:
 Most painful quote/pattern: "${body.mostPainfulQuote}"
-What people do today to solve this (urgency proxy): "${body.urgencyProxy}"
-Consistency observation: "${body.consistencyNote}"
+What people do today to solve this and how urgent it feels: "${body.urgencyProxy}"
+Repeated objections, missing features, or consistency observation: "${body.consistencyNote}"
 
 DEMAND SIGNALS:
 • Asked about pricing: ${body.askedAboutPricing}
@@ -320,7 +339,7 @@ What I'm still unsure about: "${body.founderUncertainties}"
 What would change my mind: "${body.whatWouldChangeMind}"
 Confidence level (1–10): ${body.confidenceLevel}
 
-Apply the scoring rubric to this evidence and return the PMF readiness JSON.`;
+Apply the scoring rubric to this evidence and return the PMF readiness JSON. Make the final recommendation founder-friendly and concrete.`;
 
     try {
       const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {

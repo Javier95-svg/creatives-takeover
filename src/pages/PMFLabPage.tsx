@@ -7,6 +7,10 @@ import { usePMFLab } from '@/hooks/usePMFLab';
 import PMFEvidenceForm from '@/components/pmf/PMFEvidenceForm';
 import PMFScoringLoader from '@/components/pmf/PMFScoringLoader';
 import PMFReadinessReport from '@/components/pmf/PMFReadinessReport';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
+import { ArrowRight, BrainCircuit, FlaskConical, Lightbulb, MessageSquareQuote, Rocket } from 'lucide-react';
+import { PMF_REQUIRED_SIGNALS } from '@/lib/bizmapStages';
 
 const structuredData = [
   {
@@ -41,6 +45,41 @@ export default function PMFLabPage() {
     resetToIntake,
   } = usePMFLab();
 
+  const workflowCards = [
+    {
+      title: 'Stage II Input',
+      description: 'Use the landing page you already created in Prototyping as the asset you show in customer interviews.',
+      icon: Lightbulb,
+    },
+    {
+      title: `${PMF_REQUIRED_SIGNALS} Founder Interviews`,
+      description: 'Capture structured notes from real conversations before you commit time or money to building.',
+      icon: MessageSquareQuote,
+    },
+    {
+      title: 'AI PMF Decision',
+      description: 'Get a score from 1 to 100, a clear explanation, and a next-step decision tied to the Building stage.',
+      icon: BrainCircuit,
+    },
+  ];
+
+  const ruleCards = [
+    {
+      label: '75 or higher',
+      title: 'Move to Building',
+      description: 'You have enough demand evidence to scope the MVP and move into Stage IV.',
+      icon: Rocket,
+      tone: 'border-green-500/25 bg-green-500/10 text-green-700 dark:text-green-400',
+    },
+    {
+      label: 'Below 75',
+      title: 'Iterate before building',
+      description: 'PMF Lab will surface missing features, recurring objections, and what to improve before testing again.',
+      icon: ArrowRight,
+      tone: 'border-amber-500/25 bg-amber-500/10 text-amber-700 dark:text-amber-400',
+    },
+  ];
+
   return (
     <div className="min-h-screen bg-background">
       <SEO
@@ -68,17 +107,56 @@ export default function PMFLabPage() {
           </div>
 
           <div className="container mx-auto max-w-5xl relative z-10">
-            {/* Page header — shown on intake phase only */}
-            {phase === 'intake' && (
-              <div className="text-center mb-12 sm:mb-16 animate-fade-in">
-                <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-3 sm:mb-4 takeover-gradient creatives-font leading-tight pb-2">
-                  PMF Lab
-                </h1>
-                <p className="text-lg sm:text-xl md:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed px-4" style={{ animationDelay: '0.2s' }}>
-                  Submit the real feedback you collected from potential customers and find out if your evidence is strong enough to start building your MVP.
-                </p>
+            <div className="mb-12 space-y-8 animate-fade-in">
+              <div className="text-center space-y-4">
+                <Badge className="border-primary/20 bg-primary/10 text-primary">Stage III: VALIDATION</Badge>
+                <div className="space-y-3">
+                  <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold takeover-gradient creatives-font leading-tight pb-2">
+                    PMF Lab
+                  </h1>
+                  <p className="mx-auto max-w-4xl text-lg leading-relaxed text-muted-foreground sm:text-xl">
+                    AI-powered customer validation for startup founders. Use your Stage II landing page, interview at least {PMF_REQUIRED_SIGNALS} potential customers, and let PMF Lab tell you if demand is real enough to start building.
+                  </p>
+                </div>
               </div>
-            )}
+
+              {phase === 'intake' && (
+                <>
+                  <div className="grid gap-4 md:grid-cols-3">
+                    {workflowCards.map(({ title, description, icon: Icon }) => (
+                      <Card key={title} className="border-border/60 bg-background/80 backdrop-blur">
+                        <CardContent className="space-y-4 p-5">
+                          <div className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10 text-primary">
+                            <Icon className="h-5 w-5" />
+                          </div>
+                          <div className="space-y-2">
+                            <h2 className="text-base font-semibold">{title}</h2>
+                            <p className="text-sm leading-relaxed text-muted-foreground">{description}</p>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+
+                  <div className="grid gap-4 md:grid-cols-2">
+                    {ruleCards.map(({ label, title, description, icon: Icon, tone }) => (
+                      <div key={title} className={`rounded-2xl border p-5 ${tone}`}>
+                        <div className="flex items-start gap-3">
+                          <div className="mt-0.5 rounded-xl bg-background/70 p-2 text-current">
+                            <Icon className="h-4 w-4" />
+                          </div>
+                          <div className="space-y-2">
+                            <p className="text-xs font-semibold uppercase tracking-[0.18em]">{label}</p>
+                            <h3 className="text-lg font-semibold text-foreground">{title}</h3>
+                            <p className="text-sm leading-relaxed text-muted-foreground">{description}</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
 
             {/* Phase A — Evidence Form */}
             {phase === 'intake' && (

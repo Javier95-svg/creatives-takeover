@@ -40,7 +40,7 @@ export interface StageTaskTemplate {
 
 export const DEFAULT_CURRENT_STAGE: BizMapStage = 'IDENTITY';
 export const DEFAULT_HIGHEST_UNLOCKED_STAGE: BizMapStage = 'PROTOTYPE';
-export const PMF_REQUIRED_SIGNALS = 5;
+export const PMF_REQUIRED_SIGNALS = 25;
 
 export const BIZMAP_TOOLS: BizMapToolDefinition[] = [
   {

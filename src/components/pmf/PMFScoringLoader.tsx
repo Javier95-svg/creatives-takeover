@@ -3,10 +3,10 @@ import { Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const STEPS = [
-  'Reading your validation evidence…',
-  'Evaluating pain clarity and urgency…',
-  'Measuring consistency and demand signals…',
-  'Generating your PMF readiness score…',
+  'Reading your customer interview evidence…',
+  'Extracting pain, urgency, and buying-intent signals…',
+  'Clustering missing features and recurring objections…',
+  'Generating your PMF score and founder recommendation…',
 ];
 
 const PMFScoringLoader: React.FC = () => {
@@ -23,8 +23,8 @@ const PMFScoringLoader: React.FC = () => {
     <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-8 text-center max-w-md mx-auto">
       <Loader2 className="w-12 h-12 animate-spin text-primary" />
       <div className="space-y-2">
-        <h2 className="text-xl font-semibold">Evaluating your evidence</h2>
-        <p className="text-sm text-muted-foreground">Usually takes 10–15 seconds</p>
+        <h2 className="text-xl font-semibold">AI is reviewing your interview evidence</h2>
+        <p className="text-sm text-muted-foreground">Usually takes 10–15 seconds to synthesize demand, objections, and next steps.</p>
       </div>
       <div className="space-y-3 w-full text-left">
         {STEPS.map((step, i) => (

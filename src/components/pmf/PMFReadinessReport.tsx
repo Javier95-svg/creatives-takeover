@@ -1,5 +1,5 @@
 import React from 'react';
-import { Save, Download, RefreshCw, CheckCircle2, XCircle } from 'lucide-react';
+import { Save, Download, RefreshCw, CheckCircle2, XCircle, ArrowRight, AlertTriangle, MessageSquareWarning, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
@@ -7,6 +7,8 @@ import PMFScoreCircle from './PMFScoreCircle';
 import PMFDimensionBars from './PMFDimensionBars';
 import PMFRecommendations from './PMFRecommendations';
 import type { PMFReadinessAnalysis } from '@/hooks/usePMFLab';
+import { Link } from 'react-router-dom';
+import { PMF_REQUIRED_SIGNALS } from '@/lib/bizmapStages';
 
 interface PMFReadinessReportProps {
   analysis: PMFReadinessAnalysis;
@@ -26,6 +28,19 @@ const PMFReadinessReport: React.FC<PMFReadinessReportProps> = ({
   onReanalyze,
 }) => {
   const isReady = analysis.verdict === 'ready';
+  const meetsThreshold = analysis.overallScore >= 75;
+  const decisionTitle = analysis.recommendedActionTitle ?? (meetsThreshold ? 'Move to Building' : 'Iterate Before Building');
+  const scoreMeaning =
+    analysis.scoreMeaning ??
+    (meetsThreshold
+      ? 'Your interviews show enough pain, demand, and buying intent to justify moving into Stage IV: Building.'
+      : 'The evidence is not strong enough yet. You should improve the offer, landing page, or feature promise before building.');
+  const missingFeatures = analysis.missingFeatures?.length ? analysis.missingFeatures : analysis.gaps.slice(0, 3);
+  const commonObjections = analysis.commonObjections?.length ? analysis.commonObjections : analysis.gaps.slice(0, 3);
+  const buyingSignals = analysis.buyingSignals?.length ? analysis.buyingSignals : analysis.strengths.slice(0, 3);
+  const improvementsBeforeRetest = analysis.improvementsBeforeRetest?.length
+    ? analysis.improvementsBeforeRetest
+    : analysis.recommendations.slice(0, 3).map((item) => item.action);
 
   const thresholdBanner = isReady
     ? {
@@ -45,34 +60,60 @@ const PMFReadinessReport: React.FC<PMFReadinessReportProps> = ({
 
   return (
     <div className="max-w-3xl mx-auto space-y-8">
+      <div className="grid gap-6 lg:grid-cols-[220px,1fr]">
+        <div className="rounded-3xl border border-border/60 bg-background/90 p-6 text-center shadow-sm">
+          <PMFScoreCircle
+            score={analysis.overallScore}
+            verdict={analysis.verdict}
+            verdictLabel={analysis.verdictLabel}
+          />
+        </div>
 
-      {/* Score + action buttons */}
-      <div className="flex flex-col items-center gap-6">
-        <PMFScoreCircle
-          score={analysis.overallScore}
-          verdict={analysis.verdict}
-          verdictLabel={analysis.verdictLabel}
-        />
+        <div className="rounded-3xl border border-border/60 bg-background/90 p-6 shadow-sm">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div className="space-y-3">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary/70">PMF Lab Decision</p>
+              <div>
+                <h2 className="text-2xl font-semibold">{decisionTitle}</h2>
+                <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">{scoreMeaning}</p>
+              </div>
+            </div>
+            <div className={cn(
+              'rounded-2xl border px-4 py-3 text-sm font-medium',
+              meetsThreshold
+                ? 'border-green-500/30 bg-green-500/10 text-green-700 dark:text-green-400'
+                : 'border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400'
+            )}>
+              {meetsThreshold ? 'Recommendation unlocked' : 'Iteration required'}
+            </div>
+          </div>
 
-        {/* Summary insight */}
-        <blockquote className="w-full text-sm text-muted-foreground italic bg-primary/5 border border-primary/15 rounded-lg px-5 py-4 text-center leading-relaxed">
-          "{analysis.summaryInsight}"
-        </blockquote>
+          <blockquote className="mt-5 rounded-2xl border border-primary/15 bg-primary/5 px-5 py-4 text-sm italic leading-relaxed text-muted-foreground">
+            "{analysis.summaryInsight}"
+          </blockquote>
 
-        {/* Action buttons */}
-        <div className="flex flex-wrap gap-3 justify-center">
-          <Button onClick={onSave} disabled={isSaving} size="sm">
-            <Save className="w-4 h-4 mr-2" />
-            {isSaving ? 'Saving…' : 'Save Report'}
-          </Button>
-          <Button variant="outline" onClick={onExport} disabled={isExporting} size="sm">
-            <Download className="w-4 h-4 mr-2" />
-            {isExporting ? 'Exporting…' : 'Export PDF'}
-          </Button>
-          <Button variant="ghost" onClick={onReanalyze} size="sm">
-            <RefreshCw className="w-4 h-4 mr-2" />
-            Re-analyze
-          </Button>
+          <div className="mt-5 flex flex-wrap gap-3">
+            <Button onClick={onSave} disabled={isSaving} size="sm">
+              <Save className="mr-2 h-4 w-4" />
+              {isSaving ? 'Saving…' : 'Save Report'}
+            </Button>
+            <Button variant="outline" onClick={onExport} disabled={isExporting} size="sm">
+              <Download className="mr-2 h-4 w-4" />
+              {isExporting ? 'Exporting…' : 'Export PDF'}
+            </Button>
+            <Button variant="ghost" onClick={onReanalyze} size="sm">
+              <RefreshCw className="mr-2 h-4 w-4" />
+              Re-analyze
+            </Button>
+            {meetsThreshold && (
+              <Button asChild variant="outline" size="sm">
+                <Link to="/mvp-scope">
+                  Continue to Building
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -84,10 +125,108 @@ const PMFReadinessReport: React.FC<PMFReadinessReportProps> = ({
 
       <Separator />
 
+      <div className="grid gap-4 md:grid-cols-2">
+        <div className="rounded-2xl border border-border/60 bg-muted/20 p-5">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary/70">What this score means</p>
+          <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+            PMF Lab expects at least {PMF_REQUIRED_SIGNALS} interviews and a score of 75 or higher before you move from Validation to Building.
+          </p>
+          <p className="mt-3 text-sm leading-relaxed text-foreground">
+            {analysis.overallScore >= 75
+              ? 'You have enough market evidence to scope the MVP around the strongest demand signals.'
+              : 'You should tighten the offer and retest before committing engineering time or budget.'}
+          </p>
+        </div>
+        <div className="rounded-2xl border border-border/60 bg-muted/20 p-5">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary/70">AI next action</p>
+          <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+            {analysis.nextExperiment ?? (meetsThreshold
+              ? 'Move into MVP scope definition and preserve only the features tied to the strongest buying signals.'
+              : 'Run another interview round after improving the landing page, the offer, or the key missing features.')}
+          </p>
+        </div>
+      </div>
+
       {/* Dimension bars */}
       <PMFDimensionBars dimensions={analysis.dimensions} />
 
       <Separator />
+
+      <div className="grid gap-4 md:grid-cols-2">
+        <div className="rounded-2xl border border-border/60 bg-background/70 p-5 space-y-3">
+          <div className="flex items-center gap-2">
+            <Sparkles className="h-4 w-4 text-primary" />
+            <h3 className="text-sm font-semibold">Strongest buying signals</h3>
+          </div>
+          {buyingSignals.length > 0 ? (
+            <ul className="space-y-2">
+              {buyingSignals.map((signal, index) => (
+                <li key={`${signal}-${index}`} className="text-sm leading-relaxed text-muted-foreground">
+                  {signal}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-sm text-muted-foreground">No strong buying signals were identified from the current interview set.</p>
+          )}
+        </div>
+
+        <div className="rounded-2xl border border-border/60 bg-background/70 p-5 space-y-3">
+          <div className="flex items-center gap-2">
+            <MessageSquareWarning className="h-4 w-4 text-amber-500" />
+            <h3 className="text-sm font-semibold">Most common objections</h3>
+          </div>
+          {commonObjections.length > 0 ? (
+            <ul className="space-y-2">
+              {commonObjections.map((item, index) => (
+                <li key={`${item}-${index}`} className="text-sm leading-relaxed text-muted-foreground">
+                  {item}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-sm text-muted-foreground">No major recurring objections were surfaced in the current evidence set.</p>
+          )}
+        </div>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2">
+        <div className="rounded-2xl border border-border/60 bg-background/70 p-5 space-y-3">
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="h-4 w-4 text-red-500" />
+            <h3 className="text-sm font-semibold">What users think is missing</h3>
+          </div>
+          {missingFeatures.length > 0 ? (
+            <ul className="space-y-2">
+              {missingFeatures.map((item, index) => (
+                <li key={`${item}-${index}`} className="text-sm leading-relaxed text-muted-foreground">
+                  {item}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-sm text-muted-foreground">No specific missing feature cluster was strong enough to stand out yet.</p>
+          )}
+        </div>
+
+        <div className="rounded-2xl border border-border/60 bg-background/70 p-5 space-y-3">
+          <div className="flex items-center gap-2">
+            <RefreshCw className="h-4 w-4 text-primary" />
+            <h3 className="text-sm font-semibold">What to improve before testing again</h3>
+          </div>
+          {improvementsBeforeRetest.length > 0 ? (
+            <ul className="space-y-2">
+              {improvementsBeforeRetest.map((item, index) => (
+                <li key={`${item}-${index}`} className="text-sm leading-relaxed text-muted-foreground">
+                  {item}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-sm text-muted-foreground">The current evidence does not yet suggest a specific iteration path.</p>
+          )}
+        </div>
+      </div>
 
       {/* Strengths & Gaps */}
       <div className="grid gap-4 sm:grid-cols-2">
@@ -134,11 +273,20 @@ const PMFReadinessReport: React.FC<PMFReadinessReportProps> = ({
       {/* Bottom CTA */}
       <div className="flex flex-wrap gap-3 pt-4 pb-8">
         <Button onClick={onSave} disabled={isSaving} className="flex-1 sm:flex-none px-6">
-          {isSaving ? 'Saving…' : isReady ? 'Save Report & Continue to MVP Builder' : 'Save Report'}
+          {isSaving ? 'Saving…' : isReady ? 'Save Report & Lock Validation' : 'Save Report'}
         </Button>
         <Button variant="outline" onClick={onExport} disabled={isExporting} className="flex-1 sm:flex-none px-6">
           {isExporting ? 'Exporting…' : 'Export PDF'}
         </Button>
+        {meetsThreshold ? (
+          <Button asChild variant="outline" className="flex-1 sm:flex-none px-6">
+            <Link to="/mvp-scope">Go to MVP Scope</Link>
+          </Button>
+        ) : (
+          <Button variant="ghost" onClick={onReanalyze} className="flex-1 sm:flex-none px-6">
+            Iterate and Retest
+          </Button>
+        )}
       </div>
     </div>
   );
