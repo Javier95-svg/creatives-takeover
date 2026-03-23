@@ -45,14 +45,14 @@ export default function PMFLabPage() {
 
   const ruleCards = [
     {
-      label: '75 or higher',
+      label: 'Score 75 or higher',
       title: 'Move to Building',
       description: 'You have enough demand evidence to scope the MVP and move into Stage IV.',
       icon: Rocket,
       tone: 'border-green-500/25 bg-green-500/10 text-green-700 dark:text-green-400',
     },
     {
-      label: 'Below 75',
+      label: 'Score below 75',
       title: 'Iterate before building',
       description: 'PMF Lab will surface missing features, recurring objections, and what to improve before testing again.',
       icon: ArrowRight,

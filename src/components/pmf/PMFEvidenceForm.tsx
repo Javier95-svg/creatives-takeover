@@ -969,21 +969,6 @@ const PMFEvidenceForm: React.FC<PMFEvidenceFormProps> = ({ onSubmit, isSubmittin
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="grid gap-3 md:grid-cols-3">
-            <div className="rounded-2xl border border-border/60 bg-muted/20 p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary/70">Interview log</p>
-              <p className="mt-2 text-sm text-muted-foreground">Record each customer conversation with segment, feedback, objections, missing features, and buying intent.</p>
-            </div>
-            <div className="rounded-2xl border border-border/60 bg-muted/20 p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary/70">Reliability rule</p>
-              <p className="mt-2 text-sm text-muted-foreground">PMF Lab only trusts scores backed by at least {PMF_REQUIRED_SIGNALS} completed interviews.</p>
-            </div>
-            <div className="rounded-2xl border border-border/60 bg-muted/20 p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary/70">AI output</p>
-              <p className="mt-2 text-sm text-muted-foreground">You get a score, explanation, missing features, objections, buying signals, and the next action.</p>
-            </div>
-          </div>
-
           <StepIndicator />
 
           <StepView stepKey={currentStep}>
