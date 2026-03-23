@@ -47,14 +47,14 @@ export default function PMFLabPage() {
     {
       label: 'Score 75 or higher',
       title: 'Move to Building',
-      description: 'You have enough demand evidence to scope the MVP and move into Stage IV.',
+      description: 'You have enough demand evidence to scope your MVP and move into the building stage.',
       icon: Rocket,
       tone: 'border-green-500/25 bg-green-500/10 text-green-700 dark:text-green-400',
     },
     {
       label: 'Score below 75',
       title: 'Iterate before building',
-      description: 'PMF Lab will surface missing features, recurring objections, and what to improve before testing again.',
+      description: 'PMF Lab will surface missing features, recurring objections, and what to improve before moving into development.',
       icon: ArrowRight,
       tone: 'border-amber-500/25 bg-amber-500/10 text-amber-700 dark:text-amber-400',
     },
