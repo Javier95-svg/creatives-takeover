@@ -30,6 +30,9 @@ export const NotificationBell = () => {
     const actorProfilePath = notification.actor?.username
       ? `/profile/${notification.actor.username}`
       : null;
+    const metadataRoute = typeof notification.metadata?.route === 'string'
+      ? notification.metadata.route
+      : null;
 
     // Navigate to messages if it's a message notification - go directly to /messages
     if (notification.notification_type === 'message') {
@@ -60,6 +63,11 @@ export const NotificationBell = () => {
 
     if (notification.notification_type === 'newspaper_article_published') {
       navigate('/newspaper');
+      return;
+    }
+
+    if (notification.notification_type === 'platform_update') {
+      navigate(metadataRoute || '/insighta');
       return;
     }
 
@@ -142,6 +150,8 @@ export const NotificationBell = () => {
         return metadata?.task_text
           ? `Deadline reached: ${metadata.task_text}`
           : 'A task deadline has been reached';
+      case 'platform_update':
+        return metadata?.message || metadata?.title || 'There is a new platform update';
       default:
         return `${actor.name} interacted with your post`;
     }
@@ -160,6 +170,10 @@ export const NotificationBell = () => {
 
     if (notification.notification_type === 'newspaper_article_published') {
       return metadata.image_url || metadata.banner_image_url || notification.actor.avatar;
+    }
+
+    if (notification.notification_type === 'platform_update') {
+      return metadata.image_url || notification.actor.avatar;
     }
 
     return notification.actor.avatar;
