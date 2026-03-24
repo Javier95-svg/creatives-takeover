@@ -350,7 +350,7 @@ const VCProfilePage = () => {
       </CardHeader>
 
       <CardContent className="space-y-6">
-        <div className="grid gap-4 lg:grid-cols-[1.65fr_1fr]">
+        <div className="grid gap-6 lg:grid-cols-[1.35fr_1fr]">
           <div className="rounded-xl border border-border/60 bg-muted/20 p-5">
             <h3 className="mb-4 text-base font-semibold">At a glance</h3>
             <div className="grid gap-3 text-sm">
