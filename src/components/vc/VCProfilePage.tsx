@@ -275,7 +275,6 @@ const VCProfilePage = () => {
 
             <div className="min-w-0">
               <div className="mb-3 flex flex-wrap items-center gap-2">
-                <Badge variant="outline" className="capitalize">{vc.investor_type.replace("_", " ")}</Badge>
                 {vc.is_featured && (
                   <Badge className="bg-amber-500/10 text-amber-600 border-amber-500/30 hover:bg-amber-500/20">
                     <Star className="h-3 w-3 mr-1 fill-amber-500" />
@@ -293,6 +292,47 @@ const VCProfilePage = () => {
               <p className="mt-2 text-sm leading-6 text-muted-foreground">
                 {vc.investment_thesis || `${vc.firm_name} invests across ${stageSummary} in ${sectorSummary}.`}
               </p>
+              <div className="mt-4 space-y-2">
+                {vc.investment_stages.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {vc.investment_stages.map((stage) => (
+                      <Badge
+                        key={stage}
+                        variant="outline"
+                        className="border-sky-500/30 bg-sky-500/10 text-sky-700 capitalize"
+                      >
+                        {stage.replaceAll("-", " ")}
+                      </Badge>
+                    ))}
+                  </div>
+                )}
+                {vc.industries.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {vc.industries.slice(0, 8).map((industry) => (
+                      <Badge
+                        key={industry}
+                        variant="outline"
+                        className="border-violet-500/30 bg-violet-500/10 text-violet-700"
+                      >
+                        {industry}
+                      </Badge>
+                    ))}
+                  </div>
+                )}
+                {vc.geographic_focus.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {vc.geographic_focus.slice(0, 6).map((geo) => (
+                      <Badge
+                        key={geo}
+                        variant="outline"
+                        className="border-emerald-500/30 bg-emerald-500/10 text-emerald-700"
+                      >
+                        {geo}
+                      </Badge>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
@@ -396,24 +436,6 @@ const VCProfilePage = () => {
               ) : (
                 <p className="text-sm text-muted-foreground">No external links listed for this firm yet.</p>
               )}
-            </div>
-            <div className="mt-4 flex flex-wrap gap-2">
-              {vc.investment_stages.map((stage) => (
-                <Badge key={stage} variant="outline" className="capitalize">
-                  {stage.replaceAll("-", " ")}
-                </Badge>
-              ))}
-              {vc.industries.slice(0, 6).map((industry) => (
-                <Badge key={industry} variant="secondary">
-                  {industry}
-                </Badge>
-              ))}
-              {vc.geographic_focus.slice(0, 4).map((geo) => (
-                <Badge key={geo} variant="outline">
-                  <MapPin className="h-3 w-3 mr-1" />
-                  {geo}
-                </Badge>
-              ))}
             </div>
           </div>
         </div>
