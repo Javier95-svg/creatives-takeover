@@ -30,6 +30,13 @@ const AcceleratorCard = ({ accelerator, profileLink }: AcceleratorCardProps) => 
   const stageLabel = accelerator.focus_stage?.slice(0, 2).join(", ") || "Founder fit on profile";
   const sectorLabel = accelerator.focus_sectors?.slice(0, 2).join(", ") || accelerator.keywords.slice(0, 2).join(", ");
   const geographyLabel = accelerator.cohort_geography?.slice(0, 2).join(", ") || accelerator.location.slice(0, 2).join(", ");
+  const applicationLabel = accelerator.application_url
+    ? "Apply on website"
+    : accelerator.website_url || accelerator.url
+      ? "Visit website"
+      : "See profile";
+  const fundingLabel = accelerator.funding_offered || accelerator.funding_amount || "Funding details on profile";
+  const footerLocation = accelerator.location[0] || accelerator.cohort_geography?.[0] || null;
 
   return (
     <Card className="group h-full border border-border/60 bg-background/95 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl">
@@ -71,31 +78,41 @@ const AcceleratorCard = ({ accelerator, profileLink }: AcceleratorCardProps) => 
         </div>
       </CardHeader>
 
-      <CardContent className="flex h-full flex-col gap-3 pt-0">
-        <p className="line-clamp-3 text-sm leading-6 text-muted-foreground">
+      <CardContent className="pt-0 space-y-3 flex-grow flex flex-col">
+        <p className="line-clamp-2 text-sm leading-6 text-muted-foreground">
           {accelerator.description}
         </p>
 
         <div className="grid gap-2 rounded-xl border border-border/60 bg-muted/20 p-3 text-sm">
           <div className="flex items-start justify-between gap-3">
             <span className="text-muted-foreground">Stage</span>
-            <span className="text-right font-medium capitalize">{stageLabel.replaceAll("-", " ")}</span>
+            <span className="max-w-[11rem] text-right font-medium capitalize line-clamp-2">
+              {stageLabel.replaceAll("-", " ")}
+            </span>
           </div>
           <div className="flex items-start justify-between gap-3">
             <span className="text-muted-foreground">Sector</span>
-            <span className="text-right font-medium">{sectorLabel || "See profile"}</span>
+            <span className="max-w-[11rem] text-right font-medium line-clamp-2">
+              {sectorLabel || "See profile"}
+            </span>
           </div>
           <div className="flex items-start justify-between gap-3">
             <span className="text-muted-foreground">Funding</span>
-            <span className="text-right font-medium">{accelerator.funding_offered || accelerator.funding_amount || "See profile"}</span>
+            <span className="max-w-[11rem] text-right font-medium line-clamp-2">
+              {fundingLabel}
+            </span>
           </div>
           <div className="flex items-start justify-between gap-3">
-            <span className="text-muted-foreground">Equity</span>
-            <span className="text-right font-medium">{accelerator.equity_taken || "See profile"}</span>
+            <span className="text-muted-foreground">Geography</span>
+            <span className="max-w-[11rem] text-right font-medium line-clamp-2">
+              {geographyLabel || "See profile"}
+            </span>
           </div>
           <div className="flex items-start justify-between gap-3">
             <span className="text-muted-foreground">How to apply</span>
-            <span className="text-right font-medium">{accelerator.application_deadline_info || "Application page"}</span>
+            <span className="max-w-[11rem] text-right font-medium line-clamp-2">
+              {applicationLabel}
+            </span>
           </div>
         </div>
 
@@ -104,10 +121,10 @@ const AcceleratorCard = ({ accelerator, profileLink }: AcceleratorCardProps) => 
             <Clock3 className="h-3.5 w-3.5" />
             <span>{accelerator.program_duration || "Program details on profile"}</span>
           </div>
-          {geographyLabel && (
+          {footerLocation && (
             <div className="flex items-center gap-1">
               <MapPin className="h-3.5 w-3.5" />
-              <span>{geographyLabel}</span>
+              <span>{footerLocation}</span>
             </div>
           )}
         </div>
