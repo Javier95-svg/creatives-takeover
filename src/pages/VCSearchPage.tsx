@@ -60,7 +60,7 @@ export default function VCSearchPage() {
                 VC Search
               </h1>
               <p className="text-lg sm:text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed animate-fade-in px-4" style={{ animationDelay: '0.3s' }}>
-                Search and filter through venture capitalists by<span className="gradient-text font-semibold" style={{ lineHeight: 'inherit', marginLeft: '0.25rem' }}> investment stage, industry, and geography.</span>
+                Search and filter venture capitalist firms by<span className="gradient-text font-semibold" style={{ lineHeight: 'inherit', marginLeft: '0.25rem' }}> investment stage, industry, and geography.</span>
               </p>
             </div>
 
