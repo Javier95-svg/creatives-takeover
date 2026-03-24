@@ -168,6 +168,13 @@ const AcceleratorProfilePage = () => {
     : accelerator.location.length > 0
       ? accelerator.location.join(", ")
       : "Not disclosed";
+  const stageTags = accelerator.focus_stage || [];
+  const sectorTags = accelerator.focus_sectors && accelerator.focus_sectors.length > 0
+    ? accelerator.focus_sectors
+    : accelerator.keywords;
+  const geographyTags = accelerator.cohort_geography && accelerator.cohort_geography.length > 0
+    ? accelerator.cohort_geography
+    : accelerator.location;
   const alumni = Array.isArray(accelerator.notable_alumni) ? accelerator.notable_alumni.slice(0, 6) : [];
   const snapshotItems = [
     { label: "Stage", value: stageSummary },
@@ -244,14 +251,52 @@ const AcceleratorProfilePage = () => {
                           Featured
                         </Badge>
                       )}
-                      {accelerator.program_format && (
-                        <Badge variant="outline">{accelerator.program_format}</Badge>
-                      )}
                     </div>
                     <CardTitle className="text-3xl tracking-tight">{accelerator.title}</CardTitle>
                     <p className="mt-2 text-sm leading-6 text-muted-foreground">
                       {accelerator.description}
                     </p>
+                    <div className="mt-4 space-y-2">
+                      {stageTags.length > 0 && (
+                        <div className="flex flex-wrap gap-2">
+                          {stageTags.map((stage) => (
+                            <Badge
+                              key={stage}
+                              variant="outline"
+                              className="border-sky-500/30 bg-sky-500/10 text-sky-700 capitalize"
+                            >
+                              {stage.replaceAll("-", " ")}
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
+                      {sectorTags.length > 0 && (
+                        <div className="flex flex-wrap gap-2">
+                          {sectorTags.slice(0, 8).map((sector) => (
+                            <Badge
+                              key={sector}
+                              variant="outline"
+                              className="border-violet-500/30 bg-violet-500/10 text-violet-700"
+                            >
+                              {sector}
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
+                      {geographyTags.length > 0 && (
+                        <div className="flex flex-wrap gap-2">
+                          {geographyTags.slice(0, 6).map((geo) => (
+                            <Badge
+                              key={geo}
+                              variant="outline"
+                              className="border-emerald-500/30 bg-emerald-500/10 text-emerald-700"
+                            >
+                              {geo}
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
 
@@ -267,7 +312,7 @@ const AcceleratorProfilePage = () => {
             </CardHeader>
 
             <CardContent className="space-y-6">
-              <div className="grid gap-4 lg:grid-cols-[1.65fr_1fr]">
+              <div className="grid gap-6 lg:grid-cols-[1.35fr_1fr]">
                 <div className="rounded-xl border border-border/60 bg-muted/20 p-5">
                   <h3 className="mb-4 text-base font-semibold">At a glance</h3>
                   <div className="grid gap-3 text-sm">
@@ -307,29 +352,31 @@ const AcceleratorProfilePage = () => {
               <div className="grid gap-6 lg:grid-cols-[1.35fr_1fr]">
                 <div className="rounded-xl border border-border/60 bg-background p-5">
                   <h3 className="mb-3 text-base font-semibold">Program summary</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {(accelerator.focus_stage || []).map((stage) => (
-                      <Badge key={stage} variant="outline" className="capitalize">
-                        {stage.replaceAll("-", " ")}
-                      </Badge>
-                    ))}
-                    {(accelerator.focus_sectors && accelerator.focus_sectors.length > 0
-                      ? accelerator.focus_sectors
-                      : accelerator.keywords
-                    ).slice(0, 8).map((sector) => (
-                      <Badge key={sector} variant="secondary">
-                        {sector}
-                      </Badge>
-                    ))}
-                    {(accelerator.cohort_geography && accelerator.cohort_geography.length > 0
-                      ? accelerator.cohort_geography
-                      : accelerator.location
-                    ).slice(0, 4).map((geo) => (
-                      <Badge key={geo} variant="outline">
-                        <MapPin className="h-3 w-3 mr-1" />
-                        {geo}
-                      </Badge>
-                    ))}
+                  <div className="space-y-3 text-sm">
+                    <div className="flex items-start justify-between gap-4">
+                      <span className="text-muted-foreground">Program format</span>
+                      <span className="max-w-[16rem] text-right font-medium">
+                        {accelerator.program_format || "Not disclosed"}
+                      </span>
+                    </div>
+                    <div className="flex items-start justify-between gap-4">
+                      <span className="text-muted-foreground">Duration</span>
+                      <span className="max-w-[16rem] text-right font-medium">
+                        {accelerator.program_duration || "Not disclosed"}
+                      </span>
+                    </div>
+                    <div className="flex items-start justify-between gap-4">
+                      <span className="text-sky-700">Funding</span>
+                      <span className="max-w-[16rem] text-right font-medium">
+                        {accelerator.funding_offered || accelerator.funding_amount || "Not disclosed"}
+                      </span>
+                    </div>
+                    <div className="flex items-start justify-between gap-4">
+                      <span className="text-muted-foreground">Equity</span>
+                      <span className="max-w-[16rem] text-right font-medium">
+                        {accelerator.equity_taken || "Not disclosed"}
+                      </span>
+                    </div>
                   </div>
 
                   {alumni.length > 0 && (
