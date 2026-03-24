@@ -17,7 +17,6 @@ import {
   ArrowUpRight,
   Building2,
   ExternalLink,
-  Globe,
   Linkedin,
   Lock,
   Mail,
@@ -217,7 +216,6 @@ const VCProfilePage = () => {
   const links = [
     vc.firm_website ? { label: "Website", href: vc.firm_website, icon: Building2 } : null,
     vc.linkedin_url ? { label: "LinkedIn", href: vc.linkedin_url, icon: Linkedin } : null,
-    vc.crunchbase_url ? { label: "Crunchbase", href: vc.crunchbase_url, icon: Globe } : null,
     vc.twitter_url ? { label: "X", href: vc.twitter_url, icon: Twitter } : null,
   ].filter(Boolean) as Array<{ label: string; href: string; icon: typeof Building2 }>;
 

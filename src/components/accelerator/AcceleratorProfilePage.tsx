@@ -152,8 +152,9 @@ const AcceleratorProfilePage = () => {
   }
 
   const websiteUrl = accelerator.website_url || accelerator.url;
-  const primaryActionUrl = accelerator.application_url || websiteUrl;
-  const primaryActionLabel = accelerator.application_url ? "Apply Now" : "Visit Website";
+  const hasDedicatedApplication = Boolean(accelerator.application_url && accelerator.application_url !== websiteUrl);
+  const primaryActionUrl = hasDedicatedApplication ? accelerator.application_url : websiteUrl || accelerator.application_url;
+  const primaryActionLabel = hasDedicatedApplication ? "Apply Now" : "Visit Website";
   const stageSummary = accelerator.focus_stage?.length
     ? accelerator.focus_stage.map((stage) => stage.replaceAll("-", " ")).join(", ")
     : "Not disclosed";
@@ -237,7 +238,6 @@ const AcceleratorProfilePage = () => {
 
                   <div className="min-w-0">
                     <div className="mb-3 flex flex-wrap items-center gap-2">
-                      <Badge variant="outline">Accelerator</Badge>
                       {accelerator.is_featured && (
                         <Badge className="bg-amber-500/10 text-amber-600 border-amber-500/30 hover:bg-amber-500/20">
                           <Star className="h-3 w-3 mr-1 fill-amber-500" />
