@@ -1,6 +1,10 @@
 // Type definitions for Insighta section (VC Search, Email Templates, Accelerator Hunt)
 
 export interface VCFilters {
+  investment_stages?: string[];
+  industries?: string[];
+  geographies?: string[];
+  ticket_sizes?: string[];
   investment_stage?: string;
   industry?: string;
   check_size_min?: number;
@@ -10,6 +14,11 @@ export interface VCFilters {
 }
 
 export interface AcceleratorFilters {
+  focus_stage?: string[];
+  sectors?: string[];
+  geographies?: string[];
+  equity?: string[];
+  formats?: string[];
   location?: string;
   industry_focus?: string;
   search?: string;

@@ -14,44 +14,96 @@ export const useAcceleratorSearch = (filters?: AcceleratorFilters) => {
         setLoading(true);
         setError(null);
 
-        // Build query for accelerators only
-        let query = supabase
+        const { data, error: fetchError } = await supabase
           .from('funding_opportunities')
           .select('*')
           .eq('type', 'accelerator')
           .eq('is_active', true)
           .order('is_featured', { ascending: false })
-          .order('created_at', { ascending: false });
-
-        const { data, error: fetchError } = await query;
+          .order('title', { ascending: true });
 
         if (fetchError) {
           throw fetchError;
         }
 
-        let results = (data || []) as FundingOpportunity[];
+        const selectedStages = filters?.focus_stage || [];
+        const selectedSectors = filters?.sectors?.length
+          ? filters.sectors
+          : filters?.industry_focus
+            ? [filters.industry_focus]
+            : [];
+        const selectedGeographies = filters?.geographies?.length
+          ? filters.geographies
+          : filters?.location
+            ? [filters.location]
+            : [];
+        const selectedFormats = filters?.formats || [];
+        const selectedEquity = filters?.equity || [];
 
-        // Client-side location filter
-        if (filters?.location) {
+        const normalizeArray = (value: unknown): string[] =>
+          Array.isArray(value)
+            ? value.filter((item): item is string => typeof item === 'string')
+            : [];
+
+        let results = ((data || []) as FundingOpportunity[]).map((accelerator) => ({
+          ...accelerator,
+          keywords: normalizeArray(accelerator.keywords),
+          location: normalizeArray(accelerator.location),
+          focus_stage: normalizeArray(accelerator.focus_stage),
+          focus_sectors: normalizeArray(accelerator.focus_sectors),
+          cohort_geography: normalizeArray(accelerator.cohort_geography),
+          notable_alumni: normalizeArray(accelerator.notable_alumni),
+        }));
+
+        if (selectedGeographies.length > 0) {
           results = results.filter((acc) =>
-            acc.location.includes(filters.location!)
+            selectedGeographies.some((region) =>
+              acc.cohort_geography?.includes(region) || acc.location.includes(region)
+            )
           );
         }
 
-        // Client-side industry/keywords filter
-        if (filters?.industry_focus) {
+        if (selectedSectors.length > 0) {
           results = results.filter((acc) =>
-            acc.keywords.some(k => k.toLowerCase().includes(filters.industry_focus!.toLowerCase()))
+            selectedSectors.some((sector) =>
+              acc.focus_sectors?.some((item) => item.toLowerCase() === sector.toLowerCase()) ||
+              acc.keywords.some((item) => item.toLowerCase().includes(sector.toLowerCase()))
+            )
           );
         }
 
-        // Client-side search filter
+        if (selectedStages.length > 0) {
+          results = results.filter((acc) =>
+            selectedStages.some((stage) =>
+              acc.focus_stage?.some((item) => item.toLowerCase() === stage.toLowerCase())
+            )
+          );
+        }
+
+        if (selectedFormats.length > 0) {
+          results = results.filter((acc) =>
+            selectedFormats.some((format) =>
+              acc.program_format?.toLowerCase() === format.toLowerCase()
+            )
+          );
+        }
+
+        if (selectedEquity.length > 0) {
+          results = results.filter((acc) =>
+            selectedEquity.some((equity) =>
+              (acc.equity_taken || '').toLowerCase().includes(equity.toLowerCase())
+            )
+          );
+        }
+
         if (filters?.search) {
           const searchLower = filters.search.toLowerCase();
           results = results.filter((acc) =>
             acc.title.toLowerCase().includes(searchLower) ||
             acc.description.toLowerCase().includes(searchLower) ||
-            acc.keywords.some(k => k.toLowerCase().includes(searchLower))
+            acc.keywords.some((item) => item.toLowerCase().includes(searchLower)) ||
+            acc.focus_sectors?.some((item) => item.toLowerCase().includes(searchLower)) ||
+            acc.notable_alumni?.some((item) => item.toLowerCase().includes(searchLower))
           );
         }
 
@@ -66,7 +118,16 @@ export const useAcceleratorSearch = (filters?: AcceleratorFilters) => {
     };
 
     fetchAccelerators();
-  }, [filters?.location, filters?.industry_focus, filters?.search]);
+  }, [
+    filters?.location,
+    filters?.industry_focus,
+    filters?.search,
+    filters?.focus_stage?.join('|'),
+    filters?.sectors?.join('|'),
+    filters?.geographies?.join('|'),
+    filters?.equity?.join('|'),
+    filters?.formats?.join('|'),
+  ]);
 
   return { accelerators, loading, error };
 };

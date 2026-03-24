@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import AcceleratorFilters from "@/components/accelerator/AcceleratorFilters";
+import AcceleratorCard from "@/components/accelerator/AcceleratorCard";
 import { useAcceleratorSearch } from "@/hooks/useAcceleratorSearch";
 import { AcceleratorFilters as AcceleratorFiltersType } from "@/types/insighta";
-import FundingOpportunityCard from "@/components/funding/FundingOpportunityCard";
 import { Button } from "@/components/ui/button";
 import { Lock, UserPlus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -45,9 +45,9 @@ const AcceleratorHuntTab = () => {
           {/* Blurred accelerator cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 select-none pointer-events-none blur-[6px]" aria-hidden="true">
             {accelerators.slice(0, 6).map((accelerator) => (
-              <FundingOpportunityCard
+              <AcceleratorCard
                 key={accelerator.id}
-                opportunity={accelerator}
+                accelerator={accelerator}
                 profileLink={`/insighta/accelerator/${accelerator.slug || accelerator.id}`}
               />
             ))}
@@ -88,9 +88,9 @@ const AcceleratorHuntTab = () => {
           {accelerators.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {accelerators.map((accelerator) => (
-                <FundingOpportunityCard
+                <AcceleratorCard
                   key={accelerator.id}
-                  opportunity={accelerator}
+                  accelerator={accelerator}
                   profileLink={`/insighta/accelerator/${accelerator.slug || accelerator.id}`}
                 />
               ))}

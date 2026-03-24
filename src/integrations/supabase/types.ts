@@ -3486,16 +3486,25 @@ export type Database = {
       }
       funding_opportunities: {
         Row: {
+          application_deadline_info: string | null
           application_url: string | null
+          cohort_geography: string[]
           created_at: string
           description: string
+          equity_taken: string | null
+          focus_sectors: string[]
+          focus_stage: string[]
           funding_amount: string | null
+          funding_offered: string | null
           id: string
           is_active: boolean | null
           is_featured: boolean | null
           keywords: string[] | null
           location: string[] | null
           logo_url: string | null
+          notable_alumni: Json
+          program_duration: string | null
+          program_format: string | null
           slug: string | null
           title: string
           type: string
@@ -3504,16 +3513,25 @@ export type Database = {
           website_url: string | null
         }
         Insert: {
+          application_deadline_info?: string | null
           application_url?: string | null
+          cohort_geography?: string[]
           created_at?: string
           description: string
+          equity_taken?: string | null
+          focus_sectors?: string[]
+          focus_stage?: string[]
           funding_amount?: string | null
+          funding_offered?: string | null
           id?: string
           is_active?: boolean | null
           is_featured?: boolean | null
           keywords?: string[] | null
           location?: string[] | null
           logo_url?: string | null
+          notable_alumni?: Json
+          program_duration?: string | null
+          program_format?: string | null
           slug?: string | null
           title: string
           type: string
@@ -3522,16 +3540,25 @@ export type Database = {
           website_url?: string | null
         }
         Update: {
+          application_deadline_info?: string | null
           application_url?: string | null
+          cohort_geography?: string[]
           created_at?: string
           description?: string
+          equity_taken?: string | null
+          focus_sectors?: string[]
+          focus_stage?: string[]
           funding_amount?: string | null
+          funding_offered?: string | null
           id?: string
           is_active?: boolean | null
           is_featured?: boolean | null
           keywords?: string[] | null
           location?: string[] | null
           logo_url?: string | null
+          notable_alumni?: Json
+          program_duration?: string | null
+          program_format?: string | null
           slug?: string | null
           title?: string
           type?: string

@@ -1,5 +1,6 @@
 // Simple, user-friendly types
 export type FundingType = 'grant' | 'accelerator' | 'contest' | 'microfund';
+export type AcceleratorProgramFormat = 'Remote' | 'In-person' | 'Hybrid' | string;
 
 export interface FundingOpportunity {
   id: string;
@@ -14,6 +15,15 @@ export interface FundingOpportunity {
   logo_url: string | null;
   website_url: string | null;
   application_url: string | null;
+  program_duration?: string | null;
+  program_format?: AcceleratorProgramFormat | null;
+  focus_stage?: string[] | null;
+  focus_sectors?: string[] | null;
+  equity_taken?: string | null;
+  funding_offered?: string | null;
+  cohort_geography?: string[] | null;
+  application_deadline_info?: string | null;
+  notable_alumni?: string[] | null;
   is_featured: boolean;
   is_active: boolean;
   created_at: string;

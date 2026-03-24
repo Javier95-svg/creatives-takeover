@@ -18,26 +18,40 @@ export const useVCSearch = (filters?: VCFilters, page = 1, pageSize = 15) => {
         const from = (page - 1) * pageSize;
         const to = from + pageSize - 1;
 
-        // Build query for VCs only
+        const selectedStages = filters?.investment_stages?.length
+          ? filters.investment_stages
+          : filters?.investment_stage
+            ? [filters.investment_stage]
+            : [];
+        const selectedIndustries = filters?.industries?.length
+          ? filters.industries
+          : filters?.industry
+            ? [filters.industry]
+            : [];
+        const selectedGeographies = filters?.geographies?.length
+          ? filters.geographies
+          : filters?.geographic_focus
+            ? [filters.geographic_focus]
+            : [];
+
         let query = supabase
           .from('investors')
-          .select('id, slug, name, firm_name, firm_website, logo_url, investment_stages, investment_thesis, industries, typical_check_size_min, typical_check_size_max, geographic_focus', { count: 'exact' })
+          .select('id, slug, name, firm_name, firm_website, logo_url, application_url, investment_stages, investment_thesis, industries, typical_check_size_min, typical_check_size_max, geographic_focus', { count: 'exact' })
           .eq('investor_type', 'vc')
           .eq('is_active', true)
           .order('firm_name', { ascending: true })
           .order('name', { ascending: true });
 
-        // Apply server-side filters
-        if (filters?.investment_stage) {
-          query = query.contains('investment_stages', [filters.investment_stage]);
+        if (selectedStages.length > 0) {
+          query = query.overlaps('investment_stages', selectedStages);
         }
 
-        if (filters?.industry) {
-          query = query.contains('industries', [filters.industry]);
+        if (selectedIndustries.length > 0) {
+          query = query.overlaps('industries', selectedIndustries);
         }
 
-        if (filters?.geographic_focus) {
-          query = query.contains('geographic_focus', [filters.geographic_focus]);
+        if (selectedGeographies.length > 0) {
+          query = query.overlaps('geographic_focus', selectedGeographies);
         }
 
         if (filters?.check_size_min) {
@@ -74,7 +88,19 @@ export const useVCSearch = (filters?: VCFilters, page = 1, pageSize = 15) => {
     };
 
     fetchVCs();
-  }, [filters?.investment_stage, filters?.industry, filters?.geographic_focus, filters?.check_size_min, filters?.check_size_max, filters?.search, page, pageSize]);
+  }, [
+    filters?.investment_stage,
+    filters?.industry,
+    filters?.geographic_focus,
+    filters?.check_size_min,
+    filters?.check_size_max,
+    filters?.search,
+    filters?.investment_stages?.join('|'),
+    filters?.industries?.join('|'),
+    filters?.geographies?.join('|'),
+    page,
+    pageSize,
+  ]);
 
   return { vcs, loading, error, total };
 };

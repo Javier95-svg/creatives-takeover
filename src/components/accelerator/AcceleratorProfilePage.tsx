@@ -158,6 +158,12 @@ const AcceleratorProfilePage = () => {
   }
 
   const websiteUrl = accelerator.website_url || accelerator.url;
+  const primaryActionUrl = accelerator.application_url || websiteUrl;
+  const primaryActionLabel = accelerator.application_url ? "Apply Now" : "Visit Website";
+  const stageSummary = accelerator.focus_stage?.join(', ') || 'See program fit below';
+  const sectorSummary = accelerator.focus_sectors?.join(', ') || accelerator.keywords.join(', ');
+  const geographySummary = accelerator.cohort_geography?.join(', ') || accelerator.location.join(', ');
+  const alumni = Array.isArray(accelerator.notable_alumni) ? accelerator.notable_alumni : [];
 
   return (
     <div className="min-h-screen bg-background">
@@ -237,10 +243,15 @@ const AcceleratorProfilePage = () => {
                         <Badge variant="outline" className="capitalize bg-purple-500/10 text-purple-600 border-purple-500/20">
                           Accelerator
                         </Badge>
-                        {accelerator.funding_amount && (
+                        {accelerator.program_format && (
+                          <Badge variant="outline">
+                            {accelerator.program_format}
+                          </Badge>
+                        )}
+                        {accelerator.funding_offered && (
                           <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20">
                             <DollarSign className="h-3 w-3 mr-1" />
-                            {accelerator.funding_amount}
+                            {accelerator.funding_offered}
                           </Badge>
                         )}
                       </div>
@@ -251,34 +262,85 @@ const AcceleratorProfilePage = () => {
             </CardHeader>
 
             <CardContent className="space-y-8">
+              <div className="grid gap-4 lg:grid-cols-[1.6fr_1fr]">
+                <div className="rounded-xl border border-border/60 bg-muted/20 p-5">
+                  <h3 className="mb-4 text-base font-semibold">Founder Fit Snapshot</h3>
+                  <div className="grid gap-3 text-sm">
+                    <div className="flex items-start justify-between gap-4">
+                      <span className="text-muted-foreground">Stage</span>
+                      <span className="text-right font-medium capitalize">{stageSummary.replaceAll('-', ' ')}</span>
+                    </div>
+                    <div className="flex items-start justify-between gap-4">
+                      <span className="text-muted-foreground">Sector</span>
+                      <span className="text-right font-medium">{sectorSummary || 'See profile'}</span>
+                    </div>
+                    <div className="flex items-start justify-between gap-4">
+                      <span className="text-muted-foreground">Format</span>
+                      <span className="text-right font-medium">{accelerator.program_format || 'See profile'}</span>
+                    </div>
+                    <div className="flex items-start justify-between gap-4">
+                      <span className="text-muted-foreground">Funding</span>
+                      <span className="text-right font-medium">{accelerator.funding_offered || accelerator.funding_amount || 'See profile'}</span>
+                    </div>
+                    <div className="flex items-start justify-between gap-4">
+                      <span className="text-muted-foreground">How to apply</span>
+                      <span className="text-right font-medium">{accelerator.application_deadline_info || 'Use the application page'}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="rounded-xl border border-border/60 bg-background p-5">
+                  <h3 className="mb-3 text-base font-semibold">Primary action</h3>
+                  <p className="text-sm leading-6 text-muted-foreground">
+                    Qualify the program on stage, sector, and geography first, then move directly to the application page.
+                  </p>
+                  {primaryActionUrl && (
+                    <Button asChild className="mt-4 w-full">
+                      <a href={primaryActionUrl} target="_blank" rel="noopener noreferrer">
+                        <ExternalLink className="h-4 w-4 mr-2" />
+                        {primaryActionLabel}
+                      </a>
+                    </Button>
+                  )}
+                  <div className="mt-4 space-y-2 text-sm">
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="text-muted-foreground">Duration</span>
+                      <span className="font-medium">{accelerator.program_duration || 'See profile'}</span>
+                    </div>
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="text-muted-foreground">Equity</span>
+                      <span className="font-medium">{accelerator.equity_taken || 'See profile'}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               {/* At a Glance */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 <div className="p-4 rounded-lg bg-muted/50 border text-center">
                   <DollarSign className="h-5 w-5 mx-auto mb-1.5 text-primary" />
-                  <p className="text-lg font-bold leading-tight">{accelerator.funding_amount || '—'}</p>
-                  <p className="text-xs text-muted-foreground mt-1">Investment</p>
-                </div>
-
-                <div className="p-4 rounded-lg bg-muted/50 border text-center">
-                  <MapPin className="h-5 w-5 mx-auto mb-1.5 text-primary" />
-                  <p className="text-lg font-bold leading-tight">
-                    {accelerator.location && accelerator.location.length > 0 ? accelerator.location[0] : '—'}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">Location</p>
+                  <p className="text-lg font-bold leading-tight">{accelerator.funding_offered || accelerator.funding_amount || '—'}</p>
+                  <p className="text-xs text-muted-foreground mt-1">Funding</p>
                 </div>
 
                 <div className="p-4 rounded-lg bg-muted/50 border text-center">
                   <Rocket className="h-5 w-5 mx-auto mb-1.5 text-purple-500" />
-                  <p className="text-lg font-bold leading-tight">Accelerator</p>
-                  <p className="text-xs text-muted-foreground mt-1">Program Type</p>
+                  <p className="text-lg font-bold leading-tight">{accelerator.program_format || '—'}</p>
+                  <p className="text-xs text-muted-foreground mt-1">Format</p>
+                </div>
+
+                <div className="p-4 rounded-lg bg-muted/50 border text-center">
+                  <Users className="h-5 w-5 mx-auto mb-1.5 text-blue-500" />
+                  <p className="text-lg font-bold leading-tight">{accelerator.equity_taken || '—'}</p>
+                  <p className="text-xs text-muted-foreground mt-1">Equity</p>
                 </div>
 
                 <div className="p-4 rounded-lg bg-muted/50 border text-center">
                   <Globe className="h-5 w-5 mx-auto mb-1.5 text-blue-500" />
                   <p className="text-lg font-bold leading-tight">
-                    {accelerator.location && accelerator.location.includes('Global') ? 'Yes' : 'Regional'}
+                    {accelerator.program_duration || '—'}
                   </p>
-                  <p className="text-xs text-muted-foreground mt-1">Global Reach</p>
+                  <p className="text-xs text-muted-foreground mt-1">Duration</p>
                 </div>
               </div>
 
@@ -292,14 +354,27 @@ const AcceleratorProfilePage = () => {
               </div>
 
               {/* What They Look For */}
-              {accelerator.keywords && accelerator.keywords.length > 0 && (
+              {(accelerator.focus_stage?.length || accelerator.focus_sectors?.length || accelerator.cohort_geography?.length || accelerator.keywords.length > 0) && (
                 <div className="border-t pt-6">
                   <h3 className="font-semibold text-lg mb-4">What They Look For</h3>
                   <div className="space-y-5">
+                    {accelerator.focus_stage && accelerator.focus_stage.length > 0 && (
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground mb-2">Best-fit Stage</p>
+                        <div className="flex flex-wrap gap-2">
+                          {accelerator.focus_stage.map((stage, idx) => (
+                            <Badge key={idx} variant="outline" className="px-3 py-1 text-sm capitalize">
+                              {stage}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
                     <div>
                       <p className="text-sm font-medium text-muted-foreground mb-2">Focus Areas & Keywords</p>
                       <div className="flex flex-wrap gap-2">
-                        {accelerator.keywords.map((keyword, idx) => (
+                        {(accelerator.focus_sectors && accelerator.focus_sectors.length > 0 ? accelerator.focus_sectors : accelerator.keywords).map((keyword, idx) => (
                           <Badge key={idx} variant="secondary" className="px-3 py-1 text-sm capitalize">
                             {keyword}
                           </Badge>
@@ -307,11 +382,11 @@ const AcceleratorProfilePage = () => {
                       </div>
                     </div>
 
-                    {accelerator.location && accelerator.location.length > 0 && (
+                    {(accelerator.cohort_geography?.length || accelerator.location.length > 0) && (
                       <div>
-                        <p className="text-sm font-medium text-muted-foreground mb-2">Geographic Focus</p>
+                        <p className="text-sm font-medium text-muted-foreground mb-2">Cohort Geography</p>
                         <div className="flex flex-wrap gap-3">
-                          {accelerator.location.map((loc, idx) => (
+                          {(accelerator.cohort_geography && accelerator.cohort_geography.length > 0 ? accelerator.cohort_geography : accelerator.location).map((loc, idx) => (
                             <span key={idx} className="flex items-center gap-1.5 text-sm">
                               <MapPin className="h-3.5 w-3.5 text-muted-foreground" />
                               {loc}
@@ -328,41 +403,41 @@ const AcceleratorProfilePage = () => {
               <div className="border-t pt-6">
                 <h3 className="font-semibold text-lg mb-4">What You Get</h3>
                 <div className="grid sm:grid-cols-2 gap-3">
-                  {accelerator.funding_amount && (
+                  {(accelerator.funding_offered || accelerator.funding_amount) && (
                     <div className="flex items-start gap-3 p-4 rounded-lg border bg-muted/30">
                       <DollarSign className="h-5 w-5 mt-0.5 text-green-500 shrink-0" />
                       <div>
-                        <p className="text-sm font-semibold">Funding: {accelerator.funding_amount}</p>
+                        <p className="text-sm font-semibold">Funding: {accelerator.funding_offered || accelerator.funding_amount}</p>
                         <p className="text-sm text-muted-foreground mt-0.5">
-                          Direct investment upon acceptance into the program.
+                          Founder-facing capital summary based on the current public program terms.
                         </p>
                       </div>
                     </div>
                   )}
                   <div className="flex items-start gap-3 p-4 rounded-lg border bg-muted/30">
-                    <Users className="h-5 w-5 mt-0.5 text-blue-500 shrink-0" />
+                    <Target className="h-5 w-5 mt-0.5 text-purple-500 shrink-0" />
                     <div>
-                      <p className="text-sm font-semibold">Mentorship & Network</p>
+                      <p className="text-sm font-semibold">Program Structure</p>
                       <p className="text-sm text-muted-foreground mt-0.5">
-                        Access to experienced mentors, investors, and a global alumni network.
+                        {accelerator.program_duration || 'Program-specific'} • {accelerator.program_format || 'Format varies by cohort'}
                       </p>
                     </div>
                   </div>
                   <div className="flex items-start gap-3 p-4 rounded-lg border bg-muted/30">
-                    <Target className="h-5 w-5 mt-0.5 text-purple-500 shrink-0" />
+                    <Users className="h-5 w-5 mt-0.5 text-blue-500 shrink-0" />
                     <div>
-                      <p className="text-sm font-semibold">Structured Program</p>
+                      <p className="text-sm font-semibold">Cohort Geography</p>
                       <p className="text-sm text-muted-foreground mt-0.5">
-                        Intensive curriculum designed to accelerate product-market fit and growth.
+                        {geographySummary || 'See application page for geography fit.'}
                       </p>
                     </div>
                   </div>
                   <div className="flex items-start gap-3 p-4 rounded-lg border bg-muted/30">
                     <CheckCircle className="h-5 w-5 mt-0.5 text-green-500 shrink-0" />
                     <div>
-                      <p className="text-sm font-semibold">Demo Day & Investor Access</p>
+                      <p className="text-sm font-semibold">Notable Alumni</p>
                       <p className="text-sm text-muted-foreground mt-0.5">
-                        Present to hundreds of investors at the program's culminating event.
+                        {alumni.length > 0 ? alumni.slice(0, 3).join(', ') : 'See program page for recent alumni examples.'}
                       </p>
                     </div>
                   </div>
@@ -376,22 +451,22 @@ const AcceleratorProfilePage = () => {
                   Everything you need to submit your application to {accelerator.title}.
                 </p>
 
-                <div className="flex items-start gap-3 p-4 rounded-lg border bg-muted/30 mb-4">
-                  <CheckCircle className="h-5 w-5 mt-0.5 text-green-500 shrink-0" />
-                  <div>
-                    <p className="text-sm font-semibold">Open Application</p>
-                    <p className="text-sm text-muted-foreground mt-0.5">
-                      {accelerator.title} accepts applications directly through their website. No warm introduction required.
-                    </p>
+                  <div className="flex items-start gap-3 p-4 rounded-lg border bg-muted/30 mb-4">
+                    <CheckCircle className="h-5 w-5 mt-0.5 text-green-500 shrink-0" />
+                    <div>
+                      <p className="text-sm font-semibold">{accelerator.application_deadline_info || 'Open application path'}</p>
+                      <p className="text-sm text-muted-foreground mt-0.5">
+                        {accelerator.title} accepts applications directly through its public program page. Use the fit snapshot above before applying.
+                      </p>
+                    </div>
                   </div>
-                </div>
 
-                <div className="flex flex-wrap gap-3 pt-2">
-                  {(accelerator.application_url || accelerator.url) && (
+                  <div className="flex flex-wrap gap-3 pt-2">
+                  {primaryActionUrl && (
                     <Button asChild>
-                      <a href={accelerator.application_url || accelerator.url} target="_blank" rel="noopener noreferrer">
+                      <a href={primaryActionUrl} target="_blank" rel="noopener noreferrer">
                         <ExternalLink className="h-4 w-4 mr-2" />
-                        Apply Now
+                        {primaryActionLabel}
                       </a>
                     </Button>
                   )}

@@ -15,26 +15,59 @@ const AcceleratorFilters = ({ filters, onFiltersChange, resultCount }: Accelerat
   const [showFilters, setShowFilters] = useState(false);
   const [searchTerm, setSearchTerm] = useState(filters.search || "");
 
-  const locations = ['United States', 'Europe', 'Asia', 'Global', 'Remote'];
-  const industries = ['Technology', 'Healthcare', 'Fintech', 'Consumer', 'Climate', 'AI/ML'];
+  const stages = ['idea', 'pre-seed', 'seed', 'series-a'];
+  const geographies = ['Global', 'United States', 'Europe', 'Latin America', 'Asia', 'Africa'];
+  const industries = ['AI', 'B2B SaaS', 'Fintech', 'Climate', 'Healthtech', 'Deep Tech', 'Developer Tools', 'Consumer'];
+  const formats = ['Remote', 'Hybrid', 'In-person'];
+  const equityOptions = ['No equity', 'Program equity', 'Varies'];
+
+  const selectedStages = filters.focus_stage || [];
+  const selectedSectors = filters.sectors || (filters.industry_focus ? [filters.industry_focus] : []);
+  const selectedGeographies = filters.geographies || (filters.location ? [filters.location] : []);
+  const selectedFormats = filters.formats || [];
+  const selectedEquity = filters.equity || [];
 
   const handleSearch = (value: string) => {
     setSearchTerm(value);
     onFiltersChange({ ...filters, search: value || undefined });
   };
 
-  const handleLocationToggle = (location: string) => {
+  const toggleMultiValue = (selected: string[], value: string) =>
+    selected.includes(value)
+      ? selected.filter((item) => item !== value)
+      : [...selected, value];
+
+  const handleStageToggle = (stage: string) => {
+    const next = toggleMultiValue(selectedStages, stage);
+    onFiltersChange({ ...filters, focus_stage: next.length > 0 ? next : undefined });
+  };
+
+  const handleGeographyToggle = (geography: string) => {
+    const next = toggleMultiValue(selectedGeographies, geography);
     onFiltersChange({
       ...filters,
-      location: filters.location === location ? undefined : location
+      location: undefined,
+      geographies: next.length > 0 ? next : undefined,
     });
   };
 
   const handleIndustryToggle = (industry: string) => {
+    const next = toggleMultiValue(selectedSectors, industry);
     onFiltersChange({
       ...filters,
-      industry_focus: filters.industry_focus === industry ? undefined : industry
+      industry_focus: undefined,
+      sectors: next.length > 0 ? next : undefined,
     });
+  };
+
+  const handleFormatToggle = (format: string) => {
+    const next = toggleMultiValue(selectedFormats, format);
+    onFiltersChange({ ...filters, formats: next.length > 0 ? next : undefined });
+  };
+
+  const handleEquityToggle = (equity: string) => {
+    const next = toggleMultiValue(selectedEquity, equity);
+    onFiltersChange({ ...filters, equity: next.length > 0 ? next : undefined });
   };
 
   const clearAllFilters = () => {
@@ -42,7 +75,15 @@ const AcceleratorFilters = ({ filters, onFiltersChange, resultCount }: Accelerat
     onFiltersChange({});
   };
 
-  const hasActiveFilters = filters.location || filters.industry_focus || filters.search;
+  const activeFilterCount = [
+    ...selectedStages,
+    ...selectedGeographies,
+    ...selectedSectors,
+    ...selectedFormats,
+    ...selectedEquity,
+    ...(filters.search ? [filters.search] : []),
+  ].length;
+  const hasActiveFilters = activeFilterCount > 0;
 
   return (
     <div className="mb-8 space-y-4">
@@ -80,7 +121,7 @@ const AcceleratorFilters = ({ filters, onFiltersChange, resultCount }: Accelerat
           {showFilters ? 'Hide Filters' : 'Show Filters'}
           {hasActiveFilters && (
             <Badge variant="secondary" className="ml-1">
-              {[filters.location, filters.industry_focus, filters.search].filter(Boolean).length}
+              {activeFilterCount}
             </Badge>
           )}
         </Button>
@@ -92,35 +133,82 @@ const AcceleratorFilters = ({ filters, onFiltersChange, resultCount }: Accelerat
       {/* Filter Options */}
       {showFilters && (
         <div className="border rounded-lg p-4 space-y-4 bg-muted/30">
-          {/* Location Filter */}
           <div>
-            <label className="text-sm font-medium mb-2 block">Location</label>
+            <label className="text-sm font-medium mb-2 block">Stage</label>
             <div className="flex flex-wrap gap-2">
-              {locations.map((location) => (
+              {stages.map((stage) => (
                 <Button
-                  key={location}
-                  variant={filters.location === location ? "default" : "outline"}
+                  key={stage}
+                  variant={selectedStages.includes(stage) ? "default" : "outline"}
                   size="sm"
-                  onClick={() => handleLocationToggle(location)}
+                  onClick={() => handleStageToggle(stage)}
+                  className="capitalize"
                 >
-                  {location}
+                  {stage.replace('-', ' ')}
                 </Button>
               ))}
             </div>
           </div>
 
-          {/* Industry Focus Filter */}
           <div>
-            <label className="text-sm font-medium mb-2 block">Industry Focus</label>
+            <label className="text-sm font-medium mb-2 block">Sector</label>
             <div className="flex flex-wrap gap-2">
               {industries.map((industry) => (
                 <Button
                   key={industry}
-                  variant={filters.industry_focus === industry ? "default" : "outline"}
+                  variant={selectedSectors.includes(industry) ? "default" : "outline"}
                   size="sm"
                   onClick={() => handleIndustryToggle(industry)}
                 >
                   {industry}
+                </Button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="text-sm font-medium mb-2 block">Geography</label>
+            <div className="flex flex-wrap gap-2">
+              {geographies.map((geography) => (
+                <Button
+                  key={geography}
+                  variant={selectedGeographies.includes(geography) ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => handleGeographyToggle(geography)}
+                >
+                  {geography}
+                </Button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="text-sm font-medium mb-2 block">Format</label>
+            <div className="flex flex-wrap gap-2">
+              {formats.map((format) => (
+                <Button
+                  key={format}
+                  variant={selectedFormats.includes(format) ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => handleFormatToggle(format)}
+                >
+                  {format}
+                </Button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="text-sm font-medium mb-2 block">Equity</label>
+            <div className="flex flex-wrap gap-2">
+              {equityOptions.map((equity) => (
+                <Button
+                  key={equity}
+                  variant={selectedEquity.includes(equity) ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => handleEquityToggle(equity)}
+                >
+                  {equity}
                 </Button>
               ))}
             </div>

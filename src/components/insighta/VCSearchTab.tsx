@@ -45,7 +45,18 @@ const VCSearchTab = () => {
 
   useEffect(() => {
     setPage(1);
-  }, [filters?.investment_stage, filters?.industry, filters?.geographic_focus, filters?.check_size_min, filters?.check_size_max, filters?.search]);
+  }, [
+    filters?.investment_stage,
+    filters?.industry,
+    filters?.geographic_focus,
+    filters?.check_size_min,
+    filters?.check_size_max,
+    filters?.search,
+    filters?.investment_stages?.join('|'),
+    filters?.industries?.join('|'),
+    filters?.geographies?.join('|'),
+    filters?.ticket_sizes?.join('|'),
+  ]);
 
   return (
     <div className="space-y-6">

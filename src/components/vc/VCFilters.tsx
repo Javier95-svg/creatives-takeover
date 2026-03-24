@@ -15,33 +15,67 @@ const VCFilters = ({ filters, onFiltersChange, resultCount }: VCFiltersProps) =>
   const [showFilters, setShowFilters] = useState(false);
   const [searchTerm, setSearchTerm] = useState(filters.search || "");
 
-  const investmentStages = ['pre-seed', 'seed', 'series-a', 'series-b', 'series-c+'];
-  const industries = ['Technology', 'Healthcare', 'Fintech', 'Consumer', 'Enterprise', 'Climate'];
-  const geographicFocus = ['United States', 'Europe', 'Asia', 'Global'];
+  const investmentStages = ['pre-seed', 'seed', 'series-a', 'series-b'];
+  const industries = ['AI', 'B2B SaaS', 'Fintech', 'Healthcare', 'Climate', 'Developer Tools', 'Consumer', 'Marketplace'];
+  const geographicFocus = ['United States', 'Europe', 'India', 'Latin America', 'Southeast Asia', 'Global'];
+  const ticketSizes = [
+    { key: 'under-250k', label: '<$250K', min: undefined, max: 250000 },
+    { key: '250k-1m', label: '$250K-$1M', min: 250000, max: 1000000 },
+    { key: '1m-5m', label: '$1M-$5M', min: 1000000, max: 5000000 },
+    { key: '5m-plus', label: '$5M+', min: 5000000, max: undefined },
+  ];
+
+  const selectedStages = filters.investment_stages || (filters.investment_stage ? [filters.investment_stage] : []);
+  const selectedIndustries = filters.industries || (filters.industry ? [filters.industry] : []);
+  const selectedGeographies = filters.geographies || (filters.geographic_focus ? [filters.geographic_focus] : []);
+  const selectedTicket = filters.ticket_sizes?.[0];
 
   const handleSearch = (value: string) => {
     setSearchTerm(value);
     onFiltersChange({ ...filters, search: value || undefined });
   };
 
+  const toggleMultiValue = (selected: string[], value: string) =>
+    selected.includes(value)
+      ? selected.filter((item) => item !== value)
+      : [...selected, value];
+
   const handleStageToggle = (stage: string) => {
+    const nextStages = toggleMultiValue(selectedStages, stage);
     onFiltersChange({
       ...filters,
-      investment_stage: filters.investment_stage === stage ? undefined : stage
+      investment_stage: undefined,
+      investment_stages: nextStages.length > 0 ? nextStages : undefined,
     });
   };
 
   const handleIndustryToggle = (industry: string) => {
+    const nextIndustries = toggleMultiValue(selectedIndustries, industry);
     onFiltersChange({
       ...filters,
-      industry: filters.industry === industry ? undefined : industry
+      industry: undefined,
+      industries: nextIndustries.length > 0 ? nextIndustries : undefined,
     });
   };
 
   const handleGeographicToggle = (geo: string) => {
+    const nextGeographies = toggleMultiValue(selectedGeographies, geo);
     onFiltersChange({
       ...filters,
-      geographic_focus: filters.geographic_focus === geo ? undefined : geo
+      geographic_focus: undefined,
+      geographies: nextGeographies.length > 0 ? nextGeographies : undefined,
+    });
+  };
+
+  const handleTicketToggle = (ticketKey: string) => {
+    const selectedOption = ticketSizes.find((ticket) => ticket.key === ticketKey);
+    const shouldClear = selectedTicket === ticketKey;
+
+    onFiltersChange({
+      ...filters,
+      ticket_sizes: shouldClear ? undefined : [ticketKey],
+      check_size_min: shouldClear ? undefined : selectedOption?.min,
+      check_size_max: shouldClear ? undefined : selectedOption?.max,
     });
   };
 
@@ -50,7 +84,14 @@ const VCFilters = ({ filters, onFiltersChange, resultCount }: VCFiltersProps) =>
     onFiltersChange({});
   };
 
-  const hasActiveFilters = filters.investment_stage || filters.industry || filters.geographic_focus || filters.search;
+  const activeFilterCount = [
+    ...selectedStages,
+    ...selectedIndustries,
+    ...selectedGeographies,
+    ...(selectedTicket ? [selectedTicket] : []),
+    ...(filters.search ? [filters.search] : []),
+  ].length;
+  const hasActiveFilters = activeFilterCount > 0;
 
   return (
     <div className="mb-8 space-y-4">
@@ -88,7 +129,7 @@ const VCFilters = ({ filters, onFiltersChange, resultCount }: VCFiltersProps) =>
           {showFilters ? 'Hide Filters' : 'Show Filters'}
           {hasActiveFilters && (
             <Badge variant="secondary" className="ml-1">
-              {[filters.investment_stage, filters.industry, filters.geographic_focus, filters.search].filter(Boolean).length}
+              {activeFilterCount}
             </Badge>
           )}
         </Button>
@@ -107,12 +148,12 @@ const VCFilters = ({ filters, onFiltersChange, resultCount }: VCFiltersProps) =>
               {investmentStages.map((stage) => (
                 <Button
                   key={stage}
-                  variant={filters.investment_stage === stage ? "default" : "outline"}
+                  variant={selectedStages.includes(stage) ? "default" : "outline"}
                   size="sm"
                   onClick={() => handleStageToggle(stage)}
                   className="capitalize"
                 >
-                  {stage}
+                  {stage.replace('-', ' ')}
                 </Button>
               ))}
             </div>
@@ -125,7 +166,7 @@ const VCFilters = ({ filters, onFiltersChange, resultCount }: VCFiltersProps) =>
               {industries.map((industry) => (
                 <Button
                   key={industry}
-                  variant={filters.industry === industry ? "default" : "outline"}
+                  variant={selectedIndustries.includes(industry) ? "default" : "outline"}
                   size="sm"
                   onClick={() => handleIndustryToggle(industry)}
                 >
@@ -142,11 +183,27 @@ const VCFilters = ({ filters, onFiltersChange, resultCount }: VCFiltersProps) =>
               {geographicFocus.map((geo) => (
                 <Button
                   key={geo}
-                  variant={filters.geographic_focus === geo ? "default" : "outline"}
+                  variant={selectedGeographies.includes(geo) ? "default" : "outline"}
                   size="sm"
                   onClick={() => handleGeographicToggle(geo)}
                 >
                   {geo}
+                </Button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="text-sm font-medium mb-2 block">Ticket Size</label>
+            <div className="flex flex-wrap gap-2">
+              {ticketSizes.map((ticket) => (
+                <Button
+                  key={ticket.key}
+                  variant={selectedTicket === ticket.key ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => handleTicketToggle(ticket.key)}
+                >
+                  {ticket.label}
                 </Button>
               ))}
             </div>

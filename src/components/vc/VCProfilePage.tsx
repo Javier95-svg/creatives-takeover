@@ -127,6 +127,18 @@ const VCProfilePage = () => {
     return `$${min}M - $${max}M`;
   };
 
+  const primaryAction = vc.email
+    ? {
+        label: "Contact",
+        href: `mailto:${vc.email}`,
+      }
+    : (vc.application_url || vc.firm_website)
+      ? {
+          label: vc.application_url ? "Apply Now" : "Visit Website",
+          href: vc.application_url || vc.firm_website!,
+        }
+      : null;
+
   const handleLogoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file || !vc) {
@@ -274,12 +286,68 @@ const VCProfilePage = () => {
                     )}
                   </div>
                 </div>
+                {primaryAction && (
+                  <Button asChild className="shrink-0">
+                    <a href={primaryAction.href} target={primaryAction.href.startsWith('mailto:') ? undefined : "_blank"} rel={primaryAction.href.startsWith('mailto:') ? undefined : "noopener noreferrer"}>
+                      {primaryAction.label}
+                      <ExternalLink className="h-4 w-4 ml-2" />
+                    </a>
+                  </Button>
+                )}
               </div>
             </div>
           </div>
         </CardHeader>
 
       <CardContent className="space-y-8">
+        <div className="grid gap-4 lg:grid-cols-[1.6fr_1fr]">
+          <div className="rounded-xl border border-border/60 bg-muted/20 p-5">
+            <h3 className="mb-4 text-base font-semibold">Founder Fit Snapshot</h3>
+            <div className="grid gap-3 text-sm">
+              <div className="flex items-start justify-between gap-4">
+                <span className="text-muted-foreground">Stage</span>
+                <span className="text-right font-medium capitalize">{vc.investment_stages.join(', ').replaceAll('-', ' ')}</span>
+              </div>
+              <div className="flex items-start justify-between gap-4">
+                <span className="text-muted-foreground">Sector</span>
+                <span className="text-right font-medium">{vc.industries.slice(0, 4).join(', ')}</span>
+              </div>
+              <div className="flex items-start justify-between gap-4">
+                <span className="text-muted-foreground">Ticket size</span>
+                <span className="text-right font-medium">{formatCheckSize()}</span>
+              </div>
+              <div className="flex items-start justify-between gap-4">
+                <span className="text-muted-foreground">Geography</span>
+                <span className="text-right font-medium">{vc.geographic_focus.join(', ')}</span>
+              </div>
+              <div className="flex items-start justify-between gap-4">
+                <span className="text-muted-foreground">How to apply</span>
+                <span className="text-right font-medium">
+                  {vc.email ? vc.email : vc.application_url ? 'Direct application or contact page' : 'Website outreach'}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-border/60 bg-background p-5">
+            <h3 className="mb-3 text-base font-semibold">Best outreach path</h3>
+            <p className="text-sm leading-6 text-muted-foreground">
+              {vc.requires_warm_intro
+                ? `${vc.firm_name} tends to prefer qualified introductions. If you do not have one, qualify fit first and use the firm website carefully.`
+                : `${vc.firm_name} is a viable cold-outreach target if your stage, sector, and geography align with the profile above.`}
+            </p>
+            <div className="mt-4 space-y-2 text-sm">
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-muted-foreground">Primary CTA</span>
+                <span className="font-medium">{primaryAction?.label || 'View profile details'}</span>
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-muted-foreground">Warm intro</span>
+                <span className="font-medium">{vc.requires_warm_intro ? 'Recommended' : 'Not required'}</span>
+              </div>
+            </div>
+          </div>
+        </div>
 
         {/* ── At a Glance: key numbers ── */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -581,7 +649,7 @@ const VCProfilePage = () => {
                   Generate a personalized pitch deck, cold email, or one-pager tailored
                   to {vc.firm_name}'s investment focus.
                 </p>
-                <Button size="lg" className="w-full sm:w-auto">
+                <Button size="lg" variant="outline" className="w-full sm:w-auto">
                   <Send className="h-4 w-4 mr-2" />
                   Generate Outreach Materials
                 </Button>
