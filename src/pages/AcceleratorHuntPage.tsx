@@ -70,7 +70,7 @@ export default function AcceleratorHuntPage() {
                 Accelerator Hunt
               </h1>
               <p className="text-lg sm:text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed animate-fade-in px-4" style={{ animationDelay: '0.3s' }}>
-                Discover accelerator programs offering funding,<span className="gradient-text font-semibold" style={{ lineHeight: 'inherit', marginLeft: '0.25rem' }}> mentorship, and resources.</span>
+                Discover accelerator programs offering<span className="gradient-text font-semibold" style={{ lineHeight: 'inherit', marginLeft: '0.25rem' }}> funding, mentorship, and resources.</span>
               </p>
             </div>
 
