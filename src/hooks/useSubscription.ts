@@ -1,6 +1,7 @@
 ﻿import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import type { Database, Json } from '@/integrations/supabase/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { ADMIN_SUBSCRIPTION, isAdminEmail } from '@/lib/admin';
@@ -17,7 +18,14 @@ export interface SubscriptionTier {
   tier_name: string;
   monthly_credits: number;
   price_cents: number;
-  features: any; // Use any for Json type from Supabase
+  stripe_price_id?: string | null;
+  stripe_payment_link?: string | null;
+  stripe_payment_link_monthly?: string | null;
+  stripe_payment_link_yearly?: string | null;
+  monthly_payment_link?: string | null;
+  yearly_payment_link?: string | null;
+  [key: string]: unknown;
+  features: Json | null;
 }
 
 export interface CheckoutPrefill {
@@ -46,6 +54,8 @@ type StoredBillingDetails = Partial<{
   country: string;
 }>;
 
+type CreditPackRow = Database['public']['Tables']['credit_packs']['Row'];
+
 const DEFAULT_SUBSCRIPTION: SubscriptionData = {
   subscribed: false,
   subscription_tier: 'free',
@@ -67,6 +77,76 @@ const normalizeSubscriptionData = (
   };
 };
 
+const normalizePaymentLink = (value: unknown): string | null => {
+  if (typeof value !== 'string') return null;
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
+};
+
+const normalizeTierRow = (row: Record<string, unknown>): SubscriptionTier => {
+  const rawName = (row.tier_name || row.name || row.slug || '') as string;
+  const tier_name = String(rawName).trim().toLowerCase();
+
+  const monthly_credits = Number(row.monthly_credits ?? row.credits ?? 0) || 0;
+  const price_cents = Number(row.price_cents ?? row.price ?? 0) || 0;
+
+  let features: Json = (row.features ?? row.feature_set ?? []) as Json;
+  if (typeof features === 'string') {
+    try {
+      features = JSON.parse(features) as Json;
+    } catch {
+      features = features.split(',').map((s: string) => s.trim()).filter(Boolean);
+    }
+  }
+
+  return {
+    tier_name,
+    monthly_credits,
+    price_cents,
+    stripe_price_id: typeof row.stripe_price_id === 'string' ? row.stripe_price_id : null,
+    stripe_payment_link: normalizePaymentLink(row.stripe_payment_link),
+    stripe_payment_link_monthly: normalizePaymentLink(
+      row.stripe_payment_link_monthly ?? row.monthly_stripe_payment_link ?? row.monthly_payment_link
+    ),
+    stripe_payment_link_yearly: normalizePaymentLink(
+      row.stripe_payment_link_yearly ?? row.yearly_stripe_payment_link ?? row.yearly_payment_link ?? row.annual_payment_link
+    ),
+    monthly_payment_link: normalizePaymentLink(row.monthly_payment_link),
+    yearly_payment_link: normalizePaymentLink(row.yearly_payment_link ?? row.annual_payment_link),
+    features
+  } as SubscriptionTier;
+};
+
+const resolveTierPaymentLink = (
+  tier: SubscriptionTier | null | undefined,
+  billingCycle: CheckoutBillingCycle
+) => {
+  if (!tier) return null;
+
+  const candidates = billingCycle === 'yearly'
+    ? [
+      tier.stripe_payment_link_yearly,
+      tier.yearly_payment_link,
+      tier.stripe_payment_link,
+    ]
+    : [
+      tier.stripe_payment_link_monthly,
+      tier.monthly_payment_link,
+      tier.stripe_payment_link,
+    ];
+
+  for (const candidate of candidates) {
+    const link = normalizePaymentLink(candidate);
+    if (link) return link;
+  }
+
+  return null;
+};
+
+const resolveCreditPackPaymentLink = (pack: CreditPackRow | null | undefined) => {
+  return normalizePaymentLink(pack?.stripe_payment_link);
+};
+
 export function useSubscription() {
   const { user } = useAuth();
   const [actionLoading, setActionLoading] = useState(false);
@@ -81,29 +161,7 @@ export function useSubscription() {
       return [];
     }
 
-    const normalized: SubscriptionTier[] = (data || []).map((row: any) => {
-      const rawName = (row.tier_name || row.name || row.slug || '') as string;
-      const tier_name = String(rawName).trim().toLowerCase();
-
-      const monthly_credits = Number(row.monthly_credits ?? row.credits ?? 0) || 0;
-      const price_cents = Number(row.price_cents ?? row.price ?? 0) || 0;
-
-      let features: any = row.features ?? row.feature_set ?? [];
-      if (typeof features === 'string') {
-        try {
-          features = JSON.parse(features);
-        } catch (err) {
-          features = features.split(',').map((s: string) => s.trim()).filter(Boolean);
-        }
-      }
-
-      return {
-        tier_name,
-        monthly_credits,
-        price_cents,
-        features
-      } as SubscriptionTier;
-    });
+    const normalized: SubscriptionTier[] = (data || []).map((row) => normalizeTierRow(row as Record<string, unknown>));
 
     const filtered = normalized.filter(tier => tier.tier_name !== 'enterprise');
     filtered.sort((a, b) => (a.price_cents ?? 0) - (b.price_cents ?? 0));
@@ -173,6 +231,43 @@ export function useSubscription() {
   const openCheckout = (url: string) => {
     if (typeof window === 'undefined') return;
     window.location.assign(url);
+  };
+
+  const fetchTierByName = async (tierName: string) => {
+    const normalizedTierName = String(tierName).trim().toLowerCase();
+    const cachedTier = tiersQuery.data?.find(
+      (tier) => String(tier.tier_name).trim().toLowerCase() === normalizedTierName
+    );
+    if (cachedTier) return cachedTier;
+
+    const { data, error } = await supabase
+      .from('subscription_tiers')
+      .select('*')
+      .eq('tier_name', normalizedTierName)
+      .maybeSingle();
+
+    if (error) {
+      console.error('Error fetching subscription tier payment link:', error);
+      return null;
+    }
+
+    return data ? normalizeTierRow(data) : null;
+  };
+
+  const fetchCreditPackById = async (packId: string) => {
+    const { data, error } = await supabase
+      .from('credit_packs')
+      .select('*')
+      .eq('id', packId)
+      .eq('active', true)
+      .maybeSingle();
+
+    if (error) {
+      console.error('Error fetching credit pack payment link:', error);
+      return null;
+    }
+
+    return data;
   };
 
   const createCheckout = async (
@@ -252,7 +347,7 @@ export function useSubscription() {
         const city = trim(address.city);
         const state = trim(address.state);
         const postal = trim(address.postal_code);
-        let country = trim(address.country);
+        const country = trim(address.country);
         if (country) {
           sanitizedAddress.country = country.toUpperCase();
         }
@@ -293,6 +388,13 @@ export function useSubscription() {
 
     try {
       setActionLoading(true);
+      const tierRecord = await fetchTierByName(tier);
+      const paymentLink = resolveTierPaymentLink(tierRecord, billingCycle);
+      if (paymentLink) {
+        openCheckout(paymentLink);
+        return paymentLink;
+      }
+
       const sessionResp = await supabase.auth.getSession();
       const accessToken = sessionResp?.data?.session?.access_token;
       if (!accessToken) {
@@ -352,6 +454,12 @@ export function useSubscription() {
 
     try {
       setActionLoading(true);
+      const creditPack = await fetchCreditPackById(packId);
+      const paymentLink = resolveCreditPackPaymentLink(creditPack);
+      if (paymentLink) {
+        openCheckout(paymentLink);
+        return paymentLink;
+      }
       const sessionResp = await supabase.auth.getSession();
       const accessToken = sessionResp?.data?.session?.access_token;
       if (!accessToken) {
@@ -452,11 +560,12 @@ export function useSubscription() {
       try {
         const parsed = JSON.parse(raw);
         if (Array.isArray(parsed)) featureList = parsed.map(String);
-      } catch (err) {
+      } catch {
         featureList = raw.split(',').map(s => s.trim()).filter(Boolean);
       }
     } else if (raw && typeof raw === 'object') {
-      featureList = Object.keys(raw).filter(k => raw[k]);
+      const rawRecord = raw as Record<string, unknown>;
+      featureList = Object.keys(rawRecord).filter(k => Boolean(rawRecord[k]));
     }
 
     return featureList.includes(feature);
@@ -466,7 +575,7 @@ export function useSubscription() {
     if (!subscriptionData.subscription_end) return null;
 
     try {
-      let end = subscriptionData.subscription_end as any;
+      let end: string | number | Date = subscriptionData.subscription_end as string | number | Date;
 
       if (typeof end === 'number') {
         if (end < 1e12) end = end * 1000;
