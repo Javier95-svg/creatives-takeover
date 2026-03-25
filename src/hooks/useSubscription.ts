@@ -230,7 +230,25 @@ export function useSubscription() {
 
   const openCheckout = (url: string) => {
     if (typeof window === 'undefined') return;
-    window.location.assign(url);
+    try {
+      const checkoutUrl = new URL(url);
+      const isStripePaymentLink = checkoutUrl.hostname.toLowerCase() === 'buy.stripe.com';
+
+      if (isStripePaymentLink) {
+        if (user?.email && !checkoutUrl.searchParams.has('prefilled_email')) {
+          checkoutUrl.searchParams.set('prefilled_email', user.email);
+        }
+
+        if (user?.id && !checkoutUrl.searchParams.has('client_reference_id')) {
+          checkoutUrl.searchParams.set('client_reference_id', user.id);
+        }
+      }
+
+      window.location.assign(checkoutUrl.toString());
+    } catch (error) {
+      console.warn('Unable to enrich checkout URL, redirecting as-is', error);
+      window.location.assign(url);
+    }
   };
 
   const fetchTierByName = async (tierName: string) => {

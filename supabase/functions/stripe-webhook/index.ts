@@ -147,6 +147,205 @@ const resolveSubscriptionBillingCycle = (subscription: any): BillingCycle => {
     : "monthly";
 };
 
+const mergeMetadata = (...sources: Array<Record<string, unknown> | null | undefined>) => {
+  return sources.reduce<Record<string, unknown>>((acc, source) => {
+    if (!source) return acc;
+
+    for (const [key, value] of Object.entries(source)) {
+      if (value !== undefined && value !== null) {
+        acc[key] = value;
+      }
+    }
+
+    return acc;
+  }, {});
+};
+
+const getMetadataString = (
+  metadata: Record<string, unknown> | null | undefined,
+  keys: string[]
+): string | null => {
+  if (!metadata) return null;
+
+  for (const key of keys) {
+    const value = metadata[key];
+    if (typeof value === "string" && value.trim().length > 0) {
+      return value.trim();
+    }
+  }
+
+  return null;
+};
+
+const parsePositiveInteger = (value: unknown): number | null => {
+  if (typeof value === "number" && Number.isFinite(value) && value > 0) {
+    return Math.floor(value);
+  }
+
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+    const parsed = Number(trimmed);
+    if (Number.isFinite(parsed) && parsed > 0) {
+      return Math.floor(parsed);
+    }
+  }
+
+  return null;
+};
+
+const getPaymentLinkMetadata = async (paymentLinkId: string | null | undefined) => {
+  if (!paymentLinkId) return {} as Record<string, unknown>;
+
+  try {
+    const paymentLink = await stripe.paymentLinks.retrieve(paymentLinkId);
+    return (paymentLink.metadata ?? {}) as Record<string, unknown>;
+  } catch (error) {
+    console.error("[Webhook] Unable to load payment link metadata:", error);
+    return {} as Record<string, unknown>;
+  }
+};
+
+const getCreditPackByLookup = async (
+  supabaseAdmin: any,
+  {
+    packId,
+    credits,
+    amountCents,
+  }: {
+    packId?: string | null;
+    credits?: number | null;
+    amountCents?: number | null;
+  }
+) => {
+  if (packId) {
+    const { data } = await supabaseAdmin
+      .from("credit_packs")
+      .select("id, credits, price_cents, label")
+      .eq("id", packId)
+      .eq("active", true)
+      .maybeSingle();
+
+    if (data) return data;
+  }
+
+  if (credits) {
+    const { data } = await supabaseAdmin
+      .from("credit_packs")
+      .select("id, credits, price_cents, label")
+      .eq("credits", credits)
+      .eq("active", true)
+      .maybeSingle();
+
+    if (data) return data;
+  }
+
+  if (amountCents) {
+    const { data } = await supabaseAdmin
+      .from("credit_packs")
+      .select("id, credits, price_cents, label")
+      .eq("price_cents", amountCents)
+      .eq("active", true)
+      .maybeSingle();
+
+    if (data) return data;
+  }
+
+  return null;
+};
+
+const resolveCreditPackPurchase = async (
+  supabaseAdmin: any,
+  metadata: Record<string, unknown>,
+  amountCents: number | null
+) => {
+  const packId = getMetadataString(metadata, ["pack_id", "packId"]);
+  const metadataCredits = parsePositiveInteger(
+    getMetadataString(metadata, ["credits", "credit_amount", "creditAmount", "top_up_credits"])
+  );
+
+  const pack = await getCreditPackByLookup(supabaseAdmin, {
+    packId,
+    credits: metadataCredits,
+    amountCents,
+  });
+
+  if (pack) {
+    return {
+      id: String(pack.id),
+      credits: Number(pack.credits),
+      price_cents: Number(pack.price_cents),
+      label: typeof pack.label === "string" ? pack.label : null,
+    };
+  }
+
+  if (packId && CREDIT_PACK_CREDITS[packId]) {
+    return {
+      id: packId,
+      credits: CREDIT_PACK_CREDITS[packId],
+      price_cents: amountCents ?? 0,
+      label: null,
+    };
+  }
+
+  if (metadataCredits) {
+    return {
+      id: packId ?? `credits_${metadataCredits}`,
+      credits: metadataCredits,
+      price_cents: amountCents ?? 0,
+      label: null,
+    };
+  }
+
+  return null;
+};
+
+const getExistingCreditPurchase = async (
+  supabaseAdmin: any,
+  userId: string,
+  idempotencyKey: string
+) => {
+  const { data } = await supabaseAdmin
+    .from("credit_transactions")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("tx_type", "purchase")
+    .eq("feature", "Credit Pack")
+    .contains("metadata", { idempotencyKey })
+    .maybeSingle();
+
+  return data;
+};
+
+const createCreditPurchaseNotification = async (
+  supabaseAdmin: any,
+  {
+    userId,
+    creditsAdded,
+    packId,
+  }: {
+    userId: string;
+    creditsAdded: number;
+    packId: string;
+  }
+) => {
+  try {
+    await supabaseAdmin.from("community_notifications").insert({
+      user_id: userId,
+      actor_id: userId,
+      notification_type: "credit_purchase_completed",
+      metadata: {
+        creditsAdded,
+        packId,
+        route: "/pricing#credit-packs",
+        message: `${creditsAdded} credits were added to your balance.`,
+      },
+    });
+  } catch (error) {
+    console.error("[CreditPack] Unable to create confirmation notification:", error);
+  }
+};
+
 const syncSubscriptionState = async (
   supabaseAdmin: any,
   {
@@ -259,15 +458,22 @@ async function handleCheckoutCompleted(session: any, supabaseAdmin: any) {
   console.log("[Checkout] Processing checkout.session.completed");
 
   const customerId = typeof session.customer === "string" ? session.customer : null;
+  const paymentLinkId = typeof session.payment_link === "string" ? session.payment_link : null;
+  const paymentLinkMetadata = await getPaymentLinkMetadata(paymentLinkId);
+  const combinedMetadata = mergeMetadata(
+    paymentLinkMetadata,
+    session.metadata as Record<string, unknown> | null | undefined
+  );
+
   const customerEmailFromSession =
     typeof session.customer_details?.email === "string"
       ? session.customer_details.email
-      : (typeof session.metadata?.user_email === "string" ? session.metadata.user_email : null);
+      : getMetadataString(combinedMetadata, ["user_email", "customer_email"]);
   const customerContext = await getStripeCustomerContext(customerId);
   const customerEmail = customerEmailFromSession ?? customerContext.email;
-  const explicitUserId = typeof session.metadata?.user_id === "string"
-    ? session.metadata.user_id
-    : (typeof session.client_reference_id === "string" ? session.client_reference_id : null);
+  const explicitUserId =
+    getMetadataString(combinedMetadata, ["user_id"]) ??
+    (typeof session.client_reference_id === "string" ? session.client_reference_id : null);
   const resolvedUserId = await resolveUserId(supabaseAdmin, {
     explicitUserId,
     customerId,
@@ -276,27 +482,52 @@ async function handleCheckoutCompleted(session: any, supabaseAdmin: any) {
   });
 
   if (session.mode === "payment") {
-    await handleCreditPackPurchase(session, supabaseAdmin, resolvedUserId, customerEmail, customerId);
+    await handleCreditPackPurchase({
+      supabaseAdmin,
+      resolvedUserId,
+      customerEmail,
+      customerId,
+      metadata: combinedMetadata,
+      amountCents: Number(session.amount_total ?? session.amount_subtotal ?? 0) || null,
+      checkoutSessionId: typeof session.id === "string" ? session.id : null,
+      paymentIntentId: typeof session.payment_intent === "string" ? session.payment_intent : null,
+      paymentLinkId,
+      sourceEventType: "checkout.session.completed",
+    });
     return;
   }
 
-  const tier = normalizeSubscriptionTier(session.metadata?.tier ?? session.metadata?.subscription_tier);
-  const billingCycle = normalizeBillingCycle(session.metadata?.billing_cycle);
+  const metadataTier = getMetadataString(combinedMetadata, ["tier", "subscription_tier"]);
+  const metadataBillingCycle = getMetadataString(combinedMetadata, ["billing_cycle"]);
+
+  let tier = metadataTier ? normalizeSubscriptionTier(metadataTier) : "free";
+  let billingCycle: BillingCycle = metadataBillingCycle
+    ? normalizeBillingCycle(metadataBillingCycle)
+    : "monthly";
+  let subscriptionEnd: string | null = null;
+
+  if (typeof session.subscription === "string") {
+    const subscription = await stripe.subscriptions.retrieve(session.subscription);
+    subscriptionEnd = new Date(subscription.current_period_end * 1000).toISOString();
+
+    if (!metadataTier) {
+      tier = resolveSubscriptionTier(subscription);
+    }
+
+    if (!metadataBillingCycle) {
+      billingCycle = resolveSubscriptionBillingCycle(subscription);
+    }
+  }
 
   if (!resolvedUserId || !customerEmail || tier === "free") {
     console.error("[Checkout] Missing subscription context", {
       resolvedUserId,
       customerEmail,
       tier,
-      metadata: session.metadata,
+      metadata: combinedMetadata,
+      paymentLinkId,
     });
     return;
-  }
-
-  let subscriptionEnd: string | null = null;
-  if (typeof session.subscription === "string") {
-    const subscription = await stripe.subscriptions.retrieve(session.subscription);
-    subscriptionEnd = new Date(subscription.current_period_end * 1000).toISOString();
   }
 
   await syncSubscriptionState(supabaseAdmin, {
@@ -313,18 +544,51 @@ async function handleCheckoutCompleted(session: any, supabaseAdmin: any) {
   console.log(`[Checkout] Subscription synced for ${resolvedUserId} (${tier}, ${billingCycle})`);
 }
 
-async function handleCreditPackPurchase(
-  session: any,
-  supabaseAdmin: any,
-  resolvedUserId: string | null,
-  customerEmail: string | null,
-  customerId: string | null
-) {
-  console.log("[CreditPack] Processing one-time credit pack purchase");
+async function handleCreditPackPurchase({
+  supabaseAdmin,
+  resolvedUserId,
+  customerEmail,
+  customerId,
+  metadata,
+  amountCents,
+  checkoutSessionId,
+  paymentIntentId,
+  paymentLinkId,
+  sourceEventType,
+}: {
+  supabaseAdmin: any;
+  resolvedUserId: string | null;
+  customerEmail: string | null;
+  customerId: string | null;
+  metadata: Record<string, unknown>;
+  amountCents: number | null;
+  checkoutSessionId: string | null;
+  paymentIntentId: string | null;
+  paymentLinkId: string | null;
+  sourceEventType: string;
+}) {
+  console.log("[CreditPack] Processing credit pack purchase");
 
-  const packId = typeof session.metadata?.pack_id === "string" ? session.metadata.pack_id : null;
-  if (!packId || !CREDIT_PACK_CREDITS[packId]) {
-    console.error("[CreditPack] Invalid or missing pack_id in metadata:", session.metadata);
+  const purchaseType = getMetadataString(metadata, ["purchase_type"]);
+  const explicitPackId = getMetadataString(metadata, ["pack_id", "packId"]);
+  const explicitCredits = parsePositiveInteger(
+    getMetadataString(metadata, ["credits", "credit_amount", "creditAmount", "top_up_credits"])
+  );
+
+  if (purchaseType !== "credit_pack" && !paymentLinkId && !explicitPackId && !explicitCredits) {
+    console.log("[CreditPack] Skipping non-credit-pack payment event");
+    return;
+  }
+
+  const purchase = await resolveCreditPackPurchase(supabaseAdmin, metadata, amountCents);
+  if (!purchase) {
+    console.error("[CreditPack] Unable to resolve purchased credit pack", {
+      metadata,
+      amountCents,
+      paymentLinkId,
+      checkoutSessionId,
+      paymentIntentId,
+    });
     return;
   }
 
@@ -332,55 +596,163 @@ async function handleCreditPackPurchase(
     console.error("[CreditPack] Could not resolve user for purchase", {
       customerEmail,
       customerId,
-      metadata: session.metadata,
+      metadata,
+      amountCents,
+      paymentLinkId,
     });
     return;
   }
 
-  const creditsToAdd = CREDIT_PACK_CREDITS[packId];
-
-  const { error: rpcError } = await supabaseAdmin.rpc("increment_credit_balance", {
-    p_user_id: resolvedUserId,
-    p_amount: creditsToAdd,
+  const purchaseReference = paymentIntentId ?? checkoutSessionId ?? `${purchase.id}:${resolvedUserId}`;
+  const idempotencyKey = `stripe:credit_purchase:${purchaseReference}`;
+  const idempotencyStatus = await supabaseAdmin.rpc("idempotency_try_begin", {
+    p_id: idempotencyKey,
   });
 
-  if (rpcError) {
-    console.warn("[CreditPack] RPC increment failed, using fallback:", rpcError.message);
-    const { data: currentCredits } = await supabaseAdmin
-      .from("user_credits")
-      .select("balance")
-      .eq("user_id", resolvedUserId)
-      .maybeSingle();
-
-    const newBalance = Number(currentCredits?.balance ?? 0) + creditsToAdd;
-    const { error: fallbackError } = await supabaseAdmin
-      .from("user_credits")
-      .upsert({
-        user_id: resolvedUserId,
-        balance: newBalance,
-      }, { onConflict: "user_id" });
-
-    if (fallbackError) {
-      console.error("[CreditPack] Fallback credit update failed:", fallbackError);
-      throw fallbackError;
+  if (idempotencyStatus !== "started") {
+    const existingPurchase = await getExistingCreditPurchase(supabaseAdmin, resolvedUserId, idempotencyKey);
+    if (existingPurchase && idempotencyStatus !== "completed") {
+      await supabaseAdmin.rpc("idempotency_mark_completed", {
+        p_id: idempotencyKey,
+        p_result: {
+          status: "already_recorded",
+          transactionId: existingPurchase.id,
+        },
+      });
     }
+
+    console.log(`[CreditPack] Skipping duplicate purchase event (${idempotencyStatus})`, {
+      idempotencyKey,
+      resolvedUserId,
+    });
+    return;
   }
 
-  await supabaseAdmin.from("credit_transactions").insert({
-    user_id: resolvedUserId,
-    amount: creditsToAdd,
-    tx_type: "purchase",
-    reason: `Credit pack purchase: ${packId} (${creditsToAdd} credits)`,
-    feature: "Credit Pack",
-    metadata: {
-      packId,
-      stripeSessionId: session.id,
-      customerEmail,
-      customerId,
-    },
+  try {
+    const { error: rpcError } = await supabaseAdmin.rpc("increment_credit_balance", {
+      p_user_id: resolvedUserId,
+      p_amount: purchase.credits,
+    });
+
+    if (rpcError) {
+      console.warn("[CreditPack] RPC increment failed, using fallback:", rpcError.message);
+      const { data: currentCredits } = await supabaseAdmin
+        .from("user_credits")
+        .select("balance, monthly_quota, subscription_tier, last_reset_at")
+        .eq("user_id", resolvedUserId)
+        .maybeSingle();
+
+      const nextBalance = Number(currentCredits?.balance ?? 0) + purchase.credits;
+      const { error: fallbackError } = await supabaseAdmin
+        .from("user_credits")
+        .upsert({
+          user_id: resolvedUserId,
+          balance: nextBalance,
+          monthly_quota: Number(currentCredits?.monthly_quota ?? 25),
+          subscription_tier: currentCredits?.subscription_tier ?? "free",
+          last_reset_at: currentCredits?.last_reset_at ?? new Date().toISOString(),
+        }, { onConflict: "user_id" });
+
+      if (fallbackError) {
+        console.error("[CreditPack] Fallback credit update failed:", fallbackError);
+        throw fallbackError;
+      }
+    }
+
+    await supabaseAdmin.from("credit_transactions").insert({
+      user_id: resolvedUserId,
+      amount: purchase.credits,
+      tx_type: "purchase",
+      reason: `Credit pack purchase: ${purchase.id} (${purchase.credits} credits)`,
+      feature: "Credit Pack",
+      metadata: {
+        idempotencyKey,
+        packId: purchase.id,
+        packLabel: purchase.label,
+        creditsAdded: purchase.credits,
+        priceCents: purchase.price_cents,
+        stripeSessionId: checkoutSessionId,
+        stripePaymentIntentId: paymentIntentId,
+        stripePaymentLinkId: paymentLinkId,
+        customerEmail,
+        customerId,
+        sourceEventType,
+      },
+    });
+
+    await createCreditPurchaseNotification(supabaseAdmin, {
+      userId: resolvedUserId,
+      creditsAdded: purchase.credits,
+      packId: purchase.id,
+    });
+
+    await supabaseAdmin.rpc("idempotency_mark_completed", {
+      p_id: idempotencyKey,
+      p_result: {
+        status: "credited",
+        userId: resolvedUserId,
+        creditsAdded: purchase.credits,
+        packId: purchase.id,
+        stripeSessionId: checkoutSessionId,
+        stripePaymentIntentId: paymentIntentId,
+      },
+    });
+
+    console.log(`[CreditPack] Added ${purchase.credits} credits to user ${resolvedUserId} (${purchase.id})`);
+  } catch (error) {
+    await supabaseAdmin.rpc("idempotency_clear", {
+      p_id: idempotencyKey,
+    });
+    throw error;
+  }
+}
+
+async function handlePaymentIntentSucceeded(paymentIntent: any, supabaseAdmin: any) {
+  console.log("[PaymentIntent] Processing payment_intent.succeeded");
+
+  if (paymentIntent.invoice) {
+    console.log("[PaymentIntent] Skipping invoice-backed payment intent");
+    return;
+  }
+
+  const metadata = (paymentIntent.metadata ?? {}) as Record<string, unknown>;
+  const purchaseType = getMetadataString(metadata, ["purchase_type"]);
+  const explicitPackId = getMetadataString(metadata, ["pack_id", "packId"]);
+  const explicitCredits = parsePositiveInteger(
+    getMetadataString(metadata, ["credits", "credit_amount", "creditAmount", "top_up_credits"])
+  );
+
+  if (purchaseType !== "credit_pack" && !explicitPackId && !explicitCredits) {
+    console.log("[PaymentIntent] Skipping non-credit-pack payment intent");
+    return;
+  }
+
+  const customerId = typeof paymentIntent.customer === "string" ? paymentIntent.customer : null;
+  const customerContext = await getStripeCustomerContext(customerId);
+  const customerEmail =
+    typeof paymentIntent.receipt_email === "string"
+      ? paymentIntent.receipt_email
+      : customerContext.email;
+  const explicitUserId = getMetadataString(metadata, ["user_id"]);
+  const resolvedUserId = await resolveUserId(supabaseAdmin, {
+    explicitUserId,
+    customerId,
+    customerEmail,
+    customerMetadataUserId: customerContext.metadataUserId,
   });
 
-  console.log(`[CreditPack] Added ${creditsToAdd} credits to user ${resolvedUserId} (${packId})`);
+  await handleCreditPackPurchase({
+    supabaseAdmin,
+    resolvedUserId,
+    customerEmail,
+    customerId,
+    metadata,
+    amountCents: Number(paymentIntent.amount_received ?? paymentIntent.amount ?? 0) || null,
+    checkoutSessionId: null,
+    paymentIntentId: typeof paymentIntent.id === "string" ? paymentIntent.id : null,
+    paymentLinkId: null,
+    sourceEventType: "payment_intent.succeeded",
+  });
 }
 
 async function handleSubscriptionChange(subscription: any, supabaseAdmin: any) {
@@ -494,7 +866,9 @@ serve(async (req) => {
     const customerEmail =
       typeof object.customer_details?.email === "string"
         ? object.customer_details.email
-        : (typeof object.customer_email === "string" ? object.customer_email : null);
+        : (typeof object.customer_email === "string"
+          ? object.customer_email
+          : (typeof object.receipt_email === "string" ? object.receipt_email : null));
 
     const { data: existingEvent } = await supabaseAdmin
       .from("stripe_webhook_events")
@@ -524,6 +898,9 @@ serve(async (req) => {
     switch (event.type) {
       case "checkout.session.completed":
         await handleCheckoutCompleted(object, supabaseAdmin);
+        break;
+      case "payment_intent.succeeded":
+        await handlePaymentIntentSucceeded(object, supabaseAdmin);
         break;
       case "customer.subscription.created":
       case "customer.subscription.updated":

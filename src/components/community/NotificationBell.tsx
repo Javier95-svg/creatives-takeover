@@ -71,6 +71,11 @@ export const NotificationBell = () => {
       return;
     }
 
+    if (notification.notification_type === 'credit_purchase_completed') {
+      navigate(metadataRoute || '/pricing#credit-packs');
+      return;
+    }
+
     // Navigate to profile for follow requests
     if (notification.notification_type === 'follow_request') {
       navigate(actorProfilePath || '/community');
@@ -152,6 +157,10 @@ export const NotificationBell = () => {
           : 'A task deadline has been reached';
       case 'platform_update':
         return metadata?.message || metadata?.title || 'There is a new platform update';
+      case 'credit_purchase_completed':
+        return metadata?.message || (metadata?.creditsAdded
+          ? `${metadata.creditsAdded} credits were added to your balance`
+          : 'Your purchased credits were added to your balance');
       default:
         return `${actor.name} interacted with your post`;
     }
