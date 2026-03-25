@@ -346,6 +346,118 @@ const createCreditPurchaseNotification = async (
   }
 };
 
+const resetSubscriptionQuotaForInvoice = async (
+  supabaseAdmin: any,
+  {
+    userId,
+    tier,
+    billingCycle,
+    invoiceId,
+    subscriptionId,
+    amountPaid,
+    appliedAt,
+  }: {
+    userId: string;
+    tier: string;
+    billingCycle: BillingCycle;
+    invoiceId: string;
+    subscriptionId: string | null;
+    amountPaid: number;
+    appliedAt: string;
+  }
+) => {
+  const normalizedTier = normalizeSubscriptionTier(tier);
+  if (normalizedTier === "free") return;
+  if (billingCycle !== "monthly") return;
+
+  const tierCredits = await getTierCredits(supabaseAdmin, normalizedTier);
+  const idempotencyKey = `stripe:subscription_quota:${invoiceId}`;
+  const idempotencyStatus = await supabaseAdmin.rpc("idempotency_try_begin", {
+    p_id: idempotencyKey,
+  });
+
+  if (idempotencyStatus !== "started") {
+    console.log(`[Invoice] Skipping duplicate subscription credit reset (${idempotencyStatus})`, {
+      idempotencyKey,
+      userId,
+      invoiceId,
+    });
+    return;
+  }
+
+  try {
+    const { data: currentCredits } = await supabaseAdmin
+      .from("user_credits")
+      .select("balance, monthly_quota, subscription_tier")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    const previousQuota = Number(currentCredits?.monthly_quota ?? 0);
+    const currentBalance = Number(currentCredits?.balance ?? 0);
+
+    if (currentCredits) {
+      await supabaseAdmin
+        .from("user_credits")
+        .update({
+          balance: currentBalance,
+          monthly_quota: tierCredits,
+          subscription_tier: normalizedTier,
+          last_reset_at: appliedAt,
+          last_credit_grant: appliedAt,
+        })
+        .eq("user_id", userId);
+    } else {
+      await supabaseAdmin
+        .from("user_credits")
+        .insert({
+          user_id: userId,
+          balance: currentBalance,
+          monthly_quota: tierCredits,
+          subscription_tier: normalizedTier,
+          last_reset_at: appliedAt,
+          last_credit_grant: appliedAt,
+        });
+    }
+
+    await supabaseAdmin.from("credit_transactions").insert({
+      user_id: userId,
+      amount: tierCredits - previousQuota,
+      tx_type: "reset",
+      reason: `Stripe ${normalizedTier} subscription credits refreshed after payment confirmation`,
+      feature: `Subscription - ${normalizedTier}`,
+      metadata: {
+        idempotencyKey,
+        grantType: "billing_cycle_reset",
+        previousQuota,
+        newQuota: tierCredits,
+        invoiceId,
+        subscriptionId,
+        billingCycle,
+        amountPaid,
+      },
+    });
+
+    await supabaseAdmin.rpc("idempotency_mark_completed", {
+      p_id: idempotencyKey,
+      p_result: {
+        status: "quota_reset",
+        userId,
+        tier: normalizedTier,
+        previousQuota,
+        newQuota: tierCredits,
+        invoiceId,
+      },
+    });
+
+    console.log(`[Invoice] Refreshed ${normalizedTier} quota for ${userId}: ${previousQuota} -> ${tierCredits}`);
+  } catch (error) {
+    await supabaseAdmin.rpc("idempotency_clear", {
+      p_id: idempotencyKey,
+    });
+    throw error;
+  }
+};
+
 const syncSubscriptionState = async (
   supabaseAdmin: any,
   {
@@ -833,10 +945,82 @@ async function handleSubscriptionDeleted(subscription: any, supabaseAdmin: any) 
   console.log(`[Subscription] Downgraded ${resolvedUserId} to free`);
 }
 
-async function handleInvoicePaid(invoice: any) {
+async function handleInvoicePaid(invoice: any, supabaseAdmin: any) {
   console.log("[Invoice] Received invoice.paid", {
     customer: invoice.customer,
     billingReason: invoice.billing_reason,
+  });
+
+  const subscriptionId = typeof invoice.subscription === "string" ? invoice.subscription : null;
+  if (!subscriptionId) {
+    console.log("[Invoice] Skipping non-subscription invoice");
+    return;
+  }
+
+  const billingReason = typeof invoice.billing_reason === "string" ? invoice.billing_reason : "";
+  const eligibleBillingReasons = new Set(["subscription_create", "subscription_cycle", "subscription_update"]);
+  if (!eligibleBillingReasons.has(billingReason)) {
+    console.log("[Invoice] Skipping unsupported billing reason", { billingReason, subscriptionId });
+    return;
+  }
+
+  const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+  const customerId = typeof subscription.customer === "string"
+    ? subscription.customer
+    : (typeof invoice.customer === "string" ? invoice.customer : null);
+  const customerContext = await getStripeCustomerContext(customerId);
+  const customerEmail =
+    typeof invoice.customer_email === "string"
+      ? invoice.customer_email
+      : customerContext.email;
+  const explicitUserId = typeof subscription.metadata?.user_id === "string"
+    ? subscription.metadata.user_id
+    : getMetadataString(invoice.metadata as Record<string, unknown> | null | undefined, ["user_id"]);
+  const resolvedUserId = await resolveUserId(supabaseAdmin, {
+    explicitUserId,
+    customerId,
+    customerEmail,
+    customerMetadataUserId: customerContext.metadataUserId,
+  });
+
+  if (!resolvedUserId || !customerEmail) {
+    console.error("[Invoice] Missing user context", {
+      subscriptionId,
+      customerId,
+      customerEmail,
+      explicitUserId,
+    });
+    return;
+  }
+
+  const tier = resolveSubscriptionTier(subscription);
+  const billingCycle = resolveSubscriptionBillingCycle(subscription);
+  const subscriptionEnd = subscription.current_period_end
+    ? new Date(subscription.current_period_end * 1000).toISOString()
+    : null;
+  const appliedAt = typeof invoice.status_transitions?.paid_at === "number"
+    ? new Date(invoice.status_transitions.paid_at * 1000).toISOString()
+    : new Date().toISOString();
+
+  await syncSubscriptionState(supabaseAdmin, {
+    userId: resolvedUserId,
+    email: customerEmail,
+    stripeCustomerId: customerId,
+    tier,
+    billingCycle,
+    subscribed: true,
+    subscriptionEnd,
+    grantQuota: false,
+  });
+
+  await resetSubscriptionQuotaForInvoice(supabaseAdmin, {
+    userId: resolvedUserId,
+    tier,
+    billingCycle,
+    invoiceId: typeof invoice.id === "string" ? invoice.id : `${subscriptionId}:${billingReason}`,
+    subscriptionId,
+    amountPaid: Number(invoice.amount_paid ?? 0),
+    appliedAt,
   });
 }
 
@@ -910,7 +1094,7 @@ serve(async (req) => {
         await handleSubscriptionDeleted(object, supabaseAdmin);
         break;
       case "invoice.paid":
-        await handleInvoicePaid(object);
+        await handleInvoicePaid(object, supabaseAdmin);
         break;
       default:
         console.log(`[Webhook] Unhandled event type: ${event.type}`);

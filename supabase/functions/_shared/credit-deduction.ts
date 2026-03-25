@@ -245,62 +245,68 @@ async function checkAndResetMonthlyQuota(userId: string, supabase: any): Promise
     const daysSinceReset = Math.floor((now.getTime() - lastReset.getTime()) / (1000 * 60 * 60 * 24));
     const isDifferentMonth = now.getMonth() !== lastReset.getMonth() || now.getFullYear() !== lastReset.getFullYear();
 
-    if (daysSinceReset >= 30 || isDifferentMonth) {
-      // Get user's subscription tier to determine quota amount
-      // Check both profiles and subscribers tables for tier
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('subscription_tier')
-        .eq('id', userId)
-        .single();
+    // Get user's subscription tier to determine quota amount
+    // Check both profiles and subscribers tables for tier
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('subscription_tier')
+      .eq('id', userId)
+      .single();
 
-      // Also check subscribers table as it might be more up-to-date
-      const { data: subscriber } = await supabase
-        .from('subscribers')
-        .select('subscription_tier')
-        .eq('user_id', userId)
-        .eq('subscribed', true)
-        .single();
+    // Also check subscribers table as it might be more up-to-date
+    const { data: subscriber } = await supabase
+      .from('subscribers')
+      .select('subscription_tier')
+      .eq('user_id', userId)
+      .eq('subscribed', true)
+      .single();
 
-      // Default quota amounts by tier (can be customized)
-      const quotaAmounts: Record<string, number> = {
-        'free': 25,
-        'creator': 100,
-        'professional': 300,
-        'admin': 300
-      };
+    // Default quota amounts by tier (can be customized)
+    const quotaAmounts: Record<string, number> = {
+      'free': 25,
+      'creator': 100,
+      'professional': 300,
+      'admin': 300
+    };
 
-      // Prefer subscriber tier if available, otherwise use profile tier
-      const tier = subscriber?.subscription_tier || profile?.subscription_tier || 'free';
-      const newQuota = quotaAmounts[tier] || 25;
+    // Prefer subscriber tier if available, otherwise use profile tier
+    const tier = subscriber?.subscription_tier || profile?.subscription_tier || 'free';
+    const newQuota = quotaAmounts[tier] || 25;
+    const shouldReset =
+      tier === 'free'
+        ? (daysSinceReset >= 30 || isDifferentMonth)
+        : daysSinceReset >= 30;
 
-      // Reset quota atomically
-      await supabase
-        .from('user_credits')
-        .update({
-          monthly_quota: newQuota,
-          last_reset_at: now.toISOString()
-        })
-        .eq('user_id', userId);
-
-      // Log reset transaction
-      await supabase
-        .from('credit_transactions')
-        .insert({
-          user_id: userId,
-          amount: newQuota - (credits.monthly_quota || 0),
-          tx_type: 'reset',
-          reason: `Monthly quota reset - ${newQuota} credits`,
-          feature: 'Monthly Quota Reset',
-          metadata: { 
-            previousQuota: credits.monthly_quota || 0,
-            newQuota,
-            tier 
-          }
-        });
-
-      console.log(`✅ Monthly quota reset for user ${userId}: ${newQuota} credits (tier: ${tier})`);
+    if (!shouldReset) {
+      return;
     }
+
+    // Reset quota atomically
+    await supabase
+      .from('user_credits')
+      .update({
+        monthly_quota: newQuota,
+        last_reset_at: now.toISOString()
+      })
+      .eq('user_id', userId);
+
+    // Log reset transaction
+    await supabase
+      .from('credit_transactions')
+      .insert({
+        user_id: userId,
+        amount: newQuota - (credits.monthly_quota || 0),
+        tx_type: 'reset',
+        reason: `Monthly quota reset - ${newQuota} credits`,
+        feature: 'Monthly Quota Reset',
+        metadata: { 
+          previousQuota: credits.monthly_quota || 0,
+          newQuota,
+          tier 
+        }
+      });
+
+    console.log(`✅ Monthly quota reset for user ${userId}: ${newQuota} credits (tier: ${tier})`);
   } catch (error) {
     console.error('Error checking/resetting monthly quota:', error);
     // Don't fail the operation if quota reset check fails
