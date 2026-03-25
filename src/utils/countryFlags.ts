@@ -42,6 +42,8 @@ export function getCountryFlag(country: string | null | undefined): string {
     'DENMARK': '🇩🇰',
     'FI': '🇫🇮',
     'FINLAND': '🇫🇮',
+    'LT': '🇱🇹',
+    'LITHUANIA': '🇱🇹',
     'PL': '🇵🇱',
     'POLAND': '🇵🇱',
     'IE': '🇮🇪',

@@ -169,6 +169,10 @@ export const MentorProfile = ({ mentor, onBookClick }: MentorProfileProps) => {
     if (mentor.name.toLowerCase().includes('albert') && mentor.name.toLowerCase().includes('hovhannisyan')) {
       return 'Armenia';
     }
+    // Special case: Matas Ramanauskas is from Lithuania
+    if (mentor.name.toLowerCase().includes('matas') && mentor.name.toLowerCase().includes('ramanauskas')) {
+      return 'Lithuania';
+    }
     return null;
   };
   const nationality = getNationality();
