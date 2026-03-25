@@ -160,6 +160,7 @@ export class CreditService {
               monthly_quota: 25,
               subscription_tier: 'free',
               last_reset_at: new Date().toISOString(),
+              last_credit_grant: new Date().toISOString(),
             })
             .eq('user_id', userId);
 
@@ -201,7 +202,9 @@ export class CreditService {
           user_id: userId,
           balance: 0,
           monthly_quota: initialMonthlyQuota,
-          subscription_tier: subscriptionTier
+          subscription_tier: subscriptionTier,
+          last_reset_at: new Date().toISOString(),
+          last_credit_grant: new Date().toISOString(),
         }])
         .select();
 
