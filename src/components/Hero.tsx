@@ -491,12 +491,12 @@ const Hero = () => {
                 filter: 'drop-shadow(0 0 10px hsl(var(--primary) / 0.10))'
               }}
             >
-              <span className="text-primary">Build Your Startup</span> from Scratch
+              <span className="text-primary">Build Your Startup.</span> Own Your Future.
             </h1>
 
             {/* Subheadline - Improved readability */}
             <p className="font-space-grotesk text-sm sm:text-base md:text-lg text-muted-foreground mb-6 sm:mb-8 max-w-xl mx-auto leading-relaxed px-2 sm:px-0">
-              We’re a vertical AI platform that guides early-stage founders turn ideas into revenue-ready startups through tools, frameworks, and community, accelerating and simplifying startup development in the post-AI era.
+              Creatives Takeover is the all-in-one platform that takes first-time founders through every stage of the startup journey — from raw idea to revenue-ready startup — with AI-powered tools, expert mentors, and direct investor access. All in one place.
             </p>
             
             {/* Enhanced CTA Section */}
