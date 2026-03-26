@@ -2,6 +2,12 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "rewrites": [
+    { "source": "/pricing", "destination": "/pricing/index.html" },
+    { "source": "/pricing/", "destination": "/pricing/index.html" },
+    { "source": "/community", "destination": "/community/index.html" },
+    { "source": "/community/", "destination": "/community/index.html" },
+    { "source": "/resources", "destination": "/resources/index.html" },
+    { "source": "/resources/", "destination": "/resources/index.html" },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "headers": [
