@@ -496,7 +496,7 @@ const Hero = () => {
 
             {/* Subheadline - Improved readability */}
             <p className="font-space-grotesk text-sm sm:text-base md:text-lg text-muted-foreground mb-6 sm:mb-8 max-w-xl mx-auto leading-relaxed px-2 sm:px-0">
-              Creatives Takeover is the all-in-one platform that takes first-time founders through every stage of the startup journey — from raw idea to revenue-ready startup — with AI-powered tools, expert mentors, and direct investor access. All in one place.
+              Accelerators reject 98% of applicants. Consultants charge £10k for a PowerPoint. We said enough. Creatives Takeover hands first-time founders the system, the tools, and the network that used to be reserved for the well-connected. No cohort, no gatekeepers, no BS.
             </p>
             
             {/* Enhanced CTA Section */}
