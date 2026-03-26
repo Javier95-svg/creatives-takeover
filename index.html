@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
+    <script>
+      document.documentElement.classList.add("js");
+    </script>
     <script defer src="https://t.contentsquare.net/uxa/3ef0f84e50f77.js"></script>
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-SBVWSWCNX8"></script>
@@ -55,10 +58,15 @@
     <meta name="twitter:image" content="https://creatives-takeover.com/og-image.png" />
     <meta name="twitter:title" content="Creatives Takeover" />
     <meta name="twitter:description" content="Turn your creative idea into a real business. Get AI-powered planning, community support, and funding resources designed for creative entrepreneurs. Start building today." />
+    <style>
+      .js #seo-fallback {
+        display: none;
+      }
+    </style>
   </head>
 
   <body>
-    <div id="root">
+    <main id="seo-fallback">
       <header>
         <p>Creatives Takeover</p>
         <nav aria-label="Primary pages">
@@ -109,7 +117,9 @@
           <p>Everything you need to know about Creatives Takeover.</p>
         </section>
       </article>
-    </div>
+    </main>
+
+    <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

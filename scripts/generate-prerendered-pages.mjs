@@ -14,26 +14,6 @@ const ROUTES = [
     description:
       "Turn your creative idea into a real business. Get AI-powered planning, community support, and funding resources designed for creative entrepreneurs. Start building today.",
     canonical: `${BASE_URL}/`,
-    ogType: "website",
-    structuredData: [
-      {
-        "@context": "https://schema.org",
-        "@type": "Organization",
-        name: "Creatives Takeover",
-        url: BASE_URL,
-        logo: `${BASE_URL}/lovable-uploads/new-favicon.png`,
-        description:
-          "Turn your creative idea into a real business with AI-powered planning, community support, and funding resources.",
-      },
-      {
-        "@context": "https://schema.org",
-        "@type": "WebPage",
-        name: "Creatives Takeover",
-        url: `${BASE_URL}/`,
-        description:
-          "Turn your creative idea into a real business. Get AI-powered planning, community support, and funding resources designed for creative entrepreneurs. Start building today.",
-      },
-    ],
     fallbackHtml: `
       <header>
         <p>Creatives Takeover</p>
@@ -87,42 +67,6 @@ const ROUTES = [
     description:
       "Flexible AI solopreneur pricing plans for creative professionals. Choose from Rookie, Rising, or Pro plans with AI-powered tools and startup execution support.",
     canonical: `${BASE_URL}/pricing`,
-    ogType: "website",
-    structuredData: [
-      {
-        "@context": "https://schema.org",
-        "@type": "WebPage",
-        name: "Pricing | Creatives Takeover",
-        url: `${BASE_URL}/pricing`,
-        description:
-          "Flexible AI solopreneur pricing plans for creative professionals. Choose from Rookie, Rising, or Pro plans with AI-powered tools and startup execution support.",
-      },
-      {
-        "@context": "https://schema.org",
-        "@type": "OfferCatalog",
-        name: "Creatives Takeover Pricing",
-        itemListElement: [
-          {
-            "@type": "Offer",
-            name: "Rookie",
-            price: "0",
-            priceCurrency: "USD",
-          },
-          {
-            "@type": "Offer",
-            name: "Rising",
-            price: "32.99",
-            priceCurrency: "USD",
-          },
-          {
-            "@type": "Offer",
-            name: "Pro",
-            price: "74.99",
-            priceCurrency: "USD",
-          },
-        ],
-      },
-    ],
     fallbackHtml: `
       <header>
         <p>Creatives Takeover</p>
@@ -184,28 +128,6 @@ const ROUTES = [
     description:
       "Connect with experienced founders and mentors who can guide you through startup execution. Book 1-on-1 sessions with proven entrepreneurs.",
     canonical: `${BASE_URL}/community`,
-    ogType: "website",
-    structuredData: [
-      {
-        "@context": "https://schema.org",
-        "@type": "WebPage",
-        name: "Mentor Marketplace | Find Your Startup Mentor",
-        url: `${BASE_URL}/community`,
-        description:
-          "Connect with experienced founders and mentors who can guide you through startup execution. Book 1-on-1 sessions with proven entrepreneurs.",
-      },
-      {
-        "@context": "https://schema.org",
-        "@type": "Service",
-        name: "Creatives Takeover Mentor Marketplace",
-        serviceType: "Startup Mentorship",
-        provider: {
-          "@type": "Organization",
-          name: "Creatives Takeover",
-          url: BASE_URL,
-        },
-      },
-    ],
     fallbackHtml: `
       <header>
         <p>Creatives Takeover</p>
@@ -246,23 +168,6 @@ const ROUTES = [
     description:
       "Access free creative resources including tutorials, design guides, templates, and downloads. Learn creative skills with our comprehensive resource library.",
     canonical: `${BASE_URL}/resources`,
-    ogType: "website",
-    structuredData: [
-      {
-        "@context": "https://schema.org",
-        "@type": "WebPage",
-        name: "Free Creative Resources | Tutorials, Guides & Downloads",
-        url: `${BASE_URL}/resources`,
-        description:
-          "Access free creative resources including tutorials, design guides, templates, and downloads. Learn creative skills with our comprehensive resource library.",
-      },
-      {
-        "@context": "https://schema.org",
-        "@type": "CollectionPage",
-        name: "Creatives Takeover Resources",
-        url: `${BASE_URL}/resources`,
-      },
-    ],
     fallbackHtml: `
       <header>
         <p>Creatives Takeover</p>
@@ -316,37 +221,26 @@ function replaceMetaByProperty(html, property, content) {
   return html.replace("</head>", `    ${replacement}\n  </head>`);
 }
 
-function upsertJsonLd(html, structuredData) {
-  const replacement = `<script type="application/ld+json">${JSON.stringify(structuredData)}</script>`;
-  const pattern = /<script type="application\/ld\+json">[\s\S]*?<\/script>/i;
-  if (pattern.test(html)) {
-    return html.replace(pattern, replacement);
-  }
-  return html.replace("</head>", `    ${replacement}\n  </head>`);
-}
-
 function renderRoute(template, routeConfig) {
   let html = template;
   html = replaceTag(html, /<title>[\s\S]*?<\/title>/i, `<title>${routeConfig.title}</title>`);
   html = replaceMetaByName(html, "description", routeConfig.description);
-  html = replaceMetaByProperty(html, "og:type", routeConfig.ogType || "website");
-  html = replaceMetaByProperty(html, "og:url", routeConfig.canonical);
   html = replaceMetaByProperty(html, "og:title", routeConfig.title);
   html = replaceMetaByProperty(html, "og:description", routeConfig.description);
   html = replaceMetaByProperty(html, "og:image", OG_IMAGE);
-  html = replaceMetaByProperty(html, "og:image:secure_url", OG_IMAGE);
-  html = replaceMetaByProperty(html, "og:image:alt", routeConfig.title);
   html = replaceMetaByName(html, "twitter:title", routeConfig.title);
   html = replaceMetaByName(html, "twitter:description", routeConfig.description);
   html = replaceMetaByName(html, "twitter:image", OG_IMAGE);
-  html = replaceMetaByName(html, "twitter:url", routeConfig.canonical);
   html = replaceTag(
     html,
     /<link\s+rel="canonical"\s+href="[^"]*"\s*\/?>/i,
     `<link rel="canonical" href="${routeConfig.canonical}" />`
   );
-  html = upsertJsonLd(html, routeConfig.structuredData || []);
-  html = replaceTag(html, /<div id="root">[\s\S]*?<\/div>/i, `<div id="root">\n${routeConfig.fallbackHtml}\n    </div>`);
+  html = replaceTag(
+    html,
+    /<main id="seo-fallback">[\s\S]*?<\/main>/i,
+    `<main id="seo-fallback">\n${routeConfig.fallbackHtml}\n    </main>`
+  );
   return html;
 }
 
