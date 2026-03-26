@@ -35,7 +35,9 @@ const logStep = (step: string, details?: any) => {
 const normalizeSubscriptionTier = (value: unknown): string => {
   const normalized = typeof value === "string" ? value.trim().toLowerCase() : "";
 
-  if (normalized === "pro") return "professional";
+  if (["professional", "pro", "elite", "team", "teams"].includes(normalized)) return "professional";
+  if (normalized === "rising") return "creator";
+  if (["rookie", "starter"].includes(normalized)) return "free";
   if (normalized === "creator" || normalized === "professional" || normalized === "free") {
     return normalized;
   }
@@ -70,6 +72,57 @@ const getTierCredits = async (supabaseService: any, tier: string): Promise<numbe
     .maybeSingle();
 
   return Number(data?.monthly_credits ?? FALLBACK_TIER_CREDITS[normalizedTier] ?? FALLBACK_TIER_CREDITS.free);
+};
+
+const getExistingInternalSubscriptionGrant = async (
+  supabaseService: any,
+  userId: string
+): Promise<{
+  stripeCustomerId: string | null;
+  subscriptionTier: string;
+  subscriptionEnd: string | null;
+  billingCycle: "monthly" | "yearly" | null;
+} | null> => {
+  const [{ data: subscriber }, { data: profile }] = await Promise.all([
+    supabaseService
+      .from("subscribers")
+      .select("stripe_customer_id, subscribed, subscription_tier, subscription_end")
+      .eq("user_id", userId)
+      .maybeSingle(),
+    supabaseService
+      .from("profiles")
+      .select("stripe_customer_id, subscribed, subscription_tier, subscription_end, billing_cycle")
+      .eq("id", userId)
+      .maybeSingle(),
+  ]);
+
+  const subscriberTier = normalizeSubscriptionTier(subscriber?.subscription_tier);
+  if (subscriber?.subscribed === true && subscriberTier !== "free") {
+    return {
+      stripeCustomerId:
+        typeof subscriber?.stripe_customer_id === "string" ? subscriber.stripe_customer_id : null,
+      subscriptionTier: subscriberTier,
+      subscriptionEnd:
+        typeof subscriber?.subscription_end === "string" ? subscriber.subscription_end : null,
+      billingCycle: null,
+    };
+  }
+
+  const profileTier = normalizeSubscriptionTier(profile?.subscription_tier);
+  if (profile?.subscribed === true && profileTier !== "free") {
+    return {
+      stripeCustomerId:
+        typeof profile?.stripe_customer_id === "string" ? profile.stripe_customer_id : null,
+      subscriptionTier: profileTier,
+      subscriptionEnd: typeof profile?.subscription_end === "string" ? profile.subscription_end : null,
+      billingCycle:
+        profile?.billing_cycle === "yearly" || profile?.billing_cycle === "monthly"
+          ? profile.billing_cycle
+          : null,
+    };
+  }
+
+  return null;
 };
 
 const syncSubscriptionState = async (
@@ -242,6 +295,33 @@ serve(async (req) => {
 
     if (customers.data.length === 0) {
       logStep("No Stripe customer found");
+      const existingGrant = await getExistingInternalSubscriptionGrant(supabaseService, user.id);
+      if (existingGrant) {
+        logStep("Preserving internal paid subscription without Stripe customer", {
+          userId: user.id,
+          subscriptionTier: existingGrant.subscriptionTier,
+        });
+        await syncSubscriptionState(supabaseService, {
+          userId: user.id,
+          email: user.email,
+          stripeCustomerId: existingGrant.stripeCustomerId,
+          subscribed: true,
+          subscriptionTier: existingGrant.subscriptionTier,
+          subscriptionEnd: existingGrant.subscriptionEnd,
+          billingCycle: existingGrant.billingCycle ?? "monthly",
+          forceQuotaFloor: true,
+        });
+
+        return new Response(JSON.stringify({
+          subscribed: true,
+          subscription_tier: existingGrant.subscriptionTier,
+          subscription_end: existingGrant.subscriptionEnd,
+        }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200,
+        });
+      }
+
       await syncSubscriptionState(supabaseService, {
         userId: user.id,
         email: user.email,
@@ -274,6 +354,34 @@ serve(async (req) => {
 
     if (!hasActiveSub) {
       logStep("No active Stripe subscription found", { customerId });
+      const existingGrant = await getExistingInternalSubscriptionGrant(supabaseService, user.id);
+      if (existingGrant) {
+        logStep("Preserving internal paid subscription without active Stripe subscription", {
+          userId: user.id,
+          customerId,
+          subscriptionTier: existingGrant.subscriptionTier,
+        });
+        await syncSubscriptionState(supabaseService, {
+          userId: user.id,
+          email: user.email,
+          stripeCustomerId: existingGrant.stripeCustomerId ?? customerId,
+          subscribed: true,
+          subscriptionTier: existingGrant.subscriptionTier,
+          subscriptionEnd: existingGrant.subscriptionEnd,
+          billingCycle: existingGrant.billingCycle ?? "monthly",
+          forceQuotaFloor: true,
+        });
+
+        return new Response(JSON.stringify({
+          subscribed: true,
+          subscription_tier: existingGrant.subscriptionTier,
+          subscription_end: existingGrant.subscriptionEnd,
+        }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200,
+        });
+      }
+
       await syncSubscriptionState(supabaseService, {
         userId: user.id,
         email: user.email,

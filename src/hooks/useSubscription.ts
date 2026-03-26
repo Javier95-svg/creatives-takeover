@@ -62,6 +62,24 @@ const DEFAULT_SUBSCRIPTION: SubscriptionData = {
   subscription_end: null,
 };
 
+const normalizeSubscriptionTier = (value: unknown): SubscriptionData['subscription_tier'] => {
+  const normalized = typeof value === 'string' ? value.trim().toLowerCase() : '';
+
+  if (['professional', 'pro', 'elite', 'team', 'teams'].includes(normalized)) {
+    return 'professional';
+  }
+
+  if (['creator', 'rising'].includes(normalized)) {
+    return 'creator';
+  }
+
+  if (['free', 'rookie', 'starter'].includes(normalized)) {
+    return 'free';
+  }
+
+  return 'free';
+};
+
 const normalizeSubscriptionData = (
   email: string | null | undefined,
   data?: Partial<SubscriptionData> | null
@@ -72,7 +90,7 @@ const normalizeSubscriptionData = (
 
   return {
     subscribed: Boolean(data?.subscribed),
-    subscription_tier: String(data?.subscription_tier ?? 'free').toLowerCase(),
+    subscription_tier: normalizeSubscriptionTier(data?.subscription_tier),
     subscription_end: data?.subscription_end ?? null,
   };
 };
@@ -85,7 +103,10 @@ const normalizePaymentLink = (value: unknown): string | null => {
 
 const normalizeTierRow = (row: Record<string, unknown>): SubscriptionTier => {
   const rawName = (row.tier_name || row.name || row.slug || '') as string;
-  const tier_name = String(rawName).trim().toLowerCase();
+  const normalizedRawName = String(rawName).trim().toLowerCase();
+  const tier_name = normalizedRawName === 'enterprise'
+    ? 'enterprise'
+    : normalizeSubscriptionTier(rawName);
 
   const monthly_credits = Number(row.monthly_credits ?? row.credits ?? 0) || 0;
   const price_cents = Number(row.price_cents ?? row.price ?? 0) || 0;
@@ -252,7 +273,7 @@ export function useSubscription() {
   };
 
   const fetchTierByName = async (tierName: string) => {
-    const normalizedTierName = String(tierName).trim().toLowerCase();
+    const normalizedTierName = normalizeSubscriptionTier(tierName);
     const cachedTier = tiersQuery.data?.find(
       (tier) => String(tier.tier_name).trim().toLowerCase() === normalizedTierName
     );
@@ -561,7 +582,7 @@ export function useSubscription() {
 
   const getTierInfo = (tierName: string) => {
     if (!tierName) return undefined;
-    const normalized = String(tierName).trim().toLowerCase();
+    const normalized = normalizeSubscriptionTier(tierName);
     return tiers.find(t => String(t.tier_name).trim().toLowerCase() === normalized);
   };
 
