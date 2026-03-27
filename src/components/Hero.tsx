@@ -498,7 +498,7 @@ const Hero = () => {
             <p className="homepage-hero__copy font-space-grotesk text-sm sm:text-base md:text-lg text-muted-foreground mb-6 sm:mb-8 max-w-xl mx-auto leading-relaxed px-2 sm:px-0">
               {isAuthenticated
                 ? "Set up your profile, then head to your dashboard to see what matters now, plan your next steps, and keep moving forward one task at a time."
-                : "Accelerators reject 98% of applicants. Consultants charge £10k for a PowerPoint. We said enough. Creatives Takeover hands first-time founders the system, the tools, and the network that used to be reserved for the well-connected. No cohort, no gatekeepers, no BS."}
+                : "Creatives Takeover hands first-time founders the system, the tools, and the network that used to be reserved for the well-connected. No cohort, no gatekeepers, no BS."}
             </p>
             
             {/* Enhanced CTA Section */}
