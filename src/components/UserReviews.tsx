@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { useIsMobile } from "@/hooks/use-mobile";
 import {
   Fingerprint,
   DraftingCompass,
@@ -86,6 +87,7 @@ const STEP_ANGLE = 360 / cycleSteps.length;
 const UserReviews = () => {
   const [activeStepIndex, setActiveStepIndex] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
+  const isMobile = useIsMobile();
 
   // Auto-play functionality
   useEffect(() => {
@@ -110,6 +112,39 @@ const UserReviews = () => {
 
   const activeStep = cycleSteps[activeStepIndex];
   const ActiveIcon = activeStep.icon;
+  const sectionHeader = (
+    <div className="startup-cycle-header text-center mb-16 sm:mb-20 px-6 sm:px-8 lg:px-12">
+      <Badge variant="outline" className="mb-5 text-xs uppercase tracking-wide text-muted-foreground animate-in fade-in slide-in-from-top duration-700">
+        The 7 Stage Journey 🧭
+      </Badge>
+      <h2 className="startup-cycle-title font-space-grotesk text-3xl sm:text-4xl lg:text-5xl font-semibold mb-6 tracking-tight text-primary break-words animate-in fade-in slide-in-from-bottom duration-700 delay-100">
+        Startup Development Cycle
+      </h2>
+      <p className="startup-cycle-copy font-poppins text-base sm:text-lg text-muted-foreground max-w-3xl mx-auto leading-relaxed animate-in fade-in slide-in-from-bottom duration-700 delay-200">
+        The Startup Development Cycle is a step-by-step roadmap designed by Creatives Takeover to guide founders from shaping an idea to building, launching, and growing a startup.
+      </p>
+      <div className="mt-6 animate-in fade-in zoom-in duration-700 delay-300">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setIsAutoPlaying(!isAutoPlaying)}
+          className="gap-2 hover:scale-105 transition-transform duration-200"
+        >
+          {isAutoPlaying ? (
+            <>
+              <Pause className="w-4 h-4" />
+              Pause
+            </>
+          ) : (
+            <>
+              <Play className="w-4 h-4" />
+              Auto Play
+            </>
+          )}
+        </Button>
+      </div>
+    </div>
+  );
 
   // Generate SVG path for connecting arc
   const generateConnectionPath = () => {
@@ -137,40 +172,111 @@ const UserReviews = () => {
     return path;
   };
 
-  return (
-    <section id="startup-development-cycle" className="section-shell overflow-hidden">
-      <div className="container mx-auto px-4 sm:px-6">
-        <div className="text-center mb-16 sm:mb-20 px-6 sm:px-8 lg:px-12">
-          <Badge variant="outline" className="mb-5 text-xs uppercase tracking-wide text-muted-foreground animate-in fade-in slide-in-from-top duration-700">
-            The 7 Stage Journey 🧭
-          </Badge>
-          <h2 className="font-space-grotesk text-3xl sm:text-4xl lg:text-5xl font-semibold mb-6 tracking-tight text-primary break-words animate-in fade-in slide-in-from-bottom duration-700 delay-100">
-            Startup Development Cycle
-          </h2>
-          <p className="font-poppins text-base sm:text-lg text-muted-foreground max-w-3xl mx-auto leading-relaxed animate-in fade-in slide-in-from-bottom duration-700 delay-200">
-            The Startup Development Cycle is a step-by-step roadmap designed by Creatives Takeover to guide founders from shaping an idea to building, launching, and growing a startup.
-          </p>
-          <div className="mt-6 animate-in fade-in zoom-in duration-700 delay-300">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setIsAutoPlaying(!isAutoPlaying)}
-              className="gap-2 hover:scale-105 transition-transform duration-200"
-            >
-                {isAutoPlaying ? (
-                  <>
-                    <Pause className="w-4 h-4" />
-                    Pause
-                  </>
-                ) : (
-                <>
-                  <Play className="w-4 h-4" />
-                  Auto Play
-                </>
-              )}
-            </Button>
+  if (isMobile) {
+    return (
+      <section id="startup-development-cycle" className="startup-cycle-section section-shell overflow-hidden">
+        <div className="container mx-auto px-4 sm:px-6">
+          {sectionHeader}
+
+          <div className="grid gap-4">
+            <Card className="surface-panel trust-outline overflow-hidden">
+              <CardContent className="p-4">
+                <div className="mb-4 flex items-center gap-3">
+                  <div className={`rounded-2xl border border-primary/20 bg-gradient-to-br ${activeStep.color} p-3`}>
+                    <ActiveIcon className="h-6 w-6 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Active Stage</p>
+                    <p className="font-space-grotesk text-lg font-semibold text-foreground">{activeStep.shortLabel}</p>
+                  </div>
+                </div>
+
+                <div className="startup-cycle-mobile-grid grid grid-cols-1 gap-3">
+                  {cycleSteps.map((step, index) => {
+                    const StepIcon = step.icon;
+                    const isActive = index === activeStepIndex;
+
+                    return (
+                      <button
+                        key={step.shortLabel}
+                        type="button"
+                        onClick={() => {
+                          setActiveStepIndex(index);
+                          setIsAutoPlaying(false);
+                        }}
+                        className={`min-h-[88px] rounded-2xl border p-4 text-left transition-all duration-200 ${
+                          isActive
+                            ? "border-primary bg-primary/10 shadow-[0_12px_30px_-18px_hsl(var(--primary)/0.55)]"
+                            : "border-border/70 bg-background/80"
+                        }`}
+                        aria-pressed={isActive}
+                        aria-label={`Select ${step.title}`}
+                      >
+                        <div className="mb-2 flex items-center gap-3">
+                          <div className={`rounded-xl border border-primary/20 bg-gradient-to-br ${step.color} p-2.5`}>
+                            <StepIcon className="h-4 w-4 text-primary" />
+                          </div>
+                          <span className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                            Stage {index + 1}
+                          </span>
+                        </div>
+                        <p className="font-space-grotesk text-base font-semibold leading-tight text-foreground">
+                          {step.shortLabel}
+                        </p>
+                      </button>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="surface-panel trust-outline overflow-hidden relative">
+              <div className={`absolute inset-0 bg-gradient-to-br ${activeStep.color} opacity-35 transition-all duration-700`} />
+              <CardContent className="relative z-10 p-5">
+                <div className="mb-4 flex items-start gap-3">
+                  <div className={`rounded-2xl border border-primary/20 bg-gradient-to-br ${activeStep.color} p-3`}>
+                    <ActiveIcon className="h-6 w-6 text-primary" />
+                  </div>
+                  <h3 className="font-space-grotesk text-xl font-semibold text-foreground">
+                    {activeStep.title}
+                  </h3>
+                </div>
+                <p className="text-sm leading-7 text-muted-foreground whitespace-pre-line">
+                  {activeStep.description}
+                </p>
+
+                <div className="mt-5 flex flex-wrap gap-2">
+                  {cycleSteps.map((step, index) => (
+                    <button
+                      key={step.shortLabel}
+                      type="button"
+                      onClick={() => {
+                        setActiveStepIndex(index);
+                        setIsAutoPlaying(false);
+                      }}
+                      className={`min-h-[44px] rounded-full px-3 text-xs font-medium transition-colors ${
+                        index === activeStepIndex
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-background/80 text-muted-foreground"
+                      }`}
+                      aria-label={`Go to ${step.shortLabel}`}
+                    >
+                      {step.shortLabel}
+                    </button>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
+      </section>
+    );
+  }
+
+  return (
+    <section id="startup-development-cycle" className="startup-cycle-section section-shell overflow-hidden">
+      <div className="container mx-auto px-4 sm:px-6">
+        {sectionHeader}
 
         <div className="grid gap-8 lg:gap-10 lg:grid-cols-2 items-stretch">
           <Card className="surface-panel trust-outline overflow-hidden relative group">

@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Menu, X, LogIn, LogOut, User, Settings, Gift, UserPlus, MessageCircle, Home, Bot, BookOpen, TrendingUp, Users as UsersIcon, FileText, Info, DollarSign, ChevronDown, Mail, Rocket, FlaskConical, Lightbulb, Target, Boxes, GraduationCap, Handshake, BarChart3, Filter, CheckSquare, LineChart, CalendarCheck, HeartHandshake, Sparkles, Lock } from "lucide-react";
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -46,6 +46,7 @@ const Navigation = () => {
   const [showFriendRequests, setShowFriendRequests] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string>("");
   const [lockedMenuItem, setLockedMenuItem] = useState<{ name: string; reason: string } | null>(null);
+  const mobileBarRef = useRef<HTMLDivElement | null>(null);
   const { user, signOut, loading } = useAuth();
   const { pendingFriendRequests } = useSocial(user?.id || '');
   const { trackClick } = usePageAnalytics();
@@ -133,6 +134,53 @@ const Navigation = () => {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
+  useEffect(() => {
+    setIsOpen(false);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    if (deviceType !== 'mobile' && isOpen) {
+      setIsOpen(false);
+    }
+  }, [deviceType, isOpen]);
+
+  useEffect(() => {
+    const root = document.documentElement;
+
+    const updateMobileNavOffset = () => {
+      if (!mobileBarRef.current || typeof window === 'undefined') {
+        return;
+      }
+
+      if (window.innerWidth > 768) {
+        root.style.setProperty('--mobile-nav-offset', '0px');
+        return;
+      }
+
+      const { bottom } = mobileBarRef.current.getBoundingClientRect();
+      root.style.setProperty('--mobile-nav-offset', `${Math.ceil(bottom)}px`);
+    };
+
+    updateMobileNavOffset();
+
+    const resizeObserver = new ResizeObserver(() => {
+      updateMobileNavOffset();
+    });
+
+    if (mobileBarRef.current) {
+      resizeObserver.observe(mobileBarRef.current);
+    }
+
+    window.addEventListener('resize', updateMobileNavOffset);
+    window.addEventListener('scroll', updateMobileNavOffset, { passive: true });
+
+    return () => {
+      resizeObserver.disconnect();
+      window.removeEventListener('resize', updateMobileNavOffset);
+      window.removeEventListener('scroll', updateMobileNavOffset);
+    };
+  }, []);
+
   const handleSignOut = async () => {
     try {
       await signOut();
@@ -185,7 +233,7 @@ const Navigation = () => {
                 : "bg-background/74 border-border/60 shadow-[0_10px_26px_-20px_hsl(var(--foreground)/0.18)]"
             )}
           >
-          <div className="flex items-center h-16 md:h-[70px] px-3 sm:px-4 lg:px-6 border-0">
+          <div ref={mobileBarRef} className="flex items-center h-16 md:h-[70px] px-3 sm:px-4 lg:px-6 border-0">
             {/* Logo with Enhanced Hover Effects - Fixed width to prevent layout shifts */}
             <div className="flex items-center border-0 flex-shrink-0 w-16 min-w-[4rem]">
               <Link to="/" className="flex items-center justify-center w-full rounded-xl" aria-label="Home">
@@ -470,7 +518,7 @@ const Navigation = () => {
             )}
 
             {/* Desktop & Tablet CTA */}
-            <div className="hidden md:flex items-center gap-3 !border-0 ml-auto">
+            <div className="desktop-nav-actions flex items-center gap-3 !border-0 ml-auto">
               {loading ? (
                 <div className="w-8 h-8 animate-pulse bg-muted rounded-full" />
               ) : user ? (
@@ -579,30 +627,30 @@ const Navigation = () => {
 
             {/* Mobile Menu Button */}
             <button
-              className="md:hidden flex items-center justify-center min-h-[44px] min-w-[44px] rounded-xl border border-border/55 bg-background/72 touch-manipulation active:opacity-70 transition-opacity shadow-sm"
+              className="mobile-nav-trigger flex items-center justify-center min-h-[44px] min-w-[44px] rounded-xl border border-border/55 bg-background/72 touch-manipulation active:opacity-70 transition-opacity shadow-sm"
               onClick={() => setIsOpen(!isOpen)}
               aria-label={isOpen ? "Close menu" : "Open menu"}
               aria-expanded={isOpen}
+              aria-controls="mobile-nav-panel"
             >
               {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
           </div>
 
-          {/* Mobile Navigation Backdrop */}
-          {isOpen && (
-            <div
-              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 md:hidden animate-fadeIn"
-              onClick={() => setIsOpen(false)}
-              aria-hidden="true"
-            />
-          )}
-
           {/* Mobile Navigation */}
-          {isOpen && (
-            <div className="md:hidden fixed top-[76px] left-3 right-3 bottom-3 bg-background/96 border border-border/70 rounded-[22px] animate-mobile-drawer safe-area-inset z-50 shadow-2xl backdrop-blur-xl overflow-hidden">
-              <div className="px-2 pt-2 pb-safe space-y-1 max-h-[calc(100vh-64px)] overflow-y-auto">
+          <div
+            id="mobile-nav-panel"
+            className={cn(
+              "mobile-nav-panel overflow-hidden transition-[max-height,opacity,border-color] duration-300 ease-out",
+              isOpen
+                ? "max-h-[calc(100dvh-var(--mobile-nav-offset,88px)-1rem)] opacity-100 border-t border-border/60"
+                : "max-h-0 opacity-0 border-t border-transparent"
+            )}
+            aria-hidden={!isOpen}
+          >
+            <div className="px-2 pt-2 pb-safe space-y-1 max-h-[calc(100dvh-var(--mobile-nav-offset,88px)-1rem)] overflow-y-auto">
                 {/* Theme Toggle at top of mobile menu */}
-                <div className="px-4 py-3 border-b border-border sticky top-0 bg-background z-10">
+                <div className="px-4 py-3 border-b border-border sticky top-0 bg-background/95 backdrop-blur-xl z-10">
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium text-foreground">Theme</span>
                     <ThemeToggle />
@@ -627,7 +675,7 @@ const Navigation = () => {
                         <Link
                           to={item.href}
                           className={cn(
-                            "block px-4 py-3.5 min-h-[48px] touch-manipulation flex items-center gap-3 text-base transition-all duration-200",
+                            "mobile-nav-link block px-4 py-3.5 min-h-[48px] touch-manipulation flex items-center gap-3 text-base transition-all duration-200",
                             "hover:bg-muted/50 active:bg-muted rounded-lg mx-2",
                             active
                               ? "text-foreground font-semibold bg-primary/5"
@@ -651,7 +699,7 @@ const Navigation = () => {
                                   <button
                                     key={sub.name}
                                     type="button"
-                                    className="w-full flex items-center gap-2.5 px-3 py-2.5 min-h-[44px] touch-manipulation text-sm text-muted-foreground hover:bg-muted/50 active:bg-muted rounded-lg transition-colors"
+                                    className="mobile-nav-link w-full flex items-center gap-2.5 px-3 py-2.5 min-h-[44px] touch-manipulation text-sm text-muted-foreground hover:bg-muted/50 active:bg-muted rounded-lg transition-colors"
                                     onClick={() => {
                                       setIsOpen(false);
                                       setLockedMenuItem({
@@ -670,7 +718,7 @@ const Navigation = () => {
                                 <Link
                                   key={sub.name}
                                   to={sub.href}
-                                  className="flex items-center gap-2.5 px-3 py-2.5 min-h-[44px] touch-manipulation text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50 active:bg-muted rounded-lg transition-colors"
+                                  className="mobile-nav-link flex items-center gap-2.5 px-3 py-2.5 min-h-[44px] touch-manipulation text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50 active:bg-muted rounded-lg transition-colors"
                                   onClick={() => setIsOpen(false)}
                                 >
                                   <SubIcon className="h-4 w-4 flex-shrink-0" />
@@ -778,9 +826,8 @@ const Navigation = () => {
                     </div>
                   )}
                 </div>
-              </div>
             </div>
-          )}
+          </div>
           </div>
         </div>
 

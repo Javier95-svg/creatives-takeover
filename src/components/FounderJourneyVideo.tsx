@@ -216,22 +216,22 @@ const FounderJourneyVideo = ({ className = '', position = 0 }: FounderJourneyVid
 
   if (loading) {
     return (
-      <div className={`flex items-center justify-center bg-muted/30 rounded-lg border border-border ${className}`} style={{ aspectRatio: containerAspectRatio }}>
+      <div className={`founder-journey-gif flex items-center justify-center bg-muted/30 rounded-lg border border-border ${className}`} style={{ aspectRatio: containerAspectRatio }}>
         <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
       </div>
     );
   }
 
   return (
-    <div className={`relative group ${className}`} style={{ aspectRatio: containerAspectRatio }}>
+    <div className={`founder-journey-gif relative group ${className}`} style={{ aspectRatio: containerAspectRatio }}>
       {/* GIF Frame */}
-      <div className="w-full h-full rounded-lg border-4 border-border bg-muted/30 overflow-hidden relative shadow-xl">
+      <div className="founder-journey-gif__frame w-full h-full rounded-lg border-4 border-border bg-muted/30 overflow-hidden relative shadow-xl">
         {gifUrl ? (
           <>
             <img
               src={gifUrl}
               alt="Founder journey GIF"
-              className="w-full h-full object-contain"
+              className="founder-journey-gif__image w-full h-full object-contain"
               onLoad={handleImageLoad}
             />
             {/* Admin overlay on hover */}

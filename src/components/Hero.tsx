@@ -472,20 +472,20 @@ const Hero = () => {
   };
 
   return (
-    <section
+      <section
       ref={heroRef}
       id="overview"
-      className="scroll-mt-24 relative pt-16 sm:pt-20 md:pt-24 pb-12 sm:pb-16 md:pb-20 px-4 sm:px-6 font-poppins"
+      className="homepage-hero scroll-mt-24 relative pt-16 sm:pt-20 md:pt-24 pb-12 sm:pb-16 md:pb-20 px-4 sm:px-6 font-poppins"
     >
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-muted/40 to-transparent pointer-events-none" />
 
       <div className="container mx-auto max-w-7xl relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 xl:gap-20 items-center">
           {/* Left Section - All existing content */}
-          <div className="text-center flex flex-col justify-center">
+          <div className="homepage-hero__content text-center flex flex-col justify-center">
             {/* Main Headline */}
             <h1
-              className="font-space-grotesk text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-semibold mb-4 sm:mb-6 leading-tight tracking-tight"
+              className="homepage-hero__title font-space-grotesk text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-semibold mb-4 sm:mb-6 leading-tight tracking-tight"
               style={{
                 textShadow: '0 0 18px hsl(var(--primary) / 0.18), 0 0 42px hsl(var(--primary) / 0.10)',
                 filter: 'drop-shadow(0 0 10px hsl(var(--primary) / 0.10))'
@@ -495,7 +495,7 @@ const Hero = () => {
             </h1>
 
             {/* Subheadline - Improved readability */}
-            <p className="font-space-grotesk text-sm sm:text-base md:text-lg text-muted-foreground mb-6 sm:mb-8 max-w-xl mx-auto leading-relaxed px-2 sm:px-0">
+            <p className="homepage-hero__copy font-space-grotesk text-sm sm:text-base md:text-lg text-muted-foreground mb-6 sm:mb-8 max-w-xl mx-auto leading-relaxed px-2 sm:px-0">
               {isAuthenticated
                 ? "Set up your profile, then head to your dashboard to see what matters now, plan your next steps, and keep moving forward one task at a time."
                 : "Accelerators reject 98% of applicants. Consultants charge £10k for a PowerPoint. We said enough. Creatives Takeover hands first-time founders the system, the tools, and the network that used to be reserved for the well-connected. No cohort, no gatekeepers, no BS."}
@@ -545,8 +545,8 @@ const Hero = () => {
           </div>
 
           {/* Right Section - 4-Pic Grid Layout */}
-          <div className="w-full lg:pt-8 xl:pt-10">
-            <div className="rounded-2xl border border-border/70 bg-card shadow-lg p-3 sm:p-4">
+          <div className="homepage-hero__media w-full lg:pt-8 xl:pt-10">
+            <div className="homepage-hero__media-shell rounded-2xl border border-border/70 bg-card shadow-lg p-3 sm:p-4">
               <div className="grid grid-cols-2 gap-2 sm:gap-3 md:gap-4 w-full">
                 {[1, 2, 3, 4].map((position) => {
                 // Use optimistic preview if available (instant rendering), otherwise use database image

@@ -14,7 +14,7 @@ export function useDeviceType(): DeviceType {
     // SSR-safe initialization
     if (typeof window === 'undefined') return 'desktop'
     const width = window.innerWidth
-    if (width < MOBILE_BREAKPOINT) return 'mobile'
+    if (width <= MOBILE_BREAKPOINT) return 'mobile'
     if (width < TABLET_BREAKPOINT) return 'tablet'
     return 'desktop'
   })
@@ -22,7 +22,7 @@ export function useDeviceType(): DeviceType {
   React.useEffect(() => {
     const updateDeviceType = () => {
       const width = window.innerWidth
-      if (width < MOBILE_BREAKPOINT) {
+      if (width <= MOBILE_BREAKPOINT) {
         setDeviceType('mobile')
       } else if (width < TABLET_BREAKPOINT) {
         setDeviceType('tablet')
@@ -35,8 +35,8 @@ export function useDeviceType(): DeviceType {
     updateDeviceType()
 
     // Use matchMedia for efficient breakpoint detection
-    const mobileQuery = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`)
-    const tabletQuery = window.matchMedia(`(min-width: ${MOBILE_BREAKPOINT}px) and (max-width: ${TABLET_BREAKPOINT - 1}px)`)
+    const mobileQuery = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT}px)`)
+    const tabletQuery = window.matchMedia(`(min-width: ${MOBILE_BREAKPOINT + 1}px) and (max-width: ${TABLET_BREAKPOINT - 1}px)`)
     const desktopQuery = window.matchMedia(`(min-width: ${TABLET_BREAKPOINT}px)`)
 
     const handleMobileChange = (e: MediaQueryListEvent) => {

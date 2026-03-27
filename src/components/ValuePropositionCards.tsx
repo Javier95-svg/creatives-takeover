@@ -327,6 +327,14 @@ const ValuePropositionCards = () => {
     const updateHeights = () => {
       const cards = Array.from(container.querySelectorAll<HTMLElement>('[data-value-card]'));
       if (!cards.length) return;
+
+      if (window.innerWidth <= 768) {
+        cards.forEach((card) => {
+          card.style.height = 'auto';
+        });
+        return;
+      }
+
       let maxHeight = 0;
       cards.forEach((card) => {
         card.style.height = 'auto';
@@ -360,17 +368,17 @@ const ValuePropositionCards = () => {
   }, []);
 
   return (
-    <section id="what-you-get" className="py-20 lg:py-28 scroll-mt-24 font-poppins">
+    <section id="what-you-get" className="value-prop-section py-20 lg:py-28 scroll-mt-24 font-poppins">
       <div className="container mx-auto px-4 sm:px-6">
         {/* Section Header */}
         <div className="max-w-3xl mx-auto text-center mb-12 sm:mb-16">
           <Badge variant="outline" className="mb-5 text-xs uppercase tracking-wide text-muted-foreground">
             The Perfect Ecosystem ♻️
           </Badge>
-          <h2 className="font-space-grotesk text-3xl sm:text-4xl lg:text-5xl font-semibold mb-4 tracking-tight text-primary">
+          <h2 className="value-prop-section__title font-space-grotesk text-3xl sm:text-4xl lg:text-5xl font-semibold mb-4 tracking-tight text-primary">
             Creatives Takeover in a Nutshell
           </h2>
-          <p className="font-poppins text-base sm:text-lg text-muted-foreground">
+          <p className="value-prop-section__copy font-poppins text-base sm:text-lg text-muted-foreground">
             Everything you need, all in one place. Built on six core pillars to help solofounders validate, build, and grow a business from scratch.
           </p>
         </div>
@@ -394,7 +402,7 @@ const ValuePropositionCards = () => {
                 const isUploadingPosition = uploading === card.position;
                 return (
                   <CarouselItem key={card.title} className="pl-4 basis-full h-full">
-                    <Card className="glass border-border overflow-hidden h-full relative" data-value-card>
+                    <Card className="value-prop-card glass border-border overflow-hidden h-full relative" data-value-card>
                       <Button
                         type="button"
                         variant="outline"
@@ -407,11 +415,11 @@ const ValuePropositionCards = () => {
                       </Button>
                       <div className="grid md:grid-cols-2 h-full">
                         {/* Image - Left */}
-                        <figure className="relative h-64 md:h-full md:min-h-[320px] group">
+                        <figure className="value-prop-card__media relative h-64 md:h-full md:min-h-[320px] group">
                           <img
                             src={imageSrc}
                             alt={altText}
-                            className="w-full h-full object-cover"
+                            className="value-prop-card__image w-full h-full object-cover"
                             loading="lazy"
                           />
                           <div className="absolute inset-0 bg-gradient-to-t from-background/10 to-transparent" />
@@ -465,7 +473,7 @@ const ValuePropositionCards = () => {
                         </figure>
 
                         {/* Content - Right */}
-                        <div className="p-6 md:p-10 flex flex-col justify-center md:h-full">
+                        <div className="value-prop-card__content p-6 md:p-10 flex flex-col justify-center md:h-full">
                           <div className="flex items-center gap-3 mb-4">
                             <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
                               <Icon className="h-5 w-5 text-primary" />
@@ -474,13 +482,13 @@ const ValuePropositionCards = () => {
                               <p className="text-xs uppercase tracking-wide text-muted-foreground">
                                 {card.title}
                               </p>
-                              <h3 className="font-space-grotesk text-2xl font-bold">
+                              <h3 className="value-prop-card__heading font-space-grotesk text-2xl font-bold">
                                 {card.subtitle}
                               </h3>
                             </div>
                           </div>
 
-                          <div className="font-poppins text-sm sm:text-[15px] leading-7 text-foreground/80 space-y-4">
+                          <div className="value-prop-card__body font-poppins text-sm sm:text-[15px] leading-7 text-foreground/80 space-y-4">
                             {card.description.split('\n\n').map((paragraph, idx) => (
                               <p key={idx}>{paragraph}</p>
                             ))}
