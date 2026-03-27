@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress as ProgressBar } from "@/components/ui/progress";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { supabase } from "@/integrations/supabase/client";
+import { getAccessTokenSafely } from "@/integrations/supabase/auth";
 import { useAuth } from "@/contexts/AuthContext";
 
 interface BizMapStructuredProps {
@@ -79,11 +79,12 @@ export const BizMapStructured = ({ sessionId: initialSessionId, onComplete }: Bi
   const initializeSession = async () => {
     try {
       setIsLoading(true);
+      const accessToken = await getAccessTokenSafely();
       const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/bizmap-structured/start`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token || ''}`
+          'Authorization': `Bearer ${accessToken || ''}`
         }
       });
 
@@ -107,10 +108,11 @@ export const BizMapStructured = ({ sessionId: initialSessionId, onComplete }: Bi
     if (!sessionId) return;
 
     try {
+      const accessToken = await getAccessTokenSafely();
       const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/bizmap-structured/status?session_id=${sessionId}`, {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token || ''}`
+          'Authorization': `Bearer ${accessToken || ''}`
         }
       });
 
@@ -140,11 +142,12 @@ export const BizMapStructured = ({ sessionId: initialSessionId, onComplete }: Bi
     setValidationErrors([]);
 
     try {
+      const accessToken = await getAccessTokenSafely();
       const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/bizmap-structured/answer`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token || ''}`
+          'Authorization': `Bearer ${accessToken || ''}`
         },
         body: JSON.stringify({
           session_id: sessionId,

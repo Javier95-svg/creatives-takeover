@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import AuthWallpaper from "@/components/wallpapers/AuthWallpaper";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { getSessionSafely } from "@/integrations/supabase/auth";
 import { trackActivity } from "@/lib/activity";
 import { useConversionTracking } from "@/hooks/useConversionTracking";
 import MobileFormOptimizer from "@/components/MobileFormOptimizer";
@@ -241,7 +242,7 @@ const Signup = () => {
         console.error('Signup error:', error);
         toast.error(mapSignUpError(error));
       } else {
-        let { data: { session } } = await supabase.auth.getSession();
+        let session = await getSessionSafely();
 
         // Ensure users are signed in immediately after signup.
         if (!session) {
@@ -257,8 +258,7 @@ const Signup = () => {
             return;
           }
 
-          const { data: refreshedSessionData } = await supabase.auth.getSession();
-          session = refreshedSessionData.session;
+          session = await getSessionSafely();
         }
 
         if (!session) {

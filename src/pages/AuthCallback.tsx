@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { supabase } from '@/integrations/supabase/client';
+import { getSessionSafely } from '@/integrations/supabase/auth';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import type { EmailOtpType } from '@supabase/supabase-js';
@@ -80,15 +81,7 @@ const AuthCallback = () => {
         console.log('Waiting for auth session...');
 
         // Wait for session to be established (works for both OAuth and email confirmation)
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-        
-        if (sessionError) {
-          console.error('Session error:', sessionError);
-          setStatus('error');
-          toast.error('Failed to establish session');
-          redirectToLogin();
-          return;
-        }
+        const session = await getSessionSafely();
 
         if (session?.user) {
           console.log('Auth successful, checking for return URL...');

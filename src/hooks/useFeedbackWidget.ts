@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { getSessionSafely } from '@/integrations/supabase/auth';
 import { safe } from '@/integrations/supabase/safe';
 import { useToast } from '@/hooks/use-toast';
 
@@ -20,8 +21,8 @@ export const useFeedbackWidget = () => {
     setIsSubmitting(true);
 
     try {
-      const { data: sessionData } = await supabase.auth.getSession();
-      const userId = sessionData.session?.user?.id || null;
+      const session = await getSessionSafely();
+      const userId = session?.user?.id || null;
 
       // Get browser info
       const browserInfo = {

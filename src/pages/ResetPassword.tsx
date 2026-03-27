@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import AuthWallpaper from "@/components/wallpapers/AuthWallpaper";
 import MobileFormOptimizer from "@/components/MobileFormOptimizer";
 import { supabase } from "@/integrations/supabase/client";
+import { getSessionSafely } from "@/integrations/supabase/auth";
 
 const ResetPassword = () => {
   const [formData, setFormData] = useState({
@@ -52,7 +53,7 @@ const ResetPassword = () => {
         }
 
         // 2. Check if session already exists (e.g. detectSessionInUrl handled it)
-        const { data: { session } } = await supabase.auth.getSession();
+        const session = await getSessionSafely();
         if (session) {
           setIsValidToken(true);
           return;

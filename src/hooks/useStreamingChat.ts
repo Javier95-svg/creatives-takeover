@@ -1,4 +1,4 @@
-import { supabase } from '@/integrations/supabase/client';
+import { getSessionSafely } from '@/integrations/supabase/auth';
 import { createIdempotencyKey } from '@/lib/idempotency';
 
 interface Message {
@@ -64,7 +64,7 @@ export const streamChat = async (
     'chatbot-streaming',
     `${sessionId}-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
   );
-  const { data: { session } } = await supabase.auth.getSession();
+  const session = await getSessionSafely();
   const accessToken = session?.access_token;
 
   console.log('🚀 Starting SSE streaming chat:', { 

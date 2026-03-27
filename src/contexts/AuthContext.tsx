@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, useRef, useCallback } from 'react';
 import { User, Session, AuthError as SupabaseAuthError } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { getSessionSafely } from '@/integrations/supabase/auth';
 import { logError, logInfo, logWarn } from '@/lib/logger';
 import { signUpWithFallback } from '@/lib/authSignup';
 import { VALIDATION } from '@/config/constants';
@@ -227,19 +228,28 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     );
 
     // Check for existing session on mount
-    supabase.auth.getSession().then(({ data: { session: existingSession } }) => {
-      if (!isMountedRef.current) return;
+    getSessionSafely()
+      .then((existingSession) => {
+        if (!isMountedRef.current) return;
 
-      setSession(existingSession);
-      setUser(existingSession?.user ?? null);
-      setLoading(false);
+        setSession(existingSession);
+        setUser(existingSession?.user ?? null);
+        setLoading(false);
 
-      // If there's already a session, run sign-in logic
-      // (signInProcessedRef prevents double-execution with onAuthStateChange)
-      if (existingSession?.user) {
-        handleSignIn(existingSession.user, existingSession);
-      }
-    });
+        // If there's already a session, run sign-in logic
+        // (signInProcessedRef prevents double-execution with onAuthStateChange)
+        if (existingSession?.user) {
+          handleSignIn(existingSession.user, existingSession);
+        }
+      })
+      .catch((error) => {
+        if (!isMountedRef.current) return;
+
+        logError('Failed to restore Supabase session on mount', error);
+        setSession(null);
+        setUser(null);
+        setLoading(false);
+      });
 
     return () => {
       isMountedRef.current = false;

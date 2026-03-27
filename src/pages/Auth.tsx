@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AlertCircle, Loader2, Eye, EyeOff } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { supabase } from '@/integrations/supabase/client';
+import { getSessionSafely } from '@/integrations/supabase/auth';
 import { toast } from 'sonner';
 import AuthWallpaper from '@/components/wallpapers/AuthWallpaper';
 import MobileFormOptimizer from '@/components/MobileFormOptimizer';
@@ -153,7 +154,7 @@ const Auth: React.FC = () => {
       setError(mapSignUpError(error));
       setLoading(false);
     } else {
-      let { data: { session } } = await supabase.auth.getSession();
+      let session = await getSessionSafely();
 
       // Ensure account creation immediately logs in without email confirmation gating.
       if (!session) {
@@ -169,8 +170,7 @@ const Auth: React.FC = () => {
           return;
         }
 
-        const { data: refreshedSessionData } = await supabase.auth.getSession();
-        session = refreshedSessionData.session;
+        session = await getSessionSafely();
       }
 
       if (!session) {

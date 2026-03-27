@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { getAccessTokenSafely, getSessionSafely } from '@/integrations/supabase/auth';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCreditActions } from '@/hooks/useCreditActions';
 import { createIdempotencyKey } from '@/lib/idempotency';
@@ -651,8 +651,7 @@ export function useMVPBuilder() {
 
   const callGitHubFunction = useCallback(
     async <T>(action: string, payload: Record<string, unknown> = {}): Promise<T> => {
-      const { data } = await supabase.auth.getSession();
-      const accessToken = data.session?.access_token;
+      const accessToken = await getAccessTokenSafely();
       if (!accessToken) {
         throw new Error('Please sign in first.');
       }
@@ -1231,9 +1230,7 @@ export function useMVPBuilder() {
       );
 
       try {
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
+        const session = await getSessionSafely();
         const accessToken = session?.access_token;
         const idempotencyKey = createIdempotencyKey(
           'app-builder',

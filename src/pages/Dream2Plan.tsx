@@ -11,6 +11,7 @@ import { BizMapHero } from "@/components/bizmap/BizMapHero";
 import InteractiveProgress from "@/components/InteractiveProgress";
 import SEO, { createSoftwareSchema, createBreadcrumbSchema } from "@/components/SEO";
 import { supabase } from "@/integrations/supabase/client";
+import { getSessionSafely } from "@/integrations/supabase/auth";
 import { toast } from "sonner";
 import ReportDownload from "@/components/ReportDownload";
 import { ChatSidebar } from "@/components/ChatSidebar";
@@ -452,8 +453,8 @@ const BizMapAI = () => {
       setSuccessScore(scoreData);
 
       // Persist for history/analytics
-      const { data } = await supabase.auth.getSession();
-      const userId = data.session?.user?.id ?? null;
+      const session = await getSessionSafely();
+      const userId = session?.user?.id ?? null;
       const score = scoreData as { score: number; breakdown?: Record<string, number> };
       setSuccessScore(score);
 

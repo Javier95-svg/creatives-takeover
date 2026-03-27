@@ -1,5 +1,6 @@
 ﻿import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { getAccessTokenSafely } from '@/integrations/supabase/auth';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database, Json } from '@/integrations/supabase/types';
 import { useAuth } from '@/contexts/AuthContext';
@@ -195,8 +196,7 @@ export function useSubscription() {
     if (isAdminEmail(user.email)) return { ...ADMIN_SUBSCRIPTION };
 
     try {
-      const sessionResp = await supabase.auth.getSession();
-      const accessToken = sessionResp?.data?.session?.access_token;
+      const accessToken = await getAccessTokenSafely();
 
       if (!accessToken) {
         return normalizeSubscriptionData(user.email, DEFAULT_SUBSCRIPTION);
@@ -434,8 +434,7 @@ export function useSubscription() {
         return paymentLink;
       }
 
-      const sessionResp = await supabase.auth.getSession();
-      const accessToken = sessionResp?.data?.session?.access_token;
+      const accessToken = await getAccessTokenSafely();
       if (!accessToken) {
         toast.error('Unable to create checkout: no auth session');
         return null;
@@ -499,8 +498,7 @@ export function useSubscription() {
         openCheckout(paymentLink);
         return paymentLink;
       }
-      const sessionResp = await supabase.auth.getSession();
-      const accessToken = sessionResp?.data?.session?.access_token;
+      const accessToken = await getAccessTokenSafely();
       if (!accessToken) {
         toast.error('Unable to create checkout: no auth session');
         return null;
@@ -547,8 +545,7 @@ export function useSubscription() {
 
     try {
       setActionLoading(true);
-      const sessionResp = await supabase.auth.getSession();
-      const accessToken = sessionResp?.data?.session?.access_token;
+      const accessToken = await getAccessTokenSafely();
       if (!accessToken) {
         toast.error('Unable to open portal: no auth session');
         return;
