@@ -30,7 +30,7 @@ const StickyMobileCTA = () => {
             className="w-full bg-primary hover:bg-primary/90 text-primary-foreground text-base font-semibold shadow-lg shadow-primary/20"
             asChild
           >
-            <Link to="/bizmap-ai">
+            <Link to="/signup">
               <span>Join Today</span>
               <ArrowRight className="ml-2 w-5 h-5" />
             </Link>
