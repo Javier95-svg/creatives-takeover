@@ -18,6 +18,108 @@ function getComponentTagger() {
   }
 }
 
+function getPackageName(id: string) {
+  const nodeModulesIndex = id.lastIndexOf("node_modules/");
+  if (nodeModulesIndex === -1) {
+    return null;
+  }
+
+  const packagePath = id.slice(nodeModulesIndex + "node_modules/".length);
+  const parts = packagePath.split("/");
+
+  if (parts[0]?.startsWith("@") && parts[1]) {
+    return `${parts[0]}/${parts[1]}`;
+  }
+
+  return parts[0] ?? null;
+}
+
+function sanitizeChunkName(value: string) {
+  return value.replace(/^@/, "").replace(/[\\/]/g, "-");
+}
+
+function getManualChunk(id: string) {
+  const packageName = getPackageName(id);
+  if (!packageName) {
+    return undefined;
+  }
+
+  if (
+    packageName === "react" ||
+    packageName === "react-dom" ||
+    packageName === "scheduler" ||
+    packageName === "use-sync-external-store" ||
+    packageName === "react-router" ||
+    packageName === "react-router-dom" ||
+    packageName === "@remix-run/router" ||
+    packageName === "react-helmet-async" ||
+    packageName === "react-fast-compare" ||
+    packageName === "react-transition-group" ||
+    packageName === "invariant" ||
+    packageName === "shallowequal" ||
+    packageName === "detect-node-es" ||
+    packageName === "dom-helpers"
+  ) {
+    return "react-core";
+  }
+
+  if (packageName === "@tanstack/react-query" || packageName === "@supabase/supabase-js" || packageName === "zustand") {
+    return "data-clients";
+  }
+
+  if (packageName.startsWith("@radix-ui/")) {
+    return "radix-ui";
+  }
+
+  if (packageName.startsWith("@dnd-kit/")) {
+    return "dnd-kit";
+  }
+
+  if (packageName === "recharts" || packageName.startsWith("d3-")) {
+    return "charts";
+  }
+
+  if (packageName === "victory-vendor") {
+    return "charts";
+  }
+
+  if (packageName === "posthog-js" || packageName === "@vercel/analytics" || packageName === "@vercel/speed-insights") {
+    return "analytics";
+  }
+
+  if (
+    packageName.startsWith("micromark") ||
+    packageName.startsWith("mdast-util") ||
+    packageName.startsWith("hast-util") ||
+    packageName.startsWith("unist-util") ||
+    packageName.startsWith("remark") ||
+    packageName.startsWith("rehype") ||
+    packageName.startsWith("vfile") ||
+    packageName === "property-information" ||
+    packageName === "html-url-attributes" ||
+    packageName === "space-separated-tokens" ||
+    packageName === "comma-separated-tokens" ||
+    packageName === "decode-named-character-reference" ||
+    packageName === "trim-lines" ||
+    packageName === "markdown-table" ||
+    packageName === "longest-streak" ||
+    packageName === "ccount" ||
+    packageName === "zwitch" ||
+    packageName === "bail" ||
+    packageName === "trough" ||
+    packageName === "devlop" ||
+    packageName === "is-plain-obj"
+  ) {
+    return "markdown";
+  }
+
+  if (packageName === "jspdf" || packageName === "html2canvas" || packageName === "docx" || packageName === "pptxgenjs" || packageName === "fabric") {
+    return `document-tools-${sanitizeChunkName(packageName)}`;
+  }
+
+  return `vendor-${sanitizeChunkName(packageName)}`;
+}
+
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
   const plugins = [react()];
@@ -48,6 +150,7 @@ export default defineConfig(({ mode }) => {
     build: {
       rollupOptions: {
         output: {
+          manualChunks: getManualChunk,
           // Use [hash] for long-term caching rather than an ever-changing timestamp
           entryFileNames: `assets/[name].[hash].js`,
           chunkFileNames: `assets/[name].[hash].js`,

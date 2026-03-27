@@ -5,8 +5,8 @@ import App from './App.tsx'
 import './index.css'
 import './styles/responsive-overrides.css'
 import { ThemeProvider } from './contexts/ThemeContext'
-import { logInfo, logWarn } from './lib/logger'
 import { reportAppError } from './lib/errorReporting'
+import { bootstrapPosthog } from './lib/analytics'
 
 const helmetContext = {};
 
@@ -58,51 +58,7 @@ window.addEventListener('error', (event) => {
   );
 });
 
-// Initialize PostHog if a public key is provided via Vite env vars.
-// Uses VITE_POSTHOG_API_KEY (public key) and optional VITE_POSTHOG_API_HOST.
-// Do NOT place secret server keys in client-side envs.
-const initPosthog = () => {
-  if (!import.meta.env.VITE_POSTHOG_API_KEY) {
-    return;
-  }
-
-  const start = async () => {
-    try {
-      const { default: posthog } = await import('posthog-js');
-      posthog.init(import.meta.env.VITE_POSTHOG_API_KEY as string, {
-        api_host: (import.meta.env.VITE_POSTHOG_API_HOST as string) || 'https://app.posthog.com',
-        autocapture: true,
-      });
-      // Debug helpers: confirm init and send a test event (only in development)
-      if (import.meta.env.DEV) {
-        logInfo('PostHog init OK - test event will be sent', { 
-          maskedKey: (import.meta.env.VITE_POSTHOG_API_KEY as string).slice(0,6) + '...' 
-        });
-      }
-      try {
-        posthog.capture('debug_posthog_init');
-      } catch (err) {
-        logWarn('PostHog capture debug event failed', { error: err });
-      }
-    } catch (e) {
-      // Fail silently in case posthog init causes issues during build or runtime.
-      // This prevents a crash if PostHog isn't available in some environments.
-      logWarn('PostHog init failed', { error: e });
-    }
-  };
-
-  if ('requestIdleCallback' in window) {
-    window.requestIdleCallback(() => {
-      void start();
-    });
-  } else {
-    window.setTimeout(() => {
-      void start();
-    }, 1500);
-  }
-};
-
-initPosthog();
+bootstrapPosthog();
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
