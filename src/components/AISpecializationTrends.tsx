@@ -157,9 +157,10 @@ const AISpecializationTrends = () => {
           </p>
         </div>
 
+        <div ref={chartAnimationRef}>
         {/* Key Statistics */}
         {!isMobile && (
-          <div ref={chartAnimationRef} className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
             <Card className="border-border/70 bg-card shadow-sm">
               <CardContent className="p-6 text-center">
                 <div ref={revenueRef} className="text-3xl md:text-4xl font-bold text-primary mb-2">
@@ -211,10 +212,10 @@ const AISpecializationTrends = () => {
                 Operational Velocity
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className={isMobile ? "px-4 pb-5" : undefined}>
               {chartVisible && (
-                <div className="chart-container">
-                  <ResponsiveContainer width="100%" height={300}>
+                <div className="chart-container mx-auto w-full max-w-[340px] sm:max-w-none">
+                  <ResponsiveContainer width="100%" height={isMobile ? 220 : 300}>
                     <LineChart data={operationalVelocityData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
                       <defs>
                         <linearGradient id="nicheGradient" x1="0" y1="0" x2="0" y2="1">
@@ -347,10 +348,10 @@ const AISpecializationTrends = () => {
                 Market Value Capture
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className={isMobile ? "px-4 pb-5" : undefined}>
               {chartVisible && (
-                <div className="chart-container" style={{ animationDelay: '0.2s' }}>
-                  <ResponsiveContainer width="100%" height={300}>
+                <div className="chart-container mx-auto w-full max-w-[340px] sm:max-w-none" style={{ animationDelay: '0.2s' }}>
+                  <ResponsiveContainer width="100%" height={isMobile ? 220 : 300}>
                     <AreaChart data={marketValueData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
                       <defs>
                         <linearGradient id="specializedGradient" x1="0" y1="0" x2="0" y2="1">
@@ -447,6 +448,7 @@ const AISpecializationTrends = () => {
               </p>
             </CardContent>
           </Card>
+        </div>
         </div>
 
         {/* Narrative Conclusion */}

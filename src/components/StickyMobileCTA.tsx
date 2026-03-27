@@ -31,7 +31,7 @@ const StickyMobileCTA = () => {
             asChild
           >
             <Link to="/bizmap-ai">
-              <span>Start Free</span>
+              <span>Join Today</span>
               <ArrowRight className="ml-2 w-5 h-5" />
             </Link>
           </Button>
