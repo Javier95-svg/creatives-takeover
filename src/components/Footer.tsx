@@ -131,7 +131,7 @@ const Footer = () => {
           </nav>
         </div>
 
-        <section className="mt-8 border-t border-border/70 pt-8">
+        <section className="footer-badge-section mt-8 border-t border-border/70 pt-8">
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <div className="flex flex-col gap-3">
               <a

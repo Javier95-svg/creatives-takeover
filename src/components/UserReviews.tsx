@@ -181,48 +181,136 @@ const UserReviews = () => {
           <div className="grid gap-4">
             <Card className="surface-panel trust-outline overflow-hidden">
               <CardContent className="p-4">
-                <div className="mb-4 flex items-center gap-3">
-                  <div className={`rounded-2xl border border-primary/20 bg-gradient-to-br ${activeStep.color} p-3`}>
-                    <ActiveIcon className="h-6 w-6 text-primary" />
-                  </div>
-                  <div>
-                    <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Active Stage</p>
-                    <p className="font-space-grotesk text-lg font-semibold text-foreground">{activeStep.shortLabel}</p>
-                  </div>
-                </div>
+                <div className="relative mx-auto w-full max-w-[330px] aspect-square">
+                  <svg
+                    className="absolute inset-0 h-full w-full pointer-events-none"
+                    viewBox="0 0 100 100"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <defs>
+                      <filter id="mobileGlow">
+                        <feGaussianBlur stdDeviation="0.5" result="coloredBlur" />
+                        <feMerge>
+                          <feMergeNode in="coloredBlur" />
+                          <feMergeNode in="SourceGraphic" />
+                        </feMerge>
+                      </filter>
+                      <radialGradient id="mobileRingGradient">
+                        <stop offset="0%" stopColor="currentColor" stopOpacity="0.1" />
+                        <stop offset="100%" stopColor="currentColor" stopOpacity="0.35" />
+                      </radialGradient>
+                    </defs>
 
-                <div className="startup-cycle-mobile-grid grid grid-cols-1 gap-3">
-                  {cycleSteps.map((step, index) => {
+                    <circle
+                      cx="50"
+                      cy="50"
+                      r="39"
+                      fill="none"
+                      stroke="url(#mobileRingGradient)"
+                      strokeWidth="0.25"
+                      className="text-primary"
+                      filter="url(#mobileGlow)"
+                    >
+                      <animate attributeName="r" values="39;39.4;39" dur="3s" repeatCount="indefinite" />
+                    </circle>
+
+                    <path
+                      d={generateConnectionPath()}
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="0.4"
+                      className="text-primary/30"
+                      strokeDasharray="2 2"
+                      filter="url(#mobileGlow)"
+                    >
+                      <animate attributeName="stroke-dashoffset" from="0" to="4" dur="2s" repeatCount="indefinite" />
+                    </path>
+
+                    {stepPositions.map((_, index) => {
+                      const isActiveSegment = index === activeStepIndex;
+                      const isPastSegment = index < activeStepIndex;
+                      const nextIndex = (index + 1) % stepPositions.length;
+                      const startAngle = ((-90 + STEP_ANGLE * index) * Math.PI) / 180;
+                      const endAngle = ((-90 + STEP_ANGLE * nextIndex) * Math.PI) / 180;
+                      const radius = 39;
+
+                      const x1 = 50 + Math.cos(startAngle) * radius;
+                      const y1 = 50 + Math.sin(startAngle) * radius;
+                      const x2 = 50 + Math.cos(endAngle) * radius;
+                      const y2 = 50 + Math.sin(endAngle) * radius;
+
+                      return (
+                        <path
+                          key={`mobile-segment-${index}`}
+                          d={`M ${x1} ${y1} A ${radius} ${radius} 0 0 1 ${x2} ${y2}`}
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth={isActiveSegment ? "0.8" : "0.6"}
+                          className={`transition-all duration-700 ${
+                            isActiveSegment
+                              ? "text-primary opacity-100"
+                              : isPastSegment
+                              ? "text-primary/50 opacity-70"
+                              : "text-primary/10 opacity-50"
+                          }`}
+                          filter={isActiveSegment ? "url(#mobileGlow)" : undefined}
+                        >
+                          {isActiveSegment && (
+                            <animate attributeName="stroke-width" values="0.8;1;0.8" dur="2s" repeatCount="indefinite" />
+                          )}
+                        </path>
+                      );
+                    })}
+                  </svg>
+
+                  <div className="absolute inset-[8%] rounded-full border-2 border-primary/20 bg-gradient-to-b from-primary/[0.07] to-background shadow-[inset_0_2px_20px_rgba(0,0,0,0.08)]" />
+                  <div className="absolute inset-[18%] rounded-full border border-primary/15 shadow-[0_0_15px_rgba(99,102,241,0.1)]" />
+
+                  <div className={`absolute inset-[31%] rounded-full border-2 border-primary/20 bg-gradient-to-br ${activeStep.color} backdrop-blur-sm flex items-center justify-center px-4 text-center transition-all duration-700 shadow-[0_0_24px_rgba(99,102,241,0.24)]`}>
+                    <div key={`mobile-active-${activeStepIndex}`} className="animate-in fade-in zoom-in duration-500">
+                      <ActiveIcon className="mx-auto mb-2 h-7 w-7 text-primary drop-shadow-[0_0_8px_currentColor]" />
+                      <p className="text-[10px] tracking-[0.22em] uppercase text-muted-foreground">Active</p>
+                      <p className="mt-1 font-space-grotesk text-sm font-semibold text-foreground leading-tight">
+                        {activeStep.shortLabel}
+                      </p>
+                    </div>
+                  </div>
+
+                  {stepPositions.map((position, index) => {
+                    const step = cycleSteps[index];
                     const StepIcon = step.icon;
                     const isActive = index === activeStepIndex;
+                    const isPast = index < activeStepIndex;
 
                     return (
                       <button
-                        key={step.shortLabel}
+                        key={`mobile-${step.shortLabel}`}
                         type="button"
                         onClick={() => {
                           setActiveStepIndex(index);
                           setIsAutoPlaying(false);
                         }}
-                        className={`min-h-[88px] rounded-2xl border p-4 text-left transition-all duration-200 ${
+                        className={`absolute -translate-x-1/2 -translate-y-1/2 w-[78px] rounded-xl border px-2 py-2 text-center transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 ${
                           isActive
-                            ? "border-primary bg-primary/10 shadow-[0_12px_30px_-18px_hsl(var(--primary)/0.55)]"
-                            : "border-border/70 bg-background/80"
+                            ? "bg-primary text-primary-foreground border-primary shadow-[0_0_18px_rgba(99,102,241,0.5)] scale-105"
+                            : isPast
+                            ? "bg-background/95 border-primary/35 text-foreground"
+                            : "bg-background/95 border-border/70 text-foreground"
                         }`}
+                        style={{
+                          left: `${position.x}%`,
+                          top: `${position.y}%`,
+                        }}
                         aria-pressed={isActive}
                         aria-label={`Select ${step.title}`}
                       >
-                        <div className="mb-2 flex items-center gap-3">
-                          <div className={`rounded-xl border border-primary/20 bg-gradient-to-br ${step.color} p-2.5`}>
-                            <StepIcon className="h-4 w-4 text-primary" />
-                          </div>
-                          <span className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                            Stage {index + 1}
-                          </span>
-                        </div>
-                        <p className="font-space-grotesk text-base font-semibold leading-tight text-foreground">
+                        <StepIcon className="mx-auto h-3.5 w-3.5" />
+                        <span className="mt-1 block text-[9px] uppercase tracking-[0.16em] opacity-80">
+                          {index + 1}
+                        </span>
+                        <span className="mt-0.5 block text-[10px] font-semibold leading-tight">
                           {step.shortLabel}
-                        </p>
+                        </span>
                       </button>
                     );
                   })}
@@ -245,7 +333,7 @@ const UserReviews = () => {
                   {activeStep.description}
                 </p>
 
-                <div className="mt-5 flex flex-wrap gap-2">
+                <div className="mt-5 startup-cycle-mobile-grid grid grid-cols-1 gap-2">
                   {cycleSteps.map((step, index) => (
                     <button
                       key={step.shortLabel}
@@ -254,14 +342,14 @@ const UserReviews = () => {
                         setActiveStepIndex(index);
                         setIsAutoPlaying(false);
                       }}
-                      className={`min-h-[44px] rounded-full px-3 text-xs font-medium transition-colors ${
+                      className={`min-h-[44px] rounded-2xl px-3 py-2 text-left text-xs font-medium transition-colors ${
                         index === activeStepIndex
                           ? "bg-primary text-primary-foreground"
                           : "bg-background/80 text-muted-foreground"
                       }`}
                       aria-label={`Go to ${step.shortLabel}`}
                     >
-                      {step.shortLabel}
+                      Stage {index + 1}: {step.shortLabel}
                     </button>
                   ))}
                 </div>

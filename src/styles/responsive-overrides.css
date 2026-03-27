@@ -286,6 +286,10 @@
     width: 100%;
   }
 
+  .footer-badge-section {
+    display: none;
+  }
+
   .founder-journey-gif,
   .journey-action-card,
   .value-prop-card {
