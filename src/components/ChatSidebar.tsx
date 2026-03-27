@@ -376,23 +376,23 @@ export const ChatSidebar = ({ onSessionSelect, onNewChat, className, modeInfo }:
                           <div
                             key={session.id}
                             className={cn(
-                              "group relative p-3 rounded-xl cursor-pointer transition-all duration-300",
+                              "group relative p-3 pr-11 rounded-xl cursor-pointer transition-all duration-300",
                               "hover:bg-muted/60 hover:shadow-md hover:-translate-y-0.5",
                               currentSessionId === session.id && "bg-primary/10 border border-primary/20 shadow-sm"
                             )}
                             onClick={() => handleSessionClick(session)}
                           >
                             <div className="flex items-start gap-2">
-                              <div className="flex-1 min-w-0 overflow-x-auto scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent">
+                              <div className="flex-1 min-w-0 overflow-hidden">
                                 <div className="flex items-center gap-2 mb-1">
-                                  <h4 className="font-medium text-sm whitespace-nowrap flex-1">
+                                  <h4 className="font-medium text-sm flex-1 truncate">
                                     {session.title}
                                   </h4>
                                   {session.is_pinned && (
                                     <Pin className="w-3.5 h-3.5 text-primary flex-shrink-0" />
                                   )}
                                 </div>
-                                <p className="text-xs text-muted-foreground whitespace-nowrap">
+                                <p className="text-xs text-muted-foreground truncate">
                                   {formatDate(session.updated_at)}
                                 </p>
                               </div>
@@ -403,7 +403,7 @@ export const ChatSidebar = ({ onSessionSelect, onNewChat, className, modeInfo }:
                                   <Button
                                     variant="ghost"
                                     size="sm"
-                                    className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 h-8 w-8 p-0 flex-shrink-0 rounded-lg"
+                                    className="absolute right-2 top-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-300 h-8 w-8 p-0 flex-shrink-0 rounded-lg"
                                   >
                                     <span className="text-lg leading-none">⋯</span>
                                   </Button>

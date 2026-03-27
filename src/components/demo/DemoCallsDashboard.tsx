@@ -55,15 +55,15 @@ const DemoCallsDashboard: React.FC = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="flex items-center justify-between mb-8">
-        <div>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-8">
+        <div className="min-w-0">
           <h1 className="text-3xl font-bold">Demo Calls</h1>
           <p className="text-muted-foreground mt-2">
             Schedule and join demo calls to showcase your progress and get feedback
           </p>
         </div>
         
-        <Button onClick={() => setShowScheduler(true)}>
+        <Button onClick={() => setShowScheduler(true)} className="w-full sm:w-auto">
           <Plus className="w-4 h-4 mr-2" />
           Schedule Demo
         </Button>
@@ -76,7 +76,7 @@ const DemoCallsDashboard: React.FC = () => {
         </div>
       ) : (
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="adaptive-tabs grid w-full grid-cols-3">
             <TabsTrigger value="upcoming" className="flex items-center gap-2">
               <Calendar className="w-4 h-4" />
               Upcoming ({upcomingCalls.length})

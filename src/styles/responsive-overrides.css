@@ -17,7 +17,7 @@
   }
 }
 
-@media (min-width: 768px) and (max-width: 1024px) {
+@media (min-width: 769px) and (max-width: 1024px) {
   /* Tablet fallback for base multi-column grids that have no small-screen override. */
   .grid[class~="grid-cols-3"]:not([class*="lg:grid-cols"]):not([class*="xl:grid-cols"]):not([class*="2xl:grid-cols"]),
   .grid[class~="grid-cols-4"]:not([class*="lg:grid-cols"]):not([class*="xl:grid-cols"]):not([class*="2xl:grid-cols"]),
@@ -73,7 +73,7 @@
   }
 }
 
-@media (max-width: 767px) {
+@media (max-width: 768px) {
   .container {
     padding-left: 1rem;
     padding-right: 1rem;

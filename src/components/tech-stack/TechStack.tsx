@@ -647,7 +647,7 @@ const CategorySection: React.FC<CategorySectionProps> = ({
                   key={product.id}
                   type="button"
                   onClick={() => onProductSelect(category.id, product.id)}
-                  className={`w-full rounded-xl border p-4 text-left transition-all ${
+                  className={`w-full min-h-[44px] rounded-2xl border p-4 text-left transition-all ${
                     selected
                       ? 'border-primary bg-primary/10 shadow-sm'
                       : 'border-border hover:border-primary/40 hover:bg-muted/40'
@@ -655,15 +655,17 @@ const CategorySection: React.FC<CategorySectionProps> = ({
                 >
                   <div className="mb-3 flex items-start justify-between gap-3">
                     <div>
-                      <p className="font-semibold">{product.name}</p>
-                      <p className="text-xs text-muted-foreground mt-1">{product.price}</p>
+                      <p className="font-semibold leading-tight">{product.name}</p>
+                      <p className="inline-flex rounded-full bg-background/80 px-2.5 py-1 text-xs text-muted-foreground mt-2">
+                        {product.price}
+                      </p>
                     </div>
                     {selected && <CheckCircle2 className="w-4 h-4 text-primary shrink-0 mt-0.5" />}
                   </div>
 
                   <p className="text-sm text-muted-foreground mb-3">{product.description}</p>
 
-                  <div className="grid grid-cols-1 gap-3">
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     <div>
                       <p className="text-xs font-medium mb-1">Pros</p>
                       <ul className="list-disc list-inside space-y-1 text-xs text-muted-foreground">
