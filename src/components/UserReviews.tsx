@@ -332,27 +332,6 @@ const UserReviews = () => {
                 <p className="text-sm leading-7 text-muted-foreground whitespace-pre-line">
                   {activeStep.description}
                 </p>
-
-                <div className="mt-5 startup-cycle-mobile-grid grid grid-cols-1 gap-2">
-                  {cycleSteps.map((step, index) => (
-                    <button
-                      key={step.shortLabel}
-                      type="button"
-                      onClick={() => {
-                        setActiveStepIndex(index);
-                        setIsAutoPlaying(false);
-                      }}
-                      className={`min-h-[44px] rounded-2xl px-3 py-2 text-left text-xs font-medium transition-colors ${
-                        index === activeStepIndex
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-background/80 text-muted-foreground"
-                      }`}
-                      aria-label={`Go to ${step.shortLabel}`}
-                    >
-                      Stage {index + 1}: {step.shortLabel}
-                    </button>
-                  ))}
-                </div>
               </CardContent>
             </Card>
           </div>

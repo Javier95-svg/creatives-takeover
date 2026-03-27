@@ -17,6 +17,7 @@ import {
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { useCountUp } from "@/hooks/useCountUp";
 import { useTypingAnimation } from "@/hooks/useTypingAnimation";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const TypedParagraph = ({
   text,
@@ -44,6 +45,7 @@ const TypedParagraph = ({
 const AISpecializationTrends = () => {
   const [chartVisible, setChartVisible] = useState(false);
   const [textSectionVisible, setTextSectionVisible] = useState(false);
+  const isMobile = useIsMobile();
   const typingSpeed = 24;
   const firstNarrative =
     "It has never been a better time to be a founder. Markets are unbundling, and software is breaking into focused, founder-sized opportunities instead of being dominated by a few general-purpose giants.";
@@ -156,46 +158,48 @@ const AISpecializationTrends = () => {
         </div>
 
         {/* Key Statistics */}
-        <div ref={chartAnimationRef} className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-          <Card className="border-border/70 bg-card shadow-sm">
-            <CardContent className="p-6 text-center">
-              <div ref={revenueRef} className="text-3xl md:text-4xl font-bold text-primary mb-2">
-                ${revenueCount.toFixed(1)}M
-              </div>
-              <div className="text-sm text-muted-foreground mb-1">Revenue Per Employee</div>
-              <div className="flex items-center justify-center gap-1 mt-2">
-                <TrendingUp className="w-4 h-4 text-green-600" />
-                <span className="text-xs text-green-600">4.5x Industry Avg</span>
-              </div>
-            </CardContent>
-          </Card>
+        {!isMobile && (
+          <div ref={chartAnimationRef} className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+            <Card className="border-border/70 bg-card shadow-sm">
+              <CardContent className="p-6 text-center">
+                <div ref={revenueRef} className="text-3xl md:text-4xl font-bold text-primary mb-2">
+                  ${revenueCount.toFixed(1)}M
+                </div>
+                <div className="text-sm text-muted-foreground mb-1">Revenue Per Employee</div>
+                <div className="flex items-center justify-center gap-1 mt-2">
+                  <TrendingUp className="w-4 h-4 text-green-600" />
+                  <span className="text-xs text-green-600">4.5x Industry Avg</span>
+                </div>
+              </CardContent>
+            </Card>
 
-          <Card className="border-border/70 bg-card shadow-sm">
-            <CardContent className="p-6 text-center">
-              <div ref={speedRef} className="text-3xl md:text-4xl font-bold text-muted-foreground mb-2">
-                {speedCount.toFixed(0)}x
-              </div>
-              <div className="text-sm text-muted-foreground mb-1">Faster Time-to-Market</div>
-              <div className="flex items-center justify-center gap-1 mt-2">
-                <Zap className="w-4 h-4 text-accent" />
-                <span className="text-xs text-accent">vs Legacy Enterprise</span>
-              </div>
-            </CardContent>
-          </Card>
+            <Card className="border-border/70 bg-card shadow-sm">
+              <CardContent className="p-6 text-center">
+                <div ref={speedRef} className="text-3xl md:text-4xl font-bold text-muted-foreground mb-2">
+                  {speedCount.toFixed(0)}x
+                </div>
+                <div className="text-sm text-muted-foreground mb-1">Faster Time-to-Market</div>
+                <div className="flex items-center justify-center gap-1 mt-2">
+                  <Zap className="w-4 h-4 text-accent" />
+                  <span className="text-xs text-accent">vs Legacy Enterprise</span>
+                </div>
+              </CardContent>
+            </Card>
 
-          <Card className="border-border/70 bg-card shadow-sm">
-            <CardContent className="p-6 text-center">
-              <div ref={marginRef} className="text-3xl md:text-4xl font-bold text-accent mb-2">
-                {marginCount.toFixed(0)}%
-              </div>
-              <div className="text-sm text-muted-foreground mb-1">Profit Margins</div>
-              <div className="flex items-center justify-center gap-1 mt-2">
-                <TrendingUp className="w-4 h-4 text-green-600" />
-                <span className="text-xs text-green-600">vs 20% Legacy Avg</span>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+            <Card className="border-border/70 bg-card shadow-sm">
+              <CardContent className="p-6 text-center">
+                <div ref={marginRef} className="text-3xl md:text-4xl font-bold text-accent mb-2">
+                  {marginCount.toFixed(0)}%
+                </div>
+                <div className="text-sm text-muted-foreground mb-1">Profit Margins</div>
+                <div className="flex items-center justify-center gap-1 mt-2">
+                  <TrendingUp className="w-4 h-4 text-green-600" />
+                  <span className="text-xs text-green-600">vs 20% Legacy Avg</span>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
         {/* Charts Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
