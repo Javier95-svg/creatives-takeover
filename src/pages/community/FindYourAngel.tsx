@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { Helmet } from "react-helmet-async";
 import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
@@ -35,6 +35,7 @@ import { useAngels } from "@/hooks/useAngels";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFeatureGating } from "@/hooks/useFeatureGating";
 import { useUpgradePrompt } from "@/contexts/UpgradePromptContext";
+import { ANGEL_SECTOR_OPTIONS } from "@/data/angelSectors";
 
 import { cn } from "@/lib/utils";
 import {
@@ -104,15 +105,14 @@ const FindYourAngel = () => {
     const stagesParam = searchParams.get("stages");
     return stagesParam ? stagesParam.split(",").filter(Boolean) : [];
   });
+  const [selectedSectors, setSelectedSectors] = useState<string[]>(() => {
+    const sectorsParam = searchParams.get("sectors");
+    return sectorsParam ? sectorsParam.split(",").filter(Boolean) : [];
+  });
   const [sortBy, setSortBy] = useState(searchParams.get("sort") || "alphabetical");
   const currentPage = parseInt(searchParams.get("page") || "1", 10);
 
-
-  useEffect(() => {
-    loadAngels();
-  }, []);
-
-  const loadAngels = async () => {
+  const loadAngels = useCallback(async () => {
     try {
       const fetched = await fetchAngels();
       setAngels(fetched);
@@ -120,7 +120,11 @@ const FindYourAngel = () => {
       console.error('Error loading angel investors:', error);
       setAngels([]);
     }
-  };
+  }, [fetchAngels]);
+
+  useEffect(() => {
+    loadAngels();
+  }, [loadAngels]);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
@@ -165,6 +169,31 @@ const FindYourAngel = () => {
     setSearchParams(params, { replace: true });
   };
 
+  const handleSectorToggle = (sector: string) => {
+    setSelectedSectors((prev) => {
+      const next = prev.includes(sector)
+        ? prev.filter((value) => value !== sector)
+        : [...prev, sector];
+      const params = new URLSearchParams(searchParams);
+      if (next.length > 0) {
+        params.set("sectors", next.join(","));
+      } else {
+        params.delete("sectors");
+      }
+      params.set("page", "1");
+      setSearchParams(params, { replace: true });
+      return next;
+    });
+  };
+
+  const clearSectorFilter = () => {
+    setSelectedSectors([]);
+    const params = new URLSearchParams(searchParams);
+    params.delete("sectors");
+    params.set("page", "1");
+    setSearchParams(params, { replace: true });
+  };
+
   const handleSortChange = (newSort: string) => {
     setSortBy(newSort);
     const params = new URLSearchParams(searchParams);
@@ -180,13 +209,14 @@ const FindYourAngel = () => {
   const clearAllFilters = () => {
     setSearchQuery("");
     setSelectedStages([]);
+    setSelectedSectors([]);
     setSortBy("alphabetical");
     const params = new URLSearchParams();
     params.set("page", "1");
     setSearchParams(params, { replace: true });
   };
 
-  const hasActiveFilters = searchQuery.length > 0 || selectedStages.length > 0;
+  const hasActiveFilters = searchQuery.length > 0 || selectedStages.length > 0 || selectedSectors.length > 0;
 
   // Filtered and sorted angels based on debounced search, stage filters, and sort
   const filteredAngels = useMemo(() => {
@@ -199,7 +229,8 @@ const FindYourAngel = () => {
         (angel) =>
           angel.name.toLowerCase().includes(query) ||
           angel.firm_name.toLowerCase().includes(query) ||
-          angel.investment_stages?.some((s) => s.toLowerCase().includes(query))
+          angel.investment_stages?.some((s) => s.toLowerCase().includes(query)) ||
+          angel.sectors?.some((sector) => sector.toLowerCase().includes(query))
       );
     }
 
@@ -207,6 +238,12 @@ const FindYourAngel = () => {
     if (selectedStages.length > 0) {
       result = result.filter((angel) =>
         selectedStages.some((stage) => angel.investment_stages?.includes(stage))
+      );
+    }
+
+    if (selectedSectors.length > 0) {
+      result = result.filter((angel) =>
+        selectedSectors.some((sector) => angel.sectors?.includes(sector))
       );
     }
 
@@ -235,7 +272,7 @@ const FindYourAngel = () => {
     }
 
     return result;
-  }, [angels, debouncedSearch, selectedStages, sortBy]);
+  }, [angels, debouncedSearch, selectedSectors, selectedStages, sortBy]);
 
   const handlePageChange = (page: number) => {
     const params = new URLSearchParams(searchParams);
@@ -361,10 +398,10 @@ const FindYourAngel = () => {
                           <>
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                             <Input
-                              placeholder="Search investors by name, firm, or stage"
+                              placeholder="Search investors by name, firm, stage, or sector"
                               value={searchQuery}
                               onChange={handleSearchChange}
-                              aria-label="Search angel investors by name, firm, or stage"
+                              aria-label="Search angel investors by name, firm, stage, or sector"
                               className="h-11 min-h-[44px] w-full rounded-full border-border/70 bg-background pl-10 text-base md:text-sm"
                             />
                           </>
@@ -374,9 +411,9 @@ const FindYourAngel = () => {
                               <div className="relative opacity-60">
                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                 <Input
-                                  placeholder="Search investors by name, firm, or stage"
+                                  placeholder="Search investors by name, firm, stage, or sector"
                                   disabled
-                                  aria-label="Search angel investors (upgrade to unlock)"
+                                  aria-label="Search angel investors by name, firm, stage, or sector (upgrade to unlock)"
                                   className="pointer-events-none h-11 min-h-[44px] w-full rounded-full border-border/70 bg-background pl-10 text-base md:text-sm"
                                 />
                               </div>
@@ -463,6 +500,81 @@ const FindYourAngel = () => {
                                 disabled
                               >
                                 Investment Stage
+                                <ChevronDown className="ml-2 h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Upgrade to Professional to unlock filters</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        )}
+
+                        {isPro ? (
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button
+                                variant="outline"
+                                className={cn(
+                                  "h-9 rounded-full",
+                                  selectedSectors.length > 0 && "border-primary bg-primary/5"
+                                )}
+                              >
+                                Sectors
+                                {selectedSectors.length > 0 && (
+                                  <Badge variant="secondary" className="ml-2 h-5 px-1.5">
+                                    {selectedSectors.length}
+                                  </Badge>
+                                )}
+                                <ChevronDown className="ml-2 h-4 w-4" />
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-72" align="start">
+                              <div className="space-y-4">
+                                <div className="flex items-center justify-between">
+                                  <Label className="font-semibold">Sectors</Label>
+                                  {selectedSectors.length > 0 && (
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={clearSectorFilter}
+                                    >
+                                      Clear
+                                    </Button>
+                                  )}
+                                </div>
+                                <Separator />
+                                <div className="space-y-2">
+                                  {ANGEL_SECTOR_OPTIONS.map((sector) => (
+                                    <div
+                                      key={sector}
+                                      className="flex items-center space-x-2"
+                                    >
+                                      <Checkbox
+                                        id={`filter-sector-${sector}`}
+                                        checked={selectedSectors.includes(sector)}
+                                        onCheckedChange={() => handleSectorToggle(sector)}
+                                      />
+                                      <Label
+                                        htmlFor={`filter-sector-${sector}`}
+                                        className="flex-1 cursor-pointer font-normal"
+                                      >
+                                        {sector}
+                                      </Label>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            </PopoverContent>
+                          </Popover>
+                        ) : (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="outline"
+                                className="h-9 rounded-full opacity-50 cursor-not-allowed"
+                                disabled
+                              >
+                                Sectors
                                 <ChevronDown className="ml-2 h-4 w-4" />
                               </Button>
                             </TooltipTrigger>

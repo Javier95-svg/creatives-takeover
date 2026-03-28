@@ -2,7 +2,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { AngelInvestor } from "@/types/angel";
-import { Linkedin, Globe, Building2, Mail } from "lucide-react";
+import { Linkedin, Globe, Building2, Mail, Twitter } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface AngelCardProps {
@@ -82,8 +82,22 @@ export const AngelCard = ({ angel, className, priority = false }: AngelCardProps
               </div>
             )}
 
+            {angel.sectors && angel.sectors.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {angel.sectors.map((sector) => (
+                  <Badge
+                    key={sector}
+                    variant="secondary"
+                    className="text-xs font-medium px-3 py-1"
+                  >
+                    {sector}
+                  </Badge>
+                ))}
+              </div>
+            )}
+
             {/* Social Links */}
-            {(angel.email || angel.website_url || angel.linkedin_url) && (
+            {(angel.email || angel.website_url || angel.linkedin_url || angel.twitter_x_url) && (
               <div className="flex items-center gap-4 pt-1">
                 {angel.email && (
                   <a
@@ -105,6 +119,18 @@ export const AngelCard = ({ angel, className, priority = false }: AngelCardProps
                   >
                     <Linkedin className="h-4 w-4" />
                     <span className="hidden sm:inline">LinkedIn</span>
+                  </a>
+                )}
+                {angel.twitter_x_url && (
+                  <a
+                    href={angel.twitter_x_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    aria-label="X"
+                  >
+                    <Twitter className="h-4 w-4" />
+                    <span className="hidden sm:inline">X</span>
                   </a>
                 )}
                 {angel.website_url && (

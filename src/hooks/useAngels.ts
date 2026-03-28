@@ -120,10 +120,12 @@ export const useAngels = () => {
         name: input.name,
         firm_name: input.firm_name,
         investment_stages: input.investment_stages || [],
+        sectors: input.sectors || [],
         picture: input.picture || null,
         email: input.email || null,
         website_url: input.website_url || null,
         linkedin_url: input.linkedin_url || null,
+        twitter_x_url: input.twitter_x_url || null,
         is_active: input.is_active !== undefined ? input.is_active : true,
       };
 
@@ -194,9 +196,11 @@ export const useAngels = () => {
       if (input.picture !== undefined) cleanInput.picture = input.picture;
       if (input.firm_name !== undefined) cleanInput.firm_name = input.firm_name;
       if (input.investment_stages !== undefined) cleanInput.investment_stages = input.investment_stages;
+      if (input.sectors !== undefined) cleanInput.sectors = input.sectors;
       if (input.email !== undefined) cleanInput.email = input.email;
       if (input.website_url !== undefined) cleanInput.website_url = input.website_url;
       if (input.linkedin_url !== undefined) cleanInput.linkedin_url = input.linkedin_url;
+      if (input.twitter_x_url !== undefined) cleanInput.twitter_x_url = input.twitter_x_url;
       if (input.is_active !== undefined) cleanInput.is_active = input.is_active;
 
       console.log('Updating angel investor with data:', {

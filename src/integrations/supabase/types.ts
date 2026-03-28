@@ -249,6 +249,8 @@ export type Database = {
           linkedin_url: string | null
           name: string
           picture: string | null
+          sectors: string[] | null
+          twitter_x_url: string | null
           updated_at: string | null
           website_url: string | null
         }
@@ -262,6 +264,8 @@ export type Database = {
           linkedin_url?: string | null
           name: string
           picture?: string | null
+          sectors?: string[] | null
+          twitter_x_url?: string | null
           updated_at?: string | null
           website_url?: string | null
         }
@@ -275,6 +279,8 @@ export type Database = {
           linkedin_url?: string | null
           name?: string
           picture?: string | null
+          sectors?: string[] | null
+          twitter_x_url?: string | null
           updated_at?: string | null
           website_url?: string | null
         }

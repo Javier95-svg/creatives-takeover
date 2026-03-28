@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
@@ -24,6 +24,7 @@ import { Save, Loader2, ArrowLeft, Trash2, User } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { AngelInvestor, CreateAngelInput } from "@/types/angel";
+import { ANGEL_SECTOR_OPTIONS } from "@/data/angelSectors";
 
 const INVESTMENT_STAGE_OPTIONS = [
   "Pre-Seed",
@@ -58,28 +59,15 @@ const AdminAngelEditor = () => {
     picture: null,
     firm_name: "",
     investment_stages: [],
+    sectors: [],
     email: null,
     website_url: null,
     linkedin_url: null,
+    twitter_x_url: null,
     is_active: true,
   });
 
-  // Wait for auth to load before checking admin status
-  useEffect(() => {
-    if (authLoading) return; // Wait for auth to settle
-
-    if (!isAdmin) {
-      toast.error("Only admins can access this page");
-      navigate("/community/angels");
-      return;
-    }
-
-    if (id && id !== "new") {
-      loadAngel(id);
-    }
-  }, [id, isAdmin, authLoading, navigate]);
-
-  const loadAngel = async (angelId: string) => {
+  const loadAngel = useCallback(async (angelId: string) => {
     const found = await fetchAngelById(angelId);
 
     if (found) {
@@ -89,9 +77,11 @@ const AdminAngelEditor = () => {
         picture: found.picture || null,
         firm_name: found.firm_name,
         investment_stages: found.investment_stages || [],
+        sectors: found.sectors || [],
         email: found.email || null,
         website_url: found.website_url || null,
         linkedin_url: found.linkedin_url || null,
+        twitter_x_url: found.twitter_x_url || null,
         is_active: found.is_active !== false,
       };
       setFormData(loadedForm);
@@ -101,7 +91,7 @@ const AdminAngelEditor = () => {
         setPicturePreview(found.picture);
       }
     }
-  };
+  }, [fetchAngelById]);
 
   // Track dirty state by comparing current form to initial snapshot
   useEffect(() => {
@@ -158,7 +148,7 @@ const AdminAngelEditor = () => {
       const fileId = angel?.id || 'temp';
       const fileName = `${fileId}/${Date.now()}.${fileExt}`;
 
-      const { data: uploadData, error: uploadError } = await supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from('angel-pictures')
         .upload(fileName, file, {
           cacheControl: '3600',
@@ -233,6 +223,31 @@ const AdminAngelEditor = () => {
     });
   };
 
+  // Wait for auth to load before checking admin status
+  useEffect(() => {
+    if (authLoading) return; // Wait for auth to settle
+
+    if (!isAdmin) {
+      toast.error("Only admins can access this page");
+      navigate("/community/angels");
+      return;
+    }
+
+    if (id && id !== "new") {
+      loadAngel(id);
+    }
+  }, [authLoading, id, isAdmin, loadAngel, navigate]);
+
+  const toggleSector = (sector: string) => {
+    setFormData((prev) => {
+      const current = prev.sectors || [];
+      const newSectors = current.includes(sector)
+        ? current.filter((value) => value !== sector)
+        : [...current, sector];
+      return { ...prev, sectors: newSectors };
+    });
+  };
+
   const handleSave = async () => {
     if (!formData.name || !formData.firm_name) {
       toast.error("Please fill in name and venture capital firm");
@@ -252,9 +267,11 @@ const AdminAngelEditor = () => {
         picture: formData.picture || null,
         firm_name: formData.firm_name,
         investment_stages: formData.investment_stages || [],
+        sectors: formData.sectors || [],
         email: formData.email || null,
         website_url: formData.website_url || null,
         linkedin_url: formData.linkedin_url || null,
+        twitter_x_url: formData.twitter_x_url || null,
         is_active: formData.is_active !== undefined ? formData.is_active : true,
       };
 
@@ -453,8 +470,31 @@ const AdminAngelEditor = () => {
                 </p>
               </div>
 
+              <div>
+                <Label>Sectors</Label>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {ANGEL_SECTOR_OPTIONS.map((sector) => {
+                    const isSelected = formData.sectors?.includes(sector) || false;
+                    return (
+                      <Button
+                        key={sector}
+                        type="button"
+                        variant={isSelected ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => toggleSector(sector)}
+                      >
+                        {sector}
+                      </Button>
+                    );
+                  })}
+                </div>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Tag this investor with one or more sectors they invest in.
+                </p>
+              </div>
+
               {/* Links */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
                 <div>
                   <Label htmlFor="email">Email</Label>
                   <Input
@@ -501,6 +541,22 @@ const AdminAngelEditor = () => {
                   />
                   <p className="text-xs text-muted-foreground mt-1">
                     LinkedIn profile URL
+                  </p>
+                </div>
+                <div>
+                  <Label htmlFor="twitter_x_url">X Profile URL</Label>
+                  <Input
+                    id="twitter_x_url"
+                    type="url"
+                    value={formData.twitter_x_url || ""}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, twitter_x_url: e.target.value || null }))
+                    }
+                    placeholder="https://x.com/username"
+                    className="mt-1"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    X (Twitter) profile URL
                   </p>
                 </div>
               </div>
