@@ -254,9 +254,9 @@ export const MentorProfile = ({ mentor, onBookClick }: MentorProfileProps) => {
           </div>
 
           {/* Center: Content */}
-          <div className="flex-1 min-w-0 space-y-3">
+          <div className="flex-1 min-w-0 space-y-3 text-center lg:text-left">
             {/* Name and Verification */}
-            <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex items-center justify-center gap-2 flex-wrap lg:justify-start">
               <h1 className="text-2xl lg:text-3xl font-bold text-foreground">
                 {mentor.name}
               </h1>
