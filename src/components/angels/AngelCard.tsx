@@ -84,11 +84,13 @@ export const AngelCard = ({ angel, className, priority = false }: AngelCardProps
 
             {angel.sectors && angel.sectors.length > 0 && (
               <div className="flex flex-wrap gap-2">
-                {angel.sectors.map((sector) => (
+                {angel.sectors
+                  .slice()
+                  .sort((a, b) => a.localeCompare(b))
+                  .map((sector) => (
                   <Badge
                     key={sector}
-                    variant="secondary"
-                    className="text-xs font-medium px-3 py-1"
+                    className="bg-red-600 text-white text-xs font-medium px-3 py-1 hover:bg-red-600"
                   >
                     {sector}
                   </Badge>
