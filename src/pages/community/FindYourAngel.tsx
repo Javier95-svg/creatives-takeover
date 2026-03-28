@@ -77,6 +77,8 @@ const INVESTMENT_STAGE_OPTIONS = [
   "Series C+",
 ];
 
+const SORTED_ANGEL_SECTOR_OPTIONS = [...ANGEL_SECTOR_OPTIONS].sort((a, b) => a.localeCompare(b));
+
 // Custom debounce hook
 function useDebounce<T>(value: T, delay: number): T {
   const [debouncedValue, setDebouncedValue] = useState(value);
@@ -544,7 +546,7 @@ const FindYourAngel = () => {
                                 </div>
                                 <Separator />
                                 <div className="space-y-2">
-                                  {ANGEL_SECTOR_OPTIONS.map((sector) => (
+                                  {SORTED_ANGEL_SECTOR_OPTIONS.map((sector) => (
                                     <div
                                       key={sector}
                                       className="flex items-center space-x-2"
