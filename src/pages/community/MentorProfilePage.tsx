@@ -3,6 +3,7 @@ import { useParams, Link, useLocation } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
+import CommunityMentorsWallpaper from "@/components/wallpapers/CommunityMentorsWallpaper";
 import { MentorProfile } from "@/components/mentor-marketplace/MentorProfile";
 import { Button } from "@/components/ui/button";
 import { MentorProfile as MentorProfileType } from "@/types/mentor";
@@ -31,7 +32,7 @@ const MentorProfilePage = () => {
   // Using useMemo ensures this recalculates when location.pathname changes
   const slug = useMemo(() => {
     if (paramSlug) return paramSlug;
-    const pathMatch = location.pathname.match(/^\/community\/([^\/]+)$/);
+    const pathMatch = location.pathname.match(/^\/community\/([^/]+)$/);
     return pathMatch ? pathMatch[1] : null;
   }, [paramSlug, location.pathname]);
 
@@ -178,7 +179,8 @@ const MentorProfilePage = () => {
         <title>{mentor.name} | Mentor Profile</title>
         <meta name="description" content={mentor.bio.substring(0, 160)} />
       </Helmet>
-      <div className="relative min-h-screen overflow-hidden">
+      <div className="min-h-screen bg-background relative">
+        <CommunityMentorsWallpaper />
         <div className="relative z-10">
           <Navigation />
           <div className="pt-16">
