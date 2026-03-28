@@ -332,14 +332,14 @@ export const MentorCard = ({ mentor, className, priority = false }: MentorCardPr
           <div className="flex-1 min-w-0 space-y-2">
             {/* Name and Verification */}
             <div className="flex flex-col items-center gap-2 sm:items-start">
-              <div className="flex items-center justify-center gap-2 text-center sm:justify-start sm:text-left">
+              <div className="flex items-center justify-center gap-1.5 text-center sm:gap-2 sm:justify-start sm:text-left">
                 <Link
                   to={profileUrl}
-                  className="text-lg lg:text-xl font-bold text-foreground hover:text-primary transition-colors"
+                  className="inline-flex items-center text-lg font-bold leading-none text-foreground transition-colors hover:text-primary lg:text-xl"
                 >
                   {mentor.name}
                 </Link>
-                <CheckCircle2 className="h-5 w-5 text-primary flex-shrink-0" />
+                <CheckCircle2 className="h-[18px] w-[18px] flex-shrink-0 text-primary sm:h-5 sm:w-5" />
                 {countryFlag && (
                   <span className="hidden text-lg lg:text-xl sm:inline" title={getNationality() || ''}>
                     {countryFlag}
@@ -348,9 +348,9 @@ export const MentorCard = ({ mentor, className, priority = false }: MentorCardPr
               </div>
 
               {(countryFlag || mentor.linkedin_url || mentor.twitter_x_url || mentor.website_url) && (
-                <div className="flex items-center justify-center gap-3 sm:justify-start">
+                <div className="flex items-center justify-center gap-2.5 sm:gap-3 sm:justify-start">
                   {countryFlag && (
-                    <span className="text-lg lg:text-xl sm:hidden" title={getNationality() || ''}>
+                    <span className="flex h-5 w-5 items-center justify-center text-base leading-none sm:hidden" title={getNationality() || ''}>
                       {countryFlag}
                     </span>
                   )}
@@ -359,11 +359,11 @@ export const MentorCard = ({ mentor, className, priority = false }: MentorCardPr
                       href={mentor.linkedin_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-muted-foreground hover:text-blue-600 transition-colors"
+                      className="flex h-5 w-5 items-center justify-center text-muted-foreground transition-colors hover:text-blue-600 sm:h-auto sm:w-auto"
                       aria-label="LinkedIn"
                       onClick={(e) => e.stopPropagation()}
                     >
-                      <Linkedin className="h-5 w-5" />
+                      <Linkedin className="h-4 w-4 sm:h-5 sm:w-5" />
                     </a>
                   )}
                   {mentor.twitter_x_url && (
@@ -371,11 +371,11 @@ export const MentorCard = ({ mentor, className, priority = false }: MentorCardPr
                       href={mentor.twitter_x_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-muted-foreground hover:text-foreground transition-colors"
+                      className="flex h-5 w-5 items-center justify-center text-muted-foreground transition-colors hover:text-foreground sm:h-auto sm:w-auto"
                       aria-label="X (Twitter)"
                       onClick={(e) => e.stopPropagation()}
                     >
-                      <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                      <svg className="h-4 w-4 sm:h-5 sm:w-5" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
                         <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
                       </svg>
                     </a>
@@ -385,11 +385,11 @@ export const MentorCard = ({ mentor, className, priority = false }: MentorCardPr
                       href={mentor.website_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-muted-foreground hover:text-primary transition-colors"
+                      className="flex h-5 w-5 items-center justify-center text-muted-foreground transition-colors hover:text-primary sm:h-auto sm:w-auto"
                       aria-label="Website"
                       onClick={(e) => e.stopPropagation()}
                     >
-                      <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" xmlns="http://www.w3.org/2000/svg">
+                      <svg className="h-4 w-4 sm:h-5 sm:w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" xmlns="http://www.w3.org/2000/svg">
                         <circle cx="12" cy="12" r="10" />
                         <line x1="2" y1="12" x2="22" y2="12" />
                         <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
