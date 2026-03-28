@@ -340,12 +340,17 @@ export const MentorCard = ({ mentor, className, priority = false }: MentorCardPr
                   {mentor.name}
                 </Link>
                 <CheckCircle2 className="h-5 w-5 text-primary flex-shrink-0" />
+                {countryFlag && (
+                  <span className="hidden text-lg lg:text-xl sm:inline" title={getNationality() || ''}>
+                    {countryFlag}
+                  </span>
+                )}
               </div>
 
               {(countryFlag || mentor.linkedin_url || mentor.twitter_x_url || mentor.website_url) && (
                 <div className="flex items-center justify-center gap-3 sm:justify-start">
                   {countryFlag && (
-                    <span className="text-lg lg:text-xl" title={getNationality() || ''}>
+                    <span className="text-lg lg:text-xl sm:hidden" title={getNationality() || ''}>
                       {countryFlag}
                     </span>
                   )}
