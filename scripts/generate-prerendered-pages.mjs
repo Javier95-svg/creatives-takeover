@@ -24,6 +24,12 @@ function buildFallbackHtml(routeConfig) {
         </section>`
     )
     .join("\n");
+  const faqs = (routeConfig.faqs || [])
+    .map(
+      (faq) => `          <dt>${faq.question}</dt>
+          <dd>${faq.answer}</dd>`
+    )
+    .join("\n");
 
   const ctaLinks = [
     { href: "/pricing", label: "See pricing" },
@@ -45,8 +51,15 @@ function buildFallbackHtml(routeConfig) {
         <section>
           <h1>${routeConfig.heroHeading || routeConfig.title}</h1>
           <p>${routeConfig.heroCopy || routeConfig.description}</p>
+          ${routeConfig.updatedLabel ? `<p>Last updated ${routeConfig.updatedLabel}</p>` : ""}
         </section>
 ${sections}
+        ${faqs ? `        <section>
+          <h2>Common questions</h2>
+          <dl>
+${faqs}
+          </dl>
+        </section>` : ""}
         <section>
           <h2>Explore more</h2>
           <ul>
@@ -87,9 +100,12 @@ function replaceMetaByProperty(html, property, content) {
 
 function renderRoute(template, routeConfig) {
   const canonical = `${BASE_URL}${routeConfig.path}`;
+  const robots = "index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1";
   let html = template;
   html = replaceTag(html, /<title>[\s\S]*?<\/title>/i, `<title>${routeConfig.title}</title>`);
   html = replaceMetaByName(html, "description", routeConfig.description);
+  html = replaceMetaByName(html, "robots", robots);
+  html = replaceMetaByName(html, "googlebot", robots);
   html = replaceMetaByProperty(html, "og:title", routeConfig.title);
   html = replaceMetaByProperty(html, "og:description", routeConfig.description);
   html = replaceMetaByProperty(html, "og:url", canonical);

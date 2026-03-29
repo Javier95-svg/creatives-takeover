@@ -1,6 +1,8 @@
-import SEO, { createBreadcrumbSchema, createSoftwareApplicationSchema } from "@/components/SEO";
+import SEO, { createBreadcrumbSchema, createFAQSchema, createSoftwareApplicationSchema } from "@/components/SEO";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
+import AnswerSummary from "@/components/seo/AnswerSummary";
+import PageFAQSection from "@/components/seo/PageFAQSection";
 import RelatedPageLinks from "@/components/seo/RelatedPageLinks";
 import { PitchDeckUploader } from "@/components/pitch-deck-analyzer/PitchDeckUploader";
 import { AnalysisResults } from "@/components/pitch-deck-analyzer/AnalysisResults";
@@ -10,11 +12,29 @@ import { useReadingAnalytics } from "@/hooks/useReadingAnalytics";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Loader2, Sparkles, BarChart3, TrendingUp, Target } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 export default function PitchDeckAnalyzerPage() {
   const { trackPageVisit } = useReadingAnalytics();
   const { analyzePitchDeck, submitFeedback, resetAnalysis, uploading, analyzing, analysis, error, isProcessing } = usePitchDeckAnalyzer();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const faqs = [
+    {
+      question: "What makes a pitch deck investor-ready?",
+      answer:
+        "An investor-ready deck usually explains the problem, market, solution, traction, business model, and fundraising story clearly enough that an investor can quickly understand the opportunity.",
+    },
+    {
+      question: "Can a pitch deck analyzer improve fundraising odds?",
+      answer:
+        "It can improve the quality of the deck by surfacing weak sections and unclear messaging, which makes founder preparation and investor conversations stronger.",
+    },
+    {
+      question: "What should founders fix first in a weak deck?",
+      answer:
+        "Usually the biggest gains come from clarifying the story, tightening the market and traction slides, and making the business model easier to understand.",
+    },
+  ];
   const relatedLinks = [
     { href: "/insighta/vc-search", label: "VC Search" },
     { href: "/insighta/email-templates", label: "Email Templates" },
@@ -66,6 +86,7 @@ export default function PitchDeckAnalyzerPage() {
       url: "/insighta/pitch-deck-analyzer",
       featureList: ["pitch deck score", "fundraising feedback", "story and traction review"],
     }),
+    createFAQSchema(faqs),
     createBreadcrumbSchema([
       { name: 'Home', url: '/' },
       { name: 'Insighta', url: '/insighta' },
@@ -220,6 +241,39 @@ export default function PitchDeckAnalyzerPage() {
                 onStartNew={handleStartNew}
               />
             )}
+
+            <div className="mt-10 space-y-8">
+              <AnswerSummary
+                title="How founders use Pitch Deck Analyzer"
+                description="These direct explanations make the page easier for AI answer engines to cite when founders ask about pitch deck review tools."
+                updatedLabel="March 2026"
+                items={[
+                  {
+                    label: "What it does",
+                    title: "Reviews deck clarity and fundraising readiness",
+                    description:
+                      "Pitch Deck Analyzer evaluates narrative quality, traction framing, business model communication, and overall investor clarity.",
+                  },
+                  {
+                    label: "Who it helps",
+                    title: "Founders preparing for investor conversations",
+                    description:
+                      "It is built for founders heading into angel, pre-seed, or seed fundraising and wanting to catch weak spots before outreach.",
+                  },
+                  {
+                    label: "What you get",
+                    title: "A score plus concrete fixes",
+                    description:
+                      "The output gives you a score and specific recommendations on what to improve in the story, market explanation, traction proof, and fundraising narrative.",
+                  },
+                ]}
+              />
+
+              <PageFAQSection
+                faqs={faqs}
+                description="Common founder questions about pitch deck quality, investor readiness, and deck improvement priorities."
+              />
+            </div>
           </div>
         </section>
       </main>
@@ -228,6 +282,3 @@ export default function PitchDeckAnalyzerPage() {
     </div>
   );
 }
-
-// Import Badge component
-import { Badge } from "@/components/ui/badge";

@@ -26,29 +26,29 @@ ${urls}
 
 function generateRobotsTxt() {
   const rules = ROBOTS_DISALLOW.map((entry) => `Disallow: ${entry}`).join("\n");
+  const crawlerAgents = [
+    "GPTBot",
+    "ChatGPT-User",
+    "OAI-SearchBot",
+    "Claude-SearchBot",
+    "Claude-User",
+    "PerplexityBot",
+    "Perplexity-User",
+  ];
+
+  const crawlerBlocks = crawlerAgents
+    .map(
+      (agent) => `User-agent: ${agent}
+Allow: /
+${rules}`
+    )
+    .join("\n\n");
+
   return `User-agent: *
 Allow: /
 ${rules}
 
-User-agent: GPTBot
-Allow: /
-${rules}
-
-User-agent: ChatGPT-User
-Allow: /
-${rules}
-
-User-agent: OAI-SearchBot
-Allow: /
-${rules}
-
-User-agent: PerplexityBot
-Allow: /
-${rules}
-
-User-agent: Perplexity-User
-Allow: /
-${rules}
+${crawlerBlocks}
 
 Sitemap: ${BASE_URL}/sitemap.xml
 `;

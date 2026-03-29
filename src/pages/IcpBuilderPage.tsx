@@ -1,6 +1,8 @@
-import SEO, { createBreadcrumbSchema, createSoftwareApplicationSchema } from "@/components/SEO";
+import SEO, { createBreadcrumbSchema, createFAQSchema, createSoftwareApplicationSchema } from "@/components/SEO";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
+import AnswerSummary from "@/components/seo/AnswerSummary";
+import PageFAQSection from "@/components/seo/PageFAQSection";
 import { lazy, Suspense, useEffect } from "react";
 import { useReadingAnalytics } from "@/hooks/useReadingAnalytics";
 import { useLeanStartupStore } from "@/store/leanStartupStore";
@@ -11,6 +13,23 @@ const ICPBuilder = lazy(() => import("@/components/icp/ICPBuilder"));
 export default function ICPBuilderPage() {
   const { trackPageVisit } = useReadingAnalytics();
   const { markToolUsed } = useLeanStartupStore();
+  const faqs = [
+    {
+      question: "What is an ideal customer profile for a startup?",
+      answer:
+        "An ideal customer profile is the specific type of customer most likely to need your product, feel the pain strongly, and adopt early. It is more precise than a broad persona or market category.",
+    },
+    {
+      question: "Why does ICP definition matter before building?",
+      answer:
+        "It affects product scope, messaging, interviews, and customer acquisition. If the ICP is vague, the rest of the startup plan becomes vague too.",
+    },
+    {
+      question: "Can ICP Builder help with positioning?",
+      answer:
+        "Yes. The tool is designed to connect customer targeting with pain point clarity and positioning so you can explain the product more clearly.",
+    },
+  ];
 
   useEffect(() => { markToolUsed('icp-builder'); }, [markToolUsed]);
 
@@ -40,6 +59,7 @@ export default function ICPBuilderPage() {
       url: "/icp-builder",
       featureList: ["ideal customer profile", "pain point mapping", "positioning guidance"],
     }),
+    createFAQSchema(faqs),
     createBreadcrumbSchema([
       { name: 'Home', url: '/' },
       { name: 'BizMap AI', url: '/bizmap-ai' },
@@ -136,6 +156,39 @@ export default function ICPBuilderPage() {
             >
               <ICPBuilder />
             </Suspense>
+
+            <div className="mt-10 space-y-8">
+              <AnswerSummary
+                title="How founders use ICP Builder"
+                description="These answers make the tool easier to interpret in search, AI summaries, and first-time founder research."
+                updatedLabel="March 2026"
+                items={[
+                  {
+                    label: "What it does",
+                    title: "Narrows your first customer segment",
+                    description:
+                      "ICP Builder helps you choose the first audience to target so interviews, messaging, and product priorities stay focused.",
+                  },
+                  {
+                    label: "Why it matters",
+                    title: "Sharper positioning starts with sharper targeting",
+                    description:
+                      "When the audience is vague, the offer becomes vague too. This tool reduces that ambiguity before you build.",
+                  },
+                  {
+                    label: "What you get",
+                    title: "Customer clarity plus next-step tests",
+                    description:
+                      "You leave with a clearer ideal customer profile, stronger positioning, and better validation direction.",
+                  },
+                ]}
+              />
+
+              <PageFAQSection
+                faqs={faqs}
+                description="Common founder questions about ideal customer profile definition and positioning."
+              />
+            </div>
           </div>
         </section>
       </main>

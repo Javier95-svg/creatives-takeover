@@ -39,6 +39,9 @@ const SEO = ({
   const fullUrl = url ? `${baseUrl}${url}` : baseUrl;
   const canonicalUrl = canonical || fullUrl;
   const fullImageUrl = image.startsWith('http') ? image : `${baseUrl}${image}`;
+  const robotsContent = noindex
+    ? 'noindex,nofollow'
+    : 'index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1';
 
   // Ensure title is optimized length (50-60 chars)
   const optimizedTitle = title.length > 60 ? `${title.substring(0, 57)}...` : title;
@@ -55,7 +58,8 @@ const SEO = ({
       <meta name="description" content={optimizedDescription} />
       {keywords && <meta name="keywords" content={keywords} />}
       {author && <meta name="author" content={author} />}
-      {noindex && <meta name="robots" content="noindex,nofollow" />}
+      <meta name="robots" content={robotsContent} />
+      <meta name="googlebot" content={robotsContent} />
       {googleSiteVerification && <meta name="google-site-verification" content={googleSiteVerification} />}
       
       {/* Canonical URL */}

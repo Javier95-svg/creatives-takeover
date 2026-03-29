@@ -1,8 +1,10 @@
 import { useEffect, useMemo } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import SEO, { createBreadcrumbSchema, createSoftwareApplicationSchema } from '@/components/SEO';
+import SEO, { createBreadcrumbSchema, createFAQSchema, createSoftwareApplicationSchema } from '@/components/SEO';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
+import AnswerSummary from '@/components/seo/AnswerSummary';
+import PageFAQSection from '@/components/seo/PageFAQSection';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -36,6 +38,24 @@ export default function BizMapJourneyHubPage() {
     return Math.round((completedStages / BIZMAP_STAGES.length) * 100);
   }, [stageState]);
 
+  const faqs = [
+    {
+      question: 'What does BizMap AI help founders do?',
+      answer:
+        'BizMap AI helps founders validate a startup idea, define an ideal customer, scope an MVP, test demand, and prepare for launch inside one connected workflow.',
+    },
+    {
+      question: 'Is BizMap AI better for new ideas or existing startups?',
+      answer:
+        'It is strongest for early-stage ideas and pre-launch startups, but founders with an existing product can still use it to tighten positioning, validation, and launch planning.',
+    },
+    {
+      question: 'What happens after idea validation in BizMap AI?',
+      answer:
+        'After validation, the workflow moves into customer targeting, product-market fit review, MVP planning, demand testing, and go-to-market execution so you do not restart from scratch at each step.',
+    },
+  ];
+
   const structuredData = [
     {
       '@context': 'https://schema.org',
@@ -52,6 +72,7 @@ export default function BizMapJourneyHubPage() {
       url: '/bizmap-ai',
       featureList: ['ICP Builder', 'PMF Lab', 'Waitlist Maker', 'MVP Builder', 'GTM Strategist'],
     }),
+    createFAQSchema(faqs),
     createBreadcrumbSchema([
       { name: 'Home', url: '/' },
       { name: 'BizMap AI', url: '/bizmap-ai' },
@@ -173,6 +194,37 @@ export default function BizMapJourneyHubPage() {
               <p>Use Stage IV and V to build and execute launch plans.</p>
             </div>
           </section>
+
+          <AnswerSummary
+            title="What founders use BizMap AI for"
+            description="This page now answers the core founder questions directly so search engines and AI answer engines can understand the product without guessing."
+            updatedLabel="March 2026"
+            items={[
+              {
+                label: 'What it is',
+                title: 'A connected startup workflow',
+                description:
+                  'BizMap AI connects validation, customer definition, MVP planning, waitlist testing, and launch preparation instead of treating them as isolated tools.',
+              },
+              {
+                label: 'Best for',
+                title: 'Early-stage and pre-launch founders',
+                description:
+                  'It is designed for founders who need more structure than a generic chat tool and want a clearer path from idea to execution.',
+              },
+              {
+                label: 'What you get',
+                title: 'Clearer decisions at each stage',
+                description:
+                  'You leave with stronger customer clarity, a tighter MVP plan, better launch preparation, and context that carries across the founder journey.',
+              },
+            ]}
+          />
+
+          <PageFAQSection
+            faqs={faqs}
+            description="These are the direct questions founders usually ask before using BizMap AI."
+          />
         </div>
       </main>
 

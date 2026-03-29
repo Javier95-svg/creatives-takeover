@@ -191,6 +191,35 @@ export const INDEXABLE_ROUTES = [
     heroHeading: "Startup Development Cycle For Founders",
     heroCopy:
       "Move from idea validation to MVP planning and launch with a structured founder workflow covering customer research, PMF, product scope, and go-to-market.",
+    updatedLabel: "March 2026",
+    sections: [
+      {
+        heading: "What BizMap AI is",
+        copy: "BizMap AI is a founder workflow that connects startup validation, ideal customer definition, MVP scoping, waitlist testing, and go-to-market planning in one guided cycle.",
+      },
+      {
+        heading: "Who should use it",
+        copy: "It is built for early-stage founders who need structure, not just prompts, and want to move from vague ideas to concrete execution steps.",
+      },
+      {
+        heading: "What you get from it",
+        copy: "You leave with clearer customer priorities, a tighter MVP, stronger launch preparation, and linked tools that carry your context forward stage by stage.",
+      },
+    ],
+    faqs: [
+      {
+        question: "What does BizMap AI help founders do?",
+        answer: "BizMap AI helps founders validate a startup idea, define an ideal customer, scope an MVP, test demand, and prepare for launch inside one connected workflow.",
+      },
+      {
+        question: "Is BizMap AI better for new ideas or existing startups?",
+        answer: "It is strongest for early-stage ideas and pre-launch startups, but founders with an existing product can still use it to tighten positioning, validation, and launch planning.",
+      },
+      {
+        question: "What happens after idea validation in BizMap AI?",
+        answer: "After validation, the workflow moves into customer targeting, product-market fit review, MVP planning, demand testing, and go-to-market execution so you do not restart from scratch at each step.",
+      },
+    ],
   },
   {
     path: "/pmf-lab",
@@ -202,6 +231,35 @@ export const INDEXABLE_ROUTES = [
     heroHeading: "Product-Market Fit Score Tool",
     heroCopy:
       "Review your waitlist, interviews, and demand signals, then get a clearer product-market fit score before you commit to building.",
+    updatedLabel: "March 2026",
+    sections: [
+      {
+        heading: "What PMF Lab measures",
+        copy: "PMF Lab scores the strength of your demand evidence, not just your confidence. It looks at customer signals, urgency, traction, and how clearly the pain shows up in the market.",
+      },
+      {
+        heading: "When to use it",
+        copy: "Use it before building a new MVP, before raising money on a weak story, or when you need to know whether current traction is strong enough to justify product development.",
+      },
+      {
+        heading: "What the output gives you",
+        copy: "You get a readiness score, practical recommendations, and a clearer decision on whether to build now or keep iterating on validation.",
+      },
+    ],
+    faqs: [
+      {
+        question: "What is a good product-market fit score?",
+        answer: "A higher score means your startup has stronger evidence of demand, recurring pain, and momentum. In this tool, a score of 75 or above is treated as a stronger signal that you can move into building.",
+      },
+      {
+        question: "Can PMF Lab replace customer interviews?",
+        answer: "No. PMF Lab works best when you bring real customer interviews, waitlist data, or traction evidence into the assessment. It helps interpret evidence, not invent it.",
+      },
+      {
+        question: "Should founders use PMF Lab before building an MVP?",
+        answer: "Yes. The main use case is checking whether you have enough validation evidence to justify an MVP build instead of relying on assumptions.",
+      },
+    ],
   },
   {
     path: "/tech-stack",
@@ -224,6 +282,35 @@ export const INDEXABLE_ROUTES = [
     heroHeading: "Ideal Customer Profile Builder",
     heroCopy:
       "Define the customer segment you should target first, the pain worth solving, and the positioning that makes your startup easier to explain.",
+    updatedLabel: "March 2026",
+    sections: [
+      {
+        heading: "What ICP Builder does",
+        copy: "ICP Builder helps founders define the first customer segment they should target, the pain point that matters most, and the positioning that makes the product easier to sell.",
+      },
+      {
+        heading: "Why founders use it",
+        copy: "Most early-stage startups fail by targeting too many audiences at once. This tool narrows the market so your messaging, interviews, and MVP priorities become more specific.",
+      },
+      {
+        heading: "What you get back",
+        copy: "You get a clearer ideal customer profile, sharper positioning, and practical next steps for validation before you spend more time on the wrong audience.",
+      },
+    ],
+    faqs: [
+      {
+        question: "What is an ideal customer profile for a startup?",
+        answer: "An ideal customer profile is the specific type of customer most likely to need your product, feel the pain strongly, and adopt early. It is more precise than a broad persona or market category.",
+      },
+      {
+        question: "Why does ICP definition matter before building?",
+        answer: "It affects product scope, messaging, interviews, and customer acquisition. If the ICP is vague, the rest of the startup plan becomes vague too.",
+      },
+      {
+        question: "Can ICP Builder help with positioning?",
+        answer: "Yes. The tool is designed to connect customer targeting with pain point clarity and positioning so you can explain the product more clearly.",
+      },
+    ],
   },
   {
     path: "/waitlist",
@@ -235,6 +322,35 @@ export const INDEXABLE_ROUTES = [
     heroHeading: "Startup Waitlist Page Builder",
     heroCopy:
       "Create a pre-launch page, explain your offer clearly, and collect real demand signals before you build the product.",
+    updatedLabel: "March 2026",
+    sections: [
+      {
+        heading: "What Waitlist Maker is for",
+        copy: "Waitlist Maker helps founders launch a pre-release page that explains the offer clearly and captures early demand before product development is fully underway.",
+      },
+      {
+        heading: "Why a waitlist matters",
+        copy: "A waitlist gives you evidence. It shows whether people understand the value proposition, whether the message is working, and whether real signups exist before you invest more time.",
+      },
+      {
+        heading: "What founders learn from it",
+        copy: "You learn whether your headline, offer, and audience are strong enough to attract interest, which makes later MVP and launch decisions less risky.",
+      },
+    ],
+    faqs: [
+      {
+        question: "Why should founders build a waitlist before an MVP?",
+        answer: "A waitlist is a lightweight way to test demand before you build. If people will not sign up for the idea, that is an important signal to catch early.",
+      },
+      {
+        question: "What should a startup waitlist page include?",
+        answer: "It should clearly explain the problem, the offer, who it is for, and why someone should sign up now instead of waiting.",
+      },
+      {
+        question: "Can a waitlist page help with investor conversations?",
+        answer: "Yes. Even early signup interest can strengthen your story by showing that real people responded to the positioning and offer.",
+      },
+    ],
   },
   {
     path: "/decision-sprint",
@@ -290,6 +406,35 @@ export const INDEXABLE_ROUTES = [
     heroHeading: "Plan how you will get customers",
     heroCopy:
       "Get channel recommendations, positioning, messaging, and launch priorities designed for early-stage execution.",
+    updatedLabel: "March 2026",
+    sections: [
+      {
+        heading: "What GTM Strategist does",
+        copy: "GTM Strategist helps founders turn a product idea into a go-to-market plan with messaging, channels, launch tasks, and practical acquisition priorities.",
+      },
+      {
+        heading: "When to use it",
+        copy: "Use it when your offer is defined enough to launch but you still need a practical plan for who to reach, what to say, and which channels to prioritize first.",
+      },
+      {
+        heading: "What the output includes",
+        copy: "The output includes positioning, messaging, recommended channels, a 30-day action plan, and a launch checklist you can execute immediately.",
+      },
+    ],
+    faqs: [
+      {
+        question: "What is a go-to-market strategy for an early-stage startup?",
+        answer: "A go-to-market strategy is the practical plan for reaching the right customers, explaining the offer clearly, choosing channels, and turning launch activity into early traction.",
+      },
+      {
+        question: "Does GTM Strategist recommend startup acquisition channels?",
+        answer: "Yes. It is designed to recommend channels based on your product, audience, and stage so you can focus on the tactics most likely to work first.",
+      },
+      {
+        question: "Can founders use GTM Strategist before launch?",
+        answer: "Yes. Pre-launch and first-launch planning are core use cases because the tool helps structure outreach, messaging, and execution before you waste effort on scattered tactics.",
+      },
+    ],
   },
   {
     path: "/directories",
@@ -323,6 +468,35 @@ export const INDEXABLE_ROUTES = [
     heroHeading: "Venture Capital Search",
     heroCopy:
       "Search a venture capital database by stage, geography, sector, and check size so your investor list is tighter and more relevant.",
+    updatedLabel: "March 2026",
+    sections: [
+      {
+        heading: "What VC Search helps with",
+        copy: "VC Search helps founders build a more relevant investor target list by filtering venture firms based on stage, geography, sector, and check size.",
+      },
+      {
+        heading: "Why this matters for fundraising",
+        copy: "A tighter investor list improves outreach quality. Instead of sending broad cold emails, founders can focus on firms that are more likely to match the startup's actual profile.",
+      },
+      {
+        heading: "What founders get from it",
+        copy: "You get a more focused venture capital shortlist, faster research, and better preparation for outreach, pitch refinement, and follow-up.",
+      },
+    ],
+    faqs: [
+      {
+        question: "What is a venture capital database used for?",
+        answer: "A venture capital database is used to research investors, shortlist relevant firms, and avoid wasting time pitching funds that do not match your stage, sector, or geography.",
+      },
+      {
+        question: "How do founders build a better investor list?",
+        answer: "The main improvement comes from filtering by stage, check size, geography, and sector so your list reflects actual fit rather than a random collection of VC names.",
+      },
+      {
+        question: "Should founders research investors before outreach?",
+        answer: "Yes. Better research improves targeting, messaging, and response quality, which makes outreach more efficient and credible.",
+      },
+    ],
   },
   {
     path: "/insighta/email-templates",
@@ -356,6 +530,35 @@ export const INDEXABLE_ROUTES = [
     heroHeading: "Analyze your pitch deck",
     heroCopy:
       "Get structured feedback on presentation quality, narrative strength, investor clarity, and fundraising readiness.",
+    updatedLabel: "March 2026",
+    sections: [
+      {
+        heading: "What Pitch Deck Analyzer does",
+        copy: "Pitch Deck Analyzer reviews a startup deck and scores narrative clarity, traction framing, business model communication, and overall fundraising readiness.",
+      },
+      {
+        heading: "Who should use it",
+        copy: "It is useful for founders preparing for angel, pre-seed, or seed conversations who want to know what is weak before sending the deck to investors.",
+      },
+      {
+        heading: "What the analysis returns",
+        copy: "The tool returns a score and concrete recommendations so you know what to improve in the story, market explanation, traction proof, and investor clarity.",
+      },
+    ],
+    faqs: [
+      {
+        question: "What makes a pitch deck investor-ready?",
+        answer: "An investor-ready deck usually explains the problem, market, solution, traction, business model, and fundraising story clearly enough that an investor can quickly understand the opportunity.",
+      },
+      {
+        question: "Can a pitch deck analyzer improve fundraising odds?",
+        answer: "It can improve the quality of the deck by surfacing weak sections and unclear messaging, which makes founder preparation and investor conversations stronger.",
+      },
+      {
+        question: "What should founders fix first in a weak deck?",
+        answer: "Usually the biggest gains come from clarifying the story, tightening the market and traction slides, and making the business model easier to understand.",
+      },
+    ],
   },
   {
     path: "/insighta/test",
@@ -367,6 +570,35 @@ export const INDEXABLE_ROUTES = [
     heroHeading: "Fundraising Readiness Assessment",
     heroCopy:
       "Evaluate investor readiness and identify the gaps you need to fix before fundraising.",
+    updatedLabel: "March 2026",
+    sections: [
+      {
+        heading: "What the readiness assessment measures",
+        copy: "The assessment helps founders evaluate how prepared they are for fundraising by reviewing evidence, narrative quality, traction, and investor expectations.",
+      },
+      {
+        heading: "Why founders use it before outreach",
+        copy: "It is easier to fix gaps before meetings begin than after investors start saying no. This assessment is meant to surface those gaps early.",
+      },
+      {
+        heading: "What happens after the assessment",
+        copy: "You get clearer priorities on what to improve next, which can include narrative work, traction proof, deck improvements, or better investor targeting.",
+      },
+    ],
+    faqs: [
+      {
+        question: "What is fundraising readiness?",
+        answer: "Fundraising readiness is how prepared your startup is to present a credible opportunity to investors, including story clarity, traction evidence, market understanding, and overall preparedness.",
+      },
+      {
+        question: "Should founders assess readiness before contacting investors?",
+        answer: "Yes. A readiness check helps you catch obvious gaps before you start outreach, which can improve both the deck and the fundraising narrative.",
+      },
+      {
+        question: "What if the readiness score is low?",
+        answer: "A low score usually means the startup should strengthen proof, messaging, or investor materials before pushing harder on fundraising conversations.",
+      },
+    ],
   },
   {
     path: "/demo",

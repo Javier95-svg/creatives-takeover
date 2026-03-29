@@ -1,6 +1,8 @@
-import SEO, { createBreadcrumbSchema, createSoftwareApplicationSchema } from "@/components/SEO";
+import SEO, { createBreadcrumbSchema, createFAQSchema, createSoftwareApplicationSchema } from "@/components/SEO";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
+import AnswerSummary from "@/components/seo/AnswerSummary";
+import PageFAQSection from "@/components/seo/PageFAQSection";
 import RelatedPageLinks from "@/components/seo/RelatedPageLinks";
 import VCSearchTab from "@/components/insighta/VCSearchTab";
 import { VCWallpaper } from "@/components/vc-search/VCWallpaper";
@@ -9,6 +11,23 @@ import { useEffect } from "react";
 
 export default function VCSearchPage() {
   const { trackPageVisit } = useReadingAnalytics();
+  const faqs = [
+    {
+      question: "What is a venture capital database used for?",
+      answer:
+        "A venture capital database is used to research investors, shortlist relevant firms, and avoid wasting time pitching funds that do not match your stage, sector, or geography.",
+    },
+    {
+      question: "How do founders build a better investor list?",
+      answer:
+        "The main improvement comes from filtering by stage, check size, geography, and sector so your list reflects actual fit rather than a random collection of VC names.",
+    },
+    {
+      question: "Should founders research investors before outreach?",
+      answer:
+        "Yes. Better research improves targeting, messaging, and response quality, which makes outreach more efficient and credible.",
+    },
+  ];
   const relatedLinks = [
     { href: "/insighta/email-templates", label: "Email Templates" },
     { href: "/insighta/accelerator-hunt", label: "Accelerator Search" },
@@ -44,6 +63,7 @@ export default function VCSearchPage() {
       url: "/insighta/vc-search",
       featureList: ["investor filters", "vc firm discovery", "stage and geography search"],
     }),
+    createFAQSchema(faqs),
     createBreadcrumbSchema([
       { name: 'Home', url: '/' },
       { name: 'Insighta', url: '/insighta' },
@@ -79,6 +99,39 @@ export default function VCSearchPage() {
             </div>
 
             <VCSearchTab />
+
+            <div className="mt-10 space-y-8">
+              <AnswerSummary
+                title="How founders use VC Search"
+                description="This page now includes direct, quotable explanations of the tool so AI search products can summarize it more accurately."
+                updatedLabel="March 2026"
+                items={[
+                  {
+                    label: "What it helps with",
+                    title: "Building a tighter investor shortlist",
+                    description:
+                      "VC Search helps founders filter venture firms by stage, geography, sector, and check size so the target list is more relevant.",
+                  },
+                  {
+                    label: "Why it matters",
+                    title: "Better research leads to better outreach",
+                    description:
+                      "A focused investor list reduces wasted outreach and improves the quality of fundraising conversations from the start.",
+                  },
+                  {
+                    label: "What founders get",
+                    title: "Faster investor research and better fit",
+                    description:
+                      "The tool helps you move from generic VC research to a more credible shortlist that supports deck prep and outreach planning.",
+                  },
+                ]}
+              />
+
+              <PageFAQSection
+                faqs={faqs}
+                description="Common founder questions about investor databases, VC research, and pre-outreach targeting."
+              />
+            </div>
           </div>
         </section>
       </main>

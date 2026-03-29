@@ -1,7 +1,9 @@
 import { useEffect } from 'react';
-import SEO, { createBreadcrumbSchema, createSoftwareApplicationSchema } from '@/components/SEO';
+import SEO, { createBreadcrumbSchema, createFAQSchema, createSoftwareApplicationSchema } from '@/components/SEO';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
+import AnswerSummary from '@/components/seo/AnswerSummary';
+import PageFAQSection from '@/components/seo/PageFAQSection';
 import { Separator } from '@/components/ui/separator';
 import { useGTMStrategist } from '@/hooks/useGTMStrategist';
 import { useLeanStartupStore } from '@/store/leanStartupStore';
@@ -40,6 +42,27 @@ const structuredData = [
 
 export default function GTMStrategistPage() {
   const { markToolUsed } = useLeanStartupStore();
+  const faqs = [
+    {
+      question: 'What is a go-to-market strategy for an early-stage startup?',
+      answer:
+        'A go-to-market strategy is the practical plan for reaching the right customers, explaining the offer clearly, choosing channels, and turning launch activity into early traction.',
+    },
+    {
+      question: 'Does GTM Strategist recommend startup acquisition channels?',
+      answer:
+        'Yes. It is designed to recommend channels based on your product, audience, and stage so you can focus on the tactics most likely to work first.',
+    },
+    {
+      question: 'Can founders use GTM Strategist before launch?',
+      answer:
+        'Yes. Pre-launch and first-launch planning are core use cases because the tool helps structure outreach, messaging, and execution before you waste effort on scattered tactics.',
+    },
+  ];
+  const pageStructuredData = [
+    ...structuredData,
+    createFAQSchema(faqs),
+  ];
 
   useEffect(() => {
     markToolUsed('gtm-strategist');
@@ -64,14 +87,40 @@ export default function GTMStrategistPage() {
         description="Generate a go-to-market strategy with channel recommendations, positioning, messaging, and a 30-day startup launch plan."
         keywords="go to market strategy generator, startup gtm plan, launch strategy tool, customer acquisition strategy, founder marketing"
         url="/go-to-market"
-        structuredData={structuredData}
+        structuredData={pageStructuredData}
       />
       <GTMStrategistWallpaper />
       <div className="relative z-10">
         <Navigation />
 
         <main className="px-4 pt-28 pb-20 md:pt-32 lg:pt-36">
-          <div className="container mx-auto max-w-5xl">
+          <div className="container mx-auto max-w-5xl space-y-8">
+
+          <AnswerSummary
+            title="How founders use GTM Strategist"
+            description="This gives search engines and AI answer tools a clearer, direct explanation of the product and its best use case."
+            updatedLabel="March 2026"
+            items={[
+              {
+                label: 'What it does',
+                title: 'Turns product thinking into launch planning',
+                description:
+                  'GTM Strategist converts product context into messaging, channels, launch priorities, and practical acquisition steps.',
+              },
+              {
+                label: 'When to use it',
+                title: 'Right before launch or first traction',
+                description:
+                  'It is most useful once the offer is defined enough that you need a practical plan for who to target, what to say, and where to show up.',
+              },
+              {
+                label: 'What you get',
+                title: 'A 30-day plan you can execute',
+                description:
+                  'The output includes positioning, messaging, recommended channels, and a launch checklist that is meant to be used immediately.',
+              },
+            ]}
+          />
 
           {/* Phase A — Intake Wizard */}
           {phase === 'intake' && (
@@ -163,10 +212,14 @@ export default function GTMStrategistPage() {
                       {isExporting ? 'Exporting…' : 'Export PDF'}
                     </button>
                   </div>
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
+            )}
+            <PageFAQSection
+              faqs={faqs}
+              description="Common founder questions about go-to-market planning, channel choice, and launch execution."
+            />
           </div>
         </main>
 
