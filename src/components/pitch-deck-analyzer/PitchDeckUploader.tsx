@@ -1,7 +1,8 @@
-import React, { useRef, useState } from 'react';
+import React, { useState, useRef } from 'react';
+import { Upload, FileText, X, Loader2, Lock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { FileText, Lock, Sparkles, Upload, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -18,22 +19,22 @@ export const PitchDeckUploader: React.FC<PitchDeckUploaderProps> = ({
   isUploading = false,
   isAnalyzing = false,
   selectedFile = null,
-  onClearFile,
+  onClearFile
 }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isSignedIn = Boolean(user);
-  const isProcessing = isUploading || isAnalyzing;
 
-  const validateFile = (file: File) => {
+  const validateFile = (file: File): boolean => {
     if (file.type !== 'application/pdf') {
-      toast.error('Please upload a PDF export of your pitch deck');
+      toast.error('Please upload a PDF file');
       return false;
     }
 
-    if (file.size > 20 * 1024 * 1024) {
+    const maxSize = 20 * 1024 * 1024;
+    if (file.size > maxSize) {
       toast.error('File size must be less than 20MB');
       return false;
     }
@@ -47,7 +48,7 @@ export const PitchDeckUploader: React.FC<PitchDeckUploaderProps> = ({
       return;
     }
 
-    if (!files?.length) return;
+    if (!files || files.length === 0) return;
 
     const file = files[0];
     if (validateFile(file)) {
@@ -55,95 +56,79 @@ export const PitchDeckUploader: React.FC<PitchDeckUploaderProps> = ({
     }
   };
 
-  const handleDragOver = (event: React.DragEvent) => {
-    event.preventDefault();
-    if (!isSignedIn || isProcessing) return;
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    if (!isSignedIn) {
+      setIsDragging(false);
+      return;
+    }
     setIsDragging(true);
   };
 
-  const handleDragLeave = (event: React.DragEvent) => {
-    event.preventDefault();
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
     setIsDragging(false);
   };
 
-  const handleDrop = (event: React.DragEvent) => {
-    event.preventDefault();
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
     setIsDragging(false);
-    handleFileSelect(event.dataTransfer.files);
+
+    if (!isSignedIn) {
+      toast.error('Sign in to upload your pitch deck');
+      return;
+    }
+
+    handleFileSelect(e.dataTransfer.files);
   };
 
-  const formatFileSize = (bytes: number) => {
+  const formatFileSize = (bytes: number): string => {
     if (bytes < 1024) return `${bytes} B`;
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   };
 
+  const isProcessing = isUploading || isAnalyzing;
+  const isUploadDisabled = isProcessing || !isSignedIn;
+
   return (
-    <div className="w-full">
+    <div className="w-full max-w-4xl mx-auto">
       {!selectedFile ? (
-        <div
-          className={`relative overflow-hidden rounded-[32px] border p-6 transition-all duration-200 sm:p-8 ${
+        <Card
+          className={`border-2 border-dashed transition-all duration-200 ${
             isDragging && isSignedIn
-              ? 'border-primary/45 bg-primary/5 shadow-[0_30px_80px_-50px_rgba(14,165,233,0.45)]'
-              : 'border-border/60 bg-background/75 shadow-[0_30px_90px_-70px_rgba(15,23,42,0.9)]'
+              ? 'border-primary bg-primary/5 scale-105'
+              : isSignedIn
+                ? 'border-muted-foreground/25 hover:border-primary/50'
+                : 'border-muted-foreground/25 bg-muted/20'
           }`}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
         >
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.12),transparent_22%),linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0))]" />
-
-          <div className="relative grid gap-6 lg:grid-cols-[1.2fr_0.8fr] lg:items-center">
-            <div>
-              <p className="text-xs font-medium uppercase tracking-[0.28em] text-muted-foreground">
-                Upload
-              </p>
-              <h3 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">
-                Drop the PDF export of your pitch deck
-              </h3>
-              <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
-                We parse the slides, score the deck from 1 to 100, and return investor-style
-                recommendations you can act on immediately.
-              </p>
-
-              <div className="mt-5 flex flex-wrap gap-2 text-xs text-muted-foreground">
-                <span className="rounded-full border border-border/60 bg-background/70 px-3 py-1.5">
-                  PDF only
-                </span>
-                <span className="rounded-full border border-border/60 bg-background/70 px-3 py-1.5">
-                  Max 20MB
-                </span>
-                <span className="rounded-full border border-border/60 bg-background/70 px-3 py-1.5">
-                  Score + rewrite guidance
-                </span>
+          <CardContent className="p-10 sm:p-16">
+            <div className="flex flex-col items-center justify-center space-y-4">
+              <div className="rounded-full bg-primary/10 p-6">
+                <Upload className="h-8 w-8 text-primary" />
               </div>
-            </div>
-
-            <div className="rounded-[28px] border border-border/60 bg-card/70 p-5">
-              <div className="flex items-start gap-4">
-                <div className="rounded-2xl bg-primary/10 p-3 text-primary">
-                  <Upload className="h-6 w-6" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-sm font-semibold">
-                    {isSignedIn
-                      ? isDragging
-                        ? 'Release to upload'
-                        : 'Ready for analysis'
-                      : 'Sign in required'}
-                  </p>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    {isSignedIn
-                      ? 'Investor-style scoring, deck gap detection, and concrete next steps.'
-                      : 'Upload and analysis are available for signed-in users.'}
-                  </p>
-                </div>
+              <div className="text-center">
+                <p className="text-lg font-semibold mb-2">
+                  {isSignedIn
+                    ? isDragging
+                      ? 'Drop your pitch deck here'
+                      : 'Drop your PDF presentation here'
+                    : 'Sign in to upload your pitch deck'}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {isSignedIn ? 'or click to browse' : 'upload is available for signed-in users'}
+                </p>
+                <p className="text-xs text-muted-foreground mt-2">
+                  PDF only • Maximum 20MB
+                </p>
               </div>
-
               <Button
+                variant="default"
                 size="lg"
-                className="mt-5 h-12 w-full rounded-2xl"
-                disabled={isProcessing}
                 onClick={() => {
                   if (!isSignedIn) {
                     navigate('/login');
@@ -151,49 +136,57 @@ export const PitchDeckUploader: React.FC<PitchDeckUploaderProps> = ({
                   }
                   fileInputRef.current?.click();
                 }}
+                disabled={isProcessing}
+                className="mt-2"
               >
                 {!isSignedIn ? (
                   <>
-                    <Lock className="mr-2 h-4 w-4" />
-                    Sign in to upload
+                    <Lock className="h-4 w-4 mr-2" />
+                    Sign In to Upload
                   </>
-                ) : isProcessing ? (
+                ) : isUploading ? (
                   <>
-                    <Sparkles className="mr-2 h-4 w-4 animate-pulse" />
-                    Processing...
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Uploading...
                   </>
                 ) : (
                   <>
-                    <Upload className="mr-2 h-4 w-4" />
-                    Choose PDF deck
+                    <Upload className="h-4 w-4 mr-2" />
+                    Choose File
                   </>
                 )}
               </Button>
             </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       ) : (
-        <div className="rounded-[28px] border border-primary/25 bg-primary/5 p-5 shadow-[0_24px_60px_-50px_rgba(14,165,233,0.55)]">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex min-w-0 items-center gap-4">
-              <div className="rounded-2xl bg-background p-3 text-primary shadow-sm">
-                <FileText className="h-6 w-6" />
+        <Card className="border-2 border-primary">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4 flex-1 min-w-0">
+                <div className="rounded-lg bg-primary/10 p-3">
+                  <FileText className="h-6 w-6 text-primary" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium truncate">{selectedFile.name}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {formatFileSize(selectedFile.size)}
+                  </p>
+                </div>
               </div>
-              <div className="min-w-0">
-                <p className="truncate text-base font-semibold">{selectedFile.name}</p>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  PDF export • {formatFileSize(selectedFile.size)}
-                </p>
-              </div>
+              {!isUploadDisabled && onClearFile && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={onClearFile}
+                  className="shrink-0"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              )}
             </div>
-
-            {!isProcessing && onClearFile && (
-              <Button variant="ghost" size="icon" onClick={onClearFile} className="rounded-2xl">
-                <X className="h-4 w-4" />
-              </Button>
-            )}
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       )}
 
       <input
@@ -201,8 +194,8 @@ export const PitchDeckUploader: React.FC<PitchDeckUploaderProps> = ({
         type="file"
         accept="application/pdf"
         className="hidden"
-        onChange={(event) => handleFileSelect(event.target.files)}
-        disabled={isProcessing || !isSignedIn}
+        onChange={(e) => handleFileSelect(e.target.files)}
+        disabled={isUploadDisabled}
       />
     </div>
   );

@@ -15,12 +15,6 @@ export interface PitchDeckTemplate {
     designTips?: string[];
   }>;
   previewImage?: string;
-  previewTheme?: {
-    canvas: string;
-    accent: string;
-    surface: string;
-  };
-  previewHeadline?: string;
   downloadUrl?: string;
   tags: string[];
 }
@@ -33,12 +27,6 @@ export const PITCH_DECK_TEMPLATES: PitchDeckTemplate[] = [
     category: 'structure',
     stage: 'early-stage',
     slideCount: 10,
-    previewTheme: {
-      canvas: 'linear-gradient(135deg, rgba(12,26,42,1) 0%, rgba(22,58,92,1) 100%)',
-      accent: '#5eead4',
-      surface: 'rgba(255,255,255,0.12)'
-    },
-    previewHeadline: 'Classic investor story arc',
     downloadUrl: '/templates/problem-solution-basic.pptx',
     slides: [
       {
@@ -213,12 +201,6 @@ export const PITCH_DECK_TEMPLATES: PitchDeckTemplate[] = [
     category: 'structure',
     stage: 'growth',
     slideCount: 12,
-    previewTheme: {
-      canvas: 'linear-gradient(135deg, rgba(18,18,28,1) 0%, rgba(50,27,83,1) 100%)',
-      accent: '#c084fc',
-      surface: 'rgba(255,255,255,0.1)'
-    },
-    previewHeadline: 'Metrics-first fundraising deck',
     downloadUrl: '/templates/traction-heavy.pptx',
     slides: [
       {
@@ -368,12 +350,6 @@ export const PITCH_DECK_TEMPLATES: PitchDeckTemplate[] = [
     category: 'storytelling',
     stage: 'early-stage',
     slideCount: 11,
-    previewTheme: {
-      canvas: 'linear-gradient(135deg, rgba(33,16,56,1) 0%, rgba(85,36,76,1) 100%)',
-      accent: '#f9a8d4',
-      surface: 'rgba(255,255,255,0.11)'
-    },
-    previewHeadline: 'Narrative-led ambition pitch',
     downloadUrl: '/templates/vision-driven.pptx',
     slides: [
       {
@@ -513,12 +489,6 @@ export const PITCH_DECK_TEMPLATES: PitchDeckTemplate[] = [
     category: 'design',
     stage: 'early-stage',
     slideCount: 13,
-    previewTheme: {
-      canvas: 'linear-gradient(135deg, rgba(7,42,49,1) 0%, rgba(12,85,93,1) 100%)',
-      accent: '#67e8f9',
-      surface: 'rgba(255,255,255,0.12)'
-    },
-    previewHeadline: 'Visual product walkthrough deck',
     downloadUrl: '/templates/product-demo.pptx',
     slides: [
       {
@@ -678,12 +648,6 @@ export const PITCH_DECK_TEMPLATES: PitchDeckTemplate[] = [
     category: 'industry-specific',
     stage: 'series-a',
     slideCount: 12,
-    previewTheme: {
-      canvas: 'linear-gradient(135deg, rgba(42,24,16,1) 0%, rgba(89,52,27,1) 100%)',
-      accent: '#fbbf24',
-      surface: 'rgba(255,255,255,0.1)'
-    },
-    previewHeadline: 'Enterprise SaaS fundraising format',
     downloadUrl: '/templates/saas-b2b.pptx',
     slides: [
       {

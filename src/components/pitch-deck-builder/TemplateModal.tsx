@@ -1,16 +1,10 @@
 import React from 'react';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { PITCH_DECK_TEMPLATES } from '@/data/pitchDeckTemplates';
-import { Copy, Download } from 'lucide-react';
+import { Download, Copy } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface TemplateModalProps {
@@ -19,115 +13,95 @@ interface TemplateModalProps {
 }
 
 export const TemplateModal: React.FC<TemplateModalProps> = ({ templateId, onClose }) => {
-  const template = PITCH_DECK_TEMPLATES.find((item) => item.id === templateId);
+  const template = PITCH_DECK_TEMPLATES.find(t => t.id === templateId);
 
   if (!template) return null;
 
-  const handleCopyStructure = async () => {
+  const handleCopyStructure = () => {
     const structure = template.slides
-      .map(
-        (slide) =>
-          `Slide ${slide.slideNumber}: ${slide.title}\nPurpose: ${slide.purpose}\n${slide.contentGuidelines.join('\n')}`
-      )
+      .map(slide => `Slide ${slide.slideNumber}: ${slide.title}\n${slide.purpose}\n${slide.contentGuidelines.join('\n')}`)
       .join('\n\n');
-
-    await navigator.clipboard.writeText(structure);
-    toast.success('Template structure copied to clipboard');
+    navigator.clipboard.writeText(structure);
+    toast.success('Template structure copied to clipboard!');
   };
 
   const handleDownload = () => {
-    if (!template.downloadUrl) {
-      toast.info('Download coming soon');
-      return;
+    if (template.downloadUrl) {
+      // Create a temporary link element to trigger download
+      const link = document.createElement('a');
+      link.href = template.downloadUrl;
+      link.download = `${template.id}.pptx`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      toast.success('Downloading PowerPoint template...');
+    } else {
+      toast.info('Download coming soon!');
     }
-
-    const link = document.createElement('a');
-    link.href = template.downloadUrl;
-    link.download = `${template.id}.pptx`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    toast.success('Downloading PowerPoint template...');
   };
 
   return (
-    <Dialog open onOpenChange={onClose}>
-      <DialogContent className="max-w-5xl overflow-hidden border-border/60 bg-background p-0 sm:max-h-[85vh]">
-        <div className="max-h-[85vh] overflow-y-auto">
-          <div
-            className="relative overflow-hidden border-b border-white/10 px-6 py-6 sm:px-8"
-            style={{ background: template.previewTheme?.canvas }}
-          >
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.18),transparent_24%),linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0))]" />
-            <DialogHeader className="relative max-w-3xl text-left">
-              <DialogTitle className="text-2xl font-semibold text-white sm:text-3xl">
-                {template.name}
-              </DialogTitle>
-              <DialogDescription className="text-sm leading-6 text-white/75">
-                {template.description}
-              </DialogDescription>
-            </DialogHeader>
+    <Dialog open={true} onOpenChange={onClose}>
+      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>{template.name}</DialogTitle>
+          <DialogDescription>{template.description}</DialogDescription>
+        </DialogHeader>
 
-            <div className="relative mt-5 flex flex-wrap gap-2">
-              <Badge className="bg-white/12 text-white hover:bg-white/12">
-                {template.slideCount} slides
-              </Badge>
-              <Badge variant="outline" className="border-white/20 bg-transparent capitalize text-white">
-                {template.stage.replace('-', ' ')}
-              </Badge>
-              {template.tags.map((tag) => (
-                <Badge key={tag} variant="outline" className="border-white/12 bg-white/8 text-white/85">
-                  {tag}
-                </Badge>
-              ))}
-            </div>
+        <div className="space-y-4 mt-4">
+          {/* Metadata */}
+          <div className="flex gap-2 flex-wrap">
+            <Badge>{template.slideCount} slides</Badge>
+            <Badge variant="outline" className="capitalize">{template.stage.replace('-', ' ')}</Badge>
+            {template.tags.map(tag => (
+              <Badge key={tag} variant="secondary">{tag}</Badge>
+            ))}
           </div>
 
-          <div className="space-y-5 p-6 sm:p-8">
-            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-              {template.slides.map((slide) => (
-                <Card key={slide.slideNumber} className="rounded-[24px] border-border/60 p-4">
-                  <div className="flex items-start gap-3">
-                    <div
-                      className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl text-sm font-semibold"
-                      style={{
-                        backgroundColor: template.previewTheme?.surface,
-                        color: template.previewTheme?.accent,
-                      }}
-                    >
-                      {slide.slideNumber}
+          {/* Slide Breakdown */}
+          <div className="space-y-4">
+            <h3 className="font-semibold text-lg">Slide Structure</h3>
+            {template.slides.map(slide => (
+              <Card key={slide.slideNumber} className="p-4">
+                <div className="flex items-start gap-3">
+                  <Badge className="shrink-0">{slide.slideNumber}</Badge>
+                  <div className="flex-1">
+                    <h4 className="font-semibold mb-1">{slide.title}</h4>
+                    <p className="text-sm text-muted-foreground mb-3">{slide.purpose}</p>
+                    <div className="space-y-1">
+                      <p className="text-xs font-medium">Content Guidelines:</p>
+                      <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                        {slide.contentGuidelines.map((guideline, idx) => (
+                          <li key={idx}>{guideline}</li>
+                        ))}
+                      </ul>
                     </div>
-                    <div className="min-w-0">
-                      <h4 className="font-semibold">{slide.title}</h4>
-                      <p className="mt-1 text-sm text-muted-foreground">{slide.purpose}</p>
-                    </div>
-                  </div>
-
-                  <div className="mt-4 space-y-2">
-                    {slide.contentGuidelines.slice(0, 4).map((guideline, index) => (
-                      <div key={`${slide.slideNumber}-${index}`} className="flex items-start gap-2 text-sm">
-                        <span
-                          className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full"
-                          style={{ backgroundColor: template.previewTheme?.accent }}
-                        />
-                        <span className="text-muted-foreground">{guideline}</span>
+                    {slide.designTips && (
+                      <div className="mt-3 space-y-1">
+                        <p className="text-xs font-medium text-primary">Design Tips:</p>
+                        <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                          {slide.designTips.map((tip, idx) => (
+                            <li key={idx}>{tip}</li>
+                          ))}
+                        </ul>
                       </div>
-                    ))}
+                    )}
                   </div>
-                </Card>
-              ))}
-            </div>
+                </div>
+              </Card>
+            ))}
+          </div>
 
-            <div className="flex flex-col gap-3 border-t border-border/60 pt-2 sm:flex-row">
-              <Button onClick={handleCopyStructure} variant="outline" className="flex-1 rounded-2xl">
-                <Copy className="mr-2 h-4 w-4" />
-                Copy structure
-              </Button>
-              <Button onClick={handleDownload} className="flex-1 rounded-2xl">
-                <Download className="mr-2 h-4 w-4" />
-                Download PPT template
-              </Button>
-            </div>
+          {/* Actions */}
+          <div className="flex gap-3 pt-4">
+            <Button onClick={handleCopyStructure} variant="outline" className="flex-1">
+              <Copy className="h-4 w-4 mr-2" />
+              Copy Structure
+            </Button>
+            <Button onClick={handleDownload} className="flex-1">
+              <Download className="h-4 w-4 mr-2" />
+              Download Template
+            </Button>
           </div>
         </div>
       </DialogContent>
