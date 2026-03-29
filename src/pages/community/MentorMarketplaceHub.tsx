@@ -281,6 +281,7 @@ const MentorMarketplaceHub = () => {
           name="description"
           content="Connect with experienced founders and mentors who can guide you through startup execution. Book 1-on-1 sessions with proven entrepreneurs."
         />
+        <link rel="canonical" href="https://creatives-takeover.com/community" />
       </Helmet>
       <div className="min-h-screen bg-background relative">
         <CommunityMentorsWallpaper />

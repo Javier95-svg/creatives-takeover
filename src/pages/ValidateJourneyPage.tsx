@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import SEO, { createBreadcrumbSchema } from "@/components/SEO";
 import { useLeanStartupStore } from "@/store/leanStartupStore";
 import { getSafeLocalStorage } from "@/lib/safeStorage";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
@@ -273,11 +274,33 @@ export default function ValidateJourneyPage() {
   const readinessPercent = Math.round((readinessCount / readinessTotal) * 100);
 
   return (
-    <DashboardLayout
-      title="Decision Sprint"
-      subtitle="Compare up to three ideas, score the signals, and pick the product that deserves your next build cycle."
-    >
-      <div className="space-y-8">
+    <>
+      <SEO
+        title="Decision Sprint - Creatives Takeover"
+        description="Compare startup ideas side by side, score them against practical demand criteria, and choose the idea that deserves your next sprint."
+        keywords="startup idea scoring, idea validation, startup prioritization, founder decision framework"
+        url="/decision-sprint"
+        structuredData={[
+          {
+            "@context": "https://schema.org",
+            "@type": "WebPage",
+            name: "Decision Sprint",
+            description:
+              "Compare startup ideas side by side, score them against practical demand criteria, and choose the idea that deserves your next sprint.",
+            url: "https://creatives-takeover.com/decision-sprint",
+          },
+          createBreadcrumbSchema([
+            { name: "Home", url: "/" },
+            { name: "BizMap AI", url: "/bizmap-ai" },
+            { name: "Decision Sprint", url: "/decision-sprint" },
+          ]),
+        ]}
+      />
+      <DashboardLayout
+        title="Decision Sprint"
+        subtitle="Compare up to three ideas, score the signals, and pick the product that deserves your next build cycle."
+      >
+        <div className="space-y-8">
         <div className="grid gap-6 md:grid-cols-3">
           <Card className="border-primary/20 bg-background/80">
             <CardHeader>
@@ -614,8 +637,9 @@ export default function ValidateJourneyPage() {
                 </div>
               </div>
             )}
-      </div>
-    </DashboardLayout>
+        </div>
+      </DashboardLayout>
+    </>
   );
 }
 

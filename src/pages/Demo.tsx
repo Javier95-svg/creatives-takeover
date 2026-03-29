@@ -71,8 +71,9 @@ const Demo = () => {
     return (
       <div className="min-h-screen bg-background overflow-hidden">
         <Helmet>
-          <title>Creatives Takeover</title>
+          <title>Interactive Demo | Creatives Takeover</title>
           <meta name="description" content="Try BizMap AI services for free: AI business planning, prompt library, curated insights, and entrepreneur community. No signup required." />
+          <link rel="canonical" href="https://creatives-takeover.com/demo" />
         </Helmet>
         
         <div className="relative">
@@ -190,7 +191,9 @@ const Demo = () => {
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
       <Helmet>
-        <title>Creatives Takeover</title>
+        <title>Interactive Demo | Creatives Takeover</title>
+        <meta name="description" content="Try BizMap AI services for free: AI business planning, prompt library, curated insights, and entrepreneur community. No signup required." />
+        <link rel="canonical" href="https://creatives-takeover.com/demo" />
       </Helmet>
       
       {/* Ambient Background */}

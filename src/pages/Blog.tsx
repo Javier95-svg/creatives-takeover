@@ -67,7 +67,7 @@ const Blog = ({ defaultTab = 'vc-search' }: BlogProps) => {
   return (
     <div className="min-h-screen bg-background">
       <SEO
-        title="Creatives Takeover"
+        title="Insighta - Creatives Takeover"
         description="Discover AI-powered insights on creative business trends, funding opportunities, and entrepreneurship strategies. Stay ahead with daily curated content for creative entrepreneurs."
         keywords="creative business trends, AI opportunities, entrepreneurship news, startup funding, business insights, creative entrepreneur"
         url="/insighta"

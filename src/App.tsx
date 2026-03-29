@@ -15,6 +15,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import ScrollToTop from "./components/ScrollToTop";
 import ProUpgradeBanner from "@/components/ProUpgradeBanner";
 import BizMapGuestTeaserDialog from "@/components/bizmap/BizMapGuestTeaserDialog";
+import RouteRobots from "@/components/RouteRobots";
 
 const PulseWidget = lazy(() => import("@/components/pulse/PulseWidget"));
 const MobileBottomNav = lazy(() =>
@@ -143,6 +144,7 @@ function App() {
                 <BrowserRouter>
                   <Suspense fallback={null}>
                     <ScrollToTop />
+                    <RouteRobots />
                     <UpgradePromptProvider>
                       <ProUpgradeBanner />
                       <PulseWidgetWrapper />

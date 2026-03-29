@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import SEO, { createBreadcrumbSchema } from "@/components/SEO";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import CommunityCofoundersWallpaper from "@/components/wallpapers/CommunityCofoundersWallpaper";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Handshake, Search, Filter, MapPin, Briefcase, Code, Palette, TrendingUp, Users, Star, Plus, Calendar, CheckCircle, Edit2, Trash2, MessageCircle } from "lucide-react";
+import { Handshake, Search, Filter, MapPin, Briefcase, Users, Star, Plus, Calendar, CheckCircle, Edit2, Trash2, MessageCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -150,10 +151,32 @@ const FindCoFounder = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background relative">
-      <CommunityCofoundersWallpaper />
-      <div className="relative z-10">
-        <Navigation />
+    <>
+      <SEO
+        title="Find a Co-Founder - Creatives Takeover"
+        description="Browse startup co-founder opportunities, discover collaborators across product and growth, and connect with builders working on early-stage ideas."
+        keywords="find a cofounder, startup cofounder, founder matching, startup collaborators, cofounder community"
+        url="/community/co-founders"
+        structuredData={[
+          {
+            "@context": "https://schema.org",
+            "@type": "WebPage",
+            name: "Find a Co-Founder",
+            description:
+              "Browse startup co-founder opportunities, discover collaborators across product and growth, and connect with builders working on early-stage ideas.",
+            url: "https://creatives-takeover.com/community/co-founders",
+          },
+          createBreadcrumbSchema([
+            { name: "Home", url: "/" },
+            { name: "Community", url: "/community" },
+            { name: "Find a Co-Founder", url: "/community/co-founders" },
+          ]),
+        ]}
+      />
+      <div className="min-h-screen bg-background relative">
+        <CommunityCofoundersWallpaper />
+        <div className="relative z-10">
+          <Navigation />
 
         {/* Hero Section */}
         <section className="pt-24 pb-16 px-6">
@@ -410,30 +433,31 @@ const FindCoFounder = () => {
         <Footer />
       </div>
 
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Co-Founder Post</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete this post? This action cannot be undone.
-              Your post will be permanently removed and no longer visible to other users.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setPostToDelete(null)}>
-              Cancel
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDeletePost}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Delete Post
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </div>
+        {/* Delete Confirmation Dialog */}
+        <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Co-Founder Post</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete this post? This action cannot be undone.
+                Your post will be permanently removed and no longer visible to other users.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => setPostToDelete(null)}>
+                Cancel
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleDeletePost}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                Delete Post
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </div>
+    </>
   );
 };
 

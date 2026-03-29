@@ -12,7 +12,7 @@ const Resources = () => {
   return (
     <>
       <Helmet>
-        <title>Creatives Takeover</title>
+        <title>Resources | Creatives Takeover</title>
         <meta 
           name="description" 
           content="Access free creative resources including tutorials, design guides, templates, and downloads. Learn creative skills with our comprehensive resource library." 
@@ -20,7 +20,7 @@ const Resources = () => {
         <meta name="keywords" content="creative resources, free tutorials, design guides, creative downloads, design templates, creative learning resources, free design assets" />
         <meta property="og:title" content="Free Creative Resources | Tutorials, Guides & Downloads" />
         <meta property="og:description" content="Discover our comprehensive library of free creative resources, tutorials, and guides to enhance your creative skills." />
-        <link rel="canonical" href="/resources" />
+        <link rel="canonical" href="https://creatives-takeover.com/resources" />
       </Helmet>
       <div className="relative min-h-screen overflow-hidden">
         <AnimatedBackground />

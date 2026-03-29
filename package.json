@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build && node scripts/generate-prerendered-pages.mjs",
+    "build": "node scripts/generate-seo-assets.mjs && vite build && node scripts/generate-prerendered-pages.mjs",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",

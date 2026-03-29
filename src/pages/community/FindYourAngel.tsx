@@ -339,11 +339,12 @@ const FindYourAngel = () => {
   return (
     <>
       <Helmet>
-        <title>Find your Angel | Connect with Investors</title>
+        <title>Find Your Angel | Creatives Takeover</title>
         <meta
           name="description"
           content="Find and connect with Angel Investors or Venture Capitalists. Browse investor profiles, explore focus areas, and build relationships that fund your vision."
         />
+        <link rel="canonical" href="https://creatives-takeover.com/community/angels" />
       </Helmet>
       <div className="min-h-screen bg-background relative">
         <CommunityAngelsWallpaper />

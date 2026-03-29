@@ -1,4 +1,5 @@
 import CreativesTakeoverLayout from '@/components/CreativesTakeoverLayout';
+import SEO from '@/components/SEO';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { ArrowRight, Palette, Zap, Brain, Users } from 'lucide-react';
@@ -6,6 +7,12 @@ import { ArrowRight, Palette, Zap, Brain, Users } from 'lucide-react';
 const CreativesTakeover = () => {
   return (
     <CreativesTakeoverLayout>
+      <SEO
+        title="Creatives Takeover Studio"
+        description="Explore Creatives Takeover's creative studio positioning, AI-enhanced workflows, and modern design execution approach."
+        keywords="creative studio, design systems, AI workflows, branding, creative execution"
+        url="/creatives-takeover"
+      />
       {/* Hero Section */}
       <section className="hero relative min-h-[80vh] flex items-center justify-center bg-gradient-to-br from-background via-card to-muted overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5" />
