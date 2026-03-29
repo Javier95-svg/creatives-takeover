@@ -37,7 +37,7 @@ export const ROBOTS_DISALLOW = [
 export const INDEXABLE_ROUTES = [
   {
     path: "/",
-    title: "AI Startup Builder For Founders | Creatives Takeover",
+    title: "AI Startup Builder | Creatives Takeover",
     description:
       "Build, validate, and launch faster with AI startup tools for customer research, MVP planning, fundraising prep, and go-to-market execution.",
     changefreq: "daily",

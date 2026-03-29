@@ -105,7 +105,7 @@ const Index = () => {
     <div className="min-h-screen relative">
       <HomeWallpaper />
       <SEO
-        title="AI Startup Builder For Founders | Creatives Takeover"
+        title="AI Startup Builder | Creatives Takeover"
         description="Build, validate, and launch faster with AI startup tools for customer research, MVP planning, fundraising prep, and go-to-market execution."
         keywords="ai startup builder, startup validation tools, mvp builder, fundraising tools, founder platform, startup planning software"
         url="/"
