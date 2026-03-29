@@ -42,6 +42,7 @@ export const MobileBottomNav = () => {
   }, [isMobile]);
 
   if (!isMobile) return null;
+  if (location.pathname.startsWith('/mvp-builder')) return null;
 
   const visibleItems = navItems.filter(item => !item.requiresAuth || user);
 

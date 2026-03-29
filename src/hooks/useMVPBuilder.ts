@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { getAccessTokenSafely, getSessionSafely } from '@/integrations/supabase/auth';
+import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCreditActions } from '@/hooks/useCreditActions';
 import { createIdempotencyKey } from '@/lib/idempotency';
@@ -35,8 +36,12 @@ export interface MVPMessage {
   id: string;
   role: 'user' | 'assistant';
   content: string;
+  createdAt?: string;
   isStreaming?: boolean;
   model?: string;
+  type?: 'message' | 'error';
+  linkedPrompt?: string;
+  retryPrompt?: string;
 }
 
 export interface MVPPromptHistoryItem {
@@ -106,12 +111,24 @@ export interface GitHubCommitRecord {
   author?: string | null;
 }
 
+export interface MVPProjectRecord {
+  id: string;
+  title: string;
+  prompt_history: MVPMessage[];
+  generated_code: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 interface PersistedSession {
   messages: MVPMessage[];
   currentHtml: string | null;
+  generatedCode?: string | null;
   currentProject?: MVPProjectArtifact | null;
   projectName: string;
   projectId: string;
+  lastSavedAt?: string | null;
+  hasUnsavedChanges?: boolean;
   promptHistory: MVPPromptHistoryItem[];
   selectedModels: string[];
   selectedProjectType?: MVPProjectType;
@@ -126,6 +143,56 @@ interface PersistedSession {
 }
 
 type FunctionError = Error & { status?: number };
+
+const DEFAULT_PROJECT_NAME = 'Untitled Project';
+const MVP_PROJECTS_TABLE = 'mvp_projects';
+
+function createMessage(
+  role: MVPMessage['role'],
+  content: string,
+  extras: Partial<MVPMessage> = {}
+): MVPMessage {
+  return {
+    id: crypto.randomUUID(),
+    role,
+    content,
+    createdAt: new Date().toISOString(),
+    type: 'message',
+    ...extras,
+  };
+}
+
+function buildPromptHistoryFromMessages(messages: MVPMessage[]): MVPPromptHistoryItem[] {
+  const prompts = messages.filter((message) => message.role === 'user' && message.content.trim());
+  return sortHistory(
+    prompts.map((message) => ({
+      id: message.id,
+      prompt: message.content,
+      committedAt: message.createdAt ?? new Date().toISOString(),
+      commitRef: `prompt-${message.id.slice(0, 8)}`,
+    }))
+  );
+}
+
+function extractGeneratedCode(
+  files: MVPProjectFile[],
+  entryFilePath: string,
+  html: string | null
+): string {
+  const preferredEntry =
+    files.find((file) => file.path === entryFilePath) ??
+    files.find((file) => file.path.toLowerCase().endsWith('.html')) ??
+    files[0];
+  if (preferredEntry?.content) return preferredEntry.content;
+  return html ?? '';
+}
+
+function sanitizeStreamedCode(value: string): string {
+  return value
+    .replace(/^```(?:html)?\s*/i, '')
+    .replace(/\s*```$/i, '')
+    .trim();
+}
 
 function sortHistory(items: MVPPromptHistoryItem[]): MVPPromptHistoryItem[] {
   return [...items].sort(
@@ -302,6 +369,7 @@ export function useMVPBuilder() {
     MVPProjectArtifact['dependencies']
   >([]);
   const [currentHtml, setCurrentHtml] = useState<string | null>(null);
+  const [generatedCode, setGeneratedCode] = useState<string>('');
   const [previewState, setPreviewState] = useState<MVPPreviewResult>({
     html: null,
     entryFile: null,
@@ -316,8 +384,13 @@ export function useMVPBuilder() {
   const [projectSnapshots, setProjectSnapshots] = useState<MVPProjectSnapshot[]>([]);
   const [isShowingPreviewFallback, setIsShowingPreviewFallback] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [projectName, setProjectName] = useState('Name Your App');
+  const [projectName, setProjectNameState] = useState(DEFAULT_PROJECT_NAME);
   const [projectId, setProjectId] = useState<string>(() => crypto.randomUUID());
+  const [lastSavedAt, setLastSavedAt] = useState<string | null>(null);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [isSavingProject, setIsSavingProject] = useState(false);
+  const [savedProjects, setSavedProjects] = useState<MVPProjectRecord[]>([]);
+  const [isProjectsLoading, setIsProjectsLoading] = useState(false);
   const [promptHistory, setPromptHistory] = useState<MVPPromptHistoryItem[]>([]);
   const [selectedModels, setSelectedModelsState] = useState<string[]>([MVP_DEFAULT_MODEL]);
 
@@ -336,6 +409,14 @@ export function useMVPBuilder() {
 
   const abortRef = useRef<AbortController | null>(null);
   const lastStablePreviewHtmlRef = useRef<string | null>(null);
+  const markProjectDirty = useCallback(() => {
+    setHasUnsavedChanges(true);
+  }, []);
+
+  const replaceMessages = useCallback((nextMessages: MVPMessage[]) => {
+    setMessages(nextMessages);
+    setPromptHistory(buildPromptHistoryFromMessages(nextMessages));
+  }, []);
 
   const refreshPreview = useCallback(
     (
@@ -350,6 +431,7 @@ export function useMVPBuilder() {
       if (nextEntryFile) {
         setEntryFilePathState(nextEntryFile);
       }
+      setGeneratedCode(extractGeneratedCode(files, nextEntryFile || preferredEntryFile || 'index.html', nextPreview.html));
 
       if (nextPreview.canPreview && nextPreview.html) {
         setCurrentHtml(nextPreview.html);
@@ -390,13 +472,14 @@ export function useMVPBuilder() {
       setProjectFramework(nextArtifact.framework);
       setProjectSummary(nextArtifact.summary);
       setProjectDependencies(nextArtifact.dependencies);
+      setGeneratedCode(extractGeneratedCode(nextArtifact.files, nextArtifact.entryFile, null));
       setSelectedCodeFilePath((prev) => {
         if (prev && nextArtifact.files.some((file) => file.path === prev)) return prev;
         return nextArtifact.files[0]?.path ?? null;
       });
 
       if (!options?.preserveProjectName && nextArtifact.projectName.trim()) {
-        setProjectName(nextArtifact.projectName);
+        setProjectNameState(nextArtifact.projectName);
       }
       if (!options?.preserveProjectType) {
         setSelectedProjectTypeState(nextArtifact.projectType);
@@ -434,9 +517,12 @@ export function useMVPBuilder() {
     (
       msgs: MVPMessage[],
       html: string | null,
+      code: string | null,
       project: MVPProjectArtifact | null,
       name: string,
       pid: string,
+      savedAt: string | null,
+      unsavedChanges: boolean,
       history: MVPPromptHistoryItem[],
       models: string[],
       projectType: MVPProjectType,
@@ -453,9 +539,12 @@ export function useMVPBuilder() {
         const session: PersistedSession = {
           messages: msgs.map((m) => ({ ...m, isStreaming: false })),
           currentHtml: html,
+          generatedCode: code,
           currentProject: project,
           projectName: name,
           projectId: pid,
+          lastSavedAt: savedAt,
+          hasUnsavedChanges: unsavedChanges,
           promptHistory: history,
           selectedModels: models,
           selectedProjectType: projectType,
@@ -487,8 +576,11 @@ export function useMVPBuilder() {
           isStreaming: false,
         }))
       );
-      setProjectName(session.projectName ?? 'Name Your App');
+      setGeneratedCode(session.generatedCode ?? '');
+      setProjectNameState(session.projectName ?? DEFAULT_PROJECT_NAME);
       if (session.projectId) setProjectId(session.projectId);
+      setLastSavedAt(session.lastSavedAt ?? null);
+      setHasUnsavedChanges(Boolean(session.hasUnsavedChanges));
       setPromptHistory(
         Array.isArray(session.promptHistory)
           ? sortHistory(
@@ -552,6 +644,7 @@ export function useMVPBuilder() {
         setProjectFiles([]);
         setProjectFramework('static-html');
         setCurrentHtml(null);
+        setGeneratedCode('');
         setPreviewState({
           html: null,
           entryFile: null,
@@ -577,6 +670,7 @@ export function useMVPBuilder() {
     persist(
       messages,
       currentHtml,
+      generatedCode,
       projectFiles.length > 0
         ? {
             projectName,
@@ -590,6 +684,8 @@ export function useMVPBuilder() {
         : null,
       projectName,
       projectId,
+      lastSavedAt,
+      hasUnsavedChanges,
       promptHistory,
       selectedModels,
       selectedProjectType,
@@ -605,6 +701,7 @@ export function useMVPBuilder() {
   }, [
     messages,
     currentHtml,
+    generatedCode,
     projectFiles,
     projectFramework,
     selectedProjectType,
@@ -613,6 +710,8 @@ export function useMVPBuilder() {
     projectDependencies,
     projectName,
     projectId,
+    lastSavedAt,
+    hasUnsavedChanges,
     promptHistory,
     selectedModels,
     projectSnapshots,
@@ -625,6 +724,267 @@ export function useMVPBuilder() {
     lastGeneratedProject,
     persist,
   ]);
+
+  const hydrateFromSavedProject = useCallback(
+    (record: MVPProjectRecord) => {
+      const restoredMessages = Array.isArray(record.prompt_history)
+        ? record.prompt_history
+            .map((message) => {
+              if (
+                !message ||
+                (message.role !== 'user' && message.role !== 'assistant') ||
+                typeof message.content !== 'string'
+              ) {
+                return null;
+              }
+
+              return {
+                ...message,
+                createdAt: message.createdAt ?? new Date().toISOString(),
+                isStreaming: false,
+                type: message.type === 'error' ? 'error' : 'message',
+              } as MVPMessage;
+            })
+            .filter((message): message is MVPMessage => Boolean(message))
+        : [];
+
+      replaceMessages(restoredMessages);
+      setProjectId(record.id);
+      setProjectNameState(record.title || DEFAULT_PROJECT_NAME);
+      setLastSavedAt(record.updated_at ?? record.created_at);
+      setHasUnsavedChanges(false);
+      setGeneratedCode(record.generated_code ?? '');
+      setProjectSnapshots([]);
+      setSelectedModelsState([MVP_DEFAULT_MODEL]);
+      setGitHubRepoSession(null);
+      setGitHubPendingChanges([]);
+      setGitHubCommitHistory([]);
+      setLastGitHubPrompt(null);
+      setSuggestedGitHubCommitMessage(null);
+      setGitHubBranches([]);
+
+      if (record.generated_code) {
+        const artifact = createProjectFromHtml(record.generated_code, record.title || DEFAULT_PROJECT_NAME);
+        applyProjectArtifact(artifact, {
+          allowFallback: false,
+          setAsBaseline: true,
+          preserveProjectName: true,
+          preserveProjectType: false,
+        });
+      } else {
+        setProjectFiles([]);
+        setProjectFramework('static-html');
+        setProjectSummary('Generated with MVP Builder.');
+        setProjectDependencies([]);
+        setCurrentHtml(null);
+        setPreviewState({
+          html: null,
+          entryFile: null,
+          canPreview: false,
+          warnings: [],
+          errors: [],
+          runtimeMode: 'none',
+          consoleHints: [],
+        });
+        setSelectedCodeFilePath(null);
+        setLastGeneratedProject(null);
+      }
+    },
+    [applyProjectArtifact, replaceMessages]
+  );
+
+  const loadProjects = useCallback(async () => {
+    if (!user) {
+      setSavedProjects([]);
+      return;
+    }
+
+    setIsProjectsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from(MVP_PROJECTS_TABLE as never)
+        .select('id, title, prompt_history, generated_code, created_at, updated_at')
+        .eq('user_id', user.id)
+        .order('updated_at', { ascending: false });
+
+      if (error) throw error;
+
+      setSavedProjects(
+        Array.isArray(data)
+          ? data.map((record) => ({
+              id: String(record.id),
+              title: typeof record.title === 'string' && record.title.trim() ? record.title.trim() : DEFAULT_PROJECT_NAME,
+              prompt_history: Array.isArray(record.prompt_history) ? (record.prompt_history as MVPMessage[]) : [],
+              generated_code: typeof record.generated_code === 'string' ? record.generated_code : null,
+              created_at: typeof record.created_at === 'string' ? record.created_at : new Date().toISOString(),
+              updated_at:
+                typeof record.updated_at === 'string'
+                  ? record.updated_at
+                  : typeof record.created_at === 'string'
+                  ? record.created_at
+                  : new Date().toISOString(),
+            }))
+          : []
+      );
+    } catch (error) {
+      console.error('Failed to load MVP projects:', error);
+    } finally {
+      setIsProjectsLoading(false);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    void loadProjects();
+  }, [loadProjects]);
+
+  const saveProject = useCallback(
+    async (options?: { silent?: boolean }) => {
+      if (!user) return false;
+
+      const codeToSave =
+        generatedCode ||
+        currentHtml ||
+        extractGeneratedCode(projectFiles, entryFilePath, currentHtml) ||
+        null;
+      const timestamp = new Date().toISOString();
+      const payload = {
+        id: projectId,
+        user_id: user.id,
+        title: projectName.trim() || DEFAULT_PROJECT_NAME,
+        prompt_history: messages.map((message) => ({
+          ...message,
+          isStreaming: false,
+        })),
+        generated_code: codeToSave,
+        updated_at: timestamp,
+      };
+
+      setIsSavingProject(true);
+      try {
+        const { data, error } = await supabase
+          .from(MVP_PROJECTS_TABLE as never)
+          .upsert(payload)
+          .select('id, title, prompt_history, generated_code, created_at, updated_at')
+          .single();
+
+        if (error) throw error;
+
+        const savedRecord: MVPProjectRecord = {
+          id: String(data.id),
+          title: typeof data.title === 'string' && data.title.trim() ? data.title.trim() : DEFAULT_PROJECT_NAME,
+          prompt_history: Array.isArray(data.prompt_history) ? (data.prompt_history as MVPMessage[]) : payload.prompt_history,
+          generated_code: typeof data.generated_code === 'string' ? data.generated_code : codeToSave,
+          created_at: typeof data.created_at === 'string' ? data.created_at : timestamp,
+          updated_at: typeof data.updated_at === 'string' ? data.updated_at : timestamp,
+        };
+
+        setProjectId(savedRecord.id);
+        setLastSavedAt(savedRecord.updated_at);
+        setHasUnsavedChanges(false);
+        setSavedProjects((prev) =>
+          [savedRecord, ...prev.filter((project) => project.id !== savedRecord.id)].sort(
+            (a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+          )
+        );
+
+        if (!options?.silent) {
+          toast.success('Project saved.');
+        }
+        return true;
+      } catch (error) {
+        console.error('Failed to save MVP project:', error);
+        if (!options?.silent) {
+          toast.error('Unable to save this project right now.');
+        }
+        return false;
+      } finally {
+        setIsSavingProject(false);
+      }
+    },
+    [currentHtml, entryFilePath, generatedCode, messages, projectFiles, projectId, projectName, user]
+  );
+
+  const loadProject = useCallback(
+    async (id: string) => {
+      if (!user || !id) return;
+
+      try {
+        let project = savedProjects.find((item) => item.id === id) ?? null;
+        if (!project) {
+          const { data, error } = await supabase
+            .from(MVP_PROJECTS_TABLE as never)
+            .select('id, title, prompt_history, generated_code, created_at, updated_at')
+            .eq('id', id)
+            .eq('user_id', user.id)
+            .maybeSingle();
+
+          if (error) throw error;
+          if (!data) return;
+
+          project = {
+            id: String(data.id),
+            title: typeof data.title === 'string' && data.title.trim() ? data.title.trim() : DEFAULT_PROJECT_NAME,
+            prompt_history: Array.isArray(data.prompt_history) ? (data.prompt_history as MVPMessage[]) : [],
+            generated_code: typeof data.generated_code === 'string' ? data.generated_code : null,
+            created_at: typeof data.created_at === 'string' ? data.created_at : new Date().toISOString(),
+            updated_at:
+              typeof data.updated_at === 'string'
+                ? data.updated_at
+                : typeof data.created_at === 'string'
+                ? data.created_at
+                : new Date().toISOString(),
+          };
+        }
+
+        hydrateFromSavedProject(project);
+        toast.success(`Loaded ${project.title}.`);
+      } catch (error) {
+        console.error('Failed to load MVP project:', error);
+        toast.error('Unable to load this project right now.');
+      }
+    },
+    [hydrateFromSavedProject, savedProjects, user]
+  );
+
+  const deleteProject = useCallback(
+    async (id: string) => {
+      if (!user || !id) return false;
+
+      try {
+        const { error } = await supabase
+          .from(MVP_PROJECTS_TABLE as never)
+          .delete()
+          .eq('id', id)
+          .eq('user_id', user.id);
+
+        if (error) throw error;
+
+        setSavedProjects((prev) => prev.filter((project) => project.id !== id));
+        if (projectId === id) {
+          setLastSavedAt(null);
+          setHasUnsavedChanges(false);
+        }
+        toast.success('Project deleted.');
+        return true;
+      } catch (error) {
+        console.error('Failed to delete MVP project:', error);
+        toast.error('Unable to delete this project right now.');
+        return false;
+      }
+    },
+    [projectId, user]
+  );
+
+  useEffect(() => {
+    if (!user) return;
+
+    const intervalId = window.setInterval(() => {
+      if (!hasUnsavedChanges || isSavingProject) return;
+      void saveProject({ silent: true });
+    }, 30000);
+
+    return () => window.clearInterval(intervalId);
+  }, [hasUnsavedChanges, isSavingProject, saveProject, user]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -1074,21 +1434,16 @@ export function useMVPBuilder() {
     async (prompt: string, creditFeature: string) => {
       if (!githubRepoSession) return;
 
-      const userMsg: MVPMessage = {
-        id: crypto.randomUUID(),
-        role: 'user',
-        content: prompt,
-      };
-      const assistantMsg: MVPMessage = {
-        id: crypto.randomUUID(),
-        role: 'assistant',
-        content: '',
+      const userMsg = createMessage('user', prompt);
+      const assistantMsg = createMessage('assistant', '', {
         isStreaming: true,
-      };
+        linkedPrompt: prompt,
+      });
 
       setMessages((prev) => [...prev, userMsg, assistantMsg]);
       setIsGenerating(true);
       setLastGitHubPrompt(prompt);
+      markProjectDirty();
 
       try {
         const result = await callGitHubFunction<{
@@ -1136,6 +1491,7 @@ export function useMVPBuilder() {
                   ...message,
                   content: assistantContent,
                   isStreaming: false,
+                  linkedPrompt: prompt,
                   model: result.model,
                 }
               : message
@@ -1154,20 +1510,22 @@ export function useMVPBuilder() {
         }
         setMessages((prev) =>
           prev.map((message) =>
-            message.id === assistantMsg.id
-              ? {
-                  ...message,
-                  content: `⚠️ ${err.message || 'Failed to generate repository changes.'}`,
-                  isStreaming: false,
-                }
-              : message
-          )
+                message.id === assistantMsg.id
+                  ? {
+                      ...message,
+                      content: err.message || 'Failed to generate repository changes.',
+                      isStreaming: false,
+                      type: 'error',
+                      retryPrompt: prompt,
+                    }
+                  : message
+              )
         );
       } finally {
         setIsGenerating(false);
       }
     },
-    [applyProjectArtifact, callGitHubFunction, entryFilePath, githubRepoSession, handleCreditError, selectedModels]
+    [applyProjectArtifact, callGitHubFunction, entryFilePath, githubRepoSession, handleCreditError, markProjectDirty, selectedModels]
   );
 
   const sendMessage = useCallback(
@@ -1204,25 +1562,24 @@ export function useMVPBuilder() {
         controller.abort();
       }, 120000);
 
-      const userMsg: MVPMessage = {
-        id: crypto.randomUUID(),
-        role: 'user',
-        content: prompt,
-      };
-      const assistantMsg: MVPMessage = {
-        id: crypto.randomUUID(),
-        role: 'assistant',
-        content: '',
+      const userMsg = createMessage('user', prompt);
+      const assistantMsg = createMessage('assistant', '', {
         isStreaming: true,
-      };
+        linkedPrompt: prompt,
+      });
       const nextMessages = [...messages, userMsg, assistantMsg];
       setMessages(nextMessages);
       setIsGenerating(true);
+      markProjectDirty();
 
       const conversationHistory = messages.map((message) => ({
         role: message.role,
         content: message.content,
       }));
+      const currentCode =
+        generatedCode ||
+        currentHtml ||
+        extractGeneratedCode(projectFiles, entryFilePath, currentHtml);
       const preferredFramework = resolvePreferredFramework(
         prompt,
         selectedProjectType,
@@ -1263,6 +1620,7 @@ export function useMVPBuilder() {
                   }
                 : null,
             conversationHistory,
+            currentCode,
             userId: user?.id ?? null,
             selectedModels,
             preferredProjectType: selectedProjectType,
@@ -1278,6 +1636,7 @@ export function useMVPBuilder() {
         const decoder = new TextDecoder();
         let buffer = '';
         let streamedContent = '';
+        let streamedCode = '';
         let newProject: MVPProjectArtifact | null = null;
         let completedModel: string | null = null;
         let finalized = false;
@@ -1286,16 +1645,25 @@ export function useMVPBuilder() {
           if (finalized) return;
           finalized = true;
 
-          const fallbackProject = extractProjectFromText(streamedContent, projectName);
+          const fallbackProject = streamedCode
+            ? createProjectFromHtml(sanitizeStreamedCode(streamedCode), projectName)
+            : extractProjectFromText(streamedContent, projectName);
           const committedProject = newProject ?? fallbackProject;
+          const assistantCopy =
+            committedProject?.summary ||
+            (messages.length === 0
+              ? 'Ready — your build is live.'
+              : 'Updated the build and synced the preview.');
 
           setMessages((prev) =>
             prev.map((message) =>
               message.id === assistantMsg.id
                 ? {
                     ...message,
-                    content: streamedContent || 'Done!',
+                    content: assistantCopy,
                     isStreaming: false,
+                    linkedPrompt: prompt,
+                    type: 'message',
                     ...(completedModel ? { model: completedModel } : {}),
                   }
                 : message
@@ -1306,7 +1674,7 @@ export function useMVPBuilder() {
             applyProjectArtifact(committedProject, {
               allowFallback: false,
               setAsBaseline: true,
-              preserveProjectName: projectName !== 'Name Your App',
+              preserveProjectName: projectName !== DEFAULT_PROJECT_NAME,
               preserveProjectType: false,
             });
             addProjectSnapshot(
@@ -1317,9 +1685,10 @@ export function useMVPBuilder() {
             appendPromptHistory({
               id: crypto.randomUUID(),
               prompt,
-              committedAt: new Date().toISOString(),
+              committedAt: assistantMsg.createdAt ?? new Date().toISOString(),
               commitRef: `build-${assistantMsg.id.slice(0, 8)}`,
             });
+            toast.success('Ready — your build is live.');
           }
         };
 
@@ -1351,13 +1720,20 @@ export function useMVPBuilder() {
 
             if (event.type === 'delta' && typeof event.content === 'string') {
               streamedContent += event.content;
-              setMessages((prev) =>
-                prev.map((message) =>
-                  message.id === assistantMsg.id
-                    ? { ...message, content: streamedContent }
-                    : message
-                )
-              );
+            } else if (event.type === 'code-delta' && typeof event.content === 'string') {
+              streamedCode += event.content;
+              const liveCode = sanitizeStreamedCode(streamedCode);
+              setGeneratedCode(liveCode);
+              setCurrentHtml(liveCode || null);
+              setPreviewState({
+                html: liveCode || null,
+                entryFile: 'index.html',
+                canPreview: Boolean(liveCode),
+                warnings: [],
+                errors: [],
+                runtimeMode: 'none',
+                consoleHints: [],
+              });
             } else if (event.type === 'project' && typeof event.project === 'object' && event.project !== null) {
               const nextProject = event.project as MVPProjectArtifact;
               newProject = {
@@ -1375,6 +1751,7 @@ export function useMVPBuilder() {
                 dependencies: nextProject.dependencies,
                 files: normalizeProjectFiles(nextProject.files || []),
               };
+              setGeneratedCode(extractGeneratedCode(newProject.files, newProject.entryFile, null));
             } else if (event.type === 'complete') {
               completedModel = typeof event.model === 'string' ? event.model : null;
               finalizeResponse();
@@ -1390,7 +1767,13 @@ export function useMVPBuilder() {
               setMessages((prev) =>
                 prev.map((message) =>
                   message.id === assistantMsg.id
-                    ? { ...message, content: `⚠️ ${errMsg}`, isStreaming: false }
+                    ? {
+                        ...message,
+                        content: errMsg,
+                        isStreaming: false,
+                        type: 'error',
+                        retryPrompt: prompt,
+                      }
                     : message
                 )
               );
@@ -1400,15 +1783,30 @@ export function useMVPBuilder() {
         }
       } catch (error: unknown) {
         if ((error as Error)?.name === 'AbortError') {
-          if (!didTimeout) return;
+          if (!didTimeout) {
+            setMessages((prev) =>
+              prev.map((message) =>
+                message.id === assistantMsg.id
+                  ? {
+                      ...message,
+                      content: 'Generation stopped.',
+                      isStreaming: false,
+                    }
+                  : message
+              )
+            );
+            return;
+          }
           toast.error('Request timed out. Please try a simpler prompt.');
           setMessages((prev) =>
             prev.map((message) =>
               message.id === assistantMsg.id
                 ? {
                     ...message,
-                    content: '⚠️ Request timed out. Please try a shorter or simpler prompt.',
+                    content: 'Request timed out. Please try a shorter or simpler prompt.',
                     isStreaming: false,
+                    type: 'error',
+                    retryPrompt: prompt,
                   }
                 : message
             )
@@ -1421,8 +1819,10 @@ export function useMVPBuilder() {
             message.id === assistantMsg.id
               ? {
                   ...message,
-                  content: '⚠️ Connection error. Please try again.',
+                  content: 'Connection error. Please try again.',
                   isStreaming: false,
+                  type: 'error',
+                  retryPrompt: prompt,
                 }
               : message
           )
@@ -1439,12 +1839,15 @@ export function useMVPBuilder() {
       applyProjectArtifact,
       entryFilePath,
       ensureCredits,
+      generatedCode,
       githubRepoSession,
       handleCreditError,
       handleGitHubPrompt,
       isGenerating,
       isGitHubBusy,
+      markProjectDirty,
       messages,
+      currentHtml,
       projectFiles,
       projectDependencies,
       projectFramework,
@@ -1464,13 +1867,20 @@ export function useMVPBuilder() {
       refreshPreview(projectFiles, normalizedPath, {
         allowFallback: true,
       });
+      markProjectDirty();
     },
-    [projectFiles, refreshPreview]
+    [markProjectDirty, projectFiles, refreshPreview]
   );
 
   const setSelectedProjectType = useCallback((projectType: MVPProjectType) => {
     setSelectedProjectTypeState(sanitizeMVPProjectType(projectType));
-  }, []);
+    markProjectDirty();
+  }, [markProjectDirty]);
+
+  const setProjectName = useCallback((name: string) => {
+    setProjectNameState(name || DEFAULT_PROJECT_NAME);
+    markProjectDirty();
+  }, [markProjectDirty]);
 
   const updateProjectFile = useCallback(
     (path: string, content: string) => {
@@ -1509,9 +1919,11 @@ export function useMVPBuilder() {
           ? fileDependencies
           : prev;
       });
+      setGeneratedCode(extractGeneratedCode(nextFiles, entryFilePath || normalizedPath, currentHtml));
       refreshPreview(nextFiles, entryFilePath || normalizedPath, {
         allowFallback: true,
       });
+      markProjectDirty();
 
       if (githubRepoSession) {
         const sourceFile = githubRepoSession.files.find((file) => file.path === normalizedPath);
@@ -1533,7 +1945,7 @@ export function useMVPBuilder() {
         });
       }
     },
-    [entryFilePath, githubRepoSession, projectFiles, projectFramework, refreshPreview]
+    [currentHtml, entryFilePath, githubRepoSession, markProjectDirty, projectFiles, projectFramework, refreshPreview]
   );
 
   const resetProjectFile = useCallback(
@@ -1585,7 +1997,8 @@ export function useMVPBuilder() {
     }
 
     toast.success('Reset the project code to the last saved build.');
-  }, [applyProjectArtifact, githubRepoSession, lastGeneratedProject]);
+    markProjectDirty();
+  }, [applyProjectArtifact, githubRepoSession, lastGeneratedProject, markProjectDirty]);
 
   const createManualSnapshot = useCallback(() => {
     if (projectFiles.length === 0) return;
@@ -1601,9 +2014,11 @@ export function useMVPBuilder() {
     });
     addProjectSnapshot(artifact, 'Manual snapshot', 'manual');
     toast.success('Created a project snapshot.');
+    markProjectDirty();
   }, [
     addProjectSnapshot,
     entryFilePath,
+    markProjectDirty,
     projectDependencies,
     projectFiles,
     projectFramework,
@@ -1625,18 +2040,24 @@ export function useMVPBuilder() {
       });
       addProjectSnapshot(snapshot.artifact, `Restored ${snapshot.label}`, 'restore');
       toast.success(`Restored snapshot: ${snapshot.label}`);
+      markProjectDirty();
     },
-    [addProjectSnapshot, applyProjectArtifact, projectSnapshots]
+    [addProjectSnapshot, applyProjectArtifact, markProjectDirty, projectSnapshots]
   );
 
   const setSelectedModels = useCallback((models: string[]) => {
     setSelectedModelsState(sanitizeMVPModelSelection(models));
+    markProjectDirty();
+  }, [markProjectDirty]);
+
+  const cancelGeneration = useCallback(() => {
+    abortRef.current?.abort();
   }, []);
 
   const resetProject = useCallback(() => {
     abortRef.current?.abort();
     const newId = crypto.randomUUID();
-    setMessages([]);
+    replaceMessages([]);
     setProjectFiles([]);
     setEntryFilePathState('index.html');
     setProjectFramework('static-html');
@@ -1644,6 +2065,7 @@ export function useMVPBuilder() {
     setProjectSummary('Generated with MVP Builder.');
     setProjectDependencies([]);
     setCurrentHtml(null);
+    setGeneratedCode('');
     setPreviewState({
       html: null,
       entryFile: null,
@@ -1658,9 +2080,10 @@ export function useMVPBuilder() {
     setProjectSnapshots([]);
     setIsShowingPreviewFallback(false);
     lastStablePreviewHtmlRef.current = null;
-    setProjectName('Name Your App');
+    setProjectNameState(DEFAULT_PROJECT_NAME);
     setProjectId(newId);
-    setPromptHistory([]);
+    setLastSavedAt(null);
+    setHasUnsavedChanges(false);
     setSelectedModelsState([MVP_DEFAULT_MODEL]);
     setIsGenerating(false);
 
@@ -1672,11 +2095,13 @@ export function useMVPBuilder() {
     setGitHubBranches([]);
 
     localStorage.removeItem(STORAGE_KEY);
-  }, []);
+  }, [replaceMessages]);
 
   const codeChanges = lastGeneratedProject
     ? getChangedProjectFiles(projectFiles, lastGeneratedProject.files)
     : [];
+  const saveStatus =
+    isGenerating ? 'generating' : hasUnsavedChanges ? 'unsaved' : lastSavedAt ? 'saved' : 'idle';
 
   return {
     messages,
@@ -1687,6 +2112,7 @@ export function useMVPBuilder() {
     projectSummary,
     projectDependencies,
     currentHtml,
+    generatedCode,
     previewState,
     selectedCodeFilePath,
     lastGeneratedProject,
@@ -1694,8 +2120,14 @@ export function useMVPBuilder() {
     codeChanges,
     isShowingPreviewFallback,
     isGenerating,
+    isSavingProject,
+    saveStatus,
+    hasUnsavedChanges,
     projectName,
     projectId,
+    lastSavedAt,
+    savedProjects,
+    isProjectsLoading,
     promptHistory,
     selectedModels,
     githubConnection,
@@ -1717,6 +2149,11 @@ export function useMVPBuilder() {
     restoreProjectSnapshot,
     setSelectedModels,
     sendMessage,
+    cancelGeneration,
+    saveProject,
+    loadProject,
+    loadProjects,
+    deleteProject,
     resetProject,
     connectGitHub,
     disconnectGitHub,

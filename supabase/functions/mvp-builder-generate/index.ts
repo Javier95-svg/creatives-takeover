@@ -40,88 +40,56 @@ const HTML_CAPABLE_MODEL_SET = new Set<string>([
 
 // ── System prompts ──────────────────────────────────────────────────────────
 
-const GENERATE_SYSTEM_PROMPT = `You are an expert MVP web app builder focused on production-minded, editable code.
+const GENERATE_SYSTEM_PROMPT = `You are a senior product engineer building a polished MVP preview.
 
-Your task is to generate a COMPLETE small web product for the user's idea as a structured project that can be previewed and manually edited.
+Return only a single self-contained HTML document with inline CSS and inline JavaScript.
 
-STRICT RULES:
-1. Return a project with real files. Default to static-html unless the user explicitly asks for React, Vite, Next, TSX, JSX, or a component-based framework architecture as the output format.
-2. Prefer static-html for dashboards, landing pages, admin panels, SaaS tools, browser tools, internal tools, and MVP demos. These should normally ship as index.html + styles.css + app.js so the live preview works immediately.
-3. Use react-vite only when the user explicitly asks for a React/Vite-style codebase. Use next-like only for client-side page/app router demos without server code.
-4. React/Vite projects should include package.json, index.html, and a src/ entry (for example src/main.tsx and src/App.tsx). Next-like projects should include package.json and either app/page.tsx or pages/index.tsx.
-5. Keep the code readable and trustworthy. Clear names, small functions, and only brief comments where necessary.
-6. Persist meaningful user data with localStorage when useful.
-7. Mobile-responsive layout with strong UX defaults, clear hierarchy, and accessible labels.
-8. Every button, form, tab, and filter must do something real.
-9. Include empty states, validation states, and at least basic success feedback.
-10. Do not add backend code, shell scripts, or native dependencies. Keep everything client-side and previewable.
-11. If there is any doubt, choose static-html over a framework so the product can preview immediately.
-12. Do NOT wrap the JSON in markdown fences.
+Strict rules:
+1. Output code only. No markdown fences, no commentary, no explanations, no labels.
+2. The response must be a complete HTML document starting with <!DOCTYPE html>.
+3. Inline all CSS inside <style> and all JavaScript inside <script>.
+4. Make the experience feel premium, fast, and production-minded.
+5. Every interactive control must do something real.
+6. Use accessible labels, responsive layout, and sensible empty/loading/success states.
+7. Persist useful user-facing state with localStorage when appropriate.
+8. Do not rely on a backend or build step. Everything must run in the browser as-is.
+9. Prefer small, readable vanilla JavaScript over framework code.
+10. If the prompt is ambiguous, make strong product decisions and ship a coherent first version.`;
 
-RESPONSE FORMAT:
-- First write a short plain-text "MVP Snapshot" with EXACTLY these 4 lines:
-MVP Snapshot: <one sentence product summary>
-Core Features: <comma-separated feature list>
-Primary Workflow: <one sentence user flow>
-Next Iteration: <one sentence improvement suggestion>
-- Then immediately output the full project wrapped EXACTLY like this:
-<project-output>
-{
-  "projectName": "Short project name",
-  "framework": "static-html",
-  "projectType": "web-app",
-  "entryFile": "index.html",
-  "summary": "One-sentence summary of the generated product.",
-  "dependencies": [
-    { "name": "Browser APIs", "source": "browser", "purpose": "Core interactions" }
-  ],
-  "files": [
-    { "path": "index.html", "content": "<!DOCTYPE html>..." },
-    { "path": "styles.css", "content": "..." },
-    { "path": "app.js", "content": "..." }
-  ]
-}
-</project-output>`;
+const REFINE_SYSTEM_PROMPT = `You are a senior product engineer refining an existing MVP preview.
 
-const REFINE_SYSTEM_PROMPT = `You are an expert MVP web app builder refining an existing project.
+You will receive the current HTML document and a follow-up request.
 
-The user will describe a change. Your job:
-1. Understand EXACTLY what they want to add, change, or remove.
-2. Make ONLY the requested change unless the current code is broken and needs a minimal fix to support it.
-3. Preserve file paths, localStorage keys, and working functionality whenever possible.
-4. Return the FULL updated project, not a partial patch.
-5. Preserve the current framework only when it is already preview-safe or the user explicitly asks to keep it. If the current project uses TSX, JSX, module entrypoints, React, Vite, or Next-style files and the user did not explicitly ask for that framework, migrate it to static-html so it previews reliably.
- 6. Keep the code easy to trust and edit manually.
-
-RESPONSE FORMAT:
-- First write a short plain-text "Update Summary" with EXACTLY these 3 lines:
-Change Applied: <one sentence summary>
-What Stayed Stable: <one sentence summary>
-How to Prompt Next: <one sentence suggestion>
-- Then immediately output the FULL updated project wrapped EXACTLY like this:
-<project-output>
-{
-  "projectName": "Short project name",
-    "framework": "static-html",
-    "projectType": "web-app",
-    "entryFile": "index.html",
-    "summary": "One-sentence summary of the generated product.",
-    "dependencies": [],
-    "files": [
-      { "path": "index.html", "content": "<!DOCTYPE html>..." },
-      { "path": "styles.css", "content": "..." },
-      { "path": "app.js", "content": "..." }
-    ]
-  }
-  </project-output>`;
+Strict rules:
+1. Return only the full updated HTML document. No markdown fences, no commentary, no explanations.
+2. Preserve the existing working structure unless the user explicitly requests a different direction.
+3. Make only the requested changes plus any minimal fixes required to keep the product coherent.
+4. Keep the output as a single self-contained HTML document with inline CSS and inline JavaScript.
+5. Preserve user-facing functionality and localStorage keys whenever reasonable.
+6. The response must be a complete HTML document starting with <!DOCTYPE html>.`;
 
 // ── HTML extraction ─────────────────────────────────────────────────────────
 
 function extractHtml(fullText: string): string | null {
   const start = fullText.indexOf("<html-output>");
   const end = fullText.indexOf("</html-output>");
-  if (start === -1 || end === -1) return null;
-  return fullText.slice(start + "<html-output>".length, end).trim();
+  if (start !== -1 && end !== -1) {
+    return fullText.slice(start + "<html-output>".length, end).trim();
+  }
+
+  const cleaned = fullText
+    .replace(/^```(?:html)?\s*/i, "")
+    .replace(/\s*```$/i, "")
+    .trim();
+  const doctypeIndex = cleaned.search(/<!doctype html>/i);
+  if (doctypeIndex >= 0) {
+    return cleaned.slice(doctypeIndex).trim();
+  }
+  const htmlIndex = cleaned.search(/<html[\s>]/i);
+  if (htmlIndex >= 0) {
+    return cleaned.slice(htmlIndex).trim();
+  }
+  return cleaned.startsWith("<") ? cleaned : null;
 }
 
 function normalizeProjectPath(path: string): string {
@@ -273,7 +241,11 @@ function extractProject(fullText: string) {
 function extractExplanation(fullText: string): string {
   const projectStart = fullText.indexOf("<project-output>");
   const htmlStart = fullText.indexOf("<html-output>");
+  const doctypeStart = fullText.search(/<!doctype html>/i);
+  const htmlDocumentStart = fullText.search(/<html[\s>]/i);
   const candidates = [projectStart, htmlStart].filter((value) => value >= 0);
+  if (doctypeStart >= 0) candidates.push(doctypeStart);
+  if (htmlDocumentStart >= 0) candidates.push(htmlDocumentStart);
   const start = candidates.length > 0 ? Math.min(...candidates) : -1;
   const raw = start > 0 ? fullText.slice(0, start).trim() : fullText.trim();
   // Remove any stray markdown fences
@@ -352,51 +324,6 @@ async function requestModelStream(
   }
 }
 
-async function requestModelCompletion(
-  apiKey: string,
-  model: string,
-  systemPrompt: string,
-  messages: Array<{ role: "user" | "assistant"; content: string }>
-): Promise<string | null> {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 60000);
-  try {
-    const response = await fetch(AI_GATEWAY_URL, {
-      method: "POST",
-      signal: controller.signal,
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model,
-        messages: [{ role: "system", content: systemPrompt }, ...messages],
-        temperature: 0.2,
-        max_tokens: 2400,
-        stream: false,
-      }),
-    });
-
-    if (!response.ok) return null;
-    const data = await response.json();
-    const content = data?.choices?.[0]?.message?.content;
-    if (typeof content === "string") return content;
-    if (Array.isArray(content)) {
-      return content
-        .map((part: Record<string, unknown>) =>
-          typeof part?.text === "string" ? part.text : ""
-        )
-        .join("")
-        .trim();
-    }
-    return null;
-  } catch {
-    return null;
-  } finally {
-    clearTimeout(timeoutId);
-  }
-}
-
 // ── Main handler ────────────────────────────────────────────────────────────
 
 serve(async (req: Request) => {
@@ -435,6 +362,7 @@ serve(async (req: Request) => {
   let selectedModelsRaw: unknown;
   let preferredProjectType: string | null;
   let preferredFramework: string | null;
+  let currentCode: string | null;
 
   try {
     const body = await req.json();
@@ -447,6 +375,7 @@ serve(async (req: Request) => {
     selectedModelsRaw = body.selectedModels;
     preferredProjectType = typeof body.preferredProjectType === "string" ? body.preferredProjectType : null;
     preferredFramework = typeof body.preferredFramework === "string" ? body.preferredFramework : null;
+    currentCode = typeof body.currentCode === "string" ? body.currentCode : null;
   } catch {
     return errorStream("Invalid request body", "BAD_REQUEST");
   }
@@ -460,9 +389,10 @@ serve(async (req: Request) => {
   // ── Credit deduction ───────────────────────────────────────────────────
 
   const hasExistingProject =
-    Boolean(currentProject) &&
-    Array.isArray(currentProject?.files) &&
-    currentProject!.files!.length > 0;
+    Boolean(currentCode?.trim()) ||
+    (Boolean(currentProject) &&
+      Array.isArray(currentProject?.files) &&
+      currentProject!.files!.length > 0);
   const isFirstGeneration = !hasExistingProject;
   const creditFeature = isFirstGeneration ? "APP_BUILDER_GENERATE" : "APP_BUILDER_REFINE";
   const creditCost = isFirstGeneration
@@ -508,21 +438,24 @@ serve(async (req: Request) => {
     : "";
   const frameworkInstruction = preferredFramework
     ? preferredFramework === "static-html"
-      ? "Preferred framework: static-html. Keep the project directly previewable with plain HTML, CSS, and browser JavaScript. If the current project uses TSX, JSX, or module bundling, convert it to static-html."
-      : `Preferred framework: ${preferredFramework}. Only use this framework because the user explicitly asked for it. Keep the output client-side and previewable.`
+      ? "Preferred framework: static-html. Keep the project directly previewable with plain HTML, inline CSS, and inline browser JavaScript."
+      : `Preferred framework request: ${preferredFramework}. Even so, still return a single self-contained HTML document that captures the requested look and behavior.`
     : "";
-  if (!isFirstGeneration && currentProject) {
+  if (!isFirstGeneration && currentCode) {
     userContent =
-      `Current project files (edit this exact project):\n<project-source>\n${JSON.stringify(
+      `${projectTypeInstruction}\n${frameworkInstruction}\n\nCurrent HTML (edit this exact build):\n<html-source>\n${currentCode}\n</html-source>\n\nUser request:\n${userMessage}`;
+  } else if (!isFirstGeneration && currentProject) {
+    userContent =
+      `${projectTypeInstruction}\n${frameworkInstruction}\n\nCurrent project files:\n<project-source>\n${JSON.stringify(
         currentProject,
         null,
         2
-      )}\n</project-source>\n\n${projectTypeInstruction}\n${frameworkInstruction}\n\nUser request:\n${userMessage}`;
+      )}\n</project-source>\n\nUser request:\n${userMessage}`;
   } else if (projectTypeInstruction || frameworkInstruction) {
     userContent = `${projectTypeInstruction}\n${frameworkInstruction}\n\nUser request:\n${userMessage}`;
   }
 
-  // Resolve selected model set (single or multi-model combo)
+  // Resolve selected model set
   const textCapableModels = selectedModels.filter((model) =>
     HTML_CAPABLE_MODEL_SET.has(model)
   );
@@ -530,43 +463,11 @@ serve(async (req: Request) => {
     (model) => !HTML_CAPABLE_MODEL_SET.has(model)
   );
   const requestedPrimaryModel = textCapableModels[0] ?? DEFAULT_MODEL;
-  const advisorModels = textCapableModels.slice(1, MAX_COMBO_MODELS);
-
-  // For multi-model mode, gather concise advisor notes and inject into final request context.
-  if (advisorModels.length > 0) {
-    const advisorMessages = [
-      ...recentHistory,
-      { role: "user" as const, content: userContent },
-    ];
-    const advisorOutputs = await Promise.all(
-      advisorModels.map(async (model) => {
-        const raw = await requestModelCompletion(
-          lovableApiKey,
-          model,
-          systemPrompt,
-          advisorMessages
-        );
-        if (!raw) return null;
-        const explanation = extractExplanation(raw) || raw;
-        return `Advisor (${model}): ${explanation.slice(0, 1200)}`;
-      })
-    );
-
-    const advisorNotes = advisorOutputs.filter(
-      (note): note is string => typeof note === "string" && note.length > 0
-    );
-    if (advisorNotes.length > 0) {
-      userContent +=
-        `\n\nMulti-model collaboration notes:\n` +
-        advisorNotes.join("\n\n") +
-        `\n\nUse these notes if useful, then produce a single final result using the required response format.`;
-    }
-  }
 
   if (skippedImageModels.length > 0) {
     userContent +=
       `\n\nImage-focused models selected: ${skippedImageModels.join(", ")}.` +
-      ` Prioritize stronger visual polish and image-friendly layout decisions while still returning a full static project.`;
+      ` Prioritize stronger visual polish and image-friendly layout decisions while still returning a single HTML document.`;
   }
 
   const messages = [
@@ -626,7 +527,6 @@ serve(async (req: Request) => {
     const decoder = new TextDecoder();
     let buffer = "";
     let fullText = "";
-    let streamedExplanationUntil = 0;
     let sawDone = false;
 
     try {
@@ -658,42 +558,8 @@ serve(async (req: Request) => {
           const content = chunk?.content;
 
           if (typeof content === "string" && content) {
-            const beforeLength = fullText.length;
-            const previousProjectStart = fullText.indexOf("<project-output>");
-            const previousHtmlStart = fullText.indexOf("<html-output>");
-            const previousBoundaryCandidates = [previousProjectStart, previousHtmlStart].filter(
-              (value) => value >= 0
-            );
-            const previousBoundary =
-              previousBoundaryCandidates.length > 0
-                ? Math.min(...previousBoundaryCandidates)
-                : beforeLength;
-
-            const nextText = fullText + content;
-            const nextProjectStart = nextText.indexOf("<project-output>");
-            const nextHtmlStart = nextText.indexOf("<html-output>");
-            const nextBoundaryCandidates = [nextProjectStart, nextHtmlStart].filter(
-              (value) => value >= 0
-            );
-            const nextBoundary =
-              nextBoundaryCandidates.length > 0
-                ? Math.min(...nextBoundaryCandidates)
-                : nextText.length;
-
-            if (nextBoundary > previousBoundary) {
-              const explanationChunk = nextText.slice(previousBoundary, nextBoundary);
-              if (explanationChunk) {
-                await writer.write(enc({ type: "delta", content: explanationChunk }));
-              }
-            } else if (nextBoundary > streamedExplanationUntil) {
-              const explanationChunk = nextText.slice(streamedExplanationUntil, nextBoundary);
-              if (explanationChunk) {
-                await writer.write(enc({ type: "delta", content: explanationChunk }));
-              }
-            }
-
-            fullText = nextText;
-            streamedExplanationUntil = nextBoundary;
+            fullText += content;
+            await writer.write(enc({ type: "code-delta", content }));
           } else if (
             typeof event.error === "object" &&
             event.error !== null &&
@@ -707,20 +573,15 @@ serve(async (req: Request) => {
       }
 
       const project = extractProject(fullText);
-      const explanation = extractExplanation(fullText);
 
       if (project) {
-        if (!explanation.trim()) {
-          await writer.write(enc({ type: "delta", content: "Your MVP is ready." }));
-        }
         await writer.write(enc({ type: "project", project }));
       } else {
-        console.warn("No <project-output> or <html-output> tag found in AI response");
+        console.warn("No HTML document found in AI response");
         await writer.write(
           enc({
-            type: "delta",
-            content:
-              "\n\n⚠️ The AI didn't return valid code. Please try rephrasing your prompt.",
+            type: "error",
+            error: "The AI did not return a valid HTML document. Please try rephrasing your prompt.",
           })
         );
 
