@@ -2,6 +2,20 @@
 
 export type AnalysisVerdict = 'Excellent' | 'Strong' | 'Good' | 'Needs Work';
 
+export interface PitchDeckKeyInsights {
+  summary?: string;
+  targetMarket?: string;
+  uniqueValueProp?: string;
+  fundingStage?: string;
+  askAmount?: string;
+  industry?: string;
+  estimatedSlides?: number;
+  detectedSections?: string[];
+  missingSections?: string[];
+  deckReadiness?: string;
+  parsingNotes?: string[];
+}
+
 export interface PitchDeckAnalysis {
   id: string;
   userId: string;
@@ -27,7 +41,7 @@ export interface PitchDeckAnalysis {
   strengths: string[];
   weaknesses: string[];
   recommendations: string[];
-  keyInsights?: Record<string, any>;
+  keyInsights?: PitchDeckKeyInsights;
 
   // User feedback
   userRating?: number; // 1-5 stars
