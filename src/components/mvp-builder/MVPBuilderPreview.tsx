@@ -41,13 +41,6 @@ const LOADING_STEPS = [
 
 type PreviewTab = 'preview' | 'code' | 'domain';
 
-interface RuntimeConsoleEntry {
-  id: string;
-  level: 'log' | 'info' | 'warn' | 'error';
-  label: string;
-  message: string;
-}
-
 interface MVPBuilderPreviewProps {
   html: string | null;
   isGenerating: boolean;
@@ -102,7 +95,6 @@ export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({
   const [copied, setCopied] = useState(false);
   const [loadingStep, setLoadingStep] = useState(0);
   const [activeTab, setActiveTab] = useState<PreviewTab>('preview');
-  const [consoleEntries, setConsoleEntries] = useState<RuntimeConsoleEntry[]>([]);
   const [runtimeError, setRuntimeError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -117,7 +109,6 @@ export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({
   }, [isGenerating]);
 
   useEffect(() => {
-    setConsoleEntries([]);
     setRuntimeError(null);
   }, [html, previewKey, projectId]);
 
@@ -135,10 +126,6 @@ export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({
           typeof payload.payload?.message === 'string'
             ? payload.payload.message
             : 'Build event';
-        setConsoleEntries((prev) => [
-          ...prev.slice(-59),
-          { id: crypto.randomUUID(), level, label: 'Build', message },
-        ]);
         if (level === 'error') {
           setRuntimeError(message);
         }
@@ -151,30 +138,7 @@ export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({
             ? payload.payload.message
             : 'Runtime error';
         setRuntimeError(message);
-        setConsoleEntries((prev) => [
-          ...prev.slice(-59),
-          { id: crypto.randomUUID(), level: 'error', label: 'Runtime', message },
-        ]);
         return;
-      }
-
-      if (payload.type === 'console') {
-        const level =
-          payload.payload?.level === 'warn' || payload.payload?.level === 'error'
-            ? payload.payload.level
-            : payload.payload?.level === 'info'
-            ? 'info'
-            : 'log';
-        const args = Array.isArray(payload.payload?.args) ? payload.payload.args : [];
-        setConsoleEntries((prev) => [
-          ...prev.slice(-59),
-          {
-            id: crypto.randomUUID(),
-            level,
-            label: 'Console',
-            message: args.join(' '),
-          },
-        ]);
       }
     };
 
@@ -434,9 +398,6 @@ export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({
                   <p className="text-sm font-medium text-muted-foreground">
                     Your product will appear here
                   </p>
-                  <p className="text-xs text-muted-foreground/70">
-                    Describe what you want to build in the chat to generate code and a live preview.
-                  </p>
                 </div>
               </div>
             )}
@@ -540,71 +501,6 @@ export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({
                 />
               </div>
             )}
-            </div>
-            <div className="border-t border-border/40 bg-background/85 px-4 py-3">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-                    Runtime Console
-                  </p>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {previewState.runtimeMode === 'sandbox'
-                      ? 'Build and runtime events for the in-browser sandbox appear here.'
-                      : 'Preview hints and runtime logs appear here.'}
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  {previewState.consoleHints[0] && (
-                    <span className="hidden max-w-xs truncate text-xs text-muted-foreground md:inline">
-                      {previewState.consoleHints[0]}
-                    </span>
-                  )}
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-8 px-3 text-xs"
-                    onClick={() => {
-                      setConsoleEntries([]);
-                      setRuntimeError(null);
-                    }}
-                  >
-                    Clear
-                  </Button>
-                </div>
-              </div>
-              <div className="mt-3 max-h-40 overflow-y-auto rounded-2xl border border-border/60 bg-muted/20">
-                {consoleEntries.length === 0 ? (
-                  <div className="px-4 py-4 text-sm text-muted-foreground">
-                    {isGenerating
-                      ? 'Waiting for the current build to finish...'
-                      : previewState.runtimeMode === 'sandbox'
-                      ? 'No runtime events yet. Build output will appear here once the sandbox starts.'
-                      : 'No runtime events yet.'}
-                  </div>
-                ) : (
-                  <div className="divide-y divide-border/40">
-                    {consoleEntries.map((entry) => (
-                      <div key={entry.id} className="flex gap-3 px-4 py-3 text-sm">
-                        <span
-                          className={cn(
-                            'mt-0.5 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em]',
-                            entry.level === 'error'
-                              ? 'bg-red-500/10 text-red-700'
-                              : entry.level === 'warn'
-                              ? 'bg-amber-500/10 text-amber-700'
-                              : 'bg-primary/10 text-primary'
-                          )}
-                        >
-                          {entry.label}
-                        </span>
-                        <p className="min-w-0 flex-1 break-words text-muted-foreground">
-                          {entry.message}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
             </div>
           </div>
         )}
