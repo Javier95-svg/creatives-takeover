@@ -5,6 +5,7 @@ import { MVPBuilderChat } from './MVPBuilderChat';
 import { MVPBuilderPreview } from './MVPBuilderPreview';
 import { MessageSquare, Monitor } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 type MobileTab = 'chat' | 'preview';
 
@@ -61,6 +62,64 @@ export const MVPBuilder: React.FC = () => {
   } = useMVPBuilder();
 
   const [mobileTab, setMobileTab] = useState<MobileTab>('chat');
+  const isMobile = useIsMobile();
+
+  const chatPanel = (
+    <MVPBuilderChat
+      messages={messages}
+      promptHistory={promptHistory}
+      selectedModels={selectedModels}
+      selectedProjectType={selectedProjectType}
+      githubConnection={githubConnection}
+      githubRepositories={githubRepositories}
+      githubBranches={githubBranches}
+      githubRepoSession={githubRepoSession}
+      githubPendingChanges={githubPendingChanges}
+      githubCommitHistory={githubCommitHistory}
+      isGitHubBusy={isGitHubBusy}
+      suggestedGitHubCommitMessage={suggestedGitHubCommitMessage}
+      onSelectedModelsChange={setSelectedModels}
+      onProjectTypeChange={setSelectedProjectType}
+      onSend={sendMessage}
+      onConnectGitHub={connectGitHub}
+      onDisconnectGitHub={disconnectGitHub}
+      onLoadGitHubRepositories={loadGitHubRepositories}
+      onLoadGitHubBranches={loadGitHubBranches}
+      onImportGitHubRepository={importGitHubRepository}
+      onDiscardGitHubChanges={discardGitHubChanges}
+      onCommitGitHubChanges={commitGitHubChanges}
+      onRollbackGitHubCommit={rollbackGitHubCommit}
+      onRefreshGitHubCommitHistory={loadGitHubCommitHistory}
+      isGenerating={isGenerating}
+    />
+  );
+
+  const previewPanel = (
+    <MVPBuilderPreview
+      html={currentHtml}
+      isGenerating={isGenerating}
+      projectId={projectId}
+      projectFiles={projectFiles}
+      baselineFiles={lastGeneratedProject?.files ?? []}
+      projectFramework={projectFramework}
+      projectType={selectedProjectType}
+      projectSummary={projectSummary}
+      projectDependencies={projectDependencies}
+      projectSnapshots={projectSnapshots}
+      previewState={previewState}
+      entryFilePath={entryFilePath}
+      selectedCodeFilePath={selectedCodeFilePath}
+      codeChanges={codeChanges}
+      isShowingPreviewFallback={isShowingPreviewFallback}
+      onSelectCodeFile={setSelectedCodeFilePath}
+      onSaveCodeFile={updateProjectFile}
+      onResetCodeFile={resetProjectFile}
+      onResetProjectCode={resetProjectCode}
+      onCreateSnapshot={createManualSnapshot}
+      onRestoreSnapshot={restoreProjectSnapshot}
+      onSelectEntryFile={setEntryFilePath}
+    />
+  );
 
   return (
     <div className="h-screen w-screen flex flex-col overflow-hidden bg-background">
@@ -102,74 +161,21 @@ export const MVPBuilder: React.FC = () => {
         </div>
 
         <div className="flex-1 min-h-0 grid grid-cols-1 md:grid-cols-[38%_1px_auto]">
-          <div
-            className={cn(
-              'min-h-0',
-              mobileTab !== 'chat' ? 'hidden md:block' : 'block'
-            )}
-          >
-            <MVPBuilderChat
-              messages={messages}
-              promptHistory={promptHistory}
-              selectedModels={selectedModels}
-              selectedProjectType={selectedProjectType}
-              githubConnection={githubConnection}
-              githubRepositories={githubRepositories}
-              githubBranches={githubBranches}
-              githubRepoSession={githubRepoSession}
-              githubPendingChanges={githubPendingChanges}
-              githubCommitHistory={githubCommitHistory}
-              isGitHubBusy={isGitHubBusy}
-              suggestedGitHubCommitMessage={suggestedGitHubCommitMessage}
-              onSelectedModelsChange={setSelectedModels}
-              onProjectTypeChange={setSelectedProjectType}
-              onSend={sendMessage}
-              onConnectGitHub={connectGitHub}
-              onDisconnectGitHub={disconnectGitHub}
-              onLoadGitHubRepositories={loadGitHubRepositories}
-              onLoadGitHubBranches={loadGitHubBranches}
-              onImportGitHubRepository={importGitHubRepository}
-              onDiscardGitHubChanges={discardGitHubChanges}
-              onCommitGitHubChanges={commitGitHubChanges}
-              onRollbackGitHubCommit={rollbackGitHubCommit}
-              onRefreshGitHubCommitHistory={loadGitHubCommitHistory}
-              isGenerating={isGenerating}
-            />
-          </div>
+          {!isMobile && (
+            <>
+              <div className="min-h-0">{chatPanel}</div>
 
-          <div className="hidden md:block w-px bg-gradient-to-b from-transparent via-border/60 to-transparent self-stretch" />
+              <div className="hidden md:block w-px bg-gradient-to-b from-transparent via-border/60 to-transparent self-stretch" />
 
-          <div
-            className={cn(
-              'min-h-0',
-              mobileTab !== 'preview' ? 'hidden md:block' : 'block'
-            )}
-          >
-            <MVPBuilderPreview
-              html={currentHtml}
-              isGenerating={isGenerating}
-              projectId={projectId}
-              projectFiles={projectFiles}
-              baselineFiles={lastGeneratedProject?.files ?? []}
-              projectFramework={projectFramework}
-              projectType={selectedProjectType}
-              projectSummary={projectSummary}
-              projectDependencies={projectDependencies}
-              projectSnapshots={projectSnapshots}
-              previewState={previewState}
-              entryFilePath={entryFilePath}
-              selectedCodeFilePath={selectedCodeFilePath}
-              codeChanges={codeChanges}
-              isShowingPreviewFallback={isShowingPreviewFallback}
-              onSelectCodeFile={setSelectedCodeFilePath}
-              onSaveCodeFile={updateProjectFile}
-              onResetCodeFile={resetProjectFile}
-              onResetProjectCode={resetProjectCode}
-              onCreateSnapshot={createManualSnapshot}
-              onRestoreSnapshot={restoreProjectSnapshot}
-              onSelectEntryFile={setEntryFilePath}
-            />
-          </div>
+              <div className="min-h-0">{previewPanel}</div>
+            </>
+          )}
+
+          {isMobile && mobileTab === 'chat' && <div className="min-h-0">{chatPanel}</div>}
+
+          {isMobile && mobileTab === 'preview' && (
+            <div className="min-h-0">{previewPanel}</div>
+          )}
         </div>
       </div>
     </div>
