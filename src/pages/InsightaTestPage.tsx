@@ -1,15 +1,38 @@
-import SEO from "@/components/SEO";
+import SEO, { createBreadcrumbSchema, createSoftwareApplicationSchema } from "@/components/SEO";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
+import RelatedPageLinks from "@/components/seo/RelatedPageLinks";
 import FundraisingReadinessToolkitAll from "@/components/blog/FundraisingReadinessToolkitAll";
 
 export default function InsightaTestPage() {
+  const structuredData = [
+    createSoftwareApplicationSchema({
+      name: "Fundraising Readiness Assessment",
+      description: "Assessment tool for founders who want to measure investor readiness and identify fundraising gaps.",
+      url: "/insighta/test",
+      featureList: ["readiness assessment", "fundraising gaps", "investor preparation checklist"],
+    }),
+    createBreadcrumbSchema([
+      { name: "Home", url: "/" },
+      { name: "Insighta", url: "/insighta" },
+      { name: "Fundraising Readiness Assessment", url: "/insighta/test" },
+    ]),
+  ];
+  const relatedLinks = [
+    { href: "/insighta/vc-search", label: "VC Search" },
+    { href: "/insighta/email-templates", label: "Email Templates" },
+    { href: "/insighta/accelerator-hunt", label: "Accelerator Search" },
+    { href: "/insighta/pitch-deck-analyzer", label: "Pitch Deck Analyzer" },
+  ];
+
   return (
     <div className="min-h-screen bg-background">
       <SEO
-        title="Insighta Test - Fundraising Readiness Assessment | Creatives Takeover"
-        description="Take our comprehensive self-assessment to evaluate your startup's fundraising readiness, identify gaps, and understand exactly what you need to improve before approaching investors."
-        keywords="fundraising readiness, startup assessment, investor readiness, startup evaluation"
+        title="Fundraising Readiness Assessment | Creatives Takeover"
+        description="Assess fundraising readiness, identify gaps, and see what your startup needs to improve before approaching investors."
+        keywords="fundraising readiness assessment, investor readiness test, startup fundraising score, fundraising checklist"
+        url="/insighta/test"
+        structuredData={structuredData}
       />
       <Navigation />
 
@@ -32,11 +55,12 @@ export default function InsightaTestPage() {
             {/* Page Header */}
             <div className="text-center mb-12 sm:mb-16">
               <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-3 sm:mb-4 takeover-gradient creatives-font animate-fade-in leading-tight pb-2">
-                Insighta Test
+                Fundraising Readiness Assessment
               </h1>
               <p className="text-lg sm:text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed animate-fade-in px-4" style={{ animationDelay: '0.3s' }}>
-                Evaluate your startup's fundraising readiness and<span className="gradient-text font-semibold" style={{ lineHeight: 'inherit', marginLeft: '0.25rem' }}> identify what you need to improve.</span>
+                Evaluate your startup's investor readiness and<span className="gradient-text font-semibold" style={{ lineHeight: 'inherit', marginLeft: '0.25rem' }}> identify the gaps you need to fix before fundraising.</span>
               </p>
+              <RelatedPageLinks title="Related fundraising tools" links={relatedLinks} />
             </div>
 
             <FundraisingReadinessToolkitAll />

@@ -38,9 +38,9 @@ const PricingPage = () => {
   return (
     <>
       <SEO
-        title="Creatives Takeover"
-        description="Flexible AI solopreneur pricing plans for creative professionals. Choose from Starter ($29), Elite ($99), or Teams ($299) plans with AI-powered tools and unlimited design access."
-        keywords="AI solopreneur pricing, creative subscription pricing, AI tools pricing, solopreneur software plans, creative platform pricing"
+        title="Pricing For AI Startup Tools | Creatives Takeover"
+        description="Compare pricing for Creatives Takeover's AI startup tools, founder workflows, fundraising resources, and MVP planning features."
+        keywords="ai startup tools pricing, founder software pricing, startup platform pricing, fundraising tools pricing, mvp builder pricing"
         url="/pricing"
         structuredData={structuredData}
       />

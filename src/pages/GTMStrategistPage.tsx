@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import SEO, { createBreadcrumbSchema } from '@/components/SEO';
+import SEO, { createBreadcrumbSchema, createSoftwareApplicationSchema } from '@/components/SEO';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import { Separator } from '@/components/ui/separator';
@@ -21,10 +21,16 @@ const structuredData = [
   {
     '@context': 'https://schema.org',
     '@type': 'WebPage',
-    name: 'GTM Strategist',
-    description: 'AI-powered go-to-market strategy tool for early-stage founders. Get opinionated channel recommendations, positioning, messaging, and a 30-day action plan.',
+    name: 'Go-To-Market Strategy Generator',
+    description: 'Generate go-to-market strategy, messaging, channels, and a 30-day launch plan for your startup.',
     url: 'https://creatives-takeover.com/go-to-market',
   },
+  createSoftwareApplicationSchema({
+    name: 'GTM Strategist',
+    description: 'Go-to-market strategy generator for founders who need channel recommendations, messaging, and launch priorities.',
+    url: '/go-to-market',
+    featureList: ['channel recommendations', 'positioning', 'messaging', '30-day action plan'],
+  }),
   createBreadcrumbSchema([
     { name: 'Home', url: '/' },
     { name: 'BizMap AI', url: '/bizmap-ai' },
@@ -54,9 +60,9 @@ export default function GTMStrategistPage() {
   return (
     <div className="relative min-h-screen overflow-hidden bg-background">
       <SEO
-        title="GTM Strategist — Creatives Takeover"
-        description="Get an opinionated go-to-market strategy with channel recommendations, positioning, messaging, and a 30-day action plan tailored to your business."
-        keywords="go to market strategy, gtm channels, startup marketing, first customers, founder marketing"
+        title="Go-To-Market Strategy Generator | Creatives Takeover"
+        description="Generate a go-to-market strategy with channel recommendations, positioning, messaging, and a 30-day startup launch plan."
+        keywords="go to market strategy generator, startup gtm plan, launch strategy tool, customer acquisition strategy, founder marketing"
         url="/go-to-market"
         structuredData={structuredData}
       />

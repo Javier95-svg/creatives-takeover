@@ -67,9 +67,9 @@ const Blog = ({ defaultTab = 'vc-search' }: BlogProps) => {
   return (
     <div className="min-h-screen bg-background">
       <SEO
-        title="Insighta - Creatives Takeover"
-        description="Discover AI-powered insights on creative business trends, funding opportunities, and entrepreneurship strategies. Stay ahead with daily curated content for creative entrepreneurs."
-        keywords="creative business trends, AI opportunities, entrepreneurship news, startup funding, business insights, creative entrepreneur"
+        title="Fundraising Tools For Startups | Insighta | Creatives Takeover"
+        description="Explore fundraising tools for startups, including investor search, accelerator research, outreach templates, pitch deck analysis, and readiness assessment."
+        keywords="fundraising tools for startups, investor outreach tools, startup fundraising platform, vc search, pitch deck analysis"
         url="/insighta"
         structuredData={structuredData}
       />
@@ -80,9 +80,9 @@ const Blog = ({ defaultTab = 'vc-search' }: BlogProps) => {
         <section className="container mx-auto px-4 py-12">
           {/* DEBUG: Build timestamp - 2025-12-28 10:45 AM */}
           <div className="text-center mb-8">
-            <h2 className="font-space-grotesk text-4xl sm:text-5xl font-semibold tracking-tight gradient-text mb-4">
-              Fundraising Resources
-            </h2>
+                  <h1 className="font-space-grotesk text-4xl sm:text-5xl font-semibold tracking-tight gradient-text mb-4">
+                    Fundraising Resources
+                  </h1>
             <p className="font-poppins text-muted-foreground text-lg max-w-2xl mx-auto">
               Everything you need to connect with investors and raise capital
             </p>

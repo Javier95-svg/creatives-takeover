@@ -1,6 +1,7 @@
-import SEO, { createBreadcrumbSchema } from "@/components/SEO";
+import SEO, { createBreadcrumbSchema, createSoftwareApplicationSchema } from "@/components/SEO";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
+import RelatedPageLinks from "@/components/seo/RelatedPageLinks";
 import { PitchDeckUploader } from "@/components/pitch-deck-analyzer/PitchDeckUploader";
 import { AnalysisResults } from "@/components/pitch-deck-analyzer/AnalysisResults";
 import { PitchDeckBuilder } from "@/components/pitch-deck-builder/PitchDeckBuilder";
@@ -14,6 +15,12 @@ export default function PitchDeckAnalyzerPage() {
   const { trackPageVisit } = useReadingAnalytics();
   const { analyzePitchDeck, submitFeedback, resetAnalysis, uploading, analyzing, analysis, error, isProcessing } = usePitchDeckAnalyzer();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const relatedLinks = [
+    { href: "/insighta/vc-search", label: "VC Search" },
+    { href: "/insighta/email-templates", label: "Email Templates" },
+    { href: "/insighta/accelerator-hunt", label: "Accelerator Search" },
+    { href: "/insighta/test", label: "Fundraising Assessment" },
+  ];
 
   useEffect(() => {
     trackPageVisit('Pitch Deck Analyzer');
@@ -41,8 +48,8 @@ export default function PitchDeckAnalyzerPage() {
     {
       "@context": "https://schema.org",
       "@type": "WebPage",
-      "name": "Pitch Deck Analyzer - AI-Powered Pitch Deck Assessment",
-      "description": "Get instant AI-powered analysis of your pitch deck. Receive a comprehensive score across 6 key dimensions with actionable feedback to improve your fundraising success.",
+      "name": "Pitch Deck Analyzer",
+      "description": "Upload a pitch deck, score it, and get structured feedback on story, clarity, traction, and fundraising readiness.",
       "url": "https://creatives-takeover.com/insighta/pitch-deck-analyzer",
       "publisher": {
         "@type": "Organization",
@@ -53,6 +60,12 @@ export default function PitchDeckAnalyzerPage() {
         }
       }
     },
+    createSoftwareApplicationSchema({
+      name: "Pitch Deck Analyzer",
+      description: "Pitch deck analyzer and score tool for founders preparing investor presentations.",
+      url: "/insighta/pitch-deck-analyzer",
+      featureList: ["pitch deck score", "fundraising feedback", "story and traction review"],
+    }),
     createBreadcrumbSchema([
       { name: 'Home', url: '/' },
       { name: 'Insighta', url: '/insighta' },
@@ -63,9 +76,9 @@ export default function PitchDeckAnalyzerPage() {
   return (
     <div className="min-h-screen bg-background">
       <SEO
-        title="Pitch Deck Analyzer - AI-Powered Assessment"
-        description="Get instant AI-powered analysis of your pitch deck. Comprehensive scoring across story, market, traction, business model, team, and fundraising readiness."
-        keywords="pitch deck analyzer, pitch deck score, investor presentation analysis, fundraising assessment, startup pitch analysis"
+        title="Pitch Deck Analyzer & Score Tool | Creatives Takeover"
+        description="Upload a pitch deck, get a score, and review actionable feedback on narrative, clarity, traction, business model, and fundraising readiness."
+        keywords="pitch deck analyzer, pitch deck score tool, investor deck review, startup pitch analysis, fundraising presentation feedback"
         url="/insighta/pitch-deck-analyzer"
         structuredData={structuredData}
       />
@@ -101,8 +114,9 @@ export default function PitchDeckAnalyzerPage() {
                     Pitch Deck Analyzer
                   </h1>
                   <p className="text-lg sm:text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed animate-fade-in px-4" style={{ animationDelay: '0.3s' }}>
-                    Investor-Ready Pitch Analysis.<span className="gradient-text font-semibold" style={{ lineHeight: 'inherit', marginLeft: '0.25rem' }}> Clear, comparable, actionable.</span>
+                    Upload your deck and get<span className="gradient-text font-semibold" style={{ lineHeight: 'inherit', marginLeft: '0.25rem' }}> a clear score, stronger investor feedback, and a tighter fundraising story.</span>
                   </p>
+                  <RelatedPageLinks title="Related fundraising tools" links={relatedLinks} />
 
                   {/* Value Props */}
                   <div className="grid md:grid-cols-3 gap-6 mt-12 text-left">

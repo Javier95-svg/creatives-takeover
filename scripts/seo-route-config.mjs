@@ -37,9 +37,9 @@ export const ROBOTS_DISALLOW = [
 export const INDEXABLE_ROUTES = [
   {
     path: "/",
-    title: "Creatives Takeover | AI Startup Builder For Founders",
+    title: "AI Startup Builder For Founders | Creatives Takeover",
     description:
-      "Build, validate, and launch your startup with AI-powered tools for founder planning, MVP scoping, fundraising prep, and go-to-market execution.",
+      "Build, validate, and launch faster with AI startup tools for customer research, MVP planning, fundraising prep, and go-to-market execution.",
     changefreq: "daily",
     priority: 1.0,
     heroHeading: "Build your startup. Own your future.",
@@ -69,9 +69,9 @@ export const INDEXABLE_ROUTES = [
   },
   {
     path: "/pricing",
-    title: "Pricing | Creatives Takeover",
+    title: "Pricing For AI Startup Tools | Creatives Takeover",
     description:
-      "Compare Creatives Takeover pricing plans for AI founder tools, startup workflows, fundraising resources, and community access.",
+      "Compare pricing for Creatives Takeover's AI startup tools, founder workflows, fundraising resources, and MVP planning features.",
     changefreq: "weekly",
     priority: 0.9,
     heroHeading: "Choose your plan",
@@ -183,58 +183,58 @@ export const INDEXABLE_ROUTES = [
   },
   {
     path: "/bizmap-ai",
-    title: "BizMap AI | Creatives Takeover",
+    title: "AI Startup Builder & Validation Tools | Creatives Takeover",
     description:
-      "Use BizMap AI to turn a startup idea into a structured execution plan across validation, building, and launch stages.",
+      "Use BizMap AI to validate a startup idea, define your ideal customer, plan your MVP, and move into launch with a clearer founder workflow.",
     changefreq: "weekly",
     priority: 0.9,
-    heroHeading: "Your AI startup co-founder",
+    heroHeading: "Startup Development Cycle For Founders",
     heroCopy:
-      "BizMap AI helps founders move from scattered thinking to structured execution with stage-based workflows and practical tools.",
+      "Move from idea validation to MVP planning and launch with a structured founder workflow covering customer research, PMF, product scope, and go-to-market.",
   },
   {
     path: "/pmf-lab",
-    title: "PMF Lab | Creatives Takeover",
+    title: "Product-Market Fit Score Tool | PMF Lab | Creatives Takeover",
     description:
-      "Analyze customer evidence, score product-market fit readiness, and identify what still needs validation before building.",
+      "Score product-market fit readiness with customer evidence, validation signals, and practical recommendations before building your startup.",
     changefreq: "weekly",
     priority: 0.8,
-    heroHeading: "Measure product-market fit readiness",
+    heroHeading: "Product-Market Fit Score Tool",
     heroCopy:
-      "Submit validation evidence, review your readiness score, and see what still needs work before committing to an MVP.",
+      "Review your waitlist, interviews, and demand signals, then get a clearer product-market fit score before you commit to building.",
   },
   {
     path: "/tech-stack",
-    title: "Tech Stack Builder | Creatives Takeover",
+    title: "Startup Tech Stack Builder | Creatives Takeover",
     description:
-      "Compare frameworks, platforms, and startup tooling to choose the right tech stack for your product and budget.",
+      "Compare startup frameworks, tools, and platforms to choose a tech stack that fits your product, speed, and budget.",
     changefreq: "weekly",
     priority: 0.75,
-    heroHeading: "Choose a practical tech stack",
+    heroHeading: "Startup Tech Stack Builder",
     heroCopy:
-      "Get guidance on tools, frameworks, and platforms that match your startup's stage, goals, and constraints.",
+      "Compare frameworks, tools, and infrastructure choices so you can build with a stack that matches your product and stage.",
   },
   {
     path: "/icp-builder",
-    title: "ICP Builder | Creatives Takeover",
+    title: "Ideal Customer Profile Builder | Creatives Takeover",
     description:
-      "Define your ideal customer profile, sharpen positioning, and get clearer on who you should target first.",
+      "Define your ideal customer profile, sharpen positioning, and choose the customer segment your startup should target first.",
     changefreq: "weekly",
     priority: 0.8,
-    heroHeading: "Define your ideal customer",
+    heroHeading: "Ideal Customer Profile Builder",
     heroCopy:
-      "Clarify your target market, pain points, buying triggers, and founder positioning before you build or launch.",
+      "Define the customer segment you should target first, the pain worth solving, and the positioning that makes your startup easier to explain.",
   },
   {
     path: "/waitlist",
-    title: "Waitlist Maker | Creatives Takeover",
+    title: "Startup Waitlist Page Builder | Creatives Takeover",
     description:
-      "Create a startup waitlist page, validate demand, and collect early signups before building the full product.",
+      "Build a startup waitlist page, capture early signups, and validate demand before spending time on development.",
     changefreq: "weekly",
     priority: 0.75,
-    heroHeading: "Launch a waitlist before you build",
+    heroHeading: "Startup Waitlist Page Builder",
     heroCopy:
-      "Create a landing page, capture real demand, and gather early traction signals before writing production code.",
+      "Create a pre-launch page, explain your offer clearly, and collect real demand signals before you build the product.",
   },
   {
     path: "/decision-sprint",
@@ -260,9 +260,9 @@ export const INDEXABLE_ROUTES = [
   },
   {
     path: "/mvp-builder",
-    title: "MVP Builder | Creatives Takeover",
+    title: "AI MVP Builder | Creatives Takeover",
     description:
-      "Describe your product, generate a working MVP, and iterate with live preview and code updates inside the builder.",
+      "Describe your product, generate a working MVP, and iterate with live preview and code updates inside an AI MVP builder.",
     changefreq: "weekly",
     priority: 0.8,
     heroHeading: "Build your MVP with AI",
@@ -282,9 +282,9 @@ export const INDEXABLE_ROUTES = [
   },
   {
     path: "/go-to-market",
-    title: "GTM Strategist | Creatives Takeover",
+    title: "Go-To-Market Strategy Generator | Creatives Takeover",
     description:
-      "Generate go-to-market strategy, messaging, channels, and a 30-day action plan tailored to your startup.",
+      "Generate a go-to-market strategy with channel recommendations, positioning, messaging, and a 30-day startup launch plan.",
     changefreq: "weekly",
     priority: 0.8,
     heroHeading: "Plan how you will get customers",
@@ -293,20 +293,20 @@ export const INDEXABLE_ROUTES = [
   },
   {
     path: "/directories",
-    title: "Launch Directories | Creatives Takeover",
+    title: "Startup Launch Directories | Creatives Takeover",
     description:
-      "Browse startup launch directories, communities, review sites, and listing platforms to promote your product launch.",
+      "Browse startup launch directories, communities, and listing platforms to promote your product and reach early users.",
     changefreq: "weekly",
     priority: 0.7,
-    heroHeading: "Find places to launch",
+    heroHeading: "Startup Launch Directories",
     heroCopy:
-      "Discover communities, aggregators, and launch platforms where founders can submit and promote new products.",
+      "Discover communities, launch platforms, and listing sites where founders can submit and promote new products.",
   },
   {
     path: "/insighta",
-    title: "Insighta | Creatives Takeover",
+    title: "Fundraising Tools For Startups | Insighta | Creatives Takeover",
     description:
-      "Explore fundraising tools, investor discovery resources, accelerator research, and founder outreach workflows in Insighta.",
+      "Explore fundraising tools for startups, including investor search, accelerator research, outreach templates, pitch deck analysis, and readiness assessment.",
     changefreq: "weekly",
     priority: 0.85,
     heroHeading: "Fundraising tools for founders",
@@ -315,42 +315,42 @@ export const INDEXABLE_ROUTES = [
   },
   {
     path: "/insighta/vc-search",
-    title: "VC Search | Creatives Takeover",
+    title: "Venture Capital Database & VC Search | Creatives Takeover",
     description:
-      "Search venture capital firms by stage, check size, geography, and industry to build a stronger investor list.",
+      "Search a venture capital database by stage, geography, sector, and check size to build a tighter startup investor list.",
     changefreq: "weekly",
     priority: 0.75,
-    heroHeading: "Search venture capital firms",
+    heroHeading: "Venture Capital Search",
     heroCopy:
-      "Filter investor profiles by stage, industry, and location so your outreach list is tighter and more relevant.",
+      "Search a venture capital database by stage, geography, sector, and check size so your investor list is tighter and more relevant.",
   },
   {
     path: "/insighta/email-templates",
     title: "Fundraising Email Templates | Creatives Takeover",
     description:
-      "Use ready-to-customize fundraising email templates for investor outreach, follow-ups, intros, and updates.",
+      "Use fundraising email templates for investor outreach, warm intros, follow-ups, and startup updates without starting from scratch.",
     changefreq: "weekly",
     priority: 0.7,
-    heroHeading: "Fundraising emails you can actually send",
+    heroHeading: "Fundraising Email Templates",
     heroCopy:
-      "Use templates for cold outreach, warm intros, investor updates, and follow-ups without starting from a blank page.",
+      "Copy, customize, and send fundraising emails for intros, outreach, follow-ups, and investor updates.",
   },
   {
     path: "/insighta/accelerator-hunt",
-    title: "Accelerator Hunt | Creatives Takeover",
+    title: "Startup Accelerator Database | Creatives Takeover",
     description:
-      "Find startup accelerators by location, focus, funding, and fit so you can shortlist the right programs faster.",
+      "Search a startup accelerator database by location, focus area, and funding profile to shortlist the right programs faster.",
     changefreq: "weekly",
     priority: 0.7,
-    heroHeading: "Find accelerators that fit",
+    heroHeading: "Startup Accelerator Search",
     heroCopy:
-      "Search startup accelerators by geography, focus area, and funding profile to build a more relevant application list.",
+      "Search accelerator programs by location, focus area, funding, and fit to build a stronger application list.",
   },
   {
     path: "/insighta/pitch-deck-analyzer",
-    title: "Pitch Deck Analyzer | Creatives Takeover",
+    title: "Pitch Deck Analyzer & Score Tool | Creatives Takeover",
     description:
-      "Upload a pitch deck, score it, and get actionable feedback on story, clarity, traction, business model, and fundraising readiness.",
+      "Upload a pitch deck, get a score, and review actionable feedback on narrative, clarity, traction, business model, and fundraising readiness.",
     changefreq: "weekly",
     priority: 0.75,
     heroHeading: "Analyze your pitch deck",
@@ -359,14 +359,14 @@ export const INDEXABLE_ROUTES = [
   },
   {
     path: "/insighta/test",
-    title: "Fundraising Readiness Test | Creatives Takeover",
+    title: "Fundraising Readiness Assessment | Creatives Takeover",
     description:
-      "Assess fundraising readiness, spot gaps, and understand what to improve before approaching investors.",
+      "Assess fundraising readiness, identify gaps, and see what your startup needs to improve before approaching investors.",
     changefreq: "weekly",
     priority: 0.65,
-    heroHeading: "Measure fundraising readiness",
+    heroHeading: "Fundraising Readiness Assessment",
     heroCopy:
-      "Use a structured self-assessment to identify what is missing before you start investor outreach.",
+      "Evaluate investor readiness and identify the gaps you need to fix before fundraising.",
   },
   {
     path: "/demo",

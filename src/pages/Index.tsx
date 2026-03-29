@@ -105,9 +105,9 @@ const Index = () => {
     <div className="min-h-screen relative">
       <HomeWallpaper />
       <SEO
-        title="Creatives Takeover"
-        description="Turn your creative idea into a real business. Get AI-powered planning, community support, and funding resources designed for creative entrepreneurs. Start building today."
-        keywords="AI co-founder, creative business, creative entrepreneur, business planning, accountability partners, business for creatives, startup funding"
+        title="AI Startup Builder For Founders | Creatives Takeover"
+        description="Build, validate, and launch faster with AI startup tools for customer research, MVP planning, fundraising prep, and go-to-market execution."
+        keywords="ai startup builder, startup validation tools, mvp builder, fundraising tools, founder platform, startup planning software"
         url="/"
         image="/lovable-uploads/new-favicon.png"
         structuredData={structuredData}

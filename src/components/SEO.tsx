@@ -249,6 +249,33 @@ export const createSoftwareSchema = () => ({
   }
 });
 
+export const createSoftwareApplicationSchema = (app: {
+  name: string;
+  description: string;
+  url: string;
+  applicationCategory?: string;
+  featureList?: string[];
+  price?: string;
+  priceCurrency?: string;
+}) => ({
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": app.name,
+  "applicationCategory": app.applicationCategory || "BusinessApplication",
+  "description": app.description,
+  "operatingSystem": "Web",
+  "url": `https://creatives-takeover.com${app.url}`,
+  ...(app.featureList && app.featureList.length > 0
+    ? { "featureList": app.featureList }
+    : {}),
+  "offers": {
+    "@type": "Offer",
+    "price": app.price || "0",
+    "priceCurrency": app.priceCurrency || "USD",
+    "availability": "https://schema.org/InStock"
+  }
+});
+
 // Helper function to create AboutPage schema
 export const createAboutPageSchema = () => ({
   "@context": "https://schema.org",

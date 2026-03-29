@@ -1,4 +1,4 @@
-import SEO, { createBreadcrumbSchema } from "@/components/SEO";
+import SEO, { createBreadcrumbSchema, createSoftwareApplicationSchema } from "@/components/SEO";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { lazy, Suspense, useEffect } from "react";
@@ -22,8 +22,8 @@ export default function ICPBuilderPage() {
     {
       "@context": "https://schema.org",
       "@type": "WebPage",
-      "name": "ICP Builder - Identify Your Ideal Customer",
-      "description": "Clarify your first ideal customer profile, sharpen your startup positioning, and get concrete validation steps.",
+      "name": "Ideal Customer Profile Builder",
+      "description": "Define your ideal customer profile, sharpen startup positioning, and choose the right customer segment to target first.",
       "url": "https://creatives-takeover.com/icp-builder",
       "publisher": {
         "@type": "Organization",
@@ -34,6 +34,12 @@ export default function ICPBuilderPage() {
         }
       }
     },
+    createSoftwareApplicationSchema({
+      name: "ICP Builder",
+      description: "Ideal customer profile builder for founders who need clearer positioning, customer targeting, and validation direction.",
+      url: "/icp-builder",
+      featureList: ["ideal customer profile", "pain point mapping", "positioning guidance"],
+    }),
     createBreadcrumbSchema([
       { name: 'Home', url: '/' },
       { name: 'BizMap AI', url: '/bizmap-ai' },
@@ -44,9 +50,9 @@ export default function ICPBuilderPage() {
   return (
     <div className="min-h-screen bg-background">
       <SEO
-        title="ICP Builder - Creatives Takeover"
-        description="Clarify your first ideal customer profile, sharpen your positioning, and get concrete validation steps for your startup."
-        keywords="ICP, ideal customer profile, niche market, target market, customer persona, positioning strategy, pain points"
+        title="Ideal Customer Profile Builder | Creatives Takeover"
+        description="Define your ideal customer profile, sharpen positioning, and choose the customer segment your startup should target first."
+        keywords="ideal customer profile builder, icp template, target customer profile, customer persona for startups, positioning strategy"
         url="/icp-builder"
         structuredData={structuredData}
       />
@@ -87,10 +93,10 @@ export default function ICPBuilderPage() {
               <div className="space-y-6">
                 <div className="space-y-4">
                   <h1 className="pb-2 text-center font-bold leading-[0.95] text-4xl sm:text-5xl md:text-6xl lg:text-7xl">
-                    <span className="takeover-gradient creatives-font">ICP Builder</span>
+                    <span className="takeover-gradient creatives-font">Ideal Customer Profile Builder</span>
                   </h1>
                   <p className="mx-auto max-w-2xl text-center text-lg leading-relaxed text-foreground/80 sm:text-xl">
-                    Define the niche you should target, the pain point worth solving, and the validation steps that will define your business model.
+                    Define the customer segment you should target first, the pain worth solving, and the positioning that makes your startup easier to explain.
                   </p>
                 </div>
 

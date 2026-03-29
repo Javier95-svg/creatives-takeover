@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import SEO, { createBreadcrumbSchema } from '@/components/SEO';
+import SEO, { createBreadcrumbSchema, createSoftwareApplicationSchema } from '@/components/SEO';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -40,11 +40,18 @@ export default function BizMapJourneyHubPage() {
     {
       '@context': 'https://schema.org',
       '@type': 'WebPage',
-      name: 'BizMap AI - Stage Journey',
+      name: 'BizMap AI - AI Startup Builder',
       description:
-        'A 5-stage guided startup journey with all BizMap AI tools available from ICP to GTM launch.',
+        'AI startup builder for founders working through validation, MVP planning, launch preparation, and go-to-market execution.',
       url: 'https://creatives-takeover.com/bizmap-ai',
     },
+    createSoftwareApplicationSchema({
+      name: 'BizMap AI',
+      description:
+        'AI startup builder for founders who need validation workflows, customer research, MVP planning, and launch support in one platform.',
+      url: '/bizmap-ai',
+      featureList: ['ICP Builder', 'PMF Lab', 'Waitlist Maker', 'MVP Builder', 'GTM Strategist'],
+    }),
     createBreadcrumbSchema([
       { name: 'Home', url: '/' },
       { name: 'BizMap AI', url: '/bizmap-ai' },
@@ -54,9 +61,9 @@ export default function BizMapJourneyHubPage() {
   return (
     <div className="min-h-screen bg-background">
       <SEO
-        title="BizMap AI - Startup Development Cycle"
-        description="Progress through Identity, Prototype, Validation, Building, and Launch with full tool access in every stage."
-        keywords="startup stages, product validation, waitlist, pmf, mvp, go-to-market"
+        title="AI Startup Builder & Validation Tools | Creatives Takeover"
+        description="Use BizMap AI to validate a startup idea, define your ideal customer, plan your MVP, and move into launch with a clearer founder workflow."
+        keywords="ai startup builder, startup validation tools, founder workflow, mvp planning, go to market strategy"
         url="/bizmap-ai"
         structuredData={structuredData}
       />
@@ -65,10 +72,10 @@ export default function BizMapJourneyHubPage() {
       <main className="px-4 pt-28 pb-20 md:pt-32 lg:pt-36">
         <div className="container mx-auto max-w-6xl space-y-8">
           <section className="space-y-4 text-center">
-            <Badge className="bg-primary/10 text-primary border-primary/20 px-4 py-1">BizMap AI Guided Journey</Badge>
-            <h1 className="text-3xl md:text-5xl font-bold creatives-font takeover-gradient">5-Stage Founder System</h1>
+            <Badge className="bg-primary/10 text-primary border-primary/20 px-4 py-1">AI Startup Builder</Badge>
+            <h1 className="text-3xl md:text-5xl font-bold creatives-font takeover-gradient">Startup Development Cycle For Founders</h1>
             <p className="text-muted-foreground max-w-3xl mx-auto">
-              Every stage tool is available to all users. Use this map to organize your workflow and track what you have completed.
+              Move from idea validation to MVP planning and launch with a structured founder workflow covering customer research, PMF, product scope, and go-to-market.
             </p>
 
             <div className="mx-auto max-w-3xl rounded-xl border border-primary/20 bg-card/80 p-4 text-left">
