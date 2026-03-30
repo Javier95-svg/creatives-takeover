@@ -37,6 +37,10 @@ import { useFeatureGating } from "@/hooks/useFeatureGating";
 import { useUpgradePrompt } from "@/contexts/UpgradePromptContext";
 import { ANGEL_SECTOR_OPTIONS } from "@/data/angelSectors";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  ANGELS_PRO_CHECKOUT_INTENT,
+  redirectToCheckoutIntent,
+} from "@/lib/checkoutRedirect";
 
 import { cn } from "@/lib/utils";
 import {
@@ -436,6 +440,15 @@ const FindYourAngel = () => {
 
   const previewWelcomeMode = searchParams.get("preview") === "rookie-welcome";
 
+  const handleInvestorUpgradeClick = () => {
+    if (user) {
+      redirectToCheckoutIntent(ANGELS_PRO_CHECKOUT_INTENT, user);
+      return;
+    }
+
+    navigate(`/signup?source=angels-upgrade&checkout=${encodeURIComponent(ANGELS_PRO_CHECKOUT_INTENT)}`);
+  };
+
   const handlePageChange = (page: number) => {
     const params = new URLSearchParams(searchParams);
     params.set("page", page.toString());
@@ -648,9 +661,13 @@ const FindYourAngel = () => {
                     </div>
 
                     {!isPro && (
-                      <div className="mt-4 rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-900 dark:text-amber-100">
+                      <button
+                        type="button"
+                        onClick={handleInvestorUpgradeClick}
+                        className="mt-4 block w-full rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-left text-sm text-amber-900 transition-colors hover:bg-amber-500/15 dark:text-amber-100"
+                      >
                         Pro Plan unlocks investment stage, sectors/industries, and full contact info access.
-                      </div>
+                      </button>
                     )}
 
                     <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">

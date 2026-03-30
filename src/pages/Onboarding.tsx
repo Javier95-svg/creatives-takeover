@@ -12,6 +12,10 @@ import {
   persistOnboardingReturn,
   sanitizeReturnPath,
 } from '@/lib/authRedirect';
+import {
+  consumeCheckoutIntent,
+  redirectToCheckoutIntent,
+} from '@/lib/checkoutRedirect';
 
 const Onboarding = () => {
   const { user, isAuthenticated, loading: authLoading } = useAuth();
@@ -30,6 +34,12 @@ const Onboarding = () => {
       if (!isAuthenticated || !user) {
         // Onboarding requires an authenticated account.
         navigate(appendReturnParam('/login', returnUrl), { replace: true });
+        return;
+      }
+
+      const pendingCheckoutIntent = consumeCheckoutIntent();
+      if (pendingCheckoutIntent) {
+        redirectToCheckoutIntent(pendingCheckoutIntent, user);
         return;
       }
 
@@ -58,6 +68,12 @@ const Onboarding = () => {
   }, [user, isAuthenticated, authLoading, navigate, returnUrl]);
 
   const handleComplete = () => {
+    const pendingCheckoutIntent = consumeCheckoutIntent();
+    if (pendingCheckoutIntent) {
+      redirectToCheckoutIntent(pendingCheckoutIntent, user);
+      return;
+    }
+
     const target = consumeOnboardingReturn(returnUrl);
     navigate(target, { replace: true });
   };

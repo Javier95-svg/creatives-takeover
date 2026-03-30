@@ -14,6 +14,13 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { mapSignInError } from "@/lib/authErrors";
 import { appendReturnParam, persistOnboardingReturn, sanitizeReturnPath } from "@/lib/authRedirect";
+import {
+  appendCheckoutIntentParam,
+  consumeCheckoutIntent,
+  persistCheckoutIntent,
+  redirectToCheckoutIntent,
+  sanitizeCheckoutIntent,
+} from "@/lib/checkoutRedirect";
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -36,14 +43,29 @@ const Login = () => {
   const query = new URLSearchParams(location.search);
   const source = query.get("source") || "direct";
   const returnUrl = sanitizeReturnPath(query.get("return") || query.get("redirect"), "/dashboard");
-  const signupHref = appendReturnParam(
-    source !== 'direct' ? `/signup?source=${encodeURIComponent(source)}` : "/signup",
-    returnUrl
+  const checkoutIntent = sanitizeCheckoutIntent(query.get("checkout"));
+  const signupHref = appendCheckoutIntentParam(
+    appendReturnParam(
+      source !== 'direct' ? `/signup?source=${encodeURIComponent(source)}` : "/signup",
+      returnUrl
+    ),
+    checkoutIntent,
   );
+
+  useEffect(() => {
+    if (!checkoutIntent) return;
+    persistCheckoutIntent(checkoutIntent);
+  }, [checkoutIntent]);
 
   // Handle redirect after successful login - wait for auth state to update
   useEffect(() => {
     if (user && window.location.pathname === '/login') {
+      const pendingCheckoutIntent = consumeCheckoutIntent();
+      if (pendingCheckoutIntent) {
+        redirectToCheckoutIntent(pendingCheckoutIntent, user);
+        return;
+      }
+
       const postLoginTarget = returnUrl.startsWith('/community/book/') ? '/community' : returnUrl;
       navigate(postLoginTarget);
     }
@@ -113,6 +135,9 @@ const Login = () => {
     
     try {
       persistOnboardingReturn(returnUrl);
+      if (checkoutIntent) {
+        persistCheckoutIntent(checkoutIntent);
+      }
       const { error } = await signIn(formData.email, formData.password);
       
       if (error) {

@@ -27,6 +27,13 @@ import {
   persistOnboardingReturn,
   sanitizeReturnPath,
 } from "@/lib/authRedirect";
+import {
+  appendCheckoutIntentParam,
+  consumeCheckoutIntent,
+  persistCheckoutIntent,
+  sanitizeCheckoutIntent,
+  redirectToCheckoutIntent,
+} from "@/lib/checkoutRedirect";
 
 const Signup = () => {
   const defaultPostSignupPath = '/community/angels?preview=rookie-welcome';
@@ -66,12 +73,24 @@ const Signup = () => {
     };
   });
 
+  const checkoutIntent = sanitizeCheckoutIntent(
+    new URLSearchParams(window.location.search).get('checkout'),
+  );
+
   const loginHref = (() => {
     const basePath = conversionSource.source !== 'direct'
       ? `/login?source=${encodeURIComponent(conversionSource.source)}`
       : '/login';
-    return appendReturnParam(basePath, conversionSource.returnUrl);
+    return appendCheckoutIntentParam(
+      appendReturnParam(basePath, conversionSource.returnUrl),
+      checkoutIntent,
+    );
   })();
+
+  useEffect(() => {
+    if (!checkoutIntent) return;
+    persistCheckoutIntent(checkoutIntent);
+  }, [checkoutIntent]);
 
   // Redirect authenticated users to the correct post-signup destination
   useEffect(() => {
@@ -84,6 +103,12 @@ const Signup = () => {
           .select('onboarding_completed')
           .eq('id', user.id)
           .maybeSingle();
+
+        const pendingCheckoutIntent = consumeCheckoutIntent();
+        if (pendingCheckoutIntent) {
+          redirectToCheckoutIntent(pendingCheckoutIntent, user);
+          return;
+        }
 
         const targetAfterAuth = sanitizeReturnPath(conversionSource.returnUrl, '/dashboard');
 
@@ -233,6 +258,9 @@ const Signup = () => {
 
       const fullName = [formData.firstName.trim(), formData.lastName.trim()].filter(Boolean).join(" ");
       persistOnboardingReturn(conversionSource.returnUrl);
+      if (checkoutIntent) {
+        persistCheckoutIntent(checkoutIntent);
+      }
 
       const { error } = await signUp(
         formData.email,
