@@ -120,6 +120,22 @@ export interface MVPProjectRecord {
   updated_at: string;
 }
 
+export type MVPBuilderResponseMode = 'chat' | 'build';
+
+export interface MVPBuildChangeSummary {
+  id: string;
+  prompt: string;
+  createdAt: string;
+  updatedSections: number;
+  addedComponents: number;
+  details: Array<{
+    id: string;
+    type: 'updated' | 'added' | 'removed';
+    from?: string;
+    to?: string;
+  }>;
+}
+
 interface PersistedSession {
   messages: MVPMessage[];
   currentHtml: string | null;
@@ -203,6 +219,109 @@ function sortHistory(items: MVPPromptHistoryItem[]): MVPPromptHistoryItem[] {
 
 function shortSha(sha: string): string {
   return sha.slice(0, 8);
+}
+
+function extractSectionLabelsFromHtml(html: string): string[] {
+  const labels: string[] = [];
+  const sectionRegex = /<section\b([^>]*)>([\s\S]*?)<\/section>/gi;
+
+  for (const match of html.matchAll(sectionRegex)) {
+    const attrs = match[1] ?? '';
+    const body = match[2] ?? '';
+    const headingMatch = body.match(/<h[1-4][^>]*>([\s\S]*?)<\/h[1-4]>/i);
+    const idMatch = attrs.match(/\bid=(["'])(.*?)\1/i);
+    const rawLabel = headingMatch?.[1] ?? idMatch?.[2] ?? '';
+    const label = rawLabel
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/&nbsp;/gi, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+    if (label) {
+      labels.push(label);
+    }
+  }
+
+  return labels.slice(0, 8);
+}
+
+function buildChangeSummary(
+  prompt: string,
+  baselineFiles: MVPProjectFile[],
+  nextProject: MVPProjectArtifact
+): MVPBuildChangeSummary {
+  const changedFiles = getChangedProjectFiles(nextProject.files, baselineFiles);
+  const previousEntry =
+    pickProjectEntryFile(baselineFiles, null) ??
+    baselineFiles.find((file) => file.path.toLowerCase().endsWith('.html'))?.path ??
+    baselineFiles[0]?.path ??
+    null;
+  const nextEntry =
+    pickProjectEntryFile(nextProject.files, nextProject.entryFile) ??
+    nextProject.files.find((file) => file.path.toLowerCase().endsWith('.html'))?.path ??
+    nextProject.files[0]?.path ??
+    null;
+  const previousHtml =
+    baselineFiles.find((file) => file.path === previousEntry)?.content ?? '';
+  const nextHtml =
+    nextProject.files.find((file) => file.path === nextEntry)?.content ?? '';
+  const previousSections = previousHtml ? extractSectionLabelsFromHtml(previousHtml) : [];
+  const nextSections = nextHtml ? extractSectionLabelsFromHtml(nextHtml) : [];
+
+  const details: MVPBuildChangeSummary['details'] = [];
+  const maxLength = Math.max(previousSections.length, nextSections.length);
+
+  for (let index = 0; index < maxLength; index += 1) {
+    const before = previousSections[index];
+    const after = nextSections[index];
+
+    if (before && after && before !== after) {
+      details.push({
+        id: `${index}-updated`,
+        type: 'updated',
+        from: before,
+        to: after,
+      });
+      continue;
+    }
+
+    if (!before && after) {
+      details.push({
+        id: `${index}-added`,
+        type: 'added',
+        to: after,
+      });
+      continue;
+    }
+
+    if (before && !after) {
+      details.push({
+        id: `${index}-removed`,
+        type: 'removed',
+        from: before,
+      });
+    }
+  }
+
+  const fileFallbackDetails =
+    details.length > 0
+      ? details
+      : changedFiles.slice(0, 4).map((change, index) => ({
+          id: `${index}-${change.status}`,
+          type: change.status === 'added' ? ('added' as const) : ('updated' as const),
+          from: change.status === 'added' ? undefined : change.path,
+          to: change.path,
+        }));
+
+  return {
+    id: crypto.randomUUID(),
+    prompt,
+    createdAt: new Date().toISOString(),
+    updatedSections:
+      fileFallbackDetails.filter((detail) => detail.type === 'updated').length ||
+      changedFiles.filter((change) => change.status === 'modified').length,
+    addedComponents: changedFiles.filter((change) => change.status === 'added').length,
+    details: fileFallbackDetails,
+  };
 }
 
 function promptRequestsFrameworkRuntime(prompt: string): MVPProjectFramework | null {
@@ -382,6 +501,7 @@ export function useMVPBuilder() {
   const [selectedCodeFilePath, setSelectedCodeFilePath] = useState<string | null>(null);
   const [lastGeneratedProject, setLastGeneratedProject] = useState<MVPProjectArtifact | null>(null);
   const [projectSnapshots, setProjectSnapshots] = useState<MVPProjectSnapshot[]>([]);
+  const [lastBuildChangeSummary, setLastBuildChangeSummary] = useState<MVPBuildChangeSummary | null>(null);
   const [isShowingPreviewFallback, setIsShowingPreviewFallback] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [projectName, setProjectNameState] = useState(DEFAULT_PROJECT_NAME);
@@ -1529,8 +1649,14 @@ export function useMVPBuilder() {
   );
 
   const sendMessage = useCallback(
-    async (prompt: string) => {
+    async (
+      prompt: string,
+      options?: {
+        responseMode?: MVPBuilderResponseMode;
+      }
+    ) => {
       if (!prompt.trim() || isGenerating || isGitHubBusy) return;
+      const responseMode = options?.responseMode ?? 'build';
 
       const creditFeature = githubRepoSession
         ? 'APP_BUILDER_REFINE'
@@ -1604,6 +1730,7 @@ export function useMVPBuilder() {
           },
           body: JSON.stringify({
             userMessage: prompt,
+            responseMode,
             currentProject:
               projectFiles.length > 0
                 ? {
@@ -1645,6 +1772,28 @@ export function useMVPBuilder() {
           if (finalized) return;
           finalized = true;
 
+          if (responseMode === 'chat') {
+            const assistantCopy =
+              streamedContent.trim() ||
+              'I reviewed the request and I am ready to help you shape the next build step.';
+
+            setMessages((prev) =>
+              prev.map((message) =>
+                message.id === assistantMsg.id
+                  ? {
+                      ...message,
+                      content: assistantCopy,
+                      isStreaming: false,
+                      linkedPrompt: prompt,
+                      type: 'message',
+                      ...(completedModel ? { model: completedModel } : {}),
+                    }
+                  : message
+              )
+            );
+            return;
+          }
+
           const fallbackProject = streamedCode
             ? createProjectFromHtml(sanitizeStreamedCode(streamedCode), projectName)
             : extractProjectFromText(streamedContent, projectName);
@@ -1671,6 +1820,7 @@ export function useMVPBuilder() {
           );
 
           if (committedProject) {
+            setLastBuildChangeSummary(buildChangeSummary(prompt, projectFiles, committedProject));
             applyProjectArtifact(committedProject, {
               allowFallback: false,
               setAsBaseline: true,
@@ -1720,6 +1870,18 @@ export function useMVPBuilder() {
 
             if (event.type === 'delta' && typeof event.content === 'string') {
               streamedContent += event.content;
+              if (responseMode === 'chat') {
+                setMessages((prev) =>
+                  prev.map((message) =>
+                    message.id === assistantMsg.id
+                      ? {
+                          ...message,
+                          content: streamedContent,
+                        }
+                      : message
+                  )
+                );
+              }
             } else if (event.type === 'code-delta' && typeof event.content === 'string') {
               streamedCode += event.content;
               const liveCode = sanitizeStreamedCode(streamedCode);
@@ -2078,6 +2240,7 @@ export function useMVPBuilder() {
     setSelectedCodeFilePath(null);
     setLastGeneratedProject(null);
     setProjectSnapshots([]);
+    setLastBuildChangeSummary(null);
     setIsShowingPreviewFallback(false);
     lastStablePreviewHtmlRef.current = null;
     setProjectNameState(DEFAULT_PROJECT_NAME);
@@ -2118,6 +2281,7 @@ export function useMVPBuilder() {
     lastGeneratedProject,
     projectSnapshots,
     codeChanges,
+    lastBuildChangeSummary,
     isShowingPreviewFallback,
     isGenerating,
     isSavingProject,

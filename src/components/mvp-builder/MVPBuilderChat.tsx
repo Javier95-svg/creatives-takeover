@@ -20,6 +20,11 @@ import {
   ExternalLink,
   RefreshCw,
   Undo2,
+  Square,
+  X,
+  AtSign,
+  ChevronDown,
+  ChevronRight,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -35,6 +40,8 @@ import type {
   GitHubRepoSession,
   GitHubFileChange,
   GitHubCommitRecord,
+  MVPBuildChangeSummary,
+  MVPBuilderResponseMode,
 } from '@/hooks/useMVPBuilder';
 import {
   MVP_DEFAULT_MODEL,
@@ -91,6 +98,50 @@ const TEMPLATES = [
 
 const DIFF_PREVIEW_LINE_LIMIT = 140;
 const DIFF_CONTEXT_LINES = 3;
+
+const BUILDER_MODE_STEPS: Record<MVPBuilderResponseMode, string[]> = {
+  chat: ['Reading your prompt', 'Reviewing founder context', 'Drafting response'],
+  build: ['Reading your prompt', 'Generating layout', 'Writing components', 'Rendering preview'],
+};
+
+const REFERENCE_OPTIONS = [
+  {
+    id: 'icp-profile',
+    label: '@icp-profile',
+    description: 'Use the founder ICP and pain-point framing as the primary user context.',
+  },
+  {
+    id: 'pmf-score',
+    label: '@pmf-score',
+    description: 'Use the latest validation and PMF signal to guide positioning and UX emphasis.',
+  },
+  {
+    id: 'brand-kit',
+    label: '@brand-kit',
+    description: 'Respect the current brand voice, palette, and visual tone when shaping the build.',
+  },
+] as const;
+
+type BuilderReferenceId = (typeof REFERENCE_OPTIONS)[number]['id'];
+
+type QueuedSubmission = {
+  id: string;
+  prompt: string;
+  mode: MVPBuilderResponseMode;
+};
+
+type TaskStepState = {
+  label: string;
+  status: 'pending' | 'running' | 'complete';
+};
+
+type TaskRun = {
+  id: string;
+  mode: MVPBuilderResponseMode;
+  summary: string;
+  collapsed: boolean;
+  steps: TaskStepState[];
+};
 
 type DiffPreviewLine = {
   type: 'context' | 'add' | 'remove';
@@ -243,6 +294,15 @@ function formatDateTime(iso: string | null | undefined): string {
   });
 }
 
+function getMentionQuery(value: string): string | null {
+  const match = value.match(/(?:^|\s)@([a-z0-9-]*)$/i);
+  return match ? match[1].toLowerCase() : null;
+}
+
+function stripTrailingMention(value: string): string {
+  return value.replace(/(?:^|\s)@[a-z0-9-]*$/i, ' ').replace(/\s+$/, '');
+}
+
 interface MVPBuilderChatProps {
   messages: MVPMessage[];
   promptHistory: MVPPromptHistoryItem[];
@@ -256,9 +316,14 @@ interface MVPBuilderChatProps {
   githubCommitHistory: GitHubCommitRecord[];
   isGitHubBusy: boolean;
   suggestedGitHubCommitMessage: string | null;
+  lastBuildChangeSummary: MVPBuildChangeSummary | null;
   onSelectedModelsChange: (models: string[]) => void;
   onProjectTypeChange: (projectType: MVPProjectType) => void;
-  onSend: (prompt: string) => void;
+  onSend: (
+    prompt: string,
+    options?: { responseMode?: MVPBuilderResponseMode }
+  ) => void | Promise<unknown>;
+  onCancelGeneration: () => void;
   onConnectGitHub: () => void | Promise<void>;
   onDisconnectGitHub: () => void | Promise<void>;
   onLoadGitHubRepositories: () => void | Promise<void>;
@@ -290,9 +355,11 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
   githubCommitHistory,
   isGitHubBusy,
   suggestedGitHubCommitMessage,
+  lastBuildChangeSummary,
   onSelectedModelsChange,
   onProjectTypeChange,
   onSend,
+  onCancelGeneration,
   onConnectGitHub,
   onDisconnectGitHub,
   onLoadGitHubRepositories,
@@ -305,6 +372,12 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
   isGenerating,
 }) => {
   const [input, setInput] = useState('');
+  const [builderMode, setBuilderMode] = useState<MVPBuilderResponseMode>('build');
+  const [selectedReferences, setSelectedReferences] = useState<BuilderReferenceId[]>([]);
+  const [queuedSubmissions, setQueuedSubmissions] = useState<QueuedSubmission[]>([]);
+  const [taskRuns, setTaskRuns] = useState<TaskRun[]>([]);
+  const [changeCards, setChangeCards] = useState<MVPBuildChangeSummary[]>([]);
+  const [expandedChangeCards, setExpandedChangeCards] = useState<Record<string, boolean>>({});
   const [historyOpen, setHistoryOpen] = useState(false);
   const [modelsOpen, setModelsOpen] = useState(false);
   const [githubOpen, setGithubOpen] = useState(false);
@@ -314,6 +387,9 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
   const [commitMessage, setCommitMessage] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const taskTimerIdsRef = useRef<number[]>([]);
+  const activeTaskRunIdRef = useRef<string | null>(null);
+  const previousGeneratingRef = useRef(isGenerating);
   const isEmpty = messages.length === 0;
   const sortedHistory = useMemo(
     () =>
@@ -343,6 +419,129 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
         preview: buildDiffPreview(change),
       })),
     [githubPendingChanges]
+  );
+  const mentionQuery = useMemo(() => getMentionQuery(input), [input]);
+  const availableReferences = useMemo(() => {
+    if (mentionQuery === null) return [];
+    return REFERENCE_OPTIONS.filter(
+      (reference) =>
+        !selectedReferences.includes(reference.id) &&
+        reference.label.slice(1).toLowerCase().includes(mentionQuery)
+    );
+  }, [mentionQuery, selectedReferences]);
+  const selectedReferenceItems = useMemo(
+    () => REFERENCE_OPTIONS.filter((reference) => selectedReferences.includes(reference.id)),
+    [selectedReferences]
+  );
+
+  const clearTaskTimers = useCallback(() => {
+    taskTimerIdsRef.current.forEach((timerId) => window.clearTimeout(timerId));
+    taskTimerIdsRef.current = [];
+  }, []);
+
+  const beginTaskRun = useCallback(
+    (mode: MVPBuilderResponseMode) => {
+      clearTaskTimers();
+      const runId = crypto.randomUUID();
+      activeTaskRunIdRef.current = runId;
+      const steps = BUILDER_MODE_STEPS[mode].map((label, index) => ({
+        label,
+        status: index === 0 ? ('running' as const) : ('pending' as const),
+      }));
+
+      setTaskRuns((prev) => [
+        ...prev,
+        {
+          id: runId,
+          mode,
+          summary:
+            mode === 'build' ? 'Working through build steps...' : 'Thinking through the response...',
+          collapsed: false,
+          steps,
+        },
+      ]);
+
+      BUILDER_MODE_STEPS[mode].slice(1).forEach((_step, index) => {
+        const timerId = window.setTimeout(() => {
+          if (activeTaskRunIdRef.current !== runId) return;
+          setTaskRuns((prev) =>
+            prev.map((run) =>
+              run.id === runId
+                ? {
+                    ...run,
+                    steps: run.steps.map((step, stepIndex) => ({
+                      ...step,
+                      status:
+                        stepIndex < index + 1
+                          ? 'complete'
+                          : stepIndex === index + 1
+                          ? 'running'
+                          : 'pending',
+                    })),
+                  }
+                : run
+            )
+          );
+        }, 900 * (index + 1));
+
+        taskTimerIdsRef.current.push(timerId);
+      });
+    },
+    [clearTaskTimers]
+  );
+
+  const finishTaskRun = useCallback(
+    (mode: MVPBuilderResponseMode, outcome: 'complete' | 'stopped') => {
+      const runId = activeTaskRunIdRef.current;
+      if (!runId) return;
+      clearTaskTimers();
+      activeTaskRunIdRef.current = null;
+
+      const summary =
+        outcome === 'stopped'
+          ? mode === 'build'
+            ? 'Build stopped before completion'
+            : 'Reply stopped before completion'
+          : mode === 'build'
+          ? `${BUILDER_MODE_STEPS[mode].length} build steps completed`
+          : `${BUILDER_MODE_STEPS[mode].length} response steps completed`;
+
+      setTaskRuns((prev) =>
+        prev.map((run) =>
+          run.id === runId
+            ? {
+                ...run,
+                summary,
+                collapsed: outcome === 'complete',
+                steps: run.steps.map((step) => ({
+                  ...step,
+                  status: outcome === 'complete' ? 'complete' : step.status === 'running' ? 'pending' : step.status,
+                })),
+              }
+            : run
+        )
+      );
+    },
+    [clearTaskTimers]
+  );
+
+  const submitPrompt = useCallback(
+    (submission: QueuedSubmission) => {
+      beginTaskRun(submission.mode);
+      void onSend(submission.prompt, { responseMode: submission.mode });
+    },
+    [beginTaskRun, onSend]
+  );
+
+  const enqueueOrSubmit = useCallback(
+    (submission: QueuedSubmission) => {
+      if (isGenerating) {
+        setQueuedSubmissions((prev) => [...prev, submission]);
+        return;
+      }
+      submitPrompt(submission);
+    },
+    [isGenerating, submitPrompt]
   );
 
   useEffect(() => {
@@ -386,12 +585,73 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  useEffect(() => {
+    const node = textareaRef.current;
+    if (!node) return;
+    node.style.height = '0px';
+    const nextHeight = Math.min(node.scrollHeight, 140);
+    node.style.height = `${Math.max(nextHeight, 52)}px`;
+  }, [input]);
+
+  useEffect(() => {
+    if (!lastBuildChangeSummary) return;
+    setChangeCards((prev) =>
+      prev.some((card) => card.id === lastBuildChangeSummary.id)
+        ? prev
+        : [...prev, lastBuildChangeSummary]
+    );
+  }, [lastBuildChangeSummary]);
+
+  useEffect(() => {
+    const wasGenerating = previousGeneratingRef.current;
+
+    if (wasGenerating && !isGenerating) {
+      const lastAssistant = [...messages].reverse().find((message) => message.role === 'assistant');
+      const outcome =
+        lastAssistant?.content === 'Generation stopped.' ? 'stopped' : 'complete';
+      const activeRun =
+        activeTaskRunIdRef.current === null
+          ? null
+          : taskRuns.find((run) => run.id === activeTaskRunIdRef.current) ?? null;
+      finishTaskRun(activeRun?.mode ?? builderMode, outcome);
+
+      if (queuedSubmissions.length > 0) {
+        const [nextSubmission, ...rest] = queuedSubmissions;
+        setQueuedSubmissions(rest);
+        window.setTimeout(() => submitPrompt(nextSubmission), 120);
+      }
+    }
+
+    previousGeneratingRef.current = isGenerating;
+  }, [builderMode, finishTaskRun, isGenerating, messages, queuedSubmissions, submitPrompt, taskRuns]);
+
+  useEffect(() => () => clearTaskTimers(), [clearTaskTimers]);
+
   const handleSend = useCallback(() => {
     const trimmed = input.trim();
-    if (!trimmed || isGenerating || isGitHubBusy) return;
-    onSend(trimmed);
+    if (!trimmed || isGitHubBusy) return;
+
+    const promptWithReferences = selectedReferenceItems.length
+      ? `${trimmed}\n\nReference context to incorporate:\n${selectedReferenceItems
+          .map((reference) => `- ${reference.label}: ${reference.description}`)
+          .join('\n')}`
+      : trimmed;
+
+    const submission: QueuedSubmission = {
+      id: crypto.randomUUID(),
+      prompt: promptWithReferences,
+      mode: builderMode,
+    };
+
+    if (isGenerating) {
+      setQueuedSubmissions((prev) => [...prev, submission]);
+      setInput('');
+      return;
+    }
+
+    enqueueOrSubmit(submission);
     setInput('');
-  }, [input, isGenerating, isGitHubBusy, onSend]);
+  }, [builderMode, enqueueOrSubmit, input, isGenerating, isGitHubBusy, selectedReferenceItems]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -407,9 +667,26 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
   };
 
   const handleReusePrompt = (prompt: string) => {
-    if (isGenerating || isGitHubBusy) return;
-    onSend(prompt);
+    if (isGitHubBusy) return;
+    const submission: QueuedSubmission = {
+      id: crypto.randomUUID(),
+      prompt,
+      mode: builderMode,
+    };
+    enqueueOrSubmit(submission);
     setHistoryOpen(false);
+  };
+
+  const handleSelectReference = (referenceId: BuilderReferenceId) => {
+    setSelectedReferences((prev) =>
+      prev.includes(referenceId) ? prev : [...prev, referenceId]
+    );
+    setInput((prev) => stripTrailingMention(prev));
+    requestAnimationFrame(() => textareaRef.current?.focus());
+  };
+
+  const handleRemoveReference = (referenceId: BuilderReferenceId) => {
+    setSelectedReferences((prev) => prev.filter((id) => id !== referenceId));
   };
 
   const toggleModel = (modelId: string) => {
@@ -464,14 +741,58 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
   };
 
   return (
-    <div className="flex flex-col h-full min-h-0">
-      <div className="px-3 pt-2 pb-1 shrink-0 flex items-center justify-between gap-2">
-        <p className="text-[11px] font-medium text-muted-foreground">Builder controls</p>
-        <div className="flex items-center gap-1 flex-wrap justify-end">
+    <div className="flex h-full min-h-0 flex-col bg-[#0a0f1d] text-slate-100">
+      <div className="shrink-0 border-b border-white/6 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0))] px-4 pb-3 pt-4">
+        <div className="flex items-start justify-between gap-3">
+          <div className="space-y-2">
+            <div className="inline-flex items-center gap-2 rounded-full border border-sky-400/15 bg-sky-400/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-sky-200">
+              <Wand2 className="h-3 w-3" />
+              AI Co-Builder
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-white">Build with intent</p>
+              <p className="text-xs leading-relaxed text-slate-400">
+                Describe the product, flow, and polish you want. The builder will iterate with you in real time.
+              </p>
+            </div>
+          </div>
+          <div
+            className={cn(
+              'rounded-full border px-2.5 py-1 text-[11px] font-medium',
+              isGenerating || isGitHubBusy
+                ? 'border-amber-400/25 bg-amber-400/10 text-amber-200'
+                : 'border-emerald-400/20 bg-emerald-400/10 text-emerald-200'
+            )}
+          >
+            {isGenerating ? 'Generating' : isGitHubBusy ? 'Syncing' : 'Ready'}
+          </div>
+        </div>
+
+        <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
+          <div className="rounded-2xl border border-white/8 bg-white/[0.03] px-3 py-2.5">
+            <p className="text-[10px] uppercase tracking-[0.18em] text-slate-500">Model stack</p>
+            <p className="mt-1 truncate text-sm font-medium text-slate-100">{selectedModelLabels.join(' + ')}</p>
+          </div>
+          <div className="rounded-2xl border border-white/8 bg-white/[0.03] px-3 py-2.5">
+            <p className="text-[10px] uppercase tracking-[0.18em] text-slate-500">Build mode</p>
+            <p className="mt-1 truncate text-sm font-medium text-slate-100">{getMVPProjectTypeLabel(selectedProjectType)}</p>
+          </div>
+          {githubConnection.connected && (
+            <div className="rounded-2xl border border-white/8 bg-white/[0.03] px-3 py-2.5 sm:col-span-2">
+              <p className="text-[10px] uppercase tracking-[0.18em] text-slate-500">GitHub</p>
+              <p className="mt-1 truncate text-sm text-slate-200">
+                @{githubConnection.profile?.login ?? 'connected'}
+                {githubRepoSession ? ` · ${githubRepoSession.fullName} (${githubRepoSession.branch})` : ''}
+              </p>
+            </div>
+          )}
+        </div>
+
+        <div className="mt-4 flex flex-wrap items-center gap-2">
           <select
             value={selectedProjectType}
             onChange={(event) => onProjectTypeChange(event.target.value as MVPProjectType)}
-            className="h-7 rounded-full border border-border bg-background px-3 text-xs text-foreground outline-none focus:ring-2 focus:ring-primary/30"
+            className="h-9 rounded-xl border border-white/10 bg-white/[0.04] px-3 text-xs font-medium text-slate-100 outline-none transition focus:ring-2 focus:ring-sky-400/25"
           >
             {MVP_PROJECT_TYPE_OPTIONS.map((option) => (
               <option key={option.id} value={option.id}>
@@ -479,158 +800,393 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
               </option>
             ))}
           </select>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="h-9 rounded-xl border border-white/10 bg-white/[0.04] px-3 text-xs text-slate-200 hover:bg-white/[0.08] hover:text-white"
+            onClick={() => setModelsOpen(true)}
+          >
+            <Bot className="mr-2 h-3.5 w-3.5" />
+            Models
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="h-9 rounded-xl border border-white/10 bg-white/[0.04] px-3 text-xs text-slate-200 hover:bg-white/[0.08] hover:text-white"
+            onClick={() => setGithubOpen(true)}
+          >
+            <Github className="mr-2 h-3.5 w-3.5" />
+            GitHub
+            <span className="ml-2 text-[10px] text-slate-500">{githubPendingChanges.length}</span>
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="h-9 rounded-xl border border-white/10 bg-white/[0.04] px-3 text-xs text-slate-200 hover:bg-white/[0.08] hover:text-white"
+            onClick={() => setHistoryOpen(true)}
+          >
+            <History className="mr-2 h-3.5 w-3.5" />
+            Prompt Log
+            <span className="ml-2 text-[10px] text-slate-500">{sortedHistory.length}</span>
+          </Button>
           {!githubConnection.connected && (
             <Button
               type="button"
               size="sm"
-              className="h-7 px-2 text-xs gap-1.5"
+              className="h-9 rounded-xl bg-white text-slate-950 hover:bg-slate-100"
               onClick={onConnectGitHub}
               disabled={isGitHubBusy}
             >
               {isGitHubBusy ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
               ) : (
-                <Github className="h-3.5 w-3.5" />
+                <Github className="mr-2 h-3.5 w-3.5" />
               )}
               Connect GitHub
             </Button>
           )}
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            className="h-7 px-2 text-xs gap-1.5"
-            onClick={() => setModelsOpen(true)}
-          >
-            <Bot className="h-3.5 w-3.5" />
-            Models
-            <span className="text-[10px] text-muted-foreground">({selectedModels.length})</span>
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            className="h-7 px-2 text-xs gap-1.5"
-            onClick={() => setGithubOpen(true)}
-          >
-            <Github className="h-3.5 w-3.5" />
-            GitHub
-            <span className="text-[10px] text-muted-foreground">
-              ({githubPendingChanges.length})
-            </span>
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            className="h-7 px-2 text-xs gap-1.5"
-            onClick={() => setHistoryOpen(true)}
-          >
-            <History className="h-3.5 w-3.5" />
-            Prompt Log
-            <span className="text-[10px] text-muted-foreground">({sortedHistory.length})</span>
-          </Button>
         </div>
       </div>
-      <div className="px-3 pb-1">
-        <p className="text-[10px] text-muted-foreground truncate">
-          Active: {selectedModelLabels.join(' + ')}
-        </p>
-        <p className="text-[10px] text-muted-foreground truncate">
-          Project type: {getMVPProjectTypeLabel(selectedProjectType)}
-        </p>
-        {githubConnection.connected && (
-          <p className="text-[10px] text-muted-foreground truncate">
-            GitHub: @{githubConnection.profile?.login ?? 'connected'}
-          </p>
-        )}
-        {githubRepoSession && (
-          <p className="text-[10px] text-muted-foreground truncate">
-            Repo: {githubRepoSession.fullName} ({githubRepoSession.branch})
-          </p>
-        )}
-      </div>
 
-      {/* Message list */}
       <ScrollArea className="flex-1 min-h-0">
         <div className="p-4">
           {isEmpty ? (
-            /* Empty state */
-            <div className="flex flex-col items-center justify-center h-full py-8 gap-6 text-center">
-              <div className="space-y-2">
-                <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-primary/25 to-primary/5 border border-primary/20 shadow-lg shadow-primary/10 flex items-center justify-center mx-auto">
-                  <Wand2 className="h-7 w-7 text-primary/70" />
+            <div className="flex h-full flex-col justify-center gap-6 py-10">
+              <div className="space-y-3">
+                <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-sky-400/20 bg-[radial-gradient(circle_at_top,rgba(56,189,248,0.24),rgba(14,23,42,0.4))] shadow-[0_20px_45px_rgba(14,165,233,0.12)]">
+                  <Wand2 className="h-5 w-5 text-sky-200" />
                 </div>
-                <p className="text-lg font-semibold">What are we building today?</p>
-                <p className="text-xs text-muted-foreground/70">
-                  Describe your product idea, key features, and workflow in plain language
-                </p>
+                <div className="space-y-1.5">
+                  <h2 className="text-xl font-semibold text-white">What are we building?</h2>
+                  <p className="max-w-sm text-sm leading-relaxed text-slate-400">
+                    Start with the product idea, the primary user flow, and any visual direction. The more specific the outcome, the stronger the first pass.
+                  </p>
+                </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-2 w-full max-w-xs">
+              <div className="grid grid-cols-2 gap-2">
                 {TEMPLATES.map((t) => {
                   const Icon = t.icon;
                   return (
                     <button
                       key={t.label}
-                      onClick={() => onSend(t.prompt)}
-                      disabled={isGenerating || isGitHubBusy}
-                      className="flex items-center gap-2 rounded-xl border border-border/60 bg-card hover:bg-muted/60 hover:border-primary/40 hover:shadow-sm px-3 py-2.5 text-xs font-medium transition-all duration-150 text-left disabled:opacity-50"
+                      onClick={() =>
+                        enqueueOrSubmit({
+                          id: crypto.randomUUID(),
+                          prompt: t.prompt,
+                          mode: 'build',
+                        })
+                      }
+                      disabled={isGitHubBusy}
+                      className="group flex items-center gap-2 rounded-2xl border border-white/8 bg-white/[0.03] px-3 py-3 text-left text-xs font-medium text-slate-200 transition-all duration-150 hover:border-sky-400/25 hover:bg-white/[0.06] hover:text-white disabled:opacity-50"
                     >
-                      <Icon className="h-3.5 w-3.5 text-primary/70 shrink-0" />
-                      {t.label}
+                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-white/8 bg-white/[0.05] text-sky-200">
+                        <Icon className="h-3.5 w-3.5" />
+                      </span>
+                      <span>{t.label}</span>
                     </button>
                   );
                 })}
               </div>
             </div>
           ) : (
-            /* Conversation */
-            <>
+            <div className="space-y-4">
               {messages.map((msg) => (
                 <MVPMessageItem key={msg.id} message={msg} />
               ))}
+              {taskRuns.map((run) => {
+                const isCollapsed = run.collapsed;
+                const headerLabel = run.mode === 'build' ? 'Build pipeline' : 'Chat pipeline';
+                return (
+                  <div
+                    key={run.id}
+                    className="rounded-[24px] border border-white/10 bg-white/[0.035] p-4 shadow-[0_18px_40px_rgba(0,0,0,0.22)]"
+                  >
+                    <button
+                      type="button"
+                      className="flex w-full items-center justify-between gap-3 text-left"
+                      onClick={() =>
+                        setTaskRuns((prev) =>
+                          prev.map((item) =>
+                            item.id === run.id ? { ...item, collapsed: !item.collapsed } : item
+                          )
+                        )
+                      }
+                    >
+                      <div>
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
+                          {headerLabel}
+                        </p>
+                        <p className="mt-1 text-sm font-medium text-white">{run.summary}</p>
+                      </div>
+                      {isCollapsed ? (
+                        <ChevronRight className="h-4 w-4 text-slate-500" />
+                      ) : (
+                        <ChevronDown className="h-4 w-4 text-slate-500" />
+                      )}
+                    </button>
+                    {!isCollapsed && (
+                      <div className="mt-3 space-y-2">
+                        {run.steps.map((step) => (
+                          <div
+                            key={`${run.id}-${step.label}`}
+                            className="flex items-center gap-3 rounded-2xl border border-white/6 bg-[#0b1020] px-3 py-2.5"
+                          >
+                            <span
+                              className={cn(
+                                'flex h-6 w-6 items-center justify-center rounded-full border text-[10px]',
+                                step.status === 'complete'
+                                  ? 'border-emerald-400/25 bg-emerald-400/10 text-emerald-200'
+                                  : step.status === 'running'
+                                  ? 'border-sky-400/25 bg-sky-400/10 text-sky-200'
+                                  : 'border-white/10 bg-white/[0.03] text-slate-500'
+                              )}
+                            >
+                              {step.status === 'complete' ? (
+                                <Check className="h-3.5 w-3.5" />
+                              ) : step.status === 'running' ? (
+                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                              ) : (
+                                <span className="h-1.5 w-1.5 rounded-full bg-current" />
+                              )}
+                            </span>
+                            <span className="text-sm text-slate-200">{step.label}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+              {changeCards.map((card) => {
+                const isExpanded = Boolean(expandedChangeCards[card.id]);
+                return (
+                  <div
+                    key={card.id}
+                    className="rounded-[24px] border border-sky-400/14 bg-[linear-gradient(180deg,rgba(56,189,248,0.08),rgba(255,255,255,0.03))] p-4 shadow-[0_18px_40px_rgba(0,0,0,0.22)]"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-sky-200/75">
+                          Build change summary
+                        </p>
+                        <p className="mt-1 text-sm font-medium text-white">
+                          {card.updatedSections} sections updated · {card.addedComponents} components added
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        className="inline-flex items-center gap-1 rounded-full border border-white/10 px-3 py-1 text-[11px] font-medium text-slate-300 hover:bg-white/[0.05] hover:text-white"
+                        onClick={() =>
+                          setExpandedChangeCards((prev) => ({
+                            ...prev,
+                            [card.id]: !prev[card.id],
+                          }))
+                        }
+                      >
+                        View changes
+                        {isExpanded ? (
+                          <ChevronDown className="h-3.5 w-3.5" />
+                        ) : (
+                          <ChevronRight className="h-3.5 w-3.5" />
+                        )}
+                      </button>
+                    </div>
+                    {isExpanded && (
+                      <div className="mt-3 space-y-2">
+                        {card.details.map((detail) => (
+                          <div
+                            key={detail.id}
+                            className="rounded-2xl border border-white/8 bg-[#0b1020] px-3 py-2.5 text-sm text-slate-200"
+                          >
+                            {detail.type === 'updated' && detail.from && detail.to && (
+                              <span>
+                                {detail.from} {'->'} {detail.to}
+                              </span>
+                            )}
+                            {detail.type === 'added' && detail.to && <span>Added {detail.to}</span>}
+                            {detail.type === 'removed' && detail.from && <span>Removed {detail.from}</span>}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
               <div ref={messagesEndRef} />
-            </>
+            </div>
           )}
         </div>
       </ScrollArea>
 
-      {/* Input area — card with focus glow */}
-      <div className="px-3 pb-3 pt-2 shrink-0">
-        <div className="rounded-2xl border border-border/60 bg-card/50 focus-within:border-primary/40 focus-within:shadow-[0_0_0_3px_hsl(var(--primary)/0.08)] transition-all duration-200 p-2">
-          <div className="flex gap-2 items-end">
-            <Textarea
-              ref={textareaRef}
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder={
-                isEmpty
-                  ? 'Describe your MVP idea, core features, and user flow...'
-                  : githubRepoSession
-                  ? 'Describe repository changes to implement...'
-                  : 'Describe a change to make...'
-              }
-              className="min-h-[44px] max-h-28 resize-none text-sm leading-relaxed py-2.5 border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1"
-              disabled={isGenerating || isGitHubBusy}
-            />
-            <Button
-              onClick={handleSend}
-              disabled={!input.trim() || isGenerating || isGitHubBusy}
-              size="icon"
-              className="h-9 w-9 rounded-xl shrink-0"
+      <div className="shrink-0 border-t border-white/6 bg-[linear-gradient(180deg,rgba(10,15,29,0.2),rgba(10,15,29,0.96))] px-4 pb-4 pt-3">
+        <div className="rounded-[24px] border border-white/10 bg-white/[0.04] p-3 shadow-[0_30px_60px_rgba(0,0,0,0.35)] backdrop-blur-xl transition-all duration-200 focus-within:border-sky-400/25 focus-within:bg-white/[0.06]">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <div className="inline-flex items-center rounded-full border border-white/10 bg-[#0b1020] p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
+              {(['chat', 'build'] as MVPBuilderResponseMode[]).map((mode) => (
+                <button
+                  key={mode}
+                  type="button"
+                  onClick={() => setBuilderMode(mode)}
+                  className={cn(
+                    'rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all duration-150',
+                    builderMode === mode
+                      ? 'bg-white text-slate-950 shadow-sm'
+                      : 'text-slate-400 hover:text-white'
+                  )}
+                >
+                  {mode === 'chat' ? 'Chat' : 'Build'}
+                </button>
+              ))}
+            </div>
+            <div className="text-[11px] text-slate-500">
+              {builderMode === 'chat' ? 'Text-only planning' : 'Generates and renders'}
+            </div>
+          </div>
+
+          {queuedSubmissions.length > 0 && (
+            <div className="mb-3 flex items-center justify-between gap-3 rounded-2xl border border-amber-400/20 bg-amber-400/10 px-3 py-2 text-xs text-amber-100">
+              <span>
+                {queuedSubmissions.length} message{queuedSubmissions.length > 1 ? 's' : ''} queued
+                {' '}— processing...
+              </span>
+              <button
+                type="button"
+                className="rounded-full border border-amber-200/20 p-1 text-amber-100 hover:bg-amber-200/10"
+                onClick={() => setQueuedSubmissions((prev) => prev.slice(0, -1))}
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          )}
+
+          <div className="mb-3 flex flex-wrap items-center gap-2 text-[11px] text-slate-400">
+            <button
+              type="button"
+              onClick={() => setModelsOpen(true)}
+              className="inline-flex h-9 w-9 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] hover:bg-white/[0.08] hover:text-white"
             >
-              {isGenerating ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Send className="h-4 w-4" />
+              <Bot className="h-3.5 w-3.5" />
+            </button>
+            <button
+              type="button"
+              onClick={() => setGithubOpen(true)}
+              className="inline-flex h-9 w-9 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] hover:bg-white/[0.08] hover:text-white"
+            >
+              <Github className="h-3.5 w-3.5" />
+            </button>
+            <button
+              type="button"
+              onClick={() => setHistoryOpen(true)}
+              className="inline-flex h-9 w-9 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] hover:bg-white/[0.08] hover:text-white"
+            >
+              <Clock3 className="h-3.5 w-3.5" />
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setInput((prev) => `${prev}${prev && !prev.endsWith(' ') ? ' ' : ''}@`);
+                requestAnimationFrame(() => textareaRef.current?.focus());
+              }}
+              className="inline-flex h-9 w-9 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] hover:bg-white/[0.08] hover:text-white"
+            >
+              <AtSign className="h-3.5 w-3.5" />
+            </button>
+            <div className="ml-auto flex items-center gap-2 text-[11px] text-slate-500">
+              <span>{selectedModelLabels[0]}</span>
+              <span>·</span>
+              <span>{githubConnection.connected ? 'Repo linked' : 'No repo linked'}</span>
+            </div>
+          </div>
+
+          {selectedReferenceItems.length > 0 && (
+            <div className="mb-3 flex flex-wrap items-center gap-2">
+              {selectedReferenceItems.map((reference) => (
+                <span
+                  key={reference.id}
+                  className="inline-flex items-center gap-2 rounded-full border border-sky-400/20 bg-sky-400/10 px-3 py-1 text-xs text-sky-100"
+                >
+                  {reference.label}
+                  <button
+                    type="button"
+                    className="rounded-full p-0.5 text-sky-100/80 hover:bg-sky-100/10 hover:text-white"
+                    onClick={() => handleRemoveReference(reference.id)}
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
+
+          <div className="flex items-end gap-3">
+            <div className="relative flex-1">
+              <Textarea
+                ref={textareaRef}
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder={
+                  builderMode === 'chat'
+                    ? 'Ask for product direction, UX decisions, or implementation advice...'
+                    : isEmpty
+                    ? 'Describe your MVP idea, core flow, and visual style...'
+                    : githubRepoSession
+                    ? 'Describe the repository change to implement...'
+                    : 'Describe the next change to make...'
+                }
+                className={cn(
+                  'min-h-[52px] resize-none border-0 bg-transparent px-0 py-0 text-sm leading-relaxed text-white placeholder:text-slate-500 focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none',
+                  isGenerating && 'text-slate-50'
+                )}
+                disabled={isGitHubBusy}
+              />
+              {availableReferences.length > 0 && (
+                <div className="absolute bottom-[calc(100%+12px)] left-0 z-20 w-[280px] rounded-2xl border border-white/10 bg-[#0b1020] p-2 shadow-[0_30px_60px_rgba(0,0,0,0.45)]">
+                  {availableReferences.map((reference) => (
+                    <button
+                      key={reference.id}
+                      type="button"
+                      onClick={() => handleSelectReference(reference.id)}
+                      className="flex w-full items-start gap-3 rounded-xl px-3 py-2 text-left hover:bg-white/[0.05]"
+                    >
+                      <span className="mt-0.5 rounded-full border border-white/10 bg-white/[0.04] px-2 py-0.5 text-[10px] font-semibold text-sky-200">
+                        {reference.label}
+                      </span>
+                      <span className="text-xs leading-relaxed text-slate-400">
+                        {reference.description}
+                      </span>
+                    </button>
+                  ))}
+                </div>
               )}
-            </Button>
+            </div>
+            {isGenerating ? (
+              <Button
+                onClick={onCancelGeneration}
+                type="button"
+                className="h-11 shrink-0 rounded-2xl border border-rose-400/25 bg-rose-500/15 px-4 text-rose-100 hover:bg-rose-500/20"
+              >
+                <Square className="mr-2 h-4 w-4 fill-current" />
+                Stop
+              </Button>
+            ) : (
+              <Button
+                onClick={handleSend}
+                disabled={!input.trim() || isGitHubBusy}
+                className="h-11 shrink-0 rounded-2xl bg-white px-4 text-slate-950 shadow-sm transition-transform hover:scale-[1.03] hover:bg-slate-100 disabled:bg-white/10 disabled:text-slate-500"
+              >
+                <Send className="mr-2 h-4 w-4" />
+                {builderMode === 'chat' ? 'Ask' : 'Build'}
+              </Button>
+            )}
           </div>
         </div>
-        <p className="text-[10px] text-muted-foreground/60 mt-1.5 text-right">
-          Natural language works best: idea + features + workflow · Enter to send · Shift+Enter for new line
+        <p className="mt-2 text-right text-[10px] text-slate-500">
+          Enter to send · Shift+Enter for a new line · Type @ to reference founder context
         </p>
       </div>
 

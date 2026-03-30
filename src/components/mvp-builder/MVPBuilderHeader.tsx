@@ -52,24 +52,21 @@ export const MVPBuilderHeader: React.FC<MVPBuilderHeaderProps> = ({
 
   return (
     <>
-      <header className="relative flex items-center justify-between px-5 h-13 col-span-2 shrink-0 bg-primary/[0.07] backdrop-blur-2xl border-b border-primary/15 overflow-hidden"
+      <header className="relative flex items-center justify-between px-5 h-13 col-span-2 shrink-0 bg-[#060b16]/96 backdrop-blur-2xl border-b border-white/8 overflow-hidden"
         style={{ height: '52px' }}
       >
-        {/* Subtle radial glow behind center */}
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-          <div className="w-96 h-12 bg-primary/10 rounded-full blur-3xl" />
+          <div className="h-14 w-[34rem] rounded-full bg-[radial-gradient(circle,rgba(59,130,246,0.16),transparent_65%)] blur-3xl" />
         </div>
 
-        {/* Left: back link */}
         <Link
           to="/"
-          className="relative flex items-center gap-1.5 text-sm text-foreground/50 hover:text-foreground/90 transition-colors"
+          className="relative flex items-center gap-1.5 text-sm text-slate-400 hover:text-white transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />
           Platform
         </Link>
 
-        {/* Center: editable project name */}
         <div className="relative flex items-center gap-1.5">
           {isEditing ? (
             <div className="flex items-center gap-1">
@@ -79,9 +76,9 @@ export const MVPBuilderHeader: React.FC<MVPBuilderHeaderProps> = ({
                 onChange={(e) => setDraft(e.target.value)}
                 onBlur={commit}
                 onKeyDown={handleKeyDown}
-                className="h-7 w-48 text-sm text-center px-2 py-0 bg-background/60 border-primary/30 focus-visible:ring-primary/30"
+                className="h-7 w-48 border-white/10 bg-white/5 px-2 py-0 text-center text-sm text-white focus-visible:ring-white/20"
               />
-              <Button variant="ghost" size="icon" className="h-6 w-6 text-foreground/70 hover:text-foreground" onClick={commit}>
+              <Button variant="ghost" size="icon" className="h-6 w-6 text-slate-300 hover:text-white" onClick={commit}>
                 <Check className="h-3.5 w-3.5" />
               </Button>
             </div>
@@ -91,28 +88,27 @@ export const MVPBuilderHeader: React.FC<MVPBuilderHeaderProps> = ({
                 setDraft(projectName);
                 setIsEditing(true);
               }}
-              className="flex items-center gap-1.5 text-sm font-semibold hover:opacity-80 transition-opacity group bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent"
+              className="group flex items-center gap-1.5 bg-gradient-to-r from-white to-slate-300 bg-clip-text text-sm font-semibold text-transparent transition-opacity hover:opacity-80"
             >
               {projectName}
-              <Pencil className="h-3 w-3 opacity-0 group-hover:opacity-40 transition-opacity text-foreground" />
+              <Pencil className="h-3 w-3 text-white opacity-0 transition-opacity group-hover:opacity-40" />
             </button>
           )}
         </div>
 
-        {/* Right: credits pill + new project */}
         <div className="relative flex items-center gap-2">
-          <span className="hidden md:flex items-center gap-1.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 text-[11px] px-2 py-0.5 rounded-full font-medium">
+          <span className="hidden md:flex items-center gap-1.5 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[11px] font-medium text-emerald-300">
             {primaryModelLabel}
             {additionalModels > 0 ? ` +${additionalModels}` : ''}
           </span>
-          <span className="hidden sm:flex items-center gap-1.5 bg-primary/15 border border-primary/25 text-primary text-xs px-2.5 py-0.5 rounded-full font-medium backdrop-blur-sm">
-            <span className="h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
+          <span className="hidden sm:flex items-center gap-1.5 rounded-full border border-sky-400/20 bg-sky-400/10 px-2.5 py-0.5 text-xs font-medium text-sky-200 backdrop-blur-sm">
+            <span className="h-1.5 w-1.5 rounded-full bg-sky-300 shrink-0" />
             {totalCredits} credits
           </span>
           <Button
             variant="outline"
             size="sm"
-            className="h-7 text-xs gap-1 bg-background/30 border-border/40 hover:bg-background/50 backdrop-blur-sm"
+            className="h-7 gap-1 border-white/10 bg-white/5 text-xs text-white hover:bg-white/10 hover:text-white backdrop-blur-sm"
             onClick={onNewProject}
           >
             <Plus className="h-3.5 w-3.5" />
@@ -120,8 +116,7 @@ export const MVPBuilderHeader: React.FC<MVPBuilderHeaderProps> = ({
           </Button>
         </div>
       </header>
-      {/* Gradient bottom border */}
-      <div className="h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent shrink-0" />
+      <div className="h-px shrink-0 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
     </>
   );
 };

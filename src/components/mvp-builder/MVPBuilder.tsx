@@ -26,6 +26,7 @@ export const MVPBuilder: React.FC = () => {
     projectSnapshots,
     currentHtml,
     isGenerating,
+    lastBuildChangeSummary,
     projectName,
     projectId,
     promptHistory,
@@ -49,6 +50,7 @@ export const MVPBuilder: React.FC = () => {
     restoreProjectSnapshot,
     setSelectedModels,
     sendMessage,
+    cancelGeneration,
     resetProject,
     connectGitHub,
     disconnectGitHub,
@@ -78,9 +80,11 @@ export const MVPBuilder: React.FC = () => {
       githubCommitHistory={githubCommitHistory}
       isGitHubBusy={isGitHubBusy}
       suggestedGitHubCommitMessage={suggestedGitHubCommitMessage}
+      lastBuildChangeSummary={lastBuildChangeSummary}
       onSelectedModelsChange={setSelectedModels}
       onProjectTypeChange={setSelectedProjectType}
       onSend={sendMessage}
+      onCancelGeneration={cancelGeneration}
       onConnectGitHub={connectGitHub}
       onDisconnectGitHub={disconnectGitHub}
       onLoadGitHubRepositories={loadGitHubRepositories}
@@ -131,14 +135,14 @@ export const MVPBuilder: React.FC = () => {
       />
 
       <div className="flex-1 min-h-0 flex flex-col">
-        <div className="flex md:hidden items-center justify-center border-b border-border/40 bg-background shrink-0 py-1.5">
-          <div className="flex items-center bg-muted rounded-full p-0.5">
+        <div className="flex md:hidden items-center justify-center border-b border-border/40 bg-[#0b1020] shrink-0 py-2">
+          <div className="flex items-center rounded-full border border-white/10 bg-white/5 p-0.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
             <button
               className={cn(
                 'flex items-center gap-1.5 px-4 py-1 rounded-full text-xs font-medium transition-all duration-200',
                 mobileTab === 'chat'
-                  ? 'bg-background shadow-sm text-foreground'
-                  : 'text-muted-foreground hover:text-foreground'
+                  ? 'bg-white text-slate-950 shadow-sm'
+                  : 'text-slate-300 hover:text-white'
               )}
               onClick={() => setMobileTab('chat')}
             >
@@ -149,8 +153,8 @@ export const MVPBuilder: React.FC = () => {
               className={cn(
                 'flex items-center gap-1.5 px-4 py-1 rounded-full text-xs font-medium transition-all duration-200',
                 mobileTab === 'preview'
-                  ? 'bg-background shadow-sm text-foreground'
-                  : 'text-muted-foreground hover:text-foreground'
+                  ? 'bg-white text-slate-950 shadow-sm'
+                  : 'text-slate-300 hover:text-white'
               )}
               onClick={() => setMobileTab('preview')}
             >
@@ -160,12 +164,14 @@ export const MVPBuilder: React.FC = () => {
           </div>
         </div>
 
-        <div className="flex-1 min-h-0 grid grid-cols-1 md:grid-cols-[38%_1px_auto]">
+        <div className="flex-1 min-h-0 grid grid-cols-1 md:grid-cols-[32%_1px_minmax(0,1fr)]">
           {!isMobile && (
             <>
-              <div className="min-h-0">{chatPanel}</div>
+              <div className="min-h-0 border-r border-white/5 bg-[#0a0f1d] shadow-[20px_0_60px_rgba(0,0,0,0.25)]">
+                {chatPanel}
+              </div>
 
-              <div className="hidden md:block w-px bg-gradient-to-b from-transparent via-border/60 to-transparent self-stretch" />
+              <div className="hidden md:block w-px bg-gradient-to-b from-transparent via-white/10 to-transparent self-stretch" />
 
               <div className="min-h-0">{previewPanel}</div>
             </>

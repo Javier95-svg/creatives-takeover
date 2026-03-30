@@ -68,6 +68,17 @@ Strict rules:
 5. Preserve user-facing functionality and localStorage keys whenever reasonable.
 6. The response must be a complete HTML document starting with <!DOCTYPE html>.`;
 
+const CHAT_SYSTEM_PROMPT = `You are a senior product engineer collaborating on an MVP with a founder.
+
+Respond in plain text only.
+
+Strict rules:
+1. Do not output HTML, JSON, markdown fences, or code unless the user explicitly asks for a tiny inline example.
+2. Be direct, product-minded, and specific.
+3. Help the founder clarify scope, UX decisions, flows, tradeoffs, and implementation direction.
+4. If project context is provided, use it to reference the current build and suggest the best next move.
+5. Keep the tone like a strong product engineer working alongside the founder.`;
+
 // ── HTML extraction ─────────────────────────────────────────────────────────
 
 function extractHtml(fullText: string): string | null {
@@ -363,6 +374,7 @@ serve(async (req: Request) => {
   let preferredProjectType: string | null;
   let preferredFramework: string | null;
   let currentCode: string | null;
+  let responseMode: "chat" | "build";
 
   try {
     const body = await req.json();
@@ -376,6 +388,7 @@ serve(async (req: Request) => {
     preferredProjectType = typeof body.preferredProjectType === "string" ? body.preferredProjectType : null;
     preferredFramework = typeof body.preferredFramework === "string" ? body.preferredFramework : null;
     currentCode = typeof body.currentCode === "string" ? body.currentCode : null;
+    responseMode = body.responseMode === "chat" ? "chat" : "build";
   } catch {
     return errorStream("Invalid request body", "BAD_REQUEST");
   }
@@ -421,9 +434,12 @@ serve(async (req: Request) => {
 
   // ── Build messages for model call ──────────────────────────────────────
 
-  const systemPrompt = isFirstGeneration
-    ? GENERATE_SYSTEM_PROMPT
-    : REFINE_SYSTEM_PROMPT;
+  const systemPrompt =
+    responseMode === "chat"
+      ? CHAT_SYSTEM_PROMPT
+      : isFirstGeneration
+      ? GENERATE_SYSTEM_PROMPT
+      : REFINE_SYSTEM_PROMPT;
 
   // Keep last 4 turns for speed-focused context (2 user + 2 assistant)
   const recentHistory = conversationHistory.slice(-4).map((m) => ({
@@ -441,7 +457,17 @@ serve(async (req: Request) => {
       ? "Preferred framework: static-html. Keep the project directly previewable with plain HTML, inline CSS, and inline browser JavaScript."
       : `Preferred framework request: ${preferredFramework}. Even so, still return a single self-contained HTML document that captures the requested look and behavior.`
     : "";
-  if (!isFirstGeneration && currentCode) {
+  if (responseMode === "chat" && currentCode) {
+    userContent =
+      `Current HTML snapshot:\n<html-source>\n${currentCode}\n</html-source>\n\nFounder request:\n${userMessage}`;
+  } else if (responseMode === "chat" && currentProject) {
+    userContent =
+      `Current project snapshot:\n<project-source>\n${JSON.stringify(
+        currentProject,
+        null,
+        2
+      )}\n</project-source>\n\nFounder request:\n${userMessage}`;
+  } else if (!isFirstGeneration && currentCode) {
     userContent =
       `${projectTypeInstruction}\n${frameworkInstruction}\n\nCurrent HTML (edit this exact build):\n<html-source>\n${currentCode}\n</html-source>\n\nUser request:\n${userMessage}`;
   } else if (!isFirstGeneration && currentProject) {
@@ -559,7 +585,9 @@ serve(async (req: Request) => {
 
           if (typeof content === "string" && content) {
             fullText += content;
-            await writer.write(enc({ type: "code-delta", content }));
+            await writer.write(
+              enc({ type: responseMode === "chat" ? "delta" : "code-delta", content })
+            );
           } else if (
             typeof event.error === "object" &&
             event.error !== null &&
@@ -572,26 +600,28 @@ serve(async (req: Request) => {
         }
       }
 
-      const project = extractProject(fullText);
+      if (responseMode === "build") {
+        const project = extractProject(fullText);
 
-      if (project) {
-        await writer.write(enc({ type: "project", project }));
-      } else {
-        console.warn("No HTML document found in AI response");
-        await writer.write(
-          enc({
-            type: "error",
-            error: "The AI did not return a valid HTML document. Please try rephrasing your prompt.",
-          })
-        );
+        if (project) {
+          await writer.write(enc({ type: "project", project }));
+        } else {
+          console.warn("No HTML document found in AI response");
+          await writer.write(
+            enc({
+              type: "error",
+              error: "The AI did not return a valid HTML document. Please try rephrasing your prompt.",
+            })
+          );
 
-        if (userId) {
-          await refundCredits(
-            userId,
-            creditCost,
-            creditFeature,
-            "No project output generated"
-          ).catch(() => {});
+          if (userId) {
+            await refundCredits(
+              userId,
+              creditCost,
+              creditFeature,
+              "No project output generated"
+            ).catch(() => {});
+          }
         }
       }
 
