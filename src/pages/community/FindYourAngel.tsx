@@ -554,7 +554,7 @@ const FindYourAngel = () => {
                     })}
                   </div>
 
-                  {!isPro && (
+                  {!isPro && user && (
                     <div className="rounded-[1.75rem] border border-sky-500/25 bg-sky-500/10 p-4 shadow-sm">
                       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                         <div className="space-y-2">
@@ -649,7 +649,7 @@ const FindYourAngel = () => {
 
                     {!isPro && (
                       <div className="mt-4 rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-900 dark:text-amber-100">
-                        Professional unlocks investor search, filters, sorting, and full profile access.
+                        Pro Plan unlocks investment stage, sectors/industries, and full contact info access.
                       </div>
                     )}
 
@@ -966,34 +966,36 @@ const FindYourAngel = () => {
                       ))}
                     </div>
 
-                    <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-5 text-center">
-                      <p className="text-sm font-semibold text-foreground">
-                        The commercial moment is now: you can see the investors, but you cannot reach them yet.
-                      </p>
-                      <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                        Upgrade to Pro the moment you want full profile access, search, filters, and direct contact context.
-                      </p>
-                      <div className="mt-4 flex flex-wrap justify-center gap-3">
-                        <Button
-                          onClick={() =>
-                            openUpgradePrompt({
-                              reason: 'feature',
-                              featureName: founderNicheLabel
-                                ? `${founderNicheLabel} angel investor matches`
-                                : 'Angel Investor Profiles',
-                              requiredTier: 'professional',
-                              description: 'Professional plan unlocks full angel investor profiles, search, filters, and contact details.',
-                            })
-                          }
-                        >
-                          <Crown className="mr-2 h-4 w-4" />
-                          Upgrade to Pro
-                        </Button>
-                        <Button asChild variant="outline">
-                          <Link to="/pricing">Compare plans</Link>
-                        </Button>
+                    {user ? (
+                      <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-5 text-center">
+                        <p className="text-sm font-semibold text-foreground">
+                          The commercial moment is now: you can see the investors, but you cannot reach them yet.
+                        </p>
+                        <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                          Upgrade to Pro the moment you want full profile access, search, filters, and direct contact context.
+                        </p>
+                        <div className="mt-4 flex flex-wrap justify-center gap-3">
+                          <Button
+                            onClick={() =>
+                              openUpgradePrompt({
+                                reason: 'feature',
+                                featureName: founderNicheLabel
+                                  ? `${founderNicheLabel} angel investor matches`
+                                  : 'Angel Investor Profiles',
+                                requiredTier: 'professional',
+                                description: 'Professional plan unlocks full angel investor profiles, search, filters, and contact details.',
+                              })
+                            }
+                          >
+                            <Crown className="mr-2 h-4 w-4" />
+                            Upgrade to Pro
+                          </Button>
+                          <Button asChild variant="outline">
+                            <Link to="/pricing">Compare plans</Link>
+                          </Button>
+                        </div>
                       </div>
-                    </div>
+                    ) : null}
                   </div>
                 ) : (
                   /* Non-Pro users: blurred cards with upgrade overlay */
