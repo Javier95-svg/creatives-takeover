@@ -173,6 +173,10 @@ export const MentorProfile = ({ mentor, onBookClick }: MentorProfileProps) => {
     if (mentor.name.toLowerCase().includes('matas') && mentor.name.toLowerCase().includes('ramanauskas')) {
       return 'Lithuania';
     }
+    // Special case: Pedro Monestel is from Costa Rica
+    if (mentor.name.toLowerCase().includes('pedro') && mentor.name.toLowerCase().includes('monestel')) {
+      return 'Costa Rica';
+    }
     return null;
   };
   const nationality = getNationality();

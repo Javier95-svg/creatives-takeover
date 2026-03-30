@@ -178,6 +178,10 @@ export const MentorCard = ({ mentor, className, priority = false }: MentorCardPr
     if (mentor.name.toLowerCase().includes('matas') && mentor.name.toLowerCase().includes('ramanauskas')) {
       return 'Lithuania';
     }
+    // Special case: Pedro Monestel is from Costa Rica
+    if (mentor.name.toLowerCase().includes('pedro') && mentor.name.toLowerCase().includes('monestel')) {
+      return 'Costa Rica';
+    }
     return null;
   };
 
