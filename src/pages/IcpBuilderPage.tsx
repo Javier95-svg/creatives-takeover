@@ -15,9 +15,9 @@ export default function ICPBuilderPage() {
   const { markToolUsed } = useLeanStartupStore();
   const faqs = [
     {
-      question: "What is an ideal customer profile for a startup?",
+      question: "What is the Ideal Customer Profile (ICP) and why it is so important?",
       answer:
-        "An ideal customer profile is the specific type of customer most likely to need your product, feel the pain strongly, and adopt early. It is more precise than a broad persona or market category.",
+        "Your Ideal Customer Profile is the specific type of customer most likely to need your product, feel the pain acutely, and act on it. It matters because it shapes your messaging, product decisions, validation interviews, and go-to-market strategy from the start.",
     },
     {
       question: "Why does ICP definition matter before building?",
@@ -161,8 +161,8 @@ export default function ICPBuilderPage() {
               />
 
               <PageFAQSection
+                title="Frequent Questions"
                 faqs={faqs}
-                description="Common founder questions about ideal customer profile definition and positioning."
               />
             </div>
           </div>
