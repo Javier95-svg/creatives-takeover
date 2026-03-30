@@ -39,7 +39,7 @@ const EntrepreneurProblems = () => {
     {
       phase: "Seeking Resources",
       challenge: "Fundraising feels impossible without the right connections",
-      pathway: "Explore VC Search",
+      pathway: "Meet your Investor",
       icon: Rocket,
       accentColor: "amber", // Fundraising
     },
@@ -124,9 +124,9 @@ const EntrepreneurProblems = () => {
 
     if (index === 4) {
       return {
-        to: "/insighta/vc-search",
+        to: "/community/angels",
         title: step.pathway,
-        description: "VC Search lets you explore a curated database of venture capital firms and accelerators to kickstart your fundraising journey.",
+        description: "Meet your Investor gives founders access to our angel investor community so you can discover relevant backers, see who matches your niche, and move from searching for capital to starting real conversations.",
         icon: Users,
       };
     }
