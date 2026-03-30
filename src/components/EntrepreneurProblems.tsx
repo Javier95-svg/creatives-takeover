@@ -126,7 +126,7 @@ const EntrepreneurProblems = () => {
       return {
         to: "/community/angels",
         title: step.pathway,
-        description: "Angels gives you access to investors across all stages and sectors, helping you discover relevant backers, find the right fit for your startup, and move from searching for capital to starting real conversations.",
+        description: "Angels gives you access to investors across all stages and sectors, helping you find the right backers for your startup and start real conversations.",
         icon: Users,
       };
     }
