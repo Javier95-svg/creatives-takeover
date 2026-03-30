@@ -1,5 +1,5 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer } from 'recharts';
+import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from 'recharts';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { TrendingUp } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -94,24 +94,22 @@ export const BusinessHealthScore = ({ userId }: BusinessHealthScoreProps) => {
       </CardHeader>
       <CardContent>
         <ChartContainer config={chartConfig} className="h-64">
-          <ResponsiveContainer width="100%" height="100%">
-            <RadarChart data={scoreData.chart}>
-              <PolarGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-              <PolarAngleAxis 
-                dataKey="category" 
-                tick={{ fill: 'hsl(var(--foreground))', fontSize: 12 }}
-              />
-              <PolarRadiusAxis angle={90} domain={[0, 100]} tick={{ fontSize: 10 }} />
-              <Radar
-                name="Score"
-                dataKey="score"
-                stroke="hsl(var(--primary))"
-                fill="hsl(var(--primary))"
-                fillOpacity={0.3}
-              />
-              <ChartTooltip content={<ChartTooltipContent />} />
-            </RadarChart>
-          </ResponsiveContainer>
+          <RadarChart data={scoreData.chart}>
+            <PolarGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+            <PolarAngleAxis 
+              dataKey="category" 
+              tick={{ fill: 'hsl(var(--foreground))', fontSize: 12 }}
+            />
+            <PolarRadiusAxis angle={90} domain={[0, 100]} tick={{ fontSize: 10 }} />
+            <Radar
+              name="Score"
+              dataKey="score"
+              stroke="hsl(var(--primary))"
+              fill="hsl(var(--primary))"
+              fillOpacity={0.3}
+            />
+            <ChartTooltip content={<ChartTooltipContent />} />
+          </RadarChart>
         </ChartContainer>
       </CardContent>
     </Card>

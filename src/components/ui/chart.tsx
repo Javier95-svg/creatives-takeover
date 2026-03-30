@@ -41,28 +41,70 @@ const ChartContainer = React.forwardRef<
     >["children"]
   }
 >(({ id, className, children, config, ...props }, ref) => {
-  const uniqueId = React.useId()
-  const chartId = `chart-${id || uniqueId.replace(/:/g, "")}`
+	  const uniqueId = React.useId()
+	  const chartId = `chart-${id || uniqueId.replace(/:/g, "")}`
+	  const containerRef = React.useRef<HTMLDivElement | null>(null)
+	  const [isReady, setIsReady] = React.useState(false)
 
-  return (
-    <ChartContext.Provider value={{ config }}>
-      <div
-        data-chart={chartId}
-        ref={ref}
-        className={cn(
-          "flex aspect-video justify-center text-xs [&_.recharts-cartesian-axis-tick_text]:fill-muted-foreground [&_.recharts-cartesian-grid_line[stroke='#ccc']]:stroke-border/50 [&_.recharts-curve.recharts-tooltip-cursor]:stroke-border [&_.recharts-dot[stroke='#fff']]:stroke-transparent [&_.recharts-layer]:outline-none [&_.recharts-polar-grid_[stroke='#ccc']]:stroke-border [&_.recharts-radial-bar-background-sector]:fill-muted [&_.recharts-rectangle.recharts-tooltip-cursor]:fill-muted [&_.recharts-reference-line_[stroke='#ccc']]:stroke-border [&_.recharts-sector[stroke='#fff']]:stroke-transparent [&_.recharts-sector]:outline-none [&_.recharts-surface]:outline-none",
-          className
-        )}
-        {...props}
-      >
-        <ChartStyle id={chartId} config={config} />
-        <RechartsPrimitive.ResponsiveContainer>
-          {children}
-        </RechartsPrimitive.ResponsiveContainer>
-      </div>
-    </ChartContext.Provider>
-  )
-})
+	  React.useEffect(() => {
+	    const node = containerRef.current
+	    if (!node) return
+
+	    const updateReadiness = () => {
+	      setIsReady(node.clientWidth > 0 && node.clientHeight > 0)
+	    }
+
+	    updateReadiness()
+
+	    const resizeObserver = new ResizeObserver(() => {
+	      updateReadiness()
+	    })
+
+	    resizeObserver.observe(node)
+	    window.addEventListener("load", updateReadiness)
+
+	    return () => {
+	      resizeObserver.disconnect()
+	      window.removeEventListener("load", updateReadiness)
+	    }
+	  }, [])
+
+	  const setRefs = React.useCallback(
+	    (node: HTMLDivElement | null) => {
+	      containerRef.current = node
+
+	      if (typeof ref === "function") {
+	        ref(node)
+	      } else if (ref) {
+	        ref.current = node
+	      }
+	    },
+	    [ref]
+	  )
+	
+	  return (
+	    <ChartContext.Provider value={{ config }}>
+	      <div
+	        data-chart={chartId}
+	        ref={setRefs}
+	        className={cn(
+	          "flex aspect-video justify-center text-xs [&_.recharts-cartesian-axis-tick_text]:fill-muted-foreground [&_.recharts-cartesian-grid_line[stroke='#ccc']]:stroke-border/50 [&_.recharts-curve.recharts-tooltip-cursor]:stroke-border [&_.recharts-dot[stroke='#fff']]:stroke-transparent [&_.recharts-layer]:outline-none [&_.recharts-polar-grid_[stroke='#ccc']]:stroke-border [&_.recharts-radial-bar-background-sector]:fill-muted [&_.recharts-rectangle.recharts-tooltip-cursor]:fill-muted [&_.recharts-reference-line_[stroke='#ccc']]:stroke-border [&_.recharts-sector[stroke='#fff']]:stroke-transparent [&_.recharts-sector]:outline-none [&_.recharts-surface]:outline-none",
+	          className
+	        )}
+	        {...props}
+	      >
+	        <ChartStyle id={chartId} config={config} />
+	        {isReady ? (
+	          <RechartsPrimitive.ResponsiveContainer>
+	            {children}
+	          </RechartsPrimitive.ResponsiveContainer>
+	        ) : (
+	          <div className="h-full w-full" aria-hidden="true" />
+	        )}
+	      </div>
+	    </ChartContext.Provider>
+	  )
+	})
 ChartContainer.displayName = "Chart"
 
 const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
