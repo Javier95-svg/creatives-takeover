@@ -63,11 +63,8 @@ export default function WaitlistMakerPage() {
           <div className="container mx-auto max-w-[1580px] space-y-8">
             <div className="mx-auto max-w-4xl space-y-4 px-2 text-center">
               <h1 className="pb-2 text-center font-bold leading-[0.95] text-4xl sm:text-5xl md:text-6xl lg:text-7xl">
-                <span className="takeover-gradient creatives-font">Startup Waitlist Page Builder</span>
+                <span className="takeover-gradient creatives-font">Build Your Waitlist</span>
               </h1>
-              <p className="text-lg leading-relaxed text-muted-foreground md:text-xl">
-                Create a pre-launch page, explain your offer clearly, and collect real demand signals before you build the product.
-              </p>
             </div>
 
             <WaitlistEditor />
