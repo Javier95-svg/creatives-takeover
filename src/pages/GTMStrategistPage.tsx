@@ -1,10 +1,11 @@
-import { useEffect } from 'react';
+import { useCallback, useEffect } from 'react';
 import SEO, { createBreadcrumbSchema, createFAQSchema, createSoftwareApplicationSchema } from '@/components/SEO';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import AnswerSummary from '@/components/seo/AnswerSummary';
 import PageFAQSection from '@/components/seo/PageFAQSection';
 import { Separator } from '@/components/ui/separator';
+import { Button } from '@/components/ui/button';
 import { useGTMStrategist } from '@/hooks/useGTMStrategist';
 import { useLeanStartupStore } from '@/store/leanStartupStore';
 import GTMIntakeForm from '@/components/gtm/GTMIntakeForm';
@@ -19,6 +20,10 @@ import GTMLaunchChecklist from '@/components/gtm/GTMLaunchChecklist';
 import GTMMetricsBlock from '@/components/gtm/GTMMetricsBlock';
 import GTMStrategistWallpaper from '@/components/wallpapers/GTMStrategistWallpaper';
 import { ContextualMentorRecommendations } from '@/components/mentor-marketplace/ContextualMentorRecommendations';
+import { BizMapShareDialog } from '@/components/bizmap/BizMapShareDialog';
+import { useBizMapSharing } from '@/hooks/useBizMapSharing';
+import { createGTMSharedPayload } from '@/lib/bizmapSharing';
+import { Share2 } from 'lucide-react';
 
 const structuredData = [
   {
@@ -72,6 +77,7 @@ export default function GTMStrategistPage() {
   const {
     phase,
     analysis,
+    planId,
     isSaving,
     isExporting,
     prefillData,
@@ -80,6 +86,69 @@ export default function GTMStrategistPage() {
     exportPlan,
     resetToIntake,
   } = useGTMStrategist();
+  const getSharePayload = useCallback(
+    () => createGTMSharedPayload(
+      analysis ?? {
+        planTitle: 'GTM Strategy Brief',
+        summaryInsight: '',
+        channels: [],
+        positioning: {
+          positioningStatement: '',
+          uniqueValueProposition: '',
+          keyDifferentiators: [],
+        },
+        messaging: {
+          headline: '',
+          hookLine: '',
+          proofPoint: '',
+          ctaCopy: '',
+          toneOfVoice: [],
+        },
+        actionPlan: {
+          week1: [],
+          week2: [],
+          weeks3to4: [],
+        },
+        launchChecklist: {
+          prelaunch: [],
+          launchDay: [],
+          postlaunch: [],
+        },
+        metrics: {
+          primary: [],
+          laggingIndicators: [],
+        },
+        intakeAnswers: {
+          businessType: '',
+          targetAudience: '',
+          audienceOnlineHabits: [],
+          problemAndSolution: '',
+          currentTraction: '',
+          weeklyTimeForMarketing: '',
+        },
+        generatedAt: new Date().toISOString(),
+      },
+    ),
+    [analysis],
+  );
+  const {
+    shareRecord,
+    isPreparing,
+    isUpdatingVisibility,
+    isDialogOpen,
+    setIsDialogOpen,
+    openShareDialog,
+    copyShareLink,
+    copyLinkedInPost,
+    openSharedPage,
+    shareOnLinkedIn,
+    updateVisibility,
+    regenerateLink,
+  } = useBizMapSharing({
+    sourceType: 'gtm',
+    sourceId: planId,
+    getPayload: getSharePayload,
+  });
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-background">
@@ -147,6 +216,16 @@ export default function GTMStrategistPage() {
                 onExport={exportPlan}
                 onRegenerate={resetToIntake}
               />
+
+              <div className="flex flex-wrap gap-3 rounded-[1.5rem] border border-border/60 bg-background/80 px-4 py-4 shadow-sm">
+                <Button variant="outline" onClick={openShareDialog} disabled={!planId} className="gap-2">
+                  <Share2 className="h-4 w-4" />
+                  Share strategy brief
+                </Button>
+                <p className="text-sm text-muted-foreground">
+                  Create a public link you can send to a co-founder, advisor, or LinkedIn audience.
+                </p>
+              </div>
 
               <ContextualMentorRecommendations
                 track="gtm"
@@ -238,6 +317,19 @@ export default function GTMStrategistPage() {
         </main>
 
         <Footer />
+        <BizMapShareDialog
+          open={isDialogOpen}
+          onOpenChange={setIsDialogOpen}
+          isPreparing={isPreparing}
+          isUpdatingVisibility={isUpdatingVisibility}
+          record={shareRecord}
+          onCopyLink={copyShareLink}
+          onOpenSharedPage={openSharedPage}
+          onShareOnLinkedIn={shareOnLinkedIn}
+          onCopyLinkedInPost={copyLinkedInPost}
+          onUpdateVisibility={updateVisibility}
+          onRegenerateLink={regenerateLink}
+        />
       </div>
     </div>
   );

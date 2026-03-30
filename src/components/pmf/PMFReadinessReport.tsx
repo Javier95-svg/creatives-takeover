@@ -1,5 +1,5 @@
 import React from 'react';
-import { Save, Download, RefreshCw, CheckCircle2, XCircle, ArrowRight, AlertTriangle, MessageSquareWarning, Sparkles } from 'lucide-react';
+import { Save, Download, RefreshCw, CheckCircle2, XCircle, ArrowRight, AlertTriangle, MessageSquareWarning, Share2, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
@@ -10,9 +10,13 @@ import { ContextualMentorRecommendations } from '@/components/mentor-marketplace
 import type { PMFReadinessAnalysis } from '@/hooks/usePMFLab';
 import { Link } from 'react-router-dom';
 import { PMF_REQUIRED_SIGNALS } from '@/lib/bizmapStages';
+import { BizMapShareDialog } from '@/components/bizmap/BizMapShareDialog';
+import { useBizMapSharing } from '@/hooks/useBizMapSharing';
+import { createPMFSharedPayload } from '@/lib/bizmapSharing';
 
 interface PMFReadinessReportProps {
   analysis: PMFReadinessAnalysis;
+  analysisId: string | null;
   isSaving: boolean;
   isExporting: boolean;
   onSave: () => void;
@@ -22,6 +26,7 @@ interface PMFReadinessReportProps {
 
 const PMFReadinessReport: React.FC<PMFReadinessReportProps> = ({
   analysis,
+  analysisId,
   isSaving,
   isExporting,
   onSave,
@@ -68,6 +73,24 @@ const PMFReadinessReport: React.FC<PMFReadinessReportProps> = ({
       };
 
   const ThresholdIcon = thresholdBanner.icon;
+  const {
+    shareRecord,
+    isPreparing,
+    isUpdatingVisibility,
+    isDialogOpen,
+    setIsDialogOpen,
+    openShareDialog,
+    copyShareLink,
+    copyLinkedInPost,
+    openSharedPage,
+    shareOnLinkedIn,
+    updateVisibility,
+    regenerateLink,
+  } = useBizMapSharing({
+    sourceType: 'pmf',
+    sourceId: analysisId,
+    getPayload: () => createPMFSharedPayload(analysis),
+  });
 
   return (
     <div className="max-w-3xl mx-auto space-y-8">
@@ -111,6 +134,10 @@ const PMFReadinessReport: React.FC<PMFReadinessReportProps> = ({
             <Button variant="outline" onClick={onExport} disabled={isExporting} size="sm">
               <Download className="mr-2 h-4 w-4" />
               {isExporting ? 'Exporting…' : 'Export PDF'}
+            </Button>
+            <Button variant="outline" onClick={openShareDialog} disabled={!analysisId} size="sm">
+              <Share2 className="mr-2 h-4 w-4" />
+              Share report
             </Button>
             <Button variant="ghost" onClick={onReanalyze} size="sm">
               <RefreshCw className="mr-2 h-4 w-4" />
@@ -339,6 +366,19 @@ const PMFReadinessReport: React.FC<PMFReadinessReportProps> = ({
           </Button>
         )}
       </div>
+      <BizMapShareDialog
+        open={isDialogOpen}
+        onOpenChange={setIsDialogOpen}
+        isPreparing={isPreparing}
+        isUpdatingVisibility={isUpdatingVisibility}
+        record={shareRecord}
+        onCopyLink={copyShareLink}
+        onOpenSharedPage={openSharedPage}
+        onShareOnLinkedIn={shareOnLinkedIn}
+        onCopyLinkedInPost={copyLinkedInPost}
+        onUpdateVisibility={updateVisibility}
+        onRegenerateLink={regenerateLink}
+      />
     </div>
   );
 };

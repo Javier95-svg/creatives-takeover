@@ -103,6 +103,7 @@ const FindYourAngel = lazy(() => import("./pages/community/FindYourAngel"));
 const AdminAngelEditor = lazy(() => import("./pages/community/AdminAngelEditor"));
 const WaitlistPublicPage = lazy(() => import("./pages/WaitlistPublicPage"));
 const AppBuilderPage = lazy(() => import("./pages/AppBuilderPage"));
+const SharedBizMapOutputPage = lazy(() => import("./pages/SharedBizMapOutputPage"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -120,7 +121,7 @@ const PulseWidgetWrapper = () => {
   const location = useLocation();
 
   // Show Pulse on all pages except auth flows, admin, and full-screen builders
-  const excludedPaths = ['/onboarding', '/auth', '/login', '/signup', '/forgot-password', '/reset-password', '/mvp-builder'];
+  const excludedPaths = ['/onboarding', '/auth', '/login', '/signup', '/forgot-password', '/reset-password', '/mvp-builder', '/share'];
   const isExcluded = excludedPaths.some(p => location.pathname.startsWith(p));
 
   if (isExcluded) return null;
@@ -235,6 +236,7 @@ function App() {
                         <Route path="/rag-test" element={<RAGTest />} />
                         <Route path="/test-phase1" element={<TestPhase1 />} />
                         <Route path="/w/:slug" element={<WaitlistPublicPage />} />
+                        <Route path="/share/:slug" element={<SharedBizMapOutputPage />} />
                         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                         <Route path="*" element={<NotFound />} />
                       </Routes>

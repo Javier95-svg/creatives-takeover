@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -11,6 +11,7 @@ import {
   Loader2,
   Lock,
   Megaphone,
+  Share2,
   TestTubeDiagonal,
   Users,
 } from 'lucide-react';
@@ -26,6 +27,9 @@ import { useBizMapProgress } from '@/hooks/useBizMapProgress';
 import { useActivationJourney } from '@/hooks/useActivationJourney';
 import { getToolJourneyGuide } from '@/lib/activationJourney';
 import { ActivationJourneyStrip } from '@/components/activation/ActivationJourneyStrip';
+import { BizMapShareDialog } from '@/components/bizmap/BizMapShareDialog';
+import { useBizMapSharing } from '@/hooks/useBizMapSharing';
+import { createICPSharedPayload } from '@/lib/bizmapSharing';
 import ICPInputForm, { type ICPInputFormData } from './ICPInputForm';
 import ICPDecisionSummary from './ICPDecisionSummary';
 import ICPCustomerProfile from './ICPCustomerProfile';
@@ -167,10 +171,35 @@ const ICPBuilder: React.FC = () => {
 
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState<ICPAnalysis | null>(null);
+  const [analysisId, setAnalysisId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('input');
   const [analysisKey, setAnalysisKey] = useState(0);
 
   const hasAnalysis = analysis !== null;
+  const getSharePayload = useCallback(
+    () => createICPSharedPayload(
+      analysis ?? normalizeAnalysis({}),
+    ),
+    [analysis],
+  );
+  const {
+    shareRecord,
+    isPreparing,
+    isUpdatingVisibility,
+    isDialogOpen,
+    setIsDialogOpen,
+    openShareDialog,
+    copyShareLink,
+    copyLinkedInPost,
+    openSharedPage,
+    shareOnLinkedIn,
+    updateVisibility,
+    regenerateLink,
+  } = useBizMapSharing({
+    sourceType: 'icp',
+    sourceId: analysisId,
+    getPayload: getSharePayload,
+  });
 
   const handleFormSubmit = async (formData: ICPInputFormData) => {
     if (!user) {
@@ -238,6 +267,7 @@ const ICPBuilder: React.FC = () => {
 
       if (data?.success && data?.analysis) {
         setAnalysis(normalizeAnalysis(data.analysis));
+        setAnalysisId(data.analysisId ?? null);
         setAnalysisKey((value) => value + 1);
         setActiveTab('decision');
         await refreshProgress();
@@ -331,9 +361,15 @@ const ICPBuilder: React.FC = () => {
                   <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-700 dark:text-sky-300">Current recommendation</p>
                   <p className="mt-1 text-sm font-semibold">{analysis.recommendation.primaryIcp}</p>
                 </div>
-                <div className="inline-flex items-center gap-2 rounded-full bg-background/80 px-3 py-1.5 text-xs text-foreground/70">
-                  {analysis.recommendation.confidence} confidence
-                  <ArrowRight className="h-3.5 w-3.5 text-sky-600" />
+                <div className="flex flex-wrap items-center gap-2">
+                  <div className="inline-flex items-center gap-2 rounded-full bg-background/80 px-3 py-1.5 text-xs text-foreground/70">
+                    {analysis.recommendation.confidence} confidence
+                    <ArrowRight className="h-3.5 w-3.5 text-sky-600" />
+                  </div>
+                  <Button size="sm" variant="outline" onClick={openShareDialog} className="gap-2">
+                    <Share2 className="h-4 w-4" />
+                    Share output
+                  </Button>
                 </div>
               </div>
             )}
@@ -417,6 +453,19 @@ const ICPBuilder: React.FC = () => {
           </Tabs>
         </CardContent>
       </Card>
+      <BizMapShareDialog
+        open={isDialogOpen}
+        onOpenChange={setIsDialogOpen}
+        isPreparing={isPreparing}
+        isUpdatingVisibility={isUpdatingVisibility}
+        record={shareRecord}
+        onCopyLink={copyShareLink}
+        onOpenSharedPage={openSharedPage}
+        onShareOnLinkedIn={shareOnLinkedIn}
+        onCopyLinkedInPost={copyLinkedInPost}
+        onUpdateVisibility={updateVisibility}
+        onRegenerateLink={regenerateLink}
+      />
     </div>
   );
 };

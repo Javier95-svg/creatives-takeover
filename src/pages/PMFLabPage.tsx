@@ -65,6 +65,7 @@ export default function PMFLabPage() {
   const {
     phase,
     analysis,
+    analysisId,
     hasSavedReport,
     isSaving,
     isExporting,
@@ -194,6 +195,7 @@ export default function PMFLabPage() {
                 ) : null}
                 <PMFReadinessReport
                   analysis={analysis}
+                  analysisId={analysisId}
                   isSaving={isSaving}
                   isExporting={isExporting}
                   onSave={saveReport}
