@@ -73,6 +73,8 @@ export const MATAS_RAMANAUSKAS_EMAIL = 'matt.ramanauskas@gmail.com';
 export const MATAS_RAMANAUSKAS_USER_ID = 'e1db835c-4149-407e-807e-5ff0b99661c0';
 export const PEDRO_MONESTEL_EMAIL = 'monestelp93@gmail.com';
 export const PEDRO_MONESTEL_USER_ID = 'f7d02d67-dd5b-4ce7-95dd-f6f2c9bdbc35';
+export const YASMINE_CAXEIRO_EMAIL = 'mine.caxeiro@n1n3consulting.com';
+export const YASMINE_CAXEIRO_USER_ID = '357b97ca-c578-43b1-8e48-b438142312ec';
 
 // Karolina Żurawska's email constant
 export const KAROLINA_ZURAWSKA_EMAIL = 'kz.zurawska@gmail.com';
@@ -252,6 +254,13 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
         userId: PEDRO_MONESTEL_USER_ID
       });
       return PEDRO_MONESTEL_USER_ID;
+    }
+
+    if (email.toLowerCase() === YASMINE_CAXEIRO_EMAIL.toLowerCase()) {
+      logInfo('getUserIdByEmail: Using known Yasmine Caxeiro user ID', {
+        userId: YASMINE_CAXEIRO_USER_ID
+      });
+      return YASMINE_CAXEIRO_USER_ID;
     }
 
     try {
@@ -464,6 +473,13 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
       mentorNameNormalized.includes('monestel')
     ) {
       return PEDRO_MONESTEL_USER_ID;
+    }
+
+    if (
+      mentorNameNormalized.includes('yasmine') &&
+      mentorNameNormalized.includes('caxeiro')
+    ) {
+      return YASMINE_CAXEIRO_USER_ID;
     }
 
     if (mentor.user_id && mentor.user_id.trim() !== '') {
