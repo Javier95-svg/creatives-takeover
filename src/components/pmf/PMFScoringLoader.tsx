@@ -13,10 +13,13 @@ const PMFScoringLoader: React.FC = () => {
   const [visibleSteps, setVisibleSteps] = useState<number[]>([]);
 
   useEffect(() => {
-    STEPS.forEach((_, i) => {
-      const t = setTimeout(() => setVisibleSteps(prev => [...prev, i]), i * 1800);
-      return () => clearTimeout(t);
-    });
+    const timeouts = STEPS.map((_, i) =>
+      setTimeout(() => setVisibleSteps(prev => [...prev, i]), i * 1800)
+    );
+
+    return () => {
+      timeouts.forEach((timeout) => clearTimeout(timeout));
+    };
   }, []);
 
   return (

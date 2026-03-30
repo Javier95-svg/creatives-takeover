@@ -114,12 +114,6 @@ export function usePMFLab() {
   const [isExporting, setIsExporting] = useState(false);
   const [hasSavedReport, setHasSavedReport] = useState(false);
 
-  // On mount: restore existing analysis if found
-  useEffect(() => {
-    if (!user) return;
-    void loadExistingAnalysis();
-  }, [loadExistingAnalysis, user]);
-
   const loadExistingAnalysis = useCallback(async () => {
     if (!user) return;
     if (!isPmfResultsTableAvailable()) return;
@@ -152,6 +146,12 @@ export function usePMFLab() {
       console.warn('Failed to load existing PMF analysis:', err);
     }
   }, [user]);
+
+  // On mount: restore existing analysis if found
+  useEffect(() => {
+    if (!user) return;
+    void loadExistingAnalysis();
+  }, [loadExistingAnalysis, user]);
 
   const runAnalysis = useCallback(async (answers: PMFEvidenceAnswers) => {
     if (!user) {
