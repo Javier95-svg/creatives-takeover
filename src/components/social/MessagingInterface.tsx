@@ -31,6 +31,7 @@ type ParticipantProfile = {
 
 const SOPHIA_LOPEZ_PIMENTA_USER_ID = '50695a54-30c6-4b57-969e-b2de733bcd73';
 const ARTUR_SINDARSKY_USER_ID = '1f0fe62a-7744-4153-bfcf-4f20b6e820d3';
+const YASMINE_CAXEIRO_USER_ID = '357b97ca-c578-43b1-8e48-b438142312ec';
 type MentorMeta = {
   user_id: string | null;
   name: string;
@@ -53,6 +54,11 @@ const isSophiaMentorName = (name: string | null | undefined): boolean => {
 const isArturMentorName = (name: string | null | undefined): boolean => {
   const normalized = (name || '').toLowerCase();
   return normalized.includes('artur') && normalized.includes('sindarsky');
+};
+
+const isYasmineMentorName = (name: string | null | undefined): boolean => {
+  const normalized = (name || '').toLowerCase();
+  return normalized.includes('yasmine') && normalized.includes('caxeiro');
 };
 
 const normalizeIdentity = (value: string | null | undefined): string =>
@@ -459,7 +465,10 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
       });
 
       // Filter out already fetched profiles
-      const idsToFetch = Array.from(participantIds).filter(id => !participantProfiles[id]);
+      const idsToFetch = Array.from(participantIds).filter((id) => {
+        const cachedProfile = participantProfiles[id];
+        return !cachedProfile || !cachedProfile.avatar_url;
+      });
 
       if (idsToFetch.length === 0) return;
 
@@ -502,6 +511,14 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
           ) {
             mentorMeta =
               mergedMentorData.find((mentor) => isArturMentorName(mentor.name)) || null;
+          }
+
+          if (
+            !mentorMeta &&
+            participantId === YASMINE_CAXEIRO_USER_ID
+          ) {
+            mentorMeta =
+              mergedMentorData.find((mentor) => isYasmineMentorName(mentor.name)) || null;
           }
 
           if (!profile && !mentorMeta) return;
