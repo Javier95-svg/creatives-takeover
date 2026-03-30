@@ -126,7 +126,7 @@ const EntrepreneurProblems = () => {
       return {
         to: "/community/angels",
         title: step.pathway,
-        description: "Meet your Investor gives founders access to our angel investor community so you can discover relevant backers, see who matches your niche, and move from searching for capital to starting real conversations.",
+        description: "Angels gives you access to investors across all stages and sectors, helping you discover relevant backers, find the right fit for your startup, and move from searching for capital to starting real conversations.",
         icon: Users,
       };
     }
