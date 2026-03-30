@@ -62,6 +62,8 @@ export function getCountryFlag(country: string | null | undefined): string {
     'CZECH REPUBLIC': '🇨🇿',
     'BR': '🇧🇷',
     'BRAZIL': '🇧🇷',
+    'CR': '🇨🇷',
+    'COSTA RICA': '🇨🇷',
     'MX': '🇲🇽',
     'MEXICO': '🇲🇽',
     'AR': '🇦🇷',
