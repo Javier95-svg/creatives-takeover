@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useBizMapProgress } from '@/hooks/useBizMapProgress';
+import { useActivationJourney } from '@/hooks/useActivationJourney';
 import { useCreditActions } from '@/hooks/useCreditActions';
 import { CREDIT_COSTS } from '@/config/constants';
 import { toast } from 'sonner';
@@ -17,6 +18,8 @@ import { SortableList } from '@/components/ui/sortable-list';
 import { AlertTriangle, Check, Copy, Download, Eye, Globe, Loader2, Lock, Monitor, MonitorSmartphone, Plus, Save, ShieldCheck, Sparkles, Trash2, Unlock, Users } from 'lucide-react';
 import WaitlistPageTemplate, { WaitlistContent } from './WaitlistPageTemplate';
 import { WAITLIST_ACCENT_PRESETS, WAITLIST_FONT_PRESETS, createWaitlistFieldId, getDefaultWaitlistContent, getWaitlistThemePalette, normalizeWaitlistContent } from '@/lib/waitlist';
+import { getToolJourneyGuide } from '@/lib/activationJourney';
+import { ActivationJourneyStrip } from '@/components/activation/ActivationJourneyStrip';
 
 type BuilderTab = 'content' | 'style' | 'form' | 'launch' | 'analytics';
 type PreviewDevice = 'desktop' | 'mobile';
@@ -225,6 +228,7 @@ function readGuestBrowserDraft(): {
 export default function WaitlistEditor() {
   const { user, loading: authLoading } = useAuth();
   const { refreshProgress } = useBizMapProgress();
+  const { refreshActivation } = useActivationJourney();
   const { ensureCredits } = useCreditActions();
   const initialStoredStateRef = useRef<StoredWaitlistEditorState | null>(readStoredWaitlistEditorState());
   const initialGuestDraftRef = useRef(readGuestBrowserDraft());
@@ -654,6 +658,7 @@ export default function WaitlistEditor() {
     }
     setRestorableGuestDraft(null);
     await loadAllPages();
+    await refreshActivation();
 
     if (mode !== 'autosave' && mode !== 'publish') {
       const actionLabel =
@@ -664,7 +669,7 @@ export default function WaitlistEditor() {
     }
 
     return saved.id;
-  }, [content, currentSlug, draftId, loadAllPages, productName, promptSignIn, publishBlockingReason, slugDraft, user]);
+  }, [content, currentSlug, draftId, loadAllPages, productName, promptSignIn, publishBlockingReason, refreshActivation, slugDraft, user]);
 
   const handleSave = async () => {
     if (status === 'published') {
@@ -744,6 +749,7 @@ export default function WaitlistEditor() {
     setMarkReadyAt((data as { mark_ready_at: string }).mark_ready_at);
     await loadAllPages();
     await refreshProgress();
+    await refreshActivation();
     toast.success('Prototype marked as ready. Stage II can now progress.');
   };
 
@@ -902,6 +908,8 @@ export default function WaitlistEditor() {
   const formTabClass = 'mt-0 space-y-4 [&>div]:rounded-[24px] [&>div]:border [&>div]:border-border/60 [&>div]:bg-white/80 [&>div]:p-4 [&>div]:shadow-sm [&_input]:border-border/60 [&_input]:bg-white [&_input]:text-slate-950 [&_input]:placeholder:text-slate-400 [&_label]:text-slate-950 [&_textarea]:border-border/60 [&_textarea]:bg-white [&_textarea]:text-slate-950 [&_textarea]:placeholder:text-slate-400 [&_select]:border-border/60 [&_select]:bg-white [&_select]:text-slate-950 dark:text-white dark:[&>div]:border-white/10 dark:[&>div]:bg-[linear-gradient(180deg,rgba(15,23,42,0.94),rgba(30,41,59,0.9))] dark:[&>div]:shadow-[0_18px_40px_rgba(2,6,23,0.35)] dark:[&_input]:border-white/15 dark:[&_input]:bg-white/5 dark:[&_input]:text-white dark:[&_input]:placeholder:text-slate-400 dark:[&_label]:text-white dark:[&_textarea]:border-white/15 dark:[&_textarea]:bg-white/5 dark:[&_textarea]:text-white dark:[&_textarea]:placeholder:text-slate-400 dark:[&_select]:border-white/15 dark:[&_select]:bg-slate-950 dark:[&_select]:text-white';
   const launchTabClass = 'mt-0 space-y-4 [&>div]:rounded-[24px] [&>div]:border [&>div]:border-border/60 [&>div]:bg-white/80 [&>div]:p-4 [&>div]:shadow-sm [&>label]:rounded-[24px] [&>label]:border [&>label]:border-border/60 [&>label]:bg-white/80 [&>label]:px-4 [&>label]:py-3 [&>label]:shadow-sm [&_input]:border-border/60 [&_input]:bg-white [&_input]:text-slate-950 [&_input]:placeholder:text-slate-400 [&_label]:text-slate-950 [&_select]:border-border/60 [&_select]:bg-white [&_select]:text-slate-950 dark:text-white dark:[&>div]:border-white/10 dark:[&>div]:bg-[linear-gradient(180deg,rgba(15,23,42,0.94),rgba(30,41,59,0.9))] dark:[&>div]:shadow-[0_18px_40px_rgba(2,6,23,0.35)] dark:[&>label]:border-white/10 dark:[&>label]:bg-[linear-gradient(180deg,rgba(15,23,42,0.94),rgba(30,41,59,0.9))] dark:[&>label]:shadow-[0_18px_40px_rgba(2,6,23,0.35)] dark:[&_input]:border-white/15 dark:[&_input]:bg-white/5 dark:[&_input]:text-white dark:[&_input]:placeholder:text-slate-400 dark:[&_label]:text-white dark:[&_select]:border-white/15 dark:[&_select]:bg-slate-950 dark:[&_select]:text-white';
   const analyticsTabClass = 'mt-0 space-y-4 [&>div]:rounded-[24px] [&>div]:border [&>div]:border-border/60 [&>div]:bg-white/80 [&>div]:p-4 [&>div]:shadow-sm [&_label]:text-slate-950 dark:text-white dark:[&>div]:border-white/10 dark:[&>div]:bg-[linear-gradient(180deg,rgba(15,23,42,0.94),rgba(30,41,59,0.9))] dark:[&>div]:shadow-[0_18px_40px_rgba(2,6,23,0.35)] dark:[&_label]:text-white';
+  const activationGuide = getToolJourneyGuide('/waitlist');
+  const hasTangibleOutput = Boolean(draftId || lastSavedAt);
 
   return (
     <div className="space-y-6">
@@ -910,6 +918,18 @@ export default function WaitlistEditor() {
           <Loader2 className="h-4 w-4 animate-spin" />
           Syncing your latest waitlist data...
         </div>
+      ) : null}
+      {activationGuide ? (
+        <ActivationJourneyStrip
+          stageLabel={activationGuide.stageLabel}
+          title={activationGuide.title}
+          description={activationGuide.description}
+          doneLabel={activationGuide.doneLabel}
+          completedLabel={activationGuide.completedLabel}
+          nextRoute={activationGuide.nextRoute}
+          nextLabel={activationGuide.nextLabel}
+          isComplete={hasTangibleOutput}
+        />
       ) : null}
       <Card className={toolbarCardClass}>
         <CardContent className="p-4 md:p-5">

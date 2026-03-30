@@ -9,7 +9,9 @@ import { usePMFLab } from '@/hooks/usePMFLab';
 import PMFEvidenceForm from '@/components/pmf/PMFEvidenceForm';
 import PMFScoringLoader from '@/components/pmf/PMFScoringLoader';
 import PMFReadinessReport from '@/components/pmf/PMFReadinessReport';
+import { ActivationJourneyStrip } from '@/components/activation/ActivationJourneyStrip';
 import { ArrowRight, Rocket } from 'lucide-react';
+import { getToolJourneyGuide } from '@/lib/activationJourney';
 
 const structuredData = [
   {
@@ -63,6 +65,7 @@ export default function PMFLabPage() {
   const {
     phase,
     analysis,
+    hasSavedReport,
     isSaving,
     isExporting,
     runAnalysis,
@@ -70,6 +73,7 @@ export default function PMFLabPage() {
     exportReport,
     resetToIntake,
   } = usePMFLab();
+  const activationGuide = getToolJourneyGuide('/pmf-lab');
 
   const ruleCards = [
     {
@@ -129,6 +133,19 @@ export default function PMFLabPage() {
 
               {phase === 'intake' && (
                 <>
+                  {activationGuide ? (
+                    <ActivationJourneyStrip
+                      stageLabel={activationGuide.stageLabel}
+                      title={activationGuide.title}
+                      description={activationGuide.description}
+                      doneLabel={activationGuide.doneLabel}
+                      completedLabel={activationGuide.completedLabel}
+                      nextRoute={activationGuide.nextRoute}
+                      nextLabel={activationGuide.nextLabel}
+                      isComplete={hasSavedReport}
+                      className="mb-6"
+                    />
+                  ) : null}
                   <div className="grid gap-4 md:grid-cols-2">
                     {ruleCards.map(({ label, title, description, icon: Icon, tone }) => (
                       <div key={title} className={`rounded-2xl border p-5 ${tone}`}>
@@ -162,14 +179,28 @@ export default function PMFLabPage() {
 
             {/* Phase C — PMF Readiness Report */}
             {phase === 'results' && analysis && (
-              <PMFReadinessReport
-                analysis={analysis}
-                isSaving={isSaving}
-                isExporting={isExporting}
-                onSave={saveReport}
-                onExport={exportReport}
-                onReanalyze={resetToIntake}
-              />
+              <div className="space-y-6">
+                {activationGuide ? (
+                  <ActivationJourneyStrip
+                    stageLabel={activationGuide.stageLabel}
+                    title={activationGuide.title}
+                    description={activationGuide.description}
+                    doneLabel={activationGuide.doneLabel}
+                    completedLabel={activationGuide.completedLabel}
+                    nextRoute={activationGuide.nextRoute}
+                    nextLabel={activationGuide.nextLabel}
+                    isComplete={hasSavedReport}
+                  />
+                ) : null}
+                <PMFReadinessReport
+                  analysis={analysis}
+                  isSaving={isSaving}
+                  isExporting={isExporting}
+                  onSave={saveReport}
+                  onExport={exportReport}
+                  onReanalyze={resetToIntake}
+                />
+              </div>
             )}
 
             <div className="mt-10 space-y-8">

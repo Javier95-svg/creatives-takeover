@@ -117,7 +117,7 @@ const PMFReadinessReport: React.FC<PMFReadinessReportProps> = ({
             </Button>
             {meetsThreshold && (
               <Button asChild variant="outline" size="sm">
-                <Link to="/mvp-scope">
+                <Link to="/mvp-builder">
                   Continue to Building
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>

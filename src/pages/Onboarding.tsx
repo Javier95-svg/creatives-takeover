@@ -16,6 +16,10 @@ import {
   consumeCheckoutIntent,
   redirectToCheckoutIntent,
 } from '@/lib/checkoutRedirect';
+import {
+  readActivationJourneyFromPreferences,
+  shouldUseActivationStartRoute,
+} from '@/lib/activationJourney';
 
 const Onboarding = () => {
   const { user, isAuthenticated, loading: authLoading } = useAuth();
@@ -67,7 +71,7 @@ const Onboarding = () => {
     checkOnboardingStatus();
   }, [user, isAuthenticated, authLoading, navigate, returnUrl]);
 
-  const handleComplete = () => {
+  const handleComplete = async () => {
     const pendingCheckoutIntent = consumeCheckoutIntent();
     if (pendingCheckoutIntent) {
       redirectToCheckoutIntent(pendingCheckoutIntent, user);
@@ -75,6 +79,22 @@ const Onboarding = () => {
     }
 
     const target = consumeOnboardingReturn(returnUrl);
+    if (user && shouldUseActivationStartRoute(target)) {
+      const { data } = await supabase
+        .from('profiles')
+        .select('user_preferences')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      const preferences = (data as { user_preferences?: Record<string, unknown> | null } | null)?.user_preferences;
+      const activationJourney = readActivationJourneyFromPreferences(preferences);
+
+      if (activationJourney?.startRoute) {
+        navigate(activationJourney.startRoute, { replace: true });
+        return;
+      }
+    }
+
     navigate(target, { replace: true });
   };
 

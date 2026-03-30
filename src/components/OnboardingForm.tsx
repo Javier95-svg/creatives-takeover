@@ -23,6 +23,10 @@ import {
   onboardingSelectionToProgress,
   type OnboardingBizMapStageSelection,
 } from '@/lib/bizmapStages';
+import {
+  getDefaultActivationJourney,
+  mergeActivationJourneyIntoPreferences,
+} from '@/lib/activationJourney';
 
 interface OnboardingData {
   // Step 1
@@ -202,6 +206,7 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
       }
 
       const selectedStage = formData.businessStage as OnboardingBizMapStageSelection;
+      const startedAt = new Date().toISOString();
       const stageProgress = selectedStage
         ? onboardingSelectionToProgress(selectedStage)
         : {
@@ -221,8 +226,14 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
         decisionMakingProcess: formData.decisionMakingProcess,
         communicationStyle: formData.communicationStyle,
         commitmentLevel: formData.commitmentLevel,
-        onboardingCompletedAt: new Date().toISOString(),
+        onboardingCompletedAt: startedAt,
       };
+
+      const activationEntryStage = selectedStage === 'stage_ii' ? 'stage_ii' : 'stage_i';
+      const userPreferences = mergeActivationJourneyIntoPreferences(
+        onboardingData,
+        getDefaultActivationJourney(activationEntryStage, startedAt),
+      );
 
       const { data: updatedProfile, error: updateError } = await supabase
         .from('profiles')
@@ -239,7 +250,7 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
           quiz_biggest_challenge: formData.primaryPain || null,
           quiz_launch_timeline: formData.launchTimeline || null,
           quiz_looking_for_cofounder: formData.lookingForCofounder || null,
-          user_preferences: onboardingData,
+          user_preferences: userPreferences,
         })
         .eq('id', user.id)
         .select('id')
@@ -253,14 +264,17 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
         throw new Error('PROFILE_UPDATE_NOOP');
       }
 
+      const progressPayload = {
+        user_id: user.id,
+        current_stage: stageProgress.currentStage,
+        highest_unlocked_stage: stageProgress.highestUnlockedStage,
+        ...(selectedStage === 'stage_ii' ? { identity_completed_at: startedAt } : {}),
+      };
+
       const { error: progressError } = await supabase
         .from('user_progress' as any)
         .upsert(
-          {
-            user_id: user.id,
-            current_stage: stageProgress.currentStage,
-            highest_unlocked_stage: stageProgress.highestUnlockedStage,
-          },
+          progressPayload,
           { onConflict: 'user_id' },
         );
 
@@ -307,6 +321,14 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
             currentStage: DEFAULT_CURRENT_STAGE,
             highestUnlockedStage: DEFAULT_HIGHEST_UNLOCKED_STAGE,
           };
+      const activationEntryStage = selectedStage === 'stage_ii' ? 'stage_ii' : 'stage_i';
+      const skippedPreferences = mergeActivationJourneyIntoPreferences(
+        {
+          onboardingSkippedAt: skippedAt,
+          startupIndustry: formData.startupIndustry || null,
+        },
+        getDefaultActivationJourney(activationEntryStage, skippedAt),
+      );
       const { data: updatedProfile, error: updateError } = await supabase
         .from('profiles')
         .update({
@@ -314,10 +336,7 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
           business_stage: selectedStage ? STAGE_TO_PROFILE_BUSINESS_STAGE[selectedStage] : 'identity',
           startup_industry: formData.startupIndustry ? [formData.startupIndustry] : null,
           quiz_completed: false,
-          user_preferences: {
-            onboardingSkippedAt: skippedAt,
-            startupIndustry: formData.startupIndustry || null,
-          },
+          user_preferences: skippedPreferences,
         })
         .eq('id', user.id)
         .select('id')
@@ -331,14 +350,17 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
         throw new Error('PROFILE_UPDATE_NOOP');
       }
 
+      const skippedProgressPayload = {
+        user_id: user.id,
+        current_stage: stageProgress.currentStage,
+        highest_unlocked_stage: stageProgress.highestUnlockedStage,
+        ...(selectedStage === 'stage_ii' ? { identity_completed_at: skippedAt } : {}),
+      };
+
       const { error: progressError } = await supabase
         .from('user_progress' as any)
         .upsert(
-          {
-            user_id: user.id,
-            current_stage: stageProgress.currentStage,
-            highest_unlocked_stage: stageProgress.highestUnlockedStage,
-          },
+          skippedProgressPayload,
           { onConflict: 'user_id' },
         );
 

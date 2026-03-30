@@ -26,6 +26,8 @@ interface DashboardModeViewProps {
   completedSessions: number;
   currentStage: string;
   recommendations: PersonalizedRecommendation[];
+  activationMode?: boolean;
+  activationActions?: CommandAction[];
 }
 
 interface CommandAction {
@@ -47,6 +49,8 @@ export function DashboardModeView({
   completedSessions,
   currentStage,
   recommendations = [],
+  activationMode = false,
+  activationActions = [],
 }: DashboardModeViewProps) {
   const todayCompletion = totalTasksToday > 0 ? Math.round((tasksCompletedToday / totalTasksToday) * 100) : 0;
   const weeklyCompletion = totalTasksThisWeek > 0
@@ -101,7 +105,11 @@ export function DashboardModeView({
     },
   ];
 
-  const commandActions = recommendationActions.length > 0 ? recommendationActions : fallbackActions;
+  const commandActions = activationMode && activationActions.length > 0
+    ? activationActions
+    : recommendationActions.length > 0
+      ? recommendationActions
+      : fallbackActions;
 
   return (
     <div className="space-y-6">
@@ -240,6 +248,11 @@ export function DashboardModeView({
               <CardDescription>Suggested moves to keep momentum high.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
+              {activationMode && activationActions.length > 0 ? (
+                <div className="rounded-lg border border-sky-500/20 bg-sky-500/10 p-3 text-sm text-sky-900 dark:text-sky-100">
+                  Focus on one concrete output first. Exploration can wait until you have something saved.
+                </div>
+              ) : null}
               {commandActions.map((action, index) => (
                 <div key={action.id} className="rounded-lg border border-border/60 bg-background/70 p-3">
                   <div className="mb-2 flex items-center justify-between gap-2">

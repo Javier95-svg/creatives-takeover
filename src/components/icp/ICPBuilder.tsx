@@ -23,6 +23,9 @@ import { useFeatureGating } from '@/hooks/useFeatureGating';
 import { useUpgradePrompt } from '@/contexts/UpgradePromptContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useBizMapProgress } from '@/hooks/useBizMapProgress';
+import { useActivationJourney } from '@/hooks/useActivationJourney';
+import { getToolJourneyGuide } from '@/lib/activationJourney';
+import { ActivationJourneyStrip } from '@/components/activation/ActivationJourneyStrip';
 import ICPInputForm, { type ICPInputFormData } from './ICPInputForm';
 import ICPDecisionSummary from './ICPDecisionSummary';
 import ICPCustomerProfile from './ICPCustomerProfile';
@@ -160,6 +163,7 @@ const ICPBuilder: React.FC = () => {
   const { checkFeatureAccess } = useFeatureGating();
   const { openUpgradePrompt } = useUpgradePrompt();
   const { refreshProgress } = useBizMapProgress();
+  const { refreshActivation } = useActivationJourney();
 
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState<ICPAnalysis | null>(null);
@@ -237,6 +241,7 @@ const ICPBuilder: React.FC = () => {
         setAnalysisKey((value) => value + 1);
         setActiveTab('decision');
         await refreshProgress();
+        await refreshActivation();
         toast({
           title: 'ICP Decision Ready',
           description: `Recommendation: ${data.analysis.recommendation?.primaryIcp || 'Review your decision tab for the recommended first ICP.'}`,
@@ -257,6 +262,8 @@ const ICPBuilder: React.FC = () => {
     }
   };
 
+  const activationGuide = getToolJourneyGuide('/icp-builder');
+
   const EmptyState = ({ message }: { message: string }) => (
     <div className="animate-fade-in-up py-16 text-center">
       <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-3xl border border-border/60 bg-white/80 shadow-sm dark:bg-slate-950/70">
@@ -272,6 +279,18 @@ const ICPBuilder: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      {activationGuide ? (
+        <ActivationJourneyStrip
+          stageLabel={activationGuide.stageLabel}
+          title={activationGuide.title}
+          description={activationGuide.description}
+          doneLabel={activationGuide.doneLabel}
+          completedLabel={activationGuide.completedLabel}
+          nextRoute={activationGuide.nextRoute}
+          nextLabel={activationGuide.nextLabel}
+          isComplete={hasAnalysis}
+        />
+      ) : null}
       <Card className="overflow-hidden rounded-[2rem] border border-border/70 bg-white/80 shadow-[0_28px_90px_-40px_rgba(15,23,42,0.4)] backdrop-blur dark:bg-slate-950/75">
         <CardContent className="pt-6">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">

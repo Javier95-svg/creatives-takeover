@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -33,12 +33,31 @@ interface NotificationRow {
   metadata: any;
 }
 
+const getRealtimeToastMessage = (notification: NotificationRow) => {
+  const metadata =
+    notification.metadata && typeof notification.metadata === 'object'
+      ? (notification.metadata as Record<string, unknown>)
+      : {};
+
+  if (typeof metadata.message === 'string' && metadata.message.trim()) {
+    return metadata.message;
+  }
+
+  if (typeof metadata.title === 'string' && metadata.title.trim()) {
+    return metadata.title;
+  }
+
+  return notification.notification_type === 'platform_update'
+    ? 'There is a new platform update'
+    : 'You have a new notification';
+};
+
 export const useCommunityNotifications = (userId: string | undefined) => {
   const [notifications, setNotifications] = useState<CommunityNotification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
-  const fetchNotifications = async () => {
+  const fetchNotifications = useCallback(async () => {
     if (!userId) {
       setLoading(false);
       return;
@@ -89,7 +108,7 @@ export const useCommunityNotifications = (userId: string | undefined) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [userId]);
 
   const markAsRead = async (notificationId: string) => {
     try {
@@ -148,16 +167,17 @@ export const useCommunityNotifications = (userId: string | undefined) => {
         schema: 'public',
         table: 'community_notifications',
         filter: `user_id=eq.${userId}`
-      }, () => {
+      }, (payload) => {
         fetchNotifications();
-        toast.info('You have a new notification');
+        const nextNotification = payload.new as NotificationRow;
+        toast.info(getRealtimeToastMessage(nextNotification));
       })
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [userId]);
+  }, [fetchNotifications, userId]);
 
   return {
     notifications,

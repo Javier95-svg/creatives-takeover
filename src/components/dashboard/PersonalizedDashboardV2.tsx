@@ -20,6 +20,7 @@ import { BizMapStageTasks } from './BizMapStageTasks';
 import { useBizMapProgress } from '@/hooks/useBizMapProgress';
 import { useUnifiedTasks } from '@/hooks/useUnifiedTasks';
 import { getLocalDateString, wasDailyGoalPromptSkipped } from '@/lib/dailyGoalPrompt';
+import { useActivationJourney } from '@/hooks/useActivationJourney';
 
 /** Exposes the total incomplete task count to child components (e.g. sidebar badge) */
 export const TaskCountContext = createContext<number>(0);
@@ -49,6 +50,7 @@ export const PersonalizedDashboardV2 = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { currentStage } = useBizMapProgress();
+  const { activationJourney, isActivated, loading: activationLoading } = useActivationJourney();
   const { isInitializing } = useDashboardInitialization();
   const { completedToday, totalToday } = useUnifiedTasks();
   const {
@@ -62,6 +64,7 @@ export const PersonalizedDashboardV2 = () => {
   const [todaysCheckInId, setTodaysCheckInId] = useState<string | null>(null);
   const [currentStreak, setCurrentStreak] = useState(0);
   const [dashboardMode, setDashboardMode] = useState<DashboardMode>('dashboard');
+  const [hasSavedModePreference, setHasSavedModePreference] = useState(false);
 
   // Track last fetch time to prevent unnecessary refreshes
   const lastFetchTimeRef = useRef<number>(0);
@@ -80,12 +83,20 @@ export const PersonalizedDashboardV2 = () => {
         .single();
 
       if (profile?.preferred_dashboard_mode) {
+        setHasSavedModePreference(true);
         setDashboardMode(profile.preferred_dashboard_mode as DashboardMode);
       }
     };
 
     loadDashboardPreference();
   }, [user]);
+
+  useEffect(() => {
+    if (activationLoading || hasSavedModePreference) return;
+    if (!isActivated) {
+      setDashboardMode('focus');
+    }
+  }, [activationLoading, hasSavedModePreference, isActivated]);
 
   // Save dashboard mode preference when it changes
   const handleModeChange = async (newMode: DashboardMode) => {
@@ -197,6 +208,45 @@ export const PersonalizedDashboardV2 = () => {
   };
 
   const metrics = calculateMetrics();
+  const describeRoute = (route: string) => {
+    switch (route) {
+      case '/icp-builder':
+        return 'ICP Builder';
+      case '/waitlist':
+        return 'Waitlist Maker';
+      case '/pmf-lab':
+        return 'PMF Lab';
+      case '/mvp-builder':
+        return 'MVP Builder';
+      default:
+        return 'the next BizMap tool';
+    }
+  };
+  const activationActions = !isActivated
+    ? [
+        {
+          id: 'first-output',
+          title: `Finish ${activationJourney.firstOutputLabel}`,
+          description: `Stay with one tangible output until it is saved. Start in ${describeRoute(activationJourney.startRoute)}.`,
+          actionUrl: activationJourney.startRoute,
+          priorityLabel: 'Now',
+        },
+        {
+          id: 'next-stage',
+          title: 'See the next milestone',
+          description: `After the first output, the journey moves into ${describeRoute(activationJourney.nextRoute)}.`,
+          actionUrl: activationJourney.nextRoute,
+          priorityLabel: 'Next',
+        },
+        {
+          id: 'stage-tasks',
+          title: 'Open the stage checklist',
+          description: 'Use the BizMap stage tasks to avoid bouncing across unrelated tools.',
+          actionUrl: '/dashboard#bizmap-stage-tasks',
+          priorityLabel: 'Then',
+        },
+      ]
+    : [];
 
   if (loading || isInitializing) {
     return (
@@ -280,9 +330,9 @@ export const PersonalizedDashboardV2 = () => {
                 {/* Dashboard Content */}
                 <div className="relative z-10 container mx-auto p-6 pb-24 space-y-8 max-w-7xl pt-24">
                   {/* Header */}
-                  <div>
-                    <h1 className="font-space-grotesk text-3xl sm:text-4xl font-semibold tracking-tight">
-                      {greeting}, {profile?.full_name?.split(' ')[0] || 'Founder'} 👋
+	                  <div>
+	                    <h1 className="font-space-grotesk text-3xl sm:text-4xl font-semibold tracking-tight">
+	                      {greeting}, {profile?.full_name?.split(' ')[0] || 'Founder'} 👋
                     </h1>
                     <p className="font-poppins text-muted-foreground mt-1">
                       {dashboardMode === 'focus'
@@ -291,21 +341,52 @@ export const PersonalizedDashboardV2 = () => {
                           ? 'Your central command center for priorities and next moves'
                           : 'Full control center'}
                     </p>
-                    <p className="text-xs text-muted-foreground mt-2">
-                      Current BizMap stage: <span className="font-semibold text-foreground">{currentStage}</span>
-                    </p>
-                  </div>
+	                    <p className="text-xs text-muted-foreground mt-2">
+	                      Current BizMap stage: <span className="font-semibold text-foreground">{currentStage}</span>
+	                    </p>
+	                  </div>
 
-                  {dashboardMode !== 'dashboard' && (
-                    <div id="bizmap-stage-tasks">
-                      <BizMapStageTasks />
-                    </div>
-                  )}
+                    {!isActivated && (
+                      <div className="rounded-[1.75rem] border border-sky-500/20 bg-sky-500/10 px-5 py-5 shadow-sm">
+                        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                          <div className="space-y-2">
+                            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-700 dark:text-sky-300">
+                              First-session activation
+                            </p>
+                            <h2 className="text-xl font-semibold tracking-tight">
+                              Leave this session with {activationJourney.firstOutputLabel}
+                            </h2>
+                            <p className="max-w-3xl text-sm leading-relaxed text-muted-foreground">
+                              The fastest path to value is a real artifact, not a tour of the platform. Start with the current stage tool, save the output, then move to the next step.
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => navigate(activationJourney.startRoute)}
+                            className="rounded-full bg-primary px-5 py-3 text-sm font-medium text-primary-foreground transition-transform hover:scale-[1.02]"
+                          >
+                            Continue guided start
+                          </button>
+                        </div>
+                      </div>
+                    )}
 
-                  {/* Dynamic View Based on Mode */}
-                  {dashboardMode === 'focus' && <FocusModeView {...metrics} />}
-                  {dashboardMode === 'dashboard' && <DashboardModeView {...metrics} />}
-                  {dashboardMode === 'control-center' && <ControlCenterView {...metrics} />}
+	                  {(!isActivated || dashboardMode !== 'dashboard') && (
+	                    <div id="bizmap-stage-tasks">
+	                      <BizMapStageTasks />
+	                    </div>
+	                  )}
+
+	                  {/* Dynamic View Based on Mode */}
+	                  {dashboardMode === 'focus' && <FocusModeView {...metrics} />}
+	                  {dashboardMode === 'dashboard' && (
+                      <DashboardModeView
+                        {...metrics}
+                        activationMode={!isActivated}
+                        activationActions={activationActions}
+                      />
+                    )}
+	                  {dashboardMode === 'control-center' && <ControlCenterView {...metrics} />}
                 </div>
 
                 {/* Daily Goal Modal */}

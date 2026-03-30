@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useBizMapProgress } from '@/hooks/useBizMapProgress';
+import { useActivationJourney } from '@/hooks/useActivationJourney';
 import { useCreditActions } from '@/hooks/useCreditActions';
 import { toast } from 'sonner';
 import { PMF_REQUIRED_SIGNALS } from '@/lib/bizmapStages';
@@ -101,6 +102,7 @@ const PMF_EVIDENCE_TABLE = 'pmf_validation_evidence' as any;
 export function usePMFLab() {
   const { user } = useAuth();
   const { refreshProgress } = useBizMapProgress();
+  const { refreshActivation } = useActivationJourney();
   const { ensureCredits, handleCreditError } = useCreditActions();
 
   const [phase, setPhase] = useState<Phase>('intake');
@@ -108,12 +110,13 @@ export function usePMFLab() {
   const [analysisId, setAnalysisId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [hasSavedReport, setHasSavedReport] = useState(false);
 
   // On mount: restore existing analysis if found
   useEffect(() => {
     if (!user) return;
-    loadExistingAnalysis();
-  }, [user]);
+    void loadExistingAnalysis();
+  }, [loadExistingAnalysis, user]);
 
   const loadExistingAnalysis = useCallback(async () => {
     if (!user) return;
@@ -121,7 +124,7 @@ export function usePMFLab() {
     try {
       const { data, error } = await supabase
         .from(PMF_RESULTS_TABLE)
-        .select('id, analysis_data')
+        .select('id, analysis_data, saved_at')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
         .limit(1)
@@ -139,6 +142,7 @@ export function usePMFLab() {
       if (content && content.dimensions && content.verdict) {
         setAnalysis(content as PMFReadinessAnalysis);
         setAnalysisId((data as any).id);
+        setHasSavedReport(Boolean((data as any).saved_at));
         setPhase('results');
       }
     } catch (err) {
@@ -174,6 +178,7 @@ export function usePMFLab() {
 
       setAnalysis(data.analysis as PMFReadinessAnalysis);
       setAnalysisId(data.analysisId ?? null);
+      setHasSavedReport(false);
       setPhase('results');
     } catch (err) {
       console.error('PMF analysis error:', err);
@@ -235,13 +240,15 @@ export function usePMFLab() {
       );
 
       await refreshProgress();
+      await refreshActivation();
+      setHasSavedReport(true);
     } catch (err) {
       console.error('Save error:', err);
       toast.error('Unable to save PMF report right now.');
     } finally {
       setIsSaving(false);
     }
-  }, [user, analysis, analysisId, refreshProgress]);
+  }, [user, analysis, analysisId, refreshActivation, refreshProgress]);
 
   const exportReport = useCallback(async () => {
     if (!analysis) return;
@@ -338,6 +345,7 @@ export function usePMFLab() {
     phase,
     analysis,
     analysisId,
+    hasSavedReport,
     isSaving,
     isExporting,
     runAnalysis,
