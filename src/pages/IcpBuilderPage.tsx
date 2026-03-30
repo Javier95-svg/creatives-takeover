@@ -6,7 +6,7 @@ import PageFAQSection from "@/components/seo/PageFAQSection";
 import { lazy, Suspense, useEffect } from "react";
 import { useReadingAnalytics } from "@/hooks/useReadingAnalytics";
 import { useLeanStartupStore } from "@/store/leanStartupStore";
-import { Compass, Loader2, Target, TestTubeDiagonal } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
 const ICPBuilder = lazy(() => import("@/components/icp/ICPBuilder"));
 
@@ -113,35 +113,11 @@ export default function ICPBuilderPage() {
               <div className="space-y-6">
                 <div className="space-y-4">
                   <h1 className="pb-2 text-center font-bold leading-[0.95] text-4xl sm:text-5xl md:text-6xl lg:text-7xl">
-                    <span className="takeover-gradient creatives-font">Ideal Customer Profile Builder</span>
+                    <span className="takeover-gradient creatives-font">ICP Builder</span>
                   </h1>
                   <p className="mx-auto max-w-2xl text-center text-lg leading-relaxed text-foreground/80 sm:text-xl">
-                    Define the customer segment you should target first, the pain worth solving, and the positioning that makes your startup easier to explain.
+                    Define the pain point you’re solving, who you’re solving it for, and what your moat is.
                   </p>
-                </div>
-
-                <div className="grid gap-3 sm:grid-cols-3">
-                  <div className="group stagger-item hover-lift rounded-3xl border border-border/60 bg-white/80 p-4 shadow-sm backdrop-blur dark:bg-slate-950/60">
-                    <Target className="mb-3 h-5 w-5 text-sky-600 transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:scale-105" />
-                    <p className="text-sm font-semibold">Pick the first ICP</p>
-                    <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-                      Answer five core questions and the tool recommends the one customer segment you should target first, not a vague market.
-                    </p>
-                  </div>
-                  <div className="group stagger-item hover-lift rounded-3xl border border-border/60 bg-white/80 p-4 shadow-sm backdrop-blur dark:bg-slate-950/60">
-                    <Compass className="mb-3 h-5 w-5 text-emerald-600 transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:scale-105" />
-                    <p className="text-sm font-semibold">Sharpen your wedge</p>
-                    <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-                      It clarifies the pain, current workaround, and why your solution wins so your positioning becomes sharper and easier to explain.
-                    </p>
-                  </div>
-                  <div className="group stagger-item hover-lift rounded-3xl border border-border/60 bg-white/80 p-4 shadow-sm backdrop-blur dark:bg-slate-950/60">
-                    <TestTubeDiagonal className="mb-3 h-5 w-5 text-orange-600 transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:scale-105" />
-                    <p className="text-sm font-semibold">Validate fast</p>
-                    <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-                      You leave with decision confidence, priority pain points, and practical experiments to test before you spend more time or money.
-                    </p>
-                  </div>
                 </div>
               </div>
             </div>
