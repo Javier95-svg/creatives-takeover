@@ -415,6 +415,7 @@ const FindYourAngel = () => {
   }, [angels, debouncedSearch, selectedSectors, selectedStages, sortBy]);
 
   const matchedPreviewAngels = useMemo(() => {
+    const previewLimit = user ? 5 : 10;
     const scoredAngels = angels
       .map((angel) => ({
         angel,
@@ -430,8 +431,8 @@ const FindYourAngel = () => {
       .filter((item) => item.score === 0)
       .map((item) => item.angel);
 
-    return [...strongMatches, ...fallbackMatches].slice(0, 5);
-  }, [angels, founderSignals]);
+    return [...strongMatches, ...fallbackMatches].slice(0, previewLimit);
+  }, [angels, founderSignals, user]);
 
   const previewWelcomeMode = searchParams.get("preview") === "rookie-welcome";
 
@@ -921,17 +922,6 @@ const FindYourAngel = () => {
                   </div>
                 ) : isRookie ? (
                   <div className="space-y-5">
-                    <div className="rounded-2xl border border-dashed border-sky-500/35 bg-sky-500/5 p-4">
-                      <p className="text-sm font-medium text-foreground">
-                        {founderNicheLabel
-                          ? `These profiles were selected because they invest in ${founderNicheLabel}.`
-                          : 'These profiles are the strongest available teaser for early-stage founders on the Rookie plan.'}
-                      </p>
-                      <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                        The names, firms, and sector fit are visible enough to create urgency. Pro unlocks the full profile, contact details, search, and the rest of the investor directory.
-                      </p>
-                    </div>
-
                     <div className="grid grid-cols-1 gap-6 select-none">
                       {matchedPreviewAngels.map((angel, index) => (
                         <div key={angel.id} className="relative overflow-hidden rounded-xl">
