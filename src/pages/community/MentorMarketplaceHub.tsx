@@ -17,6 +17,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { sortMentorsAlphabetically } from "@/utils/mentorSort";
 import { normalizeMentorExpertiseList } from "@/utils/mentorExpertise";
 import { isMentorWithinTimezoneRange, parseTimezoneOffset } from "@/utils/mentorTimezone";
+import { trackActivity } from "@/lib/activity";
+import { getMentorTrackExpertise, parseMentorTrack } from "@/lib/mentorDemand";
 
 import {
   Pagination,
@@ -57,6 +59,8 @@ const MentorMarketplaceHub = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("alphabetical");
   const currentPage = parseInt(searchParams.get("page") || "1", 10);
+  const mentorTrack = parseMentorTrack(searchParams.get("mentorTrack"));
+  const mentorSource = searchParams.get("mentorSource");
   
   const [filters, setFilters] = useState<MentorFilters>({
     expertise: [],
@@ -66,19 +70,62 @@ const MentorMarketplaceHub = () => {
 
   useEffect(() => {
     loadMentors();
-    
-    // Initialize filters from URL query params
-    const expertiseParam = searchParams.get("expertise");
-    if (expertiseParam) {
-      const expertise = decodeURIComponent(expertiseParam);
-      setFilters((prev) => ({
-        ...prev,
-        expertise: normalizeMentorExpertiseList([expertise]),
-      }));
-      // Clear the query parameter after setting the filter
-      setSearchParams({}, { replace: true });
-    }
   }, []);
+
+  useEffect(() => {
+    const expertiseParam = searchParams.get("expertise");
+    const expertiseFromQuery = expertiseParam
+      ? normalizeMentorExpertiseList(
+          expertiseParam
+            .split(",")
+            .map((value) => decodeURIComponent(value))
+            .filter(Boolean),
+        )
+      : [];
+    const expertiseFromTrack = mentorTrack ? getMentorTrackExpertise(mentorTrack) : [];
+    const nextExpertise = normalizeMentorExpertiseList([
+      ...expertiseFromTrack,
+      ...expertiseFromQuery,
+    ]);
+    const nextTimezone = searchParams.get("timezone");
+
+    setFilters((prev) => {
+      const nextFilters: MentorFilters = {
+        ...prev,
+        expertise: nextExpertise,
+        timezone: nextTimezone || null,
+      };
+
+      if (
+        prev.expertise.join("|") === nextFilters.expertise.join("|") &&
+        prev.timezone === nextFilters.timezone
+      ) {
+        return prev;
+      }
+
+      return nextFilters;
+    });
+
+    const sortParam = searchParams.get("sort");
+    if (sortParam) {
+      setSortBy(sortParam);
+    } else if (mentorTrack) {
+      setSortBy("recommended");
+    }
+  }, [mentorTrack, searchParams]);
+
+  useEffect(() => {
+    if (!mentorTrack) return;
+
+    void trackActivity(
+      "mentor_marketplace_context_viewed",
+      {
+        track: mentorTrack,
+        source: mentorSource || "unknown",
+      },
+      user?.id,
+    );
+  }, [mentorSource, mentorTrack, user?.id]);
 
   const loadMentors = async () => {
     try {
@@ -394,13 +441,13 @@ const MentorMarketplaceHub = () => {
             ) : filteredMentors.length > 0 ? (
               <>
                 <div className="grid grid-cols-1 gap-6">
-                  {paginatedMentors.map((mentor, index) => (
-                    <MentorCard
-                      key={mentor.id}
-                      mentor={mentor}
-                      priority={index < 4}
-                    />
-                  ))}
+	                  {paginatedMentors.map((mentor, index) => (
+	                    <MentorCard
+	                      key={mentor.id}
+	                      mentor={mentor}
+	                      priority={index < 4}
+	                    />
+	                  ))}
                 </div>
 
                 {/* Pagination */}

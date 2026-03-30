@@ -16,6 +16,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { formatDistanceToNow } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
+import { trackActivity } from '@/lib/activity';
 
 export const NotificationBell = () => {
   const { user } = useAuth();
@@ -67,6 +68,21 @@ export const NotificationBell = () => {
     }
 
     if (notification.notification_type === 'platform_update') {
+      const notificationSlug = typeof notification.metadata?.slug === 'string'
+        ? notification.metadata.slug
+        : '';
+
+      if (notificationSlug.startsWith('mentor-demand-')) {
+        void trackActivity(
+          'mentor_notification_clicked',
+          {
+            slug: notificationSlug,
+            route: metadataRoute || '/community',
+          },
+          user?.id,
+        );
+      }
+
       navigate(metadataRoute || '/insighta');
       return;
     }

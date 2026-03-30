@@ -4,6 +4,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useBizMapProgress } from '@/hooks/useBizMapProgress';
 import { useCreditActions } from '@/hooks/useCreditActions';
 import { toast } from 'sonner';
+import { ensureMentorDemandNotification } from '@/lib/mentorDemandNotifications';
+import { trackActivity } from '@/lib/activity';
 
 export interface GTMIntakeAnswers {
   businessType: string;
@@ -244,9 +246,33 @@ export function useGTMStrategist() {
         toast.success('GTM draft saved.');
       } else if (status === 'saved') {
         toast.success('GTM plan saved. Stage V marked complete.');
+        await ensureMentorDemandNotification(user.id, 'gtm', {
+          summaryInsight: analysis.summaryInsight,
+        });
+        await trackActivity(
+          'mentor_liquidity_triggered',
+          {
+            track: 'gtm',
+            source: 'gtm-save',
+            status,
+          },
+          user.id,
+        );
         await refreshProgress();
       } else {
         toast.success('GTM plan exported. Stage V marked complete.');
+        await ensureMentorDemandNotification(user.id, 'gtm', {
+          summaryInsight: analysis.summaryInsight,
+        });
+        await trackActivity(
+          'mentor_liquidity_triggered',
+          {
+            track: 'gtm',
+            source: 'gtm-save',
+            status,
+          },
+          user.id,
+        );
         await refreshProgress();
       }
     } catch (err) {

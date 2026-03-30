@@ -18,6 +18,7 @@ import GTMActionPlan from '@/components/gtm/GTMActionPlan';
 import GTMLaunchChecklist from '@/components/gtm/GTMLaunchChecklist';
 import GTMMetricsBlock from '@/components/gtm/GTMMetricsBlock';
 import GTMStrategistWallpaper from '@/components/wallpapers/GTMStrategistWallpaper';
+import { ContextualMentorRecommendations } from '@/components/mentor-marketplace/ContextualMentorRecommendations';
 
 const structuredData = [
   {
@@ -145,6 +146,19 @@ export default function GTMStrategistPage() {
                 onSave={() => savePlan('saved')}
                 onExport={exportPlan}
                 onRegenerate={resetToIntake}
+              />
+
+              <ContextualMentorRecommendations
+                track="gtm"
+                source="gtm-results"
+                targetAudience={analysis.intakeAnswers?.targetAudience}
+                summaryInsight={analysis.summaryInsight}
+                extraKeywords={[
+                  analysis.positioning?.positioningStatement,
+                  analysis.messaging?.headline,
+                  ...analysis.channels.map((channel) => channel.channel),
+                  ...analysis.channels.flatMap((channel) => channel.weekOneActions),
+                ].filter(Boolean)}
               />
 
               <div className="flex gap-8 items-start">

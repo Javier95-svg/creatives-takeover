@@ -11,6 +11,8 @@ import {
   handlePmfResultsTableError,
   isPmfResultsTableAvailable,
 } from '@/lib/pmfResultsTable';
+import { ensureMentorDemandNotification } from '@/lib/mentorDemandNotifications';
+import { trackActivity } from '@/lib/activity';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -237,6 +239,21 @@ export function usePMFLab() {
         conversationCount >= PMF_REQUIRED_SIGNALS
           ? 'PMF report saved. Stage III marked complete.'
           : `PMF report saved. Add ${PMF_REQUIRED_SIGNALS - conversationCount} more conversations to complete Stage III.`
+      );
+
+      await ensureMentorDemandNotification(user.id, 'validation', {
+        pmfScore: analysis.overallScore,
+        summaryInsight: analysis.summaryInsight,
+      });
+      await trackActivity(
+        'mentor_liquidity_triggered',
+        {
+          track: 'validation',
+          source: 'pmf-save',
+          pmfScore: analysis.overallScore,
+          verdict: analysis.verdict,
+        },
+        user.id,
       );
 
       await refreshProgress();

@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils';
 import PMFScoreCircle from './PMFScoreCircle';
 import PMFDimensionBars from './PMFDimensionBars';
 import PMFRecommendations from './PMFRecommendations';
+import { ContextualMentorRecommendations } from '@/components/mentor-marketplace/ContextualMentorRecommendations';
 import type { PMFReadinessAnalysis } from '@/hooks/usePMFLab';
 import { Link } from 'react-router-dom';
 import { PMF_REQUIRED_SIGNALS } from '@/lib/bizmapStages';
@@ -297,6 +298,27 @@ const PMFReadinessReport: React.FC<PMFReadinessReportProps> = ({
       <PMFRecommendations
         recommendations={analysis.recommendations}
         nextExperiment={analysis.nextExperiment}
+      />
+
+      <ContextualMentorRecommendations
+        track="validation"
+        source="pmf-results"
+        summaryInsight={analysis.summaryInsight}
+        extraKeywords={[
+          ...analysis.gaps,
+          ...analysis.recommendations.map((item) => item.title),
+          ...analysis.recommendations.map((item) => item.action),
+        ]}
+        title={
+          meetsThreshold
+            ? 'Want an expert read before you move into building?'
+            : 'Need help deciding what to fix before you build?'
+        }
+        description={
+          meetsThreshold
+            ? 'These mentors can pressure-test your PMF evidence, help you hold onto the strongest signals, and keep you from overcorrecting before the MVP stage.'
+            : 'These mentors are strongest when your validation is promising but still unclear. Use them to interpret objections, sharpen the offer, and decide what to test next.'
+        }
       />
 
       {/* Bottom CTA */}
