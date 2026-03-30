@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import SEO, { createBreadcrumbSchema, createFAQSchema, createSoftwareApplicationSchema } from '@/components/SEO';
+import SEO, { createBreadcrumbSchema, createFAQSchema } from '@/components/SEO';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import PageFAQSection from '@/components/seo/PageFAQSection';
@@ -11,21 +11,16 @@ import PMFReadinessReport from '@/components/pmf/PMFReadinessReport';
 import { ActivationJourneyStrip } from '@/components/activation/ActivationJourneyStrip';
 import { ArrowRight, Rocket } from 'lucide-react';
 import { getToolJourneyGuide } from '@/lib/activationJourney';
+import { PMF_REQUIRED_SIGNALS } from '@/lib/bizmapStages';
 
 const structuredData = [
   {
     '@context': 'https://schema.org',
     '@type': 'WebPage',
-    name: 'PMF Lab — Product-Market Fit Score Tool',
-    description: 'Submit customer evidence and get a product-market fit readiness score before committing to an MVP build.',
+    name: 'PMF Lab — Evidence Analyzer',
+    description: 'Submit your real validation evidence and get a PMF Readiness Score. Find out if you have enough evidence to start building your MVP.',
     url: 'https://creatives-takeover.com/pmf-lab',
   },
-  createSoftwareApplicationSchema({
-    name: 'PMF Lab',
-    description: 'Product-market fit score tool for founders validating customer demand before building.',
-    url: '/pmf-lab',
-    featureList: ['PMF readiness score', 'evidence review', 'validation recommendations'],
-  }),
 ];
 
 export default function PMFLabPage() {
@@ -95,9 +90,9 @@ export default function PMFLabPage() {
   return (
     <div className="min-h-screen bg-background">
       <SEO
-        title="Product-Market Fit Score Tool | PMF Lab | Creatives Takeover"
-        description="Score product-market fit readiness with customer evidence, validation signals, and practical recommendations before building your startup."
-        keywords="product market fit score tool, pmf checker, startup validation score, product market fit analysis, customer evidence"
+        title="PMF Lab — Creatives Takeover"
+        description="Submit your real customer validation evidence and get an AI-powered PMF Readiness Score. Know if you're ready to build before you commit."
+        keywords="product market fit, PMF score, startup validation, customer evidence, lean startup"
         url="/pmf-lab"
         structuredData={pageStructuredData}
       />
@@ -123,10 +118,10 @@ export default function PMFLabPage() {
               <div className="text-center space-y-4">
                 <div className="space-y-3">
                   <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold takeover-gradient creatives-font leading-tight pb-2">
-                    Product-Market Fit Score Tool
+                    PMF Lab
                   </h1>
                   <p className="mx-auto max-w-4xl text-lg leading-relaxed text-muted-foreground sm:text-xl">
-                    Review your waitlist, interviews, and demand signals, then get a clearer product-market fit score before you commit to building.
+                    AI-powered market validation tool for startup founders. Show your waitlist, interview at least {PMF_REQUIRED_SIGNALS} potential customers, and let PMF Lab tell you if demand is real enough to start building.
                   </p>
                 </div>
               </div>

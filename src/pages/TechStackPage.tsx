@@ -1,4 +1,4 @@
-import SEO, { createBreadcrumbSchema, createSoftwareApplicationSchema } from "@/components/SEO";
+import SEO, { createBreadcrumbSchema } from "@/components/SEO";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { lazy, Suspense } from "react";
@@ -26,8 +26,8 @@ export default function TechStackPage() {
     {
       "@context": "https://schema.org",
       "@type": "WebPage",
-      "name": "Startup Tech Stack Builder",
-      "description": "Choose the right startup tech stack, frameworks, and tools based on product needs, speed, and budget.",
+      "name": "Tech Stack Builder - Build Your Ideal Technology Stack",
+      "description": "Get AI-powered recommendations for your technology stack. Choose the right tools, frameworks, and platforms for your startup based on your specific needs.",
       "url": "https://creatives-takeover.com/tech-stack",
       "publisher": {
         "@type": "Organization",
@@ -38,12 +38,6 @@ export default function TechStackPage() {
         }
       }
     },
-    createSoftwareApplicationSchema({
-      name: "Tech Stack Builder",
-      description: "Startup tech stack builder for choosing tools, frameworks, and infrastructure with more clarity.",
-      url: "/tech-stack",
-      featureList: ["stack recommendations", "framework selection", "tool comparison"],
-    }),
     createBreadcrumbSchema([
       { name: 'Home', url: '/' },
       { name: 'BizMap AI', url: '/bizmap-ai' },
@@ -54,9 +48,9 @@ export default function TechStackPage() {
   return (
     <div className="min-h-screen bg-background">
       <SEO
-        title="Startup Tech Stack Builder | Creatives Takeover"
-        description="Compare startup frameworks, tools, and platforms to choose a tech stack that fits your product, speed, and budget."
-        keywords="startup tech stack builder, saas tech stack, startup stack planning, framework selection, app infrastructure"
+        title="Tech Stack Builder - Creatives Takeover"
+        description="Get AI-powered recommendations for your technology stack. Choose the right tools, frameworks, and platforms for your startup based on your specific needs and budget."
+        keywords="tech stack, technology stack, startup tools, development tools, platform selection, framework selection"
         url="/tech-stack"
         structuredData={structuredData}
       />
@@ -81,10 +75,10 @@ export default function TechStackPage() {
             {/* Page Header */}
             <div className="text-center mb-12 sm:mb-16">
               <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-3 sm:mb-4 takeover-gradient creatives-font animate-fade-in leading-tight pb-2">
-                Startup Tech Stack Builder
+                Tech Stack Builder
               </h1>
               <p className="text-lg sm:text-xl md:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed animate-fade-in px-4" style={{ animationDelay: '0.3s' }}>
-                Compare frameworks, tools, and infrastructure choices so you can build with a stack that matches your product and stage.
+                Compare and select the most suitable tools to build and scale your startup.
               </p>
             </div>
 

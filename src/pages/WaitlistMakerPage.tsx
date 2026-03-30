@@ -1,4 +1,4 @@
-import SEO, { createBreadcrumbSchema, createFAQSchema, createSoftwareApplicationSchema } from '@/components/SEO';
+import SEO, { createBreadcrumbSchema, createFAQSchema } from '@/components/SEO';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import PageFAQSection from '@/components/seo/PageFAQSection';
@@ -27,16 +27,10 @@ export default function WaitlistMakerPage() {
     {
       '@context': 'https://schema.org',
       '@type': 'WebPage',
-      name: 'Startup Waitlist Page Builder',
-      description: 'Create a startup waitlist page and validate demand before building the full product.',
+      name: 'Waitlist Maker',
+      description: 'Create and publish your waitlist page to validate demand before building.',
       url: 'https://creatives-takeover.com/waitlist',
     },
-    createSoftwareApplicationSchema({
-      name: 'Waitlist Maker',
-      description: 'Startup waitlist page builder for founders validating demand before product development.',
-      url: '/waitlist',
-      featureList: ['waitlist page builder', 'landing page copy', 'demand capture'],
-    }),
     createFAQSchema(faqs),
     createBreadcrumbSchema([
       { name: 'Home', url: '/' },
@@ -48,9 +42,9 @@ export default function WaitlistMakerPage() {
   return (
     <div className="relative min-h-screen overflow-hidden bg-background">
       <SEO
-        title="Startup Waitlist Page Builder | Creatives Takeover"
-        description="Build a startup waitlist page, capture early signups, and validate demand before spending time on development."
-        keywords="startup waitlist page builder, waitlist landing page, demand validation page, prelaunch signup page"
+        title="Waitlist Maker - Creatives Takeover"
+        description="Build your Stage II waitlist page and capture demand signals before development."
+        keywords="waitlist page, demand validation, startup prototype"
         url="/waitlist"
         structuredData={structuredData}
       />
@@ -62,8 +56,11 @@ export default function WaitlistMakerPage() {
           <div className="container mx-auto max-w-[1580px] space-y-8">
             <div className="mx-auto max-w-4xl space-y-4 px-2 text-center">
               <h1 className="pb-2 text-center font-bold leading-[0.95] text-4xl sm:text-5xl md:text-6xl lg:text-7xl">
-                <span className="takeover-gradient creatives-font">Build Your Waitlist</span>
+                <span className="takeover-gradient creatives-font">Waitlist Maker</span>
               </h1>
+              <p className="text-lg leading-relaxed text-muted-foreground md:text-xl">
+                Design your landing page, show what you have to offer, and validate real demand before building.
+              </p>
             </div>
 
             <WaitlistEditor />

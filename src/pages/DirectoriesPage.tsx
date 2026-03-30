@@ -1,4 +1,4 @@
-import SEO, { createBreadcrumbSchema, createSoftwareApplicationSchema } from '@/components/SEO';
+import SEO, { createBreadcrumbSchema } from '@/components/SEO';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import DirectoriesTab from '@/components/launch/DirectoriesTab';
@@ -8,16 +8,10 @@ const structuredData = [
   {
     '@context': 'https://schema.org',
     '@type': 'WebPage',
-    name: 'Startup Launch Directories',
-    description: 'Curated list of startup launch directories, communities, and listing platforms to promote a new product.',
+    name: 'Directories',
+    description: 'Curated list of startup and product launch platforms to promote your launch.',
     url: 'https://creatives-takeover.com/directories',
   },
-  createSoftwareApplicationSchema({
-    name: 'Launch Directories',
-    description: 'Directory of startup launch platforms and communities for promoting new products.',
-    url: '/directories',
-    featureList: ['launch platform directory', 'community listings', 'product promotion resources'],
-  }),
   createBreadcrumbSchema([
     { name: 'Home', url: '/' },
     { name: 'BizMap AI', url: '/bizmap-ai' },
@@ -29,9 +23,9 @@ export default function DirectoriesPage() {
   return (
     <div className="relative min-h-screen overflow-hidden bg-background">
       <SEO
-        title="Startup Launch Directories | Creatives Takeover"
-        description="Browse startup launch directories, communities, and listing platforms to promote your product and reach early users."
-        keywords="startup launch directories, product launch directories, startup directories list, launch platforms, product hunt alternatives"
+        title="Directories - Creatives Takeover"
+        description="Find the best platforms to submit and promote your startup or product launch. Filterable directory of 30+ communities, aggregators, review sites, and more."
+        keywords="product launch directories, startup directories, product hunt, launch platforms"
         url="/directories"
         structuredData={structuredData}
       />
@@ -43,10 +37,10 @@ export default function DirectoriesPage() {
           <div className="container mx-auto max-w-5xl space-y-6">
             <div className="space-y-3 text-center">
               <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold creatives-font takeover-gradient leading-tight pb-2">
-                Startup Launch Directories
+                Directories
               </h1>
               <p className="text-lg sm:text-xl md:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed px-4">
-                Discover communities, launch platforms, and listing sites where founders can submit and promote new products.
+                Discover the best platforms to submit, share, and promote your startup launch.
               </p>
             </div>
 
