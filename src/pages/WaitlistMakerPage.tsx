@@ -1,7 +1,6 @@
 import SEO, { createBreadcrumbSchema, createFAQSchema, createSoftwareApplicationSchema } from '@/components/SEO';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
-import AnswerSummary from '@/components/seo/AnswerSummary';
 import PageFAQSection from '@/components/seo/PageFAQSection';
 import WaitlistEditor from '@/components/waitlist/WaitlistEditor';
 import WaitlistMakerWallpaper from '@/components/wallpapers/WaitlistMakerWallpaper';
@@ -70,35 +69,9 @@ export default function WaitlistMakerPage() {
             <WaitlistEditor />
 
             <div className="mx-auto mt-10 max-w-5xl space-y-8 px-2">
-              <AnswerSummary
-                title="Why founders use Waitlist Maker"
-                description="This section answers the high-intent questions people ask before choosing a startup waitlist tool."
-                updatedLabel="March 2026"
-                items={[
-                  {
-                    label: 'What it is for',
-                    title: 'Testing demand before building',
-                    description:
-                      'Waitlist Maker helps you launch a pre-release page that explains the offer clearly and captures early signup intent.',
-                  },
-                  {
-                    label: 'Why it matters',
-                    title: 'Real signups are stronger than assumptions',
-                    description:
-                      'A waitlist helps you see whether your message and offer are strong enough to attract interest before product development is fully underway.',
-                  },
-                  {
-                    label: 'What founders learn',
-                    title: 'Whether the positioning is working',
-                    description:
-                      'You learn if your headline, offer, and audience are resonating, which makes later MVP and launch decisions less risky.',
-                  },
-                ]}
-              />
-
               <PageFAQSection
+                title="Frequent Questions"
                 faqs={faqs}
-                description="Common founder questions about waitlist pages, demand validation, and pre-launch traction."
               />
             </div>
           </div>
