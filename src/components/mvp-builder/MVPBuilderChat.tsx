@@ -743,18 +743,10 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
   return (
     <div className="flex h-full min-h-0 flex-col bg-[#0a0f1d] text-slate-100">
       <div className="shrink-0 border-b border-white/6 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0))] px-4 pb-3 pt-4">
-        <div className="flex items-start justify-between gap-3">
-          <div className="space-y-2">
-            <div className="inline-flex items-center gap-2 rounded-full border border-sky-400/15 bg-sky-400/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-sky-200">
-              <Wand2 className="h-3 w-3" />
-              AI Co-Builder
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-white">Build with intent</p>
-              <p className="text-xs leading-relaxed text-slate-400">
-                Describe the product, flow, and polish you want. The builder will iterate with you in real time.
-              </p>
-            </div>
+        <div className="flex items-center justify-between gap-3">
+          <div className="inline-flex items-center gap-2 rounded-full border border-sky-400/15 bg-sky-400/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-sky-200">
+            <Wand2 className="h-3 w-3" />
+            AI Co-Builder
           </div>
           <div
             className={cn(
@@ -768,7 +760,7 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
           </div>
         </div>
 
-        <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
+        <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
           <div className="rounded-2xl border border-white/8 bg-white/[0.03] px-3 py-2.5">
             <p className="text-[10px] uppercase tracking-[0.18em] text-slate-500">Model stack</p>
             <p className="mt-1 truncate text-sm font-medium text-slate-100">{selectedModelLabels.join(' + ')}</p>
@@ -1024,29 +1016,6 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
 
       <div className="shrink-0 border-t border-white/6 bg-[linear-gradient(180deg,rgba(10,15,29,0.2),rgba(10,15,29,0.96))] px-4 pb-4 pt-3">
         <div className="rounded-[24px] border border-white/10 bg-white/[0.04] p-3 shadow-[0_30px_60px_rgba(0,0,0,0.35)] backdrop-blur-xl transition-all duration-200 focus-within:border-sky-400/25 focus-within:bg-white/[0.06]">
-          <div className="mb-3 flex items-center justify-between gap-3">
-            <div className="inline-flex items-center rounded-full border border-white/10 bg-[#0b1020] p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
-              {(['chat', 'build'] as MVPBuilderResponseMode[]).map((mode) => (
-                <button
-                  key={mode}
-                  type="button"
-                  onClick={() => setBuilderMode(mode)}
-                  className={cn(
-                    'rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all duration-150',
-                    builderMode === mode
-                      ? 'bg-white text-slate-950 shadow-sm'
-                      : 'text-slate-400 hover:text-white'
-                  )}
-                >
-                  {mode === 'chat' ? 'Chat' : 'Build'}
-                </button>
-              ))}
-            </div>
-            <div className="text-[11px] text-slate-500">
-              {builderMode === 'chat' ? 'Text-only planning' : 'Generates and renders'}
-            </div>
-          </div>
-
           {queuedSubmissions.length > 0 && (
             <div className="mb-3 flex items-center justify-between gap-3 rounded-2xl border border-amber-400/20 bg-amber-400/10 px-3 py-2 text-xs text-amber-100">
               <span>
@@ -1183,6 +1152,28 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
                 {builderMode === 'chat' ? 'Ask' : 'Build'}
               </Button>
             )}
+          </div>
+        </div>
+        <div className="mt-3 flex items-center justify-between gap-3 px-1">
+          <div className="inline-flex items-center rounded-full border border-white/10 bg-[#0b1020] p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
+            {(['chat', 'build'] as MVPBuilderResponseMode[]).map((mode) => (
+              <button
+                key={mode}
+                type="button"
+                onClick={() => setBuilderMode(mode)}
+                className={cn(
+                  'rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all duration-150',
+                  builderMode === mode
+                    ? 'bg-white text-slate-950 shadow-sm'
+                    : 'text-slate-400 hover:text-white'
+                )}
+              >
+                {mode === 'chat' ? 'Chat' : 'Build'}
+              </button>
+            ))}
+          </div>
+          <div className="text-[11px] text-slate-500">
+            {builderMode === 'chat' ? 'Text-only planning' : 'Generates and renders'}
           </div>
         </div>
         <p className="mt-2 text-right text-[10px] text-slate-500">
