@@ -1,7 +1,6 @@
 import SEO, { createBreadcrumbSchema, createFAQSchema, createSoftwareApplicationSchema } from "@/components/SEO";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
-import AnswerSummary from "@/components/seo/AnswerSummary";
 import PageFAQSection from "@/components/seo/PageFAQSection";
 import { lazy, Suspense, useEffect } from "react";
 import { useReadingAnalytics } from "@/hooks/useReadingAnalytics";
@@ -134,32 +133,6 @@ export default function ICPBuilderPage() {
             </Suspense>
 
             <div className="mt-10 space-y-8">
-              <AnswerSummary
-                title="How founders use ICP Builder"
-                description="These answers make the tool easier to interpret in search, AI summaries, and first-time founder research."
-                updatedLabel="March 2026"
-                items={[
-                  {
-                    label: "What it does",
-                    title: "Narrows your first customer segment",
-                    description:
-                      "ICP Builder helps you choose the first audience to target so interviews, messaging, and product priorities stay focused.",
-                  },
-                  {
-                    label: "Why it matters",
-                    title: "Sharper positioning starts with sharper targeting",
-                    description:
-                      "When the audience is vague, the offer becomes vague too. This tool reduces that ambiguity before you build.",
-                  },
-                  {
-                    label: "What you get",
-                    title: "Customer clarity plus next-step tests",
-                    description:
-                      "You leave with a clearer ideal customer profile, stronger positioning, and better validation direction.",
-                  },
-                ]}
-              />
-
               <PageFAQSection
                 title="Frequent Questions"
                 faqs={faqs}
