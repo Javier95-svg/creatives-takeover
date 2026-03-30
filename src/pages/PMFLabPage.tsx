@@ -121,7 +121,7 @@ export default function PMFLabPage() {
                     PMF Lab
                   </h1>
                   <p className="mx-auto max-w-4xl text-lg leading-relaxed text-muted-foreground sm:text-xl">
-                    AI-powered market validation tool. Pitch your waitlist, interview at least {PMF_REQUIRED_SIGNALS} potential customers, and let PMF Lab tell you if demand is enough to start building.
+                    Pitch your waitlist, interview at least {PMF_REQUIRED_SIGNALS} potential customers, and let PMF Lab tell you if demand is enough to start building.
                   </p>
                 </div>
               </div>
