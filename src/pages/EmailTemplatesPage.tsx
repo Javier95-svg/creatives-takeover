@@ -25,8 +25,8 @@ export default function EmailTemplatesPage() {
     {
       "@context": "https://schema.org",
       "@type": "WebPage",
-      "name": "Fundraising Email Templates",
-      "description": "Use fundraising email templates for cold outreach, warm intros, follow-ups, and investor updates.",
+      "name": "Email Templates Library - Fundraising Email Templates",
+      "description": "Copy-paste ready email templates for every stage of fundraising. Personalize the variables and send.",
       "url": "https://creatives-takeover.com/insighta/email-templates",
       "publisher": {
         "@type": "Organization",
@@ -53,8 +53,8 @@ export default function EmailTemplatesPage() {
   return (
     <div className="min-h-screen bg-background">
       <SEO
-        title="Fundraising Email Templates | Creatives Takeover"
-        description="Use fundraising email templates for investor outreach, warm intros, follow-ups, and startup updates without starting from scratch."
+        title="Email Templates Library - Creatives Takeover"
+        description="Copy-paste ready email templates for every stage of fundraising. Personalize the variables (like {{vc_name}} and {{company_name}}) and send."
         keywords="fundraising email templates, investor outreach emails, cold email templates for investors, startup follow up email, warm intro template"
         url="/insighta/email-templates"
         structuredData={structuredData}
@@ -80,10 +80,10 @@ export default function EmailTemplatesPage() {
             {/* Page Header */}
             <div className="text-center mb-12 sm:mb-16">
               <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-3 sm:mb-4 takeover-gradient creatives-font animate-fade-in leading-tight pb-2">
-                Fundraising Email Templates
+                Email Templates
               </h1>
               <p className="text-lg sm:text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed animate-fade-in px-4" style={{ animationDelay: '0.3s' }}>
-                Copy, customize, and send fundraising emails for<span className="gradient-text font-semibold" style={{ lineHeight: 'inherit', marginLeft: '0.25rem' }}> intros, outreach, follow-ups, and investor updates.</span>
+                Copy-paste ready email templates for<span className="gradient-text font-semibold" style={{ lineHeight: 'inherit', marginLeft: '0.25rem' }}> every stage of fundraising.</span>
               </p>
               <RelatedPageLinks title="Related fundraising tools" links={relatedLinks} />
             </div>

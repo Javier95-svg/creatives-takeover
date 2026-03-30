@@ -68,8 +68,8 @@ export default function PitchDeckAnalyzerPage() {
     {
       "@context": "https://schema.org",
       "@type": "WebPage",
-      "name": "Pitch Deck Analyzer",
-      "description": "Upload a pitch deck, score it, and get structured feedback on story, clarity, traction, and fundraising readiness.",
+      "name": "Pitch Deck Analyzer - AI-Powered Pitch Deck Assessment",
+      "description": "Get instant AI-powered analysis of your pitch deck. Receive a comprehensive score across 6 key dimensions with actionable feedback to improve your fundraising success.",
       "url": "https://creatives-takeover.com/insighta/pitch-deck-analyzer",
       "publisher": {
         "@type": "Organization",
@@ -97,8 +97,8 @@ export default function PitchDeckAnalyzerPage() {
   return (
     <div className="min-h-screen bg-background">
       <SEO
-        title="Pitch Deck Analyzer & Score Tool | Creatives Takeover"
-        description="Upload a pitch deck, get a score, and review actionable feedback on narrative, clarity, traction, business model, and fundraising readiness."
+        title="Pitch Deck Analyzer - AI-Powered Assessment"
+        description="Get instant AI-powered analysis of your pitch deck. Comprehensive scoring across story, market, traction, business model, team, and fundraising readiness."
         keywords="pitch deck analyzer, pitch deck score tool, investor deck review, startup pitch analysis, fundraising presentation feedback"
         url="/insighta/pitch-deck-analyzer"
         structuredData={structuredData}
@@ -135,7 +135,7 @@ export default function PitchDeckAnalyzerPage() {
                     Pitch Deck Analyzer
                   </h1>
                   <p className="text-lg sm:text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed animate-fade-in px-4" style={{ animationDelay: '0.3s' }}>
-                    Upload your deck and get<span className="gradient-text font-semibold" style={{ lineHeight: 'inherit', marginLeft: '0.25rem' }}> a clear score, stronger investor feedback, and a tighter fundraising story.</span>
+                    Investor-Ready Pitch Analysis.<span className="gradient-text font-semibold" style={{ lineHeight: 'inherit', marginLeft: '0.25rem' }}> Clear, comparable, actionable.</span>
                   </p>
                   <RelatedPageLinks title="Related fundraising tools" links={relatedLinks} />
 

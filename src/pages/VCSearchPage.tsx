@@ -45,8 +45,8 @@ export default function VCSearchPage() {
     {
       "@context": "https://schema.org",
       "@type": "WebPage",
-      "name": "Venture Capital Database",
-      "description": "Search a venture capital database by stage, check size, geography, and sector to build a stronger investor list.",
+      "name": "Find Your Perfect VC - Venture Capital Search",
+      "description": "Search and filter through venture capitalists by investment stage, industry, check size, and geography",
       "url": "https://creatives-takeover.com/insighta/vc-search",
       "publisher": {
         "@type": "Organization",
@@ -74,8 +74,8 @@ export default function VCSearchPage() {
   return (
     <div className="min-h-screen bg-background">
       <SEO
-        title="Venture Capital Database & VC Search | Creatives Takeover"
-        description="Search a venture capital database by stage, geography, sector, and check size to build a tighter startup investor list."
+        title="Find Your Perfect VC - Creatives Takeover"
+        description="Search and filter through venture capitalists by investment stage, industry, check size, and geography. Click any VC to view their full profile and contact information."
         keywords="venture capital database, vc search tool, investor database, venture capital firms list, startup investor research"
         url="/insighta/vc-search"
         structuredData={structuredData}
@@ -90,10 +90,10 @@ export default function VCSearchPage() {
             {/* Page Header */}
             <div className="text-center mb-12 sm:mb-16">
               <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-3 sm:mb-4 takeover-gradient creatives-font animate-fade-in leading-tight pb-2">
-                Venture Capital Search
+                VC Search
               </h1>
               <p className="text-lg sm:text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed animate-fade-in px-4" style={{ animationDelay: '0.3s' }}>
-                Search a venture capital database by<span className="gradient-text font-semibold" style={{ lineHeight: 'inherit', marginLeft: '0.25rem' }}> stage, geography, sector, and check size.</span>
+                Search and filter venture capitalist firms by<span className="gradient-text font-semibold" style={{ lineHeight: 'inherit', marginLeft: '0.25rem' }}> investment stage, industry, and geography.</span>
               </p>
               <RelatedPageLinks title="Related fundraising tools" links={relatedLinks} />
             </div>

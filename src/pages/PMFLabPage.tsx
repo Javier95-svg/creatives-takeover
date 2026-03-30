@@ -2,7 +2,6 @@ import { useEffect } from 'react';
 import SEO, { createBreadcrumbSchema, createFAQSchema, createSoftwareApplicationSchema } from '@/components/SEO';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
-import AnswerSummary from '@/components/seo/AnswerSummary';
 import PageFAQSection from '@/components/seo/PageFAQSection';
 import { useLeanStartupStore } from '@/store/leanStartupStore';
 import { usePMFLab } from '@/hooks/usePMFLab';
@@ -206,35 +205,9 @@ export default function PMFLabPage() {
             )}
 
             <div className="mt-10 space-y-8">
-              <AnswerSummary
-                title="How founders use PMF Lab"
-                description="This section makes the core purpose of PMF Lab explicit for both users and AI answer engines that summarize startup tools."
-                updatedLabel="March 2026"
-                items={[
-                  {
-                    label: 'What it measures',
-                    title: 'Demand evidence, not optimism',
-                    description:
-                      'PMF Lab evaluates customer signals, urgency, traction, and proof that the problem is real enough to justify building.',
-                  },
-                  {
-                    label: 'When to use it',
-                    title: 'Before committing to an MVP',
-                    description:
-                      'It is most useful when you are deciding whether the current evidence is strong enough to move from validation into product development.',
-                  },
-                  {
-                    label: 'What you get',
-                    title: 'A score and next-step guidance',
-                    description:
-                      'You get a readiness score plus practical recommendations on whether to build now or keep iterating on customer validation.',
-                  },
-                ]}
-              />
-
               <PageFAQSection
+                title="Frequent Questions"
                 faqs={faqs}
-                description="Common founder questions about product-market fit scoring and when to build."
               />
             </div>
           </div>

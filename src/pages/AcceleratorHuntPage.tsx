@@ -26,8 +26,8 @@ export default function AcceleratorHuntPage() {
     {
       "@context": "https://schema.org",
       "@type": "WebPage",
-      "name": "Startup Accelerator Database",
-      "description": "Search a startup accelerator database by location, focus, and funding profile to build a better shortlist.",
+      "name": "Find Your Perfect Accelerator - Accelerator Programs Search",
+      "description": "Discover accelerator programs offering funding, mentorship, and resources. Filter by location, industry focus, and funding amount to find the best fit.",
       "url": "https://creatives-takeover.com/insighta/accelerator-hunt",
       "publisher": {
         "@type": "Organization",
@@ -54,8 +54,8 @@ export default function AcceleratorHuntPage() {
   return (
     <div className="min-h-screen bg-background">
       <SEO
-        title="Startup Accelerator Database | Creatives Takeover"
-        description="Search a startup accelerator database by location, focus area, and funding profile to shortlist the right programs faster."
+        title="Find Your Perfect Accelerator - Creatives Takeover"
+        description="Discover accelerator programs offering funding, mentorship, and resources. Filter by location, industry focus, and funding amount to find the best fit."
         keywords="startup accelerator database, accelerator search, accelerator list, startup accelerator finder, y combinator alternatives"
         url="/insighta/accelerator-hunt"
         structuredData={structuredData}
@@ -70,10 +70,10 @@ export default function AcceleratorHuntPage() {
             {/* Page Header */}
             <div className="text-center mb-12 sm:mb-16">
               <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-3 sm:mb-4 takeover-gradient creatives-font animate-fade-in leading-tight pb-2">
-                Startup Accelerator Search
+                Accelerator Hunt
               </h1>
               <p className="text-lg sm:text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed animate-fade-in px-4" style={{ animationDelay: '0.3s' }}>
-                Search accelerator programs by<span className="gradient-text font-semibold" style={{ lineHeight: 'inherit', marginLeft: '0.25rem' }}> location, focus area, funding, and fit.</span>
+                Discover accelerator programs offering<span className="gradient-text font-semibold" style={{ lineHeight: 'inherit', marginLeft: '0.25rem' }}> funding, mentorship, and resources.</span>
               </p>
               <RelatedPageLinks title="Related fundraising tools" links={relatedLinks} />
             </div>

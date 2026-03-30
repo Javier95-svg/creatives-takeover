@@ -3,7 +3,6 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import SEO, { createBreadcrumbSchema, createFAQSchema, createSoftwareApplicationSchema } from '@/components/SEO';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
-import AnswerSummary from '@/components/seo/AnswerSummary';
 import PageFAQSection from '@/components/seo/PageFAQSection';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -195,35 +194,9 @@ export default function BizMapJourneyHubPage() {
             </div>
           </section>
 
-          <AnswerSummary
-            title="What founders use BizMap AI for"
-            description="This page now answers the core founder questions directly so search engines and AI answer engines can understand the product without guessing."
-            updatedLabel="March 2026"
-            items={[
-              {
-                label: 'What it is',
-                title: 'A connected startup workflow',
-                description:
-                  'BizMap AI connects validation, customer definition, MVP planning, waitlist testing, and launch preparation instead of treating them as isolated tools.',
-              },
-              {
-                label: 'Best for',
-                title: 'Early-stage and pre-launch founders',
-                description:
-                  'It is designed for founders who need more structure than a generic chat tool and want a clearer path from idea to execution.',
-              },
-              {
-                label: 'What you get',
-                title: 'Clearer decisions at each stage',
-                description:
-                  'You leave with stronger customer clarity, a tighter MVP plan, better launch preparation, and context that carries across the founder journey.',
-              },
-            ]}
-          />
-
           <PageFAQSection
+            title="Frequent Questions"
             faqs={faqs}
-            description="These are the direct questions founders usually ask before using BizMap AI."
           />
         </div>
       </main>
