@@ -3,32 +3,11 @@ import { Mail, Linkedin, Instagram, Youtube } from "lucide-react";
 
 const Footer = () => {
   const year = new Date().getFullYear();
-  const productLinks = [
-    { to: "/bizmap-ai", label: "BizMap AI" },
-    { to: "/icp-builder", label: "ICP Builder" },
-    { to: "/pmf-lab", label: "PMF Lab" },
-    { to: "/mvp-builder", label: "MVP Builder" },
-    { to: "/go-to-market", label: "GTM Strategist" },
-  ];
-  const fundraisingLinks = [
-    { to: "/insighta", label: "Insighta" },
-    { to: "/insighta/vc-search", label: "VC Search" },
-    { to: "/insighta/accelerator-hunt", label: "Accelerator Hunt" },
-    { to: "/insighta/email-templates", label: "Email Templates" },
-    { to: "/insighta/pitch-deck-analyzer", label: "Pitch Deck Analyzer" },
-  ];
-  const learnLinks = [
-    { to: "/newspaper", label: "Newspaper" },
-    { to: "/prompt-library", label: "Prompt Library" },
-    { to: "/resources", label: "Resources" },
-    { to: "/community", label: "Community" },
-    { to: "/pricing", label: "Pricing" },
-  ];
 
   return (
     <footer className="relative bg-background border-t border-border/70">
       <div className="container mx-auto px-4 sm:px-6 py-8 sm:py-12 relative">
-        <div className="grid gap-6 sm:gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+        <div className="grid gap-6 sm:gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
           <section aria-labelledby="footer-address">
             <p className="text-sm text-muted-foreground">
               Creatives Takeover Ltd is a company registered in England and Wales (Company No. 16741912).
@@ -60,45 +39,6 @@ const Footer = () => {
               admin@creatives-takeover.com
             </a>
           </section>
-
-          <nav aria-labelledby="footer-product">
-            <h2 id="footer-product" className="text-sm font-semibold tracking-wide text-foreground">Products</h2>
-            <ul className="mt-3 space-y-2 text-sm">
-              {productLinks.map((link) => (
-                <li key={link.to}>
-                  <Link className="hover:underline underline-offset-4" to={link.to}>
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </nav>
-
-          <nav aria-labelledby="footer-fundraising">
-            <h2 id="footer-fundraising" className="text-sm font-semibold tracking-wide text-foreground">Fundraising</h2>
-            <ul className="mt-3 space-y-2 text-sm">
-              {fundraisingLinks.map((link) => (
-                <li key={link.to}>
-                  <Link className="hover:underline underline-offset-4" to={link.to}>
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </nav>
-
-          <nav aria-labelledby="footer-learn">
-            <h2 id="footer-learn" className="text-sm font-semibold tracking-wide text-foreground">Learn</h2>
-            <ul className="mt-3 space-y-2 text-sm">
-              {learnLinks.map((link) => (
-                <li key={link.to}>
-                  <Link className="hover:underline underline-offset-4" to={link.to}>
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </nav>
 
           <nav aria-labelledby="footer-legal">
             <h2 id="footer-legal" className="text-sm font-semibold tracking-wide text-foreground">Legal</h2>
