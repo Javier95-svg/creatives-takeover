@@ -36,6 +36,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useFeatureGating } from "@/hooks/useFeatureGating";
 import { useUpgradePrompt } from "@/contexts/UpgradePromptContext";
 import { ANGEL_SECTOR_OPTIONS } from "@/data/angelSectors";
+import { supabase } from "@/integrations/supabase/client";
 
 import { cn } from "@/lib/utils";
 import {
@@ -79,6 +80,110 @@ const INVESTMENT_STAGE_OPTIONS = [
 
 const SORTED_ANGEL_SECTOR_OPTIONS = [...ANGEL_SECTOR_OPTIONS].sort((a, b) => a.localeCompare(b));
 
+const ANGEL_PREVIEW_RETURN_PATH = "/community/angels?preview=rookie-welcome";
+
+const SECTOR_MATCH_KEYWORDS: Record<string, string[]> = {
+  "SaaS": ["saas", "software", "b2b software", "workflow software"],
+  "AI & Machine Learning": ["ai", "artificial intelligence", "machine learning", "automation", "llm"],
+  "FinTech": ["fintech", "payments", "banking", "insurtech", "financial"],
+  "HealthTech": ["health", "healthtech", "wellness", "medtech", "care"],
+  "CleanTech & Climate": ["climate", "cleantech", "clean tech", "energy", "sustainability"],
+  "E-Commerce & Marketplace": ["e-commerce", "ecommerce", "marketplace", "retail tech", "commerce"],
+  "EdTech": ["education", "edtech", "learning", "training"],
+  "Cybersecurity": ["cybersecurity", "security", "privacy", "identity"],
+  "Gaming & Entertainment": ["gaming", "games", "entertainment", "media", "creator"],
+  "Web3 & Blockchain": ["web3", "blockchain", "crypto", "defi"],
+  "BioTech & Life Sciences": ["biotech", "bio tech", "life sciences", "biomedical"],
+  "HR Tech & Future of Work": ["hr", "future of work", "recruiting", "talent", "people ops"],
+  "DeepTech & Hardware": ["deeptech", "deep tech", "hardware", "robotics", "semiconductor"],
+  "Mobility & Logistics": ["mobility", "logistics", "supply chain", "transport", "fleet"],
+  "Consumer & D2C": ["consumer", "d2c", "direct to consumer", "consumer brand", "lifestyle"],
+};
+
+type FounderPreviewProfile = {
+  startup_industry?: string[] | null;
+  creative_niche?: string | null;
+  user_preferences?: unknown;
+};
+
+const normalizeMatchText = (value: string) =>
+  value
+    .toLowerCase()
+    .replace(/&/g, " and ")
+    .replace(/[^a-z0-9\s]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+const mapFounderSignalToSector = (signal: string): string | null => {
+  const normalizedSignal = normalizeMatchText(signal);
+
+  for (const sector of ANGEL_SECTOR_OPTIONS) {
+    const normalizedSector = normalizeMatchText(sector);
+    if (
+      normalizedSignal === normalizedSector ||
+      normalizedSignal.includes(normalizedSector) ||
+      normalizedSector.includes(normalizedSignal)
+    ) {
+      return sector;
+    }
+
+    const synonyms = SECTOR_MATCH_KEYWORDS[sector] || [];
+    if (synonyms.some((keyword) => normalizedSignal.includes(normalizeMatchText(keyword)))) {
+      return sector;
+    }
+  }
+
+  return null;
+};
+
+const getFounderSectorSignals = (profile: FounderPreviewProfile | null): string[] => {
+  if (!profile) return [];
+
+  const preferences =
+    profile.user_preferences && typeof profile.user_preferences === "object"
+      ? (profile.user_preferences as Record<string, unknown>)
+      : null;
+  const surveyData =
+    preferences?.surveyData && typeof preferences.surveyData === "object"
+      ? (preferences.surveyData as Record<string, unknown>)
+      : null;
+  const onboardingStartupIndustry =
+    typeof preferences?.startupIndustry === "string" ? preferences.startupIndustry : null;
+
+  const rawSignals = [
+    ...(Array.isArray(profile.startup_industry) ? profile.startup_industry : []),
+    profile.creative_niche || null,
+    onboardingStartupIndustry,
+    typeof surveyData?.industry === "string" ? surveyData.industry : null,
+  ].filter((value): value is string => Boolean(value));
+
+  const mappedSignals = rawSignals
+    .map((signal) => mapFounderSignalToSector(signal) || signal)
+    .filter(Boolean);
+
+  return Array.from(new Set(mappedSignals));
+};
+
+const getAngelMatchScore = (angel: AngelInvestor, founderSignals: string[]) => {
+  if (founderSignals.length === 0) return 0;
+
+  const angelSectors = (angel.sectors || []).map(normalizeMatchText);
+  return founderSignals.reduce((score, signal) => {
+    const normalizedSignal = normalizeMatchText(signal);
+    const exactMatch = angelSectors.some(
+      (sector) => sector === normalizedSignal || sector.includes(normalizedSignal) || normalizedSignal.includes(sector),
+    );
+
+    if (exactMatch) return score + 5;
+
+    const keywordMatch = angelSectors.some((sector) =>
+      (SECTOR_MATCH_KEYWORDS[signal] || []).some((keyword) => sector.includes(normalizeMatchText(keyword))),
+    );
+
+    return keywordMatch ? score + 2 : score;
+  }, 0);
+};
+
 // Custom debounce hook
 function useDebounce<T>(value: T, delay: number): T {
   const [debouncedValue, setDebouncedValue] = useState(value);
@@ -98,7 +203,10 @@ const FindYourAngel = () => {
   const { openUpgradePrompt } = useUpgradePrompt();
   const { fetchAngels, loading } = useAngels();
   const isPro = currentTier === 'professional';
+  const isRookie = currentTier === 'free';
   const [angels, setAngels] = useState<AngelInvestor[]>([]);
+  const [founderSignals, setFounderSignals] = useState<string[]>([]);
+  const [founderNicheLabel, setFounderNicheLabel] = useState<string | null>(null);
 
   // Initialize state from URL params (fix 4b: persist filters in URL)
   const [searchQuery, setSearchQuery] = useState(searchParams.get("q") || "");
@@ -127,6 +235,36 @@ const FindYourAngel = () => {
   useEffect(() => {
     loadAngels();
   }, [loadAngels]);
+
+  useEffect(() => {
+    const loadFounderSignals = async () => {
+      if (!user) {
+        setFounderSignals([]);
+        setFounderNicheLabel(null);
+        return;
+      }
+
+      try {
+        const { data: profile, error } = await (supabase as any)
+          .from('profiles')
+          .select('startup_industry, creative_niche, user_preferences')
+          .eq('id', user.id)
+          .maybeSingle();
+
+        if (error) throw error;
+
+        const signals = getFounderSectorSignals(profile as FounderPreviewProfile | null);
+        setFounderSignals(signals);
+        setFounderNicheLabel(signals[0] || null);
+      } catch (error) {
+        console.error('Error loading founder niche for angel preview:', error);
+        setFounderSignals([]);
+        setFounderNicheLabel(null);
+      }
+    };
+
+    loadFounderSignals();
+  }, [user]);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
@@ -276,6 +414,27 @@ const FindYourAngel = () => {
     return result;
   }, [angels, debouncedSearch, selectedSectors, selectedStages, sortBy]);
 
+  const matchedPreviewAngels = useMemo(() => {
+    const scoredAngels = angels
+      .map((angel) => ({
+        angel,
+        score: getAngelMatchScore(angel, founderSignals),
+      }))
+      .sort((a, b) => {
+        if (b.score !== a.score) return b.score - a.score;
+        return a.angel.name.localeCompare(b.angel.name);
+      });
+
+    const strongMatches = scoredAngels.filter((item) => item.score > 0).map((item) => item.angel);
+    const fallbackMatches = scoredAngels
+      .filter((item) => item.score === 0)
+      .map((item) => item.angel);
+
+    return [...strongMatches, ...fallbackMatches].slice(0, 5);
+  }, [angels, founderSignals]);
+
+  const previewWelcomeMode = searchParams.get("preview") === "rookie-welcome";
+
   const handlePageChange = (page: number) => {
     const params = new URLSearchParams(searchParams);
     params.set("page", page.toString());
@@ -393,6 +552,64 @@ const FindYourAngel = () => {
                       );
                     })}
                   </div>
+
+                  {!isPro && (
+                    <div className="rounded-[1.75rem] border border-sky-500/25 bg-sky-500/10 p-4 shadow-sm">
+                      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                        <div className="space-y-2">
+                          <div className="inline-flex items-center gap-2 rounded-full border border-sky-500/30 bg-background/80 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-sky-700 dark:text-sky-200">
+                            <Sparkles className="h-3.5 w-3.5" />
+                            {isRookie ? "Rookie investor preview" : "Investor profiles locked"}
+                          </div>
+                          <h2 className="text-xl font-semibold tracking-tight">
+                            {isRookie && user
+                              ? `Five investor profiles matched to ${founderNicheLabel || "your startup niche"} are waiting below`
+                              : "See the investors, then decide if you need access"}
+                          </h2>
+                          <p className="max-w-3xl text-sm leading-relaxed text-muted-foreground">
+                            {isRookie && user
+                              ? "You can see the investors who fit your niche, but contact details and full access stay locked until you upgrade to Pro. That makes the value of the upgrade concrete before you spend anything."
+                              : "Rookie users get a matched teaser and Pro unlocks full search, filters, contact details, and complete investor profiles."}
+                          </p>
+                          {previewWelcomeMode && isRookie && user ? (
+                            <p className="text-sm font-medium text-foreground">
+                              Your account is ready. Start with the matched investor preview, then unlock Pro the moment you want to reach out.
+                            </p>
+                          ) : null}
+                        </div>
+
+                        <div className="flex flex-wrap gap-3">
+                          {!user ? (
+                            <Button asChild className="rounded-full">
+                              <Link to={`/signup?return=${encodeURIComponent(ANGEL_PREVIEW_RETURN_PATH)}`}>
+                                Start with the Rookie preview
+                              </Link>
+                            </Button>
+                          ) : (
+                            <Button
+                              className="rounded-full"
+                              onClick={() =>
+                                openUpgradePrompt({
+                                  reason: 'feature',
+                                  featureName: founderNicheLabel
+                                    ? `${founderNicheLabel} angel investor matches`
+                                    : 'Angel Investor Profiles',
+                                  requiredTier: 'professional',
+                                  description: 'Professional plan unlocks full angel investor profiles, search, filters, and contact details.',
+                                })
+                              }
+                            >
+                              <Crown className="mr-2 h-4 w-4" />
+                              Unlock Pro investor access
+                            </Button>
+                          )}
+                          <Button asChild variant="outline" className="rounded-full">
+                            <Link to="/pricing">See plans</Link>
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   <div className="rounded-[1.75rem] border border-border/60 bg-background/80 p-4 shadow-sm dark:bg-slate-900/75 sm:p-5">
                     <div className="flex flex-col gap-3">
@@ -647,6 +864,10 @@ const FindYourAngel = () => {
                   <Loader2 className="h-4 w-4 animate-spin" />
                   <span className="text-sm text-muted-foreground">Loading angel investors...</span>
                 </div>
+              ) : isRookie && user ? (
+                <p className="text-sm text-muted-foreground">
+                  {matchedPreviewAngels.length} investor profile{matchedPreviewAngels.length !== 1 ? 's' : ''} matched to {founderNicheLabel || 'your startup niche'}
+                </p>
               ) : isPro ? (
                 <p className="text-sm text-muted-foreground">
                   {filteredAngels.length} angel investor{filteredAngels.length !== 1 ? 's' : ''} found
@@ -698,6 +919,92 @@ const FindYourAngel = () => {
                       </div>
                     ))}
                   </div>
+                ) : isRookie ? (
+                  <div className="space-y-5">
+                    <div className="rounded-2xl border border-dashed border-sky-500/35 bg-sky-500/5 p-4">
+                      <p className="text-sm font-medium text-foreground">
+                        {founderNicheLabel
+                          ? `These profiles were selected because they invest in ${founderNicheLabel}.`
+                          : 'These profiles are the strongest available teaser for early-stage founders on the Rookie plan.'}
+                      </p>
+                      <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                        The names, firms, and sector fit are visible enough to create urgency. Pro unlocks the full profile, contact details, search, and the rest of the investor directory.
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-6 select-none">
+                      {matchedPreviewAngels.map((angel, index) => (
+                        <div key={angel.id} className="relative overflow-hidden rounded-xl">
+                          <AngelCard
+                            angel={angel}
+                            priority={index < 4}
+                            className="pointer-events-none blur-[2px] opacity-90"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-r from-background/35 via-transparent to-background/35" />
+                          <div className="absolute inset-x-4 bottom-4 rounded-2xl border border-border/70 bg-card/95 p-4 shadow-xl backdrop-blur">
+                            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                              <div className="space-y-1">
+                                <p className="text-sm font-semibold">
+                                  {founderNicheLabel
+                                    ? `Matched to ${founderNicheLabel}`
+                                    : 'Matched investor preview'}
+                                </p>
+                                <p className="text-xs leading-relaxed text-muted-foreground">
+                                  Unlock Pro to reveal contact details, remove blur, and open the full investor directory.
+                                </p>
+                              </div>
+                              <Button
+                                size="sm"
+                                className="rounded-full"
+                                onClick={() =>
+                                  openUpgradePrompt({
+                                    reason: 'feature',
+                                    featureName: founderNicheLabel
+                                      ? `${founderNicheLabel} angel investor matches`
+                                      : 'Angel Investor Profiles',
+                                    requiredTier: 'professional',
+                                    description: 'Professional plan unlocks full angel investor profiles, search, filters, and contact details.',
+                                  })
+                                }
+                              >
+                                <Crown className="mr-2 h-4 w-4" />
+                                Reveal this profile
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-5 text-center">
+                      <p className="text-sm font-semibold text-foreground">
+                        The commercial moment is now: you can see the investors, but you cannot reach them yet.
+                      </p>
+                      <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                        Upgrade to Pro the moment you want full profile access, search, filters, and direct contact context.
+                      </p>
+                      <div className="mt-4 flex flex-wrap justify-center gap-3">
+                        <Button
+                          onClick={() =>
+                            openUpgradePrompt({
+                              reason: 'feature',
+                              featureName: founderNicheLabel
+                                ? `${founderNicheLabel} angel investor matches`
+                                : 'Angel Investor Profiles',
+                              requiredTier: 'professional',
+                              description: 'Professional plan unlocks full angel investor profiles, search, filters, and contact details.',
+                            })
+                          }
+                        >
+                          <Crown className="mr-2 h-4 w-4" />
+                          Upgrade to Pro
+                        </Button>
+                        <Button asChild variant="outline">
+                          <Link to="/pricing">Compare plans</Link>
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
                 ) : (
                   /* Non-Pro users: blurred cards with upgrade overlay */
                   <div className="relative min-h-[400px]">
@@ -748,7 +1055,7 @@ const FindYourAngel = () => {
                 )}
 
                 {/* Pagination — always visible so users see there are multiple pages (fix 6a: proper hrefs) */}
-                {totalPages > 1 && (
+                {isPro && totalPages > 1 && (
                   <div className="mt-8">
                     <Pagination>
                       <PaginationContent>

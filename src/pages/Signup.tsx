@@ -29,6 +29,7 @@ import {
 } from "@/lib/authRedirect";
 
 const Signup = () => {
+  const defaultPostSignupPath = '/community/angels?preview=rookie-welcome';
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -54,7 +55,10 @@ const Signup = () => {
   // Get conversion source from URL
   const [conversionSource] = useState(() => {
     const params = new URLSearchParams(window.location.search);
-    const safeReturn = sanitizeReturnPath(params.get('return') || params.get('redirect'), '/dashboard');
+    const safeReturn = sanitizeReturnPath(
+      params.get('return') || params.get('redirect'),
+      defaultPostSignupPath,
+    );
 
     return {
       source: params.get('source') || 'direct',
@@ -270,14 +274,11 @@ const Signup = () => {
         // Track conversion completion
         trackSignupCompleted(triggerType);
 
-        // Track conversion source
-        if (conversionSource.source !== 'direct') {
-          console.log('User signed up from:', conversionSource.source);
-        }
-
         try {
           await trackActivity('user:signup', { source: conversionSource.source });
-        } catch { }
+        } catch (activityError) {
+          console.warn('Signup activity tracking failed', activityError);
+        }
 
         toast.success("Account created successfully! Redirecting...");
 
@@ -311,8 +312,6 @@ const Signup = () => {
   // Google OAuth signup
   const handleGoogleSignup = async () => {
     try {
-      console.log("Starting Google OAuth signup...");
-
       // Preserve post-auth intent and complete onboarding before final return.
       localStorage.setItem('oauth_return_url', conversionSource.returnUrl);
       localStorage.setItem('oauth_source', conversionSource.source);
@@ -326,7 +325,7 @@ const Signup = () => {
 
       toast("Redirecting to Google...");
 
-      const { data, error } = await supabase.auth.signInWithOAuth({
+      const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: `${window.location.origin}/auth/callback`,
@@ -337,8 +336,6 @@ const Signup = () => {
         }
       });
 
-      console.log("OAuth response:", { data, error });
-
       if (error) {
         console.error("OAuth error:", error);
         toast.error(`Google sign-up error: ${error.message}`);
@@ -346,10 +343,11 @@ const Signup = () => {
       }
 
       // If we get here without error, the redirect should have happened
-      console.log("OAuth initiated successfully");
       try {
         await trackActivity('user:signup_oauth', { provider: 'google' });
-      } catch { }
+      } catch (activityError) {
+        console.warn('OAuth signup activity tracking failed', activityError);
+      }
 
     } catch (err) {
       console.error("Caught error:", err);

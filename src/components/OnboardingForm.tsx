@@ -4,11 +4,19 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
+import { ANGEL_SECTOR_OPTIONS } from '@/data/angelSectors';
 import {
   DEFAULT_CURRENT_STAGE,
   DEFAULT_HIGHEST_UNLOCKED_STAGE,
@@ -19,6 +27,7 @@ import {
 interface OnboardingData {
   // Step 1
   businessStage: OnboardingBizMapStageSelection | '';
+  startupIndustry: string;
   founderExperience: string;
   timeCommitment: string;
   launchTimeline: string;
@@ -86,6 +95,7 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
 
   const [formData, setFormData] = useState<OnboardingData>({
     businessStage: '',
+    startupIndustry: '',
     founderExperience: '',
     timeCommitment: '',
     launchTimeline: '',
@@ -135,6 +145,9 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
       case 0:
         if (!formData.businessStage) {
           newErrors.businessStage = 'Please select your business stage';
+        }
+        if (!formData.startupIndustry) {
+          newErrors.startupIndustry = 'Please choose your startup niche';
         }
         break;
       case 3:
@@ -198,6 +211,7 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
 
       const onboardingData = {
         businessStage: selectedStage || 'stage_i',
+        startupIndustry: formData.startupIndustry,
         founderExperience: formData.founderExperience,
         timeCommitment: formData.timeCommitment,
         launchTimeline: formData.launchTimeline,
@@ -215,6 +229,7 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
         .update({
           onboarding_completed: true,
           business_stage: selectedStage ? STAGE_TO_PROFILE_BUSINESS_STAGE[selectedStage] : 'identity',
+          startup_industry: formData.startupIndustry ? [formData.startupIndustry] : null,
           quiz_completed: true,
           quiz_completed_at: new Date().toISOString(),
           quiz_is_first_startup: formData.founderExperience
@@ -297,9 +312,11 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
         .update({
           onboarding_completed: true,
           business_stage: selectedStage ? STAGE_TO_PROFILE_BUSINESS_STAGE[selectedStage] : 'identity',
+          startup_industry: formData.startupIndustry ? [formData.startupIndustry] : null,
           quiz_completed: false,
           user_preferences: {
             onboardingSkippedAt: skippedAt,
+            startupIndustry: formData.startupIndustry || null,
           },
         })
         .eq('id', user.id)
@@ -388,6 +405,29 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
                 Stage III+ unlocks only after you complete Stage I and Stage II.
               </p>
               {errors.businessStage && <p className="text-sm text-destructive mt-1">{errors.businessStage}</p>}
+            </div>
+
+            <div>
+              <Label className="text-base font-semibold mb-3 block font-space-grotesk">What niche are you building in? *</Label>
+              <Select
+                value={formData.startupIndustry}
+                onValueChange={(value) => setFormData({ ...formData, startupIndustry: value })}
+              >
+                <SelectTrigger className="h-12 rounded-lg border-border/60 bg-background/70">
+                  <SelectValue placeholder="Choose the niche that best fits your startup" />
+                </SelectTrigger>
+                <SelectContent>
+                  {ANGEL_SECTOR_OPTIONS.map((sector) => (
+                    <SelectItem key={sector} value={sector}>
+                      {sector}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="mt-2 text-xs text-muted-foreground">
+                We use this to personalize investor recommendations and matched previews.
+              </p>
+              {errors.startupIndustry && <p className="text-sm text-destructive mt-1">{errors.startupIndustry}</p>}
             </div>
 
             <div>
