@@ -126,12 +126,6 @@ export function BizMapStageTasks() {
           {completedCount}/{currentTasks.length} stage tasks completed in {currentStageDefinition?.title}.
         </div>
 
-        {completedCount === 0 && (
-          <div className="rounded-lg border border-border/40 bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
-            💡 Founders who complete Stage {currentStageDefinition?.numeral} tasks are <strong>3× more likely</strong> to reach their first paying customer. Start with the high-priority ones.
-          </div>
-        )}
-
         <div className="space-y-2">
           {currentTasks.map((task) => {
             const done = taskProgress[task.id]?.is_completed ?? false;
