@@ -14,6 +14,7 @@ import {
   TrendingUp,
   Zap,
 } from 'lucide-react';
+import { BizMapJourneyProgress } from '../BizMapJourneyProgress';
 
 interface DashboardModeViewProps {
   streak: number;
@@ -202,6 +203,10 @@ export function DashboardModeView({
             <p className="text-xs text-muted-foreground">{momentumLabel}</p>
           </CardContent>
         </Card>
+      </div>
+
+      <div id="journey-progress">
+        <BizMapJourneyProgress />
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[1.2fr_1fr]">

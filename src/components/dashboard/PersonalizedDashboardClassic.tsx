@@ -30,6 +30,7 @@ import { FounderResources } from './FounderResources';
 import { BizMapStageTasks } from './BizMapStageTasks';
 import { getLocalDateString, wasDailyGoalPromptSkipped } from '@/lib/dailyGoalPrompt';
 import { DailyMissionCard } from './DailyMissionCard';
+import { BizMapJourneyProgress } from './BizMapJourneyProgress';
 
 export const PersonalizedDashboardClassic = () => {
   const { user } = useAuth();
@@ -280,6 +281,10 @@ export const PersonalizedDashboardClassic = () => {
 
           <div className="animate-fade-in-up opacity-0" style={{ animationDelay: '0.03s', animationFillMode: 'forwards' }} id="daily-mission-card">
             <DailyMissionCard />
+          </div>
+
+          <div className="animate-fade-in-up opacity-0" style={{ animationDelay: '0.035s', animationFillMode: 'forwards' }} id="journey-progress">
+            <BizMapJourneyProgress />
           </div>
 
 	        <div className="animate-fade-in-up opacity-0" style={{ animationDelay: '0.04s', animationFillMode: 'forwards' }}>
