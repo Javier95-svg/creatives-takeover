@@ -21,6 +21,7 @@ import { useBizMapProgress } from '@/hooks/useBizMapProgress';
 import { useUnifiedTasks } from '@/hooks/useUnifiedTasks';
 import { getLocalDateString, wasDailyGoalPromptSkipped } from '@/lib/dailyGoalPrompt';
 import { useActivationJourney } from '@/hooks/useActivationJourney';
+import { DailyMissionCard } from './DailyMissionCard';
 
 /** Exposes the total incomplete task count to child components (e.g. sidebar badge) */
 export const TaskCountContext = createContext<number>(0);
@@ -342,12 +343,16 @@ export const PersonalizedDashboardV2 = () => {
                           : 'Full control center'}
                     </p>
 	                    <p className="text-xs text-muted-foreground mt-2">
-	                      Current BizMap stage: <span className="font-semibold text-foreground">{currentStage}</span>
-	                    </p>
-	                  </div>
+		                      Current BizMap stage: <span className="font-semibold text-foreground">{currentStage}</span>
+		                    </p>
+		                  </div>
 
-                    {!isActivated && (
-                      <div className="rounded-[1.75rem] border border-sky-500/20 bg-sky-500/10 px-5 py-5 shadow-sm">
+                      <div id="daily-mission-card">
+                        <DailyMissionCard />
+                      </div>
+
+	                    {!isActivated && (
+	                      <div className="rounded-[1.75rem] border border-sky-500/20 bg-sky-500/10 px-5 py-5 shadow-sm">
                         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                           <div className="space-y-2">
                             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-700 dark:text-sky-300">

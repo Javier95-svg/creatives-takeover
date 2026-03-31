@@ -29,6 +29,7 @@ import { RecentWins } from './RecentWins';
 import { FounderResources } from './FounderResources';
 import { BizMapStageTasks } from './BizMapStageTasks';
 import { getLocalDateString, wasDailyGoalPromptSkipped } from '@/lib/dailyGoalPrompt';
+import { DailyMissionCard } from './DailyMissionCard';
 
 export const PersonalizedDashboardClassic = () => {
   const { user } = useAuth();
@@ -244,9 +245,9 @@ export const PersonalizedDashboardClassic = () => {
         />
 
         {/* Header Section */}
-        <div className="space-y-4">
-          {/* Welcome Header */}
-          <div className="relative overflow-hidden animate-fade-in-up">
+	        <div className="space-y-4">
+	          {/* Welcome Header */}
+	          <div className="relative overflow-hidden animate-fade-in-up">
             <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-primary/10 to-transparent rounded-2xl blur-3xl" />
             <Card className="relative border-primary/20 shadow-lg backdrop-blur-sm bg-card/95 transition-all duration-300 hover:shadow-xl">
               <CardContent className="p-6">
@@ -274,11 +275,15 @@ export const PersonalizedDashboardClassic = () => {
                 </div>
               </CardContent>
             </Card>
-          </div>
-        </div>
+	          </div>
+	        </div>
 
-        <div className="animate-fade-in-up opacity-0" style={{ animationDelay: '0.04s', animationFillMode: 'forwards' }}>
-          <BizMapStageTasks />
+          <div className="animate-fade-in-up opacity-0" style={{ animationDelay: '0.03s', animationFillMode: 'forwards' }} id="daily-mission-card">
+            <DailyMissionCard />
+          </div>
+
+	        <div className="animate-fade-in-up opacity-0" style={{ animationDelay: '0.04s', animationFillMode: 'forwards' }}>
+	          <BizMapStageTasks />
         </div>
 
         {/* Smart Recommendations */}

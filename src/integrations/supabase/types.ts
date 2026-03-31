@@ -2273,6 +2273,36 @@ export type Database = {
         }
         Relationships: []
       }
+      daily_missions: {
+        Row: {
+          completed: boolean
+          created_at: string
+          id: string
+          mission_date: string
+          mission_text: string
+          stage: Database["public"]["Enums"]["bizmap_stage"]
+          user_id: string
+        }
+        Insert: {
+          completed?: boolean
+          created_at?: string
+          id?: string
+          mission_date: string
+          mission_text: string
+          stage?: Database["public"]["Enums"]["bizmap_stage"]
+          user_id: string
+        }
+        Update: {
+          completed?: boolean
+          created_at?: string
+          id?: string
+          mission_date?: string
+          mission_text?: string
+          stage?: Database["public"]["Enums"]["bizmap_stage"]
+          user_id?: string
+        }
+        Relationships: []
+      }
       daily_tasks: {
         Row: {
           ai_generated: boolean | null
