@@ -182,6 +182,9 @@ const BizMapAI = () => {
     getSession,
     sessions
   } = useChatSessions();
+
+  // True only if this user has never saved a completed BizMap plan before — used to make their first run free
+  const isFirstBizMap = !sessions.some(s => s.launch_report && s.launch_report.trim().length > 0);
   const [searchParams] = useSearchParams();
 
   const [message, setMessage] = useState("");
@@ -356,6 +359,16 @@ const BizMapAI = () => {
         });
         if (launchReport) {
           trackBizMapOutputSaved({ userId: user?.id, sessionId: currentSessionId });
+
+          // Send celebration email (deduped inside the function — fires once per user)
+          supabase.functions.invoke('send-retention-email', {
+            body: {
+              userId: user.id,
+              email: user.email,
+              fullName: user.user_metadata?.full_name ?? null,
+              sequence: 'celebration',
+            },
+          }).catch(() => { /* non-blocking */ });
 
           // Show share prompt the first time a report is saved
           if (!hasShownSharePromptRef.current) {
@@ -1073,7 +1086,7 @@ Subject: "Quick question about [their pain point]"
       } else {
         setMessages(prev => [...prev, { type: "assistant", content: "Amazing! I have everything I need now. Let me create your personalized Launch Report - this is going to be good! 🚀" }]);
         const completeAnswers = { ...userAnswers, [currentKey]: combined };
-        const report = await generateLaunchReport(completeAnswers, feedbackCompleted);
+        const report = await generateLaunchReport(completeAnswers, feedbackCompleted || isFirstBizMap);
         setLaunchReport(report);
         setMessages(prev => [...prev, { type: "assistant", content: report }]);
       }
@@ -1137,7 +1150,7 @@ Subject: "Quick question about [their pain point]"
 
       // Generate launch report
       const completeAnswers = { ...userAnswers };
-      const report = await generateLaunchReport(completeAnswers, feedbackCompleted);
+      const report = await generateLaunchReport(completeAnswers, feedbackCompleted || isFirstBizMap);
       setLaunchReport(report);
 
       // Add final message with report

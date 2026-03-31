@@ -9,7 +9,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-type SequenceType = "activation_nudge" | "progress_nudge" | "reengagement";
+type SequenceType = "activation_nudge" | "progress_nudge" | "reengagement" | "celebration";
 
 interface RetentionEmailRequest {
   userId: string;
@@ -58,6 +58,37 @@ function buildProgressNudgeEmail(name: string, niche: string) {
         <p style="margin: 0 0 4px; color: #64748b; font-size: 13px;">— The Creatives Takeover Team</p>
         <hr style="margin: 24px 0; border: none; border-top: 1px solid #e2e8f0;" />
         <p style="font-size: 12px; color: #94a3b8;">You're receiving this because you signed up at creatives-takeover.com. <a href="https://creatives-takeover.com/account" style="color: #94a3b8;">Manage email preferences</a></p>
+      </div>
+    `,
+  };
+}
+
+function buildCelebrationEmail(name: string, niche: string) {
+  const nicheText = niche ? ` for your ${niche} startup` : "";
+  return {
+    subject: `Your 30-day launch plan is ready, ${name} 🚀`,
+    html: `
+      <div style="font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; line-height: 1.6; color: #0f172a; max-width: 560px;">
+        <h1 style="margin: 0 0 16px; font-size: 22px; font-weight: 700;">You just built something real, ${name} 🎉</h1>
+        <p style="margin: 0 0 12px; color: #334155;">Your BizMap AI plan${nicheText} is saved and ready.</p>
+        <p style="margin: 0 0 8px; color: #334155;">Here's what you now have:</p>
+        <ul style="margin: 0 0 16px; padding-left: 20px; color: #334155;">
+          <li style="margin-bottom: 6px;">A personalized <strong>30-day launch roadmap</strong></li>
+          <li style="margin-bottom: 6px;">Market analysis and go-to-market strategy</li>
+          <li style="margin-bottom: 6px;">A validation plan built around your idea</li>
+        </ul>
+        <p style="margin: 0 0 16px; color: #334155;">Your next step is to validate it with real people. Use the <strong>ICP Builder</strong> or <strong>Waitlist Maker</strong> to turn this plan into demand signals.</p>
+        <div style="margin: 24px 0; display: flex; gap: 12px; flex-wrap: wrap;">
+          <a href="https://www.creativestakeover.com/bizmap-ai/chat" style="background: #32b8c6; color: #fff; padding: 12px 28px; border-radius: 999px; text-decoration: none; font-weight: 600; font-size: 15px; display: inline-block; margin-right: 12px; margin-bottom: 8px;">
+            View My Plan →
+          </a>
+          <a href="https://www.creativestakeover.com/dashboard" style="background: transparent; color: #32b8c6; padding: 12px 28px; border-radius: 999px; text-decoration: none; font-weight: 600; font-size: 15px; display: inline-block; border: 2px solid #32b8c6; margin-bottom: 8px;">
+            Go to Dashboard
+          </a>
+        </div>
+        <p style="margin: 0 0 4px; color: #64748b; font-size: 13px;">— The Creatives Takeover Team</p>
+        <hr style="margin: 24px 0; border: none; border-top: 1px solid #e2e8f0;" />
+        <p style="font-size: 12px; color: #94a3b8;">You're receiving this because you saved a BizMap plan at creativestakeover.com. <a href="https://www.creativestakeover.com/account" style="color: #94a3b8;">Manage email preferences</a></p>
       </div>
     `,
   };
@@ -125,6 +156,9 @@ serve(async (req: Request): Promise<Response> => {
         break;
       case "reengagement":
         emailContent = buildReengagementEmail(name, niche);
+        break;
+      case "celebration":
+        emailContent = buildCelebrationEmail(name, niche);
         break;
       default:
         return new Response(JSON.stringify({ error: `Unknown sequence: ${sequence}` }), {
