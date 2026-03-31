@@ -6,7 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useWeeklyMission } from '@/hooks/decision-engine/useWeeklyMission';
 import { Target, TrendingUp, CheckCircle2, Calendar, Edit2, Trash2, Plus } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { trackWeeklyMissionViewed } from '@/lib/analytics';
 import { cn } from '@/lib/utils';
 import {
   Dialog,
@@ -42,6 +43,10 @@ export function WeeklyMissionPanel() {
   const [newMissionGoal, setNewMissionGoal] = useState('');
   const [editedMissionGoal, setEditedMissionGoal] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    trackWeeklyMissionViewed();
+  }, []);
 
   // Handle create mission
   const handleCreateMission = async () => {

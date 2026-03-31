@@ -85,6 +85,7 @@ const SECONDARY_PAIN_OPTIONS = [
 const STAGE_TO_PROFILE_BUSINESS_STAGE: Record<OnboardingBizMapStageSelection, string> = {
   stage_i: 'identity',
   stage_ii: 'prototype',
+  stage_iii: 'building',
 };
 
 interface OnboardingFormProps {
@@ -112,7 +113,7 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
     acceptedTerms: false,
   });
 
-  const totalSteps = 4;
+  const totalSteps = 2;
   const progress = ((currentStep + 1) / totalSteps) * 100;
 
   const waitForProfile = async (userId: string) => {
@@ -154,7 +155,7 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
           newErrors.startupIndustry = 'Please choose your startup niche';
         }
         break;
-      case 3:
+      case 1:
         if (!formData.acceptedTerms) {
           newErrors.acceptedTerms = 'Please accept the Terms of Service and Privacy Policy';
         }
@@ -229,7 +230,7 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
         onboardingCompletedAt: startedAt,
       };
 
-      const activationEntryStage = selectedStage === 'stage_ii' ? 'stage_ii' : 'stage_i';
+      const activationEntryStage = selectedStage === 'stage_iii' ? 'stage_iii' : selectedStage === 'stage_ii' ? 'stage_ii' : 'stage_i';
       const userPreferences = mergeActivationJourneyIntoPreferences(
         onboardingData,
         getDefaultActivationJourney(activationEntryStage, startedAt),
@@ -269,6 +270,7 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
         current_stage: stageProgress.currentStage,
         highest_unlocked_stage: stageProgress.highestUnlockedStage,
         ...(selectedStage === 'stage_ii' ? { identity_completed_at: startedAt } : {}),
+        ...(selectedStage === 'stage_iii' ? { identity_completed_at: startedAt, prototype_completed_at: startedAt } : {}),
       };
 
       const { error: progressError } = await supabase
@@ -321,7 +323,7 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
             currentStage: DEFAULT_CURRENT_STAGE,
             highestUnlockedStage: DEFAULT_HIGHEST_UNLOCKED_STAGE,
           };
-      const activationEntryStage = selectedStage === 'stage_ii' ? 'stage_ii' : 'stage_i';
+      const activationEntryStage = selectedStage === 'stage_iii' ? 'stage_iii' : selectedStage === 'stage_ii' ? 'stage_ii' : 'stage_i';
       const skippedPreferences = mergeActivationJourneyIntoPreferences(
         {
           onboardingSkippedAt: skippedAt,
@@ -355,6 +357,7 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
         current_stage: stageProgress.currentStage,
         highest_unlocked_stage: stageProgress.highestUnlockedStage,
         ...(selectedStage === 'stage_ii' ? { identity_completed_at: skippedAt } : {}),
+        ...(selectedStage === 'stage_iii' ? { identity_completed_at: skippedAt, prototype_completed_at: skippedAt } : {}),
       };
 
       const { error: progressError } = await supabase
@@ -399,14 +402,14 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
         return (
           <div className="space-y-6">
             <div>
-              <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight mb-2 font-space-grotesk">Tell us about your current reality</h2>
+              <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight mb-2 font-space-grotesk">Two quick questions</h2>
               <p className="text-muted-foreground mb-6 font-poppins">
-                Understanding where you are helps us personalize your experience.
+                This is all we need to personalize your first tool and get you started in under a minute.
               </p>
             </div>
 
             <div>
-              <Label className="text-base font-semibold mb-3 block font-space-grotesk">Which BizMap stage are you currently in? *</Label>
+              <Label className="text-base font-semibold mb-3 block font-space-grotesk">Where are you right now? *</Label>
               <RadioGroup
                 value={formData.businessStage}
                 onValueChange={(value) =>
@@ -416,16 +419,17 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
               >
                 <Label htmlFor="stage-i" className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60 cursor-pointer">
                   <RadioGroupItem value="stage_i" id="stage-i" />
-                  <span className="flex-1">Stage I: Identity (ICP Builder)</span>
+                  <span className="flex-1">I have an idea — need to define who it's for</span>
                 </Label>
                 <Label htmlFor="stage-ii" className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60 cursor-pointer">
                   <RadioGroupItem value="stage_ii" id="stage-ii" />
-                  <span className="flex-1">Stage II: Prototype (Waitlist Maker)</span>
+                  <span className="flex-1">I'm validating — need to test real demand</span>
+                </Label>
+                <Label htmlFor="stage-iii" className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60 cursor-pointer">
+                  <RadioGroupItem value="stage_iii" id="stage-iii" />
+                  <span className="flex-1">I'm building — need to scope my MVP and raise</span>
                 </Label>
               </RadioGroup>
-              <p className="text-xs text-muted-foreground mt-2">
-                Stage III+ unlocks only after you complete Stage I and Stage II.
-              </p>
               {errors.businessStage && <p className="text-sm text-destructive mt-1">{errors.businessStage}</p>}
             </div>
 
@@ -446,245 +450,12 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
                   ))}
                 </SelectContent>
               </Select>
-              <p className="mt-2 text-xs text-muted-foreground">
-                We use this to personalize investor recommendations and matched previews.
-              </p>
               {errors.startupIndustry && <p className="text-sm text-destructive mt-1">{errors.startupIndustry}</p>}
-            </div>
-
-            <div>
-              <Label className="text-base font-semibold mb-3 block font-space-grotesk">What's your founder experience?</Label>
-              <RadioGroup
-                value={formData.founderExperience}
-                onValueChange={(value) => setFormData({ ...formData, founderExperience: value })}
-                className="space-y-2"
-              >
-                <Label htmlFor="exp-first" className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60 cursor-pointer">
-                  <RadioGroupItem value="first-time" id="exp-first" />
-                  <span className="flex-1">First-time founder</span>
-                </Label>
-                <Label htmlFor="exp-1-2" className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60 cursor-pointer">
-                  <RadioGroupItem value="1-2" id="exp-1-2" />
-                  <span className="flex-1">1-2 previous ventures</span>
-                </Label>
-                <Label htmlFor="exp-3plus" className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60 cursor-pointer">
-                  <RadioGroupItem value="3+" id="exp-3plus" />
-                  <span className="flex-1">3+ previous ventures</span>
-                </Label>
-              </RadioGroup>
-              {errors.founderExperience && <p className="text-sm text-destructive mt-1">{errors.founderExperience}</p>}
-            </div>
-
-            <div>
-              <Label className="text-base font-semibold mb-3 block font-space-grotesk">What's your time commitment?</Label>
-              <RadioGroup
-                value={formData.timeCommitment}
-                onValueChange={(value) => setFormData({ ...formData, timeCommitment: value })}
-                className="space-y-2"
-              >
-                <Label htmlFor="time-full" className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60 cursor-pointer">
-                  <RadioGroupItem value="full-time" id="time-full" />
-                  <span className="flex-1">Full-time</span>
-                </Label>
-                <Label htmlFor="time-part" className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60 cursor-pointer">
-                  <RadioGroupItem value="part-time" id="time-part" />
-                  <span className="flex-1">Part-time</span>
-                </Label>
-                <Label htmlFor="time-weekends" className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60 cursor-pointer">
-                  <RadioGroupItem value="weekends" id="time-weekends" />
-                  <span className="flex-1">Weekends/evenings</span>
-                </Label>
-              </RadioGroup>
-              {errors.timeCommitment && <p className="text-sm text-destructive mt-1">{errors.timeCommitment}</p>}
-            </div>
-
-            <div>
-              <Label className="text-base font-semibold mb-3 block font-space-grotesk">When do you want to launch?</Label>
-              <RadioGroup
-                value={formData.launchTimeline}
-                onValueChange={(value) => setFormData({ ...formData, launchTimeline: value })}
-                className="space-y-2"
-              >
-                <Label htmlFor="launch-30" className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60 cursor-pointer">
-                  <RadioGroupItem value="30-days" id="launch-30" />
-                  <span className="flex-1">Within 30 days</span>
-                </Label>
-                <Label htmlFor="launch-60" className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60 cursor-pointer">
-                  <RadioGroupItem value="60-days" id="launch-60" />
-                  <span className="flex-1">Within 60 days</span>
-                </Label>
-                <Label htmlFor="launch-90" className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60 cursor-pointer">
-                  <RadioGroupItem value="90-plus-days" id="launch-90" />
-                  <span className="flex-1">Within 90+ days</span>
-                </Label>
-                <Label htmlFor="launch-unsure" className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60 cursor-pointer">
-                  <RadioGroupItem value="not-sure" id="launch-unsure" />
-                  <span className="flex-1">Not sure yet</span>
-                </Label>
-              </RadioGroup>
-              {errors.launchTimeline && <p className="text-sm text-destructive mt-1">{errors.launchTimeline}</p>}
-            </div>
-
-            <div>
-              <Label className="text-base font-semibold mb-3 block font-space-grotesk">Are you looking for a co-founder?</Label>
-              <RadioGroup
-                value={formData.lookingForCofounder}
-                onValueChange={(value) => setFormData({ ...formData, lookingForCofounder: value })}
-                className="space-y-2"
-              >
-                <Label htmlFor="cofounder-yes" className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60 cursor-pointer">
-                  <RadioGroupItem value="yes" id="cofounder-yes" />
-                  <span className="flex-1">Yes</span>
-                </Label>
-                <Label htmlFor="cofounder-no" className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60 cursor-pointer">
-                  <RadioGroupItem value="no" id="cofounder-no" />
-                  <span className="flex-1">No</span>
-                </Label>
-              </RadioGroup>
-              {errors.lookingForCofounder && <p className="text-sm text-destructive mt-1">{errors.lookingForCofounder}</p>}
             </div>
           </div>
         );
 
       case 1:
-        return (
-          <div className="space-y-6">
-            <div>
-              <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight mb-2 font-space-grotesk">Let's dive into your challenges</h2>
-              <p className="text-muted-foreground mb-6 font-poppins">
-                Understanding your pain points helps us provide better guidance.
-              </p>
-            </div>
-
-            <div>
-              <Label className="text-base font-semibold mb-3 block font-space-grotesk">What's your primary pain point?</Label>
-              <RadioGroup
-                value={formData.primaryPain}
-                onValueChange={(value) => setFormData({ ...formData, primaryPain: value })}
-                className="space-y-2"
-              >
-                {PRIMARY_PAIN_OPTIONS.map((pain) => (
-                  <Label
-                    key={pain.value}
-                    htmlFor={`pain-${pain.value}`}
-                    className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60 cursor-pointer"
-                  >
-                    <RadioGroupItem value={pain.value} id={`pain-${pain.value}`} />
-                    <span className="flex-1">{pain.label}</span>
-                  </Label>
-                ))}
-              </RadioGroup>
-              {errors.primaryPain && <p className="text-sm text-destructive mt-1">{errors.primaryPain}</p>}
-            </div>
-
-            <div>
-              <Label className="text-base font-semibold mb-3 block font-space-grotesk">What other challenges do you face? (Select all that apply)</Label>
-              <div className="space-y-2">
-                {SECONDARY_PAIN_OPTIONS.map((pain) => (
-                  <Label
-                    key={pain.value}
-                    htmlFor={`secondary-${pain.value}`}
-                    className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60 cursor-pointer"
-                  >
-                    <Checkbox
-                      id={`secondary-${pain.value}`}
-                      checked={formData.secondaryPains.includes(pain.value)}
-                      onCheckedChange={() => toggleSecondaryPain(pain.value)}
-                    />
-                    <span className="flex-1">{pain.label}</span>
-                  </Label>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <Label className="text-base font-semibold mb-3 block font-space-grotesk">How do you typically make important decisions?</Label>
-              <RadioGroup
-                value={formData.decisionMakingProcess}
-                onValueChange={(value) => setFormData({ ...formData, decisionMakingProcess: value })}
-                className="space-y-2"
-              >
-                <Label htmlFor="decision-gut" className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60 cursor-pointer">
-                  <RadioGroupItem value="gut-feel" id="decision-gut" />
-                  <span className="flex-1">Gut feeling</span>
-                </Label>
-                <Label htmlFor="decision-research" className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60 cursor-pointer">
-                  <RadioGroupItem value="research" id="decision-research" />
-                  <span className="flex-1">Research and data</span>
-                </Label>
-                <Label htmlFor="decision-community" className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60 cursor-pointer">
-                  <RadioGroupItem value="community" id="decision-community" />
-                  <span className="flex-1">Community input</span>
-                </Label>
-                <Label htmlFor="decision-mentor" className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60 cursor-pointer">
-                  <RadioGroupItem value="mentor" id="decision-mentor" />
-                  <span className="flex-1">Mentor guidance</span>
-                </Label>
-              </RadioGroup>
-              {errors.decisionMakingProcess && <p className="text-sm text-destructive mt-1">{errors.decisionMakingProcess}</p>}
-            </div>
-          </div>
-        );
-
-      case 2:
-        return (
-          <div className="space-y-6">
-            <div>
-              <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight mb-2 font-space-grotesk">Personalize your experience</h2>
-              <p className="text-muted-foreground mb-6 font-poppins">
-                Help us tailor the platform to your preferences.
-              </p>
-            </div>
-
-            <div>
-              <Label className="text-base font-semibold mb-3 block font-space-grotesk">What's your preferred communication style?</Label>
-              <RadioGroup
-                value={formData.communicationStyle}
-                onValueChange={(value) => setFormData({ ...formData, communicationStyle: value })}
-                className="space-y-2"
-              >
-                <Label htmlFor="comm-visual" className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60 cursor-pointer">
-                  <RadioGroupItem value="visual" id="comm-visual" />
-                  <span className="flex-1">Visual (charts, graphs, infographics)</span>
-                </Label>
-                <Label htmlFor="comm-text" className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60 cursor-pointer">
-                  <RadioGroupItem value="text-focused" id="comm-text" />
-                  <span className="flex-1">Text-focused (detailed explanations)</span>
-                </Label>
-                <Label htmlFor="comm-mixed" className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60 cursor-pointer">
-                  <RadioGroupItem value="mixed" id="comm-mixed" />
-                  <span className="flex-1">Mixed (both visual and text)</span>
-                </Label>
-              </RadioGroup>
-              {errors.communicationStyle && <p className="text-sm text-destructive mt-1">{errors.communicationStyle}</p>}
-            </div>
-
-            <div>
-              <Label className="text-base font-semibold mb-3 block font-space-grotesk">What's your commitment level?</Label>
-              <RadioGroup
-                value={formData.commitmentLevel}
-                onValueChange={(value) => setFormData({ ...formData, commitmentLevel: value })}
-                className="space-y-2"
-              >
-                <Label htmlFor="commit-serious" className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60 cursor-pointer">
-                  <RadioGroupItem value="serious" id="commit-serious" />
-                  <span className="flex-1">Serious - ready to take action</span>
-                </Label>
-                <Label htmlFor="commit-exploring" className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60 cursor-pointer">
-                  <RadioGroupItem value="exploring" id="commit-exploring" />
-                  <span className="flex-1">Exploring - seeing what's possible</span>
-                </Label>
-                <Label htmlFor="commit-casual" className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60 cursor-pointer">
-                  <RadioGroupItem value="casual" id="commit-casual" />
-                  <span className="flex-1">Casual - just checking it out</span>
-                </Label>
-              </RadioGroup>
-              {errors.commitmentLevel && <p className="text-sm text-destructive mt-1">{errors.commitmentLevel}</p>}
-            </div>
-          </div>
-        );
-
-      case 3:
         return (
           <div className="space-y-6">
             <div>
@@ -719,7 +490,7 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
 
             <div className="p-4 rounded-2xl bg-primary/5 border border-primary/20">
               <p className="text-sm text-muted-foreground">
-                <strong className="text-foreground">What's next?</strong> Complete this setup or skip for now and start using your account immediately.
+                <strong className="text-foreground">What's next?</strong> We'll take you straight to your first tool — no long setup, no tutorials.
               </p>
             </div>
           </div>

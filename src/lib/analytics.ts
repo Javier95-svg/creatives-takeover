@@ -103,3 +103,56 @@ export const identify = (id: string, properties?: AnalyticsProperties) => {
   queuedIdentifies.push({ id, properties });
   void initPosthog();
 };
+
+// ─── Retention: BizMap AI events ─────────────────────────────────────────────
+
+export const trackBizMapFirstMessage = (properties?: AnalyticsProperties) =>
+  captureEvent('bizmap_first_message_sent', properties);
+
+export const trackBizMapOutputGenerated = (properties?: AnalyticsProperties) =>
+  captureEvent('bizmap_first_output_generated', properties);
+
+export const trackBizMapOutputSaved = (properties?: AnalyticsProperties) =>
+  captureEvent('bizmap_output_saved', properties);
+
+export const trackBizMapDemoStarted = (properties?: AnalyticsProperties) =>
+  captureEvent('bizmap_demo_started', properties);
+
+export const trackBizMapDemoCompleted = (properties?: AnalyticsProperties) =>
+  captureEvent('bizmap_demo_completed', properties);
+
+export const trackBizMapDemoConverted = (properties?: AnalyticsProperties) =>
+  captureEvent('bizmap_demo_converted_to_signup', properties);
+
+// ─── Retention: Tool activation events ───────────────────────────────────────
+
+export const trackICPBuilderStarted = (properties?: AnalyticsProperties) =>
+  captureEvent('icp_builder_started', properties);
+
+export const trackICPBuilderCompleted = (properties?: AnalyticsProperties) =>
+  captureEvent('icp_builder_completed', properties);
+
+export const trackWaitlistCreated = (properties?: AnalyticsProperties) =>
+  captureEvent('waitlist_created', properties);
+
+export const trackToolFirstUse = (toolName: string, properties?: AnalyticsProperties) =>
+  captureEvent('tool_first_use', { tool: toolName, ...properties });
+
+// ─── Retention: Share events ──────────────────────────────────────────────────
+
+export const trackShareLinkCreated = (properties?: AnalyticsProperties) =>
+  captureEvent('share_link_created', properties);
+
+export const trackShareLinkViewed = (properties?: AnalyticsProperties) =>
+  captureEvent('share_link_viewed', properties);
+
+export const trackShareLinkConverted = (properties?: AnalyticsProperties) =>
+  captureEvent('share_link_converted', properties);
+
+// ─── Retention: Weekly mission events ────────────────────────────────────────
+
+export const trackWeeklyMissionViewed = (properties?: AnalyticsProperties) =>
+  captureEvent('weekly_mission_viewed', properties);
+
+export const trackWeeklyMissionCompleted = (properties?: AnalyticsProperties) =>
+  captureEvent('weekly_mission_completed', properties);

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -30,12 +30,20 @@ import { ReportDisplay } from "@/components/ReportDisplay";
 import { ExampleConversations } from "@/components/bizmap/ExampleConversations";
 import { BookOpen } from "lucide-react";
 import { trackActivity } from "@/lib/activity";
+import {
+  trackBizMapFirstMessage,
+  trackBizMapOutputGenerated,
+  trackBizMapOutputSaved,
+  trackBizMapDemoCompleted,
+  trackBizMapDemoConverted,
+  trackShareLinkCreated,
+} from "@/lib/analytics";
 import { FounderOSIntegration } from "@/components/bizmap/FounderOSIntegration";
 import { useFounderOSIntegration } from "@/hooks/useFounderOSIntegration";
 import { BizMapTour } from "@/components/onboarding/BizMapTour";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import BizmapWallpaper from "@/components/wallpapers/BizmapWallpaper";
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 
 const BizMapAI = () => {
   const [currentStep, setCurrentStep] = useState(0);
@@ -181,6 +189,12 @@ const BizMapAI = () => {
     { active: false, stepKey: null, initialAnswer: "" }
   );
   const [isLoadingSession, setIsLoadingSession] = useState(false);
+  const hasShownSharePromptRef = useRef(false);
+
+  // Demo mode: read ?demo=true&idea=... from URL
+  const isDemoMode = searchParams.get('demo') === 'true';
+  const demoIdea = searchParams.get('idea') || '';
+  const [showDemoGate, setShowDemoGate] = useState(false);
 
   useEffect(() => {
     const sessionId = searchParams.get('session');
@@ -188,6 +202,20 @@ const BizMapAI = () => {
       setCurrentSessionId(sessionId);
     }
   }, [searchParams, currentSessionId, setCurrentSessionId]);
+
+  // Auto-populate and auto-submit the demo idea on mount
+  useEffect(() => {
+    if (!isDemoMode || !demoIdea) return;
+    const trimmedIdea = demoIdea.trim();
+    if (!trimmedIdea) return;
+    setMessage(trimmedIdea);
+    // Small delay so the UI renders first
+    const timer = setTimeout(() => {
+      handleSendMessage(trimmedIdea);
+    }, 800);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isDemoMode, demoIdea]);
 
   // Sync currentSessionId changes from useChatSessions
   useEffect(() => {
@@ -326,6 +354,28 @@ const BizMapAI = () => {
           is_completed: !!launchReport,
           launch_report: launchReport
         });
+        if (launchReport) {
+          trackBizMapOutputSaved({ userId: user?.id, sessionId: currentSessionId });
+
+          // Show share prompt the first time a report is saved
+          if (!hasShownSharePromptRef.current) {
+            hasShownSharePromptRef.current = true;
+            const shareUrl = `${window.location.origin}/bizmap-ai/chat?session=${currentSessionId}`;
+            trackShareLinkCreated({ userId: user?.id, sessionId: currentSessionId });
+            toast.success('Your BizMap plan is saved!', {
+              description: 'Share it with your co-founder or advisor.',
+              duration: 8000,
+              action: {
+                label: 'Copy link',
+                onClick: () => {
+                  navigator.clipboard.writeText(shareUrl).then(() => {
+                    toast.success('Link copied to clipboard');
+                  });
+                },
+              },
+            });
+          }
+        }
       }
     }
   };
@@ -529,10 +579,11 @@ const BizMapAI = () => {
       }
 
       if (data?.success) {
-        const successMessage = isFreeForFeedback ? 
-          "FREE Launch Report generated successfully! 🎉" : 
+        const successMessage = isFreeForFeedback ?
+          "FREE Launch Report generated successfully! 🎉" :
           `Launch Report generated successfully! (Used ${reportCost} credits)`;
         toast.success(successMessage);
+        trackBizMapOutputGenerated({ userId: user?.id, sessionId: currentSessionId });
         await computeAndStoreSuccessScore(answers);
         await refreshBalance();
         
@@ -987,6 +1038,18 @@ Subject: "Quick question about [their pain point]"
     if (!currentAnswer.trim()) return;
 
     const currentKey = wizardSteps[currentStep].key;
+
+    // Track first message sent — fires once when the user responds to step 0
+    if (currentStep === 0) {
+      trackBizMapFirstMessage({ userId: user?.id, messageLength: currentAnswer.length });
+    }
+
+    // Demo mode gate: allow step 0 to complete, then show signup prompt
+    if (isDemoMode && !isAuthenticated && currentStep >= 1) {
+      trackBizMapDemoCompleted({ idea: demoIdea });
+      setShowDemoGate(true);
+      return;
+    }
 
     // If we're answering a pending follow-up for this step
     if (followUpState.active && followUpState.stepKey === currentKey) {
@@ -1534,6 +1597,40 @@ Subject: "Quick question about [their pain point]"
       />
 
       <Footer />
+
+      {/* Demo Mode Signup Gate */}
+      {showDemoGate && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="w-full max-w-md bg-card border border-border/60 rounded-2xl shadow-2xl p-8 text-center animate-fade-in-up">
+            <div className="text-4xl mb-4">🚀</div>
+            <h2 className="text-2xl font-semibold font-space-grotesk mb-2">Your plan is taking shape</h2>
+            <p className="text-muted-foreground text-sm mb-6 font-poppins">
+              Sign up for free to unlock your full BizMap AI plan — market analysis, validation roadmap, 30-day launch sprint, and more.
+            </p>
+            <div className="flex flex-col gap-3">
+              <Button
+                size="lg"
+                className="w-full rounded-full font-semibold"
+                asChild
+                onClick={() => trackBizMapDemoConverted({ idea: demoIdea })}
+              >
+                <Link to={`/signup?return=/bizmap-ai/chat&idea=${encodeURIComponent(demoIdea)}`}>
+                  Build My Full Plan — Free
+                  <ArrowRight className="w-4 h-4 ml-1" />
+                </Link>
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full rounded-full text-muted-foreground"
+                onClick={() => setShowDemoGate(false)}
+              >
+                Keep exploring the demo
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
     </ErrorBoundary>
   );

@@ -17,11 +17,14 @@ import { DashboardSidebar } from './DashboardSidebar';
 import { useActiveSection } from '@/hooks/useActiveSection';
 import { ReactNode } from 'react';
 import { BizMapStageTasks } from './BizMapStageTasks';
+import { BizMapJourneyProgress } from './BizMapJourneyProgress';
 import { useBizMapProgress } from '@/hooks/useBizMapProgress';
 import { useUnifiedTasks } from '@/hooks/useUnifiedTasks';
 import { getLocalDateString, wasDailyGoalPromptSkipped } from '@/lib/dailyGoalPrompt';
 import { useActivationJourney } from '@/hooks/useActivationJourney';
 import { DailyMissionCard } from './DailyMissionCard';
+import { ShipUpdateFeed } from './ShipUpdateFeed';
+import { trackWeeklyMissionViewed } from '@/lib/analytics';
 
 /** Exposes the total incomplete task count to child components (e.g. sidebar badge) */
 export const TaskCountContext = createContext<number>(0);
@@ -352,26 +355,36 @@ export const PersonalizedDashboardV2 = () => {
                       </div>
 
 	                    {!isActivated && (
-	                      <div className="rounded-[1.75rem] border border-sky-500/20 bg-sky-500/10 px-5 py-5 shadow-sm">
+	                      <div className="rounded-[1.75rem] border border-primary/30 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent px-5 py-5 shadow-sm">
                         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                           <div className="space-y-2">
-                            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-700 dark:text-sky-300">
-                              First-session activation
+                            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
+                              Your first founder output — start here
                             </p>
                             <h2 className="text-xl font-semibold tracking-tight">
-                              Leave this session with {activationJourney.firstOutputLabel}
+                              Build your BizMap AI plan in 5 minutes
                             </h2>
                             <p className="max-w-3xl text-sm leading-relaxed text-muted-foreground">
-                              The fastest path to value is a real artifact, not a tour of the platform. Start with the current stage tool, save the output, then move to the next step.
+                              Answer 7 quick questions and walk away with a full 30-day launch roadmap, market analysis, and go-to-market strategy — personalized to your idea.
                             </p>
                           </div>
-                          <button
-                            type="button"
-                            onClick={() => navigate(activationJourney.startRoute)}
-                            className="rounded-full bg-primary px-5 py-3 text-sm font-medium text-primary-foreground transition-transform hover:scale-[1.02]"
-                          >
-                            Continue guided start
-                          </button>
+                          <div className="flex flex-col sm:flex-row gap-2 shrink-0">
+                            <button
+                              type="button"
+                              onClick={() => navigate('/bizmap-ai/chat')}
+                              className="rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition-transform hover:scale-[1.02] flex items-center gap-2"
+                            >
+                              Build My Plan
+                              <ArrowRight className="h-4 w-4" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => navigate(activationJourney.startRoute)}
+                              className="rounded-full border border-border/60 bg-background/70 px-5 py-3 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground hover:border-primary/30"
+                            >
+                              Or start with {activationJourney.firstOutputLabel}
+                            </button>
+                          </div>
                         </div>
                       </div>
                     )}
@@ -381,6 +394,20 @@ export const PersonalizedDashboardV2 = () => {
 	                      <BizMapStageTasks />
 	                    </div>
 	                  )}
+
+                  {/* Activation Journey Progress — always shown in dashboard mode */}
+                  {dashboardMode === 'dashboard' && (
+                    <div id="bizmap-journey-progress">
+                      <BizMapJourneyProgress />
+                    </div>
+                  )}
+
+                  {/* Community Ship Feed — always shown in dashboard mode */}
+                  {dashboardMode === 'dashboard' && (
+                    <div id="ship-update-feed">
+                      <ShipUpdateFeed />
+                    </div>
+                  )}
 
 	                  {/* Dynamic View Based on Mode */}
 	                  {dashboardMode === 'focus' && <FocusModeView {...metrics} />}

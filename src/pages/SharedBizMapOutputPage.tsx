@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { trackActivity } from '@/lib/activity';
+import { trackShareLinkViewed, trackShareLinkConverted } from '@/lib/analytics';
 import {
   getBizMapLinkedInPostText,
   getBizMapLinkedInShareUrl,
@@ -50,6 +51,7 @@ export default function SharedBizMapOutputPage() {
             sourceType: data.source_type,
             visibility: data.visibility,
           });
+          trackShareLinkViewed({ slug, shareId: data.id, sourceType: data.source_type });
         }
       } catch (error) {
         console.error('Failed to load shared output:', error);
@@ -105,6 +107,7 @@ export default function SharedBizMapOutputPage() {
       shareId: record.id,
       sourceType: record.source_type,
     });
+    trackShareLinkConverted({ slug: record.slug, shareId: record.id, sourceType: record.source_type });
   };
 
   const robots = record?.visibility === 'public'
@@ -363,6 +366,23 @@ export default function SharedBizMapOutputPage() {
           </div>
         )}
       </main>
+
+      {/* Sticky conversion bar — visible to viewers who haven't signed up */}
+      {record && (
+        <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-border/60 bg-background/95 backdrop-blur-md px-4 py-3">
+          <div className="mx-auto max-w-5xl flex items-center justify-between gap-4">
+            <p className="text-sm text-muted-foreground hidden sm:block">
+              Build your own plan in 5 minutes — free.
+            </p>
+            <Button asChild onClick={handleCTA} className="gap-2 rounded-full px-6 ml-auto shrink-0">
+              <Link to={`/signup?returnTo=${encodeURIComponent('/bizmap-ai/chat')}&shared_output=${encodeURIComponent(record.slug)}`}>
+                Start free — no credit card
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

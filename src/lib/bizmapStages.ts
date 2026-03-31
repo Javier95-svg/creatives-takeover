@@ -174,7 +174,8 @@ export const STAGE_TASKS: Record<BizMapStage, StageTaskTemplate[]> = {
 
 export type OnboardingBizMapStageSelection =
   | 'stage_i'
-  | 'stage_ii';
+  | 'stage_ii'
+  | 'stage_iii';
 
 export function getStageIndex(stage: BizMapStage): number {
   return BIZMAP_STAGE_ORDER.indexOf(stage);
@@ -234,6 +235,8 @@ export function onboardingSelectionToProgress(selection: OnboardingBizMapStageSe
       return { currentStage: 'IDENTITY', highestUnlockedStage: 'PROTOTYPE' };
     case 'stage_ii':
       return { currentStage: 'PROTOTYPE', highestUnlockedStage: 'PROTOTYPE' };
+    case 'stage_iii':
+      return { currentStage: 'BUILDING', highestUnlockedStage: 'BUILDING' };
     default:
       return { currentStage: DEFAULT_CURRENT_STAGE, highestUnlockedStage: DEFAULT_HIGHEST_UNLOCKED_STAGE };
   }

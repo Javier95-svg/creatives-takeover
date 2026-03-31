@@ -10,6 +10,8 @@ export interface ActivationNotificationState {
   firstOutputCelebratedAt: string | null;
   reminderSentForStage: ActivationEntryStage | null;
   reminderSentAt: string | null;
+  weeklyWinSentAt: string | null;
+  lastOutputCelebratedAt: string | null;
 }
 
 export interface ActivationBellPayload {
@@ -28,6 +30,8 @@ export function getDefaultActivationNotificationState(): ActivationNotificationS
     firstOutputCelebratedAt: null,
     reminderSentForStage: null,
     reminderSentAt: null,
+    weeklyWinSentAt: null,
+    lastOutputCelebratedAt: null,
   };
 }
 
@@ -75,6 +79,8 @@ export function readActivationNotificationStateFromPreferences(value: unknown): 
       typeof candidate.firstOutputCelebratedAt === 'string' ? candidate.firstOutputCelebratedAt : null,
     reminderSentForStage: normalizeStage(candidate.reminderSentForStage),
     reminderSentAt: typeof candidate.reminderSentAt === 'string' ? candidate.reminderSentAt : null,
+    weeklyWinSentAt: typeof candidate.weeklyWinSentAt === 'string' ? candidate.weeklyWinSentAt : null,
+    lastOutputCelebratedAt: typeof candidate.lastOutputCelebratedAt === 'string' ? candidate.lastOutputCelebratedAt : null,
   };
 }
 
@@ -217,4 +223,70 @@ export function buildActivationReminderNotification(
         imageUrl: ACTIVATION_NOTIFICATION_IMAGE,
       };
   }
+}
+
+// ─── New: fires on every save (not just the first) ───────────────────────────
+
+export function buildOutputSaveNotification(
+  activationJourney: ActivationJourneyState,
+  preferences: Record<string, unknown> | null,
+): ActivationBellPayload {
+  const nicheFragment = buildNicheFragment(preferences);
+
+  return {
+    slug: `output-saved-${Date.now()}`,
+    title: 'Output saved',
+    message: `Progress saved${nicheFragment}. Keep moving — the next step is ${activationJourney.nextRoute.replace('/', '').replace('-', ' ')}.`,
+    route: activationJourney.nextRoute,
+    imageUrl: ACTIVATION_NOTIFICATION_IMAGE,
+  };
+}
+
+// ─── New: Weekly Win — fires Monday for users who saved output in prior week ──
+
+export function buildWeeklyWinNotification(
+  activationJourney: ActivationJourneyState,
+  preferences: Record<string, unknown> | null,
+): ActivationBellPayload {
+  const nicheFragment = buildNicheFragment(preferences);
+
+  return {
+    slug: `weekly-win-${new Date().toISOString().slice(0, 10)}`,
+    title: 'Weekly win unlocked',
+    message: `You saved an output last week${nicheFragment}. Your mission this week: go one stage further.`,
+    route: activationJourney.nextRoute,
+    imageUrl: ACTIVATION_NOTIFICATION_IMAGE,
+  };
+}
+
+// ─── Timing helpers ───────────────────────────────────────────────────────────
+
+/** Returns true if a welcome notification should fire (not yet sent for this stage). */
+export function shouldSendWelcome(
+  state: ActivationNotificationState,
+  stage: ActivationEntryStage,
+): boolean {
+  return state.welcomeSentForStage !== stage;
+}
+
+/** Returns true if a reminder should fire (not yet sent for this stage + at least 10 min since welcome). */
+export function shouldSendReminder(
+  state: ActivationNotificationState,
+  stage: ActivationEntryStage,
+): boolean {
+  if (state.reminderSentForStage === stage) return false;
+  if (!state.welcomeSentAt) return false;
+  const tenMinutes = 10 * 60 * 1000;
+  return Date.now() - new Date(state.welcomeSentAt).getTime() > tenMinutes;
+}
+
+/** Returns true if a weekly-win notification should fire (not yet sent this week + Monday). */
+export function shouldSendWeeklyWin(state: ActivationNotificationState): boolean {
+  const today = new Date();
+  // Only fire on Mondays (day 1)
+  if (today.getDay() !== 1) return false;
+  if (!state.weeklyWinSentAt) return true;
+  const lastSent = new Date(state.weeklyWinSentAt);
+  const daysSince = (Date.now() - lastSent.getTime()) / (24 * 60 * 60 * 1000);
+  return daysSince >= 6;
 }
