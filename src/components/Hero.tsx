@@ -1,9 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowRight, LayoutDashboard, User, Cpu, Image as ImageIcon, Upload, Loader2, Sparkles } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { ArrowRight, LayoutDashboard, User, Cpu, Image as ImageIcon, Upload, Loader2 } from "lucide-react";
+import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { trackBizMapDemoStarted } from "@/lib/analytics";
 import { useConversionTracking } from "@/hooks/useConversionTracking";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -73,10 +72,8 @@ function getHeroImageSrcSet(imageUrl: string): string | undefined {
 const Hero = () => {
   const { isAuthenticated, user } = useAuth();
   const { trackTriggerView, trackEngagement } = useConversionTracking();
-  const navigate = useNavigate();
   const heroRef = useRef<HTMLElement>(null);
   const hasTrackedView = useRef(false);
-  const [demoIdea, setDemoIdea] = useState("");
   const [heroImages, setHeroImages] = useState<HeroImage[]>(() => {
     if (typeof window === "undefined") return [];
 
@@ -474,14 +471,6 @@ const Hero = () => {
     }, 10);
   };
 
-  const handleDemoSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const idea = demoIdea.trim();
-    if (!idea) return;
-    trackBizMapDemoStarted({ idea: idea.slice(0, 200) });
-    navigate(`/bizmap-ai/chat?demo=true&idea=${encodeURIComponent(idea)}`);
-  };
-
   return (
       <section
       ref={heroRef}
@@ -512,30 +501,6 @@ const Hero = () => {
                 : "Creatives Takeover hands first-time founders the system, the tools, and the network that used to be reserved for the well-connected. No cohort, no gatekeepers, no BS."}
             </p>
             
-            {/* Demo BizMap Input — logged-out only */}
-            {!isAuthenticated && (
-              <form onSubmit={handleDemoSubmit} className="mb-6 sm:mb-8 max-w-xl mx-auto px-2 sm:px-0">
-                <p className="text-xs text-muted-foreground mb-2 font-space-grotesk uppercase tracking-widest">Try it free — no sign-up needed</p>
-                <div className="flex gap-2">
-                  <Input
-                    value={demoIdea}
-                    onChange={(e) => setDemoIdea(e.target.value)}
-                    placeholder="I'm building a [product] for [audience]..."
-                    className="flex-1 h-11 rounded-full border-border/60 bg-background/80 text-sm"
-                    maxLength={300}
-                  />
-                  <Button
-                    type="submit"
-                    disabled={!demoIdea.trim()}
-                    className="h-11 px-4 rounded-full shrink-0"
-                  >
-                    <Sparkles className="w-4 h-4 mr-1" />
-                    Build Plan
-                  </Button>
-                </div>
-              </form>
-            )}
-
             {/* Enhanced CTA Section */}
             <div className="mb-6 sm:mb-8 md:mb-10">
               {isAuthenticated ? (
