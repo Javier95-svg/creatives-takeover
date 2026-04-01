@@ -1,16 +1,18 @@
 import { Coins, Loader2, Plus } from "lucide-react";
+import { CreditPriceList } from "@/components/CreditPriceList";
 import { useCredits } from "@/hooks/useCredits";
-import { useSubscription } from "@/hooks/useSubscription";
-import { CREDIT_PACK_OPTIONS, TIER_MONTHLY_CREDITS } from "@/config/constants";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
 import {
+  Tooltip,
+  TooltipContent,
   TooltipProvider,
+  TooltipTrigger,
 } from "@/components/ui/tooltip";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
@@ -24,8 +26,7 @@ interface CreditDisplayProps {
 }
 
 export function CreditDisplay({ variant = "navigation", showPurchaseButton = false }: CreditDisplayProps) {
-  const { balance, monthlyQuota, loading, refreshBalance } = useCredits();
-  const { subscriptionData, actionLoading, createCreditPackCheckout } = useSubscription();
+  const { balance, monthlyQuota, loading, refreshBalance, CREDIT_COSTS } = useCredits();
   const navigate = useNavigate();
   const { user } = useAuth();
 
@@ -41,14 +42,6 @@ export function CreditDisplay({ variant = "navigation", showPurchaseButton = fal
   }
 
   const totalAvailable = balance + monthlyQuota;
-  const tierKey = (subscriptionData?.subscription_tier || "free").toLowerCase() as keyof typeof TIER_MONTHLY_CREDITS;
-  const planCredits = monthlyQuota || TIER_MONTHLY_CREDITS[tierKey] || TIER_MONTHLY_CREDITS.free;
-  const planName = {
-    free: "Rookie",
-    creator: "Rising",
-    professional: "Pro",
-  }[tierKey] || "Rookie";
-  const progressValue = planCredits > 0 ? Math.min(100, (Math.max(totalAvailable, 0) / planCredits) * 100) : 0;
 
   const getBalanceColor = () => {
     if (totalAvailable <= 0) return "destructive";
@@ -83,39 +76,35 @@ export function CreditDisplay({ variant = "navigation", showPurchaseButton = fal
             <DropdownMenuSeparator />
 
             <div className="p-3 space-y-3">
-              <div className="rounded-lg border bg-muted/30 p-3 space-y-3">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium">
-                      {totalAvailable} out of {planCredits} - {planName} Plan
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {balance > 0
-                        ? `${balance} top-up credit${balance !== 1 ? "s" : ""} included`
-                        : "Monthly credits remaining"}
-                    </p>
-                  </div>
-                  <Badge variant={getBalanceColor()} className="shrink-0">
-                    {getBalanceText()}
+              {/* Monthly Quota */}
+              {monthlyQuota > 0 && (
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-muted-foreground">Monthly Quota:</span>
+                  <Badge variant="outline" className="text-xs">
+                    {monthlyQuota} credits
                   </Badge>
                 </div>
+              )}
 
-                <Progress value={progressValue} className="h-2" />
+              {/* Purchased Balance */}
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">Purchased Balance:</span>
+                <Badge variant="outline" className="text-xs">
+                  {balance} credits
+                </Badge>
+              </div>
 
-                <div className="grid gap-2">
-                  {CREDIT_PACK_OPTIONS.map((pack, index) => (
-                    <Button
-                      key={pack.id}
-                      size="sm"
-                      className="w-full"
-                      variant={index === 0 ? "default" : "outline"}
-                      disabled={actionLoading}
-                      onClick={() => createCreditPackCheckout(pack.id)}
-                    >
-                      Top Up {pack.credits} Credits
-                    </Button>
-                  ))}
-                </div>
+              {/* Total Available */}
+              <div className="flex justify-between items-center pt-2 border-t">
+                <span className="text-sm font-medium">Total Available:</span>
+                <Badge variant={getBalanceColor()}>
+                  {getBalanceText()}
+                </Badge>
+              </div>
+
+              <div className="pt-2 border-t">
+                <h4 className="text-xs font-semibold mb-2">Credit Costs</h4>
+                <CreditPriceList />
               </div>
 
               {showPurchaseButton && (

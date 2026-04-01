@@ -2,13 +2,36 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Star, Crown, Check, Zap } from "lucide-react";
+import { Star, Crown, Check } from "lucide-react";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useAuth } from "@/contexts/AuthContext";
-import { CREDIT_PACK_OPTIONS } from "@/config/constants";
+import { toast } from "sonner";
+
+// Stripe Payment Links mapping by tier and billing cycle
+const PAYMENT_LINKS: Record<string, Record<string, string>> = {
+  creator: {
+    monthly: "https://buy.stripe.com/aFacN67Sxg8T9b80bh0VO00",
+    yearly: "https://buy.stripe.com/3cIdRa7SxcWH1IG6zF0VO01",
+  },
+  professional: {
+    monthly: "https://buy.stripe.com/cNifZi0q5f4P7303nt0VO02",
+    yearly: "https://buy.stripe.com/4gMbJ2dcR09V1IGf6b0VO03",
+  },
+};
+
+// Get payment link for a given tier and billing cycle
+const getPaymentLink = (
+  tierName: string,
+  billingCycle: "monthly" | "yearly"
+): string | null => {
+  const normalizedTier = tierName.trim().toLowerCase();
+  const links = PAYMENT_LINKS[normalizedTier];
+  if (!links) return null;
+  return links[billingCycle] || null;
+};
 
 const Pricing = () => {
-  const { tiers, loading, actionLoading, subscriptionData, createCheckout, createCreditPackCheckout } = useSubscription();
+  const { tiers, loading, subscriptionData } = useSubscription();
   const { user } = useAuth();
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
 
@@ -56,26 +79,26 @@ const Pricing = () => {
         "VC Search: 5 views per month",
         "Stories: read-only",
         "Community access: limited",
-        "Discovery Calls: Book calls with mentors (10 credits per call)",
+        "Discovery Calls: Book calls with mentors (5 credits per call)",
       ],
       creator: [
-        "100 credits per month",
+        "50 credits per month",
         "Full Dashboard access",
         "BizMap AI: ICP Builder, PMF Lab, MVP Builder, Business Planner, Tech Stack Builder",
         "Insighta: VC Search, Email Templates, Pitch Deck Analyzer, Insighta Test",
         "Community: Find a Mentor, Find a Co-Founder",
         "Stories and Prompt Library",
-        "Discovery Calls: Book calls with mentors (10 credits per call)",
+        "Discovery Calls: Book calls with mentors (5 credits per call)",
       ],
       professional: [
-        "300 credits per month",
+        "150 credits per month",
         "Full Dashboard access",
         "BizMap AI: All tools including GTM Strategist",
         "Insighta: Unlimited VC Search, Accelerator Hunt, Email Templates, Pitch Deck Analyzer, Insighta Test",
         "Community: Find a Mentor, Find a Co-Founder, Find your Angel",
         "Stories, Prompt Library, and custom templates",
         "Early access to new features",
-        "Discovery Calls: Book calls with mentors (10 credits per call)",
+        "Discovery Calls: Book calls with mentors (5 credits per call)",
       ],
     };
     return featureMap[tierName] || [];
@@ -110,7 +133,7 @@ const Pricing = () => {
     return details[tierName] || { title: "Get Started", cta: "Subscribe" };
   };
 
-  const handleSubscribe = async (tierName: string) => {
+  const handleSubscribe = (tierName: string) => {
     if (tierName === "free") {
       if (!user) {
         window.location.href = "/auth";
@@ -123,16 +146,19 @@ const Pricing = () => {
       return;
     }
 
-    await createCheckout(tierName, undefined, billingCycle);
-  };
-
-  const handleBuyCreditPack = async (packId: string) => {
-    if (!user) {
-      window.location.href = "/auth";
+    const paymentLink = getPaymentLink(tierName, billingCycle);
+    if (!paymentLink) {
+      toast.error("Unable to find payment link for this plan. Please try again.");
       return;
     }
 
-    await createCreditPackCheckout(packId);
+    const checkoutWindow = window.open(paymentLink, "_blank", "noopener,noreferrer");
+    if (!checkoutWindow) {
+      toast.error("Please allow popups to open checkout in a new tab.");
+      return;
+    }
+
+    toast.success("Opening secure checkout in a new tab...");
   };
 
   if (loading) {
@@ -151,7 +177,7 @@ const Pricing = () => {
   return (
     <>
       {/* Pricing Section */}
-      <section className="relative overflow-hidden pt-28 pb-section-mobile md:pt-32 lg:pt-36 lg:pb-section-desktop" id="pricing-plans">
+      <section className="relative py-section-mobile lg:py-section-desktop overflow-hidden" id="pricing-plans">
         <div className="container mx-auto px-4 sm:px-6 relative z-10">
           <div className="text-center mb-16 animate-fade-in">
             <h1 className="text-4xl lg:text-6xl font-semibold tracking-tight mb-6 gradient-text font-space-grotesk">
@@ -176,7 +202,7 @@ const Pricing = () => {
           </div>
 
           {/* Pricing Cards */}
-          <div id="pricing-plans" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 max-w-7xl mx-auto items-start">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 max-w-7xl mx-auto items-start">
             {tiers.map((tier, index) => {
               const { cta } = getTitleAndCTA(tier.tier_name);
               const features = getFeatures(tier.tier_name);
@@ -259,7 +285,7 @@ const Pricing = () => {
 
                   <Button
                     onClick={() => handleSubscribe(tier.tier_name)}
-                    disabled={!!(isCurrentPlan && user) || actionLoading}
+                    disabled={!!(isCurrentPlan && user)}
                     className={`w-full rounded-full py-3 px-4 font-semibold font-poppins transition-all shadow-sm hover:shadow-md ${isCurrentPlan
                       ? "bg-green-600 text-white cursor-default hover:bg-green-700"
                       : isPopular
@@ -272,56 +298,6 @@ const Pricing = () => {
                 </div>
               );
             })}
-          </div>
-
-          {/* Credit Add-On Packs */}
-          <div id="credit-packs" className="mt-20 max-w-4xl mx-auto">
-            <div className="text-center mb-10">
-              <Badge variant="secondary" className="rounded-full bg-primary/10 text-primary border-primary/20 font-medium mb-4">
-                <Zap className="w-3 h-3 mr-1 inline" />
-                Extra Credits
-              </Badge>
-              <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight mb-3 font-space-grotesk">
-                Need more credits? Top up anytime.
-              </h2>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              {CREDIT_PACK_OPTIONS.map((pack, index) => (
-                <div
-                  key={pack.id}
-                  style={{ animationDelay: `${index * 150}ms`, animationFillMode: 'both' }}
-                  className="relative rounded-2xl border border-green-500/50 bg-card/80 p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:border-green-500/80 flex flex-col backdrop-blur animate-fade-in"
-                >
-                  <div className="text-center mb-4">
-                    <div className="text-3xl font-semibold tracking-tight font-space-grotesk mb-1">
-                      {pack.credits} credits
-                    </div>
-                    <div className="text-2xl font-semibold font-space-grotesk tabular-nums">
-                      ${pack.price.toFixed(2)}
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-1 font-poppins">
-                      ${(pack.price / pack.credits).toFixed(2)} per credit · never expire
-                    </p>
-                  </div>
-                  <p className="text-sm font-medium text-center text-muted-foreground mb-4 font-poppins">
-                    {pack.label}
-                  </p>
-                  <Button
-                    onClick={() => handleBuyCreditPack(pack.id)}
-                    variant="outline"
-                    disabled={actionLoading}
-                    className="w-full rounded-full font-semibold font-poppins border-green-500/50 hover:border-green-500 hover:bg-green-500/10"
-                  >
-                    Buy {pack.credits} Credits
-                  </Button>
-                </div>
-              ))}
-            </div>
-
-            <p className="text-center text-xs text-muted-foreground mt-6 font-poppins">
-              Credits are added to your persistent balance instantly after payment. Monthly plan credits reset each billing cycle — purchased credits don't.
-            </p>
           </div>
 
         </div>
