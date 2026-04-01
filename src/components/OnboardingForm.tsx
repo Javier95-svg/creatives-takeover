@@ -4,163 +4,81 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { ArrowLeft, ArrowRight } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Lightbulb, Target, Hammer } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
-import { ANGEL_SECTOR_OPTIONS } from '@/data/angelSectors';
-import {
-  DEFAULT_CURRENT_STAGE,
-  DEFAULT_HIGHEST_UNLOCKED_STAGE,
-  onboardingSelectionToProgress,
-  type OnboardingBizMapStageSelection,
-} from '@/lib/bizmapStages';
-import {
-  getDefaultActivationJourney,
-  mergeActivationJourneyIntoPreferences,
-} from '@/lib/activationJourney';
+import { captureEvent } from '@/lib/analytics';
 
 interface OnboardingData {
-  // Step 1
-  businessStage: OnboardingBizMapStageSelection | '';
-  startupIndustry: string;
-  founderExperience: string;
-  timeCommitment: string;
-  launchTimeline: string;
-  lookingForCofounder: string;
-
-  // Step 2
+  businessStage: string;
   primaryPain: string;
-  secondaryPains: string[];
-  decisionMakingProcess: string;
-
-  // Step 3
-  communicationStyle: string;
-  commitmentLevel: string;
-
-  // Step 4
   acceptedTerms: boolean;
 }
 
 const PRIMARY_PAIN_OPTIONS = [
-  {
-    value: 'unclear_direction',
-    label: 'Unclear direction - too many ideas, not enough focus',
-  },
-  {
-    value: 'cant_validate',
-    label: "Can't validate if anyone wants this",
-  },
-  {
-    value: 'building_isolation',
-    label: 'Building in isolation - no audience or feedback',
-  },
-  {
-    value: 'worried_funding',
-    label: 'Worried about how to fund this or convince investors',
-  },
-  {
-    value: 'overwhelmed_execution',
-    label: 'Overwhelmed by what to build first and how to execute',
-  },
+  { value: 'unclear_direction', label: "Too many ideas — I need focus" },
+  { value: 'cant_validate', label: "I can't tell if anyone wants this" },
+  { value: 'building_isolation', label: 'Building alone with no feedback' },
+  { value: 'worried_funding', label: 'Worried about funding and investors' },
+  { value: 'overwhelmed_execution', label: "Don't know what to build first" },
 ];
 
-const SECONDARY_PAIN_OPTIONS = [
-  { value: 'time_management', label: 'Time management - wearing too many hats' },
-  { value: 'decision_paralysis', label: 'Decision paralysis - afraid of making the wrong move' },
-  { value: 'imposter_syndrome', label: "Imposter syndrome - don't feel like a real founder" },
-  { value: 'isolation', label: 'Isolation - no one to bounce ideas off' },
-  { value: 'flying_blind', label: 'Flying blind - no data or metrics to guide decisions' },
-  { value: 'competing_priorities', label: 'Competing priorities - product vs marketing vs fundraising' },
+const STAGE_CARDS = [
+  {
+    value: 'idea',
+    icon: Lightbulb,
+    headline: "I have an idea but don't know who it's for",
+    sub: 'Start with ICP Builder → Define your customer',
+    startRoute: '/icp-builder',
+  },
+  {
+    value: 'validation',
+    icon: Target,
+    headline: 'I know my customer — I need to test demand',
+    sub: 'Start with Waitlist Maker → Capture demand signals',
+    startRoute: '/icp-builder',
+  },
+  {
+    value: 'mvp',
+    icon: Hammer,
+    headline: "I'm building the product now",
+    sub: 'Start with PMF Lab → Validate as you build',
+    startRoute: '/icp-builder',
+  },
 ];
-
-const STAGE_TO_PROFILE_BUSINESS_STAGE: Record<OnboardingBizMapStageSelection, string> = {
-  stage_i: 'identity',
-  stage_ii: 'prototype',
-  stage_iii: 'building',
-};
 
 interface OnboardingFormProps {
-  onComplete?: () => void;
+  onComplete?: (startRoute?: string) => void;
 }
 
 export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
   const { user } = useAuth();
   const [currentStep, setCurrentStep] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+  const [startedAt] = useState(Date.now());
   const [errors, setErrors] = useState<Partial<Record<keyof OnboardingData, string>>>({});
 
   const [formData, setFormData] = useState<OnboardingData>({
     businessStage: '',
-    startupIndustry: '',
-    founderExperience: '',
-    timeCommitment: '',
-    launchTimeline: '',
-    lookingForCofounder: '',
     primaryPain: '',
-    secondaryPains: [],
-    decisionMakingProcess: '',
-    communicationStyle: '',
-    commitmentLevel: '',
     acceptedTerms: false,
   });
 
   const totalSteps = 2;
   const progress = ((currentStep + 1) / totalSteps) * 100;
 
-  const waitForProfile = async (userId: string) => {
-    const maxAttempts = 20;
-    const retryDelayMs = 250;
-
-    for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
-      const { data: profile, error } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('id', userId)
-        .maybeSingle();
-
-      if (error) {
-        throw error;
-      }
-
-      if (profile) {
-        return true;
-      }
-
-      if (attempt < maxAttempts - 1) {
-        await new Promise((resolve) => window.setTimeout(resolve, retryDelayMs));
-      }
-    }
-
-    return false;
-  };
-
   const validateStep = (step: number): boolean => {
     const newErrors: Partial<Record<keyof OnboardingData, string>> = {};
 
     switch (step) {
       case 0:
-        if (!formData.businessStage) {
-          newErrors.businessStage = 'Please select your business stage';
-        }
-        if (!formData.startupIndustry) {
-          newErrors.startupIndustry = 'Please choose your startup niche';
-        }
+        if (!formData.businessStage) newErrors.businessStage = 'Please select where you are in your journey';
+        if (!formData.primaryPain) newErrors.primaryPain = 'Please select your biggest challenge';
         break;
       case 1:
-        if (!formData.acceptedTerms) {
-          newErrors.acceptedTerms = 'Please accept the Terms of Service and Privacy Policy';
-        }
-        break;
-      default:
+        if (!formData.acceptedTerms) newErrors.acceptedTerms = 'You must accept the terms to continue';
         break;
     }
 
@@ -169,11 +87,14 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
   };
 
   const handleNext = async () => {
-    if (!validateStep(currentStep)) {
-      return;
-    }
+    if (!validateStep(currentStep)) return;
 
     if (currentStep < totalSteps - 1) {
+      captureEvent('onboarding_step_completed', {
+        step: currentStep + 1,
+        stage: formData.businessStage,
+        painPoint: formData.primaryPain,
+      });
       setCurrentStep((prev) => prev + 1);
       return;
     }
@@ -189,9 +110,7 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
   };
 
   const handleSubmit = async () => {
-    if (!validateStep(currentStep)) {
-      return;
-    }
+    if (!validateStep(currentStep)) return;
 
     if (!user) {
       toast.error('Please sign in to complete onboarding');
@@ -201,198 +120,45 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
     setIsLoading(true);
 
     try {
-      const profileReady = await waitForProfile(user.id);
-      if (!profileReady) {
-        throw new Error('PROFILE_NOT_READY');
-      }
+      const selectedCard = STAGE_CARDS.find((c) => c.value === formData.businessStage);
+      const startRoute = selectedCard?.startRoute ?? '/icp-builder';
 
-      const selectedStage = formData.businessStage as OnboardingBizMapStageSelection;
-      const startedAt = new Date().toISOString();
-      const stageProgress = selectedStage
-        ? onboardingSelectionToProgress(selectedStage)
-        : {
-            currentStage: DEFAULT_CURRENT_STAGE,
-            highestUnlockedStage: DEFAULT_HIGHEST_UNLOCKED_STAGE,
-          };
-
-      const onboardingData = {
-        businessStage: selectedStage || 'stage_i',
-        startupIndustry: formData.startupIndustry,
-        founderExperience: formData.founderExperience,
-        timeCommitment: formData.timeCommitment,
-        launchTimeline: formData.launchTimeline,
-        lookingForCofounder: formData.lookingForCofounder,
-        primaryPain: formData.primaryPain,
-        secondaryPains: formData.secondaryPains,
-        decisionMakingProcess: formData.decisionMakingProcess,
-        communicationStyle: formData.communicationStyle,
-        commitmentLevel: formData.commitmentLevel,
-        onboardingCompletedAt: startedAt,
-      };
-
-      const activationEntryStage = selectedStage === 'stage_iii' ? 'stage_iii' : selectedStage === 'stage_ii' ? 'stage_ii' : 'stage_i';
-      const userPreferences = mergeActivationJourneyIntoPreferences(
-        onboardingData,
-        getDefaultActivationJourney(activationEntryStage, startedAt),
-      );
-
-      const { data: updatedProfile, error: updateError } = await supabase
+      const { error: updateError } = await supabase
         .from('profiles')
         .update({
           onboarding_completed: true,
-          business_stage: selectedStage ? STAGE_TO_PROFILE_BUSINESS_STAGE[selectedStage] : 'identity',
-          startup_industry: formData.startupIndustry ? [formData.startupIndustry] : null,
+          business_stage: formData.businessStage,
           quiz_completed: true,
           quiz_completed_at: new Date().toISOString(),
-          quiz_is_first_startup: formData.founderExperience
-            ? (formData.founderExperience === 'first-time' ? 'yes' : 'no')
-            : null,
-          quiz_current_stage: selectedStage || null,
-          quiz_biggest_challenge: formData.primaryPain || null,
-          quiz_launch_timeline: formData.launchTimeline || null,
-          quiz_looking_for_cofounder: formData.lookingForCofounder || null,
-          user_preferences: userPreferences,
+          quiz_current_stage: formData.businessStage,
+          quiz_biggest_challenge: formData.primaryPain,
+          user_preferences: {
+            businessStage: formData.businessStage,
+            primaryPain: formData.primaryPain,
+            onboardingCompletedAt: new Date().toISOString(),
+          },
         })
-        .eq('id', user.id)
-        .select('id')
-        .maybeSingle();
+        .eq('id', user.id);
 
-      if (updateError) {
-        throw updateError;
-      }
+      if (updateError) throw updateError;
 
-      if (!updatedProfile) {
-        throw new Error('PROFILE_UPDATE_NOOP');
-      }
+      captureEvent('onboarding_completed', {
+        stage: formData.businessStage,
+        painPoint: formData.primaryPain,
+        timeMs: Date.now() - startedAt,
+        startRoute,
+      });
 
-      const progressPayload = {
-        user_id: user.id,
-        current_stage: stageProgress.currentStage,
-        highest_unlocked_stage: stageProgress.highestUnlockedStage,
-        ...(selectedStage === 'stage_ii' ? { identity_completed_at: startedAt } : {}),
-        ...(selectedStage === 'stage_iii' ? { identity_completed_at: startedAt, prototype_completed_at: startedAt } : {}),
-      };
-
-      const { error: progressError } = await supabase
-        .from('user_progress' as any)
-        .upsert(
-          progressPayload,
-          { onConflict: 'user_id' },
-        );
-
-      if (progressError) {
-        throw progressError;
-      }
-
-      toast.success('Onboarding completed successfully!');
+      toast.success("You're all set! Let's get your first win.");
 
       if (onComplete) {
-        onComplete();
+        onComplete(startRoute);
       }
     } catch (error) {
       console.error('Failed to save onboarding data:', error);
-      if (error instanceof Error && (error.message === 'PROFILE_NOT_READY' || error.message === 'PROFILE_UPDATE_NOOP')) {
-        toast.error('Your account is still finishing setup. Please wait a moment and try again.');
-      } else {
-        toast.error('Failed to save onboarding data. Please try again.');
-      }
+      toast.error('Failed to save onboarding data. Please try again.');
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const handleSkip = async () => {
-    if (!user) {
-      toast.error('Please sign in to continue');
-      return;
-    }
-
-    setIsLoading(true);
-
-    try {
-      const profileReady = await waitForProfile(user.id);
-      if (!profileReady) {
-        throw new Error('PROFILE_NOT_READY');
-      }
-
-      const skippedAt = new Date().toISOString();
-      const selectedStage = formData.businessStage as OnboardingBizMapStageSelection;
-      const stageProgress = selectedStage
-        ? onboardingSelectionToProgress(selectedStage)
-        : {
-            currentStage: DEFAULT_CURRENT_STAGE,
-            highestUnlockedStage: DEFAULT_HIGHEST_UNLOCKED_STAGE,
-          };
-      const activationEntryStage = selectedStage === 'stage_iii' ? 'stage_iii' : selectedStage === 'stage_ii' ? 'stage_ii' : 'stage_i';
-      const skippedPreferences = mergeActivationJourneyIntoPreferences(
-        {
-          onboardingSkippedAt: skippedAt,
-          startupIndustry: formData.startupIndustry || null,
-        },
-        getDefaultActivationJourney(activationEntryStage, skippedAt),
-      );
-      const { data: updatedProfile, error: updateError } = await supabase
-        .from('profiles')
-        .update({
-          onboarding_completed: true,
-          business_stage: selectedStage ? STAGE_TO_PROFILE_BUSINESS_STAGE[selectedStage] : 'identity',
-          startup_industry: formData.startupIndustry ? [formData.startupIndustry] : null,
-          quiz_completed: false,
-          user_preferences: skippedPreferences,
-        })
-        .eq('id', user.id)
-        .select('id')
-        .maybeSingle();
-
-      if (updateError) {
-        throw updateError;
-      }
-
-      if (!updatedProfile) {
-        throw new Error('PROFILE_UPDATE_NOOP');
-      }
-
-      const skippedProgressPayload = {
-        user_id: user.id,
-        current_stage: stageProgress.currentStage,
-        highest_unlocked_stage: stageProgress.highestUnlockedStage,
-        ...(selectedStage === 'stage_ii' ? { identity_completed_at: skippedAt } : {}),
-        ...(selectedStage === 'stage_iii' ? { identity_completed_at: skippedAt, prototype_completed_at: skippedAt } : {}),
-      };
-
-      const { error: progressError } = await supabase
-        .from('user_progress' as any)
-        .upsert(
-          skippedProgressPayload,
-          { onConflict: 'user_id' },
-        );
-
-      if (progressError) {
-        throw progressError;
-      }
-
-      toast.success('You can complete onboarding later from your account.');
-      if (onComplete) {
-        onComplete();
-      }
-    } catch (error) {
-      console.error('Failed to skip onboarding:', error);
-      if (error instanceof Error && (error.message === 'PROFILE_NOT_READY' || error.message === 'PROFILE_UPDATE_NOOP')) {
-        toast.error('Your account is still finishing setup. Please wait a moment and try again.');
-      } else {
-        toast.error('Failed to skip onboarding. Please try again.');
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const toggleSecondaryPain = (pain: string) => {
-    const current = formData.secondaryPains;
-    if (current.includes(pain)) {
-      setFormData({ ...formData, secondaryPains: current.filter((p) => p !== pain) });
-    } else {
-      setFormData({ ...formData, secondaryPains: [...current, pain] });
     }
   };
 
@@ -400,57 +166,72 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
     switch (currentStep) {
       case 0:
         return (
-          <div className="space-y-6">
+          <div className="space-y-8">
             <div>
-              <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight mb-2 font-space-grotesk">Two quick questions</h2>
-              <p className="text-muted-foreground mb-6 font-poppins">
-                This is all we need to personalize your first tool and get you started in under a minute.
+              <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight mb-2 font-space-grotesk">
+                Where are you in your startup journey?
+              </h2>
+              <p className="text-muted-foreground font-poppins">
+                Pick the option that fits best — we'll route you to your first win.
               </p>
             </div>
 
-            <div>
-              <Label className="text-base font-semibold mb-3 block font-space-grotesk">Where are you right now? *</Label>
-              <RadioGroup
-                value={formData.businessStage}
-                onValueChange={(value) =>
-                  setFormData({ ...formData, businessStage: value as OnboardingBizMapStageSelection })
-                }
-                className="space-y-2"
-              >
-                <Label htmlFor="stage-i" className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60 cursor-pointer">
-                  <RadioGroupItem value="stage_i" id="stage-i" />
-                  <span className="flex-1">I have an idea — need to define who it's for</span>
-                </Label>
-                <Label htmlFor="stage-ii" className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60 cursor-pointer">
-                  <RadioGroupItem value="stage_ii" id="stage-ii" />
-                  <span className="flex-1">I'm validating — need to test real demand</span>
-                </Label>
-                <Label htmlFor="stage-iii" className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60 cursor-pointer">
-                  <RadioGroupItem value="stage_iii" id="stage-iii" />
-                  <span className="flex-1">I'm building — need to scope my MVP and raise</span>
-                </Label>
-              </RadioGroup>
-              {errors.businessStage && <p className="text-sm text-destructive mt-1">{errors.businessStage}</p>}
+            <div className="space-y-3">
+              {STAGE_CARDS.map(({ value, icon: Icon, headline, sub }) => {
+                const isSelected = formData.businessStage === value;
+                return (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => {
+                      setFormData((prev) => ({ ...prev, businessStage: value }));
+                      setErrors((e) => ({ ...e, businessStage: undefined }));
+                    }}
+                    className={`w-full text-left flex items-start gap-4 rounded-xl border p-4 transition-all duration-150 cursor-pointer
+                      ${isSelected
+                        ? 'border-[#32b8c6] bg-[#32b8c6]/10 shadow-sm'
+                        : 'border-border/60 bg-background/70 hover:bg-accent/60 hover:border-border'
+                      }`}
+                  >
+                    <div className={`mt-0.5 flex-shrink-0 rounded-lg p-2 ${isSelected ? 'bg-[#32b8c6]/20' : 'bg-muted'}`}>
+                      <Icon className={`h-5 w-5 ${isSelected ? 'text-[#32b8c6]' : 'text-muted-foreground'}`} />
+                    </div>
+                    <div>
+                      <p className={`font-semibold text-sm leading-snug mb-0.5 font-space-grotesk ${isSelected ? 'text-foreground' : 'text-foreground/80'}`}>
+                        {headline}
+                      </p>
+                      <p className="text-xs text-muted-foreground">{sub}</p>
+                    </div>
+                  </button>
+                );
+              })}
+              {errors.businessStage && <p className="text-sm text-destructive">{errors.businessStage}</p>}
             </div>
 
             <div>
-              <Label className="text-base font-semibold mb-3 block font-space-grotesk">What niche are you building in? *</Label>
-              <Select
-                value={formData.startupIndustry}
-                onValueChange={(value) => setFormData({ ...formData, startupIndustry: value })}
+              <Label className="text-base font-semibold mb-3 block font-space-grotesk">
+                What's your biggest challenge right now? *
+              </Label>
+              <RadioGroup
+                value={formData.primaryPain}
+                onValueChange={(value) => {
+                  setFormData((prev) => ({ ...prev, primaryPain: value }));
+                  setErrors((e) => ({ ...e, primaryPain: undefined }));
+                }}
+                className="space-y-2"
               >
-                <SelectTrigger className="h-12 rounded-lg border-border/60 bg-background/70">
-                  <SelectValue placeholder="Choose the niche that best fits your startup" />
-                </SelectTrigger>
-                <SelectContent>
-                  {ANGEL_SECTOR_OPTIONS.map((sector) => (
-                    <SelectItem key={sector} value={sector}>
-                      {sector}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {errors.startupIndustry && <p className="text-sm text-destructive mt-1">{errors.startupIndustry}</p>}
+                {PRIMARY_PAIN_OPTIONS.map((pain) => (
+                  <Label
+                    key={pain.value}
+                    htmlFor={`pain-${pain.value}`}
+                    className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60 cursor-pointer"
+                  >
+                    <RadioGroupItem value={pain.value} id={`pain-${pain.value}`} />
+                    <span className="flex-1 text-sm">{pain.label}</span>
+                  </Label>
+                ))}
+              </RadioGroup>
+              {errors.primaryPain && <p className="text-sm text-destructive mt-1">{errors.primaryPain}</p>}
             </div>
           </div>
         );
@@ -459,40 +240,44 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
         return (
           <div className="space-y-6">
             <div>
-              <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight mb-2 font-space-grotesk">Almost there!</h2>
-              <p className="text-muted-foreground mb-6 font-poppins">
-                Review our terms and get ready to launch your founder journey.
+              <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight mb-2 font-space-grotesk">
+                You're ready to go
+              </h2>
+              <p className="text-muted-foreground font-poppins">
+                We'll ask you more as you go. For now, let's get you to your first win.
               </p>
             </div>
 
-            <div className="space-y-4">
-              <div className="flex items-start space-x-2 rounded-2xl border border-border/60 bg-background/70 p-4">
-                <Checkbox
-                  id="terms"
-                  checked={formData.acceptedTerms}
-                  onCheckedChange={(checked) => setFormData({ ...formData, acceptedTerms: checked === true })}
-                  className="mt-1"
-                />
-                <Label htmlFor="terms" className="cursor-pointer text-sm leading-relaxed">
-                  I agree to the{' '}
-                  <Link to="/terms" className="text-[#32b8c6] hover:underline" target="_blank">
-                    Terms of Service
-                  </Link>
-                  {' '}and{' '}
-                  <Link to="/privacy-policy" className="text-[#32b8c6] hover:underline" target="_blank">
-                    Privacy Policy
-                  </Link>
-                  .
-                </Label>
-              </div>
-              {errors.acceptedTerms && <p className="text-sm text-destructive mt-1">{errors.acceptedTerms}</p>}
-            </div>
-
-            <div className="p-4 rounded-2xl bg-primary/5 border border-primary/20">
+            <div className="p-4 rounded-2xl bg-[#32b8c6]/10 border border-[#32b8c6]/30">
+              <p className="text-sm font-semibold text-foreground mb-1 font-space-grotesk">Your first milestone</p>
               <p className="text-sm text-muted-foreground">
-                <strong className="text-foreground">What's next?</strong> We'll take you straight to your first tool — no long setup, no tutorials.
+                Complete your <strong>ICP Profile</strong> — define exactly who your product is for.
+                Takes about 5 minutes and gives you a positioning strategy you can actually use.
               </p>
             </div>
+
+            <div className="flex items-start space-x-2 rounded-2xl border border-border/60 bg-background/70 p-4">
+              <Checkbox
+                id="terms"
+                checked={formData.acceptedTerms}
+                onCheckedChange={(checked) =>
+                  setFormData((prev) => ({ ...prev, acceptedTerms: checked === true }))
+                }
+                className="mt-1"
+              />
+              <Label htmlFor="terms" className="cursor-pointer text-sm leading-relaxed">
+                I agree to the{' '}
+                <Link to="/terms" className="text-[#32b8c6] hover:underline" target="_blank">
+                  Terms of Service
+                </Link>
+                {' '}and{' '}
+                <Link to="/privacy-policy" className="text-[#32b8c6] hover:underline" target="_blank">
+                  Privacy Policy
+                </Link>
+                . *
+              </Label>
+            </div>
+            {errors.acceptedTerms && <p className="text-sm text-destructive">{errors.acceptedTerms}</p>}
           </div>
         );
 
@@ -506,7 +291,9 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
       <Card className="rounded-2xl border border-border/60 bg-card/90 backdrop-blur-md shadow-2xl hover:shadow-2xl hover:shadow-primary/10 transition-all duration-300">
         <CardHeader className="space-y-4 pb-6 border-b border-border/60">
           <div>
-            <CardTitle className="text-2xl sm:text-3xl font-semibold tracking-tight font-space-grotesk">Welcome to Creatives Takeover</CardTitle>
+            <CardTitle className="text-2xl sm:text-3xl font-semibold tracking-tight font-space-grotesk">
+              Welcome to Creatives Takeover
+            </CardTitle>
             <CardDescription className="mt-2 text-xs uppercase tracking-[0.2em] text-muted-foreground">
               Step {currentStep + 1} of {totalSteps}
             </CardDescription>
@@ -524,7 +311,7 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
         </CardContent>
 
         <div className="px-6 pb-6 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
+          <div>
             {currentStep > 0 && (
               <Button
                 type="button"
@@ -537,15 +324,6 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
                 Back
               </Button>
             )}
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={handleSkip}
-              disabled={isLoading}
-              className="rounded-full"
-            >
-              Skip for now
-            </Button>
           </div>
 
           <div className="flex items-center gap-3">
@@ -560,9 +338,9 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
               style={{ backgroundColor: currentStep === totalSteps - 1 ? '#32b8c6' : undefined }}
             >
               {isLoading ? (
-                'Loading...'
+                'Saving...'
               ) : currentStep === totalSteps - 1 ? (
-                'Get Started'
+                'Start Building →'
               ) : (
                 <>
                   Next

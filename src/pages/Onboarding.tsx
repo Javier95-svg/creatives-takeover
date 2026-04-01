@@ -1,49 +1,22 @@
 import { useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { OnboardingForm } from '@/components/OnboardingForm';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Helmet } from 'react-helmet-async';
 import HomeWallpaper from '@/components/wallpapers/HomeWallpaper';
-import {
-  appendReturnParam,
-  consumeOnboardingReturn,
-  getOnboardingReturn,
-  persistOnboardingReturn,
-  sanitizeReturnPath,
-} from '@/lib/authRedirect';
-import {
-  consumeCheckoutIntent,
-  redirectToCheckoutIntent,
-} from '@/lib/checkoutRedirect';
-import {
-  readActivationJourneyFromPreferences,
-  shouldUseActivationStartRoute,
-} from '@/lib/activationJourney';
 
 const Onboarding = () => {
   const { user, isAuthenticated, loading: authLoading } = useAuth();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const queryReturn = sanitizeReturnPath(searchParams.get('return'), '/dashboard');
-  const storedReturn = getOnboardingReturn('/dashboard');
-  const returnUrl = queryReturn !== '/dashboard' ? queryReturn : storedReturn;
 
   useEffect(() => {
     const checkOnboardingStatus = async () => {
       if (authLoading) return;
 
-      persistOnboardingReturn(returnUrl);
-
       if (!isAuthenticated || !user) {
         // Onboarding requires an authenticated account.
-        navigate(appendReturnParam('/login', returnUrl), { replace: true });
-        return;
-      }
-
-      const pendingCheckoutIntent = consumeCheckoutIntent();
-      if (pendingCheckoutIntent) {
-        redirectToCheckoutIntent(pendingCheckoutIntent, user);
+        navigate('/signup?return=/onboarding', { replace: true });
         return;
       }
 
@@ -58,9 +31,8 @@ const Onboarding = () => {
         // STRICT CHECK: Only redirect if onboarding_completed is explicitly true
         // This ensures users who completed onboarding NEVER see this page again
         if (profile?.onboarding_completed === true) {
-          // Already onboarded, immediately redirect to intended destination.
-          const target = consumeOnboardingReturn(returnUrl);
-          navigate(target, { replace: true });
+          // Already onboarded, immediately redirect to dashboard
+          navigate('/dashboard', { replace: true });
         }
       } catch (error) {
         console.error('Error checking onboarding status:', error);
@@ -69,33 +41,10 @@ const Onboarding = () => {
     };
 
     checkOnboardingStatus();
-  }, [user, isAuthenticated, authLoading, navigate, returnUrl]);
+  }, [user, isAuthenticated, authLoading, navigate]);
 
-  const handleComplete = async () => {
-    const pendingCheckoutIntent = consumeCheckoutIntent();
-    if (pendingCheckoutIntent) {
-      redirectToCheckoutIntent(pendingCheckoutIntent, user);
-      return;
-    }
-
-    const target = consumeOnboardingReturn(returnUrl);
-    if (user && shouldUseActivationStartRoute(target)) {
-      const { data } = await supabase
-        .from('profiles')
-        .select('user_preferences')
-        .eq('id', user.id)
-        .maybeSingle();
-
-      const preferences = (data as { user_preferences?: Record<string, unknown> | null } | null)?.user_preferences;
-      const activationJourney = readActivationJourneyFromPreferences(preferences);
-
-      if (activationJourney?.startRoute) {
-        navigate(activationJourney.startRoute, { replace: true });
-        return;
-      }
-    }
-
-    navigate(target, { replace: true });
+  const handleComplete = (startRoute?: string) => {
+    navigate(startRoute ?? '/icp-builder');
   };
 
   return (

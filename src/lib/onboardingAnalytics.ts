@@ -4,6 +4,7 @@
  */
 
 import { supabase } from '@/integrations/supabase/client';
+import { captureEvent } from '@/lib/analytics';
 
 export interface OnboardingMetrics {
   userId: string;
@@ -34,21 +35,11 @@ export const trackOnboardingStep = async (
   step: 'profile_picture' | 'full_name' | 'bio' | 'social_link' | 'dashboard_visit'
 ): Promise<void> => {
   try {
-    // Log to console for debugging (remove in production or use proper analytics service)
-    console.log('[Onboarding Analytics]', {
+    captureEvent(`onboarding_${step}_completed`, {
       userId,
-      step,
       timestamp: new Date().toISOString(),
     });
-
-    // Optional: Send to analytics service (e.g., Mixpanel, Amplitude, PostHog)
-    // await fetch('/api/analytics/onboarding', {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify({ userId, step, timestamp: new Date().toISOString() }),
-    // });
   } catch (error) {
-    console.error('Error tracking onboarding step:', error);
     // Don't throw - analytics failures shouldn't break UX
   }
 };
@@ -69,22 +60,11 @@ export const trackOnboardingComplete = async (userId: string): Promise<void> => 
       const completedAt = new Date();
       const timeToComplete = (completedAt.getTime() - firstLogin.getTime()) / 1000; // in seconds
 
-      console.log('[Onboarding Complete]', {
+      captureEvent('onboarding_dashboard_visited', {
         userId,
-        timeToComplete: `${Math.round(timeToComplete / 60)} minutes`,
+        timeToCompleteMs: timeToComplete * 1000,
         timestamp: completedAt.toISOString(),
       });
-
-      // Optional: Send to analytics service
-      // await fetch('/api/analytics/onboarding-complete', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({
-      //     userId,
-      //     timeToComplete,
-      //     completedAt: completedAt.toISOString(),
-      //   }),
-      // });
     }
   } catch (error) {
     console.error('Error tracking onboarding completion:', error);
@@ -100,15 +80,14 @@ export const trackOnboardingDismissed = async (
   totalSteps: number
 ): Promise<void> => {
   try {
-    console.log('[Onboarding Dismissed]', {
+    captureEvent('onboarding_dismissed', {
       userId,
-      progress: `${completedSteps}/${totalSteps}`,
+      completedSteps,
+      totalSteps,
       timestamp: new Date().toISOString(),
     });
-
-    // Optional: Send to analytics service
   } catch (error) {
-    console.error('Error tracking onboarding dismissal:', error);
+    // Don't throw - analytics failures shouldn't break UX
   }
 };
 
