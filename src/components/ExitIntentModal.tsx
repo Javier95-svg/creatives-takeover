@@ -1,4 +1,4 @@
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { X, ArrowRight, Target, Zap, BarChart2 } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -23,6 +23,7 @@ export const ExitIntentModal = ({ isOpen, onClose }: ExitIntentModalProps) => {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="w-[95vw] max-w-md p-0 overflow-hidden border border-border/30 bg-background shadow-2xl z-[100]">
+        <DialogTitle className="sr-only">Complete your ICP — it's free</DialogTitle>
         <div className="relative">
           <div className="absolute inset-0 bg-gradient-to-br from-primary/8 to-transparent pointer-events-none" />
 
