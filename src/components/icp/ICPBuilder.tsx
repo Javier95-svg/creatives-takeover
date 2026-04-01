@@ -7,8 +7,6 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCredits } from '@/hooks/useCredits';
 import { useCreditActions } from '@/hooks/useCreditActions';
-import { useFeatureGating } from '@/hooks/useFeatureGating';
-import { useUpgradePrompt } from '@/contexts/UpgradePromptContext';
 import { supabase } from '@/integrations/supabase/client';
 import { captureEvent } from '@/lib/analytics';
 import ICPInputForm, { type ICPInputFormData } from './ICPInputForm';
@@ -100,9 +98,7 @@ const ICPBuilder: React.FC = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const { refreshBalance } = useCredits();
-  const { ensureCredits, handleCreditError } = useCreditActions();
-  const { checkFeatureAccess } = useFeatureGating();
-  const { openUpgradePrompt } = useUpgradePrompt();
+  const { handleCreditError } = useCreditActions();
 
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState<ICPAnalysis | null>(null);
@@ -118,20 +114,6 @@ const ICPBuilder: React.FC = () => {
       });
       return;
     }
-
-    const featureAccess = checkFeatureAccess('icp_analysis');
-    if (!featureAccess.hasAccess) {
-      openUpgradePrompt({
-        reason: 'feature',
-        featureName: 'ICP Builder',
-        requiredTier: featureAccess.requiredTier as 'creator' | 'professional' | undefined,
-        description: featureAccess.message || "Upgrade to Creator tier to run full ICP analysis.",
-      });
-      return;
-    }
-
-    const requiredCredits = ensureCredits('ICP_ANALYSIS', { featureName: 'ICP Builder' });
-    if (requiredCredits === null) return;
 
     try {
       setIsAnalyzing(true);

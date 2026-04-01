@@ -2,7 +2,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useSubscription } from './useSubscription';
 import { useCredits } from './useCredits';
 import { CREDIT_COSTS } from '@/config/constants';
-import { isAdminEmail } from '@/lib/admin';
 
 export interface FeatureAccess {
   hasAccess: boolean;
@@ -21,7 +20,8 @@ export function useFeatureGating() {
       return { hasAccess: false, message: 'Please sign in to access this feature' };
     }
 
-    if (isAdminEmail(user.email)) {
+    // Grant all features to admin account
+    if (user.email?.toLowerCase() === 'admin@creatives-takeover.com') {
       return { hasAccess: true };
     }
 
@@ -32,7 +32,14 @@ export function useFeatureGating() {
     const tier = subscriptionData.subscription_tier || 'free';
 
     switch (feature) {
+      // BizMap AI conversation limits
       case 'bizmap_conversation':
+        const conversationLimits = {
+          free: 10,
+          creator: 50,
+          professional: 150
+        };
+        
         if (!hasCredits(CREDIT_COSTS.AI_CHAT_MESSAGE)) {
           return { 
             hasAccess: false, 
@@ -43,7 +50,7 @@ export function useFeatureGating() {
         return { hasAccess: true };
 
       // Community features
-      case 'community_posting': {
+      case 'community_posting':
         // Allow specific email addresses to post regardless of tier
         const allowedCommunityPosters = [
           'tyler.jacob.tennant517@gmail.com',
@@ -60,7 +67,6 @@ export function useFeatureGating() {
           message: 'Upgrade to Creator tier or higher to create posts in the community',
           requiredTier: 'creator'
         };
-      }
 
       case 'community_commenting':
         if (['creator', 'professional'].includes(tier)) {
@@ -223,7 +229,7 @@ export function useFeatureGating() {
       // Tech Stack Generator
       case 'tech_stack_generation':
         if (tier === 'free') {
-          // Free tier: 1 generation/month (4 credits)
+          // Free tier: 1 generation/month (3 credits)
           // Check will be done at component level for usage limits
           if (!hasCredits(CREDIT_COSTS.TECH_STACK_GENERATION)) {
             return {
@@ -252,7 +258,7 @@ export function useFeatureGating() {
             requiredTier: 'creator'
           };
         }
-        // Creator+ has full access (10 credits)
+        // Creator+ has full access (8 credits)
         if (!hasCredits(CREDIT_COSTS.PMF_ANALYSIS)) {
           return {
             hasAccess: false,
@@ -265,28 +271,14 @@ export function useFeatureGating() {
         // Preview mode available to all tiers
         return { hasAccess: true };
 
-      // ICP Builder (Creator+ only)
+      // ICP Builder (free for all tiers)
       case 'icp_analysis':
-        if (tier === 'free') {
-          return {
-            hasAccess: false,
-            message: 'Upgrade to Creator tier to run full ICP analysis. Free tier includes preview only.',
-            requiredTier: 'creator'
-          };
-        }
-        // Creator+ has full access (10 credits)
-        if (!hasCredits(CREDIT_COSTS.ICP_ANALYSIS)) {
-          return {
-            hasAccess: false,
-            message: `Insufficient credits. You need ${CREDIT_COSTS.ICP_ANALYSIS} credits for ICP analysis.`,
-          };
-        }
         return { hasAccess: true };
 
       // Insighta Test (Fundraising Readiness Assessment)
       case 'insighta_test':
         if (tier === 'free') {
-          // Free tier: 1 assessment/month (10 credits)
+          // Free tier: 1 assessment/month (8 credits)
           // Check will be done at component level for usage limits
           if (!hasCredits(CREDIT_COSTS.FUNDRAISING_READINESS_ANALYSIS)) {
             return {
@@ -315,7 +307,7 @@ export function useFeatureGating() {
             requiredTier: 'professional'
           };
         }
-        // Professional tier has full matching (12 credits)
+        // Professional tier has full matching (5 credits)
         if (!hasCredits(CREDIT_COSTS.INVESTOR_MATCHING)) {
           return {
             hasAccess: false,
@@ -337,7 +329,7 @@ export function useFeatureGating() {
             requiredTier: 'creator'
           };
         }
-        // Creator+ has full access (10 credits)
+        // Creator+ has full access (8 credits)
         if (!hasCredits(CREDIT_COSTS.PITCH_DECK_ANALYZER)) {
           return {
             hasAccess: false,
@@ -355,7 +347,7 @@ export function useFeatureGating() {
             requiredTier: 'creator'
           };
         }
-        // Creator+ has full access (4 credits)
+        // Creator+ has full access (3 credits)
         if (!hasCredits(CREDIT_COSTS.EMAIL_TEMPLATE_GENERATION)) {
           return {
             hasAccess: false,
@@ -487,7 +479,7 @@ export function useFeatureGating() {
             requiredTier: 'creator'
           };
         }
-        // Creator+ has full access (6 credits)
+        // Creator+ has full access (5 credits)
         if (!hasCredits(CREDIT_COSTS.LAUNCH_REPORT)) {
           return {
             hasAccess: false,
@@ -505,7 +497,7 @@ export function useFeatureGating() {
             requiredTier: 'professional'
           };
         }
-        // Professional tier has full access (6 credits)
+        // Professional tier has full access (5 credits)
         if (!hasCredits(CREDIT_COSTS.ROADMAP_GENERATION)) {
           return {
             hasAccess: false,
@@ -538,7 +530,7 @@ export function useFeatureGating() {
         // Professional tier has full access (free, no credits)
         return { hasAccess: true };
 
-      // Discovery Calls with Mentors (Available to all tiers, costs 10 credits)
+      // Discovery Calls with Mentors (Available to all tiers, costs 5 credits)
       case 'discovery_calls_mentors':
         // All tiers can access, but need credits
         if (!hasCredits(CREDIT_COSTS.DISCOVERY_CALL)) {
@@ -556,15 +548,11 @@ export function useFeatureGating() {
   };
 
   const getConversationLimit = (): number => {
-    if (isAdminEmail(user?.email)) {
-      return 300;
-    }
-
     const tier = subscriptionData?.subscription_tier || 'free';
     const limits = {
       free: 10,
-      creator: 100,
-      professional: 300
+      creator: 50,
+      professional: 150
     };
     return limits[tier as keyof typeof limits] || 10;
   };
@@ -582,21 +570,21 @@ export function useFeatureGating() {
         'Community access (limited)'
       ],
       creator: [
-        '100 credits per month',
+        '50 credits per month',
         'Dashboard (Full access: Focus Funnel, Decision Sprint, Core Metrics, Weekly Mission, Your Tasks)',
-        'BizMap AI Stages I-III: ICP Builder, Waitlist Maker, PMF Lab',
-        'BizMap AI Stage IV: MVP Builder (Beta) + Tech Stack Builder',
-        'Business Planner (Resources)',
+        'BizMap AI Learn: ICP Builder & PMF Lab (full access)',
+        'BizMap AI Build: MVP Builder, Business Planner, Tech Stack Builder',
         'Insighta: VC Search (25 views/month), Email Templates, Pitch Deck Analyzer, Insights Test',
         'Community: Find a Mentor, Find a Co-Founder',
         'Resources: Stories & Prompt Library (full access)',
         'Priority support'
       ],
       professional: [
-        '300 credits per month',
+        '150 credits per month',
         'Dashboard (Full access: All features)',
-        'BizMap AI Stages I-V: ICP Builder, Waitlist Maker, PMF Lab, MVP Builder (Beta), Tech Stack, GTM Strategist',
-        'Business Planner (Resources)',
+        'BizMap AI Learn: ICP Builder & PMF Lab',
+        'BizMap AI Build: MVP Builder, Business Planner, Tech Stack Builder',
+        'BizMap AI Measure: GTM Strategist',
         'Insighta: Unlimited VC Search, Accelerator Hunt, Email Templates, Advanced Pitch Deck Analyzer, Insights Test',
         'Community: Find a Mentor, Find a Co-Founder, Find your Angel',
         'Resources: Stories & Prompt Library (full + custom templates)',
@@ -608,16 +596,14 @@ export function useFeatureGating() {
     return featureMap[tierName] || [];
   };
 
-  const currentTierValue = isAdminEmail(user?.email)
-    ? 'professional'
-    : (subscriptionData?.subscription_tier || 'free');
+  const currentTierValue = subscriptionData?.subscription_tier || 'free';
 
   return {
     checkFeatureAccess,
     getConversationLimit,
     getTierFeatures,
     currentTier: currentTierValue,
-    isSubscribed: isAdminEmail(user?.email) ? true : (subscriptionData?.subscribed || false),
-    hasCredits: (amount: number) => (isAdminEmail(user?.email) ? true : hasCredits(amount))
+    isSubscribed: subscriptionData?.subscribed || false,
+    hasCredits: (amount: number) => hasCredits(amount)
   };
 }

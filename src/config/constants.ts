@@ -194,7 +194,7 @@ export const TIER_USAGE_LIMITS = {
     bizmap_conversations: 10,
     tech_stack_generations: 1,
     pmf_analyses: 0, // Preview only
-    icp_analyses: 0, // Preview only
+    icp_analyses: -1, // Free for all users
     insighta_tests: 1,
     investor_matches: 0, // View only
     market_intelligence_queries: 0,
