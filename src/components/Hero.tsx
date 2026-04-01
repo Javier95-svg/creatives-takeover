@@ -485,7 +485,7 @@ const Hero = () => {
           </div>
 
           {/* Right Section - 4-Pic Grid Layout */}
-          <div className="w-full">
+          <div className="homepage-hero__media w-full lg:pt-8 xl:pt-10">
             <div className="rounded-2xl border border-border/70 bg-card shadow-lg p-3 sm:p-4">
               <div className="grid grid-cols-2 gap-2 sm:gap-3 md:gap-4 w-full">
                 {[1, 2, 3, 4].map((position) => {
