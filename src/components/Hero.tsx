@@ -421,18 +421,23 @@ const Hero = () => {
       <div className="container mx-auto max-w-7xl relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 xl:gap-20 items-center">
           {/* Left Section - All existing content */}
-          <div className="text-center flex flex-col justify-center">
+          <div className="homepage-hero__content text-center flex flex-col justify-center">
             {/* Main Headline */}
             <h1
-              className="font-space-grotesk text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-semibold mb-4 sm:mb-6 leading-tight tracking-tight"
-              style={{ textShadow: '0 0 40px hsl(var(--primary) / 0.15)' }}
+              className="homepage-hero__title font-space-grotesk text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-semibold mb-4 sm:mb-6 leading-tight tracking-tight"
+              style={{
+                textShadow: '0 0 18px hsl(var(--primary) / 0.18), 0 0 42px hsl(var(--primary) / 0.10)',
+                filter: 'drop-shadow(0 0 10px hsl(var(--primary) / 0.10))'
+              }}
             >
-              <span className="text-primary">The One-Person Business</span> Factory
+              <span className="text-primary">Build Your Startup.</span> Own Your Future.
             </h1>
 
             {/* Subheadline - Improved readability */}
-            <p className="font-space-grotesk text-sm sm:text-base md:text-lg text-muted-foreground mb-6 sm:mb-8 max-w-xl mx-auto leading-relaxed px-2 sm:px-0">
-              We blend technology, strategy, and community to empower individuals to build and launch startups with minimal friction. Our platform provides business development, expert support, and access to fundraising.
+            <p className="homepage-hero__copy font-space-grotesk text-sm sm:text-base md:text-lg text-muted-foreground mb-6 sm:mb-8 max-w-xl mx-auto leading-relaxed px-2 sm:px-0">
+              {isAuthenticated
+                ? "Set up your profile, then head to your dashboard to see what matters now, plan your next steps, and keep moving forward one task at a time."
+                : "Creatives Takeover hands first-time founders the system, the tools, and the network that used to be reserved for the well-connected. No cohort, no gatekeepers, no BS."}
             </p>
             
             {/* Enhanced CTA Section */}
