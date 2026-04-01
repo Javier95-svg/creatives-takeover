@@ -6,59 +6,46 @@
 
 export const CREDIT_COSTS = {
   // BizMap AI Features
-  LAUNCH_REPORT: 6,
-  ASSET_GENERATION: 6,
+  LAUNCH_REPORT: 5,
+  ASSET_GENERATION: 5,
   PREMIUM_FEATURE: 3,
   
   // AI Chat Features
   AI_CHAT_MESSAGE: 1,
   
   // Research & Analysis
-  MARKET_RESEARCH: 6,
-  MARKET_VALIDATION: 12,
-  FINANCIAL_ANALYSIS: 10,
-  FUNDRAISING_READINESS_ANALYSIS: 10,
-  BUSINESS_INSIGHTS: 6,
-  PMF_ANALYSIS: 10,
-  ICP_ANALYSIS: 10,
+  MARKET_RESEARCH: 5,
+  MARKET_VALIDATION: 10,
+  FINANCIAL_ANALYSIS: 8,
+  FUNDRAISING_READINESS_ANALYSIS: 8,
+  BUSINESS_INSIGHTS: 5,
+  PMF_ANALYSIS: 8,
+  ICP_ANALYSIS: 0,
 
   // Investor Matching & Outreach
-  INVESTOR_MATCHING: 12,
-  PITCH_DECK_GENERATION: 12,
-  COLD_EMAIL_GENERATION: 4,
-  ONEPAGER_GENERATION: 5,
+  INVESTOR_MATCHING: 5,
+  PITCH_DECK_GENERATION: 8,
+  COLD_EMAIL_GENERATION: 3,
+  ONEPAGER_GENERATION: 3,
   
   // Sprint & Task Features
   SPRINT_TASK_GENERATION: 2,
-  ROADMAP_GENERATION: 6,
+  ROADMAP_GENERATION: 5,
   
   // Tech Stack Generator
-  TECH_STACK_GENERATION: 4,
+  TECH_STACK_GENERATION: 3,
   
   // Other Premium Features
-  PDF_EXPORT: 2,
-  ADVANCED_ANALYTICS: 6,
+  PDF_EXPORT: 3,
+  ADVANCED_ANALYTICS: 5,
 
   // Insighta + BizMap Add-ons
-  PITCH_DECK_ANALYZER: 10,
-  EMAIL_TEMPLATE_GENERATION: 4,
+  PITCH_DECK_ANALYZER: 8,
+  EMAIL_TEMPLATE_GENERATION: 3,
   PROMPT_GENERATION: 2,
 
   // Community Features
-  DISCOVERY_CALL: 10,
-
-  // Waitlist Builder
-  WAITLIST_GENERATION: 3,
-
-  // AI App Builder (Lovable-style conversational app generator)
-  APP_BUILDER_GENERATE: 8,  // Initial app generation from prompt
-  APP_BUILDER_REFINE: 3,    // Each iterative refinement
-
-  // GTM Strategist
-  GTM_ANALYSIS: 10,
-
-  // PMF Lab — Evidence Scorer
-  PMF_SCORING: 8,
+  DISCOVERY_CALL: 5,
 } as const;
 
 // Type for credit cost feature names

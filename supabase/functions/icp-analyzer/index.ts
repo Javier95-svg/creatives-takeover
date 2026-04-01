@@ -63,15 +63,17 @@ serve(async (req) => {
       },
     });
 
-    // Check and deduct credits
+    // Check and deduct credits (cost of 0 means free — skip deduction entirely)
     const creditCost = CREDIT_COSTS.ICP_ANALYSIS;
-    const creditResult = await checkAndDeductCredits(
-      user.id,
-      creditCost,
-      'ICP Analysis',
-      undefined,
-      { businessDescription: businessDescription.substring(0, 100), idempotencyKey }
-    );
+    const creditResult = creditCost > 0
+      ? await checkAndDeductCredits(
+          user.id,
+          creditCost,
+          'ICP Analysis',
+          undefined,
+          { businessDescription: businessDescription.substring(0, 100), idempotencyKey }
+        )
+      : { success: true, newBalance: 0 };
 
     if (!creditResult.success) {
       return new Response(JSON.stringify({
@@ -130,23 +132,25 @@ serve(async (req) => {
     }
 
     // Build the ICP analysis prompt
-    const prompt = `You are an expert ICP strategist for early-stage startups. Your job is not to write a broad persona report. Your job is to help a founder choose the strongest first customer segment to pursue and decide what to validate next.
+    const prompt = `You are an expert Ideal Customer Profile (ICP) strategist and niche market analyst. Your specialty is helping founders identify their most profitable, accessible niche market and develop a positioning strategy that makes them stand out.
 
-OPERATING RULES:
-- Be concrete, specific, and execution-oriented.
-- Prioritize role, workflow, trigger event, pain, buying context, and reachability over generic psychographics.
-- Do not invent false precision. If evidence is weak, say confidence is low or medium.
-- Use the founder's actual inputs and any real market data provided.
-- Recommend ONE best first ICP, explain why, and explicitly say who not to target yet.
-- Output should help a founder decide what to do in the next 2-4 weeks.
+CRITICAL INSTRUCTIONS:
+- Be thorough, specific, and actionable. Every recommendation should be implementable.
+- Base assessments on evidence from the business description and any market data provided.
+- Identify a SPECIFIC niche (not broad markets). The more specific, the better.
+- Focus on finding the niche with the highest pain intensity and lowest competition.
+- Provide detailed demographic and psychographic profiles with enough detail to run targeted ads.
+- Pain points should be specific and actionable, not generic platitudes.
+- Positioning strategy should clearly differentiate from competitors.
+- Use chain-of-thought reasoning for all assessments.
 
 BUSINESS DESCRIPTION:
 ${businessDescription}
 
-TARGET AUDIENCE: ${targetAudience || 'Not specified - infer the strongest first ICP from the business description'}
-INDUSTRY: ${industry || 'Not specified - infer carefully from the business description'}
+TARGET AUDIENCE: ${targetAudience || 'Not specified - identify the best niche from the business description'}
+INDUSTRY: ${industry || 'Not specified - infer from business description'}
 ${competitors ? `\nCOMPETITORS PROVIDED BY USER:\n${competitors}` : ''}
-${unfairAdvantage ? `\nFOUNDER EDGE:\n${unfairAdvantage}` : ''}
+${unfairAdvantage ? `\nUNFAIR ADVANTAGE:\n${unfairAdvantage}` : ''}
 
 ${marketValidationData ? `\n=== REAL MARKET DATA ===
 ${redditDiscussions.length > 0 ? `\nREDDIT COMMUNITY INSIGHTS (${redditDiscussions.length} relevant discussions):
@@ -162,145 +166,146 @@ Market Size Score: ${competitorData.market_size_score}/100
 ${competitorData.competitor_gaps?.length > 0 ? `Competitor Gaps:\n${competitorData.competitor_gaps.slice(0, 3).map((g: any, i: number) => `${i + 1}. ${typeof g === 'string' ? g : g.gap || g}`).join('\n')}` : ''}
 ${competitorData.differentiation_opportunities?.length > 0 ? `Differentiation Opportunities:\n${competitorData.differentiation_opportunities.slice(0, 3).map((o: string, i: number) => `${i + 1}. ${o}`).join('\n')}` : ''}` : ''}
 
-Use this real market data wherever possible. Prefer real signals over assumptions.` : ''}
+Use this real market data to inform your ICP analysis. Prioritize real data over assumptions.` : ''}
 
 YOUR TASK:
-Return a decision-first ICP analysis with these sections:
+Provide a comprehensive ICP analysis with the following sections:
 
-1. RECOMMENDATION
-   - primaryIcp: the single best first segment to target
-   - whyThisIcp: why this segment is the strongest opening wedge
-   - problemToWin: the specific pain to anchor on
-   - valueWedge: the core advantage that should matter to this ICP
-   - decision: clear recommendation about what the founder should do next
-   - confidence: High / Medium / Low
-   - confidenceReason: why confidence is at that level
-   - evidenceSignals: 3-5 concrete signals supporting the recommendation
-   - doNotTargetYet: 2-4 adjacent segments to avoid for now
-   - openQuestions: 3-5 unknowns the founder still needs to validate
+1. NICHE PROFILE - Identify the MOST SPECIFIC viable niche for this product:
+   - Niche name (specific, memorable label)
+   - Niche description (2-3 sentences explaining who they are)
+   - Demographics: age range, gender split, location, income level, education level, typical occupation
+   - Psychographics: core values (3-5), interests (3-5), key behaviors (3-5), lifestyle description, attitudes description
+   - Buying behavior: decision process, budget range, purchase frequency, purchase triggers (3-5)
+   - Where to find them: online channels (3-5 specific platforms/communities), offline channels (2-3), communities (3-5 specific names), key influencers/voices they follow (3-5)
+   - Niche size estimate
+   - Growth trend for this niche
 
-2. CUSTOMER PROFILE
-   - segmentName
-   - whoTheyAre: concise explanation of the ICP
-   - buyer: who approves or owns the purchase
-   - user: who uses the product day to day
-   - organizationContext
-   - triggerMoments: 3-5 events that make them seek a solution
-   - urgencySignals: 3-5 signs the pain is active now
-   - currentAlternatives: 3-5 alternatives or workarounds
-   - switchingCosts: 3-5 barriers to changing behavior
-   - buyingMotion
-   - budgetOwner
-   - channels: 4-6 realistic channels or communities to reach them
-
-3. PAIN POINTS
-   Provide 4-6 pains.
+2. PAIN POINTS (5-8 specific pain points):
    For each:
-   - painPoint
-   - severity: Critical / High / Medium / Low
-   - whenItShowsUp
-   - currentWorkaround
-   - whyUnresolved
-   - switchingBarrier
-   - opportunityScore: 1-10
+   - Pain point description (specific, not generic)
+   - Severity: Critical / High / Medium / Low
+   - Frequency: How often they experience this
+   - Current solution: What they use today
+   - Gap in current solution: Why it falls short
+   - Opportunity score (1-10): How much opportunity exists to solve this
 
-4. POSITIONING
-   - oneLiner: simple positioning line
-   - positioningStatement: fuller version
-   - valueProposition
-   - differentiators: 3-5
-   - proofPoints: 3-5 believable proof points or proof angles
-   - messagePillars: 3-5 messaging themes
-   - objections: 3-5 likely objections with responses
+3. POSITIONING STRATEGY:
+   - Positioning statement (one powerful sentence: "For [target], [product] is the [category] that [key benefit] unlike [alternatives] because [reason]")
+   - Unique value proposition (2-3 sentences)
+   - Key differentiators (3-5 specific, defensible advantages)
+   - Messaging framework:
+     * Headline (attention-grabbing, benefit-driven)
+     * Subheadline (supporting detail)
+     * Key messages (3-5 core messages for marketing)
+     * Tone of voice description
+   - Competitive positioning (for each main competitor):
+     * Their positioning
+     * Your advantage over them
+     * Differentiation angle
+   - Brand personality traits (4-6 adjectives)
 
-5. VALIDATION PLAN
-   - immediateGoal: what the founder should prove next
-   - verdict: Strong Wedge / Worth Testing / Needs Sharper Focus
-   - overallScore: 0-100
-   - scoreBreakdown:
-     * pain
-     * specificity
-     * differentiation
-     * reachability
-   - reasoning
-   - experiments: 4-6 experiments, each with priority, hypothesis, test, successSignal, timeToRun
-   - milestones: 3-5 near-term milestones
+4. NICHE VIABILITY SCORE:
+   - Overall score (0-100)
+   - Verdict: "Highly Viable" (70+), "Promising" (50-69), or "Needs Refinement" (<50)
+   - Sub-scores (each 0-100):
+     * Market Size: Size and growth potential
+     * Pain Intensity: How urgently they need a solution
+     * Accessibility: How easy to reach and acquire
+     * Competitive Gap: Room for differentiation
+   - Reasoning (detailed explanation of scores)
 
-Return valid JSON in exactly this structure:
+5. ACTION PLAN (5-7 prioritized go-to-market steps):
+   For each:
+   - Priority: High / Medium / Low
+   - Action (specific action item)
+   - Description (why this matters and how to do it)
+   - Channel (where to execute this)
+
+Return your analysis as a JSON object with this exact structure:
 {
-  "recommendation": {
-    "primaryIcp": "string",
-    "whyThisIcp": "string",
-    "problemToWin": "string",
-    "valueWedge": "string",
-    "decision": "string",
-    "confidence": "High" | "Medium" | "Low",
-    "confidenceReason": "string",
-    "evidenceSignals": ["string"],
-    "doNotTargetYet": ["string"],
-    "openQuestions": ["string"]
+  "nicheScore": {
+    "overall": number,
+    "verdict": "Highly Viable" | "Promising" | "Needs Refinement",
+    "subScores": {
+      "marketSize": number,
+      "painIntensity": number,
+      "accessibility": number,
+      "competitiveGap": number
+    },
+    "reasoning": "string"
   },
-  "customerProfile": {
-    "segmentName": "string",
-    "whoTheyAre": "string",
-    "buyer": "string",
-    "user": "string",
-    "organizationContext": "string",
-    "triggerMoments": ["string"],
-    "urgencySignals": ["string"],
-    "currentAlternatives": ["string"],
-    "switchingCosts": ["string"],
-    "buyingMotion": "string",
-    "budgetOwner": "string",
-    "channels": ["string"]
+  "nicheProfile": {
+    "nicheName": "string",
+    "nicheDescription": "string",
+    "demographics": {
+      "age": "string",
+      "gender": "string",
+      "location": "string",
+      "income": "string",
+      "education": "string",
+      "occupation": "string"
+    },
+    "psychographics": {
+      "values": ["string"],
+      "interests": ["string"],
+      "behaviors": ["string"],
+      "lifestyle": "string",
+      "attitudes": "string"
+    },
+    "buyingBehavior": {
+      "decisionProcess": "string",
+      "budgetRange": "string",
+      "purchaseFrequency": "string",
+      "triggers": ["string"]
+    },
+    "whereToFindThem": {
+      "onlineChannels": ["string"],
+      "offlineChannels": ["string"],
+      "communities": ["string"],
+      "influencers": ["string"]
+    },
+    "nicheSize": "string",
+    "growthTrend": "string"
   },
   "painPoints": [
     {
       "painPoint": "string",
       "severity": "Critical" | "High" | "Medium" | "Low",
-      "whenItShowsUp": "string",
-      "currentWorkaround": "string",
-      "whyUnresolved": "string",
-      "switchingBarrier": "string",
+      "frequency": "string",
+      "currentSolution": "string",
+      "gapInCurrentSolution": "string",
       "opportunityScore": number
     }
   ],
-  "positioning": {
-    "oneLiner": "string",
+  "positioningStrategy": {
     "positioningStatement": "string",
-    "valueProposition": "string",
-    "differentiators": ["string"],
-    "proofPoints": ["string"],
-    "messagePillars": ["string"],
-    "objections": [
-      {
-        "objection": "string",
-        "response": "string"
-      }
-    ]
-  },
-  "validationPlan": {
-    "immediateGoal": "string",
-    "verdict": "Strong Wedge" | "Worth Testing" | "Needs Sharper Focus",
-    "overallScore": number,
-    "scoreBreakdown": {
-      "pain": number,
-      "specificity": number,
-      "differentiation": number,
-      "reachability": number
+    "uniqueValueProposition": "string",
+    "keyDifferentiators": ["string"],
+    "messagingFramework": {
+      "headline": "string",
+      "subheadline": "string",
+      "keyMessages": ["string"],
+      "toneOfVoice": "string"
     },
-    "reasoning": "string",
-    "experiments": [
+    "competitivePositioning": [
       {
-        "priority": "High" | "Medium" | "Low",
-        "hypothesis": "string",
-        "test": "string",
-        "successSignal": "string",
-        "timeToRun": "string"
+        "competitor": "string",
+        "theirPositioning": "string",
+        "yourAdvantage": "string",
+        "differentiationAngle": "string"
       }
     ],
-    "milestones": ["string"]
-  }
+    "brandPersonality": ["string"]
+  },
+  "actionPlan": [
+    {
+      "priority": "High" | "Medium" | "Low",
+      "action": "string",
+      "description": "string",
+      "channel": "string"
+    }
+  ]
 }`;
 
     // Wrap AI processing in try/catch for credit refund on failure
@@ -317,15 +322,17 @@ Return valid JSON in exactly this structure:
         messages: [
           {
             role: 'system',
-            content: `You are an expert ICP strategist for early-stage founders.
+            content: `You are an expert ICP (Ideal Customer Profile) strategist and niche market analyst. You help founders find their most profitable specific niche and develop positioning strategies that make them stand out.
 
 CRITICAL REQUIREMENTS:
-1. Always return valid JSON in the exact structure specified.
-2. Recommend one best first ICP, not a broad market.
-3. Prefer operational specifics over fluffy personas.
-4. If evidence is weak, lower confidence instead of inventing certainty.
-5. When real market data is provided, prioritize it.
-6. Make every recommendation usable within the next 30 days.`
+1. Always return valid JSON in the exact structure specified
+2. Be specific - identify narrow niches, not broad markets
+3. Pain points must be specific and actionable, not generic
+4. Positioning must clearly differentiate from competitors
+5. Use chain-of-thought reasoning for assessments
+6. When real market data (Reddit, competitors) is provided, prioritize it
+7. Provide enough demographic detail to run targeted marketing campaigns
+8. Every recommendation should be implementable within 30 days`
           },
           {
             role: 'user',
@@ -361,39 +368,9 @@ CRITICAL REQUIREMENTS:
       }
     }
 
-    let storedAnalysisId: string | null = null;
-    try {
-      const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-      const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-      const supabase = createClient(supabaseUrl, supabaseKey);
-
-      const { data: storedData, error: storeError } = await supabase
-        .from('icp_analysis_results')
-        .insert({
-          user_id: user.id,
-          business_description: businessDescription,
-          target_audience: targetAudience || null,
-          industry: industry || null,
-          analysis_data: analysisResult,
-          niche_score: analysisResult?.validationPlan?.overallScore ?? null,
-          verdict: analysisResult?.validationPlan?.verdict ?? null,
-        })
-        .select('id')
-        .single();
-
-      if (!storeError && storedData) {
-        storedAnalysisId = storedData.id;
-      } else {
-        console.warn('Failed to store ICP analysis result:', storeError);
-      }
-    } catch (storeError) {
-      console.warn('Error storing ICP analysis result:', storeError);
-    }
-
     return new Response(JSON.stringify({
       success: true,
       analysis: analysisResult,
-      analysisId: storedAnalysisId,
       creditsUsed: creditCost,
       newBalance: creditResult.newBalance
     }), {

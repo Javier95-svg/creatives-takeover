@@ -7,59 +7,46 @@
 // All credit costs must be defined here and referenced from this file
 export const CREDIT_COSTS = {
   // BizMap AI Features
-  LAUNCH_REPORT: 6,
-  ASSET_GENERATION: 6,
+  LAUNCH_REPORT: 5,
+  ASSET_GENERATION: 5,
   PREMIUM_FEATURE: 3,
 
   // AI Chat Features
   AI_CHAT_MESSAGE: 1,
 
   // Research & Analysis
-  MARKET_RESEARCH: 6,
-  MARKET_VALIDATION: 12,
-  FINANCIAL_ANALYSIS: 10,
-  FUNDRAISING_READINESS_ANALYSIS: 10,
-  BUSINESS_INSIGHTS: 6,
-  PMF_ANALYSIS: 10,
-  ICP_ANALYSIS: 10,
+  MARKET_RESEARCH: 5,
+  MARKET_VALIDATION: 10,
+  FINANCIAL_ANALYSIS: 8,
+  FUNDRAISING_READINESS_ANALYSIS: 8,
+  BUSINESS_INSIGHTS: 5,
+  PMF_ANALYSIS: 8,
+  ICP_ANALYSIS: 0,
 
   // Investor Matching & Outreach
-  INVESTOR_MATCHING: 12,
-  PITCH_DECK_GENERATION: 12,
-  COLD_EMAIL_GENERATION: 4,
-  ONEPAGER_GENERATION: 5,
+  INVESTOR_MATCHING: 5,
+  PITCH_DECK_GENERATION: 8,
+  COLD_EMAIL_GENERATION: 3,
+  ONEPAGER_GENERATION: 3,
 
   // Sprint & Task Features
   SPRINT_TASK_GENERATION: 2,
-  ROADMAP_GENERATION: 6,
+  ROADMAP_GENERATION: 5,
 
   // Tech Stack Generator
-  TECH_STACK_GENERATION: 4,
-
-  // Waitlist Maker
-  WAITLIST_GENERATION: 3,
+  TECH_STACK_GENERATION: 3,
 
   // Other Premium Features
-  PDF_EXPORT: 2,
-  ADVANCED_ANALYTICS: 6,
+  PDF_EXPORT: 3,
+  ADVANCED_ANALYTICS: 5,
 
   // New Features (Phase 3)
-  PITCH_DECK_ANALYZER: 10,
-  EMAIL_TEMPLATE_GENERATION: 4,
+  PITCH_DECK_ANALYZER: 8,
+  EMAIL_TEMPLATE_GENERATION: 3,
   PROMPT_GENERATION: 2,
 
   // Community Features
-  DISCOVERY_CALL: 10,
-
-  // AI App Builder (Lovable-style conversational app generator)
-  APP_BUILDER_GENERATE: 8,  // Initial app generation from prompt
-  APP_BUILDER_REFINE: 3,    // Each iterative refinement
-
-  // GTM Strategist
-  GTM_ANALYSIS: 10,
-
-  // PMF Lab — Evidence Scorer
-  PMF_SCORING: 8,
+  DISCOVERY_CALL: 5,
 } as const;
 
 // Type for credit cost feature names
@@ -190,16 +177,9 @@ export const SUBSCRIPTION_TIERS = {
 // Monthly credit allocation per tier
 export const TIER_MONTHLY_CREDITS = {
   free: 25,
-  creator: 100,
-  professional: 300,
+  creator: 50,
+  professional: 150,
 } as const;
-
-// One-time credit add-on packs (available to all tiers)
-export const CREDIT_PACK_OPTIONS = [
-  { id: 'pack_20', credits: 20, price: 8.00, label: 'Starter Pack' },
-  { id: 'pack_40', credits: 40, price: 16.00, label: 'Boost Pack' },
-  { id: 'pack_60', credits: 60, price: 24.00, label: 'Power Pack' },
-] as const;
 
 // VC View Limits per tier (monthly)
 export const VC_VIEW_LIMITS = {
@@ -262,7 +242,7 @@ export const TIER_DETAILS = {
     name: 'Creator',
     subtitle: 'Build',
     price: 32.99,
-    credits: 100,
+    credits: 50,
     vcViewLimit: 25,
     description: 'Build your startup with AI-powered tools',
   },
@@ -270,7 +250,7 @@ export const TIER_DETAILS = {
     name: 'Professional',
     subtitle: 'Scale',
     price: 74.99,
-    credits: 300,
+    credits: 150,
     vcViewLimit: -1, // unlimited
     description: 'Scale with unlimited access and premium features',
   },
