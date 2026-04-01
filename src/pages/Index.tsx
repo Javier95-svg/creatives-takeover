@@ -9,11 +9,13 @@ import AISpecializationTrends from "@/components/AISpecializationTrends";
 import StickyMobileCTA from "@/components/StickyMobileCTA";
 import { PullToRefresh } from "@/components/mobile/PullToRefresh";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useExitIntent } from "@/hooks/useExitIntent";
+import { ExitIntentModal } from "@/components/ExitIntentModal";
+import { useConversionTracking } from "@/hooks/useConversionTracking";
 
 import SEO, { createOrganizationSchema, createWebSiteSchema, createBreadcrumbSchema } from "@/components/SEO";
 import Footer from "@/components/Footer";
 import { usePageAnalytics } from "@/hooks/usePageAnalytics";
-import HomeRevealSection from "@/components/home/HomeRevealSection";
 import HomeWallpaper from "@/components/wallpapers/HomeWallpaper";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -25,9 +27,16 @@ const Index = () => {
   const isMobile = useIsMobile();
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
+  const { showExitIntent, closeExitIntent } = useExitIntent();
+  const { trackTriggerView, trackDismissal } = useConversionTracking();
   // Track homepage analytics
   usePageAnalytics('/', 'Home - Creatives Takeover');
-  
+
+  // Track when exit intent modal fires
+  useEffect(() => {
+    if (showExitIntent) trackTriggerView('exit-intent');
+  }, [showExitIntent]);
+
   // Manage session storage in useEffect with proper cleanup
   useEffect(() => {
     // Clear popup session storage on fresh page load
@@ -73,41 +82,13 @@ const Index = () => {
     ])
   ];
 
-  // Marketing page content (logged-out)
-  const marketingContent = (
-    <>
-      <Hero />
-      <HomeRevealSection staggerChildren>
-        <EntrepreneurProblems />
-      </HomeRevealSection>
-
-      <HomeRevealSection delay={80} staggerChildren>
-        <UserReviews />
-      </HomeRevealSection>
-
-      <HomeRevealSection delay={120} staggerChildren>
-        <AISpecializationTrends />
-      </HomeRevealSection>
-
-      <HomeRevealSection delay={160} staggerChildren>
-        <ValuePropositionCards />
-      </HomeRevealSection>
-
-      <HomeRevealSection delay={200} staggerChildren>
-        <Suspense fallback={<div className="h-96 animate-pulse bg-muted/20" />}>
-          <HomeFAQ />
-        </Suspense>
-      </HomeRevealSection>
-    </>
-  );
-
   return (
     <div className="min-h-screen relative">
       <HomeWallpaper />
       <SEO
-        title="AI Startup Builder | Creatives Takeover"
-        description="Build, validate, and launch faster with AI startup tools for customer research, MVP planning, fundraising prep, and go-to-market execution."
-        keywords="ai startup builder, startup validation tools, mvp builder, fundraising tools, founder platform, startup planning software"
+        title="Creatives Takeover"
+        description="Turn your creative idea into a real business. Get AI-powered planning, community support, and funding resources designed for creative entrepreneurs. Start building today."
+        keywords="AI co-founder, creative business, creative entrepreneur, business planning, accountability partners, business for creatives, startup funding"
         url="/"
         image="/lovable-uploads/new-favicon.png"
         structuredData={structuredData}
@@ -119,16 +100,46 @@ const Index = () => {
       <main>
         {isMobile ? (
           <PullToRefresh onRefresh={handleRefresh}>
-            {marketingContent}
+            <Hero />
+            <EntrepreneurProblems />
+             
+            <UserReviews />
+             
+            <AISpecializationTrends />
+             
+            <ValuePropositionCards />
+             
+            <Suspense fallback={<div className="h-96 animate-pulse bg-muted/20" />}>
+              <HomeFAQ />
+            </Suspense>
           </PullToRefresh>
         ) : (
-          marketingContent
+          <>
+            <Hero />
+            <EntrepreneurProblems />
+             
+            <UserReviews />
+             
+            <AISpecializationTrends />
+             
+            <ValuePropositionCards />
+             
+            <Suspense fallback={<div className="h-96 animate-pulse bg-muted/20" />}>
+              <HomeFAQ />
+            </Suspense>
+          </>
         )}
       </main>
       <Footer />
-
-      {/* Sticky Mobile CTA - only shown to logged-out users */}
+      
+      {/* Sticky Mobile CTA - appears after scroll on mobile */}
       <StickyMobileCTA />
+
+      {/* Exit intent modal - fires once per session after 20s for logged-out visitors */}
+      <ExitIntentModal
+        isOpen={showExitIntent}
+        onClose={() => { closeExitIntent(); trackDismissal('exit-intent'); }}
+      />
     </div>
   );
 };

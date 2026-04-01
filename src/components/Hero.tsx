@@ -1,12 +1,13 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowRight, LayoutDashboard, User, Cpu, Image as ImageIcon, Upload, Loader2 } from "lucide-react";
+import { ArrowRight, Sparkles, LayoutDashboard, User, Users, DollarSign, Play, Image as ImageIcon, Upload, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useConversionTracking } from "@/hooks/useConversionTracking";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { SocialProof } from "@/components/SocialProof";
 
 interface HeroImage {
   position: number;
@@ -14,79 +15,16 @@ interface HeroImage {
   alt_text: string | null;
 }
 
-const HERO_IMAGE_CACHE_KEY = "homepage-hero-images:v1";
-
-function normalizeImageUrl(href?: string): string | null {
-  if (!href) return null;
-  const trimmed = href.trim();
-  if (!trimmed || trimmed === "undefined" || trimmed === "null") return null;
-
-  try {
-    return new URL(trimmed, window.location.origin).toString();
-  } catch {
-    return null;
-  }
-}
-
-function getOptimizedHeroImageUrl(imageUrl: string, width: number, height: number): string {
-  if (imageUrl.startsWith("data:") || imageUrl.startsWith("blob:")) {
-    return imageUrl;
-  }
-
-  const normalized = normalizeImageUrl(imageUrl);
-  if (!normalized) return imageUrl;
-
-  try {
-    const url = new URL(normalized);
-    const publicPrefix = "/storage/v1/object/public/";
-    const publicIndex = url.pathname.indexOf(publicPrefix);
-
-    if (publicIndex === -1) {
-      return normalized;
-    }
-
-    const objectPath = url.pathname.slice(publicIndex + publicPrefix.length);
-    url.pathname = `/storage/v1/render/image/public/${objectPath}`;
-    url.searchParams.set("width", String(width));
-    url.searchParams.set("height", String(height));
-    url.searchParams.set("resize", "cover");
-    url.searchParams.set("quality", "75");
-    return url.toString();
-  } catch {
-    return normalized;
-  }
-}
-
-function getHeroImageSrcSet(imageUrl: string): string | undefined {
-  if (!imageUrl || imageUrl.startsWith("data:") || imageUrl.startsWith("blob:")) {
-    return undefined;
-  }
-
-  return [
-    `${getOptimizedHeroImageUrl(imageUrl, 320, 320)} 320w`,
-    `${getOptimizedHeroImageUrl(imageUrl, 640, 640)} 640w`,
-    `${getOptimizedHeroImageUrl(imageUrl, 960, 960)} 960w`,
-  ].join(", ");
-}
-
 const Hero = () => {
   const { isAuthenticated, user } = useAuth();
-  const { trackTriggerView, trackEngagement } = useConversionTracking();
+  const { trackTriggerView, trackEngagement, trackSignupStarted } = useConversionTracking();
   const heroRef = useRef<HTMLElement>(null);
   const hasTrackedView = useRef(false);
-  const [heroImages, setHeroImages] = useState<HeroImage[]>(() => {
-    if (typeof window === "undefined") return [];
-
-    try {
-      const cached = window.sessionStorage.getItem(HERO_IMAGE_CACHE_KEY);
-      return cached ? (JSON.parse(cached) as HeroImage[]) : [];
-    } catch {
-      return [];
-    }
-  });
+  const [heroImages, setHeroImages] = useState<HeroImage[]>([]);
   const [uploading, setUploading] = useState<number | null>(null);
   const [optimisticPreviews, setOptimisticPreviews] = useState<Record<number, string>>({});
   const fileInputRefs = useRef<Record<number, HTMLInputElement | null>>({});
+  const imageLoadStartTimes = useRef<Map<number, number>>(new Map());
   
   const isAdmin = user?.email?.toLowerCase() === 'admin@creatives-takeover.com';
 
@@ -124,7 +62,6 @@ const Hero = () => {
 
         if (data && data.length > 0) {
           setHeroImages(data);
-          window.sessionStorage.setItem(HERO_IMAGE_CACHE_KEY, JSON.stringify(data));
         }
       } catch (error) {
         console.error('Error fetching hero images:', error);
@@ -136,20 +73,22 @@ const Hero = () => {
 
   // Preload critical hero images (top row - positions 1 and 2) for faster loading
   useEffect(() => {
-    const topRowImages = heroImages
-      .filter(img => img.position <= 2)
-      .map((img) => ({
-        ...img,
-        preloadHref: normalizeImageUrl(getOptimizedHeroImageUrl(img.image_url, 640, 640)),
-      }))
-      .filter((img) => Boolean(img.preloadHref));
+    const isValidImageHref = (href?: string) => {
+      if (!href) return false;
+      const trimmed = href.trim();
+      if (!trimmed) return false;
+      if (trimmed === 'undefined' || trimmed === 'null') return false;
+      return true;
+    };
+
+    const topRowImages = heroImages.filter(img => img.position <= 2 && isValidImageHref(img.image_url));
 
     if (topRowImages.length === 0) return;
 
     // Extract storage domain from first image URL for preconnect
     try {
-      const firstImageUrl = topRowImages[0]?.preloadHref;
-      if (firstImageUrl && typeof document !== 'undefined' && document.head) {
+      const firstImageUrl = topRowImages[0]?.image_url;
+      if (isValidImageHref(firstImageUrl) && typeof document !== 'undefined' && document.head) {
         const imageUrl = new URL(firstImageUrl);
         const storageDomain = imageUrl.origin;
 
@@ -163,7 +102,7 @@ const Hero = () => {
           document.head.appendChild(preconnectLink);
         }
       }
-    } catch {
+    } catch (e) {
       // If URL parsing fails, skip preconnect
       // Silently fail - not critical for functionality
     }
@@ -173,23 +112,21 @@ const Hero = () => {
       topRowImages.forEach((image) => {
         const linkId = `hero-preload-${image.position}`;
         let preloadLink = document.getElementById(linkId) as HTMLLinkElement;
-
-        if (!image.preloadHref) {
-          if (preloadLink) preloadLink.remove();
-          return;
-        }
-
+        
         if (!preloadLink) {
           preloadLink = document.createElement('link');
           preloadLink.id = linkId;
           preloadLink.setAttribute('rel', 'preload');
           preloadLink.setAttribute('as', 'image');
-          preloadLink.setAttribute('href', image.preloadHref);
           document.head.appendChild(preloadLink);
-        } else {
-          preloadLink.setAttribute('href', image.preloadHref);
         }
-
+        
+        if (isValidImageHref(image.image_url)) {
+          preloadLink.setAttribute('href', image.image_url);
+        } else {
+          preloadLink.remove();
+          return;
+        }
         // Add fetchpriority for critical images
         if (image.position <= 2) {
           preloadLink.setAttribute('fetchpriority', 'high');
@@ -263,7 +200,7 @@ const Hero = () => {
       const fileExt = file.name.split('.').pop() || 'jpg';
       const fileName = `${position}/${Date.now()}.${fileExt}`;
 
-      const { error: uploadError } = await supabase.storage
+      const { data: uploadData, error: uploadError } = await supabase.storage
         .from('hero-images')
         .upload(fileName, file, {
           cacheControl: '3600',
@@ -396,7 +333,6 @@ const Hero = () => {
   useEffect(() => {
     if (hasTrackedView.current) return;
 
-    const currentHeroRef = heroRef.current;
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -412,13 +348,13 @@ const Hero = () => {
       { threshold: 0.5 }
     );
 
-    if (currentHeroRef) {
-      observer.observe(currentHeroRef);
+    if (heroRef.current) {
+      observer.observe(heroRef.current);
     }
 
     return () => {
-      if (currentHeroRef) {
-        observer.unobserve(currentHeroRef);
+      if (heroRef.current) {
+        observer.unobserve(heroRef.current);
       }
     };
   }, [trackTriggerView, isAuthenticated]);
@@ -441,7 +377,7 @@ const Hero = () => {
       if (typeof document === 'undefined' || typeof window === 'undefined') return;
       
       // Find the target section
-      const targetSection = document.getElementById('startup-development-cycle');
+      const targetSection = document.getElementById('what-you-get');
       if (targetSection) {
         // Get the navigation bar height (typically 64px for h-16)
         const navHeight = 64;
@@ -457,7 +393,7 @@ const Hero = () => {
         setTimeout(() => {
           if (typeof document === 'undefined' || typeof window === 'undefined') return;
           
-          const targetSection = document.getElementById('startup-development-cycle');
+          const targetSection = document.getElementById('what-you-get');
           if (targetSection) {
             const navHeight = 64;
             const targetPosition = targetSection.getBoundingClientRect().top + window.pageYOffset - navHeight;
@@ -471,34 +407,33 @@ const Hero = () => {
     }, 10);
   };
 
+  const handleTertiaryCTAClick = () => {
+    trackSignupStarted('hero-tertiary-cta');
+  };
+  
   return (
-      <section
+    <section
       ref={heroRef}
       id="overview"
-      className="homepage-hero scroll-mt-24 relative pt-16 sm:pt-20 md:pt-24 pb-12 sm:pb-16 md:pb-20 px-4 sm:px-6 font-poppins"
+      className="scroll-mt-24 relative pt-16 sm:pt-20 md:pt-24 pb-12 sm:pb-16 md:pb-20 px-4 sm:px-6 font-poppins"
     >
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-muted/40 to-transparent pointer-events-none" />
 
       <div className="container mx-auto max-w-7xl relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 xl:gap-20 items-center">
           {/* Left Section - All existing content */}
-          <div className="homepage-hero__content text-center flex flex-col justify-center">
+          <div className="text-center flex flex-col justify-center">
             {/* Main Headline */}
             <h1
-              className="homepage-hero__title font-space-grotesk text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-semibold mb-4 sm:mb-6 leading-tight tracking-tight"
-              style={{
-                textShadow: '0 0 18px hsl(var(--primary) / 0.18), 0 0 42px hsl(var(--primary) / 0.10)',
-                filter: 'drop-shadow(0 0 10px hsl(var(--primary) / 0.10))'
-              }}
+              className="font-space-grotesk text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-semibold mb-4 sm:mb-6 leading-tight tracking-tight"
+              style={{ textShadow: '0 0 40px hsl(var(--primary) / 0.15)' }}
             >
-              <span className="text-primary">Build Your Startup.</span> Own Your Future.
+              <span className="text-primary">The One-Person Business</span> Factory
             </h1>
 
             {/* Subheadline - Improved readability */}
-            <p className="homepage-hero__copy font-space-grotesk text-sm sm:text-base md:text-lg text-muted-foreground mb-6 sm:mb-8 max-w-xl mx-auto leading-relaxed px-2 sm:px-0">
-              {isAuthenticated
-                ? "Set up your profile, then head to your dashboard to see what matters now, plan your next steps, and keep moving forward one task at a time."
-                : "Creatives Takeover hands first-time founders the system, the tools, and the network that used to be reserved for the well-connected. No cohort, no gatekeepers, no BS."}
+            <p className="font-space-grotesk text-sm sm:text-base md:text-lg text-muted-foreground mb-6 sm:mb-8 max-w-xl mx-auto leading-relaxed px-2 sm:px-0">
+              We blend technology, strategy, and community to empower individuals to build and launch startups with minimal friction. Our platform provides business development, expert support, and access to fundraising.
             </p>
             
             {/* Enhanced CTA Section */}
@@ -521,23 +456,25 @@ const Hero = () => {
                 </div>
             ) : (
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-center justify-center px-4 sm:px-0">
-                <Button size="lg" className="w-full sm:w-[180px] min-h-[44px] justify-center touch-manipulation" asChild>
+                <Button size="lg" className="w-full sm:w-auto min-h-[44px] touch-manipulation" asChild>
                   <Link to="/signup" onClick={handlePrimaryCTAClick}>
-                    Start Today
+                    Join Today
                     <ArrowRight className="w-4 h-4" />
                   </Link>
                 </Button>
+                <SocialProof variant="minimal" showRecentActivity={true} showUserCount={true} />
 
                 <Button 
                   variant="outline"
                   size="lg" 
-                  className="w-full sm:w-[180px] min-h-[44px] justify-center touch-manipulation" 
-                  onClick={(event) => {
-                    handleSecondaryCTAClick(event);
+                  className="w-full sm:w-auto min-h-[44px] touch-manipulation" 
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleSecondaryCTAClick(e as any);
                   }}
                 >
-                  <Cpu className="w-4 h-4" />
-                  Our System
+                  <Play className="w-4 h-4" />
+                  Explore Features
                 </Button>
               </div>
               )}
@@ -545,8 +482,8 @@ const Hero = () => {
           </div>
 
           {/* Right Section - 4-Pic Grid Layout */}
-          <div className="homepage-hero__media w-full lg:pt-8 xl:pt-10">
-            <div className="homepage-hero__media-shell rounded-2xl border border-border/70 bg-card shadow-lg p-3 sm:p-4">
+          <div className="w-full">
+            <div className="rounded-2xl border border-border/70 bg-card shadow-lg p-3 sm:p-4">
               <div className="grid grid-cols-2 gap-2 sm:gap-3 md:gap-4 w-full">
                 {[1, 2, 3, 4].map((position) => {
                 // Use optimistic preview if available (instant rendering), otherwise use database image
@@ -554,11 +491,10 @@ const Hero = () => {
                 const image = heroImages.find(img => img.position === position);
                 // Top row (positions 1 and 2) - no default fallback images, must be uploaded
                 const imageSrc = optimisticPreview || image?.image_url || '';
-                const optimizedImageSrc = getOptimizedHeroImageUrl(imageSrc, 640, 640);
-                const imageSrcSet = getHeroImageSrcSet(imageSrc);
                 const altText = image?.alt_text || `Hero image ${position}`;
                 const isUploadingPosition = uploading === position;
-                const isTopRow = position <= 2;
+                // Load all images eagerly for faster display
+                const shouldLoadEagerly = true;
 
                 if (!imageSrc) {
                   return (
@@ -622,17 +558,16 @@ const Hero = () => {
                     className="relative rounded-xl overflow-hidden border border-border/60 bg-muted/30 group"
                   >
                     <img
-                      src={optimizedImageSrc}
-                      srcSet={imageSrcSet}
+                      src={imageSrc}
                       alt={altText}
                       className="w-full h-auto object-cover aspect-square"
-                      loading="eager"
-                      fetchPriority={isTopRow ? "high" : "low"}
+                      loading={shouldLoadEagerly ? "eager" : "lazy"}
+                      fetchPriority={shouldLoadEagerly ? "high" : "auto"}
                       decoding="async"
                       width="800"
                       height="800"
                       sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 400px"
-                      key={`${position}-${optimisticPreview ? "optimistic" : "stable"}-${imageSrc}`}
+                      key={optimisticPreview ? `optimistic-${position}-${Date.now()}` : `stable-${position}`}
                     />
                     {isAdmin && (
                       <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/40">
