@@ -10,23 +10,47 @@ import { toast } from "sonner";
 import AuthWallpaper from "@/components/wallpapers/AuthWallpaper";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { getSessionSafely } from "@/integrations/supabase/auth";
 import { trackActivity } from "@/lib/activity";
 import { useConversionTracking } from "@/hooks/useConversionTracking";
-import { SocialProof } from "@/components/SocialProof";
 import MobileFormOptimizer from "@/components/MobileFormOptimizer";
+import { mapSignUpError } from "@/lib/authErrors";
+import { MIN_PASSWORD_LENGTH, PASSWORD_LENGTH_ERROR } from "@/lib/passwordPolicy";
+import {
+  isUsernameAvailable,
+  normalizeUsernameInput,
+  validateUsername,
+} from "@/lib/username";
+import {
+  appendReturnParam,
+  buildOnboardingPath,
+  persistOnboardingReturn,
+  sanitizeReturnPath,
+} from "@/lib/authRedirect";
+import {
+  appendCheckoutIntentParam,
+  consumeCheckoutIntent,
+  persistCheckoutIntent,
+  sanitizeCheckoutIntent,
+  redirectToCheckoutIntent,
+} from "@/lib/checkoutRedirect";
 
 const Signup = () => {
+  const defaultPostSignupPath = '/community/angels?preview=rookie-welcome';
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
+    username: "",
     email: "",
     password: ""
   });
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [usernameStatus, setUsernameStatus] = useState<"idle" | "checking" | "available" | "taken">("idle");
   const [errors, setErrors] = useState({
     firstName: "",
     lastName: "",
+    username: "",
     email: "",
     password: ""
   });
@@ -38,11 +62,35 @@ const Signup = () => {
   // Get conversion source from URL
   const [conversionSource] = useState(() => {
     const params = new URLSearchParams(window.location.search);
+    const safeReturn = sanitizeReturnPath(
+      params.get('return') || params.get('redirect'),
+      defaultPostSignupPath,
+    );
+
     return {
       source: params.get('source') || 'direct',
-      returnUrl: params.get('return') || '/'
+      returnUrl: safeReturn,
     };
   });
+
+  const checkoutIntent = sanitizeCheckoutIntent(
+    new URLSearchParams(window.location.search).get('checkout'),
+  );
+
+  const loginHref = (() => {
+    const basePath = conversionSource.source !== 'direct'
+      ? `/login?source=${encodeURIComponent(conversionSource.source)}`
+      : '/login';
+    return appendCheckoutIntentParam(
+      appendReturnParam(basePath, conversionSource.returnUrl),
+      checkoutIntent,
+    );
+  })();
+
+  useEffect(() => {
+    if (!checkoutIntent) return;
+    persistCheckoutIntent(checkoutIntent);
+  }, [checkoutIntent]);
 
   // Redirect authenticated users to the correct post-signup destination
   useEffect(() => {
@@ -56,22 +104,31 @@ const Signup = () => {
           .eq('id', user.id)
           .maybeSingle();
 
-        // New users should complete onboarding first.
+        const pendingCheckoutIntent = consumeCheckoutIntent();
+        if (pendingCheckoutIntent) {
+          redirectToCheckoutIntent(pendingCheckoutIntent, user);
+          return;
+        }
+
+        const targetAfterAuth = sanitizeReturnPath(conversionSource.returnUrl, '/dashboard');
+
+        // New users should complete onboarding first, then return to intent.
         if (profile?.onboarding_completed !== true) {
-          navigate('/onboarding', { replace: true });
+          persistOnboardingReturn(targetAfterAuth);
+          navigate(buildOnboardingPath(targetAfterAuth), { replace: true });
           return;
         }
 
         const savedProgress = localStorage.getItem('bizmap_progress');
-        if (savedProgress && conversionSource.returnUrl.includes('dream2plan')) {
-          navigate(conversionSource.returnUrl, { replace: true });
+        if (savedProgress && targetAfterAuth.includes('dream2plan')) {
+          navigate(targetAfterAuth, { replace: true });
           return;
         }
 
-        navigate('/dashboard', { replace: true });
+        navigate(targetAfterAuth, { replace: true });
       } catch (error) {
         console.error('Error resolving signup redirect:', error);
-        navigate('/onboarding', { replace: true });
+        navigate(buildOnboardingPath(conversionSource.returnUrl), { replace: true });
       }
     };
 
@@ -81,12 +138,46 @@ const Signup = () => {
   // Email validation regex
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+  useEffect(() => {
+    const normalized = normalizeUsernameInput(formData.username);
+    if (!normalized) {
+      setUsernameStatus("idle");
+      return;
+    }
+
+    if (validateUsername(normalized)) {
+      setUsernameStatus("idle");
+      return;
+    }
+
+    let cancelled = false;
+    const timeoutId = window.setTimeout(async () => {
+      setUsernameStatus("checking");
+      try {
+        const available = await isUsernameAvailable(normalized);
+        if (!cancelled) {
+          setUsernameStatus(available ? "available" : "taken");
+        }
+      } catch {
+        if (!cancelled) {
+          setUsernameStatus("idle");
+        }
+      }
+    }, 300);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timeoutId);
+    };
+  }, [formData.username]);
+
   // Handle input changes
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
+    const nextValue = name === "username" ? normalizeUsernameInput(value) : value;
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: nextValue
     }));
 
     // Clear errors when user starts typing
@@ -99,10 +190,11 @@ const Signup = () => {
   };
 
   // Form validation
-  const validateForm = () => {
+  const validateForm = async () => {
     const newErrors = {
       firstName: "",
       lastName: "",
+      username: "",
       email: "",
       password: ""
     };
@@ -111,9 +203,22 @@ const Signup = () => {
     if (!formData.firstName.trim()) {
       newErrors.firstName = "First name is required";
     }
-
     if (!formData.lastName.trim()) {
       newErrors.lastName = "Last name is required";
+    }
+
+    const usernameError = validateUsername(formData.username);
+    if (usernameError) {
+      newErrors.username = usernameError;
+    } else {
+      try {
+        const available = await isUsernameAvailable(formData.username);
+        if (!available) {
+          newErrors.username = "That username is already taken";
+        }
+      } catch (availabilityError) {
+        console.warn("Username availability check failed during signup validation", availabilityError);
+      }
     }
 
     // Email validation
@@ -126,19 +231,19 @@ const Signup = () => {
     // Password validation
     if (!formData.password.trim()) {
       newErrors.password = "Password is required";
-    } else if (formData.password.length < 6) {
-      newErrors.password = "Password must be at least 6 characters";
+    } else if (formData.password.length < MIN_PASSWORD_LENGTH) {
+      newErrors.password = PASSWORD_LENGTH_ERROR;
     }
 
     setErrors(newErrors);
-    return !newErrors.firstName && !newErrors.lastName && !newErrors.email && !newErrors.password;
+    return !newErrors.firstName && !newErrors.lastName && !newErrors.username && !newErrors.email && !newErrors.password;
   };
 
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!validateForm()) {
+    if (!await validateForm()) {
       return;
     }
 
@@ -151,34 +256,25 @@ const Signup = () => {
       // Track sign-up started
       trackSignupStarted(triggerType);
 
-      const fullName = `${formData.firstName.trim()} ${formData.lastName.trim()}`;
+      const fullName = [formData.firstName.trim(), formData.lastName.trim()].filter(Boolean).join(" ");
+      persistOnboardingReturn(conversionSource.returnUrl);
+      if (checkoutIntent) {
+        persistCheckoutIntent(checkoutIntent);
+      }
+
       const { error } = await signUp(
         formData.email,
         formData.password,
-        fullName
+        fullName,
+        undefined,
+        normalizeUsernameInput(formData.username),
       );
 
       if (error) {
-        // Handle specific error cases with user-friendly messages
-        let errorMessage = error.message || "Failed to create account. Please try again.";
-
-        // Check for common Supabase error codes and messages
-        if (error.message?.includes('database error') || error.message?.includes('saving new user')) {
-          errorMessage = "There was an issue creating your profile. Your account may have been created - please try signing in.";
-        } else if (error.message?.includes('User already registered') || error.message?.includes('already exists')) {
-          errorMessage = "An account with this email already exists. Please sign in instead.";
-        } else if (error.message?.includes('Email rate limit') || error.message?.includes('too many requests')) {
-          errorMessage = "Too many signup attempts. Please wait a few minutes and try again.";
-        } else if (error.message?.includes('Invalid email')) {
-          errorMessage = "Please enter a valid email address.";
-        } else if (error.message?.includes('Password')) {
-          errorMessage = "Password does not meet requirements. Please use a stronger password.";
-        }
-
         console.error('Signup error:', error);
-        toast.error(errorMessage);
+        toast.error(mapSignUpError(error));
       } else {
-        let { data: { session } } = await supabase.auth.getSession();
+        let session = await getSessionSafely();
 
         // Ensure users are signed in immediately after signup.
         if (!session) {
@@ -194,8 +290,7 @@ const Signup = () => {
             return;
           }
 
-          const { data: refreshedSessionData } = await supabase.auth.getSession();
-          session = refreshedSessionData.session;
+          session = await getSessionSafely();
         }
 
         if (!session) {
@@ -207,19 +302,16 @@ const Signup = () => {
         // Track conversion completion
         trackSignupCompleted(triggerType);
 
-        // Track conversion source
-        if (conversionSource.source !== 'direct') {
-          console.log('User signed up from:', conversionSource.source);
-        }
-
         try {
           await trackActivity('user:signup', { source: conversionSource.source });
-        } catch { }
+        } catch (activityError) {
+          console.warn('Signup activity tracking failed', activityError);
+        }
 
         toast.success("Account created successfully! Redirecting...");
 
         setTimeout(() => {
-          navigate('/onboarding', { replace: true });
+          navigate(buildOnboardingPath(conversionSource.returnUrl), { replace: true });
         }, 300);
       }
     } catch (error) {
@@ -248,11 +340,10 @@ const Signup = () => {
   // Google OAuth signup
   const handleGoogleSignup = async () => {
     try {
-      console.log("Starting Google OAuth signup...");
-
-      // Save onboarding as return URL
-      localStorage.setItem('oauth_return_url', '/onboarding');
+      // Preserve post-auth intent and complete onboarding before final return.
+      localStorage.setItem('oauth_return_url', conversionSource.returnUrl);
       localStorage.setItem('oauth_source', conversionSource.source);
+      persistOnboardingReturn(conversionSource.returnUrl);
 
       // Also save BizMap progress if it exists
       const savedProgress = localStorage.getItem('bizmap_progress');
@@ -262,7 +353,7 @@ const Signup = () => {
 
       toast("Redirecting to Google...");
 
-      const { data, error } = await supabase.auth.signInWithOAuth({
+      const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: `${window.location.origin}/auth/callback`,
@@ -273,8 +364,6 @@ const Signup = () => {
         }
       });
 
-      console.log("OAuth response:", { data, error });
-
       if (error) {
         console.error("OAuth error:", error);
         toast.error(`Google sign-up error: ${error.message}`);
@@ -282,10 +371,11 @@ const Signup = () => {
       }
 
       // If we get here without error, the redirect should have happened
-      console.log("OAuth initiated successfully");
       try {
         await trackActivity('user:signup_oauth', { provider: 'google' });
-      } catch { }
+      } catch (activityError) {
+        console.warn('OAuth signup activity tracking failed', activityError);
+      }
 
     } catch (err) {
       console.error("Caught error:", err);
@@ -328,51 +418,6 @@ const Signup = () => {
               <p className="text-sm text-muted-foreground text-center">Get started with your free account today</p>
             </CardHeader>
             <CardContent>
-              {/* Google OAuth - Primary action */}
-              <div className="grid grid-cols-1 gap-3 mb-4">
-                <div
-                  className="relative p-[2px] rounded-md"
-                  style={{
-                    background: 'linear-gradient(90deg, hsl(var(--blue-primary)), hsl(var(--red-primary)), #EAB308, hsl(var(--green-primary)))'
-                  }}
-                >
-                  <Button
-                    type="button"
-                    variant="outline"
-                    disabled={isLoading}
-                    onClick={handleGoogleSignup}
-                    className="h-12 w-full font-medium relative bg-background hover:bg-muted/50 transition-all duration-200 border-0"
-                  >
-                    <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
-                      <path fill="hsl(var(--blue-primary))" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                      <path fill="hsl(var(--red-primary))" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                      <path fill="#EAB308" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
-                      <path fill="hsl(var(--green-primary))" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
-                    </svg>
-                    <span
-                      className="bg-clip-text text-transparent font-medium"
-                      style={{
-                        backgroundImage: 'linear-gradient(90deg, hsl(var(--blue-primary)), hsl(var(--red-primary)), #EAB308, hsl(var(--green-primary)))'
-                      }}
-                    >
-                      Continue with Google
-                    </span>
-                  </Button>
-                </div>
-              </div>
-
-              {/* Divider */}
-              <div className="relative my-4">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t border-border" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-card px-2 text-muted-foreground">
-                    Or sign up with email
-                  </span>
-                </div>
-              </div>
-
               <form onSubmit={handleSubmit} autoComplete="on" className="space-y-5">
                 {/* Name Fields */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -392,6 +437,7 @@ const Signup = () => {
                         className={`pl-10 h-12 bg-background/50 backdrop-blur-sm border-2 transition-all duration-200 focus:border-primary focus:ring-2 focus:ring-primary/20 ${errors.firstName ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : ''}`}
                         disabled={isLoading}
                         autoComplete="given-name"
+                        required
                       />
                     </div>
                     {errors.firstName && (
@@ -413,11 +459,50 @@ const Signup = () => {
                       className={`h-12 bg-background/50 backdrop-blur-sm border-2 transition-all duration-200 focus:border-primary focus:ring-2 focus:ring-primary/20 ${errors.lastName ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : ''}`}
                       disabled={isLoading}
                       autoComplete="family-name"
+                      required
                     />
                     {errors.lastName && (
                       <p className="text-sm text-red-500 animate-fade-in">{errors.lastName}</p>
                     )}
                   </div>
+                </div>
+
+                {/* Username Field */}
+                <div className="space-y-2">
+                  <Label htmlFor="username" className="text-sm font-medium">
+                    Username
+                  </Label>
+                  <div className="relative">
+                    <Input
+                      id="username"
+                      name="username"
+                      type="text"
+                      value={formData.username}
+                      onChange={handleInputChange}
+                      placeholder="Choose your username"
+                      className={`h-12 bg-background/50 backdrop-blur-sm border-2 transition-all duration-200 focus:border-primary focus:ring-2 focus:ring-primary/20 ${errors.username ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : ''}`}
+                      disabled={isLoading}
+                      autoComplete="username"
+                      autoCapitalize="off"
+                      autoCorrect="off"
+                      spellCheck={false}
+                      required
+                    />
+                  </div>
+                  {!errors.username && formData.username && (
+                    <p className={`text-xs ${usernameStatus === "taken" ? "text-red-500" : "text-muted-foreground"}`}>
+                      {usernameStatus === "checking" && "Checking username availability..."}
+                      {usernameStatus === "available" && "Username is available"}
+                      {usernameStatus === "taken" && "That username is already taken"}
+                      {usernameStatus === "idle" && "Use lowercase letters, numbers, and underscores"}
+                    </p>
+                  )}
+                  {errors.username && (
+                    <p className="text-sm text-red-500 animate-fade-in">{errors.username}</p>
+                  )}
+                  <p className="text-xs text-muted-foreground">
+                    Your public profile will be at <span className="font-medium">/profile/{formData.username || "username"}</span>
+                  </p>
                 </div>
 
                 {/* Email Field */}
@@ -441,6 +526,7 @@ const Signup = () => {
                       autoCapitalize="off"
                       autoCorrect="off"
                       inputMode="email"
+                      required
                     />
                   </div>
                   {errors.email && (
@@ -466,6 +552,8 @@ const Signup = () => {
                         }`}
                       disabled={isLoading}
                       autoComplete="new-password"
+                      minLength={MIN_PASSWORD_LENGTH}
+                      required
                     />
                     <button
                       type="button"
@@ -481,7 +569,7 @@ const Signup = () => {
                     </button>
                   </div>
                   {!errors.password && formData.password.length > 0 && (
-                    <p className="text-xs text-muted-foreground">Use at least 8 characters</p>
+                    <p className="text-xs text-muted-foreground">Use at least {MIN_PASSWORD_LENGTH} characters</p>
                   )}
                   {errors.password && (
                     <p className="text-sm text-red-500 animate-fade-in">{errors.password}</p>
@@ -510,6 +598,50 @@ const Signup = () => {
                   )}
                 </Button>
 
+                {/* Divider */}
+                <div className="relative my-6">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t border-border" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-card px-2 text-muted-foreground">
+                      OR
+                    </span>
+                  </div>
+                </div>
+
+                {/* Social Login Buttons - Enhanced */}
+                <div className="grid grid-cols-1 gap-3">
+                  <div
+                    className="relative p-[2px] rounded-md"
+                    style={{
+                      background: 'linear-gradient(90deg, hsl(var(--blue-primary)), hsl(var(--red-primary)), #EAB308, hsl(var(--green-primary)))'
+                    }}
+                  >
+                    <Button
+                      type="button"
+                      variant="outline"
+                      disabled={isLoading}
+                      onClick={handleGoogleSignup}
+                      className="h-12 w-full font-medium relative bg-background hover:bg-muted/50 transition-all duration-200 border-0"
+                    >
+                      <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
+                        <path fill="hsl(var(--blue-primary))" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                        <path fill="hsl(var(--red-primary))" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                        <path fill="#EAB308" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+                        <path fill="hsl(var(--green-primary))" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+                      </svg>
+                      <span
+                        className="bg-clip-text text-transparent font-medium"
+                        style={{
+                          backgroundImage: 'linear-gradient(90deg, hsl(var(--blue-primary)), hsl(var(--red-primary)), #EAB308, hsl(var(--green-primary)))'
+                        }}
+                      >
+                        Continue with Google
+                      </span>
+                    </Button>
+                  </div>
+                </div>
 
                 {/* Hype Text */}
                 <div className="text-center mt-4 space-y-1">
@@ -572,7 +704,7 @@ const Signup = () => {
           <p className="text-muted-foreground">
             Already have an account?{" "}
             <Link
-              to="/login"
+              to={loginHref}
               className="text-primary hover:text-primary/80 font-semibold transition-colors"
             >
               Sign in
