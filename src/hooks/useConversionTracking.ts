@@ -36,7 +36,7 @@ export const useConversionTracking = () => {
   const pageLoadTime = useRef(Date.now());
   const triggerTimes = useRef<Map<string, number>>(new Map());
   const funnelStage = useRef<number>(0);
-  const trackingEnabled = import.meta.env.VITE_ENABLE_CONVERSION_TRACKING === 'true';
+  const trackingEnabled = true;
 
   // Track conversion event
   const trackEvent = useCallback(async (event: ConversionEvent) => {
