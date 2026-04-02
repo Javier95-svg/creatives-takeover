@@ -1,19 +1,15 @@
-import SEO, { createBreadcrumbSchema, createSoftwareApplicationSchema } from "@/components/SEO";
+import SEO, { createBreadcrumbSchema } from "@/components/SEO";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
-import RelatedPageLinks from "@/components/seo/RelatedPageLinks";
 import EmailTemplatesTab from "@/components/insighta/EmailTemplatesTab";
 import { useReadingAnalytics } from "@/hooks/useReadingAnalytics";
 import { useEffect } from "react";
+import { usePlanAccess } from "@/hooks/usePlanAccess";
+import { LockedPageOverlay } from "@/components/ui/LockedPageOverlay";
 
 export default function EmailTemplatesPage() {
   const { trackPageVisit } = useReadingAnalytics();
-  const relatedLinks = [
-    { href: "/insighta/vc-search", label: "VC Search" },
-    { href: "/insighta/accelerator-hunt", label: "Accelerator Search" },
-    { href: "/insighta/pitch-deck-analyzer", label: "Pitch Deck Analyzer" },
-    { href: "/insighta/test", label: "Fundraising Assessment" },
-  ];
+  const { hasAccess } = usePlanAccess('email_templates');
 
   // Track page visit when component mounts
   useEffect(() => {
@@ -37,12 +33,6 @@ export default function EmailTemplatesPage() {
         }
       }
     },
-    createSoftwareApplicationSchema({
-      name: "Fundraising Email Templates",
-      description: "Template library for investor outreach emails, follow-ups, and startup fundraising updates.",
-      url: "/insighta/email-templates",
-      featureList: ["cold investor outreach", "warm intro templates", "follow-up emails", "investor updates"],
-    }),
     createBreadcrumbSchema([
       { name: 'Home', url: '/' },
       { name: 'Insighta', url: '/insighta' },
@@ -55,14 +45,27 @@ export default function EmailTemplatesPage() {
       <SEO
         title="Email Templates Library - Creatives Takeover"
         description="Copy-paste ready email templates for every stage of fundraising. Personalize the variables (like {{vc_name}} and {{company_name}}) and send."
-        keywords="fundraising email templates, investor outreach emails, cold email templates for investors, startup follow up email, warm intro template"
+        keywords="fundraising email templates, investor email, cold outreach, warm introduction, follow-up emails"
         url="/insighta/email-templates"
         structuredData={structuredData}
       />
       <Navigation />
 
       <main>
-        <section className="px-4 pt-28 pb-20 md:pt-32 lg:pt-36 relative overflow-hidden" data-section="email-templates">
+        {!hasAccess && (
+          <LockedPageOverlay
+            requiredPlan="rising"
+            featureName="Email Templates"
+            description="Access copy-paste ready investor outreach templates for every stage of fundraising. Available on Rising and Pro plans."
+            benefits={[
+              "Cold outreach, warm intro, and follow-up templates",
+              "AI-personalized variables for each VC",
+              "Templates proven to get replies",
+            ]}
+          />
+        )}
+        {hasAccess && (
+        <section className="py-20 px-4 relative overflow-hidden" data-section="email-templates">
           {/* Background styling */}
           <div className="absolute inset-0 pointer-events-none overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-b from-background via-background/95 to-background" />
@@ -85,12 +88,12 @@ export default function EmailTemplatesPage() {
               <p className="text-lg sm:text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed animate-fade-in px-4" style={{ animationDelay: '0.3s' }}>
                 Copy-paste ready email templates for<span className="gradient-text font-semibold" style={{ lineHeight: 'inherit', marginLeft: '0.25rem' }}> every stage of fundraising.</span>
               </p>
-              <RelatedPageLinks title="Related fundraising tools" links={relatedLinks} />
             </div>
 
             <EmailTemplatesTab />
           </div>
         </section>
+        )}
       </main>
 
       <Footer />

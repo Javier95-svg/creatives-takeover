@@ -9,6 +9,16 @@ import { toast } from "sonner";
 
 // Stripe Payment Links mapping by tier and billing cycle
 const PAYMENT_LINKS: Record<string, Record<string, string>> = {
+  // New tier names
+  rising: {
+    monthly: "https://buy.stripe.com/aFacN67Sxg8T9b80bh0VO00",
+    yearly: "https://buy.stripe.com/3cIdRa7SxcWH1IG6zF0VO01",
+  },
+  pro: {
+    monthly: "https://buy.stripe.com/cNifZi0q5f4P7303nt0VO02",
+    yearly: "https://buy.stripe.com/4gMbJ2dcR09V1IGf6b0VO03",
+  },
+  // Legacy names (backward compat)
   creator: {
     monthly: "https://buy.stripe.com/aFacN67Sxg8T9b80bh0VO00",
     yearly: "https://buy.stripe.com/3cIdRa7SxcWH1IG6zF0VO01",
@@ -38,6 +48,10 @@ const Pricing = () => {
   // Map tier names for display
   const getTierDisplayName = (tierName: string): string => {
     const displayNames: Record<string, string> = {
+      rookie: "Rookie",
+      rising: "Rising",
+      pro: "Pro",
+      // legacy fallbacks
       free: "Rookie",
       creator: "Rising",
       professional: "Pro",
@@ -47,69 +61,71 @@ const Pricing = () => {
 
   // Get pricing based on billing cycle
   const getPrice = (tierName: string): { price: number; period: string } => {
-    if (tierName === "free") {
+    if (tierName === "rookie" || tierName === "free") {
       return { price: 0, period: "" };
     }
 
     if (billingCycle === "yearly") {
       const yearlyPrices: Record<string, number> = {
-        creator: 300,
-        professional: 750,
+        rising: 300, creator: 300,
+        pro: 750, professional: 750,
       };
       return { price: yearlyPrices[tierName] || 0, period: "/year" };
     }
 
-    // Monthly prices (from database)
+    // Monthly prices
     const monthlyPrices: Record<string, number> = {
-      creator: 32.99,
-      professional: 74.99,
+      rising: 32.99, creator: 32.99,
+      pro: 74.99, professional: 74.99,
     };
     return { price: monthlyPrices[tierName] || 0, period: "/month" };
   };
 
-  // Define simplified feature list for each tier - keep it clear and concise
+  // Define feature list per tier
   const getFeatures = (tierName: string): string[] => {
     const featureMap: Record<string, string[]> = {
-      free: [
+      rookie: [
         "25 credits per month",
-        "Dashboard: Focus Funnel, Core Metrics, Weekly Mission",
-        "BizMap AI: 25 messages per month",
-        "PMF Lab: read-only",
-        "Prompt Library: limited access",
-        "VC Search: 5 views per month",
-        "Stories: read-only",
-        "Community access: limited",
-        "Discovery Calls: Book calls with mentors (5 credits per call)",
+        "ICP Builder — free, no credits needed",
+        "PMF Lab & Waitlist Maker (credit-based)",
+        "Insighta Test & Stories — full access",
+        "VC Search & Accelerator Hunt — browse only",
+        "Discovery Calls — 10 credits per call",
+        "Community — read-only",
       ],
-      creator: [
+      rising: [
         "50 credits per month",
-        "Full Dashboard access",
-        "BizMap AI: ICP Builder, PMF Lab, MVP Builder, Business Planner, Tech Stack Builder",
-        "Insighta: VC Search, Email Templates, Pitch Deck Analyzer, Insighta Test",
-        "Community: Find a Mentor, Find a Co-Founder",
-        "Stories and Prompt Library",
-        "Discovery Calls: Book calls with mentors (5 credits per call)",
+        "ICP Builder, Waitlist Maker, PMF Lab",
+        "Tech Stack Builder, MVP Builder, GTM Strategist",
+        "Email Templates & Pitch Deck Analyzer",
+        "3 free discovery calls/month (then 10 credits)",
+        "3 VC Search & Accelerator profile views/month",
+        "Full community access — mentors & co-founders",
+        "Full Prompt Library",
       ],
-      professional: [
+      pro: [
         "150 credits per month",
-        "Full Dashboard access",
-        "BizMap AI: All tools including GTM Strategist",
-        "Insighta: Unlimited VC Search, Accelerator Hunt, Email Templates, Pitch Deck Analyzer, Insighta Test",
-        "Community: Find a Mentor, Find a Co-Founder, Find your Angel",
-        "Stories, Prompt Library, and custom templates",
-        "Early access to new features",
-        "Discovery Calls: Book calls with mentors (5 credits per call)",
+        "Everything in Rising",
+        "Unlimited discovery calls",
+        "Unlimited VC & Accelerator profile views",
+        "Angels Community — exclusive access",
+        "WhatsApp Founders Group — private network",
+        "Priority support",
       ],
     };
-    return featureMap[tierName] || [];
+    // legacy name fallback
+    return featureMap[tierName] || featureMap[tierName === 'creator' ? 'rising' : tierName === 'professional' ? 'pro' : 'rookie'] || [];
   };
 
   // Get target audience description
   const getTargetAudience = (tierName: string) => {
     const audiences: Record<string, string> = {
-      free: "Start your journey - validate your idea",
-      creator: "Build your startup with AI-powered tools",
-      professional: "Scale with unlimited access and premium features",
+      rookie: "Explore the platform and validate your idea",
+      rising: "Build your startup with all 7 tools",
+      pro: "Scale with unlimited access and an exclusive founder network",
+      free: "Explore the platform and validate your idea",
+      creator: "Build your startup with all 7 tools",
+      professional: "Scale with unlimited access and an exclusive founder network",
     };
     return audiences[tierName] || "";
   };
@@ -117,7 +133,10 @@ const Pricing = () => {
   // Get subtitle for each tier
   const getSubtitle = (tierName: string) => {
     const subtitles: Record<string, string> = {
-      free: "Validate",
+      rookie: "Start",
+      rising: "Build",
+      pro: "Scale",
+      free: "Start",
       creator: "Build",
       professional: "Scale",
     };
@@ -126,15 +145,18 @@ const Pricing = () => {
 
   const getTitleAndCTA = (tierName: string) => {
     const details: Record<string, { title: string; cta: string }> = {
+      rookie: { title: "Get Started", cta: "Start Free" },
+      rising: { title: "Build Your Startup", cta: "Upgrade to Rising" },
+      pro: { title: "Scale & Connect", cta: "Upgrade to Pro" },
       free: { title: "Get Started", cta: "Start Free" },
-      creator: { title: "Build & Create", cta: "Upgrade to Creator" },
-      professional: { title: "Scale & Collaborate", cta: "Upgrade to Pro" },
+      creator: { title: "Build Your Startup", cta: "Upgrade to Rising" },
+      professional: { title: "Scale & Connect", cta: "Upgrade to Pro" },
     };
     return details[tierName] || { title: "Get Started", cta: "Subscribe" };
   };
 
   const handleSubscribe = (tierName: string) => {
-    if (tierName === "free") {
+    if (tierName === "rookie" || tierName === "free") {
       if (!user) {
         window.location.href = "/auth";
       }
@@ -209,7 +231,7 @@ const Pricing = () => {
               const targetAudience = getTargetAudience(tier.tier_name);
               const subtitle = getSubtitle(tier.tier_name);
               const isCurrentPlan = subscriptionData?.subscription_tier === tier.tier_name;
-              const isPopular = tier.tier_name === "creator";
+              const isPopular = tier.tier_name === "rising" || tier.tier_name === "creator";
               const { price, period } = getPrice(tier.tier_name);
 
               return (
@@ -219,7 +241,7 @@ const Pricing = () => {
                     ? "border-green-500/60 ring-1 ring-green-500/30 shadow-md"
                     : isPopular
                       ? "border-primary/60 ring-1 ring-primary/30 shadow-md"
-                      : tier.tier_name === "professional"
+                      : (tier.tier_name === "pro" || tier.tier_name === "professional")
                         ? "border-red-500/60 ring-1 ring-red-500/30 shadow-md"
                         : "border-border/60"
                     }`}
@@ -252,7 +274,7 @@ const Pricing = () => {
                           <span className="text-muted-foreground text-base font-poppins">{period}</span>
                         )}
                       </div>
-                      {billingCycle === "yearly" && tier.tier_name !== "free" && (
+                      {billingCycle === "yearly" && tier.tier_name !== "free" && tier.tier_name !== "rookie" && (
                         <div className="text-sm text-green-600 dark:text-green-400 mt-1 font-poppins">
                           ${(price / 12).toFixed(2)}/month billed annually
                         </div>

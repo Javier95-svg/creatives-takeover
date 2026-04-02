@@ -1,9 +1,9 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Helmet } from "react-helmet-async";
 import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
-import CommunityAngelsWallpaper from "@/components/wallpapers/CommunityAngelsWallpaper";
+import HomeWallpaper from "@/components/wallpapers/HomeWallpaper";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,18 +29,12 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { AngelCard } from "@/components/angels/AngelCard";
-import { Sparkles, Loader2, Edit, Search, ChevronDown, X, Lock, Crown, ArrowRight } from "lucide-react";
+import { Sparkles, Loader2, Edit, Search, ChevronDown, X, Lock, Crown, ArrowLeft } from "lucide-react";
 import { AngelInvestor } from "@/types/angel";
 import { useAngels } from "@/hooks/useAngels";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFeatureGating } from "@/hooks/useFeatureGating";
 import { useUpgradePrompt } from "@/contexts/UpgradePromptContext";
-import { ANGEL_SECTOR_OPTIONS } from "@/data/angelSectors";
-import { supabase } from "@/integrations/supabase/client";
-import {
-  ANGELS_PRO_CHECKOUT_INTENT,
-  redirectToCheckoutIntent,
-} from "@/lib/checkoutRedirect";
 
 import { cn } from "@/lib/utils";
 import {
@@ -55,24 +49,6 @@ import {
 
 const ANGELS_PER_PAGE = 10;
 
-const ANGEL_HIGHLIGHTS = [
-  {
-    title: "Stage-aware search",
-    description: "Shortlist investors by pre-seed and seed relevance instead of browsing random firms.",
-    icon: Sparkles,
-  },
-  {
-    title: "Focused profiles",
-    description: "Review investor names, firms, and fit signals before deciding who belongs on your list.",
-    icon: Search,
-  },
-  {
-    title: "Raise with intention",
-    description: "Build a tighter shortlist and approach investors with a clearer sense of who you want to target.",
-    icon: ArrowRight,
-  },
-];
-
 
 const INVESTMENT_STAGE_OPTIONS = [
   "Pre-Seed",
@@ -81,112 +57,6 @@ const INVESTMENT_STAGE_OPTIONS = [
   "Series B",
   "Series C+",
 ];
-
-const SORTED_ANGEL_SECTOR_OPTIONS = [...ANGEL_SECTOR_OPTIONS].sort((a, b) => a.localeCompare(b));
-
-const ANGEL_PREVIEW_RETURN_PATH = "/community/angels?preview=rookie-welcome";
-
-const SECTOR_MATCH_KEYWORDS: Record<string, string[]> = {
-  "SaaS": ["saas", "software", "b2b software", "workflow software"],
-  "AI & Machine Learning": ["ai", "artificial intelligence", "machine learning", "automation", "llm"],
-  "FinTech": ["fintech", "payments", "banking", "insurtech", "financial"],
-  "HealthTech": ["health", "healthtech", "wellness", "medtech", "care"],
-  "CleanTech & Climate": ["climate", "cleantech", "clean tech", "energy", "sustainability"],
-  "E-Commerce & Marketplace": ["e-commerce", "ecommerce", "marketplace", "retail tech", "commerce"],
-  "EdTech": ["education", "edtech", "learning", "training"],
-  "Cybersecurity": ["cybersecurity", "security", "privacy", "identity"],
-  "Gaming & Entertainment": ["gaming", "games", "entertainment", "media", "creator"],
-  "Web3 & Blockchain": ["web3", "blockchain", "crypto", "defi"],
-  "BioTech & Life Sciences": ["biotech", "bio tech", "life sciences", "biomedical"],
-  "HR Tech & Future of Work": ["hr", "future of work", "recruiting", "talent", "people ops"],
-  "DeepTech & Hardware": ["deeptech", "deep tech", "hardware", "robotics", "semiconductor"],
-  "Mobility & Logistics": ["mobility", "logistics", "supply chain", "transport", "fleet"],
-  "Consumer & D2C": ["consumer", "d2c", "direct to consumer", "consumer brand", "lifestyle"],
-};
-
-type FounderPreviewProfile = {
-  startup_industry?: string[] | null;
-  creative_niche?: string | null;
-  user_preferences?: unknown;
-};
-
-const normalizeMatchText = (value: string) =>
-  value
-    .toLowerCase()
-    .replace(/&/g, " and ")
-    .replace(/[^a-z0-9\s]/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-
-const mapFounderSignalToSector = (signal: string): string | null => {
-  const normalizedSignal = normalizeMatchText(signal);
-
-  for (const sector of ANGEL_SECTOR_OPTIONS) {
-    const normalizedSector = normalizeMatchText(sector);
-    if (
-      normalizedSignal === normalizedSector ||
-      normalizedSignal.includes(normalizedSector) ||
-      normalizedSector.includes(normalizedSignal)
-    ) {
-      return sector;
-    }
-
-    const synonyms = SECTOR_MATCH_KEYWORDS[sector] || [];
-    if (synonyms.some((keyword) => normalizedSignal.includes(normalizeMatchText(keyword)))) {
-      return sector;
-    }
-  }
-
-  return null;
-};
-
-const getFounderSectorSignals = (profile: FounderPreviewProfile | null): string[] => {
-  if (!profile) return [];
-
-  const preferences =
-    profile.user_preferences && typeof profile.user_preferences === "object"
-      ? (profile.user_preferences as Record<string, unknown>)
-      : null;
-  const surveyData =
-    preferences?.surveyData && typeof preferences.surveyData === "object"
-      ? (preferences.surveyData as Record<string, unknown>)
-      : null;
-  const onboardingStartupIndustry =
-    typeof preferences?.startupIndustry === "string" ? preferences.startupIndustry : null;
-
-  const rawSignals = [
-    ...(Array.isArray(profile.startup_industry) ? profile.startup_industry : []),
-    profile.creative_niche || null,
-    onboardingStartupIndustry,
-    typeof surveyData?.industry === "string" ? surveyData.industry : null,
-  ].filter((value): value is string => Boolean(value));
-
-  const mappedSignals = rawSignals
-    .map((signal) => mapFounderSignalToSector(signal) || signal)
-    .filter(Boolean);
-
-  return Array.from(new Set(mappedSignals));
-};
-
-const getAngelMatchScore = (angel: AngelInvestor, founderSignals: string[]) => {
-  if (founderSignals.length === 0) return 0;
-
-  const angelSectors = (angel.sectors || []).map(normalizeMatchText);
-  return founderSignals.reduce((score, signal) => {
-    const normalizedSignal = normalizeMatchText(signal);
-    const exactMatch = angelSectors.some(
-      (sector) => sector === normalizedSignal || sector.includes(normalizedSignal) || normalizedSignal.includes(sector),
-    );
-
-    if (exactMatch) return score + 5;
-
-    const keywordMatch = angelSectors.some((sector) =>
-      (SECTOR_MATCH_KEYWORDS[signal] || []).some((keyword) => sector.includes(normalizeMatchText(keyword))),
-    );
-
-    return keywordMatch ? score + 2 : score;
-  }, 0);
-};
 
 // Custom debounce hook
 function useDebounce<T>(value: T, delay: number): T {
@@ -206,11 +76,8 @@ const FindYourAngel = () => {
   const { currentTier } = useFeatureGating();
   const { openUpgradePrompt } = useUpgradePrompt();
   const { fetchAngels, loading } = useAngels();
-  const isPro = currentTier === 'professional';
-  const isRookie = currentTier === 'free';
+  const isPro = isAdmin || currentTier === 'pro';
   const [angels, setAngels] = useState<AngelInvestor[]>([]);
-  const [founderSignals, setFounderSignals] = useState<string[]>([]);
-  const [founderNicheLabel, setFounderNicheLabel] = useState<string | null>(null);
 
   // Initialize state from URL params (fix 4b: persist filters in URL)
   const [searchQuery, setSearchQuery] = useState(searchParams.get("q") || "");
@@ -219,14 +86,15 @@ const FindYourAngel = () => {
     const stagesParam = searchParams.get("stages");
     return stagesParam ? stagesParam.split(",").filter(Boolean) : [];
   });
-  const [selectedSectors, setSelectedSectors] = useState<string[]>(() => {
-    const sectorsParam = searchParams.get("sectors");
-    return sectorsParam ? sectorsParam.split(",").filter(Boolean) : [];
-  });
   const [sortBy, setSortBy] = useState(searchParams.get("sort") || "alphabetical");
   const currentPage = parseInt(searchParams.get("page") || "1", 10);
 
-  const loadAngels = useCallback(async () => {
+
+  useEffect(() => {
+    loadAngels();
+  }, []);
+
+  const loadAngels = async () => {
     try {
       const fetched = await fetchAngels();
       setAngels(fetched);
@@ -234,41 +102,7 @@ const FindYourAngel = () => {
       console.error('Error loading angel investors:', error);
       setAngels([]);
     }
-  }, [fetchAngels]);
-
-  useEffect(() => {
-    loadAngels();
-  }, [loadAngels]);
-
-  useEffect(() => {
-    const loadFounderSignals = async () => {
-      if (!user) {
-        setFounderSignals([]);
-        setFounderNicheLabel(null);
-        return;
-      }
-
-      try {
-        const { data: profile, error } = await (supabase as any)
-          .from('profiles')
-          .select('startup_industry, creative_niche, user_preferences')
-          .eq('id', user.id)
-          .maybeSingle();
-
-        if (error) throw error;
-
-        const signals = getFounderSectorSignals(profile as FounderPreviewProfile | null);
-        setFounderSignals(signals);
-        setFounderNicheLabel(signals[0] || null);
-      } catch (error) {
-        console.error('Error loading founder niche for angel preview:', error);
-        setFounderSignals([]);
-        setFounderNicheLabel(null);
-      }
-    };
-
-    loadFounderSignals();
-  }, [user]);
+  };
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
@@ -313,31 +147,6 @@ const FindYourAngel = () => {
     setSearchParams(params, { replace: true });
   };
 
-  const handleSectorToggle = (sector: string) => {
-    setSelectedSectors((prev) => {
-      const next = prev.includes(sector)
-        ? prev.filter((value) => value !== sector)
-        : [...prev, sector];
-      const params = new URLSearchParams(searchParams);
-      if (next.length > 0) {
-        params.set("sectors", next.join(","));
-      } else {
-        params.delete("sectors");
-      }
-      params.set("page", "1");
-      setSearchParams(params, { replace: true });
-      return next;
-    });
-  };
-
-  const clearSectorFilter = () => {
-    setSelectedSectors([]);
-    const params = new URLSearchParams(searchParams);
-    params.delete("sectors");
-    params.set("page", "1");
-    setSearchParams(params, { replace: true });
-  };
-
   const handleSortChange = (newSort: string) => {
     setSortBy(newSort);
     const params = new URLSearchParams(searchParams);
@@ -353,14 +162,13 @@ const FindYourAngel = () => {
   const clearAllFilters = () => {
     setSearchQuery("");
     setSelectedStages([]);
-    setSelectedSectors([]);
     setSortBy("alphabetical");
     const params = new URLSearchParams();
     params.set("page", "1");
     setSearchParams(params, { replace: true });
   };
 
-  const hasActiveFilters = searchQuery.length > 0 || selectedStages.length > 0 || selectedSectors.length > 0;
+  const hasActiveFilters = searchQuery.length > 0 || selectedStages.length > 0;
 
   // Filtered and sorted angels based on debounced search, stage filters, and sort
   const filteredAngels = useMemo(() => {
@@ -373,8 +181,7 @@ const FindYourAngel = () => {
         (angel) =>
           angel.name.toLowerCase().includes(query) ||
           angel.firm_name.toLowerCase().includes(query) ||
-          angel.investment_stages?.some((s) => s.toLowerCase().includes(query)) ||
-          angel.sectors?.some((sector) => sector.toLowerCase().includes(query))
+          angel.investment_stages?.some((s) => s.toLowerCase().includes(query))
       );
     }
 
@@ -382,12 +189,6 @@ const FindYourAngel = () => {
     if (selectedStages.length > 0) {
       result = result.filter((angel) =>
         selectedStages.some((stage) => angel.investment_stages?.includes(stage))
-      );
-    }
-
-    if (selectedSectors.length > 0) {
-      result = result.filter((angel) =>
-        selectedSectors.some((sector) => angel.sectors?.includes(sector))
       );
     }
 
@@ -416,38 +217,7 @@ const FindYourAngel = () => {
     }
 
     return result;
-  }, [angels, debouncedSearch, selectedSectors, selectedStages, sortBy]);
-
-  const matchedPreviewAngels = useMemo(() => {
-    const previewLimit = user ? 5 : 10;
-    const scoredAngels = angels
-      .map((angel) => ({
-        angel,
-        score: getAngelMatchScore(angel, founderSignals),
-      }))
-      .sort((a, b) => {
-        if (b.score !== a.score) return b.score - a.score;
-        return a.angel.name.localeCompare(b.angel.name);
-      });
-
-    const strongMatches = scoredAngels.filter((item) => item.score > 0).map((item) => item.angel);
-    const fallbackMatches = scoredAngels
-      .filter((item) => item.score === 0)
-      .map((item) => item.angel);
-
-    return [...strongMatches, ...fallbackMatches].slice(0, previewLimit);
-  }, [angels, founderSignals, user]);
-
-  const previewWelcomeMode = searchParams.get("preview") === "rookie-welcome";
-
-  const handleInvestorUpgradeClick = () => {
-    if (user) {
-      redirectToCheckoutIntent(ANGELS_PRO_CHECKOUT_INTENT, user);
-      return;
-    }
-
-    navigate(`/signup?source=angels-upgrade&checkout=${encodeURIComponent(ANGELS_PRO_CHECKOUT_INTENT)}`);
-  };
+  }, [angels, debouncedSearch, selectedStages, sortBy]);
 
   const handlePageChange = (page: number) => {
     const params = new URLSearchParams(searchParams);
@@ -509,395 +279,246 @@ const FindYourAngel = () => {
     }
   }, [currentPage, totalPages, searchParams, setSearchParams]);
 
+  const descriptionText = "Find and connect with Angel Investors or Venture Capitalists who believe in bold ideas and back them early. Browse investor profiles, explore their focus areas and investment stages, and take the first step toward building a relationship that could fund your vision.\n\nWhether you are raising your first pre-seed round or looking for a strategic partner at the seed stage, this is where you start.";
+
   return (
     <>
       <Helmet>
-        <title>Find Your Angel | Creatives Takeover</title>
+        <title>Find your Angel | Connect with Investors</title>
         <meta
           name="description"
           content="Find and connect with Angel Investors or Venture Capitalists. Browse investor profiles, explore focus areas, and build relationships that fund your vision."
         />
-        <link rel="canonical" href="https://creatives-takeover.com/community/angels" />
       </Helmet>
       <div className="min-h-screen bg-background relative">
-        <CommunityAngelsWallpaper />
+        <HomeWallpaper />
         <Navigation />
         <div className="pt-16 relative z-10">
+          {/* Back to Community link (fix 1a) */}
+          <div className="container mx-auto px-4 sm:px-6 pt-4">
+            <Button variant="ghost" size="sm" asChild>
+              <Link to="/community" className="flex items-center gap-2">
+                <ArrowLeft className="h-4 w-4" />
+                Back to Community
+              </Link>
+            </Button>
+          </div>
+
           {/* Hero Section */}
-          <section className="relative py-10 lg:py-14">
-            <div className="container mx-auto max-w-6xl px-4 sm:px-6">
-              <div className="rounded-[2rem] border border-border/60 bg-white/80 p-5 shadow-sm backdrop-blur dark:bg-slate-950/70 sm:p-8">
-                <div className="flex flex-col gap-6">
-                  <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-                    <div className="space-y-5 lg:flex-1">
-                      <div className="max-w-3xl lg:mx-auto">
-                        <h1 className="text-center text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
-                          <span className="gradient-unified creatives-font">
-                            Find your Angel
-                          </span>
-                        </h1>
-                      </div>
-                    </div>
+          <section className="relative py-16 lg:py-28">
+            <div className="container mx-auto px-4 sm:px-6">
+              <div className="max-w-4xl mx-auto text-center">
+                {/* Title */}
+                <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-6 takeover-title creatives-font">
+                  <span className="gradient-unified animate-text-flicker">
+                    Find your Angel
+                  </span>
+                </h1>
 
-                    {isAdmin && (
-                      <Button asChild className="self-start rounded-full">
-                        <Link to="/community/angels/admin/new">
-                          Create Angel Investor
-                        </Link>
-                      </Button>
-                    )}
-                  </div>
-
-                  <div className="grid gap-3 md:grid-cols-3">
-                    {ANGEL_HIGHLIGHTS.map((item) => {
-                      const Icon = item.icon;
-
-                      return (
-                        <div
-                          key={item.title}
-                          className="rounded-3xl border border-border/60 bg-background/70 p-4 shadow-sm dark:bg-slate-900/70"
-                        >
-                          <Icon className="mb-3 h-5 w-5 text-sky-600 dark:text-sky-300" />
-                          <p className="text-sm font-semibold">{item.title}</p>
-                          <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-                            {item.description}
-                          </p>
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  {!isPro && user && (
-                    <div className="rounded-[1.75rem] border border-sky-500/25 bg-sky-500/10 p-4 shadow-sm">
-                      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                        <div className="space-y-2">
-                          <div className="inline-flex items-center gap-2 rounded-full border border-sky-500/30 bg-background/80 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-sky-700 dark:text-sky-200">
-                            <Sparkles className="h-3.5 w-3.5" />
-                            {isRookie ? "Rookie investor preview" : "Investor profiles locked"}
-                          </div>
-                          <h2 className="text-xl font-semibold tracking-tight">
-                            {isRookie && user
-                              ? `Five investor profiles matched to ${founderNicheLabel || "your startup niche"} are waiting below`
-                              : "See the investors, then decide if you need access"}
-                          </h2>
-                          <p className="max-w-3xl text-sm leading-relaxed text-muted-foreground">
-                            {isRookie && user
-                              ? "You can see the investors who fit your niche, but contact details and full access stay locked until you upgrade to Pro. That makes the value of the upgrade concrete before you spend anything."
-                              : "Rookie users get a matched teaser and Pro unlocks full search, filters, contact details, and complete investor profiles."}
-                          </p>
-                          {previewWelcomeMode && isRookie && user ? (
-                            <p className="text-sm font-medium text-foreground">
-                              Your account is ready. Start with the matched investor preview, then unlock Pro the moment you want to reach out.
-                            </p>
-                          ) : null}
-                        </div>
-
-                        <div className="flex flex-wrap gap-3">
-                          {!user ? (
-                            <Button asChild className="rounded-full">
-                              <Link to={`/signup?return=${encodeURIComponent(ANGEL_PREVIEW_RETURN_PATH)}`}>
-                                Start with the Rookie preview
-                              </Link>
-                            </Button>
-                          ) : (
-                            <Button
-                              className="rounded-full"
-                              onClick={() =>
-                                openUpgradePrompt({
-                                  reason: 'feature',
-                                  featureName: founderNicheLabel
-                                    ? `${founderNicheLabel} angel investor matches`
-                                    : 'Angel Investor Profiles',
-                                  requiredTier: 'professional',
-                                  description: 'Professional plan unlocks full angel investor profiles, search, filters, and contact details.',
-                                })
-                              }
-                            >
-                              <Crown className="mr-2 h-4 w-4" />
-                              Unlock Pro investor access
-                            </Button>
-                          )}
-                          <Button asChild variant="outline" className="rounded-full">
-                            <Link to="/pricing">See plans</Link>
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="rounded-[1.75rem] border border-border/60 bg-background/80 p-4 shadow-sm dark:bg-slate-900/75 sm:p-5">
-                    <div className="flex flex-col gap-3">
-                      <div className="relative w-full xl:max-w-md">
-                        {isPro ? (
-                          <>
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                            <Input
-                              placeholder="Search investors by name, firm, stage, or sector"
-                              value={searchQuery}
-                              onChange={handleSearchChange}
-                              aria-label="Search angel investors by name, firm, stage, or sector"
-                              className="h-11 min-h-[44px] w-full rounded-full border-border/70 bg-background pl-10 text-base md:text-sm"
-                            />
-                          </>
-                        ) : (
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <div className="relative opacity-60">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                <Input
-                                  placeholder="Search investors by name, firm, stage, or sector"
-                                  disabled
-                                  aria-label="Search angel investors by name, firm, stage, or sector (upgrade to unlock)"
-                                  className="pointer-events-none h-11 min-h-[44px] w-full rounded-full border-border/70 bg-background pl-10 text-base md:text-sm"
-                                />
-                              </div>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>Upgrade to Professional to unlock search</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        )}
-                      </div>
-                    </div>
-
-                    {!isPro && (
-                      <button
-                        type="button"
-                        onClick={handleInvestorUpgradeClick}
-                        className="mt-4 block w-full rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-left text-sm text-amber-900 transition-colors hover:bg-amber-500/15 dark:text-amber-100"
-                      >
-                        Pro Plan unlocks investment stage, sectors/industries, and full contact info access.
-                      </button>
-                    )}
-
-                    <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
-                      <div className="flex flex-wrap items-center gap-3">
-                        {isPro ? (
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <Button
-                                variant="outline"
-                                className={cn(
-                                  "h-9 rounded-full",
-                                  selectedStages.length > 0 && "border-primary bg-primary/5"
-                                )}
-                              >
-                                Investment Stage
-                                {selectedStages.length > 0 && (
-                                  <Badge variant="secondary" className="ml-2 h-5 px-1.5">
-                                    {selectedStages.length}
-                                  </Badge>
-                                )}
-                                <ChevronDown className="ml-2 h-4 w-4" />
-                              </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-64" align="start">
-                              <div className="space-y-4">
-                                <div className="flex items-center justify-between">
-                                  <Label className="font-semibold">Investment Stage</Label>
-                                  {selectedStages.length > 0 && (
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      onClick={clearStageFilter}
-                                    >
-                                      Clear
-                                    </Button>
-                                  )}
-                                </div>
-                                <Separator />
-                                <div className="space-y-2">
-                                  {INVESTMENT_STAGE_OPTIONS.map((stage) => (
-                                    <div
-                                      key={stage}
-                                      className="flex items-center space-x-2"
-                                    >
-                                      <Checkbox
-                                        id={`filter-stage-${stage}`}
-                                        checked={selectedStages.includes(stage)}
-                                        onCheckedChange={() => handleStageToggle(stage)}
-                                      />
-                                      <Label
-                                        htmlFor={`filter-stage-${stage}`}
-                                        className="flex-1 cursor-pointer font-normal"
-                                      >
-                                        {stage}
-                                      </Label>
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-                            </PopoverContent>
-                          </Popover>
-                        ) : (
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                variant="outline"
-                                className="h-9 rounded-full opacity-50 cursor-not-allowed"
-                                disabled
-                              >
-                                Investment Stage
-                                <ChevronDown className="ml-2 h-4 w-4" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>Upgrade to Professional to unlock filters</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        )}
-
-                        {isPro ? (
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <Button
-                                variant="outline"
-                                className={cn(
-                                  "h-9 rounded-full",
-                                  selectedSectors.length > 0 && "border-primary bg-primary/5"
-                                )}
-                              >
-                                Sectors
-                                {selectedSectors.length > 0 && (
-                                  <Badge variant="secondary" className="ml-2 h-5 px-1.5">
-                                    {selectedSectors.length}
-                                  </Badge>
-                                )}
-                                <ChevronDown className="ml-2 h-4 w-4" />
-                              </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-72" align="start">
-                              <div className="space-y-4">
-                                <div className="flex items-center justify-between">
-                                  <Label className="font-semibold">Sectors</Label>
-                                  {selectedSectors.length > 0 && (
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      onClick={clearSectorFilter}
-                                    >
-                                      Clear
-                                    </Button>
-                                  )}
-                                </div>
-                                <Separator />
-                                <div className="space-y-2">
-                                  {SORTED_ANGEL_SECTOR_OPTIONS.map((sector) => (
-                                    <div
-                                      key={sector}
-                                      className="flex items-center space-x-2"
-                                    >
-                                      <Checkbox
-                                        id={`filter-sector-${sector}`}
-                                        checked={selectedSectors.includes(sector)}
-                                        onCheckedChange={() => handleSectorToggle(sector)}
-                                      />
-                                      <Label
-                                        htmlFor={`filter-sector-${sector}`}
-                                        className="flex-1 cursor-pointer font-normal"
-                                      >
-                                        {sector}
-                                      </Label>
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-                            </PopoverContent>
-                          </Popover>
-                        ) : (
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                variant="outline"
-                                className="h-9 rounded-full opacity-50 cursor-not-allowed"
-                                disabled
-                              >
-                                Sectors
-                                <ChevronDown className="ml-2 h-4 w-4" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>Upgrade to Professional to unlock filters</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        )}
-
-                        {hasActiveFilters && isPro && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={clearAllFilters}
-                            className="h-9 rounded-full text-muted-foreground hover:text-foreground"
-                          >
-                            <X className="mr-1 h-4 w-4" />
-                            Clear all
-                          </Button>
-                        )}
-                      </div>
-
-                      <div className="sm:ml-auto flex items-center gap-2">
-                        <span className="text-sm text-muted-foreground">Sort by:</span>
-                        {isPro ? (
-                          <Select value={sortBy} onValueChange={handleSortChange}>
-                            <SelectTrigger className="h-9 w-[180px] rounded-full">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="alphabetical">Alphabetical (A-Z)</SelectItem>
-                              <SelectItem value="newest">Newest first</SelectItem>
-                              <SelectItem value="oldest">Oldest first</SelectItem>
-                              <SelectItem value="firm">By firm name</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        ) : (
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <div className="cursor-not-allowed opacity-50">
-                                <Select value="alphabetical" disabled>
-                                  <SelectTrigger className="pointer-events-none h-9 w-[180px] rounded-full">
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                </Select>
-                              </div>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>Upgrade to Professional to unlock sorting</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        )}
-                      </div>
-                    </div>
-                  </div>
+                {/* Description with zoom-in effect */}
+                <div className="max-w-3xl mx-auto mb-8 relative animate-zoom-in">
+                  <p
+                    className="text-base sm:text-lg md:text-xl text-foreground/90 leading-relaxed"
+                    style={{
+                      whiteSpace: 'pre-line',
+                      fontFamily: "'Space Grotesk', 'Poppins', sans-serif",
+                    }}
+                  >
+                    {descriptionText}
+                  </p>
                 </div>
               </div>
             </div>
           </section>
 
           {/* Angel Investors Section */}
-          <section id="angel-grid" className="container mx-auto max-w-6xl px-4 pb-12 pt-2 relative z-10 sm:px-6">
+          <section id="angel-grid" className="container mx-auto px-4 py-12 relative z-10">
+            {/* Admin Create Button */}
+            {isAdmin && (
+              <div className="mb-6 flex justify-end">
+                <Button asChild>
+                  <Link to="/community/angels/admin/new">
+                    Create Angel Investor
+                  </Link>
+                </Button>
+              </div>
+            )}
+
+            {/* Search Bar (fix 6b: aria-label, fix 2a: disabled for non-Pro) */}
+            <div className="mb-6">
+              {isPro ? (
+                <div className="relative w-full max-w-md mx-auto md:mx-0">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search by name or keyword"
+                    value={searchQuery}
+                    onChange={handleSearchChange}
+                    aria-label="Search angel investors by name or keyword"
+                    className="pl-10 h-11 w-full min-h-[44px] text-base md:text-sm"
+                  />
+                </div>
+              ) : (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="relative w-full max-w-md mx-auto md:mx-0 opacity-50 cursor-not-allowed">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Search by name or keyword"
+                        disabled
+                        aria-label="Search angel investors (upgrade to unlock)"
+                        className="pl-10 h-11 w-full min-h-[44px] text-base md:text-sm pointer-events-none"
+                      />
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Upgrade to Professional to unlock search</p>
+                  </TooltipContent>
+                </Tooltip>
+              )}
+            </div>
+
+            {/* Investment Stage Filter Bar (fix 3a: responsive layout) */}
+            <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3 mb-6">
+              <div className="flex flex-wrap items-center gap-3">
+                {isPro ? (
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "h-9",
+                          selectedStages.length > 0 && "border-primary bg-primary/5"
+                        )}
+                      >
+                        Investment Stage
+                        {selectedStages.length > 0 && (
+                          <Badge variant="secondary" className="ml-2 h-5 px-1.5">
+                            {selectedStages.length}
+                          </Badge>
+                        )}
+                        <ChevronDown className="h-4 w-4 ml-2" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-64" align="start">
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <Label className="font-semibold">Investment Stage</Label>
+                          {selectedStages.length > 0 && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={clearStageFilter}
+                            >
+                              Clear
+                            </Button>
+                          )}
+                        </div>
+                        <Separator />
+                        <div className="space-y-2">
+                          {INVESTMENT_STAGE_OPTIONS.map((stage) => (
+                            <div
+                              key={stage}
+                              className="flex items-center space-x-2"
+                            >
+                              <Checkbox
+                                id={`filter-stage-${stage}`}
+                                checked={selectedStages.includes(stage)}
+                                onCheckedChange={() => handleStageToggle(stage)}
+                              />
+                              <Label
+                                htmlFor={`filter-stage-${stage}`}
+                                className="font-normal cursor-pointer flex-1"
+                              >
+                                {stage}
+                              </Label>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                ) : (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className="h-9 opacity-50 cursor-not-allowed"
+                        disabled
+                      >
+                        Investment Stage
+                        <ChevronDown className="h-4 w-4 ml-2" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Upgrade to Professional to unlock filters</p>
+                    </TooltipContent>
+                  </Tooltip>
+                )}
+
+                {/* Clear All Filters */}
+                {hasActiveFilters && isPro && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={clearAllFilters}
+                    className="h-9 text-muted-foreground hover:text-foreground"
+                  >
+                    <X className="h-4 w-4 mr-1" />
+                    Clear all
+                  </Button>
+                )}
+              </div>
+
+              {/* Sort (fix 3a: full-width on mobile) */}
+              <div className="sm:ml-auto flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">Sort by:</span>
+                {isPro ? (
+                  <Select value={sortBy} onValueChange={handleSortChange}>
+                    <SelectTrigger className="w-[180px] h-9">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="alphabetical">Alphabetical (A-Z)</SelectItem>
+                      <SelectItem value="newest">Newest first</SelectItem>
+                      <SelectItem value="oldest">Oldest first</SelectItem>
+                      <SelectItem value="firm">By firm name</SelectItem>
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="opacity-50 cursor-not-allowed">
+                        <Select value="alphabetical" disabled>
+                          <SelectTrigger className="w-[180px] h-9 pointer-events-none">
+                            <SelectValue />
+                          </SelectTrigger>
+                        </Select>
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Upgrade to Professional to unlock sorting</p>
+                    </TooltipContent>
+                  </Tooltip>
+                )}
+              </div>
+            </div>
+
             {/* Results Count (fix 2b: hide exact count for non-Pro) */}
-            <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div className="mb-4">
               {loading ? (
                 <div className="flex items-center gap-2">
                   <Loader2 className="h-4 w-4 animate-spin" />
                   <span className="text-sm text-muted-foreground">Loading angel investors...</span>
                 </div>
-              ) : isRookie && user ? (
-                <p className="text-sm text-muted-foreground">
-                  {matchedPreviewAngels.length} investor profile{matchedPreviewAngels.length !== 1 ? 's' : ''} matched to {founderNicheLabel || 'your startup niche'}
-                </p>
               ) : isPro ? (
                 <p className="text-sm text-muted-foreground">
                   {filteredAngels.length} angel investor{filteredAngels.length !== 1 ? 's' : ''} found
                 </p>
               ) : (
                 <p className="text-sm text-muted-foreground">
-                  {angels.length} angel investor{angels.length !== 1 ? 's' : ''} found
+                  27 angel investors found
                 </p>
               )}
-              <p className="text-sm text-muted-foreground">
-                Use the directory to build a tighter investor shortlist before you start outbound.
-              </p>
             </div>
 
             {/* Angel Investor Cards Grid */}
@@ -937,83 +558,6 @@ const FindYourAngel = () => {
                       </div>
                     ))}
                   </div>
-                ) : isRookie ? (
-                  <div className="space-y-5">
-                    <div className="grid grid-cols-1 gap-6 select-none">
-                      {matchedPreviewAngels.map((angel, index) => (
-                        <div key={angel.id} className="relative overflow-hidden rounded-xl">
-                          <AngelCard
-                            angel={angel}
-                            priority={index < 4}
-                            className="pointer-events-none blur-[2px] opacity-90"
-                          />
-                          <div className="absolute inset-0 bg-gradient-to-r from-background/35 via-transparent to-background/35" />
-                          <div className="absolute inset-x-4 bottom-4 rounded-2xl border border-border/70 bg-card/95 p-4 shadow-xl backdrop-blur">
-                            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                              <div className="space-y-1">
-                                <p className="text-sm font-semibold">
-                                  {founderNicheLabel
-                                    ? `Matched to ${founderNicheLabel}`
-                                    : 'Matched investor preview'}
-                                </p>
-                                <p className="text-xs leading-relaxed text-muted-foreground">
-                                  Unlock Pro to reveal contact details, remove blur, and open the full investor directory.
-                                </p>
-                              </div>
-                              <Button
-                                size="sm"
-                                className="rounded-full"
-                                onClick={() =>
-                                  openUpgradePrompt({
-                                    reason: 'feature',
-                                    featureName: founderNicheLabel
-                                      ? `${founderNicheLabel} angel investor matches`
-                                      : 'Angel Investor Profiles',
-                                    requiredTier: 'professional',
-                                    description: 'Professional plan unlocks full angel investor profiles, search, filters, and contact details.',
-                                  })
-                                }
-                              >
-                                <Crown className="mr-2 h-4 w-4" />
-                                Reveal this profile
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-
-                    {user ? (
-                      <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-5 text-center">
-                        <p className="text-sm font-semibold text-foreground">
-                          The commercial moment is now: you can see the investors, but you cannot reach them yet.
-                        </p>
-                        <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                          Upgrade to Pro the moment you want full profile access, search, filters, and direct contact context.
-                        </p>
-                        <div className="mt-4 flex flex-wrap justify-center gap-3">
-                          <Button
-                            onClick={() =>
-                              openUpgradePrompt({
-                                reason: 'feature',
-                                featureName: founderNicheLabel
-                                  ? `${founderNicheLabel} angel investor matches`
-                                  : 'Angel Investor Profiles',
-                                requiredTier: 'professional',
-                                description: 'Professional plan unlocks full angel investor profiles, search, filters, and contact details.',
-                              })
-                            }
-                          >
-                            <Crown className="mr-2 h-4 w-4" />
-                            Upgrade to Pro
-                          </Button>
-                          <Button asChild variant="outline">
-                            <Link to="/pricing">Compare plans</Link>
-                          </Button>
-                        </div>
-                      </div>
-                    ) : null}
-                  </div>
                 ) : (
                   /* Non-Pro users: blurred cards with upgrade overlay */
                   <div className="relative min-h-[400px]">
@@ -1047,7 +591,7 @@ const FindYourAngel = () => {
                             openUpgradePrompt({
                               reason: 'feature',
                               featureName: 'Angel Investor Profiles',
-                              requiredTier: 'professional',
+                              requiredTier: 'pro',
                               description: 'Professional plan gives you unlimited access to all angel investor profiles.',
                             })
                           }
@@ -1064,7 +608,7 @@ const FindYourAngel = () => {
                 )}
 
                 {/* Pagination — always visible so users see there are multiple pages (fix 6a: proper hrefs) */}
-                {isPro && totalPages > 1 && (
+                {totalPages > 1 && (
                   <div className="mt-8">
                     <Pagination>
                       <PaginationContent>
@@ -1100,7 +644,7 @@ const FindYourAngel = () => {
                                     openUpgradePrompt({
                                       reason: 'feature',
                                       featureName: 'Angel Investor Profiles',
-                                      requiredTier: 'professional',
+                                      requiredTier: 'pro',
                                       description: 'Professional plan gives you unlimited access to all angel investor profiles.',
                                     });
                                   }

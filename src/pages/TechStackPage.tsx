@@ -6,6 +6,8 @@ import { useReadingAnalytics } from "@/hooks/useReadingAnalytics";
 import { useLeanStartupStore } from "@/store/leanStartupStore";
 import { useEffect } from "react";
 import { Loader2 } from "lucide-react";
+import { usePlanAccess } from "@/hooks/usePlanAccess";
+import { LockedPageOverlay } from "@/components/ui/LockedPageOverlay";
 
 // Lazy load the Tech Stack component
 const TechStack = lazy(() => import("@/components/tech-stack/TechStack"));
@@ -13,6 +15,7 @@ const TechStack = lazy(() => import("@/components/tech-stack/TechStack"));
 export default function TechStackPage() {
   const { trackPageVisit } = useReadingAnalytics();
   const { markToolUsed } = useLeanStartupStore();
+  const { hasAccess, isProgressiveLock } = usePlanAccess('tech_stack');
 
   useEffect(() => { markToolUsed('tech-stack'); }, [markToolUsed]);
 
@@ -57,7 +60,24 @@ export default function TechStackPage() {
       <Navigation />
 
       <main>
-        <section className="px-4 pt-28 pb-20 md:pt-32 lg:pt-36 relative overflow-hidden" data-section="tech-stack">
+        {!hasAccess && (
+          <LockedPageOverlay
+            requiredPlan="rising"
+            featureName="Tech Stack Builder"
+            description={
+              isProgressiveLock
+                ? "Complete the PMF Lab (Stage 3) to unlock the Tech Stack Builder, or upgrade to Rising to access all 7 tools immediately."
+                : "Tech Stack Builder is available on the Rising plan and above."
+            }
+            benefits={[
+              "AI-powered tech stack recommendations",
+              "Compare frameworks, databases, and platforms",
+              "Match your stack to your budget and team size",
+            ]}
+          />
+        )}
+        {hasAccess && (
+        <section className="py-20 px-4 relative overflow-hidden" data-section="tech-stack">
           {/* Background styling */}
           <div className="absolute inset-0 pointer-events-none overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-b from-background via-background/95 to-background" />
@@ -77,8 +97,8 @@ export default function TechStackPage() {
               <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-3 sm:mb-4 takeover-gradient creatives-font animate-fade-in leading-tight pb-2">
                 Tech Stack Builder
               </h1>
-              <p className="text-lg sm:text-xl md:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed animate-fade-in px-4" style={{ animationDelay: '0.3s' }}>
-                Compare and select the most suitable tools to build and scale your startup.
+              <p className="text-lg sm:text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed animate-fade-in px-4" style={{ animationDelay: '0.3s' }}>
+                Compare and select the most suitable tools to<span className="gradient-text font-semibold" style={{ lineHeight: 'inherit', marginLeft: '0.25rem' }}> build and scale your startup.</span>
               </p>
             </div>
 
@@ -94,6 +114,7 @@ export default function TechStackPage() {
             </Suspense>
           </div>
         </section>
+        )}
       </main>
 
       <Footer />

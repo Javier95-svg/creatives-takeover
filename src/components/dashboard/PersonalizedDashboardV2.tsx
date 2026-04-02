@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, createContext } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usePersonalizedDashboard } from '@/hooks/usePersonalizedDashboard';
 import { ArrowRight } from 'lucide-react';
@@ -11,23 +11,13 @@ import { ModeToggle, DashboardMode } from './modes/ModeToggle';
 import { FocusModeView } from './modes/FocusModeView';
 import { DashboardModeView } from './modes/DashboardModeView';
 import { ControlCenterView } from './modes/ControlCenterView';
+import { RookieUpgradeBanner } from './RookieUpgradeBanner';
+import { JourneyStageGrid } from './JourneyStageGrid';
 import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 import { DashboardNavigationProvider } from '@/contexts/DashboardNavigationContext';
 import { DashboardSidebar } from './DashboardSidebar';
 import { useActiveSection } from '@/hooks/useActiveSection';
 import { ReactNode } from 'react';
-import { BizMapStageTasks } from './BizMapStageTasks';
-import { BizMapJourneyProgress } from './BizMapJourneyProgress';
-import { useBizMapProgress } from '@/hooks/useBizMapProgress';
-import { useUnifiedTasks } from '@/hooks/useUnifiedTasks';
-import { getLocalDateString, wasDailyGoalPromptSkipped } from '@/lib/dailyGoalPrompt';
-import { useActivationJourney } from '@/hooks/useActivationJourney';
-import { DailyMissionCard } from './DailyMissionCard';
-import { ShipUpdateFeed } from './ShipUpdateFeed';
-import { trackWeeklyMissionViewed } from '@/lib/analytics';
-
-/** Exposes the total incomplete task count to child components (e.g. sidebar badge) */
-export const TaskCountContext = createContext<number>(0);
 
 // Internal wrapper component that uses the navigation context
 interface DashboardContentWrapperProps {
@@ -41,7 +31,7 @@ const DashboardContentWrapper = ({ dashboardMode, children }: DashboardContentWr
     dashboardMode === 'focus'
       ? ['dashboard-focus', 'focus-funnel', 'decision-sprint', 'weekly-mission', 'core-metrics', 'your-tasks']
       : dashboardMode === 'dashboard'
-        ? ['dashboard-focus', 'priority-radar', 'next-actions', 'command-links', 'insight-brief']
+        ? ['dashboard-focus', 'focus-funnel', 'decision-sprint', 'weekly-mission', 'monthly-revenue', 'core-metrics', 'active-projects', 'quick-wins', 'your-tasks']
         : ['dashboard-focus', 'focus-funnel', 'decision-sprint', 'weekly-mission', 'monthly-revenue', 'core-metrics', 'ai-insights', 'business-health', 'active-projects', 'calendar-view', 'quick-wins', 'your-tasks', 'gmail-integration'];
 
   // Initialize active section tracking (now inside the provider)
@@ -53,10 +43,7 @@ const DashboardContentWrapper = ({ dashboardMode, children }: DashboardContentWr
 export const PersonalizedDashboardV2 = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { currentStage } = useBizMapProgress();
-  const { activationJourney, isActivated, loading: activationLoading } = useActivationJourney();
   const { isInitializing } = useDashboardInitialization();
-  const { completedToday, totalToday } = useUnifiedTasks();
   const {
     data,
     loading,
@@ -65,10 +52,10 @@ export const PersonalizedDashboardV2 = () => {
 
   const [showDailyGoal, setShowDailyGoal] = useState(false);
   const [modalMode, setModalMode] = useState<'morning' | 'evening'>('morning');
+  const [hasCheckedInToday, setHasCheckedInToday] = useState(false);
   const [todaysCheckInId, setTodaysCheckInId] = useState<string | null>(null);
   const [currentStreak, setCurrentStreak] = useState(0);
   const [dashboardMode, setDashboardMode] = useState<DashboardMode>('dashboard');
-  const [hasSavedModePreference, setHasSavedModePreference] = useState(false);
 
   // Track last fetch time to prevent unnecessary refreshes
   const lastFetchTimeRef = useRef<number>(0);
@@ -87,20 +74,12 @@ export const PersonalizedDashboardV2 = () => {
         .single();
 
       if (profile?.preferred_dashboard_mode) {
-        setHasSavedModePreference(true);
         setDashboardMode(profile.preferred_dashboard_mode as DashboardMode);
       }
     };
 
     loadDashboardPreference();
   }, [user]);
-
-  useEffect(() => {
-    if (activationLoading || hasSavedModePreference) return;
-    if (!isActivated) {
-      setDashboardMode('focus');
-    }
-  }, [activationLoading, hasSavedModePreference, isActivated]);
 
   // Save dashboard mode preference when it changes
   const handleModeChange = async (newMode: DashboardMode) => {
@@ -127,7 +106,7 @@ export const PersonalizedDashboardV2 = () => {
     }
 
     const checkDailyCheckIn = async () => {
-      const today = getLocalDateString();
+      const today = new Date().toISOString().split('T')[0];
       const currentHour = new Date().getHours();
 
       const { data: todayCheckIn } = await supabase
@@ -136,6 +115,8 @@ export const PersonalizedDashboardV2 = () => {
         .eq('user_id', user.id)
         .eq('check_in_date', today)
         .maybeSingle();
+
+      setHasCheckedInToday(!!todayCheckIn);
 
       if (todayCheckIn) {
         setTodaysCheckInId(todayCheckIn.id);
@@ -168,20 +149,14 @@ export const PersonalizedDashboardV2 = () => {
         }
 
         // Show evening reflection if after 6 PM and haven't reflected yet
-        if (
-          currentHour >= 18 &&
-          todayCheckIn.goal_achieved === null &&
-          !wasDailyGoalPromptSkipped(user.id, 'evening', today)
-        ) {
+        if (currentHour >= 18 && todayCheckIn.goal_achieved === null) {
           setModalMode('evening');
           setShowDailyGoal(true);
         }
       } else {
         // Show morning goal modal if haven't checked in
-        if (!wasDailyGoalPromptSkipped(user.id, 'morning', today)) {
-          setModalMode('morning');
-          setShowDailyGoal(true);
-        }
+        setModalMode('morning');
+        setShowDailyGoal(true);
       }
 
       lastFetchTimeRef.current = Date.now();
@@ -197,60 +172,20 @@ export const PersonalizedDashboardV2 = () => {
 
   // Calculate metrics for the views
   const calculateMetrics = () => {
+    // Mock data - will be replaced with actual data from hooks
     return {
       streak: currentStreak,
-      tasksCompletedToday: completedToday,
-      totalTasksToday: totalToday,
+      tasksCompletedToday: 3,
+      totalTasksToday: 5,
       weeklyProgress: 65,
       tasksCompletedThisWeek: 12,
       totalTasksThisWeek: 20,
       activeSprints: data?.stats?.activeSprints || 0,
       completedSessions: data?.stats?.completedSessions || 0,
-      currentStage,
-      recommendations: data?.recommendations || [],
     };
   };
 
   const metrics = calculateMetrics();
-  const describeRoute = (route: string) => {
-    switch (route) {
-      case '/icp-builder':
-        return 'ICP Builder';
-      case '/waitlist':
-        return 'Waitlist Maker';
-      case '/pmf-lab':
-        return 'PMF Lab';
-      case '/mvp-builder':
-        return 'MVP Builder';
-      default:
-        return 'the next BizMap tool';
-    }
-  };
-  const activationActions = !isActivated
-    ? [
-        {
-          id: 'first-output',
-          title: `Finish ${activationJourney.firstOutputLabel}`,
-          description: `Stay with one tangible output until it is saved. Start in ${describeRoute(activationJourney.startRoute)}.`,
-          actionUrl: activationJourney.startRoute,
-          priorityLabel: 'Now',
-        },
-        {
-          id: 'next-stage',
-          title: 'See the next milestone',
-          description: `After the first output, the journey moves into ${describeRoute(activationJourney.nextRoute)}.`,
-          actionUrl: activationJourney.nextRoute,
-          priorityLabel: 'Next',
-        },
-        {
-          id: 'stage-tasks',
-          title: 'Open the stage checklist',
-          description: 'Use the BizMap stage tasks to avoid bouncing across unrelated tools.',
-          actionUrl: '/dashboard#bizmap-stage-tasks',
-          priorityLabel: 'Then',
-        },
-      ]
-    : [];
 
   if (loading || isInitializing) {
     return (
@@ -279,7 +214,6 @@ export const PersonalizedDashboardV2 = () => {
   const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
 
   return (
-    <TaskCountContext.Provider value={totalToday - completedToday}>
     <ErrorBoundary>
       <SidebarProvider>
         <DashboardNavigationProvider>
@@ -333,92 +267,30 @@ export const PersonalizedDashboardV2 = () => {
 
                 {/* Dashboard Content */}
                 <div className="relative z-10 container mx-auto p-6 pb-24 space-y-8 max-w-7xl pt-24">
+                  {/* Rookie upgrade banner */}
+                  <RookieUpgradeBanner />
+
+                  {/* Journey Stage Grid */}
+                  <JourneyStageGrid />
+
                   {/* Header */}
-	                  <div>
-	                    <h1 className="font-space-grotesk text-3xl sm:text-4xl font-semibold tracking-tight">
-	                      {greeting}, {profile?.full_name?.split(' ')[0] || 'Founder'} 👋
+                  <div>
+                    <h1 className="font-space-grotesk text-3xl sm:text-4xl font-semibold tracking-tight">
+                      {greeting}, {profile?.full_name?.split(' ')[0] || 'Founder'} 👋
                     </h1>
                     <p className="font-poppins text-muted-foreground mt-1">
                       {dashboardMode === 'focus'
                         ? 'Here\'s your focus for today'
                         : dashboardMode === 'dashboard'
-                          ? 'Your central command center for priorities and next moves'
+                          ? 'Your dashboard overview'
                           : 'Full control center'}
                     </p>
-	                    <p className="text-xs text-muted-foreground mt-2">
-		                      Current BizMap stage: <span className="font-semibold text-foreground">{currentStage}</span>
-		                    </p>
-		                  </div>
+                  </div>
 
-                      <div id="daily-mission-card">
-                        <DailyMissionCard />
-                      </div>
-
-	                    {!isActivated && (
-	                      <div className="rounded-[1.75rem] border border-primary/30 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent px-5 py-5 shadow-sm">
-                        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                          <div className="space-y-2">
-                            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
-                              Your first founder output — start here
-                            </p>
-                            <h2 className="text-xl font-semibold tracking-tight">
-                              Build your BizMap AI plan in 5 minutes
-                            </h2>
-                            <p className="max-w-3xl text-sm leading-relaxed text-muted-foreground">
-                              Answer 7 quick questions and walk away with a full 30-day launch roadmap, market analysis, and go-to-market strategy — personalized to your idea.
-                            </p>
-                          </div>
-                          <div className="flex flex-col sm:flex-row gap-2 shrink-0">
-                            <button
-                              type="button"
-                              onClick={() => navigate('/bizmap-ai/chat')}
-                              className="rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition-transform hover:scale-[1.02] flex items-center gap-2"
-                            >
-                              Build My Plan
-                              <ArrowRight className="h-4 w-4" />
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => navigate(activationJourney.startRoute)}
-                              className="rounded-full border border-border/60 bg-background/70 px-5 py-3 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground hover:border-primary/30"
-                            >
-                              Or start with {activationJourney.firstOutputLabel}
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-	                  {(!isActivated || dashboardMode !== 'dashboard') && (
-	                    <div id="bizmap-stage-tasks">
-	                      <BizMapStageTasks />
-	                    </div>
-	                  )}
-
-                  {/* Activation Journey Progress — always shown in dashboard mode */}
-                  {dashboardMode === 'dashboard' && (
-                    <div id="bizmap-journey-progress">
-                      <BizMapJourneyProgress />
-                    </div>
-                  )}
-
-                  {/* Community Ship Feed — always shown in dashboard mode */}
-                  {dashboardMode === 'dashboard' && (
-                    <div id="ship-update-feed">
-                      <ShipUpdateFeed />
-                    </div>
-                  )}
-
-	                  {/* Dynamic View Based on Mode */}
-	                  {dashboardMode === 'focus' && <FocusModeView {...metrics} />}
-	                  {dashboardMode === 'dashboard' && (
-                      <DashboardModeView
-                        {...metrics}
-                        activationMode={!isActivated}
-                        activationActions={activationActions}
-                      />
-                    )}
-	                  {dashboardMode === 'control-center' && <ControlCenterView {...metrics} />}
+                  {/* Dynamic View Based on Mode */}
+                  {dashboardMode === 'focus' && <FocusModeView {...metrics} />}
+                  {dashboardMode === 'dashboard' && <DashboardModeView {...metrics} />}
+                  {dashboardMode === 'control-center' && <ControlCenterView {...metrics} />}
                 </div>
 
                 {/* Daily Goal Modal */}
@@ -429,6 +301,7 @@ export const PersonalizedDashboardV2 = () => {
                   mode={modalMode}
                   todaysCheckInId={todaysCheckInId}
                   onCheckInComplete={async () => {
+                    setHasCheckedInToday(true);
                     hasInitializedRef.current = false;
                     lastFetchTimeRef.current = 0;
                   }}
@@ -439,7 +312,6 @@ export const PersonalizedDashboardV2 = () => {
         </DashboardNavigationProvider>
       </SidebarProvider>
     </ErrorBoundary>
-    </TaskCountContext.Provider>
   );
 };
 

@@ -6,7 +6,6 @@ import { useUpgradePrompt } from '@/contexts/UpgradePromptContext';
 import { CREDIT_COSTS, CreditFeature, getCreditCost } from '@/config/constants';
 import { toast } from 'sonner';
 import { createIdempotencyKey } from '@/lib/idempotency';
-import { isAdminEmail } from '@/lib/admin';
 
 const CREDIT_FEATURE_LABELS: Record<CreditFeature, string> = {
   LAUNCH_REPORT: 'Launch Report Generation',
@@ -26,24 +25,19 @@ const CREDIT_FEATURE_LABELS: Record<CreditFeature, string> = {
   SPRINT_TASK_GENERATION: 'Sprint Task Generation',
   ROADMAP_GENERATION: 'Roadmap Generation',
   TECH_STACK_GENERATION: 'Tech Stack Generation',
-  WAITLIST_GENERATION: 'Waitlist Page Generation',
   PDF_EXPORT: 'PDF Export',
   ADVANCED_ANALYTICS: 'Advanced Analytics',
   PITCH_DECK_ANALYZER: 'Pitch Deck Analyzer',
   EMAIL_TEMPLATE_GENERATION: 'Email Template Generation',
   PROMPT_GENERATION: 'Prompt Generation',
-  ICP_ANALYSIS: 'ICP Builder',
   DISCOVERY_CALL: 'Discovery Call',
-  APP_BUILDER_GENERATE: 'AI App Builder — Generate',
-  APP_BUILDER_REFINE: 'AI App Builder — Refine',
-  GTM_ANALYSIS: 'GTM Strategy Analysis',
-  PMF_SCORING: 'PMF Evidence Analysis',
+  ICP_ANALYSIS: 'ICP Analysis',
 };
 
 type CreditActionOptions = {
   featureName?: string;
   requiredCredits?: number;
-  requiredTier?: 'creator' | 'professional';
+  requiredTier?: 'rising' | 'pro';
   description?: string;
   metadata?: Record<string, unknown>;
   idempotencyKey?: string;
@@ -71,17 +65,12 @@ export const useCreditActions = () => {
   const { user } = useAuth();
   const { hasCredits, refreshBalance, loading: creditsLoading } = useCredits();
   const { openUpgradePrompt } = useUpgradePrompt();
-  const isAdmin = isAdminEmail(user?.email);
 
   const ensureCredits = useCallback(
     (feature: CreditFeature, options: CreditActionOptions = {}) => {
       if (!user) {
         toast.error('Please sign in to use this feature.');
         return null;
-      }
-
-      if (isAdmin) {
-        return 0;
       }
 
       if (creditsLoading) {
@@ -107,12 +96,11 @@ export const useCreditActions = () => {
 
       return requiredCredits;
     },
-    [creditsLoading, hasCredits, isAdmin, openUpgradePrompt, user]
+    [creditsLoading, hasCredits, openUpgradePrompt, user]
   );
 
   const handleCreditError = useCallback(
     (error: any, data: any, feature: CreditFeature, options: CreditActionOptions = {}) => {
-      if (isAdmin) return true;
       if (!isCreditError(error, data)) return false;
       const requiredCredits = resolveCreditCost(
         feature,
@@ -127,7 +115,7 @@ export const useCreditActions = () => {
       });
       return true;
     },
-    [isAdmin, openUpgradePrompt]
+    [openUpgradePrompt]
   );
 
   const deductCredits = useCallback(
@@ -135,10 +123,6 @@ export const useCreditActions = () => {
       if (!user) {
         toast.error('Please sign in to use this feature.');
         return false;
-      }
-
-      if (isAdmin) {
-        return true;
       }
 
       const requiredCredits = ensureCredits(feature, options);
@@ -175,7 +159,7 @@ export const useCreditActions = () => {
       await refreshBalance();
       return true;
     },
-    [ensureCredits, handleCreditError, isAdmin, refreshBalance, user]
+    [ensureCredits, handleCreditError, refreshBalance, user]
   );
 
   return {

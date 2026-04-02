@@ -1,46 +1,22 @@
-import SEO, { createBreadcrumbSchema, createFAQSchema, createSoftwareApplicationSchema } from "@/components/SEO";
+import SEO, { createBreadcrumbSchema } from "@/components/SEO";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
-import AnswerSummary from "@/components/seo/AnswerSummary";
-import PageFAQSection from "@/components/seo/PageFAQSection";
-import RelatedPageLinks from "@/components/seo/RelatedPageLinks";
 import { PitchDeckUploader } from "@/components/pitch-deck-analyzer/PitchDeckUploader";
 import { AnalysisResults } from "@/components/pitch-deck-analyzer/AnalysisResults";
 import { PitchDeckBuilder } from "@/components/pitch-deck-builder/PitchDeckBuilder";
 import { usePitchDeckAnalyzer } from "@/hooks/usePitchDeckAnalyzer";
 import { useReadingAnalytics } from "@/hooks/useReadingAnalytics";
 import { useEffect, useState } from "react";
+import { usePlanAccess } from "@/hooks/usePlanAccess";
+import { LockedPageOverlay } from "@/components/ui/LockedPageOverlay";
 import { Button } from "@/components/ui/button";
 import { Loader2, Sparkles, BarChart3, TrendingUp, Target } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 
 export default function PitchDeckAnalyzerPage() {
   const { trackPageVisit } = useReadingAnalytics();
+  const { hasAccess } = usePlanAccess('pitch_deck_analyzer');
   const { analyzePitchDeck, submitFeedback, resetAnalysis, uploading, analyzing, analysis, error, isProcessing } = usePitchDeckAnalyzer();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const faqs = [
-    {
-      question: "What makes a pitch deck investor-ready?",
-      answer:
-        "An investor-ready deck usually explains the problem, market, solution, traction, business model, and fundraising story clearly enough that an investor can quickly understand the opportunity.",
-    },
-    {
-      question: "Can a pitch deck analyzer improve fundraising odds?",
-      answer:
-        "It can improve the quality of the deck by surfacing weak sections and unclear messaging, which makes founder preparation and investor conversations stronger.",
-    },
-    {
-      question: "What should founders fix first in a weak deck?",
-      answer:
-        "Usually the biggest gains come from clarifying the story, tightening the market and traction slides, and making the business model easier to understand.",
-    },
-  ];
-  const relatedLinks = [
-    { href: "/insighta/vc-search", label: "VC Search" },
-    { href: "/insighta/email-templates", label: "Email Templates" },
-    { href: "/insighta/accelerator-hunt", label: "Accelerator Search" },
-    { href: "/insighta/test", label: "Fundraising Assessment" },
-  ];
 
   useEffect(() => {
     trackPageVisit('Pitch Deck Analyzer');
@@ -80,13 +56,6 @@ export default function PitchDeckAnalyzerPage() {
         }
       }
     },
-    createSoftwareApplicationSchema({
-      name: "Pitch Deck Analyzer",
-      description: "Pitch deck analyzer and score tool for founders preparing investor presentations.",
-      url: "/insighta/pitch-deck-analyzer",
-      featureList: ["pitch deck score", "fundraising feedback", "story and traction review"],
-    }),
-    createFAQSchema(faqs),
     createBreadcrumbSchema([
       { name: 'Home', url: '/' },
       { name: 'Insighta', url: '/insighta' },
@@ -99,12 +68,26 @@ export default function PitchDeckAnalyzerPage() {
       <SEO
         title="Pitch Deck Analyzer - AI-Powered Assessment"
         description="Get instant AI-powered analysis of your pitch deck. Comprehensive scoring across story, market, traction, business model, team, and fundraising readiness."
-        keywords="pitch deck analyzer, pitch deck score tool, investor deck review, startup pitch analysis, fundraising presentation feedback"
+        keywords="pitch deck analyzer, pitch deck score, investor presentation analysis, fundraising assessment, startup pitch analysis"
         url="/insighta/pitch-deck-analyzer"
         structuredData={structuredData}
       />
       <Navigation />
 
+      {!hasAccess && (
+        <LockedPageOverlay
+          requiredPlan="rising"
+          featureName="Pitch Deck Analyzer"
+          description="Get instant AI-powered analysis of your pitch deck with a comprehensive score across 6 key dimensions. Available on Rising and Pro plans."
+          benefits={[
+            "Score across story, market, traction, team, and more",
+            "Actionable feedback to improve your fundraising success",
+            "Costs 8 credits per analysis on Rising+",
+          ]}
+        />
+      )}
+
+      {hasAccess && (
       <main className="relative overflow-hidden">
         {/* Shared Background styling */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
@@ -119,7 +102,7 @@ export default function PitchDeckAnalyzerPage() {
           />
         </div>
 
-        <section className="px-4 pt-28 pb-20 md:pt-32 lg:pt-36 relative z-10" data-section="pitch-deck-analyzer">
+        <section className="py-20 px-4 relative z-10" data-section="pitch-deck-analyzer">
           <div className="container mx-auto max-w-5xl">
             {!analysis ? (
               <>
@@ -137,7 +120,6 @@ export default function PitchDeckAnalyzerPage() {
                   <p className="text-lg sm:text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed animate-fade-in px-4" style={{ animationDelay: '0.3s' }}>
                     Investor-Ready Pitch Analysis.<span className="gradient-text font-semibold" style={{ lineHeight: 'inherit', marginLeft: '0.25rem' }}> Clear, comparable, actionable.</span>
                   </p>
-                  <RelatedPageLinks title="Related fundraising tools" links={relatedLinks} />
 
                   {/* Value Props */}
                   <div className="grid md:grid-cols-3 gap-6 mt-12 text-left">
@@ -241,44 +223,15 @@ export default function PitchDeckAnalyzerPage() {
                 onStartNew={handleStartNew}
               />
             )}
-
-            <div className="mt-10 space-y-8">
-              <AnswerSummary
-                title="How founders use Pitch Deck Analyzer"
-                description="These direct explanations make the page easier for AI answer engines to cite when founders ask about pitch deck review tools."
-                updatedLabel="March 2026"
-                items={[
-                  {
-                    label: "What it does",
-                    title: "Reviews deck clarity and fundraising readiness",
-                    description:
-                      "Pitch Deck Analyzer evaluates narrative quality, traction framing, business model communication, and overall investor clarity.",
-                  },
-                  {
-                    label: "Who it helps",
-                    title: "Founders preparing for investor conversations",
-                    description:
-                      "It is built for founders heading into angel, pre-seed, or seed fundraising and wanting to catch weak spots before outreach.",
-                  },
-                  {
-                    label: "What you get",
-                    title: "A score plus concrete fixes",
-                    description:
-                      "The output gives you a score and specific recommendations on what to improve in the story, market explanation, traction proof, and fundraising narrative.",
-                  },
-                ]}
-              />
-
-              <PageFAQSection
-                faqs={faqs}
-                description="Common founder questions about pitch deck quality, investor readiness, and deck improvement priorities."
-              />
-            </div>
           </div>
         </section>
       </main>
+      )}
 
       <Footer />
     </div>
   );
 }
+
+// Import Badge component
+import { Badge } from "@/components/ui/badge";

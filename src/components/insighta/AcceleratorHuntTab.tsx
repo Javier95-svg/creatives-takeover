@@ -1,21 +1,17 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import AcceleratorFilters from "@/components/accelerator/AcceleratorFilters";
-import AcceleratorCard from "@/components/accelerator/AcceleratorCard";
 import { useAcceleratorSearch } from "@/hooks/useAcceleratorSearch";
 import { AcceleratorFilters as AcceleratorFiltersType } from "@/types/insighta";
+import FundingOpportunityCard from "@/components/funding/FundingOpportunityCard";
 import { Button } from "@/components/ui/button";
 import { Lock, UserPlus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 const AcceleratorHuntTab = () => {
   const [filters, setFilters] = useState<AcceleratorFiltersType>({});
-  const [page, setPage] = useState(1);
   const { accelerators, loading, error } = useAcceleratorSearch(filters);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
-  const pageSize = 15;
-  const totalPages = accelerators.length > 0 ? Math.ceil(accelerators.length / pageSize) : 0;
-  const paginatedAccelerators = accelerators.slice((page - 1) * pageSize, page * pageSize);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -24,19 +20,6 @@ const AcceleratorHuntTab = () => {
     };
     checkAuth();
   }, []);
-
-  useEffect(() => {
-    setPage(1);
-  }, [
-    filters?.location,
-    filters?.industry_focus,
-    filters?.search,
-    filters?.focus_stage?.join('|'),
-    filters?.sectors?.join('|'),
-    filters?.geographies?.join('|'),
-    filters?.equity?.join('|'),
-    filters?.formats?.join('|'),
-  ]);
 
   return (
     <div className="space-y-6">
@@ -61,10 +44,10 @@ const AcceleratorHuntTab = () => {
         <div className="relative">
           {/* Blurred accelerator cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 select-none pointer-events-none blur-[6px]" aria-hidden="true">
-            {paginatedAccelerators.slice(0, 6).map((accelerator) => (
-              <AcceleratorCard
+            {accelerators.slice(0, 6).map((accelerator) => (
+              <FundingOpportunityCard
                 key={accelerator.id}
-                accelerator={accelerator}
+                opportunity={accelerator}
                 profileLink={`/insighta/accelerator/${accelerator.slug || accelerator.id}`}
               />
             ))}
@@ -95,7 +78,7 @@ const AcceleratorHuntTab = () => {
                 </Button>
               </div>
               <p className="text-xs text-muted-foreground mt-4">
-                Free plan includes full access to accelerator profiles
+                Sign up free — browse accelerators on any plan
               </p>
             </div>
           </div>
@@ -103,36 +86,15 @@ const AcceleratorHuntTab = () => {
       ) : (
         <>
           {accelerators.length > 0 ? (
-            <>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {paginatedAccelerators.map((accelerator) => (
-                  <AcceleratorCard
-                    key={accelerator.id}
-                    accelerator={accelerator}
-                    profileLink={`/insighta/accelerator/${accelerator.slug || accelerator.id}`}
-                  />
-                ))}
-              </div>
-
-              {totalPages > 1 && (
-                <div className="flex flex-wrap justify-center gap-2 pt-4">
-                  {Array.from({ length: totalPages }, (_, index) => {
-                    const pageNumber = index + 1;
-                    const isActive = pageNumber === page;
-                    return (
-                      <Button
-                        key={pageNumber}
-                        variant={isActive ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => setPage(pageNumber)}
-                      >
-                        {pageNumber}
-                      </Button>
-                    );
-                  })}
-                </div>
-              )}
-            </>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {accelerators.map((accelerator) => (
+                <FundingOpportunityCard
+                  key={accelerator.id}
+                  opportunity={accelerator}
+                  profileLink={`/insighta/accelerator/${accelerator.slug || accelerator.id}`}
+                />
+              ))}
+            </div>
           ) : (
             <div className="text-center py-12">
               <p className="text-muted-foreground text-lg mb-2">No accelerators found</p>

@@ -12,61 +12,65 @@ const PricingComparison = () => {
     {
       category: "Credits",
       items: [
-        { feature: "Monthly Credits", free: "25 Credits", creator: "100 Credits", professional: "300 Credits" }
+        { feature: "Monthly Credits", free: "25 Credits", creator: "50 Credits", professional: "150 Credits" }
       ]
     },
     {
       category: "Dashboard",
       items: [
-        { feature: "Dashboard Access", free: "Basic read-only", creator: "Full access", professional: "Full access" },
-        { feature: "Focus Funnel", free: "View only", creator: "Full access", professional: "Full access" },
+        { feature: "Dashboard Access", free: "Full access", creator: "Full access", professional: "Full access" },
+        { feature: "Focus Funnel", free: "Full access", creator: "Full access", professional: "Full access" },
         { feature: "Decision Sprint", free: false, creator: "Full access", professional: "Full access" },
-        { feature: "Core Metrics", free: "View only", creator: "Full access", professional: "Full access" },
-        { feature: "Weekly Mission", free: "View only", creator: "Full access", professional: "Full access" },
+        { feature: "Core Metrics", free: "Full access", creator: "Full access", professional: "Full access" },
+        { feature: "Weekly Mission", free: "Full access", creator: "Full access", professional: "Full access" },
         { feature: "Your Tasks", free: false, creator: "Full access", professional: "Full access" }
       ]
     },
     {
-      category: "BizMap AI",
+      category: "Startup Journey Tools",
       items: [
-        { feature: "ICP Builder", free: "Read-only", creator: "Full access", professional: "Full access" },
-        { feature: "PMF Lab", free: "Read-only", creator: "Full access", professional: "Full access" },
-        { feature: "Business Planner", free: "25 messages", creator: "100 messages", professional: "300 messages" },
-        { feature: "MVP Builder", free: false, creator: "Full access", professional: "Full access" },
-        { feature: "Tech Stack Builder", free: "View only", creator: "Full access", professional: "Advanced" },
-        { feature: "GTM Strategist", free: false, creator: false, professional: "Full access" }
+        { feature: "ICP Builder (Stage 1)", free: "Free — no credits", creator: "Free — no credits", professional: "Free — no credits" },
+        { feature: "Waitlist Maker (Stage 2)", free: "Credits", creator: "Credits", professional: "Credits" },
+        { feature: "PMF Lab (Stage 3)", free: "Credits", creator: "Credits", professional: "Credits" },
+        { feature: "MVP Builder (Stage 4)", free: false, creator: "Credits", professional: "Credits" },
+        { feature: "Tech Stack Builder (Stage 5)", free: false, creator: "Credits", professional: "Credits" },
+        { feature: "GTM Strategist (Stage 6)", free: false, creator: "Credits", professional: "Credits" },
+        { feature: "Directories (Stage 7)", free: false, creator: "Credits", professional: "Credits" }
       ]
     },
     {
       category: "Insighta",
       items: [
-        { feature: "VC Search", free: "5 views/month", creator: "25 views/month", professional: "Unlimited" },
-        { feature: "Accelerator Hunt", free: false, creator: false, professional: "Full access" },
-        { feature: "Email Templates", free: "View only", creator: "AI generation", professional: "AI + custom" },
-        { feature: "Pitch Deck Analyzer", free: false, creator: "Full access", professional: "Advanced + benchmarks" },
-        { feature: "Insights Test", free: "Basic", creator: "Full access", professional: "Full + personalized" }
+        { feature: "VC Search — Browse", free: "Unlimited", creator: "Unlimited", professional: "Unlimited" },
+        { feature: "VC Search — Profile Views", free: false, creator: "3 / month", professional: "Unlimited" },
+        { feature: "Accelerator Hunt — Browse", free: "Unlimited", creator: "Unlimited", professional: "Unlimited" },
+        { feature: "Accelerator Hunt — Profiles", free: false, creator: "3 / month", professional: "Unlimited" },
+        { feature: "Email Templates", free: false, creator: "Full access", professional: "Full access" },
+        { feature: "Pitch Deck Analyzer", free: false, creator: "Credits", professional: "Credits" },
+        { feature: "Insighta Test", free: "Full access", creator: "Full access", professional: "Full access" }
       ]
     },
     {
       category: "Community",
       items: [
-        { feature: "Find a Mentor", free: "Browse only", creator: "Full access", professional: "Full + verified priority" },
-        { feature: "Find a Co-Founder", free: "Browse only", creator: "Full access", professional: "Full + featured listings" },
-        { feature: "Find your Angel", free: false, creator: false, professional: "Full access" },
-        { feature: "Discovery Calls", free: "10 credits/call", creator: "10 credits/call", professional: "10 credits/call" }
+        { feature: "Find a Mentor", free: "Browse only", creator: "Full access", professional: "Full access" },
+        { feature: "Find a Co-Founder", free: "Browse only", creator: "Full access", professional: "Full access" },
+        { feature: "Angels Community", free: false, creator: false, professional: "Exclusive access" },
+        { feature: "WhatsApp Founders Group", free: false, creator: false, professional: "Included" },
+        { feature: "Discovery Calls", free: "10 credits/call", creator: "3 free/mo, then 10 credits", professional: "Unlimited free" }
       ]
     },
     {
       category: "Resources",
       items: [
-        { feature: "Stories", free: "Read-only", creator: "Full access", professional: "Full access" },
-        { feature: "Prompt Library", free: "View only", creator: "Full access", professional: "Full + custom templates" }
+        { feature: "Stories & Newspaper", free: "Full access", creator: "Full access", professional: "Full access" },
+        { feature: "Prompt Library", free: "Limited", creator: "Full access", professional: "Full access" }
       ]
     },
     {
-      category: "Premium Access",
+      category: "Support",
       items: [
-        { feature: "Early Access to New Features", free: false, creator: false, professional: true }
+        { feature: "Priority Support", free: false, creator: false, professional: true }
       ]
     }
   ];
@@ -154,7 +158,7 @@ const PricingComparison = () => {
                     {category.items.map(item => {
                       // Map display names to data keys
                       const planNameMap: Record<string, 'free' | 'creator' | 'professional'> = {
-                        'Rookie': 'free',
+                        'Rookie': 'free',   // maps to 'free' key in data for backward compat
                         'Rising': 'creator',
                         'Pro': 'professional'
                       };

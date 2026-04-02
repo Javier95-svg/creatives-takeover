@@ -31,7 +31,7 @@ const PromptLibrary = () => {
   const { deductCredits } = useCreditActions();
   const { openUpgradePrompt } = useUpgradePrompt();
 
-  const userTier = subscriptionData.subscription_tier || "free";
+  const userTier = subscriptionData.subscription_tier || "rookie";
 
   // Fetch custom prompt chains on mount
   useEffect(() => {
@@ -40,10 +40,14 @@ const PromptLibrary = () => {
   }, []);
 
   const hasAccessToPrompt = (prompt: MultiStepPrompt) => {
-    if (prompt.requiredTier === "free") return true;
+    // "free" prompts (old name) are accessible to all — treat rookie as free tier
+    if (prompt.requiredTier === "free" || prompt.requiredTier === "rookie") return true;
     if (!user) return false;
-    if (userTier === "professional" || userTier === "enterprise") return true;
-    if (userTier === "creator" && prompt.requiredTier === "creator") return true;
+    // Pro (was "professional") has full access
+    if (userTier === "pro" || userTier === "professional" || userTier === "enterprise") return true;
+    // Rising (was "creator") has access to creator-tier prompts
+    if ((userTier === "rising" || userTier === "creator") &&
+        (prompt.requiredTier === "creator" || prompt.requiredTier === "rising")) return true;
     return false;
   };
 
@@ -234,7 +238,7 @@ const PromptLibrary = () => {
         <PromptLibraryWallpaper />
         <div className="relative z-10">
           <Navigation />
-          <div className="px-4 pt-28 pb-12 md:pt-32 lg:pt-36 sm:pb-16">
+          <div className="pt-16 sm:pt-20 pb-12 sm:pb-16 px-4">
             <div className="max-w-5xl mx-auto">
               <Button
                 variant="outline"
@@ -416,7 +420,7 @@ const PromptLibrary = () => {
       <PromptLibraryWallpaper />
       <div className="relative z-10">
         <Navigation />
-        <div className="px-4 pt-28 pb-12 md:pt-32 lg:pt-36 sm:pb-16">
+        <div className="pt-16 sm:pt-20 pb-12 sm:pb-16 px-4">
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-8 sm:mb-12">
               <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 takeover-gradient creatives-font leading-tight pb-2 overflow-visible">

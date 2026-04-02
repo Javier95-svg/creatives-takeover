@@ -46,7 +46,7 @@ export const CREDIT_COSTS = {
   PROMPT_GENERATION: 2,
 
   // Community Features
-  DISCOVERY_CALL: 5,
+  DISCOVERY_CALL: 10,
 } as const;
 
 // Type for credit cost feature names
@@ -183,75 +183,81 @@ export const TIER_MONTHLY_CREDITS = {
 
 // VC View Limits per tier (monthly)
 export const VC_VIEW_LIMITS = {
-  free: 5,
-  creator: 25,
-  professional: -1, // unlimited
+  rookie: 0,    // list-only, no profile views
+  rising: 3,    // 3 profile views per calendar month
+  pro: -1,      // unlimited
 } as const;
 
-// Feature usage limits per tier (soft limits for Creator, unlimited for Professional)
+// Feature usage limits per tier
 export const TIER_USAGE_LIMITS = {
-  free: {
+  rookie: {
     bizmap_conversations: 10,
-    tech_stack_generations: 1,
-    pmf_analyses: 0, // Preview only
-    icp_analyses: -1, // Free for all users
-    insighta_tests: 1,
-    investor_matches: 0, // View only
+    tech_stack_generations: 0, // Progressive lock (complete stages first)
+    pmf_analyses: -1,          // Accessible (credit-gated)
+    icp_analyses: -1,          // Free for all users
+    insighta_tests: -1,        // Free for all users
+    investor_matches: 0,       // Not available
     market_intelligence_queries: 0,
     basic_reports: 0,
     team_members: 0,
-    vc_profile_views: 5, // New limit
+    vc_profile_views: 0,       // List-only, no profile views
+    accelerator_profile_views: 0,
+    discovery_calls_free: 0,   // Credits only (10 credits each)
   },
-  creator: {
-    bizmap_conversations: -1, // Unlimited (credit-gated)
-    tech_stack_generations: -1, // Unlimited (credit-gated)
-    pmf_analyses: -1, // Unlimited (credit-gated)
-    icp_analyses: -1, // Unlimited (credit-gated)
-    insighta_tests: -1, // Unlimited (credit-gated)
-    investor_matches: 0, // Not available on Creator tier (Professional only)
+  rising: {
+    bizmap_conversations: -1,  // Unlimited (credit-gated)
+    tech_stack_generations: -1,
+    pmf_analyses: -1,
+    icp_analyses: -1,
+    insighta_tests: -1,
+    investor_matches: 0,       // Not available on Rising (Pro only)
     market_intelligence_queries: 10,
     basic_reports: 5,
     team_members: 3,
-    vc_profile_views: 25, // New limit
+    vc_profile_views: 3,       // 3 per calendar month
+    accelerator_profile_views: 3,
+    discovery_calls_free: 3,   // 3 free per month, then 10 credits
   },
-  professional: {
-    bizmap_conversations: -1, // Unlimited (credit-gated)
-    tech_stack_generations: -1, // Unlimited (credit-gated)
-    pmf_analyses: -1, // Unlimited (credit-gated)
-    icp_analyses: -1, // Unlimited (credit-gated)
-    insighta_tests: -1, // Unlimited (credit-gated)
-    investor_matches: -1, // Unlimited (credit-gated)
-    market_intelligence_queries: -1, // Unlimited
-    basic_reports: -1, // Unlimited
-    team_members: -1, // Unlimited
-    vc_profile_views: -1, // Unlimited
+  pro: {
+    bizmap_conversations: -1,
+    tech_stack_generations: -1,
+    pmf_analyses: -1,
+    icp_analyses: -1,
+    insighta_tests: -1,
+    investor_matches: -1,
+    market_intelligence_queries: -1,
+    basic_reports: -1,
+    team_members: -1,
+    vc_profile_views: -1,      // Unlimited
+    accelerator_profile_views: -1,
+    discovery_calls_free: -1,  // Unlimited
   },
 } as const;
 
-// Subscription Tier Details (with new pricing)
+// Subscription Tier Details
 export const TIER_DETAILS = {
-  free: {
-    name: 'Free',
-    subtitle: 'Validate',
+  rookie: {
+    name: 'Rookie',
+    subtitle: 'Start',
     price: 0,
     credits: 25,
-    vcViewLimit: 5,
-    description: 'Start your journey - validate your idea',
+    vcViewLimit: 0,
+    description: 'Explore the platform and start your founder journey',
   },
-  creator: {
-    name: 'Creator',
+  rising: {
+    name: 'Rising',
     subtitle: 'Build',
     price: 32.99,
     credits: 50,
-    vcViewLimit: 25,
-    description: 'Build your startup with AI-powered tools',
+    vcViewLimit: 3,
+    description: 'Build your startup with all 7 stage tools',
   },
-  professional: {
-    name: 'Professional',
+  pro: {
+    name: 'Pro',
     subtitle: 'Scale',
     price: 74.99,
     credits: 150,
     vcViewLimit: -1, // unlimited
-    description: 'Scale with unlimited access and premium features',
+    description: 'Unlimited access, Angels community, and WhatsApp group',
   },
 } as const;

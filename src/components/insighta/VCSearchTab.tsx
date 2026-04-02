@@ -28,7 +28,7 @@ const VCSearchTab = () => {
   const isLimitReached = !vcViewLoading && !hasUnlimitedViews && remaining === 0;
   const isLowRemaining = !vcViewLoading && !hasUnlimitedViews && remaining > 0 && remaining <= 1;
   const showUpgradeBanner = isLimitReached || isLowRemaining;
-  const upgradeTier = currentTier === "free" ? "creator" : "professional";
+  const upgradeTier = currentTier === "rookie" ? "rising" : "pro";
   const upgradeDetails = TIER_DETAILS[upgradeTier as keyof typeof TIER_DETAILS];
   const currentLimitLabel = hasUnlimitedViews ? "Unlimited VC views" : `${limit} VC views/month`;
   const upgradeViewsLabel = upgradeDetails.vcViewLimit === -1
@@ -45,18 +45,7 @@ const VCSearchTab = () => {
 
   useEffect(() => {
     setPage(1);
-  }, [
-    filters?.investment_stage,
-    filters?.industry,
-    filters?.geographic_focus,
-    filters?.check_size_min,
-    filters?.check_size_max,
-    filters?.search,
-    filters?.investment_stages?.join('|'),
-    filters?.industries?.join('|'),
-    filters?.geographies?.join('|'),
-    filters?.ticket_sizes?.join('|'),
-  ]);
+  }, [filters?.investment_stage, filters?.industry, filters?.geographic_focus, filters?.check_size_min, filters?.check_size_max, filters?.search]);
 
   return (
     <div className="space-y-6">

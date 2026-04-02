@@ -24,19 +24,26 @@ This flexibility means you can start small and scale up as you grow, or adjust b
       relatedQuestions: [1, 3]
     },
     {
-      question: "What happens when I run out of AI conversation credits?",
-      answer: `Running out of credits doesn't mean hitting a wall. It actually means you're actively building your business, and we celebrate that progress!
+      question: "What are credits and how do they work?",
+      answer: `Credits are the currency that powers AI-driven features on the platform. Every plan comes with a monthly credit allowance — Rookie gets 25, Rising gets 50, and Pro gets 150.
 
-When you reach your monthly limit, you can upgrade to a higher tier for more monthly credits and additional premium features. The best part is that all your other features remain fully functional. Your Dashboard features (Focus Funnel, Core Metrics, Weekly Mission, Your Tasks), community access (Find a Mentor, Find a Co-Founder), Stories content, and Prompt Library browsing keep working exactly as they should. Only AI-powered actions like BizMap AI chat, ICP Builder, PMF Lab, Pitch Deck Analyzer, and similar tools require credits.
+Credits are spent when you use AI-powered tools: running the PMF Lab, generating a Tech Stack recommendation, analyzing a pitch deck, or having a conversation with our AI tools. Each action has a fixed cost shown before you confirm it. Free tools like the ICP Builder never cost credits.
 
-Many successful entrepreneurs start with one tier and upgrade as their momentum builds. Think of it as a sign of growth, not a limitation. Plus, credits reset monthly, so you're never penalized long-term.`,
+Dashboard features, Stories, community browsing, and reading Prompt Library content are always free — credits only apply to AI actions that generate output specifically for your business.`,
       relatedQuestions: [0, 5]
+    },
+    {
+      question: "Do unused credits roll over to the next month?",
+      answer: `Credits reset on the first of each month and do not roll over. This keeps the system predictable and ensures every subscriber gets their full allocation fresh each billing cycle.
+
+If you regularly hit your limit before month-end, it's a strong signal that you'd benefit from upgrading to the next plan. Conversely, if you're rarely using credits, the Rookie plan might be enough for your current stage.`,
+      relatedQuestions: [0, 1]
     },
     {
       question: "Do you offer refunds?",
       answer: `Yes, we stand behind our platform with a comprehensive 30-day money-back guarantee on all paid plans. If you're not completely satisfied within your first 30 days, simply reach out to us and we'll issue a full refund. No questions asked, no complicated forms, no hoops to jump through.
 
-We've built BizMap AI to genuinely help entrepreneurs succeed, and we're confident you'll see real value quickly. However, we also understand that every business is unique, and sometimes timing or fit isn't right.
+We've built this platform to genuinely help founders succeed, and we're confident you'll see real value quickly. However, we also understand that every business is unique, and sometimes timing or fit isn't right.
 
 Our straightforward refund policy removes all risk from trying our premium features. Join thousands of entrepreneurs who took the leap risk-free and discovered tools that transformed their business journey.`,
       relatedQuestions: [3, 4]
@@ -60,13 +67,22 @@ You can focus on building your business knowing your financial data is protected
       relatedQuestions: [6]
     },
     {
-      question: "What's included in the free tier?",
-      answer: `Our free tier is genuinely valuable. It's not a teaser, but a real tool to help you start your entrepreneurial journey. You get 25 credits per month, which includes 25 AI-powered business conversations with BizMap AI, basic Dashboard access (Focus Funnel, Core Metrics, Weekly Mission in read-only mode), read-only access to PMF Lab, 5 VC profile views per month, basic Insighta Test, Stories content (read-only), Prompt Library browsing (view only), and limited community access.
+      question: "What's included in the Rookie plan?",
+      answer: `The Rookie plan is free and genuinely useful — not just a teaser. You get 25 credits per month and access to our core tools: the ICP Builder (Stage 1) is completely free with no credits needed, and you can use the Waitlist Maker and PMF Lab with credits.
 
-This means you can validate your business idea, explore Dashboard features, connect with like-minded builders, and access professional resources without spending a dime. It's perfect for exploring the platform, testing our AI's capabilities with your specific business questions, and experiencing the community support before committing financially.
+You also get full access to the Insighta Test, Stories, and the Newspaper. For community features, you can browse mentors and co-founders. VC Search and Accelerator Hunt let you browse lists but not open profiles.
 
-Many successful BizMap users started on the free tier, validated their ideas, then upgraded as they gained momentum and needed more advanced features like ICP Builder, MVP Builder, GTM Strategist, Accelerator Hunt, and unlimited VC searches. Start free today and upgrade only when you're ready to scale. No credit card required to begin.`,
+It's the perfect starting point to validate your idea and get your first AHA moment before committing to a paid plan. No credit card required.`,
       relatedQuestions: [0, 1]
+    },
+    {
+      question: "What happens to my data if I downgrade?",
+      answer: `Your data is always safe, regardless of plan changes. If you downgrade from Rising or Pro to Rookie, you retain full read access to everything you've built — ICP profiles, PMF Lab results, previous analyses, community posts, and all saved content.
+
+What changes is your ability to create new content in plan-locked features. For example, you won't be able to generate new email templates or view new VC profiles beyond Rookie limits. Your existing data and history stay intact.
+
+We never delete your account data when you downgrade. Upgrade again any time to regain full access.`,
+      relatedQuestions: [0, 3]
     },
     {
       question: "How does billing work?",
@@ -83,7 +99,7 @@ We accept all major credit cards and support multiple currencies for internation
 
 Our sales team specializes in understanding your unique requirements and building flexible packages that deliver maximum value. Custom plans can include priority onboarding, team training sessions, dedicated account management, advanced analytics, white-labeling options, API access, and more.
 
-We've successfully partnered with startup incubators, business consultancies, corporate innovation teams, and educational institutions. Schedule a no-pressure consultation call with our team, and let's discuss how BizMap AI can become your organization's competitive advantage. Whether you're a team of 5 or 500, we'll find the perfect solution together.`,
+We've successfully partnered with startup incubators, business consultancies, corporate innovation teams, and educational institutions. Schedule a no-pressure consultation call with our team, and let's discuss how Creatives Takeover can become your organization's competitive advantage. Whether you're a team of 5 or 500, we'll find the perfect solution together.`,
       relatedQuestions: [0, 6]
     }
   ];

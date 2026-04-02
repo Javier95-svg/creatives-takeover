@@ -27,10 +27,8 @@ import { DailyPriorities } from './DailyPriorities';
 import { QuickWins } from './QuickWins';
 import { RecentWins } from './RecentWins';
 import { FounderResources } from './FounderResources';
-import { BizMapStageTasks } from './BizMapStageTasks';
-import { getLocalDateString, wasDailyGoalPromptSkipped } from '@/lib/dailyGoalPrompt';
-import { DailyMissionCard } from './DailyMissionCard';
-import { BizMapJourneyProgress } from './BizMapJourneyProgress';
+import { RookieUpgradeBanner } from './RookieUpgradeBanner';
+import { JourneyStageGrid } from './JourneyStageGrid';
 
 export const PersonalizedDashboardClassic = () => {
   const { user } = useAuth();
@@ -44,6 +42,7 @@ export const PersonalizedDashboardClassic = () => {
 
   const [showDailyGoal, setShowDailyGoal] = useState(false);
   const [modalMode, setModalMode] = useState<'morning' | 'evening'>('morning');
+  const [hasCheckedInToday, setHasCheckedInToday] = useState(false);
   const [todaysCheckInId, setTodaysCheckInId] = useState<string | null>(null);
   const [currentStreak, setCurrentStreak] = useState(0);
   
@@ -66,7 +65,7 @@ export const PersonalizedDashboardClassic = () => {
     }
 
     const checkDailyCheckIn = async () => {
-      const today = getLocalDateString();
+      const today = new Date().toISOString().split('T')[0];
       const currentHour = new Date().getHours();
       
       const { data: todayCheckIn } = await supabase
@@ -76,6 +75,8 @@ export const PersonalizedDashboardClassic = () => {
         .eq('check_in_date', today)
         .maybeSingle();
 
+      setHasCheckedInToday(!!todayCheckIn);
+      
       if (todayCheckIn) {
         setTodaysCheckInId(todayCheckIn.id);
         
@@ -107,20 +108,14 @@ export const PersonalizedDashboardClassic = () => {
         }
 
         // Show evening reflection if after 6 PM and haven't reflected yet
-        if (
-          currentHour >= 18 &&
-          todayCheckIn.goal_achieved === null &&
-          !wasDailyGoalPromptSkipped(user.id, 'evening', today)
-        ) {
+        if (currentHour >= 18 && todayCheckIn.goal_achieved === null) {
           setModalMode('evening');
           setShowDailyGoal(true);
         }
       } else {
         // Show morning goal modal if haven't checked in
-        if (!wasDailyGoalPromptSkipped(user.id, 'morning', today)) {
-          setModalMode('morning');
-          setShowDailyGoal(true);
-        }
+        setModalMode('morning');
+        setShowDailyGoal(true);
       }
       
       lastFetchTimeRef.current = Date.now();
@@ -239,6 +234,7 @@ export const PersonalizedDashboardClassic = () => {
           mode={modalMode}
           todaysCheckInId={todaysCheckInId || undefined}
           onCheckInComplete={() => {
+            setHasCheckedInToday(true);
             if (modalMode === 'morning') {
               setCurrentStreak(prev => prev + 1);
             }
@@ -246,9 +242,9 @@ export const PersonalizedDashboardClassic = () => {
         />
 
         {/* Header Section */}
-	        <div className="space-y-4">
-	          {/* Welcome Header */}
-	          <div className="relative overflow-hidden animate-fade-in-up">
+        <div className="space-y-4">
+          {/* Welcome Header */}
+          <div className="relative overflow-hidden animate-fade-in-up">
             <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-primary/10 to-transparent rounded-2xl blur-3xl" />
             <Card className="relative border-primary/20 shadow-lg backdrop-blur-sm bg-card/95 transition-all duration-300 hover:shadow-xl">
               <CardContent className="p-6">
@@ -276,19 +272,17 @@ export const PersonalizedDashboardClassic = () => {
                 </div>
               </CardContent>
             </Card>
-	          </div>
-	        </div>
-
-          <div className="animate-fade-in-up opacity-0" style={{ animationDelay: '0.03s', animationFillMode: 'forwards' }} id="daily-mission-card">
-            <DailyMissionCard />
           </div>
+        </div>
 
-          <div className="animate-fade-in-up opacity-0" style={{ animationDelay: '0.035s', animationFillMode: 'forwards' }} id="journey-progress">
-            <BizMapJourneyProgress />
-          </div>
+        {/* Rookie plan upgrade banner */}
+        <div className="animate-fade-in-up opacity-0" style={{ animationFillMode: 'forwards' }}>
+          <RookieUpgradeBanner />
+        </div>
 
-	        <div className="animate-fade-in-up opacity-0" style={{ animationDelay: '0.04s', animationFillMode: 'forwards' }}>
-	          <BizMapStageTasks />
+        {/* Journey Stage Grid */}
+        <div className="animate-fade-in-up opacity-0" style={{ animationDelay: '0.03s', animationFillMode: 'forwards' }}>
+          <JourneyStageGrid />
         </div>
 
         {/* Smart Recommendations */}

@@ -29,22 +29,16 @@ export function useFeatureGating() {
       return { hasAccess: true, isLoading: true };
     }
 
-    const tier = subscriptionData.subscription_tier || 'free';
+    const tier = subscriptionData.subscription_tier || 'rookie';
 
     switch (feature) {
       // BizMap AI conversation limits
       case 'bizmap_conversation':
-        const conversationLimits = {
-          free: 10,
-          creator: 50,
-          professional: 150
-        };
-        
         if (!hasCredits(CREDIT_COSTS.AI_CHAT_MESSAGE)) {
-          return { 
-            hasAccess: false, 
+          return {
+            hasAccess: false,
             message: `Insufficient credits. You need ${CREDIT_COSTS.AI_CHAT_MESSAGE} credit for BizMap AI conversations.`,
-            requiredTier: tier === 'free' ? 'creator' : undefined
+            requiredTier: tier === 'rookie' ? 'rising' : undefined
           };
         }
         return { hasAccess: true };
@@ -59,188 +53,146 @@ export function useFeatureGating() {
         if (user.email && allowedCommunityPosters.includes(user.email.toLowerCase())) {
           return { hasAccess: true };
         }
-        if (['creator', 'professional'].includes(tier)) {
+        if (['rising', 'pro'].includes(tier)) {
           return { hasAccess: true };
         }
-        return { 
-          hasAccess: false, 
-          message: 'Upgrade to Creator tier or higher to create posts in the community',
-          requiredTier: 'creator'
+        return {
+          hasAccess: false,
+          message: 'Upgrade to Rising plan or higher to create posts in the community',
+          requiredTier: 'rising'
         };
 
       case 'community_commenting':
-        if (['creator', 'professional'].includes(tier)) {
+        if (['rising', 'pro'].includes(tier)) {
           return { hasAccess: true };
         }
-        return { 
-          hasAccess: false, 
-          message: 'Upgrade to Creator tier or higher to comment on community posts',
-          requiredTier: 'creator'
+        return {
+          hasAccess: false,
+          message: 'Upgrade to Rising plan or higher to comment on community posts',
+          requiredTier: 'rising'
         };
 
       case 'community_voting':
-        if (['creator', 'professional'].includes(tier)) {
+        if (['rising', 'pro'].includes(tier)) {
           return { hasAccess: true };
         }
-        return { 
-          hasAccess: false, 
-          message: 'Upgrade to Creator tier or higher to vote on community posts',
-          requiredTier: 'creator'
+        return {
+          hasAccess: false,
+          message: 'Upgrade to Rising plan or higher to vote on community posts',
+          requiredTier: 'rising'
         };
 
       case 'community_ai_insights':
-        if (tier === 'professional') {
+        if (tier === 'pro') {
           return { hasAccess: true };
         }
-        return { 
-          hasAccess: false, 
-          message: 'Upgrade to Professional tier for AI-enhanced community features',
-          requiredTier: 'professional'
+        return {
+          hasAccess: false,
+          message: 'Upgrade to Pro plan for AI-enhanced community features',
+          requiredTier: 'pro'
         };
 
       // Prompt library features
       case 'prompt_library_export':
-        if (['creator', 'professional'].includes(tier)) {
+        if (['rising', 'pro'].includes(tier)) {
           return { hasAccess: true };
         }
-        return { 
-          hasAccess: false, 
-          message: 'Upgrade to Creator tier or higher to export prompts',
-          requiredTier: 'creator'
+        return {
+          hasAccess: false,
+          message: 'Upgrade to Rising plan or higher to export prompts',
+          requiredTier: 'rising'
         };
 
       // Sprint planning
       case 'unlimited_sprints':
-        if (['creator', 'professional'].includes(tier)) {
+        if (['rising', 'pro'].includes(tier)) {
           return { hasAccess: true };
         }
-        return { 
-          hasAccess: false, 
-          message: 'Free tier limited to 1 active sprint. Upgrade for unlimited sprints.',
-          requiredTier: 'creator'
+        return {
+          hasAccess: false,
+          message: 'Rookie plan limited to 1 active sprint. Upgrade for unlimited sprints.',
+          requiredTier: 'rising'
         };
 
       // Market intelligence
       case 'market_intelligence':
-        if (['creator', 'professional'].includes(tier)) {
+        if (['rising', 'pro'].includes(tier)) {
           return { hasAccess: true };
         }
-        return { 
-          hasAccess: false, 
-          message: 'Upgrade to Creator tier or higher for market intelligence',
-          requiredTier: 'creator'
+        return {
+          hasAccess: false,
+          message: 'Upgrade to Rising plan or higher for market intelligence',
+          requiredTier: 'rising'
         };
 
       case 'market_intelligence_unlimited':
-        if (tier === 'professional') {
+        if (tier === 'pro') {
           return { hasAccess: true };
         }
-        return { 
-          hasAccess: false, 
-          message: 'Upgrade to Professional tier for unlimited market intelligence queries',
-          requiredTier: 'professional'
+        return {
+          hasAccess: false,
+          message: 'Upgrade to Pro plan for unlimited market intelligence queries',
+          requiredTier: 'pro'
         };
 
       // Collaboration features
       case 'basic_collaboration':
-        if (['creator', 'professional'].includes(tier)) {
+        if (['rising', 'pro'].includes(tier)) {
           return { hasAccess: true };
         }
-        return { 
-          hasAccess: false, 
-          message: 'Upgrade to Creator tier or higher for collaboration tools',
-          requiredTier: 'creator'
+        return {
+          hasAccess: false,
+          message: 'Upgrade to Rising plan or higher for collaboration tools',
+          requiredTier: 'rising'
         };
 
       case 'advanced_collaboration':
-        if (tier === 'professional') {
-          return { hasAccess: true };
-        }
-        return { 
-          hasAccess: false, 
-          message: 'Upgrade to Professional tier or higher for advanced collaboration',
-          requiredTier: 'professional'
-        };
-
       case 'collaboration_unlimited':
-        if (tier === 'professional') {
+        if (tier === 'pro') {
           return { hasAccess: true };
         }
-        return { 
-          hasAccess: false, 
-          message: 'Upgrade to Professional tier for unlimited collaborators',
-          requiredTier: 'professional'
+        return {
+          hasAccess: false,
+          message: 'Upgrade to Pro plan for advanced collaboration',
+          requiredTier: 'pro'
         };
 
       // Business reports
       case 'report_generation':
-        if (['creator', 'professional'].includes(tier)) {
+        if (['rising', 'pro'].includes(tier)) {
           return { hasAccess: true };
         }
-        return { 
-          hasAccess: false, 
-          message: 'Upgrade to Creator tier or higher to generate business reports',
-          requiredTier: 'creator'
+        return {
+          hasAccess: false,
+          message: 'Upgrade to Rising plan or higher to generate business reports',
+          requiredTier: 'rising'
         };
 
       case 'custom_reports':
-        if (tier === 'professional') {
-          return { hasAccess: true };
-        }
-        return { 
-          hasAccess: false, 
-          message: 'Upgrade to Professional tier or higher for custom business reports',
-          requiredTier: 'professional'
-        };
-
       case 'export_reports':
       case 'report_export_pdf':
-        if (tier === 'professional') {
-          return { hasAccess: true };
-        }
-        return { 
-          hasAccess: false, 
-          message: 'Upgrade to Professional tier or higher to export reports as PDF',
-          requiredTier: 'professional'
-        };
-
-      // Success analytics
       case 'success_analytics':
-        if (tier === 'professional') {
-          return { hasAccess: true };
-        }
-        return { 
-          hasAccess: false, 
-          message: 'Upgrade to Professional tier or higher for success analytics',
-          requiredTier: 'professional'
-        };
-
-      // API access
       case 'api_access':
-        if (tier === 'professional') {
+        if (tier === 'pro') {
           return { hasAccess: true };
         }
-        return { 
-          hasAccess: false, 
-          message: 'Upgrade to Professional tier for API access',
-          requiredTier: 'professional'
+        return {
+          hasAccess: false,
+          message: 'Upgrade to Pro plan to access this feature',
+          requiredTier: 'pro'
         };
 
       // Tech Stack Generator
       case 'tech_stack_generation':
-        if (tier === 'free') {
-          // Free tier: 1 generation/month (3 credits)
-          // Check will be done at component level for usage limits
-          if (!hasCredits(CREDIT_COSTS.TECH_STACK_GENERATION)) {
-            return {
-              hasAccess: false,
-              message: `Insufficient credits. You need ${CREDIT_COSTS.TECH_STACK_GENERATION} credits for Tech Stack generation. Upgrade to Creator for unlimited generations.`,
-              requiredTier: 'creator'
-            };
-          }
-          return { hasAccess: true };
+        if (tier === 'rookie') {
+          // Rookie: locked_progressive — handled at component level via usePlanAccess
+          return {
+            hasAccess: false,
+            message: 'Complete the ICP Builder, Waitlist Maker, and PMF Lab to unlock Tech Stack.',
+            requiredTier: 'rising'
+          };
         }
-        // Creator+ has unlimited (credit-gated)
+        // Rising+ has unlimited (credit-gated)
         if (!hasCredits(CREDIT_COSTS.TECH_STACK_GENERATION)) {
           return {
             hasAccess: false,
@@ -249,16 +201,8 @@ export function useFeatureGating() {
         }
         return { hasAccess: true };
 
-      // Product-Market Fit Lab
+      // Product-Market Fit Lab — accessible to all plans (costs credits)
       case 'pmf_analysis':
-        if (tier === 'free') {
-          return {
-            hasAccess: false,
-            message: 'Upgrade to Creator tier to run full Product-Market Fit analysis. Free tier includes preview only.',
-            requiredTier: 'creator'
-          };
-        }
-        // Creator+ has full access (8 credits)
         if (!hasCredits(CREDIT_COSTS.PMF_ANALYSIS)) {
           return {
             hasAccess: false,
@@ -268,28 +212,14 @@ export function useFeatureGating() {
         return { hasAccess: true };
 
       case 'pmf_preview':
-        // Preview mode available to all tiers
         return { hasAccess: true };
 
       // ICP Builder (free for all tiers)
       case 'icp_analysis':
         return { hasAccess: true };
 
-      // Insighta Test (Fundraising Readiness Assessment)
+      // Insighta Test (free for all tiers)
       case 'insighta_test':
-        if (tier === 'free') {
-          // Free tier: 1 assessment/month (8 credits)
-          // Check will be done at component level for usage limits
-          if (!hasCredits(CREDIT_COSTS.FUNDRAISING_READINESS_ANALYSIS)) {
-            return {
-              hasAccess: false,
-              message: `Insufficient credits. You need ${CREDIT_COSTS.FUNDRAISING_READINESS_ANALYSIS} credits for Insighta Test. Upgrade to Creator for unlimited assessments.`,
-              requiredTier: 'creator'
-            };
-          }
-          return { hasAccess: true };
-        }
-        // Creator+ has unlimited (credit-gated)
         if (!hasCredits(CREDIT_COSTS.FUNDRAISING_READINESS_ANALYSIS)) {
           return {
             hasAccess: false,
@@ -300,14 +230,13 @@ export function useFeatureGating() {
 
       // Investor Matchmaker
       case 'investor_matching':
-        if (tier === 'free' || tier === 'creator') {
+        if (tier === 'rookie' || tier === 'rising') {
           return {
             hasAccess: false,
-            message: 'Upgrade to Professional tier to access Investor Matchmaker.',
-            requiredTier: 'professional'
+            message: 'Upgrade to Pro plan to access Investor Matchmaker.',
+            requiredTier: 'pro'
           };
         }
-        // Professional tier has full matching (5 credits)
         if (!hasCredits(CREDIT_COSTS.INVESTOR_MATCHING)) {
           return {
             hasAccess: false,
@@ -317,19 +246,17 @@ export function useFeatureGating() {
         return { hasAccess: true };
 
       case 'investor_browse':
-        // Browse/view-only available to all tiers
         return { hasAccess: true };
 
-      // Pitch Deck Analyzer (Creator+ only)
+      // Pitch Deck Analyzer (Rising+ only)
       case 'pitch_deck_analyzer':
-        if (tier === 'free') {
+        if (tier === 'rookie') {
           return {
             hasAccess: false,
-            message: 'Pitch Deck Analyzer is available on Creator and Professional plans. Upgrade to analyze your pitch deck and get actionable feedback.',
-            requiredTier: 'creator'
+            message: 'Pitch Deck Analyzer is available on Rising and Pro plans.',
+            requiredTier: 'rising'
           };
         }
-        // Creator+ has full access (8 credits)
         if (!hasCredits(CREDIT_COSTS.PITCH_DECK_ANALYZER)) {
           return {
             hasAccess: false,
@@ -338,16 +265,15 @@ export function useFeatureGating() {
         }
         return { hasAccess: true };
 
-      // Email Template Generation (Creator+ only)
+      // Email Template Generation (Rising+ only)
       case 'email_template_generation':
-        if (tier === 'free') {
+        if (tier === 'rookie') {
           return {
             hasAccess: false,
-            message: 'AI Email Template Generation is available on Creator and Professional plans. Upgrade to generate personalized investor emails.',
-            requiredTier: 'creator'
+            message: 'AI Email Template Generation is available on Rising and Pro plans.',
+            requiredTier: 'rising'
           };
         }
-        // Creator+ has full access (3 credits)
         if (!hasCredits(CREDIT_COSTS.EMAIL_TEMPLATE_GENERATION)) {
           return {
             hasAccess: false,
@@ -356,30 +282,25 @@ export function useFeatureGating() {
         }
         return { hasAccess: true };
 
-      // VC Search View (handled by useVCViewTracking hook, but included for consistency)
+      // VC Search View (handled by usePlanAccess + useVCViewTracking)
       case 'vc_search_view':
-        // This will be handled by useVCViewTracking hook
         return { hasAccess: true };
 
       // Dashboard Access
       case 'dashboard_access':
-        // Free tier gets read-only access, Creator+ gets full access
-        return { hasAccess: true };
-
-      // Dashboard Features
       case 'focus_funnel':
-        // Free tier: read-only, Creator+: full access
+      case 'core_metrics':
+      case 'weekly_mission':
         return { hasAccess: true };
 
       case 'decision_sprint':
-        if (tier === 'free') {
+        if (tier === 'rookie') {
           return {
             hasAccess: false,
-            message: 'Upgrade to Creator tier or higher to use Decision Sprint.',
-            requiredTier: 'creator'
+            message: 'Upgrade to Rising plan or higher to use Decision Sprint.',
+            requiredTier: 'rising'
           };
         }
-        // Creator+ has full access (2 credits per generation)
         if (!hasCredits(CREDIT_COSTS.SPRINT_TASK_GENERATION)) {
           return {
             hasAccess: false,
@@ -388,26 +309,18 @@ export function useFeatureGating() {
         }
         return { hasAccess: true };
 
-      case 'core_metrics':
-        // Free tier: read-only, Creator+: full access
-        return { hasAccess: true };
-
-      case 'weekly_mission':
-        // Free tier: read-only, Creator+: full access
-        return { hasAccess: true };
-
       case 'your_tasks':
-        if (tier === 'free') {
+        if (tier === 'rookie') {
           return {
             hasAccess: false,
-            message: 'Upgrade to Creator tier or higher to manage tasks.',
-            requiredTier: 'creator'
+            message: 'Upgrade to Rising plan or higher to manage tasks.',
+            requiredTier: 'rising'
           };
         }
         return { hasAccess: true };
 
       case 'roadmap_generation':
-        if (['creator', 'professional'].includes(tier)) {
+        if (['rising', 'pro'].includes(tier)) {
           if (!hasCredits(CREDIT_COSTS.ROADMAP_GENERATION)) {
             return {
               hasAccess: false,
@@ -418,12 +331,12 @@ export function useFeatureGating() {
         }
         return {
           hasAccess: false,
-          message: 'Upgrade to Creator tier or higher to generate roadmaps.',
-          requiredTier: 'creator'
+          message: 'Upgrade to Rising plan or higher to generate roadmaps.',
+          requiredTier: 'rising'
         };
 
       case 'market_research':
-        if (['creator', 'professional'].includes(tier)) {
+        if (['rising', 'pro'].includes(tier)) {
           if (!hasCredits(CREDIT_COSTS.MARKET_RESEARCH)) {
             return {
               hasAccess: false,
@@ -434,12 +347,12 @@ export function useFeatureGating() {
         }
         return {
           hasAccess: false,
-          message: 'Upgrade to Creator tier or higher for market research.',
-          requiredTier: 'creator'
+          message: 'Upgrade to Rising plan or higher for market research.',
+          requiredTier: 'rising'
         };
 
       case 'financial_analysis':
-        if (['creator', 'professional'].includes(tier)) {
+        if (['rising', 'pro'].includes(tier)) {
           if (!hasCredits(CREDIT_COSTS.FINANCIAL_ANALYSIS)) {
             return {
               hasAccess: false,
@@ -450,12 +363,12 @@ export function useFeatureGating() {
         }
         return {
           hasAccess: false,
-          message: 'Upgrade to Creator tier or higher for financial analysis.',
-          requiredTier: 'creator'
+          message: 'Upgrade to Rising plan or higher for financial analysis.',
+          requiredTier: 'rising'
         };
 
       case 'business_insights':
-        if (['creator', 'professional'].includes(tier)) {
+        if (['rising', 'pro'].includes(tier)) {
           if (!hasCredits(CREDIT_COSTS.BUSINESS_INSIGHTS)) {
             return {
               hasAccess: false,
@@ -466,20 +379,19 @@ export function useFeatureGating() {
         }
         return {
           hasAccess: false,
-          message: 'Upgrade to Creator tier or higher for business insights.',
-          requiredTier: 'creator'
+          message: 'Upgrade to Rising plan or higher for business insights.',
+          requiredTier: 'rising'
         };
 
-      // MVP Builder (Creator+ only)
+      // MVP Builder (Rising+ only, or progressive unlock for Rookie)
       case 'mvp_builder':
-        if (tier === 'free') {
+        if (tier === 'rookie') {
           return {
             hasAccess: false,
-            message: 'Upgrade to Creator tier or higher to access MVP Builder.',
-            requiredTier: 'creator'
+            message: 'Complete the first 3 stages to unlock MVP Builder, or upgrade to Rising.',
+            requiredTier: 'rising'
           };
         }
-        // Creator+ has full access (5 credits)
         if (!hasCredits(CREDIT_COSTS.LAUNCH_REPORT)) {
           return {
             hasAccess: false,
@@ -488,16 +400,15 @@ export function useFeatureGating() {
         }
         return { hasAccess: true };
 
-      // GTM Strategist (Pro only)
+      // GTM Strategist (Rising+ — progressive for Rookie)
       case 'gtm_strategist':
-        if (tier !== 'professional') {
+        if (tier === 'rookie') {
           return {
             hasAccess: false,
-            message: 'Upgrade to Professional tier to access GTM Strategist.',
-            requiredTier: 'professional'
+            message: 'Complete earlier stages to unlock GTM Strategist, or upgrade to Rising.',
+            requiredTier: 'rising'
           };
         }
-        // Professional tier has full access (5 credits)
         if (!hasCredits(CREDIT_COSTS.ROADMAP_GENERATION)) {
           return {
             hasAccess: false,
@@ -506,38 +417,27 @@ export function useFeatureGating() {
         }
         return { hasAccess: true };
 
-      // Accelerator Hunt (Pro only)
+      // Accelerator Hunt — all plans can browse; profile views gated by usePlanAccess
       case 'accelerator_hunt':
-        if (tier !== 'professional') {
-          return {
-            hasAccess: false,
-            message: 'Upgrade to Professional tier to access Accelerator Hunt.',
-            requiredTier: 'professional'
-          };
-        }
-        // Professional tier has full access (free, no credits)
         return { hasAccess: true };
 
       // Find your Angel (Pro only)
       case 'find_your_angel':
-        if (tier !== 'professional') {
+        if (tier !== 'pro') {
           return {
             hasAccess: false,
-            message: 'Upgrade to Professional tier to access Find your Angel.',
-            requiredTier: 'professional'
+            message: 'Upgrade to Pro plan to access the Angels community.',
+            requiredTier: 'pro'
           };
         }
-        // Professional tier has full access (free, no credits)
         return { hasAccess: true };
 
-      // Discovery Calls with Mentors (Available to all tiers, costs 5 credits)
+      // Discovery Calls — credit cost now 10; quota logic handled by usePlanAccess
       case 'discovery_calls_mentors':
-        // All tiers can access, but need credits
         if (!hasCredits(CREDIT_COSTS.DISCOVERY_CALL)) {
           return {
             hasAccess: false,
             message: `Insufficient credits. Discovery calls cost ${CREDIT_COSTS.DISCOVERY_CALL} credits.`,
-            requiredTier: tier === 'free' ? 'creator' : undefined
           };
         }
         return { hasAccess: true };
@@ -548,55 +448,53 @@ export function useFeatureGating() {
   };
 
   const getConversationLimit = (): number => {
-    const tier = subscriptionData?.subscription_tier || 'free';
-    const limits = {
-      free: 10,
-      creator: 50,
-      professional: 150
+    const tier = subscriptionData?.subscription_tier || 'rookie';
+    const limits: Record<string, number> = {
+      rookie: 10,
+      rising: 50,
+      pro: 150,
     };
-    return limits[tier as keyof typeof limits] || 10;
+    return limits[tier] ?? 10;
   };
 
   const getTierFeatures = (tierName: string): string[] => {
     const featureMap: Record<string, string[]> = {
-      free: [
+      rookie: [
         '25 credits per month',
-        'Dashboard (Basic: Focus Funnel, Core Metrics, Weekly Mission - read-only)',
-        'BizMap AI (25 messages/month)',
-        'PMF Lab (read-only)',
-        'Prompt Library (view only)',
-        'VC Search (5 views/month)',
-        'Stories (read-only)',
-        'Community access (limited)'
+        'Dashboard (Stages 1–3 focus)',
+        'ICP Builder (free, no credits)',
+        'Waitlist Maker & PMF Lab (credits)',
+        'Insighta Test',
+        'Newspaper',
+        'VC Search (browse only)',
+        'Accelerator Hunt (browse only)',
       ],
-      creator: [
+      rising: [
         '50 credits per month',
-        'Dashboard (Full access: Focus Funnel, Decision Sprint, Core Metrics, Weekly Mission, Your Tasks)',
-        'BizMap AI Learn: ICP Builder & PMF Lab (full access)',
-        'BizMap AI Build: MVP Builder, Business Planner, Tech Stack Builder',
-        'Insighta: VC Search (25 views/month), Email Templates, Pitch Deck Analyzer, Insights Test',
-        'Community: Find a Mentor, Find a Co-Founder',
-        'Resources: Stories & Prompt Library (full access)',
-        'Priority support'
+        'Full dashboard — all 7 stages accessible',
+        'ICP Builder (free), all other tools (credits)',
+        '3 free discovery calls per month',
+        'VC Search: 3 profile views/month',
+        'Accelerator Hunt: 3 profile views/month',
+        'Email Templates (full access)',
+        'Pitch Deck Analyzer',
+        'Prompt Library (all categories)',
+        'Community: mentors & co-founders',
       ],
-      professional: [
+      pro: [
         '150 credits per month',
-        'Dashboard (Full access: All features)',
-        'BizMap AI Learn: ICP Builder & PMF Lab',
-        'BizMap AI Build: MVP Builder, Business Planner, Tech Stack Builder',
-        'BizMap AI Measure: GTM Strategist',
-        'Insighta: Unlimited VC Search, Accelerator Hunt, Email Templates, Advanced Pitch Deck Analyzer, Insights Test',
-        'Community: Find a Mentor, Find a Co-Founder, Find your Angel',
-        'Resources: Stories & Prompt Library (full + custom templates)',
-        'Featured in Community',
-        'Priority support (24h response)',
-        'Early access to new features'
-      ]
+        'Everything in Rising',
+        'Unlimited discovery calls',
+        'Unlimited VC & Accelerator profile views',
+        'Angels community (exclusive)',
+        'WhatsApp Founders Group access',
+        'Priority support',
+      ],
     };
     return featureMap[tierName] || [];
   };
 
-  const currentTierValue = subscriptionData?.subscription_tier || 'free';
+  const currentTierValue = subscriptionData?.subscription_tier || 'rookie';
 
   return {
     checkFeatureAccess,

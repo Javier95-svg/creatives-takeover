@@ -1,55 +1,52 @@
-import SEO, { createBreadcrumbSchema } from '@/components/SEO';
-import Navigation from '@/components/Navigation';
-import Footer from '@/components/Footer';
-import DirectoriesTab from '@/components/launch/DirectoriesTab';
-import GTMStrategistWallpaper from '@/components/wallpapers/GTMStrategistWallpaper';
-
-const structuredData = [
-  {
-    '@context': 'https://schema.org',
-    '@type': 'WebPage',
-    name: 'Directories',
-    description: 'Curated list of startup and product launch platforms to promote your launch.',
-    url: 'https://creatives-takeover.com/directories',
-  },
-  createBreadcrumbSchema([
-    { name: 'Home', url: '/' },
-    { name: 'BizMap AI', url: '/bizmap-ai' },
-    { name: 'Directories', url: '/directories' },
-  ]),
-];
+import SEO from "@/components/SEO";
+import Navigation from "@/components/Navigation";
+import Footer from "@/components/Footer";
+import { usePlanAccess } from "@/hooks/usePlanAccess";
+import { LockedPageOverlay } from "@/components/ui/LockedPageOverlay";
+import ComingSoonPage from "@/pages/ComingSoonPage";
 
 export default function DirectoriesPage() {
-  return (
-    <div className="relative min-h-screen overflow-hidden bg-background">
-      <SEO
-        title="Directories - Creatives Takeover"
-        description="Find the best platforms to submit and promote your startup or product launch. Filterable directory of 30+ communities, aggregators, review sites, and more."
-        keywords="product launch directories, startup directories, product hunt, launch platforms"
-        url="/directories"
-        structuredData={structuredData}
-      />
-      <GTMStrategistWallpaper />
-      <div className="relative z-10">
+  const { hasAccess, isProgressiveLock } = usePlanAccess('directories');
+
+  if (!hasAccess) {
+    return (
+      <div className="min-h-screen bg-background">
+        <SEO
+          title="Directories - Creatives Takeover"
+          description="Get your startup listed where founders get found. Startup directories, product launch platforms, and investor databases."
+        />
         <Navigation />
-
-        <main className="px-4 pt-28 pb-20 md:pt-32 lg:pt-36">
-          <div className="container mx-auto max-w-5xl space-y-6">
-            <div className="space-y-3 text-center">
-              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold creatives-font takeover-gradient leading-tight pb-2">
-                Directories
-              </h1>
-              <p className="text-lg sm:text-xl md:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed px-4">
-                Discover the best platforms to submit, share, and promote your startup launch.
-              </p>
-            </div>
-
-            <DirectoriesTab />
-          </div>
+        <main>
+          <LockedPageOverlay
+            requiredPlan="rising"
+            featureName="Directories"
+            description={
+              isProgressiveLock
+                ? "Complete the earlier stages to unlock Directories, or upgrade to Rising to access all tools right away."
+                : "Directories is available on the Rising plan and above."
+            }
+            benefits={[
+              "List your startup on 50+ directories automatically",
+              "Product Hunt, BetaList, Hacker News — all in one place",
+              "Track your listings and inbound traffic",
+            ]}
+          />
         </main>
-
         <Footer />
       </div>
-    </div>
+    );
+  }
+
+  return (
+    <ComingSoonPage
+      title="Directories"
+      description="Get your startup listed where founders get found. Startup directories, product launch platforms, and investor databases."
+      highlights={[
+        "Submit to 50+ startup directories in one click",
+        "Optimized listings for each platform",
+        "Track submissions and inbound traffic from each source",
+        "Reminders for re-submissions and updates",
+      ]}
+    />
   );
 }

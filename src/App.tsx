@@ -14,8 +14,6 @@ import { useVersionCheck } from "@/hooks/useVersionCheck";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import ScrollToTop from "./components/ScrollToTop";
 import ProUpgradeBanner from "@/components/ProUpgradeBanner";
-import BizMapGuestTeaserDialog from "@/components/bizmap/BizMapGuestTeaserDialog";
-import RouteRobots from "@/components/RouteRobots";
 
 const PulseWidget = lazy(() => import("@/components/pulse/PulseWidget"));
 const MobileBottomNav = lazy(() =>
@@ -32,8 +30,6 @@ const Analytics = lazy(() =>
 const Index = lazy(() => import("./pages/Index"));
 const About = lazy(() => import("./pages/About"));
 const PricingPage = lazy(() => import("./pages/PricingPage"));
-const Resources = lazy(() => import("./pages/Resources"));
-const SubscriptionSuccess = lazy(() => import("./pages/SubscriptionSuccess"));
 const CommunityPage = lazy(() => import("./pages/CommunityPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Careers = lazy(() => import("./pages/Careers"));
@@ -43,10 +39,9 @@ const Signup = lazy(() => import("./pages/Signup"));
 const Dream2Plan = lazy(() => import("./pages/Dream2Plan"));
 const BizMapJourneyHubPage = lazy(() => import("./pages/BizMapJourneyHubPage"));
 const Onboarding = lazy(() => import("./pages/Onboarding"));
-const WaitlistMakerPage = lazy(() => import("./pages/WaitlistMakerPage"));
 
 const Login = lazy(() => import("./pages/Login"));
-const AuthEntryRedirect = lazy(() => import("./pages/AuthEntryRedirect"));
+const Auth = lazy(() => import("./pages/Auth"));
 const AuthCallback = lazy(() => import("./pages/AuthCallback"));
 const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
@@ -89,9 +84,6 @@ const PMFLabPage = lazy(() => import("./pages/PMFLabPage"));
 const ICPBuilderPage = lazy(() => import("./pages/IcpBuilderPage"));
 const ValidateJourneyPage = lazy(() => import("./pages/ValidateJourneyPage"));
 const TechStackPage = lazy(() => import("./pages/TechStackPage"));
-const MVPBuilderBetaPage = lazy(() => import("./pages/MVPBuilderBetaPage"));
-const GTMStrategistPage = lazy(() => import("./pages/GTMStrategistPage"));
-const DirectoriesPage = lazy(() => import("./pages/DirectoriesPage"));
 const FocusFunnel = lazy(() => import("./pages/FocusFunnel"));
 const CoreMetricsPage = lazy(() => import("./pages/CoreMetricsPage"));
 const WeeklyMissionPage = lazy(() => import("./pages/WeeklyMissionPage"));
@@ -99,11 +91,11 @@ const TasksPage = lazy(() => import("./pages/TasksPage"));
 const ValidateJourney = lazy(() => import("./pages/journeys/ValidateJourney"));
 const MvpJourney = lazy(() => import("./pages/journeys/MvpJourney"));
 const FirstCustomersJourney = lazy(() => import("./pages/journeys/FirstCustomersJourney"));
+const ComingSoonPage = lazy(() => import("./pages/ComingSoonPage"));
+const WaitlistMakerPage = lazy(() => import("./pages/WaitlistMakerPage"));
+const DirectoriesPage = lazy(() => import("./pages/DirectoriesPage"));
 const FindYourAngel = lazy(() => import("./pages/community/FindYourAngel"));
 const AdminAngelEditor = lazy(() => import("./pages/community/AdminAngelEditor"));
-const WaitlistPublicPage = lazy(() => import("./pages/WaitlistPublicPage"));
-const AppBuilderPage = lazy(() => import("./pages/AppBuilderPage"));
-const SharedBizMapOutputPage = lazy(() => import("./pages/SharedBizMapOutputPage"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -120,8 +112,8 @@ const queryClient = new QueryClient({
 const PulseWidgetWrapper = () => {
   const location = useLocation();
 
-  // Show Pulse on all pages except auth flows, admin, and full-screen builders
-  const excludedPaths = ['/onboarding', '/auth', '/login', '/signup', '/forgot-password', '/reset-password', '/mvp-builder', '/share'];
+  // Show Pulse on all pages except auth flows and admin
+  const excludedPaths = ['/onboarding', '/auth', '/login', '/signup', '/forgot-password', '/reset-password'];
   const isExcluded = excludedPaths.some(p => location.pathname.startsWith(p));
 
   if (isExcluded) return null;
@@ -145,17 +137,13 @@ function App() {
                 <BrowserRouter>
                   <Suspense fallback={null}>
                     <ScrollToTop />
-                    <RouteRobots />
                     <UpgradePromptProvider>
                       <ProUpgradeBanner />
                       <PulseWidgetWrapper />
-                      <BizMapGuestTeaserDialog />
                       <Routes>
                         <Route path="/" element={<Index />} />
                         <Route path="/about" element={<About />} />
                         <Route path="/pricing" element={<PricingPage />} />
-                        <Route path="/resources" element={<Resources />} />
-                        <Route path="/subscription-success" element={<SubscriptionSuccess />} />
                         <Route path="/community" element={<CommunityPage />} />
                         <Route path="/community/mentors/:id" element={<MentorProfilePage />} />
                         <Route path="/community/book/:id" element={<MentorBookingPage />} />
@@ -169,14 +157,8 @@ function App() {
                         <Route path="/community/admin/new" element={<AdminMentorEditor />} />
                         <Route path="/community/admin/edit/:id" element={<AdminMentorEditor />} />
                         <Route path="/community/:slug" element={<MentorProfilePage />} />
-                        <Route path="/newspaper" element={<Stories />} />
-                        <Route path="/newspaper/rss.xml" element={<StoriesRSS />} />
-                        <Route path="/newspaper/tags/:tagSlug" element={<StoryTagPage />} />
-                        <Route path="/newspaper/:slug" element={<StoryArticle />} />
-                        <Route path="/newspaper/admin/new" element={<AdminStoryEditor />} />
-                        <Route path="/newspaper/admin/edit/:id" element={<AdminStoryEditor />} />
-                        <Route path="/stories" element={<Navigate to="/newspaper" replace />} />
-                        <Route path="/stories/rss.xml" element={<Navigate to="/newspaper/rss.xml" replace />} />
+                        <Route path="/stories" element={<Stories />} />
+                        <Route path="/stories/rss.xml" element={<StoriesRSS />} />
                         <Route path="/stories/tags/:tagSlug" element={<StoryTagPage />} />
                         <Route path="/stories/:slug" element={<StoryArticle />} />
                         <Route path="/stories/admin/new" element={<AdminStoryEditor />} />
@@ -196,17 +178,15 @@ function App() {
                         <Route path="/bizmap-ai/tech-stack" element={<Navigate to="/tech-stack" replace />} />
                         <Route path="/icp-builder" element={<ICPBuilderPage />} />
                         <Route path="/bizmap-ai/icp-builder" element={<Navigate to="/icp-builder" replace />} />
-                        <Route path="/waitlist" element={<WaitlistMakerPage />} />
-                        <Route path="/waitlist-builder" element={<Navigate to="/waitlist" replace />} />
                         <Route path="/decision-sprint" element={<ValidateJourneyPage />} />
                         <Route path="/validate" element={<ValidateJourney />} />
-                        <Route path="/mvp-builder" element={<AppBuilderPage />} />
-                        <Route path="/mvp-scope" element={<MVPBuilderBetaPage />} />
-                        <Route path="/go-to-market" element={<GTMStrategistPage />} />
+                        <Route path="/waitlist-maker" element={<WaitlistMakerPage />} />
                         <Route path="/directories" element={<DirectoriesPage />} />
+                        <Route path="/mvp-builder" element={<ComingSoonPage title="MVP Builder" description="A 14-day guided sprint to take your validated idea from concept to deployed product. Daily build checkpoints, scope lock, and launch-ready templates." highlights={["Scope your MVP with AI-guided feature prioritization", "Tech stack selection matched to your budget and skills", "Landing page and payment integration templates", "Daily checkpoints to keep you shipping"]} />} />
+                        <Route path="/go-to-market" element={<ComingSoonPage title="GTM Strategist" description="Your AI-powered go-to-market command center. From ICP to launch strategy, build a GTM plan that actually converts." highlights={["Define target market, positioning, and messaging", "Select and prioritize high-impact acquisition channels", "Generate launch, pricing, and distribution strategies", "Actionable GTM plans tailored to your business stage"]} />} />
                         <Route path="/client-acquisition" element={<Navigate to="/go-to-market" replace />} />
 
-                        <Route path="/auth" element={<AuthEntryRedirect />} />
+                        <Route path="/auth" element={<Auth />} />
                         <Route path="/login" element={<Login />} />
                         <Route path="/signup" element={<Signup />} />
                         <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -235,8 +215,6 @@ function App() {
                         <Route path="/creatives-takeover" element={<CreativesTakeover />} />
                         <Route path="/rag-test" element={<RAGTest />} />
                         <Route path="/test-phase1" element={<TestPhase1 />} />
-                        <Route path="/w/:slug" element={<WaitlistPublicPage />} />
-                        <Route path="/share/:slug" element={<SharedBizMapOutputPage />} />
                         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                         <Route path="*" element={<NotFound />} />
                       </Routes>

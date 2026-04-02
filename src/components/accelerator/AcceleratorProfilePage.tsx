@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { FundingOpportunity } from "@/types/funding";
+import { usePlanAccess } from "@/hooks/usePlanAccess";
+import { LockedPageOverlay } from "@/components/ui/LockedPageOverlay";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -12,13 +14,18 @@ import Footer from "@/components/Footer";
 import { toast } from "sonner";
 import {
   ArrowLeft,
-  ArrowUpRight,
-  Building2,
-  CalendarDays,
   ExternalLink,
-  Globe,
   MapPin,
+  DollarSign,
+  Building2,
   Star,
+  BookOpen,
+  Mail,
+  Globe,
+  Rocket,
+  Users,
+  Target,
+  CheckCircle
 } from "lucide-react";
 
 const AcceleratorProfilePage = () => {
@@ -28,6 +35,7 @@ const AcceleratorProfilePage = () => {
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
+  const { hasAccess } = usePlanAccess('accelerator_profile');
 
   useEffect(() => {
     const checkAdmin = async () => {
@@ -41,24 +49,25 @@ const AcceleratorProfilePage = () => {
     const fetchAccelerator = async () => {
       if (!slug) return;
 
+      // Try slug first, fall back to ID lookup
       let { data, error } = await supabase
-        .from("funding_opportunities")
-        .select("*")
-        .eq("slug", slug)
-        .eq("type", "accelerator")
+        .from('funding_opportunities')
+        .select('*')
+        .eq('slug', slug)
+        .eq('type', 'accelerator')
         .single();
 
       if (error || !data) {
         ({ data, error } = await supabase
-          .from("funding_opportunities")
-          .select("*")
-          .eq("id", slug)
-          .eq("type", "accelerator")
+          .from('funding_opportunities')
+          .select('*')
+          .eq('id', slug)
+          .eq('type', 'accelerator')
           .single());
       }
 
       if (error) {
-        console.error("Error fetching accelerator:", error);
+        console.error('Error fetching accelerator:', error);
       } else {
         setAccelerator(data as FundingOpportunity);
       }
@@ -72,16 +81,16 @@ const AcceleratorProfilePage = () => {
     const file = event.target.files?.[0];
     if (!file || !accelerator) return;
 
-    const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/svg+xml"];
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml'];
     if (!allowedTypes.includes(file.type)) {
       toast.error("Invalid file type. Please upload JPG, PNG, WebP, GIF, or SVG");
-      event.target.value = "";
+      event.target.value = '';
       return;
     }
 
     if (file.size > 5242880) {
       toast.error("File size exceeds 5MB");
-      event.target.value = "";
+      event.target.value = '';
       return;
     }
 
@@ -89,12 +98,12 @@ const AcceleratorProfilePage = () => {
       setUploadingLogo(true);
       toast.loading("Uploading logo...", { id: "upload-logo" });
 
-      const fileExt = file.name.split(".").pop() || "png";
+      const fileExt = file.name.split('.').pop() || 'png';
       const fileName = `accelerators/${accelerator.id}/logo-${Date.now()}.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
-        .from("public-assets")
-        .upload(fileName, file, { cacheControl: "3600", upsert: true, contentType: file.type });
+        .from('public-assets')
+        .upload(fileName, file, { cacheControl: '3600', upsert: true, contentType: file.type });
 
       if (uploadError) {
         toast.error(`Upload failed: ${uploadError.message}`, { id: "upload-logo" });
@@ -102,26 +111,26 @@ const AcceleratorProfilePage = () => {
       }
 
       const { data: { publicUrl } } = supabase.storage
-        .from("public-assets")
+        .from('public-assets')
         .getPublicUrl(fileName);
 
       const { error: updateError } = await supabase
-        .from("funding_opportunities")
+        .from('funding_opportunities')
         .update({ logo_url: publicUrl })
-        .eq("id", accelerator.id);
+        .eq('id', accelerator.id);
 
       if (updateError) {
         toast.error(`Failed to save: ${updateError.message}`, { id: "upload-logo" });
         throw updateError;
       }
 
-      setAccelerator((current) => (current ? { ...current, logo_url: publicUrl } : current));
+      setAccelerator((c) => (c ? { ...c, logo_url: publicUrl } : c));
       toast.success("Logo uploaded!", { id: "upload-logo" });
     } catch (error) {
       console.error("Logo upload error:", error);
     } finally {
       setUploadingLogo(false);
-      event.target.value = "";
+      event.target.value = '';
     }
   };
 
@@ -142,7 +151,7 @@ const AcceleratorProfilePage = () => {
         <div className="text-center">
           <h2 className="text-2xl font-bold mb-2">Accelerator Not Found</h2>
           <p className="text-muted-foreground mb-6">The accelerator you're looking for doesn't exist.</p>
-          <Button onClick={() => navigate("/insighta/accelerator-hunt")}>
+          <Button onClick={() => navigate('/insighta/accelerator-hunt')}>
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Accelerator Hunt
           </Button>
@@ -151,279 +160,315 @@ const AcceleratorProfilePage = () => {
     );
   }
 
+  if (!isAdmin && !hasAccess) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navigation />
+        <LockedPageOverlay
+          requiredPlan="rising"
+          featureName="Accelerator Profiles"
+          description="View full accelerator profiles, application details, and funding information. Available on Rising and Pro plans."
+          benefits={[
+            "Up to 3 accelerator profile views per month on Rising",
+            "Unlimited views on Pro",
+            "Application deadlines and requirements",
+          ]}
+        />
+        <Footer />
+      </div>
+    );
+  }
+
   const websiteUrl = accelerator.website_url || accelerator.url;
-  const hasDedicatedApplication = Boolean(accelerator.application_url && accelerator.application_url !== websiteUrl);
-  const primaryActionUrl = hasDedicatedApplication ? accelerator.application_url : websiteUrl || accelerator.application_url;
-  const primaryActionLabel = hasDedicatedApplication ? "Apply Now" : "Visit Website";
-  const stageSummary = accelerator.focus_stage?.length
-    ? accelerator.focus_stage.map((stage) => stage.replaceAll("-", " ")).join(", ")
-    : "Not disclosed";
-  const sectorSummary = accelerator.focus_sectors?.length
-    ? accelerator.focus_sectors.join(", ")
-    : accelerator.keywords.length > 0
-      ? accelerator.keywords.join(", ")
-      : "Not disclosed";
-  const geographySummary = accelerator.cohort_geography?.length
-    ? accelerator.cohort_geography.join(", ")
-    : accelerator.location.length > 0
-      ? accelerator.location.join(", ")
-      : "Not disclosed";
-  const stageTags = accelerator.focus_stage || [];
-  const sectorTags = accelerator.focus_sectors && accelerator.focus_sectors.length > 0
-    ? accelerator.focus_sectors
-    : accelerator.keywords;
-  const geographyTags = accelerator.cohort_geography && accelerator.cohort_geography.length > 0
-    ? accelerator.cohort_geography
-    : accelerator.location;
-  const alumni = Array.isArray(accelerator.notable_alumni) ? accelerator.notable_alumni.slice(0, 6) : [];
-  const snapshotItems = [
-    { label: "Stage", value: stageSummary },
-    { label: "Sector", value: sectorSummary },
-    { label: "Format", value: accelerator.program_format || "Not disclosed" },
-    { label: "Duration", value: accelerator.program_duration || "Not disclosed" },
-    { label: "Funding", value: accelerator.funding_offered || accelerator.funding_amount || "Not disclosed" },
-    { label: "Equity", value: accelerator.equity_taken || "Not disclosed" },
-    { label: "Geography", value: geographySummary },
-    { label: "How to apply", value: accelerator.application_deadline_info || "Use the primary application page" },
-  ];
 
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
 
       <main className="relative overflow-hidden py-20 px-4">
+        {/* Background */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-b from-background via-background/95 to-background" />
           <div
-            className="absolute -top-40 -right-48 h-[55rem] w-[55rem] rounded-full opacity-50 blur-3xl animate-[spin_28s_linear_infinite]"
+            className="absolute -top-40 -right-48 w-[55rem] h-[55rem] rounded-full opacity-50 blur-3xl animate-[spin_28s_linear_infinite]"
             style={{
-              background: "radial-gradient(circle at 30% 30%, rgba(56, 189, 248, 0.2), transparent 60%), radial-gradient(circle at 70% 70%, rgba(192, 132, 252, 0.25), transparent 55%)",
+              background: 'radial-gradient(circle at 30% 30%, rgba(56, 189, 248, 0.2), transparent 60%), radial-gradient(circle at 70% 70%, rgba(192, 132, 252, 0.25), transparent 55%)'
             }}
           />
         </div>
 
         <div className="container mx-auto max-w-4xl relative z-10">
+          {/* Back Button */}
           <Button
             variant="ghost"
-            onClick={() => navigate("/insighta/accelerator-hunt")}
+            onClick={() => navigate('/insighta/accelerator-hunt')}
             className="mb-6"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Accelerator Hunt
           </Button>
 
-          <Card className="overflow-hidden border border-border/60 bg-background/95 shadow-sm">
-            <CardHeader className="space-y-6">
-              <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
-                <div className="flex items-start gap-4">
-                  <div className="shrink-0">
-                    <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-xl border border-border bg-background shadow-sm">
-                      {accelerator.logo_url ? (
-                        <img
-                          src={accelerator.logo_url}
-                          alt={`${accelerator.title} logo`}
-                          className="h-full w-full object-contain p-2"
-                        />
-                      ) : (
-                        <Building2 className="h-10 w-10 text-muted-foreground/50" />
-                      )}
-                    </div>
-                    {isAdmin && (
-                      <div className="mt-3 w-48 space-y-2">
-                        <Label className="text-xs text-muted-foreground">Admin: update logo</Label>
-                        <Input
-                          type="file"
-                          accept="image/*"
-                          onChange={handleLogoUpload}
-                          disabled={uploadingLogo}
-                          className="text-xs"
-                        />
-                        {uploadingLogo && <p className="text-xs text-primary">Uploading...</p>}
-                      </div>
+          {/* Main Profile Card */}
+          <Card className="mb-6 overflow-hidden">
+            <CardHeader>
+              <div className="flex items-start gap-6">
+                {/* Logo */}
+                <div className="shrink-0">
+                  <div className="w-20 h-20 rounded-xl border-2 border-border bg-background flex items-center justify-center overflow-hidden shadow-sm">
+                    {accelerator.logo_url ? (
+                      <img
+                        src={accelerator.logo_url}
+                        alt={`${accelerator.title} logo`}
+                        className="w-full h-full object-contain p-2"
+                      />
+                    ) : (
+                      <Building2 className="h-10 w-10 text-muted-foreground/50" />
                     )}
                   </div>
-
-                  <div className="min-w-0">
-                    <div className="mb-3 flex flex-wrap items-center gap-2">
-                      {accelerator.is_featured && (
-                        <Badge className="bg-amber-500/10 text-amber-600 border-amber-500/30 hover:bg-amber-500/20">
-                          <Star className="h-3 w-3 mr-1 fill-amber-500" />
-                          Featured
-                        </Badge>
+                  {isAdmin && (
+                    <div className="mt-3 w-48 space-y-2">
+                      <Label className="text-xs text-muted-foreground">Admin: update logo</Label>
+                      <Input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleLogoUpload}
+                        disabled={uploadingLogo}
+                        className="text-xs"
+                      />
+                      {uploadingLogo && (
+                        <p className="text-xs text-primary">Uploading...</p>
                       )}
-                    </div>
-                    <CardTitle className="text-3xl tracking-tight">{accelerator.title}</CardTitle>
-                    <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                      {accelerator.description}
-                    </p>
-                    <div className="mt-4 space-y-2">
-                      {stageTags.length > 0 && (
-                        <div className="flex flex-wrap gap-2">
-                          {stageTags.map((stage) => (
-                            <Badge
-                              key={stage}
-                              variant="outline"
-                              className="border-sky-500/30 bg-sky-500/10 text-sky-700 capitalize"
-                            >
-                              {stage.replaceAll("-", " ")}
-                            </Badge>
-                          ))}
-                        </div>
-                      )}
-                      {sectorTags.length > 0 && (
-                        <div className="flex flex-wrap gap-2">
-                          {sectorTags.slice(0, 8).map((sector) => (
-                            <Badge
-                              key={sector}
-                              variant="outline"
-                              className="border-violet-500/30 bg-violet-500/10 text-violet-700"
-                            >
-                              {sector}
-                            </Badge>
-                          ))}
-                        </div>
-                      )}
-                      {geographyTags.length > 0 && (
-                        <div className="flex flex-wrap gap-2">
-                          {geographyTags.slice(0, 6).map((geo) => (
-                            <Badge
-                              key={geo}
-                              variant="outline"
-                              className="border-emerald-500/30 bg-emerald-500/10 text-emerald-700"
-                            >
-                              {geo}
-                            </Badge>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {primaryActionUrl && (
-                  <Button asChild className="w-full sm:w-auto shrink-0">
-                    <a href={primaryActionUrl} target="_blank" rel="noopener noreferrer">
-                      {primaryActionLabel}
-                      <ArrowUpRight className="h-4 w-4 ml-2" />
-                    </a>
-                  </Button>
-                )}
-              </div>
-            </CardHeader>
-
-            <CardContent className="space-y-6">
-              <div className="grid gap-6 lg:grid-cols-[1.35fr_1fr]">
-                <div className="rounded-xl border border-border/60 bg-muted/20 p-5">
-                  <h3 className="mb-4 text-base font-semibold">At a glance</h3>
-                  <div className="grid gap-3 text-sm">
-                    {snapshotItems.map((item) => (
-                      <div key={item.label} className="flex items-start justify-between gap-4">
-                        <span className="text-muted-foreground">{item.label}</span>
-                        <span className="max-w-[16rem] text-right font-medium">{item.value}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="rounded-xl border border-border/60 bg-background p-5">
-                  <h3 className="mb-3 text-base font-semibold">Program fit</h3>
-                  <p className="text-sm leading-6 text-muted-foreground">
-                    Use stage, sector, format, and equity first. If those align, go straight to the application page.
-                  </p>
-                  <div className="mt-4 space-y-3 text-sm">
-                    <div className="flex items-start justify-between gap-3">
-                      <span className="text-muted-foreground">Primary CTA</span>
-                      <span className="max-w-[11rem] text-right font-medium">{primaryActionLabel}</span>
-                    </div>
-                    <div className="flex items-start justify-between gap-3">
-                      <span className="text-muted-foreground">Website</span>
-                      <span className="max-w-[11rem] text-right font-medium">{websiteUrl ? "Available" : "Not listed"}</span>
-                    </div>
-                    <div className="flex items-start justify-between gap-3">
-                      <span className="text-muted-foreground">Application window</span>
-                      <span className="max-w-[11rem] text-right font-medium">
-                        {accelerator.application_deadline_info || "See program page"}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="grid gap-6 lg:grid-cols-[1.35fr_1fr]">
-                <div className="rounded-xl border border-border/60 bg-background p-5">
-                  <h3 className="mb-3 text-base font-semibold">Program summary</h3>
-                  <div className="space-y-3 text-sm">
-                    <div className="flex items-start justify-between gap-4">
-                      <span className="text-muted-foreground">Program format</span>
-                      <span className="max-w-[16rem] text-right font-medium">
-                        {accelerator.program_format || "Not disclosed"}
-                      </span>
-                    </div>
-                    <div className="flex items-start justify-between gap-4">
-                      <span className="text-muted-foreground">Duration</span>
-                      <span className="max-w-[16rem] text-right font-medium">
-                        {accelerator.program_duration || "Not disclosed"}
-                      </span>
-                    </div>
-                    <div className="flex items-start justify-between gap-4">
-                      <span className="text-sky-700">Funding</span>
-                      <span className="max-w-[16rem] text-right font-medium">
-                        {accelerator.funding_offered || accelerator.funding_amount || "Not disclosed"}
-                      </span>
-                    </div>
-                    <div className="flex items-start justify-between gap-4">
-                      <span className="text-muted-foreground">Equity</span>
-                      <span className="max-w-[16rem] text-right font-medium">
-                        {accelerator.equity_taken || "Not disclosed"}
-                      </span>
-                    </div>
-                  </div>
-
-                  {alumni.length > 0 && (
-                    <div className="mt-5">
-                      <h4 className="mb-3 text-sm font-semibold">Notable alumni</h4>
-                      <div className="grid gap-3 sm:grid-cols-2">
-                        {alumni.map((company) => (
-                          <div key={company} className="rounded-lg border border-border/60 bg-muted/20 p-3 text-sm font-medium">
-                            {company}
-                          </div>
-                        ))}
-                      </div>
                     </div>
                   )}
                 </div>
 
-                <div className="rounded-xl border border-border/60 bg-background p-5">
-                  <h3 className="mb-3 text-base font-semibold">Quick links</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {websiteUrl && (
-                      <Button variant="outline" size="sm" asChild>
-                        <a href={websiteUrl} target="_blank" rel="noopener noreferrer">
-                          <Globe className="h-3.5 w-3.5 mr-1.5" />
-                          Website
-                        </a>
-                      </Button>
-                    )}
-                    {accelerator.application_url && accelerator.application_url !== websiteUrl && (
-                      <Button variant="outline" size="sm" asChild>
-                        <a href={accelerator.application_url} target="_blank" rel="noopener noreferrer">
-                          <ExternalLink className="h-3.5 w-3.5 mr-1.5" />
-                          Application
-                        </a>
-                      </Button>
-                    )}
-                  </div>
-                  <div className="mt-4 space-y-3 text-sm">
-                    <div className="flex items-start gap-2 text-muted-foreground">
-                      <CalendarDays className="h-4 w-4 mt-0.5 shrink-0" />
-                      <span>{accelerator.program_duration || "Program timing varies by cohort"}</span>
-                    </div>
-                    <div className="flex items-start gap-2 text-muted-foreground">
-                      <MapPin className="h-4 w-4 mt-0.5 shrink-0" />
-                      <span>{geographySummary}</span>
+                {/* Info */}
+                <div className="flex-1">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <div className="flex items-center gap-3 mb-2">
+                        <CardTitle className="text-3xl">{accelerator.title}</CardTitle>
+                        {accelerator.is_featured && (
+                          <Badge className="bg-amber-500/10 text-amber-600 border-amber-500/30 hover:bg-amber-500/20">
+                            <Star className="h-3 w-3 mr-1 fill-amber-500" />
+                            Featured
+                          </Badge>
+                        )}
+                      </div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Badge variant="outline" className="capitalize bg-purple-500/10 text-purple-600 border-purple-500/20">
+                          Accelerator
+                        </Badge>
+                        {accelerator.funding_amount && (
+                          <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20">
+                            <DollarSign className="h-3 w-3 mr-1" />
+                            {accelerator.funding_amount}
+                          </Badge>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
+              </div>
+            </CardHeader>
+
+            <CardContent className="space-y-8">
+              {/* At a Glance */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div className="p-4 rounded-lg bg-muted/50 border text-center">
+                  <DollarSign className="h-5 w-5 mx-auto mb-1.5 text-primary" />
+                  <p className="text-lg font-bold leading-tight">{accelerator.funding_amount || '—'}</p>
+                  <p className="text-xs text-muted-foreground mt-1">Investment</p>
+                </div>
+
+                <div className="p-4 rounded-lg bg-muted/50 border text-center">
+                  <MapPin className="h-5 w-5 mx-auto mb-1.5 text-primary" />
+                  <p className="text-lg font-bold leading-tight">
+                    {accelerator.location && accelerator.location.length > 0 ? accelerator.location[0] : '—'}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">Location</p>
+                </div>
+
+                <div className="p-4 rounded-lg bg-muted/50 border text-center">
+                  <Rocket className="h-5 w-5 mx-auto mb-1.5 text-purple-500" />
+                  <p className="text-lg font-bold leading-tight">Accelerator</p>
+                  <p className="text-xs text-muted-foreground mt-1">Program Type</p>
+                </div>
+
+                <div className="p-4 rounded-lg bg-muted/50 border text-center">
+                  <Globe className="h-5 w-5 mx-auto mb-1.5 text-blue-500" />
+                  <p className="text-lg font-bold leading-tight">
+                    {accelerator.location && accelerator.location.includes('Global') ? 'Yes' : 'Regional'}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">Global Reach</p>
+                </div>
+              </div>
+
+              {/* About - highlighted */}
+              <div className="rounded-lg border-l-4 border-primary bg-primary/5 p-5">
+                <h3 className="font-semibold mb-2 flex items-center gap-2">
+                  <BookOpen className="h-4 w-4 text-primary" />
+                  About the Program
+                </h3>
+                <p className="text-muted-foreground leading-relaxed">{accelerator.description}</p>
+              </div>
+
+              {/* What They Look For */}
+              {accelerator.keywords && accelerator.keywords.length > 0 && (
+                <div className="border-t pt-6">
+                  <h3 className="font-semibold text-lg mb-4">What They Look For</h3>
+                  <div className="space-y-5">
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground mb-2">Focus Areas & Keywords</p>
+                      <div className="flex flex-wrap gap-2">
+                        {accelerator.keywords.map((keyword, idx) => (
+                          <Badge key={idx} variant="secondary" className="px-3 py-1 text-sm capitalize">
+                            {keyword}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+
+                    {accelerator.location && accelerator.location.length > 0 && (
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground mb-2">Geographic Focus</p>
+                        <div className="flex flex-wrap gap-3">
+                          {accelerator.location.map((loc, idx) => (
+                            <span key={idx} className="flex items-center gap-1.5 text-sm">
+                              <MapPin className="h-3.5 w-3.5 text-muted-foreground" />
+                              {loc}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* What You Get */}
+              <div className="border-t pt-6">
+                <h3 className="font-semibold text-lg mb-4">What You Get</h3>
+                <div className="grid sm:grid-cols-2 gap-3">
+                  {accelerator.funding_amount && (
+                    <div className="flex items-start gap-3 p-4 rounded-lg border bg-muted/30">
+                      <DollarSign className="h-5 w-5 mt-0.5 text-green-500 shrink-0" />
+                      <div>
+                        <p className="text-sm font-semibold">Funding: {accelerator.funding_amount}</p>
+                        <p className="text-sm text-muted-foreground mt-0.5">
+                          Direct investment upon acceptance into the program.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                  <div className="flex items-start gap-3 p-4 rounded-lg border bg-muted/30">
+                    <Users className="h-5 w-5 mt-0.5 text-blue-500 shrink-0" />
+                    <div>
+                      <p className="text-sm font-semibold">Mentorship & Network</p>
+                      <p className="text-sm text-muted-foreground mt-0.5">
+                        Access to experienced mentors, investors, and a global alumni network.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3 p-4 rounded-lg border bg-muted/30">
+                    <Target className="h-5 w-5 mt-0.5 text-purple-500 shrink-0" />
+                    <div>
+                      <p className="text-sm font-semibold">Structured Program</p>
+                      <p className="text-sm text-muted-foreground mt-0.5">
+                        Intensive curriculum designed to accelerate product-market fit and growth.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3 p-4 rounded-lg border bg-muted/30">
+                    <CheckCircle className="h-5 w-5 mt-0.5 text-green-500 shrink-0" />
+                    <div>
+                      <p className="text-sm font-semibold">Demo Day & Investor Access</p>
+                      <p className="text-sm text-muted-foreground mt-0.5">
+                        Present to hundreds of investors at the program's culminating event.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* How to Apply */}
+              <div className="border-t pt-6">
+                <h3 className="font-semibold text-lg mb-1">How to Apply</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Everything you need to submit your application to {accelerator.title}.
+                </p>
+
+                <div className="flex items-start gap-3 p-4 rounded-lg border bg-muted/30 mb-4">
+                  <CheckCircle className="h-5 w-5 mt-0.5 text-green-500 shrink-0" />
+                  <div>
+                    <p className="text-sm font-semibold">Open Application</p>
+                    <p className="text-sm text-muted-foreground mt-0.5">
+                      {accelerator.title} accepts applications directly through their website. No warm introduction required.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap gap-3 pt-2">
+                  {(accelerator.application_url || accelerator.url) && (
+                    <Button asChild>
+                      <a href={accelerator.application_url || accelerator.url} target="_blank" rel="noopener noreferrer">
+                        <ExternalLink className="h-4 w-4 mr-2" />
+                        Apply Now
+                      </a>
+                    </Button>
+                  )}
+                  {websiteUrl && (
+                    <Button variant="outline" asChild>
+                      <a href={websiteUrl} target="_blank" rel="noopener noreferrer">
+                        <Globe className="h-4 w-4 mr-2" />
+                        Visit Website
+                      </a>
+                    </Button>
+                  )}
+                </div>
+              </div>
+
+              {/* Links */}
+              {websiteUrl && (
+                <div className="border-t pt-6">
+                  <h3 className="font-semibold mb-3">Links</h3>
+                  <div className="flex flex-wrap gap-2">
+                    <Button variant="outline" size="sm" asChild>
+                      <a href={websiteUrl} target="_blank" rel="noopener noreferrer">
+                        <Building2 className="h-3.5 w-3.5 mr-1.5" />Website
+                      </a>
+                    </Button>
+                    {accelerator.application_url && accelerator.application_url !== websiteUrl && (
+                      <Button variant="outline" size="sm" asChild>
+                        <a href={accelerator.application_url} target="_blank" rel="noopener noreferrer">
+                          <ExternalLink className="h-3.5 w-3.5 mr-1.5" />Application
+                        </a>
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* CTA */}
+              <div className="border-t pt-6">
+                <Card className="bg-primary/5 border-primary/20">
+                  <CardContent className="pt-6">
+                    <div className="text-center">
+                      <h4 className="font-semibold text-lg mb-2">Need Help with Your Application?</h4>
+                      <p className="text-sm text-muted-foreground mb-4">
+                        Use our email templates to craft a compelling application and follow-up emails
+                        tailored to {accelerator.title}'s focus areas.
+                      </p>
+                      <Button
+                        variant="outline"
+                        onClick={() => navigate('/insighta/email-templates')}
+                      >
+                        <Mail className="h-4 w-4 mr-2" />
+                        Browse Email Templates
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
             </CardContent>
           </Card>

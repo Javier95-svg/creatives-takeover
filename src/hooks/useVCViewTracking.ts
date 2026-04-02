@@ -6,7 +6,7 @@ import { VC_VIEW_LIMITS } from '@/config/constants';
 export interface VCViewTrackingResult {
   success: boolean;
   message?: string;
-  requiredTier?: 'creator' | 'professional';
+  requiredTier?: 'rising' | 'pro';
   reason?: 'limit_reached' | 'auth' | 'error';
 }
 
@@ -15,7 +15,7 @@ export const useVCViewTracking = () => {
   const [loading, setLoading] = useState(true);
   const { subscriptionData } = useSubscription();
 
-  const currentTier = subscriptionData?.subscription_tier || 'free';
+  const currentTier = subscriptionData?.subscription_tier || 'rookie';
   const limit = VC_VIEW_LIMITS[currentTier as keyof typeof VC_VIEW_LIMITS] || 0;
   const hasUnlimitedViews = limit === -1;
   const canViewMore = hasUnlimitedViews || viewCount < limit;
@@ -78,8 +78,10 @@ export const useVCViewTracking = () => {
       if (!canView && !hasUnlimitedViews) {
         return {
           success: false,
-          message: `You've used all ${limit} VC profile views this month. Upgrade to ${currentTier === 'free' ? 'Creator for 25 more views' : 'Professional for unlimited views'} and keep exploring.`,
-          requiredTier: currentTier === 'free' ? 'creator' : 'professional',
+          message: currentTier === 'rookie'
+            ? 'VC profile views are not available on the Rookie plan. Upgrade to Rising to view up to 3 profiles per month.'
+            : `You've used all ${limit} VC profile views this month. Upgrade to Pro for unlimited views.`,
+          requiredTier: currentTier === 'rookie' ? 'rising' : 'pro',
           reason: 'limit_reached',
         };
       }

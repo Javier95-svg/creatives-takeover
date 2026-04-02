@@ -7,212 +7,10 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const PRO_OVERRIDE_EMAILS = new Set([
-  "uneebkhanzada91@gmail.com",
-  "does@elevatedynamics.pt",
-  "adam@tiplo.ai",
-  "apembertona@gmail.com",
-]);
-
-const PRO_OVERRIDE_USER_IDS = new Set([
-  "f2fa28f8-7889-4397-b17b-478488435b84",
-  "15bba750-6594-4f48-a101-0c02a404835e",
-  "c6aba37d-847a-439e-848d-d6874b7d245a",
-  "b05d6111-0940-4403-a710-92901fcbf034",
-]);
-
-const FALLBACK_TIER_CREDITS: Record<string, number> = {
-  free: 25,
-  creator: 100,
-  professional: 300,
-};
-
+// Helper logging function for debugging
 const logStep = (step: string, details?: any) => {
-  const detailsStr = details ? ` - ${JSON.stringify(details)}` : "";
+  const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
   console.log(`[CHECK-SUBSCRIPTION] ${step}${detailsStr}`);
-};
-
-const normalizeSubscriptionTier = (value: unknown): string => {
-  const normalized = typeof value === "string" ? value.trim().toLowerCase() : "";
-
-  if (["professional", "pro", "elite", "team", "teams"].includes(normalized)) return "professional";
-  if (normalized === "rising") return "creator";
-  if (["rookie", "starter"].includes(normalized)) return "free";
-  if (normalized === "creator" || normalized === "professional" || normalized === "free") {
-    return normalized;
-  }
-
-  return "free";
-};
-
-const normalizeBillingCycle = (value: unknown): "monthly" | "yearly" => {
-  const normalized = typeof value === "string" ? value.trim().toLowerCase() : "";
-  return normalized === "yearly" || normalized === "year" ? "yearly" : "monthly";
-};
-
-const inferTierFromAmount = (amount: number, interval?: string | null): string => {
-  if (!amount || amount <= 0) return "free";
-  if (interval === "year") {
-    if (amount <= 35000) return "creator";
-    if (amount <= 80000) return "professional";
-    return "free";
-  }
-
-  if (amount <= 3500) return "creator";
-  if (amount <= 8000) return "professional";
-  return "free";
-};
-
-const getTierCredits = async (supabaseService: any, tier: string): Promise<number> => {
-  const normalizedTier = normalizeSubscriptionTier(tier);
-  const { data } = await supabaseService
-    .from("subscription_tiers")
-    .select("monthly_credits")
-    .eq("tier_name", normalizedTier)
-    .maybeSingle();
-
-  return Number(data?.monthly_credits ?? FALLBACK_TIER_CREDITS[normalizedTier] ?? FALLBACK_TIER_CREDITS.free);
-};
-
-const getExistingInternalSubscriptionGrant = async (
-  supabaseService: any,
-  userId: string
-): Promise<{
-  stripeCustomerId: string | null;
-  subscriptionTier: string;
-  subscriptionEnd: string | null;
-  billingCycle: "monthly" | "yearly" | null;
-} | null> => {
-  const [{ data: subscriber }, { data: profile }] = await Promise.all([
-    supabaseService
-      .from("subscribers")
-      .select("stripe_customer_id, subscribed, subscription_tier, subscription_end")
-      .eq("user_id", userId)
-      .maybeSingle(),
-    supabaseService
-      .from("profiles")
-      .select("stripe_customer_id, subscribed, subscription_tier, subscription_end, billing_cycle")
-      .eq("id", userId)
-      .maybeSingle(),
-  ]);
-
-  const subscriberTier = normalizeSubscriptionTier(subscriber?.subscription_tier);
-  if (subscriber?.subscribed === true && subscriberTier !== "free") {
-    return {
-      stripeCustomerId:
-        typeof subscriber?.stripe_customer_id === "string" ? subscriber.stripe_customer_id : null,
-      subscriptionTier: subscriberTier,
-      subscriptionEnd:
-        typeof subscriber?.subscription_end === "string" ? subscriber.subscription_end : null,
-      billingCycle: null,
-    };
-  }
-
-  const profileTier = normalizeSubscriptionTier(profile?.subscription_tier);
-  if (profile?.subscribed === true && profileTier !== "free") {
-    return {
-      stripeCustomerId:
-        typeof profile?.stripe_customer_id === "string" ? profile.stripe_customer_id : null,
-      subscriptionTier: profileTier,
-      subscriptionEnd: typeof profile?.subscription_end === "string" ? profile.subscription_end : null,
-      billingCycle:
-        profile?.billing_cycle === "yearly" || profile?.billing_cycle === "monthly"
-          ? profile.billing_cycle
-          : null,
-    };
-  }
-
-  return null;
-};
-
-const syncSubscriptionState = async (
-  supabaseService: any,
-  {
-    userId,
-    email,
-    stripeCustomerId,
-    subscribed,
-    subscriptionTier,
-    subscriptionEnd,
-    billingCycle,
-    forceQuotaFloor,
-  }: {
-    userId: string;
-    email: string;
-    stripeCustomerId: string | null;
-    subscribed: boolean;
-    subscriptionTier: string;
-    subscriptionEnd: string | null;
-    billingCycle: "monthly" | "yearly" | null;
-    forceQuotaFloor: boolean;
-  }
-) => {
-  const normalizedTier = subscribed ? normalizeSubscriptionTier(subscriptionTier) : "free";
-  const nowIso = new Date().toISOString();
-  const tierCredits = await getTierCredits(supabaseService, normalizedTier);
-
-  await supabaseService.from("subscribers").upsert({
-    email,
-    user_id: userId,
-    stripe_customer_id: stripeCustomerId,
-    subscribed,
-    subscription_tier: normalizedTier,
-    subscription_end: subscriptionEnd,
-    updated_at: nowIso,
-  }, { onConflict: "user_id" });
-
-  await supabaseService
-    .from("profiles")
-    .update({
-      stripe_customer_id: stripeCustomerId,
-      subscribed,
-      subscription_tier: normalizedTier,
-      subscription_end: subscriptionEnd,
-      billing_cycle: subscribed ? billingCycle : null,
-      monthly_credits: tierCredits,
-      updated_at: nowIso,
-    })
-    .eq("id", userId);
-
-  const { data: currentCredits } = await supabaseService
-    .from("user_credits")
-    .select("balance, monthly_quota, subscription_tier, last_reset_at")
-    .eq("user_id", userId)
-    .maybeSingle();
-
-  const currentBalance = Number(currentCredits?.balance ?? 0);
-  const currentQuota = Number(currentCredits?.monthly_quota ?? 0);
-  const currentTier = normalizeSubscriptionTier(currentCredits?.subscription_tier ?? "free");
-  const shouldLiftQuota = subscribed && (forceQuotaFloor || currentTier !== normalizedTier || currentQuota <= 0);
-  const nextQuota = subscribed
-    ? (shouldLiftQuota ? Math.max(currentQuota, tierCredits) : currentQuota)
-    : (currentCredits ? Math.min(currentQuota, FALLBACK_TIER_CREDITS.free) : FALLBACK_TIER_CREDITS.free);
-  const shouldAdjustFreeQuota = !subscribed && (!currentCredits || nextQuota !== currentQuota || currentTier !== "free");
-  const nextLastResetAt = subscribed
-    ? (shouldLiftQuota ? nowIso : (currentCredits?.last_reset_at ?? nowIso))
-    : (shouldAdjustFreeQuota ? nowIso : (currentCredits?.last_reset_at ?? nowIso));
-
-  if (currentCredits) {
-    await supabaseService
-      .from("user_credits")
-      .update({
-        balance: currentBalance,
-        monthly_quota: nextQuota,
-        subscription_tier: normalizedTier,
-        last_reset_at: nextLastResetAt,
-      })
-      .eq("user_id", userId);
-  } else {
-    await supabaseService
-      .from("user_credits")
-      .insert({
-        user_id: userId,
-        balance: currentBalance,
-        monthly_quota: nextQuota,
-        subscription_tier: normalizedTier,
-        last_reset_at: nextLastResetAt,
-      });
-  }
 };
 
 serve(async (req) => {
@@ -225,7 +23,9 @@ serve(async (req) => {
 
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
+    logStep("Stripe key verified");
 
+    // Use service role key for database operations
     const supabaseService = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
@@ -234,56 +34,68 @@ serve(async (req) => {
 
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) throw new Error("No authorization header provided");
+    logStep("Authorization header found");
 
     const token = authHeader.replace("Bearer ", "");
+    logStep("Authenticating user with token");
+    
     const { data: userData, error: userError } = await supabaseService.auth.getUser(token);
     if (userError) throw new Error(`Authentication error: ${userError.message}`);
     const user = userData.user;
     if (!user?.email) throw new Error("User not authenticated or email not available");
+    logStep("User authenticated", { userId: user.id, email: user.email });
 
-    const normalizedEmail = user.email.toLowerCase();
-    const isAdminEmail = normalizedEmail === "admin@creatives-takeover.com";
+    const proOverrideEmails = new Set([
+      'admin@creatives-takeover.com',
+      'apembertona@gmail.com',
+      'adam@tiplo.ai'
+    ]);
 
-    if (isAdminEmail) {
-      logStep("Admin override detected");
-      await syncSubscriptionState(supabaseService, {
-        userId: user.id,
+    // Check if this is a pro-override account - grant pro tier immediately
+    if (proOverrideEmails.has(user.email.toLowerCase())) {
+      logStep("Pro override account detected - granting pro tier", { email: user.email });
+      const proTier = 'pro';
+      const proCredits = 150;
+
+      // Update subscribers table
+      await supabaseService.from("subscribers").upsert({
         email: user.email,
-        stripeCustomerId: null,
+        user_id: user.id,
+        stripe_customer_id: null,
         subscribed: true,
-        subscriptionTier: "professional",
-        subscriptionEnd: null,
-        billingCycle: "monthly",
-        forceQuotaFloor: false,
-      });
+        subscription_tier: proTier,
+        subscription_end: null,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'email' });
+
+      // Fetch current credits to avoid reducing balances
+      const { data: creditRow } = await supabaseService
+        .from("user_credits")
+        .select("balance, monthly_quota")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      const nextBalance = Math.max(creditRow?.balance ?? 0, proCredits);
+      const nextQuota = Math.max(creditRow?.monthly_quota ?? 0, proCredits);
+
+      // Update user_credits table (tier + credits)
+      await supabaseService.from("user_credits").upsert({
+        user_id: user.id,
+        subscription_tier: proTier,
+        balance: nextBalance,
+        monthly_quota: nextQuota,
+        last_credit_grant: new Date().toISOString()
+      }, { onConflict: 'user_id' });
+
+      // Update profiles table
+      await supabaseService.from("profiles").update({
+        subscription_tier: proTier
+      }).eq('id', user.id);
 
       return new Response(JSON.stringify({
         subscribed: true,
-        subscription_tier: "professional",
-        subscription_end: null,
-      }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200,
-      });
-    }
-
-    if (PRO_OVERRIDE_EMAILS.has(normalizedEmail) || PRO_OVERRIDE_USER_IDS.has(user.id)) {
-      logStep("Professional override detected");
-      await syncSubscriptionState(supabaseService, {
-        userId: user.id,
-        email: user.email,
-        stripeCustomerId: null,
-        subscribed: true,
-        subscriptionTier: "professional",
-        subscriptionEnd: null,
-        billingCycle: "monthly",
-        forceQuotaFloor: true,
-      });
-
-      return new Response(JSON.stringify({
-        subscribed: true,
-        subscription_tier: "professional",
-        subscription_end: null,
+        subscription_tier: proTier,
+        subscription_end: null
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
@@ -291,52 +103,26 @@ serve(async (req) => {
     }
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
+    
+    // Find Stripe customer
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
-
+    
     if (customers.data.length === 0) {
-      logStep("No Stripe customer found");
-      const existingGrant = await getExistingInternalSubscriptionGrant(supabaseService, user.id);
-      if (existingGrant) {
-        logStep("Preserving internal paid subscription without Stripe customer", {
-          userId: user.id,
-          subscriptionTier: existingGrant.subscriptionTier,
-        });
-        await syncSubscriptionState(supabaseService, {
-          userId: user.id,
-          email: user.email,
-          stripeCustomerId: existingGrant.stripeCustomerId,
-          subscribed: true,
-          subscriptionTier: existingGrant.subscriptionTier,
-          subscriptionEnd: existingGrant.subscriptionEnd,
-          billingCycle: existingGrant.billingCycle ?? "monthly",
-          forceQuotaFloor: true,
-        });
-
-        return new Response(JSON.stringify({
-          subscribed: true,
-          subscription_tier: existingGrant.subscriptionTier,
-          subscription_end: existingGrant.subscriptionEnd,
-        }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-          status: 200,
-        });
-      }
-
-      await syncSubscriptionState(supabaseService, {
-        userId: user.id,
+      logStep("No customer found, updating unsubscribed state");
+      await supabaseService.from("subscribers").upsert({
         email: user.email,
-        stripeCustomerId: null,
+        user_id: user.id,
+        stripe_customer_id: null,
         subscribed: false,
-        subscriptionTier: "free",
-        subscriptionEnd: null,
-        billingCycle: null,
-        forceQuotaFloor: false,
-      });
+        subscription_tier: 'rookie',
+        subscription_end: null,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'email' });
 
       return new Response(JSON.stringify({
         subscribed: false,
-        subscription_tier: "free",
-        subscription_end: null,
+        subscription_tier: 'rookie',
+        subscription_end: null
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
@@ -344,105 +130,85 @@ serve(async (req) => {
     }
 
     const customerId = customers.data[0].id;
+    logStep("Found Stripe customer", { customerId });
+
+    // Check for active subscriptions
     const subscriptions = await stripe.subscriptions.list({
       customer: customerId,
       status: "active",
       limit: 1,
     });
-
+    
     const hasActiveSub = subscriptions.data.length > 0;
+    let subscriptionTier = 'rookie';
+    let subscriptionEnd = null;
 
-    if (!hasActiveSub) {
-      logStep("No active Stripe subscription found", { customerId });
-      const existingGrant = await getExistingInternalSubscriptionGrant(supabaseService, user.id);
-      if (existingGrant) {
-        logStep("Preserving internal paid subscription without active Stripe subscription", {
-          userId: user.id,
-          customerId,
-          subscriptionTier: existingGrant.subscriptionTier,
-        });
-        await syncSubscriptionState(supabaseService, {
-          userId: user.id,
-          email: user.email,
-          stripeCustomerId: existingGrant.stripeCustomerId ?? customerId,
-          subscribed: true,
-          subscriptionTier: existingGrant.subscriptionTier,
-          subscriptionEnd: existingGrant.subscriptionEnd,
-          billingCycle: existingGrant.billingCycle ?? "monthly",
-          forceQuotaFloor: true,
-        });
+    if (hasActiveSub) {
+      const subscription = subscriptions.data[0];
+      subscriptionEnd = new Date(subscription.current_period_end * 1000).toISOString();
+      logStep("Active subscription found", { subscriptionId: subscription.id, endDate: subscriptionEnd });
 
-        return new Response(JSON.stringify({
-          subscribed: true,
-          subscription_tier: existingGrant.subscriptionTier,
-          subscription_end: existingGrant.subscriptionEnd,
-        }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-          status: 200,
-        });
+      // Determine subscription tier from Stripe price amount
+      // Rising: ~$32.99/mo = 3299 cents; Pro: ~$74.99/mo = 7499 cents
+      const priceId = subscription.items.data[0].price.id;
+      const price = await stripe.prices.retrieve(priceId);
+      const amount = price.unit_amount || 0;
+
+      if (amount === 0) {
+        subscriptionTier = "rookie";
+      } else if (amount <= 5000) { // up to $50/mo = Rising
+        subscriptionTier = "rising";
+      } else { // $50+/mo = Pro
+        subscriptionTier = "pro";
       }
-
-      await syncSubscriptionState(supabaseService, {
-        userId: user.id,
-        email: user.email,
-        stripeCustomerId: customerId,
-        subscribed: false,
-        subscriptionTier: "free",
-        subscriptionEnd: null,
-        billingCycle: null,
-        forceQuotaFloor: false,
-      });
-
-      return new Response(JSON.stringify({
-        subscribed: false,
-        subscription_tier: "free",
-        subscription_end: null,
-      }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200,
-      });
+      logStep("Determined subscription tier", { priceId, amount, subscriptionTier });
+    } else {
+      logStep("No active subscription found");
     }
 
-    const subscription = subscriptions.data[0];
-    const metadataTier = subscription.metadata?.tier ?? subscription.metadata?.subscription_tier;
-    const priceAmount = Number(subscription.items.data[0]?.price?.unit_amount ?? 0);
-    const recurringInterval = subscription.items.data[0]?.price?.recurring?.interval ?? null;
-    const subscriptionTier =
-      typeof metadataTier === "string" && metadataTier.trim().length > 0
-        ? normalizeSubscriptionTier(metadataTier)
-        : inferTierFromAmount(priceAmount, recurringInterval);
-    const billingCycle = subscription.metadata?.billing_cycle
-      ? normalizeBillingCycle(subscription.metadata.billing_cycle)
-      : normalizeBillingCycle(recurringInterval);
-    const subscriptionEnd = new Date(subscription.current_period_end * 1000).toISOString();
-
-    logStep("Active subscription found", {
-      customerId,
-      subscriptionId: subscription.id,
-      subscriptionTier,
-      billingCycle,
-      subscriptionEnd,
-    });
-
-    await syncSubscriptionState(supabaseService, {
-      userId: user.id,
+    // Update subscribers table
+    await supabaseService.from("subscribers").upsert({
       email: user.email,
-      stripeCustomerId: customerId,
-      subscribed: true,
-      subscriptionTier,
-      subscriptionEnd,
-      billingCycle,
-      forceQuotaFloor: false,
-    });
-
-    return new Response(JSON.stringify({
-      subscribed: true,
+      user_id: user.id,
+      stripe_customer_id: customerId,
+      subscribed: hasActiveSub,
       subscription_tier: subscriptionTier,
       subscription_end: subscriptionEnd,
+      updated_at: new Date().toISOString(),
+    }, { onConflict: 'email' });
+
+    // Update user_credits table with subscription tier
+    await supabaseService.from("user_credits").upsert({
+      user_id: user.id,
+      subscription_tier: subscriptionTier,
+    }, { onConflict: 'user_id' });
+
+    logStep("Updated database with subscription info", { subscribed: hasActiveSub, subscriptionTier });
+
+    // If user just upgraded, grant monthly credits
+    if (hasActiveSub && subscriptionTier !== 'rookie') {
+      try {
+        await supabaseService.rpc('update_user_subscription_tier', {
+          user_email: user.email,
+          new_tier: subscriptionTier,
+          is_subscribed: true
+        });
+        logStep("Granted subscription credits");
+      } catch (creditError) {
+        logStep("Error granting credits", { error: creditError });
+        // Don't fail the whole operation for credit errors
+      }
+    }
+
+    return new Response(JSON.stringify({
+      subscribed: hasActiveSub,
+      subscription_tier: subscriptionTier,
+      subscription_end: subscriptionEnd
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });
+
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR in check-subscription", { message: errorMessage });
