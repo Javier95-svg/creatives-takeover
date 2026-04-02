@@ -163,8 +163,9 @@ const Account = () => {
           setFollowersCount(data.followers_count || 0);
           setFollowingCount(data.following_count || 0);
 
-          // Check if user should see onboarding checklist
-          setShowOnboarding(data.onboarding_completed === false);
+          // Activation now lives in /onboarding plus the first-value journey.
+          // Keep Account focused on profile management instead of prematurely completing onboarding.
+          setShowOnboarding(false);
 
           // Set quiz data
           setQuizData({

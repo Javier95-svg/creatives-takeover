@@ -13,6 +13,7 @@ import { useCreditActions } from "@/hooks/useCreditActions";
 import { ArrowLeft, Edit } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { completeActivationJourney, trackRetentionEvent } from "@/lib/retentionSystem";
 
 const CALENDLY_REDIRECT_KEY = 'pending_calendly_redirect';
 
@@ -128,6 +129,21 @@ const MentorProfilePage = () => {
         toast.error('Unable to process booking. Please try again.');
         return;
       }
+
+      await trackRetentionEvent('discovery_call_booked', {
+        user_id: user.id,
+        mentor_id: mentor.id,
+        mentor_name: mentor.name,
+        source: 'mentor_profile_page',
+      });
+      await completeActivationJourney({
+        user,
+        action: 'book_call',
+        mentorId: mentor.id,
+        mentorName: mentor.name,
+        source: 'mentor_profile_page',
+        actionUrl: location.pathname,
+      });
     } catch (error) {
       // If credit deduction fails, close the tab
       calendlyTab.close();

@@ -11,6 +11,8 @@ import { useMessaging } from "@/hooks/useMessaging";
 import { useCreditActions } from "@/hooks/useCreditActions";
 import { toast } from "sonner";
 import { generateMentorSlug } from "@/utils/mentorSlug";
+import { useMentorSaves } from "@/hooks/useMentorSaves";
+import { completeActivationJourney, trackRetentionEvent } from "@/lib/retentionSystem";
 
 const CALENDLY_REDIRECT_KEY = 'pending_calendly_redirect';
 
@@ -26,8 +28,11 @@ export const MentorCard = ({ mentor, className, priority = false }: MentorCardPr
   const { isAuthenticated, user } = useAuth();
   const { startConversation, resolveMentorUserId } = useMessaging({ autoLoad: false });
   const { deductCredits, ensureCredits } = useCreditActions();
+  const { saveMentor, buildSaveButtonState } = useMentorSaves();
   const mentorSlug = generateMentorSlug(mentor.name);
   const profileUrl = `/community/${mentorSlug}`;
+  const saveButton = buildSaveButtonState(mentor.id);
+  const SaveButtonIcon = saveButton.icon;
 
   // Truncate bio if too long
   const bioMaxLength = 200;
@@ -265,12 +270,49 @@ export const MentorCard = ({ mentor, className, priority = false }: MentorCardPr
         toast.error('Unable to process booking. Please try again.');
         return;
       }
+
+      await trackRetentionEvent('discovery_call_booked', {
+        user_id: user.id,
+        mentor_id: mentor.id,
+        mentor_name: mentor.name,
+        source: 'mentor_card',
+      });
+      await completeActivationJourney({
+        user,
+        action: 'book_call',
+        mentorId: mentor.id,
+        mentorName: mentor.name,
+        source: 'mentor_card',
+        actionUrl: profileUrl,
+      });
     } catch (error) {
       // If credit deduction fails, close the tab
       calendlyTab.close();
       console.error('Error deducting credits for discovery call:', error);
       toast.error('Unable to process booking. Please try again.');
     }
+  };
+
+  const handleSaveMentor = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!isAuthenticated || !user) {
+      navigate(`/login?return=${encodeURIComponent('/community')}`);
+      return;
+    }
+
+    if (saveButton.saved) {
+      return;
+    }
+
+    await saveMentor(
+      {
+        id: mentor.id,
+        name: mentor.name,
+      },
+      'mentor_card',
+    );
   };
 
   const handleSendMessage = async (e: React.MouseEvent) => {
@@ -466,6 +508,16 @@ export const MentorCard = ({ mentor, className, priority = false }: MentorCardPr
 
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row items-center gap-3 pt-2">
+              <Button
+                size="default"
+                variant={saveButton.saved ? "secondary" : "outline"}
+                onClick={handleSaveMentor}
+                disabled={saveButton.saving || saveButton.saved}
+                className="w-full sm:w-auto h-10 flex-1 hover:shadow-md transition-all duration-200"
+              >
+                <SaveButtonIcon className="h-4 w-4 mr-1.5" />
+                {saveButton.saving ? 'Saving...' : saveButton.label}
+              </Button>
               <Button
                 size="default"
                 onClick={handleBookDiscoveryCall}

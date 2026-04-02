@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { logError, logWarn, logInfo } from '@/lib/logger';
 import { handleError, getUserMessage } from '@/lib/errors';
+import { completeActivationJourney, trackRetentionEvent } from '@/lib/retentionSystem';
 
 export interface Conversation {
   id: string;
@@ -826,6 +827,15 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
                 [activeConversationId]: [...currentMessages, newMessage]
               };
             });
+
+            if (payload.new.sender_id !== user?.id) {
+              void trackRetentionEvent('message_reply_received', {
+                user_id: user?.id,
+                conversation_id: activeConversationId,
+                message_id: payload.new.id,
+                source: 'messages_realtime',
+              });
+            }
           } else if (payload.eventType === 'UPDATE') {
             // Handle message updates (like is_read status changes)
             const updatedMessage: Message = {
@@ -1047,6 +1057,9 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
     setSending(true);
     const optimisticId = `temp-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
     const optimisticTimestamp = new Date().toISOString();
+    const hadUserMessageBefore = (messagesRef.current[conversationId] || []).some(
+      (message) => message.sender_id === user.id && !message.id.startsWith('temp-')
+    );
     const existingSender = (messagesRef.current[conversationId] || []).find(
       (message) => message.sender_id === user.id
     )?.sender;
@@ -1197,6 +1210,21 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
           conversationId
         });
         // Don't throw - message was sent successfully
+      }
+
+      if (!hadUserMessageBefore) {
+        await trackRetentionEvent('first_message_sent', {
+          user_id: user.id,
+          conversation_id: conversationId,
+          source: 'messages',
+        });
+        await completeActivationJourney({
+          user,
+          action: 'send_message',
+          source: 'messages',
+          conversationId,
+          actionUrl: `/messages?conversationId=${conversationId}`,
+        });
       }
 
       return data;

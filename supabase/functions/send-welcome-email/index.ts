@@ -13,6 +13,15 @@ interface WelcomeRequest {
   fullName?: string;
 }
 
+function escapeHtml(value: string) {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
 serve(async (req: Request): Promise<Response> => {
   // Handle CORS preflight
   if (req.method === "OPTIONS") {
@@ -43,22 +52,31 @@ serve(async (req: Request): Promise<Response> => {
     const fromName = Deno.env.get("FROM_NAME") || "Creatives Takeover";
     const replyTo = Deno.env.get("REPLY_TO_EMAIL");
 
+    const appUrl = (Deno.env.get("APP_URL") || "https://www.creativestakeover.com").replace(/\/$/, "");
+    const safeName = escapeHtml(name);
+    const safeOnboardingUrl = escapeHtml(`${appUrl}/onboarding`);
+
     const html = `
-      <div style="font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, Apple Color Emoji, Segoe UI Emoji; line-height: 1.6; color: #0f172a;">
-        <h1 style="margin: 0 0 16px; font-size: 24px;">Welcome to Creatives Takeover, ${name} 🎉</h1>
-        <p style="margin: 0 0 12px;">Thanks for creating an account! You're all set to explore tools, resources, and a community built for creators and builders.</p>
-        <p style="margin: 0 0 12px;">Here are a few things you can try next:</p>
-        <ul style="margin: 0 0 16px; padding-left: 20px;">
-          <li>Start with Dream2Plan to turn ideas into a strategy.</li>
-          <li>Join the Community to learn from other builders.</li>
-          <li>Explore Resources for templates and guides.</li>
+      <div style="font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, Apple Color Emoji, Segoe UI Emoji; line-height: 1.6; color: #0f172a; max-width: 560px;">
+        <h1 style="margin: 0 0 16px; font-size: 24px; font-weight: 700;">Welcome to Creatives Takeover, ${safeName}</h1>
+        <p style="margin: 0 0 12px; color: #334155;">You are not being dropped into a generic dashboard. Your first job is to complete onboarding and choose the one action that should pull you back into the product.</p>
+        <ul style="margin: 0 0 16px; padding-left: 20px; color: #334155;">
+          <li>Save one mentor worth returning to.</li>
+          <li>Or start one conversation that can generate a reply.</li>
+          <li>Or book one discovery call with real intent.</li>
         </ul>
-        <p style="margin: 0 0 16px;">If you didn't create this account, you can safely ignore this email.</p>
-        <p style="margin: 0 0 4px;">— The Creatives Takeover Team</p>
+        <p style="margin: 0 0 16px; color: #334155;">The goal is to leave your first session with a real thread, mentor, or next step. That is what gives the retention system something concrete to bring you back to.</p>
+        <div style="margin: 24px 0;">
+          <a href="${safeOnboardingUrl}" style="background: #32b8c6; color: #fff; padding: 12px 28px; border-radius: 999px; text-decoration: none; font-weight: 600; font-size: 15px; display: inline-block;">
+            Complete onboarding →
+          </a>
+        </div>
+        <p style="margin: 0 0 12px; color: #64748b; font-size: 13px;">If you did not create this account, you can safely ignore this email.</p>
+        <p style="margin: 0 0 4px; color: #64748b; font-size: 13px;">— The Creatives Takeover Team</p>
       </div>
     `;
 
-    const subject = "Welcome to Creatives Takeover";
+    const subject = "Complete onboarding and create your first return trigger";
 
     const sendPayload: Record<string, unknown> = {
       from: `${fromName} <${fromEmail}>`,

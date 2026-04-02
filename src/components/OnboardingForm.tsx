@@ -6,14 +6,15 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ArrowLeft, ArrowRight, Lightbulb, Target, Hammer } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
 import { captureEvent } from '@/lib/analytics';
+import { getActivationRoute, startActivationJourney, type ActivationIntent } from '@/lib/retentionSystem';
 
 interface OnboardingData {
   businessStage: string;
   primaryPain: string;
+  activationIntent: ActivationIntent | '';
   acceptedTerms: boolean;
 }
 
@@ -30,22 +31,41 @@ const STAGE_CARDS = [
     value: 'idea',
     icon: Lightbulb,
     headline: "I have an idea but don't know who it's for",
-    sub: 'Start with ICP Builder → Define your customer',
-    startRoute: '/icp-builder',
+    sub: 'We will route you into a first action that creates a real return trigger.',
   },
   {
     value: 'validation',
     icon: Target,
     headline: 'I know my customer — I need to test demand',
-    sub: 'Start with Waitlist Maker → Capture demand signals',
-    startRoute: '/icp-builder',
+    sub: 'We will push you toward one concrete founder action instead of generic exploration.',
   },
   {
     value: 'mvp',
     icon: Hammer,
     headline: "I'm building the product now",
-    sub: 'Start with PMF Lab → Validate as you build',
-    startRoute: '/icp-builder',
+    sub: 'Your first move should create follow-up, not just another page view.',
+  },
+];
+
+const ACTIVATION_CARDS: Array<{
+  value: ActivationIntent;
+  headline: string;
+  sub: string;
+}> = [
+  {
+    value: 'save_mentor',
+    headline: 'Save one mentor to come back to',
+    sub: 'Turns browsing into a concrete return anchor we can re-surface by email and in-app.',
+  },
+  {
+    value: 'send_message',
+    headline: 'Start one founder conversation',
+    sub: 'Messages are the strongest retained-user behavior in the current data.',
+  },
+  {
+    value: 'book_call',
+    headline: 'Book one discovery call',
+    sub: 'This is the highest-intent action in the current funnel and should happen before passive browsing.',
   },
 ];
 
@@ -63,10 +83,11 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
   const [formData, setFormData] = useState<OnboardingData>({
     businessStage: '',
     primaryPain: '',
+    activationIntent: '',
     acceptedTerms: false,
   });
 
-  const totalSteps = 2;
+  const totalSteps = 3;
   const progress = ((currentStep + 1) / totalSteps) * 100;
 
   const validateStep = (step: number): boolean => {
@@ -78,6 +99,9 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
         if (!formData.primaryPain) newErrors.primaryPain = 'Please select your biggest challenge';
         break;
       case 1:
+        if (!formData.activationIntent) newErrors.activationIntent = 'Choose the first action that should create your return trigger';
+        break;
+      case 2:
         if (!formData.acceptedTerms) newErrors.acceptedTerms = 'You must accept the terms to continue';
         break;
     }
@@ -120,39 +144,27 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
     setIsLoading(true);
 
     try {
-      const selectedCard = STAGE_CARDS.find((c) => c.value === formData.businessStage);
-      const startRoute = selectedCard?.startRoute ?? '/icp-builder';
+      const startRoute = getActivationRoute(formData.activationIntent as ActivationIntent);
 
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({
-          onboarding_completed: true,
-          business_stage: formData.businessStage,
-          quiz_completed: true,
-          quiz_completed_at: new Date().toISOString(),
-          quiz_current_stage: formData.businessStage,
-          quiz_biggest_challenge: formData.primaryPain,
-          user_preferences: {
-            businessStage: formData.businessStage,
-            primaryPain: formData.primaryPain,
-            onboardingCompletedAt: new Date().toISOString(),
-          },
-        })
-        .eq('id', user.id);
+      await startActivationJourney({
+        userId: user.id,
+        businessStage: formData.businessStage,
+        primaryPain: formData.primaryPain,
+        activationIntent: formData.activationIntent as ActivationIntent,
+      });
 
-      if (updateError) throw updateError;
-
-      captureEvent('onboarding_completed', {
+      captureEvent('activation_path_selected', {
         stage: formData.businessStage,
         painPoint: formData.primaryPain,
+        activationIntent: formData.activationIntent,
         timeMs: Date.now() - startedAt,
         startRoute,
       });
 
-      toast.success("You're all set! Let's get your first win.");
+      toast.success("One last step: complete your first value action before you explore the rest of the platform.");
 
       if (onComplete) {
-        onComplete(startRoute);
+        onComplete(`${startRoute}&activation=1&intent=${formData.activationIntent}`);
       }
     } catch (error) {
       console.error('Failed to save onboarding data:', error);
@@ -241,18 +253,64 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
           <div className="space-y-6">
             <div>
               <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight mb-2 font-space-grotesk">
-                You're ready to go
+                Pick the action that should pull you back
               </h2>
               <p className="text-muted-foreground font-poppins">
-                We'll ask you more as you go. For now, let's get you to your first win.
+                The reports show users only retain when they create a real asset. Choose the first action that should become your return trigger.
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              {ACTIVATION_CARDS.map((card) => {
+                const isSelected = formData.activationIntent === card.value;
+                return (
+                  <button
+                    key={card.value}
+                    type="button"
+                    onClick={() => {
+                      setFormData((prev) => ({ ...prev, activationIntent: card.value }));
+                      setErrors((prev) => ({ ...prev, activationIntent: undefined }));
+                    }}
+                    className={`w-full rounded-2xl border p-4 text-left transition-all duration-150 ${
+                      isSelected
+                        ? 'border-[#32b8c6] bg-[#32b8c6]/10 shadow-sm'
+                        : 'border-border/60 bg-background/70 hover:bg-accent/60 hover:border-border'
+                    }`}
+                  >
+                    <p className="font-semibold text-sm mb-1 font-space-grotesk">{card.headline}</p>
+                    <p className="text-sm text-muted-foreground">{card.sub}</p>
+                  </button>
+                );
+              })}
+              {errors.activationIntent && <p className="text-sm text-destructive">{errors.activationIntent}</p>}
+            </div>
+          </div>
+        );
+
+      case 2:
+        return (
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight mb-2 font-space-grotesk">
+                Lock the plan and take the first step
+              </h2>
+              <p className="text-muted-foreground font-poppins">
+                You will land on a guided path, not a generic dashboard. Activation only completes after the first value-bearing action.
               </p>
             </div>
 
             <div className="p-4 rounded-2xl bg-[#32b8c6]/10 border border-[#32b8c6]/30">
-              <p className="text-sm font-semibold text-foreground mb-1 font-space-grotesk">Your first milestone</p>
+              <p className="text-sm font-semibold text-foreground mb-1 font-space-grotesk">Your selected return trigger</p>
               <p className="text-sm text-muted-foreground">
-                Complete your <strong>ICP Profile</strong> — define exactly who your product is for.
-                Takes about 5 minutes and gives you a positioning strategy you can actually use.
+                {formData.activationIntent === 'save_mentor' && (
+                  <>You will go to mentors and save one person worth coming back to.</>
+                )}
+                {formData.activationIntent === 'send_message' && (
+                  <>You will open mentors and start one conversation that can generate a reply.</>
+                )}
+                {formData.activationIntent === 'book_call' && (
+                  <>You will open mentors and book one discovery call with real commercial intent.</>
+                )}
               </p>
             </div>
 
@@ -340,7 +398,7 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
               {isLoading ? (
                 'Saving...'
               ) : currentStep === totalSteps - 1 ? (
-                'Start Building →'
+                'Start First Value Action →'
               ) : (
                 <>
                   Next

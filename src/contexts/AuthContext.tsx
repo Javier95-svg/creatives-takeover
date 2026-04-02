@@ -396,16 +396,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       logWarn('Used direct signup fallback due confirmation email delivery issue', { email });
     }
 
-    if (!error) {
-      try {
-        await supabase.functions.invoke('send-welcome-email', {
-          body: { email, fullName: fullName || '' }
-        });
-      } catch (welcomeError) {
-        logError('Welcome email failed', welcomeError, { email });
-      }
-    }
-
     return { error };
   };
 

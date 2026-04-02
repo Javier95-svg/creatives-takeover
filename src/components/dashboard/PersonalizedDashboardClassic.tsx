@@ -30,6 +30,7 @@ import { FounderResources } from './FounderResources';
 import { RookieUpgradeBanner } from './RookieUpgradeBanner';
 import { JourneyStageGrid } from './JourneyStageGrid';
 import { QuotaCounterWidgets } from './QuotaCounterWidgets';
+import { RetentionActionFeed } from './RetentionActionFeed';
 
 export const PersonalizedDashboardClassic = () => {
   const { user } = useAuth();
@@ -279,6 +280,10 @@ export const PersonalizedDashboardClassic = () => {
         {/* Rookie plan upgrade banner */}
         <div className="animate-fade-in-up opacity-0" style={{ animationFillMode: 'forwards' }}>
           <RookieUpgradeBanner />
+        </div>
+
+        <div className="animate-fade-in-up opacity-0" style={{ animationDelay: '0.02s', animationFillMode: 'forwards' }}>
+          <RetentionActionFeed />
         </div>
 
         {/* Journey Stage Grid */}

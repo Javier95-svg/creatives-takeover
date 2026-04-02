@@ -14,6 +14,7 @@ import { ControlCenterView } from './modes/ControlCenterView';
 import { RookieUpgradeBanner } from './RookieUpgradeBanner';
 import { JourneyStageGrid } from './JourneyStageGrid';
 import { QuotaCounterWidgets } from './QuotaCounterWidgets';
+import { RetentionActionFeed } from './RetentionActionFeed';
 import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 import { DashboardNavigationProvider } from '@/contexts/DashboardNavigationContext';
 import { DashboardSidebar } from './DashboardSidebar';
@@ -274,6 +275,8 @@ export const PersonalizedDashboardV2 = () => {
                   <div className="relative z-10 container mx-auto p-6 pb-24 space-y-8 max-w-7xl pt-24">
                     {/* Rookie upgrade banner */}
                     <RookieUpgradeBanner />
+
+                    <RetentionActionFeed />
 
                     {/* Journey Stage Grid */}
                     <JourneyStageGrid />

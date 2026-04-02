@@ -10,10 +10,11 @@ import { Input } from "@/components/ui/input";
 import { MentorCard } from "@/components/mentor-marketplace/MentorCard";
 import { TopFilterBar } from "@/components/mentor-marketplace/TopFilterBar";
 import { MentorFilters } from "@/components/mentor-marketplace/FilterSidebar";
-import { Users, Loader2, Search, GraduationCap, ArrowRight } from "lucide-react";
+import { Users, Loader2, Search, GraduationCap, ArrowRight, BookmarkCheck, MessageCircle, Calendar } from "lucide-react";
 import { Mentor } from "@/types/mentor";
 import { useMentors } from "@/hooks/useMentors";
 import { useAuth } from "@/contexts/AuthContext";
+import { useMentorSaves } from "@/hooks/useMentorSaves";
 import { sortMentorsAlphabetically } from "@/utils/mentorSort";
 import { normalizeMentorExpertiseList } from "@/utils/mentorExpertise";
 import { isMentorWithinTimezoneRange, parseTimezoneOffset } from "@/utils/mentorTimezone";
@@ -31,6 +32,7 @@ import {
 } from "@/components/ui/pagination";
 
 const MENTORS_PER_PAGE = 10;
+type ActivationIntent = "save_mentor" | "send_message" | "book_call";
 
 const MENTOR_HIGHLIGHTS = [
   {
@@ -55,12 +57,14 @@ const MentorMarketplaceHub = () => {
   const { user } = useAuth();
   const isAdmin = user?.email?.toLowerCase() === 'admin@creatives-takeover.com';
   const { fetchMentors, loading } = useMentors();
+  const { savedMentors } = useMentorSaves();
   const [mentors, setMentors] = useState<Mentor[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("alphabetical");
   const currentPage = parseInt(searchParams.get("page") || "1", 10);
   const mentorTrack = parseMentorTrack(searchParams.get("mentorTrack"));
   const mentorSource = searchParams.get("mentorSource");
+  const activationIntent = searchParams.get("activationIntent") as ActivationIntent | null;
   
   const [filters, setFilters] = useState<MentorFilters>({
     expertise: [],
@@ -111,8 +115,10 @@ const MentorMarketplaceHub = () => {
       setSortBy(sortParam);
     } else if (mentorTrack) {
       setSortBy("recommended");
+    } else if (mentorSource === "onboarding") {
+      setSortBy("recommended");
     }
-  }, [mentorTrack, searchParams]);
+  }, [mentorSource, mentorTrack, searchParams]);
 
   useEffect(() => {
     if (!mentorTrack) return;
@@ -212,6 +218,61 @@ const MentorMarketplaceHub = () => {
   };
 
 
+  const savedMentorIds = useMemo(
+    () => new Set(savedMentors.map((mentor) => mentor.mentor_id)),
+    [savedMentors],
+  );
+
+  const activationBanner = useMemo(() => {
+    if (mentorSource === "saved" && savedMentorIds.size > 0) {
+      return {
+        icon: BookmarkCheck,
+        eyebrow: "Saved mentors",
+        title: `You have ${savedMentorIds.size} saved mentor${savedMentorIds.size === 1 ? "" : "s"} ready for follow-up`,
+        description: "Start with the mentors you already saved. That is the fastest path from passive browsing to a real next step.",
+      };
+    }
+
+    if (mentorSource === "booked-call") {
+      return {
+        icon: Calendar,
+        eyebrow: "Discovery calls",
+        title: "Use this session to book or follow up on one call",
+        description: "Discovery calls are the highest-intent action in the current funnel. Focus on one conversation, not more browsing.",
+      };
+    }
+
+    if (mentorSource === "onboarding" && activationIntent === "save_mentor") {
+      return {
+        icon: BookmarkCheck,
+        eyebrow: "First value action",
+        title: "Save one mentor before you explore anything else",
+        description: "A saved mentor becomes a real return anchor we can surface later by email and in-app.",
+      };
+    }
+
+    if (mentorSource === "onboarding" && activationIntent === "send_message") {
+      return {
+        icon: MessageCircle,
+        eyebrow: "First value action",
+        title: "Start one conversation that can generate a reply",
+        description: "Messages are the strongest retained-user behavior in the current product data. Use the Message button on one mentor card.",
+      };
+    }
+
+    if (mentorSource === "onboarding" && activationIntent === "book_call") {
+      return {
+        icon: Calendar,
+        eyebrow: "First value action",
+        title: "Book one discovery call before passive browsing",
+        description: "This is the highest-intent action in the current funnel. We are prioritizing call-ready mentors in the list below.",
+      };
+    }
+
+    return null;
+  }, [activationIntent, mentorSource, savedMentorIds]);
+  const ActivationBannerIcon = activationBanner?.icon;
+
   const filteredMentors = useMemo(() => {
     const selectedTimezoneOffset = parseTimezoneOffset(filters.timezone);
 
@@ -293,8 +354,26 @@ const MentorMarketplaceHub = () => {
         break;
     }
 
+    if (mentorSource === "saved" && savedMentorIds.size > 0) {
+      result = result.sort((a, b) => {
+        const aSaved = savedMentorIds.has(a.id) ? 1 : 0;
+        const bSaved = savedMentorIds.has(b.id) ? 1 : 0;
+        if (aSaved !== bSaved) return bSaved - aSaved;
+        return 0;
+      });
+    }
+
+    if (mentorSource === "onboarding" && activationIntent === "book_call") {
+      result = result.sort((a, b) => {
+        const aCalendly = a.calendly_url ? 1 : 0;
+        const bCalendly = b.calendly_url ? 1 : 0;
+        if (aCalendly !== bCalendly) return bCalendly - aCalendly;
+        return 0;
+      });
+    }
+
     return result;
-  }, [searchQuery, filters, mentors, sortBy]);
+  }, [activationIntent, filters, mentorSource, mentors, savedMentorIds, searchQuery, sortBy]);
 
   // Pagination calculations
   const totalPages = Math.ceil(filteredMentors.length / MENTORS_PER_PAGE);
@@ -359,8 +438,8 @@ const MentorMarketplaceHub = () => {
                     )}
                   </div>
 
-                  <div className="grid gap-3 md:grid-cols-3">
-                    {MENTOR_HIGHLIGHTS.map((item) => {
+	                  <div className="grid gap-3 md:grid-cols-3">
+	                    {MENTOR_HIGHLIGHTS.map((item) => {
                       const Icon = item.icon;
 
                       return (
@@ -376,9 +455,30 @@ const MentorMarketplaceHub = () => {
                         </div>
                       );
                     })}
-                  </div>
+	                    </div>
 
-                  <div className="rounded-[1.75rem] border border-border/60 bg-background/80 p-4 shadow-sm dark:bg-slate-900/75 sm:p-5">
+                    {activationBanner && ActivationBannerIcon && (
+                      <div className="rounded-[1.75rem] border border-[#32b8c6]/30 bg-[#32b8c6]/10 p-4 shadow-sm sm:p-5">
+                        <div className="flex items-start gap-3">
+                          <div className="rounded-2xl bg-white/80 p-3 text-[#32b8c6]">
+                            <ActivationBannerIcon className="h-5 w-5" />
+                          </div>
+                          <div className="space-y-1">
+                            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#15717b]">
+                              {activationBanner.eyebrow}
+                            </p>
+                            <h2 className="text-xl font-semibold text-foreground">
+                              {activationBanner.title}
+                            </h2>
+                            <p className="text-sm leading-relaxed text-muted-foreground">
+                              {activationBanner.description}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+	                  <div className="rounded-[1.75rem] border border-border/60 bg-background/80 p-4 shadow-sm dark:bg-slate-900/75 sm:p-5">
                     <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
                       <div className="relative w-full xl:max-w-md">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />

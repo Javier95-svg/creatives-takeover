@@ -147,7 +147,7 @@ export const DailyGoalModal = ({
           {isMorning ? (
             <>
               <p className="text-sm text-muted-foreground">
-                Set a clear, achievable goal for today. Keep your momentum going! 🚀
+                Set a clear, achievable goal for today. Momentum is built through one concrete move, not by browsing.
               </p>
 
               <Textarea
@@ -161,7 +161,7 @@ export const DailyGoalModal = ({
           ) : (
             <>
               <p className="text-sm text-muted-foreground">
-                Take a moment to reflect on your day. Honest reflection helps you grow! 💭
+                Take a moment to reflect on your day. Honest reflection helps you turn one session into a repeat habit.
               </p>
 
               <div className="space-y-4">
@@ -253,7 +253,7 @@ export const DailyGoalModal = ({
               onClick={handleSkip}
               disabled={isSubmitting}
             >
-              {isMorning ? 'Skip Today' : 'Skip Reflection'}
+              {isMorning ? 'Not now' : 'Close for now'}
             </Button>
             <Button
               onClick={handleSubmit}

@@ -10,6 +10,7 @@ import { getCountryFlag } from "@/utils/countryFlags";
 import { useAuth } from "@/contexts/AuthContext";
 import { useMessaging } from "@/hooks/useMessaging";
 import { toast } from "sonner";
+import { useMentorSaves } from "@/hooks/useMentorSaves";
 
 interface MentorProfileProps {
   mentor: MentorProfileType;
@@ -20,12 +21,15 @@ export const MentorProfile = ({ mentor, onBookClick }: MentorProfileProps) => {
   const navigate = useNavigate();
   const { isAuthenticated, user } = useAuth();
   const { startConversation, resolveMentorUserId } = useMessaging({ autoLoad: false });
+  const { saveMentor, buildSaveButtonState } = useMentorSaves();
   const currencySymbol = getCurrencySymbol(mentor.currency);
   const programFee = mentor.hourly_rate / 100;
   const hourlyRate = ((mentor as any).hourly_rate_per_hour || 0) / 100;
   const averageRating = mentor.rating || 0;
   const reviewCount = mentor.review_count || 0;
   const sessionsCompleted = mentor.total_sessions_completed || 0;
+  const saveButton = buildSaveButtonState(mentor.id);
+  const SaveButtonIcon = saveButton.icon;
   
   // Truncate bio for display
   const bioMaxLength = 250;
@@ -241,6 +245,25 @@ export const MentorProfile = ({ mentor, onBookClick }: MentorProfileProps) => {
     }
   };
 
+  const handleSaveMentor = async () => {
+    if (!isAuthenticated || !user) {
+      navigate(`/login?return=${encodeURIComponent(window.location.pathname)}`);
+      return;
+    }
+
+    if (saveButton.saved) {
+      return;
+    }
+
+    await saveMentor(
+      {
+        id: mentor.id,
+        name: mentor.name,
+      },
+      'mentor_profile',
+    );
+  };
+
   return (
     <Card className="border-2 border-border/60 rounded-lg overflow-hidden shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 bg-background">
       <CardContent className="p-6 lg:p-8">
@@ -417,6 +440,16 @@ export const MentorProfile = ({ mentor, onBookClick }: MentorProfileProps) => {
 
                 {/* Action Buttons */}
                 <div className="flex flex-col items-stretch gap-3 pt-2 sm:flex-row">
+                  <Button
+                    variant={saveButton.saved ? "secondary" : "outline"}
+                    size="default"
+                    onClick={handleSaveMentor}
+                    className="w-full flex-1 text-sm sm:text-base hover:shadow-md transition-all duration-200"
+                    disabled={saveButton.saving || saveButton.saved}
+                  >
+                    <SaveButtonIcon className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                    {saveButton.saving ? 'Saving...' : saveButton.label}
+                  </Button>
                   <Button
                     onClick={onBookClick}
                     size="default"
