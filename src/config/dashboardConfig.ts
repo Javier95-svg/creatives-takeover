@@ -5,7 +5,7 @@
  * Import DASHBOARD_CONFIG[plan] in Dashboard.tsx — never hardcode plan checks in widgets.
  */
 
-import { Plan } from '@/config/planPermissions';
+import type { Plan } from '@/config/planPermissions';
 
 export interface DashboardConfig {
   /** Stage numbers that are fully active/accessible */

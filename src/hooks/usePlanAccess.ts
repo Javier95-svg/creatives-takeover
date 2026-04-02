@@ -1,7 +1,7 @@
 import { useSubscription } from '@/hooks/useSubscription';
 import {
-  Plan,
-  AccessRule,
+  type Plan,
+  type AccessRule,
   PLAN_PERMISSIONS,
   MONTHLY_FREE_QUOTAS,
 } from '@/config/planPermissions';

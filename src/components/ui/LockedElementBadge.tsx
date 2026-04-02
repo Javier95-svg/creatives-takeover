@@ -19,7 +19,7 @@ import {
   DialogContent,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { PLAN_LABELS, Plan } from '@/config/planPermissions';
+import { PLAN_LABELS } from '@/config/planPermissions';
 
 interface LockedElementBadgeProps {
   /** Children are rendered but overlaid / intercepted */

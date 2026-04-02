@@ -13,7 +13,7 @@
 import { Lock, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { PLAN_LABELS, Plan } from '@/config/planPermissions';
+import { PLAN_LABELS } from '@/config/planPermissions';
 
 interface LockedPageOverlayProps {
   /** The minimum plan needed to unlock this feature */
