@@ -84,6 +84,8 @@ const PMFLabPage = lazy(() => import("./pages/PMFLabPage"));
 const ICPBuilderPage = lazy(() => import("./pages/IcpBuilderPage"));
 const ValidateJourneyPage = lazy(() => import("./pages/ValidateJourneyPage"));
 const TechStackPage = lazy(() => import("./pages/TechStackPage"));
+const AppBuilderPage = lazy(() => import("./pages/AppBuilderPage"));
+const GTMStrategistPage = lazy(() => import("./pages/GTMStrategistPage"));
 const FocusFunnel = lazy(() => import("./pages/FocusFunnel"));
 const CoreMetricsPage = lazy(() => import("./pages/CoreMetricsPage"));
 const WeeklyMissionPage = lazy(() => import("./pages/WeeklyMissionPage"));
@@ -91,7 +93,6 @@ const TasksPage = lazy(() => import("./pages/TasksPage"));
 const ValidateJourney = lazy(() => import("./pages/journeys/ValidateJourney"));
 const MvpJourney = lazy(() => import("./pages/journeys/MvpJourney"));
 const FirstCustomersJourney = lazy(() => import("./pages/journeys/FirstCustomersJourney"));
-const ComingSoonPage = lazy(() => import("./pages/ComingSoonPage"));
 const WaitlistMakerPage = lazy(() => import("./pages/WaitlistMakerPage"));
 const DirectoriesPage = lazy(() => import("./pages/DirectoriesPage"));
 const FindYourAngel = lazy(() => import("./pages/community/FindYourAngel"));
@@ -182,8 +183,8 @@ function App() {
                         <Route path="/validate" element={<ValidateJourney />} />
                         <Route path="/waitlist-maker" element={<WaitlistMakerPage />} />
                         <Route path="/directories" element={<DirectoriesPage />} />
-                        <Route path="/mvp-builder" element={<ComingSoonPage title="MVP Builder" description="A 14-day guided sprint to take your validated idea from concept to deployed product. Daily build checkpoints, scope lock, and launch-ready templates." highlights={["Scope your MVP with AI-guided feature prioritization", "Tech stack selection matched to your budget and skills", "Landing page and payment integration templates", "Daily checkpoints to keep you shipping"]} />} />
-                        <Route path="/go-to-market" element={<ComingSoonPage title="GTM Strategist" description="Your AI-powered go-to-market command center. From ICP to launch strategy, build a GTM plan that actually converts." highlights={["Define target market, positioning, and messaging", "Select and prioritize high-impact acquisition channels", "Generate launch, pricing, and distribution strategies", "Actionable GTM plans tailored to your business stage"]} />} />
+                        <Route path="/mvp-builder" element={<AppBuilderPage />} />
+                        <Route path="/go-to-market" element={<GTMStrategistPage />} />
                         <Route path="/client-acquisition" element={<Navigate to="/go-to-market" replace />} />
 
                         <Route path="/auth" element={<Auth />} />
