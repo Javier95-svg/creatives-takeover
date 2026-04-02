@@ -215,7 +215,7 @@
   }
 
   .homepage-hero {
-    padding-top: calc(var(--mobile-nav-offset, 88px) + 1rem) !important;
+    padding-top: calc(var(--mobile-nav-offset, 88px) + 2rem) !important;
     padding-bottom: 2.75rem !important;
   }
 
