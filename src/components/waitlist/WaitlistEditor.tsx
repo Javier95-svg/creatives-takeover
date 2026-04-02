@@ -20,6 +20,7 @@ import WaitlistPageTemplate, { WaitlistContent } from './WaitlistPageTemplate';
 import { WAITLIST_ACCENT_PRESETS, WAITLIST_FONT_PRESETS, createWaitlistFieldId, getDefaultWaitlistContent, getWaitlistThemePalette, normalizeWaitlistContent } from '@/lib/waitlist';
 import { getToolJourneyGuide } from '@/lib/activationJourney';
 import { ActivationJourneyStrip } from '@/components/activation/ActivationJourneyStrip';
+import { captureEvent } from '@/lib/analytics';
 
 type BuilderTab = 'content' | 'style' | 'form' | 'launch' | 'analytics';
 type PreviewDevice = 'desktop' | 'mobile';
@@ -307,6 +308,7 @@ export default function WaitlistEditor() {
     if (content.consentRequired && !content.collectConsent) return 'Show the consent checkbox if consent is required.';
     return null;
   }, [content.collectConsent, content.consentRequired, content.headline, content.subheadline, productName, slugAvailable]);
+  const hasSavedWaitlistBeforeCurrentAction = Boolean(draftId || allPages.length > 0);
 
   const variantMetrics = useMemo(() => {
     const metrics = { A: { views: 0, signups: 0 }, B: { views: 0, signups: 0 } };
@@ -612,6 +614,7 @@ export default function WaitlistEditor() {
     const trimmedName = productName.trim() || 'Untitled Waitlist';
     const normalized = normalizeWaitlistContent(content, trimmedName);
     const resolvedSlug = sanitizeSlug(slugDraft || currentSlug || '') || generateSlug(trimmedName);
+    const isFirstOutput = !hasSavedWaitlistBeforeCurrentAction;
 
     if (mode === 'publish') setIsPublishing(true);
     else setIsSaving(true);
@@ -660,6 +663,24 @@ export default function WaitlistEditor() {
     await loadAllPages();
     await refreshActivation();
 
+    if (mode === 'manual') {
+      captureEvent('waitlist_draft_saved', {
+        source: 'activation',
+        waitlistId: saved.id,
+        isFirstOutput,
+        ...(saved.slug ? { slug: saved.slug } : {}),
+      });
+    }
+
+    if (mode === 'publish') {
+      captureEvent('waitlist_published', {
+        source: 'activation',
+        waitlistId: saved.id,
+        isFirstOutput,
+        ...(saved.slug ? { slug: saved.slug } : {}),
+      });
+    }
+
     if (mode !== 'autosave' && mode !== 'publish') {
       const actionLabel =
         mode === 'live-update'
@@ -669,7 +690,7 @@ export default function WaitlistEditor() {
     }
 
     return saved.id;
-  }, [content, currentSlug, draftId, loadAllPages, productName, promptSignIn, publishBlockingReason, refreshActivation, slugDraft, user]);
+  }, [content, currentSlug, draftId, hasSavedWaitlistBeforeCurrentAction, loadAllPages, productName, promptSignIn, publishBlockingReason, refreshActivation, slugDraft, user]);
 
   const handleSave = async () => {
     if (status === 'published') {
@@ -731,6 +752,7 @@ export default function WaitlistEditor() {
     if (!draftId || !user) return;
 
     setIsMarkingReady(true);
+    const isFirstOutput = !hasSavedWaitlistBeforeCurrentAction;
 
     const { data, error } = await (supabase as any)
       .from(WAITLIST_TABLE)
@@ -750,6 +772,12 @@ export default function WaitlistEditor() {
     await loadAllPages();
     await refreshProgress();
     await refreshActivation();
+    captureEvent('waitlist_marked_ready', {
+      source: 'activation',
+      waitlistId: draftId,
+      isFirstOutput,
+      ...(currentSlug ? { slug: currentSlug } : {}),
+    });
     toast.success('Prototype marked as ready. Stage II can now progress.');
   };
 

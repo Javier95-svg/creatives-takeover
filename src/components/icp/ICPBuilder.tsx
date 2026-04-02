@@ -7,6 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCredits } from '@/hooks/useCredits';
 import { useCreditActions } from '@/hooks/useCreditActions';
+import { useActivationJourney } from '@/hooks/useActivationJourney';
 import { supabase } from '@/integrations/supabase/client';
 import { captureEvent } from '@/lib/analytics';
 import ICPInputForm, { type ICPInputFormData } from './ICPInputForm';
@@ -99,6 +100,7 @@ const ICPBuilder: React.FC = () => {
   const { toast } = useToast();
   const { refreshBalance } = useCredits();
   const { handleCreditError } = useCreditActions();
+  const { refreshActivation } = useActivationJourney('stage_i');
 
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState<ICPAnalysis | null>(null);
@@ -178,6 +180,7 @@ const ICPBuilder: React.FC = () => {
           description: `Your niche viability score is ${data.analysis.nicheScore?.overall || 'N/A'}/100 - ${data.analysis.nicheScore?.verdict || 'N/A'}. Review your detailed ICP below.`,
         });
         await refreshBalance();
+        await refreshActivation();
       } else {
         throw new Error(data?.error || 'Analysis failed');
       }

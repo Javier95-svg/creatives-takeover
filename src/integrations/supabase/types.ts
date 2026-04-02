@@ -5371,6 +5371,7 @@ export type Database = {
           instagram_url: string | null
           last_active_at: string | null
           last_activity_at: string | null
+          last_seen_at: string | null
           last_checkin_date: string | null
           last_credit_reset_at: string
           linkedin_url: string | null
@@ -5441,6 +5442,7 @@ export type Database = {
           instagram_url?: string | null
           last_active_at?: string | null
           last_activity_at?: string | null
+          last_seen_at?: string | null
           last_checkin_date?: string | null
           last_credit_reset_at?: string
           linkedin_url?: string | null
@@ -5511,6 +5513,7 @@ export type Database = {
           instagram_url?: string | null
           last_active_at?: string | null
           last_activity_at?: string | null
+          last_seen_at?: string | null
           last_checkin_date?: string | null
           last_credit_reset_at?: string
           linkedin_url?: string | null
@@ -5745,6 +5748,30 @@ export type Database = {
           name?: string
           template_config?: Json
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      re_engagement_emails: {
+        Row: {
+          id: string
+          opened: boolean
+          sent_at: string
+          stage_at_send: Database["public"]["Enums"]["bizmap_stage"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          opened?: boolean
+          sent_at?: string
+          stage_at_send: Database["public"]["Enums"]["bizmap_stage"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          opened?: boolean
+          sent_at?: string
+          stage_at_send?: Database["public"]["Enums"]["bizmap_stage"]
           user_id?: string
         }
         Relationships: []

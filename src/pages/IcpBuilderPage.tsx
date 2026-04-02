@@ -2,59 +2,24 @@ import SEO, { createBreadcrumbSchema, createFAQSchema, createSoftwareApplication
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import PageFAQSection from "@/components/seo/PageFAQSection";
-import { lazy, Suspense, useEffect, useState } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { useReadingAnalytics } from "@/hooks/useReadingAnalytics";
 import { useLeanStartupStore } from "@/store/leanStartupStore";
-import { Loader2, Target, Users, TrendingUp } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { captureEvent } from "@/lib/analytics";
+import { ActivationJourneyStrip } from "@/components/activation/ActivationJourneyStrip";
+import { useActivationJourney } from "@/hooks/useActivationJourney";
+import { getToolJourneyGuide } from "@/lib/activationJourney";
 
 const ICPBuilder = lazy(() => import("@/components/icp/ICPBuilder"));
 
 const FIRST_WIN_KEY = 'icp_builder_visited';
 
-function FirstWinOverlay({ onDismiss }: { onDismiss: () => void }) {
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-      <div className="w-full max-w-md bg-card border border-border/60 rounded-2xl shadow-2xl p-8 animate-fade-in">
-        <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-[#32b8c6]/15 mb-6 mx-auto">
-          <Target className="h-6 w-6 text-[#32b8c6]" />
-        </div>
-        <h2 className="text-xl font-bold text-center mb-2 font-space-grotesk">
-          Your first milestone: Define who you're building for
-        </h2>
-        <p className="text-sm text-muted-foreground text-center mb-6">
-          Founders who complete an ICP profile are 3× more likely to find paying customers in their first 90 days.
-        </p>
-        <ul className="space-y-3 mb-8">
-          <li className="flex items-start gap-3 text-sm">
-            <Users className="h-4 w-4 text-[#32b8c6] mt-0.5 flex-shrink-0" />
-            <span>Get a precise picture of exactly who will pay for your product</span>
-          </li>
-          <li className="flex items-start gap-3 text-sm">
-            <TrendingUp className="h-4 w-4 text-[#32b8c6] mt-0.5 flex-shrink-0" />
-            <span>Receive a viability score and positioning strategy you can use today</span>
-          </li>
-          <li className="flex items-start gap-3 text-sm">
-            <Target className="h-4 w-4 text-[#32b8c6] mt-0.5 flex-shrink-0" />
-            <span>Takes about 5 minutes — your first saved output on the platform</span>
-          </li>
-        </ul>
-        <button
-          onClick={onDismiss}
-          className="w-full py-3 rounded-full font-semibold text-white text-sm shadow-sm hover:shadow-md transition-shadow"
-          style={{ backgroundColor: '#32b8c6' }}
-        >
-          Let's do it →
-        </button>
-      </div>
-    </div>
-  );
-}
-
 export default function ICPBuilderPage() {
   const { trackPageVisit } = useReadingAnalytics();
   const { markToolUsed } = useLeanStartupStore();
-  const [showOverlay, setShowOverlay] = useState(false);
+  const { isActivated } = useActivationJourney('stage_i');
+  const activationGuide = getToolJourneyGuide('/icp-builder');
 
   const faqs = [
     {
@@ -86,7 +51,6 @@ export default function ICPBuilderPage() {
     captureEvent('icp_builder_opened', { isFirstVisit });
     if (isFirstVisit) {
       localStorage.setItem(FIRST_WIN_KEY, 'true');
-      setShowOverlay(true);
     }
   }, []);
 
@@ -131,10 +95,6 @@ export default function ICPBuilderPage() {
       />
       <Navigation />
 
-      {showOverlay && (
-        <FirstWinOverlay onDismiss={() => setShowOverlay(false)} />
-      )}
-
       <main>
         <section className="relative overflow-hidden px-4 pt-28 pb-20 md:pt-32 lg:pt-36" data-section="icp-builder">
           <div className="absolute inset-0 pointer-events-none overflow-hidden">
@@ -176,6 +136,19 @@ export default function ICPBuilderPage() {
                     Define the pain point you're solving, who you're solving it for, and what your moat is.
                   </p>
                 </div>
+                {activationGuide ? (
+                  <ActivationJourneyStrip
+                    stageLabel={activationGuide.stageLabel}
+                    title={activationGuide.title}
+                    description={activationGuide.description}
+                    doneLabel={activationGuide.doneLabel}
+                    completedLabel={activationGuide.completedLabel}
+                    nextRoute={activationGuide.nextRoute}
+                    nextLabel={activationGuide.nextLabel}
+                    isComplete={isActivated}
+                    className="mx-auto max-w-4xl"
+                  />
+                ) : null}
               </div>
             </div>
 
