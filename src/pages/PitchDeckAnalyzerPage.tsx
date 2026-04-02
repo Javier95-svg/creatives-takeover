@@ -10,6 +10,7 @@ import { useEffect, useState } from "react";
 import { usePlanAccess } from "@/hooks/usePlanAccess";
 import { LockedPageOverlay } from "@/components/ui/LockedPageOverlay";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Loader2, Sparkles, BarChart3, TrendingUp, Target } from "lucide-react";
 
 export default function PitchDeckAnalyzerPage() {
@@ -233,5 +234,3 @@ export default function PitchDeckAnalyzerPage() {
   );
 }
 
-// Import Badge component
-import { Badge } from "@/components/ui/badge";
