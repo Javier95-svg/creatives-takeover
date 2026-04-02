@@ -58,6 +58,7 @@ const StoryTagPage = lazy(() => import("./pages/StoryTagPage"));
 const AdminStoryEditor = lazy(() => import("./pages/AdminStoryEditor"));
 const AdminHeroImages = lazy(() => import("./pages/AdminHeroImages"));
 const StoriesRSS = lazy(() => import("./pages/StoriesRSS"));
+const WaitlistPublicPage = lazy(() => import("./pages/WaitlistPublicPage"));
 const AdminVCManagement = lazy(() => import("./pages/AdminVCManagement"));
 const AdminAcceleratorManagement = lazy(() => import("./pages/AdminAcceleratorManagement"));
 
@@ -158,12 +159,18 @@ function App() {
                         <Route path="/community/admin/new" element={<AdminMentorEditor />} />
                         <Route path="/community/admin/edit/:id" element={<AdminMentorEditor />} />
                         <Route path="/community/:slug" element={<MentorProfilePage />} />
-                        <Route path="/stories" element={<Stories />} />
-                        <Route path="/stories/rss.xml" element={<StoriesRSS />} />
+                        <Route path="/newspaper" element={<Stories />} />
+                        <Route path="/newspaper/rss.xml" element={<StoriesRSS />} />
+                        <Route path="/newspaper/tags/:tagSlug" element={<StoryTagPage />} />
+                        <Route path="/newspaper/admin/new" element={<AdminStoryEditor />} />
+                        <Route path="/newspaper/admin/edit/:id" element={<AdminStoryEditor />} />
+                        <Route path="/newspaper/:slug" element={<StoryArticle />} />
+                        <Route path="/stories" element={<Navigate to="/newspaper" replace />} />
+                        <Route path="/stories/rss.xml" element={<Navigate to="/newspaper/rss.xml" replace />} />
                         <Route path="/stories/tags/:tagSlug" element={<StoryTagPage />} />
-                        <Route path="/stories/:slug" element={<StoryArticle />} />
-                        <Route path="/stories/admin/new" element={<AdminStoryEditor />} />
+                        <Route path="/stories/admin/new" element={<Navigate to="/newspaper/admin/new" replace />} />
                         <Route path="/stories/admin/edit/:id" element={<AdminStoryEditor />} />
+                        <Route path="/stories/:slug" element={<StoryArticle />} />
                         <Route path="/admin/hero-images" element={<AdminHeroImages />} />
                         <Route path="/admin/vc-management" element={<AdminVCManagement />} />
                         <Route path="/admin/accelerator-management" element={<AdminAcceleratorManagement />} />
@@ -181,7 +188,9 @@ function App() {
                         <Route path="/bizmap-ai/icp-builder" element={<Navigate to="/icp-builder" replace />} />
                         <Route path="/decision-sprint" element={<ValidateJourneyPage />} />
                         <Route path="/validate" element={<ValidateJourney />} />
-                        <Route path="/waitlist-maker" element={<WaitlistMakerPage />} />
+                        <Route path="/waitlist" element={<WaitlistMakerPage />} />
+                        <Route path="/waitlist-maker" element={<Navigate to="/waitlist" replace />} />
+                        <Route path="/w/:slug" element={<WaitlistPublicPage />} />
                         <Route path="/directories" element={<DirectoriesPage />} />
                         <Route path="/mvp-builder" element={<AppBuilderPage />} />
                         <Route path="/go-to-market" element={<GTMStrategistPage />} />
