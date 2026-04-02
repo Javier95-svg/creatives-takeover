@@ -66,6 +66,8 @@ export const ARTUR_SINDARSKY_EMAIL = 'arturpatser@gmail.com';
 export const ARTUR_SINDARSKY_USER_ID = '1f0fe62a-7744-4153-bfcf-4f20b6e820d3';
 export const SHARON_PRAISE_AKPUNNE_EMAIL = 'sharonpraiseakpunne1@gmail.com';
 export const SHARON_PRAISE_AKPUNNE_USER_ID = '77283f92-7d90-45e2-97aa-3ec500781656';
+export const FELICITY_MUKUNJU_EMAIL = 'felicitymukunju@gmail.com';
+export const FELICITY_MUKUNJU_USER_ID = '681858ab-db84-4930-9bd0-5db759ec5ea4';
 export const VIVIAN_UBOCHI_EMAIL = 'vivian@gooroconsulting.com';
 export const VIVIAN_UBOCHI_USER_ID = '5e919674-60ba-42b9-bd18-813f484f7c24';
 export const SAKINA_LOKHANDWALA_EMAIL = 'slsakina27@gmail.com';
@@ -227,6 +229,13 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
         userId: SHARON_PRAISE_AKPUNNE_USER_ID
       });
       return SHARON_PRAISE_AKPUNNE_USER_ID;
+    }
+
+    if (email.toLowerCase() === FELICITY_MUKUNJU_EMAIL.toLowerCase()) {
+      logInfo('getUserIdByEmail: Using known Felicity Mukunju user ID', {
+        userId: FELICITY_MUKUNJU_USER_ID
+      });
+      return FELICITY_MUKUNJU_USER_ID;
     }
 
     if (email.toLowerCase() === VIVIAN_UBOCHI_EMAIL.toLowerCase()) {
@@ -453,6 +462,13 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
       mentorNameNormalized.includes('akpunne')
     ) {
       return SHARON_PRAISE_AKPUNNE_USER_ID;
+    }
+
+    if (
+      mentorNameNormalized.includes('felicity') &&
+      mentorNameNormalized.includes('mukunju')
+    ) {
+      return FELICITY_MUKUNJU_USER_ID;
     }
 
     if (
