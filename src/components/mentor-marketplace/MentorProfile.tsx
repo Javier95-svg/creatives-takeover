@@ -153,6 +153,10 @@ export const MentorProfile = ({ mentor, onBookClick }: MentorProfileProps) => {
     if (mentor.name.toLowerCase().includes('katie') && mentor.name.toLowerCase().includes('brett')) {
       return 'South Africa';
     }
+    // Special case: Felicity Mukunju is from Kenya
+    if (mentor.name.toLowerCase().includes('felicity') && mentor.name.toLowerCase().includes('mukunju')) {
+      return 'Kenya';
+    }
     // Special case: Sharon Praise-Akpunne is from United Kingdom
     if (
       mentor.name.toLowerCase().includes('sharon') &&
