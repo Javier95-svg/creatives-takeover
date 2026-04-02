@@ -13,6 +13,7 @@ import { DashboardModeView } from './modes/DashboardModeView';
 import { ControlCenterView } from './modes/ControlCenterView';
 import { RookieUpgradeBanner } from './RookieUpgradeBanner';
 import { JourneyStageGrid } from './JourneyStageGrid';
+import { QuotaCounterWidgets } from './QuotaCounterWidgets';
 import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 import { DashboardNavigationProvider } from '@/contexts/DashboardNavigationContext';
 import { DashboardSidebar } from './DashboardSidebar';
@@ -272,6 +273,9 @@ export const PersonalizedDashboardV2 = () => {
 
                   {/* Journey Stage Grid */}
                   <JourneyStageGrid />
+
+                  {/* Quota counters — Rising plan only */}
+                  <QuotaCounterWidgets />
 
                   {/* Header */}
                   <div>

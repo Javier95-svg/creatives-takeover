@@ -29,6 +29,7 @@ import { RecentWins } from './RecentWins';
 import { FounderResources } from './FounderResources';
 import { RookieUpgradeBanner } from './RookieUpgradeBanner';
 import { JourneyStageGrid } from './JourneyStageGrid';
+import { QuotaCounterWidgets } from './QuotaCounterWidgets';
 
 export const PersonalizedDashboardClassic = () => {
   const { user } = useAuth();
@@ -285,8 +286,13 @@ export const PersonalizedDashboardClassic = () => {
           <JourneyStageGrid />
         </div>
 
-        {/* Smart Recommendations */}
+        {/* Quota counters — Rising plan only */}
         <div className="animate-fade-in-up opacity-0" style={{ animationDelay: '0.05s', animationFillMode: 'forwards' }}>
+          <QuotaCounterWidgets />
+        </div>
+
+        {/* Smart Recommendations */}
+        <div className="animate-fade-in-up opacity-0" style={{ animationDelay: '0.07s', animationFillMode: 'forwards' }}>
           <SmartRecommendations maxRecommendations={2} />
         </div>
 

@@ -17,6 +17,10 @@ import { useFeatureGating } from "@/hooks/useFeatureGating";
 import { useCreditActions } from "@/hooks/useCreditActions";
 import { useUpgradePrompt } from "@/contexts/UpgradePromptContext";
 import { CREDIT_COSTS } from "@/config/constants";
+import { usePlanAccess } from "@/hooks/usePlanAccess";
+
+// Categories unlocked on Rookie plan — all others require Rising+
+const ROOKIE_UNLOCKED_CATEGORIES = new Set(['all']);
 
 const PromptLibrary = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -446,6 +450,26 @@ const PromptLibrary = () => {
                 <div className="flex flex-wrap gap-2 justify-center">
                   {promptCategories.map((category) => {
                     const Icon = category.icon;
+                    const isLockedForRookie = userTier === 'rookie' && !ROOKIE_UNLOCKED_CATEGORIES.has(category.id);
+                    if (isLockedForRookie) {
+                      return (
+                        <Button
+                          key={category.id}
+                          variant="outline"
+                          size="sm"
+                          onClick={() => openUpgradePrompt({
+                            reason: 'feature',
+                            featureName: 'Prompt Library Categories',
+                            description: `The ${category.name} category is available on the Rising plan and above.`,
+                          })}
+                          className="flex items-center gap-1.5 sm:gap-2 h-9 sm:h-10 px-3 sm:px-4 text-xs sm:text-sm touch-manipulation opacity-50 cursor-pointer"
+                        >
+                          <Lock className="w-3 sm:w-4 h-3 sm:h-4" />
+                          <span className="hidden xs:inline">{category.name}</span>
+                          <span className="xs:hidden">{category.name.split(" ")[0]}</span>
+                        </Button>
+                      );
+                    }
                     return (
                       <Button
                         key={category.id}
