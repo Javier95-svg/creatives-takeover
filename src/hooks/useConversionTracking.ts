@@ -38,6 +38,33 @@ export const useConversionTracking = () => {
   const funnelStage = useRef<number>(0);
   const trackingEnabled = true;
 
+  const updateFunnel = useCallback(async (updates: Record<string, unknown>, useUpsert = false) => {
+    if (!trackingEnabled || !user?.id) return;
+
+    try {
+      const payload = {
+        session_id: sessionId.current,
+        user_id: user.id,
+        updated_at: new Date().toISOString(),
+        ...updates,
+      };
+
+      if (useUpsert) {
+        await supabase.from('conversion_funnels').upsert(payload, {
+          onConflict: 'session_id',
+        });
+        return;
+      }
+
+      await supabase
+        .from('conversion_funnels')
+        .update(payload)
+        .eq('session_id', sessionId.current);
+    } catch (error) {
+      console.error('Funnel tracking error:', error);
+    }
+  }, [trackingEnabled, user]);
+
   // Track conversion event
   const trackEvent = useCallback(async (event: ConversionEvent) => {
     if (!trackingEnabled) return;
@@ -95,19 +122,10 @@ export const useConversionTracking = () => {
     });
 
     // Also update funnel
-    try {
-      await supabase.from('conversion_funnels').upsert({
-        session_id: sessionId.current,
-        user_id: user?.id || null,
-        stage_1_viewed_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      }, {
-        onConflict: 'session_id',
-      });
-    } catch (error) {
-      console.error('Funnel tracking error:', error);
-    }
-  }, [trackEvent, user, trackingEnabled]);
+    await updateFunnel({
+      stage_1_viewed_at: new Date().toISOString(),
+    }, true);
+  }, [trackEvent, trackingEnabled, updateFunnel]);
 
   // Track user engagement (stage 2)
   const trackEngagement = useCallback(async (
@@ -129,15 +147,10 @@ export const useConversionTracking = () => {
     });
 
     // Update funnel
-    try {
-      await supabase.from('conversion_funnels').update({
-        stage_2_engaged_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      }).eq('session_id', sessionId.current);
-    } catch (error) {
-      console.error('Funnel tracking error:', error);
-    }
-  }, [trackEvent, trackingEnabled]);
+    await updateFunnel({
+      stage_2_engaged_at: new Date().toISOString(),
+    });
+  }, [trackEvent, trackingEnabled, updateFunnel]);
 
   // Track sign-up started (stage 3)
   const trackSignupStarted = useCallback(async (triggerType: string) => {
@@ -149,15 +162,10 @@ export const useConversionTracking = () => {
     });
 
     // Update funnel
-    try {
-      await supabase.from('conversion_funnels').update({
-        stage_3_signup_started_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      }).eq('session_id', sessionId.current);
-    } catch (error) {
-      console.error('Funnel tracking error:', error);
-    }
-  }, [trackEvent, trackingEnabled]);
+    await updateFunnel({
+      stage_3_signup_started_at: new Date().toISOString(),
+    });
+  }, [trackEvent, trackingEnabled, updateFunnel]);
 
   // Track sign-up completed (stage 4)
   const trackSignupCompleted = useCallback(async (triggerType: string) => {
@@ -175,20 +183,15 @@ export const useConversionTracking = () => {
     });
 
     // Update funnel
-    try {
-      const startTime = pageLoadTime.current;
-      const completionTime = Math.floor((Date.now() - startTime) / 1000);
+    const startTime = pageLoadTime.current;
+    const completionTime = Math.floor((Date.now() - startTime) / 1000);
 
-      await supabase.from('conversion_funnels').update({
-        stage_4_signup_completed_at: new Date().toISOString(),
-        completed: true,
-        completion_time: completionTime,
-        updated_at: new Date().toISOString(),
-      }).eq('session_id', sessionId.current);
-    } catch (error) {
-      console.error('Funnel tracking error:', error);
-    }
-  }, [trackEvent, trackingEnabled]);
+    await updateFunnel({
+      stage_4_signup_completed_at: new Date().toISOString(),
+      completed: true,
+      completion_time: completionTime,
+    });
+  }, [trackEvent, trackingEnabled, updateFunnel]);
 
   // Track dismissal
   const trackDismissal = useCallback(async (triggerType: string) => {
@@ -199,16 +202,11 @@ export const useConversionTracking = () => {
     });
 
     // Mark as dropped off
-    try {
-      await supabase.from('conversion_funnels').update({
-        dropped_off_at_stage: funnelStage.current,
-        drop_off_reason: 'dismissed',
-        updated_at: new Date().toISOString(),
-      }).eq('session_id', sessionId.current);
-    } catch (error) {
-      console.error('Funnel tracking error:', error);
-    }
-  }, [trackEvent, trackingEnabled]);
+    await updateFunnel({
+      dropped_off_at_stage: funnelStage.current,
+      drop_off_reason: 'dismissed',
+    });
+  }, [trackEvent, trackingEnabled, updateFunnel]);
 
   // Track abandonment
   const trackAbandonment = useCallback(async (triggerType: string, reason?: string) => {
@@ -219,16 +217,11 @@ export const useConversionTracking = () => {
     });
 
     // Mark as dropped off
-    try {
-      await supabase.from('conversion_funnels').update({
-        dropped_off_at_stage: funnelStage.current,
-        drop_off_reason: reason || 'abandoned',
-        updated_at: new Date().toISOString(),
-      }).eq('session_id', sessionId.current);
-    } catch (error) {
-      console.error('Funnel tracking error:', error);
-    }
-  }, [trackEvent, trackingEnabled]);
+    await updateFunnel({
+      dropped_off_at_stage: funnelStage.current,
+      drop_off_reason: reason || 'abandoned',
+    });
+  }, [trackEvent, trackingEnabled, updateFunnel]);
 
   return {
     trackTriggerView,

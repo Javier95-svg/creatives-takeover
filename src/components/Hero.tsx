@@ -77,7 +77,12 @@ const Hero = () => {
       const trimmed = href.trim();
       if (!trimmed) return false;
       if (trimmed === 'undefined' || trimmed === 'null') return false;
-      return true;
+      try {
+        new URL(trimmed, window.location.origin);
+        return true;
+      } catch {
+        return false;
+      }
     };
 
     const topRowImages = heroImages.filter(img => img.position <= 2 && isValidImageHref(img.image_url));
@@ -109,24 +114,28 @@ const Hero = () => {
     // Preload top row images
     if (typeof document !== 'undefined' && document.head) {
       topRowImages.forEach((image) => {
+        if (!isValidImageHref(image.image_url)) {
+          return;
+        }
+
         const linkId = `hero-preload-${image.position}`;
         let preloadLink = document.getElementById(linkId) as HTMLLinkElement;
+        const normalizedHref = new URL(image.image_url, window.location.origin).toString();
         
         if (!preloadLink) {
           preloadLink = document.createElement('link');
           preloadLink.id = linkId;
           preloadLink.setAttribute('rel', 'preload');
           preloadLink.setAttribute('as', 'image');
+          preloadLink.setAttribute('href', normalizedHref);
+          if (image.position <= 2) {
+            preloadLink.setAttribute('fetchpriority', 'high');
+          }
           document.head.appendChild(preloadLink);
-        }
-        
-        if (isValidImageHref(image.image_url)) {
-          preloadLink.setAttribute('href', image.image_url);
-        } else {
-          preloadLink.remove();
           return;
         }
-        // Add fetchpriority for critical images
+
+        preloadLink.setAttribute('href', normalizedHref);
         if (image.position <= 2) {
           preloadLink.setAttribute('fetchpriority', 'high');
         }
