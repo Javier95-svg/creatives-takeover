@@ -442,23 +442,13 @@ export const MentorProfile = ({ mentor, onBookClick }: MentorProfileProps) => {
               </div>
             )}
 
-                {/* Action Buttons */}
-                <div className="flex flex-col items-stretch gap-3 pt-2 sm:flex-row">
-                  <Button
-                    variant={saveButton.saved ? "secondary" : "outline"}
-                    size="default"
-                    onClick={handleSaveMentor}
-                    className="w-full flex-1 text-sm sm:text-base hover:shadow-md transition-all duration-200"
-                    disabled={saveButton.saving || saveButton.saved}
-                  >
-                    <SaveButtonIcon className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                    {saveButton.saving ? 'Saving...' : saveButton.label}
-                  </Button>
-                  <Button
-                    onClick={onBookClick}
-                    size="default"
-                    className="w-full flex-1 text-sm sm:text-base hover:shadow-md transition-all duration-200"
-                    disabled={mentor.is_active === false}
+	                {/* Action Buttons */}
+	                <div className="flex flex-col items-stretch gap-3 pt-2 sm:flex-row">
+	                  <Button
+	                    onClick={onBookClick}
+	                    size="default"
+	                    className="w-full flex-1 text-sm sm:text-base hover:shadow-md transition-all duration-200"
+	                    disabled={mentor.is_active === false}
                   >
                     <Calendar className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
                     Book Discovery Call
@@ -469,10 +459,20 @@ export const MentorProfile = ({ mentor, onBookClick }: MentorProfileProps) => {
                     onClick={handleSendMessage}
                     className="w-full flex-1 text-sm sm:text-base hover:shadow-md transition-all duration-200"
                   >
-                    <MessageCircle className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                    Send Message
-                  </Button>
-                </div>
+	                    <MessageCircle className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
+	                    Send Message
+	                  </Button>
+	                  <Button
+	                    variant={saveButton.saved ? "secondary" : "outline"}
+	                    size="default"
+	                    onClick={handleSaveMentor}
+	                    className="w-full flex-1 text-sm sm:text-base hover:shadow-md transition-all duration-200"
+	                    disabled={saveButton.saving || saveButton.saved}
+	                  >
+	                    <SaveButtonIcon className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
+	                    {saveButton.saving ? 'Saving...' : saveButton.label}
+	                  </Button>
+	                </div>
           </div>
 
         </div>

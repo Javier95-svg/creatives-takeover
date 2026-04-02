@@ -514,16 +514,6 @@ export const MentorCard = ({ mentor, className, priority = false }: MentorCardPr
             <div className="flex flex-col sm:flex-row items-center gap-3 pt-2">
               <Button
                 size="default"
-                variant={saveButton.saved ? "secondary" : "outline"}
-                onClick={handleSaveMentor}
-                disabled={saveButton.saving || saveButton.saved}
-                className="w-full sm:w-auto h-10 flex-1 hover:shadow-md transition-all duration-200"
-              >
-                <SaveButtonIcon className="h-4 w-4 mr-1.5" />
-                {saveButton.saving ? 'Saving...' : saveButton.label}
-              </Button>
-              <Button
-                size="default"
                 onClick={handleBookDiscoveryCall}
                 className="w-full sm:w-auto h-10 flex-1 hover:shadow-md transition-all duration-200"
               >
@@ -538,6 +528,16 @@ export const MentorCard = ({ mentor, className, priority = false }: MentorCardPr
               >
                 <MessageCircle className="h-4 w-4 mr-1.5" />
                 Message
+              </Button>
+              <Button
+                size="default"
+                variant={saveButton.saved ? "secondary" : "outline"}
+                onClick={handleSaveMentor}
+                disabled={saveButton.saving || saveButton.saved}
+                className="w-full sm:w-auto h-10 flex-1 hover:shadow-md transition-all duration-200"
+              >
+                <SaveButtonIcon className="h-4 w-4 mr-1.5" />
+                {saveButton.saving ? 'Saving...' : saveButton.label}
               </Button>
             </div>
           </div>
