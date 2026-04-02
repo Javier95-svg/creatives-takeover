@@ -4,12 +4,9 @@ import Footer from "@/components/Footer";
 import EmailTemplatesTab from "@/components/insighta/EmailTemplatesTab";
 import { useReadingAnalytics } from "@/hooks/useReadingAnalytics";
 import { useEffect } from "react";
-import { usePlanAccess } from "@/hooks/usePlanAccess";
-import { LockedPageOverlay } from "@/components/ui/LockedPageOverlay";
 
 export default function EmailTemplatesPage() {
   const { trackPageVisit } = useReadingAnalytics();
-  const { hasAccess } = usePlanAccess('email_templates');
 
   // Track page visit when component mounts
   useEffect(() => {
@@ -52,19 +49,6 @@ export default function EmailTemplatesPage() {
       <Navigation />
 
       <main>
-        {!hasAccess && (
-          <LockedPageOverlay
-            requiredPlan="rising"
-            featureName="Email Templates"
-            description="Access copy-paste ready investor outreach templates for every stage of fundraising. Available on Rising and Pro plans."
-            benefits={[
-              "Cold outreach, warm intro, and follow-up templates",
-              "AI-personalized variables for each VC",
-              "Templates proven to get replies",
-            ]}
-          />
-        )}
-        {hasAccess && (
         <section className="py-20 px-4 relative overflow-hidden" data-section="email-templates">
           {/* Background styling */}
           <div className="absolute inset-0 pointer-events-none overflow-hidden">
@@ -93,7 +77,6 @@ export default function EmailTemplatesPage() {
             <EmailTemplatesTab />
           </div>
         </section>
-        )}
       </main>
 
       <Footer />

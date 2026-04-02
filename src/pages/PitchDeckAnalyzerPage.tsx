@@ -7,15 +7,12 @@ import { PitchDeckBuilder } from "@/components/pitch-deck-builder/PitchDeckBuild
 import { usePitchDeckAnalyzer } from "@/hooks/usePitchDeckAnalyzer";
 import { useReadingAnalytics } from "@/hooks/useReadingAnalytics";
 import { useEffect, useState } from "react";
-import { usePlanAccess } from "@/hooks/usePlanAccess";
-import { LockedPageOverlay } from "@/components/ui/LockedPageOverlay";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Sparkles, BarChart3, TrendingUp, Target } from "lucide-react";
 
 export default function PitchDeckAnalyzerPage() {
   const { trackPageVisit } = useReadingAnalytics();
-  const { hasAccess } = usePlanAccess('pitch_deck_analyzer');
   const { analyzePitchDeck, submitFeedback, resetAnalysis, uploading, analyzing, analysis, error, isProcessing } = usePitchDeckAnalyzer();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
@@ -75,20 +72,6 @@ export default function PitchDeckAnalyzerPage() {
       />
       <Navigation />
 
-      {!hasAccess && (
-        <LockedPageOverlay
-          requiredPlan="rising"
-          featureName="Pitch Deck Analyzer"
-          description="Get instant AI-powered analysis of your pitch deck with a comprehensive score across 6 key dimensions. Available on Rising and Pro plans."
-          benefits={[
-            "Score across story, market, traction, team, and more",
-            "Actionable feedback to improve your fundraising success",
-            "Costs 8 credits per analysis on Rising+",
-          ]}
-        />
-      )}
-
-      {hasAccess && (
       <main className="relative overflow-hidden">
         {/* Shared Background styling */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
@@ -227,7 +210,6 @@ export default function PitchDeckAnalyzerPage() {
           </div>
         </section>
       </main>
-      )}
 
       <Footer />
     </div>

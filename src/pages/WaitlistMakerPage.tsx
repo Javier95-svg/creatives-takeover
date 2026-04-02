@@ -1,52 +1,56 @@
-import SEO from "@/components/SEO";
-import Navigation from "@/components/Navigation";
-import Footer from "@/components/Footer";
-import { usePlanAccess } from "@/hooks/usePlanAccess";
-import { LockedPageOverlay } from "@/components/ui/LockedPageOverlay";
-import ComingSoonPage from "@/pages/ComingSoonPage";
+import SEO, { createBreadcrumbSchema } from '@/components/SEO';
+import Navigation from '@/components/Navigation';
+import Footer from '@/components/Footer';
+import WaitlistEditor from '@/components/waitlist/WaitlistEditor';
+import WaitlistMakerWallpaper from '@/components/wallpapers/WaitlistMakerWallpaper';
+
+const structuredData = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'WebPage',
+    name: 'Waitlist Maker',
+    description: 'Create and publish your waitlist page to validate demand before building.',
+    url: 'https://creatives-takeover.com/waitlist',
+  },
+  createBreadcrumbSchema([
+    { name: 'Home', url: '/' },
+    { name: 'BizMap AI', url: '/bizmap-ai' },
+    { name: 'Waitlist Maker', url: '/waitlist' },
+  ]),
+];
 
 export default function WaitlistMakerPage() {
-  const { hasAccess, isProgressiveLock } = usePlanAccess('waitlist_maker');
-
-  if (!hasAccess) {
-    return (
-      <div className="min-h-screen bg-background">
-        <SEO
-          title="Waitlist Maker - Creatives Takeover"
-          description="Build demand before you launch. Create a waitlist and validate interest before writing a single line of code."
-        />
+  return (
+    <div className="relative min-h-screen overflow-hidden bg-background">
+      <SEO
+        title="Waitlist Maker - Creatives Takeover"
+        description="Build your Stage II waitlist page and capture demand signals before development."
+        keywords="waitlist page, demand validation, startup prototype"
+        url="/waitlist"
+        structuredData={structuredData}
+      />
+      <WaitlistMakerWallpaper />
+      <div className="relative z-10">
         <Navigation />
-        <main>
-          <LockedPageOverlay
-            requiredPlan="rising"
-            featureName="Waitlist Maker"
-            description={
-              isProgressiveLock
-                ? "Complete the ICP Builder (Stage 1) to unlock the Waitlist Maker, or upgrade to Rising to access all tools right away."
-                : "Waitlist Maker is available on the Rising plan and above."
-            }
-            benefits={[
-              "Launch a waitlist page in minutes",
-              "Capture emails before you build",
-              "Validate demand with real sign-ups",
-            ]}
-          />
+
+        <main className="px-4 py-16 md:py-20">
+          <div className="container mx-auto max-w-[1580px] space-y-8">
+            <div className="space-y-4 px-2 text-center lg:max-w-4xl lg:text-left">
+              <div className="inline-flex items-center rounded-full border border-primary/20 bg-background/70 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.28em] text-primary shadow-sm backdrop-blur">
+                Landing Page Studio
+              </div>
+              <h1 className="text-4xl font-bold creatives-font takeover-gradient md:text-6xl">Waitlist Maker</h1>
+              <p className="text-lg leading-relaxed text-muted-foreground md:text-xl">
+                Design your landing page, show what you have to offer, and validate real demand before building.
+              </p>
+            </div>
+
+            <WaitlistEditor />
+          </div>
         </main>
+
         <Footer />
       </div>
-    );
-  }
-
-  return (
-    <ComingSoonPage
-      title="Waitlist Maker"
-      description="Build demand before you launch. Create a waitlist and validate interest before writing a single line of code."
-      highlights={[
-        "Customizable waitlist landing page in minutes",
-        "Automated email capture and confirmation",
-        "Referral mechanics to grow your list virally",
-        "Integration with your ICP insights from Stage 1",
-      ]}
-    />
+    </div>
   );
 }
