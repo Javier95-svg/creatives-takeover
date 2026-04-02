@@ -49,7 +49,7 @@ export default function EmailTemplatesPage() {
       <Navigation />
 
       <main>
-        <section className="py-20 px-4 relative overflow-hidden" data-section="email-templates">
+        <section className="relative overflow-hidden px-4 pt-28 pb-20 md:pt-32 lg:pt-36" data-section="email-templates">
           {/* Background styling */}
           <div className="absolute inset-0 pointer-events-none overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-b from-background via-background/95 to-background" />

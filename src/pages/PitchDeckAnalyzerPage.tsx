@@ -8,7 +8,6 @@ import { usePitchDeckAnalyzer } from "@/hooks/usePitchDeckAnalyzer";
 import { useReadingAnalytics } from "@/hooks/useReadingAnalytics";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Loader2, Sparkles, BarChart3, TrendingUp, Target } from "lucide-react";
 
 export default function PitchDeckAnalyzerPage() {
@@ -86,18 +85,12 @@ export default function PitchDeckAnalyzerPage() {
           />
         </div>
 
-        <section className="py-20 px-4 relative z-10" data-section="pitch-deck-analyzer">
+        <section className="relative z-10 px-4 pt-28 pb-20 md:pt-32 lg:pt-36" data-section="pitch-deck-analyzer">
           <div className="container mx-auto max-w-5xl">
             {!analysis ? (
               <>
                 {/* Hero Section */}
                 <div className="text-center mb-12 sm:mb-16">
-                  <div className="inline-block mb-4">
-                    <Badge className="bg-primary/10 text-primary border-primary/20 px-4 py-1.5">
-                      <Sparkles className="h-3 w-3 mr-2" />
-                      AI-Powered Analysis
-                    </Badge>
-                  </div>
                   <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-3 sm:mb-4 takeover-gradient creatives-font animate-fade-in leading-tight pb-2">
                     Pitch Deck Analyzer
                   </h1>
