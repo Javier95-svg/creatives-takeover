@@ -12,7 +12,7 @@ const PricingComparison = () => {
     {
       category: "Credits",
       items: [
-        { feature: "Monthly Credits", free: "25 Credits", creator: "50 Credits", professional: "150 Credits" }
+        { feature: "Monthly Credits", free: "25 Credits", creator: "100 Credits", professional: "300 Credits" }
       ]
     },
     {

@@ -470,7 +470,7 @@ export function useFeatureGating() {
         'Accelerator Hunt (browse only)',
       ],
       rising: [
-        '50 credits per month',
+        '100 credits per month',
         'Full dashboard — all 7 stages accessible',
         'ICP Builder (free), all other tools (credits)',
         '3 free discovery calls per month',
@@ -482,7 +482,7 @@ export function useFeatureGating() {
         'Community: mentors & co-founders',
       ],
       pro: [
-        '150 credits per month',
+        '300 credits per month',
         'Everything in Rising',
         'Unlimited discovery calls',
         'Unlimited VC & Accelerator profile views',

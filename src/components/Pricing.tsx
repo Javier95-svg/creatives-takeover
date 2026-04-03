@@ -94,7 +94,7 @@ const Pricing = () => {
         "Community — read-only",
       ],
       rising: [
-        "50 credits per month",
+        "100 credits per month",
         "ICP Builder, Waitlist Maker, PMF Lab",
         "Tech Stack Builder, MVP Builder, GTM Strategist",
         "Email Templates & Pitch Deck Analyzer",
@@ -104,7 +104,7 @@ const Pricing = () => {
         "Full Prompt Library",
       ],
       pro: [
-        "150 credits per month",
+        "300 credits per month",
         "Everything in Rising",
         "Unlimited discovery calls",
         "Unlimited VC & Accelerator profile views",
