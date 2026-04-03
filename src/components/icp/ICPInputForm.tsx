@@ -496,7 +496,15 @@ const ICPInputForm: React.FC<ICPInputFormProps> = ({
                 <ChevronLeft className="h-4 w-4" />
                 Back
               </Button>
-              <Button type="button" onClick={() => onSubmit(formData)} disabled={isSubmitting} className="flex-1 gap-2" size="lg">
+              <Button
+                type="button"
+                onClick={() => onSubmit(formData)}
+                disabled={isSubmitting}
+                className="flex-1 gap-2"
+                size="lg"
+                data-telemetry-id="icp-builder-save"
+                data-track-click="icp-builder-save"
+              >
                 {isSubmitting ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin" />

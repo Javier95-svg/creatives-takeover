@@ -18,6 +18,33 @@ interface ICPAnalysisRequest {
   unfairAdvantage?: string;
 }
 
+const validateRequest = (payload: Partial<ICPAnalysisRequest>) => {
+  const issues: string[] = [];
+
+  if (typeof payload.businessDescription !== 'string' || payload.businessDescription.trim().length < 30) {
+    issues.push('businessDescription must be at least 30 characters');
+  }
+
+  const optionalFields: Array<keyof Omit<ICPAnalysisRequest, 'businessDescription'>> = [
+    'targetAudience',
+    'industry',
+    'competitors',
+    'unfairAdvantage',
+  ];
+
+  optionalFields.forEach((field) => {
+    const value = payload[field];
+    if (value !== undefined && typeof value !== 'string') {
+      issues.push(`${field} must be a string when provided`);
+    }
+    if (typeof value === 'string' && value.length > 4000) {
+      issues.push(`${field} is too long`);
+    }
+  });
+
+  return issues;
+};
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -33,23 +60,36 @@ serve(async (req) => {
       });
     }
 
+    let payload: ICPAnalysisRequest;
+    try {
+      payload = await req.json();
+    } catch (_error) {
+      return new Response(JSON.stringify({
+        error: 'Malformed JSON body'
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    const validationIssues = validateRequest(payload);
+    if (validationIssues.length > 0) {
+      return new Response(JSON.stringify({
+        error: 'Validation failed',
+        validationIssues,
+      }), {
+        status: 422,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
     const {
       businessDescription,
       targetAudience,
       industry,
       competitors,
       unfairAdvantage
-    }: ICPAnalysisRequest = await req.json();
-
-    // Validate required fields
-    if (!businessDescription || !businessDescription.trim()) {
-      return new Response(JSON.stringify({
-        error: 'Missing required field: businessDescription'
-      }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
-    }
+    } = payload;
 
     const idempotencyKey = await resolveCreditIdempotencyKey(req, {
       userId: user.id,
@@ -92,6 +132,14 @@ serve(async (req) => {
       throw new Error('OpenAI API key not configured');
     }
 
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error('Supabase service role credentials not configured');
+    }
+
+    const serviceClient = createClient(supabaseUrl, supabaseKey);
+
     // Fetch market validation data
     let marketValidationData: any = null;
     let redditDiscussions: any[] = [];
@@ -99,11 +147,7 @@ serve(async (req) => {
 
     try {
       console.log('Fetching market validation data for ICP analysis...');
-      const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-      const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-      const supabase = createClient(supabaseUrl, supabaseKey);
-
-      const validationResponse = await supabase.functions.invoke('market-validation-engine', {
+      const validationResponse = await serviceClient.functions.invoke('market-validation-engine', {
         body: {
           business_idea: businessDescription,
           industry: industry || undefined,
@@ -310,16 +354,20 @@ Return your analysis as a JSON object with this exact structure:
 
     // Wrap AI processing in try/catch for credit refund on failure
     try {
-    // Call OpenAI API
-    const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openaiApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o',
-        messages: [
+	    // Call OpenAI API
+      const openAiAbortController = new AbortController();
+      const openAiTimeout = setTimeout(() => openAiAbortController.abort(), 60000);
+
+      const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${openaiApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        signal: openAiAbortController.signal,
+        body: JSON.stringify({
+	        model: 'gpt-4o',
+	        messages: [
           {
             role: 'system',
             content: `You are an expert ICP (Ideal Customer Profile) strategist and niche market analyst. You help founders find their most profitable specific niche and develop positioning strategies that make them stand out.
@@ -339,13 +387,13 @@ CRITICAL REQUIREMENTS:
             content: prompt
           }
         ],
-        response_format: { type: 'json_object' },
-        temperature: 0.6,
-        max_tokens: 6000,
-      }),
-    });
+	        response_format: { type: 'json_object' },
+	        temperature: 0.6,
+	        max_tokens: 6000,
+        }),
+      }).finally(() => clearTimeout(openAiTimeout));
 
-    if (!openaiResponse.ok) {
+	    if (!openaiResponse.ok) {
       const errorText = await openaiResponse.text();
       console.error('OpenAI API Error:', errorText);
       throw new Error(`OpenAI API Error: ${openaiResponse.status}`);
@@ -354,9 +402,9 @@ CRITICAL REQUIREMENTS:
     const aiData = await openaiResponse.json();
     let analysisResult;
 
-    try {
-      const content = aiData.choices[0].message.content;
-      analysisResult = JSON.parse(content);
+	    try {
+	      const content = aiData.choices[0].message.content;
+	      analysisResult = JSON.parse(content);
     } catch (parseError) {
       console.error('Error parsing AI response:', parseError);
       const content = aiData.choices[0].message.content;
@@ -364,16 +412,38 @@ CRITICAL REQUIREMENTS:
       if (jsonMatch) {
         analysisResult = JSON.parse(jsonMatch[1]);
       } else {
-        throw new Error('Failed to parse AI response as JSON');
-      }
-    }
+	        throw new Error('Failed to parse AI response as JSON');
+	      }
+	    }
 
-    return new Response(JSON.stringify({
-      success: true,
-      analysis: analysisResult,
-      creditsUsed: creditCost,
-      newBalance: creditResult.newBalance
-    }), {
+      analysisResult.generatedAt = new Date().toISOString();
+
+      const { data: storedAnalysis, error: storeError } = await serviceClient
+        .from('icp_analysis_results' as any)
+        .insert({
+          user_id: user.id,
+          business_description: businessDescription,
+          target_audience: targetAudience || null,
+          industry: industry || null,
+          niche_score: analysisResult?.nicheScore?.overall ?? null,
+          verdict: analysisResult?.nicheScore?.verdict ?? null,
+          analysis_data: analysisResult,
+        })
+        .select('id')
+        .single();
+
+      if (storeError || !storedAnalysis) {
+        console.error('Failed to store ICP analysis:', storeError);
+        throw new Error(`Failed to save ICP analysis: ${storeError?.message || 'unknown storage error'}`);
+      }
+	
+	    return new Response(JSON.stringify({
+	      success: true,
+	      analysis: analysisResult,
+          analysisId: (storedAnalysis as { id?: string }).id ?? null,
+	      creditsUsed: creditCost,
+	      newBalance: creditResult.newBalance
+	    }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
 

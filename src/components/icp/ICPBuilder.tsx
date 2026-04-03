@@ -2,19 +2,26 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, Target, Users, AlertTriangle, Megaphone, BarChart3, FileText } from 'lucide-react';
+import { Target, Users, AlertTriangle, Megaphone, BarChart3, FileText } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCredits } from '@/hooks/useCredits';
 import { useCreditActions } from '@/hooks/useCreditActions';
 import { useActivationJourney } from '@/hooks/useActivationJourney';
 import { supabase } from '@/integrations/supabase/client';
-import { captureEvent } from '@/lib/analytics';
+import { captureEvent, trackICPBuilderCompleted, trackICPBuilderStarted } from '@/lib/analytics';
+import { reportAppError } from '@/lib/errorReporting';
 import ICPInputForm, { type ICPInputFormData } from './ICPInputForm';
 import ICPNicheProfile from './ICPNicheProfile';
 import ICPPainPoints from './ICPPainPoints';
 import ICPPositioning from './ICPPositioning';
 import ICPNicheScore from './ICPNicheScore';
+import {
+  buildIcpBusinessDescription,
+  getIcpFieldLabel,
+  icpInputFormSchema,
+  type IcpInputSchema,
+} from '@/lib/icpBuilderSchema';
 
 interface ICPAnalysis {
   nicheScore: {
@@ -95,6 +102,38 @@ interface ICPAnalysis {
   }>;
 }
 
+const ICP_RESULTS_TABLE = 'icp_analysis_results';
+const ICP_ANALYSIS_TIMEOUT_MS = 45000;
+
+const withTimeout = async <T,>(promise: Promise<T>, timeoutMs: number) => {
+  let timeoutHandle: number | null = null;
+
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    timeoutHandle = window.setTimeout(() => {
+      reject(new Error(`ICP analysis timed out after ${Math.round(timeoutMs / 1000)} seconds.`));
+    }, timeoutMs);
+  });
+
+  try {
+    return await Promise.race([promise, timeoutPromise]);
+  } finally {
+    if (timeoutHandle !== null) {
+      window.clearTimeout(timeoutHandle);
+    }
+  }
+};
+
+const getErrorCode = (error: unknown) => {
+  const message = error instanceof Error ? error.message.toLowerCase() : '';
+
+  if (message.includes('timed out')) return 'timeout';
+  if (message.includes('failed to fetch') || message.includes('network')) return 'network_error';
+  if (message.includes('save') && message.includes('failed')) return 'save_failed';
+  if (message.includes('validation')) return 'validation_failed';
+
+  return 'unknown_error';
+};
+
 const ICPBuilder: React.FC = () => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -105,10 +144,43 @@ const ICPBuilder: React.FC = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState<ICPAnalysis | null>(null);
   const [activeTab, setActiveTab] = useState('input');
-  const [analysisStartedAt] = useState(Date.now());
 
-  const handleFormSubmit = async (formData: ICPInputFormData) => {
+  const persistIcpFallback = async (
+    validatedFormData: IcpInputSchema,
+    nextAnalysis: ICPAnalysis,
+    businessDescription: string,
+  ) => {
+    if (!user) return null;
+
+    const { data, error } = await supabase
+      .from(ICP_RESULTS_TABLE)
+      .insert({
+        user_id: user.id,
+        business_description: businessDescription,
+        target_audience: validatedFormData.targetAudience,
+        industry: validatedFormData.industry || null,
+        niche_score: nextAnalysis.nicheScore?.overall ?? null,
+        verdict: nextAnalysis.nicheScore?.verdict ?? null,
+        analysis_data: nextAnalysis,
+      })
+      .select('id')
+      .single();
+
+    if (error) {
+      throw new Error(`Save failed after analysis: ${error.message}`);
+    }
+
+    return (data as { id?: string } | null)?.id ?? null;
+  };
+
+  const handleSaveClick = async (formData: ICPInputFormData) => {
+    const attemptStartedAt = Date.now();
+
     if (!user) {
+      captureEvent('icp_profile_save_failed', {
+        reason: 'unauthenticated',
+        page_path: '/icp-builder',
+      });
       toast({
         title: "Authentication Required",
         description: "Please sign in to use ICP Builder",
@@ -117,40 +189,63 @@ const ICPBuilder: React.FC = () => {
       return;
     }
 
+    if (isAnalyzing) {
+      return;
+    }
+
     try {
+      const validationResult = icpInputFormSchema.safeParse(formData);
+
+      if (!validationResult.success) {
+        const missingFields = validationResult.error.issues.map((issue) => {
+          const field = issue.path[0];
+          return typeof field === 'string' ? getIcpFieldLabel(field as keyof IcpInputSchema) : 'unknown field';
+        });
+
+        captureEvent('icp_profile_save_failed', {
+          reason: 'validation_failed',
+          missingFields,
+          issueCount: validationResult.error.issues.length,
+          page_path: '/icp-builder',
+        });
+
+        toast({
+          title: 'Complete the required inputs',
+          description: `Please fix: ${Array.from(new Set(missingFields)).join(', ')}.`,
+          variant: 'destructive',
+        });
+        setActiveTab('input');
+        return;
+      }
+
       setIsAnalyzing(true);
-
-      const descriptionParts: string[] = [];
-      descriptionParts.push(`Problem: ${formData.problemStatement}`);
-      descriptionParts.push(`Product/Service: ${formData.productDescription}`);
-      descriptionParts.push(`Target Audience: ${formData.targetAudience}`);
-      if (formData.industry) {
-        descriptionParts.push(`Industry: ${formData.industry}`);
-      }
-      if (formData.revenueModel) {
-        descriptionParts.push(`Revenue Model: ${formData.revenueModel}`);
-      }
-      if (formData.mainCompetitors) {
-        descriptionParts.push(`Main Competitors: ${formData.mainCompetitors}`);
-      }
-      if (formData.unfairAdvantage) {
-        descriptionParts.push(`Unfair Advantage: ${formData.unfairAdvantage}`);
-      }
-      if (formData.currentTraction) {
-        descriptionParts.push(`Current Traction: ${formData.currentTraction}`);
-      }
-
-      const businessDescription = descriptionParts.join('\n\n');
-
-      const { data, error } = await supabase.functions.invoke('icp-analyzer', {
-        body: {
-          businessDescription,
-          targetAudience: formData.targetAudience,
-          industry: formData.industry || undefined,
-          competitors: formData.mainCompetitors || undefined,
-          unfairAdvantage: formData.unfairAdvantage || undefined,
-        },
+      trackICPBuilderStarted({ page_path: '/icp-builder' });
+      captureEvent('icp_profile_save_attempted', {
+        page_path: '/icp-builder',
       });
+
+      const validatedFormData = validationResult.data;
+      const businessDescription = buildIcpBusinessDescription(validatedFormData);
+      const idempotencyKey =
+        typeof crypto !== 'undefined' && 'randomUUID' in crypto
+          ? crypto.randomUUID()
+          : `icp_${user.id}_${Date.now()}`;
+
+      const { data, error } = await withTimeout(
+        supabase.functions.invoke('icp-analyzer', {
+          body: {
+            businessDescription,
+            targetAudience: validatedFormData.targetAudience,
+            industry: validatedFormData.industry || undefined,
+            competitors: validatedFormData.mainCompetitors || undefined,
+            unfairAdvantage: validatedFormData.founderEdge || undefined,
+          },
+          headers: {
+            'idempotency-key': idempotencyKey,
+          },
+        }),
+        ICP_ANALYSIS_TIMEOUT_MS,
+      );
 
       if (error) {
         if (handleCreditError(error, data, 'ICP_ANALYSIS', { featureName: 'ICP Builder' })) {
@@ -166,13 +261,32 @@ const ICPBuilder: React.FC = () => {
       }
 
       if (data?.success && data?.analysis) {
+        let analysisId = data.analysisId ?? null;
+
+        if (!analysisId) {
+          analysisId = await persistIcpFallback(validatedFormData, data.analysis, businessDescription);
+        }
+
+        if (!analysisId) {
+          throw new Error('Save failed after analysis: the ICP result did not return an analysis ID.');
+        }
+
         setAnalysis(data.analysis);
         setActiveTab('profile');
 
         captureEvent('icp_profile_saved', {
-          timeToSaveMs: Date.now() - analysisStartedAt,
+          analysisId,
+          timeToSaveMs: Date.now() - attemptStartedAt,
           nicheScore: data.analysis.nicheScore?.overall,
           verdict: data.analysis.nicheScore?.verdict,
+          page_path: '/icp-builder',
+        });
+        trackICPBuilderCompleted({
+          analysisId,
+          timeToSaveMs: Date.now() - attemptStartedAt,
+          nicheScore: data.analysis.nicheScore?.overall,
+          verdict: data.analysis.nicheScore?.verdict,
+          page_path: '/icp-builder',
         });
 
         toast({
@@ -185,10 +299,36 @@ const ICPBuilder: React.FC = () => {
         throw new Error(data?.error || 'Analysis failed');
       }
     } catch (error) {
+      const errorCode = getErrorCode(error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to analyze ICP. Please try again.';
+
+      reportAppError(
+        error instanceof Error ? error : new Error(String(error)),
+        'window_error',
+        {
+          feature: 'icp_builder',
+          action: 'save_profile',
+          errorCode,
+          pagePath: '/icp-builder',
+        },
+      );
+      captureEvent('icp_profile_save_failed', {
+        reason: errorCode,
+        message: errorMessage,
+        timeToFailureMs: Date.now() - attemptStartedAt,
+        page_path: '/icp-builder',
+      });
+      captureEvent('icp_builder_completed', {
+        success: false,
+        failureReason: errorCode,
+        message: errorMessage,
+        timeToFailureMs: Date.now() - attemptStartedAt,
+        page_path: '/icp-builder',
+      });
       console.error('Error analyzing ICP:', error);
       toast({
         title: "Analysis Failed",
-        description: error instanceof Error ? error.message : "Failed to analyze ICP. Please try again.",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -253,7 +393,7 @@ const ICPBuilder: React.FC = () => {
 
             <TabsContent value="input" className="mt-6">
               <ICPInputForm
-                onSubmit={handleFormSubmit}
+                onSubmit={handleSaveClick}
                 isSubmitting={isAnalyzing}
               />
             </TabsContent>

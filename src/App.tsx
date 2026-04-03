@@ -14,6 +14,7 @@ import { useVersionCheck } from "@/hooks/useVersionCheck";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import ScrollToTop from "./components/ScrollToTop";
 import ProUpgradeBanner from "@/components/ProUpgradeBanner";
+import { useInteractionTelemetry } from "@/hooks/useInteractionTelemetry";
 
 const PulseWidget = lazy(() => import("@/components/pulse/PulseWidget"));
 const MobileBottomNav = lazy(() =>
@@ -122,6 +123,11 @@ const PulseWidgetWrapper = () => {
   return <PulseWidget />;
 };
 
+const InteractionTelemetryBridge = () => {
+  useInteractionTelemetry();
+  return null;
+};
+
 function App() {
   const { hasUpdate, refreshApp } = useVersionCheck();
 
@@ -139,6 +145,7 @@ function App() {
                 <BrowserRouter>
                   <Suspense fallback={null}>
                     <ScrollToTop />
+                    <InteractionTelemetryBridge />
                     <UpgradePromptProvider>
                       <ProUpgradeBanner />
                       <PulseWidgetWrapper />
