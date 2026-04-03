@@ -17,7 +17,7 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { captureEvent } from "@/lib/analytics";
-import { loadValidationDraftArtifact, saveValidationDraftArtifact } from "@/lib/retentionSystem";
+import { loadValidationDraftArtifact, saveValidationDraftArtifact, trackRetentionEvent } from "@/lib/retentionSystem";
 import { clearPendingValueCapture, persistPendingValueCapture, readPendingValueCapture } from "@/lib/valueCapture";
 
 type CriteriaKey =
@@ -355,6 +355,13 @@ export default function ValidateJourneyPage() {
       });
       setDraftArtifactId(nextDraftId);
       captureEvent('artifact_saved', {
+        artifactType: 'validation_draft',
+        artifactId: nextDraftId,
+        resumeUrl: '/decision-sprint',
+      });
+      // FIX(retention): /decision-sprint — validation saves now emit durable artifact events so tranche 3 reporting can measure activation outcomes outside PostHog.
+      void trackRetentionEvent('artifact_saved', {
+        user_id: user.id,
         artifactType: 'validation_draft',
         artifactId: nextDraftId,
         resumeUrl: '/decision-sprint',

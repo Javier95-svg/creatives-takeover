@@ -5,6 +5,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useRetentionFeed } from '@/hooks/useRetentionFeed';
 import { captureEvent } from '@/lib/analytics';
+import { useAuth } from '@/contexts/AuthContext';
+import { trackRetentionEvent } from '@/lib/retentionSystem';
 
 const iconByNudgeId = {
   activation: Sparkles,
@@ -14,6 +16,7 @@ const iconByNudgeId = {
 } as const;
 
 export function RetentionActionFeed() {
+  const { user } = useAuth();
   const { loading, primaryNudge, secondaryNudges, activationMode, activationGateVariant, latestArtifactType } = useRetentionFeed();
 
   const handlePrimaryClick = () => {
@@ -26,6 +29,16 @@ export function RetentionActionFeed() {
       actionUrl: primaryNudge.actionUrl,
       artifactType: latestArtifactType ?? undefined,
     });
+    if (user?.id) {
+      // FIX(retention): dashboard — resume-card clicks now also hit durable retention logs so the admin experiment tab can compare control vs forced-gate without relying on PostHog only.
+      void trackRetentionEvent('dashboard_continue_clicked', {
+        user_id: user.id,
+        activationGateVariant: activationGateVariant ?? 'unknown',
+        nudgeId: primaryNudge.id,
+        actionUrl: primaryNudge.actionUrl,
+        artifactType: latestArtifactType ?? undefined,
+      });
+    }
 
     if (primaryNudge.id === 'continue') {
       captureEvent('artifact_resumed', {
@@ -33,6 +46,14 @@ export function RetentionActionFeed() {
         artifactType: latestArtifactType ?? 'unknown',
         resumeUrl: primaryNudge.actionUrl,
       });
+      if (user?.id) {
+        void trackRetentionEvent('artifact_resumed', {
+          user_id: user.id,
+          activationGateVariant: activationGateVariant ?? 'unknown',
+          artifactType: latestArtifactType ?? 'unknown',
+          resumeUrl: primaryNudge.actionUrl,
+        });
+      }
     }
   };
 

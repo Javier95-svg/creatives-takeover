@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { Activity, MousePointerClick, Clock, Eye, LogOut } from "lucide-react";
+import { Activity, MousePointerClick, Clock, Eye, LogOut, Sparkles, Target } from "lucide-react";
 import { subDays, startOfDay, endOfDay } from "date-fns";
 import { safe } from "@/integrations/supabase/safe";
 import {
@@ -24,6 +24,22 @@ import {
 } from "@/hooks/usePageAnalyticsData";
 
 const COLORS = ['hsl(var(--chart-1))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))', 'hsl(var(--chart-5))'];
+
+interface RetentionExperimentSummary {
+  cohortUsers: number;
+  controlUsers: number;
+  forcedGateUsers: number;
+  controlOnboardingCompleted: number;
+  forcedGateOnboardingCompleted: number;
+  controlFirstArtifacts: number;
+  forcedGateFirstArtifacts: number;
+  controlDashboardContinue: number;
+  forcedGateDashboardContinue: number;
+  controlArtifactResumed: number;
+  forcedGateArtifactResumed: number;
+  activationIntents: Array<{ intent: string; users: number }>;
+  artifactTypes: Array<{ type: string; users: number }>;
+}
 
 const AdminAnalytics = () => {
   const { user } = useAuth();
@@ -46,6 +62,21 @@ const AdminAnalytics = () => {
     onboardingStarted: 0,
     onboardingCompleted: 0,
     firstValueActions: 0,
+  });
+  const [retentionExperiment, setRetentionExperiment] = useState<RetentionExperimentSummary>({
+    cohortUsers: 0,
+    controlUsers: 0,
+    forcedGateUsers: 0,
+    controlOnboardingCompleted: 0,
+    forcedGateOnboardingCompleted: 0,
+    controlFirstArtifacts: 0,
+    forcedGateFirstArtifacts: 0,
+    controlDashboardContinue: 0,
+    forcedGateDashboardContinue: 0,
+    controlArtifactResumed: 0,
+    forcedGateArtifactResumed: 0,
+    activationIntents: [],
+    artifactTypes: [],
   });
 
   useEffect(() => {
@@ -120,13 +151,13 @@ const AdminAnalytics = () => {
           .eq('event_type', 'signup_completed')
           .gte('created_at', fromIso)
           .lte('created_at', toIso),
-        (supabase as any)
+        supabase
           .from('activity_events')
           .select('id', { count: 'exact', head: true })
           .eq('event', 'onboarding_started')
           .gte('created_at', fromIso)
           .lte('created_at', toIso),
-        (supabase as any)
+        supabase
           .from('activity_events')
           .select('id', { count: 'exact', head: true })
           .eq('event', 'onboarding_completed')
@@ -149,6 +180,180 @@ const AdminAnalytics = () => {
       });
     })();
   }, [endDate, startDate]);
+
+  useEffect(() => {
+    (async () => {
+      const fromIso = startDate.toISOString();
+      const toIso = endDate.toISOString();
+
+      const { data: profiles } = await safe.select(async () =>
+        await supabase
+          .from('profiles')
+          .select('id, created_at, onboarding_completed, user_preferences')
+          .gte('created_at', fromIso)
+          .lte('created_at', toIso)
+      );
+
+      const cohortProfiles = ((profiles as Array<{
+        id: string;
+        onboarding_completed?: boolean | null;
+        user_preferences?: Record<string, unknown> | null;
+      }> | null) ?? []).filter((profile) => {
+        const preferences = profile.user_preferences ?? {};
+        return preferences.activationGateVariant === 'control' || preferences.activationGateVariant === 'forced_gate';
+      });
+
+      const cohortIds = cohortProfiles.map((profile) => profile.id);
+      const variantByUserId = new Map(
+        cohortProfiles.map((profile) => [
+          profile.id,
+          (profile.user_preferences?.activationGateVariant as 'control' | 'forced_gate') ?? 'control',
+        ]),
+      );
+
+      const activationIntentCounts = new Map<string, number>();
+      const artifactTypeCounts = new Map<string, number>();
+
+      let controlUsers = 0;
+      let forcedGateUsers = 0;
+      let controlOnboardingCompleted = 0;
+      let forcedGateOnboardingCompleted = 0;
+      let controlFirstArtifacts = 0;
+      let forcedGateFirstArtifacts = 0;
+
+      cohortProfiles.forEach((profile) => {
+        const preferences = profile.user_preferences ?? {};
+        const variant = preferences.activationGateVariant === 'forced_gate' ? 'forced_gate' : 'control';
+        const activationIntent = typeof preferences.activationIntent === 'string' ? preferences.activationIntent : null;
+        const firstArtifactType = typeof preferences.firstArtifactType === 'string' ? preferences.firstArtifactType : null;
+
+        if (variant === 'forced_gate') {
+          forcedGateUsers += 1;
+          if (profile.onboarding_completed === true) {
+            forcedGateOnboardingCompleted += 1;
+          }
+          if (firstArtifactType) {
+            forcedGateFirstArtifacts += 1;
+          }
+        } else {
+          controlUsers += 1;
+          if (profile.onboarding_completed === true) {
+            controlOnboardingCompleted += 1;
+          }
+          if (firstArtifactType) {
+            controlFirstArtifacts += 1;
+          }
+        }
+
+        if (activationIntent) {
+          activationIntentCounts.set(activationIntent, (activationIntentCounts.get(activationIntent) ?? 0) + 1);
+        }
+
+        if (firstArtifactType) {
+          artifactTypeCounts.set(firstArtifactType, (artifactTypeCounts.get(firstArtifactType) ?? 0) + 1);
+        }
+      });
+
+      let controlDashboardContinue = 0;
+      let forcedGateDashboardContinue = 0;
+      let controlArtifactResumed = 0;
+      let forcedGateArtifactResumed = 0;
+
+      if (cohortIds.length > 0) {
+        const { data: retentionEvents } = await safe.select(async () =>
+          await supabase
+            .from('user_activity_log')
+            .select('user_id, activity_type')
+            .in('user_id', cohortIds)
+            .in('activity_type', ['dashboard_continue_clicked', 'artifact_resumed'])
+            .gte('created_at', fromIso)
+            .lte('created_at', toIso)
+        );
+
+        const continueUsers = new Set<string>();
+        const resumedUsers = new Set<string>();
+
+        ((retentionEvents as Array<{ user_id: string; activity_type: string }> | null) ?? []).forEach((event) => {
+          const key = `${event.activity_type}:${event.user_id}`;
+          if (event.activity_type === 'dashboard_continue_clicked') {
+            continueUsers.add(key);
+          }
+          if (event.activity_type === 'artifact_resumed') {
+            resumedUsers.add(key);
+          }
+        });
+
+        continueUsers.forEach((key) => {
+          const userId = key.split(':')[1];
+          const variant = variantByUserId.get(userId);
+          if (variant === 'forced_gate') {
+            forcedGateDashboardContinue += 1;
+          } else if (variant === 'control') {
+            controlDashboardContinue += 1;
+          }
+        });
+
+        resumedUsers.forEach((key) => {
+          const userId = key.split(':')[1];
+          const variant = variantByUserId.get(userId);
+          if (variant === 'forced_gate') {
+            forcedGateArtifactResumed += 1;
+          } else if (variant === 'control') {
+            controlArtifactResumed += 1;
+          }
+        });
+      }
+
+      setRetentionExperiment({
+        cohortUsers: cohortProfiles.length,
+        controlUsers,
+        forcedGateUsers,
+        controlOnboardingCompleted,
+        forcedGateOnboardingCompleted,
+        controlFirstArtifacts,
+        forcedGateFirstArtifacts,
+        controlDashboardContinue,
+        forcedGateDashboardContinue,
+        controlArtifactResumed,
+        forcedGateArtifactResumed,
+        activationIntents: Array.from(activationIntentCounts.entries())
+          .map(([intent, users]) => ({ intent, users }))
+          .sort((a, b) => b.users - a.users),
+        artifactTypes: Array.from(artifactTypeCounts.entries())
+          .map(([type, users]) => ({ type, users }))
+          .sort((a, b) => b.users - a.users),
+      });
+    })();
+  }, [endDate, startDate]);
+
+  const safePercent = (value: number, total: number) => (total > 0 ? Math.round((value / total) * 100) : 0);
+  const experimentRateCards = [
+    {
+      title: 'Onboarding Completion',
+      control: safePercent(retentionExperiment.controlOnboardingCompleted, retentionExperiment.controlUsers),
+      forced: safePercent(retentionExperiment.forcedGateOnboardingCompleted, retentionExperiment.forcedGateUsers),
+    },
+    {
+      title: 'First Artifact Conversion',
+      control: safePercent(retentionExperiment.controlFirstArtifacts, retentionExperiment.controlUsers),
+      forced: safePercent(retentionExperiment.forcedGateFirstArtifacts, retentionExperiment.forcedGateUsers),
+    },
+    {
+      title: 'Dashboard Continue Click',
+      control: safePercent(retentionExperiment.controlDashboardContinue, retentionExperiment.controlUsers),
+      forced: safePercent(retentionExperiment.forcedGateDashboardContinue, retentionExperiment.forcedGateUsers),
+    },
+    {
+      title: 'Artifact Resume',
+      control: safePercent(retentionExperiment.controlArtifactResumed, retentionExperiment.controlUsers),
+      forced: safePercent(retentionExperiment.forcedGateArtifactResumed, retentionExperiment.forcedGateUsers),
+    },
+  ];
+  const experimentRateChart = experimentRateCards.map((card) => ({
+    metric: card.title,
+    control: card.control,
+    forcedGate: card.forced,
+  }));
 
   if (!user || isAdmin === null || overviewLoading) {
     return (
@@ -243,6 +448,7 @@ const AdminAnalytics = () => {
 	            <TabsList>
 	              <TabsTrigger value="overview">Overview</TabsTrigger>
 	              <TabsTrigger value="onboarding">Onboarding</TabsTrigger>
+                <TabsTrigger value="retention">Retention</TabsTrigger>
 	              <TabsTrigger value="pages">Pages</TabsTrigger>
 	              <TabsTrigger value="ctas">CTAs</TabsTrigger>
 	              <TabsTrigger value="engagement">Engagement</TabsTrigger>
@@ -378,6 +584,173 @@ const AdminAnalytics = () => {
 	                </CardContent>
 	              </Card>
 	            </TabsContent>
+
+            <TabsContent value="retention" className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium">Experiment Cohort</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{retentionExperiment.cohortUsers}</div>
+                    <p className="text-xs text-muted-foreground">Users created in the selected date range with an assigned activation variant</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium">Control Users</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{retentionExperiment.controlUsers}</div>
+                    <p className="text-xs text-muted-foreground">{safePercent(retentionExperiment.controlUsers, retentionExperiment.cohortUsers)}% of cohort</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium">Forced Gate Users</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{retentionExperiment.forcedGateUsers}</div>
+                    <p className="text-xs text-muted-foreground">{safePercent(retentionExperiment.forcedGateUsers, retentionExperiment.cohortUsers)}% of cohort</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium">Winning Signal</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">
+                      {experimentRateCards.reduce((best, card) => (
+                        card.forced > best.delta
+                          ? { label: card.title, delta: card.forced - card.control }
+                          : best
+                      ), { label: 'No lift yet', delta: 0 }).label}
+                    </div>
+                    <p className="text-xs text-muted-foreground">Biggest forced-gate lift over control in the current window</p>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Sparkles className="h-4 w-4 text-primary" />
+                      Activation Experiment Rates
+                    </CardTitle>
+                    <CardDescription>
+                      Compare onboarding completion, first artifact creation, and resume behavior between control and forced gate.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ResponsiveContainer width="100%" height={320}>
+                      <BarChart data={experimentRateChart}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="metric" />
+                        <YAxis />
+                        <Tooltip formatter={(value: number) => `${value}%`} />
+                        <Legend />
+                        <Bar dataKey="control" fill="hsl(var(--chart-3))" name="Control" />
+                        <Bar dataKey="forcedGate" fill="hsl(var(--primary))" name="Forced Gate" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Target className="h-4 w-4 text-primary" />
+                      Experiment Metrics
+                    </CardTitle>
+                    <CardDescription>
+                      Raw counts behind the activation experiment so you can inspect lift before changing traffic allocation.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Metric</TableHead>
+                          <TableHead className="text-right">Control</TableHead>
+                          <TableHead className="text-right">Forced Gate</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {experimentRateCards.map((card) => (
+                          <TableRow key={card.title}>
+                            <TableCell className="font-medium">{card.title}</TableCell>
+                            <TableCell className="text-right">{card.control}%</TableCell>
+                            <TableCell className="text-right">{card.forced}%</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Activation Intent Mix</CardTitle>
+                    <CardDescription>Which activation paths new users are choosing in the selected cohort window.</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ResponsiveContainer width="100%" height={300}>
+                      <BarChart data={retentionExperiment.activationIntents}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="intent" />
+                        <YAxis />
+                        <Tooltip />
+                        <Bar dataKey="users" fill="hsl(var(--primary))" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>First Artifact Types</CardTitle>
+                    <CardDescription>What users actually create first after onboarding instead of just browsing.</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ResponsiveContainer width="100%" height={300}>
+                      <PieChart>
+                        <Pie
+                          data={retentionExperiment.artifactTypes}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={false}
+                          label={(entry) => entry.type}
+                          outerRadius={90}
+                          dataKey="users"
+                        >
+                          {retentionExperiment.artifactTypes.map((entry, index) => (
+                            <Cell key={entry.type} fill={COLORS[index % COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Retention Experiment Notes</CardTitle>
+                  <CardDescription>
+                    This view uses profile state plus durable `user_activity_log` events, so it can validate activation outcomes without relying only on PostHog.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-2 text-sm text-muted-foreground">
+                  <p>If first artifact conversion is higher in forced gate, the activation chooser is doing its job.</p>
+                  <p>If dashboard continue clicks rise but artifact resumes stay flat, the resume card is visible but the linked asset is not compelling enough yet.</p>
+                  <p>If onboarding completion is healthy but first artifact lift is weak, the issue is still in the activation paths themselves rather than in onboarding.</p>
+                </CardContent>
+              </Card>
+            </TabsContent>
 
             {/* Pages Tab */}
             <TabsContent value="pages">

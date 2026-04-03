@@ -395,7 +395,7 @@ export async function completeActivationJourney(params: CompleteActivationParams
 export async function markFirstArtifactCreated(params: MarkArtifactCreatedParams) {
   const createdAt = new Date().toISOString();
 
-  return updateUserPreferences(params.userId, {
+  const nextState = await updateUserPreferences(params.userId, {
     activationCompletedAt: createdAt,
     firstValueAction: params.artifactType,
     firstValueActionAt: createdAt,
@@ -412,6 +412,19 @@ export async function markFirstArtifactCreated(params: MarkArtifactCreatedParams
     lastArtifactLabel: params.label ?? null,
     lastArtifactResumeUrl: params.resumeUrl,
   }, true);
+
+  // FIX(retention): retention-system — first artifact creation now lands in durable activity logs so the admin experiment dashboard can measure signup-to-artifact conversion by variant.
+  await trackRetentionEvent('first_artifact_created', {
+    user_id: params.userId,
+    artifactType: params.artifactType,
+    artifactId: params.artifactId ?? null,
+    resumeUrl: params.resumeUrl,
+    label: params.label ?? null,
+    source: params.source ?? 'product',
+    activationGateVariant: nextState.user_preferences?.activationGateVariant ?? null,
+  });
+
+  return nextState;
 }
 
 export async function saveValidationDraftArtifact(userId: string, draft: ValidationDraftArtifact) {
