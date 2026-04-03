@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useRetentionFeed } from '@/hooks/useRetentionFeed';
+import { captureEvent } from '@/lib/analytics';
 
 const iconByNudgeId = {
   activation: Sparkles,
@@ -13,7 +14,27 @@ const iconByNudgeId = {
 } as const;
 
 export function RetentionActionFeed() {
-  const { loading, primaryNudge, secondaryNudges, activationMode } = useRetentionFeed();
+  const { loading, primaryNudge, secondaryNudges, activationMode, activationGateVariant, latestArtifactType } = useRetentionFeed();
+
+  const handlePrimaryClick = () => {
+    if (!primaryNudge) return;
+
+    // FIX(retention): dashboard — the main resume card now emits experiment-aware resume events so control vs forced-gate outcomes can be compared.
+    captureEvent('dashboard_continue_clicked', {
+      activationGateVariant: activationGateVariant ?? 'unknown',
+      nudgeId: primaryNudge.id,
+      actionUrl: primaryNudge.actionUrl,
+      artifactType: latestArtifactType ?? undefined,
+    });
+
+    if (primaryNudge.id === 'continue') {
+      captureEvent('artifact_resumed', {
+        activationGateVariant: activationGateVariant ?? 'unknown',
+        artifactType: latestArtifactType ?? 'unknown',
+        resumeUrl: primaryNudge.actionUrl,
+      });
+    }
+  };
 
   if (!loading && !primaryNudge && secondaryNudges.length === 0) {
     return null;
@@ -71,7 +92,7 @@ export function RetentionActionFeed() {
                 <p className="text-xl font-semibold leading-7">{primaryNudge.title}</p>
                 <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">{primaryNudge.description}</p>
                 <Button asChild className="mt-4">
-                  <Link to={primaryNudge.actionUrl}>
+                  <Link to={primaryNudge.actionUrl} onClick={handlePrimaryClick}>
                     {primaryNudge.actionLabel}
                     <ArrowRight className="ml-1 h-4 w-4" />
                   </Link>

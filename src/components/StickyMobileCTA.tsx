@@ -28,8 +28,9 @@ const StickyMobileCTA = () => {
             className="w-full bg-primary hover:bg-primary/90 text-primary-foreground text-base font-semibold shadow-lg shadow-primary/20"
             asChild
           >
-            <Link to="/signup">
-              <span>Start Free</span>
+            {/* FIX(retention): homepage — the sticky mobile CTA now routes directly into ICP quickstart instead of a generic signup step. */}
+            <Link to="/icp-builder">
+              <span>Run ICP Analysis</span>
               <ArrowRight className="ml-2 w-5 h-5" />
             </Link>
           </Button>

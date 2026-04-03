@@ -13,6 +13,8 @@ import { toast } from "sonner";
 import { generateMentorSlug } from "@/utils/mentorSlug";
 import { useMentorSaves } from "@/hooks/useMentorSaves";
 import { completeActivationJourney, trackRetentionEvent } from "@/lib/retentionSystem";
+import { clearPendingValueCapture, persistPendingValueCapture, readPendingValueCapture } from "@/lib/valueCapture";
+import { useEffect, useRef } from "react";
 
 const CALENDLY_REDIRECT_KEY = 'pending_calendly_redirect';
 
@@ -35,6 +37,7 @@ export const MentorCard = ({ mentor, className, priority = false }: MentorCardPr
   const SaveButtonIcon = saveButton.icon;
   const hasBookableCall = Boolean(mentor.calendly_url?.trim());
   const hasMessagingAccount = Boolean(mentor.user_id?.trim());
+  const hasConsumedPendingAction = useRef(false);
 
   // Truncate bio if too long
   const bioMaxLength = 200;
@@ -238,10 +241,14 @@ export const MentorCard = ({ mentor, className, priority = false }: MentorCardPr
 
     // Check if user is authenticated
     if (!isAuthenticated || !user) {
-      // Store Calendly URL in localStorage for redirect after auth
       localStorage.setItem(CALENDLY_REDIRECT_KEY, calendlyUrl);
-      // Redirect to auth page
-      navigate('/login?return=/community');
+      persistPendingValueCapture({
+        action: 'book_mentor',
+        entityId: mentor.id,
+        source: 'mentor_card',
+        resumeLabel: `Book ${mentor.name}`,
+      });
+      navigate(`/signup?source=book-mentor&return=${encodeURIComponent(profileUrl)}`);
       return;
     }
 
@@ -308,7 +315,13 @@ export const MentorCard = ({ mentor, className, priority = false }: MentorCardPr
     e.stopPropagation();
 
     if (!isAuthenticated || !user) {
-      navigate(`/login?return=${encodeURIComponent('/community')}`);
+      persistPendingValueCapture({
+        action: 'save_mentor',
+        entityId: mentor.id,
+        source: 'mentor_card',
+        resumeLabel: `Save ${mentor.name}`,
+      });
+      navigate(`/signup?source=save-mentor&return=${encodeURIComponent(profileUrl)}`);
       return;
     }
 
@@ -336,7 +349,13 @@ export const MentorCard = ({ mentor, className, priority = false }: MentorCardPr
 
     // Check if user is authenticated
     if (!isAuthenticated || !user) {
-      navigate('/login');
+      persistPendingValueCapture({
+        action: 'message_mentor',
+        entityId: mentor.id,
+        source: 'mentor_card',
+        resumeLabel: `Message ${mentor.name}`,
+      });
+      navigate(`/signup?source=message-mentor&return=${encodeURIComponent(profileUrl)}`);
       return;
     }
     const mentorUserId = await resolveMentorUserId({
@@ -369,6 +388,42 @@ export const MentorCard = ({ mentor, className, priority = false }: MentorCardPr
       toast.error('Failed to start conversation. Please try again.');
     }
   };
+
+  useEffect(() => {
+    if (!user || hasConsumedPendingAction.current) return;
+
+    const pendingCapture = readPendingValueCapture();
+    if (!pendingCapture || pendingCapture.entityId !== mentor.id) {
+      return;
+    }
+
+    hasConsumedPendingAction.current = true;
+
+    if (pendingCapture.action === 'save_mentor' && !saveButton.saved) {
+      clearPendingValueCapture();
+      void saveMentor({ id: mentor.id, name: mentor.name }, 'mentor_card_save_gated_auth');
+      return;
+    }
+
+    if (pendingCapture.action === 'message_mentor' && hasMessagingAccount) {
+      clearPendingValueCapture();
+      void (async () => {
+        const mentorUserId = await resolveMentorUserId({
+          name: mentor.name,
+          user_id: mentor.user_id || null,
+        });
+
+        if (!mentorUserId || mentorUserId === user.id) {
+          return;
+        }
+
+        const conversationId = await startConversation(mentorUserId);
+        if (conversationId) {
+          navigate(`/messages?conversationId=${conversationId}`);
+        }
+      })();
+    }
+  }, [hasMessagingAccount, mentor.id, mentor.name, mentor.user_id, navigate, resolveMentorUserId, saveButton.saved, saveMentor, startConversation, user]);
 
   return (
     <Card className={cn("border-2 border-border/60 rounded-lg hover:shadow-lg hover:-translate-y-1 transition-all duration-300 bg-background", className)}>

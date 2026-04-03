@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { buildActivationSummary, type ActivationIntent } from '@/lib/retentionSystem';
+import { buildActivationSummary, type ActivationGateVariant, type ActivationIntent } from '@/lib/retentionSystem';
 
 export interface RetentionNudge {
   id: string;
@@ -20,6 +20,8 @@ interface RetentionFeedState {
   savedMentorCount: number;
   activationIntent: ActivationIntent | null;
   activationMode: boolean;
+  activationGateVariant: ActivationGateVariant | null;
+  latestArtifactType: string | null;
 }
 
 export const useRetentionFeed = (): RetentionFeedState => {
@@ -32,6 +34,8 @@ export const useRetentionFeed = (): RetentionFeedState => {
     savedMentorCount: 0,
     activationIntent: null,
     activationMode: false,
+    activationGateVariant: null,
+    latestArtifactType: null,
   });
 
   const loadFeed = useCallback(async () => {
@@ -44,6 +48,8 @@ export const useRetentionFeed = (): RetentionFeedState => {
         savedMentorCount: 0,
         activationIntent: null,
         activationMode: false,
+        activationGateVariant: null,
+        latestArtifactType: null,
       });
       return;
     }
@@ -65,11 +71,19 @@ export const useRetentionFeed = (): RetentionFeedState => {
       const activationIntent = typeof userPreferences.activationIntent === 'string'
         ? userPreferences.activationIntent as ActivationIntent
         : null;
+      const activationGateVariant = userPreferences.activationGateVariant === 'forced_gate'
+        ? 'forced_gate'
+        : userPreferences.activationGateVariant === 'control'
+          ? 'control'
+          : null;
       const activationMode =
         profile.onboarding_completed !== true ||
-        (userPreferences.activationGateVariant === 'forced_gate' && typeof userPreferences.firstArtifactType !== 'string');
+        (activationGateVariant === 'forced_gate' && typeof userPreferences.firstArtifactType !== 'string');
       const latestArtifactLabel = typeof userPreferences.lastArtifactLabel === 'string'
         ? userPreferences.lastArtifactLabel
+        : null;
+      const latestArtifactType = typeof userPreferences.lastArtifactType === 'string'
+        ? userPreferences.lastArtifactType
         : null;
       const latestArtifactResumeUrl = typeof userPreferences.lastArtifactResumeUrl === 'string'
         ? userPreferences.lastArtifactResumeUrl
@@ -198,6 +212,8 @@ export const useRetentionFeed = (): RetentionFeedState => {
         savedMentorCount,
         activationIntent,
         activationMode,
+        activationGateVariant,
+        latestArtifactType,
       });
     } catch (error) {
       console.error('Failed to load retention feed', error);

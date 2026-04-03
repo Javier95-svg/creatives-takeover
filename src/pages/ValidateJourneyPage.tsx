@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import SEO, { createBreadcrumbSchema } from "@/components/SEO";
 import { useLeanStartupStore } from "@/store/leanStartupStore";
 import { getSafeLocalStorage } from "@/lib/safeStorage";
@@ -11,9 +11,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { Slider } from "@/components/ui/slider";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
-import { CheckCircle2, ClipboardList, Rocket, Target, ArrowRight, Scale, Star } from "lucide-react";
-import { Link } from "react-router-dom";
+import { CheckCircle2, ClipboardList, Rocket, Target, ArrowRight, Scale, Star, Save } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
+import { captureEvent } from "@/lib/analytics";
+import { loadValidationDraftArtifact, saveValidationDraftArtifact } from "@/lib/retentionSystem";
+import { clearPendingValueCapture, persistPendingValueCapture, readPendingValueCapture } from "@/lib/valueCapture";
 
 type CriteriaKey =
   | "problemSeverity"
@@ -164,9 +169,15 @@ const getDecisionLabel = (score: number) => {
 };
 
 export default function ValidateJourneyPage() {
+  const navigate = useNavigate();
+  const { user, isAuthenticated } = useAuth();
   const [ideas, setIdeas] = useState<IdeaScore[]>([createIdea()]);
   const [activeIdeaId, setActiveIdeaId] = useState<string>(ideas[0]?.id || "");
   const [chosenIdeaId, setChosenIdeaId] = useState<string | null>(null);
+  const [draftArtifactId, setDraftArtifactId] = useState<string>(`validation-draft-${Date.now()}`);
+  const [isSavingDraft, setIsSavingDraft] = useState(false);
+  const restoredFromLocal = useRef(false);
+  const remoteDraftLoaded = useRef(false);
 
   const { markToolUsed } = useLeanStartupStore();
   useEffect(() => { markToolUsed('decision-sprint'); }, [markToolUsed]);
@@ -183,9 +194,11 @@ export default function ValidateJourneyPage() {
         chosenIdeaId?: string | null;
       };
       if (parsed.ideas && parsed.ideas.length > 0) {
+        restoredFromLocal.current = true;
         setIdeas(parsed.ideas);
         setActiveIdeaId(parsed.activeIdeaId || parsed.ideas[0].id);
         setChosenIdeaId(parsed.chosenIdeaId ?? null);
+        setDraftArtifactId(parsed.chosenIdeaId || parsed.activeIdeaId || parsed.ideas[0].id);
       }
     } catch (error) {
       console.error("Failed to load validation sprint data", error);
@@ -198,6 +211,32 @@ export default function ValidateJourneyPage() {
     const storage = getSafeLocalStorage();
     storage.setItem(STORAGE_KEY, payload);
   }, [ideas, activeIdeaId, chosenIdeaId]);
+
+  useEffect(() => {
+    if (!user || restoredFromLocal.current || remoteDraftLoaded.current) return;
+
+    remoteDraftLoaded.current = true;
+
+    const restoreRemoteDraft = async () => {
+      try {
+        const remoteDraft = await loadValidationDraftArtifact(user.id);
+        if (!remoteDraft) return;
+
+        const restoredIdeas = remoteDraft.ideas as IdeaScore[];
+        if (!Array.isArray(restoredIdeas) || restoredIdeas.length === 0) return;
+
+        // FIX(retention): /decision-sprint — signed-in users now reopen their saved validation draft instead of starting from a blank local-only state.
+        setIdeas(restoredIdeas);
+        setActiveIdeaId(remoteDraft.activeIdeaId || restoredIdeas[0].id);
+        setChosenIdeaId(remoteDraft.chosenIdeaId ?? null);
+        setDraftArtifactId(remoteDraft.id);
+      } catch (error) {
+        console.error('Failed to restore validation draft', error);
+      }
+    };
+
+    void restoreRemoteDraft();
+  }, [user]);
 
   const rankedIdeas = useMemo(() => {
     return [...ideas].sort((a, b) => computeScore(b) - computeScore(a));
@@ -272,6 +311,73 @@ export default function ValidateJourneyPage() {
   const readinessCount = readinessFields.filter((field) => field && field.trim()).length + (activeIdea?.marketSignals.length >= 2 ? 1 : 0);
   const readinessTotal = 5;
   const readinessPercent = Math.round((readinessCount / readinessTotal) * 100);
+  const hasMeaningfulDraft = ideas.some((idea) =>
+    [
+      idea.name,
+      idea.oneLiner,
+      idea.targetCustomer,
+      idea.coreProblem,
+      idea.currentAlternative,
+      idea.unfairAdvantage,
+      idea.risks,
+    ].some((value) => value.trim().length > 0) || idea.marketSignals.length > 0,
+  );
+
+  const handleSaveDraft = async () => {
+    if (!hasMeaningfulDraft) {
+      toast.error('Add at least one idea or signal before saving this validation draft.');
+      return;
+    }
+
+    if (!user || !isAuthenticated) {
+      // FIX(retention): /decision-sprint — anonymous users can build the sprint first and only hit auth when they decide to save the draft.
+      persistPendingValueCapture({
+        action: 'save_validation',
+        entityId: activeIdeaId,
+        source: 'decision_sprint',
+        resumeLabel: 'Validation sprint draft',
+      });
+      navigate(`/signup?source=save-validation&return=${encodeURIComponent('/decision-sprint')}`);
+      return;
+    }
+
+    setIsSavingDraft(true);
+
+    try {
+      const updatedAt = new Date().toISOString();
+      const nextDraftId = draftArtifactId || chosenIdeaId || activeIdeaId || `validation-draft-${Date.now()}`;
+      await saveValidationDraftArtifact(user.id, {
+        id: nextDraftId,
+        ideas,
+        activeIdeaId,
+        chosenIdeaId,
+        updatedAt,
+      });
+      setDraftArtifactId(nextDraftId);
+      captureEvent('artifact_saved', {
+        artifactType: 'validation_draft',
+        artifactId: nextDraftId,
+        resumeUrl: '/decision-sprint',
+      });
+      toast.success('Validation draft saved. You can now resume it from the dashboard.');
+    } catch (error) {
+      console.error('Failed to save validation draft', error);
+      toast.error('Failed to save validation draft. Please try again.');
+    } finally {
+      setIsSavingDraft(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!user || !hasMeaningfulDraft) return;
+
+    const pendingCapture = readPendingValueCapture();
+    if (pendingCapture?.action !== 'save_validation') return;
+
+    clearPendingValueCapture();
+    void handleSaveDraft();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, hasMeaningfulDraft]);
 
   return (
     <>
@@ -296,12 +402,23 @@ export default function ValidateJourneyPage() {
           ]),
         ]}
       />
-      <DashboardLayout
-        title="Decision Sprint"
-        subtitle="Compare up to three ideas, score the signals, and pick the product that deserves your next build cycle."
-      >
-        <div className="space-y-8">
-        <div className="grid gap-6 md:grid-cols-3">
+	      <DashboardLayout
+	        title="Decision Sprint"
+	        subtitle="Compare up to three ideas, score the signals, and pick the product that deserves your next build cycle."
+	      >
+	        <div className="space-y-8">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-sm text-muted-foreground">
+                Start anonymously if you want. Save the sprint only when you decide this idea is worth coming back to.
+              </p>
+            </div>
+            <Button type="button" variant="outline" onClick={handleSaveDraft} disabled={isSavingDraft || !hasMeaningfulDraft}>
+              <Save className="mr-2 h-4 w-4" />
+              {isSavingDraft ? 'Saving draft...' : 'Save validation draft'}
+            </Button>
+          </div>
+	        <div className="grid gap-6 md:grid-cols-3">
           <Card className="border-primary/20 bg-background/80">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg">
@@ -583,14 +700,21 @@ export default function ValidateJourneyPage() {
                         <p className={cn("text-sm", decisionLabel.tone)}>{decisionLabel.description}</p>
                       </div>
 
-                      <Button
-                        className="w-full"
-                        onClick={() => setChosenIdeaId(activeIdea.id)}
-                        disabled={!activeIdea.name.trim()}
-                      >
-                        Mark this idea as chosen
-                      </Button>
-                      <Button variant="outline" className="w-full" asChild>
+	                      <Button
+	                        className="w-full"
+	                        onClick={() => {
+                            setChosenIdeaId(activeIdea.id);
+                            setDraftArtifactId(activeIdea.id);
+                          }}
+	                        disabled={!activeIdea.name.trim()}
+	                      >
+	                        Mark this idea as chosen
+	                      </Button>
+                        <Button variant="outline" className="w-full" onClick={handleSaveDraft} disabled={isSavingDraft || !hasMeaningfulDraft}>
+                          <Save className="h-4 w-4 mr-2" />
+                          {isSavingDraft ? 'Saving draft...' : 'Save and come back later'}
+                        </Button>
+	                      <Button variant="outline" className="w-full" asChild>
                         <Link to="/pmf-lab">
                           Continue to Market Need Lab
                           <ArrowRight className="h-4 w-4 ml-2" />

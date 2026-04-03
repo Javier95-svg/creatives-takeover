@@ -80,6 +80,14 @@ interface MarkArtifactCreatedParams {
   source?: string;
 }
 
+export interface ValidationDraftArtifact {
+  id: string;
+  chosenIdeaId: string | null;
+  activeIdeaId: string;
+  ideas: unknown[];
+  updatedAt: string;
+}
+
 const ACTIVATION_ROUTE_BY_INTENT: Record<ActivationIntent, string> = {
   find_mentor: '/community?mentorSource=onboarding&activationIntent=find_mentor',
   run_icp: '/icp-builder?activation=1',
@@ -404,6 +412,57 @@ export async function markFirstArtifactCreated(params: MarkArtifactCreatedParams
     lastArtifactLabel: params.label ?? null,
     lastArtifactResumeUrl: params.resumeUrl,
   }, true);
+}
+
+export async function saveValidationDraftArtifact(userId: string, draft: ValidationDraftArtifact) {
+  const profileState = await getProfileRetentionState(userId);
+  const existingPreferences = profileState?.user_preferences ?? {};
+  const hasFirstArtifact = typeof existingPreferences.firstArtifactType === 'string';
+
+  return updateUserPreferences(userId, {
+    validationDraft: draft,
+    ...(hasFirstArtifact ? {} : {
+      activationCompletedAt: draft.updatedAt,
+      firstArtifactType: 'validation_draft',
+      firstArtifactCreatedAt: draft.updatedAt,
+      firstArtifactId: draft.id,
+      firstArtifactLabel: 'Validation sprint draft',
+      firstArtifactResumeUrl: '/decision-sprint',
+    }),
+    lastArtifactType: 'validation_draft',
+    lastArtifactCreatedAt: draft.updatedAt,
+    lastArtifactId: draft.id,
+    lastArtifactLabel: 'Validation sprint draft',
+    lastArtifactResumeUrl: '/decision-sprint',
+  }, !hasFirstArtifact);
+}
+
+export async function loadValidationDraftArtifact(userId: string): Promise<ValidationDraftArtifact | null> {
+  const profileState = await getProfileRetentionState(userId);
+  const value = profileState?.user_preferences?.validationDraft;
+
+  if (!value || typeof value !== 'object') {
+    return null;
+  }
+
+  const candidate = value as Record<string, unknown>;
+
+  if (
+    typeof candidate.id !== 'string' ||
+    typeof candidate.activeIdeaId !== 'string' ||
+    !Array.isArray(candidate.ideas) ||
+    typeof candidate.updatedAt !== 'string'
+  ) {
+    return null;
+  }
+
+  return {
+    id: candidate.id,
+    chosenIdeaId: typeof candidate.chosenIdeaId === 'string' ? candidate.chosenIdeaId : null,
+    activeIdeaId: candidate.activeIdeaId,
+    ideas: candidate.ideas,
+    updatedAt: candidate.updatedAt,
+  };
 }
 
 export function buildActivationSummary(intent: ActivationIntent) {

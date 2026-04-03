@@ -11,6 +11,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useMessaging } from "@/hooks/useMessaging";
 import { toast } from "sonner";
 import { useMentorSaves } from "@/hooks/useMentorSaves";
+import { useCallback, useEffect, useRef } from "react";
+import { clearPendingValueCapture, persistPendingValueCapture, readPendingValueCapture } from "@/lib/valueCapture";
 
 interface MentorProfileProps {
   mentor: MentorProfileType;
@@ -31,6 +33,7 @@ export const MentorProfile = ({ mentor, onBookClick }: MentorProfileProps) => {
   const SaveButtonIcon = saveButton.icon;
   const hasBookableCall = Boolean(mentor.calendly_url?.trim()) && mentor.is_active !== false;
   const hasMessagingAccount = Boolean(mentor.user_id?.trim());
+  const hasConsumedPendingAction = useRef(false);
   
   // Truncate bio for display
   const bioMaxLength = 250;
@@ -217,7 +220,7 @@ export const MentorProfile = ({ mentor, onBookClick }: MentorProfileProps) => {
     );
   };
 
-  const handleSendMessage = async () => {
+  const handleSendMessage = useCallback(async () => {
     if (!hasMessagingAccount) {
       toast.error('This mentor has not enabled direct messaging yet. Try the social links on this profile instead.');
       return;
@@ -225,7 +228,13 @@ export const MentorProfile = ({ mentor, onBookClick }: MentorProfileProps) => {
 
     // Check if user is authenticated
     if (!isAuthenticated || !user) {
-      navigate('/login');
+      persistPendingValueCapture({
+        action: 'message_mentor',
+        entityId: mentor.id,
+        source: 'mentor_profile',
+        resumeLabel: `Message ${mentor.name}`,
+      });
+      navigate(`/signup?source=message-mentor&return=${encodeURIComponent(window.location.pathname)}`);
       return;
     }
     const mentorUserId = await resolveMentorUserId({
@@ -257,11 +266,17 @@ export const MentorProfile = ({ mentor, onBookClick }: MentorProfileProps) => {
       console.error('Error starting conversation:', error);
       toast.error('Failed to start conversation. Please try again.');
     }
-  };
+  }, [hasMessagingAccount, isAuthenticated, mentor.id, mentor.name, mentor.user_id, navigate, startConversation, resolveMentorUserId, user]);
 
   const handleSaveMentor = async () => {
     if (!isAuthenticated || !user) {
-      navigate(`/login?return=${encodeURIComponent(window.location.pathname)}`);
+      persistPendingValueCapture({
+        action: 'save_mentor',
+        entityId: mentor.id,
+        source: 'mentor_profile',
+        resumeLabel: `Save ${mentor.name}`,
+      });
+      navigate(`/signup?source=save-mentor&return=${encodeURIComponent(window.location.pathname)}`);
       return;
     }
 
@@ -277,6 +292,36 @@ export const MentorProfile = ({ mentor, onBookClick }: MentorProfileProps) => {
       'mentor_profile',
     );
   };
+
+  useEffect(() => {
+    if (!user || hasConsumedPendingAction.current) return;
+
+    const pendingCapture = readPendingValueCapture();
+    if (!pendingCapture || pendingCapture.entityId !== mentor.id) {
+      return;
+    }
+
+    hasConsumedPendingAction.current = true;
+
+    if (pendingCapture.action === 'save_mentor' && !saveButton.saved) {
+      clearPendingValueCapture();
+      void saveMentor({ id: mentor.id, name: mentor.name }, 'mentor_profile_save_gated_auth');
+      return;
+    }
+
+    if (pendingCapture.action === 'message_mentor' && hasMessagingAccount) {
+      clearPendingValueCapture();
+      void handleSendMessage();
+      return;
+    }
+
+    if (pendingCapture.action === 'book_mentor') {
+      clearPendingValueCapture();
+      toast.message(`Continue booking with ${mentor.name}`, {
+        description: 'Your account is ready. Use the discovery call button below to finish the booking flow.',
+      });
+    }
+  }, [handleSendMessage, hasMessagingAccount, mentor.id, mentor.name, saveButton.saved, saveMentor, user]);
 
   return (
     <Card className="border-2 border-border/60 rounded-lg overflow-hidden shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 bg-background">

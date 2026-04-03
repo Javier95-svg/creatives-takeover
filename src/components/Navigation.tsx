@@ -64,7 +64,7 @@ const Navigation = () => {
     "Home": Home,
     "BizMap AI": Bot,
     "Insighta": TrendingUp,
-    "Community": UsersIcon,
+    "Find Mentor": UsersIcon,
     "More": FileText,
     "About Us": Info,
     "Pricing": DollarSign,
@@ -192,8 +192,8 @@ const Navigation = () => {
 
   const navItems = [
     { name: "Home", href: "/", tooltip: "Return to homepage", icon: Home },
-    { name: "BizMap AI", href: "/bizmap-ai", tooltip: "AI Co-Founder that creates your business plan", icon: Bot },
-    { name: "Community", href: "/community", tooltip: "Connect with fellow creative entrepreneurs", icon: UsersIcon },
+    { name: "BizMap AI", href: "/bizmap-ai", tooltip: "Validate, build, and launch with guided startup tools", icon: Bot },
+    { name: "Find Mentor", href: "/community", tooltip: "Start with one mentor worth saving, messaging, or booking", icon: UsersIcon },
     { name: "Insighta", href: "/insighta", tooltip: "Funding opportunities and investment resources", icon: TrendingUp },
     { name: "More", href: "/newspaper", tooltip: "Stories, prompts, and learning resources", icon: FileText },
     { name: "About Us", href: "/about", tooltip: "Learn about our mission and team", icon: Info },

@@ -368,8 +368,8 @@ const Hero = () => {
   }, [trackTriggerView, isAuthenticated]);
 
   // Handle CTA clicks
-  const handlePrimaryCTAClick = () => {
-    trackEngagement('hero-primary-cta', 85);
+  const handleActivationCTAClick = (triggerType: string, engagementScore: number) => {
+    trackEngagement(triggerType, engagementScore);
   };
 
   const handleDashboardCTAClick = () => {
@@ -449,8 +449,8 @@ const Hero = () => {
                 : "Creatives Takeover hands first-time founders the system, the tools, and the network that used to be reserved for the well-connected. No cohort, no gatekeepers, no BS."}
             </p>
             
-            {/* Enhanced CTA Section */}
-            <div className="mb-6 sm:mb-8 md:mb-10">
+	            {/* Enhanced CTA Section */}
+	            <div className="mb-6 sm:mb-8 md:mb-10">
               {isAuthenticated ? (
                 <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-center justify-center px-4 sm:px-0">
                   <Button size="lg" variant="outline" className="w-full sm:w-auto min-w-[180px] min-h-[44px] touch-manipulation" asChild>
@@ -467,30 +467,47 @@ const Hero = () => {
                     </Link>
                   </Button>
                 </div>
-            ) : (
-              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-center justify-center px-4 sm:px-0">
-                <Button size="lg" className="w-full sm:w-auto min-h-[44px] touch-manipulation" asChild>
-                  <Link to="/signup" onClick={handlePrimaryCTAClick}>
-                    Join Today
-                    <ArrowRight className="w-4 h-4" />
-                  </Link>
-                </Button>
+	            ) : (
+	              <div className="flex flex-col gap-3 items-center justify-center px-4 sm:px-0">
+                  {/* FIX(retention): homepage — hero CTAs now route first-time visitors into the three activation entry paths instead of a generic signup ask. */}
+	                <div className="grid w-full gap-3 sm:grid-cols-3">
+                    <Button size="lg" className="w-full min-h-[44px] touch-manipulation" asChild>
+                      <Link to="/icp-builder" onClick={() => handleActivationCTAClick('hero-icp-cta', 90)}>
+                        Run ICP Analysis
+                        <ArrowRight className="w-4 h-4" />
+                      </Link>
+                    </Button>
 
-                <Button 
-                  variant="outline"
-                  size="lg" 
-                  className="w-full sm:w-auto min-h-[44px] touch-manipulation" 
-                  onClick={(e) => {
-                    e.preventDefault();
-                    handleSecondaryCTAClick(e as any);
-                  }}
-                >
-                  <Play className="w-4 h-4" />
-                  Explore Features
-                </Button>
-              </div>
-              )}
-            </div>
+                    <Button size="lg" variant="outline" className="w-full min-h-[44px] touch-manipulation" asChild>
+                      <Link to="/community" onClick={() => handleActivationCTAClick('hero-mentor-cta', 82)}>
+                        Find a Mentor
+                        <Users className="w-4 h-4" />
+                      </Link>
+                    </Button>
+
+                    <Button size="lg" variant="outline" className="w-full min-h-[44px] touch-manipulation" asChild>
+                      <Link to="/decision-sprint" onClick={() => handleActivationCTAClick('hero-validation-cta', 86)}>
+                        Start Validation
+                        <Sparkles className="w-4 h-4" />
+                      </Link>
+                    </Button>
+                  </div>
+
+	                <Button 
+	                  variant="ghost"
+	                  size="lg" 
+	                  className="w-full sm:w-auto min-h-[44px] touch-manipulation" 
+	                  onClick={(e) => {
+	                    e.preventDefault();
+	                    handleSecondaryCTAClick(e as any);
+	                  }}
+	                >
+	                  <Play className="w-4 h-4" />
+	                  Explore the platform
+	                </Button>
+	              </div>
+	              )}
+	            </div>
           </div>
 
           {/* Right Section - 4-Pic Grid Layout */}
