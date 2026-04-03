@@ -6,6 +6,7 @@ import { Star, Crown, Check } from "lucide-react";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 // Stripe Payment Links mapping by tier and billing cycle
 const PAYMENT_LINKS: Record<string, Record<string, string>> = {
@@ -43,7 +44,18 @@ const getPaymentLink = (
 const Pricing = () => {
   const { tiers, loading, subscriptionData } = useSubscription();
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
+
+  const normalizeTierName = (tierName?: string | null): string => {
+    const normalizedTier = (tierName || "").trim().toLowerCase();
+
+    if (normalizedTier === "free" || normalizedTier === "rookie") return "rookie";
+    if (normalizedTier === "creator" || normalizedTier === "rising") return "rising";
+    if (normalizedTier === "professional" || normalizedTier === "pro") return "pro";
+
+    return normalizedTier;
+  };
 
   // Map tier names for display
   const getTierDisplayName = (tierName: string): string => {
@@ -155,7 +167,16 @@ const Pricing = () => {
     return details[tierName] || { title: "Get Started", cta: "Subscribe" };
   };
 
+  // FIX(dead-click): /pricing — current-plan buttons no longer render as inert disabled CTAs and now route signed-in users to account management.
   const handleSubscribe = (tierName: string) => {
+    const currentTier = normalizeTierName(subscriptionData?.subscription_tier);
+    const nextTier = normalizeTierName(tierName);
+
+    if (user && currentTier === nextTier) {
+      navigate("/account");
+      return;
+    }
+
     if (tierName === "rookie" || tierName === "free") {
       if (!user) {
         window.location.href = "/auth";
@@ -230,7 +251,7 @@ const Pricing = () => {
               const features = getFeatures(tier.tier_name);
               const targetAudience = getTargetAudience(tier.tier_name);
               const subtitle = getSubtitle(tier.tier_name);
-              const isCurrentPlan = subscriptionData?.subscription_tier === tier.tier_name;
+              const isCurrentPlan = normalizeTierName(subscriptionData?.subscription_tier) === normalizeTierName(tier.tier_name);
               const isPopular = tier.tier_name === "rising" || tier.tier_name === "creator";
               const { price, period } = getPrice(tier.tier_name);
 
@@ -305,17 +326,17 @@ const Pricing = () => {
                     </div>
                   </div>
 
+                  {/* FIX(dead-click): /pricing — current plan cards now provide a real "Manage Plan" action instead of a disabled button that absorbs clicks. */}
                   <Button
                     onClick={() => handleSubscribe(tier.tier_name)}
-                    disabled={!!(isCurrentPlan && user)}
                     className={`w-full rounded-full py-3 px-4 font-semibold font-poppins transition-all shadow-sm hover:shadow-md ${isCurrentPlan
-                      ? "bg-green-600 text-white cursor-default hover:bg-green-700"
+                      ? "bg-green-600 text-white hover:bg-green-700"
                       : isPopular
                         ? "bg-primary hover:bg-primary/90 text-primary-foreground"
                         : "bg-secondary hover:bg-secondary/80 text-secondary-foreground"
                       }`}
                   >
-                    {isCurrentPlan && user ? "Current Plan" : !user && tier.tier_name === "free" ? "Start Now" : cta}
+                    {isCurrentPlan && user ? "Manage Plan" : !user && tier.tier_name === "free" ? "Start Now" : cta}
                   </Button>
                 </div>
               );

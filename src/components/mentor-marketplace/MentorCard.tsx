@@ -33,6 +33,8 @@ export const MentorCard = ({ mentor, className, priority = false }: MentorCardPr
   const profileUrl = `/community/${mentorSlug}`;
   const saveButton = buildSaveButtonState(mentor.id);
   const SaveButtonIcon = saveButton.icon;
+  const hasBookableCall = Boolean(mentor.calendly_url?.trim());
+  const hasMessagingAccount = Boolean(mentor.user_id?.trim());
 
   // Truncate bio if too long
   const bioMaxLength = 200;
@@ -228,7 +230,7 @@ export const MentorCard = ({ mentor, className, priority = false }: MentorCardPr
 
     const calendlyUrl = mentor.calendly_url?.trim();
 
-    if (!calendlyUrl) {
+    if (!hasBookableCall || !calendlyUrl) {
       toast.error("This mentor does not have a Calendly link configured yet.");
       return;
     }
@@ -326,6 +328,11 @@ export const MentorCard = ({ mentor, className, priority = false }: MentorCardPr
   const handleSendMessage = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+
+    if (!hasMessagingAccount) {
+      toast.error('This mentor has not enabled direct messaging yet. Try the social links on their profile instead.');
+      return;
+    }
 
     // Check if user is authenticated
     if (!isAuthenticated || !user) {
@@ -516,22 +523,26 @@ export const MentorCard = ({ mentor, className, priority = false }: MentorCardPr
 
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row items-center gap-3 pt-2">
+              {/* FIX(dead-click): /community — mentor cards now only show primary call/message actions when the mentor actually supports them, and otherwise render explicit unavailable states. */}
               <Button
                 size="default"
-                onClick={handleBookDiscoveryCall}
+                variant={hasBookableCall ? "default" : "outline"}
+                onClick={hasBookableCall ? handleBookDiscoveryCall : undefined}
+                disabled={!hasBookableCall}
                 className="w-full sm:w-auto h-10 flex-1 hover:shadow-md transition-all duration-200"
               >
                 <Calendar className="h-4 w-4 mr-1.5" />
-                Book Discovery Call
+                {hasBookableCall ? 'Book Discovery Call' : 'Discovery Call Unavailable'}
               </Button>
               <Button
                 size="default"
                 variant="outline"
-                onClick={handleSendMessage}
+                onClick={hasMessagingAccount ? handleSendMessage : undefined}
+                disabled={!hasMessagingAccount}
                 className="w-full sm:w-auto h-10 flex-1 hover:shadow-md transition-all duration-200"
               >
                 <MessageCircle className="h-4 w-4 mr-1.5" />
-                Message
+                {hasMessagingAccount ? 'Message' : 'Messaging Unavailable'}
               </Button>
               <Button
                 size="default"
@@ -544,6 +555,15 @@ export const MentorCard = ({ mentor, className, priority = false }: MentorCardPr
                 {saveButton.saving ? 'Saving...' : saveButton.label}
               </Button>
             </div>
+            {(!hasBookableCall || !hasMessagingAccount) && (
+              <p className="text-xs text-muted-foreground">
+                {!hasBookableCall && !hasMessagingAccount
+                  ? 'This mentor currently supports profile browsing only. Use the external links above to reach out.'
+                  : !hasBookableCall
+                    ? 'Discovery calls are not enabled for this mentor yet.'
+                    : 'Direct messaging is not enabled for this mentor yet.'}
+              </p>
+            )}
           </div>
 
         </div>

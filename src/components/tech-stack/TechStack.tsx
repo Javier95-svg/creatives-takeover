@@ -181,6 +181,14 @@ const TechStack: React.FC = () => {
     }
 
     if (selectedCount !== techStackData.length) {
+      const firstUnselectedCategory = techStackData.find((category) => !selectedProducts[category.id]);
+      if (firstUnselectedCategory) {
+        document.getElementById(`tech-stack-category-${firstUnselectedCategory.id}`)?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center',
+        });
+      }
+
       toast({
         title: "Selection Required",
         description: `Please select one product from all ${techStackData.length} categories to generate your budget.`,
@@ -350,6 +358,16 @@ const TechStack: React.FC = () => {
   const canGenerateBudget = Boolean(user) && allCategoriesSelected;
   const canSaveReport = Boolean(user) && showBudget && allCategoriesSelected;
   const previewBreakdown = previewReport?.budget_breakdown || [];
+  const firstUnselectedCategory = techStackData.find((category) => !selectedProducts[category.id]);
+  const generateButtonLabel = !user
+    ? 'Sign In to View Budget'
+    : subscriptionLoading || creditsLoading
+      ? 'Loading access...'
+      : firstUnselectedCategory
+        ? 'Complete selections first'
+        : currentTier === 'free'
+          ? 'Generate (1/month)'
+          : 'Generate Budget';
 
   return (
     <div className="space-y-6 sm:space-y-8 pb-8">
@@ -544,7 +562,10 @@ const TechStack: React.FC = () => {
                 </p>
                 {!allCategoriesSelected && user && (
                   <p className="text-xs text-muted-foreground mt-1">
-                    Select one product in all {techStackData.length} categories to view budget and strategy
+                    {/* FIX(dead-click): /tech-stack — the sticky CTA now names the exact blocker so it does not look like a dead primary action. */}
+                    {firstUnselectedCategory
+                      ? `Next blocker: choose a tool in ${firstUnselectedCategory.name} to unlock the budget.`
+                      : `Select one product in all ${techStackData.length} categories to view budget and strategy.`}
                   </p>
                 )}
               </div>
@@ -564,23 +585,20 @@ const TechStack: React.FC = () => {
                 <Button
                   onClick={handleSeeBudget}
                   size="lg"
-                  className={`w-full sm:w-auto min-w-[140px] ${!canGenerateBudget ? 'opacity-70' : ''}`}
+                  variant={!allCategoriesSelected && user ? "outline" : "default"}
+                  className="w-full sm:w-auto min-w-[140px]"
                   aria-disabled={!canGenerateBudget}
                   disabled={Boolean(user) && (subscriptionLoading || creditsLoading)}
                 >
                   {!user ? (
                     <>
                       <Lock className="w-4 h-4 mr-2" />
-                      Sign In to View Budget
+                      {generateButtonLabel}
                     </>
                   ) : (
                     <>
                       <Calculator className="w-4 h-4 mr-2" />
-                      {subscriptionLoading || creditsLoading
-                        ? 'Loading access...'
-                        : currentTier === 'free'
-                          ? 'Generate (1/month)'
-                          : 'Generate Budget'}
+                      {generateButtonLabel}
                       <CreditCostBadge feature="TECH_STACK_GENERATION" className="ml-2 bg-background/20 text-primary-foreground" />
                     </>
                   )}
@@ -624,7 +642,7 @@ const CategorySection: React.FC<CategorySectionProps> = ({
   isMobile
 }) => {
   return (
-    <Card>
+    <Card id={`tech-stack-category-${category.id}`}>
       <CardHeader>
         <CardTitle className="text-2xl flex items-center gap-2">
           {category.name}

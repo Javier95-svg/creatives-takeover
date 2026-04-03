@@ -21,6 +21,7 @@ const Messages = () => {
   const { getUserIdByUsername, startConversation } = useMessaging({ autoLoad: false, suppressLoadErrors: true });
   const [resolvedConversationId, setResolvedConversationId] = useState<string | undefined>(conversationIdParam || undefined);
   const [isResolvingUsername, setIsResolvingUsername] = useState(false);
+  const [conversationError, setConversationError] = useState<string | null>(null);
   const hasResolvedUsername = useRef<string | null>(null);
 
   // Prevent unwanted scrolling on page load and interactions
@@ -88,6 +89,7 @@ const Messages = () => {
     if (!username || !user || !isAuthenticated) {
       // If no username, use conversationId from query param or undefined
       setResolvedConversationId(conversationIdParam || undefined);
+      setConversationError(null);
       hasResolvedUsername.current = null;
       return;
     }
@@ -109,6 +111,7 @@ const Messages = () => {
         if (!userId) {
           toast.error(`User "${username}" not found`);
           setResolvedConversationId(undefined);
+          setConversationError(`We couldn't find the founder "${username}". You can return to the community hub and start a new conversation from a live profile.`);
           hasResolvedUsername.current = null; // Reset on error
           return;
         }
@@ -117,6 +120,7 @@ const Messages = () => {
         if (userId === user.id) {
           toast.error('Cannot message yourself');
           setResolvedConversationId(undefined);
+          setConversationError('This route points back to your own profile, so there is no conversation to open here.');
           hasResolvedUsername.current = null;
           return;
         }
@@ -126,15 +130,18 @@ const Messages = () => {
         
         if (conversationId) {
           setResolvedConversationId(conversationId);
+          setConversationError(null);
         } else {
           toast.error('Failed to start conversation');
           setResolvedConversationId(undefined);
+          setConversationError('We could not start that conversation right now. You can open your inbox or return to the community and try again.');
           hasResolvedUsername.current = null;
         }
         } catch (error) {
           logError('Error resolving username', error);
           toast.error('Failed to load conversation');
           setResolvedConversationId(undefined);
+          setConversationError('That conversation could not be loaded right now. Open your inbox or return to the community to start again.');
           hasResolvedUsername.current = null;
         } finally {
         setIsResolvingUsername(false);
@@ -212,6 +219,25 @@ const Messages = () => {
                     <div className="text-center">
                       <MessageCircle className="h-12 w-12 mx-auto mb-4 animate-pulse text-muted-foreground" />
                       <p className="text-muted-foreground">Loading conversation...</p>
+                    </div>
+                  </div>
+                ) : conversationError ? (
+                  <div className="flex items-center justify-center min-h-[320px] h-[45vh] md:h-[600px]">
+                    {/* FIX(dead-click): /messages — username-resolution failures now render an inline recovery state with clear next actions instead of leaving the page in a toast-only dead state. */}
+                    <div className="max-w-lg text-center space-y-4">
+                      <MessageCircle className="h-12 w-12 mx-auto text-muted-foreground" />
+                      <div className="space-y-2">
+                        <h2 className="text-xl font-semibold">Conversation unavailable</h2>
+                        <p className="text-sm text-muted-foreground leading-relaxed">{conversationError}</p>
+                      </div>
+                      <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                        <Button asChild>
+                          <Link to="/messages">Open Inbox</Link>
+                        </Button>
+                        <Button variant="outline" asChild>
+                          <Link to="/community">Back to Community</Link>
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 ) : (

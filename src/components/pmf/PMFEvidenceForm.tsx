@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   CheckCircle2,
@@ -174,6 +174,9 @@ const PMFEvidenceForm: React.FC<PMFEvidenceFormProps> = ({ onSubmit, isSubmittin
   const [whatWouldChangeMind, setWhatWouldChangeMind] = useState('');
   const [confidenceLevel, setConfidenceLevel] = useState(5);
   const [currentStep, setCurrentStep] = useState(0);
+  const validationSetupRef = useRef<HTMLDivElement | null>(null);
+  const interviewStepRef = useRef<HTMLDivElement | null>(null);
+  const [stepFeedback, setStepFeedback] = useState<{ step: number; message: string } | null>(null);
 
   const conversationCount = interviews.length;
   const strongInterestCount = interviews.filter(
@@ -293,6 +296,18 @@ const PMFEvidenceForm: React.FC<PMFEvidenceFormProps> = ({ onSubmit, isSubmittin
       ? interviews.length >= 1
       : true;
 
+  useEffect(() => {
+    if (stepFeedback?.step === currentStep && canContinue) {
+      setStepFeedback(null);
+    }
+  }, [canContinue, currentStep, stepFeedback]);
+
+  useEffect(() => {
+    if (stepFeedback?.step === totalSteps && isValid) {
+      setStepFeedback(null);
+    }
+  }, [isValid, stepFeedback, totalSteps]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!isValid) return;
@@ -326,6 +341,52 @@ const PMFEvidenceForm: React.FC<PMFEvidenceFormProps> = ({ onSubmit, isSubmittin
     if (currentStep > 0) setCurrentStep((prev) => prev - 1);
   };
 
+  const scrollToRef = (targetRef: React.RefObject<HTMLDivElement>) => {
+    window.setTimeout(() => {
+      targetRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 0);
+  };
+
+  // FIX(dead-click): /pmf-lab — blocked wizard CTAs now explain the missing requirement and scroll users to the exact step instead of leaving a dead disabled button.
+  const handleBlockedContinue = () => {
+    if (currentStep === 0) {
+      setStepFeedback({
+        step: 0,
+        message: 'Select at least one validation method before moving to the interview tracker.',
+      });
+      scrollToRef(validationSetupRef);
+      return;
+    }
+
+    if (currentStep === 1) {
+      setStepFeedback({
+        step: 1,
+        message: 'Add your first customer interview to continue to the pattern summary.',
+      });
+      scrollToRef(interviewStepRef);
+    }
+  };
+
+  // FIX(dead-click): /pmf-lab — the final analyze action now jumps users back to the missing prerequisite step with visible guidance instead of presenting an inert disabled CTA.
+  const handleBlockedAnalysis = () => {
+    if (testTypes.length === 0) {
+      setCurrentStep(0);
+      setStepFeedback({
+        step: 0,
+        message: 'Choose a validation method first so PMF Lab knows how you tested demand.',
+      });
+      scrollToRef(validationSetupRef);
+      return;
+    }
+
+    setCurrentStep(1);
+    setStepFeedback({
+      step: 1,
+      message: `Log at least ${PMF_REQUIRED_SIGNALS} interviews before running the PMF analysis.`,
+    });
+    scrollToRef(interviewStepRef);
+  };
+
   const StepIndicator = () => (
     <div className="flex items-center justify-center gap-1 mb-8">
       {STEPS.map((item, index) => {
@@ -335,21 +396,29 @@ const PMFEvidenceForm: React.FC<PMFEvidenceFormProps> = ({ onSubmit, isSubmittin
 
         return (
           <React.Fragment key={item.number}>
-            <button
-              type="button"
-              onClick={() => (isDone || isActive) && setCurrentStep(index)}
-              className={cn(
-                'relative w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-bold transition-all duration-300 shrink-0',
-                isDone && hasValue
-                  ? 'bg-primary text-primary-foreground cursor-pointer shadow-sm'
-                  : isActive
-                    ? 'bg-primary/10 text-primary border-2 border-primary ring-2 ring-primary/20 cursor-default'
-                    : 'bg-muted text-muted-foreground cursor-default'
-              )}
-              title={isDone ? `Edit: ${item.title}` : undefined}
-            >
-              {isDone && hasValue ? <CheckCircle2 className="w-3.5 h-3.5" /> : item.number}
-            </button>
+            {isDone && hasValue ? (
+              <button
+                type="button"
+                onClick={() => setCurrentStep(index)}
+                className="relative w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-bold transition-all duration-300 shrink-0 bg-primary text-primary-foreground cursor-pointer shadow-sm"
+                title={`Edit: ${item.title}`}
+              >
+                {/* FIX(dead-click): /pmf-lab — future step indicators are now non-interactive until the step is actually reachable. */}
+                <CheckCircle2 className="w-3.5 h-3.5" />
+              </button>
+            ) : (
+              <div
+                aria-current={isActive ? 'step' : undefined}
+                className={cn(
+                  'relative w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-bold transition-all duration-300 shrink-0',
+                  isActive
+                    ? 'bg-primary/10 text-primary border-2 border-primary ring-2 ring-primary/20'
+                    : 'bg-muted text-muted-foreground'
+                )}
+              >
+                {item.number}
+              </div>
+            )}
             {index < totalSteps - 1 && (
               <div
                 className={cn(
@@ -432,7 +501,7 @@ const PMFEvidenceForm: React.FC<PMFEvidenceFormProps> = ({ onSubmit, isSubmittin
   const renderCurrentStep = () => {
     if (currentStep === 0) {
       return (
-        <div className="space-y-5">
+        <div ref={validationSetupRef} className="space-y-5">
           <div className="flex flex-wrap gap-2">
             {TEST_TYPES.map((type) => (
               <button
@@ -468,7 +537,7 @@ const PMFEvidenceForm: React.FC<PMFEvidenceFormProps> = ({ onSubmit, isSubmittin
 
     if (currentStep === 1) {
       return (
-        <div className="space-y-5">
+        <div ref={interviewStepRef} className="space-y-5">
           <div className="rounded-2xl border border-primary/15 bg-primary/5 p-4">
             <div className="flex items-center justify-between gap-3 text-sm">
               <div>
@@ -925,8 +994,10 @@ const PMFEvidenceForm: React.FC<PMFEvidenceFormProps> = ({ onSubmit, isSubmittin
                     Back
                   </Button>
                   <Button
-                    type="submit"
-                    disabled={!isValid || isSubmitting}
+                    type={isValid ? "submit" : "button"}
+                    onClick={isValid ? undefined : handleBlockedAnalysis}
+                    disabled={isSubmitting}
+                    variant={isValid ? "default" : "outline"}
                     className="flex-1 btn-magnetic gap-2"
                     size="lg"
                   >
@@ -944,8 +1015,10 @@ const PMFEvidenceForm: React.FC<PMFEvidenceFormProps> = ({ onSubmit, isSubmittin
                   </Button>
                 </div>
                 {!isValid && (
-                  <p className="text-xs text-muted-foreground text-right">
-                    Add at least one validation method and {PMF_REQUIRED_SIGNALS} logged interviews to unlock AI scoring.
+                  <p className="text-xs text-right text-muted-foreground">
+                    {stepFeedback?.step === totalSteps
+                      ? stepFeedback.message
+                      : `Add at least one validation method and ${PMF_REQUIRED_SIGNALS} logged interviews to unlock AI scoring.`}
                   </p>
                 )}
               </div>
@@ -1012,8 +1085,8 @@ const PMFEvidenceForm: React.FC<PMFEvidenceFormProps> = ({ onSubmit, isSubmittin
                 )}
                 <Button
                   type="button"
-                  onClick={goNext}
-                  disabled={!canContinue}
+                  onClick={canContinue ? goNext : handleBlockedContinue}
+                  variant={canContinue ? "default" : "outline"}
                   className={cn('flex-1 gap-2 btn-magnetic', currentStep === 0 && 'w-full')}
                   size="lg"
                 >
@@ -1030,6 +1103,15 @@ const PMFEvidenceForm: React.FC<PMFEvidenceFormProps> = ({ onSubmit, isSubmittin
                   )}
                 </Button>
               </div>
+              {!canContinue && (
+                <p className="text-xs text-right text-muted-foreground">
+                  {stepFeedback?.step === currentStep
+                    ? stepFeedback.message
+                    : currentStep === 0
+                      ? 'Select at least one validation method to continue.'
+                      : 'Add your first interview to continue.'}
+                </p>
+              )}
             </div>
           </StepView>
         </CardContent>

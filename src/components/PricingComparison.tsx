@@ -6,7 +6,6 @@ import { Check, X, ChevronLeft, ChevronRight } from "lucide-react";
 
 const PricingComparison = () => {
   const [currentMobileIndex, setCurrentMobileIndex] = useState(0);
-  const [highlightedRow, setHighlightedRow] = useState<string | null>(null);
 
   const features = [
     {
@@ -233,23 +232,19 @@ const PricingComparison = () => {
                         </td>
                       </tr>
                       {category.items.map((item, index) => {
-                        const isHighlighted = highlightedRow === item.feature;
                         return (
                           <tr
                             key={item.feature}
                             style={{ animationDelay: `${(catIndex + 1) * 0.15 + (index + 1) * 0.05}s` }}
-                            className={`animate-fade-in cursor-pointer transition-all duration-300 border-b border-border/40 ${index % 2 === 0 ? "bg-background" : "bg-muted/20"
-                              } ${isHighlighted ? 'bg-primary/10 shadow-md scale-[1.01]' : 'hover:bg-muted/40'
-                              }`}
-                            onClick={() => setHighlightedRow(isHighlighted ? null : item.feature)}
+                            className={`animate-fade-in border-b border-border/40 ${index % 2 === 0 ? "bg-background" : "bg-muted/20"}`}
                           >
-                            <td className={`sticky left-0 z-10 bg-inherit p-4 font-medium text-sm text-foreground border-r border-border/60 ${isHighlighted ? 'text-primary' : ''
-                              }`}>
+                            {/* FIX(dead-click): /pricing — removed fake clickable comparison rows because they were informational only and should not look interactive. */}
+                            <td className="sticky left-0 z-10 bg-inherit p-4 font-medium text-sm text-foreground border-r border-border/60">
                               {item.feature}
                             </td>
-                            <td className="p-4 text-center border-r border-border/40">{renderFeatureValue(item.free, isHighlighted)}</td>
-                            <td className="p-4 text-center border-r border-border/40">{renderFeatureValue(item.creator, isHighlighted)}</td>
-                            <td className="p-4 text-center bg-primary/5">{renderFeatureValue(item.professional, isHighlighted)}</td>
+                            <td className="p-4 text-center border-r border-border/40">{renderFeatureValue(item.free)}</td>
+                            <td className="p-4 text-center border-r border-border/40">{renderFeatureValue(item.creator)}</td>
+                            <td className="p-4 text-center bg-primary/5">{renderFeatureValue(item.professional)}</td>
                           </tr>
                         );
                       })}

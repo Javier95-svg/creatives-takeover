@@ -171,6 +171,7 @@ const ICPInputForm: React.FC<ICPInputFormProps> = ({
   const [currentStep, setCurrentStep] = useState(0);
   const [saveState, setSaveState] = useState<'idle' | 'restored' | 'saving' | 'saved'>('idle');
   const [lastSavedAt, setLastSavedAt] = useState<number | null>(null);
+  const [stepFeedback, setStepFeedback] = useState<{ step: number; message: string } | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const hasHydratedDraft = useRef(false);
 
@@ -196,6 +197,12 @@ const ICPInputForm: React.FC<ICPInputFormProps> = ({
       return () => clearTimeout(timer);
     }
   }, [currentStep, isReview]);
+
+  useEffect(() => {
+    if (stepFeedback?.step === currentStep && canContinue) {
+      setStepFeedback(null);
+    }
+  }, [canContinue, currentStep, stepFeedback]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -276,6 +283,15 @@ const ICPInputForm: React.FC<ICPInputFormProps> = ({
     }
   };
 
+  // FIX(dead-click): /icp-builder — blocked wizard CTAs now focus the current textarea and explain the missing input instead of relying on a dead disabled button.
+  const handleBlockedContinue = () => {
+    setStepFeedback({
+      step: currentStep,
+      message: 'Add enough detail here so the next ICP decision is grounded in something specific.',
+    });
+    textareaRef.current?.focus();
+  };
+
   const StepIndicator = () => (
     <div className="mb-8 rounded-[1.5rem] border border-border/60 bg-background/80 p-4 shadow-sm">
       <div className="mb-4 flex items-center justify-between gap-4">
@@ -304,21 +320,29 @@ const ICPInputForm: React.FC<ICPInputFormProps> = ({
         const hasValue = (formData[item.field] as string).trim().length > 0;
         return (
           <React.Fragment key={item.field}>
-            <button
-              type="button"
-              onClick={() => (isDone || isActive) && setCurrentStep(index)}
-              className={cn(
-                'relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[11px] font-bold transition-all duration-300',
-                isDone && hasValue
-                  ? 'cursor-pointer bg-primary text-primary-foreground shadow-sm'
-                  : isActive
-                    ? 'cursor-default border-2 border-primary bg-primary/10 text-primary ring-2 ring-primary/20'
-                    : 'cursor-default border border-border/60 bg-muted/70 text-muted-foreground',
-              )}
-              title={isDone ? `Edit: ${item.question}` : undefined}
-            >
-              {isDone && hasValue ? <CheckCircle2 className="h-3.5 w-3.5" /> : item.number}
-            </button>
+            {isDone && hasValue ? (
+              <button
+                type="button"
+                onClick={() => setCurrentStep(index)}
+                className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[11px] font-bold transition-all duration-300 cursor-pointer bg-primary text-primary-foreground shadow-sm"
+                title={`Edit: ${item.question}`}
+              >
+                {/* FIX(dead-click): /icp-builder — future step indicators are no longer clickable until the user actually unlocks them. */}
+                <CheckCircle2 className="h-3.5 w-3.5" />
+              </button>
+            ) : (
+              <div
+                aria-current={isActive ? 'step' : undefined}
+                className={cn(
+                  'relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[11px] font-bold transition-all duration-300',
+                  isActive
+                    ? 'border-2 border-primary bg-primary/10 text-primary ring-2 ring-primary/20'
+                    : 'border border-border/60 bg-muted/70 text-muted-foreground',
+                )}
+              >
+                {item.number}
+              </div>
+            )}
             {index < totalSteps - 1 && (
               <div
                 className={cn(
@@ -602,8 +626,8 @@ const ICPInputForm: React.FC<ICPInputFormProps> = ({
               )}
               <Button
                 type="button"
-                onClick={goNext}
-                disabled={!canContinue}
+                onClick={canContinue ? goNext : handleBlockedContinue}
+                variant={canContinue ? "default" : "outline"}
                 className={cn('flex-1 gap-2', currentStep === 0 && 'w-full')}
                 size="lg"
               >
@@ -620,6 +644,13 @@ const ICPInputForm: React.FC<ICPInputFormProps> = ({
                 )}
               </Button>
             </div>
+            {!canContinue && (
+              <p className="text-right text-xs text-muted-foreground">
+                {stepFeedback?.step === currentStep
+                  ? stepFeedback.message
+                  : 'Complete this answer before moving to the next ICP step.'}
+              </p>
+            )}
           </div>
         </div>
       </StepView>

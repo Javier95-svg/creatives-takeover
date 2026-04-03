@@ -23,13 +23,14 @@ export const MentorProfile = ({ mentor, onBookClick }: MentorProfileProps) => {
   const { startConversation, resolveMentorUserId } = useMessaging({ autoLoad: false });
   const { saveMentor, buildSaveButtonState } = useMentorSaves();
   const currencySymbol = getCurrencySymbol(mentor.currency);
-  const programFee = mentor.hourly_rate / 100;
   const hourlyRate = ((mentor as any).hourly_rate_per_hour || 0) / 100;
   const averageRating = mentor.rating || 0;
   const reviewCount = mentor.review_count || 0;
   const sessionsCompleted = mentor.total_sessions_completed || 0;
   const saveButton = buildSaveButtonState(mentor.id);
   const SaveButtonIcon = saveButton.icon;
+  const hasBookableCall = Boolean(mentor.calendly_url?.trim()) && mentor.is_active !== false;
+  const hasMessagingAccount = Boolean(mentor.user_id?.trim());
   
   // Truncate bio for display
   const bioMaxLength = 250;
@@ -217,6 +218,11 @@ export const MentorProfile = ({ mentor, onBookClick }: MentorProfileProps) => {
   };
 
   const handleSendMessage = async () => {
+    if (!hasMessagingAccount) {
+      toast.error('This mentor has not enabled direct messaging yet. Try the social links on this profile instead.');
+      return;
+    }
+
     // Check if user is authenticated
     if (!isAuthenticated || !user) {
       navigate('/login');
@@ -449,22 +455,24 @@ export const MentorProfile = ({ mentor, onBookClick }: MentorProfileProps) => {
 	                {/* Action Buttons */}
 	                <div className="flex flex-col items-stretch gap-3 pt-2 sm:flex-row">
 	                  <Button
-	                    onClick={onBookClick}
+	                    onClick={hasBookableCall ? onBookClick : undefined}
 	                    size="default"
+	                    variant={hasBookableCall ? "default" : "outline"}
 	                    className="w-full flex-1 text-sm sm:text-base hover:shadow-md transition-all duration-200"
-	                    disabled={mentor.is_active === false}
+	                    disabled={!hasBookableCall}
                   >
                     <Calendar className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                    Book Discovery Call
+                    {hasBookableCall ? 'Book Discovery Call' : 'Discovery Call Unavailable'}
                   </Button>
                   <Button
                     variant="outline"
                     size="default"
-                    onClick={handleSendMessage}
+                    onClick={hasMessagingAccount ? handleSendMessage : undefined}
                     className="w-full flex-1 text-sm sm:text-base hover:shadow-md transition-all duration-200"
+                    disabled={!hasMessagingAccount}
                   >
 	                    <MessageCircle className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
-	                    Send Message
+	                    {hasMessagingAccount ? 'Send Message' : 'Messaging Unavailable'}
 	                  </Button>
 	                  <Button
 	                    variant={saveButton.saved ? "secondary" : "outline"}
@@ -477,6 +485,18 @@ export const MentorProfile = ({ mentor, onBookClick }: MentorProfileProps) => {
 	                    {saveButton.saving ? 'Saving...' : saveButton.label}
 	                  </Button>
 	                </div>
+            {(!hasBookableCall || !hasMessagingAccount) && (
+              <>
+                {/* FIX(dead-click): /community/[user-profile] — unavailable mentor actions now render as explicit secondary states instead of primary-looking buttons that silently fail. */}
+                <p className="text-xs text-muted-foreground">
+                  {!hasBookableCall && !hasMessagingAccount
+                    ? 'This mentor currently supports profile browsing only. Use the external links above to reach out.'
+                    : !hasBookableCall
+                      ? 'Discovery calls are not enabled for this mentor yet.'
+                      : 'Direct messaging is not enabled for this mentor yet.'}
+                </p>
+              </>
+            )}
           </div>
 
         </div>

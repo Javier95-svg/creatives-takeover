@@ -35,41 +35,31 @@ export function BlurredToolPreview({
   if (!locked) return <>{children}</>;
 
   return (
-    <div className="relative overflow-hidden">
-      {/* Blurred, non-interactive tool content */}
-      <div
-        className="pointer-events-none select-none"
-        style={{ filter: 'blur(6px)', opacity: 0.45 }}
-        aria-hidden="true"
-      >
-        {children}
-      </div>
+    <div className="mx-auto max-w-2xl px-4 py-6">
+      {/* FIX(dead-click): shared-gated-ui — replaced blurred live content with a static locked-state card so users do not click unusable controls underneath. */}
+      <div className="rounded-3xl border border-border/60 bg-card/95 p-8 text-center shadow-xl backdrop-blur-md sm:p-10">
+        <div className="inline-flex h-14 w-14 items-center justify-center rounded-full border border-primary/20 bg-primary/10">
+          <Lock className="h-6 w-6 text-primary" />
+        </div>
 
-      {/* Lock overlay — centered over the blurred content */}
-      <div className="absolute inset-0 flex items-center justify-center z-20 bg-background/30 backdrop-blur-[2px]">
-        <div className="mx-4 max-w-sm w-full rounded-2xl border border-border/60 bg-card/90 backdrop-blur-md shadow-2xl p-8 text-center space-y-4">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-primary/10 border border-primary/20 mx-auto">
-            <Lock className="w-6 h-6 text-primary" />
-          </div>
+        <div className="mt-5 space-y-2">
+          <h3 className="text-xl font-bold text-foreground">{featureName}</h3>
+          <p className="text-sm leading-relaxed text-muted-foreground">{unlockCondition}</p>
+        </div>
 
-          <div className="space-y-2">
-            <h3 className="text-lg font-bold text-foreground">{featureName}</h3>
-            <p className="text-sm text-muted-foreground leading-relaxed">{unlockCondition}</p>
-          </div>
-
+        <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
           {requiredPlan ? (
             <Button
               onClick={() => navigate('/pricing')}
-              className="w-full gap-2"
+              className="gap-2"
             >
               Upgrade to {requiredPlan === 'pro' ? 'Pro' : 'Rising'}
-              <ArrowRight className="w-4 h-4" />
+              <ArrowRight className="h-4 w-4" />
             </Button>
           ) : (
             <Button
               variant="outline"
               onClick={() => navigate(-1)}
-              className="w-full"
             >
               Go Back
             </Button>

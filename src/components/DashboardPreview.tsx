@@ -180,23 +180,24 @@ const DashboardPreview = () => {
                   { name: "Time Tracker", icon: Clock, color: "text-[hsl(var(--blue-primary))]" },
                   { name: "Task Manager", icon: CheckSquare, color: "text-[hsl(var(--green-primary))]" }
                 ].map((resource, idx) => (
+                  // FIX(dead-click): /dashboard — static preview resource cards no longer advertise clickability with pointer and hover CTA affordances.
                   <div 
                     key={idx} 
-                    className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg border border-border/50 hover:border-primary/30 hover:bg-muted/50 transition-all cursor-pointer group/item"
+                    className="flex items-center gap-3 rounded-lg border border-border/50 bg-muted/30 p-3 transition-colors"
                   >
                     <div className={`w-10 h-10 rounded-lg ${
-                      resource.name === 'Project Templates' ? 'bg-[hsl(var(--blue-primary))]/10 group-hover/item:bg-[hsl(var(--blue-primary))]/20' :
-                      resource.name === 'Planning Guides' ? 'bg-[hsl(var(--red-primary))]/10 group-hover/item:bg-[hsl(var(--red-primary))]/20' :
-                      resource.name === 'Time Tracker' ? 'bg-[hsl(var(--blue-primary))]/10 group-hover/item:bg-[hsl(var(--blue-primary))]/20' :
-                      'bg-[hsl(var(--green-primary))]/10 group-hover/item:bg-[hsl(var(--green-primary))]/20'
-                    } flex items-center justify-center transition-colors`}>
+                      resource.name === 'Project Templates' ? 'bg-[hsl(var(--blue-primary))]/10' :
+                      resource.name === 'Planning Guides' ? 'bg-[hsl(var(--red-primary))]/10' :
+                      resource.name === 'Time Tracker' ? 'bg-[hsl(var(--blue-primary))]/10' :
+                      'bg-[hsl(var(--green-primary))]/10'
+                    } flex items-center justify-center`}>
                       <resource.icon className={`w-5 h-5 ${resource.color}`} />
                     </div>
                     <div className="flex-1">
                       <div className="text-sm font-medium">{resource.name}</div>
                       <div className="text-xs text-muted-foreground">Quick access</div>
                     </div>
-                    <ArrowRight className="w-4 h-4 text-muted-foreground group-hover/item:text-[hsl(var(--blue-primary))] transition-colors" />
+                    <ArrowRight className="w-4 h-4 text-muted-foreground" />
                   </div>
                 ))}
               </div>
@@ -267,22 +268,23 @@ const DashboardPreview = () => {
             <CardContent>
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="p-4 bg-muted/30 rounded-lg text-center border border-border/50 hover:border-primary/30 transition-colors cursor-pointer">
+                  {/* FIX(dead-click): /dashboard — static planning-tool tiles were stripped of pointer styling so they read as preview content instead of inert controls. */}
+                  <div className="p-4 bg-muted/30 rounded-lg text-center border border-border/50 transition-colors">
                     <Calendar className="w-6 h-6 text-primary mx-auto mb-2" />
                     <div className="text-sm font-semibold mb-1">Timeline View</div>
                     <div className="text-xs text-muted-foreground">Visual roadmap</div>
                   </div>
-                  <div className="p-4 bg-muted/30 rounded-lg text-center border border-border/50 hover:border-primary/30 transition-colors cursor-pointer">
+                  <div className="p-4 bg-muted/30 rounded-lg text-center border border-border/50 transition-colors">
                     <ListTodo className="w-6 h-6 text-secondary mx-auto mb-2" />
                     <div className="text-sm font-semibold mb-1">Task Board</div>
                     <div className="text-xs text-muted-foreground">Kanban style</div>
                   </div>
-                  <div className="p-4 bg-muted/30 rounded-lg text-center border border-border/50 hover:border-primary/30 transition-colors cursor-pointer">
+                  <div className="p-4 bg-muted/30 rounded-lg text-center border border-border/50 transition-colors">
                     <Flag className="w-6 h-6 text-accent mx-auto mb-2" />
                     <div className="text-sm font-semibold mb-1">Milestones</div>
                     <div className="text-xs text-muted-foreground">Track goals</div>
                   </div>
-                  <div className="p-4 bg-muted/30 rounded-lg text-center border border-border/50 hover:border-primary/30 transition-colors cursor-pointer">
+                  <div className="p-4 bg-muted/30 rounded-lg text-center border border-border/50 transition-colors">
                     <TrendingUp className="w-6 h-6 text-[hsl(var(--green-primary))] mx-auto mb-2" />
                     <div className="text-sm font-semibold mb-1">Analytics</div>
                     <div className="text-xs text-muted-foreground">Progress insights</div>

@@ -18,9 +18,6 @@ import {
   Building2,
   ExternalLink,
   Linkedin,
-  Lock,
-  Mail,
-  MapPin,
   Star,
   Twitter,
   UserPlus,
@@ -227,6 +224,7 @@ const VCProfilePage = () => {
     { label: "How to apply", value: outreachSummary },
     { label: "Warm intro", value: vc.requires_warm_intro ? "Recommended" : "Not required" },
   ];
+  const isProfileLocked = requiresAuth || Boolean(upgradePrompt);
 
   const profileContent = (
     <Card className="overflow-hidden border border-border/60 bg-background/95 shadow-sm">
@@ -441,6 +439,49 @@ const VCProfilePage = () => {
     </Card>
   );
 
+  const lockedProfileContent = (
+    <Card className="overflow-hidden border border-border/60 bg-background/95 shadow-sm">
+      <CardHeader className="space-y-4">
+        <CardTitle className="text-3xl tracking-tight">{vc.firm_name}</CardTitle>
+        <p className="text-sm leading-6 text-muted-foreground">
+          {requiresAuth
+            ? `Sign in to unlock the full ${vc.firm_name} profile, warm-intro guidance, and outbound links.`
+            : `Upgrade to ${upgradeTierLabel} to unlock the full ${vc.firm_name} profile, warm-intro guidance, and outbound links.`}
+        </p>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        <div className="grid gap-3 text-sm sm:grid-cols-2">
+          {snapshotItems.slice(0, 4).map((item) => (
+            <div key={item.label} className="rounded-xl border border-border/60 bg-muted/20 p-4">
+              <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">{item.label}</p>
+              <p className="mt-2 font-medium">{item.value}</p>
+            </div>
+          ))}
+        </div>
+        <div className="flex flex-col gap-3 sm:flex-row">
+          {/* FIX(dead-click): /insighta/vc/[slug] — auth and view-limit gating now render a static summary card instead of a blurred interactive profile underneath. */}
+          {requiresAuth ? (
+            <>
+              <Button asChild className="w-full sm:w-auto">
+                <Link to="/auth">
+                  <UserPlus className="w-4 h-4 mr-2" />
+                  Sign Up Free
+                </Link>
+              </Button>
+              <Button asChild variant="outline" className="w-full sm:w-auto">
+                <Link to="/auth">Sign In</Link>
+              </Button>
+            </>
+          ) : (
+            <Button onClick={() => navigate("/pricing")} className="w-full sm:w-auto">
+              Upgrade to {upgradeTierLabel}
+            </Button>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
@@ -476,41 +517,7 @@ const VCProfilePage = () => {
             </Card>
           )}
 
-          {requiresAuth ? (
-            <div className="relative">
-              <div className="select-none pointer-events-none blur-[6px]" aria-hidden="true">
-                {profileContent}
-              </div>
-
-              <div className="absolute inset-0 flex items-center justify-center bg-background/40 backdrop-blur-[2px] rounded-xl">
-                <div className="text-center max-w-md px-6 py-10 bg-card/95 backdrop-blur-md border border-border rounded-2xl shadow-2xl">
-                  <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-primary/10 mb-5">
-                    <Lock className="w-6 h-6 text-primary" />
-                  </div>
-                  <h3 className="text-xl font-bold mb-2">Sign in to view {vc.firm_name}</h3>
-                  <p className="text-muted-foreground text-sm mb-6 leading-relaxed">
-                    Create a free account to access full VC profiles and outbound details.
-                  </p>
-                  <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                    <Button asChild size="lg" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
-                      <Link to="/auth">
-                        <UserPlus className="w-4 h-4 mr-2" />
-                        Sign Up Free
-                      </Link>
-                    </Button>
-                    <Button asChild variant="outline" size="lg">
-                      <Link to="/auth">Sign In</Link>
-                    </Button>
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-4">
-                    Free plan includes 5 VC profile views per month
-                  </p>
-                </div>
-              </div>
-            </div>
-          ) : (
-            profileContent
-          )}
+          {isProfileLocked ? lockedProfileContent : profileContent}
         </div>
       </main>
 

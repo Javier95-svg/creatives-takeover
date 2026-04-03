@@ -14,7 +14,6 @@ import { toast } from "sonner";
 import {
   ArrowLeft,
   ExternalLink,
-  Lock,
   MapPin,
   DollarSign,
   Building2,
@@ -180,6 +179,7 @@ const AcceleratorProfilePage = () => {
   const upgradeDetail = upgradePrompt?.requiredTier === "pro"
     ? "Unlock unlimited accelerator views this month."
     : "Unlock 3 accelerator profile views this month.";
+  const isProfileLocked = requiresAuth || Boolean(upgradePrompt);
 
   const profileContent = (
     <Card className="mb-6 overflow-hidden">
@@ -438,6 +438,53 @@ const AcceleratorProfilePage = () => {
     </Card>
   );
 
+  const lockedProfileContent = (
+    <Card className="mb-6 overflow-hidden border border-border/60 bg-background/95 shadow-sm">
+      <CardHeader className="space-y-4">
+        <CardTitle className="text-3xl">{accelerator.title}</CardTitle>
+        <p className="text-sm leading-6 text-muted-foreground">
+          {requiresAuth
+            ? `Sign in to unlock the full ${accelerator.title} profile, application details, and outbound links.`
+            : `Upgrade to ${upgradeTierLabel} to unlock the full ${accelerator.title} profile, application details, and outbound links.`}
+        </p>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="rounded-xl border border-border/60 bg-muted/20 p-4">
+            <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Funding</p>
+            <p className="mt-2 font-medium">{accelerator.funding_amount || 'Not disclosed'}</p>
+          </div>
+          <div className="rounded-xl border border-border/60 bg-muted/20 p-4">
+            <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Location</p>
+            <p className="mt-2 font-medium">
+              {accelerator.location && accelerator.location.length > 0 ? accelerator.location.join(', ') : 'Not disclosed'}
+            </p>
+          </div>
+        </div>
+        <div className="flex flex-col gap-3 sm:flex-row">
+          {/* FIX(dead-click): /insighta/accelerator/[slug] — auth and view-limit gating now use a static summary card instead of a blurred actionable profile beneath the lock state. */}
+          {requiresAuth ? (
+            <>
+              <Button asChild className="w-full sm:w-auto">
+                <Link to="/auth">
+                  <UserPlus className="w-4 h-4 mr-2" />
+                  Sign Up Free
+                </Link>
+              </Button>
+              <Button asChild variant="outline" className="w-full sm:w-auto">
+                <Link to="/auth">Sign In</Link>
+              </Button>
+            </>
+          ) : (
+            <Button onClick={() => navigate("/pricing")} className="w-full sm:w-auto">
+              Upgrade to {upgradeTierLabel}
+            </Button>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
@@ -482,41 +529,7 @@ const AcceleratorProfilePage = () => {
             </Card>
           )}
 
-          {requiresAuth ? (
-            <div className="relative">
-              <div className="select-none pointer-events-none blur-[6px]" aria-hidden="true">
-                {profileContent}
-              </div>
-
-              <div className="absolute inset-0 flex items-center justify-center bg-background/40 backdrop-blur-[2px] rounded-xl">
-                <div className="text-center max-w-md px-6 py-10 bg-card/95 backdrop-blur-md border border-border rounded-2xl shadow-2xl">
-                  <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-primary/10 mb-5">
-                    <Lock className="w-6 h-6 text-primary" />
-                  </div>
-                  <h3 className="text-xl font-bold mb-2">Sign in to view {accelerator.title}</h3>
-                  <p className="text-muted-foreground text-sm mb-6 leading-relaxed">
-                    Create a free account to access full accelerator profiles and application details.
-                  </p>
-                  <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                    <Button asChild size="lg" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
-                      <Link to="/auth">
-                        <UserPlus className="w-4 h-4 mr-2" />
-                        Sign Up Free
-                      </Link>
-                    </Button>
-                    <Button asChild variant="outline" size="lg">
-                      <Link to="/auth">Sign In</Link>
-                    </Button>
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-4">
-                    Sign up free — browse accelerators on any plan
-                  </p>
-                </div>
-              </div>
-            </div>
-          ) : (
-            profileContent
-          )}
+          {isProfileLocked ? lockedProfileContent : profileContent}
         </div>
       </main>
 

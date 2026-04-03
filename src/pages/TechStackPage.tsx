@@ -60,58 +60,58 @@ export default function TechStackPage() {
       <Navigation />
 
       <main>
-        <BlurredToolPreview
-          featureName="Tech Stack Builder"
-          unlockCondition={
-            hasAccess
-              ? ''
-              : isProgressiveLock
-              ? "Complete the PMF Lab (Stage 3) to unlock this tool, or upgrade to Rising to access all 7 tools immediately."
-              : "Tech Stack Builder is available on the Rising plan and above."
-          }
-          requiredPlan={hasAccess ? undefined : 'rising'}
-          locked={!hasAccess}
-        >
-          <section className="relative overflow-hidden px-4 pt-28 pb-20 md:pt-32 lg:pt-36" data-section="tech-stack">
-            {/* Background styling */}
-            <div className="absolute inset-0 pointer-events-none overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-b from-background via-background/95 to-background" />
-              <div
-                className="absolute -top-40 -right-48 w-[55rem] h-[55rem] rounded-full opacity-70 blur-3xl animate-[spin_28s_linear_infinite]"
-                style={{
-                  background:
-                    'radial-gradient(circle at 30% 30%, rgba(34, 211, 238, 0.3), transparent 60%), radial-gradient(circle at 70% 70%, rgba(59, 130, 246, 0.35), transparent 55%)',
-                  animationDuration: '28s'
-                }}
-              />
+        <section className="relative overflow-hidden px-4 pt-28 pb-20 md:pt-32 lg:pt-36" data-section="tech-stack">
+          {/* Background styling */}
+          <div className="absolute inset-0 pointer-events-none overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-b from-background via-background/95 to-background" />
+            <div
+              className="absolute -top-40 -right-48 w-[55rem] h-[55rem] rounded-full opacity-70 blur-3xl animate-[spin_28s_linear_infinite]"
+              style={{
+                background:
+                  'radial-gradient(circle at 30% 30%, rgba(34, 211, 238, 0.3), transparent 60%), radial-gradient(circle at 70% 70%, rgba(59, 130, 246, 0.35), transparent 55%)',
+                animationDuration: '28s'
+              }}
+            />
+          </div>
+
+          <div className="container mx-auto max-w-5xl relative z-10">
+            {/* Page Header */}
+            <div className="text-center mb-12 sm:mb-16">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-3 sm:mb-4 takeover-gradient creatives-font animate-fade-in leading-tight pb-2">
+                Tech Stack Builder
+              </h1>
+              <p className="text-lg sm:text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed animate-fade-in px-4" style={{ animationDelay: '0.3s' }}>
+                Compare and select the most suitable tools to<span className="gradient-text font-semibold" style={{ lineHeight: 'inherit', marginLeft: '0.25rem' }}> build and scale your startup.</span>
+              </p>
             </div>
 
-            <div className="container mx-auto max-w-5xl relative z-10">
-              {/* Page Header */}
-              <div className="text-center mb-12 sm:mb-16">
-                <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-3 sm:mb-4 takeover-gradient creatives-font animate-fade-in leading-tight pb-2">
-                  Tech Stack Builder
-                </h1>
-                <p className="text-lg sm:text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed animate-fade-in px-4" style={{ animationDelay: '0.3s' }}>
-                  Compare and select the most suitable tools to<span className="gradient-text font-semibold" style={{ lineHeight: 'inherit', marginLeft: '0.25rem' }}> build and scale your startup.</span>
-                </p>
-              </div>
-
-              {hasAccess && (
-                <Suspense
-                  fallback={
-                    <div className="flex flex-col items-center justify-center py-20 space-y-4">
-                      <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                      <p className="text-muted-foreground">Loading Tech Stack Builder...</p>
-                    </div>
-                  }
-                >
-                  <TechStack />
-                </Suspense>
-              )}
-            </div>
-          </section>
-        </BlurredToolPreview>
+            {hasAccess ? (
+              <Suspense
+                fallback={
+                  <div className="flex flex-col items-center justify-center py-20 space-y-4">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    <p className="text-muted-foreground">Loading Tech Stack Builder...</p>
+                  </div>
+                }
+              >
+                <TechStack />
+              </Suspense>
+            ) : (
+              <BlurredToolPreview
+                featureName="Tech Stack Builder"
+                unlockCondition={
+                  isProgressiveLock
+                    ? "Complete the PMF Lab (Stage 3) to unlock this tool, or upgrade to Rising to access all 7 tools immediately."
+                    : "Tech Stack Builder is available on the Rising plan and above."
+                }
+                requiredPlan="rising"
+                locked
+              >
+                <div />
+              </BlurredToolPreview>
+            )}
+          </div>
+        </section>
       </main>
 
       <Footer />
