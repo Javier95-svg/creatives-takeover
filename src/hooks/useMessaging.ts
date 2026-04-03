@@ -68,6 +68,8 @@ export const SHARON_PRAISE_AKPUNNE_EMAIL = 'sharonpraiseakpunne1@gmail.com';
 export const SHARON_PRAISE_AKPUNNE_USER_ID = '77283f92-7d90-45e2-97aa-3ec500781656';
 export const FELICITY_MUKUNJU_EMAIL = 'felicitymukunju@gmail.com';
 export const FELICITY_MUKUNJU_USER_ID = '681858ab-db84-4930-9bd0-5db759ec5ea4';
+export const AKSHITA_YADAV_EMAIL = 'yadavakshita.2000@gmail.com';
+export const AKSHITA_YADAV_USER_ID = 'b6477549-9eee-4f6b-bde6-ea8a80579acc';
 export const VIVIAN_UBOCHI_EMAIL = 'vivian@gooroconsulting.com';
 export const VIVIAN_UBOCHI_USER_ID = '5e919674-60ba-42b9-bd18-813f484f7c24';
 export const SAKINA_LOKHANDWALA_EMAIL = 'slsakina27@gmail.com';
@@ -236,6 +238,13 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
         userId: FELICITY_MUKUNJU_USER_ID
       });
       return FELICITY_MUKUNJU_USER_ID;
+    }
+
+    if (email.toLowerCase() === AKSHITA_YADAV_EMAIL.toLowerCase()) {
+      logInfo('getUserIdByEmail: Using known Akshita Yadav user ID', {
+        userId: AKSHITA_YADAV_USER_ID
+      });
+      return AKSHITA_YADAV_USER_ID;
     }
 
     if (email.toLowerCase() === VIVIAN_UBOCHI_EMAIL.toLowerCase()) {
