@@ -2,16 +2,21 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ExternalLink, Building2, DollarSign } from "lucide-react";
+import { ExternalLink, Building2, DollarSign, Lock } from "lucide-react";
 import { FundingOpportunity } from "@/types/funding";
 import { Link } from "react-router-dom";
 
 interface FundingOpportunityCardProps {
   opportunity: FundingOpportunity;
   profileLink?: string;
+  canViewProfile?: boolean;
 }
 
-const FundingOpportunityCard = ({ opportunity, profileLink }: FundingOpportunityCardProps) => {
+const FundingOpportunityCard = ({
+  opportunity,
+  profileLink,
+  canViewProfile = true,
+}: FundingOpportunityCardProps) => {
   const getFallbackLogo = (url?: string) => {
     if (!url) return null;
     try {
@@ -92,23 +97,32 @@ const FundingOpportunityCard = ({ opportunity, profileLink }: FundingOpportunity
         </p>
 
         {/* View Details Button */}
-        <Button
-          asChild
-          size="sm"
-          className="w-full mt-auto"
-        >
-          {profileLink ? (
+        {profileLink ? (
+          canViewProfile ? (
+            <Button asChild size="sm" className="w-full mt-auto">
             <Link to={profileLink}>
               View Details
               <ExternalLink className="h-3 w-3 ml-1" />
             </Link>
+            </Button>
           ) : (
+            <Button size="sm" className="w-full mt-auto" variant="secondary" disabled>
+              <Lock className="h-3 w-3 mr-1" />
+              View limit reached
+            </Button>
+          )
+        ) : (
+          <Button
+            asChild
+            size="sm"
+            className="w-full mt-auto"
+          >
             <a href={opportunity.url} target="_blank" rel="noopener noreferrer">
               Learn More
               <ExternalLink className="h-3 w-3 ml-1" />
             </a>
-          )}
-        </Button>
+          </Button>
+        )}
       </CardContent>
     </Card>
   );

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import VCFilters from "@/components/vc/VCFilters";
 import VCGrid from "@/components/vc/VCGrid";
+import InsightaPagination from "@/components/insighta/InsightaPagination";
 import { useVCSearch } from "@/hooks/useVCSearch";
 import { useVCViewTracking } from "@/hooks/useVCViewTracking";
 import { VCFilters as VCFiltersType } from "@/types/insighta";
@@ -92,24 +93,7 @@ const VCSearchTab = () => {
       ) : (
         <>
           <VCGrid vcs={vcs} canViewProfiles={canViewProfiles} isAuthenticated={isAuthenticated} />
-          {totalPages > 1 && (
-            <div className="flex flex-wrap justify-center gap-2 pt-4">
-              {Array.from({ length: totalPages }, (_, index) => {
-                const pageNumber = index + 1;
-                const isActive = pageNumber === page;
-                return (
-                  <Button
-                    key={pageNumber}
-                    variant={isActive ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setPage(pageNumber)}
-                  >
-                    {pageNumber}
-                  </Button>
-                );
-              })}
-            </div>
-          )}
+          <InsightaPagination page={page} totalPages={totalPages} onPageChange={setPage} />
         </>
       )}
     </div>

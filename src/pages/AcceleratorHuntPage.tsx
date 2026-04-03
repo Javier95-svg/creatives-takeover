@@ -1,20 +1,17 @@
 import SEO, { createBreadcrumbSchema, createSoftwareApplicationSchema } from "@/components/SEO";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
+import AnswerSummary from "@/components/seo/AnswerSummary";
 import RelatedPageLinks from "@/components/seo/RelatedPageLinks";
 import AcceleratorHuntTab from "@/components/insighta/AcceleratorHuntTab";
 import { AcceleratorWallpaper } from "@/components/accelerator/AcceleratorWallpaper";
+import { insightaPageContent } from "@/data/insightaPageContent";
 import { useReadingAnalytics } from "@/hooks/useReadingAnalytics";
 import { useEffect } from "react";
 
 export default function AcceleratorHuntPage() {
   const { trackPageVisit } = useReadingAnalytics();
-  const relatedLinks = [
-    { href: "/insighta/vc-search", label: "VC Search" },
-    { href: "/insighta/email-templates", label: "Email Templates" },
-    { href: "/insighta/pitch-deck-analyzer", label: "Pitch Deck Analyzer" },
-    { href: "/insighta/test", label: "Fundraising Assessment" },
-  ];
+  const { relatedLinks, answerSummary } = insightaPageContent.acceleratorHunt;
 
   // Track page visit when component mounts
   useEffect(() => {
@@ -79,6 +76,15 @@ export default function AcceleratorHuntPage() {
             </div>
 
             <AcceleratorHuntTab />
+
+            <div className="mt-10 space-y-8">
+              <AnswerSummary
+                title={answerSummary.title}
+                description={answerSummary.description}
+                updatedLabel={answerSummary.updatedLabel}
+                items={answerSummary.items}
+              />
+            </div>
           </div>
         </section>
       </main>

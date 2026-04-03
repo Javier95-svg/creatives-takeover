@@ -3,16 +3,23 @@ import { supabase } from '@/integrations/supabase/client';
 import { FundingOpportunity } from '@/types/funding';
 import { AcceleratorFilters } from '@/types/insighta';
 
-export const useAcceleratorSearch = (filters?: AcceleratorFilters) => {
+export const useAcceleratorSearch = (
+  filters?: AcceleratorFilters,
+  page = 1,
+  pageSize = 15,
+) => {
   const [accelerators, setAccelerators] = useState<FundingOpportunity[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [total, setTotal] = useState(0);
 
   useEffect(() => {
     const fetchAccelerators = async () => {
       try {
         setLoading(true);
         setError(null);
+        const from = (page - 1) * pageSize;
+        const to = from + pageSize;
 
         const { data, error: fetchError } = await supabase
           .from('funding_opportunities')
@@ -107,11 +114,13 @@ export const useAcceleratorSearch = (filters?: AcceleratorFilters) => {
           );
         }
 
-        setAccelerators(results);
-      } catch (err: any) {
+        setTotal(results.length);
+        setAccelerators(results.slice(from, to));
+      } catch (err: unknown) {
         console.error('Error fetching accelerators:', err);
-        setError(err.message || 'Failed to load accelerators. Please try again.');
+        setError(err instanceof Error ? err.message : 'Failed to load accelerators. Please try again.');
         setAccelerators([]);
+        setTotal(0);
       } finally {
         setLoading(false);
       }
@@ -119,15 +128,10 @@ export const useAcceleratorSearch = (filters?: AcceleratorFilters) => {
 
     fetchAccelerators();
   }, [
-    filters?.location,
-    filters?.industry_focus,
-    filters?.search,
-    filters?.focus_stage?.join('|'),
-    filters?.sectors?.join('|'),
-    filters?.geographies?.join('|'),
-    filters?.equity?.join('|'),
-    filters?.formats?.join('|'),
+    filters,
+    page,
+    pageSize,
   ]);
 
-  return { accelerators, loading, error };
+  return { accelerators, loading, error, total };
 };

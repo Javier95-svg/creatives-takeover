@@ -3520,6 +3520,38 @@ export type Database = {
         }
         Relationships: []
       }
+      accelerator_views: {
+        Row: {
+          accelerator_id: string | null
+          id: string
+          subscription_tier: string
+          user_id: string | null
+          viewed_at: string | null
+        }
+        Insert: {
+          accelerator_id?: string | null
+          id?: string
+          subscription_tier: string
+          user_id?: string | null
+          viewed_at?: string | null
+        }
+        Update: {
+          accelerator_id?: string | null
+          id?: string
+          subscription_tier?: string
+          user_id?: string | null
+          viewed_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "accelerator_views_accelerator_id_fkey"
+            columns: ["accelerator_id"]
+            isOneToOne: false
+            referencedRelation: "funding_opportunities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       funding_opportunities: {
         Row: {
           application_deadline_info: string | null
@@ -8032,6 +8064,10 @@ export type Database = {
           next_threshold: number
         }[]
       }
+      can_view_accelerator: {
+        Args: { p_tier: string; p_user_id: string }
+        Returns: boolean
+      }
       can_view_vc: {
         Args: { p_tier: string; p_user_id: string }
         Returns: boolean
@@ -8135,6 +8171,10 @@ export type Database = {
           recent_insights: number
           top_sources: string[]
         }[]
+      }
+      get_monthly_accelerator_view_count: {
+        Args: { p_user_id: string }
+        Returns: number
       }
       get_monthly_vc_view_count: {
         Args: { p_user_id: string }
