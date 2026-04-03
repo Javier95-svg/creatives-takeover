@@ -122,6 +122,9 @@ export function getCountryFlag(country: string | null | undefined): string {
     'BOSNIA': '🇧🇦',
     'BOSNIA AND HERZEGOVINA': '🇧🇦',
     'BOSNIA & HERZEGOVINA': '🇧🇦',
+    'RS': '🇷🇸',
+    'SERBIA': '🇷🇸',
+    'SERBIAN': '🇷🇸',
   };
   
   // Check direct match
