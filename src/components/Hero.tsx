@@ -423,7 +423,7 @@ const Hero = () => {
     <section
       ref={heroRef}
       id="overview"
-      className="scroll-mt-24 relative pt-16 sm:pt-20 md:pt-24 pb-12 sm:pb-16 md:pb-20 px-4 sm:px-6 font-poppins"
+      className="scroll-mt-24 relative pt-[calc(var(--mobile-nav-offset,0px)+1rem)] sm:pt-[calc(var(--mobile-nav-offset,0px)+1.25rem)] md:pt-24 pb-12 sm:pb-16 md:pb-20 px-4 sm:px-6 font-poppins"
     >
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-muted/40 to-transparent pointer-events-none" />
 
