@@ -32,7 +32,7 @@ import {
 } from "@/components/ui/pagination";
 
 const MENTORS_PER_PAGE = 10;
-type ActivationIntent = "save_mentor" | "send_message" | "book_call";
+type ActivationIntent = "find_mentor" | "save_mentor" | "send_message" | "book_call";
 
 const MENTOR_HIGHLIGHTS = [
   {
@@ -248,6 +248,15 @@ const MentorMarketplaceHub = () => {
         eyebrow: "First value action",
         title: "Save one mentor before you explore anything else",
         description: "A saved mentor becomes a real return anchor we can surface later by email and in-app.",
+      };
+    }
+
+    if (mentorSource === "onboarding" && activationIntent === "find_mentor") {
+      return {
+        icon: BookmarkCheck,
+        eyebrow: "First value action",
+        title: "Create one mentor relationship before passive browsing",
+        description: "Save one mentor, send one message, or book one call so this session ends with a real return trigger.",
       };
     }
 

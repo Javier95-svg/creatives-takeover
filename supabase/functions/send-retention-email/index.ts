@@ -9,7 +9,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-type ActivationIntent = "save_mentor" | "send_message" | "book_call";
+type ActivationIntent = "save_mentor" | "send_message" | "book_call" | "run_icp";
 type SequenceType =
   | "activation_day0"
   | "activation_day2"
@@ -30,6 +30,7 @@ interface RetentionEmailRequest {
   mentorId?: string;
   mentorName?: string;
   ctaUrl?: string;
+  ctaLabel?: string;
   contextHeadline?: string;
   contextBody?: string;
   savedMentorCount?: number;
@@ -51,6 +52,8 @@ function normalizeAppUrl(value: string) {
 
 function getDefaultCta(intent: ActivationIntent | undefined, appUrl: string) {
   switch (intent) {
+    case "run_icp":
+      return `${appUrl}/icp-builder`;
     case "save_mentor":
       return `${appUrl}/community?mentorSource=retention-saved`;
     case "send_message":
@@ -64,6 +67,8 @@ function getDefaultCta(intent: ActivationIntent | undefined, appUrl: string) {
 
 function getDefaultCtaLabel(intent: ActivationIntent | undefined) {
   switch (intent) {
+    case "run_icp":
+      return "Open ICP Builder";
     case "save_mentor":
       return "Open Saved Mentors";
     case "send_message":
@@ -150,6 +155,8 @@ function buildSequenceEmail(args: {
           ? `You saved ${mentorLabel} - now keep the thread alive`
           : args.intent === "send_message"
             ? `Your conversation is open - come back for the reply`
+            : args.intent === "run_icp"
+              ? `Your ICP result is waiting`
             : `Your discovery call path is active`,
         html: buildEmailShell({
           title: `Nice move, ${args.name}`,
@@ -164,6 +171,11 @@ function buildSequenceEmail(args: {
                   "Messages are the strongest retained-user signal in the current product data.",
                   "One live thread gives you a concrete reason to return tomorrow.",
                 ]
+              : args.intent === "run_icp"
+                ? [
+                    "You now have an ICP result worth refining instead of restarting from scratch.",
+                    "The fastest next step is to reopen the saved ICP and turn it into one sharper validation move.",
+                  ]
               : [
                   "Discovery calls are the highest-intent action in the current funnel.",
                   "The strongest follow-up usually happens right after the booking.",
@@ -180,6 +192,8 @@ function buildSequenceEmail(args: {
           ? `${unreadText} are still waiting`
           : args.intent === "save_mentor"
             ? `You still have ${savedCountText} to act on`
+            : args.intent === "run_icp"
+              ? `Your ICP result is still waiting`
             : `Do not let this discovery call go cold`,
         html: buildEmailShell({
           title: `${args.name}, your first win is still open`,
@@ -188,6 +202,8 @@ function buildSequenceEmail(args: {
               ? `You have ${unreadText} waiting in Messages.`
               : args.intent === "save_mentor"
                 ? `You saved ${mentorLabel} but have not turned that intent into follow-up yet.`
+                : args.intent === "run_icp"
+                  ? `You generated an ICP result but have not used it as your next decision anchor yet.`
                 : `You booked a discovery path and now need one focused follow-up move.`
           ),
           body: args.body || "The goal is not more exploration. The goal is to move one existing thread, mentor relationship, or booking forward before it loses momentum.",
@@ -202,6 +218,8 @@ function buildSequenceEmail(args: {
           ? `Your conversations${nicheText} are waiting`
           : args.intent === "save_mentor"
             ? `Your saved mentors${nicheText} are still your best next move`
+            : args.intent === "run_icp"
+              ? `Your ICP analysis${nicheText} is still your cleanest next move`
             : `Come back with one clear question for your next call`,
         html: buildEmailShell({
           title: `${args.name}, pick the thread back up`,
@@ -211,6 +229,8 @@ function buildSequenceEmail(args: {
               ? `Open Messages and move one conversation forward.`
               : args.intent === "save_mentor"
                 ? `Revisit ${mentorLabel} and decide who deserves a real follow-up.`
+                : args.intent === "run_icp"
+                  ? `Reopen the saved ICP and turn it into one sharper validation move.`
                 : "Use the next call to pressure-test one decision instead of ten.",
             "You do not need a full reset. One focused session is enough to restart momentum.",
           ],
@@ -310,6 +330,7 @@ serve(async (req: Request): Promise<Response> => {
       activationIntent,
       mentorName,
       ctaUrl,
+      ctaLabel,
       contextHeadline,
       contextBody,
       savedMentorCount,
@@ -326,7 +347,7 @@ serve(async (req: Request): Promise<Response> => {
     const appUrl = normalizeAppUrl(Deno.env.get("APP_URL") || "https://www.creativestakeover.com");
     const name = fullName?.trim() || "Founder";
     const finalCtaUrl = ctaUrl || getDefaultCta(activationIntent, appUrl);
-    const finalCtaLabel = getDefaultCtaLabel(activationIntent);
+    const finalCtaLabel = ctaLabel || getDefaultCtaLabel(activationIntent);
     const emailContent = buildSequenceEmail({
       name,
       sequence,

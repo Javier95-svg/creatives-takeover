@@ -6,7 +6,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-type ActivationIntent = "save_mentor" | "send_message" | "book_call";
+type ActivationIntent = "save_mentor" | "send_message" | "book_call" | "run_icp";
 type SequenceType =
   | "activation_day2"
   | "activation_day7"
@@ -34,6 +34,7 @@ interface UserAssetState {
   latestSavedMentorName: string | null;
   unreadMessageCount: number;
   hasDiscoveryCall: boolean;
+  hasIcpAnalysis: boolean;
 }
 
 interface SequenceDecision {
@@ -64,7 +65,7 @@ function getPreferenceString(preferences: JsonRecord | null, key: string): strin
 }
 
 function getActivationIntent(value: string | null): ActivationIntent | null {
-  if (value === "save_mentor" || value === "send_message" || value === "book_call") {
+  if (value === "save_mentor" || value === "send_message" || value === "book_call" || value === "run_icp") {
     return value;
   }
 
@@ -92,6 +93,8 @@ function getLastSeenAt(profile: ProfileRow) {
 
 function getDefaultCta(intent: ActivationIntent, appBaseUrl: string) {
   switch (intent) {
+    case "run_icp":
+      return `${appBaseUrl}/icp-builder`;
     case "save_mentor":
       return `${appBaseUrl}/community?mentorSource=saved`;
     case "send_message":
@@ -128,6 +131,8 @@ function buildSequenceDecision(args: {
             ? "Save one mentor before you browse anything else. That gives the product a real person to bring you back to."
             : intent === "send_message"
               ? "Start one mentor conversation before you explore the rest of the product. A live thread is still the clearest return trigger in the data."
+              : intent === "run_icp"
+                ? "Open ICP Builder, generate one result, and save it before you disappear into passive browsing."
               : "Book one discovery call before you keep browsing. It is the highest-intent action in the current funnel.",
       };
     }
@@ -142,6 +147,8 @@ function buildSequenceDecision(args: {
             ? "Choose one mentor worth returning to and save them now. That creates a persistent anchor for the rest of the retention system."
             : intent === "send_message"
               ? "Send one message now so the product can pull you back with a reply instead of generic reminders."
+              : intent === "run_icp"
+                ? "Generate one ICP result now so the product has a real saved asset to bring you back to."
               : "Book one discovery call now so you leave with a real next step instead of another passive session.",
       };
     }
@@ -149,7 +156,7 @@ function buildSequenceDecision(args: {
     return null;
   }
 
-  if (inactiveFor >= DAY_14_MS && (assets.savedMentorCount > 0 || assets.unreadMessageCount > 0 || assets.hasDiscoveryCall)) {
+  if (inactiveFor >= DAY_14_MS && (assets.savedMentorCount > 0 || assets.unreadMessageCount > 0 || assets.hasDiscoveryCall || assets.hasIcpAnalysis)) {
     return {
       sequence: "weekly_digest",
       ctaUrl:
@@ -157,18 +164,24 @@ function buildSequenceDecision(args: {
           ? `${appBaseUrl}/messages`
           : assets.savedMentorCount > 0
             ? `${appBaseUrl}/community?mentorSource=saved`
+            : assets.hasIcpAnalysis
+              ? `${appBaseUrl}/icp-builder`
             : `${appBaseUrl}/community?mentorSource=booked-call`,
       contextHeadline:
         assets.unreadMessageCount > 0
           ? `You still have ${assets.unreadMessageCount} message ${assets.unreadMessageCount === 1 ? "reply" : "replies"} waiting.`
           : assets.savedMentorCount > 0
             ? `You still have ${assets.savedMentorCount} saved mentor${assets.savedMentorCount === 1 ? "" : "s"} connected to your account.`
+            : assets.hasIcpAnalysis
+              ? "You still have a saved ICP result waiting to be reused."
             : "You still have a discovery-call path worth following through.",
       contextBody:
         assets.unreadMessageCount > 0
           ? "Start by moving one conversation forward. Messages are still the strongest return trigger in the product."
           : assets.savedMentorCount > 0
             ? `Revisit ${latestSavedMentor} and decide which mentor relationship deserves real follow-up this week.`
+            : assets.hasIcpAnalysis
+              ? "Reopen your saved ICP and turn it into one sharper validation or positioning move this week."
             : "Use the mentor marketplace to prepare one focused question for your next discovery conversation.",
     };
   }
@@ -193,6 +206,8 @@ function buildSequenceDecision(args: {
           ? "Open Messages and move one thread forward today."
           : assets.savedMentorCount > 0
             ? "Open your saved mentors and turn one saved profile into a real follow-up action."
+            : intent === "run_icp"
+              ? "Reopen the saved ICP result and use it to sharpen your next validation move."
             : intent === "book_call"
               ? "Use the next session to pressure-test one decision with a mentor instead of resetting your whole workflow."
               : "The best recovery is one focused session tied to the action you already started.",
@@ -219,6 +234,8 @@ function buildSequenceDecision(args: {
           ? "Pick up the conversation before the thread goes cold."
           : assets.savedMentorCount > 0
             ? "Go back to your saved mentors and move one relationship forward before the momentum fades."
+            : intent === "run_icp"
+              ? "Your saved ICP result is still the cleanest way back into the product. Reopen it and use it."
             : intent === "book_call"
               ? "You already created a high-intent path. Use it to move one real decision forward."
               : "The product only retains when it points you back to a real asset, thread, or next step.",
@@ -291,6 +308,7 @@ async function getUserAssetState(userId: string): Promise<UserAssetState> {
       ((latestSavedMentorName as { mentor?: { name?: string } | null } | undefined)?.mentor?.name ?? null),
     unreadMessageCount,
     hasDiscoveryCall: Boolean(recentBooking),
+    hasIcpAnalysis: false,
   };
 }
 
@@ -380,17 +398,22 @@ serve(async (req: Request): Promise<Response> => {
         const firstValueActionAt =
           getPreferenceString(preferences, "firstValueActionAt") ||
           getPreferenceString(preferences, "activationCompletedAt");
+        const firstArtifactType = getPreferenceString(preferences, "firstArtifactType");
         const lastSeenAt = getLastSeenAt(profile);
         const assets = await getUserAssetState(profile.id);
+        assets.hasIcpAnalysis = firstArtifactType === "icp_analysis";
         const activationIntent =
           explicitIntent ||
+          (assets.hasIcpAnalysis
+            ? "run_icp"
+            :
           (assets.unreadMessageCount > 0
             ? "send_message"
             : assets.savedMentorCount > 0
               ? "save_mentor"
               : assets.hasDiscoveryCall
                 ? "book_call"
-                : null);
+                : null));
 
         if (!activationIntent) {
           results.skipped++;

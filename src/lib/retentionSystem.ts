@@ -2,7 +2,22 @@ import type { User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { captureEvent } from '@/lib/analytics';
 
-export type ActivationIntent = 'save_mentor' | 'send_message' | 'book_call';
+export type ActivationIntent =
+  | 'find_mentor'
+  | 'run_icp'
+  | 'start_validation'
+  | 'save_mentor'
+  | 'send_message'
+  | 'book_call';
+export type ActivationArtifactIntent = 'save_mentor' | 'send_message' | 'book_call';
+export type ActivationGateVariant = 'control' | 'forced_gate';
+export type RetentionArtifactType =
+  | 'mentor_saved'
+  | 'mentor_message'
+  | 'discovery_call'
+  | 'icp_analysis'
+  | 'validation_draft'
+  | 'pmf_report';
 export type RetentionSequence =
   | 'activation_day0'
   | 'activation_day2'
@@ -31,7 +46,7 @@ interface StartActivationParams {
 
 interface CompleteActivationParams {
   user: User;
-  action: ActivationIntent;
+  action: ActivationArtifactIntent;
   actionUrl: string;
   source: string;
   mentorId?: string;
@@ -45,17 +60,30 @@ interface RetentionEmailParams {
   fullName?: string | null;
   niche?: string | null;
   sequence: RetentionSequence;
-  activationIntent?: ActivationIntent;
+  activationIntent?: ActivationArtifactIntent;
   mentorId?: string;
   mentorName?: string;
   ctaUrl?: string;
+  ctaLabel?: string;
   contextHeadline?: string;
   contextBody?: string;
   savedMentorCount?: number;
   unreadMessageCount?: number;
 }
 
+interface MarkArtifactCreatedParams {
+  userId: string;
+  artifactType: RetentionArtifactType;
+  resumeUrl: string;
+  artifactId?: string | null;
+  label?: string | null;
+  source?: string;
+}
+
 const ACTIVATION_ROUTE_BY_INTENT: Record<ActivationIntent, string> = {
+  find_mentor: '/community?mentorSource=onboarding&activationIntent=find_mentor',
+  run_icp: '/icp-builder?activation=1',
+  start_validation: '/decision-sprint?activation=1',
   save_mentor: '/community?mentorSource=onboarding&activationIntent=save_mentor',
   send_message: '/community?mentorSource=onboarding&activationIntent=send_message',
   book_call: '/community?mentorSource=onboarding&activationIntent=book_call',
@@ -63,6 +91,18 @@ const ACTIVATION_ROUTE_BY_INTENT: Record<ActivationIntent, string> = {
 
 export function getActivationRoute(intent: ActivationIntent) {
   return ACTIVATION_ROUTE_BY_INTENT[intent];
+}
+
+function hashSeed(seed: string) {
+  let hash = 0;
+  for (let index = 0; index < seed.length; index += 1) {
+    hash = (hash * 31 + seed.charCodeAt(index)) >>> 0;
+  }
+  return hash;
+}
+
+export function getActivationGateVariantFromSeed(seed: string): ActivationGateVariant {
+  return hashSeed(seed) % 2 === 0 ? 'forced_gate' : 'control';
 }
 
 async function getProfileRetentionState(userId: string): Promise<ProfileRetentionState | null> {
@@ -153,8 +193,58 @@ export async function sendRetentionEmail(params: RetentionEmailParams) {
   }
 }
 
+export async function ensureActivationGateVariant(userId: string): Promise<ActivationGateVariant> {
+  const profileState = await getProfileRetentionState(userId);
+  const existingVariant = profileState?.user_preferences?.activationGateVariant;
+
+  if (existingVariant === 'control' || existingVariant === 'forced_gate') {
+    return existingVariant;
+  }
+
+  const assignedVariant = getActivationGateVariantFromSeed(userId);
+
+  await updateUserPreferences(userId, {
+    activationGateVariant: assignedVariant,
+  });
+
+  return assignedVariant;
+}
+
+export async function getActivationGateState(userId: string) {
+  const profileState = await getProfileRetentionState(userId);
+  const preferences = profileState?.user_preferences ?? {};
+  const activationIntent = typeof preferences.activationIntent === 'string'
+    ? preferences.activationIntent as ActivationIntent
+    : null;
+  const activationGateVariant = preferences.activationGateVariant === 'forced_gate'
+    ? 'forced_gate'
+    : preferences.activationGateVariant === 'control'
+      ? 'control'
+      : getActivationGateVariantFromSeed(userId);
+  const firstArtifactType = typeof preferences.firstArtifactType === 'string'
+    ? preferences.firstArtifactType as RetentionArtifactType
+    : null;
+
+  return {
+    activationGateVariant,
+    activationIntent,
+    onboardingCompleted: profileState?.onboarding_completed === true,
+    firstArtifactType,
+    firstArtifactCreatedAt: typeof preferences.firstArtifactCreatedAt === 'string'
+      ? preferences.firstArtifactCreatedAt
+      : null,
+    lastArtifactLabel: typeof preferences.lastArtifactLabel === 'string'
+      ? preferences.lastArtifactLabel
+      : null,
+    lastArtifactResumeUrl: typeof preferences.lastArtifactResumeUrl === 'string'
+      ? preferences.lastArtifactResumeUrl
+      : null,
+  };
+}
+
 export async function startActivationJourney(params: StartActivationParams) {
   const startedAt = new Date().toISOString();
+  const activationGateVariant = await ensureActivationGateVariant(params.userId);
 
   const { error } = await supabase
     .from('profiles')
@@ -174,10 +264,16 @@ export async function startActivationJourney(params: StartActivationParams) {
 
   await updateUserPreferences(params.userId, {
     activationIntent: params.activationIntent,
+    activationGateVariant,
     activationStartedAt: startedAt,
     activationCompletedAt: null,
     activationSource: 'onboarding',
     firstValueAction: null,
+    firstArtifactType: null,
+    firstArtifactCreatedAt: null,
+    firstArtifactId: null,
+    firstArtifactLabel: null,
+    firstArtifactResumeUrl: null,
     primaryPain: params.primaryPain,
   }, false);
 
@@ -204,6 +300,36 @@ export async function completeActivationJourney(params: CompleteActivationParams
       firstValueActionAt: completedAt,
       firstValueActionSource: params.source,
       firstValueActionUrl: params.actionUrl,
+      firstArtifactType:
+        params.action === 'save_mentor'
+          ? 'mentor_saved'
+          : params.action === 'send_message'
+            ? 'mentor_message'
+            : 'discovery_call',
+      firstArtifactCreatedAt: completedAt,
+      firstArtifactId: params.mentorId ?? params.conversationId ?? null,
+      firstArtifactLabel:
+        params.action === 'save_mentor'
+          ? (params.mentorName ? `Saved mentor: ${params.mentorName}` : 'Saved mentor')
+          : params.action === 'send_message'
+            ? 'Founder conversation'
+            : 'Booked discovery call',
+      firstArtifactResumeUrl: params.actionUrl,
+      lastArtifactType:
+        params.action === 'save_mentor'
+          ? 'mentor_saved'
+          : params.action === 'send_message'
+            ? 'mentor_message'
+            : 'discovery_call',
+      lastArtifactCreatedAt: completedAt,
+      lastArtifactId: params.mentorId ?? params.conversationId ?? null,
+      lastArtifactLabel:
+        params.action === 'save_mentor'
+          ? (params.mentorName ? `Saved mentor: ${params.mentorName}` : 'Saved mentor')
+          : params.action === 'send_message'
+            ? 'Founder conversation'
+            : 'Booked discovery call',
+      lastArtifactResumeUrl: params.actionUrl,
       firstValueMentorId: params.mentorId ?? null,
       firstValueMentorName: params.mentorName ?? null,
       firstConversationId: params.conversationId ?? null,
@@ -244,6 +370,12 @@ export async function completeActivationJourney(params: CompleteActivationParams
       mentorId: params.mentorId,
       mentorName: params.mentorName,
       ctaUrl: params.actionUrl,
+      ctaLabel:
+        params.action === 'send_message'
+          ? 'Open Messages'
+          : params.action === 'book_call'
+            ? 'Review Mentor Options'
+            : 'Open Saved Mentors',
       contextHeadline: headlineByAction[params.action],
       contextBody: bodyByAction[params.action],
     });
@@ -252,8 +384,51 @@ export async function completeActivationJourney(params: CompleteActivationParams
   return nextState;
 }
 
+export async function markFirstArtifactCreated(params: MarkArtifactCreatedParams) {
+  const createdAt = new Date().toISOString();
+
+  return updateUserPreferences(params.userId, {
+    activationCompletedAt: createdAt,
+    firstValueAction: params.artifactType,
+    firstValueActionAt: createdAt,
+    firstValueActionSource: params.source ?? 'product',
+    firstValueActionUrl: params.resumeUrl,
+    firstArtifactType: params.artifactType,
+    firstArtifactCreatedAt: createdAt,
+    firstArtifactId: params.artifactId ?? null,
+    firstArtifactLabel: params.label ?? null,
+    firstArtifactResumeUrl: params.resumeUrl,
+    lastArtifactType: params.artifactType,
+    lastArtifactCreatedAt: createdAt,
+    lastArtifactId: params.artifactId ?? null,
+    lastArtifactLabel: params.label ?? null,
+    lastArtifactResumeUrl: params.resumeUrl,
+  }, true);
+}
+
 export function buildActivationSummary(intent: ActivationIntent) {
   switch (intent) {
+    case 'find_mentor':
+      return {
+        title: 'Find one mentor worth returning to',
+        description: 'Use mentor discovery to create a saved profile, a message thread, or a booked call before you browse anything else.',
+        actionUrl: getActivationRoute(intent),
+        priorityLabel: 'First win',
+      };
+    case 'run_icp':
+      return {
+        title: 'Run a one-field ICP quickstart',
+        description: 'Get to a first ICP recommendation fast, then expand only after you see value.',
+        actionUrl: getActivationRoute(intent),
+        priorityLabel: 'First win',
+      };
+    case 'start_validation':
+      return {
+        title: 'Start your validation sprint',
+        description: 'Turn the next session into a concrete validation asset instead of another browse-and-bounce visit.',
+        actionUrl: getActivationRoute(intent),
+        priorityLabel: 'First win',
+      };
     case 'save_mentor':
       return {
         title: 'Save one mentor before you leave',

@@ -16,13 +16,16 @@ interface ICPAnalysisRequest {
   industry?: string;
   competitors?: string;
   unfairAdvantage?: string;
+  quickstart?: boolean;
 }
 
-const validateRequest = (payload: Partial<ICPAnalysisRequest>) => {
+const validateRequest = (payload: Partial<ICPAnalysisRequest>, quickstart = false) => {
   const issues: string[] = [];
 
-  if (typeof payload.businessDescription !== 'string' || payload.businessDescription.trim().length < 30) {
-    issues.push('businessDescription must be at least 30 characters');
+  const minLength = quickstart ? 20 : 30;
+
+  if (typeof payload.businessDescription !== 'string' || payload.businessDescription.trim().length < minLength) {
+    issues.push(`businessDescription must be at least ${minLength} characters`);
   }
 
   const optionalFields: Array<keyof Omit<ICPAnalysisRequest, 'businessDescription'>> = [
@@ -51,15 +54,6 @@ serve(async (req) => {
   }
 
   try {
-    // Get authenticated user
-    const user = await getUserFromAuth(req);
-    if (!user) {
-      return new Response(JSON.stringify({ error: 'Authentication required' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
-    }
-
     let payload: ICPAnalysisRequest;
     try {
       payload = await req.json();
@@ -72,13 +66,82 @@ serve(async (req) => {
       });
     }
 
-    const validationIssues = validateRequest(payload);
+    const quickstart = payload.quickstart === true;
+    const validationIssues = validateRequest(payload, quickstart);
     if (validationIssues.length > 0) {
       return new Response(JSON.stringify({
         error: 'Validation failed',
         validationIssues,
       }), {
         status: 422,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
+    if (!openaiApiKey) {
+      throw new Error('OpenAI API key not configured');
+    }
+
+    if (quickstart) {
+      const quickstartAbortController = new AbortController();
+      const quickstartTimeout = setTimeout(() => quickstartAbortController.abort(), 20000);
+
+      const quickstartResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${openaiApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        signal: quickstartAbortController.signal,
+        body: JSON.stringify({
+          model: 'gpt-4o-mini',
+          messages: [
+            {
+              role: 'system',
+              content: `You help startup founders get to a first ICP fast. Return valid JSON only in this shape:
+{
+  "recommendedICP": "string",
+  "topPainPoint": "string",
+  "reasonToWin": "string",
+  "nextStep": "string"
+}
+Keep every field concise, specific, and actionable.`,
+            },
+            {
+              role: 'user',
+              content: `Product and audience idea:\n${payload.businessDescription.trim()}\n\nRespond with the best first ICP to test, their top pain point, why this segment is promising, and the best next step.`,
+            },
+          ],
+          response_format: { type: 'json_object' },
+          temperature: 0.4,
+          max_tokens: 600,
+        }),
+      }).finally(() => clearTimeout(quickstartTimeout));
+
+      if (!quickstartResponse.ok) {
+        const errorText = await quickstartResponse.text();
+        console.error('OpenAI quickstart error:', errorText);
+        throw new Error(`OpenAI API Error: ${quickstartResponse.status}`);
+      }
+
+      const quickstartData = await quickstartResponse.json();
+      const quickstartResult = JSON.parse(quickstartData.choices[0].message.content);
+
+      return new Response(JSON.stringify({
+        success: true,
+        quickstart: true,
+        quickstartResult,
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    // Get authenticated user
+    const user = await getUserFromAuth(req);
+    if (!user) {
+      return new Response(JSON.stringify({ error: 'Authentication required' }), {
+        status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
@@ -125,11 +188,6 @@ serve(async (req) => {
         status: 402,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
-    }
-
-    const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
-    if (!openaiApiKey) {
-      throw new Error('OpenAI API key not configured');
     }
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL');

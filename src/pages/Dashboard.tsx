@@ -7,14 +7,14 @@ import { Helmet } from 'react-helmet-async';
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useUpgradePrompt } from '@/contexts/UpgradePromptContext';
+import { useActivationGate } from '@/hooks/useActivationGate';
 
 const Dashboard = () => {
   const { user } = useAuth();
   const { checkFeatureAccess } = useFeatureGating();
   const navigate = useNavigate();
-  const { openUpgradePrompt } = useUpgradePrompt();
   const [useClassicDashboard, setUseClassicDashboard] = useState(false);
+  const activationGate = useActivationGate();
 
   // Load user's dashboard preference
   useEffect(() => {
@@ -61,6 +61,13 @@ const Dashboard = () => {
     checkProfile();
   }, [user, navigate]);
 
+  useEffect(() => {
+    if (!user || !activationGate.shouldEnforceGate) return;
+
+    // FIX(retention): dashboard — forced-gate users are redirected back to their selected activation path until they create a first artifact worth returning to.
+    navigate(activationGate.redirectUrl, { replace: true });
+  }, [activationGate.redirectUrl, activationGate.shouldEnforceGate, navigate, user]);
+
   if (!user) {
     return (
       <>
@@ -71,6 +78,10 @@ const Dashboard = () => {
         <DashboardPreview />
       </>
     );
+  }
+
+  if (activationGate.loading) {
+    return null;
   }
 
   // Check access before rendering

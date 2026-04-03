@@ -14,7 +14,8 @@ export interface RetentionNudge {
 
 interface RetentionFeedState {
   loading: boolean;
-  nudges: RetentionNudge[];
+  primaryNudge: RetentionNudge | null;
+  secondaryNudges: RetentionNudge[];
   unreadMessageCount: number;
   savedMentorCount: number;
   activationIntent: ActivationIntent | null;
@@ -25,7 +26,8 @@ export const useRetentionFeed = (): RetentionFeedState => {
   const { user } = useAuth();
   const [state, setState] = useState<RetentionFeedState>({
     loading: true,
-    nudges: [],
+    primaryNudge: null,
+    secondaryNudges: [],
     unreadMessageCount: 0,
     savedMentorCount: 0,
     activationIntent: null,
@@ -36,7 +38,8 @@ export const useRetentionFeed = (): RetentionFeedState => {
     if (!user) {
       setState({
         loading: false,
-        nudges: [],
+        primaryNudge: null,
+        secondaryNudges: [],
         unreadMessageCount: 0,
         savedMentorCount: 0,
         activationIntent: null,
@@ -62,7 +65,15 @@ export const useRetentionFeed = (): RetentionFeedState => {
       const activationIntent = typeof userPreferences.activationIntent === 'string'
         ? userPreferences.activationIntent as ActivationIntent
         : null;
-      const activationMode = profile.onboarding_completed !== true;
+      const activationMode =
+        profile.onboarding_completed !== true ||
+        (userPreferences.activationGateVariant === 'forced_gate' && typeof userPreferences.firstArtifactType !== 'string');
+      const latestArtifactLabel = typeof userPreferences.lastArtifactLabel === 'string'
+        ? userPreferences.lastArtifactLabel
+        : null;
+      const latestArtifactResumeUrl = typeof userPreferences.lastArtifactResumeUrl === 'string'
+        ? userPreferences.lastArtifactResumeUrl
+        : null;
 
       const { data: savedMentors, error: savedMentorsError } = await supabase
         .from('mentor_saves')
@@ -117,17 +128,27 @@ export const useRetentionFeed = (): RetentionFeedState => {
         .maybeSingle();
 
       const nudges: RetentionNudge[] = [];
+      let primaryNudge: RetentionNudge | null = null;
 
-      if (activationMode && activationIntent) {
+      if (latestArtifactLabel && latestArtifactResumeUrl) {
+        primaryNudge = {
+          id: 'continue',
+          eyebrow: 'Continue where you left off',
+          title: latestArtifactLabel,
+          description: 'Open the last artifact you created and take the next concrete step before you explore anything else.',
+          actionLabel: 'Continue where you left off',
+          actionUrl: latestArtifactResumeUrl,
+        };
+      } else if (activationMode && activationIntent) {
         const activationSummary = buildActivationSummary(activationIntent);
-        nudges.push({
+        primaryNudge = {
           id: 'activation',
           eyebrow: 'Finish activation',
           title: activationSummary.title,
           description: activationSummary.description,
           actionLabel: 'Complete first value action',
           actionUrl: activationSummary.actionUrl,
-        });
+        };
       }
 
       if (unreadMessageCount > 0) {
@@ -171,7 +192,8 @@ export const useRetentionFeed = (): RetentionFeedState => {
 
       setState({
         loading: false,
-        nudges: nudges.slice(0, 3),
+        primaryNudge,
+        secondaryNudges: nudges.slice(0, 2),
         unreadMessageCount,
         savedMentorCount,
         activationIntent,

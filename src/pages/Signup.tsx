@@ -16,6 +16,7 @@ import { useConversionTracking } from "@/hooks/useConversionTracking";
 import MobileFormOptimizer from "@/components/MobileFormOptimizer";
 import { mapSignUpError } from "@/lib/authErrors";
 import { MIN_PASSWORD_LENGTH, PASSWORD_LENGTH_ERROR } from "@/lib/passwordPolicy";
+import { captureEvent } from "@/lib/analytics";
 import {
   isUsernameAvailable,
   normalizeUsernameInput,
@@ -254,6 +255,12 @@ const Signup = () => {
       const triggerType = conversionSource.source !== 'direct' ? conversionSource.source : 'signup-page';
 
       // Track sign-up started
+      // FIX(retention): signup — emit canonical signup events so the onboarding funnel can be reconciled against PostHog and admin diagnostics.
+      captureEvent('signup_started', {
+        triggerType,
+        source: conversionSource.source,
+        returnUrl: conversionSource.returnUrl,
+      });
       trackSignupStarted(triggerType);
 
       const fullName = [formData.firstName.trim(), formData.lastName.trim()].filter(Boolean).join(" ");
@@ -300,6 +307,11 @@ const Signup = () => {
         }
 
         // Track conversion completion
+        captureEvent('signup_completed', {
+          triggerType,
+          source: conversionSource.source,
+          returnUrl: conversionSource.returnUrl,
+        });
         trackSignupCompleted(triggerType);
 
         try {

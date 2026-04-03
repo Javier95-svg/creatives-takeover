@@ -8,7 +8,13 @@ import { Flame, Loader2, CheckCircle2, XCircle } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { clearDailyGoalPromptSkipped, getLocalDateString, markDailyGoalPromptSkipped } from '@/lib/dailyGoalPrompt';
+import {
+  clearDailyGoalPromptState,
+  getLocalDateString,
+  markDailyGoalPromptUnresolved,
+  snoozeDailyGoalPrompt,
+} from '@/lib/dailyGoalPrompt';
+import { captureEvent } from '@/lib/analytics';
 
 type ModalMode = 'morning' | 'evening';
 
@@ -38,6 +44,16 @@ export const DailyGoalModal = ({
   const [tomorrowFocus, setTomorrowFocus] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const today = getLocalDateString();
+  const suggestionOptions = mode === 'morning'
+    ? [
+        'Resume my ICP draft',
+        'Reply to one message',
+        'Revisit one saved mentor',
+      ]
+    : [
+        'Capture the blocker and reset tomorrow',
+        'Log one small win from today',
+      ];
 
   const handleSubmit = async () => {
     if (mode === 'morning' && !goal.trim()) return;
@@ -91,7 +107,7 @@ export const DailyGoalModal = ({
         toast.success(message);
       }
 
-      clearDailyGoalPromptSkipped(user.id, mode, today);
+      clearDailyGoalPromptState(user.id, mode, today);
       onOpenChange(false);
       setGoal('');
       setGoalAchieved(null);
@@ -114,7 +130,13 @@ export const DailyGoalModal = ({
       return;
     }
 
-    markDailyGoalPromptSkipped(user.id, mode, today);
+    // FIX(retention): dashboard prompt — the daily check-in now snoozes for one hour instead of letting users opt out for the whole day.
+    snoozeDailyGoalPrompt(user.id, mode, today);
+    markDailyGoalPromptUnresolved(user.id, mode, today);
+    captureEvent('daily_prompt_snoozed', {
+      mode,
+      page_path: '/dashboard',
+    });
     setGoal('');
     setGoalAchieved(null);
     setWhatWentWell('');
@@ -122,6 +144,24 @@ export const DailyGoalModal = ({
     setEnergyLevelEnd(3);
     setTomorrowFocus('');
     onOpenChange(false);
+  };
+
+  const handleSuggestion = (value: string) => {
+    if (mode === 'morning') {
+      setGoal(value);
+    } else {
+      setTomorrowFocus(value);
+    }
+
+    if (user) {
+      markDailyGoalPromptUnresolved(user.id, mode, today);
+    }
+
+    captureEvent('daily_prompt_microcommit_selected', {
+      mode,
+      suggestion: value,
+      page_path: '/dashboard',
+    });
   };
 
   const isMorning = mode === 'morning';
@@ -157,6 +197,20 @@ export const DailyGoalModal = ({
                 className="min-h-[100px]"
                 autoFocus
               />
+
+              <div className="flex flex-wrap gap-2">
+                {suggestionOptions.map((suggestion) => (
+                  <Button
+                    key={suggestion}
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleSuggestion(suggestion)}
+                  >
+                    {suggestion}
+                  </Button>
+                ))}
+              </div>
             </>
           ) : (
             <>
@@ -243,6 +297,20 @@ export const DailyGoalModal = ({
                     className="min-h-[70px]"
                   />
                 </div>
+
+                <div className="flex flex-wrap gap-2">
+                  {suggestionOptions.map((suggestion) => (
+                    <Button
+                      key={suggestion}
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleSuggestion(suggestion)}
+                    >
+                      {suggestion}
+                    </Button>
+                  ))}
+                </div>
               </div>
             </>
           )}
@@ -253,7 +321,7 @@ export const DailyGoalModal = ({
               onClick={handleSkip}
               disabled={isSubmitting}
             >
-              {isMorning ? 'Not now' : 'Close for now'}
+              Snooze 1 hour
             </Button>
             <Button
               onClick={handleSubmit}

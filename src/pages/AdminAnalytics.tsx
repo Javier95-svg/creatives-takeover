@@ -8,10 +8,9 @@ import Footer from "@/components/Footer";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { Activity, MousePointerClick, Clock, Users, TrendingUp, Eye, LogOut } from "lucide-react";
+import { Activity, MousePointerClick, Clock, Eye, LogOut } from "lucide-react";
 import { subDays, startOfDay, endOfDay } from "date-fns";
 import { safe } from "@/integrations/supabase/safe";
 import {
@@ -41,6 +40,13 @@ const AdminAnalytics = () => {
   }
   
   const [activityEvents, setActivityEvents] = useState<ActivityEvent[]>([]);
+  const [onboardingFunnel, setOnboardingFunnel] = useState({
+    signupStarted: 0,
+    signupCompleted: 0,
+    onboardingStarted: 0,
+    onboardingCompleted: 0,
+    firstValueActions: 0,
+  });
 
   useEffect(() => {
     const checkAdmin = async () => {
@@ -89,6 +95,60 @@ const AdminAnalytics = () => {
       setActivityEvents((data as ActivityEvent[]) || []);
     })();
   }, [dateRange]);
+
+  useEffect(() => {
+    (async () => {
+      const fromIso = startDate.toISOString();
+      const toIso = endDate.toISOString();
+
+      const [
+        signupStartedResult,
+        signupCompletedResult,
+        onboardingStartedResult,
+        onboardingCompletedResult,
+        firstValueActionsResult,
+      ] = await Promise.all([
+        supabase
+          .from('conversion_events')
+          .select('id', { count: 'exact', head: true })
+          .eq('event_type', 'signup_started')
+          .gte('created_at', fromIso)
+          .lte('created_at', toIso),
+        supabase
+          .from('conversion_events')
+          .select('id', { count: 'exact', head: true })
+          .eq('event_type', 'signup_completed')
+          .gte('created_at', fromIso)
+          .lte('created_at', toIso),
+        (supabase as any)
+          .from('activity_events')
+          .select('id', { count: 'exact', head: true })
+          .eq('event', 'onboarding_started')
+          .gte('created_at', fromIso)
+          .lte('created_at', toIso),
+        (supabase as any)
+          .from('activity_events')
+          .select('id', { count: 'exact', head: true })
+          .eq('event', 'onboarding_completed')
+          .gte('created_at', fromIso)
+          .lte('created_at', toIso),
+        supabase
+          .from('user_activity_log')
+          .select('id', { count: 'exact', head: true })
+          .in('activity_type', ['activation_completed', 'mentor_saved'])
+          .gte('created_at', fromIso)
+          .lte('created_at', toIso),
+      ]);
+
+      setOnboardingFunnel({
+        signupStarted: signupStartedResult.count ?? 0,
+        signupCompleted: signupCompletedResult.count ?? 0,
+        onboardingStarted: onboardingStartedResult.count ?? 0,
+        onboardingCompleted: onboardingCompletedResult.count ?? 0,
+        firstValueActions: firstValueActionsResult.count ?? 0,
+      });
+    })();
+  }, [endDate, startDate]);
 
   if (!user || isAdmin === null || overviewLoading) {
     return (
@@ -180,17 +240,18 @@ const AdminAnalytics = () => {
 
           {/* Tabs for different views */}
           <Tabs defaultValue="overview" className="space-y-6">
-            <TabsList>
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="pages">Pages</TabsTrigger>
-              <TabsTrigger value="ctas">CTAs</TabsTrigger>
-              <TabsTrigger value="engagement">Engagement</TabsTrigger>
+	            <TabsList>
+	              <TabsTrigger value="overview">Overview</TabsTrigger>
+	              <TabsTrigger value="onboarding">Onboarding</TabsTrigger>
+	              <TabsTrigger value="pages">Pages</TabsTrigger>
+	              <TabsTrigger value="ctas">CTAs</TabsTrigger>
+	              <TabsTrigger value="engagement">Engagement</TabsTrigger>
               <TabsTrigger value="realtime">Real-Time</TabsTrigger>
                 <TabsTrigger value="activity">Activity</TabsTrigger>
             </TabsList>
 
-            {/* Overview Tab */}
-            <TabsContent value="overview" className="space-y-6">
+	            {/* Overview Tab */}
+	            <TabsContent value="overview" className="space-y-6">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <Card>
                   <CardHeader>
@@ -258,7 +319,65 @@ const AdminAnalytics = () => {
                   </ResponsiveContainer>
                 </CardContent>
               </Card>
-            </TabsContent>
+	            </TabsContent>
+
+	            <TabsContent value="onboarding" className="space-y-6">
+	              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+	                <Card>
+	                  <CardHeader>
+	                    <CardTitle className="text-sm font-medium">Signup Started</CardTitle>
+	                  </CardHeader>
+	                  <CardContent>
+	                    <div className="text-2xl font-bold">{onboardingFunnel.signupStarted}</div>
+	                  </CardContent>
+	                </Card>
+	                <Card>
+	                  <CardHeader>
+	                    <CardTitle className="text-sm font-medium">Signup Completed</CardTitle>
+	                  </CardHeader>
+	                  <CardContent>
+	                    <div className="text-2xl font-bold">{onboardingFunnel.signupCompleted}</div>
+	                  </CardContent>
+	                </Card>
+	                <Card>
+	                  <CardHeader>
+	                    <CardTitle className="text-sm font-medium">Onboarding Started</CardTitle>
+	                  </CardHeader>
+	                  <CardContent>
+	                    <div className="text-2xl font-bold">{onboardingFunnel.onboardingStarted}</div>
+	                  </CardContent>
+	                </Card>
+	                <Card>
+	                  <CardHeader>
+	                    <CardTitle className="text-sm font-medium">Onboarding Completed</CardTitle>
+	                  </CardHeader>
+	                  <CardContent>
+	                    <div className="text-2xl font-bold">{onboardingFunnel.onboardingCompleted}</div>
+	                  </CardContent>
+	                </Card>
+	                <Card>
+	                  <CardHeader>
+	                    <CardTitle className="text-sm font-medium">First Value Actions</CardTitle>
+	                  </CardHeader>
+	                  <CardContent>
+	                    <div className="text-2xl font-bold">{onboardingFunnel.firstValueActions}</div>
+	                  </CardContent>
+	                </Card>
+	              </div>
+	              <Card>
+	                <CardHeader>
+	                  <CardTitle>Onboarding Funnel Debug</CardTitle>
+	                  <CardDescription>
+	                    Temporary admin view for validating that signup reaches onboarding and that onboarding leads to a real first-value action.
+	                  </CardDescription>
+	                </CardHeader>
+	                <CardContent className="space-y-2 text-sm text-muted-foreground">
+	                  <p>Use this to confirm whether `onboarding_started` is live again after the retention funnel repair.</p>
+	                  <p>If signup completion is healthy but onboarding start stays low, the auth callback or redirect chain is still broken.</p>
+	                  <p>If onboarding completion is healthy but first-value actions stay low, the activation flow is still leaking after onboarding.</p>
+	                </CardContent>
+	              </Card>
+	            </TabsContent>
 
             {/* Pages Tab */}
             <TabsContent value="pages">

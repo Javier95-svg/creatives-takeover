@@ -20,6 +20,15 @@ import { DashboardNavigationProvider } from '@/contexts/DashboardNavigationConte
 import { DashboardSidebar } from './DashboardSidebar';
 import { useActiveSection } from '@/hooks/useActiveSection';
 import { ReactNode } from 'react';
+import {
+  getDailyGoalPromptSnoozeUntil,
+  getLocalDateString,
+  hasDailyGoalPromptResurfaced,
+  hasDailyGoalPromptUnresolved,
+  markDailyGoalPromptResurfaced,
+} from '@/lib/dailyGoalPrompt';
+import { captureEvent } from '@/lib/analytics';
+import { DailyPromptResumeCard } from './DailyPromptResumeCard';
 
 // Internal wrapper component that uses the navigation context
 interface DashboardContentWrapperProps {
@@ -56,10 +65,12 @@ export const PersonalizedDashboardV2 = () => {
 
   const [showDailyGoal, setShowDailyGoal] = useState(false);
   const [modalMode, setModalMode] = useState<'morning' | 'evening'>('morning');
-  const [hasCheckedInToday, setHasCheckedInToday] = useState(false);
+  const [_hasCheckedInToday, setHasCheckedInToday] = useState(false);
   const [todaysCheckInId, setTodaysCheckInId] = useState<string | null>(null);
   const [currentStreak, setCurrentStreak] = useState(0);
   const [dashboardMode, setDashboardMode] = useState<DashboardMode>('dashboard');
+  const [hasUnresolvedPrompt, setHasUnresolvedPrompt] = useState(false);
+  const [unresolvedMode, setUnresolvedMode] = useState<'morning' | 'evening'>('morning');
 
   // Track last fetch time to prevent unnecessary refreshes
   const lastFetchTimeRef = useRef<number>(0);
@@ -110,7 +121,7 @@ export const PersonalizedDashboardV2 = () => {
     }
 
     const checkDailyCheckIn = async () => {
-      const today = new Date().toISOString().split('T')[0];
+      const today = getLocalDateString();
       const currentHour = new Date().getHours();
 
       const { data: todayCheckIn } = await supabase
@@ -154,13 +165,38 @@ export const PersonalizedDashboardV2 = () => {
 
         // Show evening reflection if after 6 PM and haven't reflected yet
         if (currentHour >= 18 && todayCheckIn.goal_achieved === null) {
-          setModalMode('evening');
-          setShowDailyGoal(true);
+          const nextMode = 'evening';
+          const snoozeUntil = getDailyGoalPromptSnoozeUntil(user.id, nextMode, today);
+          const isSnoozed = typeof snoozeUntil === 'number' && snoozeUntil > Date.now();
+
+          setModalMode(nextMode);
+          setUnresolvedMode(nextMode);
+          setHasUnresolvedPrompt(hasDailyGoalPromptUnresolved(user.id, nextMode, today) || isSnoozed);
+
+          if (!isSnoozed) {
+            if (typeof snoozeUntil === 'number' && !hasDailyGoalPromptResurfaced(user.id, nextMode, today)) {
+              markDailyGoalPromptResurfaced(user.id, nextMode, today);
+              captureEvent('daily_prompt_resurfaced', { mode: nextMode, page_path: '/dashboard' });
+            }
+            setShowDailyGoal(true);
+          }
         }
       } else {
-        // Show morning goal modal if haven't checked in
-        setModalMode('morning');
-        setShowDailyGoal(true);
+        const nextMode = 'morning';
+        const snoozeUntil = getDailyGoalPromptSnoozeUntil(user.id, nextMode, today);
+        const isSnoozed = typeof snoozeUntil === 'number' && snoozeUntil > Date.now();
+
+        setModalMode(nextMode);
+        setUnresolvedMode(nextMode);
+        setHasUnresolvedPrompt(hasDailyGoalPromptUnresolved(user.id, nextMode, today) || isSnoozed);
+
+        if (!isSnoozed) {
+          if (typeof snoozeUntil === 'number' && !hasDailyGoalPromptResurfaced(user.id, nextMode, today)) {
+            markDailyGoalPromptResurfaced(user.id, nextMode, today);
+            captureEvent('daily_prompt_resurfaced', { mode: nextMode, page_path: '/dashboard' });
+          }
+          setShowDailyGoal(true);
+        }
       }
 
       lastFetchTimeRef.current = Date.now();
@@ -191,6 +227,15 @@ export const PersonalizedDashboardV2 = () => {
 
   const metrics = calculateMetrics();
   const incompleteTaskCount = Math.max(metrics.totalTasksToday - metrics.tasksCompletedToday, 0);
+  const handleDailyGoalOpenChange = (open: boolean) => {
+    setShowDailyGoal(open);
+
+    if (!open && user) {
+      const today = getLocalDateString();
+      setHasUnresolvedPrompt(hasDailyGoalPromptUnresolved(user.id, modalMode, today));
+      setUnresolvedMode(modalMode);
+    }
+  };
 
   if (loading || isInitializing) {
     return (
@@ -276,6 +321,17 @@ export const PersonalizedDashboardV2 = () => {
                     {/* Rookie upgrade banner */}
                     <RookieUpgradeBanner />
 
+                    {hasUnresolvedPrompt ? (
+                      // FIX(retention): dashboard — snoozed daily prompts now leave a pinned unresolved card so the habit loop still has a visible next step.
+                      <DailyPromptResumeCard
+                        mode={unresolvedMode}
+                        onResume={() => {
+                          setModalMode(unresolvedMode);
+                          setShowDailyGoal(true);
+                        }}
+                      />
+                    ) : null}
+
                     <RetentionActionFeed />
 
                     {/* Journey Stage Grid */}
@@ -307,12 +363,13 @@ export const PersonalizedDashboardV2 = () => {
                   {/* Daily Goal Modal */}
                   <DailyGoalModal
                     open={showDailyGoal}
-                    onOpenChange={setShowDailyGoal}
+                    onOpenChange={handleDailyGoalOpenChange}
                     currentStreak={currentStreak}
                     mode={modalMode}
                     todaysCheckInId={todaysCheckInId}
                     onCheckInComplete={async () => {
                       setHasCheckedInToday(true);
+                      setHasUnresolvedPrompt(false);
                       hasInitializedRef.current = false;
                       lastFetchTimeRef.current = 0;
                     }}

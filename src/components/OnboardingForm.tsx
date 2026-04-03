@@ -9,6 +9,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
 import { captureEvent } from '@/lib/analytics';
+import { trackActivity } from '@/lib/activity';
 import { getActivationRoute, startActivationJourney, type ActivationIntent } from '@/lib/retentionSystem';
 
 interface OnboardingData {
@@ -53,19 +54,19 @@ const ACTIVATION_CARDS: Array<{
   sub: string;
 }> = [
   {
-    value: 'save_mentor',
-    headline: 'Save one mentor to come back to',
-    sub: 'Turns browsing into a concrete return anchor we can re-surface by email and in-app.',
+    value: 'find_mentor',
+    headline: 'Find a mentor',
+    sub: 'Start with one mentor worth saving, messaging, or booking so the first session creates a real return trigger.',
   },
   {
-    value: 'send_message',
-    headline: 'Start one founder conversation',
-    sub: 'Messages are the strongest retained-user behavior in the current data.',
+    value: 'run_icp',
+    headline: 'Run ICP analysis',
+    sub: 'Get to a fast first ICP recommendation with one prompt, then expand only after you see value.',
   },
   {
-    value: 'book_call',
-    headline: 'Book one discovery call',
-    sub: 'This is the highest-intent action in the current funnel and should happen before passive browsing.',
+    value: 'start_validation',
+    headline: 'Start validation',
+    sub: 'Use Decision Sprint to score one idea before you disappear into passive browsing.',
   },
 ];
 
@@ -144,27 +145,50 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
     setIsLoading(true);
 
     try {
-      const startRoute = getActivationRoute(formData.activationIntent as ActivationIntent);
+      const selectedIntent = formData.activationIntent as ActivationIntent;
+      const startRoute = getActivationRoute(selectedIntent);
 
       await startActivationJourney({
         userId: user.id,
         businessStage: formData.businessStage,
         primaryPain: formData.primaryPain,
-        activationIntent: formData.activationIntent as ActivationIntent,
+        activationIntent: selectedIntent,
       });
 
-      captureEvent('activation_path_selected', {
+      // FIX(retention): onboarding — activation intent selection is now captured with the canonical event name used by the retention recovery funnel.
+      captureEvent('activation_intent_selected', {
         stage: formData.businessStage,
         painPoint: formData.primaryPain,
-        activationIntent: formData.activationIntent,
+        activationIntent: selectedIntent,
         timeMs: Date.now() - startedAt,
         startRoute,
       });
+      captureEvent('activation_path_selected', {
+        stage: formData.businessStage,
+        painPoint: formData.primaryPain,
+        activationIntent: selectedIntent,
+        timeMs: Date.now() - startedAt,
+        startRoute,
+      });
+      // FIX(retention): onboarding — completion is now emitted explicitly so onboarding_started/onboarding_completed can be trusted again.
+      captureEvent('onboarding_completed', {
+        stage: formData.businessStage,
+        painPoint: formData.primaryPain,
+        activationIntent: selectedIntent,
+        timeMs: Date.now() - startedAt,
+      });
+      void trackActivity('onboarding_completed', {
+        stage: formData.businessStage,
+        painPoint: formData.primaryPain,
+        activationIntent: selectedIntent,
+        startRoute,
+      }, user.id);
 
       toast.success("One last step: complete your first value action before you explore the rest of the platform.");
 
       if (onComplete) {
-        onComplete(`${startRoute}&activation=1&intent=${formData.activationIntent}`);
+        const separator = startRoute.includes('?') ? '&' : '?';
+        onComplete(`${startRoute}${separator}activation=1&intent=${selectedIntent}`);
       }
     } catch (error) {
       console.error('Failed to save onboarding data:', error);
@@ -256,7 +280,7 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
                 Pick the action that should pull you back
               </h2>
               <p className="text-muted-foreground font-poppins">
-                The reports show users only retain when they create a real asset. Choose the first action that should become your return trigger.
+                The first session should create one concrete thing worth revisiting. Pick the path that should become your return trigger.
               </p>
             </div>
 
@@ -302,14 +326,14 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
             <div className="p-4 rounded-2xl bg-[#32b8c6]/10 border border-[#32b8c6]/30">
               <p className="text-sm font-semibold text-foreground mb-1 font-space-grotesk">Your selected return trigger</p>
               <p className="text-sm text-muted-foreground">
-                {formData.activationIntent === 'save_mentor' && (
-                  <>You will go to mentors and save one person worth coming back to.</>
+                {formData.activationIntent === 'find_mentor' && (
+                  <>You will go to mentors and create one relationship worth returning to.</>
                 )}
-                {formData.activationIntent === 'send_message' && (
-                  <>You will open mentors and start one conversation that can generate a reply.</>
+                {formData.activationIntent === 'run_icp' && (
+                  <>You will start with one prompt, get a fast ICP recommendation, and only expand the brief after the value shows up.</>
                 )}
-                {formData.activationIntent === 'book_call' && (
-                  <>You will open mentors and book one discovery call with real commercial intent.</>
+                {formData.activationIntent === 'start_validation' && (
+                  <>You will score one startup idea and leave with a clearer decision instead of more passive exploration.</>
                 )}
               </p>
             </div>
