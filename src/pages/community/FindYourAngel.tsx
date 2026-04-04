@@ -337,6 +337,19 @@ const FindYourAngel = () => {
           <section id="angel-grid" className="container mx-auto px-4 py-12 relative z-10">
             {!user && publicTab ? (
               <>
+                <div className="mb-4">
+                  {loading ? (
+                    <div className="flex items-center gap-2">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span className="text-sm text-muted-foreground">Loading angel investors...</span>
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">
+                      {angels.length} angel investor{angels.length !== 1 ? 's' : ''} found
+                    </p>
+                  )}
+                </div>
+
                 {/* Blurred Preview of First Page of Angels - for non-signed-in visitors */}
                 {!loading && angels.length > 0 && (
                   <div className="relative min-h-[600px]">
