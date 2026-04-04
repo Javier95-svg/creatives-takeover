@@ -3,7 +3,26 @@ import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Gift, Home, Bot, BookOpen, TrendingUp, Users, FileText, Info, DollarSign } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Home,
+  Bot,
+  BookOpen,
+  TrendingUp,
+  Users,
+  FileText,
+  Info,
+  DollarSign,
+  ChevronDown,
+  GraduationCap,
+  Handshake,
+  Sparkles,
+} from "lucide-react";
 
 interface NavItem {
   name: string;
@@ -13,10 +32,23 @@ interface NavItem {
   requiresAuth?: boolean;
 }
 
+interface SubmenuItem {
+  name: string;
+  href: string;
+  description: string;
+  icon: React.ComponentType<{ className?: string }>;
+}
+
 interface TabletNavigationProps {
   navItems: NavItem[];
   onItemClick?: (itemName: string) => void;
 }
+
+const communitySubmenu: SubmenuItem[] = [
+  { name: "Find a Mentor", href: "/community", icon: GraduationCap, description: "Connect with experienced mentors" },
+  { name: "Find a Co-Founder", href: "/community/co-founders", icon: Handshake, description: "Meet your business soulmate" },
+  { name: "Find your Angel", href: "/community/angels", icon: Sparkles, description: "Connect with angel investors" },
+];
 
 // Icon mapping for navigation items
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -46,6 +78,7 @@ export const TabletNavigation: React.FC<TabletNavigationProps> = ({
           const isActive = location.pathname === item.href || 
             (item.href !== "/" && location.pathname.startsWith(item.href));
           const Icon = item.icon || iconMap[item.name];
+          const hasCommunitySubmenu = item.name === "Community";
           
           // Color-code navigation items semantically
           let colorClass = '';
@@ -59,22 +92,69 @@ export const TabletNavigation: React.FC<TabletNavigationProps> = ({
             colorClass = 'hover:text-foreground';
           }
 
+          const triggerClassName = cn(
+            "flex flex-col items-center justify-center gap-1 relative",
+            "px-3 py-2.5 rounded-lg transition-all duration-250",
+            "min-h-[48px] min-w-[60px] touch-manipulation",
+            "text-sm font-medium",
+            isActive
+              ? "text-primary bg-primary/10 shadow-sm scale-105"
+              : `text-muted-foreground ${colorClass} hover:bg-muted/50`,
+            "active:scale-95 hover:scale-105"
+          );
+
+          if (hasCommunitySubmenu) {
+            return (
+              <DropdownMenu key={item.name}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <DropdownMenuTrigger className={triggerClassName}>
+                      {Icon && <Icon className="h-4 w-4" />}
+                      <span className="flex items-center gap-1 text-[10px] leading-tight text-center max-w-[70px]">
+                        <span className="truncate">{item.name}</span>
+                        <ChevronDown className="h-3 w-3 flex-shrink-0" />
+                      </span>
+                    </DropdownMenuTrigger>
+                  </TooltipTrigger>
+                  {item.tooltip && (
+                    <TooltipContent>
+                      <p>{item.tooltip}</p>
+                    </TooltipContent>
+                  )}
+                </Tooltip>
+                <DropdownMenuContent align="center" className="w-64">
+                  {communitySubmenu.map((subItem) => {
+                    const SubIcon = subItem.icon;
+                    const isSubActive = location.pathname === subItem.href || location.pathname.startsWith(`${subItem.href}/`);
+
+                    return (
+                      <DropdownMenuItem key={subItem.href} asChild>
+                        <Link
+                          to={subItem.href}
+                          onClick={() => onItemClick?.(`${item.name} - ${subItem.name}`)}
+                          className={cn("cursor-pointer", isSubActive && "bg-primary/5")}
+                        >
+                          <SubIcon className="h-4 w-4 mr-2" />
+                          <div className="flex flex-col">
+                            <span className="font-medium">{subItem.name}</span>
+                            <span className="text-xs text-muted-foreground">{subItem.description}</span>
+                          </div>
+                        </Link>
+                      </DropdownMenuItem>
+                    );
+                  })}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            );
+          }
+
           return (
             <Tooltip key={item.name}>
               <TooltipTrigger asChild>
                 <Link
                   to={item.href}
                   onClick={() => onItemClick?.(item.name)}
-                  className={cn(
-                    "flex flex-col items-center justify-center gap-1 relative",
-                    "px-3 py-2.5 rounded-lg transition-all duration-250",
-                    "min-h-[48px] min-w-[60px] touch-manipulation",
-                    "text-sm font-medium",
-                    isActive
-                      ? "text-primary bg-primary/10 shadow-sm scale-105"
-                      : `text-muted-foreground ${colorClass} hover:bg-muted/50`,
-                    "active:scale-95 hover:scale-105"
-                  )}
+                  className={triggerClassName}
                 >
                   {Icon && <Icon className="h-4 w-4" />}
                   <span className="text-[10px] leading-tight text-center max-w-[60px] truncate">
