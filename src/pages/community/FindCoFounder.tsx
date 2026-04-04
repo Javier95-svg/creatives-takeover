@@ -4,7 +4,6 @@ import SEO, { createBreadcrumbSchema } from "@/components/SEO";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import CommunityCofoundersWallpaper from "@/components/wallpapers/CommunityCofoundersWallpaper";
-import CommunitySectionTabs from "@/components/community/CommunitySectionTabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -178,11 +177,6 @@ const FindCoFounder = () => {
 	        <CommunityCofoundersWallpaper />
 	        <div className="relative z-10">
 	          <Navigation />
-	          <section className="px-6 pt-20">
-	            <div className="max-w-7xl mx-auto">
-	              <CommunitySectionTabs />
-	            </div>
-	          </section>
 
 	        {/* Hero Section */}
 	        <section className="pt-24 pb-16 px-6">

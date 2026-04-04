@@ -4,7 +4,6 @@ import { Link, useSearchParams } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import CommunityMentorsWallpaper from "@/components/wallpapers/CommunityMentorsWallpaper";
-import CommunitySectionTabs from "@/components/community/CommunitySectionTabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -423,9 +422,6 @@ const MentorMarketplaceHub = () => {
 	        <CommunityMentorsWallpaper />
 	        <Navigation />
 	        <div className="pt-16 relative z-10">
-	          <section className="pt-4 lg:pt-6">
-	            <CommunitySectionTabs />
-	          </section>
 	          {/* Hero Section */}
 	          <section className="relative py-10 lg:py-14">
             <div className="container mx-auto max-w-6xl px-4 sm:px-6">
