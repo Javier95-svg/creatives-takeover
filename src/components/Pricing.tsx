@@ -278,7 +278,7 @@ export default function Pricing() {
                     ? "Manage Plan"
                     : plan.key === "rookie"
                       ? "Start Free"
-                      : `Start ${plan.title}`}
+                      : `Go ${plan.title}`}
                 </Button>
               </div>
             );
