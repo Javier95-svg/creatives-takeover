@@ -3,7 +3,7 @@ import SEO, { createBreadcrumbSchema, createFAQSchema } from '@/components/SEO';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import PageFAQSection from '@/components/seo/PageFAQSection';
-import { SignedOutFeaturePreview } from '@/components/ui/SignedOutFeaturePreview';
+import { PreviewModeWrapper } from '@/components/ui/PreviewModeWrapper';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import { useGTMStrategist } from '@/hooks/useGTMStrategist';
@@ -166,12 +166,17 @@ export default function GTMStrategistPage() {
 
 	          {!user ? (
 	            publicTab && (
-	              <SignedOutFeaturePreview
+	              <PreviewModeWrapper
 	                featureName={publicTab.featureName}
 	                description={publicTab.description || ''}
-	                previewItems={publicTab.previewItems}
 	                showPricingCta={publicTab.showPricingCta}
-	              />
+	              >
+	                <GTMIntakeForm
+	                  prefillData={{}}
+	                  onSubmit={() => {}}
+	                  isSubmitting={false}
+	                />
+	              </PreviewModeWrapper>
 	            )
 	          ) : (
 	            <>

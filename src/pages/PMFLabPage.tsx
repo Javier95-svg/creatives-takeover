@@ -168,12 +168,27 @@ export default function PMFLabPage() {
 
             {!user ? (
               publicTab && (
-                <SignedOutFeaturePreview
+                <PreviewModeWrapper
                   featureName={publicTab.featureName}
                   description={publicTab.description || ''}
-                  previewItems={publicTab.previewItems}
                   showPricingCta={publicTab.showPricingCta}
-                />
+                >
+                  <div className="space-y-6">
+                    {activationGuide ? (
+                      <ActivationJourneyStrip
+                        stageLabel={activationGuide.stageLabel}
+                        title={activationGuide.title}
+                        description={activationGuide.description}
+                        doneLabel={activationGuide.doneLabel}
+                        completedLabel={activationGuide.completedLabel}
+                      />
+                    ) : null}
+                    <PMFEvidenceForm
+                      onSubmit={() => {}}
+                      isSubmitting={false}
+                    />
+                  </div>
+                </PreviewModeWrapper>
               )
             ) : (
               <>
