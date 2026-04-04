@@ -3,7 +3,7 @@ import { Helmet } from "react-helmet-async";
 import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
-import HomeWallpaper from "@/components/wallpapers/HomeWallpaper";
+import CommunityAngelsWallpaper from "@/components/wallpapers/CommunityAngelsWallpaper";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -294,7 +294,7 @@ const FindYourAngel = () => {
         />
       </Helmet>
 	      <div className="min-h-screen bg-background relative">
-	        <HomeWallpaper />
+          <CommunityAngelsWallpaper />
 	        <Navigation />
 	        <div className="pt-16 relative z-10">
 	          <div className="container mx-auto px-4 sm:px-6 pt-4">
