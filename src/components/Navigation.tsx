@@ -64,7 +64,7 @@ const Navigation = () => {
     "Home": Home,
     "BizMap AI": Bot,
     "Insighta": TrendingUp,
-    "Find Mentor": UsersIcon,
+    "Community": UsersIcon,
     "More": FileText,
     "About Us": Info,
     "Pricing": DollarSign,
@@ -193,7 +193,7 @@ const Navigation = () => {
   const navItems = [
     { name: "Home", href: "/", tooltip: "Return to homepage", icon: Home },
     { name: "BizMap AI", href: "/bizmap-ai", tooltip: "Validate, build, and launch with guided startup tools", icon: Bot },
-    { name: "Find Mentor", href: "/community", tooltip: "Start with one mentor worth saving, messaging, or booking", icon: UsersIcon },
+    { name: "Community", href: "/community", tooltip: "Mentors, angel investors, and co-founder matchmaking", icon: UsersIcon },
     { name: "Insighta", href: "/insighta", tooltip: "Funding opportunities and investment resources", icon: TrendingUp },
     { name: "More", href: "/newspaper", tooltip: "Stories, prompts, and learning resources", icon: FileText },
     { name: "About Us", href: "/about", tooltip: "Learn about our mission and team", icon: Info },
@@ -394,50 +394,43 @@ const Navigation = () => {
                     );
                   }
 
-                  // Special handling for Community with dropdown
+                  // Special handling for Community with inline desktop subtabs
                   if (item.name === 'Community') {
                     return (
-                      <DropdownMenu key={item.name}>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <DropdownMenuTrigger className={cn(
-                              navTriggerBaseClass,
-                              active
-                                ? navTriggerActiveClass
-                                : navTriggerInactiveClass
-                            )}>
-                              {Icon && <Icon className="h-4 w-4 flex-shrink-0 opacity-70 transition-opacity group-hover:opacity-100" />}
-                              <span className="tracking-wide">{item.name}</span>
-                              <ChevronDown className="h-3 w-3 ml-0.5 opacity-60" />
-                            </DropdownMenuTrigger>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>{item.tooltip}</p>
-                          </TooltipContent>
-                        </Tooltip>
-                        <DropdownMenuContent align="start" className={cn("w-72 md:w-56 sm:w-full", navDropdownClass)}>
-                          <DropdownMenuLabel>Connect & Collaborate 🌐</DropdownMenuLabel>
-                          <DropdownMenuSeparator />
-                          {communitySubmenu.map((subItem) => {
-                            const SubIcon = subItem.icon;
-                            return (
-                              <DropdownMenuItem key={subItem.name} asChild>
-                                <Link
-                                  to={subItem.href}
-                                  onClick={() => trackClick(`${item.name} - ${subItem.name}`, 'Navigation')}
-                                  className="cursor-pointer"
-                                >
-                                  <SubIcon className="h-4 w-4 mr-2" />
-                                  <div className="flex flex-col">
-                                    <span className="font-medium">{subItem.name}</span>
-                                    <span className="text-xs text-muted-foreground">{subItem.description}</span>
-                                  </div>
-                                </Link>
-                              </DropdownMenuItem>
-                            );
-                          })}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                      <div
+                        key={item.name}
+                        className={cn(
+                          "flex items-center gap-1 rounded-[1rem] border px-2 py-1.5 shadow-sm backdrop-blur-xl",
+                          active
+                            ? "border-border/80 bg-background/84"
+                            : "border-transparent bg-transparent"
+                        )}
+                      >
+                        <div className="flex items-center gap-2 px-2 text-muted-foreground/90">
+                          {Icon && <Icon className="h-4 w-4 flex-shrink-0" />}
+                          <span className="text-sm font-medium tracking-wide">Community</span>
+                        </div>
+                        <div className="h-6 w-px bg-border/70" />
+                        {communitySubmenu.map((subItem) => {
+                          const subActive = isActive(subItem.href);
+
+                          return (
+                            <Link
+                              key={subItem.name}
+                              to={subItem.href}
+                              onClick={() => trackClick(`${item.name} - ${subItem.name}`, 'Navigation')}
+                              className={cn(
+                                "rounded-xl px-3 py-2 text-sm font-medium whitespace-nowrap transition-all duration-200",
+                                subActive
+                                  ? "bg-primary text-primary-foreground shadow-sm"
+                                  : "text-muted-foreground hover:bg-background/80 hover:text-foreground"
+                              )}
+                            >
+                              {subItem.name === "Find your Angel" ? "Angel Investors" : subItem.name.replace("Find a ", "")}
+                            </Link>
+                          );
+                        })}
+                      </div>
                     );
                   }
 
