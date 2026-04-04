@@ -94,12 +94,8 @@ const FindYourAngel = () => {
 
 
   useEffect(() => {
-    if (!user) {
-      return;
-    }
-
     loadAngels();
-  }, [user]);
+  }, []);
 
   const loadAngels = async () => {
     try {
@@ -340,12 +336,39 @@ const FindYourAngel = () => {
           {/* Angel Investors Section */}
           <section id="angel-grid" className="container mx-auto px-4 py-12 relative z-10">
             {!user && publicTab ? (
-              <SignedOutFeaturePreview
-                featureName={publicTab.featureName}
-                description={publicTab.description || ''}
-                previewItems={publicTab.previewItems}
-                showPricingCta={publicTab.showPricingCta}
-              />
+              <>
+                <SignedOutFeaturePreview
+                  featureName={publicTab.featureName}
+                  description={publicTab.description || ''}
+                  previewItems={publicTab.previewItems}
+                  showPricingCta={publicTab.showPricingCta}
+                />
+                
+                {/* Blurred Preview of First Page of Angels - for non-signed-in visitors */}
+                {!loading && angels.length > 0 && (
+                  <div className="mt-16">
+                    <div className="relative min-h-[400px]">
+                      <div className="grid grid-cols-1 gap-6 select-none pointer-events-none blur-[6px]" aria-hidden="true">
+                        {angels.slice(0, ANGELS_PER_PAGE).map((angel, index) => (
+                          <AngelCard
+                            key={angel.id}
+                            angel={angel}
+                            priority={index < 4}
+                          />
+                        ))}
+                      </div>
+
+                      <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-b from-transparent via-background/50 to-background rounded-xl">
+                        <div className="text-center">
+                          <p className="text-sm font-semibold text-muted-foreground">
+                            Preview: Showing 10 of 86 investors
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </>
             ) : (
               <>
 	            {/* Admin Create Button */}
