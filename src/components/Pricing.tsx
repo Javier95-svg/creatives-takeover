@@ -135,6 +135,25 @@ const PLAN_CONFIG: Array<{
   },
 ];
 
+const PLAN_CARD_STYLES: Record<PlanKey, { border: string; ring: string }> = {
+  rookie: {
+    border: "border-green-500/60",
+    ring: "ring-green-500/30",
+  },
+  starter: {
+    border: "border-yellow-500/60",
+    ring: "ring-yellow-500/30",
+  },
+  rising: {
+    border: "border-blue-500/60",
+    ring: "ring-blue-500/30",
+  },
+  pro: {
+    border: "border-red-500/50",
+    ring: "ring-red-500/20",
+  },
+};
+
 const normalizeTierName = (tierName?: string | null): PlanKey => {
   const normalized = (tierName || "").trim().toLowerCase();
   if (normalized === "starter") return "starter";
@@ -213,25 +232,20 @@ export default function Pricing() {
           </Tabs>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 max-w-7xl mx-auto items-start">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 xl:gap-8 max-w-[96rem] mx-auto items-start">
           {PLAN_CONFIG.map((plan, index) => {
             const isCurrentPlan = currentTier === plan.key;
             const isPopular = plan.key === "rising";
             const isPro = plan.key === "pro";
             const price = billingCycle === "yearly" ? plan.yearlyPrice : plan.monthlyPrice;
             const period = billingCycle === "yearly" ? "/year" : plan.monthlyPrice === 0 ? "" : "/month";
+            const cardStyle = PLAN_CARD_STYLES[plan.key];
 
             return (
               <div
                 key={plan.key}
-                className={`relative rounded-2xl border bg-card/80 p-6 sm:p-8 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl flex flex-col backdrop-blur ${
-                  isCurrentPlan
-                    ? "border-green-500/60 ring-1 ring-green-500/30 shadow-md"
-                    : isPopular
-                      ? "border-primary/60 ring-1 ring-primary/30 shadow-md"
-                      : isPro
-                        ? "border-red-500/50 ring-1 ring-red-500/20 shadow-md"
-                        : "border-border/60"
+                className={`relative rounded-2xl border bg-card/80 p-6 sm:p-8 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl flex flex-col backdrop-blur xl:min-w-[280px] ${cardStyle.border} ${
+                  isCurrentPlan || isPopular || isPro ? `ring-1 ${cardStyle.ring} shadow-md` : ""
                 }`}
                 style={{ animationDelay: `${index * 0.08}s` }}
               >
