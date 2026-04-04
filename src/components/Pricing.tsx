@@ -238,7 +238,7 @@ export default function Pricing() {
           </Tabs>
         </div>
 
-        <div className="grid grid-cols-1 justify-items-center md:grid-cols-2 xl:grid-cols-4 gap-7 xl:gap-10 max-w-[104rem] mx-auto items-start">
+        <div className="grid grid-cols-1 justify-items-center md:grid-cols-2 xl:grid-cols-4 gap-6 xl:gap-9 max-w-[104rem] mx-auto items-start">
           {PLAN_CONFIG.map((plan, index) => {
             const isCurrentPlan = currentTier === plan.key;
             const isPopular = plan.key === "rising";
@@ -250,7 +250,7 @@ export default function Pricing() {
             return (
               <div
                 key={plan.key}
-                className={`relative w-full max-w-[356px] rounded-2xl border bg-card/80 p-6 sm:p-8 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl flex flex-col backdrop-blur ${cardStyle.border} ${
+                className={`relative w-full max-w-[364px] rounded-2xl border bg-card/80 p-6 sm:p-8 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl flex flex-col backdrop-blur ${cardStyle.border} ${
                   isCurrentPlan || isPopular || isPro ? `ring-1 ${cardStyle.ring} shadow-md` : ""
                 }`}
                 style={{ animationDelay: `${index * 0.08}s` }}
