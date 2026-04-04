@@ -45,8 +45,8 @@ const features: FeatureCategory[] = [
     category: "Startup Journey",
     items: [
       { feature: "ICP Builder", rookie: "Free on every plan", starter: "Free on every plan", rising: "Free on every plan", pro: "Free on every plan" },
-      { feature: "Waitlist Maker", rookie: "Not included", starter: "Uses credits", rising: "Included", pro: "Included" },
-      { feature: "PMF Lab", rookie: "Not included", starter: "Uses credits", rising: "Included", pro: "Included" },
+      { feature: "Waitlist Maker", rookie: "Uses credits", starter: "Uses credits", rising: "Included", pro: "Included" },
+      { feature: "PMF Lab", rookie: "Preview only", starter: "Uses credits", rising: "Included", pro: "Included" },
       { feature: "MVP Builder", rookie: "Preview only", starter: "Preview only", rising: "Always uses credits", pro: "Always uses credits" },
       { feature: "Tech Stack Builder", rookie: "Preview only", starter: "Preview only", rising: "Included", pro: "Included" },
       { feature: "GTM Strategist", rookie: "Preview only", starter: "Preview only", rising: "Always uses credits", pro: "Always uses credits" },
