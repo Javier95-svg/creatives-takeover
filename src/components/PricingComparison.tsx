@@ -42,7 +42,7 @@ const features: FeatureCategory[] = [
     ],
   },
   {
-    category: "Startup Journey",
+    category: "BizMap AI: Startup Development Cycle",
     items: [
       { feature: "ICP Builder", rookie: "Free on every plan", starter: "Free on every plan", rising: "Free on every plan", pro: "Free on every plan" },
       { feature: "Waitlist Maker", rookie: "Uses credits", starter: "Uses credits", rising: "Included", pro: "Included" },
