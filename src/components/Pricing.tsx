@@ -137,22 +137,26 @@ const PLAN_CONFIG: Array<{
   },
 ];
 
-const PLAN_CARD_STYLES: Record<PlanKey, { border: string; ring: string }> = {
+const PLAN_CARD_STYLES: Record<PlanKey, { border: string; ring: string; button: string }> = {
   rookie: {
     border: "border-green-500/60",
     ring: "ring-green-500/30",
+    button: "border-green-600 bg-green-600 text-white hover:bg-green-700 hover:border-green-700",
   },
   starter: {
     border: "border-yellow-500/60",
     ring: "ring-yellow-500/30",
+    button: "border-yellow-500 bg-yellow-500 text-white hover:bg-yellow-600 hover:border-yellow-600",
   },
   rising: {
     border: "border-blue-500/60",
     ring: "ring-blue-500/30",
+    button: "border-blue-600 bg-blue-600 text-white hover:bg-blue-700 hover:border-blue-700",
   },
   pro: {
     border: "border-red-500/50",
     ring: "ring-red-500/20",
+    button: "border-red-600 bg-red-600 text-white hover:bg-red-700 hover:border-red-700",
   },
 };
 
@@ -313,10 +317,10 @@ export default function Pricing() {
                 </div>
 
                 <Button
-                  className="w-full"
+                  className={`w-full ${cardStyle.button}`}
                   disabled={actionLoading}
                   onClick={() => void handleSubscribe(plan.key)}
-                  variant={isPopular || isPro ? "default" : "outline"}
+                  variant="outline"
                 >
                   {isCurrentPlan && user
                     ? "Manage Plan"
