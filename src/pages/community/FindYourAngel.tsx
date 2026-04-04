@@ -4,6 +4,7 @@ import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import HomeWallpaper from "@/components/wallpapers/HomeWallpaper";
+import CommunitySectionTabs from "@/components/community/CommunitySectionTabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,7 +30,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { AngelCard } from "@/components/angels/AngelCard";
-import { Sparkles, Loader2, Edit, Search, ChevronDown, X, Lock, Crown, ArrowLeft } from "lucide-react";
+import { Sparkles, Loader2, Edit, Search, ChevronDown, X, Lock, Crown } from "lucide-react";
 import { AngelInvestor } from "@/types/angel";
 import { useAngels } from "@/hooks/useAngels";
 import { useAuth } from "@/contexts/AuthContext";
@@ -290,22 +291,16 @@ const FindYourAngel = () => {
           content="Find and connect with Angel Investors or Venture Capitalists. Browse investor profiles, explore focus areas, and build relationships that fund your vision."
         />
       </Helmet>
-      <div className="min-h-screen bg-background relative">
-        <HomeWallpaper />
-        <Navigation />
-        <div className="pt-16 relative z-10">
-          {/* Back to Community link (fix 1a) */}
-          <div className="container mx-auto px-4 sm:px-6 pt-4">
-            <Button variant="ghost" size="sm" asChild>
-              <Link to="/community" className="flex items-center gap-2">
-                <ArrowLeft className="h-4 w-4" />
-                Back to Community
-              </Link>
-            </Button>
-          </div>
+	      <div className="min-h-screen bg-background relative">
+	        <HomeWallpaper />
+	        <Navigation />
+	        <div className="pt-16 relative z-10">
+	          <section className="pt-4 lg:pt-6">
+	            <CommunitySectionTabs />
+	          </section>
 
-          {/* Hero Section */}
-          <section className="relative py-16 lg:py-28">
+	          {/* Hero Section */}
+	          <section className="relative py-16 lg:py-28">
             <div className="container mx-auto px-4 sm:px-6">
               <div className="max-w-4xl mx-auto text-center">
                 {/* Title */}
