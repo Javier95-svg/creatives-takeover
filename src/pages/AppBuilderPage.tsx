@@ -18,8 +18,8 @@ export default function AppBuilderPage() {
     }),
   ];
 
-  const content = (
-    <>
+  return (
+    <div className="min-h-screen bg-background">
       <SEO
         title="AI MVP Builder | Creatives Takeover"
         description="Describe your product, generate a working MVP, and iterate with live preview and code updates inside an AI MVP builder."
@@ -29,15 +29,7 @@ export default function AppBuilderPage() {
       />
       <Navigation />
       <main className="px-4 pt-28 pb-20 md:pt-32 lg:pt-36">
-        <div className="container mx-auto max-w-5xl space-y-8">
-          <div className="space-y-3 text-center">
-            <h1 className="pb-2 text-3xl font-bold leading-tight creatives-font takeover-gradient sm:text-4xl md:text-5xl lg:text-6xl">
-              MVP Builder
-            </h1>
-            <p className="mx-auto max-w-3xl text-lg leading-relaxed text-muted-foreground sm:text-xl">
-              Turn your product brief into a working prototype with a live build workflow.
-            </p>
-          </div>
+        <div className="container mx-auto max-w-5xl">
           {!user && publicTab ? (
             <PreviewModeWrapper
               featureName={publicTab.featureName}
@@ -52,25 +44,6 @@ export default function AppBuilderPage() {
         </div>
       </main>
       <Footer />
-    </>
-  );
-
-  return (
-    <div className="min-h-screen bg-background">
-      {content}
     </div>
-  );
-
-  return (
-    <>
-      <SEO
-        title="AI MVP Builder | Creatives Takeover"
-        description="Describe your product, generate a working MVP, and iterate with live preview and code updates inside an AI MVP builder."
-        keywords="ai mvp builder, app builder ai, startup prototype builder, mvp generator, prompt to app"
-        url="/mvp-builder"
-        structuredData={structuredData}
-      />
-      <MVPBuilder />
-    </>
   );
 }
