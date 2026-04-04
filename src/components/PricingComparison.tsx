@@ -56,9 +56,9 @@ const features: FeatureCategory[] = [
   {
     category: "Insighta",
     items: [
-      { feature: "VC Search", rookie: "Browse only", starter: "2 profile views/monthly", rising: "5 profile views/monthly", pro: "Unlimited" },
-      { feature: "Accelerator Hunt", rookie: "Browse only", starter: "2 profile views/monthly", rising: "5 profile views/monthly", pro: "Unlimited" },
-      { feature: "Email Templates", rookie: "Not included", starter: "Basic templates", rising: "Full access", pro: "Full access" },
+      { feature: "VC Search", rookie: "Browse only", starter: "2 profile views/monthly", rising: "5 profile views/monthly", pro: "Unlimited profile views" },
+      { feature: "Accelerator Hunt", rookie: "Browse only", starter: "2 profile views/monthly", rising: "5 profile views/monthly", pro: "Unlimited profile views" },
+      { feature: "Email Templates", rookie: "Not included", starter: "Full access", rising: "Full access", pro: "Full access" },
       { feature: "Pitch Deck Analyzer", rookie: "Not included", starter: "Not included", rising: "Included", pro: "Included" },
       { feature: "Insighta Test", rookie: "Included", starter: "Included", rising: "Included", pro: "Included" },
     ],
@@ -67,7 +67,7 @@ const features: FeatureCategory[] = [
     category: "Community",
     items: [
       { feature: "Discovery Calls (Mentorship)", rookie: "1 discovery call/monthly, then 10 credits", starter: "2 discovery calls/monthly, then 10 credits", rising: "3 discovery calls/monthly, then 10 credits", pro: "Unlimited" },
-      { feature: "Find a Co-Founder Posting", rookie: "1 post/monthly, then 5 credits", starter: "2 posts/monthly, then 5 credits", rising: "Unlimited", pro: "Unlimited" },
+      { feature: "Find a Co-Founder Posting", rookie: "1 post/monthly", starter: "2 posts/monthly", rising: "Unlimited", pro: "Unlimited" },
       { feature: "Find Your Angel", rookie: false, starter: false, rising: false, pro: "Included" },
     ],
   },

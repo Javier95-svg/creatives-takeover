@@ -4,45 +4,130 @@ import {
   Bot,
   Users,
   TrendingUp,
-  LayoutDashboard,
-  Lightbulb
 } from "lucide-react";
 import { CREDIT_COSTS } from "@/config/constants";
 
+type CreditBreakdownItem = {
+  name: string;
+  description: string;
+  badge: string;
+  badgeVariant?: "secondary" | "outline";
+  badgeClassName?: string;
+};
+
+const creditBreakdown: {
+  bizmap: CreditBreakdownItem[];
+  insighta: CreditBreakdownItem[];
+  community: CreditBreakdownItem[];
+} = {
+  bizmap: [
+    {
+      name: "ICP Builder",
+      description: "Free on every plan, so you can define your ideal customer profile without spending credits.",
+      badge: "FREE",
+      badgeVariant: "outline",
+      badgeClassName: "bg-green-50 dark:bg-green-950/30",
+    },
+    {
+      name: "Waitlist Maker",
+      description: `Rookie and Starter use ${CREDIT_COSTS.WAITLIST_GENERATION} credits per launch. Rising and Pro include it.`,
+      badge: `${CREDIT_COSTS.WAITLIST_GENERATION} credits`,
+    },
+    {
+      name: "Product-Market Fit Lab",
+      description: `Preview only on Rookie. Starter uses ${CREDIT_COSTS.PMF_ANALYSIS} credits per analysis. Rising and Pro include it.`,
+      badge: `${CREDIT_COSTS.PMF_ANALYSIS} credits`,
+    },
+    {
+      name: "MVP Builder",
+      description: `Preview only on Rookie and Starter. Rising and Pro can run it for ${CREDIT_COSTS.APP_BUILDER_GENERATE} credits per use.`,
+      badge: `${CREDIT_COSTS.APP_BUILDER_GENERATE} credits`,
+    },
+    {
+      name: "Tech Stack Builder",
+      description: "Preview only on Rookie and Starter. Included on Rising and Pro.",
+      badge: "Included on Rising+",
+      badgeVariant: "outline",
+      badgeClassName: "bg-blue-50 dark:bg-blue-950/30",
+    },
+    {
+      name: "GTM Strategist",
+      description: `Preview only on Rookie and Starter. Rising and Pro can run it for ${CREDIT_COSTS.GTM_ANALYSIS} credits per use.`,
+      badge: `${CREDIT_COSTS.GTM_ANALYSIS} credits`,
+    },
+    {
+      name: "Directories",
+      description: "Preview only on Rookie and Starter. Included on Rising and Pro.",
+      badge: "Included on Rising+",
+      badgeVariant: "outline",
+      badgeClassName: "bg-blue-50 dark:bg-blue-950/30",
+    },
+  ],
+  insighta: [
+    {
+      name: "VC Search",
+      description: "Rookie can browse only. Starter gets 2 profile views/monthly, Rising 5 profile views/monthly, and Pro unlimited profile views.",
+      badge: "View limits",
+      badgeVariant: "outline",
+      badgeClassName: "bg-blue-50 dark:bg-blue-950/30",
+    },
+    {
+      name: "Accelerator Hunt",
+      description: "Rookie can browse only. Starter gets 2 profile views/monthly, Rising 5 profile views/monthly, and Pro unlimited profile views.",
+      badge: "View limits",
+      badgeVariant: "outline",
+      badgeClassName: "bg-blue-50 dark:bg-blue-950/30",
+    },
+    {
+      name: "Email Templates",
+      description: `Starter, Rising, and Pro have full access. Each generated template uses ${CREDIT_COSTS.EMAIL_TEMPLATE_GENERATION} credits. Rookie does not include it.`,
+      badge: `${CREDIT_COSTS.EMAIL_TEMPLATE_GENERATION} credits`,
+    },
+    {
+      name: "Pitch Deck Analyzer",
+      description: `Included on Rising and Pro. Each analysis uses ${CREDIT_COSTS.PITCH_DECK_ANALYZER} credits. Rookie and Starter do not include it.`,
+      badge: `${CREDIT_COSTS.PITCH_DECK_ANALYZER} credits`,
+    },
+    {
+      name: "Insighta Test",
+      description: "Included on every plan.",
+      badge: "Included",
+      badgeVariant: "outline",
+      badgeClassName: "bg-green-50 dark:bg-green-950/30",
+    },
+  ],
+  community: [
+    {
+      name: "Discovery Calls (Mentorship)",
+      description: `Rookie gets 1 free call/monthly, Starter 2, Rising 3, and Pro unlimited. Extra calls on Rookie, Starter, and Rising use ${CREDIT_COSTS.DISCOVERY_CALL} credits.`,
+      badge: `${CREDIT_COSTS.DISCOVERY_CALL} credits`,
+    },
+    {
+      name: "Find a Co-Founder Posting",
+      description: "Rookie gets 1 post/monthly, Starter 2, and Rising plus Pro are unlimited.",
+      badge: "Monthly quotas",
+      badgeVariant: "outline",
+      badgeClassName: "bg-blue-50 dark:bg-blue-950/30",
+    },
+    {
+      name: "Find Your Angel",
+      description: "Pro only. Rookie, Starter, and Rising do not include investor access here.",
+      badge: "PRO ONLY",
+      badgeVariant: "outline",
+      badgeClassName: "bg-red-50 dark:bg-red-950/30",
+    },
+  ],
+};
+
 const SubscriptionFeatures = () => {
-  const creditBreakdown = {
-    dashboard: [
-      { name: "Focus Funnel", cost: 0, description: "Goal tracking and prioritization", badge: "FREE" },
-      { name: "Decision Sprint", cost: CREDIT_COSTS.SPRINT_TASK_GENERATION, description: "AI-generated sprint tasks and priorities" },
-      { name: "Core Metrics", cost: 0, description: "Track your key performance indicators", badge: "FREE" },
-      { name: "Weekly Mission", cost: 0, description: "Weekly goal setting and tracking", badge: "FREE" },
-      { name: "Your Tasks", cost: 0, description: "Task management and organization", badge: "FREE" },
-      { name: "Roadmap Generation", cost: CREDIT_COSTS.ROADMAP_GENERATION, description: "Strategic business roadmap" },
-    ],
-    bizmap: [
-      { name: "ICP Builder", cost: CREDIT_COSTS.ICP_ANALYSIS, description: "Define your ideal customer profile" },
-      { name: "Waitlist Maker", cost: CREDIT_COSTS.WAITLIST_GENERATION, description: "Publish your waitlist page and capture early signups" },
-      { name: "Product-Market Fit Lab", cost: CREDIT_COSTS.PMF_ANALYSIS, description: "Complete PMF analysis with recommendations" },
-      { name: "MVP Builder", cost: CREDIT_COSTS.LAUNCH_REPORT, description: "14-day MVP building sprint" },
-      { name: "Tech Stack Builder", cost: CREDIT_COSTS.TECH_STACK_GENERATION, description: "Custom tech stack for your startup" },
-      { name: "GTM Strategist", cost: CREDIT_COSTS.ROADMAP_GENERATION, description: "End-to-end go-to-market planning" },
-      { name: "Directories", cost: 0, description: "Browse startup launch directories and platforms" },
-    ],
-    insighta: [
-      { name: "Accelerator Hunt", cost: 0, description: "Find accelerator programs (Pro only)", badge: "PRO ONLY" },
-      { name: "Email Templates", cost: CREDIT_COSTS.EMAIL_TEMPLATE_GENERATION, description: "Personalized investor outreach emails" },
-    ],
-    community: [
-      { name: "Find a Mentor", cost: 0, description: "Browse and connect with mentors", badge: "FREE" },
-      { name: "Find a Co-Founder", cost: 0, description: "Discover potential co-founders", badge: "FREE" },
-      { name: "Find your Angel", cost: 0, description: "Connect with angel investors (Pro only)", badge: "PRO ONLY" },
-      { name: "Discovery Calls", cost: CREDIT_COSTS.DISCOVERY_CALL, description: "Book discovery calls with mentors" },
-    ],
-    resources: [
-      { name: "Stories", cost: 0, description: "Read founder stories and insights", badge: "FREE" },
-      { name: "Prompt Library", cost: CREDIT_COSTS.PROMPT_GENERATION, description: "Browse prompts free, then load or copy premium prompts with credits", badge: "VIEW FREE" },
-      { name: "Report Export", cost: CREDIT_COSTS.PDF_EXPORT, description: "Export your report as PDF or Word" },
-    ],
+  const renderFeatureBadge = (feature: CreditBreakdownItem) => {
+    const badgeClassName = feature.badgeClassName ? `shrink-0 ${feature.badgeClassName}` : "shrink-0";
+
+    return (
+      <Badge variant={feature.badgeVariant ?? "secondary"} className={badgeClassName}>
+        {feature.badge}
+      </Badge>
+    );
   };
 
   return (
@@ -83,7 +168,7 @@ const SubscriptionFeatures = () => {
                       <p className="font-medium text-sm">{feature.name}</p>
                       <p className="text-xs text-muted-foreground mt-1">{feature.description}</p>
                     </div>
-                    <Badge variant="secondary" className="shrink-0">{feature.cost} {feature.cost === 1 ? "credit" : "credits"}</Badge>
+                    {renderFeatureBadge(feature)}
                   </div>
                 ))}
               </div>
@@ -108,16 +193,9 @@ const SubscriptionFeatures = () => {
                       <p className="font-medium text-sm">{feature.name}</p>
                       <p className="text-xs text-muted-foreground mt-1">{feature.description}</p>
                     </div>
-                    <Badge variant="secondary" className="shrink-0">{feature.cost} credits</Badge>
+                    {renderFeatureBadge(feature)}
                   </div>
                 ))}
-                <div className="flex justify-between items-start gap-3 pb-3 border-t-2 border-primary/20 pt-3">
-                  <div className="flex-1">
-                    <p className="font-medium text-sm">VC Search</p>
-                    <p className="text-xs text-muted-foreground mt-1">View limits per tier, not credit-based</p>
-                  </div>
-                  <Badge variant="outline" className="shrink-0 bg-blue-50 dark:bg-blue-950/30">View Limits</Badge>
-                </div>
               </div>
             </CardContent>
           </Card>
@@ -140,15 +218,7 @@ const SubscriptionFeatures = () => {
                       <p className="font-medium text-sm">{feature.name}</p>
                       <p className="text-xs text-muted-foreground mt-1">{feature.description}</p>
                     </div>
-                    {feature.cost === 0 ? (
-                      feature.badge ? (
-                        <Badge variant="outline" className="shrink-0 bg-blue-50 dark:bg-blue-950/30">{feature.badge}</Badge>
-                      ) : (
-                        <Badge variant="outline" className="shrink-0 bg-green-50 dark:bg-green-950/30">FREE</Badge>
-                      )
-                    ) : (
-                      <Badge variant="secondary" className="shrink-0">{feature.cost} credits</Badge>
-                    )}
+                    {renderFeatureBadge(feature)}
                   </div>
                 ))}
               </div>
