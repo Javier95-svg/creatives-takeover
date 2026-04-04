@@ -36,6 +36,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useFeatureGating } from "@/hooks/useFeatureGating";
 import { useUpgradePrompt } from "@/contexts/UpgradePromptContext";
 import { SignedOutFeaturePreview } from "@/components/ui/SignedOutFeaturePreview";
+import { PREVIEW_MODE_OVERLAY_BACKGROUND } from "@/components/ui/previewOverlayStyles";
 
 import { cn } from "@/lib/utils";
 import { getPublicTabConfig } from "@/config/publicTabVisibility";
@@ -364,7 +365,7 @@ const FindYourAngel = () => {
                     </div>
 
                     <div className="absolute inset-0 flex items-center justify-center rounded-xl" style={{
-                      background: 'radial-gradient(circle at center, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.6) 50%, rgba(0,0,0,0.8) 100%)'
+                      background: PREVIEW_MODE_OVERLAY_BACKGROUND,
                     }}>
                       <div className="z-20">
                         <SignedOutFeaturePreview

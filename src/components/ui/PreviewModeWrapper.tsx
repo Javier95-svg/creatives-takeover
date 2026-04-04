@@ -2,7 +2,7 @@ import { ReactNode } from 'react';
 import { Lock, ArrowRight, Crown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link, useLocation } from 'react-router-dom';
-import { cn } from '@/lib/utils';
+import { PREVIEW_MODE_OVERLAY_BACKGROUND } from '@/components/ui/previewOverlayStyles';
 
 interface PreviewModeWrapperProps {
   children: ReactNode;
@@ -37,7 +37,7 @@ export function PreviewModeWrapper({
       <div 
         className="absolute inset-0 flex items-center justify-center rounded-xl"
         style={{
-          background: 'radial-gradient(circle at center, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.6) 50%, rgba(0,0,0,0.8) 100%)',
+          background: PREVIEW_MODE_OVERLAY_BACKGROUND,
         }}
       >
         {/* Centered CTA Box */}

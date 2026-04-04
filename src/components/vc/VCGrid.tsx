@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Lock, UserPlus } from "lucide-react";
 import VCCard from "./VCCard";
+import { PREVIEW_MODE_OVERLAY_BACKGROUND } from "@/components/ui/previewOverlayStyles";
 
 interface VCGridProps {
   vcs: Investor[];
@@ -34,7 +35,10 @@ const VCGrid = ({ vcs, canViewProfiles = true, isAuthenticated = true }: VCGridP
         </div>
 
         {/* Sign-in overlay */}
-        <div className="absolute inset-0 flex items-center justify-center bg-background/40 backdrop-blur-[2px] rounded-xl">
+        <div
+          className="absolute inset-0 flex items-center justify-center rounded-xl"
+          style={{ background: PREVIEW_MODE_OVERLAY_BACKGROUND }}
+        >
           <div className="text-center max-w-md px-6 py-10 bg-card/95 backdrop-blur-md border border-border rounded-2xl shadow-2xl">
             <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-primary/10 mb-5">
               <Lock className="w-6 h-6 text-primary" />
