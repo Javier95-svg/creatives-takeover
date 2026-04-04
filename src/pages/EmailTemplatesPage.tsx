@@ -83,12 +83,13 @@ export default function EmailTemplatesPage() {
               <EmailTemplatesTab />
             ) : (
               publicTab && (
-                <SignedOutFeaturePreview
+                <PreviewModeWrapper
                   featureName={publicTab.featureName}
                   description={publicTab.description || ''}
-                  previewItems={publicTab.previewItems}
                   showPricingCta={publicTab.showPricingCta}
-                />
+                >
+                  <EmailTemplatesTab />
+                </PreviewModeWrapper>
               )
             )}
           </div>

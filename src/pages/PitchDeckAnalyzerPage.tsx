@@ -94,12 +94,16 @@ export default function PitchDeckAnalyzerPage() {
           <div className="container mx-auto max-w-5xl">
             {!user ? (
               publicTab && (
-                <SignedOutFeaturePreview
+                <PreviewModeWrapper
                   featureName={publicTab.featureName}
                   description={publicTab.description || ''}
-                  previewItems={publicTab.previewItems}
                   showPricingCta={publicTab.showPricingCta}
-                />
+                >
+                  <PitchDeckUploader
+                    onFileSelected={handleFileSelected}
+                    uploading={false}
+                  />
+                </PreviewModeWrapper>
               )
             ) : !analysis ? (
               <>

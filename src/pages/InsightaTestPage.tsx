@@ -92,12 +92,13 @@ export default function InsightaTestPage() {
               <FundraisingReadinessToolkitAll />
             ) : (
               publicTab && (
-                <SignedOutFeaturePreview
+                <PreviewModeWrapper
                   featureName={publicTab.featureName}
                   description={publicTab.description || ''}
-                  previewItems={publicTab.previewItems}
                   showPricingCta={publicTab.showPricingCta}
-                />
+                >
+                  <FundraisingReadinessToolkitAll />
+                </PreviewModeWrapper>
               )
             )}
 
