@@ -62,7 +62,6 @@ const features: FeatureCategory[] = [
       { feature: "Email Templates", rookie: "Not included", starter: "Basic templates", rising: "Full access", pro: "Full access" },
       { feature: "Pitch Deck Analyzer", rookie: "Not included", starter: "Not included", rising: "Included", pro: "Included" },
       { feature: "Insighta Test", rookie: "Included", starter: "Included", rising: "Included", pro: "Included" },
-      { feature: "Newspaper", rookie: "Included", starter: "Included", rising: "Included", pro: "Included" },
     ],
   },
   {
@@ -70,11 +69,7 @@ const features: FeatureCategory[] = [
     items: [
       { feature: "Discovery Calls", rookie: "1 free/cycle", starter: "2 free/cycle", rising: "3 free, then 10 credits", pro: "Unlimited" },
       { feature: "Co-Founder Posts", rookie: "1/cycle", starter: "2/cycle", rising: "Unlimited", pro: "Unlimited" },
-      { feature: "Mentor Marketplace", rookie: "Browse only", starter: "Included", rising: "Included", pro: "Included" },
-      { feature: "Find a Co-Founder", rookie: "Browse only", starter: "Included", rising: "Included", pro: "Included" },
       { feature: "Angels Community", rookie: false, starter: false, rising: false, pro: "Included" },
-      { feature: "Group Office Hours", rookie: false, starter: false, rising: false, pro: "Included" },
-      { feature: "Priority Support", rookie: false, starter: false, rising: false, pro: "Included" },
     ],
   },
   {
