@@ -67,7 +67,7 @@ const features: FeatureCategory[] = [
     category: "Community",
     items: [
       { feature: "Discovery Calls (Mentorship)", rookie: "1 discovery call/monthly, then 10 credits", starter: "2 discovery calls/monthly, then 10 credits", rising: "3 discovery calls/monthly, then 10 credits", pro: "Unlimited" },
-      { feature: "Find a Co-Founder Posting", rookie: "1/cycle", starter: "2/cycle", rising: "Unlimited", pro: "Unlimited" },
+      { feature: "Find a Co-Founder Posting", rookie: "1 post/monthly, then 5 credits", starter: "2 posts/monthly, then 5 credits", rising: "Unlimited", pro: "Unlimited" },
       { feature: "Find Your Angel", rookie: false, starter: false, rising: false, pro: "Included" },
     ],
   },
