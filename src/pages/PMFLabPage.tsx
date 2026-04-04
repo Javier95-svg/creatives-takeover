@@ -3,6 +3,7 @@ import SEO, { createBreadcrumbSchema, createFAQSchema } from '@/components/SEO';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import PageFAQSection from '@/components/seo/PageFAQSection';
+import { SignedOutFeaturePreview } from '@/components/ui/SignedOutFeaturePreview';
 import { useLeanStartupStore } from '@/store/leanStartupStore';
 import { usePMFLab } from '@/hooks/usePMFLab';
 import PMFEvidenceForm from '@/components/pmf/PMFEvidenceForm';
@@ -12,6 +13,8 @@ import { ActivationJourneyStrip } from '@/components/activation/ActivationJourne
 import { ArrowRight, Rocket } from 'lucide-react';
 import { getToolJourneyGuide } from '@/lib/activationJourney';
 import { PMF_REQUIRED_SIGNALS } from '@/lib/bizmapStages';
+import { getPublicTabConfig } from '@/config/publicTabVisibility';
+import { useAuth } from '@/contexts/AuthContext';
 
 const structuredData = [
   {
@@ -24,6 +27,8 @@ const structuredData = [
 ];
 
 export default function PMFLabPage() {
+  const { user } = useAuth();
+  const publicTab = getPublicTabConfig('/pmf-lab');
   const { markToolUsed } = useLeanStartupStore();
   const faqs = [
     {
@@ -161,42 +166,55 @@ export default function PMFLabPage() {
               )}
             </div>
 
-            {/* Phase A — Evidence Form */}
-            {phase === 'intake' && (
-              <PMFEvidenceForm
-                onSubmit={runAnalysis}
-                isSubmitting={false}
-              />
-            )}
-
-            {/* Phase B — Scoring Loader */}
-            {phase === 'analyzing' && <PMFScoringLoader />}
-
-            {/* Phase C — PMF Readiness Report */}
-            {phase === 'results' && analysis && (
-              <div className="space-y-6">
-                {activationGuide ? (
-                  <ActivationJourneyStrip
-                    stageLabel={activationGuide.stageLabel}
-                    title={activationGuide.title}
-                    description={activationGuide.description}
-                    doneLabel={activationGuide.doneLabel}
-                    completedLabel={activationGuide.completedLabel}
-                    nextRoute={activationGuide.nextRoute}
-                    nextLabel={activationGuide.nextLabel}
-                    isComplete={hasSavedReport}
-                  />
-                ) : null}
-                <PMFReadinessReport
-                  analysis={analysis}
-                  analysisId={analysisId}
-                  isSaving={isSaving}
-                  isExporting={isExporting}
-                  onSave={saveReport}
-                  onExport={exportReport}
-                  onReanalyze={resetToIntake}
+            {!user ? (
+              publicTab && (
+                <SignedOutFeaturePreview
+                  featureName={publicTab.featureName}
+                  description={publicTab.description || ''}
+                  previewItems={publicTab.previewItems}
+                  showPricingCta={publicTab.showPricingCta}
                 />
-              </div>
+              )
+            ) : (
+              <>
+                {/* Phase A — Evidence Form */}
+                {phase === 'intake' && (
+                  <PMFEvidenceForm
+                    onSubmit={runAnalysis}
+                    isSubmitting={false}
+                  />
+                )}
+
+                {/* Phase B — Scoring Loader */}
+                {phase === 'analyzing' && <PMFScoringLoader />}
+
+                {/* Phase C — PMF Readiness Report */}
+                {phase === 'results' && analysis && (
+                  <div className="space-y-6">
+                    {activationGuide ? (
+                      <ActivationJourneyStrip
+                        stageLabel={activationGuide.stageLabel}
+                        title={activationGuide.title}
+                        description={activationGuide.description}
+                        doneLabel={activationGuide.doneLabel}
+                        completedLabel={activationGuide.completedLabel}
+                        nextRoute={activationGuide.nextRoute}
+                        nextLabel={activationGuide.nextLabel}
+                        isComplete={hasSavedReport}
+                      />
+                    ) : null}
+                    <PMFReadinessReport
+                      analysis={analysis}
+                      analysisId={analysisId}
+                      isSaving={isSaving}
+                      isExporting={isExporting}
+                      onSave={saveReport}
+                      onExport={exportReport}
+                      onReanalyze={resetToIntake}
+                    />
+                  </div>
+                )}
+              </>
             )}
 
             <div className="mt-10 space-y-8">

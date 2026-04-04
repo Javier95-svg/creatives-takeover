@@ -1,0 +1,183 @@
+export type PublicTabVisibilityState = 'accessible' | 'locked' | 'hidden';
+
+export interface PublicTabConfig {
+  state: PublicTabVisibilityState;
+  featureName: string;
+  description?: string;
+  previewItems?: string[];
+  showPricingCta?: boolean;
+}
+
+export const PUBLIC_TAB_VISIBILITY: Record<string, PublicTabConfig> = {
+  '/icp-builder': {
+    state: 'accessible',
+    featureName: 'ICP Builder',
+  },
+  '/waitlist': {
+    state: 'locked',
+    featureName: 'Waitlist Maker',
+    description: 'Turn your ICP into a live demand test with a polished waitlist page and launch-ready positioning.',
+    previewItems: [
+      'See how your promise, CTA, and waitlist flow come together before launch.',
+      'Preview the builder shell and publishing flow, then sign up to generate your page.',
+      'Use it right after ICP Builder to validate whether real people want what you are building.',
+    ],
+  },
+  '/pmf-lab': {
+    state: 'locked',
+    featureName: 'PMF Lab',
+    description: 'Analyze your interview and demand signals before you commit to building the wrong thing.',
+    previewItems: [
+      'Preview the evidence intake flow founders use to pressure-test demand.',
+      'See how PMF Lab scores real traction signals and flags missing proof.',
+      'Unlock the full analysis workflow after sign-up.',
+    ],
+  },
+  '/mvp-builder': {
+    state: 'locked',
+    featureName: 'MVP Builder',
+    description: 'Generate a working MVP from a product brief and iterate visually inside the platform.',
+    previewItems: [
+      'Explore the builder shell, live preview workflow, and AI code generation path.',
+      'Understand how prompts turn into a first working product draft.',
+      'Sign up to start generating and refining your MVP.',
+    ],
+  },
+  '/tech-stack': {
+    state: 'locked',
+    featureName: 'Tech Stack Builder',
+    description: 'Compare the best-fit tools, frameworks, and platforms before you start building.',
+    previewItems: [
+      'Preview the recommendation flow for choosing your startup stack.',
+      'See the kind of tooling guidance you unlock after sign-up.',
+      'Use it to move from idea clarity into practical build decisions.',
+    ],
+  },
+  '/go-to-market': {
+    state: 'locked',
+    featureName: 'GTM Strategist',
+    description: 'Get a structured go-to-market brief with messaging, channels, and a concrete launch plan.',
+    previewItems: [
+      'See how the strategist turns your startup context into a launch brief.',
+      'Preview channel recommendations, positioning prompts, and rollout structure.',
+      'Sign up to generate your own GTM plan.',
+    ],
+  },
+  '/directories': {
+    state: 'locked',
+    featureName: 'Directories',
+    description: 'Shortlist the most relevant places to submit and distribute your startup launch.',
+    previewItems: [
+      'Preview the directory database founders use to plan distribution.',
+      'See how launch channels are organized before you unlock the full list.',
+      'Sign up to access the launch research workflow.',
+    ],
+  },
+  '/community': {
+    state: 'accessible',
+    featureName: 'Find a Mentor',
+  },
+  '/community/co-founders': {
+    state: 'accessible',
+    featureName: 'Find a Co-Founder',
+  },
+  '/community/angels': {
+    state: 'locked',
+    featureName: 'Find your Angel',
+    description: 'Investor discovery stays visible as a premium aspiration surface, but full access is reserved for Pro members.',
+    previewItems: [
+      'Preview the investor discovery experience and profile layout.',
+      'See what the Angels community unlocks once you have an account and the right plan.',
+      'Use sign-up as the first step, then upgrade to Pro when you are ready to fundraise.',
+    ],
+    showPricingCta: true,
+  },
+  '/insighta/vc-search': {
+    state: 'locked',
+    featureName: 'VC Search',
+    description: 'Search investor firms by stage, geography, and focus without burning time on low-fit outreach.',
+    previewItems: [
+      'Preview the filtering and profile discovery workflow.',
+      'See how founders build their first target investor list inside the platform.',
+      'Sign up to unlock the search experience and investor research flow.',
+    ],
+  },
+  '/insighta/accelerator-hunt': {
+    state: 'locked',
+    featureName: 'Accelerator Hunt',
+    description: 'Find accelerators that match your stage, geography, and startup focus before you apply.',
+    previewItems: [
+      'Preview the accelerator search workflow and fit signals.',
+      'See how the platform helps founders shortlist relevant programs.',
+      'Sign up to unlock the full research flow.',
+    ],
+  },
+  '/insighta/email-templates': {
+    state: 'locked',
+    featureName: 'Email Templates',
+    description: 'Access fundraising and outreach templates built for cold intros, follow-ups, and investor updates.',
+    previewItems: [
+      'Preview the template library founders use once they are actively fundraising.',
+      'See how messaging blocks are structured before you unlock the full set.',
+      'Sign up to unlock copy you can tailor to your raise.',
+    ],
+  },
+  '/insighta/pitch-deck-analyzer': {
+    state: 'locked',
+    featureName: 'Pitch Deck Analyzer',
+    description: 'Upload your deck and get fast feedback on clarity, structure, traction story, and investor readiness.',
+    previewItems: [
+      'Preview the assessment flow and scoring dimensions.',
+      'See the kind of actionable deck feedback you unlock after sign-up.',
+      'Use it when you are ready to tighten your fundraising narrative.',
+    ],
+  },
+  '/insighta/test': {
+    state: 'locked',
+    featureName: 'Insighta Test',
+    description: 'Measure your fundraising readiness before you start investor outreach.',
+    previewItems: [
+      'Preview the assessment experience and the themes it evaluates.',
+      'See how the platform surfaces readiness gaps before a raise.',
+      'Sign up to unlock the full test flow.',
+    ],
+  },
+  '/newspaper': {
+    state: 'accessible',
+    featureName: 'Newspaper',
+  },
+  '/prompt-library': {
+    state: 'accessible',
+    featureName: 'Prompt Library',
+  },
+  '/dashboard': {
+    state: 'hidden',
+    featureName: 'Home dashboard',
+  },
+  '/focus-funnel': {
+    state: 'hidden',
+    featureName: 'Focus Funnel',
+  },
+  '/decision-sprint': {
+    state: 'hidden',
+    featureName: 'Decision Sprint',
+  },
+  '/core-metrics': {
+    state: 'hidden',
+    featureName: 'Core Metrics',
+  },
+  '/weekly-mission': {
+    state: 'hidden',
+    featureName: 'Weekly Mission',
+  },
+  '/tasks': {
+    state: 'hidden',
+    featureName: 'Your Tasks',
+  },
+};
+
+export const getPublicTabConfig = (path: string): PublicTabConfig | undefined => PUBLIC_TAB_VISIBILITY[path];
+
+export const getPublicTabState = (path: string): PublicTabVisibilityState =>
+  PUBLIC_TAB_VISIBILITY[path]?.state ?? 'accessible';
+

@@ -3,6 +3,7 @@ import SEO, { createBreadcrumbSchema, createFAQSchema } from '@/components/SEO';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import PageFAQSection from '@/components/seo/PageFAQSection';
+import { SignedOutFeaturePreview } from '@/components/ui/SignedOutFeaturePreview';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import { useGTMStrategist } from '@/hooks/useGTMStrategist';
@@ -23,6 +24,8 @@ import { BizMapShareDialog } from '@/components/bizmap/BizMapShareDialog';
 import { useBizMapSharing } from '@/hooks/useBizMapSharing';
 import { createGTMSharedPayload } from '@/lib/bizmapSharing';
 import { Share2 } from 'lucide-react';
+import { getPublicTabConfig } from '@/config/publicTabVisibility';
+import { useAuth } from '@/contexts/AuthContext';
 
 const structuredData = [
   {
@@ -40,6 +43,8 @@ const structuredData = [
 ];
 
 export default function GTMStrategistPage() {
+  const { user } = useAuth();
+  const publicTab = getPublicTabConfig('/go-to-market');
   const { markToolUsed } = useLeanStartupStore();
   const faqs = [
     {
@@ -159,125 +164,138 @@ export default function GTMStrategistPage() {
         <main className="px-4 pt-28 pb-20 md:pt-32 lg:pt-36">
           <div className="container mx-auto max-w-5xl space-y-8">
 
-          {/* Phase A — Intake Wizard */}
-          {phase === 'intake' && (
-            <GTMIntakeForm
-              prefillData={prefillData}
-              onSubmit={runAnalysis}
-              isSubmitting={false}
-            />
-          )}
+	          {!user ? (
+	            publicTab && (
+	              <SignedOutFeaturePreview
+	                featureName={publicTab.featureName}
+	                description={publicTab.description || ''}
+	                previewItems={publicTab.previewItems}
+	                showPricingCta={publicTab.showPricingCta}
+	              />
+	            )
+	          ) : (
+	            <>
+	              {/* Phase A — Intake Wizard */}
+	              {phase === 'intake' && (
+	                <GTMIntakeForm
+	                  prefillData={prefillData}
+	                  onSubmit={runAnalysis}
+	                  isSubmitting={false}
+	                />
+	              )}
 
-          {/* Phase B — Analysis Loading */}
-          {phase === 'analyzing' && <GTMAnalysisLoader />}
+	              {/* Phase B — Analysis Loading */}
+	              {phase === 'analyzing' && <GTMAnalysisLoader />}
 
-          {/* Phase C — GTM Brief Results */}
-          {phase === 'results' && analysis && (
-            <div className="space-y-8">
-              <GTMBriefHeader
-                planTitle={analysis.planTitle}
-                summaryInsight={analysis.summaryInsight}
-                isSaving={isSaving}
-                isExporting={isExporting}
-                onSave={() => savePlan('saved')}
-                onExport={exportPlan}
-                onRegenerate={resetToIntake}
-              />
+	              {/* Phase C — GTM Brief Results */}
+	              {phase === 'results' && analysis && (
+	                <div className="space-y-8">
+	                  <GTMBriefHeader
+	                    planTitle={analysis.planTitle}
+	                    summaryInsight={analysis.summaryInsight}
+	                    isSaving={isSaving}
+	                    isExporting={isExporting}
+	                    onSave={() => savePlan('saved')}
+	                    onExport={exportPlan}
+	                    onRegenerate={resetToIntake}
+	                  />
 
-              <div className="flex flex-wrap gap-3 rounded-[1.5rem] border border-border/60 bg-background/80 px-4 py-4 shadow-sm">
-                <Button variant="outline" onClick={openShareDialog} disabled={!planId} className="gap-2">
-                  <Share2 className="h-4 w-4" />
-                  Share strategy brief
-                </Button>
-                <p className="text-sm text-muted-foreground">
-                  Create a public link you can send to a co-founder, advisor, or LinkedIn audience.
-                </p>
-              </div>
+	                  <div className="flex flex-wrap gap-3 rounded-[1.5rem] border border-border/60 bg-background/80 px-4 py-4 shadow-sm">
+	                    <Button variant="outline" onClick={openShareDialog} disabled={!planId} className="gap-2">
+	                      <Share2 className="h-4 w-4" />
+	                      Share strategy brief
+	                    </Button>
+	                    <p className="text-sm text-muted-foreground">
+	                      Create a public link you can send to a co-founder, advisor, or LinkedIn audience.
+	                    </p>
+	                  </div>
 
-              <ContextualMentorRecommendations
-                track="gtm"
-                source="gtm-results"
-                targetAudience={analysis.intakeAnswers?.targetAudience}
-                summaryInsight={analysis.summaryInsight}
-                extraKeywords={[
-                  analysis.positioning?.positioningStatement,
-                  analysis.messaging?.headline,
-                  ...analysis.channels.map((channel) => channel.channel),
-                  ...analysis.channels.flatMap((channel) => channel.weekOneActions),
-                ].filter(Boolean)}
-              />
+	                  <ContextualMentorRecommendations
+	                    track="gtm"
+	                    source="gtm-results"
+	                    targetAudience={analysis.intakeAnswers?.targetAudience}
+	                    summaryInsight={analysis.summaryInsight}
+	                    extraKeywords={[
+	                      analysis.positioning?.positioningStatement,
+	                      analysis.messaging?.headline,
+	                      ...analysis.channels.map((channel) => channel.channel),
+	                      ...analysis.channels.flatMap((channel) => channel.weekOneActions),
+	                    ].filter(Boolean)}
+	                  />
 
-              <div className="flex gap-8 items-start">
-                {/* Sticky sidebar (desktop only) */}
-                <GTMBriefSidebar />
+	                  <div className="flex gap-8 items-start">
+	                    {/* Sticky sidebar (desktop only) */}
+	                    <GTMBriefSidebar />
 
-                {/* Main content */}
-                <div className="flex-1 min-w-0 space-y-12">
+	                    {/* Main content */}
+	                    <div className="flex-1 min-w-0 space-y-12">
 
-                  <section id="channels" className="space-y-4 scroll-mt-6">
-                    <h2 className="text-lg font-bold text-muted-foreground uppercase tracking-wider text-xs">
-                      Recommended Channels ({analysis.channels.length})
-                    </h2>
-                    <div className="space-y-4">
-                      {analysis.channels.map((ch, i) => (
-                        <GTMChannelCard key={ch.channel} channel={ch} rank={i + 1} />
-                      ))}
-                    </div>
-                  </section>
+	                      <section id="channels" className="space-y-4 scroll-mt-6">
+	                        <h2 className="text-lg font-bold text-muted-foreground uppercase tracking-wider text-xs">
+	                          Recommended Channels ({analysis.channels.length})
+	                        </h2>
+	                        <div className="space-y-4">
+	                          {analysis.channels.map((ch, i) => (
+	                            <GTMChannelCard key={ch.channel} channel={ch} rank={i + 1} />
+	                          ))}
+	                        </div>
+	                      </section>
 
-                  <Separator />
+	                      <Separator />
 
-                  <section id="positioning" className="scroll-mt-6">
-                    <GTMPositioningBlock positioning={analysis.positioning} />
-                  </section>
+	                      <section id="positioning" className="scroll-mt-6">
+	                        <GTMPositioningBlock positioning={analysis.positioning} />
+	                      </section>
 
-                  <Separator />
+	                      <Separator />
 
-                  <section id="messaging" className="scroll-mt-6">
-                    <GTMMessagingBlock messaging={analysis.messaging} />
-                  </section>
+	                      <section id="messaging" className="scroll-mt-6">
+	                        <GTMMessagingBlock messaging={analysis.messaging} />
+	                      </section>
 
-                  <Separator />
+	                      <Separator />
 
-                  <section id="action-plan" className="scroll-mt-6">
-                    <GTMActionPlan actionPlan={analysis.actionPlan} />
-                  </section>
+	                      <section id="action-plan" className="scroll-mt-6">
+	                        <GTMActionPlan actionPlan={analysis.actionPlan} />
+	                      </section>
 
-                  <Separator />
+	                      <Separator />
 
-                  <section id="checklist" className="scroll-mt-6">
-                    <GTMLaunchChecklist checklist={analysis.launchChecklist} />
-                  </section>
+	                      <section id="checklist" className="scroll-mt-6">
+	                        <GTMLaunchChecklist checklist={analysis.launchChecklist} />
+	                      </section>
 
-                  <Separator />
+	                      <Separator />
 
-                  <section id="metrics" className="scroll-mt-6">
-                    <GTMMetricsBlock metrics={analysis.metrics} />
-                  </section>
+	                      <section id="metrics" className="scroll-mt-6">
+	                        <GTMMetricsBlock metrics={analysis.metrics} />
+	                      </section>
 
-                  {/* Bottom save CTA */}
-                  <div className="flex flex-wrap gap-3 pt-4 pb-8">
-                    <button
-                      onClick={() => savePlan('saved')}
-                      disabled={isSaving}
-                      className="flex-1 sm:flex-none px-6 py-2.5 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
-                    >
-                      {isSaving ? 'Saving…' : 'Save Plan & Complete Stage V'}
-                    </button>
-                    <button
-                      onClick={exportPlan}
-                      disabled={isExporting}
-                      className="flex-1 sm:flex-none px-6 py-2.5 border border-border rounded-lg text-sm font-medium hover:bg-muted transition-colors disabled:opacity-50"
-                    >
-                      {isExporting ? 'Exporting…' : 'Export PDF'}
-                    </button>
-                  </div>
-                  </div>
-                </div>
-              </div>
-            )}
-            <PageFAQSection
-              title="Frequent Questions"
+	                      {/* Bottom save CTA */}
+	                      <div className="flex flex-wrap gap-3 pt-4 pb-8">
+	                        <button
+	                          onClick={() => savePlan('saved')}
+	                          disabled={isSaving}
+	                          className="flex-1 sm:flex-none px-6 py-2.5 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
+	                        >
+	                          {isSaving ? 'Saving...' : 'Save Plan & Complete Stage V'}
+	                        </button>
+	                        <button
+	                          onClick={exportPlan}
+	                          disabled={isExporting}
+	                          className="flex-1 sm:flex-none px-6 py-2.5 border border-border rounded-lg text-sm font-medium hover:bg-muted transition-colors disabled:opacity-50"
+	                        >
+	                          {isExporting ? 'Exporting...' : 'Export PDF'}
+	                        </button>
+	                      </div>
+	                    </div>
+	                  </div>
+	                </div>
+	              )}
+	            </>
+	          )}
+	            <PageFAQSection
+	              title="Frequent Questions"
               faqs={faqs}
             />
           </div>

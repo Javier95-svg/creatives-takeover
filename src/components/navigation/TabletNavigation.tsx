@@ -2,6 +2,7 @@ import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
+import { getPublicTabState } from "@/config/publicTabVisibility";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   DropdownMenu,
@@ -22,6 +23,7 @@ import {
   GraduationCap,
   Handshake,
   Sparkles,
+  Lock,
 } from "lucide-react";
 
 interface NavItem {
@@ -123,23 +125,35 @@ export const TabletNavigation: React.FC<TabletNavigationProps> = ({
                   )}
                 </Tooltip>
                 <DropdownMenuContent align="center" className="w-64">
-                  {communitySubmenu.map((subItem) => {
-                    const SubIcon = subItem.icon;
-                    const isSubActive = location.pathname === subItem.href || location.pathname.startsWith(`${subItem.href}/`);
+	                  {communitySubmenu.map((subItem) => {
+	                    const SubIcon = subItem.icon;
+	                    const isSubActive = location.pathname === subItem.href || location.pathname.startsWith(`${subItem.href}/`);
+                      const publicTabState = !user ? getPublicTabState(subItem.href) : 'accessible';
 
-                    return (
-                      <DropdownMenuItem key={subItem.href} asChild>
-                        <Link
-                          to={subItem.href}
-                          onClick={() => onItemClick?.(`${item.name} - ${subItem.name}`)}
-                          className={cn("cursor-pointer", isSubActive && "bg-primary/5")}
-                        >
-                          <SubIcon className="h-4 w-4 mr-2" />
-                          <div className="flex flex-col">
-                            <span className="font-medium">{subItem.name}</span>
-                            <span className="text-xs text-muted-foreground">{subItem.description}</span>
+                      if (publicTabState === 'hidden') {
+                        return null;
+                      }
+
+	                    return (
+	                      <DropdownMenuItem key={subItem.href} asChild>
+	                        <Link
+	                          to={subItem.href}
+	                          onClick={() => onItemClick?.(`${item.name} - ${subItem.name}`)}
+	                          className={cn("cursor-pointer", isSubActive && "bg-primary/5")}
+	                        >
+                          <div className="relative mr-2">
+	                            <SubIcon className={cn("h-4 w-4", publicTabState === 'locked' && "text-muted-foreground")} />
+                            {publicTabState === 'locked' && (
+                              <Lock className="absolute -right-1.5 -top-1.5 h-3 w-3 rounded-full bg-background text-primary" />
+                            )}
                           </div>
-                        </Link>
+	                          <div className="flex flex-col">
+	                            <span className="font-medium">{subItem.name}</span>
+	                            <span className="text-xs text-muted-foreground">
+                                {publicTabState === 'locked' ? 'Sign up to unlock' : subItem.description}
+                              </span>
+	                          </div>
+	                        </Link>
                       </DropdownMenuItem>
                     );
                   })}

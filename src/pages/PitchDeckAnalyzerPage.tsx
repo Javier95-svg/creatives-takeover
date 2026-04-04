@@ -1,6 +1,7 @@
 import SEO, { createBreadcrumbSchema } from "@/components/SEO";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
+import { SignedOutFeaturePreview } from "@/components/ui/SignedOutFeaturePreview";
 import { PitchDeckUploader } from "@/components/pitch-deck-analyzer/PitchDeckUploader";
 import { AnalysisResults } from "@/components/pitch-deck-analyzer/AnalysisResults";
 import { PitchDeckBuilder } from "@/components/pitch-deck-builder/PitchDeckBuilder";
@@ -9,8 +10,12 @@ import { useReadingAnalytics } from "@/hooks/useReadingAnalytics";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Loader2, Sparkles, BarChart3, TrendingUp, Target } from "lucide-react";
+import { getPublicTabConfig } from "@/config/publicTabVisibility";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function PitchDeckAnalyzerPage() {
+  const { user } = useAuth();
+  const publicTab = getPublicTabConfig('/insighta/pitch-deck-analyzer');
   const { trackPageVisit } = useReadingAnalytics();
   const { analyzePitchDeck, submitFeedback, resetAnalysis, uploading, analyzing, analysis, error, isProcessing } = usePitchDeckAnalyzer();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -87,7 +92,16 @@ export default function PitchDeckAnalyzerPage() {
 
         <section className="relative z-10 px-4 pt-28 pb-20 md:pt-32 lg:pt-36" data-section="pitch-deck-analyzer">
           <div className="container mx-auto max-w-5xl">
-            {!analysis ? (
+            {!user ? (
+              publicTab && (
+                <SignedOutFeaturePreview
+                  featureName={publicTab.featureName}
+                  description={publicTab.description || ''}
+                  previewItems={publicTab.previewItems}
+                  showPricingCta={publicTab.showPricingCta}
+                />
+              )
+            ) : !analysis ? (
               <>
                 {/* Hero Section */}
                 <div className="text-center mb-12 sm:mb-16">

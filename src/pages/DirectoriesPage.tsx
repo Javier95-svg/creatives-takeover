@@ -1,8 +1,11 @@
 import SEO, { createBreadcrumbSchema } from '@/components/SEO';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
+import { SignedOutFeaturePreview } from '@/components/ui/SignedOutFeaturePreview';
 import DirectoriesTab from '@/components/launch/DirectoriesTab';
 import GTMStrategistWallpaper from '@/components/wallpapers/GTMStrategistWallpaper';
+import { getPublicTabConfig } from '@/config/publicTabVisibility';
+import { useAuth } from '@/contexts/AuthContext';
 
 const structuredData = [
   {
@@ -20,6 +23,9 @@ const structuredData = [
 ];
 
 export default function DirectoriesPage() {
+  const { user } = useAuth();
+  const publicTab = getPublicTabConfig('/directories');
+
   return (
     <div className="relative min-h-screen overflow-hidden bg-background">
       <SEO
@@ -44,7 +50,18 @@ export default function DirectoriesPage() {
               </p>
             </div>
 
-            <DirectoriesTab />
+            {user ? (
+              <DirectoriesTab />
+            ) : (
+              publicTab && (
+                <SignedOutFeaturePreview
+                  featureName={publicTab.featureName}
+                  description={publicTab.description || ''}
+                  previewItems={publicTab.previewItems}
+                  showPricingCta={publicTab.showPricingCta}
+                />
+              )
+            )}
           </div>
         </main>
 

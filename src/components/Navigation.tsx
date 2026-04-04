@@ -39,6 +39,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { getPublicTabState } from "@/config/publicTabVisibility";
 
 const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -217,6 +218,7 @@ const Navigation = () => {
     "nav-dropdown-surface max-w-[calc(100vw-2rem)]";
   const navActionButtonClass =
     "nav-action-button relative h-10 w-10 rounded-[14px] text-muted-foreground hover:text-foreground";
+  const getSignedOutTabState = (href: string) => (!user ? getPublicTabState(href) : 'accessible');
 
   return (
     <TooltipProvider delayDuration={200}>
@@ -290,18 +292,46 @@ const Navigation = () => {
                         <DropdownMenuContent align="start" className={cn("w-80 md:w-72 sm:w-64 max-h-[min(520px,80vh)] overflow-y-auto overscroll-contain", navDropdownClass)}>
                           <DropdownMenuLabel>Validate ✅ Build 🛠️ Launch 🚀</DropdownMenuLabel>
                           <DropdownMenuSeparator />
-                          {bizMapSubmenu.map((subItem, idx) => {
-                            if ('type' in subItem && subItem.type === 'label') {
+	                          {bizMapSubmenu.map((subItem, idx) => {
+	                            if ('type' in subItem && subItem.type === 'label') {
                               return (
                                 <DropdownMenuLabel key={idx} className="text-[10px] font-semibold uppercase tracking-wider text-primary mt-2 first:mt-0">
                                   {subItem.label}
                                 </DropdownMenuLabel>
                               );
                             }
-                            const linkItem = subItem as { name: string; href: string; icon: React.ComponentType<{ className?: string }>; description: string };
-                            const SubIcon = linkItem.icon;
-                            const toolUnlocked = isToolRouteUnlocked(linkItem.href);
-                            const lockReason = getLockReasonForRoute(linkItem.href);
+	                            const linkItem = subItem as { name: string; href: string; icon: React.ComponentType<{ className?: string }>; description: string };
+	                            const SubIcon = linkItem.icon;
+                            const publicTabState = getSignedOutTabState(linkItem.href);
+                            const showSignedOutLock = publicTabState === 'locked';
+
+                            if (publicTabState === 'hidden') {
+                              return null;
+                            }
+
+                            if (showSignedOutLock) {
+                              return (
+                                <DropdownMenuItem key={linkItem.name} asChild>
+                                  <Link
+                                    to={linkItem.href}
+                                    onClick={() => trackClick(`${item.name} - ${linkItem.name}`, 'Navigation')}
+                                    className="cursor-pointer"
+                                  >
+                                    <div className="relative mr-2">
+                                      <SubIcon className="h-4 w-4 text-muted-foreground" />
+                                      <Lock className="absolute -right-1.5 -top-1.5 h-3 w-3 rounded-full bg-background text-primary" />
+                                    </div>
+                                    <div className="flex flex-col">
+                                      <span className="font-medium">{linkItem.name}</span>
+                                      <span className="text-xs text-muted-foreground">Sign up to unlock</span>
+                                    </div>
+                                  </Link>
+                                </DropdownMenuItem>
+                              );
+                            }
+
+	                            const toolUnlocked = isToolRouteUnlocked(linkItem.href);
+	                            const lockReason = getLockReasonForRoute(linkItem.href);
 
                             if (!toolUnlocked) {
                               return (
@@ -371,22 +401,35 @@ const Navigation = () => {
                         <DropdownMenuContent align="start" className={cn("w-72 md:w-56 sm:w-full", navDropdownClass)}>
                           <DropdownMenuLabel>Fundraising Tools 💸</DropdownMenuLabel>
                           <DropdownMenuSeparator />
-                          {insightaSubmenu.map((subItem) => {
-                            const SubIcon = subItem.icon;
-                            return (
-                              <DropdownMenuItem key={subItem.name} asChild>
-                                <Link
-                                  to={subItem.href}
-                                  onClick={() => trackClick(`${item.name} - ${subItem.name}`, 'Navigation')}
-                                  className="cursor-pointer"
-                                >
-                                  <SubIcon className="h-4 w-4 mr-2" />
-                                  <div className="flex flex-col">
-                                    <span className="font-medium">{subItem.name}</span>
-                                    <span className="text-xs text-muted-foreground">{subItem.description}</span>
-                                  </div>
-                                </Link>
-                              </DropdownMenuItem>
+	                          {insightaSubmenu.map((subItem) => {
+	                            const SubIcon = subItem.icon;
+                            const publicTabState = getSignedOutTabState(subItem.href);
+
+                            if (publicTabState === 'hidden') {
+                              return null;
+                            }
+
+	                            return (
+	                              <DropdownMenuItem key={subItem.name} asChild>
+	                                <Link
+	                                  to={subItem.href}
+	                                  onClick={() => trackClick(`${item.name} - ${subItem.name}`, 'Navigation')}
+	                                  className="cursor-pointer"
+	                                >
+	                                  <div className="relative mr-2">
+	                                    <SubIcon className={cn("h-4 w-4", publicTabState === 'locked' && "text-muted-foreground")} />
+	                                    {publicTabState === 'locked' && (
+	                                      <Lock className="absolute -right-1.5 -top-1.5 h-3 w-3 rounded-full bg-background text-primary" />
+	                                    )}
+	                                  </div>
+	                                  <div className="flex flex-col">
+	                                    <span className="font-medium">{subItem.name}</span>
+	                                    <span className="text-xs text-muted-foreground">
+                                          {publicTabState === 'locked' ? 'Sign up to unlock' : subItem.description}
+                                        </span>
+	                                  </div>
+	                                </Link>
+	                              </DropdownMenuItem>
                             );
                           })}
                         </DropdownMenuContent>
@@ -418,22 +461,35 @@ const Navigation = () => {
                         <DropdownMenuContent align="start" className={cn("w-72 md:w-56 sm:w-full", navDropdownClass)}>
                           <DropdownMenuLabel>Connect & Collaborate 🌐</DropdownMenuLabel>
                           <DropdownMenuSeparator />
-                          {communitySubmenu.map((subItem) => {
-                            const SubIcon = subItem.icon;
-                            return (
-                              <DropdownMenuItem key={subItem.name} asChild>
-                                <Link
-                                  to={subItem.href}
-                                  onClick={() => trackClick(`${item.name} - ${subItem.name}`, 'Navigation')}
-                                  className="cursor-pointer"
-                                >
-                                  <SubIcon className="h-4 w-4 mr-2" />
-                                  <div className="flex flex-col">
-                                    <span className="font-medium">{subItem.name}</span>
-                                    <span className="text-xs text-muted-foreground">{subItem.description}</span>
-                                  </div>
-                                </Link>
-                              </DropdownMenuItem>
+	                          {communitySubmenu.map((subItem) => {
+	                            const SubIcon = subItem.icon;
+                            const publicTabState = getSignedOutTabState(subItem.href);
+
+                            if (publicTabState === 'hidden') {
+                              return null;
+                            }
+
+	                            return (
+	                              <DropdownMenuItem key={subItem.name} asChild>
+	                                <Link
+	                                  to={subItem.href}
+	                                  onClick={() => trackClick(`${item.name} - ${subItem.name}`, 'Navigation')}
+	                                  className="cursor-pointer"
+	                                >
+	                                  <div className="relative mr-2">
+	                                    <SubIcon className={cn("h-4 w-4", publicTabState === 'locked' && "text-muted-foreground")} />
+	                                    {publicTabState === 'locked' && (
+	                                      <Lock className="absolute -right-1.5 -top-1.5 h-3 w-3 rounded-full bg-background text-primary" />
+	                                    )}
+	                                  </div>
+	                                  <div className="flex flex-col">
+	                                    <span className="font-medium">{subItem.name}</span>
+	                                    <span className="text-xs text-muted-foreground">
+                                          {publicTabState === 'locked' ? 'Sign up to unlock' : subItem.description}
+                                        </span>
+	                                  </div>
+	                                </Link>
+	                              </DropdownMenuItem>
                             );
                           })}
                         </DropdownMenuContent>
@@ -465,22 +521,35 @@ const Navigation = () => {
                         <DropdownMenuContent align="start" className="w-72 md:w-56 sm:w-full max-w-[calc(100vw-2rem)]">
                           <DropdownMenuLabel>Resources for Founders 🗂️</DropdownMenuLabel>
                           <DropdownMenuSeparator />
-                          {resourcesSubmenu.map((subItem) => {
-                            const SubIcon = subItem.icon;
-                            return (
-                              <DropdownMenuItem key={subItem.name} asChild>
-                                <Link
-                                  to={subItem.href}
-                                  onClick={() => trackClick(`${item.name} - ${subItem.name}`, 'Navigation')}
-                                  className="cursor-pointer"
-                                >
-                                  <SubIcon className="h-4 w-4 mr-2" />
-                                  <div className="flex flex-col">
-                                    <span className="font-medium">{subItem.name}</span>
-                                    <span className="text-xs text-muted-foreground">{subItem.description}</span>
-                                  </div>
-                                </Link>
-                              </DropdownMenuItem>
+	                          {resourcesSubmenu.map((subItem) => {
+	                            const SubIcon = subItem.icon;
+                            const publicTabState = getSignedOutTabState(subItem.href);
+
+                            if (publicTabState === 'hidden') {
+                              return null;
+                            }
+
+	                            return (
+	                              <DropdownMenuItem key={subItem.name} asChild>
+	                                <Link
+	                                  to={subItem.href}
+	                                  onClick={() => trackClick(`${item.name} - ${subItem.name}`, 'Navigation')}
+	                                  className="cursor-pointer"
+	                                >
+	                                  <div className="relative mr-2">
+	                                    <SubIcon className={cn("h-4 w-4", publicTabState === 'locked' && "text-muted-foreground")} />
+	                                    {publicTabState === 'locked' && (
+	                                      <Lock className="absolute -right-1.5 -top-1.5 h-3 w-3 rounded-full bg-background text-primary" />
+	                                    )}
+	                                  </div>
+	                                  <div className="flex flex-col">
+	                                    <span className="font-medium">{subItem.name}</span>
+	                                    <span className="text-xs text-muted-foreground">
+                                          {publicTabState === 'locked' ? 'Sign up to unlock' : subItem.description}
+                                        </span>
+	                                  </div>
+	                                </Link>
+	                              </DropdownMenuItem>
                             );
                           })}
                         </DropdownMenuContent>
@@ -689,12 +758,38 @@ const Navigation = () => {
                         {/* Mobile submenu items */}
                         {submenu && (
                           <div className="ml-10 mr-2 mb-1 space-y-0.5">
-                            {submenu.items.map((sub) => {
-                              const SubIcon = sub.icon;
-                              const subUnlocked = isToolRouteUnlocked(sub.href);
-                              const subLockReason = getLockReasonForRoute(sub.href);
+	                            {submenu.items.map((sub) => {
+	                              const SubIcon = sub.icon;
+	                              const publicTabState = getSignedOutTabState(sub.href);
 
-                              if (!subUnlocked && item.name === 'BizMap AI') {
+                              if (publicTabState === 'hidden') {
+                                return null;
+                              }
+
+	                              const subUnlocked = isToolRouteUnlocked(sub.href);
+	                              const subLockReason = getLockReasonForRoute(sub.href);
+
+                              if (publicTabState === 'locked') {
+                                return (
+                                  <Link
+                                    key={sub.name}
+                                    to={sub.href}
+                                    className="mobile-nav-link flex items-center gap-2.5 px-3 py-2.5 min-h-[44px] touch-manipulation text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50 active:bg-muted rounded-lg transition-colors"
+                                    onClick={() => setIsOpen(false)}
+                                  >
+                                    <div className="relative">
+                                      <SubIcon className="h-4 w-4 flex-shrink-0" />
+                                      <Lock className="absolute -right-1.5 -top-1.5 h-3 w-3 rounded-full bg-background text-primary" />
+                                    </div>
+                                    <div className="flex flex-col text-left">
+                                      <span>{sub.name}</span>
+                                      <span className="text-xs text-muted-foreground">Sign up to unlock</span>
+                                    </div>
+                                  </Link>
+                                );
+                              }
+
+	                              if (!subUnlocked && item.name === 'BizMap AI') {
                                 return (
                                   <button
                                     key={sub.name}

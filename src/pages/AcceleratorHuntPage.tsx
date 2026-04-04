@@ -3,13 +3,18 @@ import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import AnswerSummary from "@/components/seo/AnswerSummary";
 import RelatedPageLinks from "@/components/seo/RelatedPageLinks";
+import { SignedOutFeaturePreview } from "@/components/ui/SignedOutFeaturePreview";
 import AcceleratorHuntTab from "@/components/insighta/AcceleratorHuntTab";
 import { AcceleratorWallpaper } from "@/components/accelerator/AcceleratorWallpaper";
 import { insightaPageContent } from "@/data/insightaPageContent";
 import { useReadingAnalytics } from "@/hooks/useReadingAnalytics";
 import { useEffect } from "react";
+import { getPublicTabConfig } from "@/config/publicTabVisibility";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function AcceleratorHuntPage() {
+  const { user } = useAuth();
+  const publicTab = getPublicTabConfig('/insighta/accelerator-hunt');
   const { trackPageVisit } = useReadingAnalytics();
   const { relatedLinks, answerSummary } = insightaPageContent.acceleratorHunt;
 
@@ -75,7 +80,18 @@ export default function AcceleratorHuntPage() {
               <RelatedPageLinks title="Related fundraising tools" links={relatedLinks} />
             </div>
 
-            <AcceleratorHuntTab />
+            {user ? (
+              <AcceleratorHuntTab />
+            ) : (
+              publicTab && (
+                <SignedOutFeaturePreview
+                  featureName={publicTab.featureName}
+                  description={publicTab.description || ''}
+                  previewItems={publicTab.previewItems}
+                  showPricingCta={publicTab.showPricingCta}
+                />
+              )
+            )}
 
             <div className="mt-10 space-y-8">
               <AnswerSummary

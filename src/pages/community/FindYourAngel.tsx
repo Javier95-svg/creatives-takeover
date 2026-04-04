@@ -35,8 +35,10 @@ import { useAngels } from "@/hooks/useAngels";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFeatureGating } from "@/hooks/useFeatureGating";
 import { useUpgradePrompt } from "@/contexts/UpgradePromptContext";
+import { SignedOutFeaturePreview } from "@/components/ui/SignedOutFeaturePreview";
 
 import { cn } from "@/lib/utils";
+import { getPublicTabConfig } from "@/config/publicTabVisibility";
 import {
   Pagination,
   PaginationContent,
@@ -76,6 +78,7 @@ const FindYourAngel = () => {
   const { currentTier } = useFeatureGating();
   const { openUpgradePrompt } = useUpgradePrompt();
   const { fetchAngels, loading } = useAngels();
+  const publicTab = getPublicTabConfig('/community/angels');
   const isPro = isAdmin || currentTier === 'pro';
   const [angels, setAngels] = useState<AngelInvestor[]>([]);
 
@@ -91,8 +94,12 @@ const FindYourAngel = () => {
 
 
   useEffect(() => {
+    if (!user) {
+      return;
+    }
+
     loadAngels();
-  }, []);
+  }, [user]);
 
   const loadAngels = async () => {
     try {
@@ -332,9 +339,18 @@ const FindYourAngel = () => {
 
           {/* Angel Investors Section */}
           <section id="angel-grid" className="container mx-auto px-4 py-12 relative z-10">
-            {/* Admin Create Button */}
-            {isAdmin && (
-              <div className="mb-6 flex justify-end">
+            {!user && publicTab ? (
+              <SignedOutFeaturePreview
+                featureName={publicTab.featureName}
+                description={publicTab.description || ''}
+                previewItems={publicTab.previewItems}
+                showPricingCta={publicTab.showPricingCta}
+              />
+            ) : (
+              <>
+	            {/* Admin Create Button */}
+	            {isAdmin && (
+	              <div className="mb-6 flex justify-end">
                 <Button asChild>
                   <Link to="/community/angels/admin/new">
                     Create Angel Investor
@@ -515,7 +531,7 @@ const FindYourAngel = () => {
                 </p>
               ) : (
                 <p className="text-sm text-muted-foreground">
-                  27 angel investors found
+                  86 angel investors found
                 </p>
               )}
             </div>
@@ -666,8 +682,8 @@ const FindYourAngel = () => {
                   </div>
                 )}
               </>
-            ) : angels.length === 0 ? (
-              <Card>
+	            ) : angels.length === 0 ? (
+	              <Card>
                 <CardContent className="p-12 text-center">
                   <Sparkles className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
                   <h3 className="text-xl font-semibold mb-2">No angel investors yet</h3>
@@ -696,8 +712,10 @@ const FindYourAngel = () => {
                   </Button>
                 </CardContent>
               </Card>
+	            )}
+              </>
             )}
-          </section>
+	          </section>
         </div>
         <Footer />
       </div>

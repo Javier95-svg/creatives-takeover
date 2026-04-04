@@ -4,9 +4,14 @@ import Footer from "@/components/Footer";
 import AnswerSummary from "@/components/seo/AnswerSummary";
 import PageFAQSection from "@/components/seo/PageFAQSection";
 import RelatedPageLinks from "@/components/seo/RelatedPageLinks";
+import { SignedOutFeaturePreview } from "@/components/ui/SignedOutFeaturePreview";
 import FundraisingReadinessToolkitAll from "@/components/blog/FundraisingReadinessToolkitAll";
+import { getPublicTabConfig } from "@/config/publicTabVisibility";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function InsightaTestPage() {
+  const { user } = useAuth();
+  const publicTab = getPublicTabConfig('/insighta/test');
   const faqs = [
     {
       question: "What is fundraising readiness?",
@@ -83,7 +88,18 @@ export default function InsightaTestPage() {
               <RelatedPageLinks title="Related fundraising tools" links={relatedLinks} />
             </div>
 
-            <FundraisingReadinessToolkitAll />
+            {user ? (
+              <FundraisingReadinessToolkitAll />
+            ) : (
+              publicTab && (
+                <SignedOutFeaturePreview
+                  featureName={publicTab.featureName}
+                  description={publicTab.description || ''}
+                  previewItems={publicTab.previewItems}
+                  showPricingCta={publicTab.showPricingCta}
+                />
+              )
+            )}
 
             <div className="mt-10 space-y-8">
               <AnswerSummary

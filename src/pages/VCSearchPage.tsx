@@ -3,13 +3,18 @@ import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import AnswerSummary from "@/components/seo/AnswerSummary";
 import RelatedPageLinks from "@/components/seo/RelatedPageLinks";
+import { SignedOutFeaturePreview } from "@/components/ui/SignedOutFeaturePreview";
 import VCSearchTab from "@/components/insighta/VCSearchTab";
 import { VCWallpaper } from "@/components/vc-search/VCWallpaper";
 import { insightaPageContent } from "@/data/insightaPageContent";
 import { useReadingAnalytics } from "@/hooks/useReadingAnalytics";
 import { useEffect } from "react";
+import { getPublicTabConfig } from "@/config/publicTabVisibility";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function VCSearchPage() {
+  const { user } = useAuth();
+  const publicTab = getPublicTabConfig('/insighta/vc-search');
   const { trackPageVisit } = useReadingAnalytics();
   const { relatedLinks, answerSummary } = insightaPageContent.vcSearch;
 
@@ -75,7 +80,18 @@ export default function VCSearchPage() {
               <RelatedPageLinks title="Related fundraising tools" links={relatedLinks} />
             </div>
 
-            <VCSearchTab />
+            {user ? (
+              <VCSearchTab />
+            ) : (
+              publicTab && (
+                <SignedOutFeaturePreview
+                  featureName={publicTab.featureName}
+                  description={publicTab.description || ''}
+                  previewItems={publicTab.previewItems}
+                  showPricingCta={publicTab.showPricingCta}
+                />
+              )
+            )}
 
             <div className="mt-10 space-y-8">
               <AnswerSummary

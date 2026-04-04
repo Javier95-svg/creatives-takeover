@@ -8,11 +8,16 @@ import { useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import { usePlanAccess } from "@/hooks/usePlanAccess";
 import { BlurredToolPreview } from "@/components/ui/BlurredToolPreview";
+import { SignedOutFeaturePreview } from "@/components/ui/SignedOutFeaturePreview";
+import { getPublicTabConfig } from "@/config/publicTabVisibility";
+import { useAuth } from "@/contexts/AuthContext";
 
 // Lazy load the Tech Stack component
 const TechStack = lazy(() => import("@/components/tech-stack/TechStack"));
 
 export default function TechStackPage() {
+  const { user } = useAuth();
+  const publicTab = getPublicTabConfig('/tech-stack');
   const { trackPageVisit } = useReadingAnalytics();
   const { markToolUsed } = useLeanStartupStore();
   const { hasAccess, isProgressiveLock } = usePlanAccess('tech_stack');
@@ -85,7 +90,16 @@ export default function TechStackPage() {
               </p>
             </div>
 
-            {hasAccess ? (
+            {!user ? (
+              publicTab && (
+                <SignedOutFeaturePreview
+                  featureName={publicTab.featureName}
+                  description={publicTab.description || ''}
+                  previewItems={publicTab.previewItems}
+                  showPricingCta={publicTab.showPricingCta}
+                />
+              )
+            ) : hasAccess ? (
               <Suspense
                 fallback={
                   <div className="flex flex-col items-center justify-center py-20 space-y-4">

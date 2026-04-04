@@ -1,11 +1,16 @@
 import SEO, { createBreadcrumbSchema } from "@/components/SEO";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
+import { SignedOutFeaturePreview } from "@/components/ui/SignedOutFeaturePreview";
 import EmailTemplatesTab from "@/components/insighta/EmailTemplatesTab";
 import { useReadingAnalytics } from "@/hooks/useReadingAnalytics";
 import { useEffect } from "react";
+import { getPublicTabConfig } from "@/config/publicTabVisibility";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function EmailTemplatesPage() {
+  const { user } = useAuth();
+  const publicTab = getPublicTabConfig('/insighta/email-templates');
   const { trackPageVisit } = useReadingAnalytics();
 
   // Track page visit when component mounts
@@ -74,7 +79,18 @@ export default function EmailTemplatesPage() {
               </p>
             </div>
 
-            <EmailTemplatesTab />
+            {user ? (
+              <EmailTemplatesTab />
+            ) : (
+              publicTab && (
+                <SignedOutFeaturePreview
+                  featureName={publicTab.featureName}
+                  description={publicTab.description || ''}
+                  previewItems={publicTab.previewItems}
+                  showPricingCta={publicTab.showPricingCta}
+                />
+              )
+            )}
           </div>
         </section>
       </main>

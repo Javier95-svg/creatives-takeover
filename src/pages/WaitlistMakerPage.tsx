@@ -2,10 +2,15 @@ import SEO, { createBreadcrumbSchema, createFAQSchema } from '@/components/SEO';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import PageFAQSection from '@/components/seo/PageFAQSection';
+import { SignedOutFeaturePreview } from '@/components/ui/SignedOutFeaturePreview';
 import WaitlistEditor from '@/components/waitlist/WaitlistEditor';
 import WaitlistMakerWallpaper from '@/components/wallpapers/WaitlistMakerWallpaper';
+import { getPublicTabConfig } from '@/config/publicTabVisibility';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function WaitlistMakerPage() {
+  const { user } = useAuth();
+  const publicTab = getPublicTabConfig('/waitlist');
   const faqs = [
     {
       question: 'Why should founders build a waitlist before an MVP?',
@@ -63,7 +68,18 @@ export default function WaitlistMakerPage() {
               </p>
             </div>
 
-            <WaitlistEditor />
+            {user ? (
+              <WaitlistEditor />
+            ) : (
+              publicTab && (
+                <SignedOutFeaturePreview
+                  featureName={publicTab.featureName}
+                  description={publicTab.description || ''}
+                  previewItems={publicTab.previewItems}
+                  showPricingCta={publicTab.showPricingCta}
+                />
+              )
+            )}
 
             <div className="mx-auto mt-10 max-w-5xl space-y-8 px-2">
               <PageFAQSection
