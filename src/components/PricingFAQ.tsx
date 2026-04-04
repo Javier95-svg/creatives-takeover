@@ -18,16 +18,16 @@ const PricingFAQ = () => {
       question: "Can I change plans later?",
       answer: `Yes. You can move between Rookie, Starter, Rising, and Pro whenever your workflow changes.
 
-Upgrades unlock the new plan immediately. Downgrades take effect on the next billing cycle so you keep the access you already paid for.`,
+    Upgrades unlock the new plan immediately. Downgrades take effect on the next billing cycle so you keep the access, credits, and limits you already paid for until that cycle ends.`,
       relatedQuestions: [1, 3],
     },
     {
       question: "What are credits and how do they work?",
       answer: `Credits are the usage currency for the AI-powered parts of the platform. Every plan includes a monthly credit grant: Rookie gets 25, Starter 50, Rising 100, and Pro 300.
 
-Rookie and Starter rely on credits for the tools they can access. Rising and Pro include most BizMap workflows without per-use charges, but MVP Builder and GTM Strategist still consume credits on every plan.
+    On Rookie and Starter, Waitlist Maker uses credits, and Starter also uses credits for PMF Lab. On Rising and Pro, Waitlist Maker, PMF Lab, Tech Stack Builder, and Directories are included, but MVP Builder and GTM Strategist still use credits.
 
-ICP Builder stays free across all four plans, and Rising discovery-call overage still costs 10 credits per extra call after the included free calls.`,
+    ICP Builder stays free across all four plans. Discovery Calls are quota-based before overage: Rookie includes 1 per month, Starter 2, Rising 3, and extra calls on those plans cost 10 credits each. Pro includes unlimited discovery calls.`,
       relatedQuestions: [0, 5],
     },
     {
@@ -60,23 +60,23 @@ That means billing, renewals, and checkout security all run on Stripe's infrastr
     },
     {
       question: "What's included in the Rookie plan?",
-      answer: `Rookie is free forever and includes 25 credits per month. ICP Builder is free, Insighta Test and Newspaper stay available, and you can browse mentors, co-founders, VCs, and accelerators.
+      answer: `Rookie is free forever and includes 25 credits per month. You get Dashboard Rookie Mode, ICP Builder for free, Waitlist Maker with credit usage, Prompt Library access for free models only, Insighta Test, Newspaper, 1 discovery call per month, and 1 Find a Co-Founder post per month.
 
-Waitlist Maker and PMF Lab are not included on Rookie, while MVP Builder, Tech Stack, GTM Strategist, and Directories stay in preview mode. Rookie also includes 1 free discovery call and 1 co-founder post per billing cycle.`,
+    VC Search and Accelerator Hunt are browse only on Rookie. PMF Lab, MVP Builder, Tech Stack Builder, GTM Strategist, and Directories stay in preview only, and Find Your Angel is not included.`,
       relatedQuestions: [0, 1],
     },
     {
       question: "What happens to my data if I downgrade?",
       answer: `Downgrading changes what you can create next, not whether your existing work still exists.
 
-You keep your prior data, but any plan-locked actions follow the limits of your new tier. For example, Rookie cannot open paid fundraising tools and Starter has lower VC, accelerator, and community quotas than Rising or Pro.`,
+    You keep your prior data, but any plan-locked actions follow the limits of your new tier. For example, moving from Rising to Starter drops VC Search and Accelerator Hunt to 2 profile views per month, removes Pitch Deck Analyzer access, and returns MVP Builder, Tech Stack Builder, GTM Strategist, and Directories to preview-only access.`,
       relatedQuestions: [0, 3],
     },
     {
       question: "How does billing work?",
       answer: `You can choose monthly or yearly billing on Starter, Rising, and Pro. The current prices are Starter at $9/month or $79/year, Rising at $29/month or $239/year, and Pro at $65/month or $589/year.
 
-Your subscription renews automatically until you cancel. Included credits and quota-limited actions reset on the same billing-cycle anchor rather than a generic calendar month.`,
+    Your subscription renews automatically until you cancel. Included credits, profile-view limits, and quota-limited actions reset on the same billing-cycle anchor rather than a generic calendar month.`,
       relatedQuestions: [4, 0],
     },
     {
