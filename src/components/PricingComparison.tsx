@@ -39,7 +39,6 @@ const features: FeatureCategory[] = [
     category: "Credits",
     items: [
       { feature: "Monthly Credits", rookie: "25 credits", starter: "50 credits", rising: "100 credits", pro: "300 credits" },
-      { feature: "Credit Packs", rookie: "Available", starter: "Available", rising: "Available", pro: "Available" },
     ],
   },
   {
@@ -75,9 +74,8 @@ const features: FeatureCategory[] = [
   {
     category: "Resources",
     items: [
-      { feature: "Stories", rookie: "Included", starter: "Included", rising: "Included", pro: "Included" },
+      { feature: "Newspaper", rookie: "Included", starter: "Included", rising: "Included", pro: "Included" },
       { feature: "Prompt Library", rookie: "Business Case only", starter: "5 templates", rising: "Full library", pro: "Full library" },
-      { feature: "Credit Rule", rookie: "Credits power accessible AI tools", starter: "Credits power accessible AI tools", rising: "Most tools included; MVP/GTM use credits", pro: "Most tools included; MVP/GTM use credits" },
     ],
   },
 ];
