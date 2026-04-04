@@ -29,10 +29,10 @@ const SubscriptionFeatures = () => {
       { name: "Directories", cost: 0, description: "Browse startup launch directories and platforms" },
     ],
     insighta: [
+      { name: "VC Search", cost: 0, description: "Browse venture capital firms (view limits per tier)", badge: "VIEW LIMITS" },
       { name: "Accelerator Hunt", cost: 0, description: "Find accelerator programs (Pro only)", badge: "PRO ONLY" },
       { name: "Pitch Deck Analyzer", cost: CREDIT_COSTS.PITCH_DECK_ANALYZER, description: "AI analysis with actionable feedback" },
       { name: "Email Templates", cost: CREDIT_COSTS.EMAIL_TEMPLATE_GENERATION, description: "Personalized investor outreach emails" },
-      { name: "Insighta Test", cost: CREDIT_COSTS.FUNDRAISING_READINESS_ANALYSIS, description: "Fundraising readiness assessment" },
     ],
     community: [
       { name: "Find a Mentor", cost: 0, description: "Browse and connect with mentors", badge: "FREE" },
