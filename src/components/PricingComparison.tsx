@@ -56,8 +56,8 @@ const features: FeatureCategory[] = [
   {
     category: "Insighta",
     items: [
-      { feature: "VC Search", rookie: "Browse only", starter: "2 profiles/cycle", rising: "10 profiles/cycle", pro: "Unlimited" },
-      { feature: "Accelerator Hunt", rookie: "Browse only", starter: "2 profiles/cycle", rising: "10 profiles/cycle", pro: "Unlimited" },
+      { feature: "VC Search", rookie: "Browse only", starter: "2 profile views/monthly", rising: "5 profile views/monthly", pro: "Unlimited" },
+      { feature: "Accelerator Hunt", rookie: "Browse only", starter: "2 profile views/monthly", rising: "5 profile views/monthly", pro: "Unlimited" },
       { feature: "Email Templates", rookie: "Not included", starter: "Basic templates", rising: "Full access", pro: "Full access" },
       { feature: "Pitch Deck Analyzer", rookie: "Not included", starter: "Not included", rising: "Included", pro: "Included" },
       { feature: "Insighta Test", rookie: "Included", starter: "Included", rising: "Included", pro: "Included" },
