@@ -347,7 +347,7 @@ const FindYourAngel = () => {
                 {/* Blurred Preview of First Page of Angels - for non-signed-in visitors */}
                 {!loading && angels.length > 0 && (
                   <div className="mt-16">
-                    <div className="relative min-h-[400px]">
+                    <div className="relative min-h-[600px]">
                       <div className="grid grid-cols-1 gap-6 select-none pointer-events-none blur-[6px]" aria-hidden="true">
                         {angels.slice(0, ANGELS_PER_PAGE).map((angel, index) => (
                           <AngelCard
@@ -358,8 +358,10 @@ const FindYourAngel = () => {
                         ))}
                       </div>
 
-                      <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-b from-transparent via-background/50 to-background rounded-xl">
-                        <div className="text-center">
+                      <div className="absolute inset-0 flex items-center justify-center rounded-xl" style={{
+                        background: 'radial-gradient(circle at center, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.6) 50%, rgba(0,0,0,0.8) 100%)'
+                      }}>
+                        <div className="text-center z-20">
                           <p className="text-sm font-semibold text-muted-foreground">
                             Preview: Showing 10 of 86 investors
                           </p>
