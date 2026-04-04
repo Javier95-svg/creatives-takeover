@@ -238,7 +238,7 @@ export default function Pricing() {
           </Tabs>
         </div>
 
-        <div className="grid grid-cols-1 justify-items-center md:grid-cols-2 xl:grid-cols-4 gap-8 xl:gap-12 max-w-[104rem] mx-auto items-start">
+        <div className="grid grid-cols-1 justify-items-center md:grid-cols-2 xl:grid-cols-4 gap-7 xl:gap-10 max-w-[104rem] mx-auto items-start">
           {PLAN_CONFIG.map((plan, index) => {
             const isCurrentPlan = currentTier === plan.key;
             const isPopular = plan.key === "rising";
