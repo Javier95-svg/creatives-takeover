@@ -1,6 +1,4 @@
 import SEO, { createSoftwareApplicationSchema } from '@/components/SEO';
-import Footer from '@/components/Footer';
-import Navigation from '@/components/Navigation';
 import { PreviewModeWrapper } from '@/components/ui/PreviewModeWrapper';
 import { MVPBuilder } from '@/components/mvp-builder/MVPBuilder';
 import { getPublicTabConfig } from '@/config/publicTabVisibility';
@@ -19,7 +17,7 @@ export default function AppBuilderPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="h-screen w-screen overflow-hidden bg-background">
       <SEO
         title="AI MVP Builder | Creatives Takeover"
         description="Describe your product, generate a working MVP, and iterate with live preview and code updates inside an AI MVP builder."
@@ -27,23 +25,17 @@ export default function AppBuilderPage() {
         url="/mvp-builder"
         structuredData={structuredData}
       />
-      <Navigation />
-      <main className="px-4 pt-28 pb-20 md:pt-32 lg:pt-36">
-        <div className="container mx-auto max-w-5xl">
-          {!user && publicTab ? (
-            <PreviewModeWrapper
-              featureName={publicTab.featureName}
-              description={publicTab.description || ''}
-              showPricingCta={publicTab.showPricingCta}
-            >
-              <MVPBuilder />
-            </PreviewModeWrapper>
-          ) : (
-            <MVPBuilder />
-          )}
-        </div>
-      </main>
-      <Footer />
+      {!user && publicTab ? (
+        <PreviewModeWrapper
+          featureName={publicTab.featureName}
+          description={publicTab.description || ''}
+          showPricingCta={publicTab.showPricingCta}
+        >
+          <MVPBuilder />
+        </PreviewModeWrapper>
+      ) : (
+        <MVPBuilder />
+      )}
     </div>
   );
 }
