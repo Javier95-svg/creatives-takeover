@@ -208,11 +208,13 @@ const PricingComparison = () => {
                 <tbody>
                   {features.map((category) => (
                     <React.Fragment key={category.category}>
-                      <tr>
-                        <td colSpan={5} className="p-4 bg-muted/50 sticky left-0 z-10 text-center border-b border-border/60">
-                          <h4 className="font-semibold text-base text-primary font-space-grotesk">{category.category}</h4>
-                        </td>
-                      </tr>
+                      {category.category !== "Credits" && (
+                        <tr>
+                          <td colSpan={5} className="p-4 bg-muted/50 sticky left-0 z-10 text-center border-b border-border/60">
+                            <h4 className="font-semibold text-base text-primary font-space-grotesk">{category.category}</h4>
+                          </td>
+                        </tr>
+                      )}
                       {category.items.map((item, index) => (
                         <tr
                           key={item.feature}
