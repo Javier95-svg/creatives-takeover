@@ -1,7 +1,7 @@
 import SEO, { createBreadcrumbSchema } from "@/components/SEO";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
-import { SignedOutFeaturePreview } from "@/components/ui/SignedOutFeaturePreview";
+import { PreviewModeWrapper } from '@/components/ui/PreviewModeWrapper';
 import EmailTemplatesTab from "@/components/insighta/EmailTemplatesTab";
 import { useReadingAnalytics } from "@/hooks/useReadingAnalytics";
 import { useEffect } from "react";

@@ -7,8 +7,7 @@ import { useLeanStartupStore } from "@/store/leanStartupStore";
 import { useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import { usePlanAccess } from "@/hooks/usePlanAccess";
-import { BlurredToolPreview } from "@/components/ui/BlurredToolPreview";
-import { SignedOutFeaturePreview } from "@/components/ui/SignedOutFeaturePreview";
+import { PreviewModeWrapper } from '@/components/ui/PreviewModeWrapper';
 import { getPublicTabConfig } from "@/config/publicTabVisibility";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -92,12 +91,22 @@ export default function TechStackPage() {
 
             {!user ? (
               publicTab && (
-                <SignedOutFeaturePreview
+                <PreviewModeWrapper
                   featureName={publicTab.featureName}
                   description={publicTab.description || ''}
-                  previewItems={publicTab.previewItems}
                   showPricingCta={publicTab.showPricingCta}
-                />
+                >
+                  <Suspense
+                    fallback={
+                      <div className="flex flex-col items-center justify-center py-20 space-y-4">
+                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                        <p className="text-muted-foreground">Loading Tech Stack Builder...</p>
+                      </div>
+                    }
+                  >
+                    <TechStack />
+                  </Suspense>
+                </PreviewModeWrapper>
               )
             ) : hasAccess ? (
               <Suspense

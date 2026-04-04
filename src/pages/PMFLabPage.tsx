@@ -3,7 +3,7 @@ import SEO, { createBreadcrumbSchema, createFAQSchema } from '@/components/SEO';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import PageFAQSection from '@/components/seo/PageFAQSection';
-import { SignedOutFeaturePreview } from '@/components/ui/SignedOutFeaturePreview';
+import { PreviewModeWrapper } from '@/components/ui/PreviewModeWrapper';
 import { useLeanStartupStore } from '@/store/leanStartupStore';
 import { usePMFLab } from '@/hooks/usePMFLab';
 import PMFEvidenceForm from '@/components/pmf/PMFEvidenceForm';

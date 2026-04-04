@@ -3,7 +3,7 @@ import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import AnswerSummary from "@/components/seo/AnswerSummary";
 import RelatedPageLinks from "@/components/seo/RelatedPageLinks";
-import { SignedOutFeaturePreview } from "@/components/ui/SignedOutFeaturePreview";
+import { PreviewModeWrapper } from '@/components/ui/PreviewModeWrapper';
 import VCSearchTab from "@/components/insighta/VCSearchTab";
 import { VCWallpaper } from "@/components/vc-search/VCWallpaper";
 import { insightaPageContent } from "@/data/insightaPageContent";
@@ -84,12 +84,13 @@ export default function VCSearchPage() {
               <VCSearchTab />
             ) : (
               publicTab && (
-                <SignedOutFeaturePreview
+                <PreviewModeWrapper
                   featureName={publicTab.featureName}
                   description={publicTab.description || ''}
-                  previewItems={publicTab.previewItems}
                   showPricingCta={publicTab.showPricingCta}
-                />
+                >
+                  <VCSearchTab />
+                </PreviewModeWrapper>
               )
             )}
 

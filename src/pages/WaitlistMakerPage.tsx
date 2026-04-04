@@ -2,7 +2,7 @@ import SEO, { createBreadcrumbSchema, createFAQSchema } from '@/components/SEO';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import PageFAQSection from '@/components/seo/PageFAQSection';
-import { SignedOutFeaturePreview } from '@/components/ui/SignedOutFeaturePreview';
+import { PreviewModeWrapper } from '@/components/ui/PreviewModeWrapper';
 import WaitlistEditor from '@/components/waitlist/WaitlistEditor';
 import WaitlistMakerWallpaper from '@/components/wallpapers/WaitlistMakerWallpaper';
 import { getPublicTabConfig } from '@/config/publicTabVisibility';
@@ -72,12 +72,13 @@ export default function WaitlistMakerPage() {
               <WaitlistEditor />
             ) : (
               publicTab && (
-                <SignedOutFeaturePreview
+                <PreviewModeWrapper
                   featureName={publicTab.featureName}
                   description={publicTab.description || ''}
-                  previewItems={publicTab.previewItems}
                   showPricingCta={publicTab.showPricingCta}
-                />
+                >
+                  <WaitlistEditor />
+                </PreviewModeWrapper>
               )
             )}
 

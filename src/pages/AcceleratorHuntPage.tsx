@@ -3,7 +3,7 @@ import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import AnswerSummary from "@/components/seo/AnswerSummary";
 import RelatedPageLinks from "@/components/seo/RelatedPageLinks";
-import { SignedOutFeaturePreview } from "@/components/ui/SignedOutFeaturePreview";
+import { PreviewModeWrapper } from '@/components/ui/PreviewModeWrapper';
 import AcceleratorHuntTab from "@/components/insighta/AcceleratorHuntTab";
 import { AcceleratorWallpaper } from "@/components/accelerator/AcceleratorWallpaper";
 import { insightaPageContent } from "@/data/insightaPageContent";
@@ -84,12 +84,13 @@ export default function AcceleratorHuntPage() {
               <AcceleratorHuntTab />
             ) : (
               publicTab && (
-                <SignedOutFeaturePreview
+                <PreviewModeWrapper
                   featureName={publicTab.featureName}
                   description={publicTab.description || ''}
-                  previewItems={publicTab.previewItems}
                   showPricingCta={publicTab.showPricingCta}
-                />
+                >
+                  <AcceleratorHuntTab />
+                </PreviewModeWrapper>
               )
             )}
 

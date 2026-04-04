@@ -4,7 +4,7 @@ import Footer from "@/components/Footer";
 import AnswerSummary from "@/components/seo/AnswerSummary";
 import PageFAQSection from "@/components/seo/PageFAQSection";
 import RelatedPageLinks from "@/components/seo/RelatedPageLinks";
-import { SignedOutFeaturePreview } from "@/components/ui/SignedOutFeaturePreview";
+import { PreviewModeWrapper } from '@/components/ui/PreviewModeWrapper';
 import FundraisingReadinessToolkitAll from "@/components/blog/FundraisingReadinessToolkitAll";
 import { getPublicTabConfig } from "@/config/publicTabVisibility";
 import { useAuth } from "@/contexts/AuthContext";

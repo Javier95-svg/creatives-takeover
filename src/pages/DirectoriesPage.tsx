@@ -1,7 +1,7 @@
 import SEO, { createBreadcrumbSchema } from '@/components/SEO';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
-import { SignedOutFeaturePreview } from '@/components/ui/SignedOutFeaturePreview';
+import { PreviewModeWrapper } from '@/components/ui/PreviewModeWrapper';
 import DirectoriesTab from '@/components/launch/DirectoriesTab';
 import GTMStrategistWallpaper from '@/components/wallpapers/GTMStrategistWallpaper';
 import { getPublicTabConfig } from '@/config/publicTabVisibility';
@@ -54,12 +54,13 @@ export default function DirectoriesPage() {
               <DirectoriesTab />
             ) : (
               publicTab && (
-                <SignedOutFeaturePreview
+                <PreviewModeWrapper
                   featureName={publicTab.featureName}
                   description={publicTab.description || ''}
-                  previewItems={publicTab.previewItems}
                   showPricingCta={publicTab.showPricingCta}
-                />
+                >
+                  <DirectoriesTab />
+                </PreviewModeWrapper>
               )
             )}
           </div>

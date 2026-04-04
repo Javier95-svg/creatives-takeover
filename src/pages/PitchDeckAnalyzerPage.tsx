@@ -1,7 +1,7 @@
 import SEO, { createBreadcrumbSchema } from "@/components/SEO";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
-import { SignedOutFeaturePreview } from "@/components/ui/SignedOutFeaturePreview";
+import { PreviewModeWrapper } from '@/components/ui/PreviewModeWrapper';
 import { PitchDeckUploader } from "@/components/pitch-deck-analyzer/PitchDeckUploader";
 import { AnalysisResults } from "@/components/pitch-deck-analyzer/AnalysisResults";
 import { PitchDeckBuilder } from "@/components/pitch-deck-builder/PitchDeckBuilder";
