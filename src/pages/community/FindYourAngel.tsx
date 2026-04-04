@@ -550,7 +550,7 @@ const FindYourAngel = () => {
                 </p>
               ) : (
                 <p className="text-sm text-muted-foreground">
-                  86 angel investors found
+                  {angels.length} angel investor{angels.length !== 1 ? 's' : ''} found
                 </p>
               )}
             </div>
