@@ -75,7 +75,7 @@ const features: FeatureCategory[] = [
     category: "Resources",
     items: [
       { feature: "Newspaper", rookie: "Included", starter: "Included", rising: "Included", pro: "Included" },
-      { feature: "Prompt Library", rookie: "Business Case only", starter: "5 templates", rising: "Full library", pro: "Full library" },
+      { feature: "Prompt Library", rookie: "Free templates only", starter: "Free templates only", rising: "Full library", pro: "Full library" },
     ],
   },
 ];
