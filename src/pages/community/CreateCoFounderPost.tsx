@@ -15,7 +15,12 @@ import Navigation from '@/components/Navigation';
 import { AccountWallpaper } from '@/components/AccountWallpaper';
 import { useMonthlyQuotas } from '@/hooks/useMonthlyQuotas';
 import { useSubscription } from '@/hooks/useSubscription';
-import { MONTHLY_FREE_QUOTAS } from '@/config/planPermissions';
+import { MONTHLY_FREE_QUOTAS, normalizePlan } from '@/config/planPermissions';
+
+const getCurrentUtcMonthStart = () => {
+  const now = new Date();
+  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)).toISOString().slice(0, 10);
+};
 
 const CreateCoFounderPost = () => {
   const { user } = useAuth();
@@ -43,13 +48,7 @@ const CreateCoFounderPost = () => {
     { id: 'finance', label: 'Finance Co-Founder (CFO)', description: 'Fundraising, financial planning' },
   ];
 
-  const currentPlan = (() => {
-    const normalized = (subscriptionData.subscription_tier || 'rookie').toLowerCase();
-    if (normalized === 'starter') return 'starter';
-    if (normalized === 'rising' || normalized === 'creator') return 'rising';
-    if (normalized === 'pro' || normalized === 'professional') return 'pro';
-    return 'rookie';
-  })();
+  const currentPlan = normalizePlan(subscriptionData.subscription_tier);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,7 +65,7 @@ const CreateCoFounderPost = () => {
 
     setLoading(true);
     try {
-      const cycleAnchor = cycleStart ?? new Date().toISOString().slice(0, 10);
+      const cycleAnchor = cycleStart ?? getCurrentUtcMonthStart();
       const postLimit = MONTHLY_FREE_QUOTAS.cofounder_posts[currentPlan];
 
       if (Number.isFinite(postLimit)) {
@@ -79,7 +78,7 @@ const CreateCoFounderPost = () => {
         if (countError) throw countError;
 
         if ((count || 0) >= postLimit) {
-          toast.error(`You've reached your ${postLimit} co-founder post limit for this billing cycle.`);
+          toast.error(`You've reached your ${postLimit} co-founder post limit for this month.`);
           return;
         }
       }

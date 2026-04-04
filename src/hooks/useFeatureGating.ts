@@ -2,6 +2,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useSubscription } from './useSubscription';
 import { useCredits } from './useCredits';
 import { CREDIT_COSTS } from '@/config/constants';
+import { normalizePlan } from '@/config/planPermissions';
 
 export interface FeatureAccess {
   hasAccess: boolean;
@@ -29,7 +30,7 @@ export function useFeatureGating() {
       return { hasAccess: true, isLoading: true };
     }
 
-    const tier = subscriptionData.subscription_tier || 'rookie';
+    const tier = normalizePlan(subscriptionData.subscription_tier);
 
     switch (feature) {
       // BizMap AI conversation limits
@@ -418,12 +419,6 @@ export function useFeatureGating() {
 
       // Discovery Calls — credit cost now 10; quota logic handled by usePlanAccess
       case 'discovery_calls_mentors':
-        if (!hasCredits(CREDIT_COSTS.DISCOVERY_CALL)) {
-          return {
-            hasAccess: false,
-            message: `Insufficient credits. Discovery calls cost ${CREDIT_COSTS.DISCOVERY_CALL} credits.`,
-          };
-        }
         return { hasAccess: true };
 
       default:
@@ -446,42 +441,46 @@ export function useFeatureGating() {
     const featureMap: Record<string, string[]> = {
       rookie: [
         '25 credits per month',
-        'ICP Builder included',
-        'Waitlist Maker and PMF Lab not included',
-        '1 free discovery call per billing cycle',
-        '1 co-founder post per billing cycle',
+        'Dashboard Rookie Mode',
+        'ICP Builder included for free',
+        'Waitlist Maker available with credits',
+        'Stages 3 to 5 in preview mode',
+        '1 discovery call this month',
+        '1 co-founder post this month',
         'VC Search and Accelerator Hunt list-only',
-        'Prompt Library: Business Case only',
+        'Prompt Library free models only',
         'Insighta Test and Newspaper included',
       ],
       starter: [
         '50 credits per month',
-        'ICP Builder included',
+        'Dashboard Starter Mode',
+        'ICP Builder included for free',
         'Waitlist Maker and PMF Lab use credits',
-        'MVP Builder, Tech Stack, GTM Strategist, and Directories in preview mode',
-        '2 free discovery calls per billing cycle',
-        '2 co-founder posts per billing cycle',
-        '2 VC and 2 accelerator profiles per billing cycle',
-        'Basic email templates and 5 prompt templates',
+        'Stages 4 and 5 in preview mode',
+        '2 discovery calls this month',
+        '2 co-founder posts this month',
+        '2 VC and 2 accelerator profile views this month',
+        'Email Templates included',
+        'Prompt Library free models only',
       ],
       rising: [
         '100 credits per month',
-        'All 7 tools accessible in any order',
-        'Most BizMap tools included without per-use credits',
+        'Dashboard Rising Mode',
+        'Full BizMap AI tools access',
         'MVP Builder and GTM Strategist still use credits',
-        '3 free discovery calls per billing cycle, then 10 credits each',
-        'Unlimited free co-founder posts',
-        '10 VC and 10 accelerator profiles per billing cycle',
+        '3 discovery calls this month',
+        'Unlimited co-founder posts',
+        '5 VC and 5 accelerator profile views this month',
         'Full email templates, pitch deck analyzer, and prompt library',
       ],
       pro: [
         '300 credits per month',
+        'Dashboard Pro Mode',
+        'Find Your Angel access',
         'Everything in Rising',
         'MVP Builder and GTM Strategist still use credits',
         'Unlimited discovery calls',
         'Unlimited VC and Accelerator profile views',
-        'Angels community access',
-        'Group office hours and priority support',
       ],
     };
     return featureMap[tierName] || [];

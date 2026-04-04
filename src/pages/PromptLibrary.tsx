@@ -18,10 +18,6 @@ import { useCreditActions } from "@/hooks/useCreditActions";
 import { useUpgradePrompt } from "@/contexts/UpgradePromptContext";
 import { CREDIT_COSTS } from "@/config/constants";
 
-// Categories unlocked on Rookie plan — all others require Rising+
-const ROOKIE_UNLOCKED_CATEGORIES = new Set(['all']);
-const STARTER_UNLOCKED_PROMPT_IDS = new Set<number | string>([1, 2, 3, 4, 5]);
-
 const normalizePlan = (value?: string | null) => {
   const normalized = (value || "rookie").toLowerCase();
   if (normalized === "starter") return "starter";
@@ -64,13 +60,11 @@ const PromptLibrary = () => {
     if (promptTier === "rookie") return true;
     if (!user) return false;
     if (userTier === "pro" || userTier === "rising") return true;
-    if (userTier === "starter") return STARTER_UNLOCKED_PROMPT_IDS.has(prompt.id);
     return false;
   };
 
   const getRequiredUpgradePlan = (prompt: MultiStepPrompt): "starter" | "rising" | "pro" => {
     if (userTier === "starter") return "rising";
-    if (userTier === "rookie" && STARTER_UNLOCKED_PROMPT_IDS.has(prompt.id)) return "starter";
     return "rising";
   };
 
@@ -471,26 +465,6 @@ const PromptLibrary = () => {
                 <div className="flex flex-wrap gap-2 justify-center">
                   {promptCategories.map((category) => {
                     const Icon = category.icon;
-                    const isLockedForRookie = userTier === 'rookie' && !ROOKIE_UNLOCKED_CATEGORIES.has(category.id);
-                    if (isLockedForRookie) {
-                      return (
-                        <Button
-                          key={category.id}
-                          variant="outline"
-                          size="sm"
-                          onClick={() => openUpgradePrompt({
-                            reason: 'feature',
-                            featureName: 'Prompt Library Categories',
-                            description: `The ${category.name} category is available on the Rising plan and above.`,
-                          })}
-                          className="flex items-center gap-1.5 sm:gap-2 h-9 sm:h-10 px-3 sm:px-4 text-xs sm:text-sm touch-manipulation opacity-50 cursor-pointer"
-                        >
-                          <Lock className="w-3 sm:w-4 h-3 sm:h-4" />
-                          <span className="hidden xs:inline">{category.name}</span>
-                          <span className="xs:hidden">{category.name.split(" ")[0]}</span>
-                        </Button>
-                      );
-                    }
                     return (
                       <Button
                         key={category.id}

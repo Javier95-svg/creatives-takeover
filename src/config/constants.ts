@@ -192,7 +192,7 @@ export const TIER_MONTHLY_CREDITS = {
 export const VC_VIEW_LIMITS = {
   rookie: 0,
   starter: 2,
-  rising: 10,
+  rising: 5,
   pro: -1,
 } as const;
 
@@ -229,7 +229,7 @@ export const TIER_USAGE_LIMITS = {
     cofounder_posts_free: 2,
   },
   rising: {
-    bizmap_conversations: -1,  // Unlimited (credit-gated)
+    bizmap_conversations: -1,
     tech_stack_generations: -1,
     pmf_analyses: -1,
     icp_analyses: -1,
@@ -238,8 +238,8 @@ export const TIER_USAGE_LIMITS = {
     market_intelligence_queries: 10,
     basic_reports: 5,
     team_members: 3,
-    vc_profile_views: 10,
-    accelerator_profile_views: 10,
+    vc_profile_views: 5,
+    accelerator_profile_views: 5,
     discovery_calls_free: 3,
     cofounder_posts_free: -1,
   },
@@ -268,7 +268,7 @@ export const TIER_DETAILS = {
     price: 0,
     credits: 25,
     vcViewLimit: 0,
-    description: 'Explore the platform and start your founder journey',
+    description: 'Explore the platform with free ICP Builder access and list-only investor browsing',
   },
   starter: {
     name: 'Starter',
@@ -276,15 +276,15 @@ export const TIER_DETAILS = {
     price: 9,
     credits: 50,
     vcViewLimit: 2,
-    description: 'Unlock Stages 2 and 3 with a low-friction first paid step',
+    description: 'Unlock PMF Lab, Email Templates, and limited investor profile views',
   },
   rising: {
     name: 'Rising',
     subtitle: 'Build',
     price: 29,
     credits: 100,
-    vcViewLimit: 10,
-    description: 'Build with all 7 tools and no per-use charges on most BizMap actions',
+    vcViewLimit: 5,
+    description: 'Full BizMap AI access with 5 VC and 5 accelerator profile views per month',
   },
   pro: {
     name: 'Pro',

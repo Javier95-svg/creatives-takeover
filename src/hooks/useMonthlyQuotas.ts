@@ -15,7 +15,12 @@ const EMPTY_QUOTAS: MonthlyQuotas = {
 };
 
 function toDateKey(date: Date): string {
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+  return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, '0')}-${String(date.getUTCDate()).padStart(2, '0')}`;
+}
+
+function getCurrentUtcMonthStart(): string {
+  const now = new Date();
+  return toDateKey(new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)));
 }
 
 export function useMonthlyQuotas() {
@@ -28,16 +33,7 @@ export function useMonthlyQuotas() {
     if (!user) { setLoading(false); return; }
     setLoading(true);
     try {
-      const { data: creditCycle } = await supabase
-        .from('user_credits')
-        .select('last_reset_at')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-      const resetAnchor = creditCycle?.last_reset_at
-        ? new Date(creditCycle.last_reset_at)
-        : new Date();
-      const periodStart = toDateKey(resetAnchor);
+      const periodStart = getCurrentUtcMonthStart();
       setCycleStart(periodStart);
 
       const [{ data: quotaRow }, { data: vcCount }, { data: acceleratorCount }] = await Promise.all([

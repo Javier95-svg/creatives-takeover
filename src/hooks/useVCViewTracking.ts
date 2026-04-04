@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useSubscription } from './useSubscription';
 import { VC_VIEW_LIMITS } from '@/config/constants';
+import { normalizePlan } from '@/config/planPermissions';
 
 export interface VCViewTrackingResult {
   success: boolean;
@@ -15,7 +16,7 @@ export const useVCViewTracking = () => {
   const [loading, setLoading] = useState(true);
   const { subscriptionData } = useSubscription();
 
-  const currentTier = subscriptionData?.subscription_tier || 'rookie';
+  const currentTier = normalizePlan(subscriptionData?.subscription_tier);
   const limit = VC_VIEW_LIMITS[currentTier as keyof typeof VC_VIEW_LIMITS] || 0;
   const hasUnlimitedViews = limit === -1;
   const canViewMore = hasUnlimitedViews || viewCount < limit;
@@ -81,8 +82,8 @@ export const useVCViewTracking = () => {
           message: currentTier === 'rookie'
             ? 'VC profile views are not available on the Rookie plan. Upgrade to Starter to unlock profile views.'
             : currentTier === 'starter'
-              ? `You've used all ${limit} VC profile views this billing cycle. Upgrade to Rising for 10 profile views per cycle.`
-              : `You've used all ${limit} VC profile views this billing cycle. Upgrade to Pro for unlimited views.`,
+              ? `You've used all ${limit} VC profile views this month. Upgrade to Rising for 5 profile views per month.`
+              : `You've used all ${limit} VC profile views this month. Upgrade to Pro for unlimited views.`,
           requiredTier: currentTier === 'rookie' ? 'starter' : currentTier === 'starter' ? 'rising' : 'pro',
           reason: 'limit_reached',
         };

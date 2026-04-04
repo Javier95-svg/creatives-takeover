@@ -41,6 +41,8 @@ import { DashboardMode } from './modes/ModeToggle';
 import { DashboardCustomization } from './DashboardCustomization';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { resolveEntitlement, normalizePlan, type FeatureKey } from '@/config/planPermissions';
+import { useSubscription } from '@/hooks/useSubscription';
 
 interface DashboardSidebarProps {
   dashboardMode: DashboardMode;
@@ -74,21 +76,21 @@ type LegacySidebarPreferences = Partial<SidebarPreferences> & {
 const defaultSidebarPreferences: SidebarPreferences = {
   showICPBuilder: true,
   showWaitlistMaker: true,
-  showPMFLab: false,
-  showMVPBuilder: false,
-  showTechStack: false,
-  showGTMStrategist: false,
-  showDirectories: false,
+  showPMFLab: true,
+  showMVPBuilder: true,
+  showTechStack: true,
+  showGTMStrategist: true,
+  showDirectories: true,
   showFindMentor: true,
   showFindCoFounder: true,
   showFindAngel: true,
-  showVCSearch: false,
-  showAcceleratorHunt: false,
-  showEmailTemplates: false,
-  showPitchDeckAnalyzer: false,
-  showInsightaTest: false,
+  showVCSearch: true,
+  showAcceleratorHunt: true,
+  showEmailTemplates: true,
+  showPitchDeckAnalyzer: true,
+  showInsightaTest: true,
   showNewspaper: true,
-  showPromptLibrary: false,
+  showPromptLibrary: true,
 };
 
 const normalizePreferences = (raw: LegacySidebarPreferences | null | undefined): SidebarPreferences => {
@@ -113,14 +115,17 @@ interface ToolItem {
   label: string;
   icon: LucideIcon;
   prefKey: keyof SidebarPreferences;
+  featureKey?: FeatureKey;
 }
 
 export const DashboardSidebar = ({ dashboardMode: _dashboardMode }: DashboardSidebarProps) => {
   const location = useLocation();
   const { setOpenMobile, isMobile } = useSidebar();
   const { user } = useAuth();
+  const { subscriptionData } = useSubscription();
   const incompleteTaskCount = useContext(TaskCountContext);
   const [sidebarPreferences, setSidebarPreferences] = useState<SidebarPreferences>(defaultSidebarPreferences);
+  const currentPlan = normalizePlan(subscriptionData?.subscription_tier);
 
   useEffect(() => {
     const loadPreferences = async () => {
@@ -156,24 +161,34 @@ export const DashboardSidebar = ({ dashboardMode: _dashboardMode }: DashboardSid
   ];
 
   const toolsItems: ToolItem[] = [
-    sidebarPreferences.showICPBuilder && { path: '/icp-builder', label: 'ICP Builder', icon: Target, prefKey: 'showICPBuilder' },
-    sidebarPreferences.showWaitlistMaker && { path: '/waitlist', label: 'Waitlist Maker', icon: ClipboardList, prefKey: 'showWaitlistMaker' },
-    sidebarPreferences.showPMFLab && { path: '/pmf-lab', label: 'PMF Lab', icon: FlaskConical, prefKey: 'showPMFLab' },
-    sidebarPreferences.showMVPBuilder && { path: '/mvp-builder', label: 'MVP Builder', icon: Rocket, prefKey: 'showMVPBuilder' },
-    sidebarPreferences.showTechStack && { path: '/tech-stack', label: 'Tech Stack', icon: Zap, prefKey: 'showTechStack' },
-    sidebarPreferences.showGTMStrategist && { path: '/go-to-market', label: 'GTM Strategist', icon: LineChart, prefKey: 'showGTMStrategist' },
-    sidebarPreferences.showDirectories && { path: '/directories', label: 'Directories', icon: Filter, prefKey: 'showDirectories' },
-    sidebarPreferences.showFindMentor && { path: '/community', label: 'Find a Mentor', icon: Users, prefKey: 'showFindMentor' },
-    sidebarPreferences.showFindCoFounder && { path: '/community/co-founders', label: 'Find a Co-Founder', icon: Handshake, prefKey: 'showFindCoFounder' },
-    sidebarPreferences.showFindAngel && { path: '/community/angels', label: 'Find your Angel', icon: Sparkles, prefKey: 'showFindAngel' },
-    sidebarPreferences.showVCSearch && { path: '/insighta/vc-search', label: 'VC Search', icon: FileSearch, prefKey: 'showVCSearch' },
-    sidebarPreferences.showAcceleratorHunt && { path: '/insighta/accelerator-hunt', label: 'Accelerator Hunt', icon: Rocket, prefKey: 'showAcceleratorHunt' },
-    sidebarPreferences.showEmailTemplates && { path: '/insighta/email-templates', label: 'Email Templates', icon: Mail, prefKey: 'showEmailTemplates' },
-    sidebarPreferences.showPitchDeckAnalyzer && { path: '/insighta/pitch-deck-analyzer', label: 'Pitch Deck Analyzer', icon: BarChart3, prefKey: 'showPitchDeckAnalyzer' },
-    sidebarPreferences.showInsightaTest && { path: '/insighta/test', label: 'Insighta Test', icon: Sparkles, prefKey: 'showInsightaTest' },
-    sidebarPreferences.showNewspaper && { path: '/newspaper', label: 'Newspaper', icon: BookOpen, prefKey: 'showNewspaper' },
-    sidebarPreferences.showPromptLibrary && { path: '/prompt-library', label: 'Prompt Library', icon: Library, prefKey: 'showPromptLibrary' },
-  ].filter(Boolean) as ToolItem[];
+    { path: '/icp-builder', label: 'ICP Builder', icon: Target, prefKey: 'showICPBuilder', featureKey: 'icp_builder' },
+    { path: '/waitlist', label: 'Waitlist Maker', icon: ClipboardList, prefKey: 'showWaitlistMaker', featureKey: 'waitlist_maker' },
+    { path: '/pmf-lab', label: 'PMF Lab', icon: FlaskConical, prefKey: 'showPMFLab', featureKey: 'pmf_lab' },
+    { path: '/mvp-builder', label: 'MVP Builder', icon: Rocket, prefKey: 'showMVPBuilder', featureKey: 'mvp_builder' },
+    { path: '/tech-stack', label: 'Tech Stack', icon: Zap, prefKey: 'showTechStack', featureKey: 'tech_stack' },
+    { path: '/go-to-market', label: 'GTM Strategist', icon: LineChart, prefKey: 'showGTMStrategist', featureKey: 'gtm_strategist' },
+    { path: '/directories', label: 'Directories', icon: Filter, prefKey: 'showDirectories', featureKey: 'directories' },
+    { path: '/community', label: 'Find a Mentor', icon: Users, prefKey: 'showFindMentor' },
+    { path: '/community/co-founders', label: 'Find a Co-Founder', icon: Handshake, prefKey: 'showFindCoFounder' },
+    { path: '/community/angels', label: 'Find your Angel', icon: Sparkles, prefKey: 'showFindAngel', featureKey: 'angels_community' },
+    { path: '/insighta/vc-search', label: 'VC Search', icon: FileSearch, prefKey: 'showVCSearch', featureKey: 'vc_search_browse' },
+    { path: '/insighta/accelerator-hunt', label: 'Accelerator Hunt', icon: Rocket, prefKey: 'showAcceleratorHunt', featureKey: 'accelerator_browse' },
+    { path: '/insighta/email-templates', label: 'Email Templates', icon: Mail, prefKey: 'showEmailTemplates', featureKey: 'email_templates' },
+    { path: '/insighta/pitch-deck-analyzer', label: 'Pitch Deck Analyzer', icon: BarChart3, prefKey: 'showPitchDeckAnalyzer', featureKey: 'pitch_deck_analyzer' },
+    { path: '/insighta/test', label: 'Insighta Test', icon: Sparkles, prefKey: 'showInsightaTest', featureKey: 'insighta_test' },
+    { path: '/newspaper', label: 'Newspaper', icon: BookOpen, prefKey: 'showNewspaper', featureKey: 'newspaper' },
+    { path: '/prompt-library', label: 'Prompt Library', icon: Library, prefKey: 'showPromptLibrary', featureKey: 'prompt_library' },
+  ].filter((item) => {
+    if (!sidebarPreferences[item.prefKey]) {
+      return false;
+    }
+
+    if (!item.featureKey) {
+      return true;
+    }
+
+    return resolveEntitlement(item.featureKey, currentPlan).isVisible;
+  });
 
   const removeTool = async (prefKey: keyof SidebarPreferences) => {
     const updatedPreferences: SidebarPreferences = { ...sidebarPreferences, [prefKey]: false };

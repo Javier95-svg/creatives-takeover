@@ -1,12 +1,7 @@
 /**
  * Journey Stage Grid — shown on the dashboard.
  *
- * Displays all 7 startup stage tools. For Rookie plan:
- *   - Stages 1–3 are always active (learn phase)
- *   - Stages 4–5 unlock when the learn phase reaches ≥ 30% completion
- *   - Stages 6–7 unlock when the build phase reaches ≥ 30% completion
- *
- * Rising & Pro: all 7 stages show as active (access handled per-page).
+ * Displays the core BizMap tools and reflects plan-based preview vs full access.
  */
 
 import type { ComponentType } from 'react';
@@ -14,7 +9,8 @@ import { Link } from 'react-router-dom';
 import { Lock, ArrowRight, Users, Radio, FlaskConical, Hammer, Boxes, TrendingUp, FolderOpen } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { usePlanAccess } from '@/hooks/usePlanAccess';
-import { useLeanStartupStore, getPhaseCompletion, type Phase } from '@/store/leanStartupStore';
+import type { Phase } from '@/store/leanStartupStore';
+import type { FeatureKey } from '@/config/planPermissions';
 
 interface Stage {
   id: number;
@@ -22,7 +18,7 @@ interface Stage {
   description: string;
   href: string;
   icon: ComponentType<{ className?: string }>;
-  planFeature: string;
+  planFeature: FeatureKey;
   badge?: string;
   phase: Phase; // which lean-startup phase this stage belongs to
 }
@@ -42,7 +38,7 @@ const STAGES: Stage[] = [
     id: 2,
     name: 'Waitlist Maker',
     description: 'Build demand before you launch.',
-    href: '/waitlist-maker',
+    href: '/waitlist',
     icon: Radio,
     planFeature: 'waitlist_maker',
     badge: 'Credits',
@@ -100,42 +96,15 @@ const STAGES: Stage[] = [
   },
 ];
 
-/** Returns which phase must be ≥30% complete for this phase to unlock. */
-function getPreviousPhase(phase: Phase): Phase | null {
-  if (phase === 'learn') return null;
-  if (phase === 'build') return 'learn';
-  return 'build';
-}
-
 function StageCard({ stage }: { stage: Stage }) {
-  const { hasAccess, isProgressiveLock } = usePlanAccess(stage.planFeature);
+  const { hasAccess, state, upgradeTarget } = usePlanAccess(stage.planFeature);
   const Icon = stage.icon;
 
-  // Subscribe to leanStartupStore so the card re-renders when progress changes.
-  // We read phases + skippedPhases to compute unlock status reactively.
-  const phases = useLeanStartupStore((state) => state.phases);
-  const skippedPhases = useLeanStartupStore((state) => state.skippedPhases);
-
-  // For progressively-locked stages, check whether the prerequisite phase is done.
-  let progressivelyUnlocked = false;
-  if (isProgressiveLock) {
-    const prevPhase = getPreviousPhase(stage.phase);
-    if (prevPhase === null) {
-      progressivelyUnlocked = true;
-    } else if (skippedPhases.includes(stage.phase)) {
-      progressivelyUnlocked = true;
-    } else {
-      // Trigger reactive recompute by referencing `phases` (store subscription)
-      void phases; // ensure the selector dependency is tracked
-      progressivelyUnlocked = getPhaseCompletion(prevPhase) >= 30;
-    }
-  }
-
-  const isLocked = !hasAccess && !progressivelyUnlocked;
+  const isPreview = state === 'preview_only';
+  const isLocked = state === 'locked' || state === 'hidden';
 
   if (isLocked) {
-    const prevPhase = getPreviousPhase(stage.phase);
-    const prevPhaseName = prevPhase === 'learn' ? 'Stage 3 (PMF Lab)' : prevPhase === 'build' ? 'Stage 5 (Tech Stack)' : null;
+    const requiredPlanLabel = upgradeTarget ? upgradeTarget.charAt(0).toUpperCase() + upgradeTarget.slice(1) : 'higher';
 
     return (
       <div className="relative group rounded-xl border border-border/60 bg-card/60 p-4 opacity-60 grayscale cursor-not-allowed">
@@ -154,13 +123,12 @@ function StageCard({ stage }: { stage: Stage }) {
           Stage {stage.id} · {stage.name}
         </p>
         <p className="text-xs text-muted-foreground leading-snug">
-          {prevPhaseName ? `Complete ${prevPhaseName} first.` : stage.description}
+          Upgrade to {requiredPlanLabel} to unlock this tool.
         </p>
       </div>
     );
   }
 
-  // Accessible (either non-progressive-lock, or phase is now unlocked)
   return (
     <Link
       to={stage.href}
@@ -172,7 +140,7 @@ function StageCard({ stage }: { stage: Stage }) {
         </div>
         {stage.badge && (
           <Badge variant="outline" className="text-[10px] font-semibold uppercase tracking-wider px-1.5">
-            {stage.badge}
+            {isPreview ? 'Preview' : stage.badge}
           </Badge>
         )}
       </div>
@@ -180,7 +148,7 @@ function StageCard({ stage }: { stage: Stage }) {
         Stage {stage.id} · {stage.name}
       </p>
       <p className="text-xs text-muted-foreground leading-snug mb-3 flex-1">
-        {stage.description}
+        {isPreview ? `${stage.description} Preview only on your current plan.` : stage.description}
       </p>
       <div className="flex items-center gap-1 text-[11px] font-medium text-primary opacity-0 group-hover:opacity-100 transition-opacity">
         Open <ArrowRight className="w-3 h-3" />

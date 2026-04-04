@@ -23,7 +23,7 @@ export function RookieUpgradeBanner() {
         </div>
         <p className="text-sm text-foreground/90 leading-snug">
           <span className="font-semibold">You're on the Rookie plan.</span>{' '}
-          Unlock Waitlist Maker, PMF Lab, profile views, and extra monthly credits by upgrading to Starter.
+          Unlock PMF Lab, Email Templates, extra monthly limits, and more investor access by upgrading to Starter.
         </p>
       </div>
 

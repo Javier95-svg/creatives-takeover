@@ -147,21 +147,34 @@ serve(async (req) => {
     const customerId = customers.data[0].id;
     logStep("Found Stripe customer", { customerId });
 
-    // Check for active subscriptions
+    // Keep paid access through current_period_end for active, trialing, and past_due subscriptions.
     const subscriptions = await stripe.subscriptions.list({
       customer: customerId,
-      status: "active",
-      limit: 1,
+      status: "all",
+      limit: 10,
     });
-    
-    const hasActiveSub = subscriptions.data.length > 0;
+
+    const eligibleStatuses = new Set(["active", "trialing", "past_due"]);
+    const nowUnix = Math.floor(Date.now() / 1000);
+    const activeSubscription = subscriptions.data
+      .filter((subscription) =>
+        eligibleStatuses.has(subscription.status) &&
+        (subscription.current_period_end ?? 0) >= nowUnix
+      )
+      .sort((a, b) => (b.current_period_end ?? 0) - (a.current_period_end ?? 0))[0];
+
+    const hasActiveSub = Boolean(activeSubscription);
     let subscriptionTier = 'rookie';
     let subscriptionEnd = null;
 
     if (hasActiveSub) {
-      const subscription = subscriptions.data[0];
+      const subscription = activeSubscription!;
       subscriptionEnd = new Date(subscription.current_period_end * 1000).toISOString();
-      logStep("Active subscription found", { subscriptionId: subscription.id, endDate: subscriptionEnd });
+      logStep("Eligible subscription found", {
+        subscriptionId: subscription.id,
+        status: subscription.status,
+        endDate: subscriptionEnd,
+      });
 
       const metadataTier = subscription.metadata?.tier ?? subscription.metadata?.subscription_tier;
       if (typeof metadataTier === "string" && metadataTier.trim().length > 0) {
