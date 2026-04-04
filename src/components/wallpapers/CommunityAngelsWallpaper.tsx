@@ -12,43 +12,50 @@ const networkNodes = [
   { top: "78%", left: "83%", size: 13, hue: "sky", delay: "3.2s" },
 ];
 
-const floatingPanels = [
-  {
-    top: "12%",
-    left: "8%",
-    width: 188,
-    rotate: "-6deg",
-    delay: "0s",
-    labelWidth: "w-24",
-    bars: ["w-12", "w-20"],
-  },
+const orbitSignals = [
   {
     top: "14%",
+    left: "8%",
+    size: 156,
+    duration: "24s",
+    delay: "0s",
+    direction: "normal" as const,
+    tone: "amber" as const,
+  },
+  {
+    top: "16%",
     right: "9%",
-    width: 176,
-    rotate: "5deg",
-    delay: "0.9s",
-    labelWidth: "w-20",
-    bars: ["w-10", "w-16"],
+    size: 146,
+    duration: "30s",
+    delay: "1.2s",
+    direction: "reverse" as const,
+    tone: "blue" as const,
   },
   {
-    top: "54%",
-    left: "10%",
-    width: 210,
-    rotate: "-4deg",
-    delay: "1.5s",
-    labelWidth: "w-28",
-    bars: ["w-14", "w-24"],
+    top: "58%",
+    left: "11%",
+    size: 172,
+    duration: "28s",
+    delay: "0.8s",
+    direction: "reverse" as const,
+    tone: "sky" as const,
   },
   {
-    top: "61%",
-    right: "11%",
-    width: 194,
-    rotate: "4deg",
-    delay: "2.1s",
-    labelWidth: "w-24",
-    bars: ["w-16", "w-12"],
+    top: "63%",
+    right: "12%",
+    size: 154,
+    duration: "22s",
+    delay: "1.8s",
+    direction: "normal" as const,
+    tone: "amber" as const,
   },
+];
+
+const beaconRipples = [
+  { top: "18%", left: "46%", size: 54, tone: "blue", duration: "3.8s", delay: "0.2s" },
+  { top: "34%", left: "57%", size: 64, tone: "sky", duration: "4.2s", delay: "0.8s" },
+  { top: "57%", left: "47%", size: 72, tone: "amber", duration: "4.6s", delay: "1.3s" },
+  { top: "64%", left: "67%", size: 60, tone: "blue", duration: "4s", delay: "1.9s" },
 ];
 
 const nodeColorMap = {
@@ -63,6 +70,27 @@ const nodeColorMap = {
   sky: {
     className: "bg-sky-400/85 dark:bg-sky-300",
     glow: "0 0 0 8px rgba(56, 189, 248, 0.10), 0 0 28px rgba(14, 165, 233, 0.34)",
+  },
+} as const;
+
+const orbitToneMap = {
+  amber: {
+    ring: "border-amber-400/28 dark:border-amber-300/22",
+    innerRing: "border-amber-400/18 dark:border-amber-300/14",
+    dot: "bg-amber-400 dark:bg-amber-200",
+    glow: "0 0 22px rgba(245, 158, 11, 0.32)",
+  },
+  blue: {
+    ring: "border-blue-400/28 dark:border-blue-300/22",
+    innerRing: "border-blue-400/18 dark:border-blue-300/14",
+    dot: "bg-blue-500 dark:bg-blue-300",
+    glow: "0 0 22px rgba(59, 130, 246, 0.30)",
+  },
+  sky: {
+    ring: "border-sky-400/28 dark:border-sky-300/22",
+    innerRing: "border-sky-400/18 dark:border-sky-300/14",
+    dot: "bg-sky-400 dark:bg-sky-300",
+    glow: "0 0 22px rgba(14, 165, 233, 0.30)",
   },
 } as const;
 
@@ -141,29 +169,70 @@ const CommunityAngelsWallpaper = () => {
         );
       })}
 
-      {floatingPanels.map((panel, index) => (
-        <div
-          key={`angel-panel-${index}`}
-          className="absolute hidden rounded-[28px] border border-white/55 bg-white/55 px-5 py-4 shadow-[0_20px_70px_rgba(15,23,42,0.08)] backdrop-blur-xl md:block dark:border-white/10 dark:bg-white/[0.05] dark:shadow-[0_18px_70px_rgba(2,6,23,0.34)]"
-          style={{
-            top: panel.top,
-            left: panel.left,
-            right: panel.right,
-            width: `${panel.width}px`,
-            transform: `rotate(${panel.rotate})`,
-            animation: `float 16s ease-in-out ${panel.delay} infinite`,
-          }}
-        >
-          <div className={`h-2 rounded-full bg-gradient-to-r from-amber-400/55 via-blue-400/45 to-sky-400/35 dark:from-amber-300/45 dark:via-blue-300/45 dark:to-sky-300/35 ${panel.labelWidth}`} />
-          <div className="mt-4 flex items-center gap-3">
-            <div className="h-9 w-9 rounded-full bg-blue-500/10 ring-1 ring-blue-400/20 dark:bg-blue-300/12 dark:ring-blue-200/15" />
-            <div className="space-y-2">
-              <div className={`h-2 rounded-full bg-slate-900/8 dark:bg-white/12 ${panel.bars[0]}`} />
-              <div className={`h-2 rounded-full bg-slate-900/8 dark:bg-white/8 ${panel.bars[1]}`} />
+      {orbitSignals.map((orbit, index) => {
+        const tone = orbitToneMap[orbit.tone];
+
+        return (
+          <div
+            key={`angel-orbit-${index}`}
+            className="absolute hidden md:block"
+            style={{
+              top: orbit.top,
+              left: orbit.left,
+              right: orbit.right,
+              width: `${orbit.size}px`,
+              height: `${orbit.size}px`,
+            }}
+          >
+            <div
+              className={`relative h-full w-full rounded-full border ${tone.ring} animate-spin`}
+              style={{
+                animationDuration: orbit.duration,
+                animationDelay: orbit.delay,
+                animationDirection: orbit.direction,
+              }}
+            >
+              <div className={`absolute inset-[18%] rounded-full border ${tone.innerRing}`} />
+              <div
+                className={`absolute left-1/2 top-0 h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full ${tone.dot}`}
+                style={{ boxShadow: tone.glow }}
+              />
+              <div
+                className={`absolute bottom-[14%] right-[10%] h-2.5 w-2.5 rounded-full ${tone.dot} opacity-80`}
+                style={{ boxShadow: tone.glow }}
+              />
             </div>
+            <div className="absolute inset-[32%] rounded-full bg-white/35 blur-xl dark:bg-white/[0.03]" />
           </div>
-        </div>
-      ))}
+        );
+      })}
+
+      {beaconRipples.map((beacon, index) => {
+        const tone = orbitToneMap[beacon.tone];
+
+        return (
+          <div
+            key={`angel-beacon-${index}`}
+            className="absolute"
+            style={{
+              top: beacon.top,
+              left: beacon.left,
+              width: `${beacon.size}px`,
+              height: `${beacon.size}px`,
+              transform: "translate(-50%, -50%)",
+            }}
+          >
+            <div
+              className={`absolute inset-0 rounded-full border ${tone.ring} animate-ping`}
+              style={{ animationDuration: beacon.duration, animationDelay: beacon.delay }}
+            />
+            <div
+              className={`absolute inset-[18%] rounded-full border ${tone.innerRing} animate-ping`}
+              style={{ animationDuration: beacon.duration, animationDelay: beacon.delay }}
+            />
+          </div>
+        );
+      })}
 
       <div className="absolute inset-x-[8%] top-[32%] h-px bg-gradient-to-r from-transparent via-blue-400/35 to-transparent dark:via-blue-300/30" />
       <div className="absolute inset-x-[16%] top-[58%] h-px bg-gradient-to-r from-transparent via-amber-400/28 to-transparent dark:via-amber-300/24" />
