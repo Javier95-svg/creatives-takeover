@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowRight, LayoutDashboard, User, DollarSign, Play, Image as ImageIcon, Upload, Loader2 } from "lucide-react";
+import { ArrowRight, LayoutDashboard, User, DollarSign, Cpu, Image as ImageIcon, Upload, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useConversionTracking } from "@/hooks/useConversionTracking";
@@ -386,7 +386,7 @@ const Hero = () => {
       if (typeof document === 'undefined' || typeof window === 'undefined') return;
       
       // Find the target section
-      const targetSection = document.getElementById('what-you-get');
+      const targetSection = document.getElementById('startup-development-cycle');
       if (targetSection) {
         // Get the navigation bar height (typically 64px for h-16)
         const navHeight = 64;
@@ -402,7 +402,7 @@ const Hero = () => {
         setTimeout(() => {
           if (typeof document === 'undefined' || typeof window === 'undefined') return;
           
-          const targetSection = document.getElementById('what-you-get');
+          const targetSection = document.getElementById('startup-development-cycle');
           if (targetSection) {
             const navHeight = 64;
             const targetPosition = targetSection.getBoundingClientRect().top + window.pageYOffset - navHeight;
@@ -484,8 +484,8 @@ const Hero = () => {
 		                    handleSecondaryCTAClick(e as any);
 		                  }}
 		                >
-		                  <Play className="w-4 h-4" />
-		                  How It Works
+		                  <Cpu className="w-4 h-4" />
+		                  Our System
 		                </Button>
 		              </div>
 		              </div>
