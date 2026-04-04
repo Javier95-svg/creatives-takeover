@@ -297,7 +297,7 @@ const FindYourAngel = () => {
           <CommunityAngelsWallpaper />
 	        <Navigation />
 	        <div className="pt-16 relative z-10">
-	          <div className="container mx-auto px-4 sm:px-6 pt-4">
+            <div className="container mx-auto px-4 sm:px-6 pt-8">
 	            <Button variant="ghost" size="sm" asChild>
 	              <Link to="/community" className="flex items-center gap-2">
 	                <ArrowLeft className="h-4 w-4" />
