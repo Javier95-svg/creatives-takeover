@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Lock, UserPlus } from "lucide-react";
 import VCCard from "./VCCard";
-import { PREVIEW_MODE_OVERLAY_BACKGROUND } from "@/components/ui/previewOverlayStyles";
+import { PREVIEW_MODE_CONTENT_BLUR, PREVIEW_MODE_OVERLAY_BACKGROUND } from "@/components/ui/previewOverlayStyles";
 
 interface VCGridProps {
   vcs: Investor[];
@@ -28,7 +28,11 @@ const VCGrid = ({ vcs, canViewProfiles = true, isAuthenticated = true }: VCGridP
     return (
       <div className="relative">
         {/* Blurred VC cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 select-none pointer-events-none blur-[6px]" aria-hidden="true">
+        <div
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 select-none pointer-events-none"
+          aria-hidden="true"
+          style={{ filter: PREVIEW_MODE_CONTENT_BLUR, willChange: 'filter' }}
+        >
           {vcs.slice(0, 6).map((vc) => (
             <VCCard key={vc.id} vc={vc} canViewProfile={false} />
           ))}

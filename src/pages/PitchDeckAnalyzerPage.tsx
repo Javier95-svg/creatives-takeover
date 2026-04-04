@@ -92,6 +92,47 @@ export default function PitchDeckAnalyzerPage() {
 
         <section className="relative z-10 px-4 pt-28 pb-20 md:pt-32 lg:pt-36" data-section="pitch-deck-analyzer">
           <div className="container mx-auto max-w-5xl">
+            {!analysis && (
+              <div className="text-center mb-12 sm:mb-16">
+                <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-3 sm:mb-4 takeover-gradient creatives-font animate-fade-in leading-tight pb-2">
+                  Pitch Deck Analyzer
+                </h1>
+                <p className="text-lg sm:text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed animate-fade-in px-4" style={{ animationDelay: '0.3s' }}>
+                  Investor-Ready Pitch Analysis.<span className="gradient-text font-semibold" style={{ lineHeight: 'inherit', marginLeft: '0.25rem' }}> Clear, comparable, actionable.</span>
+                </p>
+
+                <div className="grid md:grid-cols-3 gap-6 mt-12 text-left">
+                  <div className="flex items-start gap-3">
+                    <div className="p-2 rounded-lg bg-primary/10 shrink-0">
+                      <BarChart3 className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold mb-1">6-Dimension Scoring</h3>
+                      <p className="text-sm text-muted-foreground">Story, market, traction, model, team, readiness</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="p-2 rounded-lg bg-primary/10 shrink-0">
+                      <TrendingUp className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold mb-1">Actionable Insights</h3>
+                      <p className="text-sm text-muted-foreground">Know exactly what to fix and when to raise</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="p-2 rounded-lg bg-primary/10 shrink-0">
+                      <Target className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold mb-1">Instant Results</h3>
+                      <p className="text-sm text-muted-foreground">Get your comprehensive analysis in minutes</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {!user ? (
               publicTab && (
                 <PreviewModeWrapper
@@ -99,56 +140,19 @@ export default function PitchDeckAnalyzerPage() {
                   description={publicTab.description || ''}
                   showPricingCta={publicTab.showPricingCta}
                 >
-                  <PitchDeckUploader
-                    onFileSelected={handleFileSelected}
-                    uploading={false}
-                  />
+                  <div className="space-y-6 animate-fade-in" style={{ animationDelay: '0.6s' }}>
+                    <PitchDeckUploader
+                      onFileSelected={handleFileSelected}
+                      uploading={false}
+                    />
+                    <div className="mt-16">
+                      <PitchDeckBuilder />
+                    </div>
+                  </div>
                 </PreviewModeWrapper>
               )
             ) : !analysis ? (
               <>
-                {/* Hero Section */}
-                <div className="text-center mb-12 sm:mb-16">
-                  <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-3 sm:mb-4 takeover-gradient creatives-font animate-fade-in leading-tight pb-2">
-                    Pitch Deck Analyzer
-                  </h1>
-                  <p className="text-lg sm:text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed animate-fade-in px-4" style={{ animationDelay: '0.3s' }}>
-                    Investor-Ready Pitch Analysis.<span className="gradient-text font-semibold" style={{ lineHeight: 'inherit', marginLeft: '0.25rem' }}> Clear, comparable, actionable.</span>
-                  </p>
-
-                  {/* Value Props */}
-                  <div className="grid md:grid-cols-3 gap-6 mt-12 text-left">
-                    <div className="flex items-start gap-3">
-                      <div className="p-2 rounded-lg bg-primary/10 shrink-0">
-                        <BarChart3 className="h-5 w-5 text-primary" />
-                      </div>
-                      <div>
-                        <h3 className="font-semibold mb-1">6-Dimension Scoring</h3>
-                        <p className="text-sm text-muted-foreground">Story, market, traction, model, team, readiness</p>
-                      </div>
-                    </div>
-                    <div className="flex items-start gap-3">
-                      <div className="p-2 rounded-lg bg-primary/10 shrink-0">
-                        <TrendingUp className="h-5 w-5 text-primary" />
-                      </div>
-                      <div>
-                        <h3 className="font-semibold mb-1">Actionable Insights</h3>
-                        <p className="text-sm text-muted-foreground">Know exactly what to fix and when to raise</p>
-                      </div>
-                    </div>
-                    <div className="flex items-start gap-3">
-                      <div className="p-2 rounded-lg bg-primary/10 shrink-0">
-                        <Target className="h-5 w-5 text-primary" />
-                      </div>
-                      <div>
-                        <h3 className="font-semibold mb-1">Instant Results</h3>
-                        <p className="text-sm text-muted-foreground">Get your comprehensive analysis in minutes</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Upload Section */}
                 <div className="space-y-6 animate-fade-in" style={{ animationDelay: '0.6s' }}>
                   <PitchDeckUploader
                     onFileSelected={handleFileSelected}

@@ -78,8 +78,14 @@ export const PUBLIC_TAB_VISIBILITY: Record<string, PublicTabConfig> = {
     featureName: 'Find a Mentor',
   },
   '/community/co-founders': {
-    state: 'accessible',
+    state: 'locked',
     featureName: 'Find a Co-Founder',
+    description: 'Browse real founder posts, see how projects are framed, and sign in to unlock outreach, posting, and matching.',
+    previewItems: [
+      'Preview founder cards, project stages, roles sought, and collaboration signals.',
+      'See how startup teams present their opportunity before you join the network.',
+      'Sign up to create posts, message founders, and unlock the full co-founder flow.',
+    ],
   },
   '/community/angels': {
     state: 'locked',

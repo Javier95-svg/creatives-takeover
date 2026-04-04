@@ -7,6 +7,7 @@ import CommunityCofoundersWallpaper from "@/components/wallpapers/CommunityCofou
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { PreviewModeWrapper } from "@/components/ui/PreviewModeWrapper";
 import { Handshake, Search, Filter, MapPin, Briefcase, Users, Star, Plus, Calendar, CheckCircle, Edit2, Trash2, MessageCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -24,6 +25,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { sampleCofounderPosts } from "@/data/sampleCofounderPosts";
+import { getPublicTabConfig } from "@/config/publicTabVisibility";
 
 interface CofounderPost {
   id: string;
@@ -50,6 +52,7 @@ interface CofounderPost {
 const FindCoFounder = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const publicTab = getPublicTabConfig('/community/co-founders');
   const [posts, setPosts] = useState<CofounderPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -150,6 +153,235 @@ const FindCoFounder = () => {
     setDeleteDialogOpen(true);
   };
 
+  const communityContent = (
+    <>
+      <div className="mb-8">
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex flex-col md:flex-row gap-4">
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
+                <input
+                  type="text"
+                  placeholder="Search by skills, industry, or location..."
+                  className="w-full pl-10 pr-4 py-3 rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary"
+                  readOnly={!user}
+                />
+              </div>
+              <Button variant="outline" className="md:w-auto">
+                <Filter className="w-4 h-4 mr-2" />
+                Filters
+              </Button>
+              <Button asChild className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 md:w-auto">
+                <Link to="/community/co-founders/create">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Create Post
+                </Link>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="space-y-6 mb-12">
+        {loading ? (
+          <Card>
+            <CardContent className="pt-6 text-center py-12">
+              <p className="text-muted-foreground">Loading posts...</p>
+            </CardContent>
+          </Card>
+        ) : posts.length === 0 ? (
+          <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-purple/5">
+            <CardContent className="pt-6 text-center py-12">
+              <div className="mb-6">
+                <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-primary/10 mb-4">
+                  <Handshake className="w-10 h-10 text-primary" />
+                </div>
+              </div>
+              <h2 className="text-3xl font-bold mb-4">No Posts Yet</h2>
+              <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-6">
+                Be the first to post and find your perfect co-founder!
+              </p>
+              <Button asChild size="lg" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
+                <Link to="/community/co-founders/create">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Create Your Post
+                </Link>
+              </Button>
+            </CardContent>
+          </Card>
+        ) : (
+          posts.map((post) => (
+            <Card key={post.id} className="hover:border-primary/50 transition-all">
+              <CardHeader>
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-center gap-3 flex-1">
+                    <Avatar className="w-12 h-12">
+                      <AvatarImage src={post.author?.avatar_url} />
+                      <AvatarFallback>
+                        {post.author?.full_name?.charAt(0) || 'A'}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <CardTitle className="text-xl mb-1">{post.project_name}</CardTitle>
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        {post.is_sample ? (
+                          <span>{post.author?.full_name}</span>
+                        ) : post.author?.username ? (
+                          <Link
+                            to={`/profile/${post.author.username}`}
+                            className="hover:text-primary hover:underline transition-colors cursor-pointer"
+                          >
+                            {post.author?.full_name}
+                          </Link>
+                        ) : (
+                          <span>{post.author?.full_name}</span>
+                        )}
+                        <span>•</span>
+                        <span className="flex items-center gap-1">
+                          <Calendar className="w-3 h-3" />
+                          {formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <Badge variant="outline" className="flex items-center gap-1">
+                    <CheckCircle className="w-3 h-3" />
+                    {getStageLabel(post.stage)}
+                  </Badge>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <CardDescription className="text-base whitespace-pre-wrap">
+                  {post.project_description}
+                </CardDescription>
+
+                <div className="flex flex-wrap gap-2">
+                  {post.industry && (
+                    <Badge variant="secondary">
+                      <Briefcase className="w-3 h-3 mr-1" />
+                      {post.industry}
+                    </Badge>
+                  )}
+                  {post.location && (
+                    <Badge variant="secondary">
+                      <MapPin className="w-3 h-3 mr-1" />
+                      {post.location}
+                    </Badge>
+                  )}
+                  {post.commitment && (
+                    <Badge variant="secondary">
+                      <Users className="w-3 h-3 mr-1" />
+                      {post.commitment}
+                    </Badge>
+                  )}
+                  {post.equity_range && (
+                    <Badge variant="secondary">
+                      Equity: {post.equity_range}
+                    </Badge>
+                  )}
+                </div>
+
+                <div>
+                  <p className="text-sm font-medium mb-2">Looking for:</p>
+                  <div className="flex flex-wrap gap-2">
+                    {post.looking_for.map((type) => (
+                      <Badge key={type} className="bg-primary/10 text-primary border-primary/20">
+                        {getCofounderTypeLabel(type)}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+
+                {post.additional_info && (
+                  <div className="pt-2 border-t">
+                    <p className="text-sm text-muted-foreground">{post.additional_info}</p>
+                  </div>
+                )}
+
+                {post.is_sample ? (
+                  <div className="flex gap-3 pt-2 items-center">
+                    <Badge variant="outline" className="text-muted-foreground border-muted-foreground/30">
+                      Sample Post
+                    </Badge>
+                    <span className="text-xs text-muted-foreground">Create your own post to connect with real founders</span>
+                  </div>
+                ) : post.user_id === user?.id ? (
+                  <div className="flex gap-3 pt-2">
+                    <Button
+                      variant="outline"
+                      className="flex-1"
+                      onClick={() => handleEditPost(post.id)}
+                    >
+                      <Edit2 className="w-4 h-4 mr-2" />
+                      Edit Post
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      onClick={() => openDeleteDialog(post.id)}
+                    >
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      Delete
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex gap-3 pt-2">
+                    <Button variant="default" className="flex-1">
+                      <Handshake className="w-4 h-4 mr-2" />
+                      Connect
+                    </Button>
+                    <Button variant="outline" className="flex-1">
+                      <MessageCircle className="w-4 h-4 mr-2" />
+                      Message
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          ))
+        )}
+      </div>
+
+      <div className="grid md:grid-cols-3 gap-6 mb-12">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Users className="w-5 h-5 text-primary" />
+              Smart Matching
+            </CardTitle>
+            <CardDescription>
+              AI-powered algorithm matches you with co-founders based on complementary skills and shared values
+            </CardDescription>
+          </CardHeader>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Star className="w-5 h-5 text-primary" />
+              Verified Profiles
+            </CardTitle>
+            <CardDescription>
+              All co-founder profiles are verified to ensure authenticity and serious commitment
+            </CardDescription>
+          </CardHeader>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Briefcase className="w-5 h-5 text-primary" />
+              Experience Levels
+            </CardTitle>
+            <CardDescription>
+              Find co-founders from first-time entrepreneurs to serial founders
+            </CardDescription>
+          </CardHeader>
+        </Card>
+      </div>
+    </>
+  );
+
   return (
     <>
       <SEO
@@ -195,237 +427,19 @@ const FindCoFounder = () => {
               Connect with talented entrepreneurs who share your vision and complement your skills
             </p>
           </div>
-
-          {/* Search and Filters */}
-          <div className="mb-8">
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex flex-col md:flex-row gap-4">
-                  <div className="flex-1 relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
-                    <input
-                      type="text"
-                      placeholder="Search by skills, industry, or location..."
-                      className="w-full pl-10 pr-4 py-3 rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary"
-                    />
-                  </div>
-                  <Button variant="outline" className="md:w-auto">
-                    <Filter className="w-4 h-4 mr-2" />
-                    Filters
-                  </Button>
-                  <Button asChild className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 md:w-auto">
-                    <Link to="/community/co-founders/create">
-                      <Plus className="w-4 h-4 mr-2" />
-                      Create Post
-                    </Link>
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Co-Founder Posts */}
-          <div className="space-y-6 mb-12">
-            {loading ? (
-              <Card>
-                <CardContent className="pt-6 text-center py-12">
-                  <p className="text-muted-foreground">Loading posts...</p>
-                </CardContent>
-              </Card>
-            ) : posts.length === 0 ? (
-              <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-purple/5">
-                <CardContent className="pt-6 text-center py-12">
-                  <div className="mb-6">
-                    <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-primary/10 mb-4">
-                      <Handshake className="w-10 h-10 text-primary" />
-                    </div>
-                  </div>
-                  <h2 className="text-3xl font-bold mb-4">No Posts Yet</h2>
-                  <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-6">
-                    Be the first to post and find your perfect co-founder!
-                  </p>
-                  <Button asChild size="lg" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
-                    <Link to="/community/co-founders/create">
-                      <Plus className="w-4 h-4 mr-2" />
-                      Create Your Post
-                    </Link>
-                  </Button>
-                </CardContent>
-              </Card>
-            ) : (
-              posts.map((post) => (
-                <Card key={post.id} className="hover:border-primary/50 transition-all">
-                  <CardHeader>
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex items-center gap-3 flex-1">
-                        <Avatar className="w-12 h-12">
-                          <AvatarImage src={post.author?.avatar_url} />
-                          <AvatarFallback>
-                            {post.author?.full_name?.charAt(0) || 'A'}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <CardTitle className="text-xl mb-1">{post.project_name}</CardTitle>
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            {post.is_sample ? (
-                              <span>{post.author?.full_name}</span>
-                            ) : post.author?.username ? (
-                              <Link
-                                to={`/profile/${post.author.username}`}
-                                className="hover:text-primary hover:underline transition-colors cursor-pointer"
-                              >
-                                {post.author?.full_name}
-                              </Link>
-                            ) : (
-                              <span>{post.author?.full_name}</span>
-                            )}
-                            <span>•</span>
-                            <span className="flex items-center gap-1">
-                              <Calendar className="w-3 h-3" />
-                              {formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                      <Badge variant="outline" className="flex items-center gap-1">
-                        <CheckCircle className="w-3 h-3" />
-                        {getStageLabel(post.stage)}
-                      </Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <CardDescription className="text-base whitespace-pre-wrap">
-                      {post.project_description}
-                    </CardDescription>
-
-                    <div className="flex flex-wrap gap-2">
-                      {post.industry && (
-                        <Badge variant="secondary">
-                          <Briefcase className="w-3 h-3 mr-1" />
-                          {post.industry}
-                        </Badge>
-                      )}
-                      {post.location && (
-                        <Badge variant="secondary">
-                          <MapPin className="w-3 h-3 mr-1" />
-                          {post.location}
-                        </Badge>
-                      )}
-                      {post.commitment && (
-                        <Badge variant="secondary">
-                          <Users className="w-3 h-3 mr-1" />
-                          {post.commitment}
-                        </Badge>
-                      )}
-                      {post.equity_range && (
-                        <Badge variant="secondary">
-                          Equity: {post.equity_range}
-                        </Badge>
-                      )}
-                    </div>
-
-                    <div>
-                      <p className="text-sm font-medium mb-2">Looking for:</p>
-                      <div className="flex flex-wrap gap-2">
-                        {post.looking_for.map((type) => (
-                          <Badge key={type} className="bg-primary/10 text-primary border-primary/20">
-                            {getCofounderTypeLabel(type)}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-
-                    {post.additional_info && (
-                      <div className="pt-2 border-t">
-                        <p className="text-sm text-muted-foreground">{post.additional_info}</p>
-                      </div>
-                    )}
-
-                    {/* Action Buttons */}
-                    {post.is_sample ? (
-                      // Sample post actions
-                      <div className="flex gap-3 pt-2 items-center">
-                        <Badge variant="outline" className="text-muted-foreground border-muted-foreground/30">
-                          Sample Post
-                        </Badge>
-                        <span className="text-xs text-muted-foreground">Create your own post to connect with real founders</span>
-                      </div>
-                    ) : post.user_id === user?.id ? (
-                      // Owner controls
-                      <div className="flex gap-3 pt-2">
-                        <Button
-                          variant="outline"
-                          className="flex-1"
-                          onClick={() => handleEditPost(post.id)}
-                        >
-                          <Edit2 className="w-4 h-4 mr-2" />
-                          Edit Post
-                        </Button>
-                        <Button
-                          variant="destructive"
-                          onClick={() => openDeleteDialog(post.id)}
-                        >
-                          <Trash2 className="w-4 h-4 mr-2" />
-                          Delete
-                        </Button>
-                      </div>
-                    ) : (
-                      // Visitor actions
-                      <div className="flex gap-3 pt-2">
-                        <Button variant="default" className="flex-1">
-                          <Handshake className="w-4 h-4 mr-2" />
-                          Connect
-                        </Button>
-                        <Button variant="outline" className="flex-1">
-                          <MessageCircle className="w-4 h-4 mr-2" />
-                          Message
-                        </Button>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              ))
-            )}
-          </div>
-
-          {/* What to Expect */}
-          <div className="grid md:grid-cols-3 gap-6 mb-12">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Users className="w-5 h-5 text-primary" />
-                  Smart Matching
-                </CardTitle>
-                <CardDescription>
-                  AI-powered algorithm matches you with co-founders based on complementary skills and shared values
-                </CardDescription>
-              </CardHeader>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Star className="w-5 h-5 text-primary" />
-                  Verified Profiles
-                </CardTitle>
-                <CardDescription>
-                  All co-founder profiles are verified to ensure authenticity and serious commitment
-                </CardDescription>
-              </CardHeader>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Briefcase className="w-5 h-5 text-primary" />
-                  Experience Levels
-                </CardTitle>
-                <CardDescription>
-                  Find co-founders from first-time entrepreneurs to serial founders
-                </CardDescription>
-              </CardHeader>
-            </Card>
-          </div>
+          {user ? (
+            communityContent
+          ) : (
+            publicTab && (
+              <PreviewModeWrapper
+                featureName={publicTab.featureName}
+                description={publicTab.description || ''}
+                showPricingCta={publicTab.showPricingCta}
+              >
+                {communityContent}
+              </PreviewModeWrapper>
+            )
+          )}
 
         </div>
         </section>

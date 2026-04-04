@@ -36,7 +36,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useFeatureGating } from "@/hooks/useFeatureGating";
 import { useUpgradePrompt } from "@/contexts/UpgradePromptContext";
 import { SignedOutFeaturePreview } from "@/components/ui/SignedOutFeaturePreview";
-import { PREVIEW_MODE_OVERLAY_BACKGROUND } from "@/components/ui/previewOverlayStyles";
+import { PREVIEW_MODE_CONTENT_BLUR, PREVIEW_MODE_OVERLAY_BACKGROUND } from "@/components/ui/previewOverlayStyles";
 
 import { cn } from "@/lib/utils";
 import { getPublicTabConfig } from "@/config/publicTabVisibility";
@@ -354,7 +354,11 @@ const FindYourAngel = () => {
                 {/* Blurred Preview of First Page of Angels - for non-signed-in visitors */}
                 {!loading && angels.length > 0 && (
                   <div className="relative min-h-[600px]">
-                    <div className="grid grid-cols-1 gap-6 select-none pointer-events-none blur-[6px]" aria-hidden="true">
+                    <div
+                      className="grid grid-cols-1 gap-6 select-none pointer-events-none"
+                      aria-hidden="true"
+                      style={{ filter: PREVIEW_MODE_CONTENT_BLUR, willChange: 'filter' }}
+                    >
                       {angels.slice(0, ANGELS_PER_PAGE).map((angel, index) => (
                         <AngelCard
                           key={angel.id}

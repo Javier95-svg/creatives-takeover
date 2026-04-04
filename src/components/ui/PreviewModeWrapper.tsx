@@ -2,7 +2,7 @@ import { ReactNode } from 'react';
 import { Lock, ArrowRight, Crown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link, useLocation } from 'react-router-dom';
-import { PREVIEW_MODE_OVERLAY_BACKGROUND } from '@/components/ui/previewOverlayStyles';
+import { PREVIEW_MODE_CONTENT_BLUR, PREVIEW_MODE_OVERLAY_BACKGROUND } from '@/components/ui/previewOverlayStyles';
 
 interface PreviewModeWrapperProps {
   children: ReactNode;
@@ -26,9 +26,9 @@ export function PreviewModeWrapper({
     <div className="relative min-h-[600px] w-full">
       {/* Blurred Content Background */}
       <div 
-        className="w-full select-none pointer-events-none blur-[6px]" 
+        className="w-full select-none pointer-events-none"
         aria-hidden="true"
-        style={{ willChange: 'filter' }}
+        style={{ filter: PREVIEW_MODE_CONTENT_BLUR, willChange: 'filter' }}
       >
         {children}
       </div>

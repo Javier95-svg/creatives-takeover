@@ -11,6 +11,7 @@ import InsightaPagination from "@/components/insighta/InsightaPagination";
 import { Button } from "@/components/ui/button";
 import { Lock, UserPlus } from "lucide-react";
 import { TIER_DETAILS } from "@/config/constants";
+import { PREVIEW_MODE_CONTENT_BLUR, PREVIEW_MODE_OVERLAY_BACKGROUND } from "@/components/ui/previewOverlayStyles";
 
 const AcceleratorHuntTab = () => {
   const [filters, setFilters] = useState<AcceleratorFiltersType>({});
@@ -95,7 +96,11 @@ const AcceleratorHuntTab = () => {
       ) : isAuthenticated === false ? (
         <>
           <div className="relative">
-            <div className="grid grid-cols-1 gap-6 select-none pointer-events-none blur-[6px] md:grid-cols-2 lg:grid-cols-3" aria-hidden="true">
+            <div
+              className="grid grid-cols-1 gap-6 select-none pointer-events-none md:grid-cols-2 lg:grid-cols-3"
+              aria-hidden="true"
+              style={{ filter: PREVIEW_MODE_CONTENT_BLUR, willChange: 'filter' }}
+            >
               {accelerators.slice(0, 6).map((accelerator) => (
                 <FundingOpportunityCard
                   key={accelerator.id}
@@ -106,7 +111,10 @@ const AcceleratorHuntTab = () => {
               ))}
             </div>
 
-            <div className="absolute inset-0 flex items-center justify-center bg-background/40 backdrop-blur-[2px] rounded-xl">
+            <div
+              className="absolute inset-0 flex items-center justify-center rounded-xl"
+              style={{ background: PREVIEW_MODE_OVERLAY_BACKGROUND }}
+            >
               <div className="text-center max-w-md px-6 py-10 bg-card/95 backdrop-blur-md border border-border rounded-2xl shadow-2xl">
                 <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-primary/10 mb-5">
                   <Lock className="w-6 h-6 text-primary" />
