@@ -81,7 +81,7 @@ const TechStack: React.FC = () => {
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewReport, setPreviewReport] = useState<TechStackReport | null>(null);
 
-  const currentTier = (subscriptionData.subscription_tier || 'free').toLowerCase();
+  const currentTier = (subscriptionData.subscription_tier || 'rookie').toLowerCase();
   useEffect(() => {
     if (!user) {
       setSavedReports([]);
@@ -215,16 +215,16 @@ const TechStack: React.FC = () => {
     }
 
     if (!featureAccess.hasAccess) {
-      openUpgradePrompt({
-        reason: 'feature',
-        featureName: 'Tech Stack Generator',
-        requiredTier: featureAccess.requiredTier as 'creator' | 'professional' | undefined,
-        description: featureAccess.message || "Upgrade to Creator tier for unlimited Tech Stack generations.",
-      });
-      return;
-    }
+        openUpgradePrompt({
+          reason: 'feature',
+          featureName: 'Tech Stack Generator',
+          requiredTier: featureAccess.requiredTier as 'starter' | 'rising' | 'pro' | undefined,
+          description: featureAccess.message || "Upgrade to Rising for full Tech Stack access.",
+        });
+        return;
+      }
 
-    if (currentTier === 'free') {
+    if (currentTier === 'rookie') {
       try {
         const { data: usageData, error: usageError } = await supabase
           .rpc('get_feature_usage', {
@@ -240,8 +240,8 @@ const TechStack: React.FC = () => {
               limit: usage.limit,
               limitLabel: 'Tech Stack generations',
               featureName: 'Tech Stack Generator',
-              requiredTier: 'creator',
-              description: "You've used your free Tech Stack generation this month.",
+              requiredTier: 'rising',
+              description: "You've used your Tech Stack generation allowance for this billing cycle.",
             });
             return;
           }
@@ -361,11 +361,11 @@ const TechStack: React.FC = () => {
   const firstUnselectedCategory = techStackData.find((category) => !selectedProducts[category.id]);
   const generateButtonLabel = !user
     ? 'Sign In to View Budget'
-    : subscriptionLoading || creditsLoading
-      ? 'Loading access...'
+      : subscriptionLoading || creditsLoading
+        ? 'Loading access...'
       : firstUnselectedCategory
         ? 'Complete selections first'
-        : currentTier === 'free'
+        : currentTier === 'rookie'
           ? 'Generate (1/month)'
           : 'Generate Budget';
 

@@ -18,12 +18,11 @@ export const QuotaCounterWidgets = () => {
   const { plan } = usePlanAccess('discovery_calls');
   const { quotas, loading } = useMonthlyQuotas();
 
-  // Only show for Rising — Pro has unlimited
-  if (plan !== 'rising') return null;
+  if (plan !== 'starter' && plan !== 'rising') return null;
 
-  const dcLimit = MONTHLY_FREE_QUOTAS.discovery_calls.rising;
-  const vcLimit = MONTHLY_FREE_QUOTAS.vc_profiles.rising;
-  const accLimit = MONTHLY_FREE_QUOTAS.accelerator_profiles.rising;
+  const dcLimit = MONTHLY_FREE_QUOTAS.discovery_calls[plan];
+  const vcLimit = MONTHLY_FREE_QUOTAS.vc_profiles[plan];
+  const accLimit = MONTHLY_FREE_QUOTAS.accelerator_profiles[plan];
 
   const counters = [
     {

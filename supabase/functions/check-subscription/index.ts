@@ -7,6 +7,21 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+const PLAN_CREDITS: Record<string, number> = {
+  rookie: 25,
+  starter: 50,
+  rising: 100,
+  pro: 300,
+};
+
+const normalizeTier = (value: unknown): string => {
+  const normalized = typeof value === "string" ? value.trim().toLowerCase() : "";
+  if (["professional", "pro"].includes(normalized)) return "pro";
+  if (["creator", "rising"].includes(normalized)) return "rising";
+  if (normalized === "starter") return "starter";
+  return "rookie";
+};
+
 // Helper logging function for debugging
 const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -55,7 +70,7 @@ serve(async (req) => {
     if (proOverrideEmails.has(user.email.toLowerCase())) {
       logStep("Pro override account detected - granting pro tier", { email: user.email });
       const proTier = 'pro';
-      const proCredits = 150;
+      const proCredits = PLAN_CREDITS.pro;
 
       // Update subscribers table
       await supabaseService.from("subscribers").upsert({
@@ -148,20 +163,24 @@ serve(async (req) => {
       subscriptionEnd = new Date(subscription.current_period_end * 1000).toISOString();
       logStep("Active subscription found", { subscriptionId: subscription.id, endDate: subscriptionEnd });
 
-      // Determine subscription tier from Stripe price amount
-      // Rising: ~$32.99/mo = 3299 cents; Pro: ~$74.99/mo = 7499 cents
-      const priceId = subscription.items.data[0].price.id;
-      const price = await stripe.prices.retrieve(priceId);
-      const amount = price.unit_amount || 0;
-
-      if (amount === 0) {
-        subscriptionTier = "rookie";
-      } else if (amount <= 5000) { // up to $50/mo = Rising
-        subscriptionTier = "rising";
-      } else { // $50+/mo = Pro
-        subscriptionTier = "pro";
+      const metadataTier = subscription.metadata?.tier ?? subscription.metadata?.subscription_tier;
+      if (typeof metadataTier === "string" && metadataTier.trim().length > 0) {
+        subscriptionTier = normalizeTier(metadataTier);
+      } else {
+        const amount = subscription.items.data[0]?.price?.unit_amount || 0;
+        const interval = subscription.items.data[0]?.price?.recurring?.interval;
+        if (interval === "year") {
+          if (amount === 7900) subscriptionTier = "starter";
+          else if (amount === 23900) subscriptionTier = "rising";
+          else if (amount === 58900) subscriptionTier = "pro";
+        } else {
+          if (amount === 900) subscriptionTier = "starter";
+          else if (amount === 2900) subscriptionTier = "rising";
+          else if (amount === 6500) subscriptionTier = "pro";
+        }
+        subscriptionTier = normalizeTier(subscriptionTier);
+        logStep("Determined subscription tier from price", { amount, interval, subscriptionTier });
       }
-      logStep("Determined subscription tier", { priceId, amount, subscriptionTier });
     } else {
       logStep("No active subscription found");
     }

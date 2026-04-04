@@ -10,6 +10,11 @@ export const CREDIT_COSTS = {
   LAUNCH_REPORT: 5,
   ASSET_GENERATION: 5,
   PREMIUM_FEATURE: 3,
+  WAITLIST_GENERATION: 3,
+  PMF_SCORING: 8,
+  GTM_ANALYSIS: 5,
+  APP_BUILDER_GENERATE: 5,
+  APP_BUILDER_REFINE: 3,
 
   // AI Chat Features
   AI_CHAT_MESSAGE: 1,
@@ -169,31 +174,34 @@ export const STATUS = {
 
 // Subscription Tiers
 export const SUBSCRIPTION_TIERS = {
-  FREE: 'free',
-  CREATOR: 'creator',
-  PROFESSIONAL: 'professional',
+  ROOKIE: 'rookie',
+  STARTER: 'starter',
+  RISING: 'rising',
+  PRO: 'pro',
 } as const;
 
 // Monthly credit allocation per tier
 export const TIER_MONTHLY_CREDITS = {
-  free: 25,
-  creator: 50,
-  professional: 150,
+  rookie: 25,
+  starter: 50,
+  rising: 100,
+  pro: 300,
 } as const;
 
 // VC View Limits per tier (monthly)
 export const VC_VIEW_LIMITS = {
-  rookie: 0,    // list-only, no profile views
-  rising: 3,    // 3 profile views per calendar month
-  pro: -1,      // unlimited
+  rookie: 0,
+  starter: 2,
+  rising: 10,
+  pro: -1,
 } as const;
 
 // Feature usage limits per tier
 export const TIER_USAGE_LIMITS = {
   rookie: {
     bizmap_conversations: 10,
-    tech_stack_generations: 0, // Progressive lock (complete stages first)
-    pmf_analyses: -1,          // Accessible (credit-gated)
+    tech_stack_generations: 0,
+    pmf_analyses: 0,
     icp_analyses: -1,          // Free for all users
     insighta_tests: -1,        // Free for all users
     investor_matches: 0,       // Not available
@@ -202,7 +210,23 @@ export const TIER_USAGE_LIMITS = {
     team_members: 0,
     vc_profile_views: 0,       // List-only, no profile views
     accelerator_profile_views: 0,
-    discovery_calls_free: 0,   // Credits only (10 credits each)
+    discovery_calls_free: 1,
+    cofounder_posts_free: 1,
+  },
+  starter: {
+    bizmap_conversations: -1,
+    tech_stack_generations: 0,
+    pmf_analyses: -1,
+    icp_analyses: -1,
+    insighta_tests: -1,
+    investor_matches: 0,
+    market_intelligence_queries: 0,
+    basic_reports: 0,
+    team_members: 0,
+    vc_profile_views: 2,
+    accelerator_profile_views: 2,
+    discovery_calls_free: 2,
+    cofounder_posts_free: 2,
   },
   rising: {
     bizmap_conversations: -1,  // Unlimited (credit-gated)
@@ -214,9 +238,10 @@ export const TIER_USAGE_LIMITS = {
     market_intelligence_queries: 10,
     basic_reports: 5,
     team_members: 3,
-    vc_profile_views: 3,       // 3 per calendar month
-    accelerator_profile_views: 3,
-    discovery_calls_free: 3,   // 3 free per month, then 10 credits
+    vc_profile_views: 10,
+    accelerator_profile_views: 10,
+    discovery_calls_free: 3,
+    cofounder_posts_free: -1,
   },
   pro: {
     bizmap_conversations: -1,
@@ -230,7 +255,8 @@ export const TIER_USAGE_LIMITS = {
     team_members: -1,
     vc_profile_views: -1,      // Unlimited
     accelerator_profile_views: -1,
-    discovery_calls_free: -1,  // Unlimited
+    discovery_calls_free: -1,
+    cofounder_posts_free: -1,
   },
 } as const;
 
@@ -244,20 +270,28 @@ export const TIER_DETAILS = {
     vcViewLimit: 0,
     description: 'Explore the platform and start your founder journey',
   },
+  starter: {
+    name: 'Starter',
+    subtitle: 'Momentum',
+    price: 9,
+    credits: 50,
+    vcViewLimit: 2,
+    description: 'Unlock Stages 2 and 3 with a low-friction first paid step',
+  },
   rising: {
     name: 'Rising',
     subtitle: 'Build',
-    price: 32.99,
-    credits: 50,
-    vcViewLimit: 3,
-    description: 'Build your startup with all 7 stage tools',
+    price: 29,
+    credits: 100,
+    vcViewLimit: 10,
+    description: 'Build with all 7 tools and no per-use charges on most BizMap actions',
   },
   pro: {
     name: 'Pro',
     subtitle: 'Scale',
-    price: 74.99,
-    credits: 150,
+    price: 65,
+    credits: 300,
     vcViewLimit: -1, // unlimited
-    description: 'Unlimited access, Angels community, and WhatsApp group',
+    description: 'Fundraising and scaling tier with unlimited investor views and priority support',
   },
 } as const;

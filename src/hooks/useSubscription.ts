@@ -59,7 +59,7 @@ type CreditPackRow = Database['public']['Tables']['credit_packs']['Row'];
 
 const DEFAULT_SUBSCRIPTION: SubscriptionData = {
   subscribed: false,
-  subscription_tier: 'free',
+  subscription_tier: 'rookie',
   subscription_end: null,
 };
 
@@ -67,18 +67,22 @@ const normalizeSubscriptionTier = (value: unknown): SubscriptionData['subscripti
   const normalized = typeof value === 'string' ? value.trim().toLowerCase() : '';
 
   if (['professional', 'pro', 'elite', 'team', 'teams'].includes(normalized)) {
-    return 'professional';
+    return 'pro';
   }
 
   if (['creator', 'rising'].includes(normalized)) {
-    return 'creator';
+    return 'rising';
   }
 
-  if (['free', 'rookie', 'starter'].includes(normalized)) {
-    return 'free';
+  if (normalized === 'starter') {
+    return 'starter';
   }
 
-  return 'free';
+  if (['free', 'rookie'].includes(normalized)) {
+    return 'rookie';
+  }
+
+  return 'rookie';
 };
 
 const normalizeSubscriptionData = (

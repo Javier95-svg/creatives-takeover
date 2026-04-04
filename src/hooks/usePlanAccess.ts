@@ -47,7 +47,10 @@ export function usePlanAccess(feature: string): PlanAccessResult {
   const hasAccess = rule !== 'locked';
   const requiresCredits = rule === 'credits' || rule === 'quota_3_free_then_credits';
   const isQuotaLimited =
-    rule === 'quota_3_per_month' || rule === 'quota_3_free_then_credits';
+    rule === 'quota_1_per_month' ||
+    rule === 'quota_2_per_month' ||
+    rule === 'quota_10_per_month' ||
+    rule === 'quota_3_free_then_credits';
   const isProgressiveLock = rule === 'locked_progressive';
 
   // Look up the monthly free quota for quota-limited features
@@ -68,7 +71,7 @@ export function usePlanAccess(feature: string): PlanAccessResult {
 }
 
 function isValidPlan(value: string): value is Plan {
-  return value === 'rookie' || value === 'rising' || value === 'pro';
+  return value === 'rookie' || value === 'starter' || value === 'rising' || value === 'pro';
 }
 
 function featureToQuotaKey(feature: string): string | null {

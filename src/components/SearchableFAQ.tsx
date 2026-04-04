@@ -36,15 +36,15 @@ const SearchableFAQ = () => {
       id: 1,
       category: "Pricing",
       question: "What pricing plans do you offer?",
-      answer: "We offer three plans designed for different stages of building your startup from scratch: Rookie (Free) with 25 credits/month to validate and explore, Rising ($32.99/month or $300/year) with 100 credits/month to build with more momentum, and Pro ($74.99/month or $750/year) with 300 credits/month for founders who need deeper usage and faster execution. Annual billing saves you approximately 25%. Any plan can also purchase extra credit packs (20, 40, or 60 credits) for spike usage - they never expire.",
+      answer: "We offer four plans. Rookie is free with 25 credits/month. Starter is $9/month or $79/year with 50 credits/month. Rising is $29/month or $239/year with 100 credits/month. Pro is $65/month or $589/year with 300 credits/month. Extra credit packs remain available on every plan for heavier execution windows.",
       popular: true,
-      tags: ["pricing", "plans", "subscription", "rookie", "rising", "pro"]
+      tags: ["pricing", "plans", "subscription", "rookie", "starter", "rising", "pro"]
     },
     {
       id: 2,
       category: "Pricing",
       question: "Is there a free plan available?",
-      answer: "Yes. Our Rookie plan is completely free forever, with no credit card required. You get 25 credits per month, access to BizMap AI, read-only access to PMF Lab, 5 VC profile views per month, basic Insighta Test, and community access. It is built for founders who want to start validating and building before paying for heavier usage.",
+      answer: "Yes. Rookie is completely free forever with no credit card required. You get 25 credits per month, free ICP Builder access, Insighta Test, Newspaper, mentor and co-founder browsing, and preview access to later-stage tools. Rookie also includes 1 free discovery call and 1 co-founder post per billing cycle.",
       popular: true,
       tags: ["free", "rookie", "no credit card", "credits"]
     },
@@ -52,7 +52,7 @@ const SearchableFAQ = () => {
       id: 3,
       category: "Pricing",
       question: "Can I cancel my subscription anytime?",
-      answer: "Absolutely! You can cancel your Rising or Pro subscription at any time with no cancellation fees. Your access and remaining credits continue until the end of your current billing period. You can manage your subscription directly from your account settings or through the Stripe customer portal.",
+      answer: "Absolutely. You can cancel Starter, Rising, or Pro at any time with no cancellation fee. Your paid access continues until the end of your current billing period, and then the account falls back to Rookie.",
       popular: false,
       tags: ["cancel", "refund", "billing", "stripe"]
     },
@@ -60,7 +60,7 @@ const SearchableFAQ = () => {
       id: 4,
       category: "Pricing",
       question: "What's the difference between Rising and Pro plans?",
-      answer: "Rising ($32.99/month) gives you 100 credits, full BizMap AI access, PMF Lab, Pitch Deck Analyzer, AI Email Templates, 25 VC profile views/month, and priority support. Pro ($74.99/month) includes 300 credits, unlimited VC searches, advanced analytics, custom email templates, featured community profile, 24-hour priority support, and early access to new features like investor matching.",
+      answer: "Rising gives you 100 credits, all 7 tools, 10 VC profiles and 10 accelerator profiles per billing cycle, 3 free discovery calls before 10-credit overage, full prompt library access, full email templates, and pitch deck analyzer access. Pro gives you 300 credits, unlimited discovery calls, unlimited VC and accelerator profile views, Angels community access, group office hours, and priority support. On both plans, MVP Builder and GTM Strategist still consume credits.",
       popular: true,
       tags: ["rising", "pro", "comparison", "features"]
     },
@@ -68,7 +68,7 @@ const SearchableFAQ = () => {
       id: 5,
       category: "Pricing",
       question: "Do credits roll over to the next month?",
-      answer: "Credits do not roll over. They reset at the beginning of each billing cycle. This encourages regular use of the platform and ensures you're actively working on your startup. If you consistently run out of credits, consider upgrading to a higher tier for more monthly credits.",
+      answer: "Credits do not roll over. They reset at the start of each billing cycle. If you regularly burn through your included credits before the cycle ends, the usual answer is either moving up a plan or buying extra credit packs.",
       popular: false,
       tags: ["credits", "rollover", "monthly", "reset"]
     },
@@ -144,7 +144,7 @@ const SearchableFAQ = () => {
       id: 14,
       category: "Features",
       question: "What is VC Search and how many VCs can I view?",
-      answer: "VC Search helps you discover and research venture capital firms and angel investors relevant to your startup. You can filter by industry, stage, location, and investment thesis. Rookie users can view 5 VC profiles/month, Rising users get 25/month, and Pro users have unlimited access. This helps you build a targeted investor outreach list.",
+      answer: "VC Search helps you discover and research venture capital firms and angel investors relevant to your startup. You can filter by industry, stage, location, and investment thesis. Rookie users can browse only, Starter users can open 2 profiles per billing cycle, Rising users get 10, and Pro users have unlimited access.",
       popular: true,
       tags: ["vc search", "investors", "fundraising", "venture capital"]
     },
@@ -152,7 +152,7 @@ const SearchableFAQ = () => {
       id: 15,
       category: "Features",
       question: "What is Insighta Test?",
-      answer: "Insighta Test is our landing page and value proposition testing tool. It helps you validate your messaging, identify unclear elements, and optimize your landing page for conversions. You can gather structured feedback and analytics to understand how potential customers perceive your startup. Free users get 1 test, paid users get unlimited tests (10 credits per test).",
+      answer: "Insighta Test is our landing page and value proposition testing tool. It helps you validate your messaging, identify unclear elements, and optimize for conversions. It is included on every plan, including Rookie.",
       popular: false,
       tags: ["insighta", "landing page", "testing", "validation", "conversion"]
     },
@@ -160,7 +160,7 @@ const SearchableFAQ = () => {
       id: 16,
       category: "Features",
       question: "What tools are included in the Prompt Library?",
-      answer: "The Prompt Library contains curated AI prompts for startup tasks like market research, competitor analysis, customer personas, marketing copy, email outreach, and more. Free users can view prompts, while paid users can use and customize them. It's designed to help you leverage AI effectively across your startup journey (2 credits per prompt generation).",
+      answer: "The Prompt Library contains curated prompts for startup tasks like market research, positioning, customer personas, and outreach. Rookie gets a limited library, Starter gets 5 prompt templates, and Rising or Pro get the full library. Premium prompt loading and copying still use credits where applicable.",
       popular: false,
       tags: ["prompt library", "ai prompts", "templates", "productivity"]
     },
@@ -176,7 +176,7 @@ const SearchableFAQ = () => {
       id: 18,
       category: "Features",
       question: "How does the Tech Stack Generator work?",
-      answer: "The Tech Stack Generator recommends the best technologies for your startup based on your product type, scale requirements, budget, and technical expertise. It provides detailed explanations for each recommendation, helping you make informed decisions about your technical infrastructure (4 credits per generation). Available on all paid plans.",
+      answer: "The Tech Stack Generator recommends the best technologies for your startup based on product type, budget, scale requirements, and technical context. Rookie and Starter see it in preview mode, while Rising and Pro unlock it as an included workflow.",
       popular: false,
       tags: ["tech stack", "technology", "recommendations", "development"]
     },
@@ -186,7 +186,7 @@ const SearchableFAQ = () => {
       id: 19,
       category: "Credits",
       question: "How does the credit system work?",
-      answer: "Credits power all AI features on the platform. Each action has a specific credit cost: BizMap AI messages (1 credit), Prompt Generation (2 credits), Waitlist Page publishing (3 credits), Tech Stack Generation (4 credits), Email Template and Cold Email Generation (4 credits), Launch Reports (6 credits), PMF Analysis (10 credits), Pitch Deck Analysis (10 credits), Insighta Tests (10 credits), Market Validation (12 credits), and Investor Matching (12 credits). Credits refresh monthly based on your plan.",
+      answer: "Credits refresh with your plan every billing cycle: Rookie 25, Starter 50, Rising 100, and Pro 300. Rookie and Starter rely on credits for the AI actions they can access. Rising and Pro include most BizMap workflows without per-use credit charges, but MVP Builder and GTM Strategist always consume credits across every plan. Rising discovery-call overage also costs 10 credits per extra call.",
       popular: true,
       tags: ["credits", "costs", "ai features", "monthly"]
     },
@@ -194,7 +194,7 @@ const SearchableFAQ = () => {
       id: 20,
       category: "Credits",
       question: "What happens when I run out of credits?",
-      answer: "When you've used all your monthly credits, you'll need to wait until your next billing cycle for them to refresh, or upgrade to a higher tier for more credits. Core platform features like viewing Founder Stories, accessing your Focus Funnel, and browsing the Prompt Library remain available. Only AI-powered actions require credits.",
+      answer: "When you run out of credits, the credit-powered actions stop until your next billing cycle or until you add more credits. Read-only and non-credit features like Stories, dashboards, and browsing remain available. The fastest path back is either a higher plan or a credit pack purchase.",
       popular: true,
       tags: ["out of credits", "upgrade", "refresh", "limitations"]
     },
@@ -202,7 +202,7 @@ const SearchableFAQ = () => {
       id: 21,
       category: "Credits",
       question: "Which features use the most credits?",
-      answer: "Premium AI analyses use the most credits: PMF Analysis (10 credits), Pitch Deck Analyzer (10 credits), and Fundraising Readiness Analysis (10 credits). The highest-value founder actions sit above that: Market Validation and Investor Matching cost 12 credits, while Discovery Calls cost 10 credits. Mid-tier features include Launch Reports and Roadmap Generation at 6 credits, while Waitlist publishing is 3 credits and BizMap AI chat messages are just 1 credit each.",
+      answer: "The highest-value execution actions consume the biggest chunks. PMF Analysis and Discovery Call overage use 10 credits, MVP Builder uses the launch-report credit cost, and GTM Strategist uses the roadmap-generation credit cost. Lighter actions like BizMap AI chat and Waitlist Maker consume much less.",
       popular: false,
       tags: ["credit costs", "features", "expensive", "affordable"]
     },

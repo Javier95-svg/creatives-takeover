@@ -58,7 +58,7 @@ const VCGrid = ({ vcs, canViewProfiles = true, isAuthenticated = true }: VCGridP
               </Button>
             </div>
             <p className="text-xs text-muted-foreground mt-4">
-              Free plan includes 5 VC profile views per month
+              Starter unlocks 2 VC profiles per cycle, Rising unlocks 10, and Pro is unlimited
             </p>
           </div>
         </div>

@@ -45,29 +45,31 @@ export function SubscriptionStatus({ variant = "card" }: SubscriptionStatusProps
     );
   }
 
-  const tierInfo = getTierInfo(subscriptionData?.subscription_tier || 'free');
+  const currentTier = subscriptionData?.subscription_tier || 'rookie';
+  const tierInfo = getTierInfo(currentTier);
   const daysUntilEnd = getDaysUntilEnd();
 
   const getTierColor = (tier: string) => {
     switch (tier) {
-      case 'free': return 'secondary';
-      case 'creator': return 'default';
-      case 'professional': return 'default';
+      case 'rookie': return 'secondary';
+      case 'starter': return 'outline';
+      case 'rising': return 'default';
+      case 'pro': return 'default';
       default: return 'secondary';
     }
   };
 
   const getTierIcon = (tier: string) => {
-    if (tier === 'free') return null;
+    if (tier === 'rookie') return null;
     return <Crown className="h-3 w-3" />;
   };
 
   if (variant === "inline") {
     return (
       <div className="flex items-center gap-2">
-        <Badge variant={getTierColor(subscriptionData?.subscription_tier || 'free')} className="gap-1">
-          {getTierIcon(subscriptionData?.subscription_tier || 'free')}
-          {(subscriptionData?.subscription_tier || 'free').charAt(0).toUpperCase() + (subscriptionData?.subscription_tier || 'free').slice(1)}
+        <Badge variant={getTierColor(currentTier)} className="gap-1">
+          {getTierIcon(currentTier)}
+          {currentTier.charAt(0).toUpperCase() + currentTier.slice(1)}
         </Badge>
         {subscriptionData?.subscribed && (
           <Button size="sm" variant="ghost" onClick={openCustomerPortal}>
@@ -91,9 +93,9 @@ export function SubscriptionStatus({ variant = "card" }: SubscriptionStatusProps
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium">Current Plan:</span>
-              <Badge variant={getTierColor(subscriptionData?.subscription_tier || 'free')} className="gap-1">
-                {getTierIcon(subscriptionData?.subscription_tier || 'free')}
-                {(subscriptionData?.subscription_tier || 'free').charAt(0).toUpperCase() + (subscriptionData?.subscription_tier || 'free').slice(1)}
+              <Badge variant={getTierColor(currentTier)} className="gap-1">
+                {getTierIcon(currentTier)}
+                {currentTier.charAt(0).toUpperCase() + currentTier.slice(1)}
               </Badge>
             </div>
 
@@ -182,7 +184,7 @@ export function SubscriptionStatus({ variant = "card" }: SubscriptionStatusProps
                       try {
                         const parsed = JSON.parse(tierInfo.features);
                         return Array.isArray(parsed) ? parsed : [];
-                      } catch (error) {
+                      } catch {
                         return tierInfo.features
                           .split(',')
                           .map((feature) => feature.trim())
@@ -213,9 +215,9 @@ export function SubscriptionStatus({ variant = "card" }: SubscriptionStatusProps
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center justify-between text-sm">
           <span>Subscription</span>
-          <Badge variant={getTierColor(subscriptionData?.subscription_tier || 'free')} className="gap-1">
-            {getTierIcon(subscriptionData?.subscription_tier || 'free')}
-            {(subscriptionData?.subscription_tier || 'free').charAt(0).toUpperCase() + (subscriptionData?.subscription_tier || 'free').slice(1)}
+          <Badge variant={getTierColor(currentTier)} className="gap-1">
+            {getTierIcon(currentTier)}
+            {currentTier.charAt(0).toUpperCase() + currentTier.slice(1)}
           </Badge>
         </CardTitle>
       </CardHeader>

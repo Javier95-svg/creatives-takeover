@@ -337,7 +337,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         avatar_url: profileUser.user_metadata?.avatar_url || '',
         date_of_birth: profileUser.user_metadata?.date_of_birth || null,
         username: finalUsername,
-        subscription_tier: 'free',
+        subscription_tier: 'rookie',
       };
 
       let { error } = await supabase

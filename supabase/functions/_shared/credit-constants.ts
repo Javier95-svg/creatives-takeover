@@ -9,6 +9,11 @@ export const CREDIT_COSTS = {
   LAUNCH_REPORT: 5,
   ASSET_GENERATION: 5,
   PREMIUM_FEATURE: 3,
+  WAITLIST_GENERATION: 3,
+  PMF_SCORING: 8,
+  GTM_ANALYSIS: 5,
+  APP_BUILDER_GENERATE: 5,
+  APP_BUILDER_REFINE: 3,
   
   // AI Chat Features
   AI_CHAT_MESSAGE: 1,
@@ -45,7 +50,7 @@ export const CREDIT_COSTS = {
   PROMPT_GENERATION: 2,
 
   // Community Features
-  DISCOVERY_CALL: 5,
+  DISCOVERY_CALL: 10,
 } as const;
 
 // Type for credit cost feature names

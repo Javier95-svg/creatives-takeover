@@ -33,7 +33,7 @@ const VCProfilePage = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [upgradePrompt, setUpgradePrompt] = useState<{
-    requiredTier?: "creator" | "professional";
+    requiredTier?: "starter" | "rising" | "pro";
   } | null>(null);
   const [requiresAuth, setRequiresAuth] = useState(false);
 
@@ -205,10 +205,18 @@ const VCProfilePage = () => {
       : vc.firm_website
         ? { label: "Visit Website", href: vc.firm_website }
         : null;
-  const upgradeTierLabel = upgradePrompt?.requiredTier === "professional" ? "Pro" : "Creator";
-  const upgradeDetail = upgradePrompt?.requiredTier === "professional"
-    ? "Unlock unlimited VC views this month."
-    : "Unlock 25 VC views this month.";
+  const upgradeTierLabel =
+    upgradePrompt?.requiredTier === "pro"
+      ? "Pro"
+      : upgradePrompt?.requiredTier === "starter"
+        ? "Starter"
+        : "Rising";
+  const upgradeDetail =
+    upgradePrompt?.requiredTier === "pro"
+      ? "Unlock unlimited VC views this billing cycle."
+      : upgradePrompt?.requiredTier === "starter"
+        ? "Unlock 2 VC profile views this billing cycle."
+        : "Unlock 10 VC profile views this billing cycle.";
   const portfolioHighlights = vc.portfolio_companies.slice(0, 6);
   const links = [
     vc.firm_website ? { label: "Website", href: vc.firm_website, icon: Building2 } : null,
@@ -504,7 +512,7 @@ const VCProfilePage = () => {
               <CardContent className="pt-6 flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between">
                 <div>
                   <p className="text-sm font-semibold text-foreground">
-                    You've used all {limit} VC profile views this month.
+                    You've used all {limit} VC profile views this billing cycle.
                   </p>
                   <p className="text-sm text-muted-foreground">
                     Upgrade to {upgradeTierLabel} to keep exploring. {upgradeDetail}

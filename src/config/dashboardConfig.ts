@@ -23,18 +23,32 @@ export type DashboardWidget =
   | 'stage_tools'
   | 'upgrade_banner'
   | 'discovery_call_counter'
+  | 'cofounder_post_counter'
   | 'vc_quota_counter'
   | 'accelerator_quota_counter'
   | 'angels_shortcut'
-  | 'whatsapp_link'
   | 'unlimited_calls_badge';
 
 export const DASHBOARD_CONFIG: Record<Plan, DashboardConfig> = {
   rookie: {
+    activeStages: [1],
+    lockedStages: [2, 3, 4, 5, 6, 7],
+    showUpgradeBanner: true,
+    widgets: ['progress_tracker', 'stage_tools', 'upgrade_banner'],
+  },
+  starter: {
     activeStages: [1, 2, 3],
     lockedStages: [4, 5, 6, 7],
     showUpgradeBanner: true,
-    widgets: ['progress_tracker', 'stage_tools', 'upgrade_banner'],
+    widgets: [
+      'progress_tracker',
+      'stage_tools',
+      'upgrade_banner',
+      'discovery_call_counter',
+      'cofounder_post_counter',
+      'vc_quota_counter',
+      'accelerator_quota_counter',
+    ],
   },
   rising: {
     activeStages: [1, 2, 3, 4, 5, 6, 7],
@@ -44,6 +58,7 @@ export const DASHBOARD_CONFIG: Record<Plan, DashboardConfig> = {
       'progress_tracker',
       'stage_tools',
       'discovery_call_counter',
+      'cofounder_post_counter',
       'vc_quota_counter',
       'accelerator_quota_counter',
     ],
@@ -56,7 +71,6 @@ export const DASHBOARD_CONFIG: Record<Plan, DashboardConfig> = {
       'progress_tracker',
       'stage_tools',
       'angels_shortcut',
-      'whatsapp_link',
       'unlimited_calls_badge',
     ],
   },

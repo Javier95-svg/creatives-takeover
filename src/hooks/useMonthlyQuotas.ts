@@ -14,39 +14,54 @@ const EMPTY_QUOTAS: MonthlyQuotas = {
   accelerator_profiles_viewed: 0,
 };
 
-function currentMonthDate(): string {
-  const now = new Date();
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
+function toDateKey(date: Date): string {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 }
 
 export function useMonthlyQuotas() {
   const { user } = useAuth();
   const [quotas, setQuotas] = useState<MonthlyQuotas>(EMPTY_QUOTAS);
   const [loading, setLoading] = useState(true);
+  const [cycleStart, setCycleStart] = useState<string | null>(null);
 
   const fetchQuotas = useCallback(async () => {
     if (!user) { setLoading(false); return; }
     setLoading(true);
-    const { data, error } = await supabase
-      .from('user_monthly_quotas')
-      .select('discovery_calls_used, vc_profiles_viewed, accelerator_profiles_viewed')
-      .eq('user_id', user.id)
-      .eq('month', currentMonthDate())
-      .maybeSingle();
+    try {
+      const { data: creditCycle } = await supabase
+        .from('user_credits')
+        .select('last_reset_at')
+        .eq('user_id', user.id)
+        .maybeSingle();
 
-    if (!error && data) {
+      const resetAnchor = creditCycle?.last_reset_at
+        ? new Date(creditCycle.last_reset_at)
+        : new Date();
+      const periodStart = toDateKey(resetAnchor);
+      setCycleStart(periodStart);
+
+      const [{ data: quotaRow }, { data: vcCount }, { data: acceleratorCount }] = await Promise.all([
+        supabase
+          .from('user_monthly_quotas')
+          .select('discovery_calls_used')
+          .eq('user_id', user.id)
+          .eq('month', periodStart)
+          .maybeSingle(),
+        supabase.rpc('get_monthly_vc_view_count', { p_user_id: user.id }),
+        supabase.rpc('get_monthly_accelerator_view_count', { p_user_id: user.id }),
+      ]);
+
       setQuotas({
-        discovery_calls_used: data.discovery_calls_used ?? 0,
-        vc_profiles_viewed: data.vc_profiles_viewed ?? 0,
-        accelerator_profiles_viewed: data.accelerator_profiles_viewed ?? 0,
+        discovery_calls_used: quotaRow?.discovery_calls_used ?? 0,
+        vc_profiles_viewed: vcCount ?? 0,
+        accelerator_profiles_viewed: acceleratorCount ?? 0,
       });
-    } else {
-      setQuotas(EMPTY_QUOTAS);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }, [user]);
 
   useEffect(() => { fetchQuotas(); }, [fetchQuotas]);
 
-  return { quotas, loading, refreshQuotas: fetchQuotas };
+  return { quotas, loading, refreshQuotas: fetchQuotas, cycleStart };
 }

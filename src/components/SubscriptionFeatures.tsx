@@ -1,62 +1,50 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import {
-  Bot,
-  Users,
-  TrendingUp,
-  LayoutDashboard,
-  Lightbulb
-} from "lucide-react";
+import { Bot, Coins, CreditCard, PhoneCall, Rocket } from "lucide-react";
 import { CREDIT_COSTS } from "@/config/constants";
 
-const SubscriptionFeatures = () => {
-  const creditBreakdown = {
-    dashboard: [
-      { name: "Focus Funnel", cost: 0, description: "Goal tracking and prioritization", badge: "FREE" },
-      { name: "Decision Sprint", cost: CREDIT_COSTS.SPRINT_TASK_GENERATION, description: "AI-generated sprint tasks and priorities" },
-      { name: "Core Metrics", cost: 0, description: "Track your key performance indicators", badge: "FREE" },
-      { name: "Weekly Mission", cost: 0, description: "Weekly goal setting and tracking", badge: "FREE" },
-      { name: "Your Tasks", cost: 0, description: "Task management and organization", badge: "FREE" },
-      { name: "Roadmap Generation", cost: CREDIT_COSTS.ROADMAP_GENERATION, description: "Strategic business roadmap" },
-    ],
-    bizmap: [
-      { name: "Business Planner (AI Chat)", cost: CREDIT_COSTS.AI_CHAT_MESSAGE, description: "Every message in Business Planning mode" },
-      { name: "ICP Builder", cost: CREDIT_COSTS.ICP_ANALYSIS, description: "Define your ideal customer profile" },
-      { name: "Waitlist Maker", cost: CREDIT_COSTS.WAITLIST_GENERATION, description: "Publish your waitlist page and capture early signups" },
-      { name: "Product-Market Fit Lab", cost: CREDIT_COSTS.PMF_ANALYSIS, description: "Complete PMF analysis with recommendations" },
-      { name: "MVP Builder", cost: CREDIT_COSTS.LAUNCH_REPORT, description: "14-day MVP building sprint" },
-      { name: "Tech Stack Builder", cost: CREDIT_COSTS.TECH_STACK_GENERATION, description: "Custom tech stack for your startup" },
-      { name: "GTM Strategist", cost: CREDIT_COSTS.ROADMAP_GENERATION, description: "End-to-end go-to-market planning" },
-      { name: "Launch Report", cost: CREDIT_COSTS.LAUNCH_REPORT, description: "Comprehensive business launch roadmap" },
-      { name: "Asset Generation", cost: CREDIT_COSTS.ASSET_GENERATION, description: "Generate outreach, social posts, and landing page assets" },
-      { name: "Prompt Generation", cost: CREDIT_COSTS.PROMPT_GENERATION, description: "AI-generated custom prompts" },
-    ],
-    insighta: [
-      { name: "VC Search", cost: 0, description: "Browse venture capital firms (view limits per tier)", badge: "VIEW LIMITS" },
-      { name: "Accelerator Hunt", cost: 0, description: "Find accelerator programs (Pro only)", badge: "PRO ONLY" },
-      { name: "Pitch Deck Analyzer", cost: CREDIT_COSTS.PITCH_DECK_ANALYZER, description: "AI analysis with actionable feedback" },
-      { name: "Email Template Generation", cost: CREDIT_COSTS.EMAIL_TEMPLATE_GENERATION, description: "Personalized investor outreach emails" },
-      { name: "Insights Test", cost: CREDIT_COSTS.FUNDRAISING_READINESS_ANALYSIS, description: "Fundraising readiness assessment" },
-      { name: "Investor Matching", cost: CREDIT_COSTS.INVESTOR_MATCHING, description: "Find VCs aligned with your startup" },
-      { name: "One-Pager Generation", cost: CREDIT_COSTS.ONEPAGER_GENERATION, description: "Professional one-page pitch document" },
-    ],
-    community: [
-      { name: "Find a Mentor", cost: 0, description: "Browse and connect with mentors", badge: "FREE" },
-      { name: "Find a Co-Founder", cost: 0, description: "Discover potential co-founders", badge: "FREE" },
-      { name: "Find your Angel", cost: 0, description: "Connect with angel investors (Pro only)", badge: "PRO ONLY" },
-      { name: "Discovery Calls", cost: CREDIT_COSTS.DISCOVERY_CALL, description: "Book discovery calls with mentors" },
-    ],
-    resources: [
-      { name: "Stories", cost: 0, description: "Read founder stories and insights", badge: "FREE" },
-      { name: "Prompt Library", cost: CREDIT_COSTS.PROMPT_GENERATION, description: "Browse prompts free, then load or copy premium prompts with credits", badge: "VIEW FREE" },
-      { name: "Report Export", cost: CREDIT_COSTS.PDF_EXPORT, description: "Export your report as PDF or Word" },
-    ],
-  };
+const planCredits = [
+  { plan: "Rookie", credits: 25, summary: "Free plan for first traction signals and guided discovery." },
+  { plan: "Starter", credits: 50, summary: "Credit-powered access to validation tools and light fundraising workflows." },
+  { plan: "Rising", credits: 100, summary: "Most tools are included, but MVP Builder and GTM Strategist still use credits." },
+  { plan: "Pro", credits: 300, summary: "Highest monthly credit pool for founders running heavier execution and fundraising." },
+];
 
+const rules = [
+  {
+    icon: Bot,
+    title: "Rookie and Starter Are Credit-Led",
+    body: "On Rookie and Starter, credits power the AI actions you can access. That includes BizMap AI work plus eligible validation and generation flows.",
+  },
+  {
+    icon: Rocket,
+    title: "MVP Builder and GTM Always Use Credits",
+    body: "This is the platform-wide exception. Rising and Pro unlock those tools immediately, but both still deduct credits whenever founders use MVP Builder or GTM Strategist.",
+  },
+  {
+    icon: PhoneCall,
+    title: "Discovery Calls Follow Plan Quotas",
+    body: "Rookie includes 1 free discovery call per billing cycle, Starter includes 2, Rising includes 3 and then charges 10 credits per extra call, and Pro keeps discovery calls unlimited.",
+  },
+  {
+    icon: CreditCard,
+    title: "Credit Packs Stay Available",
+    body: "Extra credits remain useful for heavier execution cycles, especially for Rising users running MVP or GTM workflows and any discovery-call overage.",
+  },
+];
+
+const costExamples = [
+  { name: "BizMap AI message", cost: CREDIT_COSTS.AI_CHAT_MESSAGE, note: "The everyday planning action." },
+  { name: "Waitlist Maker", cost: CREDIT_COSTS.WAITLIST_GENERATION, note: "Credit-based on Starter and below." },
+  { name: "PMF analysis", cost: CREDIT_COSTS.PMF_ANALYSIS, note: "Credit-gated on Starter, included on Rising and Pro." },
+  { name: "MVP Builder", cost: CREDIT_COSTS.LAUNCH_REPORT, note: "Always uses credits on every plan." },
+  { name: "Discovery-call overage", cost: CREDIT_COSTS.DISCOVERY_CALL, note: "Applies after Rising's 3 free calls." },
+];
+
+const SubscriptionFeatures = () => {
   return (
     <section className="relative py-section-mobile lg:py-section-desktop overflow-hidden" id="features">
       <div className="container mx-auto px-4 sm:px-6 relative z-10">
-        {/* Section Header */}
         <div className="text-center mb-16 animate-fade-in">
           <div className="mb-6">
             <Badge variant="secondary" className="rounded-full bg-primary/10 text-primary border-primary/20 font-medium">
@@ -67,157 +55,74 @@ const SubscriptionFeatures = () => {
             How Our Credit System Works
           </h2>
           <p className="text-lg sm:text-xl text-muted-foreground max-w-3xl mx-auto font-poppins">
-            Every tool has a transparent credit cost, so you can see exactly what each action uses before spending a single credit.
+            Monthly credits are included in every plan, but access and credit usage are not the same thing. Rising and Pro include most BizMap workflows, while MVP Builder and GTM Strategist always spend credits.
           </p>
         </div>
 
-        {/* Credit Breakdown Grid - wider cards for readability */}
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 items-start">
-          {/* Dashboard Card */}
-          <Card className="rounded-2xl border border-slate-300/60 dark:border-slate-500/40 bg-card/80 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md">
-            <CardHeader>
-              <div className="flex items-center gap-3 mb-2">
-                <div className="p-2 rounded-full bg-primary/10">
-                  <LayoutDashboard className="h-6 w-6 text-primary" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-8">
+          {planCredits.map((plan) => (
+            <Card key={plan.plan} className="rounded-2xl border border-border/60 bg-card/80 shadow-sm">
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-xl font-space-grotesk">{plan.plan}</CardTitle>
+                  <Badge variant="secondary" className="rounded-full">
+                    {plan.credits}/mo
+                  </Badge>
                 </div>
-                <CardTitle className="text-xl font-space-grotesk">Dashboard</CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {creditBreakdown.dashboard.map((feature, idx) => (
-                  <div key={idx} className="flex justify-between items-start gap-3 pb-3 border-b border-border/50 last:border-0">
-                    <div className="flex-1">
-                      <p className="font-medium text-sm">{feature.name}</p>
-                      <p className="text-xs text-muted-foreground mt-1">{feature.description}</p>
-                    </div>
-                    <Badge variant="secondary" className="shrink-0">{feature.cost} credits</Badge>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* BizMap AI Card */}
-          <Card className="rounded-2xl border border-slate-300/60 dark:border-slate-500/40 bg-card/80 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md">
-            <CardHeader>
-              <div className="flex items-center gap-3 mb-2">
-                <div className="p-2 rounded-full bg-primary/10">
-                  <Bot className="h-6 w-6 text-primary" />
-                </div>
-                <CardTitle className="text-xl font-space-grotesk">BizMap AI</CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {creditBreakdown.bizmap.map((feature, idx) => (
-                  <div key={idx} className="flex justify-between items-start gap-3 pb-3 border-b border-border/50 last:border-0">
-                    <div className="flex-1">
-                      <p className="font-medium text-sm">{feature.name}</p>
-                      <p className="text-xs text-muted-foreground mt-1">{feature.description}</p>
-                    </div>
-                    <Badge variant="secondary" className="shrink-0">{feature.cost} {feature.cost === 1 ? 'credit' : 'credits'}</Badge>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Insighta Card */}
-          <Card className="rounded-2xl border border-slate-300/60 dark:border-slate-500/40 bg-card/80 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md">
-            <CardHeader>
-              <div className="flex items-center gap-3 mb-2">
-                <div className="p-2 rounded-full bg-primary/10">
-                  <TrendingUp className="h-6 w-6 text-primary" />
-                </div>
-                <CardTitle className="text-xl font-space-grotesk">Insighta</CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {creditBreakdown.insighta.map((feature, idx) => (
-                  <div key={idx} className="flex justify-between items-start gap-3 pb-3 border-b border-border/50 last:border-0">
-                    <div className="flex-1">
-                      <p className="font-medium text-sm">{feature.name}</p>
-                      <p className="text-xs text-muted-foreground mt-1">{feature.description}</p>
-                    </div>
-                    <Badge variant="secondary" className="shrink-0">{feature.cost} credits</Badge>
-                  </div>
-                ))}
-                {/* VC Search - Non-credit feature */}
-                <div className="flex justify-between items-start gap-3 pb-3 border-t-2 border-primary/20 pt-3">
-                  <div className="flex-1">
-                    <p className="font-medium text-sm">VC Search</p>
-                    <p className="text-xs text-muted-foreground mt-1">View limits per tier, not credit-based</p>
-                  </div>
-                  <Badge variant="outline" className="shrink-0 bg-blue-50 dark:bg-blue-950/30">View Limits</Badge>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Community Card */}
-          <Card className="rounded-2xl border border-slate-300/60 dark:border-slate-500/40 bg-card/80 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md">
-            <CardHeader>
-              <div className="flex items-center gap-3 mb-2">
-                <div className="p-2 rounded-full bg-primary/10">
-                  <Users className="h-6 w-6 text-primary" />
-                </div>
-                <CardTitle className="text-xl font-space-grotesk">Community</CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {creditBreakdown.community.map((feature, idx) => (
-                  <div key={idx} className="flex justify-between items-start gap-3 pb-3 border-b border-border/50 last:border-0">
-                    <div className="flex-1">
-                      <p className="font-medium text-sm">{feature.name}</p>
-                      <p className="text-xs text-muted-foreground mt-1">{feature.description}</p>
-                    </div>
-                    {feature.cost === 0 ? (
-                      feature.badge ? (
-                        <Badge variant="outline" className="shrink-0 bg-blue-50 dark:bg-blue-950/30">{feature.badge}</Badge>
-                      ) : (
-                        <Badge variant="outline" className="shrink-0 bg-green-50 dark:bg-green-950/30">FREE</Badge>
-                      )
-                    ) : (
-                      <Badge variant="secondary" className="shrink-0">{feature.cost} credits</Badge>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Resources Card */}
-          <Card className="rounded-2xl border border-slate-300/60 dark:border-slate-500/40 bg-card/80 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md">
-            <CardHeader>
-              <div className="flex items-center gap-3 mb-2">
-                <div className="p-2 rounded-full bg-primary/10">
-                  <Lightbulb className="h-6 w-6 text-primary" />
-                </div>
-                <CardTitle className="text-xl font-space-grotesk">Resources</CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {creditBreakdown.resources.map((feature, idx) => (
-                  <div key={idx} className="flex justify-between items-start gap-3 pb-3 border-b border-border/50 last:border-0">
-                    <div className="flex-1">
-                      <p className="font-medium text-sm">{feature.name}</p>
-                      <p className="text-xs text-muted-foreground mt-1">{feature.description}</p>
-                    </div>
-                    {feature.cost === 0 ? (
-                      <Badge variant="outline" className="shrink-0 bg-green-50 dark:bg-green-950/30">{feature.badge || "FREE"}</Badge>
-                    ) : (
-                      <Badge variant="secondary" className="shrink-0">{feature.cost} credits</Badge>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground font-poppins leading-relaxed">{plan.summary}</p>
+              </CardContent>
+            </Card>
+          ))}
         </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          {rules.map(({ icon: Icon, title, body }) => (
+            <Card key={title} className="rounded-2xl border border-border/60 bg-card/80 shadow-sm">
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-full bg-primary/10">
+                    <Icon className="h-5 w-5 text-primary" />
+                  </div>
+                  <CardTitle className="text-xl font-space-grotesk">{title}</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground font-poppins leading-relaxed">{body}</p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        <Card className="rounded-2xl border border-border/60 bg-card/80 shadow-sm">
+          <CardHeader>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2 rounded-full bg-primary/10">
+                <Coins className="h-6 w-6 text-primary" />
+              </div>
+              <CardTitle className="text-2xl font-space-grotesk">Common Credit Costs</CardTitle>
+            </div>
+            <p className="text-sm text-muted-foreground font-poppins">
+              ICP Builder stays free on all plans. These are the actions founders will see most often when they move from planning into execution.
+            </p>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4">
+              {costExamples.map((feature) => (
+                <div key={feature.name} className="rounded-xl border border-border/60 bg-background/70 p-4">
+                  <div className="flex items-center justify-between gap-3 mb-2">
+                    <p className="font-medium text-sm">{feature.name}</p>
+                    <Badge variant="secondary" className="shrink-0">
+                      {feature.cost} {feature.cost === 1 ? "credit" : "credits"}
+                    </Badge>
+                  </div>
+                  <p className="text-xs text-muted-foreground leading-relaxed">{feature.note}</p>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </section>
   );

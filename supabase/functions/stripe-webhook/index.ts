@@ -9,9 +9,10 @@ const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
 const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET") || "";
 
 const FALLBACK_TIER_CREDITS: Record<string, number> = {
-  free: 25,
-  creator: 100,
-  professional: 300,
+  rookie: 25,
+  starter: 50,
+  rising: 100,
+  pro: 300,
 };
 
 const CREDIT_PACK_CREDITS: Record<string, number> = {
@@ -25,12 +26,11 @@ type BillingCycle = "monthly" | "yearly";
 const normalizeSubscriptionTier = (value: unknown): string => {
   const normalized = typeof value === "string" ? value.trim().toLowerCase() : "";
 
-  if (normalized === "pro") return "professional";
-  if (normalized === "creator" || normalized === "professional" || normalized === "free") {
-    return normalized;
-  }
-
-  return "free";
+  if (["professional", "pro"].includes(normalized)) return "pro";
+  if (["creator", "rising"].includes(normalized)) return "rising";
+  if (normalized === "starter") return "starter";
+  if (["free", "rookie"].includes(normalized)) return "rookie";
+  return "rookie";
 };
 
 const normalizeBillingCycle = (value: unknown): BillingCycle => {
@@ -39,16 +39,18 @@ const normalizeBillingCycle = (value: unknown): BillingCycle => {
 };
 
 const inferTierFromAmount = (amount: number, interval?: string | null): string => {
-  if (!amount || amount <= 0) return "free";
+  if (!amount || amount <= 0) return "rookie";
   if (interval === "year") {
-    if (amount <= 35000) return "creator";
-    if (amount <= 80000) return "professional";
-    return "free";
+    if (amount === 7900) return "starter";
+    if (amount === 23900) return "rising";
+    if (amount === 58900) return "pro";
+    return "rookie";
   }
 
-  if (amount <= 3500) return "creator";
-  if (amount <= 8000) return "professional";
-  return "free";
+  if (amount === 900) return "starter";
+  if (amount === 2900) return "rising";
+  if (amount === 6500) return "pro";
+  return "rookie";
 };
 
 const getTierCredits = async (supabaseAdmin: any, tier: string): Promise<number> => {
@@ -367,7 +369,7 @@ const resetSubscriptionQuotaForInvoice = async (
   }
 ) => {
   const normalizedTier = normalizeSubscriptionTier(tier);
-  if (normalizedTier === "free") return;
+  if (normalizedTier === "rookie") return;
   if (billingCycle !== "monthly") return;
 
   const tierCredits = await getTierCredits(supabaseAdmin, normalizedTier);
@@ -480,7 +482,7 @@ const syncSubscriptionState = async (
     grantQuota: boolean;
   }
 ) => {
-  const normalizedTier = subscribed ? normalizeSubscriptionTier(tier) : "free";
+  const normalizedTier = subscribed ? normalizeSubscriptionTier(tier) : "rookie";
   const nextBillingCycle = subscribed ? billingCycle : null;
   const tierCredits = await getTierCredits(supabaseAdmin, normalizedTier);
   const nowIso = new Date().toISOString();
@@ -516,12 +518,12 @@ const syncSubscriptionState = async (
 
   const currentBalance = Number(currentCredits?.balance ?? 0);
   const currentQuota = Number(currentCredits?.monthly_quota ?? 0);
-  const currentTier = normalizeSubscriptionTier(currentCredits?.subscription_tier ?? "free");
+  const currentTier = normalizeSubscriptionTier(currentCredits?.subscription_tier ?? "rookie");
   const shouldLiftQuota = subscribed && (grantQuota || currentTier !== normalizedTier || currentQuota <= 0);
   const nextQuota = subscribed
     ? (shouldLiftQuota ? Math.max(currentQuota, tierCredits) : currentQuota)
-    : (currentCredits ? Math.min(currentQuota, FALLBACK_TIER_CREDITS.free) : FALLBACK_TIER_CREDITS.free);
-  const shouldAdjustFreeQuota = !subscribed && (!currentCredits || nextQuota !== currentQuota || currentTier !== "free");
+    : (currentCredits ? Math.min(currentQuota, FALLBACK_TIER_CREDITS.rookie) : FALLBACK_TIER_CREDITS.rookie);
+  const shouldAdjustFreeQuota = !subscribed && (!currentCredits || nextQuota !== currentQuota || currentTier !== "rookie");
 
   const nextLastResetAt = subscribed
     ? (shouldLiftQuota ? nowIso : (currentCredits?.last_reset_at ?? nowIso))
@@ -612,7 +614,7 @@ async function handleCheckoutCompleted(session: any, supabaseAdmin: any) {
   const metadataTier = getMetadataString(combinedMetadata, ["tier", "subscription_tier"]);
   const metadataBillingCycle = getMetadataString(combinedMetadata, ["billing_cycle"]);
 
-  let tier = metadataTier ? normalizeSubscriptionTier(metadataTier) : "free";
+  let tier = metadataTier ? normalizeSubscriptionTier(metadataTier) : "rookie";
   let billingCycle: BillingCycle = metadataBillingCycle
     ? normalizeBillingCycle(metadataBillingCycle)
     : "monthly";
@@ -631,7 +633,7 @@ async function handleCheckoutCompleted(session: any, supabaseAdmin: any) {
     }
   }
 
-  if (!resolvedUserId || !customerEmail || tier === "free") {
+  if (!resolvedUserId || !customerEmail || tier === "rookie") {
     console.error("[Checkout] Missing subscription context", {
       resolvedUserId,
       customerEmail,
@@ -935,7 +937,7 @@ async function handleSubscriptionDeleted(subscription: any, supabaseAdmin: any) 
     userId: resolvedUserId,
     email: customerEmail,
     stripeCustomerId: customerId,
-    tier: "free",
+    tier: "rookie",
     billingCycle: null,
     subscribed: false,
     subscriptionEnd: null,

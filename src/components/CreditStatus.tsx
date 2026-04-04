@@ -18,7 +18,8 @@ export function CreditStatus({ requiredCredits, feature, showPurchaseLink = true
   const { currentTier } = useFeatureGating();
   
   const totalAvailable = balance + monthlyQuota;
-  const monthlyCredits = TIER_MONTHLY_CREDITS[currentTier as keyof typeof TIER_MONTHLY_CREDITS] || 10;
+  const normalizedTier = currentTier === 'free' ? 'rookie' : currentTier;
+  const monthlyCredits = TIER_MONTHLY_CREDITS[normalizedTier as keyof typeof TIER_MONTHLY_CREDITS] || 25;
   const creditUsagePercent = monthlyCredits > 0 
     ? Math.round(((monthlyCredits - totalAvailable) / monthlyCredits) * 100)
     : 0;
@@ -179,15 +180,15 @@ export function CreditStatus({ requiredCredits, feature, showPurchaseLink = true
             {status.message}
             {getCreditCostMessage()}
             
-            {showPurchaseLink && (status.type === 'insufficient' || status.type === 'empty' || status.type === 'very_low' || (status.type === 'low' && currentTier === 'free')) && (
+            {showPurchaseLink && (status.type === 'insufficient' || status.type === 'empty' || status.type === 'very_low' || (status.type === 'low' && normalizedTier === 'rookie')) && (
               <div className="mt-3 flex gap-2">
                 <Button size="sm" variant={status.type === 'very_low' || status.type === 'empty' ? "default" : "outline"} asChild>
                   <Link to="/pricing">
                     <TrendingUp className="h-3 w-3 mr-1" />
-                    {currentTier === 'free' ? 'Upgrade Plan' : 'View Plans'}
+                    {normalizedTier === 'rookie' ? 'Upgrade Plan' : 'View Plans'}
                   </Link>
                 </Button>
-                {currentTier !== 'free' && (
+                {normalizedTier !== 'rookie' && (
                   <Button size="sm" variant="outline" asChild>
                     <Link to="/credits">
                       Learn More

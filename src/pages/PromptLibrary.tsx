@@ -17,10 +17,26 @@ import { useFeatureGating } from "@/hooks/useFeatureGating";
 import { useCreditActions } from "@/hooks/useCreditActions";
 import { useUpgradePrompt } from "@/contexts/UpgradePromptContext";
 import { CREDIT_COSTS } from "@/config/constants";
-import { usePlanAccess } from "@/hooks/usePlanAccess";
 
 // Categories unlocked on Rookie plan — all others require Rising+
 const ROOKIE_UNLOCKED_CATEGORIES = new Set(['all']);
+const STARTER_UNLOCKED_PROMPT_IDS = new Set<number | string>([1, 2, 3, 4, 5]);
+
+const normalizePlan = (value?: string | null) => {
+  const normalized = (value || "rookie").toLowerCase();
+  if (normalized === "starter") return "starter";
+  if (normalized === "rising" || normalized === "creator") return "rising";
+  if (normalized === "pro" || normalized === "professional" || normalized === "enterprise") return "pro";
+  return "rookie";
+};
+
+const normalizePromptTier = (value?: string | null) => {
+  const normalized = (value || "free").toLowerCase();
+  if (normalized === "professional" || normalized === "pro") return "pro";
+  if (normalized === "creator" || normalized === "rising") return "rising";
+  if (normalized === "starter") return "starter";
+  return "rookie";
+};
 
 const PromptLibrary = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -28,14 +44,14 @@ const PromptLibrary = () => {
   const [selectedConcept, setSelectedConcept] = useState<MultiStepPrompt | null>(null);
   const [currentStep, setCurrentStep] = useState(1);
 
-  const { subscriptionData, loading: subscriptionLoading } = useSubscription();
+  const { subscriptionData, loading: _subscriptionLoading } = useSubscription();
   const { user } = useAuth();
-  const { publishedChains, fetchPublishedChains, loading: chainsLoading } = useCustomPromptChains();
+  const { publishedChains, fetchPublishedChains, loading: _chainsLoading } = useCustomPromptChains();
   const { checkFeatureAccess } = useFeatureGating();
   const { deductCredits } = useCreditActions();
   const { openUpgradePrompt } = useUpgradePrompt();
 
-  const userTier = subscriptionData.subscription_tier || "rookie";
+  const userTier = normalizePlan(subscriptionData.subscription_tier);
 
   // Fetch custom prompt chains on mount
   useEffect(() => {
@@ -44,15 +60,18 @@ const PromptLibrary = () => {
   }, []);
 
   const hasAccessToPrompt = (prompt: MultiStepPrompt) => {
-    // "free" prompts (old name) are accessible to all — treat rookie as free tier
-    if (prompt.requiredTier === "free" || prompt.requiredTier === "rookie") return true;
+    const promptTier = normalizePromptTier(prompt.requiredTier);
+    if (promptTier === "rookie") return true;
     if (!user) return false;
-    // Pro (was "professional") has full access
-    if (userTier === "pro" || userTier === "professional" || userTier === "enterprise") return true;
-    // Rising (was "creator") has access to creator-tier prompts
-    if ((userTier === "rising" || userTier === "creator") &&
-        (prompt.requiredTier === "creator" || prompt.requiredTier === "rising")) return true;
+    if (userTier === "pro" || userTier === "rising") return true;
+    if (userTier === "starter") return STARTER_UNLOCKED_PROMPT_IDS.has(prompt.id);
     return false;
+  };
+
+  const getRequiredUpgradePlan = (prompt: MultiStepPrompt): "starter" | "rising" | "pro" => {
+    if (userTier === "starter") return "rising";
+    if (userTier === "rookie" && STARTER_UNLOCKED_PROMPT_IDS.has(prompt.id)) return "starter";
+    return "rising";
   };
 
   const canAccessStep = (prompt: MultiStepPrompt, step: number) => {
@@ -95,7 +114,7 @@ const PromptLibrary = () => {
         openUpgradePrompt({
           reason: 'feature',
           featureName: 'Prompt Library exports',
-          requiredTier: exportAccess.requiredTier as 'creator' | 'professional' | undefined,
+          requiredTier: exportAccess.requiredTier as 'rising' | 'pro' | undefined,
           description: exportAccess.message,
         });
         return;
@@ -111,7 +130,7 @@ const PromptLibrary = () => {
     toast.success("Prompt copied to clipboard!");
   };
 
-  const useInBizMap = async (prompt: string, isPremium: boolean = false) => {
+  const launchInBizMap = async (prompt: string, isPremium: boolean = false) => {
     if (isPremium && selectedConcept) {
       // Check if user can export premium prompts
       const exportAccess = checkFeatureAccess('prompt_library_export');
@@ -119,7 +138,7 @@ const PromptLibrary = () => {
         openUpgradePrompt({
           reason: 'feature',
           featureName: 'Prompt Library exports',
-          requiredTier: exportAccess.requiredTier as 'creator' | 'professional' | undefined,
+          requiredTier: exportAccess.requiredTier as 'rising' | 'pro' | undefined,
           description: exportAccess.message,
         });
         return;
@@ -137,7 +156,7 @@ const PromptLibrary = () => {
     toast.success("Opening BizMap AI with your prompt!");
   };
 
-  const getDifficultyColor = (difficulty: string) => {
+  const _getDifficultyColor = (_difficulty: string) => {
     switch (difficulty) {
       case "Easy": return "bg-green-100 text-green-800 border-green-200";
       case "Medium": return "bg-yellow-100 text-yellow-800 border-yellow-200";
@@ -152,7 +171,7 @@ const PromptLibrary = () => {
     const step1Prompt = prompt.steps?.[0]?.prompt || "";
     const lowerPrompt = step1Prompt.toLowerCase();
     const lowerTitle = prompt.conceptTitle.toLowerCase();
-    const lowerDesc = prompt.description.toLowerCase();
+    const _lowerDesc = prompt.description.toLowerCase();
     
     // Extract key value proposition elements
     if (lowerPrompt.includes("reduce") || lowerPrompt.includes("cost")) {
@@ -226,10 +245,12 @@ const PromptLibrary = () => {
   if (selectedConcept) {
     const step = selectedConcept.steps.find(s => s.step === currentStep);
     const isStepLocked = !canAccessStep(selectedConcept, currentStep);
-    const isPremiumPrompt = selectedConcept.requiredTier !== "free";
+    const isPremiumPrompt = normalizePromptTier(selectedConcept.requiredTier) !== "rookie";
+    const requiredUpgradePlan = getRequiredUpgradePlan(selectedConcept);
+    const requiredUpgradeLabel = requiredUpgradePlan.charAt(0).toUpperCase() + requiredUpgradePlan.slice(1);
     const getTierIcon = () => {
-      if (selectedConcept.requiredTier === "professional") return Crown;
-      if (selectedConcept.requiredTier === "creator") return Sparkles;
+      if (requiredUpgradePlan === "pro") return Crown;
+      if (requiredUpgradePlan === "starter" || requiredUpgradePlan === "rising") return Sparkles;
       return null;
     };
     const TierIcon = getTierIcon();
@@ -321,11 +342,11 @@ const PromptLibrary = () => {
                             <div className="text-center p-6 max-w-md">
                               {TierIcon && (
                                 <div className="flex justify-center mb-4">
-                                  <TierIcon className={`w-12 h-12 ${selectedConcept.requiredTier === "professional" ? "text-amber-600" : "text-purple-600"}`} />
+                                  <TierIcon className={`w-12 h-12 ${requiredUpgradePlan === "pro" ? "text-amber-600" : "text-purple-600"}`} />
                                 </div>
                               )}
                               <h4 className="text-lg font-semibold mb-2">
-                                Upgrade to {selectedConcept.requiredTier.charAt(0).toUpperCase() + selectedConcept.requiredTier.slice(1)} to Unlock
+                                Upgrade to {requiredUpgradeLabel} to Unlock
                               </h4>
                               <p className="text-sm text-muted-foreground mb-4">
                                 Get access to Steps 2-7 and complete your 30-day launch journey with premium prompts.
@@ -355,7 +376,7 @@ const PromptLibrary = () => {
                       {!isStepLocked && (
                         <div className="flex flex-col sm:flex-row gap-3">
                           <Button
-                            onClick={() => useInBizMap(step.prompt, isPremiumPrompt)}
+                            onClick={() => launchInBizMap(step.prompt, isPremiumPrompt)}
                             className="flex-1"
                           >
                             <ExternalLink className="w-4 h-4 mr-2" />
@@ -379,13 +400,13 @@ const PromptLibrary = () => {
                         >
                           Previous Step
                         </Button>
-                        {isPremiumPrompt && currentStep === 1 && !hasAccessToPrompt(selectedConcept) ? (
+                          {isPremiumPrompt && currentStep === 1 && !hasAccessToPrompt(selectedConcept) ? (
                           <Button
                             onClick={() => window.location.href = "/pricing"}
                             className="gap-2"
                           >
                             {TierIcon && <TierIcon className="w-4 h-4" />}
-                            Upgrade to Unlock the Full Journey
+                            Upgrade to {requiredUpgradeLabel}
                           </Button>
                         ) : (
                           <Button
@@ -489,7 +510,10 @@ const PromptLibrary = () => {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-5 sm:gap-6">
-              {filteredPrompts.map((prompt) => (
+              {filteredPrompts.map((prompt) => {
+                const isLocked = !hasAccessToPrompt(prompt) && normalizePromptTier(prompt.requiredTier) !== "rookie";
+
+                return (
                 <Card 
                   key={prompt.id} 
                   className="glass-card hover:shadow-xl hover:shadow-primary/10 border border-border/50 hover:border-primary/30 transition-all duration-300 hover:scale-[1.01] hover:-translate-y-0.5 group"
@@ -499,7 +523,7 @@ const PromptLibrary = () => {
                       <div className="flex-1 min-w-0">
                         <CardTitle className="text-lg sm:text-xl font-bold mb-2 leading-tight flex items-center gap-2 group-hover:text-primary transition-colors">
                           <span className="flex-1">{prompt.conceptTitle}</span>
-                          {prompt.requiredTier !== "free" && (
+                          {isLocked && (
                             <Lock className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                           )}
                         </CardTitle>
@@ -562,7 +586,8 @@ const PromptLibrary = () => {
                     </Button>
                   </CardContent>
                 </Card>
-              ))}
+                );
+              })}
             </div>
 
             {filteredPrompts.length === 0 && (

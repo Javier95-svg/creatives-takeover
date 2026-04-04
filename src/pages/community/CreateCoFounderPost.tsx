@@ -13,9 +13,14 @@ import { toast } from 'sonner';
 import { Loader2, Handshake, ArrowLeft, Save } from 'lucide-react';
 import Navigation from '@/components/Navigation';
 import { AccountWallpaper } from '@/components/AccountWallpaper';
+import { useMonthlyQuotas } from '@/hooks/useMonthlyQuotas';
+import { useSubscription } from '@/hooks/useSubscription';
+import { MONTHLY_FREE_QUOTAS } from '@/config/planPermissions';
 
 const CreateCoFounderPost = () => {
   const { user } = useAuth();
+  const { subscriptionData } = useSubscription();
+  const { cycleStart } = useMonthlyQuotas();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
 
@@ -38,6 +43,14 @@ const CreateCoFounderPost = () => {
     { id: 'finance', label: 'Finance Co-Founder (CFO)', description: 'Fundraising, financial planning' },
   ];
 
+  const currentPlan = (() => {
+    const normalized = (subscriptionData.subscription_tier || 'rookie').toLowerCase();
+    if (normalized === 'starter') return 'starter';
+    if (normalized === 'rising' || normalized === 'creator') return 'rising';
+    if (normalized === 'pro' || normalized === 'professional') return 'pro';
+    return 'rookie';
+  })();
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -53,6 +66,24 @@ const CreateCoFounderPost = () => {
 
     setLoading(true);
     try {
+      const cycleAnchor = cycleStart ?? new Date().toISOString().slice(0, 10);
+      const postLimit = MONTHLY_FREE_QUOTAS.cofounder_posts[currentPlan];
+
+      if (Number.isFinite(postLimit)) {
+        const { count, error: countError } = await supabase
+          .from('cofounder_posts')
+          .select('id', { count: 'exact', head: true })
+          .eq('user_id', user.id)
+          .gte('created_at', cycleAnchor);
+
+        if (countError) throw countError;
+
+        if ((count || 0) >= postLimit) {
+          toast.error(`You've reached your ${postLimit} co-founder post limit for this billing cycle.`);
+          return;
+        }
+      }
+
       // Create co-founder post
       const { error } = await supabase
         .from('cofounder_posts')

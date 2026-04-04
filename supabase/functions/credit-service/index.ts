@@ -158,7 +158,7 @@ export class CreditService {
             .update({
               balance: 0,
               monthly_quota: 25,
-              subscription_tier: 'free',
+              subscription_tier: 'rookie',
               last_reset_at: new Date().toISOString(),
               last_credit_grant: new Date().toISOString(),
             })
@@ -180,7 +180,7 @@ export class CreditService {
 
       // Free plan starts with monthly quota (not spendable balance).
       const initialMonthlyQuota = 25;
-      const subscriptionTier = 'free'; // Will be updated to professional by other mechanisms
+      const subscriptionTier = 'rookie';
       const welcomeReason = 'Monthly free-tier allocation on signup';
 
       // Check if there's already a welcome transaction to avoid duplicate grants

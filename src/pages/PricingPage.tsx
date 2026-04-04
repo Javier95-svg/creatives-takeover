@@ -12,21 +12,27 @@ const PricingPage = () => {
   // Structured data for pricing tiers
   const structuredData = [
     createProductSchema({
+      name: "Creatives Takeover Rookie Plan",
+      description: "Free founder plan with 25 monthly credits, free ICP Builder access, and early-stage startup validation tools.",
+      price: 0,
+      currency: "USD"
+    }),
+    createProductSchema({
       name: "Creatives Takeover Starter Plan",
-      description: "AI-powered business planning and creative tools for solopreneurs starting their journey.",
+      description: "Validation-focused founder plan with 50 monthly credits, Waitlist Maker, PMF Lab, and light fundraising access.",
+      price: 9,
+      currency: "USD"
+    }),
+    createProductSchema({
+      name: "Creatives Takeover Rising Plan",
+      description: "The default build plan with 100 monthly credits, full startup tool access, and fundraising workflows for active founders.",
       price: 29,
       currency: "USD"
     }),
     createProductSchema({
-      name: "Creatives Takeover Elite Plan",
-      description: "Advanced AI tools, unlimited design access, and priority support for growing creative businesses.",
-      price: 99,
-      currency: "USD"
-    }),
-    createProductSchema({
-      name: "Creatives Takeover Teams Plan",
-      description: "Complete creative business platform with collaboration tools for creative teams and agencies.",
-      price: 299,
+      name: "Creatives Takeover Pro Plan",
+      description: "Scaling and fundraising plan with 300 monthly credits, unlimited investor research views, office hours, and priority support.",
+      price: 65,
       currency: "USD"
     }),
     createBreadcrumbSchema([

@@ -114,11 +114,11 @@ export function useCustomPromptChains() {
       throw new Error('You must be logged in to create a prompt chain');
     }
 
-    // Check subscription tier if trying to publish - only Creator and Professional users can publish
+    // Check subscription tier if trying to publish - only Rising and Pro users can publish
     if (chainData.published) {
-      const userTier = subscriptionData.subscription_tier || 'free';
-      if (userTier !== 'creator' && userTier !== 'professional' && userTier !== 'enterprise') {
-        const errorMessage = 'Upgrade to Creator or Professional plan to publish prompt chains';
+      const userTier = (subscriptionData.subscription_tier || 'rookie').toLowerCase();
+      if (userTier !== 'rising' && userTier !== 'pro' && userTier !== 'creator' && userTier !== 'professional' && userTier !== 'enterprise') {
+        const errorMessage = 'Upgrade to Rising or Pro to publish prompt chains';
         setError(errorMessage);
         toast.error(errorMessage);
         throw new Error(errorMessage);
@@ -216,10 +216,10 @@ export function useCustomPromptChains() {
       throw new Error('You must be logged in to publish a prompt chain');
     }
 
-    // Check subscription tier - only Creator and Professional users can publish
-    const userTier = subscriptionData.subscription_tier || 'free';
-    if (userTier !== 'creator' && userTier !== 'professional' && userTier !== 'enterprise') {
-      const errorMessage = 'Upgrade to Creator or Professional plan to publish prompt chains';
+    // Check subscription tier - only Rising and Pro users can publish
+    const userTier = (subscriptionData.subscription_tier || 'rookie').toLowerCase();
+    if (userTier !== 'rising' && userTier !== 'pro' && userTier !== 'creator' && userTier !== 'professional' && userTier !== 'enterprise') {
+      const errorMessage = 'Upgrade to Rising or Pro to publish prompt chains';
       setError(errorMessage);
       toast.error(errorMessage);
       throw new Error(errorMessage);

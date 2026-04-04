@@ -13,7 +13,7 @@ export interface FeatureAccess {
 export function useFeatureGating() {
   const { user } = useAuth();
   const { subscriptionData, loading: subscriptionLoading } = useSubscription();
-  const { balance, hasCredits, loading: creditsLoading } = useCredits();
+  const { hasCredits, loading: creditsLoading } = useCredits();
 
   const checkFeatureAccess = (feature: string): FeatureAccess => {
     if (!user) {
@@ -44,7 +44,7 @@ export function useFeatureGating() {
         return { hasAccess: true };
 
       // Community features
-      case 'community_posting':
+      case 'community_posting': {
         // Allow specific email addresses to post regardless of tier
         const allowedCommunityPosters = [
           'tyler.jacob.tennant517@gmail.com',
@@ -53,33 +53,34 @@ export function useFeatureGating() {
         if (user.email && allowedCommunityPosters.includes(user.email.toLowerCase())) {
           return { hasAccess: true };
         }
-        if (['rising', 'pro'].includes(tier)) {
+        if (['starter', 'rising', 'pro'].includes(tier)) {
           return { hasAccess: true };
         }
         return {
           hasAccess: false,
-          message: 'Upgrade to Rising plan or higher to create posts in the community',
-          requiredTier: 'rising'
+          message: 'Upgrade to Starter plan or higher to create posts in the community',
+          requiredTier: 'starter'
         };
+      }
 
       case 'community_commenting':
-        if (['rising', 'pro'].includes(tier)) {
+        if (['starter', 'rising', 'pro'].includes(tier)) {
           return { hasAccess: true };
         }
         return {
           hasAccess: false,
-          message: 'Upgrade to Rising plan or higher to comment on community posts',
-          requiredTier: 'rising'
+          message: 'Upgrade to Starter plan or higher to comment on community posts',
+          requiredTier: 'starter'
         };
 
       case 'community_voting':
-        if (['rising', 'pro'].includes(tier)) {
+        if (['starter', 'rising', 'pro'].includes(tier)) {
           return { hasAccess: true };
         }
         return {
           hasAccess: false,
-          message: 'Upgrade to Rising plan or higher to vote on community posts',
-          requiredTier: 'rising'
+          message: 'Upgrade to Starter plan or higher to vote on community posts',
+          requiredTier: 'starter'
         };
 
       case 'community_ai_insights':
@@ -137,13 +138,13 @@ export function useFeatureGating() {
 
       // Collaboration features
       case 'basic_collaboration':
-        if (['rising', 'pro'].includes(tier)) {
+        if (['starter', 'rising', 'pro'].includes(tier)) {
           return { hasAccess: true };
         }
         return {
           hasAccess: false,
-          message: 'Upgrade to Rising plan or higher for collaboration tools',
-          requiredTier: 'rising'
+          message: 'Upgrade to Starter plan or higher for collaboration tools',
+          requiredTier: 'starter'
         };
 
       case 'advanced_collaboration':
@@ -184,26 +185,25 @@ export function useFeatureGating() {
 
       // Tech Stack Generator
       case 'tech_stack_generation':
-        if (tier === 'rookie') {
-          // Rookie: locked_progressive — handled at component level via usePlanAccess
+        if (tier === 'rookie' || tier === 'starter') {
           return {
             hasAccess: false,
-            message: 'Complete the ICP Builder, Waitlist Maker, and PMF Lab to unlock Tech Stack.',
+            message: 'Tech Stack is available in preview on Rookie and Starter. Upgrade to Rising for full access.',
             requiredTier: 'rising'
-          };
-        }
-        // Rising+ has unlimited (credit-gated)
-        if (!hasCredits(CREDIT_COSTS.TECH_STACK_GENERATION)) {
-          return {
-            hasAccess: false,
-            message: `Insufficient credits. You need ${CREDIT_COSTS.TECH_STACK_GENERATION} credits for Tech Stack generation.`,
           };
         }
         return { hasAccess: true };
 
-      // Product-Market Fit Lab — accessible to all plans (costs credits)
+      // Product-Market Fit Lab — Rookie gets preview, Starter uses credits, Rising/Pro included
       case 'pmf_analysis':
-        if (!hasCredits(CREDIT_COSTS.PMF_ANALYSIS)) {
+        if (tier === 'rookie') {
+          return {
+            hasAccess: false,
+            message: 'PMF Lab is available in preview on Rookie. Upgrade to Starter to run full analyses.',
+            requiredTier: 'starter'
+          };
+        }
+        if (tier === 'starter' && !hasCredits(CREDIT_COSTS.PMF_ANALYSIS)) {
           return {
             hasAccess: false,
             message: `Insufficient credits. You need ${CREDIT_COSTS.PMF_ANALYSIS} credits for PMF analysis.`,
@@ -218,14 +218,8 @@ export function useFeatureGating() {
       case 'icp_analysis':
         return { hasAccess: true };
 
-      // Insighta Test (free for all tiers)
+      // Insighta Test (included for all tiers)
       case 'insighta_test':
-        if (!hasCredits(CREDIT_COSTS.FUNDRAISING_READINESS_ANALYSIS)) {
-          return {
-            hasAccess: false,
-            message: `Insufficient credits. You need ${CREDIT_COSTS.FUNDRAISING_READINESS_ANALYSIS} credits for Insighta Test.`,
-          };
-        }
         return { hasAccess: true };
 
       // Investor Matchmaker
@@ -250,34 +244,22 @@ export function useFeatureGating() {
 
       // Pitch Deck Analyzer (Rising+ only)
       case 'pitch_deck_analyzer':
-        if (tier === 'rookie') {
+        if (tier === 'rookie' || tier === 'starter') {
           return {
             hasAccess: false,
             message: 'Pitch Deck Analyzer is available on Rising and Pro plans.',
             requiredTier: 'rising'
           };
         }
-        if (!hasCredits(CREDIT_COSTS.PITCH_DECK_ANALYZER)) {
-          return {
-            hasAccess: false,
-            message: `Insufficient credits. Pitch Deck Analyzer costs ${CREDIT_COSTS.PITCH_DECK_ANALYZER} credits. Your balance: ${balance}`,
-          };
-        }
         return { hasAccess: true };
 
-      // Email Template Generation (Rising+ only)
+      // Email Template Generation (Starter+ included)
       case 'email_template_generation':
         if (tier === 'rookie') {
           return {
             hasAccess: false,
-            message: 'AI Email Template Generation is available on Rising and Pro plans.',
-            requiredTier: 'rising'
-          };
-        }
-        if (!hasCredits(CREDIT_COSTS.EMAIL_TEMPLATE_GENERATION)) {
-          return {
-            hasAccess: false,
-            message: `Insufficient credits. Email generation costs ${CREDIT_COSTS.EMAIL_TEMPLATE_GENERATION} credits. Your balance: ${balance}`,
+            message: 'Email Templates are available from the Starter plan.',
+            requiredTier: 'starter'
           };
         }
         return { hasAccess: true };
@@ -294,11 +276,13 @@ export function useFeatureGating() {
         return { hasAccess: true };
 
       case 'decision_sprint':
-        if (tier === 'rookie') {
+        if (tier === 'rookie' || tier === 'starter') {
           return {
-            hasAccess: false,
-            message: 'Upgrade to Rising plan or higher to use Decision Sprint.',
-            requiredTier: 'rising'
+            hasAccess: tier === 'starter',
+            message: tier === 'starter'
+              ? undefined
+              : 'Upgrade to Starter plan or higher to use Decision Sprint.',
+            requiredTier: tier === 'starter' ? undefined : 'starter'
           };
         }
         if (!hasCredits(CREDIT_COSTS.SPRINT_TASK_GENERATION)) {
@@ -313,8 +297,8 @@ export function useFeatureGating() {
         if (tier === 'rookie') {
           return {
             hasAccess: false,
-            message: 'Upgrade to Rising plan or higher to manage tasks.',
-            requiredTier: 'rising'
+            message: 'Upgrade to Starter plan or higher to manage tasks.',
+            requiredTier: 'starter'
           };
         }
         return { hasAccess: true };
@@ -385,10 +369,10 @@ export function useFeatureGating() {
 
       // MVP Builder (Rising+ only, or progressive unlock for Rookie)
       case 'mvp_builder':
-        if (tier === 'rookie') {
+        if (tier === 'rookie' || tier === 'starter') {
           return {
             hasAccess: false,
-            message: 'Complete the first 3 stages to unlock MVP Builder, or upgrade to Rising.',
+            message: 'MVP Builder is available in preview on Rookie and Starter. Upgrade to Rising for full access.',
             requiredTier: 'rising'
           };
         }
@@ -402,10 +386,10 @@ export function useFeatureGating() {
 
       // GTM Strategist (Rising+ — progressive for Rookie)
       case 'gtm_strategist':
-        if (tier === 'rookie') {
+        if (tier === 'rookie' || tier === 'starter') {
           return {
             hasAccess: false,
-            message: 'Complete earlier stages to unlock GTM Strategist, or upgrade to Rising.',
+            message: 'GTM Strategist is available in preview on Rookie and Starter. Upgrade to Rising for full access.',
             requiredTier: 'rising'
           };
         }
@@ -450,45 +434,54 @@ export function useFeatureGating() {
   const getConversationLimit = (): number => {
     const tier = subscriptionData?.subscription_tier || 'rookie';
     const limits: Record<string, number> = {
-      rookie: 10,
-      rising: 50,
-      pro: 150,
+      rookie: 25,
+      starter: 50,
+      rising: 100,
+      pro: 300,
     };
-    return limits[tier] ?? 10;
+    return limits[tier] ?? 25;
   };
 
   const getTierFeatures = (tierName: string): string[] => {
     const featureMap: Record<string, string[]> = {
       rookie: [
         '25 credits per month',
-        'Dashboard (Stages 1–3 focus)',
-        'ICP Builder (free, no credits)',
-        'Waitlist Maker & PMF Lab (credits)',
-        'Insighta Test',
-        'Newspaper',
-        'VC Search (browse only)',
-        'Accelerator Hunt (browse only)',
+        'ICP Builder included',
+        'Waitlist Maker and PMF Lab not included',
+        '1 free discovery call per billing cycle',
+        '1 co-founder post per billing cycle',
+        'VC Search and Accelerator Hunt list-only',
+        'Prompt Library: Business Case only',
+        'Insighta Test and Newspaper included',
+      ],
+      starter: [
+        '50 credits per month',
+        'ICP Builder included',
+        'Waitlist Maker and PMF Lab use credits',
+        'MVP Builder, Tech Stack, GTM Strategist, and Directories in preview mode',
+        '2 free discovery calls per billing cycle',
+        '2 co-founder posts per billing cycle',
+        '2 VC and 2 accelerator profiles per billing cycle',
+        'Basic email templates and 5 prompt templates',
       ],
       rising: [
         '100 credits per month',
-        'Full dashboard — all 7 stages accessible',
-        'ICP Builder (free), all other tools (credits)',
-        '3 free discovery calls per month',
-        'VC Search: 3 profile views/month',
-        'Accelerator Hunt: 3 profile views/month',
-        'Email Templates (full access)',
-        'Pitch Deck Analyzer',
-        'Prompt Library (all categories)',
-        'Community: mentors & co-founders',
+        'All 7 tools accessible in any order',
+        'Most BizMap tools included without per-use credits',
+        'MVP Builder and GTM Strategist still use credits',
+        '3 free discovery calls per billing cycle, then 10 credits each',
+        'Unlimited free co-founder posts',
+        '10 VC and 10 accelerator profiles per billing cycle',
+        'Full email templates, pitch deck analyzer, and prompt library',
       ],
       pro: [
         '300 credits per month',
         'Everything in Rising',
+        'MVP Builder and GTM Strategist still use credits',
         'Unlimited discovery calls',
-        'Unlimited VC & Accelerator profile views',
-        'Angels community (exclusive)',
-        'WhatsApp Founders Group access',
-        'Priority support',
+        'Unlimited VC and Accelerator profile views',
+        'Angels community access',
+        'Group office hours and priority support',
       ],
     };
     return featureMap[tierName] || [];

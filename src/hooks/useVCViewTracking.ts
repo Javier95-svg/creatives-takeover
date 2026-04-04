@@ -6,7 +6,7 @@ import { VC_VIEW_LIMITS } from '@/config/constants';
 export interface VCViewTrackingResult {
   success: boolean;
   message?: string;
-  requiredTier?: 'rising' | 'pro';
+  requiredTier?: 'starter' | 'rising' | 'pro';
   reason?: 'limit_reached' | 'auth' | 'error';
 }
 
@@ -79,9 +79,11 @@ export const useVCViewTracking = () => {
         return {
           success: false,
           message: currentTier === 'rookie'
-            ? 'VC profile views are not available on the Rookie plan. Upgrade to Rising to view up to 3 profiles per month.'
-            : `You've used all ${limit} VC profile views this month. Upgrade to Pro for unlimited views.`,
-          requiredTier: currentTier === 'rookie' ? 'rising' : 'pro',
+            ? 'VC profile views are not available on the Rookie plan. Upgrade to Starter to unlock profile views.'
+            : currentTier === 'starter'
+              ? `You've used all ${limit} VC profile views this billing cycle. Upgrade to Rising for 10 profile views per cycle.`
+              : `You've used all ${limit} VC profile views this billing cycle. Upgrade to Pro for unlimited views.`,
+          requiredTier: currentTier === 'rookie' ? 'starter' : currentTier === 'starter' ? 'rising' : 'pro',
           reason: 'limit_reached',
         };
       }

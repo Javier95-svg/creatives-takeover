@@ -16,7 +16,7 @@ const FAQPage = () => {
       },
       {
         question: "How much does it cost?",
-        answer: "We offer three plans: Rookie (Free) with 25 credits/month for idea validation, Rising at $32.99/month with 100 credits for building your startup, and Pro at $74.99/month with 300 credits for scaling with unlimited access. Annual billing saves approximately 25%. You can also buy extra credit packs (20, 40, or 60 credits) on any plan - they never expire."
+        answer: "We offer four plans: Rookie is free with 25 credits/month, Starter is $9/month or $79/year with 50 credits, Rising is $29/month or $239/year with 100 credits, and Pro is $65/month or $589/year with 300 credits. Extra credit packs remain available on every plan."
       },
       {
         question: "What is the credit system?",
@@ -28,7 +28,7 @@ const FAQPage = () => {
       },
       {
         question: "Can I try it for free?",
-        answer: "Yes. Our Rookie plan is free forever with 25 credits per month and no credit card required. You get access to BizMap AI, read-only PMF Lab, 5 VC profile views, basic Insighta Test, and community features."
+        answer: "Yes. Rookie is free forever with 25 credits per month and no credit card required. You get free ICP Builder access, Insighta Test, Newspaper, early-stage browsing or preview access, and community browsing features."
       },
       {
         question: "Is my business idea safe?",

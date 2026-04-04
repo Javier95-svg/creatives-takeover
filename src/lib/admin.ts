@@ -2,7 +2,7 @@ export const ADMIN_EMAIL = 'admin@creatives-takeover.com';
 
 export const ADMIN_SUBSCRIPTION = {
   subscribed: true,
-  subscription_tier: 'professional',
+  subscription_tier: 'pro',
   subscription_end: null,
 } as const;
 

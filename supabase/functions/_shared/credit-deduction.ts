@@ -263,14 +263,20 @@ async function checkAndResetMonthlyQuota(userId: string, supabase: any): Promise
 
     // Default quota amounts by tier (can be customized)
     const quotaAmounts: Record<string, number> = {
-      'free': 25,
-      'creator': 100,
-      'professional': 300,
+      'rookie': 25,
+      'starter': 50,
+      'rising': 100,
+      'pro': 300,
       'admin': 300
     };
 
     // Prefer subscriber tier if available, otherwise use profile tier
-    const tier = subscriber?.subscription_tier || profile?.subscription_tier || 'free';
+    const rawTier = subscriber?.subscription_tier || profile?.subscription_tier || 'rookie';
+    const tier =
+      rawTier === 'free' ? 'rookie' :
+      rawTier === 'creator' ? 'rising' :
+      rawTier === 'professional' ? 'pro' :
+      rawTier;
     const newQuota = quotaAmounts[tier] || 25;
     const shouldReset =
       tier === 'free'
