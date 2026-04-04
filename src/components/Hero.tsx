@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowRight, Sparkles, LayoutDashboard, User, Users, DollarSign, Play, Image as ImageIcon, Upload, Loader2 } from "lucide-react";
+import { ArrowRight, LayoutDashboard, User, DollarSign, Play, Image as ImageIcon, Upload, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useConversionTracking } from "@/hooks/useConversionTracking";
@@ -368,8 +368,9 @@ const Hero = () => {
   }, [trackTriggerView, isAuthenticated]);
 
   // Handle CTA clicks
-  const handleActivationCTAClick = (triggerType: string, engagementScore: number) => {
-    trackEngagement(triggerType, engagementScore);
+  const handlePrimaryCTAClick = () => {
+    trackEngagement('hero-primary-cta', 85);
+    trackSignupStarted('hero-primary-cta');
   };
 
   const handleDashboardCTAClick = () => {
@@ -415,10 +416,6 @@ const Hero = () => {
     }, 10);
   };
 
-  const handleTertiaryCTAClick = () => {
-    trackSignupStarted('hero-tertiary-cta');
-  };
-  
   return (
     <section
       ref={heroRef}
@@ -469,44 +466,30 @@ const Hero = () => {
                 </div>
 	            ) : (
 	              <div className="flex flex-col gap-3 items-center justify-center px-4 sm:px-0">
-                  {/* FIX(retention): homepage — hero CTAs now route first-time visitors into the three activation entry paths instead of a generic signup ask. */}
-	                <div className="grid w-full gap-3 sm:grid-cols-3">
-                    <Button size="lg" className="w-full min-h-[44px] touch-manipulation" asChild>
-                      <Link to="/icp-builder" onClick={() => handleActivationCTAClick('hero-icp-cta', 90)}>
-                        Run ICP Analysis
-                        <ArrowRight className="w-4 h-4" />
-                      </Link>
-                    </Button>
+	                  {/* FIX(retention): homepage — restored the previous hero CTA pair so first-time visitors see the original signup and feature-exploration entry points again. */}
+		              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-center justify-center px-4 sm:px-0">
+		                <Button size="lg" className="w-full sm:w-auto min-h-[44px] touch-manipulation" asChild>
+		                  <Link to="/signup" onClick={handlePrimaryCTAClick}>
+		                    Join Today
+		                    <ArrowRight className="w-4 h-4" />
+		                  </Link>
+		                </Button>
 
-                    <Button size="lg" variant="outline" className="w-full min-h-[44px] touch-manipulation" asChild>
-                      <Link to="/community" onClick={() => handleActivationCTAClick('hero-mentor-cta', 82)}>
-                        Find a Mentor
-                        <Users className="w-4 h-4" />
-                      </Link>
-                    </Button>
-
-                    <Button size="lg" variant="outline" className="w-full min-h-[44px] touch-manipulation" asChild>
-                      <Link to="/decision-sprint" onClick={() => handleActivationCTAClick('hero-validation-cta', 86)}>
-                        Start Validation
-                        <Sparkles className="w-4 h-4" />
-                      </Link>
-                    </Button>
-                  </div>
-
-	                <Button 
-	                  variant="ghost"
-	                  size="lg" 
-	                  className="w-full sm:w-auto min-h-[44px] touch-manipulation" 
-	                  onClick={(e) => {
-	                    e.preventDefault();
-	                    handleSecondaryCTAClick(e as any);
-	                  }}
-	                >
-	                  <Play className="w-4 h-4" />
-	                  Explore the platform
-	                </Button>
-	              </div>
-	              )}
+		                <Button 
+		                  variant="outline"
+		                  size="lg" 
+		                  className="w-full sm:w-auto min-h-[44px] touch-manipulation" 
+		                  onClick={(e) => {
+		                    e.preventDefault();
+		                    handleSecondaryCTAClick(e as any);
+		                  }}
+		                >
+		                  <Play className="w-4 h-4" />
+		                  How It Works
+		                </Button>
+		              </div>
+		              </div>
+		              )}
 	            </div>
           </div>
 
