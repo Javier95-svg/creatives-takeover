@@ -20,16 +20,13 @@ const SubscriptionFeatures = () => {
       { name: "Roadmap Generation", cost: CREDIT_COSTS.ROADMAP_GENERATION, description: "Strategic business roadmap" },
     ],
     bizmap: [
-      { name: "Business Planner (AI Chat)", cost: CREDIT_COSTS.AI_CHAT_MESSAGE, description: "Every message in Business Planning mode" },
       { name: "ICP Builder", cost: CREDIT_COSTS.ICP_ANALYSIS, description: "Define your ideal customer profile" },
       { name: "Waitlist Maker", cost: CREDIT_COSTS.WAITLIST_GENERATION, description: "Publish your waitlist page and capture early signups" },
       { name: "Product-Market Fit Lab", cost: CREDIT_COSTS.PMF_ANALYSIS, description: "Complete PMF analysis with recommendations" },
       { name: "MVP Builder", cost: CREDIT_COSTS.LAUNCH_REPORT, description: "14-day MVP building sprint" },
       { name: "Tech Stack Builder", cost: CREDIT_COSTS.TECH_STACK_GENERATION, description: "Custom tech stack for your startup" },
       { name: "GTM Strategist", cost: CREDIT_COSTS.ROADMAP_GENERATION, description: "End-to-end go-to-market planning" },
-      { name: "Launch Report", cost: CREDIT_COSTS.LAUNCH_REPORT, description: "Comprehensive business launch roadmap" },
-      { name: "Asset Generation", cost: CREDIT_COSTS.ASSET_GENERATION, description: "Generate outreach, social posts, and landing page assets" },
-      { name: "Prompt Generation", cost: CREDIT_COSTS.PROMPT_GENERATION, description: "AI-generated custom prompts" },
+      { name: "Directories", cost: 0, description: "Browse startup launch directories and platforms" },
     ],
     insighta: [
       { name: "VC Search", cost: 0, description: "Browse venture capital firms (view limits per tier)", badge: "VIEW LIMITS" },
