@@ -1,19 +1,19 @@
 export const ANGEL_SECTOR_OPTIONS = [
-  "SaaS",
   "AI & Machine Learning",
-  "FinTech",
-  "HealthTech",
+  "BioTech & Life Sciences",
   "CleanTech & Climate",
+  "Consumer & D2C",
+  "Cybersecurity",
+  "DeepTech & Hardware",
   "E-Commerce & Marketplace",
   "EdTech",
-  "Cybersecurity",
+  "FinTech",
   "Gaming & Entertainment",
-  "Web3 & Blockchain",
-  "BioTech & Life Sciences",
+  "HealthTech",
   "HR Tech & Future of Work",
-  "DeepTech & Hardware",
   "Mobility & Logistics",
-  "Consumer & D2C",
+  "SaaS",
+  "Web3 & Blockchain",
 ] as const;
 
 export type AngelSector = (typeof ANGEL_SECTOR_OPTIONS)[number];
