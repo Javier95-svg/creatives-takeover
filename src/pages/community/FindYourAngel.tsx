@@ -40,6 +40,7 @@ import { PREVIEW_MODE_CONTENT_BLUR, PREVIEW_MODE_OVERLAY_BACKGROUND } from "@/co
 
 import { cn } from "@/lib/utils";
 import { getPublicTabConfig } from "@/config/publicTabVisibility";
+import { ANGEL_SECTOR_OPTIONS } from "@/data/angelSectors";
 import {
   Pagination,
   PaginationContent,
@@ -89,6 +90,10 @@ const FindYourAngel = () => {
   const [selectedStages, setSelectedStages] = useState<string[]>(() => {
     const stagesParam = searchParams.get("stages");
     return stagesParam ? stagesParam.split(",").filter(Boolean) : [];
+  });
+  const [selectedSectors, setSelectedSectors] = useState<string[]>(() => {
+    const sectorsParam = searchParams.get("sectors");
+    return sectorsParam ? sectorsParam.split(",").filter(Boolean) : [];
   });
   const [sortBy, setSortBy] = useState(searchParams.get("sort") || "alphabetical");
   const currentPage = parseInt(searchParams.get("page") || "1", 10);
@@ -151,6 +156,31 @@ const FindYourAngel = () => {
     setSearchParams(params, { replace: true });
   };
 
+  const handleSectorToggle = (sector: string) => {
+    setSelectedSectors((prev) => {
+      const next = prev.includes(sector)
+        ? prev.filter((value) => value !== sector)
+        : [...prev, sector];
+      const params = new URLSearchParams(searchParams);
+      if (next.length > 0) {
+        params.set("sectors", next.join(","));
+      } else {
+        params.delete("sectors");
+      }
+      params.set("page", "1");
+      setSearchParams(params, { replace: true });
+      return next;
+    });
+  };
+
+  const clearSectorFilter = () => {
+    setSelectedSectors([]);
+    const params = new URLSearchParams(searchParams);
+    params.delete("sectors");
+    params.set("page", "1");
+    setSearchParams(params, { replace: true });
+  };
+
   const handleSortChange = (newSort: string) => {
     setSortBy(newSort);
     const params = new URLSearchParams(searchParams);
@@ -166,13 +196,14 @@ const FindYourAngel = () => {
   const clearAllFilters = () => {
     setSearchQuery("");
     setSelectedStages([]);
+    setSelectedSectors([]);
     setSortBy("alphabetical");
     const params = new URLSearchParams();
     params.set("page", "1");
     setSearchParams(params, { replace: true });
   };
 
-  const hasActiveFilters = searchQuery.length > 0 || selectedStages.length > 0;
+  const hasActiveFilters = searchQuery.length > 0 || selectedStages.length > 0 || selectedSectors.length > 0;
 
   // Filtered and sorted angels based on debounced search, stage filters, and sort
   const filteredAngels = useMemo(() => {
@@ -185,7 +216,8 @@ const FindYourAngel = () => {
         (angel) =>
           angel.name.toLowerCase().includes(query) ||
           angel.firm_name.toLowerCase().includes(query) ||
-          angel.investment_stages?.some((s) => s.toLowerCase().includes(query))
+          angel.investment_stages?.some((s) => s.toLowerCase().includes(query)) ||
+          angel.sectors?.some((sector) => sector.toLowerCase().includes(query))
       );
     }
 
@@ -194,6 +226,14 @@ const FindYourAngel = () => {
       result = result.filter((angel) =>
         selectedStages.some((stage) => angel.investment_stages?.includes(stage))
       );
+    }
+
+    // Sector filter
+    if (selectedSectors.length > 0) {
+      result = result.filter((angel) => {
+        const angelSectors = angel.sectors?.map((sector) => sector.toLowerCase()) || [];
+        return selectedSectors.some((sector) => angelSectors.includes(sector.toLowerCase()));
+      });
     }
 
     // Sorting
@@ -221,7 +261,7 @@ const FindYourAngel = () => {
     }
 
     return result;
-  }, [angels, debouncedSearch, selectedStages, sortBy]);
+  }, [angels, debouncedSearch, selectedStages, selectedSectors, sortBy]);
 
   const handlePageChange = (page: number) => {
     const params = new URLSearchParams(searchParams);
@@ -498,6 +538,81 @@ const FindYourAngel = () => {
                         disabled
                       >
                         Investment Stage
+                        <ChevronDown className="h-4 w-4 ml-2" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Upgrade to Professional to unlock filters</p>
+                    </TooltipContent>
+                  </Tooltip>
+                )}
+
+                {isPro ? (
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "h-9",
+                          selectedSectors.length > 0 && "border-primary bg-primary/5"
+                        )}
+                      >
+                        Sector
+                        {selectedSectors.length > 0 && (
+                          <Badge variant="secondary" className="ml-2 h-5 px-1.5">
+                            {selectedSectors.length}
+                          </Badge>
+                        )}
+                        <ChevronDown className="h-4 w-4 ml-2" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-72" align="start">
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <Label className="font-semibold">Sector</Label>
+                          {selectedSectors.length > 0 && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={clearSectorFilter}
+                            >
+                              Clear
+                            </Button>
+                          )}
+                        </div>
+                        <Separator />
+                        <div className="max-h-72 space-y-2 overflow-y-auto pr-1">
+                          {ANGEL_SECTOR_OPTIONS.map((sector) => (
+                            <div
+                              key={sector}
+                              className="flex items-center space-x-2"
+                            >
+                              <Checkbox
+                                id={`filter-sector-${sector}`}
+                                checked={selectedSectors.includes(sector)}
+                                onCheckedChange={() => handleSectorToggle(sector)}
+                              />
+                              <Label
+                                htmlFor={`filter-sector-${sector}`}
+                                className="font-normal cursor-pointer flex-1"
+                              >
+                                {sector}
+                              </Label>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                ) : (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className="h-9 opacity-50 cursor-not-allowed"
+                        disabled
+                      >
+                        Sector
                         <ChevronDown className="h-4 w-4 ml-2" />
                       </Button>
                     </TooltipTrigger>
