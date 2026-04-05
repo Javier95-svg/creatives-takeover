@@ -8,6 +8,7 @@ import { sortMentorsAlphabetically } from '@/utils/mentorSort';
 
 const MARC_BRIGHT_USER_ID = '4eea3ae6-40ec-4bd0-a373-4005343a9e25';
 const ALBERT_HOVHANNISYAN_USER_ID = 'e8ddb66e-142b-4d88-9d4f-7ce3cf18ce14';
+const ARTUR_SINDARSKY_USER_ID = '1f0fe62a-7744-4153-bfcf-4f20b6e820d3';
 
 const isMarcBrightMentor = (name?: string | null): boolean => {
   const normalizedName = (name || '').toLowerCase();
@@ -17,6 +18,11 @@ const isMarcBrightMentor = (name?: string | null): boolean => {
 const isAlbertHovhannisyanMentor = (name?: string | null): boolean => {
   const normalizedName = (name || '').toLowerCase();
   return normalizedName.includes('albert') && normalizedName.includes('hovhannisyan');
+};
+
+const isArturSindarskyMentor = (name?: string | null): boolean => {
+  const normalizedName = (name || '').toLowerCase();
+  return normalizedName.includes('artur') && normalizedName.includes('sindarsky');
 };
 
 export interface CreateMentorInput {
@@ -91,6 +97,8 @@ const convertToMentor = (data: any): Mentor => {
         ? MARC_BRIGHT_USER_ID
         : isAlbertHovhannisyanMentor(data.name)
           ? ALBERT_HOVHANNISYAN_USER_ID
+          : isArturSindarskyMentor(data.name)
+            ? ARTUR_SINDARSKY_USER_ID
           : undefined),
     hourly_rate_per_hour: data.hourly_rate_per_hour ?? 0,
     availability: (data.availability || []) as AvailabilitySlot[],
