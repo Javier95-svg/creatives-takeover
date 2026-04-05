@@ -22,6 +22,7 @@ const SAKINA_LOKHANDWALA_USER_ID = '625f9871-b975-40c5-9b71-a093419c69c8';
 const SHARON_PRAISE_AKPUNNE_USER_ID = '77283f92-7d90-45e2-97aa-3ec500781656';
 const SOPHIA_LOPEZ_PIMENTA_USER_ID = '50695a54-30c6-4b57-969e-b2de733bcd73';
 const VIVIAN_UBOCHI_USER_ID = '5e919674-60ba-42b9-bd18-813f484f7c24';
+const YASMINE_CAXEIRO_USER_ID = '357b97ca-c578-43b1-8e48-b438142312ec';
 
 const isMarcBrightMentor = (name?: string | null): boolean => {
   const normalizedName = (name || '').toLowerCase();
@@ -101,6 +102,11 @@ const isSophiaLopezPimentaMentor = (name?: string | null): boolean => {
 const isVivianUbochiMentor = (name?: string | null): boolean => {
   const normalizedName = (name || '').toLowerCase();
   return normalizedName.includes('vivian') && normalizedName.includes('ubochi');
+};
+
+const isYasmineCaxeiroMentor = (name?: string | null): boolean => {
+  const normalizedName = (name || '').toLowerCase();
+  return normalizedName.includes('yasmine') && normalizedName.includes('caxeiro');
 };
 
 export interface CreateMentorInput {
@@ -203,6 +209,8 @@ const convertToMentor = (data: any): Mentor => {
                                     ? SOPHIA_LOPEZ_PIMENTA_USER_ID
                                     : isVivianUbochiMentor(data.name)
                                       ? VIVIAN_UBOCHI_USER_ID
+                                      : isYasmineCaxeiroMentor(data.name)
+                                        ? YASMINE_CAXEIRO_USER_ID
           : undefined),
     hourly_rate_per_hour: data.hourly_rate_per_hour ?? 0,
     availability: (data.availability || []) as AvailabilitySlot[],
