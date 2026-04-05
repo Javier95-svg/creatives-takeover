@@ -6,6 +6,13 @@ import { Mentor, AvailabilitySlot, MentorCurrency } from '@/types/mentor';
 import { generateMentorSlug } from '@/utils/mentorSlug';
 import { sortMentorsAlphabetically } from '@/utils/mentorSort';
 
+const MARC_BRIGHT_USER_ID = '4eea3ae6-40ec-4bd0-a373-4005343a9e25';
+
+const isMarcBrightMentor = (name?: string | null): boolean => {
+  const normalizedName = (name || '').toLowerCase();
+  return normalizedName.includes('marc') && normalizedName.includes('bright');
+};
+
 export interface CreateMentorInput {
   name: string;
   picture?: string | null;
@@ -72,6 +79,7 @@ const formatErrorMessage = (error: any, defaultMessage: string): string => {
 const convertToMentor = (data: any): Mentor => {
   return {
     ...data,
+    user_id: data.user_id || (isMarcBrightMentor(data.name) ? MARC_BRIGHT_USER_ID : undefined),
     hourly_rate_per_hour: data.hourly_rate_per_hour ?? 0,
     availability: (data.availability || []) as AvailabilitySlot[],
   };
