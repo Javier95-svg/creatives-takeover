@@ -16,6 +16,7 @@ const JOHNNY_BOU_MALHAB_USER_ID = 'dd972b4a-7e02-41c4-a722-bacead700c9b';
 const KATIE_BRETT_USER_ID = 'a786507a-b45c-4044-9b92-d9db40340f47';
 const LUCAS_ANNARATTONE_USER_ID = '089e99ca-18d6-43f5-9687-f60c2d76b2f8';
 const MATAS_RAMANAUSKAS_USER_ID = 'e1db835c-4149-407e-807e-5ff0b99661c0';
+const MATIAS_PANCORVO_USER_ID = 'd4d2ec5d-75ca-482a-8126-2e5a9ff9b98c';
 
 const isMarcBrightMentor = (name?: string | null): boolean => {
   const normalizedName = (name || '').toLowerCase();
@@ -65,6 +66,11 @@ const isLucasAnnarattoneMentor = (name?: string | null): boolean => {
 const isMatasRamanauskasMentor = (name?: string | null): boolean => {
   const normalizedName = (name || '').toLowerCase();
   return normalizedName.includes('matas') && normalizedName.includes('ramanauskas');
+};
+
+const isMatiasPancorvoMentor = (name?: string | null): boolean => {
+  const normalizedName = (name || '').toLowerCase();
+  return normalizedName.includes('matias') && normalizedName.includes('pancorvo');
 };
 
 export interface CreateMentorInput {
@@ -155,6 +161,8 @@ const convertToMentor = (data: any): Mentor => {
                         ? LUCAS_ANNARATTONE_USER_ID
                         : isMatasRamanauskasMentor(data.name)
                           ? MATAS_RAMANAUSKAS_USER_ID
+                          : isMatiasPancorvoMentor(data.name)
+                            ? MATIAS_PANCORVO_USER_ID
           : undefined),
     hourly_rate_per_hour: data.hourly_rate_per_hour ?? 0,
     availability: (data.availability || []) as AvailabilitySlot[],
