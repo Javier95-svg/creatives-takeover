@@ -3,6 +3,11 @@ import Stripe from "https://esm.sh/stripe@14.21.0?target=deno";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.0";
 import { resolveMonthlyBillingWindow } from "../_shared/billing-period.ts";
 import { normalizePlan as normalizeSubscriptionTier, PLAN_MONTHLY_CREDITS } from "../_shared/plan-enforcement.ts";
+import {
+  buildProActivationIdempotencyKey,
+  shouldEnqueueProActivation,
+  type ProActivationSource,
+} from "../_shared/pro-activation.ts";
 
 const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
   apiVersion: "2023-10-16",
@@ -17,6 +22,13 @@ const CREDIT_PACK_CREDITS: Record<string, number> = {
 };
 
 type BillingCycle = "monthly" | "yearly";
+
+interface ProActivationEventContext {
+  source: ProActivationSource;
+  stripeEventId: string;
+  stripeEventType: string;
+  subscriptionId?: string | null;
+}
 
 const normalizeBillingCycle = (value: unknown): BillingCycle => {
   const normalized = typeof value === "string" ? value.trim().toLowerCase() : "";
@@ -47,6 +59,55 @@ const getTierCredits = async (supabaseAdmin: any, tier: string): Promise<number>
     .maybeSingle();
 
   return Number(data?.monthly_credits ?? PLAN_MONTHLY_CREDITS[normalizedTier]);
+};
+
+const enqueueProActivationOutbox = async (
+  supabaseAdmin: any,
+  {
+    userId,
+    email,
+    fullName,
+    startupName,
+    stripeCustomerId,
+    eventContext,
+    billingCycle,
+  }: {
+    userId: string;
+    email: string;
+    fullName?: string | null;
+    startupName?: string | null;
+    stripeCustomerId?: string | null;
+    eventContext: ProActivationEventContext;
+    billingCycle: BillingCycle | null;
+  }
+) => {
+  const idempotencyKey = buildProActivationIdempotencyKey({
+    stripeEventId: eventContext.stripeEventId,
+    userId,
+    subscriptionId: eventContext.subscriptionId,
+  });
+
+  const { error } = await supabaseAdmin.rpc("enqueue_pro_activation_outbox", {
+    p_user_id: userId,
+    p_email: email,
+    p_full_name: fullName ?? null,
+    p_startup_name: startupName ?? null,
+    p_subscription_id: eventContext.subscriptionId ?? null,
+    p_stripe_customer_id: stripeCustomerId ?? null,
+    p_stripe_event_id: eventContext.stripeEventId,
+    p_stripe_event_type: eventContext.stripeEventType,
+    p_idempotency_key: idempotencyKey,
+    p_payload: {
+      tier: "pro",
+      billingCycle,
+      source: eventContext.source,
+      queuedAtIso: new Date().toISOString(),
+    },
+  });
+
+  if (error) {
+    throw error;
+  }
 };
 
 const toIsoOrNull = (unixSeconds?: number | null) => (
@@ -475,6 +536,7 @@ const syncSubscriptionState = async (
     billingAnchorAt,
     stripeCurrentPeriodStart,
     stripeCurrentPeriodEnd,
+    proActivationEvent,
   }: {
     userId: string;
     email: string;
@@ -487,6 +549,7 @@ const syncSubscriptionState = async (
     billingAnchorAt?: string | null;
     stripeCurrentPeriodStart?: string | null;
     stripeCurrentPeriodEnd?: string | null;
+    proActivationEvent?: ProActivationEventContext | null;
   }
 ) => {
   const normalizedTier = subscribed ? normalizeSubscriptionTier(tier) : "rookie";
@@ -495,6 +558,24 @@ const syncSubscriptionState = async (
   const nowIso = new Date().toISOString();
   const resolvedAnchor = billingAnchorAt ?? nowIso;
   const monthlyBillingWindow = resolveMonthlyBillingWindow(resolvedAnchor, new Date(nowIso));
+
+  const [{ data: existingSubscriber }, { data: existingProfile }] = await Promise.all([
+    supabaseAdmin
+      .from("subscribers")
+      .select("subscribed, subscription_tier")
+      .eq("user_id", userId)
+      .maybeSingle(),
+    supabaseAdmin
+      .from("profiles")
+      .select("subscribed, subscription_tier, full_name, startup_name")
+      .eq("id", userId)
+      .maybeSingle(),
+  ]);
+
+  const wasSubscribed = Boolean(existingSubscriber?.subscribed ?? existingProfile?.subscribed ?? false);
+  const previousTier = normalizeSubscriptionTier(
+    existingSubscriber?.subscription_tier ?? existingProfile?.subscription_tier ?? "rookie"
+  );
 
   await supabaseAdmin.from("subscribers").upsert({
     email,
@@ -592,9 +673,34 @@ const syncSubscriptionState = async (
       },
     });
   }
+
+  if (
+    proActivationEvent &&
+    shouldEnqueueProActivation({
+      previousTier,
+      nextTier: normalizedTier,
+      wasSubscribed,
+      isSubscribed: subscribed,
+      source: proActivationEvent.source,
+    })
+  ) {
+    await enqueueProActivationOutbox(supabaseAdmin, {
+      userId,
+      email,
+      fullName: existingProfile?.full_name ?? null,
+      startupName: existingProfile?.startup_name ?? null,
+      stripeCustomerId,
+      eventContext: proActivationEvent,
+      billingCycle: nextBillingCycle,
+    });
+  }
 };
 
-async function handleCheckoutCompleted(session: any, supabaseAdmin: any) {
+async function handleCheckoutCompleted(
+  session: any,
+  supabaseAdmin: any,
+  eventContext: { stripeEventId: string; stripeEventType: string }
+) {
   console.log("[Checkout] Processing checkout.session.completed");
 
   const customerId = typeof session.customer === "string" ? session.customer : null;
@@ -679,6 +785,14 @@ async function handleCheckoutCompleted(session: any, supabaseAdmin: any) {
     subscribed: true,
     subscriptionEnd,
     grantQuota: true,
+    proActivationEvent: typeof session.subscription === "string"
+      ? {
+        source: "checkout",
+        stripeEventId: eventContext.stripeEventId,
+        stripeEventType: eventContext.stripeEventType,
+        subscriptionId: session.subscription,
+      }
+      : null,
   });
 
   console.log(`[Checkout] Subscription synced for ${resolvedUserId} (${tier}, ${billingCycle})`);
@@ -895,7 +1009,11 @@ async function handlePaymentIntentSucceeded(paymentIntent: any, supabaseAdmin: a
   });
 }
 
-async function handleSubscriptionChange(subscription: any, supabaseAdmin: any) {
+async function handleSubscriptionChange(
+  subscription: any,
+  supabaseAdmin: any,
+  eventContext: { stripeEventId: string; stripeEventType: string }
+) {
   console.log("[Subscription] Processing subscription change");
 
   const customerId = typeof subscription.customer === "string" ? subscription.customer : null;
@@ -938,6 +1056,12 @@ async function handleSubscriptionChange(subscription: any, supabaseAdmin: any) {
     billingAnchorAt,
     stripeCurrentPeriodStart,
     stripeCurrentPeriodEnd: subscriptionEnd,
+    proActivationEvent: {
+      source: "subscription",
+      stripeEventId: eventContext.stripeEventId,
+      stripeEventType: eventContext.stripeEventType,
+      subscriptionId: typeof subscription.id === "string" ? subscription.id : null,
+    },
   });
 
   console.log(`[Subscription] Synced ${resolvedUserId}: ${tier} (${status})`);
@@ -981,7 +1105,11 @@ async function handleSubscriptionDeleted(subscription: any, supabaseAdmin: any) 
   console.log(`[Subscription] Downgraded ${resolvedUserId} to rookie`);
 }
 
-async function handleInvoicePaid(invoice: any, supabaseAdmin: any) {
+async function handleInvoicePaid(
+  invoice: any,
+  supabaseAdmin: any,
+  eventContext: { stripeEventId: string; stripeEventType: string }
+) {
   console.log("[Invoice] Received invoice.paid", {
     customer: invoice.customer,
     billingReason: invoice.billing_reason,
@@ -1052,6 +1180,12 @@ async function handleInvoicePaid(invoice: any, supabaseAdmin: any) {
     billingAnchorAt,
     stripeCurrentPeriodStart,
     stripeCurrentPeriodEnd: subscriptionEnd,
+    proActivationEvent: {
+      source: "invoice",
+      stripeEventId: eventContext.stripeEventId,
+      stripeEventType: eventContext.stripeEventType,
+      subscriptionId,
+    },
   });
 
   await resetSubscriptionQuotaForInvoice(supabaseAdmin, {
@@ -1123,20 +1257,29 @@ serve(async (req) => {
 
     switch (event.type) {
       case "checkout.session.completed":
-        await handleCheckoutCompleted(object, supabaseAdmin);
+        await handleCheckoutCompleted(object, supabaseAdmin, {
+          stripeEventId: event.id,
+          stripeEventType: event.type,
+        });
         break;
       case "payment_intent.succeeded":
         await handlePaymentIntentSucceeded(object, supabaseAdmin);
         break;
       case "customer.subscription.created":
       case "customer.subscription.updated":
-        await handleSubscriptionChange(object, supabaseAdmin);
+        await handleSubscriptionChange(object, supabaseAdmin, {
+          stripeEventId: event.id,
+          stripeEventType: event.type,
+        });
         break;
       case "customer.subscription.deleted":
         await handleSubscriptionDeleted(object, supabaseAdmin);
         break;
       case "invoice.paid":
-        await handleInvoicePaid(object, supabaseAdmin);
+        await handleInvoicePaid(object, supabaseAdmin, {
+          stripeEventId: event.id,
+          stripeEventType: event.type,
+        });
         break;
       default:
         console.log(`[Webhook] Unhandled event type: ${event.type}`);
