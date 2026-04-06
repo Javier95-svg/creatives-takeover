@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0?target=deno";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.0";
+import { resolveMonthlyBillingWindow } from "../_shared/billing-period.ts";
 
 const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
   apiVersion: "2023-10-16",
@@ -63,6 +64,12 @@ const getTierCredits = async (supabaseAdmin: any, tier: string): Promise<number>
 
   return Number(data?.monthly_credits ?? FALLBACK_TIER_CREDITS[normalizedTier] ?? FALLBACK_TIER_CREDITS.free);
 };
+
+const toIsoOrNull = (unixSeconds?: number | null) => (
+  typeof unixSeconds === "number" && Number.isFinite(unixSeconds)
+    ? new Date(unixSeconds * 1000).toISOString()
+    : null
+);
 
 const getStripeCustomerContext = async (customerId: string | null | undefined) => {
   if (!customerId) {
@@ -358,6 +365,7 @@ const resetSubscriptionQuotaForInvoice = async (
     subscriptionId,
     amountPaid,
     appliedAt,
+    billingAnchorAt,
   }: {
     userId: string;
     tier: string;
@@ -366,6 +374,7 @@ const resetSubscriptionQuotaForInvoice = async (
     subscriptionId: string | null;
     amountPaid: number;
     appliedAt: string;
+    billingAnchorAt: string | null;
   }
 ) => {
   const normalizedTier = normalizeSubscriptionTier(tier);
@@ -398,6 +407,7 @@ const resetSubscriptionQuotaForInvoice = async (
     const currentBalance = Number(currentCredits?.balance ?? 0);
 
     if (currentCredits) {
+      const billingWindow = resolveMonthlyBillingWindow(billingAnchorAt ?? appliedAt, new Date(appliedAt));
       await supabaseAdmin
         .from("user_credits")
         .update({
@@ -406,9 +416,13 @@ const resetSubscriptionQuotaForInvoice = async (
           subscription_tier: normalizedTier,
           last_reset_at: appliedAt,
           last_credit_grant: appliedAt,
+          billing_anchor_at: billingWindow.anchorAt.toISOString(),
+          current_period_start: billingWindow.periodStart.toISOString(),
+          current_period_end: billingWindow.periodEnd.toISOString(),
         })
         .eq("user_id", userId);
     } else {
+      const billingWindow = resolveMonthlyBillingWindow(billingAnchorAt ?? appliedAt, new Date(appliedAt));
       await supabaseAdmin
         .from("user_credits")
         .insert({
@@ -418,6 +432,9 @@ const resetSubscriptionQuotaForInvoice = async (
           subscription_tier: normalizedTier,
           last_reset_at: appliedAt,
           last_credit_grant: appliedAt,
+          billing_anchor_at: billingWindow.anchorAt.toISOString(),
+          current_period_start: billingWindow.periodStart.toISOString(),
+          current_period_end: billingWindow.periodEnd.toISOString(),
         });
     }
 
@@ -471,6 +488,9 @@ const syncSubscriptionState = async (
     subscribed,
     subscriptionEnd,
     grantQuota,
+    billingAnchorAt,
+    stripeCurrentPeriodStart,
+    stripeCurrentPeriodEnd,
   }: {
     userId: string;
     email: string;
@@ -480,12 +500,17 @@ const syncSubscriptionState = async (
     subscribed: boolean;
     subscriptionEnd: string | null;
     grantQuota: boolean;
+    billingAnchorAt?: string | null;
+    stripeCurrentPeriodStart?: string | null;
+    stripeCurrentPeriodEnd?: string | null;
   }
 ) => {
   const normalizedTier = subscribed ? normalizeSubscriptionTier(tier) : "rookie";
   const nextBillingCycle = subscribed ? billingCycle : null;
   const tierCredits = await getTierCredits(supabaseAdmin, normalizedTier);
   const nowIso = new Date().toISOString();
+  const resolvedAnchor = billingAnchorAt ?? nowIso;
+  const monthlyBillingWindow = resolveMonthlyBillingWindow(resolvedAnchor, new Date(nowIso));
 
   await supabaseAdmin.from("subscribers").upsert({
     email,
@@ -494,6 +519,13 @@ const syncSubscriptionState = async (
     subscribed,
     subscription_tier: normalizedTier,
     subscription_end: subscriptionEnd,
+    billing_anchor_at: resolvedAnchor,
+    current_period_start: subscribed
+      ? (stripeCurrentPeriodStart ?? monthlyBillingWindow.periodStart.toISOString())
+      : monthlyBillingWindow.periodStart.toISOString(),
+    current_period_end: subscribed
+      ? (stripeCurrentPeriodEnd ?? subscriptionEnd ?? monthlyBillingWindow.periodEnd.toISOString())
+      : monthlyBillingWindow.periodEnd.toISOString(),
     updated_at: nowIso,
   }, { onConflict: "user_id" });
 
@@ -512,7 +544,7 @@ const syncSubscriptionState = async (
 
   const { data: currentCredits } = await supabaseAdmin
     .from("user_credits")
-    .select("balance, monthly_quota, subscription_tier, last_reset_at")
+    .select("balance, monthly_quota, subscription_tier, last_reset_at, billing_anchor_at, current_period_start, current_period_end")
     .eq("user_id", userId)
     .maybeSingle();
 
@@ -528,6 +560,10 @@ const syncSubscriptionState = async (
   const nextLastResetAt = subscribed
     ? (shouldLiftQuota ? nowIso : (currentCredits?.last_reset_at ?? nowIso))
     : (shouldAdjustFreeQuota ? nowIso : (currentCredits?.last_reset_at ?? nowIso));
+  const nextAnchorAt = subscribed
+    ? resolvedAnchor
+    : (billingAnchorAt ?? (currentCredits?.billing_anchor_at as string | null | undefined) ?? nowIso);
+  const nextMonthlyWindow = resolveMonthlyBillingWindow(nextAnchorAt, new Date(nowIso));
 
   if (currentCredits) {
     await supabaseAdmin
@@ -537,6 +573,9 @@ const syncSubscriptionState = async (
         monthly_quota: nextQuota,
         subscription_tier: normalizedTier,
         last_reset_at: nextLastResetAt,
+        billing_anchor_at: nextMonthlyWindow.anchorAt.toISOString(),
+        current_period_start: nextMonthlyWindow.periodStart.toISOString(),
+        current_period_end: nextMonthlyWindow.periodEnd.toISOString(),
       })
       .eq("user_id", userId);
   } else {
@@ -548,6 +587,9 @@ const syncSubscriptionState = async (
         monthly_quota: nextQuota,
         subscription_tier: normalizedTier,
         last_reset_at: nextLastResetAt,
+        billing_anchor_at: nextMonthlyWindow.anchorAt.toISOString(),
+        current_period_start: nextMonthlyWindow.periodStart.toISOString(),
+        current_period_end: nextMonthlyWindow.periodEnd.toISOString(),
       });
   }
 
@@ -897,6 +939,8 @@ async function handleSubscriptionChange(subscription: any, supabaseAdmin: any) {
   const subscriptionEnd = subscription.current_period_end
     ? new Date(subscription.current_period_end * 1000).toISOString()
     : null;
+  const stripeCurrentPeriodStart = toIsoOrNull(subscription.current_period_start ?? null);
+  const billingAnchorAt = toIsoOrNull(subscription.billing_cycle_anchor ?? subscription.current_period_start ?? null);
 
   await syncSubscriptionState(supabaseAdmin, {
     userId: resolvedUserId,
@@ -907,6 +951,9 @@ async function handleSubscriptionChange(subscription: any, supabaseAdmin: any) {
     subscribed: isSubscribed,
     subscriptionEnd,
     grantQuota: false,
+    billingAnchorAt,
+    stripeCurrentPeriodStart,
+    stripeCurrentPeriodEnd: subscriptionEnd,
   });
 
   console.log(`[Subscription] Synced ${resolvedUserId}: ${tier} (${status})`);
@@ -942,6 +989,9 @@ async function handleSubscriptionDeleted(subscription: any, supabaseAdmin: any) 
     subscribed: false,
     subscriptionEnd: null,
     grantQuota: false,
+    billingAnchorAt: new Date().toISOString(),
+    stripeCurrentPeriodStart: null,
+    stripeCurrentPeriodEnd: null,
   });
 
   console.log(`[Subscription] Downgraded ${resolvedUserId} to free`);
@@ -1000,6 +1050,8 @@ async function handleInvoicePaid(invoice: any, supabaseAdmin: any) {
   const subscriptionEnd = subscription.current_period_end
     ? new Date(subscription.current_period_end * 1000).toISOString()
     : null;
+  const stripeCurrentPeriodStart = toIsoOrNull(subscription.current_period_start ?? null);
+  const billingAnchorAt = toIsoOrNull(subscription.billing_cycle_anchor ?? subscription.current_period_start ?? null);
   const appliedAt = typeof invoice.status_transitions?.paid_at === "number"
     ? new Date(invoice.status_transitions.paid_at * 1000).toISOString()
     : new Date().toISOString();
@@ -1013,6 +1065,9 @@ async function handleInvoicePaid(invoice: any, supabaseAdmin: any) {
     subscribed: true,
     subscriptionEnd,
     grantQuota: false,
+    billingAnchorAt,
+    stripeCurrentPeriodStart,
+    stripeCurrentPeriodEnd: subscriptionEnd,
   });
 
   await resetSubscriptionQuotaForInvoice(supabaseAdmin, {
@@ -1023,6 +1078,7 @@ async function handleInvoicePaid(invoice: any, supabaseAdmin: any) {
     subscriptionId,
     amountPaid: Number(invoice.amount_paid ?? 0),
     appliedAt,
+    billingAnchorAt,
   });
 }
 

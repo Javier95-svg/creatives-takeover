@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
+import { resolveMonthlyBillingWindow } from './billing-period.ts';
 
 const ADMIN_EMAIL = 'admin@creatives-takeover.com';
 
@@ -231,19 +232,13 @@ async function checkAndResetMonthlyQuota(userId: string, supabase: any): Promise
   try {
     const { data: credits } = await supabase
       .from('user_credits')
-      .select('last_reset_at, monthly_quota')
+      .select('created_at, last_reset_at, last_credit_grant, monthly_quota, current_period_start, current_period_end, billing_anchor_at')
       .eq('user_id', userId)
       .single();
 
-    if (!credits || !credits.last_reset_at) return;
+    if (!credits) return;
 
-    const lastReset = new Date(credits.last_reset_at);
     const now = new Date();
-    
-    // Check if a month has passed since last reset
-    // Reset if it's been 30+ days or if we're in a different month
-    const daysSinceReset = Math.floor((now.getTime() - lastReset.getTime()) / (1000 * 60 * 60 * 24));
-    const isDifferentMonth = now.getMonth() !== lastReset.getMonth() || now.getFullYear() !== lastReset.getFullYear();
 
     // Get user's subscription tier to determine quota amount
     // Check both profiles and subscribers tables for tier
@@ -278,41 +273,59 @@ async function checkAndResetMonthlyQuota(userId: string, supabase: any): Promise
       rawTier === 'professional' ? 'pro' :
       rawTier;
     const newQuota = quotaAmounts[tier] || 25;
-    const shouldReset =
-      tier === 'free'
-        ? (daysSinceReset >= 30 || isDifferentMonth)
-        : daysSinceReset >= 30;
 
-    if (!shouldReset) {
+    const anchorSource = credits.billing_anchor_at
+      || credits.current_period_start
+      || credits.last_reset_at
+      || credits.last_credit_grant
+      || credits.created_at
+      || now.toISOString();
+    const billingWindow = resolveMonthlyBillingWindow(anchorSource, now);
+    const storedPeriodStart = typeof credits.current_period_start === 'string' ? new Date(credits.current_period_start) : null;
+    const storedPeriodEnd = typeof credits.current_period_end === 'string' ? new Date(credits.current_period_end) : null;
+    const hasCrossedBoundary = !storedPeriodEnd || now >= storedPeriodEnd;
+    const needsWindowSync = !credits.billing_anchor_at
+      || !storedPeriodStart
+      || !storedPeriodEnd
+      || storedPeriodStart.getTime() !== billingWindow.periodStart.getTime()
+      || storedPeriodEnd.getTime() !== billingWindow.periodEnd.getTime();
+
+    if (!hasCrossedBoundary && !needsWindowSync) {
       return;
     }
 
-    // Reset quota atomically
     await supabase
       .from('user_credits')
       .update({
-        monthly_quota: newQuota,
-        last_reset_at: now.toISOString()
+        monthly_quota: hasCrossedBoundary ? newQuota : (credits.monthly_quota || 0),
+        last_reset_at: hasCrossedBoundary ? now.toISOString() : (credits.last_reset_at || now.toISOString()),
+        billing_anchor_at: billingWindow.anchorAt.toISOString(),
+        current_period_start: billingWindow.periodStart.toISOString(),
+        current_period_end: billingWindow.periodEnd.toISOString(),
       })
       .eq('user_id', userId);
 
-    // Log reset transaction
-    await supabase
-      .from('credit_transactions')
-      .insert({
-        user_id: userId,
-        amount: newQuota - (credits.monthly_quota || 0),
-        tx_type: 'reset',
-        reason: `Monthly quota reset - ${newQuota} credits`,
-        feature: 'Monthly Quota Reset',
-        metadata: { 
-          previousQuota: credits.monthly_quota || 0,
-          newQuota,
-          tier 
-        }
-      });
+    if (hasCrossedBoundary) {
+      await supabase
+        .from('credit_transactions')
+        .insert({
+          user_id: userId,
+          amount: newQuota - (credits.monthly_quota || 0),
+          tx_type: 'reset',
+          reason: `Billing-anchor quota reset - ${newQuota} credits`,
+          feature: 'Monthly Quota Reset',
+          metadata: {
+            previousQuota: credits.monthly_quota || 0,
+            newQuota,
+            tier,
+            billingAnchorAt: billingWindow.anchorAt.toISOString(),
+            currentPeriodStart: billingWindow.periodStart.toISOString(),
+            currentPeriodEnd: billingWindow.periodEnd.toISOString(),
+          }
+        });
 
-    console.log(`✅ Monthly quota reset for user ${userId}: ${newQuota} credits (tier: ${tier})`);
+      console.log(`✅ Billing-anchor quota reset for user ${userId}: ${newQuota} credits (tier: ${tier})`);
+    }
   } catch (error) {
     console.error('Error checking/resetting monthly quota:', error);
     // Don't fail the operation if quota reset check fails

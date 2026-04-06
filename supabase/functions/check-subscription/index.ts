@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { resolveMonthlyBillingWindow } from "../_shared/billing-period.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -71,6 +72,7 @@ serve(async (req) => {
       logStep("Pro override account detected - granting pro tier", { email: user.email });
       const proTier = 'pro';
       const proCredits = PLAN_CREDITS.pro;
+      const proBillingWindow = resolveMonthlyBillingWindow(new Date().toISOString());
 
       // Update subscribers table
       await supabaseService.from("subscribers").upsert({
@@ -80,6 +82,9 @@ serve(async (req) => {
         subscribed: true,
         subscription_tier: proTier,
         subscription_end: null,
+        billing_anchor_at: proBillingWindow.anchorAt.toISOString(),
+        current_period_start: proBillingWindow.periodStart.toISOString(),
+        current_period_end: proBillingWindow.periodEnd.toISOString(),
         updated_at: new Date().toISOString(),
       }, { onConflict: 'email' });
 
@@ -99,7 +104,10 @@ serve(async (req) => {
         subscription_tier: proTier,
         balance: nextBalance,
         monthly_quota: nextQuota,
-        last_credit_grant: new Date().toISOString()
+        last_credit_grant: new Date().toISOString(),
+        billing_anchor_at: proBillingWindow.anchorAt.toISOString(),
+        current_period_start: proBillingWindow.periodStart.toISOString(),
+        current_period_end: proBillingWindow.periodEnd.toISOString(),
       }, { onConflict: 'user_id' });
 
       // Update profiles table
@@ -198,6 +206,14 @@ serve(async (req) => {
       logStep("No active subscription found");
     }
 
+    const billingAnchorAt = hasActiveSub
+      ? new Date(((activeSubscription?.billing_cycle_anchor ?? activeSubscription?.current_period_start) || Math.floor(Date.now() / 1000)) * 1000).toISOString()
+      : null;
+    const monthlyBillingWindow = resolveMonthlyBillingWindow(billingAnchorAt ?? new Date().toISOString());
+    const stripeCurrentPeriodStart = hasActiveSub && activeSubscription?.current_period_start
+      ? new Date(activeSubscription.current_period_start * 1000).toISOString()
+      : null;
+
     // Update subscribers table
     await supabaseService.from("subscribers").upsert({
       email: user.email,
@@ -206,6 +222,9 @@ serve(async (req) => {
       subscribed: hasActiveSub,
       subscription_tier: subscriptionTier,
       subscription_end: subscriptionEnd,
+      billing_anchor_at: monthlyBillingWindow.anchorAt.toISOString(),
+      current_period_start: hasActiveSub ? stripeCurrentPeriodStart : monthlyBillingWindow.periodStart.toISOString(),
+      current_period_end: hasActiveSub ? subscriptionEnd : monthlyBillingWindow.periodEnd.toISOString(),
       updated_at: new Date().toISOString(),
     }, { onConflict: 'email' });
 
@@ -213,6 +232,9 @@ serve(async (req) => {
     await supabaseService.from("user_credits").upsert({
       user_id: user.id,
       subscription_tier: subscriptionTier,
+      billing_anchor_at: monthlyBillingWindow.anchorAt.toISOString(),
+      current_period_start: monthlyBillingWindow.periodStart.toISOString(),
+      current_period_end: monthlyBillingWindow.periodEnd.toISOString(),
     }, { onConflict: 'user_id' });
 
     logStep("Updated database with subscription info", { subscribed: hasActiveSub, subscriptionTier });

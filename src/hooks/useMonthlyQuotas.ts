@@ -33,7 +33,10 @@ export function useMonthlyQuotas() {
     if (!user) { setLoading(false); return; }
     setLoading(true);
     try {
-      const periodStart = getCurrentUtcMonthStart();
+      const { data: billingPeriodStart } = await supabase.rpc('get_current_billing_period_start', {
+        p_user_id: user.id,
+      });
+      const periodStart = billingPeriodStart || getCurrentUtcMonthStart();
       setCycleStart(periodStart);
 
       const [{ data: quotaRow }, { data: vcCount }, { data: acceleratorCount }] = await Promise.all([

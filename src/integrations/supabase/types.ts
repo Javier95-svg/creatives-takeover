@@ -6487,7 +6487,10 @@ export type Database = {
       }
       subscribers: {
         Row: {
+          billing_anchor_at: string | null
           created_at: string
+          current_period_end: string | null
+          current_period_start: string | null
           email: string
           id: string
           stripe_customer_id: string | null
@@ -6498,7 +6501,10 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          billing_anchor_at?: string | null
           created_at?: string
+          current_period_end?: string | null
+          current_period_start?: string | null
           email: string
           id?: string
           stripe_customer_id?: string | null
@@ -6509,7 +6515,10 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          billing_anchor_at?: string | null
           created_at?: string
+          current_period_end?: string | null
+          current_period_start?: string | null
           email?: string
           id?: string
           stripe_customer_id?: string | null
@@ -6938,7 +6947,10 @@ export type Database = {
       user_credits: {
         Row: {
           balance: number
+          billing_anchor_at: string | null
           created_at: string
+          current_period_end: string | null
+          current_period_start: string | null
           last_credit_grant: string | null
           last_reset_at: string
           monthly_quota: number
@@ -6948,7 +6960,10 @@ export type Database = {
         }
         Insert: {
           balance?: number
+          billing_anchor_at?: string | null
           created_at?: string
+          current_period_end?: string | null
+          current_period_start?: string | null
           last_credit_grant?: string | null
           last_reset_at?: string
           monthly_quota?: number
@@ -6958,7 +6973,10 @@ export type Database = {
         }
         Update: {
           balance?: number
+          billing_anchor_at?: string | null
           created_at?: string
+          current_period_end?: string | null
+          current_period_start?: string | null
           last_credit_grant?: string | null
           last_reset_at?: string
           monthly_quota?: number
@@ -8171,6 +8189,10 @@ export type Database = {
           recent_insights: number
           top_sources: string[]
         }[]
+      }
+      get_current_billing_period_start: {
+        Args: { p_user_id: string }
+        Returns: string
       }
       get_monthly_accelerator_view_count: {
         Args: { p_user_id: string }
