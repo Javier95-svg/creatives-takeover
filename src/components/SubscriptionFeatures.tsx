@@ -80,13 +80,17 @@ const creditBreakdown: {
     },
     {
       name: "Email Templates",
-      description: `Starter, Rising, and Pro have full access. Each generated template uses ${CREDIT_COSTS.EMAIL_TEMPLATE_GENERATION} credits. Rookie does not include it.`,
-      badge: `${CREDIT_COSTS.EMAIL_TEMPLATE_GENERATION} credits`,
+      description: "Starter, Rising, and Pro have full access without extra credit charges. Rookie does not include it.",
+      badge: "Included on Starter+",
+      badgeVariant: "outline",
+      badgeClassName: "bg-blue-50 dark:bg-blue-950/30",
     },
     {
       name: "Pitch Deck Analyzer",
-      description: `Included on Rising and Pro. Each analysis uses ${CREDIT_COSTS.PITCH_DECK_ANALYZER} credits. Rookie and Starter do not include it.`,
-      badge: `${CREDIT_COSTS.PITCH_DECK_ANALYZER} credits`,
+      description: "Included on Rising and Pro without extra credit charges. Rookie and Starter do not include it.",
+      badge: "Included on Rising+",
+      badgeVariant: "outline",
+      badgeClassName: "bg-blue-50 dark:bg-blue-950/30",
     },
     {
       name: "Insighta Test",
@@ -99,8 +103,10 @@ const creditBreakdown: {
   community: [
     {
       name: "Discovery Calls (Mentorship)",
-      description: `Rookie gets 1 free call/monthly, Starter 2, Rising 3, and Pro unlimited. Extra calls on Rookie, Starter, and Rising use ${CREDIT_COSTS.DISCOVERY_CALL} credits.`,
-      badge: `${CREDIT_COSTS.DISCOVERY_CALL} credits`,
+      description: "Rookie gets 1 call/monthly, Starter 2, Rising 3, and Pro unlimited. Upgrade when you need a higher monthly limit.",
+      badge: "Monthly quotas",
+      badgeVariant: "outline",
+      badgeClassName: "bg-blue-50 dark:bg-blue-950/30",
     },
     {
       name: "Find a Co-Founder Posting",

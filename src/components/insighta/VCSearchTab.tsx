@@ -9,7 +9,7 @@ import InsightaPagination from "@/components/insighta/InsightaPagination";
 import { useVCSearch } from "@/hooks/useVCSearch";
 import { useVCViewTracking } from "@/hooks/useVCViewTracking";
 import { VCFilters as VCFiltersType } from "@/types/insighta";
-import { TIER_DETAILS } from "@/config/constants";
+import { PLAN_SUMMARIES } from "@/config/planPermissions";
 
 const VCSearchTab = () => {
   const [filters, setFilters] = useState<VCFiltersType>({});
@@ -31,17 +31,18 @@ const VCSearchTab = () => {
   const isLowRemaining = !vcViewLoading && !hasUnlimitedViews && remaining > 0 && remaining <= 1;
   const showUpgradeBanner = isLimitReached || isLowRemaining;
   const upgradeTier = upgradeTarget ?? (currentTier === "rookie" ? "starter" : currentTier === "starter" ? "rising" : "pro");
-  const upgradeDetails = TIER_DETAILS[upgradeTier as keyof typeof TIER_DETAILS];
+  const upgradeDetails = PLAN_SUMMARIES[upgradeTier];
   const currentLimitLabel = hasUnlimitedViews ? "Unlimited VC views" : `${limit} VC views/month`;
-  const upgradeViewsLabel = upgradeDetails.vcViewLimit === -1
+  const upgradeViewsLabel = upgradeDetails.vcViewLimit === Infinity
     ? "Unlimited VC views"
     : `${upgradeDetails.vcViewLimit} VC views/month`;
   const upgradeTitle = isLimitReached
     ? "VC view limit reached"
     : `Only ${remaining} VC view${remaining === 1 ? "" : "s"} left this month`;
   const upgradeCopy = isLimitReached
-    ? `Your plan includes ${currentLimitLabel}. Upgrade to ${upgradeDetails.name} for ${upgradeViewsLabel} and ${upgradeDetails.credits} credits/month.`
-    : `Keep your research moving. ${upgradeDetails.name} gives you ${upgradeViewsLabel} and ${upgradeDetails.credits} credits/month.`;
+    ? `Your plan includes ${currentLimitLabel}. Upgrade to ${upgradeDetails.name} for ${upgradeViewsLabel} and ${upgradeDetails.monthlyCredits} credits/month.`
+    : `Keep your research moving. ${upgradeDetails.name} gives you ${upgradeViewsLabel} and ${upgradeDetails.monthlyCredits} credits/month.`;
+
   const canViewProfiles = vcViewLoading ? true : canViewMore;
   const totalPages = total > 0 ? Math.ceil(total / pageSize) : 0;
 
@@ -51,7 +52,6 @@ const VCSearchTab = () => {
 
   return (
     <div className="space-y-6">
-      {/* Filters */}
       <VCFilters
         filters={filters}
         onFiltersChange={setFilters}
@@ -81,7 +81,6 @@ const VCSearchTab = () => {
         </Card>
       )}
 
-      {/* Results */}
       {loading ? (
         <div className="text-center py-12">
           <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]"></div>

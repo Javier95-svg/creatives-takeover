@@ -9,7 +9,8 @@ import { Button } from "@/components/ui/button";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useFeatureGating } from "@/hooks/useFeatureGating";
 import { useCredits } from "@/hooks/useCredits";
-import { CREDIT_COSTS, TIER_DETAILS } from "@/config/constants";
+import { CREDIT_COSTS } from "@/config/constants";
+import { getNextPlan, normalizePlan, PLAN_SUMMARIES, type Plan } from "@/config/planPermissions";
 
 type UpgradeReason = "credits" | "limit" | "feature";
 
@@ -18,7 +19,7 @@ export interface UpgradePromptDialogProps {
   onOpenChange: (open: boolean) => void;
   reason?: UpgradeReason;
   featureName?: string;
-  requiredTier?: "creator" | "professional";
+  requiredTier?: Plan;
   requiredCredits?: number;
   limit?: number;
   limitLabel?: string;
@@ -42,13 +43,14 @@ const UpgradePromptDialog = ({
   const { createCheckout, subscriptionData } = useSubscription();
   const { currentTier } = useFeatureGating();
   const { balance } = useCredits();
+  const normalizedCurrentTier = normalizePlan(currentTier);
 
   const recommendedTier = useMemo(() => {
     if (requiredTier) return requiredTier;
-    return currentTier === "free" ? "creator" : "professional";
+    return getNextPlan(normalizedCurrentTier);
   }, [requiredTier, currentTier]);
 
-  const tierDetails = TIER_DETAILS[recommendedTier];
+  const tierDetails = PLAN_SUMMARIES[recommendedTier];
   const featureLabel = featureName || "this feature";
   const limitCopy = limitLabel || featureLabel;
 
@@ -66,13 +68,13 @@ const UpgradePromptDialog = ({
       return `You've used all ${limit} ${limitCopy} this month. Upgrade to ${tierDetails.name} to keep exploring.`;
     }
     if (reason === "credits" && typeof requiredCredits === "number") {
-      return `You need ${requiredCredits} credits to use ${featureLabel}. Upgrade to ${tierDetails.name} for ${tierDetails.credits} credits/month and keep moving.`;
+      return `You need ${requiredCredits} credits to use ${featureLabel}. Upgrade to ${tierDetails.name} for ${tierDetails.monthlyCredits} credits/month and keep moving.`;
     }
-    return `Upgrade to ${tierDetails.name} to unlock ${featureLabel} plus ${tierDetails.credits} credits each month.`;
+    return `Upgrade to ${tierDetails.name} to unlock ${featureLabel} plus ${tierDetails.monthlyCredits} credits each month.`;
   }, [featureLabel, limit, limitCopy, reason, tierDetails, requiredCredits]);
 
-  const canUpgrade = Boolean(tierDetails) && recommendedTier !== currentTier;
-  const vcViewText = tierDetails?.vcViewLimit === -1
+  const canUpgrade = Boolean(tierDetails) && recommendedTier !== normalizedCurrentTier;
+  const vcViewText = tierDetails?.vcViewLimit === Infinity
     ? "Unlimited VC views"
     : `${tierDetails?.vcViewLimit} VC views/month`;
 
@@ -145,7 +147,7 @@ const UpgradePromptDialog = ({
                   </div>
                 </div>
                 <div className="mt-4 flex flex-wrap gap-2 text-xs">
-                  <Badge variant="outline">{tierDetails.credits} credits/month</Badge>
+                  <Badge variant="outline">{tierDetails.monthlyCredits} credits/month</Badge>
                   <Badge variant="outline">{vcViewText}</Badge>
                 </div>
               </CardContent>

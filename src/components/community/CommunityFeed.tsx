@@ -401,14 +401,14 @@ const CommunityFeed: React.FC = () => {
                   <div className="flex-1">
                     <h3 className="text-lg font-semibold mb-2">Share Your Story</h3>
                     <p className="text-sm text-muted-foreground mb-4">
-                      {postingAccess.message || 'Upgrade to Creator tier or higher to create posts in the community'}
+                      {postingAccess.message || 'Upgrade to Starter plan or higher to create posts in the community'}
                     </p>
                     <Button 
                       onClick={() =>
                         openUpgradePrompt({
                           reason: 'feature',
                           featureName: 'Community posts',
-                          requiredTier: postingAccess.requiredTier as 'creator' | 'professional' | undefined,
+                          requiredTier: postingAccess.requiredTier as Plan | undefined,
                           description: postingAccess.message,
                         })
                       }

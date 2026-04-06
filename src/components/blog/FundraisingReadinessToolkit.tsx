@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo } from "react";
 import { Rocket, Target, Users, DollarSign, CheckCircle2, AlertCircle, HelpCircle, ChevronDown, ChevronUp, Loader2, LogIn, ArrowRight } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -14,9 +14,9 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useCredits } from "@/hooks/useCredits";
 import { useFeatureGating } from "@/hooks/useFeatureGating";
-import { useSubscription } from "@/hooks/useSubscription";
 import { useUpgradePrompt } from "@/contexts/UpgradePromptContext";
 import { useCreditActions } from "@/hooks/useCreditActions";
+import { type Plan } from "@/config/planPermissions";
 
 interface Criterion {
   id: string;
@@ -187,7 +187,6 @@ const FundraisingReadinessToolkit = () => {
   const { balance, refreshBalance } = useCredits();
   const { ensureCredits, handleCreditError } = useCreditActions();
   const { checkFeatureAccess } = useFeatureGating();
-  const { subscriptionData } = useSubscription();
   const { openUpgradePrompt } = useUpgradePrompt();
   const [scores, setScores] = useState<{ [key: string]: number }>({
     mvp: 0,
@@ -269,42 +268,13 @@ const FundraisingReadinessToolkit = () => {
       openUpgradePrompt({
         reason: 'feature',
         featureName: 'Insighta Test',
-        requiredTier: featureAccess.requiredTier as 'creator' | 'professional' | undefined,
+        requiredTier: featureAccess.requiredTier as Plan | undefined,
         description: featureAccess.message,
       });
       return;
     }
 
-      if (requiredCredits === null) return;
-
-    // Check usage limits for free tier (1/month)
-    const currentTier = subscriptionData.subscription_tier?.toLowerCase() || 'free';
-    if (currentTier === 'free' && user) {
-      try {
-        const { data: usageData, error: usageError } = await supabase
-          .rpc('get_feature_usage', {
-            p_user_id: user.id,
-            p_feature_name: 'insighta_tests'
-          });
-
-        if (!usageError && usageData) {
-          const usage = usageData as { current_usage: number; limit: number; remaining: number };
-          if (usage.remaining <= 0 && usage.limit > 0) {
-            openUpgradePrompt({
-              reason: 'limit',
-              featureName: 'Insighta Test',
-              requiredTier: 'creator',
-              limit: usage.limit,
-              limitLabel: 'Insighta Test assessments',
-              description: "You've used your free Insighta Test this month. Upgrade to keep assessing your readiness.",
-            });
-            return;
-          }
-        }
-      } catch (error) {
-        console.error('Error checking usage:', error);
-      }
-    }
+    if (requiredCredits === null) return;
 
     setIsAnalyzing(true);
     setAnalysisError(null);
@@ -334,16 +304,7 @@ const FundraisingReadinessToolkit = () => {
         }
 
       setAiAnalysis(data as AIAnalysis);
-      
-      // Increment usage for free tier
-      if (currentTier === 'free' && user) {
-        await supabase.rpc('check_and_increment_usage', {
-          p_user_id: user.id,
-          p_feature_name: 'insighta_tests',
-          p_increment_by: 1
-        });
-      }
-      
+
         toast.success(`Analysis complete! (Used ${requiredCredits} credits)`);
         await refreshBalance();
       } catch (error) {

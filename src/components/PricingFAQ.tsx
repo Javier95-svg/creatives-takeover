@@ -27,7 +27,7 @@ const PricingFAQ = () => {
 
     On Rookie and Starter, Waitlist Maker uses credits, and Starter also uses credits for PMF Lab. On Rising and Pro, Waitlist Maker, PMF Lab, Tech Stack Builder, and Directories are included, but MVP Builder and GTM Strategist still use credits.
 
-    ICP Builder stays free across all four plans. Discovery Calls are quota-based before overage: Rookie includes 1 per month, Starter 2, Rising 3, and extra calls on those plans cost 10 credits each. Pro includes unlimited discovery calls.`,
+    ICP Builder stays free across all four plans. Discovery Calls are monthly quotas: Rookie includes 1 per month, Starter 2, Rising 3, and Pro includes unlimited discovery calls.`,
       relatedQuestions: [0, 5],
     },
     {

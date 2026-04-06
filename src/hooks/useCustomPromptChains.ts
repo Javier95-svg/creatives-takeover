@@ -69,7 +69,7 @@ export function useCustomPromptChains() {
         description: chain.description,
         tags: chain.tags || [],
         difficulty: chain.difficulty as "Easy" | "Medium" | "Hard",
-        requiredTier: 'free' as const, // Custom chains are free to use
+        requiredTier: 'rookie' as const, // Custom chains are free to use
         steps: chain.steps as MultiStepPrompt['steps'],
         author_name: chain.author_name,
         is_custom: true,

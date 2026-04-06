@@ -60,7 +60,7 @@ const SearchableFAQ = () => {
       id: 4,
       category: "Pricing",
       question: "What's the difference between Rising and Pro plans?",
-      answer: "Rising gives you 100 credits, all 7 tools, 10 VC profiles and 10 accelerator profiles per billing cycle, 3 free discovery calls before 10-credit overage, full prompt library access, full email templates, and pitch deck analyzer access. Pro gives you 300 credits, unlimited discovery calls, unlimited VC and accelerator profile views, Angels community access, group office hours, and priority support. On both plans, MVP Builder and GTM Strategist still consume credits.",
+      answer: "Rising gives you 100 credits, the full BizMap AI toolset, 5 VC profiles and 5 accelerator profiles per billing cycle, 3 discovery calls, full prompt library access, full email templates, and pitch deck analyzer access. Pro gives you 300 credits, unlimited discovery calls, unlimited VC and accelerator profile views, Angels community access, group office hours, and priority support. On both plans, MVP Builder and GTM Strategist still consume credits.",
       popular: true,
       tags: ["rising", "pro", "comparison", "features"]
     },
@@ -144,7 +144,7 @@ const SearchableFAQ = () => {
       id: 14,
       category: "Features",
       question: "What is VC Search and how many VCs can I view?",
-      answer: "VC Search helps you discover and research venture capital firms and angel investors relevant to your startup. You can filter by industry, stage, location, and investment thesis. Rookie users can browse only, Starter users can open 2 profiles per billing cycle, Rising users get 10, and Pro users have unlimited access.",
+      answer: "VC Search helps you discover and research venture capital firms and angel investors relevant to your startup. You can filter by industry, stage, location, and investment thesis. Rookie users can browse only, Starter users can open 2 profiles per billing cycle, Rising users get 5, and Pro users have unlimited access.",
       popular: true,
       tags: ["vc search", "investors", "fundraising", "venture capital"]
     },
@@ -160,7 +160,7 @@ const SearchableFAQ = () => {
       id: 16,
       category: "Features",
       question: "What tools are included in the Prompt Library?",
-      answer: "The Prompt Library contains curated prompts for startup tasks like market research, positioning, customer personas, and outreach. Rookie gets a limited library, Starter gets 5 prompt templates, and Rising or Pro get the full library. Premium prompt loading and copying still use credits where applicable.",
+      answer: "The Prompt Library contains curated prompts for startup tasks like market research, positioning, customer personas, and outreach. Rookie and Starter can use the free models only, while Rising and Pro unlock the full library. Premium prompt loading and copying still use credits where applicable.",
       popular: false,
       tags: ["prompt library", "ai prompts", "templates", "productivity"]
     },
@@ -186,7 +186,7 @@ const SearchableFAQ = () => {
       id: 19,
       category: "Credits",
       question: "How does the credit system work?",
-      answer: "Credits refresh with your plan every billing cycle: Rookie 25, Starter 50, Rising 100, and Pro 300. Rookie and Starter rely on credits for the AI actions they can access. Rising and Pro include most BizMap workflows without per-use credit charges, but MVP Builder and GTM Strategist always consume credits across every plan. Rising discovery-call overage also costs 10 credits per extra call.",
+      answer: "Credits refresh with your plan every billing cycle: Rookie 25, Starter 50, Rising 100, and Pro 300. Rookie and Starter rely on credits for the AI actions they can access. Rising and Pro include most BizMap workflows without per-use credit charges, but MVP Builder and GTM Strategist always consume credits across every plan.",
       popular: true,
       tags: ["credits", "costs", "ai features", "monthly"]
     },
@@ -202,7 +202,7 @@ const SearchableFAQ = () => {
       id: 21,
       category: "Credits",
       question: "Which features use the most credits?",
-      answer: "The highest-value execution actions consume the biggest chunks. PMF Analysis and Discovery Call overage use 10 credits, MVP Builder uses the launch-report credit cost, and GTM Strategist uses the roadmap-generation credit cost. Lighter actions like BizMap AI chat and Waitlist Maker consume much less.",
+      answer: "The highest-value execution actions consume the biggest chunks. PMF Analysis uses 10 credits on Starter, MVP Builder uses the launch-report credit cost, and GTM Strategist uses the roadmap-generation credit cost. Lighter actions like BizMap AI chat and Waitlist Maker consume much less.",
       popular: false,
       tags: ["credit costs", "features", "expensive", "affordable"]
     },

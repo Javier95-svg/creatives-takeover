@@ -10,7 +10,7 @@ import FundingOpportunityCard from "@/components/funding/FundingOpportunityCard"
 import InsightaPagination from "@/components/insighta/InsightaPagination";
 import { Button } from "@/components/ui/button";
 import { Lock, UserPlus } from "lucide-react";
-import { TIER_DETAILS } from "@/config/constants";
+import { PLAN_SUMMARIES } from "@/config/planPermissions";
 import { PREVIEW_MODE_CONTENT_BLUR, PREVIEW_MODE_OVERLAY_BACKGROUND } from "@/components/ui/previewOverlayStyles";
 
 const AcceleratorHuntTab = () => {
@@ -33,18 +33,19 @@ const AcceleratorHuntTab = () => {
   const isLowRemaining = !acceleratorViewLoading && !hasUnlimitedViews && remaining > 0 && remaining <= 1;
   const showUpgradeBanner = isLimitReached || isLowRemaining;
   const upgradeTier = upgradeTarget ?? (currentTier === "rookie" ? "starter" : currentTier === "starter" ? "rising" : "pro");
-  const upgradeDetails = TIER_DETAILS[upgradeTier as keyof typeof TIER_DETAILS];
+  const upgradeDetails = PLAN_SUMMARIES[upgradeTier];
   const canViewProfiles = acceleratorViewLoading ? true : canViewMore;
   const currentLimitLabel = hasUnlimitedViews ? "Unlimited accelerator views" : `${limit} accelerator views/month`;
-  const upgradeViewsLabel = upgradeDetails.vcViewLimit === -1
+  const upgradeViewsLabel = upgradeDetails.acceleratorViewLimit === Infinity
     ? "Unlimited accelerator views"
-    : `${upgradeDetails.vcViewLimit} accelerator views/month`;
+    : `${upgradeDetails.acceleratorViewLimit} accelerator views/month`;
   const upgradeTitle = isLimitReached
     ? "Accelerator view limit reached"
     : `Only ${remaining} accelerator view${remaining === 1 ? "" : "s"} left this month`;
   const upgradeCopy = isLimitReached
-    ? `Your plan includes ${currentLimitLabel}. Upgrade to ${upgradeDetails.name} for ${upgradeViewsLabel} and ${upgradeDetails.credits} credits/month.`
-    : `Keep your research moving. ${upgradeDetails.name} gives you ${upgradeViewsLabel} and ${upgradeDetails.credits} credits/month.`;
+    ? `Your plan includes ${currentLimitLabel}. Upgrade to ${upgradeDetails.name} for ${upgradeViewsLabel} and ${upgradeDetails.monthlyCredits} credits/month.`
+    : `Keep your research moving. ${upgradeDetails.name} gives you ${upgradeViewsLabel} and ${upgradeDetails.monthlyCredits} credits/month.`;
+
   const totalPages = total > 0 ? Math.ceil(total / pageSize) : 0;
   const filterResetKey = JSON.stringify(filters);
 
@@ -54,7 +55,6 @@ const AcceleratorHuntTab = () => {
 
   return (
     <div className="space-y-6">
-      {/* Filters */}
       <AcceleratorFilters
         filters={filters}
         onFiltersChange={setFilters}
@@ -84,7 +84,6 @@ const AcceleratorHuntTab = () => {
         </Card>
       )}
 
-      {/* Results */}
       {loading ? (
         <div className="text-center py-12">
           <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]"></div>

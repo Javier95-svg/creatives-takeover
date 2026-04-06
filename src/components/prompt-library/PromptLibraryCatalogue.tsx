@@ -12,12 +12,20 @@ import {
 } from '@/components/ui/dialog';
 import promptData from '@/data/prompt_library_tiers.csv?raw';
 
+type RawPromptTier = 'Free' | 'Creator' | 'Professional';
+
 interface Prompt {
   name: string;
-  tier: 'Free' | 'Creator' | 'Professional';
+  tier: 'Free' | 'Rising' | 'Pro';
 }
 
-type FilterTier = 'All' | 'Free' | 'Creator' | 'Professional';
+type FilterTier = 'All' | 'Free' | 'Rising' | 'Pro';
+
+const PROMPT_TIER_MAP: Record<RawPromptTier, Prompt['tier']> = {
+  Free: 'Free',
+  Creator: 'Rising',
+  Professional: 'Pro',
+};
 
 const parseCSV = (csvText: string): Prompt[] => {
   const lines = csvText.trim().split('\n');
@@ -31,7 +39,8 @@ const parseCSV = (csvText: string): Prompt[] => {
     if (lastCommaIndex === -1) continue;
 
     const name = line.substring(0, lastCommaIndex).trim();
-    const tier = line.substring(lastCommaIndex + 1).trim() as 'Free' | 'Creator' | 'Professional';
+    const rawTier = line.substring(lastCommaIndex + 1).trim() as RawPromptTier;
+    const tier = PROMPT_TIER_MAP[rawTier];
 
     if (name && tier) {
       prompts.push({ name, tier });
@@ -49,14 +58,14 @@ const tierConfig = {
     textColor: 'text-gray-900',
     borderColor: 'border-gray-200',
   },
-  Creator: {
+  Rising: {
     icon: Sparkles,
     color: 'bg-purple-100 text-purple-700 border-purple-200',
     bgColor: 'bg-gray-50',
     textColor: 'text-gray-400',
     borderColor: 'border-gray-300',
   },
-  Professional: {
+  Pro: {
     icon: Crown,
     color: 'bg-amber-100 text-amber-700 border-amber-200',
     bgColor: 'bg-gray-50',
@@ -94,8 +103,8 @@ export default function PromptLibraryCatalogue() {
   const filterButtons: { tier: FilterTier; label: string }[] = [
     { tier: 'All', label: `All (${prompts.length})` },
     { tier: 'Free', label: `Free (${tierCounts.Free || 0})` },
-    { tier: 'Creator', label: `Creator (${tierCounts.Creator || 0})` },
-    { tier: 'Professional', label: `Professional (${tierCounts.Professional || 0})` },
+    { tier: 'Rising', label: `Rising (${tierCounts.Rising || 0})` },
+    { tier: 'Pro', label: `Pro (${tierCounts.Pro || 0})` },
   ];
 
   return (
@@ -183,7 +192,7 @@ export default function PromptLibraryCatalogue() {
             <DialogTitle className="flex items-center gap-2">
               {selectedPrompt && (
                 <>
-                  {selectedPrompt.tier === 'Creator' ? (
+                  {selectedPrompt.tier === 'Rising' ? (
                     <Sparkles className="w-5 h-5 text-purple-600" />
                   ) : (
                     <Crown className="w-5 h-5 text-amber-600" />

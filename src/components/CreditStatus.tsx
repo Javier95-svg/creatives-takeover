@@ -5,7 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { CREDIT_COSTS, TIER_MONTHLY_CREDITS } from "@/config/constants";
+import { CREDIT_COSTS } from "@/config/constants";
+import { normalizePlan, PLAN_MONTHLY_CREDITS } from "@/config/planPermissions";
 
 interface CreditStatusProps {
   requiredCredits?: number;
@@ -18,8 +19,8 @@ export function CreditStatus({ requiredCredits, feature, showPurchaseLink = true
   const { currentTier } = useFeatureGating();
   
   const totalAvailable = balance + monthlyQuota;
-  const normalizedTier = currentTier === 'free' ? 'rookie' : currentTier;
-  const monthlyCredits = TIER_MONTHLY_CREDITS[normalizedTier as keyof typeof TIER_MONTHLY_CREDITS] || 25;
+  const normalizedTier = normalizePlan(currentTier);
+  const monthlyCredits = PLAN_MONTHLY_CREDITS[normalizedTier];
   const creditUsagePercent = monthlyCredits > 0 
     ? Math.round(((monthlyCredits - totalAvailable) / monthlyCredits) * 100)
     : 0;

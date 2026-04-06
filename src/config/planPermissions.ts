@@ -9,6 +9,15 @@ import { getCreditCost, TIER_MONTHLY_CREDITS, type CreditFeature } from './const
 
 export type Plan = 'rookie' | 'starter' | 'rising' | 'pro';
 
+export interface PlanSummary {
+  name: string;
+  price: number;
+  monthlyCredits: number;
+  vcViewLimit: number;
+  acceleratorViewLimit: number;
+  description: string;
+}
+
 export type GateState =
   | 'full'
   | 'credit_gated'
@@ -104,6 +113,8 @@ export const PLAN_LABELS: Record<Plan, string> = {
   rising: 'Rising',
   pro: 'Pro',
 };
+
+export const PLAN_SEQUENCE: Plan[] = ['rookie', 'starter', 'rising', 'pro'];
 
 export const PLAN_MONTHLY_CREDITS: Record<Plan, number> = {
   rookie: TIER_MONTHLY_CREDITS.rookie,
@@ -354,6 +365,41 @@ export const MONTHLY_FREE_QUOTAS: Record<string, Record<Plan, number>> = {
   accelerator_profiles: { rookie: 0, starter: 2, rising: 5, pro: Infinity },
 };
 
+export const PLAN_SUMMARIES: Record<Plan, PlanSummary> = {
+  rookie: {
+    name: PLAN_LABELS.rookie,
+    price: 0,
+    monthlyCredits: PLAN_MONTHLY_CREDITS.rookie,
+    vcViewLimit: MONTHLY_FREE_QUOTAS.vc_profiles.rookie,
+    acceleratorViewLimit: MONTHLY_FREE_QUOTAS.accelerator_profiles.rookie,
+    description: 'Idea clarity and first traction with preview access and browse-only investor research.',
+  },
+  starter: {
+    name: PLAN_LABELS.starter,
+    price: 9,
+    monthlyCredits: PLAN_MONTHLY_CREDITS.starter,
+    vcViewLimit: MONTHLY_FREE_QUOTAS.vc_profiles.starter,
+    acceleratorViewLimit: MONTHLY_FREE_QUOTAS.accelerator_profiles.starter,
+    description: 'Adds PMF Lab, full Email Templates, and 2 VC plus 2 accelerator profile views each billing cycle.',
+  },
+  rising: {
+    name: PLAN_LABELS.rising,
+    price: 29,
+    monthlyCredits: PLAN_MONTHLY_CREDITS.rising,
+    vcViewLimit: MONTHLY_FREE_QUOTAS.vc_profiles.rising,
+    acceleratorViewLimit: MONTHLY_FREE_QUOTAS.accelerator_profiles.rising,
+    description: 'Full working stack with Pitch Deck Analyzer, full Prompt Library access, and 5 VC plus 5 accelerator profile views.',
+  },
+  pro: {
+    name: PLAN_LABELS.pro,
+    price: 65,
+    monthlyCredits: PLAN_MONTHLY_CREDITS.pro,
+    vcViewLimit: MONTHLY_FREE_QUOTAS.vc_profiles.pro,
+    acceleratorViewLimit: MONTHLY_FREE_QUOTAS.accelerator_profiles.pro,
+    description: 'Fundraising tier with Angels access, unlimited research views, and the highest monthly credit grant.',
+  },
+};
+
 export function normalizePlan(value: string | null | undefined): Plan {
   const normalized = (value || 'rookie').trim().toLowerCase();
 
@@ -368,6 +414,15 @@ export function normalizePlan(value: string | null | undefined): Plan {
   }
 
   return 'rookie';
+}
+
+export function getNextPlan(plan: Plan): Plan {
+  const currentIndex = PLAN_SEQUENCE.indexOf(plan);
+  if (currentIndex < 0 || currentIndex === PLAN_SEQUENCE.length - 1) {
+    return 'pro';
+  }
+
+  return PLAN_SEQUENCE[currentIndex + 1];
 }
 
 export function resolveEntitlement(feature: FeatureKey, plan: Plan): EntitlementResult {

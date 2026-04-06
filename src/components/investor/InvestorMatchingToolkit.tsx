@@ -117,7 +117,7 @@ const InvestorMatchingToolkit = () => {
                         Sign In to Browse Investors
                       </Button>
                       <p className="text-sm text-muted-foreground mt-3">
-                        Sign in to browse investors. Upgrade to Creator for full matching.
+                        Sign in to browse investors. Upgrade to Pro for full matching.
                       </p>
                     </>
                   );
@@ -131,7 +131,7 @@ const InvestorMatchingToolkit = () => {
                         Upgrade to Match Investors
                       </Button>
                       <p className="text-sm text-muted-foreground mt-3">
-                        Free tier allows browsing only. Upgrade to Creator for AI-powered matching and outreach generation.
+                        Browse stays available on every plan. Upgrade to Pro for AI-powered matching and outreach generation.
                       </p>
                     </>
                   );

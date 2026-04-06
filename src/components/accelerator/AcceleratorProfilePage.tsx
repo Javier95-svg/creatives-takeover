@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
+import { PLAN_SUMMARIES, type Plan } from "@/config/planPermissions";
 import { toast } from "sonner";
 import {
   ArrowLeft,
@@ -37,7 +38,7 @@ const AcceleratorProfilePage = () => {
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const { trackAcceleratorView, limit } = useAcceleratorViewTracking();
   const [upgradePrompt, setUpgradePrompt] = useState<{
-    requiredTier?: "rising" | "pro";
+    requiredTier?: Plan;
   } | null>(null);
   const [requiresAuth, setRequiresAuth] = useState(false);
 
@@ -175,10 +176,11 @@ const AcceleratorProfilePage = () => {
   }
 
   const websiteUrl = accelerator.website_url || accelerator.url;
-  const upgradeTierLabel = upgradePrompt?.requiredTier === "pro" ? "Pro" : "Rising";
-  const upgradeDetail = upgradePrompt?.requiredTier === "pro"
-    ? "Unlock unlimited accelerator views this month."
-    : "Unlock 3 accelerator profile views this month.";
+  const upgradePlan = upgradePrompt?.requiredTier ? PLAN_SUMMARIES[upgradePrompt.requiredTier] : null;
+  const upgradeTierLabel = upgradePlan?.name ?? "Rising";
+  const upgradeDetail = !upgradePlan || upgradePlan.acceleratorViewLimit === Infinity
+    ? "Unlock unlimited accelerator views this billing cycle."
+    : `Unlock ${upgradePlan.acceleratorViewLimit} accelerator profile views this billing cycle.`;
   const isProfileLocked = requiresAuth || Boolean(upgradePrompt);
 
   const profileContent = (

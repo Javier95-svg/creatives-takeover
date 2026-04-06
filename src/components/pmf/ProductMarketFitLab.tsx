@@ -232,8 +232,8 @@ const ProductMarketFitLab: React.FC<ProductMarketFitLabProps> = ({
         openUpgradePrompt({
           reason: 'feature',
           featureName: 'Product-Market Fit Lab',
-          requiredTier: featureAccess.requiredTier as 'creator' | 'professional' | undefined,
-          description: featureAccess.message || "Upgrade to Creator tier to run full Product-Market Fit analysis.",
+          requiredTier: featureAccess.requiredTier as Plan | undefined,
+          description: featureAccess.message || "Upgrade to Starter or higher to run full Product-Market Fit analysis.",
         });
         return;
       }

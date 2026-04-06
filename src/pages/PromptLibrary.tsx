@@ -17,6 +17,7 @@ import { useFeatureGating } from "@/hooks/useFeatureGating";
 import { useCreditActions } from "@/hooks/useCreditActions";
 import { useUpgradePrompt } from "@/contexts/UpgradePromptContext";
 import { CREDIT_COSTS } from "@/config/constants";
+import { type Plan } from "@/config/planPermissions";
 
 const normalizePlan = (value?: string | null) => {
   const normalized = (value || "rookie").toLowerCase();
@@ -27,7 +28,7 @@ const normalizePlan = (value?: string | null) => {
 };
 
 const normalizePromptTier = (value?: string | null) => {
-  const normalized = (value || "free").toLowerCase();
+  const normalized = (value || "rookie").toLowerCase();
   if (normalized === "professional" || normalized === "pro") return "pro";
   if (normalized === "creator" || normalized === "rising") return "rising";
   if (normalized === "starter") return "starter";
@@ -108,7 +109,7 @@ const PromptLibrary = () => {
         openUpgradePrompt({
           reason: 'feature',
           featureName: 'Prompt Library exports',
-          requiredTier: exportAccess.requiredTier as 'rising' | 'pro' | undefined,
+          requiredTier: exportAccess.requiredTier as Plan | undefined,
           description: exportAccess.message,
         });
         return;
@@ -132,7 +133,7 @@ const PromptLibrary = () => {
         openUpgradePrompt({
           reason: 'feature',
           featureName: 'Prompt Library exports',
-          requiredTier: exportAccess.requiredTier as 'rising' | 'pro' | undefined,
+          requiredTier: exportAccess.requiredTier as Plan | undefined,
           description: exportAccess.message,
         });
         return;

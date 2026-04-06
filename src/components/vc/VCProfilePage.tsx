@@ -11,6 +11,7 @@ import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { VCWallpaper } from "@/components/vc-search/VCWallpaper";
 import { useVCViewTracking } from "@/hooks/useVCViewTracking";
+import { PLAN_SUMMARIES, type Plan } from "@/config/planPermissions";
 import { toast } from "sonner";
 import {
   ArrowLeft,
@@ -33,7 +34,7 @@ const VCProfilePage = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [upgradePrompt, setUpgradePrompt] = useState<{
-    requiredTier?: "starter" | "rising" | "pro";
+    requiredTier?: Plan;
   } | null>(null);
   const [requiresAuth, setRequiresAuth] = useState(false);
 
@@ -205,18 +206,11 @@ const VCProfilePage = () => {
       : vc.firm_website
         ? { label: "Visit Website", href: vc.firm_website }
         : null;
-  const upgradeTierLabel =
-    upgradePrompt?.requiredTier === "pro"
-      ? "Pro"
-      : upgradePrompt?.requiredTier === "starter"
-        ? "Starter"
-        : "Rising";
-  const upgradeDetail =
-    upgradePrompt?.requiredTier === "pro"
-      ? "Unlock unlimited VC views this billing cycle."
-      : upgradePrompt?.requiredTier === "starter"
-        ? "Unlock 2 VC profile views this billing cycle."
-        : "Unlock 10 VC profile views this billing cycle.";
+  const upgradePlan = upgradePrompt?.requiredTier ? PLAN_SUMMARIES[upgradePrompt.requiredTier] : null;
+  const upgradeTierLabel = upgradePlan?.name ?? "Rising";
+  const upgradeDetail = !upgradePlan || upgradePlan.vcViewLimit === Infinity
+    ? "Unlock unlimited VC views this billing cycle."
+    : `Unlock ${upgradePlan.vcViewLimit} VC profile views this billing cycle.`;
   const portfolioHighlights = vc.portfolio_companies.slice(0, 6);
   const links = [
     vc.firm_website ? { label: "Website", href: vc.firm_website, icon: Building2 } : null,

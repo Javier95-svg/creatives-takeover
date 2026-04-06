@@ -66,7 +66,7 @@ const features: FeatureCategory[] = [
   {
     category: "Community",
     items: [
-      { feature: "Discovery Calls (Mentorship)", rookie: "1 discovery call/monthly, then 10 credits", starter: "2 discovery calls/monthly, then 10 credits", rising: "3 discovery calls/monthly, then 10 credits", pro: "Unlimited" },
+      { feature: "Discovery Calls (Mentorship)", rookie: "1 discovery call/monthly", starter: "2 discovery calls/monthly", rising: "3 discovery calls/monthly", pro: "Unlimited" },
       { feature: "Find a Co-Founder Posting", rookie: "1 post/monthly", starter: "2 posts/monthly", rising: "Unlimited", pro: "Unlimited" },
       { feature: "Find Your Angel", rookie: false, starter: false, rising: false, pro: "Included" },
     ],
@@ -75,7 +75,7 @@ const features: FeatureCategory[] = [
     category: "Resources",
     items: [
       { feature: "Newspaper", rookie: "Included", starter: "Included", rising: "Included", pro: "Included" },
-      { feature: "Prompt Library", rookie: "Free templates only", starter: "Free templates only", rising: "Full library", pro: "Full library" },
+      { feature: "Prompt Library", rookie: "Free models only", starter: "Free models only", rising: "Full library", pro: "Full library" },
     ],
   },
 ];
