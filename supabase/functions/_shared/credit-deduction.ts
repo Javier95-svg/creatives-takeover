@@ -1,5 +1,12 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
 import { resolveMonthlyBillingWindow } from './billing-period.ts';
+import {
+  PLAN_MONTHLY_CREDITS,
+  normalizePlan,
+  resolveFeatureEnforcement,
+  type EnforcedFeature,
+  type Plan,
+} from './plan-enforcement.ts';
 
 const ADMIN_EMAIL = 'admin@creatives-takeover.com';
 
@@ -15,7 +22,54 @@ export interface CreditDeductionResult {
   usedFromQuota?: number;
   usedFromBalance?: number;
   error?: string;
-  errorCode?: 'INSUFFICIENT_CREDITS' | 'USER_NOT_FOUND' | 'DEDUCTION_FAILED';
+  errorCode?: 'INSUFFICIENT_CREDITS' | 'USER_NOT_FOUND' | 'DEDUCTION_FAILED' | 'PLAN_UPGRADE_REQUIRED' | 'QUOTA_LIMIT_REACHED';
+  requiredTier?: Plan;
+  limit?: number;
+  remaining?: number;
+}
+
+async function getCurrentCreditSnapshot(userId: string, supabase: any) {
+  const { data } = await supabase
+    .from('user_credits')
+    .select('balance, monthly_quota')
+    .eq('user_id', userId)
+    .maybeSingle();
+
+  return {
+    balance: data?.balance ?? 0,
+    monthlyQuota: data?.monthly_quota ?? 0,
+  };
+}
+
+async function getUserPlan(userId: string, supabase: any): Promise<Plan> {
+  const { data: rpcTier } = await supabase.rpc('get_user_normalized_subscription_tier', {
+    p_user_id: userId,
+  });
+
+  if (typeof rpcTier === 'string' && rpcTier.trim()) {
+    return normalizePlan(rpcTier);
+  }
+
+  const [{ data: subscriber }, { data: credits }, { data: profile }] = await Promise.all([
+    supabase
+      .from('subscribers')
+      .select('subscription_tier')
+      .eq('user_id', userId)
+      .eq('subscribed', true)
+      .maybeSingle(),
+    supabase
+      .from('user_credits')
+      .select('subscription_tier')
+      .eq('user_id', userId)
+      .maybeSingle(),
+    supabase
+      .from('profiles')
+      .select('subscription_tier')
+      .eq('id', userId)
+      .maybeSingle(),
+  ]);
+
+  return normalizePlan(subscriber?.subscription_tier || credits?.subscription_tier || profile?.subscription_tier);
 }
 
 /**
@@ -80,7 +134,11 @@ export async function checkAndDeductCredits(
   };
 
   try {
-    if (!Number.isFinite(amount) || amount <= 0) {
+    const entitlementFeature = typeof metadata?.entitlementFeature === 'string'
+      ? metadata.entitlementFeature.trim().toUpperCase() as EnforcedFeature
+      : undefined;
+
+    if ((!Number.isFinite(amount) || amount <= 0) && entitlementFeature !== 'DISCOVERY_CALL') {
       return await returnWithIdempotency({
         success: false,
         error: 'Invalid credit amount',
@@ -162,6 +220,59 @@ export async function checkAndDeductCredits(
       idempotencyStarted = true;
     }
 
+    const userPlan = await getUserPlan(userId, supabase);
+    const enforcement = entitlementFeature ? resolveFeatureEnforcement(userPlan, entitlementFeature) : null;
+
+    if (enforcement?.mode === 'blocked') {
+      return await returnWithIdempotency({
+        success: false,
+        error: `This feature is not available on your ${userPlan} plan.`,
+        errorCode: 'PLAN_UPGRADE_REQUIRED',
+        requiredTier: enforcement.requiredPlan,
+      }, false);
+    }
+
+    if (enforcement?.mode === 'included') {
+      const currentCredits = await getCurrentCreditSnapshot(userId, supabase);
+      return await returnWithIdempotency({
+        success: true,
+        newBalance: currentCredits.balance,
+        newQuota: currentCredits.monthlyQuota,
+        usedFromQuota: 0,
+        usedFromBalance: 0,
+      }, false);
+    }
+
+    if (enforcement?.mode === 'quota') {
+      const { data: quotaData, error: quotaError } = await supabase.rpc('consume_monthly_feature_quota', {
+        p_user_id: userId,
+        p_feature_name: 'discovery_calls',
+        p_increment_by: 1,
+      });
+
+      if (quotaError || !quotaData?.allowed) {
+        return await returnWithIdempotency({
+          success: false,
+          error: quotaData?.message || 'Usage limit reached for this billing cycle.',
+          errorCode: quotaData?.error_code === 'PLAN_UPGRADE_REQUIRED' ? 'PLAN_UPGRADE_REQUIRED' : 'QUOTA_LIMIT_REACHED',
+          requiredTier: quotaData?.required_tier ? normalizePlan(quotaData.required_tier) : enforcement.requiredPlan,
+          limit: typeof quotaData?.limit === 'number' ? quotaData.limit : enforcement.monthlyLimit,
+          remaining: typeof quotaData?.remaining === 'number' ? quotaData.remaining : undefined,
+        }, false);
+      }
+
+      const currentCredits = await getCurrentCreditSnapshot(userId, supabase);
+      return await returnWithIdempotency({
+        success: true,
+        newBalance: currentCredits.balance,
+        newQuota: currentCredits.monthlyQuota,
+        usedFromQuota: 0,
+        usedFromBalance: 0,
+      });
+    }
+
+    const chargeAmount = enforcement?.mode === 'charge' ? enforcement.creditCost : amount;
+
     // Check if quota needs reset (monthly reset logic)
     await checkAndResetMonthlyQuota(userId, supabase);
 
@@ -172,7 +283,7 @@ export async function checkAndDeductCredits(
 
     const { data: deductionData, error: deductionError } = await supabase.rpc('deduct_credits_atomic', {
       p_user_id: userId,
-      p_amount: amount,
+      p_amount: chargeAmount,
       p_feature: feature,
       p_session_id: sessionId ?? null,
       p_metadata: deductionMetadata,
@@ -239,40 +350,8 @@ async function checkAndResetMonthlyQuota(userId: string, supabase: any): Promise
     if (!credits) return;
 
     const now = new Date();
-
-    // Get user's subscription tier to determine quota amount
-    // Check both profiles and subscribers tables for tier
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('subscription_tier')
-      .eq('id', userId)
-      .single();
-
-    // Also check subscribers table as it might be more up-to-date
-    const { data: subscriber } = await supabase
-      .from('subscribers')
-      .select('subscription_tier')
-      .eq('user_id', userId)
-      .eq('subscribed', true)
-      .single();
-
-    // Default quota amounts by tier (can be customized)
-    const quotaAmounts: Record<string, number> = {
-      'rookie': 25,
-      'starter': 50,
-      'rising': 100,
-      'pro': 300,
-      'admin': 300
-    };
-
-    // Prefer subscriber tier if available, otherwise use profile tier
-    const rawTier = subscriber?.subscription_tier || profile?.subscription_tier || 'rookie';
-    const tier =
-      rawTier === 'free' ? 'rookie' :
-      rawTier === 'creator' ? 'rising' :
-      rawTier === 'professional' ? 'pro' :
-      rawTier;
-    const newQuota = quotaAmounts[tier] || 25;
+    const tier = await getUserPlan(userId, supabase);
+    const newQuota = PLAN_MONTHLY_CREDITS[tier];
 
     const anchorSource = credits.billing_anchor_at
       || credits.current_period_start

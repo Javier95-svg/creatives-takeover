@@ -1,139 +1,9 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
+import { CREDIT_COSTS } from '../_shared/credit-constants.ts';
+import { checkAndDeductCredits, getUserFromAuth, refundCredits } from '../_shared/credit-deduction.ts';
 
-// ─── Inlined: credit-constants ───────────────────────────────────────────────
-const CREDIT_COSTS = {
-  PMF_SCORING: 8,
-} as const;
 const MIN_INTERVIEWS_FOR_READY = 25;
-
-const ADMIN_EMAIL = 'admin@creatives-takeover.com';
-
-// ─── Inlined: getUserFromAuth ─────────────────────────────────────────────────
-async function getUserFromAuth(req: Request): Promise<{ id: string; email?: string | null } | null> {
-  const supabaseUrl = Deno.env.get('SUPABASE_URL');
-  const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-  if (!supabaseUrl || !serviceRoleKey) return null;
-
-  const supabase = createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false } });
-  const authHeader = req.headers.get('Authorization');
-  if (!authHeader) return null;
-
-  try {
-    const { data: { user }, error } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''));
-    if (error || !user) return null;
-    return { id: user.id, email: user.email };
-  } catch {
-    return null;
-  }
-}
-
-// ─── Inlined: checkAndDeductCredits ──────────────────────────────────────────
-interface CreditDeductionResult {
-  success: boolean;
-  newBalance?: number;
-  newQuota?: number;
-  usedFromQuota?: number;
-  usedFromBalance?: number;
-  error?: string;
-  errorCode?: 'INSUFFICIENT_CREDITS' | 'USER_NOT_FOUND' | 'DEDUCTION_FAILED';
-}
-
-async function checkAndDeductCredits(
-  userId: string,
-  amount: number,
-  feature: string,
-  sessionId?: string,
-  metadata?: Record<string, any>
-): Promise<CreditDeductionResult> {
-  const supabaseUrl = Deno.env.get('SUPABASE_URL');
-  const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-  if (!supabaseUrl || !serviceRoleKey) {
-    return { success: false, error: 'Supabase configuration missing', errorCode: 'DEDUCTION_FAILED' };
-  }
-
-  const supabase = createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false } });
-
-  if (!Number.isFinite(amount) || amount <= 0) {
-    return { success: false, error: 'Invalid credit amount', errorCode: 'DEDUCTION_FAILED' };
-  }
-
-  const { data: deductionData, error: deductionError } = await supabase.rpc('deduct_credits_atomic', {
-    p_user_id: userId,
-    p_amount: amount,
-    p_feature: feature,
-    p_session_id: sessionId ?? null,
-    p_metadata: metadata ?? {},
-  });
-
-  if (deductionError || !deductionData) {
-    console.error('Error running deduct_credits_atomic:', deductionError);
-    return { success: false, error: 'Failed to update credit balance', errorCode: 'DEDUCTION_FAILED' };
-  }
-
-  const result = deductionData as CreditDeductionResult;
-  if (!result.success) {
-    return {
-      success: false,
-      error: result.error || 'Credit deduction failed',
-      errorCode: result.errorCode || 'DEDUCTION_FAILED'
-    };
-  }
-
-  return {
-    success: true,
-    newBalance: result.newBalance,
-    newQuota: result.newQuota,
-    usedFromQuota: result.usedFromQuota,
-    usedFromBalance: result.usedFromBalance,
-  };
-}
-
-// ─── Inlined: refundCredits ───────────────────────────────────────────────────
-async function refundCredits(
-  userId: string,
-  amount: number,
-  feature: string,
-  reason: string,
-  metadata?: Record<string, any>
-): Promise<boolean> {
-  const supabaseUrl = Deno.env.get('SUPABASE_URL');
-  const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-  if (!supabaseUrl || !serviceRoleKey || !Number.isFinite(amount) || amount <= 0) return false;
-
-  const supabase = createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false } });
-
-  try {
-    const { data: current, error: fetchError } = await supabase
-      .from('user_credits')
-      .select('balance')
-      .eq('user_id', userId)
-      .single();
-
-    if (fetchError || !current) return false;
-
-    const { error: updateError } = await supabase
-      .from('user_credits')
-      .update({ balance: ((current as any).balance || 0) + amount })
-      .eq('user_id', userId);
-
-    if (updateError) return false;
-
-    await supabase.from('credit_transactions').insert({
-      user_id: userId,
-      amount,
-      tx_type: 'refund',
-      reason,
-      feature,
-      metadata: metadata || {},
-    });
-
-    return true;
-  } catch {
-    return false;
-  }
-}
 
 // ─── CORS headers ─────────────────────────────────────────────────────────────
 const corsHeaders = {
@@ -209,21 +79,21 @@ serve(async (req) => {
     }
 
     const creditCost = CREDIT_COSTS.PMF_SCORING;
-    const creditResult = user.email?.toLowerCase() === ADMIN_EMAIL
-      ? { success: true }
-      : await checkAndDeductCredits(
-          user.id,
-          creditCost,
-          'PMF Evidence Analysis',
-          undefined,
-          { testTypes: body.testTypes }
-        );
+    const creditResult = await checkAndDeductCredits(
+      user.id,
+      creditCost,
+      'PMF Evidence Analysis',
+      undefined,
+      { testTypes: body.testTypes, entitlementFeature: 'PMF_SCORING' }
+    );
+    const chargedCredits = (creditResult.usedFromQuota ?? 0) + (creditResult.usedFromBalance ?? 0);
 
     if (!creditResult.success) {
       return new Response(JSON.stringify({
         error: creditResult.error || 'Credit deduction failed',
         creditError: true,
         errorCode: creditResult.errorCode,
+        requiredTier: creditResult.requiredTier,
         requiredCredits: creditCost,
       }), {
         status: 402,
@@ -465,7 +335,7 @@ Apply the scoring rubric to this evidence and return the PMF readiness JSON. Mak
         success: true,
         analysis,
         analysisId,
-        creditsUsed: creditCost,
+        creditsUsed: chargedCredits,
         newBalance: creditResult.newBalance,
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -473,7 +343,9 @@ Apply the scoring rubric to this evidence and return the PMF readiness JSON. Mak
 
     } catch (aiError) {
       const err = aiError instanceof Error ? aiError : new Error(String(aiError));
-      await refundCredits(user.id, creditCost, 'PMF Evidence Analysis', 'Refund: AI processing failed', { error: err.message });
+      if (chargedCredits > 0) {
+        await refundCredits(user.id, chargedCredits, 'PMF Evidence Analysis', 'Refund: AI processing failed', { error: err.message });
+      }
       throw aiError;
     }
 

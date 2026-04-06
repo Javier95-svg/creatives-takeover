@@ -89,15 +89,18 @@ serve(async (req) => {
       creditCost,
       'Pitch Deck Analyzer',
       undefined,
-      { fileName, fileSize, storagePath, idempotencyKey }
+      { fileName, fileSize, storagePath, idempotencyKey, entitlementFeature: 'PITCH_DECK_ANALYZER' }
     );
+    const chargedCredits = (creditCheck.usedFromQuota ?? 0) + (creditCheck.usedFromBalance ?? 0);
 
     if (!creditCheck.success) {
       return new Response(
         JSON.stringify({
           error: creditCheck.error || 'Insufficient credits',
           required: creditCost,
-          creditError: true
+          creditError: true,
+          errorCode: creditCheck.errorCode,
+          requiredTier: creditCheck.requiredTier,
         }),
         {
           status: creditCheck.errorCode === 'INSUFFICIENT_CREDITS' ? 402 : 400,
@@ -118,7 +121,9 @@ serve(async (req) => {
       );
     } catch (err) {
       console.error('AI processing failed, refunding credits:', err);
-      await refundCredits(effectiveUserId, creditCost, 'Pitch Deck Analyzer', 'Refund: AI processing failed', { error: err instanceof Error ? err.message : String(err) });
+      if (chargedCredits > 0) {
+        await refundCredits(effectiveUserId, chargedCredits, 'Pitch Deck Analyzer', 'Refund: AI processing failed', { error: err instanceof Error ? err.message : String(err) });
+      }
       throw err;
     }
 

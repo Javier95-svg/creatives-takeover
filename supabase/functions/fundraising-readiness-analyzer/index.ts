@@ -110,14 +110,17 @@ serve(async (req) => {
       creditCost,
       'Fundraising Readiness Analysis',
       undefined,
-      { idempotencyKey }
+      { idempotencyKey, entitlementFeature: 'FUNDRAISING_READINESS_ANALYSIS' }
     );
+    const chargedCredits = (creditCheck.usedFromQuota ?? 0) + (creditCheck.usedFromBalance ?? 0);
 
     if (!creditCheck.success) {
       return new Response(
         JSON.stringify({ 
           error: creditCheck.error || 'Insufficient credits',
-          required: creditCost
+          required: creditCost,
+          errorCode: creditCheck.errorCode,
+          requiredTier: creditCheck.requiredTier,
         }),
         { 
           status: creditCheck.errorCode === 'INSUFFICIENT_CREDITS' ? 402 : 400,
@@ -551,7 +554,9 @@ CRITICAL: Judge against ${stage} standards, NOT scaling-stage perfection.`
     } catch (aiError) {
       // Refund credits on AI processing failure
       const err = aiError instanceof Error ? aiError : new Error(String(aiError));
-      await refundCredits(user.id, creditCost, 'Fundraising Readiness Analysis', 'Refund: AI processing failed', { error: err.message });
+      if (chargedCredits > 0) {
+        await refundCredits(user.id, chargedCredits, 'Fundraising Readiness Analysis', 'Refund: AI processing failed', { error: err.message });
+      }
       throw aiError;
     }
 

@@ -70,14 +70,16 @@ serve(async (req) => {
       creditCost,
       'PMF Analysis',
       undefined,
-      { businessDescription: businessDescription.substring(0, 100), idempotencyKey }
+      { businessDescription: businessDescription.substring(0, 100), idempotencyKey, entitlementFeature: 'PMF_ANALYSIS' }
     );
+    const chargedCredits = (creditResult.usedFromQuota ?? 0) + (creditResult.usedFromBalance ?? 0);
 
     if (!creditResult.success) {
       return new Response(JSON.stringify({ 
         error: creditResult.error || 'Credit deduction failed',
         creditError: true,
         errorCode: creditResult.errorCode,
+        requiredTier: creditResult.requiredTier,
         requiredCredits: creditCost
       }), {
         status: 402,
@@ -598,14 +600,16 @@ Your analysis should help founders make informed decisions, not just validate th
         analysis: analysisResult,
         analysisId: storedAnalysisId,
         patternInsights: patternInsights,
-        creditsUsed: creditCost,
+        creditsUsed: chargedCredits,
         newBalance: creditResult.newBalance
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     } catch (err) {
       console.error('AI processing failed, refunding credits:', err);
-      await refundCredits(user.id, creditCost, 'PMF Analysis', 'Refund: AI processing failed', { error: err instanceof Error ? err.message : String(err) });
+      if (chargedCredits > 0) {
+        await refundCredits(user.id, chargedCredits, 'PMF Analysis', 'Refund: AI processing failed', { error: err instanceof Error ? err.message : String(err) });
+      }
       throw err;
     }
 

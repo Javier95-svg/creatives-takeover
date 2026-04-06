@@ -2,11 +2,11 @@ import { useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCredits } from '@/hooks/useCredits';
-import { getCurrentUtcMonthStart, useMonthlyQuotas } from '@/hooks/useMonthlyQuotas';
+import { useMonthlyQuotas } from '@/hooks/useMonthlyQuotas';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useUpgradePrompt } from '@/contexts/UpgradePromptContext';
 import { CREDIT_COSTS, CreditFeature, getCreditCost } from '@/config/constants';
-import { getQuotaStatus, normalizePlan } from '@/config/planPermissions';
+import { getQuotaStatus, normalizePlan, type Plan } from '@/config/planPermissions';
 import { toast } from 'sonner';
 import { createIdempotencyKey } from '@/lib/idempotency';
 
@@ -55,6 +55,32 @@ const resolveCreditCost = (feature: CreditFeature, override?: number) => {
   return getCreditCost(feature) ?? CREDIT_COSTS[feature];
 };
 
+const PLAN_SEQUENCE: Plan[] = ['rookie', 'starter', 'rising', 'pro'];
+
+const FEATURE_MINIMUM_PLAN: Partial<Record<CreditFeature, Plan>> = {
+  EMAIL_TEMPLATE_GENERATION: 'starter',
+  PMF_ANALYSIS: 'starter',
+  PMF_SCORING: 'starter',
+  APP_BUILDER_GENERATE: 'rising',
+  APP_BUILDER_REFINE: 'rising',
+  GTM_ANALYSIS: 'rising',
+  TECH_STACK_GENERATION: 'rising',
+  PITCH_DECK_ANALYZER: 'rising',
+  PROMPT_GENERATION: 'rising',
+};
+
+const FEATURE_INCLUDED_ON_PLAN: Partial<Record<CreditFeature, Plan>> = {
+  WAITLIST_GENERATION: 'rising',
+  PMF_ANALYSIS: 'rising',
+  PMF_SCORING: 'rising',
+  TECH_STACK_GENERATION: 'rising',
+  PITCH_DECK_ANALYZER: 'rising',
+  EMAIL_TEMPLATE_GENERATION: 'starter',
+  FUNDRAISING_READINESS_ANALYSIS: 'rookie',
+  ICP_ANALYSIS: 'rookie',
+  PROMPT_GENERATION: 'rising',
+};
+
 const ALWAYS_PAID_FEATURES = new Set<string>([
   'LAUNCH_REPORT',
   'GTM_ANALYSIS',
@@ -68,16 +94,8 @@ const ALWAYS_FREE_FEATURES = new Set<string>([
   'FUNDRAISING_READINESS_ANALYSIS',
 ]);
 
-const INCLUDED_ON_PAID_PLANS = new Set<string>([
-  'WAITLIST_GENERATION',
-  'PMF_ANALYSIS',
-  'PMF_SCORING',
-  'TECH_STACK_GENERATION',
-  'PITCH_DECK_ANALYZER',
-  'EMAIL_TEMPLATE_GENERATION',
-  'FUNDRAISING_READINESS_ANALYSIS',
-  'PROMPT_GENERATION',
-]);
+const isPlanAtLeast = (plan: Plan, minimumPlan: Plan) =>
+  PLAN_SEQUENCE.indexOf(plan) >= PLAN_SEQUENCE.indexOf(minimumPlan);
 
 const isCreditError = (error?: any, data?: any) => {
   if (!error && !data) return false;
@@ -85,6 +103,7 @@ const isCreditError = (error?: any, data?: any) => {
   if (typeof error?.message === 'string' && error.message.toLowerCase().includes('credit')) return true;
   if (data?.creditError || data?.required || data?.requiredCredits) return true;
   if (typeof data?.error === 'string' && data.error.toLowerCase().includes('credit')) return true;
+  if (data?.errorCode === 'PLAN_UPGRADE_REQUIRED' || data?.errorCode === 'QUOTA_LIMIT_REACHED') return true;
   return false;
 };
 
@@ -92,7 +111,7 @@ export const useCreditActions = () => {
   const { user } = useAuth();
   const { hasCredits, refreshBalance, loading: creditsLoading } = useCredits();
   const { subscriptionData } = useSubscription();
-  const { quotas, cycleStart, refreshQuotas } = useMonthlyQuotas();
+  const { quotas, refreshQuotas } = useMonthlyQuotas();
   const { openUpgradePrompt } = useUpgradePrompt();
   const currentTier = normalizePlan(subscriptionData?.subscription_tier);
 
@@ -110,42 +129,15 @@ export const useCreditActions = () => {
         return 0;
       }
 
-      if (currentTier === 'starter' && feature === 'EMAIL_TEMPLATE_GENERATION') {
+      const includedOnPlan = FEATURE_INCLUDED_ON_PLAN[feature as CreditFeature];
+      if (includedOnPlan && isPlanAtLeast(currentTier, includedOnPlan) && !ALWAYS_PAID_FEATURES.has(feature)) {
         return 0;
-      }
-
-      if (currentTier === 'rising' || currentTier === 'pro') {
-        if (!ALWAYS_PAID_FEATURES.has(feature) && INCLUDED_ON_PAID_PLANS.has(feature)) {
-          return 0;
-        }
       }
 
       return resolveCreditCost(feature as CreditFeature, override);
     },
     [currentTier]
   );
-
-  const consumeDiscoveryCallQuota = useCallback(async () => {
-    if (!user) return false;
-
-    const monthKey = cycleStart ?? getCurrentUtcMonthStart();
-    const nextUsed = (quotas.discovery_calls_used ?? 0) + 1;
-    const { error } = await supabase
-      .from('user_monthly_quotas')
-      .upsert({
-        user_id: user.id,
-        month: monthKey,
-        discovery_calls_used: nextUsed,
-      }, { onConflict: 'user_id,month' });
-
-    if (error) {
-      toast.error('Unable to reserve your discovery-call quota right now.');
-      return false;
-    }
-
-    await refreshQuotas();
-    return true;
-  }, [cycleStart, quotas.discovery_calls_used, refreshQuotas, user]);
 
   const ensureCredits = useCallback(
     (feature: CreditFeature, options: CreditActionOptions = {}) => {
@@ -156,6 +148,17 @@ export const useCreditActions = () => {
 
       if (creditsLoading) {
         toast('Loading credit balance...');
+        return null;
+      }
+
+      const minimumPlan = FEATURE_MINIMUM_PLAN[feature];
+      if (minimumPlan && !isPlanAtLeast(currentTier, minimumPlan)) {
+        openUpgradePrompt({
+          reason: 'feature',
+          featureName: resolveFeatureLabel(feature, options.featureName),
+          requiredTier: minimumPlan,
+          description: options.description,
+        });
         return null;
       }
 
@@ -198,6 +201,24 @@ export const useCreditActions = () => {
   const handleCreditError = useCallback(
     (error: any, data: any, feature: CreditFeature, options: CreditActionOptions = {}) => {
       if (!isCreditError(error, data)) return false;
+      if (data?.errorCode === 'PLAN_UPGRADE_REQUIRED' || data?.requiredTier) {
+        openUpgradePrompt({
+          reason: 'feature',
+          featureName: resolveFeatureLabel(feature, options.featureName),
+          requiredTier: (data?.requiredTier as Plan | undefined) || FEATURE_MINIMUM_PLAN[feature],
+          description: data?.error || options.description,
+        });
+        return true;
+      }
+      if (data?.errorCode === 'QUOTA_LIMIT_REACHED') {
+        openUpgradePrompt({
+          reason: 'feature',
+          featureName: resolveFeatureLabel(feature, options.featureName),
+          requiredTier: data?.requiredTier as Plan | undefined,
+          description: data?.error || options.description,
+        });
+        return true;
+      }
       const requiredCredits = getEffectiveRequiredCredits(
         feature,
         options.requiredCredits ?? data?.requiredCredits ?? data?.required
@@ -223,10 +244,7 @@ export const useCreditActions = () => {
 
       const requiredCredits = ensureCredits(feature, options);
       if (requiredCredits === null) return false;
-      if (requiredCredits === 0) {
-        if (feature === 'DISCOVERY_CALL' && currentTier !== 'pro') {
-          return consumeDiscoveryCallQuota();
-        }
+      if (requiredCredits === 0 && feature !== 'DISCOVERY_CALL') {
         return true;
       }
 
@@ -247,6 +265,7 @@ export const useCreditActions = () => {
           amount: requiredCredits,
           tx_type: 'deduct',
           feature: featureLabel,
+          featureCode: feature,
           reason: `Used ${requiredCredits} credits for ${featureLabel}`,
           metadata,
         },
@@ -257,10 +276,14 @@ export const useCreditActions = () => {
         return false;
       }
 
+      if (feature === 'DISCOVERY_CALL') {
+        await refreshQuotas();
+      }
+
       await refreshBalance();
       return true;
     },
-    [consumeDiscoveryCallQuota, currentTier, ensureCredits, handleCreditError, refreshBalance, user]
+    [ensureCredits, handleCreditError, refreshBalance, refreshQuotas, user]
   );
 
   return {

@@ -59,7 +59,7 @@ serve(async (req) => {
       creditCost,
       'GTM Analysis',
       undefined,
-      { businessType, idempotencyKey }
+      { businessType, idempotencyKey, entitlementFeature: 'GTM_ANALYSIS' }
     );
 
     if (!creditResult.success) {
@@ -67,6 +67,7 @@ serve(async (req) => {
         error: creditResult.error || 'Credit deduction failed',
         creditError: true,
         errorCode: creditResult.errorCode,
+        requiredTier: creditResult.requiredTier,
         requiredCredits: creditCost,
       }), {
         status: 402,

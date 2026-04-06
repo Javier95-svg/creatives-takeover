@@ -419,14 +419,16 @@ serve(async (req: Request) => {
       creditCost,
       creditFeature,
       undefined,
-      { idempotencyKey }
+      { idempotencyKey, entitlementFeature: creditFeature }
     );
 
     if (!creditCheck.success) {
       return errorStream(
         creditCheck.errorCode === "INSUFFICIENT_CREDITS"
           ? `You need ${creditCost} credits to use the AI App Builder. Please upgrade your plan or purchase more credits.`
-          : "Unable to process credits. Please try again.",
+          : creditCheck.errorCode === "PLAN_UPGRADE_REQUIRED"
+            ? "AI App Builder is available on Rising and Pro. Upgrade your plan to continue."
+            : "Unable to process credits. Please try again.",
         creditCheck.errorCode
       );
     }

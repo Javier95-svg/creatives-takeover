@@ -43,14 +43,16 @@ serve(async (req) => {
       creditCost,
       "Waitlist Page Generation",
       undefined,
-      { productName: productName.substring(0, 80) },
+      { productName: productName.substring(0, 80), entitlementFeature: 'WAITLIST_GENERATION' },
     );
+    const chargedCredits = (creditResult.usedFromQuota ?? 0) + (creditResult.usedFromBalance ?? 0);
 
     if (!creditResult.success) {
       return new Response(JSON.stringify({
         error: creditResult.error || "Insufficient credits",
         creditError: true,
         errorCode: creditResult.errorCode,
+        requiredTier: creditResult.requiredTier,
         requiredCredits: creditCost,
       }), {
         status: 402,
@@ -146,20 +148,22 @@ Return only valid JSON using this exact shape:
       return new Response(JSON.stringify({
         success: true,
         content: result,
-        creditsUsed: creditCost,
+        creditsUsed: chargedCredits,
         newBalance: creditResult.newBalance,
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     } catch (aiError) {
       const err = aiError instanceof Error ? aiError : new Error(String(aiError));
-      await refundCredits(
-        user.id,
-        creditCost,
-        "Waitlist Page Generation",
-        "Refund: AI processing failed",
-        { error: err.message },
-      );
+      if (chargedCredits > 0) {
+        await refundCredits(
+          user.id,
+          chargedCredits,
+          "Waitlist Page Generation",
+          "Refund: AI processing failed",
+          { error: err.message },
+        );
+      }
       throw aiError;
     }
   } catch (error) {

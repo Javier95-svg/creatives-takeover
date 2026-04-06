@@ -3,6 +3,7 @@ import { withErrorBoundary, logInfo, logWarn } from "../_shared/logger.ts";
 import { withIdempotency } from "../_shared/idempotency.ts";
 import { CREDIT_COSTS } from '../_shared/credit-constants.ts';
 import { checkAndDeductCredits, getUserFromAuth } from '../_shared/credit-deduction.ts';
+import { type EnforcedFeature } from '../_shared/plan-enforcement.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -15,6 +16,7 @@ interface CreditTransaction {
   tx_type: 'grant' | 'deduct' | 'purchase' | 'refund' | 'adjustment' | 'reset';
   reason?: string;
   feature?: string;
+  feature_code?: EnforcedFeature;
   session_id?: string;
   metadata?: Record<string, any>;
 }
@@ -64,7 +66,10 @@ export class CreditService {
         amount,
         featureLabel,
         transaction.session_id,
-        transaction.metadata
+        {
+          ...(transaction.metadata || {}),
+          ...(transaction.feature_code ? { entitlementFeature: transaction.feature_code } : {}),
+        }
       );
 
       return {
@@ -72,7 +77,10 @@ export class CreditService {
         newBalance: result.newBalance,
         newQuota: result.newQuota,
         error: result.error,
-        errorCode: result.errorCode
+        errorCode: result.errorCode,
+        requiredTier: result.requiredTier,
+        limit: result.limit,
+        remaining: result.remaining,
       };
     } catch (error) {
       console.error('Error in deductCredits:', error);
@@ -308,6 +316,7 @@ export default withErrorBoundary(async function handler(req: Request) {
 
           const amount = Number(params.amount || 0);
           const feature = (params.feature as string) || 'Credit Deduction';
+          const featureCode = params.featureCode as EnforcedFeature | undefined;
           const sessionId = params.session_id as string | undefined;
           const metadata = {
             ...(params.metadata as Record<string, unknown> | undefined),
@@ -319,6 +328,7 @@ export default withErrorBoundary(async function handler(req: Request) {
             amount,
             tx_type: 'deduct',
             feature,
+            feature_code: featureCode,
             reason: `Used ${amount} credits for ${feature}`,
             session_id: sessionId,
             metadata,
