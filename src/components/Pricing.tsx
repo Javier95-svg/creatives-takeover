@@ -6,6 +6,7 @@ import { Check, Crown, Sparkles, Star } from "lucide-react";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { PLAN_HIGHLIGHTS, PLAN_MONTHLY_CREDITS } from "@/config/planPermissions";
 
 type BillingCycle = "monthly" | "yearly";
 type PlanKey = "rookie" | "starter" | "rising" | "pro";
@@ -47,19 +48,8 @@ const PLAN_CONFIG: Array<{
     yearlyPrice: 0,
     yearlyEquivalent: "Free forever",
     savings: null,
-    credits: 25,
-    features: [
-      "Dashboard Rookie Mode",
-      "ICP Builder (free)",
-      "Waitlist Maker (uses credits)",
-      "PMF Lab, MVP Builder, Tech Stack Builder, GTM Strategist, and Directories (preview only)",
-      "1 free discovery call/month (mentorship)",
-      "1 Find a Co-Founder post/month",
-      "VC Search & Accelerator Hunt (browse only)",
-      "Prompt Library (free models only)",
-      "Insighta Test",
-      "Newspaper",
-    ],
+    credits: PLAN_MONTHLY_CREDITS.rookie,
+    features: PLAN_HIGHLIGHTS.rookie,
   },
   {
     key: "starter",
@@ -70,20 +60,8 @@ const PLAN_CONFIG: Array<{
     yearlyPrice: 79,
     yearlyEquivalent: "$6.58/mo",
     savings: "Save 27%",
-    credits: 50,
-    features: [
-      "Dashboard Starter Mode",
-      "ICP Builder (free)",
-      "Waitlist Maker + PMF Lab (use credits)",
-      "MVP Builder, Tech Stack Builder, GTM Strategist, and Directories (preview only)",
-      "2 free discovery calls/month (mentorship)",
-      "2 Find a Co-Founder posts/month",
-      "VC Search & Accelerator Hunt (2 profile views/monthly)",
-      "Email Templates (full access)",
-      "Prompt Library (free models only)",
-      "Insighta Test",
-      "Newspaper",
-    ],
+    credits: PLAN_MONTHLY_CREDITS.starter,
+    features: PLAN_HIGHLIGHTS.starter,
   },
   {
     key: "rising",
@@ -94,21 +72,9 @@ const PLAN_CONFIG: Array<{
     yearlyPrice: 239,
     yearlyEquivalent: "$19.92/mo",
     savings: "Save 31%",
-    credits: 100,
+    credits: PLAN_MONTHLY_CREDITS.rising,
     highlight: "Most Popular",
-    features: [
-      "Dashboard Rising Mode",
-      "Waitlist Maker, PMF Lab, Tech Stack Builder, and Directories included",
-      "MVP Builder + GTM Strategist (use credits)",
-      "3 free discovery calls/month (mentorship)",
-      "Unlimited Find a Co-Founder posts",
-      "VC Search & Accelerator Hunt (5 profile views/monthly)",
-      "Email Templates (full access)",
-      "Pitch Deck Analyzer (included)",
-      "Prompt Library (full access)",
-      "Insighta Test",
-      "Newspaper",
-    ],
+    features: PLAN_HIGHLIGHTS.rising,
   },
   {
     key: "pro",
@@ -119,21 +85,8 @@ const PLAN_CONFIG: Array<{
     yearlyPrice: 589,
     yearlyEquivalent: "$49.08/mo",
     savings: "Save 25%",
-    credits: 300,
-    features: [
-      "Dashboard Pro Mode",
-      "Find Your Angel",
-      "Waitlist Maker, PMF Lab, Tech Stack Builder, and Directories included",
-      "MVP Builder + GTM Strategist (use credits)",
-      "Unlimited discovery calls (mentorship)",
-      "Unlimited Find a Co-Founder posts",
-      "VC Search & Accelerator Hunt (unlimited profile views)",
-      "Email Templates (full access)",
-      "Pitch Deck Analyzer (included)",
-      "Prompt Library (full access)",
-      "Insighta Test",
-      "Newspaper",
-    ],
+    credits: PLAN_MONTHLY_CREDITS.pro,
+    features: PLAN_HIGHLIGHTS.pro,
   },
 ];
 

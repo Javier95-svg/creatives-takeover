@@ -5,7 +5,7 @@
  * all resolve from this file instead of hardcoded tier checks.
  */
 
-import type { CreditFeature } from '@/config/constants';
+import { getCreditCost, TIER_MONTHLY_CREDITS, type CreditFeature } from './constants.ts';
 
 export type Plan = 'rookie' | 'starter' | 'rising' | 'pro';
 
@@ -67,11 +67,13 @@ export interface EntitlementResult {
   state: GateState;
   reason?: RestrictionReason;
   upgradeTarget?: Plan;
+  creditFeature?: CreditFeature;
   creditCost?: number;
   monthlyLimit?: number;
   usedThisMonth?: number;
   remaining?: number;
   resetsAt?: string;
+  dashboardMode?: DashboardModeVariant;
   uiMode: 'full' | 'preview' | 'locked';
   isVisible: boolean;
   freeModelsOnly: boolean;
@@ -82,6 +84,93 @@ export const PLAN_LABELS: Record<Plan, string> = {
   starter: 'Starter',
   rising: 'Rising',
   pro: 'Pro',
+};
+
+export const PLAN_MONTHLY_CREDITS: Record<Plan, number> = {
+  rookie: TIER_MONTHLY_CREDITS.rookie,
+  starter: TIER_MONTHLY_CREDITS.starter,
+  rising: TIER_MONTHLY_CREDITS.rising,
+  pro: TIER_MONTHLY_CREDITS.pro,
+};
+
+export const PLAN_HIGHLIGHTS: Record<Plan, string[]> = {
+  rookie: [
+    'Dashboard Rookie Mode',
+    'ICP Builder (free)',
+    'Waitlist Maker',
+    'Stages 3-5 (preview only)',
+    '1 free discovery call/month (mentorship)',
+    '1 Find a Co-Founder post per month',
+    'VC Search & Accelerator Hunt (view only)',
+    'Prompt Library (free models only)',
+    'Insighta Test',
+    'Newspaper',
+  ],
+  starter: [
+    'Dashboard Starter Mode',
+    'ICP Builder (free)',
+    'Waitlist Maker + PMF Lab',
+    'Stages 4-5 (preview only)',
+    '2 free discovery calls/month (mentorship)',
+    '2 Find a Co-Founder posts per month',
+    'VC Search & Accelerator Hunt (2 profiles view per month)',
+    'Email Templates (full access)',
+    'Prompt Library (free models only)',
+    'Insighta Test',
+    'Newspaper',
+  ],
+  rising: [
+    'Dashboard Rising Mode',
+    'Full BizMap AI tools access',
+    'MVP Builder + GTM Strategist (credits apply)',
+    '3 free discovery calls/month (mentorship)',
+    'Unlimited Find a Co-Founder posts',
+    'VC Search & Accelerator Hunt (5 profiles view per month)',
+    'Email Templates (full access)',
+    'Pitch Deck Analyzer (full access)',
+    'Prompt Library (full access)',
+    'Insighta Test',
+    'Newspaper',
+  ],
+  pro: [
+    'Dashboard Pro Mode',
+    'Find Your Angel (investors)',
+    'Full BizMap AI tools access',
+    'MVP Builder + GTM Strategist (credits apply)',
+    'Unlimited discovery calls (mentorship)',
+    'Unlimited Find a Co-Founder posts',
+    'VC Search & Accelerator Hunt (unlimited profile views)',
+    'Email Templates (full access)',
+    'Pitch Deck Analyzer (full access)',
+    'Prompt Library (full access)',
+    'Insighta Test',
+    'Newspaper',
+  ],
+};
+
+export const FEATURE_LABELS: Record<FeatureKey, string> = {
+  dashboard_mode: 'Dashboard Mode',
+  icp_builder: 'ICP Builder',
+  waitlist_maker: 'Waitlist Maker',
+  pmf_lab: 'PMF Lab',
+  mvp_builder: 'MVP Builder',
+  tech_stack: 'Tech Stack Builder',
+  gtm_strategist: 'GTM Strategist',
+  directories: 'Directories',
+  discovery_calls: 'Discovery Calls',
+  cofounder_posts: 'Find a Co-Founder posts',
+  angels_community: 'Find Your Angel',
+  vc_search_browse: 'VC Search',
+  vc_search_profile: 'VC Search profiles',
+  accelerator_browse: 'Accelerator Hunt',
+  accelerator_profile: 'Accelerator Hunt profiles',
+  email_templates: 'Email Templates',
+  pitch_deck_analyzer: 'Pitch Deck Analyzer',
+  prompt_library: 'Prompt Library',
+  prompt_library_export: 'Prompt Library export',
+  insighta_test: 'Insighta Test',
+  newspaper: 'Newspaper',
+  profile: 'Profile',
 };
 
 export const FEATURE_ENTITLEMENTS: Record<FeatureKey, Record<Plan, FeatureEntitlementConfig>> = {
@@ -259,6 +348,7 @@ export function resolveEntitlement(feature: FeatureKey, plan: Plan): Entitlement
   const config = FEATURE_ENTITLEMENTS[feature]?.[plan] ?? { state: 'full' as const };
   const state = config.state;
   const monthlyLimit = config.monthlyLimit;
+  const creditCost = config.creditFeature ? getCreditCost(config.creditFeature) ?? undefined : undefined;
 
   let reason: RestrictionReason | undefined;
   if (state === 'preview_only') reason = 'preview_only';
@@ -269,7 +359,10 @@ export function resolveEntitlement(feature: FeatureKey, plan: Plan): Entitlement
     state,
     reason,
     upgradeTarget: config.requiredPlan,
+    creditFeature: config.creditFeature,
+    creditCost,
     monthlyLimit,
+    dashboardMode: config.dashboardMode,
     uiMode:
       state === 'preview_only'
         ? 'preview'

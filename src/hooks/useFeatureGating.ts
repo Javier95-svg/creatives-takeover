@@ -2,7 +2,15 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useSubscription } from './useSubscription';
 import { useCredits } from './useCredits';
 import { CREDIT_COSTS } from '@/config/constants';
-import { normalizePlan } from '@/config/planPermissions';
+import {
+  FEATURE_LABELS,
+  PLAN_HIGHLIGHTS,
+  PLAN_LABELS,
+  PLAN_MONTHLY_CREDITS,
+  normalizePlan,
+  resolveEntitlement,
+  type FeatureKey,
+} from '@/config/planPermissions';
 
 export interface FeatureAccess {
   hasAccess: boolean;
@@ -31,6 +39,41 @@ export function useFeatureGating() {
     }
 
     const tier = normalizePlan(subscriptionData.subscription_tier);
+
+    const checkCanonicalFeatureAccess = (featureKey: FeatureKey): FeatureAccess => {
+      const entitlement = resolveEntitlement(featureKey, tier);
+      const featureLabel = FEATURE_LABELS[featureKey];
+
+      if (entitlement.state === 'full' || entitlement.state === 'quota_limited') {
+        return { hasAccess: true };
+      }
+
+      if (entitlement.state === 'credit_gated') {
+        if (!entitlement.creditCost || hasCredits(entitlement.creditCost)) {
+          return { hasAccess: true };
+        }
+
+        return {
+          hasAccess: false,
+          message: `Insufficient credits. You need ${entitlement.creditCost} credits for ${featureLabel}.`,
+          requiredTier: entitlement.upgradeTarget,
+        };
+      }
+
+      if (entitlement.state === 'preview_only') {
+        return {
+          hasAccess: false,
+          message: `${featureLabel} is available in preview on ${PLAN_LABELS[tier]}. Upgrade to ${PLAN_LABELS[entitlement.upgradeTarget ?? tier]} for full access.`,
+          requiredTier: entitlement.upgradeTarget,
+        };
+      }
+
+      return {
+        hasAccess: false,
+        message: `Upgrade to ${PLAN_LABELS[entitlement.upgradeTarget ?? 'pro']} to access ${featureLabel}.`,
+        requiredTier: entitlement.upgradeTarget,
+      };
+    };
 
     switch (feature) {
       // BizMap AI conversation limits
@@ -96,14 +139,7 @@ export function useFeatureGating() {
 
       // Prompt library features
       case 'prompt_library_export':
-        if (['rising', 'pro'].includes(tier)) {
-          return { hasAccess: true };
-        }
-        return {
-          hasAccess: false,
-          message: 'Upgrade to Rising plan or higher to export prompts',
-          requiredTier: 'rising'
-        };
+        return checkCanonicalFeatureAccess('prompt_library_export');
 
       // Sprint planning
       case 'unlimited_sprints':
@@ -186,31 +222,11 @@ export function useFeatureGating() {
 
       // Tech Stack Generator
       case 'tech_stack_generation':
-        if (tier === 'rookie' || tier === 'starter') {
-          return {
-            hasAccess: false,
-            message: 'Tech Stack is available in preview on Rookie and Starter. Upgrade to Rising for full access.',
-            requiredTier: 'rising'
-          };
-        }
-        return { hasAccess: true };
+        return checkCanonicalFeatureAccess('tech_stack');
 
       // Product-Market Fit Lab — Rookie gets preview, Starter uses credits, Rising/Pro included
       case 'pmf_analysis':
-        if (tier === 'rookie') {
-          return {
-            hasAccess: false,
-            message: 'PMF Lab is available in preview on Rookie. Upgrade to Starter to run full analyses.',
-            requiredTier: 'starter'
-          };
-        }
-        if (tier === 'starter' && !hasCredits(CREDIT_COSTS.PMF_ANALYSIS)) {
-          return {
-            hasAccess: false,
-            message: `Insufficient credits. You need ${CREDIT_COSTS.PMF_ANALYSIS} credits for PMF analysis.`,
-          };
-        }
-        return { hasAccess: true };
+        return checkCanonicalFeatureAccess('pmf_lab');
 
       case 'pmf_preview':
         return { hasAccess: true };
@@ -245,25 +261,11 @@ export function useFeatureGating() {
 
       // Pitch Deck Analyzer (Rising+ only)
       case 'pitch_deck_analyzer':
-        if (tier === 'rookie' || tier === 'starter') {
-          return {
-            hasAccess: false,
-            message: 'Pitch Deck Analyzer is available on Rising and Pro plans.',
-            requiredTier: 'rising'
-          };
-        }
-        return { hasAccess: true };
+        return checkCanonicalFeatureAccess('pitch_deck_analyzer');
 
       // Email Template Generation (Starter+ included)
       case 'email_template_generation':
-        if (tier === 'rookie') {
-          return {
-            hasAccess: false,
-            message: 'Email Templates are available from the Starter plan.',
-            requiredTier: 'starter'
-          };
-        }
-        return { hasAccess: true };
+        return checkCanonicalFeatureAccess('email_templates');
 
       // VC Search View (handled by usePlanAccess + useVCViewTracking)
       case 'vc_search_view':
@@ -370,37 +372,11 @@ export function useFeatureGating() {
 
       // MVP Builder (Rising+ only, or progressive unlock for Rookie)
       case 'mvp_builder':
-        if (tier === 'rookie' || tier === 'starter') {
-          return {
-            hasAccess: false,
-            message: 'MVP Builder is available in preview on Rookie and Starter. Upgrade to Rising for full access.',
-            requiredTier: 'rising'
-          };
-        }
-        if (!hasCredits(CREDIT_COSTS.LAUNCH_REPORT)) {
-          return {
-            hasAccess: false,
-            message: `Insufficient credits. MVP Builder costs ${CREDIT_COSTS.LAUNCH_REPORT} credits.`,
-          };
-        }
-        return { hasAccess: true };
+        return checkCanonicalFeatureAccess('mvp_builder');
 
       // GTM Strategist (Rising+ — progressive for Rookie)
       case 'gtm_strategist':
-        if (tier === 'rookie' || tier === 'starter') {
-          return {
-            hasAccess: false,
-            message: 'GTM Strategist is available in preview on Rookie and Starter. Upgrade to Rising for full access.',
-            requiredTier: 'rising'
-          };
-        }
-        if (!hasCredits(CREDIT_COSTS.ROADMAP_GENERATION)) {
-          return {
-            hasAccess: false,
-            message: `Insufficient credits. GTM Strategist costs ${CREDIT_COSTS.ROADMAP_GENERATION} credits.`,
-          };
-        }
-        return { hasAccess: true };
+        return checkCanonicalFeatureAccess('gtm_strategist');
 
       // Accelerator Hunt — all plans can browse; profile views gated by usePlanAccess
       case 'accelerator_hunt':
@@ -408,14 +384,7 @@ export function useFeatureGating() {
 
       // Find your Angel (Pro only)
       case 'find_your_angel':
-        if (tier !== 'pro') {
-          return {
-            hasAccess: false,
-            message: 'Upgrade to Pro plan to access the Angels community.',
-            requiredTier: 'pro'
-          };
-        }
-        return { hasAccess: true };
+        return checkCanonicalFeatureAccess('angels_community');
 
       // Discovery Calls — credit cost now 10; quota logic handled by usePlanAccess
       case 'discovery_calls_mentors':
@@ -427,66 +396,16 @@ export function useFeatureGating() {
   };
 
   const getConversationLimit = (): number => {
-    const tier = subscriptionData?.subscription_tier || 'rookie';
-    const limits: Record<string, number> = {
-      rookie: 25,
-      starter: 50,
-      rising: 100,
-      pro: 300,
-    };
-    return limits[tier] ?? 25;
+    const currentPlan = normalizePlan(subscriptionData?.subscription_tier);
+    return PLAN_MONTHLY_CREDITS[currentPlan];
   };
 
   const getTierFeatures = (tierName: string): string[] => {
-    const featureMap: Record<string, string[]> = {
-      rookie: [
-        '25 credits per month',
-        'Dashboard Rookie Mode',
-        'ICP Builder included for free',
-        'Waitlist Maker available with credits',
-        'Stages 3 to 5 in preview mode',
-        '1 discovery call this month',
-        '1 co-founder post this month',
-        'VC Search and Accelerator Hunt list-only',
-        'Prompt Library free models only',
-        'Insighta Test and Newspaper included',
-      ],
-      starter: [
-        '50 credits per month',
-        'Dashboard Starter Mode',
-        'ICP Builder included for free',
-        'Waitlist Maker and PMF Lab use credits',
-        'Stages 4 and 5 in preview mode',
-        '2 discovery calls this month',
-        '2 co-founder posts this month',
-        '2 VC and 2 accelerator profile views this month',
-        'Email Templates included',
-        'Prompt Library free models only',
-      ],
-      rising: [
-        '100 credits per month',
-        'Dashboard Rising Mode',
-        'Full BizMap AI tools access',
-        'MVP Builder and GTM Strategist still use credits',
-        '3 discovery calls this month',
-        'Unlimited co-founder posts',
-        '5 VC and 5 accelerator profile views this month',
-        'Full email templates, pitch deck analyzer, and prompt library',
-      ],
-      pro: [
-        '300 credits per month',
-        'Dashboard Pro Mode',
-        'Find Your Angel access',
-        'Everything in Rising',
-        'MVP Builder and GTM Strategist still use credits',
-        'Unlimited discovery calls',
-        'Unlimited VC and Accelerator profile views',
-      ],
-    };
-    return featureMap[tierName] || [];
+    const currentPlan = normalizePlan(tierName);
+    return [`${PLAN_MONTHLY_CREDITS[currentPlan]} credits per month`, ...PLAN_HIGHLIGHTS[currentPlan]];
   };
 
-  const currentTierValue = subscriptionData?.subscription_tier || 'rookie';
+  const currentTierValue = normalizePlan(subscriptionData?.subscription_tier);
 
   return {
     checkFeatureAccess,
