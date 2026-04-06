@@ -24,6 +24,7 @@ const AcceleratorHuntTab = () => {
     hasUnlimitedViews,
     currentTier,
     limit,
+    upgradeTarget,
     loading: acceleratorViewLoading,
     isAuthenticated,
   } = useAcceleratorViewTracking();
@@ -31,7 +32,7 @@ const AcceleratorHuntTab = () => {
   const isLimitReached = !acceleratorViewLoading && !hasUnlimitedViews && remaining === 0;
   const isLowRemaining = !acceleratorViewLoading && !hasUnlimitedViews && remaining > 0 && remaining <= 1;
   const showUpgradeBanner = isLimitReached || isLowRemaining;
-  const upgradeTier = currentTier === "rookie" ? "rising" : "pro";
+  const upgradeTier = upgradeTarget ?? (currentTier === "rookie" ? "starter" : currentTier === "starter" ? "rising" : "pro");
   const upgradeDetails = TIER_DETAILS[upgradeTier as keyof typeof TIER_DETAILS];
   const canViewProfiles = acceleratorViewLoading ? true : canViewMore;
   const currentLimitLabel = hasUnlimitedViews ? "Unlimited accelerator views" : `${limit} accelerator views/month`;

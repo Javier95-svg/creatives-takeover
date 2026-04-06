@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSubscription } from "./useSubscription";
-import { VC_VIEW_LIMITS } from "@/config/constants";
-import { normalizePlan } from "@/config/planPermissions";
+import { getMonthlyQuotaLimit, getQuotaStatus, normalizePlan } from "@/config/planPermissions";
 
 export interface AcceleratorViewTrackingResult {
   success: boolean;
@@ -18,9 +17,11 @@ export const useAcceleratorViewTracking = () => {
   const { subscriptionData } = useSubscription();
 
   const currentTier = normalizePlan(subscriptionData?.subscription_tier);
-  const limit = VC_VIEW_LIMITS[currentTier as keyof typeof VC_VIEW_LIMITS] || 0;
-  const hasUnlimitedViews = limit === -1;
-  const canViewMore = hasUnlimitedViews || viewCount < limit;
+  const quotaStatus = getQuotaStatus("accelerator_profile", currentTier, viewCount);
+  const limit = quotaStatus.limit;
+  const hasUnlimitedViews = quotaStatus.hasUnlimited;
+  const canViewMore = quotaStatus.canUse;
+  const upgradeTarget = quotaStatus.upgradeTarget;
 
   useEffect(() => {
     fetchMonthlyViewCount();
@@ -87,15 +88,16 @@ export const useAcceleratorViewTracking = () => {
       }
 
       if (!canView && !hasUnlimitedViews) {
+        const nextLimit = upgradeTarget ? getMonthlyQuotaLimit("accelerator_profile", upgradeTarget) : Infinity;
         return {
           success: false,
           message:
             currentTier === "rookie"
               ? "Accelerator profile views are not available on the Rookie plan. Upgrade to Starter to unlock profile views."
               : currentTier === "starter"
-                ? `You've used all ${limit} accelerator profile views this month. Upgrade to Rising for 5 profile views per month.`
+                ? `You've used all ${limit} accelerator profile views this month. Upgrade to Rising for ${nextLimit} profile views per month.`
                 : `You've used all ${limit} accelerator profile views this month. Upgrade to Pro for unlimited views.`,
-          requiredTier: currentTier === "rookie" ? "starter" : currentTier === "starter" ? "rising" : "pro",
+          requiredTier: upgradeTarget,
           reason: "limit_reached",
         };
       }
@@ -129,10 +131,11 @@ export const useAcceleratorViewTracking = () => {
     limit,
     hasUnlimitedViews,
     canViewMore,
+    upgradeTarget,
     currentTier,
     trackAcceleratorView,
     loading,
     isAuthenticated,
-    remaining: hasUnlimitedViews ? Infinity : Math.max(0, limit - viewCount),
+    remaining: quotaStatus.remaining,
   };
 };

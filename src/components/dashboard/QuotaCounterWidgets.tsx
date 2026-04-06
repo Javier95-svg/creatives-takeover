@@ -2,7 +2,7 @@ import { Phone, Eye, Building2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { usePlanAccess } from '@/hooks/usePlanAccess';
 import { useMonthlyQuotas } from '@/hooks/useMonthlyQuotas';
-import { MONTHLY_FREE_QUOTAS } from '@/config/planPermissions';
+import { getMonthlyQuotaLimit } from '@/config/planPermissions';
 
 const QuotaBar = ({ used, max }: { used: number; max: number }) => {
   const pct = max > 0 ? Math.min((used / max) * 100, 100) : 0;
@@ -20,9 +20,9 @@ export const QuotaCounterWidgets = () => {
 
   if (plan !== 'starter' && plan !== 'rising') return null;
 
-  const dcLimit = MONTHLY_FREE_QUOTAS.discovery_calls[plan];
-  const vcLimit = MONTHLY_FREE_QUOTAS.vc_profiles[plan];
-  const accLimit = MONTHLY_FREE_QUOTAS.accelerator_profiles[plan];
+  const dcLimit = getMonthlyQuotaLimit('discovery_calls', plan);
+  const vcLimit = getMonthlyQuotaLimit('vc_search_profile', plan);
+  const accLimit = getMonthlyQuotaLimit('accelerator_profile', plan);
 
   const counters = [
     {

@@ -18,7 +18,7 @@ function toDateKey(date: Date): string {
   return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, '0')}-${String(date.getUTCDate()).padStart(2, '0')}`;
 }
 
-function getCurrentUtcMonthStart(): string {
+export function getCurrentUtcMonthStart(): string {
   const now = new Date();
   return toDateKey(new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)));
 }

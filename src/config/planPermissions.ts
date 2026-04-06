@@ -52,6 +52,12 @@ export type FeatureKey =
   | 'newspaper'
   | 'profile';
 
+export type QuotaFeatureKey =
+  | 'discovery_calls'
+  | 'cofounder_posts'
+  | 'vc_search_profile'
+  | 'accelerator_profile';
+
 interface FeatureEntitlementConfig {
   state: GateState;
   visibility?: 'visible' | 'hidden';
@@ -77,6 +83,19 @@ export interface EntitlementResult {
   uiMode: 'full' | 'preview' | 'locked';
   isVisible: boolean;
   freeModelsOnly: boolean;
+}
+
+export interface QuotaStatus {
+  feature: QuotaFeatureKey;
+  plan: Plan;
+  state: GateState;
+  used: number;
+  limit: number;
+  remaining: number;
+  hasUnlimited: boolean;
+  canUse: boolean;
+  isLocked: boolean;
+  upgradeTarget?: Plan;
 }
 
 export const PLAN_LABELS: Record<Plan, string> = {
@@ -171,6 +190,13 @@ export const FEATURE_LABELS: Record<FeatureKey, string> = {
   insighta_test: 'Insighta Test',
   newspaper: 'Newspaper',
   profile: 'Profile',
+};
+
+export const QUOTA_FEATURE_LABELS: Record<QuotaFeatureKey, { singular: string; plural: string }> = {
+  discovery_calls: { singular: 'discovery call', plural: 'discovery calls' },
+  cofounder_posts: { singular: 'Find a Co-Founder post', plural: 'Find a Co-Founder posts' },
+  vc_search_profile: { singular: 'VC profile view', plural: 'VC profile views' },
+  accelerator_profile: { singular: 'accelerator profile view', plural: 'accelerator profile views' },
 };
 
 export const FEATURE_ENTITLEMENTS: Record<FeatureKey, Record<Plan, FeatureEntitlementConfig>> = {
@@ -374,7 +400,7 @@ export function resolveEntitlement(feature: FeatureKey, plan: Plan): Entitlement
   };
 }
 
-export function getMonthlyQuotaLimit(feature: FeatureKey, plan: Plan): number {
+export function getMonthlyQuotaLimit(feature: QuotaFeatureKey, plan: Plan): number {
   switch (feature) {
     case 'discovery_calls':
       return MONTHLY_FREE_QUOTAS.discovery_calls[plan];
@@ -387,4 +413,30 @@ export function getMonthlyQuotaLimit(feature: FeatureKey, plan: Plan): number {
     default:
       return 0;
   }
+}
+
+export function isUnlimitedQuotaLimit(limit: number): boolean {
+  return !Number.isFinite(limit) || limit === Infinity;
+}
+
+export function getQuotaStatus(feature: QuotaFeatureKey, plan: Plan, used: number = 0): QuotaStatus {
+  const entitlement = resolveEntitlement(feature, plan);
+  const limit = getMonthlyQuotaLimit(feature, plan);
+  const hasUnlimited = isUnlimitedQuotaLimit(limit);
+  const remaining = hasUnlimited ? Infinity : Math.max(0, limit - used);
+  const isLocked = entitlement.state === 'locked' || entitlement.state === 'hidden';
+  const canUse = entitlement.state === 'full' || (entitlement.state === 'quota_limited' && remaining > 0);
+
+  return {
+    feature,
+    plan,
+    state: entitlement.state,
+    used,
+    limit,
+    remaining,
+    hasUnlimited,
+    canUse,
+    isLocked,
+    upgradeTarget: entitlement.upgradeTarget,
+  };
 }

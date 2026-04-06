@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
+  getQuotaStatus,
   PLAN_HIGHLIGHTS,
   PLAN_MONTHLY_CREDITS,
   normalizePlan,
@@ -108,4 +109,31 @@ test('core entitlement rules reflect the pricing contract', () => {
 
   const proAngelAccess = resolveEntitlement('angels_community', 'pro');
   assert.equal(proAngelAccess.state, 'full');
+});
+
+test('quota status stays aligned with the entitlement matrix', () => {
+  const rookieVcQuota = getQuotaStatus('vc_search_profile', 'rookie', 0);
+  assert.equal(rookieVcQuota.isLocked, true);
+  assert.equal(rookieVcQuota.canUse, false);
+  assert.equal(rookieVcQuota.upgradeTarget, 'starter');
+
+  const starterVcQuota = getQuotaStatus('vc_search_profile', 'starter', 1);
+  assert.equal(starterVcQuota.limit, 2);
+  assert.equal(starterVcQuota.remaining, 1);
+  assert.equal(starterVcQuota.canUse, true);
+  assert.equal(starterVcQuota.upgradeTarget, 'rising');
+
+  const exhaustedStarterVcQuota = getQuotaStatus('vc_search_profile', 'starter', 2);
+  assert.equal(exhaustedStarterVcQuota.canUse, false);
+  assert.equal(exhaustedStarterVcQuota.remaining, 0);
+
+  const risingDiscoveryQuota = getQuotaStatus('discovery_calls', 'rising', 2);
+  assert.equal(risingDiscoveryQuota.limit, 3);
+  assert.equal(risingDiscoveryQuota.remaining, 1);
+  assert.equal(risingDiscoveryQuota.upgradeTarget, 'pro');
+
+  const proAcceleratorQuota = getQuotaStatus('accelerator_profile', 'pro', 99);
+  assert.equal(proAcceleratorQuota.hasUnlimited, true);
+  assert.equal(proAcceleratorQuota.canUse, true);
+  assert.equal(proAcceleratorQuota.remaining, Infinity);
 });

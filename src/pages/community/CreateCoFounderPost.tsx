@@ -13,14 +13,9 @@ import { toast } from 'sonner';
 import { Loader2, Handshake, ArrowLeft, Save } from 'lucide-react';
 import Navigation from '@/components/Navigation';
 import { AccountWallpaper } from '@/components/AccountWallpaper';
-import { useMonthlyQuotas } from '@/hooks/useMonthlyQuotas';
+import { getCurrentUtcMonthStart, useMonthlyQuotas } from '@/hooks/useMonthlyQuotas';
 import { useSubscription } from '@/hooks/useSubscription';
-import { MONTHLY_FREE_QUOTAS, normalizePlan } from '@/config/planPermissions';
-
-const getCurrentUtcMonthStart = () => {
-  const now = new Date();
-  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)).toISOString().slice(0, 10);
-};
+import { getQuotaStatus, normalizePlan } from '@/config/planPermissions';
 
 const CreateCoFounderPost = () => {
   const { user } = useAuth();
@@ -66,9 +61,9 @@ const CreateCoFounderPost = () => {
     setLoading(true);
     try {
       const cycleAnchor = cycleStart ?? getCurrentUtcMonthStart();
-      const postLimit = MONTHLY_FREE_QUOTAS.cofounder_posts[currentPlan];
+      const initialQuota = getQuotaStatus('cofounder_posts', currentPlan);
 
-      if (Number.isFinite(postLimit)) {
+      if (Number.isFinite(initialQuota.limit)) {
         const { count, error: countError } = await supabase
           .from('cofounder_posts')
           .select('id', { count: 'exact', head: true })
@@ -77,8 +72,10 @@ const CreateCoFounderPost = () => {
 
         if (countError) throw countError;
 
-        if ((count || 0) >= postLimit) {
-          toast.error(`You've reached your ${postLimit} co-founder post limit for this month.`);
+        const quota = getQuotaStatus('cofounder_posts', currentPlan, count || 0);
+
+        if (!quota.canUse) {
+          toast.error(`You've reached your ${quota.limit} co-founder post limit for this month.`);
           return;
         }
       }

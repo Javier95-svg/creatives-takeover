@@ -2,11 +2,11 @@ import { useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCredits } from '@/hooks/useCredits';
-import { useMonthlyQuotas } from '@/hooks/useMonthlyQuotas';
+import { getCurrentUtcMonthStart, useMonthlyQuotas } from '@/hooks/useMonthlyQuotas';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useUpgradePrompt } from '@/contexts/UpgradePromptContext';
 import { CREDIT_COSTS, CreditFeature, getCreditCost } from '@/config/constants';
-import { normalizePlan } from '@/config/planPermissions';
+import { getQuotaStatus, normalizePlan } from '@/config/planPermissions';
 import { toast } from 'sonner';
 import { createIdempotencyKey } from '@/lib/idempotency';
 
@@ -49,11 +49,6 @@ type CreditActionOptions = {
 
 const resolveFeatureLabel = (feature: CreditFeature, override?: string) =>
   override || CREDIT_FEATURE_LABELS[feature] || feature;
-
-const getCurrentUtcMonthStart = () => {
-  const now = new Date();
-  return `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, '0')}-01`;
-};
 
 const resolveCreditCost = (feature: CreditFeature, override?: number) => {
   if (typeof override === 'number') return override;
@@ -100,17 +95,6 @@ export const useCreditActions = () => {
   const { quotas, cycleStart, refreshQuotas } = useMonthlyQuotas();
   const { openUpgradePrompt } = useUpgradePrompt();
   const currentTier = normalizePlan(subscriptionData?.subscription_tier);
-
-  const getDiscoveryCallQuotaLimit = useCallback(() => {
-    const freeQuotaByTier: Record<string, number> = {
-      rookie: 1,
-      starter: 2,
-      rising: 3,
-      pro: Infinity,
-    };
-
-    return freeQuotaByTier[currentTier] ?? 0;
-  }, [currentTier]);
 
   const getEffectiveRequiredCredits = useCallback(
     (feature: string, override?: number) => {
@@ -176,19 +160,15 @@ export const useCreditActions = () => {
       }
 
       if (feature === 'DISCOVERY_CALL') {
-        const discoveryLimit = getDiscoveryCallQuotaLimit();
-        const hasRemainingDiscoveryCalls =
-          discoveryLimit === Infinity || (quotas.discovery_calls_used ?? 0) < discoveryLimit;
+        const discoveryQuota = getQuotaStatus('discovery_calls', currentTier, quotas.discovery_calls_used ?? 0);
 
-        if (!hasRemainingDiscoveryCalls) {
-          const requiredTier =
-            currentTier === 'rookie' ? 'starter' : currentTier === 'starter' ? 'rising' : 'pro';
+        if (!discoveryQuota.canUse) {
 
           openUpgradePrompt({
             reason: 'feature',
             featureName: 'Discovery Calls',
-            requiredTier,
-            description: `You have used all ${discoveryLimit} discovery call${discoveryLimit === 1 ? '' : 's'} for this month.`,
+            requiredTier: discoveryQuota.upgradeTarget,
+            description: `You have used all ${discoveryQuota.limit} discovery call${discoveryQuota.limit === 1 ? '' : 's'} for this month.`,
           });
           return null;
         }
@@ -212,7 +192,7 @@ export const useCreditActions = () => {
 
       return requiredCredits;
     },
-    [creditsLoading, currentTier, getDiscoveryCallQuotaLimit, getEffectiveRequiredCredits, hasCredits, openUpgradePrompt, quotas.discovery_calls_used, user]
+    [creditsLoading, currentTier, getEffectiveRequiredCredits, hasCredits, openUpgradePrompt, quotas.discovery_calls_used, user]
   );
 
   const handleCreditError = useCallback(

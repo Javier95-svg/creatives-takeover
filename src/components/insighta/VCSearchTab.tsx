@@ -22,6 +22,7 @@ const VCSearchTab = () => {
     hasUnlimitedViews,
     currentTier,
     limit,
+    upgradeTarget,
     loading: vcViewLoading,
     isAuthenticated,
   } = useVCViewTracking();
@@ -29,7 +30,7 @@ const VCSearchTab = () => {
   const isLimitReached = !vcViewLoading && !hasUnlimitedViews && remaining === 0;
   const isLowRemaining = !vcViewLoading && !hasUnlimitedViews && remaining > 0 && remaining <= 1;
   const showUpgradeBanner = isLimitReached || isLowRemaining;
-  const upgradeTier = currentTier === "rookie" ? "rising" : "pro";
+  const upgradeTier = upgradeTarget ?? (currentTier === "rookie" ? "starter" : currentTier === "starter" ? "rising" : "pro");
   const upgradeDetails = TIER_DETAILS[upgradeTier as keyof typeof TIER_DETAILS];
   const currentLimitLabel = hasUnlimitedViews ? "Unlimited VC views" : `${limit} VC views/month`;
   const upgradeViewsLabel = upgradeDetails.vcViewLimit === -1
