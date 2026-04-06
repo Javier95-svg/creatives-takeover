@@ -9,7 +9,9 @@ import {
 
 test('normalizePlan preserves canonical and legacy aliases', () => {
   assert.equal(normalizePlan('creator'), 'rising');
+  assert.equal(normalizePlan('premium'), 'rising');
   assert.equal(normalizePlan('professional'), 'pro');
+  assert.equal(normalizePlan('enterprise'), 'pro');
   assert.equal(normalizePlan('basic'), 'starter');
   assert.equal(normalizePlan('free'), 'rookie');
 });

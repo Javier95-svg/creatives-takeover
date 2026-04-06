@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.55.0';
+import { normalizePlan, type Plan } from '../_shared/plan-enforcement.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -11,45 +12,37 @@ const supabase = createClient(
   Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
 );
 
-const TIER_FEATURES: Record<string, { label: string; features: string[] }> = {
-  basic: {
-    label: 'Creator',
+const TIER_FEATURES: Record<Plan, { label: string; features: string[] }> = {
+  rookie: {
+    label: 'Rookie',
     features: [
-      'BizMap AI business plan drafts',
-      'Full community access & co-founder matching',
+      '25 monthly credits with free ICP Builder access',
+      'Insighta Test, Newspaper, and preview access across the platform',
+      'A simple way to restart your workflow before upgrading again',
+    ],
+  },
+  starter: {
+    label: 'Starter',
+    features: [
+      'Waitlist Maker and PMF Lab access',
+      '2 free discovery calls and 2 co-founder posts per billing cycle',
       '50 AI credits per month',
     ],
   },
-  creator: {
-    label: 'Creator',
+  rising: {
+    label: 'Rising',
     features: [
-      'BizMap AI business plan drafts',
-      'Full community access & co-founder matching',
-      '50 AI credits per month',
+      'Full BizMap AI access with most tools included',
+      'Pitch Deck Analyzer, Prompt Library, and deeper research workflows',
+      '100 AI credits per month',
     ],
   },
-  premium: {
-    label: 'Professional',
+  pro: {
+    label: 'Pro',
     features: [
-      'All BizMap AI tools & market research',
-      'Insighta VC search & accelerator discovery',
-      '150 AI credits per month',
-    ],
-  },
-  professional: {
-    label: 'Professional',
-    features: [
-      'All BizMap AI tools & market research',
-      'Insighta VC search & accelerator discovery',
-      '150 AI credits per month',
-    ],
-  },
-  enterprise: {
-    label: 'Enterprise',
-    features: [
-      'Everything in Professional',
-      'Priority support',
-      '500 AI credits per month',
+      'Everything in Rising plus Angels and unlimited discovery calls',
+      'Unlimited VC and accelerator profile views',
+      '300 AI credits per month',
     ],
   },
 };
@@ -69,7 +62,7 @@ async function sendWinBackEmail(
     return { success: false, error: 'RESEND_API_KEY not configured' };
   }
 
-  const tierInfo = TIER_FEATURES[previousTier] ?? TIER_FEATURES['basic'];
+  const tierInfo = TIER_FEATURES[normalizePlan(previousTier)] ?? TIER_FEATURES.rookie;
   const featureListHtml = tierInfo.features
     .map((f) => `<li style="margin-bottom: 8px;">${f}</li>`)
     .join('');
@@ -171,7 +164,7 @@ serve(async (req: Request): Promise<Response> => {
       `)
       .eq('subscribed', false)
       .not('subscription_end', 'is', null)
-      .neq('subscription_tier', 'free')
+      .neq('subscription_tier', 'rookie')
       .gte('subscription_end', ninetyDaysAgo);
 
     if (queryError) {
@@ -194,7 +187,7 @@ serve(async (req: Request): Promise<Response> => {
 
     for (const user of churnedUsers as any[]) {
       const email: string = user.email;
-      const previousTier: string = user.subscription_tier;
+      const previousTier = normalizePlan(user.subscription_tier);
       const fullName: string = user.profiles?.full_name ?? '';
       const firstName = fullName.split(' ')[0] || 'there';
 

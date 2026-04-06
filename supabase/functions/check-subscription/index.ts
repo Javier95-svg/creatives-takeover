@@ -2,25 +2,11 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { resolveMonthlyBillingWindow } from "../_shared/billing-period.ts";
+import { normalizePlan as normalizeTier, PLAN_MONTHLY_CREDITS } from "../_shared/plan-enforcement.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
-
-const PLAN_CREDITS: Record<string, number> = {
-  rookie: 25,
-  starter: 50,
-  rising: 100,
-  pro: 300,
-};
-
-const normalizeTier = (value: unknown): string => {
-  const normalized = typeof value === "string" ? value.trim().toLowerCase() : "";
-  if (["professional", "pro"].includes(normalized)) return "pro";
-  if (["creator", "rising"].includes(normalized)) return "rising";
-  if (normalized === "starter") return "starter";
-  return "rookie";
 };
 
 // Helper logging function for debugging
@@ -71,7 +57,7 @@ serve(async (req) => {
     if (proOverrideEmails.has(user.email.toLowerCase())) {
       logStep("Pro override account detected - granting pro tier", { email: user.email });
       const proTier = 'pro';
-      const proCredits = PLAN_CREDITS.pro;
+      const proCredits = PLAN_MONTHLY_CREDITS.pro;
       const proBillingWindow = resolveMonthlyBillingWindow(new Date().toISOString());
 
       // Update subscribers table
@@ -243,7 +229,7 @@ serve(async (req) => {
     if (hasActiveSub && subscriptionTier !== 'rookie') {
       try {
         await supabaseService.rpc('update_user_subscription_tier', {
-          user_email: user.email,
+          target_user_id: user.id,
           new_tier: subscriptionTier,
           is_subscribed: true
         });

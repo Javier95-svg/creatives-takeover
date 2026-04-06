@@ -406,10 +406,10 @@ export function normalizePlan(value: string | null | undefined): Plan {
   if (['pro', 'professional', 'elite', 'team', 'teams', 'enterprise'].includes(normalized)) {
     return 'pro';
   }
-  if (['rising', 'creator'].includes(normalized)) {
+  if (['rising', 'creator', 'premium'].includes(normalized)) {
     return 'rising';
   }
-  if (normalized === 'starter') {
+  if (['starter', 'basic'].includes(normalized)) {
     return 'starter';
   }
 

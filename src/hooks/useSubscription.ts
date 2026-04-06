@@ -6,6 +6,7 @@ import type { Database, Json } from '@/integrations/supabase/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { ADMIN_SUBSCRIPTION, isAdminEmail } from '@/lib/admin';
+import { normalizePlan } from '@/config/planPermissions';
 
 const BILLING_STORAGE_KEY = 'ct_billing_details';
 
@@ -63,28 +64,6 @@ const DEFAULT_SUBSCRIPTION: SubscriptionData = {
   subscription_end: null,
 };
 
-const normalizeSubscriptionTier = (value: unknown): SubscriptionData['subscription_tier'] => {
-  const normalized = typeof value === 'string' ? value.trim().toLowerCase() : '';
-
-  if (['professional', 'pro', 'elite', 'team', 'teams'].includes(normalized)) {
-    return 'pro';
-  }
-
-  if (['creator', 'rising'].includes(normalized)) {
-    return 'rising';
-  }
-
-  if (normalized === 'starter') {
-    return 'starter';
-  }
-
-  if (['free', 'rookie'].includes(normalized)) {
-    return 'rookie';
-  }
-
-  return 'rookie';
-};
-
 const normalizeSubscriptionData = (
   email: string | null | undefined,
   data?: Partial<SubscriptionData> | null
@@ -95,7 +74,7 @@ const normalizeSubscriptionData = (
 
   return {
     subscribed: Boolean(data?.subscribed),
-    subscription_tier: normalizeSubscriptionTier(data?.subscription_tier),
+    subscription_tier: normalizePlan(data?.subscription_tier),
     subscription_end: data?.subscription_end ?? null,
   };
 };
@@ -108,10 +87,7 @@ const normalizePaymentLink = (value: unknown): string | null => {
 
 const normalizeTierRow = (row: Record<string, unknown>): SubscriptionTier => {
   const rawName = (row.tier_name || row.name || row.slug || '') as string;
-  const normalizedRawName = String(rawName).trim().toLowerCase();
-  const tier_name = normalizedRawName === 'enterprise'
-    ? 'enterprise'
-    : normalizeSubscriptionTier(rawName);
+  const tier_name = normalizePlan(rawName);
 
   const monthly_credits = Number(row.monthly_credits ?? row.credits ?? 0) || 0;
   const price_cents = Number(row.price_cents ?? row.price ?? 0) || 0;
@@ -188,11 +164,16 @@ export function useSubscription() {
     }
 
     const normalized: SubscriptionTier[] = (data || []).map((row) => normalizeTierRow(row as Record<string, unknown>));
+    const uniqueTiers = Array.from(
+      normalized.reduce((map, tier) => {
+        map.set(tier.tier_name, tier);
+        return map;
+      }, new Map<string, SubscriptionTier>()).values()
+    );
 
-    const filtered = normalized.filter(tier => tier.tier_name !== 'enterprise');
-    filtered.sort((a, b) => (a.price_cents ?? 0) - (b.price_cents ?? 0));
+    uniqueTiers.sort((a, b) => (a.price_cents ?? 0) - (b.price_cents ?? 0));
 
-    return filtered;
+    return uniqueTiers;
   };
 
   const fetchSubscription = async (): Promise<SubscriptionData> => {
@@ -277,7 +258,7 @@ export function useSubscription() {
   };
 
   const fetchTierByName = async (tierName: string) => {
-    const normalizedTierName = normalizeSubscriptionTier(tierName);
+    const normalizedTierName = normalizePlan(tierName);
     const cachedTier = tiersQuery.data?.find(
       (tier) => String(tier.tier_name).trim().toLowerCase() === normalizedTierName
     );

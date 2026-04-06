@@ -2,19 +2,13 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0?target=deno";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.0";
 import { resolveMonthlyBillingWindow } from "../_shared/billing-period.ts";
+import { normalizePlan as normalizeSubscriptionTier, PLAN_MONTHLY_CREDITS } from "../_shared/plan-enforcement.ts";
 
 const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
   apiVersion: "2023-10-16",
 });
 
 const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET") || "";
-
-const FALLBACK_TIER_CREDITS: Record<string, number> = {
-  rookie: 25,
-  starter: 50,
-  rising: 100,
-  pro: 300,
-};
 
 const CREDIT_PACK_CREDITS: Record<string, number> = {
   pack_20: 20,
@@ -23,16 +17,6 @@ const CREDIT_PACK_CREDITS: Record<string, number> = {
 };
 
 type BillingCycle = "monthly" | "yearly";
-
-const normalizeSubscriptionTier = (value: unknown): string => {
-  const normalized = typeof value === "string" ? value.trim().toLowerCase() : "";
-
-  if (["professional", "pro"].includes(normalized)) return "pro";
-  if (["creator", "rising"].includes(normalized)) return "rising";
-  if (normalized === "starter") return "starter";
-  if (["free", "rookie"].includes(normalized)) return "rookie";
-  return "rookie";
-};
 
 const normalizeBillingCycle = (value: unknown): BillingCycle => {
   const normalized = typeof value === "string" ? value.trim().toLowerCase() : "";
@@ -62,7 +46,7 @@ const getTierCredits = async (supabaseAdmin: any, tier: string): Promise<number>
     .eq("tier_name", normalizedTier)
     .maybeSingle();
 
-  return Number(data?.monthly_credits ?? FALLBACK_TIER_CREDITS[normalizedTier] ?? FALLBACK_TIER_CREDITS.free);
+  return Number(data?.monthly_credits ?? PLAN_MONTHLY_CREDITS[normalizedTier]);
 };
 
 const toIsoOrNull = (unixSeconds?: number | null) => (
@@ -554,12 +538,12 @@ const syncSubscriptionState = async (
   const shouldLiftQuota = subscribed && (grantQuota || currentTier !== normalizedTier || currentQuota <= 0);
   const nextQuota = subscribed
     ? (shouldLiftQuota ? Math.max(currentQuota, tierCredits) : currentQuota)
-    : (currentCredits ? Math.min(currentQuota, FALLBACK_TIER_CREDITS.rookie) : FALLBACK_TIER_CREDITS.rookie);
-  const shouldAdjustFreeQuota = !subscribed && (!currentCredits || nextQuota !== currentQuota || currentTier !== "rookie");
+    : (currentCredits ? Math.min(currentQuota, PLAN_MONTHLY_CREDITS.rookie) : PLAN_MONTHLY_CREDITS.rookie);
+  const shouldAdjustRookieQuota = !subscribed && (!currentCredits || nextQuota !== currentQuota || currentTier !== "rookie");
 
   const nextLastResetAt = subscribed
     ? (shouldLiftQuota ? nowIso : (currentCredits?.last_reset_at ?? nowIso))
-    : (shouldAdjustFreeQuota ? nowIso : (currentCredits?.last_reset_at ?? nowIso));
+    : (shouldAdjustRookieQuota ? nowIso : (currentCredits?.last_reset_at ?? nowIso));
   const nextAnchorAt = subscribed
     ? resolvedAnchor
     : (billingAnchorAt ?? (currentCredits?.billing_anchor_at as string | null | undefined) ?? nowIso);
@@ -805,7 +789,7 @@ async function handleCreditPackPurchase({
           user_id: resolvedUserId,
           balance: nextBalance,
           monthly_quota: Number(currentCredits?.monthly_quota ?? 25),
-          subscription_tier: currentCredits?.subscription_tier ?? "free",
+          subscription_tier: normalizeSubscriptionTier(currentCredits?.subscription_tier ?? "rookie"),
           last_reset_at: currentCredits?.last_reset_at ?? new Date().toISOString(),
         }, { onConflict: "user_id" });
 
@@ -934,7 +918,7 @@ async function handleSubscriptionChange(subscription: any, supabaseAdmin: any) {
 
   const status = typeof subscription.status === "string" ? subscription.status : "";
   const isSubscribed = ["active", "trialing", "past_due"].includes(status);
-  const tier = isSubscribed ? resolveSubscriptionTier(subscription) : "free";
+  const tier = isSubscribed ? resolveSubscriptionTier(subscription) : "rookie";
   const billingCycle = isSubscribed ? resolveSubscriptionBillingCycle(subscription) : null;
   const subscriptionEnd = subscription.current_period_end
     ? new Date(subscription.current_period_end * 1000).toISOString()
@@ -994,7 +978,7 @@ async function handleSubscriptionDeleted(subscription: any, supabaseAdmin: any) 
     stripeCurrentPeriodEnd: null,
   });
 
-  console.log(`[Subscription] Downgraded ${resolvedUserId} to free`);
+  console.log(`[Subscription] Downgraded ${resolvedUserId} to rookie`);
 }
 
 async function handleInvoicePaid(invoice: any, supabaseAdmin: any) {

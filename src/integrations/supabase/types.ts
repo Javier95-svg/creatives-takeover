@@ -8315,7 +8315,7 @@ export type Database = {
         Returns: boolean
       }
       update_user_subscription_tier: {
-        Args: { is_subscribed?: boolean; new_tier: string; user_email: string }
+        Args: { is_subscribed?: boolean; new_tier: string; target_user_id: string }
         Returns: undefined
       }
     }

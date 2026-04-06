@@ -17,23 +17,7 @@ import { useFeatureGating } from "@/hooks/useFeatureGating";
 import { useCreditActions } from "@/hooks/useCreditActions";
 import { useUpgradePrompt } from "@/contexts/UpgradePromptContext";
 import { CREDIT_COSTS } from "@/config/constants";
-import { type Plan } from "@/config/planPermissions";
-
-const normalizePlan = (value?: string | null) => {
-  const normalized = (value || "rookie").toLowerCase();
-  if (normalized === "starter") return "starter";
-  if (normalized === "rising" || normalized === "creator") return "rising";
-  if (normalized === "pro" || normalized === "professional" || normalized === "enterprise") return "pro";
-  return "rookie";
-};
-
-const normalizePromptTier = (value?: string | null) => {
-  const normalized = (value || "rookie").toLowerCase();
-  if (normalized === "professional" || normalized === "pro") return "pro";
-  if (normalized === "creator" || normalized === "rising") return "rising";
-  if (normalized === "starter") return "starter";
-  return "rookie";
-};
+import { normalizePlan, type Plan } from "@/config/planPermissions";
 
 const PromptLibrary = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -57,7 +41,7 @@ const PromptLibrary = () => {
   }, []);
 
   const hasAccessToPrompt = (prompt: MultiStepPrompt) => {
-    const promptTier = normalizePromptTier(prompt.requiredTier);
+    const promptTier = normalizePlan(prompt.requiredTier);
     if (promptTier === "rookie") return true;
     if (!user) return false;
     if (userTier === "pro" || userTier === "rising") return true;

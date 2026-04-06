@@ -11,7 +11,10 @@ import {
 
 test('normalizePlan keeps legacy creator users on rising', () => {
   assert.equal(normalizePlan('creator'), 'rising');
+  assert.equal(normalizePlan('basic'), 'starter');
+  assert.equal(normalizePlan('premium'), 'rising');
   assert.equal(normalizePlan('professional'), 'pro');
+  assert.equal(normalizePlan('enterprise'), 'pro');
   assert.equal(normalizePlan('free'), 'rookie');
 });
 
