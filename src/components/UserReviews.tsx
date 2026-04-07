@@ -114,13 +114,13 @@ const UserReviews = () => {
   const ActiveIcon = activeStep.icon;
   const sectionHeader = (
     <div className="startup-cycle-header text-center mb-16 sm:mb-20 px-6 sm:px-8 lg:px-12">
-      <Badge variant="outline" className="mb-5 text-xs uppercase tracking-wide text-muted-foreground animate-in fade-in slide-in-from-top duration-700">
+      <Badge variant="outline" className="homepage-section-badge mb-5 animate-in fade-in slide-in-from-top duration-700">
         The 7 Stage Journey 🧭
       </Badge>
-      <h2 className="startup-cycle-title font-space-grotesk text-3xl sm:text-4xl lg:text-5xl font-semibold mb-6 tracking-tight text-primary break-words animate-in fade-in slide-in-from-bottom duration-700 delay-100">
+      <h2 className="homepage-section-title startup-cycle-title text-3xl sm:text-4xl lg:text-[2.9rem] mb-5 break-words animate-in fade-in slide-in-from-bottom duration-700 delay-100">
         Startup Development Cycle
       </h2>
-      <p className="startup-cycle-copy text-base sm:text-lg text-muted-foreground max-w-3xl mx-auto leading-relaxed animate-in fade-in slide-in-from-bottom duration-700 delay-200">
+      <p className="homepage-section-copy startup-cycle-copy text-base sm:text-lg max-w-3xl mx-auto animate-in fade-in slide-in-from-bottom duration-700 delay-200">
         The Startup Development Cycle is a step-by-step roadmap designed by Creatives Takeover to guide founders from shaping an idea to building, launching, and growing a startup.
       </p>
       <div className="mt-6 animate-in fade-in zoom-in duration-700 delay-300">
@@ -128,7 +128,7 @@ const UserReviews = () => {
           variant="outline"
           size="sm"
           onClick={() => setIsAutoPlaying(!isAutoPlaying)}
-          className="gap-2 hover:scale-105 transition-transform duration-200"
+          className="gap-2 border-border/80 bg-background/70 hover:bg-background hover:scale-105 transition-transform duration-200"
         >
           {isAutoPlaying ? (
             <>
@@ -285,7 +285,7 @@ const UserReviews = () => {
                         }}
                         className={`absolute -translate-x-1/2 -translate-y-1/2 w-[78px] rounded-xl border px-2 py-2 text-center transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 ${
                           isActive
-                            ? "bg-primary text-primary-foreground border-primary shadow-[0_0_18px_rgba(99,102,241,0.5)] scale-105"
+                            ? "bg-primary text-primary-foreground border-primary shadow-[0_16px_32px_-18px_rgba(37,99,235,0.55)] scale-105"
                             : isPast
                             ? "bg-background/95 border-primary/35 text-foreground"
                             : "bg-background/95 border-border/70 text-foreground"
@@ -312,7 +312,7 @@ const UserReviews = () => {
             </Card>
 
             <Card className="surface-panel trust-outline overflow-hidden relative">
-              <div className={`absolute inset-0 bg-gradient-to-br ${activeStep.color} opacity-35 transition-all duration-700`} />
+              <div className={`absolute inset-0 bg-gradient-to-br ${activeStep.color} opacity-20 transition-all duration-700`} />
               <CardContent className="relative z-10 p-5">
                 <div className="mb-4 flex items-start gap-3">
                   <div className={`rounded-2xl border border-primary/20 bg-gradient-to-br ${activeStep.color} p-3`}>
@@ -341,7 +341,7 @@ const UserReviews = () => {
         <div className="grid gap-8 lg:gap-10 lg:grid-cols-2 items-stretch">
           <Card className="surface-panel trust-outline overflow-hidden relative group">
             {/* Ambient background animation */}
-            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/5" />
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/4 via-transparent to-primary/4" />
             <CardContent className="p-6 sm:p-8 relative">
               <div className="relative mx-auto w-full max-w-[560px] aspect-square" style={{ perspective: '1000px' }}>
                 {/* SVG Layer for Connection Lines */}
@@ -469,7 +469,7 @@ const UserReviews = () => {
                       }}
                       className={`absolute -translate-x-1/2 -translate-y-1/2 w-[110px] sm:w-[122px] px-3 py-2.5 rounded-xl border-2 text-xs sm:text-sm text-center font-medium transition-all duration-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 group overflow-hidden ${
                         isActive
-                          ? "bg-gradient-to-br from-primary via-primary to-primary/90 text-primary-foreground border-primary shadow-lg scale-110"
+                          ? "bg-gradient-to-br from-primary via-primary to-primary/92 text-primary-foreground border-primary shadow-[0_22px_34px_-22px_rgba(37,99,235,0.7)] scale-110"
                           : isPast
                           ? "bg-background/95 border-primary/40 hover:border-primary/60 hover:bg-primary/10 hover:scale-105 hover:shadow-[0_8px_20px_rgba(99,102,241,0.2)] hover:-translate-y-1"
                           : "bg-background/95 border-border/70 hover:border-primary/60 hover:bg-primary/10 hover:scale-105 hover:shadow-[0_8px_20px_rgba(99,102,241,0.2)] hover:-translate-y-1"
@@ -499,8 +499,8 @@ const UserReviews = () => {
 
           <Card className="surface-panel trust-outline overflow-hidden relative group">
             {/* Animated gradient background */}
-            <div className={`absolute inset-0 bg-gradient-to-br ${activeStep.color} opacity-50 transition-all duration-700`} />
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(99,102,241,0.1),transparent)] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            <div className={`absolute inset-0 bg-gradient-to-br ${activeStep.color} opacity-28 transition-all duration-700`} />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(37,99,235,0.08),transparent)] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
             {/* Floating particles effect */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -512,7 +512,7 @@ const UserReviews = () => {
             <CardContent className="p-6 sm:p-8 lg:p-10 h-full flex flex-col justify-center relative z-10">
               <div className="animate-in fade-in slide-in-from-right duration-700" key={activeStepIndex}>
                 <div className="flex items-start gap-4 mb-4">
-                  <div className={`p-3 rounded-xl bg-gradient-to-br ${activeStep.color} border-2 border-primary/30 shadow-[0_0_20px_rgba(99,102,241,0.2)] backdrop-blur-sm hover:scale-110 transition-transform duration-300`}>
+                  <div className={`p-3 rounded-xl bg-gradient-to-br ${activeStep.color} border border-primary/18 shadow-[0_18px_32px_-24px_rgba(37,99,235,0.28)] backdrop-blur-sm hover:scale-110 transition-transform duration-300`}>
                     <ActiveIcon className="w-6 h-6 sm:w-7 sm:h-7 text-primary" />
                   </div>
                   <h3 className="font-space-grotesk text-2xl sm:text-3xl font-semibold flex-1 bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text">

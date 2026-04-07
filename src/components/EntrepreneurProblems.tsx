@@ -168,13 +168,13 @@ const EntrepreneurProblems = () => {
     return (
       <Link
         to={action.to}
-        className={`journey-action-card group relative block w-full overflow-hidden rounded-lg border border-border bg-background/95 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-md hover:border-primary/30 hover:bg-primary/5 ${className}`}
+        className={`journey-action-card group relative block w-full overflow-hidden rounded-[24px] border border-border/80 bg-card/95 shadow-[0_20px_45px_-28px_rgba(15,23,42,0.22)] transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_24px_54px_-30px_rgba(15,23,42,0.26)] hover:border-primary/25 ${className}`}
         style={{ aspectRatio: 256 / 135 }}
       >
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.16),transparent_55%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.2),transparent_58%)]" />
         <div className="relative flex h-full flex-col justify-between p-5 sm:p-6">
           <div className="flex items-start justify-between gap-4">
-            <div className="rounded-lg bg-primary/10 p-2.5 text-primary">
+            <div className="rounded-xl border border-primary/15 bg-primary/10 p-2.5 text-primary">
               <ActionIcon className="h-6 w-6" />
             </div>
           </div>
@@ -193,18 +193,18 @@ const EntrepreneurProblems = () => {
   };
 
   return (
-    <section className="founder-journey-section py-20 lg:py-28 relative" aria-labelledby="journey-heading">
+    <section className="founder-journey-section section-shell relative" aria-labelledby="journey-heading">
 
       <div className="container mx-auto px-4 sm:px-6 relative z-10">
         {/* Section Header */}
-        <div className="text-center mb-16 sm:mb-20 max-w-4xl mx-auto">
-          <Badge variant="outline" className="mb-5 text-xs uppercase tracking-wide text-muted-foreground">
+        <div className="text-center mb-14 sm:mb-16 max-w-3xl mx-auto">
+          <Badge variant="outline" className="homepage-section-badge mb-5">
             Own Your Path 🚀
           </Badge>
-          <h2 id="journey-heading" className="founder-journey-section__title font-space-grotesk text-3xl sm:text-4xl lg:text-5xl font-semibold mb-6 leading-tight tracking-tight text-foreground">
+          <h2 id="journey-heading" className="homepage-section-title founder-journey-section__title text-3xl sm:text-4xl lg:text-[2.9rem] mb-5">
             Every Founder's Journey is Unique
           </h2>
-          <p className="founder-journey-section__copy text-base sm:text-lg text-muted-foreground leading-relaxed">
+          <p className="homepage-section-copy founder-journey-section__copy mx-auto text-base sm:text-lg">
             But some challenges are universal. Here, we highlight some of the most common obstacles founders face and how we assist to overcome them.
           </p>
         </div>
@@ -212,10 +212,10 @@ const EntrepreneurProblems = () => {
         {/* Vertical Timeline */}
         <div className="max-w-5xl mx-auto relative">
           {/* Timeline Line - Continuous vertical line */}
-          <div className="absolute left-8 md:left-1/2 top-0 bottom-0 w-px bg-border hidden sm:block" />
+          <div className="absolute left-8 md:left-1/2 top-0 bottom-0 w-px bg-border/80 hidden sm:block" />
 
           {/* Timeline Items */}
-          <div className="space-y-12 md:space-y-16">
+          <div className="space-y-10 md:space-y-14">
             {journeySteps.map((step, index) => {
               const Icon = step.icon;
               const accentClasses = getAccentClasses(step.accentColor);
@@ -230,7 +230,7 @@ const EntrepreneurProblems = () => {
                   <div className="md:hidden space-y-5">
                     <div className="text-center">
                       <div className="mb-3 flex justify-center">
-                        <span className="inline-flex items-center rounded-full border border-primary/30 bg-primary/10 px-2.5 py-0.5 text-[11px] font-medium text-primary">
+                        <span className="inline-flex items-center rounded-full border border-border/72 bg-background/88 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
                           {step.phase}
                         </span>
                       </div>
@@ -260,7 +260,7 @@ const EntrepreneurProblems = () => {
                       <>
                         <div className="md:col-start-2 md:row-start-1 text-center">
                           <div className="mb-3 flex justify-center">
-                            <span className="inline-flex items-center rounded-full border border-primary/30 bg-primary/10 px-2.5 py-0.5 text-[11px] font-medium text-primary">
+                            <span className="inline-flex items-center rounded-full border border-border/72 bg-background/88 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
                               {step.phase}
                             </span>
                           </div>
@@ -289,7 +289,7 @@ const EntrepreneurProblems = () => {
                       <>
                         <div className="md:col-start-1 md:row-start-1 text-center">
                           <div className="mb-3 flex justify-center">
-                            <span className="inline-flex items-center rounded-full border border-primary/30 bg-primary/10 px-2.5 py-0.5 text-[11px] font-medium text-primary">
+                            <span className="inline-flex items-center rounded-full border border-border/72 bg-background/88 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
                               {step.phase}
                             </span>
                           </div>

@@ -5,19 +5,17 @@ const HomeWallpaper = () => (
       className="fixed inset-0 -z-10"
       style={{
         backgroundImage: [
-          'radial-gradient(circle at top left, hsl(var(--primary) / 0.05), transparent 45%)',
-          'radial-gradient(circle at 30% 80%, hsl(var(--accent) / 0.03), transparent 55%)',
+          'radial-gradient(circle at 50% -12%, hsl(var(--primary) / 0.13), transparent 34%)',
+          'radial-gradient(circle at 100% 0%, hsl(var(--primary) / 0.05), transparent 26%)',
+          'radial-gradient(circle at 0% 100%, hsl(var(--foreground) / 0.025), transparent 28%)',
+          'linear-gradient(180deg, hsl(var(--background)), hsl(220 24% 97%))',
         ].join(', '),
       }}
     />
     <div
-      className="fixed inset-0 -z-10 opacity-[0.15]"
+      className="fixed inset-0 -z-10 opacity-90"
       style={{
-        backgroundImage: [
-          'linear-gradient(to right, hsl(var(--border) / 0.6) 1px, transparent 1px)',
-          'linear-gradient(to bottom, hsl(var(--border) / 0.6) 1px, transparent 1px)',
-        ].join(', '),
-        backgroundSize: '64px 64px',
+        backgroundImage: 'linear-gradient(180deg, transparent 0%, hsl(var(--primary) / 0.022) 28%, transparent 58%, hsl(var(--primary) / 0.028) 100%)',
       }}
     >
     </div>

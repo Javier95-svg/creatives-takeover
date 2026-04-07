@@ -368,17 +368,17 @@ const ValuePropositionCards = () => {
   }, []);
 
   return (
-    <section id="what-you-get" className="value-prop-section py-20 lg:py-28 scroll-mt-24">
+    <section id="what-you-get" className="value-prop-section section-shell scroll-mt-24">
       <div className="container mx-auto px-4 sm:px-6">
         {/* Section Header */}
         <div className="max-w-3xl mx-auto text-center mb-12 sm:mb-16">
-          <Badge variant="outline" className="mb-5 text-xs uppercase tracking-wide text-muted-foreground">
+          <Badge variant="outline" className="homepage-section-badge mb-5">
             The Perfect Ecosystem ♻️
           </Badge>
-          <h2 className="value-prop-section__title font-space-grotesk text-3xl sm:text-4xl lg:text-5xl font-semibold mb-4 tracking-tight text-foreground">
+          <h2 className="homepage-section-title value-prop-section__title text-3xl sm:text-4xl lg:text-[2.9rem] mb-4">
             Creatives Takeover in a Nutshell
           </h2>
-          <p className="value-prop-section__copy text-base sm:text-lg text-muted-foreground">
+          <p className="homepage-section-copy value-prop-section__copy text-base sm:text-lg">
             Everything you need, all in one place. Built on six core pillars to help solofounders validate, build, and grow a business from scratch.
           </p>
         </div>
@@ -402,7 +402,7 @@ const ValuePropositionCards = () => {
                 const isUploadingPosition = uploading === card.position;
                 return (
                   <CarouselItem key={card.title} className="pl-4 basis-full h-full">
-                    <Card className="value-prop-card glass border-border overflow-hidden h-full relative" data-value-card>
+                    <Card className="value-prop-card surface-panel trust-outline overflow-hidden h-full relative rounded-[30px]" data-value-card>
                       <Button
                         type="button"
                         variant="outline"
@@ -422,7 +422,7 @@ const ValuePropositionCards = () => {
                             className="value-prop-card__image w-full h-full object-cover"
                             loading="lazy"
                           />
-                          <div className="absolute inset-0 bg-gradient-to-t from-background/10 to-transparent" />
+                          <div className="absolute inset-0 bg-gradient-to-t from-background/15 via-transparent to-transparent" />
                           {isAdmin && (
                             <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/40">
                               <div className="w-full max-w-[200px] px-4">
@@ -473,22 +473,22 @@ const ValuePropositionCards = () => {
                         </figure>
 
                         {/* Content - Right */}
-                        <div className="value-prop-card__content p-6 md:p-10 flex flex-col justify-center md:h-full">
+                        <div className="value-prop-card__content p-7 md:p-10 lg:p-12 flex flex-col justify-center md:h-full">
                           <div className="flex items-center gap-3 mb-4">
                             <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
                               <Icon className="h-5 w-5 text-primary" />
                             </div>
                             <div>
-                              <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                              <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
                                 {card.title}
                               </p>
-                              <h3 className="value-prop-card__heading font-space-grotesk text-2xl font-bold">
+                              <h3 className="value-prop-card__heading font-space-grotesk text-[1.75rem] font-semibold tracking-tight text-foreground">
                                 {card.subtitle}
                               </h3>
                             </div>
                           </div>
 
-                          <div className="value-prop-card__body text-sm sm:text-[15px] leading-7 text-foreground/80 space-y-4">
+                          <div className="value-prop-card__body text-[15px] leading-7 text-muted-foreground space-y-4">
                             {card.description.split('\n\n').map((paragraph, idx) => (
                               <p key={idx}>{paragraph}</p>
                             ))}
