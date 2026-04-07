@@ -127,11 +127,11 @@ export const PLAN_HIGHLIGHTS: Record<Plan, string[]> = {
   rookie: [
     'Dashboard Rookie Mode',
     'ICP Builder (free)',
-    'Waitlist Maker',
-    'Stages 3-5 (preview only)',
+    'Stage 1 guided dashboard',
+    'Stages 4-5 preview cards',
     '1 free discovery call/month (mentorship)',
     '1 Find a Co-Founder post per month',
-    'VC Search & Accelerator Hunt (view only)',
+    'VC Search & Accelerator Hunt (browse only)',
     'Prompt Library (free models only)',
     'Insighta Test',
     'Newspaper',
@@ -139,6 +139,7 @@ export const PLAN_HIGHLIGHTS: Record<Plan, string[]> = {
   starter: [
     'Dashboard Starter Mode',
     'ICP Builder (free)',
+    'Stages 1-3 active',
     'Waitlist Maker + PMF Lab',
     'Stages 4-5 (preview only)',
     '2 free discovery calls/month (mentorship)',
@@ -152,10 +153,11 @@ export const PLAN_HIGHLIGHTS: Record<Plan, string[]> = {
   rising: [
     'Dashboard Rising Mode',
     'Full BizMap AI tools access',
-    'MVP Builder + GTM Strategist (credits apply)',
+    'All five stages available in one cockpit',
+    'MVP Builder + GTM Strategist',
     '3 free discovery calls/month (mentorship)',
     'Unlimited Find a Co-Founder posts',
-    'VC Search & Accelerator Hunt (5 profiles view per month)',
+    'VC Search & Accelerator Hunt (10 profile views per month)',
     'Email Templates (full access)',
     'Pitch Deck Analyzer (full access)',
     'Prompt Library (full access)',
@@ -164,9 +166,10 @@ export const PLAN_HIGHLIGHTS: Record<Plan, string[]> = {
   ],
   pro: [
     'Dashboard Pro Mode',
+    'Pro War Room with fundraising layer',
     'Find Your Angel (investors)',
     'Full BizMap AI tools access',
-    'MVP Builder + GTM Strategist (credits apply)',
+    'MVP Builder + GTM Strategist',
     'Unlimited discovery calls (mentorship)',
     'Unlimited Find a Co-Founder posts',
     'VC Search & Accelerator Hunt (unlimited profile views)',
@@ -289,7 +292,7 @@ export const FEATURE_ENTITLEMENTS: Record<FeatureKey, Record<Plan, FeatureEntitl
   vc_search_profile: {
     rookie: { state: 'locked', requiredPlan: 'starter', monthlyLimit: 0 },
     starter: { state: 'quota_limited', monthlyLimit: 2, requiredPlan: 'rising' },
-    rising: { state: 'quota_limited', monthlyLimit: 5, requiredPlan: 'pro' },
+    rising: { state: 'quota_limited', monthlyLimit: 10, requiredPlan: 'pro' },
     pro: { state: 'full' },
   },
   accelerator_browse: {
@@ -301,7 +304,7 @@ export const FEATURE_ENTITLEMENTS: Record<FeatureKey, Record<Plan, FeatureEntitl
   accelerator_profile: {
     rookie: { state: 'locked', requiredPlan: 'starter', monthlyLimit: 0 },
     starter: { state: 'quota_limited', monthlyLimit: 2, requiredPlan: 'rising' },
-    rising: { state: 'quota_limited', monthlyLimit: 5, requiredPlan: 'pro' },
+    rising: { state: 'quota_limited', monthlyLimit: 10, requiredPlan: 'pro' },
     pro: { state: 'full' },
   },
 
@@ -361,8 +364,8 @@ export const PLAN_PERMISSIONS: Record<FeatureKey, Record<Plan, AccessRule>> = Ob
 export const MONTHLY_FREE_QUOTAS: Record<string, Record<Plan, number>> = {
   discovery_calls: { rookie: 1, starter: 2, rising: 3, pro: Infinity },
   cofounder_posts: { rookie: 1, starter: 2, rising: Infinity, pro: Infinity },
-  vc_profiles: { rookie: 0, starter: 2, rising: 5, pro: Infinity },
-  accelerator_profiles: { rookie: 0, starter: 2, rising: 5, pro: Infinity },
+  vc_profiles: { rookie: 0, starter: 2, rising: 10, pro: Infinity },
+  accelerator_profiles: { rookie: 0, starter: 2, rising: 10, pro: Infinity },
 };
 
 export const PLAN_SUMMARIES: Record<Plan, PlanSummary> = {
@@ -372,7 +375,7 @@ export const PLAN_SUMMARIES: Record<Plan, PlanSummary> = {
     monthlyCredits: PLAN_MONTHLY_CREDITS.rookie,
     vcViewLimit: MONTHLY_FREE_QUOTAS.vc_profiles.rookie,
     acceleratorViewLimit: MONTHLY_FREE_QUOTAS.accelerator_profiles.rookie,
-    description: 'Idea clarity and first traction with preview access and browse-only investor research.',
+    description: 'A guided Stage 1 dashboard with light monthly usage and previews of the later build and launch layers.',
   },
   starter: {
     name: PLAN_LABELS.starter,
@@ -380,7 +383,7 @@ export const PLAN_SUMMARIES: Record<Plan, PlanSummary> = {
     monthlyCredits: PLAN_MONTHLY_CREDITS.starter,
     vcViewLimit: MONTHLY_FREE_QUOTAS.vc_profiles.starter,
     acceleratorViewLimit: MONTHLY_FREE_QUOTAS.accelerator_profiles.starter,
-    description: 'Adds PMF Lab, full Email Templates, and 2 VC plus 2 accelerator profile views each billing cycle.',
+    description: 'Structured execution across Stages 1 to 3 with PMF workflows, prompt shortcuts, and light investor research.',
   },
   rising: {
     name: PLAN_LABELS.rising,
@@ -388,7 +391,7 @@ export const PLAN_SUMMARIES: Record<Plan, PlanSummary> = {
     monthlyCredits: PLAN_MONTHLY_CREDITS.rising,
     vcViewLimit: MONTHLY_FREE_QUOTAS.vc_profiles.rising,
     acceleratorViewLimit: MONTHLY_FREE_QUOTAS.accelerator_profiles.rising,
-    description: 'Full working stack with Pitch Deck Analyzer, full Prompt Library access, and 5 VC plus 5 accelerator profile views.',
+    description: 'Full operating cockpit across all five stages with 10 VC and 10 accelerator profile views per billing cycle.',
   },
   pro: {
     name: PLAN_LABELS.pro,
@@ -396,7 +399,7 @@ export const PLAN_SUMMARIES: Record<Plan, PlanSummary> = {
     monthlyCredits: PLAN_MONTHLY_CREDITS.pro,
     vcViewLimit: MONTHLY_FREE_QUOTAS.vc_profiles.pro,
     acceleratorViewLimit: MONTHLY_FREE_QUOTAS.accelerator_profiles.pro,
-    description: 'Fundraising tier with Angels access, unlimited research views, and the highest monthly credit grant.',
+    description: 'Premium war room with Angels access, unlimited research views, and added support for fundraising execution.',
   },
 };
 

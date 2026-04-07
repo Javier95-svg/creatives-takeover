@@ -8,18 +8,15 @@ import { supabase } from '@/integrations/supabase/client';
 import { useDashboardInitialization } from '@/hooks/useDashboardInitialization';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { ModeToggle, DashboardMode } from './modes/ModeToggle';
-import { FocusModeView } from './modes/FocusModeView';
-import { DashboardModeView } from './modes/DashboardModeView';
-import { ControlCenterView } from './modes/ControlCenterView';
-import { RookieUpgradeBanner } from './RookieUpgradeBanner';
-import { JourneyStageGrid } from './JourneyStageGrid';
-import { QuotaCounterWidgets } from './QuotaCounterWidgets';
+import { RookieModeView, StarterModeView, RisingModeView, ProModeView } from './modes/TierDashboardViews';
 import { RetentionActionFeed } from './RetentionActionFeed';
 import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 import { DashboardNavigationProvider } from '@/contexts/DashboardNavigationContext';
 import { DashboardSidebar } from './DashboardSidebar';
 import { useActiveSection } from '@/hooks/useActiveSection';
 import { ReactNode } from 'react';
+import { normalizePlan, resolveEntitlement } from '@/config/planPermissions';
+import { useSubscription } from '@/hooks/useSubscription';
 import {
   getDailyGoalPromptSnoozeUntil,
   getLocalDateString,
@@ -41,11 +38,13 @@ export const TaskCountContext = createContext(0);
 const DashboardContentWrapper = ({ dashboardMode, children }: DashboardContentWrapperProps) => {
   // Setup section IDs for active section tracking
   const sectionIds =
-    dashboardMode === 'focus'
-      ? ['dashboard-focus', 'focus-funnel', 'decision-sprint', 'weekly-mission', 'core-metrics', 'your-tasks']
-      : dashboardMode === 'dashboard'
-        ? ['dashboard-focus', 'focus-funnel', 'decision-sprint', 'weekly-mission', 'monthly-revenue', 'core-metrics', 'active-projects', 'quick-wins', 'your-tasks']
-        : ['dashboard-focus', 'focus-funnel', 'decision-sprint', 'weekly-mission', 'monthly-revenue', 'core-metrics', 'ai-insights', 'business-health', 'active-projects', 'calendar-view', 'quick-wins', 'your-tasks', 'gmail-integration'];
+    dashboardMode === 'rookie'
+      ? ['mode-welcome', 'mode-stage', 'mode-usage', 'mode-preview']
+      : dashboardMode === 'starter'
+        ? ['mode-stage', 'mode-tasks', 'mode-usage']
+        : dashboardMode === 'rising'
+          ? ['mode-stage', 'mode-usage', 'weekly-mission', 'decision-sprint', 'focus-funnel', 'your-tasks', 'mode-tools']
+          : ['mode-stage', 'mode-support', 'mode-fundraising', 'mode-usage', 'weekly-mission', 'decision-sprint', 'focus-funnel', 'your-tasks'];
 
   // Initialize active section tracking (now inside the provider)
   useActiveSection(sectionIds);
@@ -57,6 +56,7 @@ export const PersonalizedDashboardV2 = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { isInitializing } = useDashboardInitialization();
+  const { subscriptionData } = useSubscription();
   const {
     data,
     loading,
@@ -68,7 +68,6 @@ export const PersonalizedDashboardV2 = () => {
   const [_hasCheckedInToday, setHasCheckedInToday] = useState(false);
   const [todaysCheckInId, setTodaysCheckInId] = useState<string | null>(null);
   const [currentStreak, setCurrentStreak] = useState(0);
-  const [dashboardMode, setDashboardMode] = useState<DashboardMode>('dashboard');
   const [hasUnresolvedPrompt, setHasUnresolvedPrompt] = useState(false);
   const [unresolvedMode, setUnresolvedMode] = useState<'morning' | 'evening'>('morning');
 
@@ -76,37 +75,6 @@ export const PersonalizedDashboardV2 = () => {
   const lastFetchTimeRef = useRef<number>(0);
   const hasInitializedRef = useRef<boolean>(false);
   const DATA_STALE_TIME = 5 * 60 * 1000; // 5 minutes
-
-  // Load user's preferred dashboard mode from profile
-  useEffect(() => {
-    if (!user) return;
-
-    const loadDashboardPreference = async () => {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('preferred_dashboard_mode')
-        .eq('id', user.id)
-        .single();
-
-      if (profile?.preferred_dashboard_mode) {
-        setDashboardMode(profile.preferred_dashboard_mode as DashboardMode);
-      }
-    };
-
-    loadDashboardPreference();
-  }, [user]);
-
-  // Save dashboard mode preference when it changes
-  const handleModeChange = async (newMode: DashboardMode) => {
-    setDashboardMode(newMode);
-
-    if (user) {
-      await supabase
-        .from('profiles')
-        .update({ preferred_dashboard_mode: newMode })
-        .eq('id', user.id);
-    }
-  };
 
   // Check if user has checked in today and calculate streak
   useEffect(() => {
@@ -227,6 +195,8 @@ export const PersonalizedDashboardV2 = () => {
 
   const metrics = calculateMetrics();
   const incompleteTaskCount = Math.max(metrics.totalTasksToday - metrics.tasksCompletedToday, 0);
+  const currentPlan = normalizePlan(subscriptionData.subscription_tier);
+  const dashboardMode = (resolveEntitlement('dashboard_mode', currentPlan).dashboardMode ?? currentPlan) as DashboardMode;
   const handleDailyGoalOpenChange = (open: boolean) => {
     setShowDailyGoal(open);
 
@@ -262,6 +232,14 @@ export const PersonalizedDashboardV2 = () => {
   // Determine greeting based on time
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
+  const founderName = profile?.full_name?.split(' ')[0] || 'Founder';
+
+  const subtitleByMode: Record<DashboardMode, string> = {
+    rookie: 'A simplified dashboard for getting the first signal right.',
+    starter: 'A structured workspace for moving through Stages 1 to 3.',
+    rising: 'Your full operator cockpit across all five stages.',
+    pro: 'Your fundraising-aware command layer with premium support.',
+  };
 
   return (
     <ErrorBoundary>
@@ -269,7 +247,7 @@ export const PersonalizedDashboardV2 = () => {
         <DashboardNavigationProvider>
           <TaskCountContext.Provider value={incompleteTaskCount}>
             <DashboardContentWrapper dashboardMode={dashboardMode}>
-              <DashboardSidebar dashboardMode={dashboardMode} />
+              <DashboardSidebar />
               <SidebarInset>
                 <div className="min-h-screen relative overflow-hidden bg-background">
                   {/* Fixed Header with Exit Button and Mode Toggle */}
@@ -281,7 +259,7 @@ export const PersonalizedDashboardV2 = () => {
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
                           <SidebarTrigger />
-                          <ModeToggle currentMode={dashboardMode} onModeChange={handleModeChange} />
+                          <ModeToggle currentMode={dashboardMode} />
                         </div>
                         <button
                           onClick={() => navigate('/')}
@@ -318,9 +296,6 @@ export const PersonalizedDashboardV2 = () => {
 
                   {/* Dashboard Content */}
                   <div className="relative z-10 container mx-auto p-6 pb-24 space-y-8 max-w-7xl pt-24">
-                    {/* Rookie upgrade banner */}
-                    <RookieUpgradeBanner />
-
                     {hasUnresolvedPrompt ? (
                       // FIX(retention): dashboard — snoozed daily prompts now leave a pinned unresolved card so the habit loop still has a visible next step.
                       <DailyPromptResumeCard
@@ -334,30 +309,21 @@ export const PersonalizedDashboardV2 = () => {
 
                     <RetentionActionFeed />
 
-                    {/* Journey Stage Grid */}
-                    <JourneyStageGrid />
-
-                    {/* Quota counters — Rising plan only */}
-                    <QuotaCounterWidgets />
-
                     {/* Header */}
                     <div>
                       <h1 className="font-space-grotesk text-3xl sm:text-4xl font-semibold tracking-tight">
-                        {greeting}, {profile?.full_name?.split(' ')[0] || 'Founder'} 👋
+                        {greeting}, {founderName} 👋
                       </h1>
                       <p className="text-muted-foreground mt-1">
-                        {dashboardMode === 'focus'
-                          ? 'Here\'s your focus for today'
-                          : dashboardMode === 'dashboard'
-                            ? 'Your dashboard overview'
-                            : 'Full control center'}
+                        {subtitleByMode[dashboardMode]}
                       </p>
                     </div>
 
                     {/* Dynamic View Based on Mode */}
-                    {dashboardMode === 'focus' && <FocusModeView {...metrics} />}
-                    {dashboardMode === 'dashboard' && <DashboardModeView {...metrics} />}
-                    {dashboardMode === 'control-center' && <ControlCenterView {...metrics} />}
+                    {dashboardMode === 'rookie' && <RookieModeView founderName={founderName} {...metrics} />}
+                    {dashboardMode === 'starter' && <StarterModeView founderName={founderName} {...metrics} />}
+                    {dashboardMode === 'rising' && <RisingModeView founderName={founderName} {...metrics} />}
+                    {dashboardMode === 'pro' && <ProModeView founderName={founderName} {...metrics} />}
                   </div>
 
                   {/* Daily Goal Modal */}

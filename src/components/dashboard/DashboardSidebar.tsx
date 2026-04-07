@@ -37,16 +37,11 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from '@/components/ui/sidebar';
-import { DashboardMode } from './modes/ModeToggle';
 import { DashboardCustomization } from './DashboardCustomization';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { resolveEntitlement, normalizePlan, type FeatureKey } from '@/config/planPermissions';
+import { resolveEntitlement, normalizePlan, type FeatureKey, type DashboardModeVariant } from '@/config/planPermissions';
 import { useSubscription } from '@/hooks/useSubscription';
-
-interface DashboardSidebarProps {
-  dashboardMode: DashboardMode;
-}
 
 interface SidebarPreferences {
   showICPBuilder: boolean;
@@ -118,7 +113,7 @@ interface ToolItem {
   featureKey?: FeatureKey;
 }
 
-export const DashboardSidebar = ({ dashboardMode: _dashboardMode }: DashboardSidebarProps) => {
+export const DashboardSidebar = () => {
   const location = useLocation();
   const { setOpenMobile, isMobile } = useSidebar();
   const { user } = useAuth();
@@ -126,6 +121,7 @@ export const DashboardSidebar = ({ dashboardMode: _dashboardMode }: DashboardSid
   const incompleteTaskCount = useContext(TaskCountContext);
   const [sidebarPreferences, setSidebarPreferences] = useState<SidebarPreferences>(defaultSidebarPreferences);
   const currentPlan = normalizePlan(subscriptionData?.subscription_tier);
+  const dashboardMode = (resolveEntitlement('dashboard_mode', currentPlan).dashboardMode ?? currentPlan) as DashboardModeVariant;
 
   useEffect(() => {
     const loadPreferences = async () => {
@@ -151,14 +147,42 @@ export const DashboardSidebar = ({ dashboardMode: _dashboardMode }: DashboardSid
     }
   };
 
-  const dashboardNavItems = [
-    { path: '/dashboard', label: 'Home', icon: Home },
-    { path: '/focus-funnel', label: 'Focus Funnel', icon: Target },
-    { path: '/decision-sprint', label: 'Decision Sprint', icon: ClipboardList },
-    { path: '/core-metrics', label: 'Core Metrics', icon: BarChart3 },
-    { path: '/weekly-mission', label: 'Weekly Mission', icon: Calendar },
-    { path: '/tasks', label: 'Your Tasks', icon: CheckSquare },
-  ];
+  const dashboardNavItemsByMode: Record<DashboardModeVariant, Array<{ path: string; label: string; icon: LucideIcon }>> = {
+    rookie: [
+      { path: '/dashboard', label: 'Home', icon: Home },
+      { path: '/tasks', label: 'Your Tasks', icon: CheckSquare },
+    ],
+    starter: [
+      { path: '/dashboard', label: 'Home', icon: Home },
+      { path: '/weekly-mission', label: 'Weekly Mission', icon: Calendar },
+      { path: '/tasks', label: 'Your Tasks', icon: CheckSquare },
+    ],
+    rising: [
+      { path: '/dashboard', label: 'Home', icon: Home },
+      { path: '/focus-funnel', label: 'Focus Funnel', icon: Target },
+      { path: '/decision-sprint', label: 'Decision Sprint', icon: ClipboardList },
+      { path: '/core-metrics', label: 'Core Metrics', icon: BarChart3 },
+      { path: '/weekly-mission', label: 'Weekly Mission', icon: Calendar },
+      { path: '/tasks', label: 'Your Tasks', icon: CheckSquare },
+    ],
+    pro: [
+      { path: '/dashboard', label: 'War Room', icon: Home },
+      { path: '/focus-funnel', label: 'Focus Funnel', icon: Target },
+      { path: '/decision-sprint', label: 'Decision Sprint', icon: ClipboardList },
+      { path: '/core-metrics', label: 'Core Metrics', icon: BarChart3 },
+      { path: '/weekly-mission', label: 'Weekly Mission', icon: Calendar },
+      { path: '/tasks', label: 'Your Tasks', icon: CheckSquare },
+    ],
+  };
+
+  const dashboardNavItems = dashboardNavItemsByMode[dashboardMode];
+
+  const visibleToolPreferences: Record<DashboardModeVariant, Array<keyof SidebarPreferences>> = {
+    rookie: ['showICPBuilder', 'showFindMentor', 'showFindCoFounder'],
+    starter: ['showICPBuilder', 'showWaitlistMaker', 'showPMFLab', 'showFindMentor', 'showFindCoFounder', 'showVCSearch', 'showAcceleratorHunt', 'showEmailTemplates', 'showPromptLibrary'],
+    rising: ['showICPBuilder', 'showWaitlistMaker', 'showPMFLab', 'showMVPBuilder', 'showTechStack', 'showGTMStrategist', 'showDirectories', 'showFindMentor', 'showFindCoFounder', 'showVCSearch', 'showAcceleratorHunt', 'showEmailTemplates', 'showPitchDeckAnalyzer', 'showInsightaTest', 'showNewspaper', 'showPromptLibrary'],
+    pro: ['showICPBuilder', 'showWaitlistMaker', 'showPMFLab', 'showMVPBuilder', 'showTechStack', 'showGTMStrategist', 'showDirectories', 'showFindMentor', 'showFindCoFounder', 'showFindAngel', 'showVCSearch', 'showAcceleratorHunt', 'showEmailTemplates', 'showPitchDeckAnalyzer', 'showInsightaTest', 'showNewspaper', 'showPromptLibrary'],
+  };
 
   const toolsItems: ToolItem[] = [
     { path: '/icp-builder', label: 'ICP Builder', icon: Target, prefKey: 'showICPBuilder', featureKey: 'icp_builder' },
@@ -179,6 +203,10 @@ export const DashboardSidebar = ({ dashboardMode: _dashboardMode }: DashboardSid
     { path: '/newspaper', label: 'Newspaper', icon: BookOpen, prefKey: 'showNewspaper', featureKey: 'newspaper' },
     { path: '/prompt-library', label: 'Prompt Library', icon: Library, prefKey: 'showPromptLibrary', featureKey: 'prompt_library' },
   ].filter((item) => {
+    if (!visibleToolPreferences[dashboardMode].includes(item.prefKey)) {
+      return false;
+    }
+
     if (!sidebarPreferences[item.prefKey]) {
       return false;
     }

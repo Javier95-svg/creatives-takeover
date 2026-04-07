@@ -1,84 +1,30 @@
-import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Target, LayoutDashboard, Settings2, Check } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Compass } from 'lucide-react';
+import type { DashboardModeVariant } from '@/config/planPermissions';
 
-export type DashboardMode = 'focus' | 'dashboard' | 'control_center';
+export type DashboardMode = DashboardModeVariant;
 
 interface ModeToggleProps {
   currentMode: DashboardMode;
-  onModeChange: (mode: DashboardMode) => void;
 }
 
-export function ModeToggle({ currentMode, onModeChange }: ModeToggleProps) {
-  const modes: { value: DashboardMode; label: string; description: string; icon: typeof Target }[] = [
-    {
-      value: 'focus',
-      label: 'Focus Mode',
-      description: 'One clear priority + key metrics',
-      icon: Target,
-    },
-    {
-      value: 'dashboard',
-      label: 'Dashboard Mode',
-      description: 'Overview + active projects',
-      icon: LayoutDashboard,
-    },
-    {
-      value: 'control_center',
-      label: 'Control Center',
-      description: 'Full view with all widgets',
-      icon: Settings2,
-    },
-  ];
+const MODE_COPY: Record<DashboardMode, { label: string; description: string }> = {
+  rookie: { label: 'Rookie Mode', description: 'Guided and simplified' },
+  starter: { label: 'Starter Mode', description: 'Structured and progressing' },
+  rising: { label: 'Rising Mode', description: 'Operational and productive' },
+  pro: { label: 'Pro Mode', description: 'Strategic and data-rich' },
+};
 
-  const currentModeConfig = modes.find((m) => m.value === currentMode);
-  const CurrentIcon = currentModeConfig?.icon || Target;
+export function ModeToggle({ currentMode }: ModeToggleProps) {
+  const copy = MODE_COPY[currentMode];
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="sm" className="gap-2">
-          <CurrentIcon className="h-4 w-4" />
-          <span className="hidden sm:inline">{currentModeConfig?.label || 'Focus Mode'}</span>
-          <span className="sm:hidden">Mode</span>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-64">
-        <DropdownMenuLabel>Dashboard View</DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        {modes.map((mode) => {
-          const Icon = mode.icon;
-          const isActive = currentMode === mode.value;
-
-          return (
-            <DropdownMenuItem
-              key={mode.value}
-              onClick={() => onModeChange(mode.value)}
-              className="flex items-start gap-3 py-3 cursor-pointer"
-            >
-              <Icon className={`h-4 w-4 mt-0.5 ${isActive ? 'text-primary' : 'text-muted-foreground'}`} />
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <p className={`text-sm font-medium ${isActive ? 'text-primary' : ''}`}>
-                    {mode.label}
-                  </p>
-                  {isActive && <Check className="h-3 w-3 text-primary" />}
-                </div>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  {mode.description}
-                </p>
-              </div>
-            </DropdownMenuItem>
-          );
-        })}
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <div className="flex items-center gap-2 rounded-full border border-border/60 bg-background/80 px-3 py-2 text-sm">
+      <Compass className="h-4 w-4 text-primary" />
+      <div className="flex items-center gap-2">
+        <span className="font-medium">{copy.label}</span>
+        <Badge variant="outline" className="hidden sm:inline-flex">{copy.description}</Badge>
+      </div>
+    </div>
   );
 }

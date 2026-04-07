@@ -31,10 +31,10 @@ export type DashboardWidget =
 
 export const DASHBOARD_CONFIG: Record<Plan, DashboardConfig> = {
   rookie: {
-    activeStages: [1, 2],
-    lockedStages: [3, 4, 5],
+    activeStages: [1],
+    lockedStages: [2, 3, 4, 5],
     showUpgradeBanner: true,
-    widgets: ['progress_tracker', 'stage_tools', 'upgrade_banner'],
+    widgets: ['progress_tracker', 'stage_tools', 'upgrade_banner', 'discovery_call_counter', 'cofounder_post_counter'],
   },
   starter: {
     activeStages: [1, 2, 3],
@@ -70,6 +70,10 @@ export const DASHBOARD_CONFIG: Record<Plan, DashboardConfig> = {
     widgets: [
       'progress_tracker',
       'stage_tools',
+      'discovery_call_counter',
+      'cofounder_post_counter',
+      'vc_quota_counter',
+      'accelerator_quota_counter',
       'angels_shortcut',
       'unlimited_calls_badge',
     ],

@@ -19,7 +19,7 @@ export const DashboardLayout = ({ children, title, subtitle }: DashboardLayoutPr
     <ErrorBoundary>
       <SidebarProvider>
         <DashboardNavigationProvider>
-          <DashboardSidebar dashboardMode="dashboard" />
+          <DashboardSidebar />
           <SidebarInset>
             <div className="min-h-screen relative overflow-hidden bg-background">
               {/* Fixed Header */}
