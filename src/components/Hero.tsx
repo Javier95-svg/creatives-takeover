@@ -430,9 +430,10 @@ const Hero = () => {
           <div className="homepage-hero__content text-center lg:text-left flex flex-col justify-center max-w-2xl lg:max-w-[34rem]">
             {/* Main Headline */}
             <h1
-              className="homepage-hero__title font-space-grotesk text-[2.75rem] sm:text-5xl md:text-6xl xl:text-[4.5rem] font-semibold mb-5 sm:mb-6 leading-[0.95] tracking-[-0.05em]"
+              className="homepage-hero__title font-space-grotesk text-4xl sm:text-5xl md:text-6xl xl:text-[4.5rem] font-semibold mb-5 sm:mb-6 leading-[0.98] tracking-[-0.045em]"
             >
-              <span className="text-primary">Build Your Startup.</span> Own Your Future.
+              <span className="text-primary block">Build Your Startup.</span>
+              <span className="block">Own Your Future.</span>
             </h1>
 
             {/* Subheadline - Improved readability */}
@@ -461,9 +462,9 @@ const Hero = () => {
                   </Button>
                 </div>
 	            ) : (
-                <div className="flex flex-col gap-3 items-center lg:items-start justify-center lg:justify-start px-4 sm:px-0">
+                <div className="flex flex-col gap-3 items-center justify-center px-4 sm:px-0">
 	                  {/* FIX(retention): homepage — restored the previous hero CTA pair so first-time visitors see the original signup and feature-exploration entry points again. */}
-                  <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-center lg:items-start justify-center lg:justify-start px-4 sm:px-0">
+                  <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-center justify-center px-4 sm:px-0">
 		                <Button size="lg" className="w-full sm:w-auto min-h-[44px] touch-manipulation" asChild>
 		                  <Link to="/signup" onClick={handlePrimaryCTAClick}>
 		                    Join Today
