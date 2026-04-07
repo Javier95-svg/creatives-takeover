@@ -29,23 +29,23 @@ const HomeWallpaper = () => (
       className="fixed inset-0 -z-10"
       style={{
         backgroundImage: [
-          'radial-gradient(ellipse 80% 50% at 10% 20%, hsl(var(--primary) / 0.06), transparent)',
-          'radial-gradient(ellipse 50% 50% at 90% 15%, hsl(var(--primary) / 0.03), transparent)',
-          'radial-gradient(ellipse 70% 35% at 45% 100%, hsl(var(--accent) / 0.04), transparent)',
+          'radial-gradient(ellipse 80% 50% at 10% 20%, hsl(var(--primary) / 0.12), transparent)',
+          'radial-gradient(ellipse 50% 50% at 90% 15%, hsl(var(--primary) / 0.07), transparent)',
+          'radial-gradient(ellipse 70% 35% at 45% 100%, hsl(var(--accent) / 0.08), transparent)',
         ].join(', '),
       }}
     />
 
     {/* L3 — Fine noise grain for editorial texture */}
     <svg
-      className="fixed inset-0 -z-10 w-full h-full pointer-events-none opacity-[0.28] mix-blend-soft-light"
+      className="fixed inset-0 -z-10 w-full h-full pointer-events-none opacity-[0.35] mix-blend-multiply dark:mix-blend-soft-light dark:opacity-[0.28]"
       aria-hidden="true"
     >
       <filter id="homeGrain">
         <feTurbulence
           type="fractalNoise"
-          baseFrequency="0.6"
-          numOctaves="3"
+          baseFrequency="0.65"
+          numOctaves="4"
           stitchTiles="stitch"
         />
         <feColorMatrix type="saturate" values="0" />
@@ -58,9 +58,9 @@ const HomeWallpaper = () => (
       className="fixed inset-0 -z-10 overflow-hidden pointer-events-none"
       aria-hidden="true"
     >
-      <div className="absolute -left-[20%] top-[8%] w-[75vw] aspect-[2/1] rounded-full border border-border/[0.08]" />
-      <div className="absolute -right-[10%] top-[5%] w-[55vw] aspect-[1.6/1] rounded-full border border-primary/[0.05]" />
-      <div className="absolute left-[5%] -bottom-[25%] w-[85vw] aspect-[2.5/1] rounded-full border border-border/[0.06]" />
+      <div className="absolute -left-[20%] top-[8%] w-[75vw] aspect-[2/1] rounded-full border border-border/20" />
+      <div className="absolute -right-[10%] top-[5%] w-[55vw] aspect-[1.6/1] rounded-full border border-primary/15" />
+      <div className="absolute left-[5%] -bottom-[25%] w-[85vw] aspect-[2.5/1] rounded-full border border-border/15" />
     </div>
   </>
 );
