@@ -4,18 +4,16 @@ const HomeWallpaper = () => (
     <div
       className="fixed inset-0 -z-10"
       style={{
-        backgroundImage: [
-          'radial-gradient(circle at 50% -12%, hsl(var(--primary) / 0.13), transparent 34%)',
-          'radial-gradient(circle at 100% 0%, hsl(var(--primary) / 0.05), transparent 26%)',
-          'radial-gradient(circle at 0% 100%, hsl(var(--foreground) / 0.025), transparent 28%)',
-          'linear-gradient(180deg, hsl(var(--background)), hsl(220 24% 97%))',
-        ].join(', '),
+        backgroundImage:
+          'radial-gradient(circle at top left, hsl(var(--primary) / 0.12), transparent 45%), radial-gradient(circle at 30% 80%, hsl(var(--accent) / 0.08), transparent 55%)',
       }}
     />
     <div
-      className="fixed inset-0 -z-10 opacity-90"
+      className="fixed inset-0 -z-10 opacity-50"
       style={{
-        backgroundImage: 'linear-gradient(180deg, transparent 0%, hsl(var(--primary) / 0.022) 28%, transparent 58%, hsl(var(--primary) / 0.028) 100%)',
+        backgroundImage:
+          'linear-gradient(to right, hsl(var(--border) / 0.6) 1px, transparent 1px), linear-gradient(to bottom, hsl(var(--border) / 0.6) 1px, transparent 1px)',
+        backgroundSize: '48px 48px',
       }}
     >
     </div>

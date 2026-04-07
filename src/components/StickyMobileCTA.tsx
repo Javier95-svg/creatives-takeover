@@ -1,31 +1,34 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 const StickyMobileCTA = () => {
   const [isVisible, setIsVisible] = useState(false);
+  const location = useLocation();
+  const isHomepage = location.pathname === "/";
 
   useEffect(() => {
     const handleScroll = () => {
-      // Show CTA after scrolling 300px
       const scrollPosition = window.scrollY || document.documentElement.scrollTop;
-      setIsVisible(scrollPosition > 300);
+      const visibilityThreshold = isHomepage ? 900 : 300;
+      setIsVisible(scrollPosition > visibilityThreshold);
     };
 
+    handleScroll();
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  }, [isHomepage]);
 
   if (!isVisible) return null;
 
   return (
-    <div className="fixed bottom-16 left-0 right-0 z-50 lg:hidden safe-area-inset animate-in fade-in slide-in-from-bottom-4 duration-300">
-      <div className="bg-background/95 backdrop-blur-lg border-t border-border shadow-lg">
-        <div className="container mx-auto px-4 py-3">
+    <div className="fixed bottom-[calc(4.75rem+env(safe-area-inset-bottom,0px))] left-3 right-3 z-40 lg:hidden animate-in fade-in slide-in-from-bottom-4 duration-300">
+      <div className="mx-auto max-w-md rounded-[28px] border border-border/80 bg-background/88 backdrop-blur-xl shadow-[0_24px_42px_-24px_rgba(15,23,42,0.35)]">
+        <div className="px-3 py-3 sm:px-4">
           <Button
             size="lg"
-            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground text-base font-semibold shadow-lg shadow-primary/10 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            className="w-full min-h-[52px] rounded-[22px] bg-primary hover:bg-primary/90 text-primary-foreground text-[15px] font-semibold shadow-[0_18px_32px_-20px_rgba(37,99,235,0.55)] focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             asChild
           >
             {/* FIX(retention): homepage — the sticky mobile CTA now routes directly into ICP quickstart instead of a generic signup step. */}

@@ -1,10 +1,15 @@
 import { useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { usePulseWidget } from '@/hooks/usePulseWidget';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { PulseBubble } from './PulseBubble';
 import { PulseProactiveMessage } from './PulseProactiveMessage';
 import { PulsePanel } from './PulsePanel';
 
 const PulseWidget = () => {
+  const location = useLocation();
+  const isMobile = useIsMobile();
+  const compactMobileHomepage = isMobile && location.pathname === '/';
   const {
     isOpen,
     activeTab,
@@ -31,6 +36,10 @@ const PulseWidget = () => {
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, closePanel]);
+
+  if (compactMobileHomepage) {
+    return null;
+  }
 
   return (
     <>

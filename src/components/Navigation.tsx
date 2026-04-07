@@ -246,7 +246,6 @@ const Navigation = () => {
                   width={44}
                   height={44}
                   decoding="async"
-                  fetchPriority="high"
                 />
               </Link>
             </div>

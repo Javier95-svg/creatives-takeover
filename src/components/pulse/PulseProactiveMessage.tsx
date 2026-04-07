@@ -1,14 +1,28 @@
 import { X, Sparkles } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface PulseProactiveMessageProps {
   message: string;
   onDismiss: () => void;
   onClick: () => void;
+  compactMobileHomepage?: boolean;
 }
 
-export const PulseProactiveMessage = ({ message, onDismiss, onClick }: PulseProactiveMessageProps) => {
+export const PulseProactiveMessage = ({
+  message,
+  onDismiss,
+  onClick,
+  compactMobileHomepage = false,
+}: PulseProactiveMessageProps) => {
   return (
-    <div className="fixed bottom-24 right-6 z-50 max-w-xs animate-in slide-in-from-bottom-4 fade-in duration-300">
+    <div
+      className={cn(
+        "fixed z-50 max-w-xs animate-in slide-in-from-bottom-4 fade-in duration-300",
+        compactMobileHomepage
+          ? "bottom-[calc(12rem+env(safe-area-inset-bottom,0px))] right-4"
+          : "bottom-24 right-6"
+      )}
+    >
       <div
         className="relative bg-card border shadow-xl rounded-2xl rounded-br-sm p-4 cursor-pointer hover:shadow-2xl transition-shadow"
         onClick={onClick}

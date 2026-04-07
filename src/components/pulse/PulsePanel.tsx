@@ -3,6 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PulseChatView } from './PulseChatView';
 import { PulseFeedbackView } from './PulseFeedbackView';
 import type { PulseMessage } from '@/hooks/usePulseWidget';
+import { cn } from '@/lib/utils';
 
 interface PulsePanelProps {
   isOpen: boolean;
@@ -14,6 +15,7 @@ interface PulsePanelProps {
   quickReplies: string[];
   onSendMessage: (text: string) => void;
   userName: string | null;
+  compactMobileHomepage?: boolean;
 }
 
 export const PulsePanel = ({
@@ -26,11 +28,19 @@ export const PulsePanel = ({
   quickReplies,
   onSendMessage,
   userName,
+  compactMobileHomepage = false,
 }: PulsePanelProps) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed bottom-24 right-6 z-40 w-96 max-w-[calc(100vw-32px)] h-[480px] max-h-[70vh] bg-background border rounded-2xl shadow-2xl flex flex-col animate-in slide-in-from-bottom-4 fade-in duration-300">
+    <div
+      className={cn(
+        "fixed z-40 bg-background border rounded-2xl shadow-2xl flex flex-col animate-in slide-in-from-bottom-4 fade-in duration-300",
+        compactMobileHomepage
+          ? "bottom-[calc(8.5rem+env(safe-area-inset-bottom,0px))] left-4 right-4 w-auto max-w-none h-[min(32rem,62vh)]"
+          : "bottom-24 right-6 w-96 max-w-[calc(100vw-32px)] h-[480px] max-h-[70vh]"
+      )}
+    >
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b">
         <div className="flex items-center gap-2">
