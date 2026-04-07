@@ -430,7 +430,7 @@ const Hero = () => {
           <div className="homepage-hero__content text-center flex flex-col items-center justify-center max-w-2xl lg:max-w-[34rem] mx-auto">
             {/* Main Headline */}
             <h1
-              className="homepage-hero__title font-space-grotesk text-[2.125rem] sm:text-[2.75rem] md:text-[3.5rem] lg:text-[4.1rem] font-semibold mb-5 sm:mb-6 leading-tight tracking-tight text-center"
+              className="homepage-hero__title font-space-grotesk text-[2.125rem] sm:text-[2.75rem] md:text-[3.5rem] lg:text-[4.1rem] font-semibold mb-5 sm:mb-6 leading-[1.12] tracking-tight text-center"
             >
               <span className="text-primary block [text-shadow:0_0_22px_rgba(59,130,246,0.28)]">Where Founders</span>
               <span className="block text-white [text-shadow:0_0_24px_rgba(255,255,255,0.18),0_2px_10px_rgba(15,23,42,0.28)]">Come to Build</span>
