@@ -207,7 +207,7 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
               <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight mb-2 font-space-grotesk">
                 Where are you in your startup journey?
               </h2>
-              <p className="text-muted-foreground font-poppins">
+              <p className="text-muted-foreground">
                 Pick the option that fits best — we'll route you to your first win.
               </p>
             </div>
@@ -279,7 +279,7 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
               <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight mb-2 font-space-grotesk">
                 Pick the action that should pull you back
               </h2>
-              <p className="text-muted-foreground font-poppins">
+              <p className="text-muted-foreground">
                 The first session should create one concrete thing worth revisiting. Pick the path that should become your return trigger.
               </p>
             </div>
@@ -318,7 +318,7 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
               <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight mb-2 font-space-grotesk">
                 Lock the plan and take the first step
               </h2>
-              <p className="text-muted-foreground font-poppins">
+              <p className="text-muted-foreground">
                 You will land on a guided path, not a generic dashboard. Activation only completes after the first value-bearing action.
               </p>
             </div>
@@ -369,7 +369,7 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
   };
 
   return (
-    <div className="w-full max-w-[680px] mx-auto p-4 sm:p-6 font-poppins">
+    <div className="w-full max-w-[680px] mx-auto p-4 sm:p-6">
       <Card className="rounded-2xl border border-border/60 bg-card/90 backdrop-blur-md shadow-2xl hover:shadow-2xl hover:shadow-primary/10 transition-all duration-300">
         <CardHeader className="space-y-4 pb-6 border-b border-border/60">
           <div>

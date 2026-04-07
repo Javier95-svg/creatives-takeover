@@ -16,7 +16,7 @@ const AboutHero = () => {
               <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 sm:mb-6 gradient-text leading-tight animate-text-shimmer text-foreground">
                 The Future Belongs to Founders
               </h1>
-              <p className="text-lg sm:text-xl text-foreground/90 leading-relaxed font-poppins">We're entering a world where AI and automation will eliminate most traditional jobs but also unlock unprecedented entrepreneurial opportunities. Everyone will need to think and act like a founder, and we're here to make that transition possible.</p>
+              <p className="text-lg sm:text-xl text-foreground/90 leading-relaxed">We're entering a world where AI and automation will eliminate most traditional jobs but also unlock unprecedented entrepreneurial opportunities. Everyone will need to think and act like a founder, and we're here to make that transition possible.</p>
             </div>
               
             <div className="space-y-3 sm:space-y-4">

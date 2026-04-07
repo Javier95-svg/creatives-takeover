@@ -31,7 +31,7 @@ export const ExitIntentModal = ({ isOpen, onClose }: ExitIntentModalProps) => {
             {/* Close */}
             <button
               onClick={onClose}
-              className="absolute top-4 right-4 text-muted-foreground hover:text-foreground transition-colors"
+              className="absolute top-2 right-2 p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors touch-manipulation"
               aria-label="Close"
             >
               <X className="w-4 h-4" />
@@ -43,7 +43,7 @@ export const ExitIntentModal = ({ isOpen, onClose }: ExitIntentModalProps) => {
             </div>
 
             {/* Headline */}
-            <h2 className="text-2xl font-bold text-foreground leading-tight mb-3">
+            <h2 className="font-space-grotesk text-2xl font-bold text-foreground leading-tight mb-3">
               Build your ICP before you go.
             </h2>
 
@@ -80,7 +80,7 @@ export const ExitIntentModal = ({ isOpen, onClose }: ExitIntentModalProps) => {
             <div className="text-center">
               <button
                 onClick={onClose}
-                className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                className="min-h-[44px] px-4 py-2 text-xs text-muted-foreground hover:text-foreground transition-colors touch-manipulation rounded-lg hover:bg-muted/50"
               >
                 Maybe later
               </button>

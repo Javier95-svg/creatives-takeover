@@ -149,7 +149,7 @@ const SubscriptionFeatures = () => {
           <h2 className="text-4xl lg:text-5xl font-semibold tracking-tight mb-6 pb-2 gradient-text font-space-grotesk">
             How Our Credit System Works
           </h2>
-          <p className="text-lg sm:text-xl text-muted-foreground max-w-3xl mx-auto font-poppins">
+          <p className="text-lg sm:text-xl text-muted-foreground max-w-3xl mx-auto">
             Every tool has a transparent credit cost, so you can see exactly what each action uses before spending a single credit.
           </p>
         </div>

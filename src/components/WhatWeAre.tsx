@@ -9,7 +9,7 @@ const WhatWeAre = () => {
       <div className="container mx-auto px-6">
         <div className="max-w-4xl mx-auto text-center mb-16 animate-fade-in-up">
           <h2 className="text-4xl font-bold mb-6 gradient-text">Who We Are</h2>
-          <p className="text-lg font-poppins font-medium text-foreground/85 leading-relaxed">
+          <p className="text-lg font-medium text-foreground/85 leading-relaxed">
             Creatives Takeover is a vibrant community built for creators and solopreneurs ready to bring their ideas to life. We guide you step-by-step from concept to launch, helping you build powerful no-code apps together. Whether you're a first-time founder or a curious creative, we make software creation accessible, collaborative, and genuinely fun. No code, no limits, just real solutions, built by you.
           </p>
         </div>

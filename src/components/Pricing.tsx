@@ -172,16 +172,16 @@ export default function Pricing() {
           <h1 className="text-4xl lg:text-6xl font-semibold tracking-tight mb-6 gradient-text font-space-grotesk">
             Choose Your Plan
           </h1>
-          <p className="text-lg sm:text-xl text-muted-foreground max-w-3xl mx-auto mb-8 font-poppins">
+          <p className="text-lg sm:text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
             Four plans, clear credits, and a smoother path from first idea to fundraising momentum.
           </p>
 
           <Tabs value={billingCycle} onValueChange={(value) => setBillingCycle(value as BillingCycle)} className="inline-block">
             <TabsList className="grid w-full grid-cols-2 rounded-full border border-border/60 bg-background/70 p-1 shadow-sm backdrop-blur">
-              <TabsTrigger className="rounded-full text-sm font-medium font-poppins data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" value="monthly">
+              <TabsTrigger className="rounded-full text-sm font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" value="monthly">
                 Monthly
               </TabsTrigger>
-              <TabsTrigger className="rounded-full text-sm font-medium font-poppins data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" value="yearly">
+              <TabsTrigger className="rounded-full text-sm font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" value="yearly">
                 Yearly
                 <Badge variant="secondary" className="ml-2 rounded-full bg-green-500/10 text-green-600 border-green-500/20 text-xs px-2.5">
                   Save up to 31%
@@ -226,7 +226,7 @@ export default function Pricing() {
                   <h3 className="text-2xl sm:text-3xl font-semibold mb-1 tracking-tight font-space-grotesk">
                     {plan.title}
                   </h3>
-                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-3 font-poppins">
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-3">
                     {plan.subtitle}
                   </p>
                   <div className="mb-4">
@@ -235,35 +235,35 @@ export default function Pricing() {
                         ${formatPrice(price)}
                       </span>
                       {period && (
-                        <span className="text-muted-foreground text-base font-poppins">{period}</span>
+                        <span className="text-muted-foreground text-base">{period}</span>
                       )}
                     </div>
                     {billingCycle === "yearly" && plan.key !== "rookie" && (
-                      <div className="text-sm text-green-600 mt-1 font-poppins">
+                      <div className="text-sm text-green-600 mt-1">
                         {plan.yearlyEquivalent} billed annually
                       </div>
                     )}
                     {plan.savings && billingCycle === "yearly" && (
-                      <div className="text-xs text-muted-foreground mt-1 font-poppins">{plan.savings}</div>
+                      <div className="text-xs text-muted-foreground mt-1">{plan.savings}</div>
                     )}
-                    <div className="text-sm text-muted-foreground mt-2 font-poppins">
+                    <div className="text-sm text-muted-foreground mt-2">
                       {plan.credits} credits/month
                     </div>
                   </div>
-                  <p className="text-sm text-muted-foreground mb-6 font-poppins">
+                  <p className="text-sm text-muted-foreground mb-6">
                     {plan.audience}
                   </p>
                 </div>
 
                 <div className="mb-6 flex-1">
-                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4 font-poppins">
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4">
                     Plan highlights
                   </p>
                   <div className="space-y-3">
                     {plan.features.map((feature) => (
                       <div key={feature} className="flex items-start gap-3">
                         <Check className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
-                        <span className="text-sm text-foreground/90 font-poppins leading-relaxed">{feature}</span>
+                        <span className="text-sm text-foreground/90 leading-relaxed">{feature}</span>
                       </div>
                     ))}
                   </div>

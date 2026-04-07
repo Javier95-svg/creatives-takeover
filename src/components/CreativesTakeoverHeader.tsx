@@ -26,7 +26,7 @@ const CreativesTakeoverHeader = () => {
           {/* Desktop Navigation */}
           <nav 
             id="site-nav" 
-            className="hidden md:flex items-center gap-2 rounded-full border border-border/60 bg-background/80 px-2 py-1 shadow-sm font-poppins text-sm"
+            className="hidden md:flex items-center gap-2 rounded-full border border-border/60 bg-background/80 px-2 py-1 shadow-sm text-sm"
             aria-hidden="false"
           >
             <Link to="#work" className="rounded-full px-3 py-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors">

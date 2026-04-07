@@ -102,7 +102,7 @@ The default self-serve offering now centers on Rookie, Starter, Rising, and Pro,
           <h2 className="text-4xl lg:text-5xl font-semibold tracking-tight mb-8 pb-2 gradient-text font-space-grotesk">
             Pricing FAQ
           </h2>
-          <p className="text-lg text-muted-foreground max-w-3xl mx-auto font-poppins">
+          <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
             Clear answers on pricing, billing cycles, credits, and what changes between Rookie, Starter, Rising, and Pro.
           </p>
         </div>
@@ -117,7 +117,7 @@ The default self-serve offering now centers on Rookie, Starter, Rising, and Pro,
                   <AccordionTrigger className="text-left text-foreground hover:text-primary font-space-grotesk text-base sm:text-lg">
                     {faq.question}
                   </AccordionTrigger>
-                  <AccordionContent className="text-muted-foreground space-y-4 font-poppins">
+                  <AccordionContent className="text-muted-foreground space-y-4">
                     <div className="space-y-3">
                       {faq.answer.split("\n\n").map((paragraph, pIndex) => (
                         <p key={pIndex}>{paragraph.trim()}</p>

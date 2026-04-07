@@ -345,7 +345,7 @@ export const PersonalizedDashboardV2 = () => {
                       <h1 className="font-space-grotesk text-3xl sm:text-4xl font-semibold tracking-tight">
                         {greeting}, {profile?.full_name?.split(' ')[0] || 'Founder'} 👋
                       </h1>
-                      <p className="font-poppins text-muted-foreground mt-1">
+                      <p className="text-muted-foreground mt-1">
                         {dashboardMode === 'focus'
                           ? 'Here\'s your focus for today'
                           : dashboardMode === 'dashboard'

@@ -1617,7 +1617,7 @@ Subject: "Quick question about [their pain point]"
           <div className="w-full max-w-md bg-card border border-border/60 rounded-2xl shadow-2xl p-8 text-center animate-fade-in-up">
             <div className="text-4xl mb-4">🚀</div>
             <h2 className="text-2xl font-semibold font-space-grotesk mb-2">Your plan is taking shape</h2>
-            <p className="text-muted-foreground text-sm mb-6 font-poppins">
+            <p className="text-muted-foreground text-sm mb-6">
               Sign up for free to unlock your full BizMap AI plan — market analysis, validation roadmap, 30-day launch sprint, and more.
             </p>
             <div className="flex flex-col gap-3">

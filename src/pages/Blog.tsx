@@ -83,7 +83,7 @@ const Blog = ({ defaultTab = 'vc-search' }: BlogProps) => {
                   <h1 className="font-space-grotesk text-4xl sm:text-5xl font-semibold tracking-tight gradient-text mb-4">
                     Fundraising Resources
                   </h1>
-            <p className="font-poppins text-muted-foreground text-lg max-w-2xl mx-auto">
+            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
               Everything you need to connect with investors and raise capital
             </p>
           </div>

@@ -77,7 +77,7 @@ const SignedInHome = () => {
   });
 
   return (
-    <div className="py-12 px-4 sm:px-6 font-poppins min-h-[70vh]">
+    <div className="py-12 px-4 sm:px-6 min-h-[70vh]">
       <div className="container mx-auto max-w-5xl">
         {/* Welcome header */}
         <div className="mb-8">

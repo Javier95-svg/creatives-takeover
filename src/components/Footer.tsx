@@ -12,7 +12,7 @@ const Footer = () => {
             <p className="text-sm text-muted-foreground">
               Creatives Takeover Ltd is a company registered in England and Wales (Company No. 16741912).
             </p>
-            <h2 id="footer-address" className="mt-4 text-sm font-semibold tracking-wide text-foreground">Registered Office</h2>
+            <h2 id="footer-address" className="mt-4 text-sm font-semibold font-space-grotesk tracking-wide text-foreground">Registered Office</h2>
             <address className="mt-3 text-sm text-muted-foreground not-italic">
               71-75, Shelton Street<br />
               Covent Garden<br />
@@ -22,18 +22,18 @@ const Footer = () => {
           </section>
 
           <section aria-labelledby="footer-contact">
-            <h2 id="footer-contact" className="text-sm font-semibold tracking-wide text-foreground">Contact</h2>
+            <h2 id="footer-contact" className="text-sm font-semibold font-space-grotesk tracking-wide text-foreground">Contact</h2>
             <p className="mt-3 text-sm text-muted-foreground">Questions or feedback? We’d love to hear from you.</p>
             <a
               href="mailto:javier@creatives-takeover.com"
-              className="mt-4 inline-flex items-center gap-2 text-sm underline-offset-4 hover:underline"
+              className="mt-4 inline-flex items-center gap-2 text-sm min-h-[44px] py-2 underline-offset-4 hover:underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-sm transition-colors"
             >
               <Mail className="h-4 w-4" aria-hidden="true" />
               javier@creatives-takeover.com
             </a>
             <a
               href="mailto:admin@creatives-takeover.com"
-              className="mt-2 inline-flex items-center gap-2 text-sm underline-offset-4 hover:underline"
+              className="mt-2 inline-flex items-center gap-2 text-sm min-h-[44px] py-2 underline-offset-4 hover:underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-sm transition-colors"
             >
               <Mail className="h-4 w-4" aria-hidden="true" />
               admin@creatives-takeover.com
@@ -41,15 +41,15 @@ const Footer = () => {
           </section>
 
           <nav aria-labelledby="footer-legal">
-            <h2 id="footer-legal" className="text-sm font-semibold tracking-wide text-foreground">Legal</h2>
+            <h2 id="footer-legal" className="text-sm font-semibold font-space-grotesk tracking-wide text-foreground">Legal</h2>
             <ul className="mt-3 space-y-2 text-sm">
               <li>
-                <Link className="hover:underline underline-offset-4" to="/privacy-policy">
+                <Link className="inline-flex items-center min-h-[44px] py-2 hover:underline underline-offset-4 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-sm transition-colors" to="/privacy-policy">
                   Privacy Policy
                 </Link>
               </li>
               <li>
-                <Link className="hover:underline underline-offset-4" to="/terms">
+                <Link className="inline-flex items-center min-h-[44px] py-2 hover:underline underline-offset-4 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-sm transition-colors" to="/terms">
                   Terms of Service
                 </Link>
               </li>
@@ -57,7 +57,7 @@ const Footer = () => {
           </nav>
 
           <nav aria-labelledby="footer-social">
-            <h2 id="footer-social" className="text-sm font-semibold tracking-wide text-foreground">Follow Us</h2>
+            <h2 id="footer-social" className="text-sm font-semibold font-space-grotesk tracking-wide text-foreground">Follow Us</h2>
             <ul className="mt-3 flex flex-wrap items-center gap-1">
               {/* Instagram */}
               <li className="flex items-center">
@@ -68,7 +68,7 @@ const Footer = () => {
                   aria-label="Instagram"
                   className="flex items-center justify-center p-2 min-h-[44px] min-w-[44px] rounded-lg hover:bg-muted/50 transition-colors touch-manipulation"
                 >
-                  <Instagram className="h-5 w-5 text-pink-500 hover:text-pink-400 transition-colors" />
+                  <Instagram className="h-5 w-5 text-foreground hover:text-muted-foreground transition-colors" />
                 </a>
               </li>
               
@@ -135,7 +135,7 @@ const Footer = () => {
         {/* RGB gradient divider */}
         <div className="mt-8 pt-8 border-t border-border/70" />
         <div className="mt-6 text-xs text-muted-foreground text-center">
-          <span className="gradient-rgb font-semibold">&copy; {year} Creatives Takeover Ltd.</span> All rights reserved.
+          <span className="font-semibold">&copy; {year} Creatives Takeover Ltd.</span> All rights reserved.
         </div>
       </div>
     </footer>

@@ -36,8 +36,7 @@ export default {
       },
 			fontFamily: {
 				'sans': ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
-				'poppins': ['Poppins', 'sans-serif'],
-				'space-grotesk': ['Space Grotesk', 'Poppins', 'sans-serif'],
+				'space-grotesk': ['Space Grotesk', 'sans-serif'],
 			},
 			fontSize: {
 				'headline-xl': ['64px', { lineHeight: '1.1', fontWeight: '700' }],

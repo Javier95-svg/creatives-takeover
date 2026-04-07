@@ -32,7 +32,7 @@ export const BizMapHero = () => {
           <div className="space-y-6 sm:space-y-8 lg:max-w-xl">
             {/* Small Label - Centered and closer to title */}
             <div className="text-center mb-1">
-              <span className="text-xs font-semibold uppercase tracking-[0.2em] text-primary/80 font-poppins">
+              <span className="text-xs font-semibold uppercase tracking-[0.2em] text-primary/80">
                 {HERO_CONFIG.label}
               </span>
             </div>
@@ -56,7 +56,7 @@ export const BizMapHero = () => {
                 {/* Chat Header */}
                 <div className="flex items-center gap-2 pb-3 border-b border-border/40">
                   <Bot className="w-5 h-5 text-primary" />
-                  <span className="text-base font-semibold font-poppins">BizMap AI</span>
+                  <span className="text-base font-semibold">BizMap AI</span>
                 </div>
 
                 {/* Message Bubbles */}
@@ -67,7 +67,7 @@ export const BizMapHero = () => {
                       <Bot className="w-4 h-4 text-primary" />
                     </div>
                     <div className="flex-1 rounded-lg bg-muted/50 p-4">
-                      <p className="text-sm text-foreground/80 leading-relaxed font-poppins">
+                      <p className="text-sm text-foreground/80 leading-relaxed">
                         Hi! I'm your AI business planner. What would you like to work on today?
                       </p>
                     </div>
@@ -76,7 +76,7 @@ export const BizMapHero = () => {
                   {/* User Message */}
                   <div className="flex gap-3 justify-end">
                     <div className="flex-1 rounded-lg bg-primary/10 p-3 sm:p-4 max-w-[85%] sm:max-w-[80%]">
-                      <p className="text-xs sm:text-sm text-foreground/80 leading-relaxed font-poppins text-right">
+                      <p className="text-xs sm:text-sm text-foreground/80 leading-relaxed text-right">
                         I want to validate my startup idea
                       </p>
                     </div>
@@ -91,7 +91,7 @@ export const BizMapHero = () => {
                       <Bot className="w-4 h-4 text-primary" />
                     </div>
                     <div className="flex-1 rounded-lg bg-muted/50 p-4">
-                      <p className="text-sm text-foreground/80 leading-relaxed font-poppins">
+                      <p className="text-sm text-foreground/80 leading-relaxed">
                         Great! Let's start by understanding your target market and core problem...
                       </p>
                     </div>
@@ -104,7 +104,7 @@ export const BizMapHero = () => {
                     type="text"
                     placeholder="Type your message..."
                     disabled
-                    className="flex-1 px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm rounded-lg border border-border/60 bg-background/50 text-muted-foreground/60 font-poppins cursor-not-allowed"
+                    className="flex-1 px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm rounded-lg border border-border/60 bg-background/50 text-muted-foreground/60 cursor-not-allowed"
                   />
                   <Button size="icon" variant="ghost" disabled className="flex-shrink-0">
                     <Send className="w-5 h-5 text-muted-foreground/40" />

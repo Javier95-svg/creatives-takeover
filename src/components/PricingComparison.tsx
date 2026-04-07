@@ -115,7 +115,7 @@ const PricingComparison = () => {
           <h2 className="text-4xl lg:text-5xl font-semibold tracking-tight mb-8 pb-2 gradient-text font-space-grotesk">
             Compare Our Plans
           </h2>
-          <p className="text-lg sm:text-xl text-muted-foreground max-w-3xl mx-auto font-poppins">
+          <p className="text-lg sm:text-xl text-muted-foreground max-w-3xl mx-auto">
             Compare credits, fundraising limits, community access, and the MVP or GTM credit rules side by side.
           </p>
         </div>

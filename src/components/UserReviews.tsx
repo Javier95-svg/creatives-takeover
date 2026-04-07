@@ -120,7 +120,7 @@ const UserReviews = () => {
       <h2 className="startup-cycle-title font-space-grotesk text-3xl sm:text-4xl lg:text-5xl font-semibold mb-6 tracking-tight text-primary break-words animate-in fade-in slide-in-from-bottom duration-700 delay-100">
         Startup Development Cycle
       </h2>
-      <p className="startup-cycle-copy font-poppins text-base sm:text-lg text-muted-foreground max-w-3xl mx-auto leading-relaxed animate-in fade-in slide-in-from-bottom duration-700 delay-200">
+      <p className="startup-cycle-copy text-base sm:text-lg text-muted-foreground max-w-3xl mx-auto leading-relaxed animate-in fade-in slide-in-from-bottom duration-700 delay-200">
         The Startup Development Cycle is a step-by-step roadmap designed by Creatives Takeover to guide founders from shaping an idea to building, launching, and growing a startup.
       </p>
       <div className="mt-6 animate-in fade-in zoom-in duration-700 delay-300">
