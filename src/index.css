@@ -27,8 +27,8 @@ All colors MUST be HSL.
     --secondary: 215 16% 47%; /* Medium gray for secondary actions */
     --secondary-foreground: 0 0% 100%;
 
-    --muted: 210 40% 96%;
-    --muted-foreground: 215 16% 52%;
+    --muted: 220 14% 96%;
+    --muted-foreground: 220 10% 50%;
 
     /* Accent - Medium blue for highlights */
     --accent: 217 91% 50%; /* Medium blue accent */

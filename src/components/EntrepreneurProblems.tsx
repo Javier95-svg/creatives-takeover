@@ -168,7 +168,7 @@ const EntrepreneurProblems = () => {
     return (
       <Link
         to={action.to}
-        className={`journey-action-card group relative block w-full overflow-hidden rounded-lg border-4 border-border bg-background/95 shadow-xl transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/50 hover:bg-primary/5 ${className}`}
+        className={`journey-action-card group relative block w-full overflow-hidden rounded-lg border border-border bg-background/95 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:border-primary/30 hover:bg-primary/5 ${className}`}
         style={{ aspectRatio: 256 / 135 }}
       >
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.16),transparent_55%)]" />
@@ -193,7 +193,7 @@ const EntrepreneurProblems = () => {
   };
 
   return (
-    <section className="founder-journey-section py-20 lg:py-28 relative font-poppins" aria-labelledby="journey-heading">
+    <section className="founder-journey-section py-20 lg:py-28 relative" aria-labelledby="journey-heading">
 
       <div className="container mx-auto px-4 sm:px-6 relative z-10">
         {/* Section Header */}
@@ -201,10 +201,10 @@ const EntrepreneurProblems = () => {
           <Badge variant="outline" className="mb-5 text-xs uppercase tracking-wide text-muted-foreground">
             Own Your Path 🚀
           </Badge>
-          <h2 id="journey-heading" className="founder-journey-section__title font-space-grotesk text-3xl sm:text-4xl lg:text-5xl font-semibold mb-6 leading-tight tracking-tight text-primary">
+          <h2 id="journey-heading" className="founder-journey-section__title font-space-grotesk text-3xl sm:text-4xl lg:text-5xl font-semibold mb-6 leading-tight tracking-tight text-foreground">
             Every Founder's Journey is Unique
           </h2>
-          <p className="founder-journey-section__copy font-poppins text-base sm:text-lg text-muted-foreground leading-relaxed">
+          <p className="founder-journey-section__copy text-base sm:text-lg text-muted-foreground leading-relaxed">
             But some challenges are universal. Here, we highlight some of the most common obstacles founders face and how we assist to overcome them.
           </p>
         </div>

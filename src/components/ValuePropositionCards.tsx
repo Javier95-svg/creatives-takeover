@@ -368,23 +368,23 @@ const ValuePropositionCards = () => {
   }, []);
 
   return (
-    <section id="what-you-get" className="value-prop-section py-20 lg:py-28 scroll-mt-24 font-poppins">
+    <section id="what-you-get" className="value-prop-section py-20 lg:py-28 scroll-mt-24">
       <div className="container mx-auto px-4 sm:px-6">
         {/* Section Header */}
         <div className="max-w-3xl mx-auto text-center mb-12 sm:mb-16">
           <Badge variant="outline" className="mb-5 text-xs uppercase tracking-wide text-muted-foreground">
             The Perfect Ecosystem ♻️
           </Badge>
-          <h2 className="value-prop-section__title font-space-grotesk text-3xl sm:text-4xl lg:text-5xl font-semibold mb-4 tracking-tight text-primary">
+          <h2 className="value-prop-section__title font-space-grotesk text-3xl sm:text-4xl lg:text-5xl font-semibold mb-4 tracking-tight text-foreground">
             Creatives Takeover in a Nutshell
           </h2>
-          <p className="value-prop-section__copy font-poppins text-base sm:text-lg text-muted-foreground">
+          <p className="value-prop-section__copy text-base sm:text-lg text-muted-foreground">
             Everything you need, all in one place. Built on six core pillars to help solofounders validate, build, and grow a business from scratch.
           </p>
         </div>
 
         {/* Horizontal Carousel */}
-        <div className="max-w-5xl mx-auto">
+        <div className="max-w-6xl mx-auto">
           <Carousel
             setApi={setApi}
             opts={{
@@ -488,7 +488,7 @@ const ValuePropositionCards = () => {
                             </div>
                           </div>
 
-                          <div className="value-prop-card__body font-poppins text-sm sm:text-[15px] leading-7 text-foreground/80 space-y-4">
+                          <div className="value-prop-card__body text-sm sm:text-[15px] leading-7 text-foreground/80 space-y-4">
                             {card.description.split('\n\n').map((paragraph, idx) => (
                               <p key={idx}>{paragraph}</p>
                             ))}

@@ -50,15 +50,15 @@ const HomeFAQ = () => {
   ];
 
   return (
-    <section className="relative py-20 lg:py-28 font-poppins">
+    <section className="relative py-20 lg:py-28">
 
       <div className="container mx-auto px-4 sm:px-6 relative z-10">
         {/* Section Header */}
         <div className="text-center mb-12 sm:mb-16">
-          <h2 className="font-space-grotesk text-3xl sm:text-4xl md:text-5xl font-semibold mb-4 sm:mb-6 text-primary">
+          <h2 className="font-space-grotesk text-3xl sm:text-4xl md:text-5xl font-semibold mb-4 sm:mb-6 text-foreground">
             FAQs
           </h2>
-          <p className="font-poppins text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto px-4">
+          <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto px-4">
             Everything you need to know about Creatives Takeover.
           </p>
         </div>
@@ -73,7 +73,7 @@ const HomeFAQ = () => {
                   value={`item-${index}`}
                   className="border-b border-border/70 px-4 sm:px-6 last:border-b-0"
                 >
-                  <AccordionTrigger className="text-left text-sm sm:text-base md:text-lg font-semibold py-4">
+                  <AccordionTrigger className="text-left text-sm sm:text-base md:text-lg font-semibold py-5 lg:py-6 tracking-tight">
                     {faq.question}
                   </AccordionTrigger>
                   <AccordionContent className="text-sm sm:text-base text-muted-foreground leading-relaxed pt-2">

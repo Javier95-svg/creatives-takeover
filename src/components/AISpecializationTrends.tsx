@@ -98,7 +98,7 @@ const AISpecializationTrends = () => {
 
 
   return (
-    <section className="py-20 lg:py-28 relative overflow-hidden font-poppins">
+    <section className="py-20 lg:py-28 relative overflow-hidden">
       <style>{`
         @keyframes chartFadeIn {
           from {
@@ -152,7 +152,7 @@ const AISpecializationTrends = () => {
           <h2 className="font-space-grotesk text-3xl sm:text-4xl lg:text-5xl font-semibold mb-6 tracking-tight text-primary">
             The Future of Work Is Here
           </h2>
-          <p className="font-poppins text-base sm:text-lg text-muted-foreground max-w-3xl mx-auto px-4 leading-relaxed">
+          <p className="text-base sm:text-lg text-muted-foreground max-w-3xl mx-auto px-4 leading-relaxed">
             Technology is enabling small teams to build exceptional products and business models that can successfully compete with large enterprises.
           </p>
         </div>

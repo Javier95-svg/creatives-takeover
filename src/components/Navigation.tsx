@@ -229,10 +229,10 @@ const Navigation = () => {
         <div className="max-w-[1600px] mx-auto px-3 sm:px-5 lg:px-8 pt-3">
           <div
             className={cn(
-              "rounded-[22px] border transition-all duration-300 backdrop-blur-xl",
+              "rounded-[22px] border transition-all duration-300 backdrop-blur-lg",
               scrolled
-                ? "bg-background/88 border-border/75 shadow-[0_18px_40px_-24px_hsl(var(--foreground)/0.24)]"
-                : "bg-background/74 border-border/60 shadow-[0_10px_26px_-20px_hsl(var(--foreground)/0.18)]"
+                ? "bg-background/88 border-border/75 shadow-[0_8px_24px_-12px_rgba(0,0,0,0.12)]"
+                : "bg-background/74 border-border/60 shadow-[0_4px_16px_-10px_rgba(0,0,0,0.08)]"
             )}
           >
           <div ref={mobileBarRef} className="flex items-center h-16 md:h-[70px] px-3 sm:px-4 lg:px-6 border-0">

@@ -266,9 +266,9 @@ const UserReviews = () => {
                   <div className="absolute inset-[8%] rounded-full border-2 border-primary/20 bg-gradient-to-b from-primary/[0.07] to-background shadow-[inset_0_2px_20px_rgba(0,0,0,0.08)]" />
                   <div className="absolute inset-[18%] rounded-full border border-primary/15 shadow-[0_0_15px_rgba(99,102,241,0.1)]" />
 
-                  <div className={`absolute inset-[31%] rounded-full border-2 border-primary/20 bg-gradient-to-br ${activeStep.color} backdrop-blur-sm flex items-center justify-center px-4 text-center transition-all duration-700 shadow-[0_0_24px_rgba(99,102,241,0.24)]`}>
+                  <div className={`absolute inset-[31%] rounded-full border-2 border-primary/20 bg-gradient-to-br ${activeStep.color} backdrop-blur-sm flex items-center justify-center px-4 text-center transition-all duration-700 shadow-lg`}>
                     <div key={`mobile-active-${activeStepIndex}`} className="animate-in fade-in zoom-in duration-500">
-                      <ActiveIcon className="mx-auto mb-2 h-7 w-7 text-primary drop-shadow-[0_0_8px_currentColor]" />
+                      <ActiveIcon className="mx-auto mb-2 h-7 w-7 text-primary" />
                       <p className="text-[10px] tracking-[0.22em] uppercase text-muted-foreground">Active</p>
                       <p className="mt-1 font-space-grotesk text-sm font-semibold text-foreground leading-tight">
                         {activeStep.shortLabel}
@@ -348,7 +348,7 @@ const UserReviews = () => {
         <div className="grid gap-8 lg:gap-10 lg:grid-cols-2 items-stretch">
           <Card className="surface-panel trust-outline overflow-hidden relative group">
             {/* Ambient background animation */}
-            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/5 animate-pulse" style={{ animationDuration: '4s' }} />
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/5" />
             <CardContent className="p-6 sm:p-8 relative">
               <div className="relative mx-auto w-full max-w-[560px] aspect-square" style={{ perspective: '1000px' }}>
                 {/* SVG Layer for Connection Lines */}
@@ -433,7 +433,7 @@ const UserReviews = () => {
                         strokeWidth={isActiveSegment ? "0.8" : "0.6"}
                         className={`transition-all duration-700 ${
                           isActiveSegment
-                            ? "text-primary opacity-100 drop-shadow-[0_0_8px_currentColor]"
+                            ? "text-primary opacity-100"
                             : isPastSegment
                             ? "text-primary/50 opacity-70"
                             : "text-primary/10 opacity-50"
@@ -454,13 +454,13 @@ const UserReviews = () => {
                 </svg>
 
                 {/* Background circles with 3D effect */}
-                <div className="absolute inset-[8%] rounded-full border-2 border-primary/20 bg-gradient-to-b from-primary/[0.07] to-background shadow-[inset_0_2px_20px_rgba(0,0,0,0.1)] animate-pulse" style={{ animationDuration: '6s', transform: 'translateZ(0)' }} />
-                <div className="absolute inset-[19%] rounded-full border border-primary/15 shadow-[0_0_15px_rgba(99,102,241,0.1)] animate-pulse" style={{ animationDuration: '5s', animationDelay: '1s' }} />
+                <div className="absolute inset-[8%] rounded-full border-2 border-primary/20 bg-gradient-to-b from-primary/[0.07] to-background shadow-[inset_0_2px_20px_rgba(0,0,0,0.1)]" style={{ transform: 'translateZ(0)' }} />
+                <div className="absolute inset-[19%] rounded-full border border-primary/15 shadow-[0_0_15px_rgba(99,102,241,0.1)]" />
 
                 {/* Center active indicator with icon */}
-                <div className={`absolute inset-[33%] rounded-full border-2 border-primary/20 bg-gradient-to-br ${activeStep.color} backdrop-blur-sm flex items-center justify-center text-center px-6 transition-all duration-700 shadow-[0_0_30px_rgba(99,102,241,0.3),inset_0_2px_15px_rgba(255,255,255,0.1)] hover:scale-105`} style={{ transform: 'translateZ(20px)' }}>
+                <div className={`absolute inset-[33%] rounded-full border-2 border-primary/20 bg-gradient-to-br ${activeStep.color} backdrop-blur-sm flex items-center justify-center text-center px-6 transition-all duration-700 shadow-lg hover:scale-105`} style={{ transform: 'translateZ(20px)' }}>
                   <div className="animate-in fade-in zoom-in duration-500" key={activeStepIndex}>
-                    <ActiveIcon className="w-8 h-8 sm:w-10 sm:h-10 mx-auto mb-2 text-primary drop-shadow-[0_0_8px_currentColor] animate-pulse" style={{ animationDuration: '3s' }} />
+                    <ActiveIcon className="w-8 h-8 sm:w-10 sm:h-10 mx-auto mb-2 text-primary" />
                     <p className="text-xs tracking-[0.22em] uppercase text-muted-foreground mb-1">Active Stage</p>
                     <p className="font-space-grotesk text-lg sm:text-xl font-semibold bg-gradient-to-r from-primary via-primary/80 to-primary bg-clip-text">{activeStep.shortLabel}</p>
                   </div>
@@ -483,7 +483,7 @@ const UserReviews = () => {
                       }}
                       className={`absolute -translate-x-1/2 -translate-y-1/2 w-[110px] sm:w-[122px] px-3 py-2.5 rounded-xl border-2 text-xs sm:text-sm text-center font-medium transition-all duration-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 group overflow-hidden ${
                         isActive
-                          ? "bg-gradient-to-br from-primary via-primary to-primary/90 text-primary-foreground border-primary shadow-[0_0_25px_rgba(99,102,241,0.6),0_0_40px_rgba(99,102,241,0.3),inset_0_1px_0_rgba(255,255,255,0.2)] scale-110 animate-pulse"
+                          ? "bg-gradient-to-br from-primary via-primary to-primary/90 text-primary-foreground border-primary shadow-lg scale-110"
                           : isPast
                           ? "bg-background/95 border-primary/40 hover:border-primary/60 hover:bg-primary/10 hover:scale-105 hover:shadow-[0_8px_20px_rgba(99,102,241,0.2)] hover:-translate-y-1"
                           : "bg-background/95 border-border/70 hover:border-primary/60 hover:bg-primary/10 hover:scale-105 hover:shadow-[0_8px_20px_rgba(99,102,241,0.2)] hover:-translate-y-1"
@@ -502,7 +502,7 @@ const UserReviews = () => {
                         <div className="absolute inset-0 rounded-xl bg-primary/30 animate-ping" style={{ animationDuration: '2s' }} />
                       )}
                       <div className="relative z-10">
-                        <StepIcon className={`w-4 h-4 mx-auto mb-1 transition-all duration-300 ${isActive ? 'animate-bounce drop-shadow-[0_0_8px_currentColor]' : 'group-hover:scale-125 group-hover:rotate-12'}`} style={{ animationDuration: isActive ? '1.5s' : undefined }} />
+                        <StepIcon className={`w-4 h-4 mx-auto mb-1 transition-all duration-300 ${isActive ? '' : 'group-hover:scale-125 group-hover:rotate-12'}`} />
                         <span className="block text-[10px] sm:text-[11px] tracking-[0.1em] uppercase opacity-75">
                           {index + 1}
                         </span>
@@ -524,16 +524,16 @@ const UserReviews = () => {
 
             {/* Floating particles effect */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
-              <div className="absolute top-1/4 left-1/4 w-2 h-2 bg-primary/20 rounded-full blur-sm animate-pulse" style={{ animationDuration: '3s' }} />
-              <div className="absolute top-3/4 right-1/4 w-3 h-3 bg-primary/15 rounded-full blur-sm animate-pulse" style={{ animationDuration: '4s', animationDelay: '1s' }} />
-              <div className="absolute top-1/2 right-1/3 w-1.5 h-1.5 bg-primary/25 rounded-full blur-sm animate-pulse" style={{ animationDuration: '2.5s', animationDelay: '0.5s' }} />
+              <div className="absolute top-1/4 left-1/4 w-2 h-2 bg-primary/20 rounded-full blur-sm" />
+              <div className="absolute top-3/4 right-1/4 w-3 h-3 bg-primary/15 rounded-full blur-sm" />
+              <div className="absolute top-1/2 right-1/3 w-1.5 h-1.5 bg-primary/25 rounded-full blur-sm" />
             </div>
 
             <CardContent className="p-6 sm:p-8 lg:p-10 h-full flex flex-col justify-center relative z-10">
               <div className="animate-in fade-in slide-in-from-right duration-700" key={activeStepIndex}>
                 <div className="flex items-start gap-4 mb-4">
                   <div className={`p-3 rounded-xl bg-gradient-to-br ${activeStep.color} border-2 border-primary/30 shadow-[0_0_20px_rgba(99,102,241,0.2)] backdrop-blur-sm hover:scale-110 transition-transform duration-300`}>
-                    <ActiveIcon className="w-6 h-6 sm:w-7 sm:h-7 text-primary drop-shadow-[0_0_6px_currentColor]" />
+                    <ActiveIcon className="w-6 h-6 sm:w-7 sm:h-7 text-primary" />
                   </div>
                   <h3 className="font-space-grotesk text-2xl sm:text-3xl font-semibold flex-1 bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text">
                     {activeStep.title}

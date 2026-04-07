@@ -420,7 +420,7 @@ const Hero = () => {
     <section
       ref={heroRef}
       id="overview"
-      className="scroll-mt-24 relative pt-[calc(var(--mobile-nav-offset,0px)+1rem)] sm:pt-[calc(var(--mobile-nav-offset,0px)+1.25rem)] md:pt-24 pb-12 sm:pb-16 md:pb-20 px-4 sm:px-6 font-poppins"
+      className="scroll-mt-24 relative pt-[calc(var(--mobile-nav-offset,0px)+1rem)] sm:pt-[calc(var(--mobile-nav-offset,0px)+1.25rem)] md:pt-24 pb-12 sm:pb-16 md:pb-20 px-4 sm:px-6"
     >
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-muted/40 to-transparent pointer-events-none" />
 
@@ -431,10 +431,6 @@ const Hero = () => {
             {/* Main Headline */}
             <h1
               className="homepage-hero__title font-space-grotesk text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-semibold mb-4 sm:mb-6 leading-tight tracking-tight"
-              style={{
-                textShadow: '0 0 18px hsl(var(--primary) / 0.18), 0 0 42px hsl(var(--primary) / 0.10)',
-                filter: 'drop-shadow(0 0 10px hsl(var(--primary) / 0.10))'
-              }}
             >
               <span className="text-primary">Build Your Startup.</span> Own Your Future.
             </h1>
