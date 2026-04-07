@@ -17,6 +17,7 @@ import { useActiveSection } from '@/hooks/useActiveSection';
 import { ReactNode } from 'react';
 import { normalizePlan, resolveEntitlement } from '@/config/planPermissions';
 import { useSubscription } from '@/hooks/useSubscription';
+import { useDashboardMetrics } from '@/hooks/useDashboardMetrics';
 import {
   getDailyGoalPromptSnoozeUntil,
   getLocalDateString,
@@ -57,6 +58,7 @@ export const PersonalizedDashboardV2 = () => {
   const navigate = useNavigate();
   const { isInitializing } = useDashboardInitialization();
   const { subscriptionData } = useSubscription();
+  const dashboardMetrics = useDashboardMetrics();
   const {
     data,
     loading,
@@ -178,22 +180,17 @@ export const PersonalizedDashboardV2 = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 
-  // Calculate metrics for the views
-  const calculateMetrics = () => {
-    return {
-      streak: data?.stats?.currentStreak || currentStreak,
-      tasksCompletedToday: 3,
-      totalTasksToday: 5,
-      weeklyProgress: 65,
-      tasksCompletedThisWeek: 12,
-      totalTasksThisWeek: 20,
-      activeSprints: data?.stats?.activeSprints || 0,
-      completedSessions: data?.stats?.completedSessions || 0,
-      totalCheckIns: data?.stats?.totalCheckIns || 0,
-    };
+  const metrics = {
+    streak: data?.stats?.currentStreak || currentStreak,
+    tasksCompletedToday: dashboardMetrics.tasksCompletedToday,
+    totalTasksToday: dashboardMetrics.totalTasksToday,
+    weeklyProgress: dashboardMetrics.weeklyProgress,
+    tasksCompletedThisWeek: dashboardMetrics.tasksCompletedThisWeek,
+    totalTasksThisWeek: dashboardMetrics.totalTasksThisWeek,
+    activeSprints: data?.stats?.activeSprints || 0,
+    completedSessions: data?.stats?.completedSessions || 0,
+    totalCheckIns: data?.stats?.totalCheckIns || 0,
   };
-
-  const metrics = calculateMetrics();
   const incompleteTaskCount = Math.max(metrics.totalTasksToday - metrics.tasksCompletedToday, 0);
   const currentPlan = normalizePlan(subscriptionData.subscription_tier);
   const dashboardMode = (resolveEntitlement('dashboard_mode', currentPlan).dashboardMode ?? currentPlan) as DashboardMode;
@@ -207,7 +204,7 @@ export const PersonalizedDashboardV2 = () => {
     }
   };
 
-  if (loading || isInitializing) {
+  if (loading || isInitializing || dashboardMetrics.isLoading) {
     return (
       <div className="container mx-auto p-6 space-y-6">
         <div className="animate-pulse space-y-6">
