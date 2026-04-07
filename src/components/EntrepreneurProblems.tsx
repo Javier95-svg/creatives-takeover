@@ -1,64 +1,257 @@
-import { Map, Users, Target, Rocket, Lightbulb, LayoutDashboard, Bot, Handshake, Code, FlaskConical } from "lucide-react";
+import type { CSSProperties } from "react";
+import {
+  Boxes,
+  FlaskConical,
+  GraduationCap,
+  Handshake,
+  LayoutDashboard,
+  Lightbulb,
+  Map,
+  Rocket,
+  Target,
+  Users,
+  Code,
+  type LucideIcon,
+} from "lucide-react";
 import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import FounderJourneyVideo from "./FounderJourneyVideo";
-import { Home, FileSearch, Zap } from "lucide-react";
-import { GraduationCap, Boxes } from "lucide-react";
+
+type AccentColor = "blue" | "green" | "red" | "amber";
+
+type JourneyStep = {
+  phase: string;
+  challenge: string;
+  pathway: string;
+  icon: LucideIcon;
+  accentColor: AccentColor;
+};
+
+type JourneyAction = {
+  to: string;
+  title: string;
+  description: string;
+  icon: LucideIcon;
+  accentName: string;
+  accent: string;
+  accentSoft: string;
+  accentGlow: string;
+  accentBorder: string;
+  accentStrong: string;
+  panelTint: string;
+  meshTint: string;
+  idleVariant: "spotlight" | "diagonal" | "halo" | "float" | "beam" | "glint" | "dual";
+  shimmerAngle: string;
+  floatDistance: string;
+  hoverLift: string;
+  hoverScale: string;
+  sweepDuration: string;
+  delay: string;
+};
+
+const journeySteps: JourneyStep[] = [
+  {
+    phase: "The Starting Point",
+    challenge: "Scattered ideas without a clear direction",
+    pathway: "BizMap AI guides you from scattered thoughts to a strategic plan—clarifying your market, competitors, and next steps in one conversation.",
+    icon: Lightbulb,
+    accentColor: "blue",
+  },
+  {
+    phase: "Finding Direction",
+    challenge: "Aligning your product with a genuine market need",
+    pathway: "The Dashboard breaks down your vision into weekly sprints, tracks progress, and keeps you accountable—transforming busyness into real momentum.",
+    icon: Target,
+    accentColor: "green",
+  },
+  {
+    phase: "Lack of Experience",
+    challenge: "Navigating Uncertainty and Decision-Making",
+    pathway: "Our Community connects you with mentors and fellow founders who've navigated these exact challenges—offering guidance, feedback, and genuine support.",
+    icon: Users,
+    accentColor: "red",
+  },
+  {
+    phase: "Working Smartly",
+    challenge: "Task prioritization and resources management",
+    pathway: "BizMap AI helps define your ICP, select the right channels, and craft a go-to-market strategy based on proven frameworks—no more guessing.",
+    icon: Map,
+    accentColor: "blue",
+  },
+  {
+    phase: "Seeking Resources",
+    challenge: "Fundraising feels impossible without the right connections",
+    pathway: "Meet your Investor",
+    icon: Rocket,
+    accentColor: "amber",
+  },
+  {
+    phase: "Tech Stack Selection",
+    challenge: "The Teck Stack Dilemma",
+    pathway: "Build your Tech Stack",
+    icon: Code,
+    accentColor: "blue",
+  },
+  {
+    phase: "Founder's Mental Tax",
+    challenge: "High chance of burnout",
+    pathway: "Find a Co-Founder",
+    icon: LayoutDashboard,
+    accentColor: "green",
+  },
+];
+
+const journeyActions: JourneyAction[] = [
+  {
+    to: "/icp-builder",
+    title: "Define your ICP",
+    description: "ICP Builder guides you to define your ideal customer profile and niche market with actionable positioning strategies and pain point analysis.",
+    icon: Target,
+    accentName: "cobalt",
+    accent: "218 89% 60%",
+    accentSoft: "212 100% 97%",
+    accentGlow: "216 95% 69%",
+    accentBorder: "217 87% 75%",
+    accentStrong: "220 90% 53%",
+    panelTint: "214 78% 72%",
+    meshTint: "210 75% 93%",
+    idleVariant: "spotlight",
+    shimmerAngle: "132deg",
+    floatDistance: "4px",
+    hoverLift: "-6px",
+    hoverScale: "1.01",
+    sweepDuration: "720ms",
+    delay: "0s",
+  },
+  {
+    to: "/pmf-lab",
+    title: "Try PMF Lab",
+    description: "PMF Lab assesses feedback from founders' landing page or waitlist shares, scoring 1-100 on market embrace probability.",
+    icon: FlaskConical,
+    accentName: "teal",
+    accent: "183 75% 42%",
+    accentSoft: "182 61% 95%",
+    accentGlow: "184 82% 52%",
+    accentBorder: "183 68% 67%",
+    accentStrong: "186 84% 34%",
+    panelTint: "182 59% 69%",
+    meshTint: "180 46% 92%",
+    idleVariant: "diagonal",
+    shimmerAngle: "144deg",
+    floatDistance: "3px",
+    hoverLift: "-6px",
+    hoverScale: "1.012",
+    sweepDuration: "640ms",
+    delay: "0.18s",
+  },
+  {
+    to: "/community",
+    title: "Find a Mentor",
+    description: "Community gives you access to our global mentorship network, ideal for founders seeking expert advice to grow faster and avoid common mistakes.",
+    icon: GraduationCap,
+    accentName: "coral",
+    accent: "13 84% 63%",
+    accentSoft: "18 100% 96%",
+    accentGlow: "12 90% 69%",
+    accentBorder: "14 86% 78%",
+    accentStrong: "10 84% 57%",
+    panelTint: "15 66% 74%",
+    meshTint: "20 74% 93%",
+    idleVariant: "halo",
+    shimmerAngle: "124deg",
+    floatDistance: "3px",
+    hoverLift: "-5px",
+    hoverScale: "1.008",
+    sweepDuration: "760ms",
+    delay: "0.3s",
+  },
+  {
+    to: "/dashboard",
+    title: "Explore Dashboard",
+    description: "Dashboard serves as your central task manager, helping you track progress and stay accountable with smart deadlines and reminders.",
+    icon: LayoutDashboard,
+    accentName: "amber",
+    accent: "42 92% 57%",
+    accentSoft: "46 100% 95%",
+    accentGlow: "41 96% 66%",
+    accentBorder: "43 92% 75%",
+    accentStrong: "38 90% 52%",
+    panelTint: "43 76% 73%",
+    meshTint: "46 78% 92%",
+    idleVariant: "float",
+    shimmerAngle: "136deg",
+    floatDistance: "5px",
+    hoverLift: "-8px",
+    hoverScale: "1.014",
+    sweepDuration: "620ms",
+    delay: "0.12s",
+  },
+  {
+    to: "/community/angels",
+    title: "Meet your Investor",
+    description: "Angels gives you access to investors across all stages and sectors, helping you find the right backers for your startup and start real conversations.",
+    icon: Users,
+    accentName: "emerald",
+    accent: "154 59% 43%",
+    accentSoft: "152 54% 95%",
+    accentGlow: "154 64% 52%",
+    accentBorder: "154 57% 66%",
+    accentStrong: "154 67% 37%",
+    panelTint: "153 46% 69%",
+    meshTint: "152 44% 92%",
+    idleVariant: "beam",
+    shimmerAngle: "154deg",
+    floatDistance: "3px",
+    hoverLift: "-6px",
+    hoverScale: "1.01",
+    sweepDuration: "700ms",
+    delay: "0.22s",
+  },
+  {
+    to: "/tech-stack",
+    title: "Tech Stack Builder",
+    description: "Pick the best tools across 8 product categories, each with 4 options, while estimating your monthly and annual budget.",
+    icon: Boxes,
+    accentName: "indigo-steel",
+    accent: "226 31% 57%",
+    accentSoft: "228 43% 96%",
+    accentGlow: "225 45% 68%",
+    accentBorder: "227 32% 74%",
+    accentStrong: "228 36% 49%",
+    panelTint: "226 29% 73%",
+    meshTint: "228 26% 93%",
+    idleVariant: "glint",
+    shimmerAngle: "122deg",
+    floatDistance: "2px",
+    hoverLift: "-6px",
+    hoverScale: "1.01",
+    sweepDuration: "680ms",
+    delay: "0.36s",
+  },
+  {
+    to: "/community/co-founders",
+    title: "Find a Co-Founder",
+    description: "The Co-Founder tab lets you post when you’re seeking a co-founder, instantly notifying all platform users to spark quick matches.",
+    icon: Handshake,
+    accentName: "raspberry",
+    accent: "338 72% 58%",
+    accentSoft: "336 100% 96%",
+    accentGlow: "337 84% 68%",
+    accentBorder: "338 70% 77%",
+    accentStrong: "339 74% 52%",
+    panelTint: "337 60% 74%",
+    meshTint: "335 72% 93%",
+    idleVariant: "dual",
+    shimmerAngle: "140deg",
+    floatDistance: "4px",
+    hoverLift: "-6px",
+    hoverScale: "1.012",
+    sweepDuration: "740ms",
+    delay: "0.28s",
+  },
+];
 
 const EntrepreneurProblems = () => {
-  // Timeline items representing the founder's journey with bottlenecks and pathways
-  const journeySteps = [
-    {
-      phase: "The Starting Point",
-      challenge: "Scattered ideas without a clear direction",
-      pathway: "BizMap AI guides you from scattered thoughts to a strategic plan—clarifying your market, competitors, and next steps in one conversation.",
-      icon: Lightbulb,
-      accentColor: "blue", // Planning
-    },
-    {
-      phase: "Finding Direction",
-      challenge: "Aligning your product with a genuine market need",
-      pathway: "The Dashboard breaks down your vision into weekly sprints, tracks progress, and keeps you accountable—transforming busyness into real momentum.",
-      icon: Target,
-      accentColor: "green", // Execution/Growth
-    },
-    {
-      phase: "Lack of Experience",
-      challenge: "Navigating Uncertainty and Decision-Making",
-      pathway: "Our Community connects you with mentors and fellow founders who've navigated these exact challenges—offering guidance, feedback, and genuine support.",
-      icon: Users,
-      accentColor: "red", // Action/Connection
-    },
-    {
-      phase: "Working Smartly",
-      challenge: "Task prioritization and resources management",
-      pathway: "BizMap AI helps define your ICP, select the right channels, and craft a go-to-market strategy based on proven frameworks—no more guessing.",
-      icon: Map,
-      accentColor: "blue", // Planning
-    },
-    {
-      phase: "Seeking Resources",
-      challenge: "Fundraising feels impossible without the right connections",
-      pathway: "Meet your Investor",
-      icon: Rocket,
-      accentColor: "amber", // Fundraising
-    },
-    {
-      phase: "Tech Stack Selection",
-      challenge: "The Teck Stack Dilemma",
-      pathway: "Build your Tech Stack",
-      icon: Code,
-      accentColor: "blue", // Planning/Technical
-    },
-    {
-      phase: "Founder's Mental Tax",
-      challenge: "High chance of burnout",
-      pathway: "Find a Co-Founder",
-      icon: LayoutDashboard,
-      accentColor: "green", // Growth/Success
-    },
-  ];
-
   const getAccentClasses = (color: string) => {
     const classes = {
       blue: {
@@ -85,107 +278,69 @@ const EntrepreneurProblems = () => {
     return classes[color as keyof typeof classes] || classes.blue;
   };
 
-  const getPathwayAction = (step: (typeof journeySteps)[number], index: number) => {
-    if (index === 0) {
-      return {
-        to: "/icp-builder",
-        title: "Define your ICP",
-        description: "ICP Builder guides you to define your ideal customer profile and niche market with actionable positioning strategies and pain point analysis.",
-        icon: Target,
-      };
-    }
-
-    if (index === 1) {
-      return {
-        to: "/pmf-lab",
-        title: "Try PMF Lab",
-        description: "PMF Lab assesses feedback from founders' landing page or waitlist shares, scoring 1-100 on market embrace probability.",
-        icon: FlaskConical,
-      };
-    }
-
-    if (index === 2) {
-      return {
-        to: "/community",
-        title: "Find a Mentor",
-        description: "Community gives you access to our global mentorship network, ideal for founders seeking expert advice to grow faster and avoid common mistakes.",
-        icon: GraduationCap,
-      };
-    }
-
-    if (index === 3) {
-      return {
-        to: "/dashboard",
-        title: "Explore Dashboard",
-        description: "Dashboard serves as your central task manager, helping you track progress and stay accountable with smart deadlines and reminders.",
-        icon: LayoutDashboard,
-      };
-    }
-
-    if (index === 4) {
-      return {
-        to: "/community/angels",
-        title: step.pathway,
-        description: "Angels gives you access to investors across all stages and sectors, helping you find the right backers for your startup and start real conversations.",
-        icon: Users,
-      };
-    }
-
-    if (index === 5) {
-      return {
-        to: "/tech-stack",
-        title: "Tech Stack Builder",
-        description: "Pick the best tools across 8 product categories, each with 4 options, while estimating your monthly and annual budget.",
-        icon: Boxes,
-      };
-    }
-
-    if (index === 6) {
-      return {
-        to: "/community/co-founders",
-        title: step.pathway,
-        description: "The Co-Founder tab lets you post when you’re seeking a co-founder, instantly notifying all platform users to spark quick matches.",
-        icon: Handshake,
-      };
-    }
-
-    return null;
+  const getPathwayAction = (index: number) => {
+    return journeyActions[index] ?? null;
   };
 
   const renderPathwayAction = (
-    step: (typeof journeySteps)[number],
+    _step: JourneyStep,
     index: number,
     className = "",
   ) => {
-    const action = getPathwayAction(step, index);
+    const action = getPathwayAction(index);
 
     if (!action) {
       return null;
     }
 
     const ActionIcon = action.icon;
+    const actionStyle = {
+      aspectRatio: 256 / 135,
+      "--journey-accent": action.accent,
+      "--journey-accent-soft": action.accentSoft,
+      "--journey-accent-glow": action.accentGlow,
+      "--journey-accent-border": action.accentBorder,
+      "--journey-accent-strong": action.accentStrong,
+      "--journey-panel-tint": action.panelTint,
+      "--journey-mesh-tint": action.meshTint,
+      "--journey-shimmer-angle": action.shimmerAngle,
+      "--journey-float-distance": action.floatDistance,
+      "--journey-hover-lift": action.hoverLift,
+      "--journey-hover-scale": action.hoverScale,
+      "--journey-sweep-duration": action.sweepDuration,
+      "--journey-delay": action.delay,
+    } as CSSProperties;
 
     return (
       <Link
         to={action.to}
-        className={`journey-action-card group relative block w-full overflow-hidden rounded-[24px] border border-border/80 bg-card/95 shadow-[0_20px_45px_-28px_rgba(15,23,42,0.22)] transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_24px_54px_-30px_rgba(15,23,42,0.26)] hover:border-primary/25 ${className}`}
-        style={{ aspectRatio: 256 / 135 }}
+        className={`journey-action-card group relative block w-full overflow-hidden rounded-[24px] touch-manipulation ${className}`}
+        data-accent={action.accentName}
+        data-idle={action.idleVariant}
+        style={actionStyle}
       >
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.2),transparent_58%)]" />
-        <div className="relative flex h-full flex-col justify-between p-5 sm:p-6">
-          <div className="flex items-start justify-between gap-4">
-            <div className="rounded-xl border border-primary/15 bg-primary/10 p-2.5 text-primary">
-              <ActionIcon className="h-6 w-6" />
-            </div>
-          </div>
+        <span aria-hidden="true" className="journey-action-card__aurora" />
+        <span aria-hidden="true" className="journey-action-card__mesh" />
+        <div className="journey-action-card__surface relative h-full p-5 sm:p-6">
+          <span aria-hidden="true" className="journey-action-card__edge" />
+          <span aria-hidden="true" className="journey-action-card__scanline" />
 
-          <div className="space-y-2">
-            <h4 className="journey-action-card__title font-space-grotesk text-xl font-semibold leading-tight text-foreground">
-              {action.title}
-            </h4>
-            <p className="journey-action-card__copy line-clamp-3 text-sm leading-relaxed text-muted-foreground">
-              {action.description}
-            </p>
+          <div className="journey-action-card__content flex h-full flex-col justify-between gap-5">
+            <div className="flex items-start justify-between gap-4">
+              <div className="journey-action-card__icon-shell rounded-[18px] p-2.5 text-[hsl(var(--journey-accent-strong))] sm:p-3">
+                <ActionIcon className="h-6 w-6" />
+              </div>
+              <span aria-hidden="true" className="journey-action-card__accent-dot shrink-0" />
+            </div>
+
+            <div className="journey-action-card__copy-wrap space-y-2">
+              <h4 className="journey-action-card__title font-space-grotesk text-xl font-semibold leading-tight">
+                {action.title}
+              </h4>
+              <p className="journey-action-card__copy line-clamp-3 text-sm leading-relaxed">
+                {action.description}
+              </p>
+            </div>
           </div>
         </div>
       </Link>
