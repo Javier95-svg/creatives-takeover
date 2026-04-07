@@ -430,7 +430,7 @@ const Hero = () => {
           <div className="homepage-hero__content text-center lg:text-left flex flex-col justify-center max-w-2xl lg:max-w-[34rem]">
             {/* Main Headline */}
             <h1
-              className="homepage-hero__title font-space-grotesk text-[2.75rem] sm:text-5xl md:text-6xl xl:text-[4.5rem] font-semibold mb-5 sm:mb-6 leading-[0.95] tracking-[-0.05em]"
+              className="homepage-hero__title font-space-grotesk text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-semibold mb-5 sm:mb-6 leading-tight tracking-tight"
             >
               <span className="text-primary block">Build Your Startup.</span>
               <span className="block">Own Your Future.</span>
