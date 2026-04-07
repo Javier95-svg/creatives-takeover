@@ -316,13 +316,17 @@
     font-size: 1.28rem !important;
   }
 
+  .journey-action-card__title-row {
+    gap: 0.65rem;
+  }
+
   .journey-action-card__icon-shell {
-    width: 2.7rem;
-    height: 2.7rem;
+    width: 2.25rem;
+    height: 2.25rem;
   }
 
   .journey-action-card__copy-wrap {
-    padding: 1rem 1rem 0.95rem !important;
+    padding: 0.1rem 0 0 !important;
   }
 
   .journey-action-card__copy {

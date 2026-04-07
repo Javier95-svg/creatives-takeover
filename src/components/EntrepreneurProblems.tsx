@@ -322,21 +322,18 @@ const EntrepreneurProblems = () => {
         <span aria-hidden="true" className="journey-action-card__aurora" />
         <span aria-hidden="true" className="journey-action-card__mesh" />
         <div className="journey-action-card__surface relative h-full p-5 sm:p-6">
-          <span aria-hidden="true" className="journey-action-card__edge" />
           <span aria-hidden="true" className="journey-action-card__scanline" />
 
           <div className="journey-action-card__content flex h-full flex-col items-center justify-center gap-4 text-center">
-            <div className="journey-action-card__signal-row flex items-center justify-center gap-3">
-              <div className="journey-action-card__icon-shell rounded-[18px] p-2.5 text-[hsl(var(--journey-accent-strong))] sm:p-3">
-                <ActionIcon className="h-6 w-6" />
-              </div>
-              <span aria-hidden="true" className="journey-action-card__accent-dot shrink-0" />
-            </div>
-
             <div className="journey-action-card__copy-wrap w-full space-y-2">
-              <h4 className="journey-action-card__title font-space-grotesk font-semibold leading-tight">
-                {action.title}
-              </h4>
+              <div className="journey-action-card__title-row flex items-center justify-center gap-3">
+                <h4 className="journey-action-card__title font-space-grotesk font-semibold leading-tight">
+                  {action.title}
+                </h4>
+                <div className="journey-action-card__icon-shell rounded-[16px] p-2 text-[hsl(var(--journey-accent-strong))] sm:p-2.5">
+                  <ActionIcon className="h-5 w-5" />
+                </div>
+              </div>
               <p className="journey-action-card__copy line-clamp-3 leading-relaxed">
                 {action.description}
               </p>
