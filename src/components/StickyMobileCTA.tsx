@@ -20,12 +20,12 @@ const StickyMobileCTA = () => {
   if (!isVisible) return null;
 
   return (
-    <div className="fixed bottom-16 left-0 right-0 z-50 lg:hidden safe-area-inset">
-      <div className="bg-background/95 backdrop-blur-lg border-t border-border shadow-2xl">
+    <div className="fixed bottom-16 left-0 right-0 z-50 lg:hidden safe-area-inset animate-in fade-in slide-in-from-bottom-4 duration-300">
+      <div className="bg-background/95 backdrop-blur-lg border-t border-border shadow-lg">
         <div className="container mx-auto px-4 py-3">
           <Button
             size="lg"
-            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground text-base font-semibold shadow-lg shadow-primary/20"
+            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground text-base font-semibold shadow-lg shadow-primary/10 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             asChild
           >
             {/* FIX(retention): homepage — the sticky mobile CTA now routes directly into ICP quickstart instead of a generic signup step. */}

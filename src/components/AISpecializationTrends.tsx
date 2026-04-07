@@ -161,7 +161,7 @@ const AISpecializationTrends = () => {
         {/* Key Statistics */}
         {!isMobile && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-            <Card className="border-border/70 bg-card shadow-sm">
+            <Card className="border-border/60 bg-card shadow-sm">
               <CardContent className="p-6 text-center">
                 <div ref={revenueRef} className="text-3xl md:text-4xl font-bold text-primary mb-2">
                   ${revenueCount.toFixed(1)}M
@@ -174,7 +174,7 @@ const AISpecializationTrends = () => {
               </CardContent>
             </Card>
 
-            <Card className="border-border/70 bg-card shadow-sm">
+            <Card className="border-border/60 bg-card shadow-sm">
               <CardContent className="p-6 text-center">
                 <div ref={speedRef} className="text-3xl md:text-4xl font-bold text-muted-foreground mb-2">
                   {speedCount.toFixed(0)}x
@@ -187,7 +187,7 @@ const AISpecializationTrends = () => {
               </CardContent>
             </Card>
 
-            <Card className="border-border/70 bg-card shadow-sm">
+            <Card className="border-border/60 bg-card shadow-sm">
               <CardContent className="p-6 text-center">
                 <div ref={marginRef} className="text-3xl md:text-4xl font-bold text-accent mb-2">
                   {marginCount.toFixed(0)}%
@@ -205,7 +205,7 @@ const AISpecializationTrends = () => {
         {/* Charts Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
           {/* Chart 1: Operational Velocity */}
-          <Card className="border-border/70 shadow-sm hover:shadow-md transition-shadow">
+          <Card className="border-border/60 shadow-sm hover:shadow-md transition-shadow">
             <CardHeader>
               <CardTitle className="font-space-grotesk text-base sm:text-lg flex items-center gap-2">
                 <Zap className="w-5 h-5 text-primary" />
@@ -222,13 +222,6 @@ const AISpecializationTrends = () => {
                           <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={1} />
                           <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.6} />
                         </linearGradient>
-                        <filter id="glow">
-                          <feGaussianBlur stdDeviation="3" result="coloredBlur" />
-                          <feMerge>
-                            <feMergeNode in="coloredBlur" />
-                            <feMergeNode in="SourceGraphic" />
-                          </feMerge>
-                        </filter>
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
                       <XAxis
@@ -275,7 +268,6 @@ const AISpecializationTrends = () => {
                           strokeWidth: 2,
                           stroke: 'hsl(var(--background))',
                           style: {
-                            filter: 'drop-shadow(0 0 4px hsl(var(--primary) / 0.5))',
                             transition: 'all 0.3s ease'
                           }
                         }}
@@ -285,7 +277,6 @@ const AISpecializationTrends = () => {
                           stroke: 'hsl(var(--background))',
                           strokeWidth: 2,
                           style: {
-                            filter: 'drop-shadow(0 0 8px hsl(var(--primary) / 0.8))',
                             transition: 'all 0.3s ease'
                           }
                         }}
@@ -294,7 +285,6 @@ const AISpecializationTrends = () => {
                         animationDuration={2500}
                         animationEasing="ease-out"
                         style={{
-                          filter: 'drop-shadow(0 2px 4px hsl(var(--primary) / 0.3))',
                           transition: 'all 0.3s ease'
                         }}
                       />
@@ -341,7 +331,7 @@ const AISpecializationTrends = () => {
           </Card>
 
           {/* Chart 2: Market Value Capture */}
-          <Card className="border-border/70 shadow-sm hover:shadow-md transition-shadow">
+          <Card className="border-border/60 shadow-sm hover:shadow-md transition-shadow">
             <CardHeader>
               <CardTitle className="font-space-grotesk text-base sm:text-lg flex items-center gap-2">
                 <Target className="w-5 h-5 text-primary" />
@@ -362,13 +352,6 @@ const AISpecializationTrends = () => {
                           <stop offset="0%" stopColor="hsl(var(--muted-foreground))" stopOpacity={0.6} />
                           <stop offset="100%" stopColor="hsl(var(--muted-foreground))" stopOpacity={0.15} />
                         </linearGradient>
-                        <filter id="areaGlow">
-                          <feGaussianBlur stdDeviation="2" result="coloredBlur" />
-                          <feMerge>
-                            <feMergeNode in="coloredBlur" />
-                            <feMergeNode in="SourceGraphic" />
-                          </feMerge>
-                        </filter>
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
                       <XAxis
@@ -418,7 +401,6 @@ const AISpecializationTrends = () => {
                         animationDuration={2800}
                         animationEasing="ease-out"
                         style={{
-                          filter: 'drop-shadow(0 2px 4px hsl(var(--primary) / 0.2))',
                           transition: 'all 0.3s ease'
                         }}
                       />
@@ -453,7 +435,7 @@ const AISpecializationTrends = () => {
 
         {/* Narrative Conclusion */}
         <div ref={textSectionRef} className="mt-12 max-w-4xl mx-auto">
-          <div className="bg-muted/40 border border-border/70 rounded-lg p-8">
+          <div className="bg-muted/40 border border-border/60 rounded-lg p-8">
             <h3 className="font-space-grotesk text-2xl font-semibold mb-4 text-center">
               A Lifetime Opportunity
             </h3>

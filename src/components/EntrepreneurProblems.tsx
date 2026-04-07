@@ -1,4 +1,4 @@
-﻿import { Map, Users, Target, Rocket, Lightbulb, LayoutDashboard, Bot, Handshake, Code, FlaskConical } from "lucide-react";
+import { Map, Users, Target, Rocket, Lightbulb, LayoutDashboard, Bot, Handshake, Code, FlaskConical } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import FounderJourneyVideo from "./FounderJourneyVideo";
@@ -168,7 +168,7 @@ const EntrepreneurProblems = () => {
     return (
       <Link
         to={action.to}
-        className={`journey-action-card group relative block w-full overflow-hidden rounded-lg border border-border bg-background/95 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:border-primary/30 hover:bg-primary/5 ${className}`}
+        className={`journey-action-card group relative block w-full overflow-hidden rounded-lg border border-border bg-background/95 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-md hover:border-primary/30 hover:bg-primary/5 ${className}`}
         style={{ aspectRatio: 256 / 135 }}
       >
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.16),transparent_55%)]" />
@@ -230,7 +230,7 @@ const EntrepreneurProblems = () => {
                   <div className="md:hidden space-y-5">
                     <div className="text-center">
                       <div className="mb-3 flex justify-center">
-                        <span className="inline-flex items-center rounded-full border border-green-300 dark:border-green-700 bg-green-100 dark:bg-green-900/30 px-2.5 py-0.5 text-[11px] font-medium text-green-700 dark:text-green-400">
+                        <span className="inline-flex items-center rounded-full border border-primary/30 bg-primary/10 px-2.5 py-0.5 text-[11px] font-medium text-primary">
                           {step.phase}
                         </span>
                       </div>
@@ -260,7 +260,7 @@ const EntrepreneurProblems = () => {
                       <>
                         <div className="md:col-start-2 md:row-start-1 text-center">
                           <div className="mb-3 flex justify-center">
-                            <span className="inline-flex items-center rounded-full border border-green-300 dark:border-green-700 bg-green-100 dark:bg-green-900/30 px-2.5 py-0.5 text-[11px] font-medium text-green-700 dark:text-green-400">
+                            <span className="inline-flex items-center rounded-full border border-primary/30 bg-primary/10 px-2.5 py-0.5 text-[11px] font-medium text-primary">
                               {step.phase}
                             </span>
                           </div>
@@ -289,7 +289,7 @@ const EntrepreneurProblems = () => {
                       <>
                         <div className="md:col-start-1 md:row-start-1 text-center">
                           <div className="mb-3 flex justify-center">
-                            <span className="inline-flex items-center rounded-full border border-green-300 dark:border-green-700 bg-green-100 dark:bg-green-900/30 px-2.5 py-0.5 text-[11px] font-medium text-green-700 dark:text-green-400">
+                            <span className="inline-flex items-center rounded-full border border-primary/30 bg-primary/10 px-2.5 py-0.5 text-[11px] font-medium text-primary">
                               {step.phase}
                             </span>
                           </div>

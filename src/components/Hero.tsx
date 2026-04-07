@@ -422,10 +422,10 @@ const Hero = () => {
       id="overview"
       className="scroll-mt-24 relative pt-[calc(var(--mobile-nav-offset,0px)+1rem)] sm:pt-[calc(var(--mobile-nav-offset,0px)+1.25rem)] md:pt-24 pb-12 sm:pb-16 md:pb-20 px-4 sm:px-6"
     >
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-muted/40 to-transparent pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-muted/20 to-transparent pointer-events-none" />
 
       <div className="container mx-auto max-w-7xl relative z-10">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 xl:gap-20 items-center">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 xl:gap-16 items-center">
           {/* Left Section - All existing content */}
           <div className="homepage-hero__content text-center flex flex-col justify-center">
             {/* Main Headline */}
@@ -491,7 +491,7 @@ const Hero = () => {
 
           {/* Right Section - 4-Pic Grid Layout */}
           <div className="homepage-hero__media w-full lg:pt-8 xl:pt-10">
-            <div className="rounded-2xl border border-border/70 bg-card shadow-lg p-3 sm:p-4">
+            <div className="rounded-2xl border border-border/60 bg-card shadow-lg p-3 sm:p-4">
               <div className="grid grid-cols-2 gap-2 sm:gap-3 md:gap-4 w-full">
                 {[1, 2, 3, 4].map((position) => {
                 // Use optimistic preview if available (instant rendering), otherwise use database image
@@ -508,7 +508,7 @@ const Hero = () => {
                   return (
                     <div
                       key={position}
-                      className="relative rounded-xl border border-dashed border-border/70 bg-muted/30 aspect-square flex flex-col items-center justify-center gap-3 p-4"
+                      className="relative rounded-xl border border-dashed border-border/40 bg-muted/30 aspect-square flex flex-col items-center justify-center gap-3 p-4"
                     >
                       <ImageIcon className="h-10 w-10 text-muted-foreground/50" />
                       {isAdmin && (
@@ -563,7 +563,7 @@ const Hero = () => {
                 return (
                   <div
                     key={position}
-                    className="relative rounded-xl overflow-hidden border border-border/60 bg-muted/30 group"
+                    className="relative rounded-xl overflow-hidden border border-border/40 bg-muted/30 group"
                   >
                     <img
                       src={imageSrc}

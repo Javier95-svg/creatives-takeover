@@ -101,32 +101,36 @@ const Index = () => {
         {isMobile ? (
           <PullToRefresh onRefresh={handleRefresh}>
             <Hero />
-            <EntrepreneurProblems />
-             
+            <div className="bg-muted/20">
+              <EntrepreneurProblems />
+            </div>
             <UserReviews />
-             
-            <AISpecializationTrends />
-             
+            <div className="bg-muted/20">
+              <AISpecializationTrends />
+            </div>
             <ValuePropositionCards />
-             
-            <Suspense fallback={<div className="h-96 animate-pulse bg-muted/20" />}>
-              <HomeFAQ />
-            </Suspense>
+            <div className="bg-muted/20">
+              <Suspense fallback={<div className="h-96 animate-pulse bg-muted/20" />}>
+                <HomeFAQ />
+              </Suspense>
+            </div>
           </PullToRefresh>
         ) : (
           <>
             <Hero />
-            <EntrepreneurProblems />
-             
+            <div className="bg-muted/20">
+              <EntrepreneurProblems />
+            </div>
             <UserReviews />
-             
-            <AISpecializationTrends />
-             
+            <div className="bg-muted/20">
+              <AISpecializationTrends />
+            </div>
             <ValuePropositionCards />
-             
-            <Suspense fallback={<div className="h-96 animate-pulse bg-muted/20" />}>
-              <HomeFAQ />
-            </Suspense>
+            <div className="bg-muted/20">
+              <Suspense fallback={<div className="h-96 animate-pulse bg-muted/20" />}>
+                <HomeFAQ />
+              </Suspense>
+            </div>
           </>
         )}
       </main>

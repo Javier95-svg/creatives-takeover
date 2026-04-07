@@ -188,13 +188,6 @@ const UserReviews = () => {
                     xmlns="http://www.w3.org/2000/svg"
                   >
                     <defs>
-                      <filter id="mobileGlow">
-                        <feGaussianBlur stdDeviation="0.5" result="coloredBlur" />
-                        <feMerge>
-                          <feMergeNode in="coloredBlur" />
-                          <feMergeNode in="SourceGraphic" />
-                        </feMerge>
-                      </filter>
                       <radialGradient id="mobileRingGradient">
                         <stop offset="0%" stopColor="currentColor" stopOpacity="0.1" />
                         <stop offset="100%" stopColor="currentColor" stopOpacity="0.35" />
@@ -209,7 +202,7 @@ const UserReviews = () => {
                       stroke="url(#mobileRingGradient)"
                       strokeWidth="0.25"
                       className="text-primary"
-                      filter="url(#mobileGlow)"
+                      
                     >
                       <animate attributeName="r" values="39;39.4;39" dur="3s" repeatCount="indefinite" />
                     </circle>
@@ -221,7 +214,7 @@ const UserReviews = () => {
                       strokeWidth="0.4"
                       className="text-primary/30"
                       strokeDasharray="2 2"
-                      filter="url(#mobileGlow)"
+                      
                     >
                       <animate attributeName="stroke-dashoffset" from="0" to="4" dur="2s" repeatCount="indefinite" />
                     </path>
@@ -253,7 +246,7 @@ const UserReviews = () => {
                               ? "text-primary/50 opacity-70"
                               : "text-primary/10 opacity-50"
                           }`}
-                          filter={isActiveSegment ? "url(#mobileGlow)" : undefined}
+                          
                         >
                           {isActiveSegment && (
                             <animate attributeName="stroke-width" values="0.8;1;0.8" dur="2s" repeatCount="indefinite" />
@@ -359,13 +352,6 @@ const UserReviews = () => {
                 >
                   {/* Glowing outer ring */}
                   <defs>
-                    <filter id="glow">
-                      <feGaussianBlur stdDeviation="0.5" result="coloredBlur"/>
-                      <feMerge>
-                        <feMergeNode in="coloredBlur"/>
-                        <feMergeNode in="SourceGraphic"/>
-                      </feMerge>
-                    </filter>
                     <radialGradient id="ringGradient">
                       <stop offset="0%" stopColor="currentColor" stopOpacity="0.1" />
                       <stop offset="100%" stopColor="currentColor" stopOpacity="0.4" />
@@ -381,7 +367,7 @@ const UserReviews = () => {
                     stroke="url(#ringGradient)"
                     strokeWidth="0.25"
                     className="text-primary"
-                    filter="url(#glow)"
+                    
                   >
                     <animate
                       attributeName="r"
@@ -399,7 +385,7 @@ const UserReviews = () => {
                     strokeWidth="0.4"
                     className="text-primary/30"
                     strokeDasharray="2 2"
-                    filter="url(#glow)"
+                    
                   >
                     <animate
                       attributeName="stroke-dashoffset"
@@ -438,7 +424,7 @@ const UserReviews = () => {
                             ? "text-primary/50 opacity-70"
                             : "text-primary/10 opacity-50"
                         }`}
-                        filter={isActiveSegment ? "url(#glow)" : undefined}
+                        
                       >
                         {isActiveSegment && (
                           <animate
@@ -497,10 +483,6 @@ const UserReviews = () => {
                       aria-pressed={isActive}
                       aria-label={`Select ${step.title}`}
                     >
-                      {/* Ripple effect on active */}
-                      {isActive && (
-                        <div className="absolute inset-0 rounded-xl bg-primary/30 animate-ping" style={{ animationDuration: '2s' }} />
-                      )}
                       <div className="relative z-10">
                         <StepIcon className={`w-4 h-4 mx-auto mb-1 transition-all duration-300 ${isActive ? '' : 'group-hover:scale-125 group-hover:rotate-12'}`} />
                         <span className="block text-[10px] sm:text-[11px] tracking-[0.1em] uppercase opacity-75">
@@ -508,8 +490,6 @@ const UserReviews = () => {
                         </span>
                         <span className="block mt-0.5 leading-tight font-semibold">{step.shortLabel}</span>
                       </div>
-                      {/* Shine effect on hover */}
-                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
                     </button>
                   );
                 })}
@@ -554,7 +534,7 @@ const UserReviews = () => {
                       }}
                       className={`h-1.5 rounded-full transition-all duration-500 hover:h-2 ${
                         index === activeStepIndex
-                          ? "bg-gradient-to-r from-primary via-primary/90 to-primary w-8 shadow-[0_0_10px_rgba(99,102,241,0.5)]"
+                          ? "bg-gradient-to-r from-primary via-primary/90 to-primary w-8"
                           : index < activeStepIndex
                           ? "bg-primary/40 w-6 hover:w-7 hover:bg-primary/60"
                           : "bg-primary/20 w-4 hover:w-5 hover:bg-primary/30"

@@ -65,13 +65,13 @@ const HomeFAQ = () => {
 
         {/* FAQ Accordion */}
         <div className="max-w-4xl mx-auto px-4">
-          <div className="rounded-2xl border border-border/70 bg-card p-4 sm:p-6 lg:p-8 shadow-sm">
+          <div className="rounded-2xl border border-border/60 bg-card p-4 sm:p-6 lg:p-8 shadow-sm">
             <Accordion type="single" collapsible className="space-y-0">
               {faqs.map((faq, index) => (
                 <AccordionItem
                   key={index}
                   value={`item-${index}`}
-                  className="border-b border-border/70 px-4 sm:px-6 last:border-b-0"
+                  className="border-b border-border/40 px-4 sm:px-6 last:border-b-0"
                 >
                   <AccordionTrigger className="text-left text-sm sm:text-base md:text-lg font-semibold py-5 lg:py-6 tracking-tight">
                     {faq.question}
