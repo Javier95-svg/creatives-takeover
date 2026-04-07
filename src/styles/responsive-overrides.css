@@ -313,23 +313,23 @@
   }
 
   .journey-action-card__title {
-    font-size: 1.125rem !important;
+    font-size: 1.28rem !important;
   }
 
   .journey-action-card__icon-shell {
-    width: 3.1rem;
-    height: 3.1rem;
+    width: 2.7rem;
+    height: 2.7rem;
   }
 
   .journey-action-card__copy-wrap {
-    padding: 0.95rem 0.95rem 0.9rem !important;
+    padding: 1rem 1rem 0.95rem !important;
   }
 
   .journey-action-card__copy {
     display: block;
     overflow: visible;
-    font-size: 0.92rem !important;
-    line-height: 1.55 !important;
+    font-size: 0.98rem !important;
+    line-height: 1.62 !important;
   }
 
   .journey-action-card .line-clamp-3 {

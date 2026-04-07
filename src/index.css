@@ -3572,14 +3572,20 @@ img {
   .journey-action-card__content {
     position: relative;
     z-index: 2;
+    min-height: 100%;
+    text-align: center;
+  }
+
+  .journey-action-card__signal-row {
+    margin-inline: auto;
   }
 
   .journey-action-card__icon-shell {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 3.35rem;
-    height: 3.35rem;
+    width: 2.95rem;
+    height: 2.95rem;
     border: 1px solid hsl(var(--journey-accent-border) / 0.42);
     background:
       linear-gradient(180deg, hsl(var(--background) / 0.6), hsl(var(--journey-panel-tint) / 0.18)),
@@ -3598,9 +3604,9 @@ img {
   }
 
   .journey-action-card__accent-dot {
-    width: 0.9rem;
-    height: 0.9rem;
-    margin-top: 0.25rem;
+    width: 0.72rem;
+    height: 0.72rem;
+    margin-top: 0;
     border-radius: 999px;
     border: 1px solid hsl(var(--journey-accent-border) / 0.46);
     background:
@@ -3616,7 +3622,9 @@ img {
 
   .journey-action-card__copy-wrap {
     position: relative;
-    padding: 1rem 1rem 0.95rem;
+    width: min(100%, 30rem);
+    margin-inline: auto;
+    padding: 1.1rem 1.15rem 1.05rem;
     border-radius: 18px;
     border: 1px solid hsl(var(--journey-accent-border) / 0.16);
     background:
@@ -3645,12 +3653,19 @@ img {
 
   .journey-action-card__title {
     color: hsl(var(--foreground));
+    font-size: clamp(1.38rem, 1.12rem + 0.7vw, 1.78rem);
+    line-height: 1.08;
+    letter-spacing: -0.025em;
     text-wrap: balance;
     text-shadow: 0 1px 0 hsl(var(--background) / 0.2);
   }
 
   .journey-action-card__copy {
     color: hsl(var(--muted-foreground) / 0.96);
+    max-width: 34ch;
+    margin-inline: auto;
+    font-size: clamp(0.99rem, 0.92rem + 0.2vw, 1.08rem);
+    line-height: 1.62;
   }
 
   .journey-action-card:hover {
@@ -3716,7 +3731,7 @@ img {
 
   .journey-action-card:hover .journey-action-card__copy-wrap,
   .journey-action-card:focus-visible .journey-action-card__copy-wrap {
-    transform: translateY(-2px);
+    transform: translateY(-1px);
     border-color: hsl(var(--journey-accent-border) / 0.28);
     background:
       linear-gradient(180deg, hsl(var(--background) / 0.52), hsl(var(--background) / 0.24)),

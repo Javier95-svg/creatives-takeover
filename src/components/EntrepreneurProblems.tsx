@@ -325,19 +325,19 @@ const EntrepreneurProblems = () => {
           <span aria-hidden="true" className="journey-action-card__edge" />
           <span aria-hidden="true" className="journey-action-card__scanline" />
 
-          <div className="journey-action-card__content flex h-full flex-col justify-between gap-5">
-            <div className="flex items-start justify-between gap-4">
+          <div className="journey-action-card__content flex h-full flex-col items-center justify-center gap-4 text-center">
+            <div className="journey-action-card__signal-row flex items-center justify-center gap-3">
               <div className="journey-action-card__icon-shell rounded-[18px] p-2.5 text-[hsl(var(--journey-accent-strong))] sm:p-3">
                 <ActionIcon className="h-6 w-6" />
               </div>
               <span aria-hidden="true" className="journey-action-card__accent-dot shrink-0" />
             </div>
 
-            <div className="journey-action-card__copy-wrap space-y-2">
-              <h4 className="journey-action-card__title font-space-grotesk text-xl font-semibold leading-tight">
+            <div className="journey-action-card__copy-wrap w-full space-y-2">
+              <h4 className="journey-action-card__title font-space-grotesk font-semibold leading-tight">
                 {action.title}
               </h4>
-              <p className="journey-action-card__copy line-clamp-3 text-sm leading-relaxed">
+              <p className="journey-action-card__copy line-clamp-3 leading-relaxed">
                 {action.description}
               </p>
             </div>
