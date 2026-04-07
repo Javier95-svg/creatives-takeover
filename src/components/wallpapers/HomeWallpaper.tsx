@@ -1,44 +1,57 @@
 /**
- * HomeWallpaper — "Orbital Depth"
+ * HomeWallpaper — Continuous Scrolling Canvas
  *
- * 4-layer composition for a premium SaaS feel:
- *   L1  Solid base (theme-aware)
- *   L2  Gradient mesh — three asymmetric radials create directional warmth
- *       (top-left stronger, bottom and right recede) mimicking a real light source
- *   L3  Noise grain — desaturated feTurbulence at low opacity, blended via
- *       mix-blend-soft-light so it adapts to both light and dark themes
- *   L4  Orbital arcs — thin ellipses partially overflowing the viewport,
- *       evoking trajectory / growth without being literal
+ * Single seamless background — no section breaks. Gradient layers use
+ * `absolute` positioning so they scroll with the page, creating a
+ * progressive visual journey from hero → mid-page → footer.
  *
- * All colors reference design tokens so the wallpaper follows light/dark mode
- * automatically.  Every layer sits at -z-10 with pointer-events-none so it
- * never interferes with content.
- *
- * Alternate direction — "Luminous Veil":
- *   Single large top-center azimuthal glow (primary at 8%) with radial
- *   vignette (darker edges).  Same noise layer, no geometric shapes.
- *   To try: remove L4, change L2 to one centered ellipse gradient.
+ *   L1  Solid base (fixed)
+ *   L2  Hero glow — top 900px, concentrated primary aurora (absolute)
+ *   L3  Mid-page warmth — offset warm gradient adding depth (absolute)
+ *   L4  Dot grid — subtle structure across full viewport (fixed)
+ *   L5  Noise grain — editorial texture, theme-adaptive blend (fixed)
  */
 const HomeWallpaper = () => (
   <>
     {/* L1 — Solid base */}
     <div className="fixed inset-0 -z-10 bg-background" />
 
-    {/* L2 — Gradient mesh: asymmetric radials create directional depth */}
+    {/* L2 — Hero glow: concentrated at top, fades into page */}
     <div
-      className="fixed inset-0 -z-10"
+      className="absolute inset-x-0 top-0 h-[900px] -z-10"
       style={{
         backgroundImage: [
-          'radial-gradient(ellipse 80% 50% at 10% 20%, hsl(var(--primary) / 0.12), transparent)',
-          'radial-gradient(ellipse 50% 50% at 90% 15%, hsl(var(--primary) / 0.07), transparent)',
-          'radial-gradient(ellipse 70% 35% at 45% 100%, hsl(var(--accent) / 0.08), transparent)',
+          'radial-gradient(ellipse 130% 55% at 50% 0%, hsl(217 91% 60% / 0.14), transparent)',
+          'radial-gradient(ellipse 80% 35% at 50% 0%, hsl(217 91% 70% / 0.09), transparent)',
+          'radial-gradient(ellipse 60% 60% at 50% 5%, hsl(210 60% 90% / 0.22), transparent 80%)',
         ].join(', '),
       }}
     />
 
-    {/* L3 — Fine noise grain for editorial texture */}
+    {/* L3 — Mid-page warmth: offset gradient for depth */}
+    <div
+      className="absolute inset-x-0 top-[800px] h-[1200px] -z-10"
+      style={{
+        backgroundImage: [
+          'radial-gradient(ellipse 100% 50% at 30% 20%, hsl(217 91% 60% / 0.06), transparent)',
+          'radial-gradient(ellipse 80% 40% at 70% 60%, hsl(230 70% 65% / 0.05), transparent)',
+        ].join(', '),
+      }}
+    />
+
+    {/* L4 — Dot grid: full-viewport structure */}
+    <div
+      className="fixed inset-0 -z-10 opacity-[0.35] dark:opacity-[0.12]"
+      style={{
+        backgroundImage:
+          'radial-gradient(circle 0.75px at center, hsl(var(--foreground) / 0.12) 0.75px, transparent 0.75px)',
+        backgroundSize: '24px 24px',
+      }}
+    />
+
+    {/* L5 — Noise grain */}
     <svg
-      className="fixed inset-0 -z-10 w-full h-full pointer-events-none opacity-[0.35] mix-blend-multiply dark:mix-blend-soft-light dark:opacity-[0.28]"
+      className="fixed inset-0 -z-10 w-full h-full pointer-events-none opacity-[0.28] mix-blend-multiply dark:mix-blend-soft-light dark:opacity-[0.18]"
       aria-hidden="true"
     >
       <filter id="homeGrain">
@@ -52,16 +65,6 @@ const HomeWallpaper = () => (
       </filter>
       <rect width="100%" height="100%" filter="url(#homeGrain)" />
     </svg>
-
-    {/* L4 — Orbital arcs: thin ellipses suggest trajectory and motion */}
-    <div
-      className="fixed inset-0 -z-10 overflow-hidden pointer-events-none"
-      aria-hidden="true"
-    >
-      <div className="absolute -left-[20%] top-[8%] w-[75vw] aspect-[2/1] rounded-full border border-border/20" />
-      <div className="absolute -right-[10%] top-[5%] w-[55vw] aspect-[1.6/1] rounded-full border border-primary/15" />
-      <div className="absolute left-[5%] -bottom-[25%] w-[85vw] aspect-[2.5/1] rounded-full border border-border/15" />
-    </div>
   </>
 );
 

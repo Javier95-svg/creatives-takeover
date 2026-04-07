@@ -422,8 +422,6 @@ const Hero = () => {
       id="overview"
       className="scroll-mt-24 relative pt-[calc(var(--mobile-nav-offset,0px)+1rem)] sm:pt-[calc(var(--mobile-nav-offset,0px)+1.25rem)] md:pt-24 pb-12 sm:pb-16 md:pb-20 px-4 sm:px-6"
     >
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-muted/20 to-transparent pointer-events-none" />
-
       <div className="container mx-auto max-w-7xl relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 xl:gap-16 items-center">
           {/* Left Section - All existing content */}
