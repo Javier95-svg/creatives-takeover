@@ -2,17 +2,13 @@ import { Link, useNavigate } from 'react-router-dom';
 import {
   ArrowRight,
   BarChart3,
-  Building2,
   Calendar,
   CheckCircle2,
   Compass,
-  Eye,
   Flame,
   FolderOpen,
-  Handshake,
   Library,
   MessageSquare,
-  Phone,
   Rocket,
   Sparkles,
   Target,
@@ -28,9 +24,16 @@ import { DecisionSprintCard } from '../DecisionSprintCard';
 import { TodaysMissionWidget } from '../TodaysMissionWidget';
 import { FocusFunnelWidget } from '@/components/focus-funnel/FocusFunnelWidget';
 import { QuotaCounterWidgets } from '../QuotaCounterWidgets';
+import { MomentumMeter } from '../MomentumMeter';
+import { InsightaActivityCard } from '../InsightaActivityCard';
+import { CommunityActivityCard } from '../CommunityActivityCard';
+import type { PersonalizedRecommendation } from '@/hooks/usePersonalizedDashboard';
 
 interface TierDashboardViewProps {
+  userId: string;
   founderName: string;
+  creativeNiche?: string;
+  businessStage?: string;
   streak: number;
   tasksCompletedToday: number;
   totalTasksToday: number;
@@ -39,7 +42,17 @@ interface TierDashboardViewProps {
   totalTasksThisWeek: number;
   activeSprints: number;
   completedSessions: number;
+  totalCheckIns: number;
+  recommendations: PersonalizedRecommendation[];
 }
+
+type ActionItem = {
+  id: string;
+  title: string;
+  description: string;
+  href: string;
+  label: string;
+};
 
 type StageDefinition = {
   id: number;
@@ -176,6 +189,151 @@ function MetricCard({
   );
 }
 
+function ActionRadarCard({
+  title,
+  description,
+  actions,
+}: {
+  title: string;
+  description: string;
+  actions: ActionItem[];
+}) {
+  return (
+    <Card className="border-border/70 bg-card/80 backdrop-blur-sm">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-lg">
+          <Target className="h-5 w-5 text-primary" />
+          {title}
+        </CardTitle>
+        <CardDescription>{description}</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {actions.map((action, index) => (
+          <div key={action.id} className="rounded-xl border border-border/60 bg-background/70 p-4">
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">{index === 0 ? 'Now' : index === 1 ? 'Next' : 'Then'}</p>
+              <Badge variant="outline">{action.label}</Badge>
+            </div>
+            <p className="mt-1 text-sm font-semibold text-foreground">{action.title}</p>
+            <p className="mt-2 text-sm text-muted-foreground">{action.description}</p>
+            <Button asChild size="sm" variant="ghost" className="mt-3 px-0 text-primary hover:bg-transparent">
+              <Link to={action.href}>
+                Open
+                <ArrowRight className="ml-1 h-3.5 w-3.5" />
+              </Link>
+            </Button>
+          </div>
+        ))}
+      </CardContent>
+    </Card>
+  );
+}
+
+function UnlockValueCard({
+  eyebrow,
+  title,
+  description,
+  bullets,
+  ctaLabel,
+  ctaHref,
+}: {
+  eyebrow: string;
+  title: string;
+  description: string;
+  bullets: string[];
+  ctaLabel: string;
+  ctaHref: string;
+}) {
+  return (
+    <Card className="border-primary/20 bg-gradient-to-br from-primary/8 via-card to-card">
+      <CardHeader>
+        <Badge variant="outline" className="w-fit">{eyebrow}</Badge>
+        <CardTitle className="text-lg">{title}</CardTitle>
+        <CardDescription>{description}</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <div className="space-y-2 text-sm text-muted-foreground">
+          {bullets.map((bullet) => (
+            <div key={bullet} className="rounded-lg border border-border/60 bg-background/70 px-3 py-2">
+              {bullet}
+            </div>
+          ))}
+        </div>
+        <Button asChild variant="outline" size="sm">
+          <Link to={ctaHref}>{ctaLabel}</Link>
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}
+
+function FundraisingActionGrid() {
+  const actions = [
+    {
+      title: 'Angels Network',
+      description: 'Open the warm investor layer reserved for Pro founders.',
+      href: '/community/angels',
+    },
+    {
+      title: 'Pitch Deck Analyzer',
+      description: 'Pressure-test your deck before investor outreach.',
+      href: '/insighta/pitch-deck-analyzer',
+    },
+    {
+      title: 'Email Templates',
+      description: 'Use investor-ready templates for follow-ups and warm intros.',
+      href: '/insighta/email-templates',
+    },
+    {
+      title: 'Insighta Research',
+      description: 'Review current VC and accelerator signals before you reach out.',
+      href: '/insighta',
+    },
+  ];
+
+  return (
+    <Card className="border-border/70 bg-card/80 backdrop-blur-sm">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-lg">
+          <Users className="h-5 w-5 text-primary" />
+          Fundraising Command Layer
+        </CardTitle>
+        <CardDescription>Move from research to outreach without leaving the premium dashboard workflow.</CardDescription>
+      </CardHeader>
+      <CardContent className="grid gap-3 sm:grid-cols-2">
+        {actions.map((action) => (
+          <Link
+            key={action.title}
+            to={action.href}
+            className="rounded-xl border border-border/60 bg-background/70 p-4 transition-colors hover:border-primary/30 hover:bg-background"
+          >
+            <p className="text-sm font-semibold text-foreground">{action.title}</p>
+            <p className="mt-2 text-sm text-muted-foreground">{action.description}</p>
+          </Link>
+        ))}
+      </CardContent>
+    </Card>
+  );
+}
+
+function buildActionItems(
+  recommendations: PersonalizedRecommendation[],
+  fallbackActions: ActionItem[]
+) {
+  const mappedRecommendations = recommendations
+    .filter((item) => !item.is_completed && !item.is_dismissed)
+    .slice(0, 3)
+    .map((item) => ({
+      id: item.id,
+      title: item.title,
+      description: item.description,
+      href: item.action_url?.startsWith('/') ? item.action_url : '/dashboard',
+      label: `P${item.priority}`,
+    }));
+
+  return mappedRecommendations.length > 0 ? mappedRecommendations : fallbackActions;
+}
+
 function ToolLauncherGrid({ title, description }: { title: string; description: string }) {
   return (
     <Card className="border-border/70 bg-card/80 backdrop-blur-sm">
@@ -212,7 +370,31 @@ function ToolLauncherGrid({ title, description }: { title: string; description: 
   );
 }
 
-export function RookieModeView({ founderName }: TierDashboardViewProps) {
+export function RookieModeView({ founderName, recommendations }: TierDashboardViewProps) {
+  const actionItems = buildActionItems(recommendations, [
+    {
+      id: 'rookie-icp',
+      title: 'Finish your ICP first',
+      description: 'The dashboard keeps Stage 1 as the single priority because every later unlock depends on customer clarity.',
+      href: '/icp-builder',
+      label: 'Stage 1',
+    },
+    {
+      id: 'rookie-mentor',
+      title: 'Use your discovery call intentionally',
+      description: 'Treat your included mentorship slot as a checkpoint after you can clearly describe your customer and problem.',
+      href: '/community/mentors',
+      label: 'Included',
+    },
+    {
+      id: 'rookie-upgrade',
+      title: 'Preview the next operating layer',
+      description: 'Starter opens waitlist, PMF, and a more structured dashboard once you have the basics pinned down.',
+      href: '/pricing',
+      label: 'Upgrade path',
+    },
+  ]);
+
   return (
     <div className="mx-auto max-w-5xl space-y-6">
       <div id="mode-welcome">
@@ -248,31 +430,38 @@ export function RookieModeView({ founderName }: TierDashboardViewProps) {
         </div>
         <div id="mode-usage" className="space-y-6">
           <QuotaCounterWidgets />
-          <Card className="border-border/70 bg-card/80 backdrop-blur-sm">
-            <CardHeader>
-              <CardTitle className="text-lg">Why this matters</CardTitle>
-              <CardDescription>Friendly guidance for founders who just arrived.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3 text-sm text-muted-foreground">
-              <p>Your dashboard only shows one meaningful next move at a time so you don&apos;t burn energy on tools you cannot use yet.</p>
-              <p>Once you finish Stage 1, the next tier starts surfacing traction-building workflows and short-term planning.</p>
-            </CardContent>
-          </Card>
+          <ActionRadarCard
+            title="Next Steps"
+            description="The dashboard collapses the path to the few actions that actually matter at Rookie level."
+            actions={actionItems}
+          />
         </div>
       </div>
 
       <div id="mode-preview" className="grid gap-4 md:grid-cols-2">
-        <UpgradePreviewCard
-          eyebrow="Stage 4 Preview"
-          title="Build when the signal is real"
-          description="Rising unlocks MVP Builder and Tech Stack once your ICP and traction story are ready to support build work."
-          cta="See Rising unlocks"
+        <UnlockValueCard
+          eyebrow="Starter Unlock"
+          title="Move from clarity into traction"
+          description="The next paid tier is about structured validation, not feature sprawl."
+          bullets={[
+            'Waitlist Maker for first demand capture',
+            'PMF Lab for early feedback loops',
+            '2 discovery calls and 2 co-founder posts each cycle',
+          ]}
+          ctaLabel="Compare Starter"
+          ctaHref="/pricing"
         />
-        <UpgradePreviewCard
-          eyebrow="Stage 5 Preview"
-          title="Launch with more than hope"
-          description="GTM Strategist and Directories stay visible now so you understand the path ahead before spending energy there."
-          cta="See Stage 5 unlocks"
+        <UnlockValueCard
+          eyebrow="Longer Path"
+          title="See where Rising leads"
+          description="The later build and launch stages stay visible so the dashboard teaches the system before you unlock it."
+          bullets={[
+            'MVP Builder and Tech Stack in Stage 4',
+            'GTM Strategist and Directories in Stage 5',
+            'Broader research and fundraising workflows later on',
+          ]}
+          ctaLabel="See Rising unlocks"
+          ctaHref="/pricing"
         />
       </div>
     </div>
@@ -280,11 +469,40 @@ export function RookieModeView({ founderName }: TierDashboardViewProps) {
 }
 
 export function StarterModeView({
+  userId,
   tasksCompletedToday,
   totalTasksToday,
   weeklyProgress,
+  activeSprints,
+  completedSessions,
+  streak,
+  totalCheckIns,
+  recommendations,
 }: TierDashboardViewProps) {
   const tasksRemainingToday = Math.max(totalTasksToday - tasksCompletedToday, 0);
+  const actionItems = buildActionItems(recommendations, [
+    {
+      id: 'starter-waitlist',
+      title: 'Launch demand capture this week',
+      description: 'Use Waitlist Maker to get real names and messaging feedback before you broaden scope.',
+      href: '/waitlist',
+      label: 'Stage 2',
+    },
+    {
+      id: 'starter-pmf',
+      title: 'Pressure-test your PMF signal',
+      description: 'PMF Lab should become the feedback loop that keeps this dashboard honest.',
+      href: '/pmf-lab',
+      label: 'Stage 3',
+    },
+    {
+      id: 'starter-upgrade',
+      title: 'Prepare for the Rising cockpit',
+      description: 'Rising removes the staged guardrails and opens build, launch, and deeper research workflows.',
+      href: '/pricing',
+      label: 'Next tier',
+    },
+  ]);
 
   return (
     <div className="space-y-6">
@@ -321,11 +539,27 @@ export function StarterModeView({
               </div>
             </CardContent>
           </Card>
+          <ActionRadarCard
+            title="Recommended Sequence"
+            description="Starter keeps the work ordered so signal quality does not collapse under too many tools."
+            actions={actionItems}
+          />
         </div>
         <div className="space-y-6">
           <div id="mode-usage">
             <QuotaCounterWidgets />
           </div>
+          {userId ? (
+            <MomentumMeter
+              userId={userId}
+              stats={{
+                activeSprints,
+                completedSessions,
+                currentStreak: streak,
+                totalCheckIns,
+              }}
+            />
+          ) : null}
           <Card className="border-border/70 bg-card/80 backdrop-blur-sm">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg">
@@ -343,11 +577,17 @@ export function StarterModeView({
               </Button>
             </CardContent>
           </Card>
-          <UpgradePreviewCard
+          <UnlockValueCard
             eyebrow="Next Upgrade"
-            title="Rising opens the product cockpit"
-            description="You&apos;ve mapped the market. Rising gives you build-stage tools, wider investor research, and a denser execution workspace."
-            cta="Compare Rising"
+            title="Rising opens the full product cockpit"
+            description="Once the market signal exists, the next tier removes the sequential dashboard feel and opens parallel execution."
+            bullets={[
+              'All five stages active at once',
+              'MVP Builder, Tech Stack, GTM Strategist, and Directories',
+              '10 VC and 10 accelerator profile views per cycle',
+            ]}
+            ctaLabel="Compare Rising"
+            ctaHref="/pricing"
           />
         </div>
       </div>
@@ -356,6 +596,7 @@ export function StarterModeView({
 }
 
 export function RisingModeView({
+  userId,
   streak,
   tasksCompletedToday,
   totalTasksToday,
@@ -363,10 +604,36 @@ export function RisingModeView({
   tasksCompletedThisWeek,
   totalTasksThisWeek,
   activeSprints,
+  completedSessions,
+  totalCheckIns,
+  recommendations,
 }: TierDashboardViewProps) {
   const navigate = useNavigate();
   const todayCompletion = totalTasksToday > 0 ? Math.round((tasksCompletedToday / totalTasksToday) * 100) : 0;
   const weeklyCompletion = totalTasksThisWeek > 0 ? Math.round((tasksCompletedThisWeek / totalTasksThisWeek) * 100) : 0;
+  const actionItems = buildActionItems(recommendations, [
+    {
+      id: 'rising-build',
+      title: 'Push the build lane forward',
+      description: 'Use MVP Builder and Tech Stack to convert validated signal into something founders can actually test.',
+      href: '/mvp-builder',
+      label: 'Stage 4',
+    },
+    {
+      id: 'rising-gtm',
+      title: 'Pressure-test launch readiness',
+      description: 'GTM Strategist and Directories should turn traction into a repeatable motion this week.',
+      href: '/go-to-market',
+      label: 'Stage 5',
+    },
+    {
+      id: 'rising-research',
+      title: 'Use research where it changes decisions',
+      description: 'Investor and accelerator browsing should inform actual sequencing, not become passive browsing.',
+      href: '/insighta',
+      label: 'Research',
+    },
+  ]);
 
   return (
     <div className="space-y-6">
@@ -431,6 +698,11 @@ export function RisingModeView({
               description="Every core BizMap tool is surfaced here so you can work in parallel instead of waiting for the next unlock."
             />
           </div>
+          <ActionRadarCard
+            title="Priority Radar"
+            description="The Rising workspace is denser, but it still needs a ranked next-step list instead of noise."
+            actions={actionItems}
+          />
           <Card id="mode-stage" className="border-border/70 bg-card/80 backdrop-blur-sm">
             <CardHeader>
               <CardTitle className="text-lg">Full Stage Overview</CardTitle>
@@ -448,6 +720,10 @@ export function RisingModeView({
               ))}
             </CardContent>
           </Card>
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-1">
+            <InsightaActivityCard />
+            <CommunityActivityCard />
+          </div>
         </div>
       </div>
 
@@ -456,18 +732,56 @@ export function RisingModeView({
         <MetricCard label="Stage Progress" value={`${weeklyProgress.toFixed(0)}%`} caption="Mission and stage momentum" icon={BarChart3} />
         <MetricCard label="Community Activity" value={streak > 0 ? `${streak} day streak` : 'Start today'} caption="Consistency still matters, even in Rising" icon={Flame} />
       </div>
+      {userId ? (
+        <MomentumMeter
+          userId={userId}
+          stats={{
+            activeSprints,
+            completedSessions,
+            currentStreak: streak,
+            totalCheckIns,
+          }}
+        />
+      ) : null}
     </div>
   );
 }
 
 
 export function ProModeView({
+  userId,
   streak,
   weeklyProgress,
   tasksCompletedThisWeek,
   completedSessions,
+  activeSprints,
+  totalCheckIns,
+  recommendations,
 }: TierDashboardViewProps) {
   const navigate = useNavigate();
+  const actionItems = buildActionItems(recommendations, [
+    {
+      id: 'pro-angels',
+      title: 'Open the Angels Network first',
+      description: 'Warm investor proximity is the highest-leverage difference in Pro, so it belongs at the top of the queue.',
+      href: '/community/angels',
+      label: 'Warm intro',
+    },
+    {
+      id: 'pro-deck',
+      title: 'Pressure-test the pitch before outreach',
+      description: 'Use the analyzer and templates before you send investor communication into the market.',
+      href: '/insighta/pitch-deck-analyzer',
+      label: 'Deck review',
+    },
+    {
+      id: 'pro-research',
+      title: 'Refresh your investor map',
+      description: 'Keep VC and accelerator research tied to your actual fundraising narrative and current traction.',
+      href: '/insighta',
+      label: 'Research',
+    },
+  ]);
 
   return (
     <div className="space-y-6">
@@ -511,11 +825,21 @@ export function ProModeView({
                 <p className="font-medium text-foreground">Founders WhatsApp Group</p>
                 <p className="mt-1">Fast lane for quick asks, peer signal, and live operator support.</p>
               </div>
-              <Button asChild variant="outline" className="w-full justify-between">
-                <Link to="/community">Open founder support layer</Link>
-              </Button>
+              <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-1">
+                <Button asChild variant="outline" className="justify-between">
+                  <Link to="/community">Open founder support layer</Link>
+                </Button>
+                <Button asChild variant="outline" className="justify-between">
+                  <Link to="/community/angels">Open Angels Network</Link>
+                </Button>
+              </div>
             </CardContent>
           </Card>
+          <ActionRadarCard
+            title="Priority Radar"
+            description="The Pro dashboard ranks fundraising work so premium access turns into motion, not just access."
+            actions={actionItems}
+          />
         </div>
 
         <div className="space-y-6">
@@ -527,28 +851,7 @@ export function ProModeView({
               <DecisionSprintCard />
             </div>
             <div id="mode-fundraising">
-              <Card className="border-border/70 bg-card/80 backdrop-blur-sm">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-lg">
-                    <Users className="h-5 w-5 text-primary" />
-                    Fundraising Pipeline
-                  </CardTitle>
-                  <CardDescription>Investor relationship management becomes a first-class part of the cockpit.</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-3 text-sm">
-                  <div className="rounded-xl border border-border/60 bg-background/70 p-4">
-                    <p className="font-medium text-foreground">Angels Network</p>
-                    <p className="mt-1 text-muted-foreground">Prioritize warm investor paths before sending cold outreach.</p>
-                  </div>
-                  <div className="rounded-xl border border-border/60 bg-background/70 p-4">
-                    <p className="font-medium text-foreground">Insighta dashboard</p>
-                    <p className="mt-1 text-muted-foreground">Track VC, accelerator, and deck activity from one investor-focused surface.</p>
-                  </div>
-                  <Button asChild className="w-full justify-between">
-                    <Link to="/community/angels">Open Angels Network</Link>
-                  </Button>
-                </CardContent>
-              </Card>
+              <FundraisingActionGrid />
             </div>
           </div>
           <div id="focus-funnel">
@@ -563,34 +866,24 @@ export function ProModeView({
           <div id="mode-usage">
             <QuotaCounterWidgets />
           </div>
-          <Card className="border-border/70 bg-card/80 backdrop-blur-sm">
-            <CardHeader>
-              <CardTitle className="text-lg">Advanced Activity Overview</CardTitle>
-              <CardDescription>Signals that matter once the founder is fundraising and moving fast.</CardDescription>
-            </CardHeader>
-            <CardContent className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
-              <div className="rounded-xl border border-border/60 bg-background/70 p-4">
-                <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Pitch deck usage</p>
-                <p className="mt-1 text-lg font-semibold text-foreground">{completedSessions}</p>
-                <p className="text-sm text-muted-foreground">Recent analyzer or deck-related sessions.</p>
-              </div>
-              <div className="rounded-xl border border-border/60 bg-background/70 p-4">
-                <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Platform engagement</p>
-                <p className="mt-1 text-lg font-semibold text-foreground">{tasksCompletedThisWeek}</p>
-                <p className="text-sm text-muted-foreground">Execution signals logged this week.</p>
-              </div>
-              <div className="rounded-xl border border-border/60 bg-background/70 p-4">
-                <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Co-founder activity</p>
-                <p className="mt-1 text-lg font-semibold text-foreground">{streak > 0 ? `${streak} day streak` : 'No recent activity'}</p>
-                <p className="text-sm text-muted-foreground">Use this as a proxy for platform rhythm and founder responsiveness.</p>
-              </div>
-              <div className="rounded-xl border border-border/60 bg-background/70 p-4">
-                <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Mission status</p>
-                <p className="mt-1 text-lg font-semibold text-foreground">{weeklyProgress.toFixed(0)}%</p>
-                <p className="text-sm text-muted-foreground">A premium dashboard still needs one clear weekly operating objective.</p>
-              </div>
-            </CardContent>
-          </Card>
+          {userId ? (
+            <MomentumMeter
+              userId={userId}
+              stats={{
+                activeSprints,
+                completedSessions,
+                currentStreak: streak,
+                totalCheckIns,
+              }}
+            />
+          ) : null}
+          <InsightaActivityCard />
+          <CommunityActivityCard />
+          <div className="grid gap-4 md:grid-cols-3 xl:grid-cols-1">
+            <MetricCard label="Execution This Week" value={String(tasksCompletedThisWeek)} caption="Logged operating actions across the platform" icon={CheckCircle2} />
+            <MetricCard label="Mission Status" value={`${weeklyProgress.toFixed(0)}%`} caption="Keep one weekly objective visible even at Pro" icon={BarChart3} />
+            <MetricCard label="Founder Rhythm" value={streak > 0 ? `${streak} day streak` : 'Needs attention'} caption="Consistency still compounds faster than access" icon={Flame} />
+          </div>
         </div>
       </div>
     </div>

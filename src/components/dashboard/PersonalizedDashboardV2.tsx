@@ -180,9 +180,8 @@ export const PersonalizedDashboardV2 = () => {
 
   // Calculate metrics for the views
   const calculateMetrics = () => {
-    // Mock data - will be replaced with actual data from hooks
     return {
-      streak: currentStreak,
+      streak: data?.stats?.currentStreak || currentStreak,
       tasksCompletedToday: 3,
       totalTasksToday: 5,
       weeklyProgress: 65,
@@ -190,6 +189,7 @@ export const PersonalizedDashboardV2 = () => {
       totalTasksThisWeek: 20,
       activeSprints: data?.stats?.activeSprints || 0,
       completedSessions: data?.stats?.completedSessions || 0,
+      totalCheckIns: data?.stats?.totalCheckIns || 0,
     };
   };
 
@@ -233,6 +233,14 @@ export const PersonalizedDashboardV2 = () => {
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
   const founderName = profile?.full_name?.split(' ')[0] || 'Founder';
+  const tierViewSharedProps = {
+    userId: user?.id || '',
+    founderName,
+    creativeNiche: profile?.creative_niche,
+    businessStage: profile?.business_stage,
+    recommendations: data?.recommendations || [],
+    ...metrics,
+  };
 
   const subtitleByMode: Record<DashboardMode, string> = {
     rookie: 'A simplified dashboard for getting the first signal right.',
@@ -320,10 +328,10 @@ export const PersonalizedDashboardV2 = () => {
                     </div>
 
                     {/* Dynamic View Based on Mode */}
-                    {dashboardMode === 'rookie' && <RookieModeView founderName={founderName} {...metrics} />}
-                    {dashboardMode === 'starter' && <StarterModeView founderName={founderName} {...metrics} />}
-                    {dashboardMode === 'rising' && <RisingModeView founderName={founderName} {...metrics} />}
-                    {dashboardMode === 'pro' && <ProModeView founderName={founderName} {...metrics} />}
+                    {dashboardMode === 'rookie' && <RookieModeView {...tierViewSharedProps} />}
+                    {dashboardMode === 'starter' && <StarterModeView {...tierViewSharedProps} />}
+                    {dashboardMode === 'rising' && <RisingModeView {...tierViewSharedProps} />}
+                    {dashboardMode === 'pro' && <ProModeView {...tierViewSharedProps} />}
                   </div>
 
                   {/* Daily Goal Modal */}
