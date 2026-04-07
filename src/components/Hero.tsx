@@ -430,10 +430,10 @@ const Hero = () => {
           <div className="homepage-hero__content text-center lg:text-left flex flex-col justify-center max-w-2xl lg:max-w-[34rem]">
             {/* Main Headline */}
             <h1
-              className="homepage-hero__title font-space-grotesk text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-semibold mb-5 sm:mb-6 leading-tight tracking-tight"
+              className="homepage-hero__title font-space-grotesk text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-semibold mb-5 sm:mb-6 leading-tight tracking-tight text-center"
             >
-              <span className="text-primary block">Where Founders</span>
-              <span className="block text-white [text-shadow:0_2px_10px_rgba(15,23,42,0.28)]">Come to Build</span>
+              <span className="text-primary block [text-shadow:0_0_22px_rgba(59,130,246,0.28)]">Where Founders</span>
+              <span className="block text-white [text-shadow:0_0_24px_rgba(255,255,255,0.18),0_2px_10px_rgba(15,23,42,0.28)]">Come to Build</span>
             </h1>
 
             {/* Subheadline - Improved readability */}
