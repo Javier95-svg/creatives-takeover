@@ -58,6 +58,8 @@ export function getCountryFlag(country: string | null | undefined): string {
     'PORTUGAL': '🇵🇹',
     'GR': '🇬🇷',
     'GREECE': '🇬🇷',
+    'HU': '🇭🇺',
+    'HUNGARY': '🇭🇺',
     'CZ': '🇨🇿',
     'CZECH REPUBLIC': '🇨🇿',
     'BR': '🇧🇷',
