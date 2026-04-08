@@ -19,6 +19,7 @@ import { signUpWithFallback } from '@/lib/authSignup';
 import { mapSignInError, mapSignUpError } from '@/lib/authErrors';
 import { MIN_PASSWORD_LENGTH, PASSWORD_LENGTH_ERROR } from '@/lib/passwordPolicy';
 import { persistOnboardingReturn, sanitizeReturnPath } from '@/lib/authRedirect';
+import { resumePendingDiscoveryCallRedirect } from '@/services/discoveryCallService';
 
 const Auth: React.FC = () => {
   const navigate = useNavigate();
@@ -33,9 +34,6 @@ const Auth: React.FC = () => {
   const searchParams = new URLSearchParams(location.search);
   const redirectUrl = sanitizeReturnPath(searchParams.get('redirect') || searchParams.get('return'), '/dashboard');
   
-  // Check for pending Calendly redirect
-  const CALENDLY_REDIRECT_KEY = 'pending_calendly_redirect';
-
   // Form states
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -50,31 +48,28 @@ const Auth: React.FC = () => {
   useEffect(() => {
     if (!user) return;
 
-    // Check for pending Calendly redirect
-    const pendingCalendlyUrl = localStorage.getItem(CALENDLY_REDIRECT_KEY);
-    if (pendingCalendlyUrl) {
-      localStorage.removeItem(CALENDLY_REDIRECT_KEY);
-      // Redirect to Calendly
-      window.open(pendingCalendlyUrl, '_blank', 'noopener,noreferrer');
-      // Also navigate to community page
-      navigate('/community');
-      return;
-    }
-
-    // Only redirect if we're still on the auth page
-    if (window.location.pathname === '/auth') {
-      // If redirect is a booking flow, go to /community instead
-      const finalRedirect = redirectUrl.startsWith('/community/book/') ? '/community' : redirectUrl;
-      
-      // If redirect is just '/', check onboarding status to avoid double redirect
-      if (finalRedirect === '/') {
-        // Let Index.tsx handle the redirect based on onboarding status
-        navigate('/');
-      } else {
-        // Use the specific redirect URL
-        navigate(finalRedirect);
+    void (async () => {
+      const resumedDiscoveryCall = await resumePendingDiscoveryCallRedirect();
+      if (resumedDiscoveryCall) {
+        navigate('/community');
+        return;
       }
-    }
+
+      // Only redirect if we're still on the auth page
+      if (window.location.pathname === '/auth') {
+        // If redirect is a booking flow, go to /community instead
+        const finalRedirect = redirectUrl.startsWith('/community/book/') ? '/community' : redirectUrl;
+        
+        // If redirect is just '/', check onboarding status to avoid double redirect
+        if (finalRedirect === '/') {
+          // Let Index.tsx handle the redirect based on onboarding status
+          navigate('/');
+        } else {
+          // Use the specific redirect URL
+          navigate(finalRedirect);
+        }
+      }
+    })();
   }, [user, navigate, redirectUrl]);
 
   // Prefill saved email if user opted to be remembered

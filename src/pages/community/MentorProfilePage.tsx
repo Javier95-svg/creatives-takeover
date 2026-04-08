@@ -9,13 +9,13 @@ import { Button } from "@/components/ui/button";
 import { MentorProfile as MentorProfileType } from "@/types/mentor";
 import { useMentors } from "@/hooks/useMentors";
 import { useAuth } from "@/contexts/AuthContext";
-import { useCreditActions } from "@/hooks/useCreditActions";
+import { useUpgradePrompt } from "@/contexts/UpgradePromptContext";
 import { ArrowLeft, Edit } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { completeActivationJourney, trackRetentionEvent } from "@/lib/retentionSystem";
-
-const CALENDLY_REDIRECT_KEY = 'pending_calendly_redirect';
+import { buildDiscoveryCallRedirectUrl, createDiscoveryCallIntent, storePendingDiscoveryCallRedirect } from "@/services/discoveryCallService";
+import { createIdempotencyKey } from "@/lib/idempotency";
 
 const MentorProfilePage = () => {
   const { id, slug: paramSlug } = useParams<{ id?: string; slug?: string }>();
@@ -24,7 +24,7 @@ const MentorProfilePage = () => {
   const { user, isAuthenticated } = useAuth();
   const isAdmin = user?.email?.toLowerCase() === 'admin@creatives-takeover.com';
   const { fetchMentorById, fetchMentorBySlug } = useMentors();
-  const { deductCredits, ensureCredits } = useCreditActions();
+  const { openUpgradePrompt } = useUpgradePrompt();
   const [mentor, setMentor] = useState<MentorProfileType | null>(null);
   const [loadingMentor, setLoadingMentor] = useState(true);
 
@@ -87,48 +87,60 @@ const MentorProfilePage = () => {
 
     // Check if user is authenticated
     if (!isAuthenticated || !user) {
-      // Store Calendly URL in localStorage for redirect after auth
-      localStorage.setItem(CALENDLY_REDIRECT_KEY, calendlyUrl);
+      storePendingDiscoveryCallRedirect({
+        url: calendlyUrl,
+        mentorId: mentor.id,
+        mentorName: mentor.name,
+        source: 'mentor_profile_page',
+      });
       // Redirect to auth page
       navigate('/login?return=/community');
       return;
     }
 
-    // Check credits FIRST (synchronously from cache) before opening tab
-    // This ensures we don't open the tab if user doesn't have enough credits
-    const requiredCredits = ensureCredits('DISCOVERY_CALL', {
-      featureName: 'Discovery Call',
-      metadata: { mentor_id: mentor.id, mentor_name: mentor.name }
-    });
-
-    if (requiredCredits === null) {
-      // User doesn't have enough credits - ensureCredits already showed upgrade prompt
-      return;
-    }
-
-    // Open Calendly URL synchronously (must be in direct response to user click)
-    // This prevents popup blockers from blocking the new tab
-    const calendlyTab = window.open(normalizedCalendlyUrl, '_blank', 'noopener,noreferrer');
+    const calendlyTab = window.open('', '_blank', 'noopener,noreferrer');
     if (!calendlyTab) {
       toast.error('Popup blocked. Please allow popups and try again.');
       return;
     }
 
-    // Deduct credits for discovery call (10 credits) AFTER opening Calendly
-    // Credits were already verified above, so this should succeed
     try {
-      const creditsDeducted = await deductCredits('DISCOVERY_CALL', {
-        featureName: 'Discovery Call',
-        metadata: { mentor_id: mentor.id, mentor_name: mentor.name }
+      const bookingIntent = await createDiscoveryCallIntent({
+        mentorId: mentor.id,
+        mentorName: mentor.name,
+        source: 'mentor_profile_page',
+        idempotencyKey: createIdempotencyKey(`mentor-profile-discovery-call-${mentor.id}`),
+        metadata: { mentor_id: mentor.id, mentor_name: mentor.name },
       });
 
-      if (!creditsDeducted) {
-        // Credit deduction failed (rare edge case - e.g., credits spent between check and deduction)
-        // Close the tab and show error
+      if (!bookingIntent.success || !bookingIntent.callId) {
         calendlyTab.close();
-        toast.error('Unable to process booking. Please try again.');
+
+        if (bookingIntent.errorCode === 'PLAN_UPGRADE_REQUIRED' && bookingIntent.requiredTier) {
+          openUpgradePrompt({
+            reason: 'feature',
+            featureName: 'Discovery Calls',
+            requiredTier: bookingIntent.requiredTier,
+            description: bookingIntent.error,
+          });
+          return;
+        }
+
+        if (bookingIntent.errorCode === 'INSUFFICIENT_CREDITS') {
+          openUpgradePrompt({
+            reason: 'credits',
+            featureName: 'Discovery Calls',
+            requiredCredits: bookingIntent.requiredCredits ?? 10,
+            description: bookingIntent.error,
+          });
+          return;
+        }
+
+        toast.error(bookingIntent.error || 'Unable to process booking. Please try again.');
         return;
       }
+
+      calendlyTab.location.href = buildDiscoveryCallRedirectUrl(normalizedCalendlyUrl, bookingIntent.callId);
 
       await trackRetentionEvent('discovery_call_booked', {
         user_id: user.id,
@@ -145,9 +157,8 @@ const MentorProfilePage = () => {
         actionUrl: location.pathname,
       });
     } catch (error) {
-      // If credit deduction fails, close the tab
       calendlyTab.close();
-      console.error('Error deducting credits for discovery call:', error);
+      console.error('Error creating discovery call intent:', error);
       toast.error('Unable to process booking. Please try again.');
     }
   };

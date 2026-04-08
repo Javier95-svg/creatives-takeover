@@ -7,6 +7,7 @@ import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import type { EmailOtpType } from '@supabase/supabase-js';
 import { appendReturnParam, buildOnboardingPath, persistOnboardingReturn, sanitizeReturnPath } from '@/lib/authRedirect';
+import { resumePendingDiscoveryCallRedirect } from '@/services/discoveryCallService';
 
 const AuthCallback = () => {
   const navigate = useNavigate();
@@ -94,18 +95,16 @@ const AuthCallback = () => {
             toast.success('Successfully signed in!');
           }
           
-          // Check for pending Calendly redirect (from OAuth or regular auth)
-          const CALENDLY_REDIRECT_KEY = 'pending_calendly_redirect';
+          // Check for pending discovery-call redirect (from OAuth or regular auth)
           const oauthCalendlyUrl = localStorage.getItem('oauth_calendly_redirect');
-          const pendingCalendlyUrl = localStorage.getItem(CALENDLY_REDIRECT_KEY) || oauthCalendlyUrl;
+          const pendingCalendlyUrl = localStorage.getItem('pending_calendly_redirect') || oauthCalendlyUrl;
           
           if (pendingCalendlyUrl) {
-            // Clean up Calendly redirect keys
-            localStorage.removeItem(CALENDLY_REDIRECT_KEY);
+            localStorage.removeItem('pending_calendly_redirect');
             localStorage.removeItem('oauth_calendly_redirect');
-            
-            // Redirect to Calendly
-            window.open(pendingCalendlyUrl, '_blank', 'noopener,noreferrer');
+
+            localStorage.setItem('pending_calendly_redirect', pendingCalendlyUrl);
+            await resumePendingDiscoveryCallRedirect();
             // Also navigate to community page
             setTimeout(() => {
               navigate('/community');

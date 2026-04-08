@@ -12,6 +12,7 @@ import {
   persistOnboardingReturn,
   sanitizeReturnPath,
 } from '@/lib/authRedirect';
+import { resumePendingDiscoveryCallRedirect } from '@/services/discoveryCallService';
 
 interface AuthContextType {
   user: User | null;
@@ -185,13 +186,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
       }
 
-      // Check for pending Calendly redirect
-      const CALENDLY_REDIRECT_KEY = 'pending_calendly_redirect';
-      const pendingCalendlyUrl = localStorage.getItem(CALENDLY_REDIRECT_KEY);
-      if (pendingCalendlyUrl) {
-        localStorage.removeItem(CALENDLY_REDIRECT_KEY);
+      const hasPendingDiscoveryCall = localStorage.getItem('pending_calendly_redirect');
+      if (hasPendingDiscoveryCall) {
         setTimeout(() => {
-          window.open(pendingCalendlyUrl, '_blank', 'noopener,noreferrer');
+          void resumePendingDiscoveryCallRedirect();
         }, 800);
       }
 

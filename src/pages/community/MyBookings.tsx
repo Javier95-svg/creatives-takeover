@@ -1,34 +1,106 @@
 import { Helmet } from "react-helmet-async";
 import { Link } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Booking } from "@/types/mentor";
-import { Calendar, Clock, Video, ArrowLeft, X } from "lucide-react";
+import { Calendar, Clock, Video, ArrowLeft } from "lucide-react";
 import { format } from "date-fns";
-
-// Mock bookings - will be replaced with database queries
-const MOCK_BOOKINGS: Booking[] = [];
+import { listMyDiscoveryCalls, type DiscoveryCallBookingItem } from "@/services/discoveryCallService";
 
 const MyBookings = () => {
-  const upcomingBookings = MOCK_BOOKINGS.filter(
-    (b) => b.status === "pending" || b.status === "confirmed"
-  );
-  const pastBookings = MOCK_BOOKINGS.filter(
-    (b) => b.status === "completed" || b.status === "cancelled"
+  const [bookings, setBookings] = useState<DiscoveryCallBookingItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadBookings = async () => {
+      try {
+        setLoading(true);
+        const response = await listMyDiscoveryCalls();
+        if (!cancelled && response.success) {
+          setBookings(response.bookings);
+        }
+      } catch (error) {
+        console.error('Failed to load discovery calls:', error);
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    };
+
+    void loadBookings();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const upcomingBookings = useMemo(
+    () => bookings.filter((booking) => booking.status === "intent_created" || booking.status === "scheduled"),
+    [bookings],
   );
 
-  const getStatusBadge = (status: Booking["status"]) => {
-    const variants: Record<Booking["status"], string> = {
-      pending: "outline",
-      confirmed: "default",
+  const pastBookings = useMemo(
+    () => bookings.filter((booking) => booking.status !== "intent_created" && booking.status !== "scheduled"),
+    [bookings],
+  );
+
+  const getStatusBadge = (status: DiscoveryCallBookingItem["status"]) => {
+    const variants: Record<DiscoveryCallBookingItem["status"], string> = {
+      intent_created: "outline",
+      scheduled: "default",
       completed: "secondary",
-      cancelled: "destructive",
-      refunded: "destructive",
+      cancelled_early: "destructive",
+      cancelled_late: "destructive",
+      founder_no_show: "destructive",
+      mentor_no_show: "outline",
     };
     return variants[status] || "outline";
+  };
+
+  const formatStatusLabel = (status: DiscoveryCallBookingItem['status']) => {
+    switch (status) {
+      case 'intent_created':
+        return 'Scheduling in progress';
+      case 'scheduled':
+        return 'Scheduled';
+      case 'completed':
+        return 'Completed';
+      case 'cancelled_early':
+        return 'Cancelled early';
+      case 'cancelled_late':
+        return 'Cancelled late';
+      case 'founder_no_show':
+        return 'Founder no-show';
+      case 'mentor_no_show':
+        return 'Mentor no-show';
+      default:
+        return status;
+    }
+  };
+
+  const renderTiming = (booking: DiscoveryCallBookingItem) => {
+    if (!booking.scheduledFor) {
+      return <span>Awaiting final scheduling in Calendly</span>;
+    }
+
+    return (
+      <>
+        <div className="flex items-center gap-2">
+          <Calendar className="h-4 w-4" />
+          {format(new Date(booking.scheduledFor), "PPP")}
+        </div>
+        <div className="flex items-center gap-2">
+          <Clock className="h-4 w-4" />
+          {format(new Date(booking.scheduledFor), "p")}
+        </div>
+      </>
+    );
   };
 
   return (
@@ -55,10 +127,18 @@ const MyBookings = () => {
                 </p>
               </div>
 
+              {loading && (
+                <Card className="mb-8">
+                  <CardContent className="p-8 text-center text-muted-foreground">
+                    Loading your discovery calls...
+                  </CardContent>
+                </Card>
+              )}
+
               {/* Upcoming Bookings */}
               <div className="mb-12">
                 <h2 className="text-2xl font-semibold mb-6">Upcoming Sessions</h2>
-                {upcomingBookings.length > 0 ? (
+                {!loading && upcomingBookings.length > 0 ? (
                   <div className="grid gap-4">
                     {upcomingBookings.map((booking) => (
                       <Card key={booking.id}>
@@ -66,41 +146,35 @@ const MyBookings = () => {
                           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                             <div className="space-y-2">
                               <div className="flex items-center gap-3">
-                                <h3 className="text-lg font-semibold">Mentor Session</h3>
+                                <h3 className="text-lg font-semibold">{booking.mentorName}</h3>
                                 <Badge variant={getStatusBadge(booking.status) as 'default' | 'secondary' | 'destructive' | 'outline'}>
-                                  {booking.status}
+                                  {formatStatusLabel(booking.status)}
                                 </Badge>
                               </div>
                               <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-                                <div className="flex items-center gap-2">
-                                  <Calendar className="h-4 w-4" />
-                                  {format(new Date(booking.scheduled_time), "PPP")}
-                                </div>
+                                {renderTiming(booking)}
                                 <div className="flex items-center gap-2">
                                   <Clock className="h-4 w-4" />
-                                  {format(new Date(booking.scheduled_time), "p")}
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  <Clock className="h-4 w-4" />
-                                  {booking.duration_minutes} minutes
+                                  {booking.durationMinutes} minutes
                                 </div>
                               </div>
-                              {booking.zoom_link && (
+                              {booking.meetingUrl && (
                                 <Button asChild variant="outline" size="sm">
-                                  <a href={booking.zoom_link} target="_blank" rel="noopener noreferrer">
+                                  <a href={booking.meetingUrl} target="_blank" rel="noopener noreferrer">
                                     <Video className="h-4 w-4 mr-2" />
-                                    Join Zoom Meeting
+                                    Join Meeting
+                                  </a>
+                                </Button>
+                              )}
+                              {!booking.scheduledFor && booking.providerBookingUrl && (
+                                <Button asChild variant="outline" size="sm">
+                                  <a href={booking.providerBookingUrl} target="_blank" rel="noopener noreferrer">
+                                    Continue Scheduling
                                   </a>
                                 </Button>
                               )}
                             </div>
-                            <div className="flex gap-2">
-                              {booking.status === "confirmed" && (
-                                <Button variant="outline" size="sm">
-                                  Reschedule
-                                </Button>
-                              )}
-                            </div>
+                            <div className="flex gap-2" />
                           </div>
                         </CardContent>
                       </Card>
@@ -123,7 +197,7 @@ const MyBookings = () => {
               {/* Past Bookings */}
               <div>
                 <h2 className="text-2xl font-semibold mb-6">Past Sessions</h2>
-                {pastBookings.length > 0 ? (
+                {!loading && pastBookings.length > 0 ? (
                   <div className="grid gap-4">
                     {pastBookings.map((booking) => (
                       <Card key={booking.id}>
@@ -131,20 +205,14 @@ const MyBookings = () => {
                           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                             <div className="space-y-2">
                               <div className="flex items-center gap-3">
-                                <h3 className="text-lg font-semibold">Mentor Session</h3>
+                                <h3 className="text-lg font-semibold">{booking.mentorName}</h3>
                                 <Badge variant={getStatusBadge(booking.status) as 'default' | 'secondary' | 'destructive' | 'outline'}>
-                                  {booking.status}
+                                  {formatStatusLabel(booking.status)}
                                 </Badge>
                               </div>
                               <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-                                <div className="flex items-center gap-2">
-                                  <Calendar className="h-4 w-4" />
-                                  {format(new Date(booking.scheduled_time), "PPP")}
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  <Clock className="h-4 w-4" />
-                                  {format(new Date(booking.scheduled_time), "p")}
-                                </div>
+                                {renderTiming(booking)}
+                                {booking.cancelledReason && <div>{booking.cancelledReason}</div>}
                               </div>
                             </div>
                           </div>
