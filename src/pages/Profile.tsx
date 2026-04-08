@@ -1,5 +1,5 @@
 import { Helmet } from "react-helmet-async";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
@@ -22,9 +22,15 @@ import { PinnedPosts } from "@/components/profile/PinnedPosts";
 import { PicturesGallery } from "@/components/profile/PicturesGallery";
 import { MilestonesTimeline } from "@/components/profile/MilestonesTimeline";
 import { useProfileData } from "@/hooks/useProfileData";
-import { useCreditActions } from "@/hooks/useCreditActions";
+import { useUpgradePrompt } from "@/contexts/UpgradePromptContext";
 import { toast } from "sonner";
 import { logError } from "@/lib/logger";
+import { createIdempotencyKey } from "@/lib/idempotency";
+import {
+  buildDiscoveryCallRedirectUrl,
+  createDiscoveryCallIntent,
+  storePendingDiscoveryCallRedirect,
+} from "@/services/discoveryCallService";
 import DOMPurify from "dompurify";
 
 // Calendly link for Samuel Starkman
@@ -97,6 +103,13 @@ interface Post {
   comment_count: number;
 }
 
+interface DiscoveryCallMentorConfig {
+  id: string;
+  name: string;
+  calendly_url: string | null;
+  is_active: boolean | null;
+}
+
 // Helper function to check if profile belongs to Samuel Starkman
 const isSamuelStarkmanProfile = (profile: Profile | null): boolean => {
   if (!profile) return false;
@@ -110,6 +123,7 @@ const isSamuelStarkmanProfile = (profile: Profile | null): boolean => {
 
 const Profile = () => {
   const { username } = useParams<{ username: string }>();
+  const navigate = useNavigate();
   const { user: currentUser } = useAuth();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);
@@ -120,7 +134,7 @@ const Profile = () => {
   const isOwnProfile = currentUser?.id === profile?.id;
 
   const { stats, loading: statsLoading } = useProfileData(profile?.id || '');
-  const { deductCredits } = useCreditActions();
+  const { openUpgradePrompt } = useUpgradePrompt();
 
   const formatLabel = (value: string) =>
     value
@@ -129,34 +143,120 @@ const Profile = () => {
       .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
       .join(' ');
 
+  const resolveDiscoveryCallMentor = async (): Promise<DiscoveryCallMentorConfig | null> => {
+    if (!profile) {
+      return null;
+    }
+
+    let mentorQuery = supabase
+      .from('mentors')
+      .select('id, name, calendly_url, is_active')
+      .eq('user_id', profile.id)
+      .eq('is_active', true)
+      .limit(1)
+      .maybeSingle();
+
+    let { data, error } = await mentorQuery;
+
+    if (error) {
+      throw error;
+    }
+
+    if (!data && isSamuelStarkmanProfile(profile)) {
+      const fallback = await supabase
+        .from('mentors')
+        .select('id, name, calendly_url, is_active')
+        .ilike('name', '%samuel%starkman%')
+        .eq('is_active', true)
+        .limit(1)
+        .maybeSingle();
+
+      if (fallback.error) {
+        throw fallback.error;
+      }
+
+      data = fallback.data;
+    }
+
+    return (data as DiscoveryCallMentorConfig | null) ?? null;
+  };
+
   const handleBookDiscoveryCall = async () => {
-    // Check if user is authenticated
-    if (!currentUser) {
-      toast.error('Please sign in to book a discovery call.');
-      return;
-    }
+    try {
+      const mentor = await resolveDiscoveryCallMentor();
+      const calendlyUrl = mentor?.calendly_url?.trim() || SAMUEL_STARKMAN_CALENDLY_URL;
 
-    // Deduct credits for discovery call (10 credits) BEFORE opening Calendly
-    // This ensures users are always charged when booking a call
-    const creditsDeducted = await deductCredits('DISCOVERY_CALL', {
-      featureName: 'Discovery Call',
-      metadata: { mentor_name: profile?.full_name || 'Samuel Starkman' }
-    });
+      if (!mentor?.id || !mentor.is_active || !calendlyUrl) {
+        toast.error('This mentor does not have a discovery call booking link configured yet.');
+        return;
+      }
 
-    // Only open Calendly if credits were successfully deducted
-    if (!creditsDeducted) {
-      // Credit deduction failed (insufficient credits or error)
-      // The deductCredits function already shows appropriate error messages
-      return;
-    }
+      const normalizedCalendlyUrl = /^https?:\/\//i.test(calendlyUrl) ? calendlyUrl : `https://${calendlyUrl}`;
 
-    // Open Calendly URL in a new tab after successful credit deduction
-    const calendlyTab = window.open(SAMUEL_STARKMAN_CALENDLY_URL, '_blank', 'noopener,noreferrer');
-    if (!calendlyTab) {
-      toast.error('Popup blocked. Please allow popups and try again.');
-      // Note: Credits were already deducted, but we couldn't open Calendly
-      // This is a rare edge case - the user was charged but couldn't access the booking page
-      console.error('Credits deducted but Calendly popup was blocked');
+      if (!currentUser) {
+        storePendingDiscoveryCallRedirect({
+          url: calendlyUrl,
+          mentorId: mentor.id,
+          mentorName: mentor.name,
+          source: 'profile_page',
+        });
+        navigate(`/login?return=${encodeURIComponent(window.location.pathname)}`);
+        return;
+      }
+
+      const calendlyTab = window.open('', '_blank', 'noopener,noreferrer');
+      if (!calendlyTab) {
+        toast.error('Popup blocked. Please allow popups and try again.');
+        return;
+      }
+
+      const bookingIntent = await createDiscoveryCallIntent({
+        mentorId: mentor.id,
+        mentorName: mentor.name,
+        source: 'profile_page',
+        idempotencyKey: createIdempotencyKey(`profile-discovery-call-${mentor.id}`),
+        metadata: {
+          mentor_id: mentor.id,
+          mentor_name: mentor.name,
+          profile_id: profile.id,
+          profile_username: profile.username,
+        },
+      });
+
+      if (!bookingIntent.success || !bookingIntent.callId) {
+        calendlyTab.close();
+
+        if (bookingIntent.errorCode === 'PLAN_UPGRADE_REQUIRED' && bookingIntent.requiredTier) {
+          openUpgradePrompt({
+            reason: 'feature',
+            featureName: 'Discovery Calls',
+            requiredTier: bookingIntent.requiredTier,
+            description: bookingIntent.error,
+          });
+          return;
+        }
+
+        if (bookingIntent.errorCode === 'INSUFFICIENT_CREDITS') {
+          openUpgradePrompt({
+            reason: 'credits',
+            featureName: 'Discovery Calls',
+            requiredCredits: bookingIntent.requiredCredits ?? 10,
+            description: bookingIntent.error,
+          });
+          return;
+        }
+
+        toast.error(bookingIntent.error || 'Unable to process booking. Please try again.');
+        return;
+      }
+
+      calendlyTab.location.href = buildDiscoveryCallRedirectUrl(normalizedCalendlyUrl, bookingIntent.callId);
+    } catch (error) {
+      logError('profile_discovery_call_booking_failed', {
+        username,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      toast.error('Unable to process booking. Please try again.');
     }
   };
 

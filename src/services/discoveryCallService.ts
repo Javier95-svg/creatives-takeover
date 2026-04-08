@@ -137,6 +137,8 @@ export function buildDiscoveryCallRedirectUrl(baseUrl: string, callId: string) {
   url.searchParams.set('ct_discovery_call_id', callId);
   url.searchParams.set('utm_source', 'creatives_takeover');
   url.searchParams.set('utm_medium', 'mentor_marketplace');
+  url.searchParams.set('utm_campaign', 'discovery_call');
+  url.searchParams.set('utm_content', callId);
   return url.toString();
 }
 
