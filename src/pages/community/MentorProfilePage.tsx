@@ -14,7 +14,7 @@ import { ArrowLeft, Edit } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { completeActivationJourney, trackRetentionEvent } from "@/lib/retentionSystem";
-import { buildDiscoveryCallRedirectUrl, createDiscoveryCallIntent, storePendingDiscoveryCallRedirect } from "@/services/discoveryCallService";
+import { buildDiscoveryCallRedirectUrl, createDiscoveryCallIntent, openDeferredExternalTab } from "@/services/discoveryCallService";
 import { createIdempotencyKey } from "@/lib/idempotency";
 
 const MentorProfilePage = () => {
@@ -87,18 +87,11 @@ const MentorProfilePage = () => {
 
     // Check if user is authenticated
     if (!isAuthenticated || !user) {
-      storePendingDiscoveryCallRedirect({
-        url: calendlyUrl,
-        mentorId: mentor.id,
-        mentorName: mentor.name,
-        source: 'mentor_profile_page',
-      });
-      // Redirect to auth page
-      navigate('/login?return=/community');
+      window.open(normalizedCalendlyUrl, '_blank', 'noopener,noreferrer');
       return;
     }
 
-    const calendlyTab = window.open('', '_blank', 'noopener,noreferrer');
+    const calendlyTab = openDeferredExternalTab();
     if (!calendlyTab) {
       toast.error('Popup blocked. Please allow popups and try again.');
       return;

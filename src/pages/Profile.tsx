@@ -29,6 +29,7 @@ import { createIdempotencyKey } from "@/lib/idempotency";
 import {
   buildDiscoveryCallRedirectUrl,
   createDiscoveryCallIntent,
+  openDeferredExternalTab,
   storePendingDiscoveryCallRedirect,
 } from "@/services/discoveryCallService";
 import DOMPurify from "dompurify";
@@ -204,7 +205,7 @@ const Profile = () => {
         return;
       }
 
-      const calendlyTab = window.open('', '_blank', 'noopener,noreferrer');
+      const calendlyTab = openDeferredExternalTab();
       if (!calendlyTab) {
         toast.error('Popup blocked. Please allow popups and try again.');
         return;

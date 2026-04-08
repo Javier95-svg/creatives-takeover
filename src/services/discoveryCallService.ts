@@ -142,6 +142,22 @@ export function buildDiscoveryCallRedirectUrl(baseUrl: string, callId: string) {
   return url.toString();
 }
 
+export function openDeferredExternalTab() {
+  const tab = window.open('', '_blank');
+
+  if (!tab) {
+    return null;
+  }
+
+  try {
+    tab.opener = null;
+  } catch {
+    // Ignore browser restrictions on mutating opener.
+  }
+
+  return tab;
+}
+
 export async function resumePendingDiscoveryCallRedirect() {
   const pendingRedirect = readPendingDiscoveryCallRedirect();
   if (!pendingRedirect) {

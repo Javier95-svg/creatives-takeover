@@ -15,7 +15,7 @@ import { completeActivationJourney, trackRetentionEvent } from "@/lib/retentionS
 import { clearPendingValueCapture, persistPendingValueCapture, readPendingValueCapture } from "@/lib/valueCapture";
 import { useEffect, useRef } from "react";
 import { useUpgradePrompt } from "@/contexts/UpgradePromptContext";
-import { buildDiscoveryCallRedirectUrl, createDiscoveryCallIntent, storePendingDiscoveryCallRedirect } from "@/services/discoveryCallService";
+import { buildDiscoveryCallRedirectUrl, createDiscoveryCallIntent, openDeferredExternalTab } from "@/services/discoveryCallService";
 import { createIdempotencyKey } from "@/lib/idempotency";
 
 interface MentorCardProps {
@@ -241,23 +241,11 @@ export const MentorCard = ({ mentor, className, priority = false }: MentorCardPr
 
     // Check if user is authenticated
     if (!isAuthenticated || !user) {
-      storePendingDiscoveryCallRedirect({
-        url: calendlyUrl,
-        mentorId: mentor.id,
-        mentorName: mentor.name,
-        source: 'mentor_card',
-      });
-      persistPendingValueCapture({
-        action: 'book_mentor',
-        entityId: mentor.id,
-        source: 'mentor_card',
-        resumeLabel: `Book ${mentor.name}`,
-      });
-      navigate(`/signup?source=book-mentor&return=${encodeURIComponent(profileUrl)}`);
+      window.open(normalizedCalendlyUrl, '_blank', 'noopener,noreferrer');
       return;
     }
 
-    const calendlyTab = window.open('', '_blank', 'noopener,noreferrer');
+    const calendlyTab = openDeferredExternalTab();
     if (!calendlyTab) {
       toast.error('Popup blocked. Please allow popups and try again.');
       return;
