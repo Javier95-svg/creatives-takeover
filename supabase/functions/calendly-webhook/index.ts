@@ -407,6 +407,32 @@ serve(async (req: Request) => {
         return jsonResponse({ ok: false, error: data?.error ?? "Unable to finalize booking" }, 409);
       }
 
+      try {
+        const { data: notificationResult, error: notificationError } = await supabaseAdmin.functions.invoke(
+          "notify-discovery-call-booked",
+          {
+            body: { discoveryCallId: call.id },
+          },
+        );
+
+        if (notificationError) {
+          logWarn("calendly-webhook:admin-booking-notification-failed", {
+            callId: call.id,
+            error: notificationError.message,
+          });
+        } else {
+          logInfo("calendly-webhook:admin-booking-notification-result", {
+            callId: call.id,
+            result: notificationResult,
+          });
+        }
+      } catch (notificationInvokeError) {
+        logWarn("calendly-webhook:admin-booking-notification-exception", {
+          callId: call.id,
+          error: notificationInvokeError instanceof Error ? notificationInvokeError.message : String(notificationInvokeError),
+        });
+      }
+
       return jsonResponse({ ok: true, action: "finalized", callId: call.id, result: data });
     }
 
