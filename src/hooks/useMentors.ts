@@ -125,6 +125,7 @@ export interface CreateMentorInput {
   twitter_x_url?: string | null;
   website_url?: string | null;
   calendly_url?: string | null;
+  nationality?: string | null;
 }
 
 // Helper function to format error messages
@@ -401,6 +402,7 @@ export const useMentors = () => {
         twitter_x_url: input.twitter_x_url || null,
         website_url: input.website_url || null,
         calendly_url: input.calendly_url || null,
+        nationality: input.nationality || null,
       };
       
       console.log('Creating mentor with data:', {
@@ -494,6 +496,7 @@ export const useMentors = () => {
       if (input.twitter_x_url !== undefined) cleanInput.twitter_x_url = input.twitter_x_url;
       if (input.website_url !== undefined) cleanInput.website_url = input.website_url;
       if (input.calendly_url !== undefined) cleanInput.calendly_url = input.calendly_url;
+      if (input.nationality !== undefined) cleanInput.nationality = input.nationality;
       
       // Debug: Log the clean input
       console.log('Updating mentor with clean input:', {

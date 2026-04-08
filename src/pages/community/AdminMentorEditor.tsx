@@ -68,6 +68,7 @@ const AdminMentorEditor = () => {
     twitter_x_url: null,
     website_url: null,
     calendly_url: null,
+    nationality: null,
   });
 
   useEffect(() => {
@@ -102,6 +103,7 @@ const AdminMentorEditor = () => {
         twitter_x_url: found.twitter_x_url || null,
         website_url: found.website_url || null,
         calendly_url: found.calendly_url || null,
+        nationality: found.nationality || null,
       });
       if (found.picture) {
         setPicturePreview(found.picture);
@@ -321,6 +323,7 @@ const AdminMentorEditor = () => {
         twitter_x_url: formData.twitter_x_url || null,
         website_url: formData.website_url || null,
         calendly_url: formData.calendly_url || null,
+        nationality: formData.nationality || null,
       };
 
       // Debug: Log saveData to verify all fields are included
@@ -546,6 +549,21 @@ const AdminMentorEditor = () => {
                   />
                   <p className="text-xs text-muted-foreground mt-1">
                     Required: Calendly link for discovery call bookings
+                  </p>
+                </div>
+                <div>
+                  <Label htmlFor="nationality">Nationality</Label>
+                  <Input
+                    id="nationality"
+                    value={formData.nationality || ""}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, nationality: e.target.value || null }))
+                    }
+                    placeholder="Hungary"
+                    className="mt-1"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Country name or ISO code used to show the mentor flag
                   </p>
                 </div>
               </div>
