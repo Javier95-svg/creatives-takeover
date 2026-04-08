@@ -383,7 +383,7 @@ export function RookieModeView({ founderName, recommendations }: TierDashboardVi
       id: 'rookie-mentor',
       title: 'Use your discovery call intentionally',
       description: 'Treat your included mentorship slot as a checkpoint after you can clearly describe your customer and problem.',
-      href: '/community/mentors',
+      href: '/community',
       label: 'Included',
     },
     {

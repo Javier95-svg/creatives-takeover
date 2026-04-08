@@ -30,18 +30,24 @@ const creditBreakdown: {
     },
     {
       name: "Waitlist Maker",
-      description: `Rookie and Starter use ${CREDIT_COSTS.WAITLIST_GENERATION} credits per launch. Rising and Pro include it.`,
-      badge: `${CREDIT_COSTS.WAITLIST_GENERATION} credits`,
+      description: `Rookie uses ${CREDIT_COSTS.WAITLIST_GENERATION} credits per launch. Starter, Rising, and Pro include it without extra per-use charges.`,
+      badge: "Included on Starter+",
+      badgeVariant: "outline",
+      badgeClassName: "bg-blue-50 dark:bg-blue-950/30",
     },
     {
       name: "Product-Market Fit Lab",
-      description: `Preview only on Rookie. Starter uses ${CREDIT_COSTS.PMF_ANALYSIS} credits per analysis. Rising and Pro include it.`,
-      badge: `${CREDIT_COSTS.PMF_ANALYSIS} credits`,
+      description: "Preview only on Rookie. Starter, Rising, and Pro can run full PMF analyses without extra credit charges.",
+      badge: "Included on Starter+",
+      badgeVariant: "outline",
+      badgeClassName: "bg-blue-50 dark:bg-blue-950/30",
     },
     {
       name: "MVP Builder",
-      description: `Preview only on Rookie and Starter. Rising and Pro can run it for ${CREDIT_COSTS.APP_BUILDER_GENERATE} credits per use.`,
-      badge: `${CREDIT_COSTS.APP_BUILDER_GENERATE} credits`,
+      description: "Preview only on Rookie and Starter. Included on Rising and Pro.",
+      badge: "Included on Rising+",
+      badgeVariant: "outline",
+      badgeClassName: "bg-blue-50 dark:bg-blue-950/30",
     },
     {
       name: "Tech Stack Builder",
@@ -52,8 +58,10 @@ const creditBreakdown: {
     },
     {
       name: "GTM Strategist",
-      description: `Preview only on Rookie and Starter. Rising and Pro can run it for ${CREDIT_COSTS.GTM_ANALYSIS} credits per use.`,
-      badge: `${CREDIT_COSTS.GTM_ANALYSIS} credits`,
+      description: "Preview only on Rookie and Starter. Included on Rising and Pro.",
+      badge: "Included on Rising+",
+      badgeVariant: "outline",
+      badgeClassName: "bg-blue-50 dark:bg-blue-950/30",
     },
     {
       name: "Directories",
@@ -66,14 +74,14 @@ const creditBreakdown: {
   insighta: [
     {
       name: "VC Search",
-      description: "Rookie can browse only. Starter gets 2 profile views/monthly, Rising 5 profile views/monthly, and Pro unlimited profile views.",
+      description: "Rookie can browse only. Starter gets 2 profile views/monthly, Rising 10 profile views/monthly, and Pro unlimited profile views.",
       badge: "View limits",
       badgeVariant: "outline",
       badgeClassName: "bg-blue-50 dark:bg-blue-950/30",
     },
     {
       name: "Accelerator Hunt",
-      description: "Rookie can browse only. Starter gets 2 profile views/monthly, Rising 5 profile views/monthly, and Pro unlimited profile views.",
+      description: "Rookie can browse only. Starter gets 2 profile views/monthly, Rising 10 profile views/monthly, and Pro unlimited profile views.",
       badge: "View limits",
       badgeVariant: "outline",
       badgeClassName: "bg-blue-50 dark:bg-blue-950/30",
@@ -150,7 +158,7 @@ const SubscriptionFeatures = () => {
             How Our Credit System Works
           </h2>
           <p className="text-lg sm:text-xl text-muted-foreground max-w-3xl mx-auto">
-            Every tool has a transparent credit cost, so you can see exactly what each action uses before spending a single credit.
+            Every tool has a transparent access model, so you can see what is included on your plan and what still uses credits before spending anything.
           </p>
         </div>
 

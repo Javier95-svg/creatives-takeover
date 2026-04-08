@@ -93,7 +93,9 @@ export function CreditStatus({ requiredCredits, feature, showPurchaseLink = true
       return ` Roadmap generation costs ${CREDIT_COSTS.ROADMAP_GENERATION} credits.`;
     }
     if (featureLower.includes('waitlist')) {
-      return ` Publishing a waitlist page costs ${CREDIT_COSTS.WAITLIST_GENERATION} credits.`;
+      return normalizedTier === 'rookie'
+        ? ` Publishing a waitlist page costs ${CREDIT_COSTS.WAITLIST_GENERATION} credits on Rookie.`
+        : ' Waitlist publishing is included on your plan.';
     }
     if (featureLower.includes('market validation') || featureLower.includes('validation')) {
       return ` Market validation costs ${CREDIT_COSTS.MARKET_VALIDATION} credits.`;
@@ -110,17 +112,37 @@ export function CreditStatus({ requiredCredits, feature, showPurchaseLink = true
     if (featureLower.includes('chat') || featureLower.includes('message') || featureLower.includes('bizmap')) {
       return ` BizMap AI messages cost ${CREDIT_COSTS.AI_CHAT_MESSAGE} credit each.`;
     }
+    if (featureLower.includes('mvp')) {
+      return normalizedTier === 'rising' || normalizedTier === 'pro'
+        ? ' MVP Builder is included on your plan.'
+        : ' MVP Builder unlocks on Rising and Pro.';
+    }
+    if (featureLower.includes('gtm')) {
+      return normalizedTier === 'rising' || normalizedTier === 'pro'
+        ? ' GTM Strategist is included on your plan.'
+        : ' GTM Strategist unlocks on Rising and Pro.';
+    }
     if (featureLower.includes('tech stack')) {
-      return ` Tech Stack generation costs ${CREDIT_COSTS.TECH_STACK_GENERATION} credits.`;
+      return normalizedTier === 'rising' || normalizedTier === 'pro'
+        ? ' Tech Stack Builder is included on your plan.'
+        : ' Tech Stack Builder unlocks on Rising and Pro.';
     }
     if (featureLower.includes('pmf') || featureLower.includes('product-market fit')) {
-      return ` Product-Market Fit analysis costs ${CREDIT_COSTS.PMF_ANALYSIS} credits.`;
+      if (normalizedTier === 'rookie') {
+        return ' Product-Market Fit Lab unlocks on Starter and above.';
+      }
+      return ' Product-Market Fit Lab is included on your plan.';
     }
     if (featureLower.includes('insighta') || featureLower.includes('test')) {
       return ` Insighta Test costs ${CREDIT_COSTS.FUNDRAISING_READINESS_ANALYSIS} credits.`;
     }
     if (featureLower.includes('investor') || featureLower.includes('matching')) {
       return ` Investor matching costs ${CREDIT_COSTS.INVESTOR_MATCHING} credits.`;
+    }
+    if (featureLower.includes('pitch deck')) {
+      return normalizedTier === 'rising' || normalizedTier === 'pro'
+        ? ' Pitch Deck Analyzer is included on your plan.'
+        : ' Pitch Deck Analyzer unlocks on Rising and Pro.';
     }
     if (featureLower.includes('market research')) {
       return ` Market research costs ${CREDIT_COSTS.MARKET_RESEARCH} credits.`;

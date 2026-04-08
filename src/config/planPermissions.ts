@@ -228,22 +228,22 @@ export const FEATURE_ENTITLEMENTS: Record<FeatureKey, Record<Plan, FeatureEntitl
     pro: { state: 'full' },
   },
   waitlist_maker: {
-    rookie: { state: 'credit_gated', creditFeature: 'WAITLIST_GENERATION' },
-    starter: { state: 'credit_gated', creditFeature: 'WAITLIST_GENERATION' },
+    rookie: { state: 'preview_only', requiredPlan: 'starter' },
+    starter: { state: 'full' },
     rising: { state: 'full' },
     pro: { state: 'full' },
   },
   pmf_lab: {
     rookie: { state: 'preview_only', requiredPlan: 'starter' },
-    starter: { state: 'credit_gated', creditFeature: 'PMF_ANALYSIS' },
+    starter: { state: 'full' },
     rising: { state: 'full' },
     pro: { state: 'full' },
   },
   mvp_builder: {
     rookie: { state: 'preview_only', requiredPlan: 'rising' },
     starter: { state: 'preview_only', requiredPlan: 'rising' },
-    rising: { state: 'credit_gated', creditFeature: 'APP_BUILDER_GENERATE' },
-    pro: { state: 'credit_gated', creditFeature: 'APP_BUILDER_GENERATE' },
+    rising: { state: 'full' },
+    pro: { state: 'full' },
   },
   tech_stack: {
     rookie: { state: 'preview_only', requiredPlan: 'rising' },
@@ -254,8 +254,8 @@ export const FEATURE_ENTITLEMENTS: Record<FeatureKey, Record<Plan, FeatureEntitl
   gtm_strategist: {
     rookie: { state: 'preview_only', requiredPlan: 'rising' },
     starter: { state: 'preview_only', requiredPlan: 'rising' },
-    rising: { state: 'credit_gated', creditFeature: 'GTM_ANALYSIS' },
-    pro: { state: 'credit_gated', creditFeature: 'GTM_ANALYSIS' },
+    rising: { state: 'full' },
+    pro: { state: 'full' },
   },
   directories: {
     rookie: { state: 'preview_only', requiredPlan: 'rising' },

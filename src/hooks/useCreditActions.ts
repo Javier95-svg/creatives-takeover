@@ -70,23 +70,23 @@ const FEATURE_MINIMUM_PLAN: Partial<Record<CreditFeature, Plan>> = {
 };
 
 const FEATURE_INCLUDED_ON_PLAN: Partial<Record<CreditFeature, Plan>> = {
-  WAITLIST_GENERATION: 'rising',
-  PMF_ANALYSIS: 'rising',
-  PMF_SCORING: 'rising',
+  WAITLIST_GENERATION: 'starter',
+  PMF_ANALYSIS: 'starter',
+  PMF_SCORING: 'starter',
   TECH_STACK_GENERATION: 'rising',
   PITCH_DECK_ANALYZER: 'rising',
   EMAIL_TEMPLATE_GENERATION: 'starter',
   FUNDRAISING_READINESS_ANALYSIS: 'rookie',
   ICP_ANALYSIS: 'rookie',
+  APP_BUILDER_GENERATE: 'rising',
+  APP_BUILDER_REFINE: 'rising',
+  GTM_ANALYSIS: 'rising',
   PROMPT_GENERATION: 'rising',
 };
 
 const ALWAYS_PAID_FEATURES = new Set<string>([
   'LAUNCH_REPORT',
-  'GTM_ANALYSIS',
   'ROADMAP_GENERATION',
-  'APP_BUILDER_GENERATE',
-  'APP_BUILDER_REFINE',
 ]);
 
 const ALWAYS_FREE_FEATURES = new Set<string>([

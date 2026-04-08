@@ -5,7 +5,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useBizMapProgress } from '@/hooks/useBizMapProgress';
 import { useActivationJourney } from '@/hooks/useActivationJourney';
 import { useCreditActions } from '@/hooks/useCreditActions';
+import { useSubscription } from '@/hooks/useSubscription';
 import { CREDIT_COSTS } from '@/config/constants';
+import { normalizePlan } from '@/config/planPermissions';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -231,6 +233,7 @@ export default function WaitlistEditor() {
   const { refreshProgress } = useBizMapProgress();
   const { refreshActivation } = useActivationJourney();
   const { ensureCredits } = useCreditActions();
+  const { subscriptionData } = useSubscription();
   const initialStoredStateRef = useRef<StoredWaitlistEditorState | null>(readStoredWaitlistEditorState());
   const initialGuestDraftRef = useRef(readGuestBrowserDraft());
   const initialState = initialStoredStateRef.current ?? (initialGuestDraftRef.current ? {
@@ -292,9 +295,13 @@ export default function WaitlistEditor() {
   const slugTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const isGuest = !user;
+  const currentPlan = normalizePlan(subscriptionData?.subscription_tier);
   const isCompleted = useMemo(() => Boolean(markReadyAt) || signupCount > 0, [markReadyAt, signupCount]);
   const reservedUrl = currentSlug ? `${BASE_URL}/w/${currentSlug}` : null;
   const liveUrl = status === 'published' && currentSlug ? `${BASE_URL}/w/${currentSlug}` : null;
+  const waitlistPublishDescription = currentPlan === 'rookie'
+    ? `Publishing costs ${CREDIT_COSTS.WAITLIST_GENERATION} credits and exposes your public URL.`
+    : 'Publishing is included on your plan and exposes your public URL.';
   const currentSnapshot = useMemo(
     () => buildEditorSnapshot(productName, content, slugDraft || currentSlug || '', status),
     [content, currentSlug, productName, slugDraft, status]
@@ -1359,7 +1366,7 @@ export default function WaitlistEditor() {
                       {[
                         { title: 'Draft', description: draftId ? 'Draft exists and can be recovered.' : 'Create your first draft to reserve a page record.', complete: Boolean(draftId) },
                         { title: 'Slug', description: slugAvailable === false ? 'Choose another slug before publishing.' : slugDraft || currentSlug ? 'Your page slug is ready.' : 'A slug will be generated automatically if left empty.', complete: slugAvailable !== false },
-                        { title: 'Publish', description: status === 'published' ? 'This waitlist is live and shareable.' : `Publishing costs ${CREDIT_COSTS.WAITLIST_GENERATION} credits and exposes your public URL.`, complete: status === 'published' },
+                        { title: 'Publish', description: status === 'published' ? 'This waitlist is live and shareable.' : waitlistPublishDescription, complete: status === 'published' },
                       ].map((step) => (
                         <div key={step.title} className="rounded-md border border-border/60 bg-slate-50/80 px-3 py-2 text-sm dark:border-white/10 dark:bg-white/5">
                           <div className="flex items-center gap-2">

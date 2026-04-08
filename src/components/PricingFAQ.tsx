@@ -25,7 +25,7 @@ const PricingFAQ = () => {
       question: "What are credits and how do they work?",
       answer: `Credits are the usage currency for the AI-powered parts of the platform. Every plan includes a monthly credit grant: Rookie gets 25, Starter 50, Rising 100, and Pro 300.
 
-    On Rookie and Starter, Waitlist Maker uses credits, and Starter also uses credits for PMF Lab. On Rising and Pro, Waitlist Maker, PMF Lab, Tech Stack Builder, and Directories are included, but MVP Builder and GTM Strategist still use credits.
+    On Rookie, Waitlist Maker uses credits and PMF Lab stays preview-only. Starter includes Waitlist Maker and PMF Lab. Rising and Pro also include MVP Builder, Tech Stack Builder, GTM Strategist, and Directories without extra per-use credit charges.
 
     ICP Builder stays free across all four plans. Discovery Calls are monthly quotas: Rookie includes 1 per month, Starter 2, Rising 3, and Pro includes unlimited discovery calls.`,
       relatedQuestions: [0, 5],
@@ -62,7 +62,7 @@ That means billing, renewals, and checkout security all run on Stripe's infrastr
       question: "What's included in the Rookie plan?",
       answer: `Rookie is free forever and includes 25 credits per month. You get Dashboard Rookie Mode, ICP Builder for free, Waitlist Maker with credit usage, Prompt Library access for free models only, Insighta Test, Newspaper, 1 discovery call per month, and 1 Find a Co-Founder post per month.
 
-    VC Search and Accelerator Hunt are browse only on Rookie. PMF Lab, MVP Builder, Tech Stack Builder, GTM Strategist, and Directories stay in preview only, and Find Your Angel is not included.`,
+    VC Search and Accelerator Hunt are browse only on Rookie. PMF Lab, MVP Builder, Tech Stack Builder, GTM Strategist, and Directories stay in preview only, and Find Your Angel is not included. Email Templates and Pitch Deck Analyzer are also not included on Rookie.`,
       relatedQuestions: [0, 1],
     },
     {

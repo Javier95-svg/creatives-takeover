@@ -45,19 +45,19 @@ const features: FeatureCategory[] = [
     category: "BizMap AI: Startup Development Cycle",
     items: [
       { feature: "ICP Builder", rookie: "Free on every plan", starter: "Free on every plan", rising: "Free on every plan", pro: "Free on every plan" },
-      { feature: "Waitlist Maker", rookie: "Uses credits", starter: "Uses credits", rising: "Included", pro: "Included" },
-      { feature: "PMF Lab", rookie: "Preview only", starter: "Uses credits", rising: "Included", pro: "Included" },
-      { feature: "MVP Builder", rookie: "Preview only", starter: "Preview only", rising: "Uses Credits", pro: "Uses Credits" },
+      { feature: "Waitlist Maker", rookie: "Uses credits", starter: "Included", rising: "Included", pro: "Included" },
+      { feature: "PMF Lab", rookie: "Preview only", starter: "Included", rising: "Included", pro: "Included" },
+      { feature: "MVP Builder", rookie: "Preview only", starter: "Preview only", rising: "Included", pro: "Included" },
       { feature: "Tech Stack Builder", rookie: "Preview only", starter: "Preview only", rising: "Included", pro: "Included" },
-      { feature: "GTM Strategist", rookie: "Preview only", starter: "Preview only", rising: "Uses Credits", pro: "Uses Credits" },
+      { feature: "GTM Strategist", rookie: "Preview only", starter: "Preview only", rising: "Included", pro: "Included" },
       { feature: "Directories", rookie: "Preview only", starter: "Preview only", rising: "Included", pro: "Included" },
     ],
   },
   {
     category: "Insighta",
     items: [
-      { feature: "VC Search", rookie: "Browse only", starter: "2 profile views/monthly", rising: "5 profile views/monthly", pro: "Unlimited profile views" },
-      { feature: "Accelerator Hunt", rookie: "Browse only", starter: "2 profile views/monthly", rising: "5 profile views/monthly", pro: "Unlimited profile views" },
+      { feature: "VC Search", rookie: "Browse only", starter: "2 profile views/monthly", rising: "10 profile views/monthly", pro: "Unlimited profile views" },
+      { feature: "Accelerator Hunt", rookie: "Browse only", starter: "2 profile views/monthly", rising: "10 profile views/monthly", pro: "Unlimited profile views" },
       { feature: "Email Templates", rookie: "Not included", starter: "Full access", rising: "Full access", pro: "Full access" },
       { feature: "Pitch Deck Analyzer", rookie: "Not included", starter: "Not included", rising: "Included", pro: "Included" },
       { feature: "Insighta Test", rookie: "Included", starter: "Included", rising: "Included", pro: "Included" },
@@ -116,7 +116,7 @@ const PricingComparison = () => {
             Compare Our Plans
           </h2>
           <p className="text-lg sm:text-xl text-muted-foreground max-w-3xl mx-auto">
-            Compare credits, fundraising limits, community access, and the MVP or GTM credit rules side by side.
+            Compare credits, fundraising limits, community access, and which workflows are included on each tier.
           </p>
         </div>
 

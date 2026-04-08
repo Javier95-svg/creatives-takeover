@@ -60,7 +60,7 @@ const SearchableFAQ = () => {
       id: 4,
       category: "Pricing",
       question: "What's the difference between Rising and Pro plans?",
-      answer: "Rising gives you 100 credits, the full BizMap AI toolset, 5 VC profiles and 5 accelerator profiles per billing cycle, 3 discovery calls, full prompt library access, full email templates, and pitch deck analyzer access. Pro gives you 300 credits, unlimited discovery calls, unlimited VC and accelerator profile views, Angels community access, group office hours, and priority support. On both plans, MVP Builder and GTM Strategist still consume credits.",
+      answer: "Rising gives you 100 credits, the full BizMap AI toolset, 10 VC profiles and 10 accelerator profiles per billing cycle, 3 discovery calls, full prompt library access, full email templates, and pitch deck analyzer access. Pro gives you 300 credits, unlimited discovery calls, unlimited VC and accelerator profile views, Angels community access, group office hours, and priority support. MVP Builder and GTM Strategist are included on both Rising and Pro.",
       popular: true,
       tags: ["rising", "pro", "comparison", "features"]
     },
@@ -128,7 +128,7 @@ const SearchableFAQ = () => {
       id: 12,
       category: "Features",
       question: "What is PMF Lab?",
-      answer: "PMF Lab (Product-Market Fit Lab) helps you analyze and improve your product-market fit. It provides frameworks, assessments, and actionable insights to ensure you're building something customers actually want. Free users get read-only access to learn the concepts, while paid users can run full PMF analyses on their startups (10 credits per analysis).",
+      answer: "PMF Lab (Product-Market Fit Lab) helps you analyze and improve your product-market fit. It provides frameworks, assessments, and actionable insights to ensure you're building something customers actually want. Rookie users get read-only access to learn the concepts, while Starter, Rising, and Pro can run full PMF analyses without extra per-use credit charges.",
       popular: true,
       tags: ["pmf lab", "product-market fit", "analysis", "validation"]
     },
@@ -136,7 +136,7 @@ const SearchableFAQ = () => {
       id: 13,
       category: "Features",
       question: "How does the Pitch Deck Analyzer work?",
-      answer: "The Pitch Deck Analyzer uses AI to review your pitch deck and provide detailed feedback on structure, content, clarity, and investor appeal. It identifies strengths, weaknesses, and specific improvements to help you create a more compelling deck. Upload your deck, and receive comprehensive analysis (10 credits per analysis). Available on Rising and Pro plans.",
+      answer: "The Pitch Deck Analyzer uses AI to review your pitch deck and provide detailed feedback on structure, content, clarity, and investor appeal. It identifies strengths, weaknesses, and specific improvements to help you create a more compelling deck. Upload your deck and receive a full analysis. It is included on Rising and Pro plans.",
       popular: true,
       tags: ["pitch deck", "analyzer", "investor", "feedback"]
     },
@@ -144,7 +144,7 @@ const SearchableFAQ = () => {
       id: 14,
       category: "Features",
       question: "What is VC Search and how many VCs can I view?",
-      answer: "VC Search helps you discover and research venture capital firms and angel investors relevant to your startup. You can filter by industry, stage, location, and investment thesis. Rookie users can browse only, Starter users can open 2 profiles per billing cycle, Rising users get 5, and Pro users have unlimited access.",
+      answer: "VC Search helps you discover and research venture capital firms and angel investors relevant to your startup. You can filter by industry, stage, location, and investment thesis. Rookie users can browse only, Starter users can open 2 profiles per billing cycle, Rising users get 10, and Pro users have unlimited access.",
       popular: true,
       tags: ["vc search", "investors", "fundraising", "venture capital"]
     },
@@ -186,7 +186,7 @@ const SearchableFAQ = () => {
       id: 19,
       category: "Credits",
       question: "How does the credit system work?",
-      answer: "Credits refresh with your plan every billing cycle: Rookie 25, Starter 50, Rising 100, and Pro 300. Rookie and Starter rely on credits for the AI actions they can access. Rising and Pro include most BizMap workflows without per-use credit charges, but MVP Builder and GTM Strategist always consume credits across every plan.",
+      answer: "Credits refresh with your plan every billing cycle: Rookie 25, Starter 50, Rising 100, and Pro 300. Rookie relies on credits for the AI actions it can access, including Waitlist Maker. Starter includes Waitlist Maker and PMF Lab, while Rising and Pro also include MVP Builder, Tech Stack Builder, GTM Strategist, and Directories without extra per-use credit charges. Metered AI actions like chat and premium generations still draw from your credit balance.",
       popular: true,
       tags: ["credits", "costs", "ai features", "monthly"]
     },
@@ -202,7 +202,7 @@ const SearchableFAQ = () => {
       id: 21,
       category: "Credits",
       question: "Which features use the most credits?",
-      answer: "The highest-value execution actions consume the biggest chunks. PMF Analysis uses 10 credits on Starter, MVP Builder uses the launch-report credit cost, and GTM Strategist uses the roadmap-generation credit cost. Lighter actions like BizMap AI chat and Waitlist Maker consume much less.",
+      answer: "The biggest credit consumers are still the metered AI actions: BizMap AI chat, premium prompt actions, launch reports, roadmap generation, exports, and similar one-off generations. Rookie also uses credits for Waitlist Maker. On higher tiers, the main build workflows are increasingly included, so most credit usage shifts toward optional AI generation rather than core dashboard tools.",
       popular: false,
       tags: ["credit costs", "features", "expensive", "affordable"]
     },

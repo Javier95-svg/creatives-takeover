@@ -29,7 +29,7 @@ const HomeFAQ = () => {
     },
     {
       question: "How can I discover investors and funding opportunities?",
-      answer: "Insighta is your fundraising toolkit with multiple tools.\n\nVC Search lets you browse and filter venture capitalists by industry, stage, location, and check size. Rookie can browse only, Starter can open 2 profiles per billing cycle, Rising gets 5, and Pro is unlimited.\n\nAccelerator Hunt follows the same model: Rookie browse only, Starter gets 2 profiles, Rising gets 5, and Pro is unlimited. Pair those with the Pitch Deck Analyzer and Email Templates so your outreach is sharper and more targeted."
+      answer: "Insighta is your fundraising toolkit with multiple tools.\n\nVC Search lets you browse and filter venture capitalists by industry, stage, location, and check size. Rookie can browse only, Starter can open 2 profiles per billing cycle, Rising gets 10, and Pro is unlimited.\n\nAccelerator Hunt follows the same model: Rookie browse only, Starter gets 2 profiles, Rising gets 10, and Pro is unlimited. Pair those with the Pitch Deck Analyzer and Email Templates so your outreach is sharper and more targeted."
     },
     {
       question: "What kind of community can I expect on the platform?",
@@ -45,7 +45,7 @@ const HomeFAQ = () => {
     },
     {
       question: "How much does it cost and what do I get?",
-      answer: "Rookie is free forever with 25 credits per month. It is built for idea clarity and first traction: ICP Builder is free, Insighta Test and Newspaper are included, community browsing stays open, and you get 1 discovery call plus 1 co-founder post per billing cycle.\n\nStarter is $9/month or $79/year with 50 credits per month. It unlocks credit-based Waitlist Maker and PMF Lab, gives you 2 discovery calls, 2 co-founder posts, 2 VC profiles, 2 accelerator profiles, full Email Templates access, and Prompt Library access for free models only.\n\nRising is $29/month or $239/year with 100 credits per month. It unlocks the full toolset, full email templates, pitch deck analyzer, and 5 VC plus 5 accelerator profiles per cycle. Most tools are included without per-use charges, but MVP Builder and GTM Strategist still consume credits.\n\nPro is $65/month or $589/year with 300 credits per month. It adds unlimited discovery calls, unlimited VC and accelerator profile views, Angels community access, group office hours, and priority support. Extra credit packs remain available on any plan."
+      answer: "Rookie is free forever with 25 credits per month. It is built for idea clarity and first traction: ICP Builder is free, Insighta Test and Newspaper are included, community browsing stays open, and you get 1 discovery call plus 1 co-founder post per billing cycle.\n\nStarter is $9/month or $79/year with 50 credits per month. It includes Waitlist Maker and PMF Lab, gives you 2 discovery calls, 2 co-founder posts, 2 VC profiles, 2 accelerator profiles, full Email Templates access, and Prompt Library access for free models only.\n\nRising is $29/month or $239/year with 100 credits per month. It unlocks the full toolset, full email templates, pitch deck analyzer, 10 VC plus 10 accelerator profiles per cycle, and includes MVP Builder, Tech Stack Builder, GTM Strategist, and Directories.\n\nPro is $65/month or $589/year with 300 credits per month. It adds unlimited discovery calls, unlimited VC and accelerator profile views, Angels community access, group office hours, and priority support. Extra credit packs remain available on any plan."
     }
   ];
 
