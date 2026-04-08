@@ -8,7 +8,9 @@ import {
   PLAN_LABELS,
   PLAN_MONTHLY_CREDITS,
   normalizePlan,
+  resolveDashboardSurfaceAccess,
   resolveEntitlement,
+  type DashboardSurfaceFeature,
   type FeatureKey,
 } from '@/config/planPermissions';
 
@@ -72,6 +74,30 @@ export function useFeatureGating() {
         hasAccess: false,
         message: `Upgrade to ${PLAN_LABELS[entitlement.upgradeTarget ?? 'pro']} to access ${featureLabel}.`,
         requiredTier: entitlement.upgradeTarget,
+      };
+    };
+
+    const checkDashboardSurfaceFeature = (featureKey: DashboardSurfaceFeature): FeatureAccess => {
+      const access = resolveDashboardSurfaceAccess(featureKey, tier);
+
+      if (access.hasAccess) {
+        return { hasAccess: true };
+      }
+
+      const requiredTier = access.requiredPlan ?? 'pro';
+      const featureLabelBySurface: Record<DashboardSurfaceFeature, string> = {
+        dashboard_access: 'the dashboard',
+        focus_funnel: 'Focus Funnel',
+        core_metrics: 'Core Metrics',
+        weekly_mission: 'Weekly Mission',
+        decision_sprint: 'Decision Sprint',
+        your_tasks: 'Your Tasks',
+      };
+
+      return {
+        hasAccess: false,
+        message: `Upgrade to ${PLAN_LABELS[requiredTier]} to access ${featureLabelBySurface[featureKey]}.`,
+        requiredTier,
       };
     };
 
@@ -276,35 +302,13 @@ export function useFeatureGating() {
       case 'focus_funnel':
       case 'core_metrics':
       case 'weekly_mission':
-        return { hasAccess: true };
+        return checkDashboardSurfaceFeature(feature);
 
       case 'decision_sprint':
-        if (tier === 'rookie' || tier === 'starter') {
-          return {
-            hasAccess: tier === 'starter',
-            message: tier === 'starter'
-              ? undefined
-              : 'Upgrade to Starter plan or higher to use Decision Sprint.',
-            requiredTier: tier === 'starter' ? undefined : 'starter'
-          };
-        }
-        if (!hasCredits(CREDIT_COSTS.SPRINT_TASK_GENERATION)) {
-          return {
-            hasAccess: false,
-            message: `Insufficient credits. Decision Sprint costs ${CREDIT_COSTS.SPRINT_TASK_GENERATION} credits per generation.`,
-          };
-        }
-        return { hasAccess: true };
+        return checkDashboardSurfaceFeature(feature);
 
       case 'your_tasks':
-        if (tier === 'rookie') {
-          return {
-            hasAccess: false,
-            message: 'Upgrade to Starter plan or higher to manage tasks.',
-            requiredTier: 'starter'
-          };
-        }
-        return { hasAccess: true };
+        return checkDashboardSurfaceFeature(feature);
 
       case 'roadmap_generation':
         if (['rising', 'pro'].includes(tier)) {

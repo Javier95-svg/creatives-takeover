@@ -1,11 +1,9 @@
-import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usePersonalizedDashboard } from '@/hooks/usePersonalizedDashboard';
 import { Card, CardContent } from '@/components/ui/card';
 import { Flame, ArrowRight } from 'lucide-react';
 import { DailyGoalModal } from './DailyGoalModal';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
 import { TaskCalendar } from './TaskCalendar';
 import { TaskOverview } from './TaskOverview';
 import { useDashboardInitialization } from '@/hooks/useDashboardInitialization';
@@ -31,15 +29,8 @@ import { RookieUpgradeBanner } from './RookieUpgradeBanner';
 import { JourneyStageGrid } from './JourneyStageGrid';
 import { QuotaCounterWidgets } from './QuotaCounterWidgets';
 import { RetentionActionFeed } from './RetentionActionFeed';
-import {
-  getDailyGoalPromptSnoozeUntil,
-  getLocalDateString,
-  hasDailyGoalPromptResurfaced,
-  hasDailyGoalPromptUnresolved,
-  markDailyGoalPromptResurfaced,
-} from '@/lib/dailyGoalPrompt';
-import { captureEvent } from '@/lib/analytics';
 import { DailyPromptResumeCard } from './DailyPromptResumeCard';
+import { useDashboardDailyPrompt } from '@/hooks/useDashboardDailyPrompt';
 
 export const PersonalizedDashboardClassic = () => {
   const { user } = useAuth();
@@ -50,122 +41,21 @@ export const PersonalizedDashboardClassic = () => {
     loading,
     trackActivity
   } = usePersonalizedDashboard();
-
-  const [showDailyGoal, setShowDailyGoal] = useState(false);
-  const [modalMode, setModalMode] = useState<'morning' | 'evening'>('morning');
-  const [_hasCheckedInToday, setHasCheckedInToday] = useState(false);
-  const [todaysCheckInId, setTodaysCheckInId] = useState<string | null>(null);
-  const [currentStreak, setCurrentStreak] = useState(0);
-  const [hasUnresolvedPrompt, setHasUnresolvedPrompt] = useState(false);
-  const [unresolvedMode, setUnresolvedMode] = useState<'morning' | 'evening'>('morning');
-  
-  // Track last fetch time to prevent unnecessary refreshes
-  const lastFetchTimeRef = useRef<number>(0);
-  const hasInitializedRef = useRef<boolean>(false);
-  const DATA_STALE_TIME = 5 * 60 * 1000; // 5 minutes
-
-  // Check if user has checked in today and calculate streak
-  useEffect(() => {
-    if (!user) return;
-    
-    // Only fetch if we haven't initialized or data is stale
-    const now = Date.now();
-    const shouldFetch = !hasInitializedRef.current || (now - lastFetchTimeRef.current > DATA_STALE_TIME);
-    
-    if (!shouldFetch) {
-      // Use cached data if available
-      return;
-    }
-
-    const checkDailyCheckIn = async () => {
-      const today = getLocalDateString();
-      const currentHour = new Date().getHours();
-      
-      const { data: todayCheckIn } = await supabase
-        .from('daily_check_ins')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('check_in_date', today)
-        .maybeSingle();
-
-      setHasCheckedInToday(!!todayCheckIn);
-      
-      if (todayCheckIn) {
-        setTodaysCheckInId(todayCheckIn.id);
-        
-        // Calculate streak
-        const { data: recentCheckIns } = await supabase
-          .from('daily_check_ins')
-          .select('check_in_date')
-          .eq('user_id', user.id)
-          .order('check_in_date', { ascending: false })
-          .limit(30);
-
-        if (recentCheckIns) {
-          let streak = 0;
-          const dates = recentCheckIns.map(c => c.check_in_date).sort().reverse();
-          
-          for (let i = 0; i < dates.length; i++) {
-            const currentDate = new Date(dates[i]);
-            const expectedDate = new Date();
-            expectedDate.setDate(expectedDate.getDate() - i);
-            
-            if (currentDate.toISOString().split('T')[0] === expectedDate.toISOString().split('T')[0]) {
-              streak++;
-            } else {
-              break;
-            }
-          }
-          
-          setCurrentStreak(streak);
-        }
-
-        // Show evening reflection if after 6 PM and haven't reflected yet
-        if (currentHour >= 18 && todayCheckIn.goal_achieved === null) {
-          const nextMode = 'evening';
-          const snoozeUntil = getDailyGoalPromptSnoozeUntil(user.id, nextMode, today);
-          const isSnoozed = typeof snoozeUntil === 'number' && snoozeUntil > Date.now();
-
-          setModalMode(nextMode);
-          setUnresolvedMode(nextMode);
-          setHasUnresolvedPrompt(hasDailyGoalPromptUnresolved(user.id, nextMode, today) || isSnoozed);
-
-          if (!isSnoozed) {
-            if (typeof snoozeUntil === 'number' && !hasDailyGoalPromptResurfaced(user.id, nextMode, today)) {
-              markDailyGoalPromptResurfaced(user.id, nextMode, today);
-              captureEvent('daily_prompt_resurfaced', { mode: nextMode, page_path: '/dashboard' });
-            }
-            setShowDailyGoal(true);
-          }
-        }
-      } else {
-        const nextMode = 'morning';
-        const snoozeUntil = getDailyGoalPromptSnoozeUntil(user.id, nextMode, today);
-        const isSnoozed = typeof snoozeUntil === 'number' && snoozeUntil > Date.now();
-
-        setModalMode(nextMode);
-        setUnresolvedMode(nextMode);
-        setHasUnresolvedPrompt(hasDailyGoalPromptUnresolved(user.id, nextMode, today) || isSnoozed);
-
-        if (!isSnoozed) {
-          if (typeof snoozeUntil === 'number' && !hasDailyGoalPromptResurfaced(user.id, nextMode, today)) {
-            markDailyGoalPromptResurfaced(user.id, nextMode, today);
-            captureEvent('daily_prompt_resurfaced', { mode: nextMode, page_path: '/dashboard' });
-          }
-          setShowDailyGoal(true);
-        }
-      }
-      
-      lastFetchTimeRef.current = Date.now();
-      hasInitializedRef.current = true;
-    };
-
-    checkDailyCheckIn();
-    if (!hasInitializedRef.current) {
+  const {
+    showDailyGoal,
+    modalMode,
+    todaysCheckInId,
+    currentStreak,
+    hasUnresolvedPrompt,
+    unresolvedMode,
+    handleDailyGoalOpenChange,
+    handlePromptResume,
+    handleCheckInComplete,
+  } = useDashboardDailyPrompt({
+    onFirstView: () => {
       trackActivity('dashboard_view');
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id]);
+    },
+  });
 
   // Disable auto-refresh on visibility change - preserve state
   // Removed visibility change handler to prevent auto-refresh
@@ -203,16 +93,6 @@ export const PersonalizedDashboardClassic = () => {
   // Determine greeting based on time
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
-  const handleDailyGoalOpenChange = (open: boolean) => {
-    setShowDailyGoal(open);
-
-    if (!open && user) {
-      const today = getLocalDateString();
-      setHasUnresolvedPrompt(hasDailyGoalPromptUnresolved(user.id, modalMode, today));
-      setUnresolvedMode(modalMode);
-    }
-  };
-
   return (
     <ErrorBoundary>
       <div className="min-h-screen relative overflow-hidden bg-background">
@@ -280,13 +160,7 @@ export const PersonalizedDashboardClassic = () => {
           currentStreak={currentStreak}
           mode={modalMode}
           todaysCheckInId={todaysCheckInId || undefined}
-          onCheckInComplete={() => {
-            setHasCheckedInToday(true);
-            setHasUnresolvedPrompt(false);
-            if (modalMode === 'morning') {
-              setCurrentStreak(prev => prev + 1);
-            }
-          }}
+          onCheckInComplete={handleCheckInComplete}
         />
 
         {/* Header Section */}
@@ -328,10 +202,7 @@ export const PersonalizedDashboardClassic = () => {
           {hasUnresolvedPrompt ? (
             <DailyPromptResumeCard
               mode={unresolvedMode}
-              onResume={() => {
-                setModalMode(unresolvedMode);
-                setShowDailyGoal(true);
-              }}
+              onResume={handlePromptResume}
             />
           ) : null}
         </div>

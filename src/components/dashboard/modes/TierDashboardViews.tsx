@@ -28,6 +28,7 @@ import { MomentumMeter } from '../MomentumMeter';
 import { InsightaActivityCard } from '../InsightaActivityCard';
 import { CommunityActivityCard } from '../CommunityActivityCard';
 import type { PersonalizedRecommendation } from '@/hooks/usePersonalizedDashboard';
+import { getDashboardModeConfig } from '@/config/planPermissions';
 
 interface TierDashboardViewProps {
   userId: string;
@@ -371,6 +372,7 @@ function ToolLauncherGrid({ title, description }: { title: string; description: 
 }
 
 export function RookieModeView({ founderName, recommendations }: TierDashboardViewProps) {
+  const modeConfig = getDashboardModeConfig('rookie');
   const actionItems = buildActionItems(recommendations, [
     {
       id: 'rookie-icp',
@@ -422,8 +424,8 @@ export function RookieModeView({ founderName, recommendations }: TierDashboardVi
       <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
         <div id="mode-stage">
           <StageProgressPanel
-            activeStages={[1]}
-            previewStages={[4, 5]}
+            activeStages={modeConfig.activeStages}
+            previewStages={modeConfig.previewStages}
             title="Your Startup Development Cycle"
             description="Stage 1 is where the platform begins guiding you. Later stages stay visible so the upgrade path feels concrete."
           />
@@ -479,6 +481,7 @@ export function StarterModeView({
   totalCheckIns,
   recommendations,
 }: TierDashboardViewProps) {
+  const modeConfig = getDashboardModeConfig('starter');
   const tasksRemainingToday = Math.max(totalTasksToday - tasksCompletedToday, 0);
   const actionItems = buildActionItems(recommendations, [
     {
@@ -510,8 +513,8 @@ export function StarterModeView({
         <div className="space-y-6">
           <div id="mode-stage">
             <StageProgressPanel
-              activeStages={[1, 2, 3]}
-              previewStages={[4, 5]}
+              activeStages={modeConfig.activeStages}
+              previewStages={modeConfig.previewStages}
               title="Active Stages"
               description="Starter keeps you progressing in order: define the audience, capture demand, then pressure test PMF."
             />
@@ -608,6 +611,7 @@ export function RisingModeView({
   totalCheckIns,
   recommendations,
 }: TierDashboardViewProps) {
+  const modeConfig = getDashboardModeConfig('rising');
   const navigate = useNavigate();
   const todayCompletion = totalTasksToday > 0 ? Math.round((tasksCompletedToday / totalTasksToday) * 100) : 0;
   const weeklyCompletion = totalTasksThisWeek > 0 ? Math.round((tasksCompletedThisWeek / totalTasksThisWeek) * 100) : 0;
@@ -709,7 +713,7 @@ export function RisingModeView({
               <CardDescription>Stages no longer force a sequence. Use the order that best matches the startup pressure you are under this week.</CardDescription>
             </CardHeader>
             <CardContent className="grid gap-3">
-              {STAGE_DEFINITIONS.map((stage) => (
+              {STAGE_DEFINITIONS.filter((stage) => modeConfig.activeStages.includes(stage.id)).map((stage) => (
                 <div key={stage.id} className="flex items-center justify-between rounded-xl border border-border/60 bg-background/70 px-4 py-3">
                   <div>
                     <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Stage {stage.id}</p>
@@ -758,6 +762,7 @@ export function ProModeView({
   totalCheckIns,
   recommendations,
 }: TierDashboardViewProps) {
+  const modeConfig = getDashboardModeConfig('pro');
   const navigate = useNavigate();
   const actionItems = buildActionItems(recommendations, [
     {
@@ -807,7 +812,8 @@ export function ProModeView({
         <div className="space-y-6">
           <div id="mode-stage">
             <StageProgressPanel
-              activeStages={[1, 2, 3, 4, 5]}
+              activeStages={modeConfig.activeStages}
+              previewStages={modeConfig.previewStages}
               title="Strategic Stage Map"
               description="Every stage remains live, but the center of gravity now shifts toward fundraising and investor readiness."
             />

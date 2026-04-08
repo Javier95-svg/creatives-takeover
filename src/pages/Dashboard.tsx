@@ -14,51 +14,53 @@ const Dashboard = () => {
   const { checkFeatureAccess } = useFeatureGating();
   const navigate = useNavigate();
   const [useClassicDashboard, setUseClassicDashboard] = useState(false);
+  const [profileLoading, setProfileLoading] = useState(true);
   const activationGate = useActivationGate();
 
-  // Load user's dashboard preference
   useEffect(() => {
-    if (!user) return;
+    let isCancelled = false;
 
-    const loadDashboardPreference = async () => {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('use_classic_dashboard')
-        .eq('id', user.id)
-        .single();
+    if (!user) {
+      setUseClassicDashboard(false);
+      setProfileLoading(false);
+      return () => {
+        isCancelled = true;
+      };
+    }
 
-      if (profile) {
-        setUseClassicDashboard(profile.use_classic_dashboard || false);
-      }
-    };
+    const loadDashboardProfile = async () => {
+      setProfileLoading(true);
 
-    loadDashboardPreference();
-  }, [user]);
-
-  // Load user's dashboard preference & check onboarding
-  useEffect(() => {
-    if (!user) return;
-
-    const checkProfile = async () => {
-      const { data: profile } = await supabase
+      const { data: profile, error } = await supabase
         .from('profiles')
         .select('use_classic_dashboard, onboarding_completed')
         .eq('id', user.id)
         .single();
 
-      if (profile) {
-        // STRICT CHECK: Only redirect if onboarding_completed is explicitly false
-        // NEVER redirect if onboarding_completed is true (already completed)
-        if (profile.onboarding_completed === false) {
-          navigate('/onboarding');
-          return;
-        }
-        // If onboarding_completed is true or null, proceed with dashboard
-        setUseClassicDashboard(profile.use_classic_dashboard || false);
+      if (isCancelled) {
+        return;
       }
+
+      if (error) {
+        console.error('Error loading dashboard profile:', error);
+        setProfileLoading(false);
+        return;
+      }
+
+      if (profile?.onboarding_completed === false) {
+        navigate('/onboarding');
+        return;
+      }
+
+      setUseClassicDashboard(Boolean(profile?.use_classic_dashboard));
+      setProfileLoading(false);
     };
 
-    checkProfile();
+    void loadDashboardProfile();
+
+    return () => {
+      isCancelled = true;
+    };
   }, [user, navigate]);
 
   useEffect(() => {
@@ -80,7 +82,7 @@ const Dashboard = () => {
     );
   }
 
-  if (activationGate.loading) {
+  if (activationGate.loading || profileLoading) {
     return null;
   }
 

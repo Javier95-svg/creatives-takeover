@@ -37,6 +37,66 @@ export type RestrictionReason =
 
 export type DashboardModeVariant = 'rookie' | 'starter' | 'rising' | 'pro';
 
+export type DashboardNavIconKey =
+  | 'home'
+  | 'calendar'
+  | 'check_square'
+  | 'target'
+  | 'clipboard_list'
+  | 'bar_chart_3';
+
+export type DashboardSidebarToolKey =
+  | 'icp_builder'
+  | 'waitlist_maker'
+  | 'pmf_lab'
+  | 'mvp_builder'
+  | 'tech_stack'
+  | 'gtm_strategist'
+  | 'directories'
+  | 'find_mentor'
+  | 'find_cofounder'
+  | 'find_angel'
+  | 'vc_search'
+  | 'accelerator_hunt'
+  | 'email_templates'
+  | 'pitch_deck_analyzer'
+  | 'insighta_test'
+  | 'newspaper'
+  | 'prompt_library';
+
+export interface DashboardNavItem {
+  path: string;
+  label: string;
+  iconKey: DashboardNavIconKey;
+}
+
+export interface DashboardModeConfig {
+  label: string;
+  badgeDescription: string;
+  subtitle: string;
+  sectionIds: string[];
+  activeStages: number[];
+  previewStages: number[];
+  showUpgradeBanner: boolean;
+  navItems: DashboardNavItem[];
+  visibleTools: DashboardSidebarToolKey[];
+}
+
+export type DashboardSurfaceFeature =
+  | 'dashboard_access'
+  | 'focus_funnel'
+  | 'core_metrics'
+  | 'weekly_mission'
+  | 'decision_sprint'
+  | 'your_tasks';
+
+export interface DashboardSurfaceAccessResult {
+  feature: DashboardSurfaceFeature;
+  plan: Plan;
+  hasAccess: boolean;
+  requiredPlan?: Plan;
+}
+
 export type FeatureKey =
   | 'dashboard_mode'
   | 'icp_builder'
@@ -179,6 +239,82 @@ export const PLAN_HIGHLIGHTS: Record<Plan, string[]> = {
     'Insighta Test',
     'Newspaper',
   ],
+};
+
+export const DASHBOARD_MODE_CONFIG: Record<DashboardModeVariant, DashboardModeConfig> = {
+  rookie: {
+    label: 'Rookie Mode',
+    badgeDescription: 'Guided and simplified',
+    subtitle: 'A simplified dashboard for getting the first signal right.',
+    sectionIds: ['mode-welcome', 'mode-stage', 'mode-usage', 'mode-preview'],
+    activeStages: [1],
+    previewStages: [4, 5],
+    showUpgradeBanner: true,
+    navItems: [
+      { path: '/dashboard', label: 'Home', iconKey: 'home' },
+      { path: '/tasks', label: 'Your Tasks', iconKey: 'check_square' },
+    ],
+    visibleTools: ['icp_builder', 'find_mentor', 'find_cofounder'],
+  },
+  starter: {
+    label: 'Starter Mode',
+    badgeDescription: 'Structured and progressing',
+    subtitle: 'A structured workspace for moving through Stages 1 to 3.',
+    sectionIds: ['mode-stage', 'mode-tasks', 'mode-usage'],
+    activeStages: [1, 2, 3],
+    previewStages: [4, 5],
+    showUpgradeBanner: true,
+    navItems: [
+      { path: '/dashboard', label: 'Home', iconKey: 'home' },
+      { path: '/weekly-mission', label: 'Weekly Mission', iconKey: 'calendar' },
+      { path: '/tasks', label: 'Your Tasks', iconKey: 'check_square' },
+    ],
+    visibleTools: ['icp_builder', 'waitlist_maker', 'pmf_lab', 'find_mentor', 'find_cofounder', 'vc_search', 'accelerator_hunt', 'email_templates', 'prompt_library'],
+  },
+  rising: {
+    label: 'Rising Mode',
+    badgeDescription: 'Operational and productive',
+    subtitle: 'Your full operator cockpit across all five stages.',
+    sectionIds: ['mode-stage', 'mode-usage', 'weekly-mission', 'decision-sprint', 'focus-funnel', 'your-tasks', 'mode-tools'],
+    activeStages: [1, 2, 3, 4, 5],
+    previewStages: [],
+    showUpgradeBanner: false,
+    navItems: [
+      { path: '/dashboard', label: 'Home', iconKey: 'home' },
+      { path: '/focus-funnel', label: 'Focus Funnel', iconKey: 'target' },
+      { path: '/decision-sprint', label: 'Decision Sprint', iconKey: 'clipboard_list' },
+      { path: '/core-metrics', label: 'Core Metrics', iconKey: 'bar_chart_3' },
+      { path: '/weekly-mission', label: 'Weekly Mission', iconKey: 'calendar' },
+      { path: '/tasks', label: 'Your Tasks', iconKey: 'check_square' },
+    ],
+    visibleTools: ['icp_builder', 'waitlist_maker', 'pmf_lab', 'mvp_builder', 'tech_stack', 'gtm_strategist', 'directories', 'find_mentor', 'find_cofounder', 'vc_search', 'accelerator_hunt', 'email_templates', 'pitch_deck_analyzer', 'insighta_test', 'newspaper', 'prompt_library'],
+  },
+  pro: {
+    label: 'Pro Mode',
+    badgeDescription: 'Strategic and data-rich',
+    subtitle: 'Your fundraising-aware command layer with premium support.',
+    sectionIds: ['mode-stage', 'mode-support', 'mode-fundraising', 'mode-usage', 'weekly-mission', 'decision-sprint', 'focus-funnel', 'your-tasks'],
+    activeStages: [1, 2, 3, 4, 5],
+    previewStages: [],
+    showUpgradeBanner: false,
+    navItems: [
+      { path: '/dashboard', label: 'War Room', iconKey: 'home' },
+      { path: '/focus-funnel', label: 'Focus Funnel', iconKey: 'target' },
+      { path: '/decision-sprint', label: 'Decision Sprint', iconKey: 'clipboard_list' },
+      { path: '/core-metrics', label: 'Core Metrics', iconKey: 'bar_chart_3' },
+      { path: '/weekly-mission', label: 'Weekly Mission', iconKey: 'calendar' },
+      { path: '/tasks', label: 'Your Tasks', iconKey: 'check_square' },
+    ],
+    visibleTools: ['icp_builder', 'waitlist_maker', 'pmf_lab', 'mvp_builder', 'tech_stack', 'gtm_strategist', 'directories', 'find_mentor', 'find_cofounder', 'find_angel', 'vc_search', 'accelerator_hunt', 'email_templates', 'pitch_deck_analyzer', 'insighta_test', 'newspaper', 'prompt_library'],
+  },
+};
+
+const DASHBOARD_SURFACE_PATHS: Record<Exclude<DashboardSurfaceFeature, 'dashboard_access'>, string> = {
+  focus_funnel: '/focus-funnel',
+  core_metrics: '/core-metrics',
+  weekly_mission: '/weekly-mission',
+  decision_sprint: '/decision-sprint',
+  your_tasks: '/tasks',
 };
 
 export const FEATURE_LABELS: Record<FeatureKey, string> = {
@@ -426,6 +562,43 @@ export function getNextPlan(plan: Plan): Plan {
   }
 
   return PLAN_SEQUENCE[currentIndex + 1];
+}
+
+export function resolveDashboardMode(plan: Plan): DashboardModeVariant {
+  return FEATURE_ENTITLEMENTS.dashboard_mode[plan]?.dashboardMode ?? plan;
+}
+
+export function getDashboardModeConfig(mode: DashboardModeVariant): DashboardModeConfig {
+  return DASHBOARD_MODE_CONFIG[mode];
+}
+
+export function resolveDashboardSurfaceAccess(
+  feature: DashboardSurfaceFeature,
+  plan: Plan
+): DashboardSurfaceAccessResult {
+  if (feature === 'dashboard_access') {
+    return { feature, plan, hasAccess: true };
+  }
+
+  const targetPath = DASHBOARD_SURFACE_PATHS[feature];
+  const currentMode = resolveDashboardMode(plan);
+  const hasAccess = getDashboardModeConfig(currentMode).navItems.some((item) => item.path === targetPath);
+
+  if (hasAccess) {
+    return { feature, plan, hasAccess: true };
+  }
+
+  const requiredPlan = PLAN_SEQUENCE.find((candidatePlan) => {
+    const candidateMode = resolveDashboardMode(candidatePlan);
+    return getDashboardModeConfig(candidateMode).navItems.some((item) => item.path === targetPath);
+  });
+
+  return {
+    feature,
+    plan,
+    hasAccess: false,
+    requiredPlan,
+  };
 }
 
 export function resolveEntitlement(feature: FeatureKey, plan: Plan): EntitlementResult {

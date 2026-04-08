@@ -40,7 +40,15 @@ import {
 import { DashboardCustomization } from './DashboardCustomization';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { resolveEntitlement, normalizePlan, type FeatureKey, type DashboardModeVariant } from '@/config/planPermissions';
+import {
+  getDashboardModeConfig,
+  normalizePlan,
+  resolveDashboardMode,
+  resolveEntitlement,
+  type DashboardNavIconKey,
+  type DashboardSidebarToolKey,
+  type FeatureKey,
+} from '@/config/planPermissions';
 import { useSubscription } from '@/hooks/useSubscription';
 
 interface SidebarPreferences {
@@ -106,6 +114,7 @@ const normalizePreferences = (raw: LegacySidebarPreferences | null | undefined):
 };
 
 interface ToolItem {
+  toolKey: DashboardSidebarToolKey;
   path: string;
   label: string;
   icon: LucideIcon;
@@ -121,7 +130,7 @@ export const DashboardSidebar = () => {
   const incompleteTaskCount = useContext(TaskCountContext);
   const [sidebarPreferences, setSidebarPreferences] = useState<SidebarPreferences>(defaultSidebarPreferences);
   const currentPlan = normalizePlan(subscriptionData?.subscription_tier);
-  const dashboardMode = (resolveEntitlement('dashboard_mode', currentPlan).dashboardMode ?? currentPlan) as DashboardModeVariant;
+  const modeConfig = getDashboardModeConfig(resolveDashboardMode(currentPlan));
 
   useEffect(() => {
     const loadPreferences = async () => {
@@ -147,63 +156,40 @@ export const DashboardSidebar = () => {
     }
   };
 
-  const dashboardNavItemsByMode: Record<DashboardModeVariant, Array<{ path: string; label: string; icon: LucideIcon }>> = {
-    rookie: [
-      { path: '/dashboard', label: 'Home', icon: Home },
-      { path: '/tasks', label: 'Your Tasks', icon: CheckSquare },
-    ],
-    starter: [
-      { path: '/dashboard', label: 'Home', icon: Home },
-      { path: '/weekly-mission', label: 'Weekly Mission', icon: Calendar },
-      { path: '/tasks', label: 'Your Tasks', icon: CheckSquare },
-    ],
-    rising: [
-      { path: '/dashboard', label: 'Home', icon: Home },
-      { path: '/focus-funnel', label: 'Focus Funnel', icon: Target },
-      { path: '/decision-sprint', label: 'Decision Sprint', icon: ClipboardList },
-      { path: '/core-metrics', label: 'Core Metrics', icon: BarChart3 },
-      { path: '/weekly-mission', label: 'Weekly Mission', icon: Calendar },
-      { path: '/tasks', label: 'Your Tasks', icon: CheckSquare },
-    ],
-    pro: [
-      { path: '/dashboard', label: 'War Room', icon: Home },
-      { path: '/focus-funnel', label: 'Focus Funnel', icon: Target },
-      { path: '/decision-sprint', label: 'Decision Sprint', icon: ClipboardList },
-      { path: '/core-metrics', label: 'Core Metrics', icon: BarChart3 },
-      { path: '/weekly-mission', label: 'Weekly Mission', icon: Calendar },
-      { path: '/tasks', label: 'Your Tasks', icon: CheckSquare },
-    ],
+  const navIconMap: Record<DashboardNavIconKey, LucideIcon> = {
+    home: Home,
+    calendar: Calendar,
+    check_square: CheckSquare,
+    target: Target,
+    clipboard_list: ClipboardList,
+    bar_chart_3: BarChart3,
   };
 
-  const dashboardNavItems = dashboardNavItemsByMode[dashboardMode];
-
-  const visibleToolPreferences: Record<DashboardModeVariant, Array<keyof SidebarPreferences>> = {
-    rookie: ['showICPBuilder', 'showFindMentor', 'showFindCoFounder'],
-    starter: ['showICPBuilder', 'showWaitlistMaker', 'showPMFLab', 'showFindMentor', 'showFindCoFounder', 'showVCSearch', 'showAcceleratorHunt', 'showEmailTemplates', 'showPromptLibrary'],
-    rising: ['showICPBuilder', 'showWaitlistMaker', 'showPMFLab', 'showMVPBuilder', 'showTechStack', 'showGTMStrategist', 'showDirectories', 'showFindMentor', 'showFindCoFounder', 'showVCSearch', 'showAcceleratorHunt', 'showEmailTemplates', 'showPitchDeckAnalyzer', 'showInsightaTest', 'showNewspaper', 'showPromptLibrary'],
-    pro: ['showICPBuilder', 'showWaitlistMaker', 'showPMFLab', 'showMVPBuilder', 'showTechStack', 'showGTMStrategist', 'showDirectories', 'showFindMentor', 'showFindCoFounder', 'showFindAngel', 'showVCSearch', 'showAcceleratorHunt', 'showEmailTemplates', 'showPitchDeckAnalyzer', 'showInsightaTest', 'showNewspaper', 'showPromptLibrary'],
-  };
+  const dashboardNavItems = modeConfig.navItems.map((item) => ({
+    ...item,
+    icon: navIconMap[item.iconKey],
+  }));
 
   const toolsItems: ToolItem[] = [
-    { path: '/icp-builder', label: 'ICP Builder', icon: Target, prefKey: 'showICPBuilder', featureKey: 'icp_builder' },
-    { path: '/waitlist', label: 'Waitlist Maker', icon: ClipboardList, prefKey: 'showWaitlistMaker', featureKey: 'waitlist_maker' },
-    { path: '/pmf-lab', label: 'PMF Lab', icon: FlaskConical, prefKey: 'showPMFLab', featureKey: 'pmf_lab' },
-    { path: '/mvp-builder', label: 'MVP Builder', icon: Rocket, prefKey: 'showMVPBuilder', featureKey: 'mvp_builder' },
-    { path: '/tech-stack', label: 'Tech Stack', icon: Zap, prefKey: 'showTechStack', featureKey: 'tech_stack' },
-    { path: '/go-to-market', label: 'GTM Strategist', icon: LineChart, prefKey: 'showGTMStrategist', featureKey: 'gtm_strategist' },
-    { path: '/directories', label: 'Directories', icon: Filter, prefKey: 'showDirectories', featureKey: 'directories' },
-    { path: '/community', label: 'Find a Mentor', icon: Users, prefKey: 'showFindMentor' },
-    { path: '/community/co-founders', label: 'Find a Co-Founder', icon: Handshake, prefKey: 'showFindCoFounder' },
-    { path: '/community/angels', label: 'Find your Angel', icon: Sparkles, prefKey: 'showFindAngel', featureKey: 'angels_community' },
-    { path: '/insighta/vc-search', label: 'VC Search', icon: FileSearch, prefKey: 'showVCSearch', featureKey: 'vc_search_browse' },
-    { path: '/insighta/accelerator-hunt', label: 'Accelerator Hunt', icon: Rocket, prefKey: 'showAcceleratorHunt', featureKey: 'accelerator_browse' },
-    { path: '/insighta/email-templates', label: 'Email Templates', icon: Mail, prefKey: 'showEmailTemplates', featureKey: 'email_templates' },
-    { path: '/insighta/pitch-deck-analyzer', label: 'Pitch Deck Analyzer', icon: BarChart3, prefKey: 'showPitchDeckAnalyzer', featureKey: 'pitch_deck_analyzer' },
-    { path: '/insighta/test', label: 'Insighta Test', icon: Sparkles, prefKey: 'showInsightaTest', featureKey: 'insighta_test' },
-    { path: '/newspaper', label: 'Newspaper', icon: BookOpen, prefKey: 'showNewspaper', featureKey: 'newspaper' },
-    { path: '/prompt-library', label: 'Prompt Library', icon: Library, prefKey: 'showPromptLibrary', featureKey: 'prompt_library' },
+    { toolKey: 'icp_builder', path: '/icp-builder', label: 'ICP Builder', icon: Target, prefKey: 'showICPBuilder', featureKey: 'icp_builder' },
+    { toolKey: 'waitlist_maker', path: '/waitlist', label: 'Waitlist Maker', icon: ClipboardList, prefKey: 'showWaitlistMaker', featureKey: 'waitlist_maker' },
+    { toolKey: 'pmf_lab', path: '/pmf-lab', label: 'PMF Lab', icon: FlaskConical, prefKey: 'showPMFLab', featureKey: 'pmf_lab' },
+    { toolKey: 'mvp_builder', path: '/mvp-builder', label: 'MVP Builder', icon: Rocket, prefKey: 'showMVPBuilder', featureKey: 'mvp_builder' },
+    { toolKey: 'tech_stack', path: '/tech-stack', label: 'Tech Stack', icon: Zap, prefKey: 'showTechStack', featureKey: 'tech_stack' },
+    { toolKey: 'gtm_strategist', path: '/go-to-market', label: 'GTM Strategist', icon: LineChart, prefKey: 'showGTMStrategist', featureKey: 'gtm_strategist' },
+    { toolKey: 'directories', path: '/directories', label: 'Directories', icon: Filter, prefKey: 'showDirectories', featureKey: 'directories' },
+    { toolKey: 'find_mentor', path: '/community', label: 'Find a Mentor', icon: Users, prefKey: 'showFindMentor' },
+    { toolKey: 'find_cofounder', path: '/community/co-founders', label: 'Find a Co-Founder', icon: Handshake, prefKey: 'showFindCoFounder' },
+    { toolKey: 'find_angel', path: '/community/angels', label: 'Find your Angel', icon: Sparkles, prefKey: 'showFindAngel', featureKey: 'angels_community' },
+    { toolKey: 'vc_search', path: '/insighta/vc-search', label: 'VC Search', icon: FileSearch, prefKey: 'showVCSearch', featureKey: 'vc_search_browse' },
+    { toolKey: 'accelerator_hunt', path: '/insighta/accelerator-hunt', label: 'Accelerator Hunt', icon: Rocket, prefKey: 'showAcceleratorHunt', featureKey: 'accelerator_browse' },
+    { toolKey: 'email_templates', path: '/insighta/email-templates', label: 'Email Templates', icon: Mail, prefKey: 'showEmailTemplates', featureKey: 'email_templates' },
+    { toolKey: 'pitch_deck_analyzer', path: '/insighta/pitch-deck-analyzer', label: 'Pitch Deck Analyzer', icon: BarChart3, prefKey: 'showPitchDeckAnalyzer', featureKey: 'pitch_deck_analyzer' },
+    { toolKey: 'insighta_test', path: '/insighta/test', label: 'Insighta Test', icon: Sparkles, prefKey: 'showInsightaTest', featureKey: 'insighta_test' },
+    { toolKey: 'newspaper', path: '/newspaper', label: 'Newspaper', icon: BookOpen, prefKey: 'showNewspaper', featureKey: 'newspaper' },
+    { toolKey: 'prompt_library', path: '/prompt-library', label: 'Prompt Library', icon: Library, prefKey: 'showPromptLibrary', featureKey: 'prompt_library' },
   ].filter((item) => {
-    if (!visibleToolPreferences[dashboardMode].includes(item.prefKey)) {
+    if (!modeConfig.visibleTools.includes(item.toolKey)) {
       return false;
     }
 

@@ -1,4 +1,4 @@
-import React, { createContext, useEffect, useState, useRef } from 'react';
+import React, { createContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usePersonalizedDashboard } from '@/hooks/usePersonalizedDashboard';
 import { ArrowRight } from 'lucide-react';
@@ -15,39 +15,21 @@ import { DashboardNavigationProvider } from '@/contexts/DashboardNavigationConte
 import { DashboardSidebar } from './DashboardSidebar';
 import { useActiveSection } from '@/hooks/useActiveSection';
 import { ReactNode } from 'react';
-import { normalizePlan, resolveEntitlement } from '@/config/planPermissions';
+import { getDashboardModeConfig, normalizePlan, resolveDashboardMode } from '@/config/planPermissions';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useDashboardMetrics } from '@/hooks/useDashboardMetrics';
-import {
-  getDailyGoalPromptSnoozeUntil,
-  getLocalDateString,
-  hasDailyGoalPromptResurfaced,
-  hasDailyGoalPromptUnresolved,
-  markDailyGoalPromptResurfaced,
-} from '@/lib/dailyGoalPrompt';
-import { captureEvent } from '@/lib/analytics';
 import { DailyPromptResumeCard } from './DailyPromptResumeCard';
+import { useDashboardDailyPrompt } from '@/hooks/useDashboardDailyPrompt';
 
 // Internal wrapper component that uses the navigation context
 interface DashboardContentWrapperProps {
-  dashboardMode: DashboardMode;
+  sectionIds: string[];
   children: ReactNode;
 }
 
 export const TaskCountContext = createContext(0);
 
-const DashboardContentWrapper = ({ dashboardMode, children }: DashboardContentWrapperProps) => {
-  // Setup section IDs for active section tracking
-  const sectionIds =
-    dashboardMode === 'rookie'
-      ? ['mode-welcome', 'mode-stage', 'mode-usage', 'mode-preview']
-      : dashboardMode === 'starter'
-        ? ['mode-stage', 'mode-tasks', 'mode-usage']
-        : dashboardMode === 'rising'
-          ? ['mode-stage', 'mode-usage', 'weekly-mission', 'decision-sprint', 'focus-funnel', 'your-tasks', 'mode-tools']
-          : ['mode-stage', 'mode-support', 'mode-fundraising', 'mode-usage', 'weekly-mission', 'decision-sprint', 'focus-funnel', 'your-tasks'];
-
-  // Initialize active section tracking (now inside the provider)
+const DashboardContentWrapper = ({ sectionIds, children }: DashboardContentWrapperProps) => {
   useActiveSection(sectionIds);
 
   return <>{children}</>;
@@ -64,121 +46,21 @@ export const PersonalizedDashboardV2 = () => {
     loading,
     trackActivity
   } = usePersonalizedDashboard();
-
-  const [showDailyGoal, setShowDailyGoal] = useState(false);
-  const [modalMode, setModalMode] = useState<'morning' | 'evening'>('morning');
-  const [_hasCheckedInToday, setHasCheckedInToday] = useState(false);
-  const [todaysCheckInId, setTodaysCheckInId] = useState<string | null>(null);
-  const [currentStreak, setCurrentStreak] = useState(0);
-  const [hasUnresolvedPrompt, setHasUnresolvedPrompt] = useState(false);
-  const [unresolvedMode, setUnresolvedMode] = useState<'morning' | 'evening'>('morning');
-
-  // Track last fetch time to prevent unnecessary refreshes
-  const lastFetchTimeRef = useRef<number>(0);
-  const hasInitializedRef = useRef<boolean>(false);
-  const DATA_STALE_TIME = 5 * 60 * 1000; // 5 minutes
-
-  // Check if user has checked in today and calculate streak
-  useEffect(() => {
-    if (!user) return;
-
-    // Only fetch if we haven't initialized or data is stale
-    const now = Date.now();
-    const shouldFetch = !hasInitializedRef.current || (now - lastFetchTimeRef.current > DATA_STALE_TIME);
-
-    if (!shouldFetch) {
-      return;
-    }
-
-    const checkDailyCheckIn = async () => {
-      const today = getLocalDateString();
-      const currentHour = new Date().getHours();
-
-      const { data: todayCheckIn } = await supabase
-        .from('daily_check_ins')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('check_in_date', today)
-        .maybeSingle();
-
-      setHasCheckedInToday(!!todayCheckIn);
-
-      if (todayCheckIn) {
-        setTodaysCheckInId(todayCheckIn.id);
-
-        // Calculate streak
-        const { data: recentCheckIns } = await supabase
-          .from('daily_check_ins')
-          .select('check_in_date')
-          .eq('user_id', user.id)
-          .order('check_in_date', { ascending: false })
-          .limit(30);
-
-        if (recentCheckIns) {
-          let streak = 0;
-          const dates = recentCheckIns.map(c => c.check_in_date).sort().reverse();
-
-          for (let i = 0; i < dates.length; i++) {
-            const currentDate = new Date(dates[i]);
-            const expectedDate = new Date();
-            expectedDate.setDate(expectedDate.getDate() - i);
-
-            if (currentDate.toISOString().split('T')[0] === expectedDate.toISOString().split('T')[0]) {
-              streak++;
-            } else {
-              break;
-            }
-          }
-
-          setCurrentStreak(streak);
-        }
-
-        // Show evening reflection if after 6 PM and haven't reflected yet
-        if (currentHour >= 18 && todayCheckIn.goal_achieved === null) {
-          const nextMode = 'evening';
-          const snoozeUntil = getDailyGoalPromptSnoozeUntil(user.id, nextMode, today);
-          const isSnoozed = typeof snoozeUntil === 'number' && snoozeUntil > Date.now();
-
-          setModalMode(nextMode);
-          setUnresolvedMode(nextMode);
-          setHasUnresolvedPrompt(hasDailyGoalPromptUnresolved(user.id, nextMode, today) || isSnoozed);
-
-          if (!isSnoozed) {
-            if (typeof snoozeUntil === 'number' && !hasDailyGoalPromptResurfaced(user.id, nextMode, today)) {
-              markDailyGoalPromptResurfaced(user.id, nextMode, today);
-              captureEvent('daily_prompt_resurfaced', { mode: nextMode, page_path: '/dashboard' });
-            }
-            setShowDailyGoal(true);
-          }
-        }
-      } else {
-        const nextMode = 'morning';
-        const snoozeUntil = getDailyGoalPromptSnoozeUntil(user.id, nextMode, today);
-        const isSnoozed = typeof snoozeUntil === 'number' && snoozeUntil > Date.now();
-
-        setModalMode(nextMode);
-        setUnresolvedMode(nextMode);
-        setHasUnresolvedPrompt(hasDailyGoalPromptUnresolved(user.id, nextMode, today) || isSnoozed);
-
-        if (!isSnoozed) {
-          if (typeof snoozeUntil === 'number' && !hasDailyGoalPromptResurfaced(user.id, nextMode, today)) {
-            markDailyGoalPromptResurfaced(user.id, nextMode, today);
-            captureEvent('daily_prompt_resurfaced', { mode: nextMode, page_path: '/dashboard' });
-          }
-          setShowDailyGoal(true);
-        }
-      }
-
-      lastFetchTimeRef.current = Date.now();
-      hasInitializedRef.current = true;
-    };
-
-    checkDailyCheckIn();
-    if (!hasInitializedRef.current) {
+  const {
+    showDailyGoal,
+    modalMode,
+    todaysCheckInId,
+    currentStreak,
+    hasUnresolvedPrompt,
+    unresolvedMode,
+    handleDailyGoalOpenChange,
+    handlePromptResume,
+    handleCheckInComplete,
+  } = useDashboardDailyPrompt({
+    onFirstView: () => {
       trackActivity('dashboard_view');
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id]);
+    },
+  });
 
   const metrics = {
     streak: data?.stats?.currentStreak || currentStreak,
@@ -193,16 +75,8 @@ export const PersonalizedDashboardV2 = () => {
   };
   const incompleteTaskCount = Math.max(metrics.totalTasksToday - metrics.tasksCompletedToday, 0);
   const currentPlan = normalizePlan(subscriptionData.subscription_tier);
-  const dashboardMode = (resolveEntitlement('dashboard_mode', currentPlan).dashboardMode ?? currentPlan) as DashboardMode;
-  const handleDailyGoalOpenChange = (open: boolean) => {
-    setShowDailyGoal(open);
-
-    if (!open && user) {
-      const today = getLocalDateString();
-      setHasUnresolvedPrompt(hasDailyGoalPromptUnresolved(user.id, modalMode, today));
-      setUnresolvedMode(modalMode);
-    }
-  };
+  const dashboardMode = resolveDashboardMode(currentPlan) as DashboardMode;
+  const modeConfig = getDashboardModeConfig(dashboardMode);
 
   if (loading || isInitializing || dashboardMetrics.isLoading) {
     return (
@@ -239,19 +113,12 @@ export const PersonalizedDashboardV2 = () => {
     ...metrics,
   };
 
-  const subtitleByMode: Record<DashboardMode, string> = {
-    rookie: 'A simplified dashboard for getting the first signal right.',
-    starter: 'A structured workspace for moving through Stages 1 to 3.',
-    rising: 'Your full operator cockpit across all five stages.',
-    pro: 'Your fundraising-aware command layer with premium support.',
-  };
-
   return (
     <ErrorBoundary>
       <SidebarProvider>
         <DashboardNavigationProvider>
           <TaskCountContext.Provider value={incompleteTaskCount}>
-            <DashboardContentWrapper dashboardMode={dashboardMode}>
+            <DashboardContentWrapper sectionIds={modeConfig.sectionIds}>
               <DashboardSidebar />
               <SidebarInset>
                 <div className="min-h-screen relative overflow-hidden bg-background">
@@ -305,10 +172,7 @@ export const PersonalizedDashboardV2 = () => {
                       // FIX(retention): dashboard — snoozed daily prompts now leave a pinned unresolved card so the habit loop still has a visible next step.
                       <DailyPromptResumeCard
                         mode={unresolvedMode}
-                        onResume={() => {
-                          setModalMode(unresolvedMode);
-                          setShowDailyGoal(true);
-                        }}
+                        onResume={handlePromptResume}
                       />
                     ) : null}
 
@@ -320,7 +184,7 @@ export const PersonalizedDashboardV2 = () => {
                         {greeting}, {founderName} 👋
                       </h1>
                       <p className="text-muted-foreground mt-1">
-                        {subtitleByMode[dashboardMode]}
+                        {modeConfig.subtitle}
                       </p>
                     </div>
 
@@ -338,12 +202,7 @@ export const PersonalizedDashboardV2 = () => {
                     currentStreak={currentStreak}
                     mode={modalMode}
                     todaysCheckInId={todaysCheckInId}
-                    onCheckInComplete={async () => {
-                      setHasCheckedInToday(true);
-                      setHasUnresolvedPrompt(false);
-                      hasInitializedRef.current = false;
-                      lastFetchTimeRef.current = 0;
-                    }}
+                    onCheckInComplete={handleCheckInComplete}
                   />
                 </div>
               </SidebarInset>
