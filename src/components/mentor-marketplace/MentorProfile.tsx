@@ -201,8 +201,11 @@ export const MentorProfile = ({ mentor, onBookClick }: MentorProfileProps) => {
     if (mentor.name.toLowerCase().includes('pedro') && mentor.name.toLowerCase().includes('monestel')) {
       return 'Costa Rica';
     }
-    // Special case: Gabor Hornik is from Hungary
-    if (normalizedMentorName.includes('gabor') && normalizedMentorName.includes('hornik')) {
+    // Special case: Gabor/Gabor Homik/Hornik is from Hungary
+    if (
+      normalizedMentorName.includes('gabor') &&
+      (normalizedMentorName.includes('hornik') || normalizedMentorName.includes('homik'))
+    ) {
       return 'Hungary';
     }
     return null;
