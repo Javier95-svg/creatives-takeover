@@ -95,6 +95,7 @@ const resolveCountryFromMentorName = (mentorName: string): string | null => {
   if (name.includes("sharon") && name.includes("praise") && name.includes("akpunne")) return "United Kingdom";
   if (name.includes("vivian") && name.includes("ubochi")) return "Nigeria";
   if (name.includes("johnny") && name.includes("bou") && name.includes("malhab")) return "Lebanon";
+  if (name.includes("gabor") && name.includes("hornik")) return "Hungary";
 
   return null;
 };

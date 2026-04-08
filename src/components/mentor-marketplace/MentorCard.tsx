@@ -53,6 +53,10 @@ export const MentorCard = ({ mentor, className, priority = false }: MentorCardPr
     if (mentor.nationality) {
       return mentor.nationality;
     }
+    const normalizedMentorName = mentor.name
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "");
     // Special case: Samuel is American
     if (mentor.name.toLowerCase().includes('samuel')) {
       return 'USA';
@@ -205,7 +209,7 @@ export const MentorCard = ({ mentor, className, priority = false }: MentorCardPr
       return 'Costa Rica';
     }
     // Special case: Gabor Hornik is from Hungary
-    if (mentor.name.toLowerCase().includes('gabor') && mentor.name.toLowerCase().includes('hornik')) {
+    if (normalizedMentorName.includes('gabor') && normalizedMentorName.includes('hornik')) {
       return 'Hungary';
     }
     return null;
