@@ -863,10 +863,11 @@ SELECT
   dc.meeting_url,
   founder.id AS founder_id,
   founder.full_name AS founder_name,
-  founder.email AS founder_email,
+  founder_sub.email AS founder_email,
   mentor.id AS mentor_id,
   mentor.name AS mentor_name,
   mentor.user_id AS mentor_user_id
 FROM public.discovery_calls dc
 LEFT JOIN public.profiles founder ON founder.id = dc.founder_id
+LEFT JOIN public.subscribers founder_sub ON founder_sub.user_id = founder.id
 LEFT JOIN public.mentors mentor ON mentor.id = dc.mentor_id;
