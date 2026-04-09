@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { AdvancedFieldsSection } from '@/components/pmf/AdvancedFieldsSection';
+import { getIcpDraftStorageKey } from '@/lib/icpDraftStorage';
 
 export interface ICPInputFormData {
   problemStatement: string;
@@ -34,6 +35,7 @@ export interface ICPInputFormData {
 
 interface ICPInputFormProps {
   initialData?: Partial<ICPInputFormData>;
+  initialStep?: number;
   onSubmit: (data: ICPInputFormData) => void;
   isSubmitting?: boolean;
 }
@@ -46,7 +48,6 @@ interface ICPDraftPayload {
 }
 
 const ICP_DRAFT_VERSION = 1;
-const ICP_DRAFT_STORAGE_PREFIX = 'icp_builder_draft';
 
 const INDUSTRIES = [
   'Technology/SaaS', 'E-commerce/Retail', 'Healthcare', 'Education',
@@ -75,8 +76,6 @@ const createFormData = (initialData?: Partial<ICPInputFormData>): ICPInputFormDa
   revenueModel: initialData?.revenueModel || '',
   currentTraction: initialData?.currentTraction || '',
 });
-
-const getDraftStorageKey = (userId?: string) => `${ICP_DRAFT_STORAGE_PREFIX}:${userId || 'anonymous'}`;
 
 const hasAnyDraftContent = (formData: ICPInputFormData) =>
   Object.values(formData).some((value) => value.trim().length > 0);
@@ -163,12 +162,13 @@ const StepView: React.FC<{ children: React.ReactNode; stepKey: number }> = ({ ch
 
 const ICPInputForm: React.FC<ICPInputFormProps> = ({
   initialData,
+  initialStep = 0,
   onSubmit,
   isSubmitting = false,
 }) => {
   const { user } = useAuth();
   const [formData, setFormData] = useState<ICPInputFormData>(createFormData(initialData));
-  const [currentStep, setCurrentStep] = useState(0);
+  const [currentStep, setCurrentStep] = useState(initialStep);
   const [saveState, setSaveState] = useState<'idle' | 'restored' | 'saving' | 'saved'>('idle');
   const [lastSavedAt, setLastSavedAt] = useState<number | null>(null);
   const [stepFeedback, setStepFeedback] = useState<{ step: number; message: string } | null>(null);
@@ -180,7 +180,7 @@ const ICPInputForm: React.FC<ICPInputFormProps> = ({
   const step = CORE_STEPS[currentStep];
   const currentValue = step ? (formData[step.field] as string) : '';
   const canContinue = currentValue.trim().length > 0;
-  const storageKey = getDraftStorageKey(user?.id);
+  const storageKey = getIcpDraftStorageKey(user?.id);
   const completedOptionalCount = [
     formData.painCost,
     formData.founderEdge,
@@ -210,6 +210,7 @@ const ICPInputForm: React.FC<ICPInputFormProps> = ({
     try {
       const rawDraft = window.localStorage.getItem(storageKey);
       if (!rawDraft) {
+        setCurrentStep(Math.min(Math.max(initialStep, 0), totalSteps));
         hasHydratedDraft.current = true;
         return;
       }
@@ -233,7 +234,7 @@ const ICPInputForm: React.FC<ICPInputFormProps> = ({
     } finally {
       hasHydratedDraft.current = true;
     }
-  }, [storageKey, totalSteps]);
+  }, [initialStep, storageKey, totalSteps]);
 
   useEffect(() => {
     if (!hasHydratedDraft.current || typeof window === 'undefined') return;

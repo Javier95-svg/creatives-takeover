@@ -5,9 +5,7 @@ import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { trackIcpBuilderStartedUngated } from "@/lib/analytics";
-
-const ICP_SEED_STORAGE_KEY = "ct_icp_seed";
-const ICP_SIGNUP_RETURN_PATH = "/icp-builder";
+import { buildIcpSeedReturnPath, persistIcpSeed } from "@/lib/icpSeed";
 
 interface HeroProps {
   onRequestSoftGate?: (seed: string) => void;
@@ -21,13 +19,7 @@ const Hero = ({ onRequestSoftGate, softGateEnabled = false }: HeroProps) => {
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    const normalizedSeed = seed.trim();
-
-    if (normalizedSeed) {
-      sessionStorage.setItem(ICP_SEED_STORAGE_KEY, normalizedSeed);
-    } else {
-      sessionStorage.removeItem(ICP_SEED_STORAGE_KEY);
-    }
+    const normalizedSeed = persistIcpSeed(seed);
 
     trackIcpBuilderStartedUngated({ source: "hero" });
 
@@ -38,7 +30,7 @@ const Hero = ({ onRequestSoftGate, softGateEnabled = false }: HeroProps) => {
 
     // TODO(soft-gate): wire the in-place modal open path in Quick Win 3.
     navigate(
-      `/signup?source=hero-icp&return=${encodeURIComponent(ICP_SIGNUP_RETURN_PATH)}`,
+      `/signup?source=hero-icp&return=${encodeURIComponent(buildIcpSeedReturnPath(null))}`,
     );
   };
 

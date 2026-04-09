@@ -1,9 +1,10 @@
-import { useEffect, lazy, Suspense } from "react";
+import { useEffect, lazy, Suspense, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useFeatureFlagEnabled } from "posthog-js/react";
 import Navigation from "@/components/Navigation";
 import Hero from "@/components/Hero";
 import HeroWedge from "@/components/home/Hero";
+import SoftGateModal from "@/components/auth/SoftGateModal";
 import ValuePropositionCards from "@/components/ValuePropositionCards";
 import UserReviews from "@/components/UserReviews";
 import EntrepreneurProblems from "@/components/EntrepreneurProblems";
@@ -21,6 +22,7 @@ import { usePageAnalytics } from "@/hooks/usePageAnalytics";
 import HomeWallpaper from "@/components/wallpapers/HomeWallpaper";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { trackLandingViewed } from "@/lib/analytics";
 
 // Lazy load below-the-fold components for better performance
 const HomeFAQ = lazy(() => import("@/components/HomeFAQ"));
@@ -34,6 +36,9 @@ const Index = () => {
   const homepageHeroWedgeEnabled = useFeatureFlagEnabled('homepage-hero-wedge');
   const softGateModalEnabled = useFeatureFlagEnabled('soft-gate-modal');
   const showHeroWedge = !authLoading && !user && !!homepageHeroWedgeEnabled;
+  const [softGateOpen, setSoftGateOpen] = useState(false);
+  const [softGateSeed, setSoftGateSeed] = useState('');
+  const hasTrackedLandingView = useRef(false);
   // Track homepage analytics
   usePageAnalytics('/', 'Home - Creatives Takeover');
 
@@ -41,6 +46,12 @@ const Index = () => {
   useEffect(() => {
     if (showExitIntent) trackTriggerView('exit-intent');
   }, [showExitIntent, trackTriggerView]);
+
+  useEffect(() => {
+    if (hasTrackedLandingView.current) return;
+    trackLandingViewed({ page: '/' });
+    hasTrackedLandingView.current = true;
+  }, []);
 
   // Manage session storage in useEffect with proper cleanup
   useEffect(() => {
@@ -106,7 +117,13 @@ const Index = () => {
         {isMobile ? (
           <PullToRefresh onRefresh={handleRefresh}>
             {showHeroWedge ? (
-              <HeroWedge softGateEnabled={!!softGateModalEnabled} />
+              <HeroWedge
+                onRequestSoftGate={(seed) => {
+                  setSoftGateSeed(seed);
+                  setSoftGateOpen(true);
+                }}
+                softGateEnabled={!!softGateModalEnabled}
+              />
             ) : (
               <Hero />
             )}
@@ -127,7 +144,13 @@ const Index = () => {
         ) : (
           <>
             {showHeroWedge ? (
-              <HeroWedge softGateEnabled={!!softGateModalEnabled} />
+              <HeroWedge
+                onRequestSoftGate={(seed) => {
+                  setSoftGateSeed(seed);
+                  setSoftGateOpen(true);
+                }}
+                softGateEnabled={!!softGateModalEnabled}
+              />
             ) : (
               <Hero />
             )}
@@ -156,6 +179,12 @@ const Index = () => {
       <ExitIntentModal
         isOpen={showExitIntent}
         onClose={() => { closeExitIntent(); trackDismissal('exit-intent'); }}
+      />
+      <SoftGateModal
+        open={showHeroWedge && !!softGateModalEnabled && softGateOpen}
+        onOpenChange={setSoftGateOpen}
+        seed={softGateSeed}
+        trigger="hero"
       />
     </div>
   );

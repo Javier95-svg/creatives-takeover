@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -10,8 +10,15 @@ import { useCredits } from '@/hooks/useCredits';
 import { useCreditActions } from '@/hooks/useCreditActions';
 import { useActivationJourney } from '@/hooks/useActivationJourney';
 import { supabase } from '@/integrations/supabase/client';
-import { captureEvent, trackICPBuilderCompleted, trackICPBuilderStarted } from '@/lib/analytics';
+import {
+  captureEvent,
+  trackActivationCompleted,
+  trackICPBuilderCompleted,
+  trackICPBuilderStarted,
+} from '@/lib/analytics';
+import { getIcpDraftStorageKey } from '@/lib/icpDraftStorage';
 import { reportAppError } from '@/lib/errorReporting';
+import { consumeStoredIcpSeed, normalizeIcpSeed } from '@/lib/icpSeed';
 import { markFirstArtifactCreated, sendRetentionEmail } from '@/lib/retentionSystem';
 import ICPInputForm, { type ICPInputFormData } from './ICPInputForm';
 import ICPNicheProfile from './ICPNicheProfile';
@@ -167,6 +174,7 @@ const clearQuickstartState = () => {
 
 const ICPBuilder: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuth();
   const { toast } = useToast();
   const { refreshBalance } = useCredits();
@@ -181,6 +189,7 @@ const ICPBuilder: React.FC = () => {
   const [isQuickstartLoading, setIsQuickstartLoading] = useState(false);
   const [showExpandedBuilder, setShowExpandedBuilder] = useState(false);
   const [expandedFormKey, setExpandedFormKey] = useState(0);
+  const [expandedInitialStep, setExpandedInitialStep] = useState(0);
   const [restoredAnalysisLabel, setRestoredAnalysisLabel] = useState<string | null>(null);
 
   useEffect(() => {
@@ -190,6 +199,38 @@ const ICPBuilder: React.FC = () => {
     setQuickstartPrompt(restoredState.prompt || '');
     setQuickstartResult(restoredState.result || null);
   }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const seedFromUrl = normalizeIcpSeed(searchParams.get('seed'));
+    const storedSeed = normalizeIcpSeed(window.sessionStorage.getItem('ct_icp_seed'));
+    const effectiveSeed = seedFromUrl || storedSeed;
+
+    if (!effectiveSeed) {
+      return;
+    }
+
+    const draftStorageKey = getIcpDraftStorageKey(user?.id);
+    const existingDraft = window.localStorage.getItem(draftStorageKey);
+    if (existingDraft) {
+      return;
+    }
+
+    setQuickstartPrompt(effectiveSeed);
+    setQuickstartResult(null);
+    setShowExpandedBuilder(true);
+    setExpandedInitialStep(1);
+    setExpandedFormKey((previous) => previous + 1);
+    trackActivationCompleted({ artifact: 'icp_seed_prefilled' });
+    consumeStoredIcpSeed();
+
+    if (seedFromUrl) {
+      const nextParams = new URLSearchParams(searchParams);
+      nextParams.delete('seed');
+      setSearchParams(nextParams, { replace: true });
+    }
+  }, [searchParams, setSearchParams, user?.id]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -360,6 +401,7 @@ const ICPBuilder: React.FC = () => {
       recommendedICP: quickstartResult.recommendedICP,
     });
     setShowExpandedBuilder(true);
+    setExpandedInitialStep(0);
     setExpandedFormKey((prev) => prev + 1);
     setActiveTab('input');
   };
@@ -732,6 +774,7 @@ const ICPBuilder: React.FC = () => {
                   <ICPInputForm
                     key={expandedFormKey}
                     initialData={expandedInitialData}
+                    initialStep={expandedInitialStep}
                     onSubmit={handleSaveClick}
                     isSubmitting={isAnalyzing}
                   />

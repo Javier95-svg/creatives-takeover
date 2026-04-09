@@ -7,6 +7,7 @@ import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import type { EmailOtpType } from '@supabase/supabase-js';
 import { appendReturnParam, buildOnboardingPath, persistOnboardingReturn, sanitizeReturnPath } from '@/lib/authRedirect';
+import { trackSignupCompleted } from '@/lib/analytics';
 import { resumePendingDiscoveryCallRedirect } from '@/services/discoveryCallService';
 
 const AuthCallback = () => {
@@ -47,7 +48,7 @@ const AuthCallback = () => {
           const otpType = callbackType as EmailOtpType;
 
           if (allowedTypes.includes(otpType)) {
-            console.log('PKCE email confirmation detected, verifying token_hash...');
+            console.warn('PKCE email confirmation detected, verifying token_hash...');
             const { error: otpError } = await supabase.auth.verifyOtp({
               token_hash: tokenHash,
               type: otpType,
@@ -62,7 +63,7 @@ const AuthCallback = () => {
             }
           }
         } else if (legacyToken && callbackType === 'signup') {
-          console.log('Legacy email confirmation token detected.');
+          console.warn('Legacy email confirmation token detected.');
           toast.success('Email confirmed successfully!');
         }
 
@@ -79,13 +80,13 @@ const AuthCallback = () => {
           }
         }
 
-        console.log('Waiting for auth session...');
+        console.warn('Waiting for auth session...');
 
         // Wait for session to be established (works for both OAuth and email confirmation)
         const session = await getSessionSafely();
 
         if (session?.user) {
-          console.log('Auth successful, checking for return URL...');
+          console.warn('Auth successful, checking for return URL...');
           setStatus('success');
           
           // Show appropriate success message
@@ -116,6 +117,7 @@ const AuthCallback = () => {
           const fallbackReturnUrl = isEmailConfirmation ? '/onboarding' : '/dashboard';
           let returnUrl = sanitizeReturnPath(localStorage.getItem('oauth_return_url') || fallbackReturnUrl, '/dashboard');
           const oauthSource = localStorage.getItem('oauth_source');
+          const oauthSignupMethod = localStorage.getItem('oauth_signup_method');
           
           // If return URL is a booking flow, redirect to /community instead
           if (returnUrl.startsWith('/community/book/')) {
@@ -132,9 +134,18 @@ const AuthCallback = () => {
           // Clean up OAuth-related localStorage
           localStorage.removeItem('oauth_return_url');
           localStorage.removeItem('oauth_source');
+          localStorage.removeItem('oauth_signup_method');
 
           // Preserve post-onboarding intent for first-time users.
           persistOnboardingReturn(returnUrl);
+
+          if (
+            oauthSignupMethod === 'google' ||
+            oauthSignupMethod === 'linkedin' ||
+            oauthSignupMethod === 'email'
+          ) {
+            trackSignupCompleted({ method: oauthSignupMethod });
+          }
           
           // Track OAuth signup if source exists
           if (oauthSource && oauthSource !== 'direct') {
@@ -172,7 +183,7 @@ const AuthCallback = () => {
             }, 500);
           }
         } else {
-          console.log('No session found, redirecting to login');
+          console.warn('No session found, redirecting to login');
           setStatus('error');
           redirectToLogin(2000);
         }

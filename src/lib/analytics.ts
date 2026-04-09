@@ -1,6 +1,7 @@
 import posthog from 'posthog-js';
 
 type AnalyticsProperties = Record<string, unknown>;
+type SignupMethod = 'google' | 'linkedin' | 'email';
 
 const PH_KEY =
   import.meta.env.VITE_POSTHOG_API_KEY ??
@@ -10,6 +11,8 @@ const PH_HOST =
   import.meta.env.VITE_POSTHOG_API_HOST ??
   import.meta.env.VITE_POSTHOG_HOST ??
   'https://us.i.posthog.com';
+
+const FIRST_TOUCH_UTM_KEY = 'ct_posthog_first_touch_utms';
 
 let posthogClient: typeof posthog | null = null;
 let initPromise: Promise<void> | null = null;
@@ -29,6 +32,60 @@ const flushQueue = () => {
   queuedEvents.splice(0).forEach(({ eventName, properties }) => {
     posthogClient?.capture(eventName, properties ?? {});
   });
+};
+
+const getFirstTouchUtms = (): AnalyticsProperties => {
+  if (typeof window === 'undefined') {
+    return {};
+  }
+
+  try {
+    const stored = window.localStorage.getItem(FIRST_TOUCH_UTM_KEY);
+    if (stored) {
+      return JSON.parse(stored) as AnalyticsProperties;
+    }
+  } catch (error) {
+    console.warn('Failed to read stored PostHog UTMs', error);
+  }
+
+  const params = new URLSearchParams(window.location.search);
+  const firstTouchUtms = {
+    utm_source: params.get('utm_source') || undefined,
+    utm_medium: params.get('utm_medium') || undefined,
+    utm_campaign: params.get('utm_campaign') || undefined,
+    utm_content: params.get('utm_content') || undefined,
+    utm_term: params.get('utm_term') || undefined,
+  };
+
+  const hasAnyUtm = Object.values(firstTouchUtms).some(Boolean);
+  if (!hasAnyUtm) {
+    return {};
+  }
+
+  try {
+    window.localStorage.setItem(FIRST_TOUCH_UTM_KEY, JSON.stringify(firstTouchUtms));
+  } catch (error) {
+    console.warn('Failed to persist first-touch UTMs', error);
+  }
+
+  return firstTouchUtms;
+};
+
+const registerFirstTouchUtms = () => {
+  if (!posthogClient) {
+    return;
+  }
+
+  const utmProperties = getFirstTouchUtms();
+  if (Object.keys(utmProperties).length === 0) {
+    return;
+  }
+
+  try {
+    posthogClient.register(utmProperties);
+  } catch (error) {
+    console.warn('PostHog UTM registration failed', error);
+  }
 };
 
 export const initPosthog = () => {
@@ -52,6 +109,7 @@ export const initPosthog = () => {
         persistence: 'localStorage',
       });
       posthogClient = posthog;
+      registerFirstTouchUtms();
       initialized = true;
       flushQueue();
     } catch (error) {
@@ -106,6 +164,24 @@ export const identify = (id: string, properties?: AnalyticsProperties) => {
   queuedIdentifies.push({ id, properties });
   void initPosthog();
 };
+
+export const trackLandingViewed = ({ page, exit_intent }: { page: string; exit_intent?: boolean }) =>
+  captureEvent('landing_viewed', {
+    page,
+    ...(typeof exit_intent === 'boolean' ? { exit_intent } : {}),
+  });
+
+export const trackSoftGateShown = ({ trigger }: { trigger: string }) =>
+  captureEvent('soft_gate_shown', { trigger });
+
+export const trackSignupStarted = ({ method }: { method: SignupMethod }) =>
+  captureEvent('signup_started', { method });
+
+export const trackSignupCompleted = ({ method }: { method: SignupMethod }) =>
+  captureEvent('signup_completed', { method });
+
+export const trackActivationCompleted = ({ artifact }: { artifact: string }) =>
+  captureEvent('activation_completed', { artifact });
 
 // ─── Retention: BizMap AI events ─────────────────────────────────────────────
 
