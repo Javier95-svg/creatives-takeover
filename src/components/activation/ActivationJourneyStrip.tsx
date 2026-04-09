@@ -67,9 +67,12 @@ export function ActivationJourneyStrip({
               </Link>
             </Button>
           ) : (
-            <Button className="rounded-full" disabled>
+            <div
+              className="rounded-full border border-current/15 bg-background/75 px-4 py-2 text-sm font-medium text-muted-foreground"
+              aria-live="polite"
+            >
               Complete this step first
-            </Button>
+            </div>
           )}
         </div>
       </div>
