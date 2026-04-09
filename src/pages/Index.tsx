@@ -1,7 +1,9 @@
 import { useEffect, lazy, Suspense } from "react";
 import { useNavigate } from "react-router-dom";
+import { useFeatureFlagEnabled } from "posthog-js/react";
 import Navigation from "@/components/Navigation";
 import Hero from "@/components/Hero";
+import HeroWedge from "@/components/home/Hero";
 import ValuePropositionCards from "@/components/ValuePropositionCards";
 import UserReviews from "@/components/UserReviews";
 import EntrepreneurProblems from "@/components/EntrepreneurProblems";
@@ -29,13 +31,16 @@ const Index = () => {
   const { user, loading: authLoading } = useAuth();
   const { showExitIntent, closeExitIntent } = useExitIntent();
   const { trackTriggerView, trackDismissal } = useConversionTracking();
+  const homepageHeroWedgeEnabled = useFeatureFlagEnabled('homepage-hero-wedge');
+  const softGateModalEnabled = useFeatureFlagEnabled('soft-gate-modal');
+  const showHeroWedge = !authLoading && !user && !!homepageHeroWedgeEnabled;
   // Track homepage analytics
   usePageAnalytics('/', 'Home - Creatives Takeover');
 
   // Track when exit intent modal fires
   useEffect(() => {
     if (showExitIntent) trackTriggerView('exit-intent');
-  }, [showExitIntent]);
+  }, [showExitIntent, trackTriggerView]);
 
   // Manage session storage in useEffect with proper cleanup
   useEffect(() => {
@@ -100,7 +105,11 @@ const Index = () => {
       <main>
         {isMobile ? (
           <PullToRefresh onRefresh={handleRefresh}>
-            <Hero />
+            {showHeroWedge ? (
+              <HeroWedge softGateEnabled={!!softGateModalEnabled} />
+            ) : (
+              <Hero />
+            )}
             <div className="homepage-band-muted">
               <EntrepreneurProblems />
             </div>
@@ -117,7 +126,11 @@ const Index = () => {
           </PullToRefresh>
         ) : (
           <>
-            <Hero />
+            {showHeroWedge ? (
+              <HeroWedge softGateEnabled={!!softGateModalEnabled} />
+            ) : (
+              <Hero />
+            )}
             <div className="homepage-band-muted">
               <EntrepreneurProblems />
             </div>

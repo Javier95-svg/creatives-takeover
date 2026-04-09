@@ -1,3 +1,5 @@
+import posthog from 'posthog-js';
+
 type AnalyticsProperties = Record<string, unknown>;
 
 const PH_KEY =
@@ -9,7 +11,7 @@ const PH_HOST =
   import.meta.env.VITE_POSTHOG_HOST ??
   'https://us.i.posthog.com';
 
-let posthogClient: (typeof import('posthog-js'))['default'] | null = null;
+let posthogClient: typeof posthog | null = null;
 let initPromise: Promise<void> | null = null;
 let initialized = false;
 const queuedEvents: Array<{ eventName: string; properties?: AnalyticsProperties }> = [];
@@ -44,7 +46,6 @@ export const initPosthog = () => {
 
   initPromise = (async () => {
     try {
-      const { default: posthog } = await import('posthog-js');
       posthog.init(PH_KEY as string, {
         api_host: PH_HOST,
         autocapture: true,
@@ -60,6 +61,8 @@ export const initPosthog = () => {
 
   return initPromise;
 };
+
+export const getPosthogClient = () => posthog;
 
 export const bootstrapPosthog = () => {
   const start = () => {
@@ -128,6 +131,12 @@ export const trackBizMapDemoConverted = (properties?: AnalyticsProperties) =>
 
 export const trackICPBuilderStarted = (properties?: AnalyticsProperties) =>
   captureEvent('icp_builder_started', properties);
+
+export const trackIcpBuilderStartedUngated = (properties: { source: string }) =>
+  trackICPBuilderStarted({
+    ...properties,
+    entry_variant: 'ungated',
+  });
 
 export const trackICPBuilderCompleted = (properties?: AnalyticsProperties) =>
   captureEvent('icp_builder_completed', properties);
