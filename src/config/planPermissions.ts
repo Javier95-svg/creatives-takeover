@@ -39,6 +39,7 @@ export type DashboardModeVariant = 'rookie' | 'starter' | 'rising' | 'pro';
 
 export type DashboardNavIconKey =
   | 'home'
+  | 'bookmark_check'
   | 'calendar'
   | 'check_square'
   | 'target'
@@ -68,6 +69,7 @@ export interface DashboardNavItem {
   path: string;
   label: string;
   iconKey: DashboardNavIconKey;
+  sectionId?: string;
 }
 
 export interface DashboardModeConfig {
@@ -246,12 +248,13 @@ export const DASHBOARD_MODE_CONFIG: Record<DashboardModeVariant, DashboardModeCo
     label: 'Rookie Mode',
     badgeDescription: 'Guided and simplified',
     subtitle: 'A simplified dashboard for getting the first signal right.',
-    sectionIds: ['mode-welcome', 'mode-stage', 'mode-usage', 'mode-preview'],
+    sectionIds: ['mode-welcome', 'saved-mentors', 'mode-stage', 'mode-usage', 'mode-preview'],
     activeStages: [1],
     previewStages: [4, 5],
     showUpgradeBanner: true,
     navItems: [
       { path: '/dashboard', label: 'Home', iconKey: 'home' },
+      { path: '/dashboard', label: 'Saved Mentors', iconKey: 'bookmark_check', sectionId: 'saved-mentors' },
       { path: '/tasks', label: 'Your Tasks', iconKey: 'check_square' },
     ],
     visibleTools: ['icp_builder', 'find_mentor', 'find_cofounder'],
@@ -260,12 +263,13 @@ export const DASHBOARD_MODE_CONFIG: Record<DashboardModeVariant, DashboardModeCo
     label: 'Starter Mode',
     badgeDescription: 'Structured and progressing',
     subtitle: 'A structured workspace for moving through Stages 1 to 3.',
-    sectionIds: ['mode-stage', 'mode-tasks', 'mode-usage'],
+    sectionIds: ['saved-mentors', 'mode-stage', 'mode-tasks', 'mode-usage'],
     activeStages: [1, 2, 3],
     previewStages: [4, 5],
     showUpgradeBanner: true,
     navItems: [
       { path: '/dashboard', label: 'Home', iconKey: 'home' },
+      { path: '/dashboard', label: 'Saved Mentors', iconKey: 'bookmark_check', sectionId: 'saved-mentors' },
       { path: '/weekly-mission', label: 'Weekly Mission', iconKey: 'calendar' },
       { path: '/tasks', label: 'Your Tasks', iconKey: 'check_square' },
     ],
@@ -275,12 +279,13 @@ export const DASHBOARD_MODE_CONFIG: Record<DashboardModeVariant, DashboardModeCo
     label: 'Rising Mode',
     badgeDescription: 'Operational and productive',
     subtitle: 'Your full operator cockpit across all five stages.',
-    sectionIds: ['mode-stage', 'mode-usage', 'weekly-mission', 'decision-sprint', 'focus-funnel', 'your-tasks', 'mode-tools'],
+    sectionIds: ['saved-mentors', 'mode-stage', 'mode-usage', 'weekly-mission', 'decision-sprint', 'focus-funnel', 'your-tasks', 'mode-tools'],
     activeStages: [1, 2, 3, 4, 5],
     previewStages: [],
     showUpgradeBanner: false,
     navItems: [
       { path: '/dashboard', label: 'Home', iconKey: 'home' },
+      { path: '/dashboard', label: 'Saved Mentors', iconKey: 'bookmark_check', sectionId: 'saved-mentors' },
       { path: '/focus-funnel', label: 'Focus Funnel', iconKey: 'target' },
       { path: '/decision-sprint', label: 'Decision Sprint', iconKey: 'clipboard_list' },
       { path: '/core-metrics', label: 'Core Metrics', iconKey: 'bar_chart_3' },
@@ -293,12 +298,13 @@ export const DASHBOARD_MODE_CONFIG: Record<DashboardModeVariant, DashboardModeCo
     label: 'Pro Mode',
     badgeDescription: 'Strategic and data-rich',
     subtitle: 'Your fundraising-aware command layer with premium support.',
-    sectionIds: ['mode-stage', 'mode-support', 'mode-fundraising', 'mode-usage', 'weekly-mission', 'decision-sprint', 'focus-funnel', 'your-tasks'],
+    sectionIds: ['saved-mentors', 'mode-stage', 'mode-support', 'mode-fundraising', 'mode-usage', 'weekly-mission', 'decision-sprint', 'focus-funnel', 'your-tasks'],
     activeStages: [1, 2, 3, 4, 5],
     previewStages: [],
     showUpgradeBanner: false,
     navItems: [
       { path: '/dashboard', label: 'War Room', iconKey: 'home' },
+      { path: '/dashboard', label: 'Saved Mentors', iconKey: 'bookmark_check', sectionId: 'saved-mentors' },
       { path: '/focus-funnel', label: 'Focus Funnel', iconKey: 'target' },
       { path: '/decision-sprint', label: 'Decision Sprint', iconKey: 'clipboard_list' },
       { path: '/core-metrics', label: 'Core Metrics', iconKey: 'bar_chart_3' },

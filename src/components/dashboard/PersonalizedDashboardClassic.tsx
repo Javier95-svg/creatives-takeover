@@ -31,6 +31,7 @@ import { QuotaCounterWidgets } from './QuotaCounterWidgets';
 import { RetentionActionFeed } from './RetentionActionFeed';
 import { DailyPromptResumeCard } from './DailyPromptResumeCard';
 import { useDashboardDailyPrompt } from '@/hooks/useDashboardDailyPrompt';
+import { SavedMentorsCard } from './SavedMentorsCard';
 
 export const PersonalizedDashboardClassic = () => {
   const { user } = useAuth();
@@ -213,6 +214,10 @@ export const PersonalizedDashboardClassic = () => {
 
         <div className="animate-fade-in-up opacity-0" style={{ animationDelay: '0.02s', animationFillMode: 'forwards' }}>
           <RetentionActionFeed />
+        </div>
+
+        <div className="animate-fade-in-up opacity-0" style={{ animationDelay: '0.025s', animationFillMode: 'forwards' }}>
+          <SavedMentorsCard />
         </div>
 
         {/* Journey Stage Grid */}

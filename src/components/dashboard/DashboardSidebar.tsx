@@ -1,7 +1,8 @@
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useState, useEffect, useContext } from 'react';
 import { TaskCountContext } from './PersonalizedDashboardV2';
 import {
+  BookmarkCheck,
   Target,
   Calendar,
   CheckSquare,
@@ -50,6 +51,7 @@ import {
   type FeatureKey,
 } from '@/config/planPermissions';
 import { useSubscription } from '@/hooks/useSubscription';
+import { useDashboardNavigation } from '@/contexts/DashboardNavigationContext';
 
 interface SidebarPreferences {
   showICPBuilder: boolean;
@@ -124,10 +126,12 @@ interface ToolItem {
 
 export const DashboardSidebar = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const { setOpenMobile, isMobile } = useSidebar();
   const { user } = useAuth();
   const { subscriptionData } = useSubscription();
   const incompleteTaskCount = useContext(TaskCountContext);
+  const { activeSection, setActiveSection } = useDashboardNavigation();
   const [sidebarPreferences, setSidebarPreferences] = useState<SidebarPreferences>(defaultSidebarPreferences);
   const currentPlan = normalizePlan(subscriptionData?.subscription_tier);
   const modeConfig = getDashboardModeConfig(resolveDashboardMode(currentPlan));
@@ -158,6 +162,7 @@ export const DashboardSidebar = () => {
 
   const navIconMap: Record<DashboardNavIconKey, LucideIcon> = {
     home: Home,
+    bookmark_check: BookmarkCheck,
     calendar: Calendar,
     check_square: CheckSquare,
     target: Target,
@@ -169,6 +174,46 @@ export const DashboardSidebar = () => {
     ...item,
     icon: navIconMap[item.iconKey],
   }));
+
+  const buildNavTarget = (path: string, sectionId?: string) => {
+    if (!sectionId) {
+      return path;
+    }
+
+    return `${path}#${sectionId}`;
+  };
+
+  const isNavItemActive = (path: string, sectionId?: string) => {
+    if (sectionId) {
+      return location.pathname === path && (location.hash === `#${sectionId}` || activeSection === sectionId);
+    }
+
+    if (path === '/dashboard') {
+      return location.pathname === path && !activeSection;
+    }
+
+    return location.pathname === path;
+  };
+
+  const handleDashboardSectionClick = (sectionId: string, path: string) => (event: React.MouseEvent<HTMLAnchorElement>) => {
+    event.preventDefault();
+    handleNavClick();
+    setActiveSection(sectionId);
+
+    if (location.pathname !== path) {
+      navigate(buildNavTarget(path, sectionId));
+      return;
+    }
+
+    const targetElement = document.getElementById(sectionId);
+    if (!targetElement) {
+      navigate(buildNavTarget(path, sectionId));
+      return;
+    }
+
+    window.history.replaceState(null, '', buildNavTarget(path, sectionId));
+    targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
 
   const toolsItems: ToolItem[] = [
     { toolKey: 'icp_builder', path: '/icp-builder', label: 'ICP Builder', icon: Target, prefKey: 'showICPBuilder', featureKey: 'icp_builder' },
@@ -240,10 +285,15 @@ export const DashboardSidebar = () => {
             <SidebarMenu>
               {dashboardNavItems.map((item) => {
                 const isTasksItem = item.path === '/tasks';
+                const target = buildNavTarget(item.path, item.sectionId);
                 return (
-                  <SidebarMenuItem key={item.path}>
-                    <SidebarMenuButton asChild isActive={location.pathname === item.path} tooltip={item.label}>
-                      <Link to={item.path} onClick={handleNavClick} className="flex items-center gap-2 w-full">
+                  <SidebarMenuItem key={target}>
+                    <SidebarMenuButton asChild isActive={isNavItemActive(item.path, item.sectionId)} tooltip={item.label}>
+                      <Link
+                        to={target}
+                        onClick={item.sectionId ? handleDashboardSectionClick(item.sectionId, item.path) : handleNavClick}
+                        className="flex items-center gap-2 w-full"
+                      >
                         <item.icon className="h-4 w-4 shrink-0" />
                         <span className="flex-1">{item.label}</span>
                         {isTasksItem && incompleteTaskCount > 0 && (

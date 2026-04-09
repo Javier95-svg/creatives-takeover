@@ -20,6 +20,7 @@ import { useSubscription } from '@/hooks/useSubscription';
 import { useDashboardMetrics } from '@/hooks/useDashboardMetrics';
 import { DailyPromptResumeCard } from './DailyPromptResumeCard';
 import { useDashboardDailyPrompt } from '@/hooks/useDashboardDailyPrompt';
+import { SavedMentorsCard } from './SavedMentorsCard';
 
 // Internal wrapper component that uses the navigation context
 interface DashboardContentWrapperProps {
@@ -187,6 +188,8 @@ export const PersonalizedDashboardV2 = () => {
                         {modeConfig.subtitle}
                       </p>
                     </div>
+
+                    <SavedMentorsCard />
 
                     {/* Dynamic View Based on Mode */}
                     {dashboardMode === 'rookie' && <RookieModeView {...tierViewSharedProps} />}
