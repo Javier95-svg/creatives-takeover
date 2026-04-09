@@ -116,7 +116,7 @@ export const useMentorSaves = () => {
         source,
         mentorId: mentor.id,
         mentorName: mentor.name,
-        actionUrl: '/community?mentorSource=saved',
+        actionUrl: '/saved-mentors',
       });
 
       toast.success(`${mentor.name} saved. We'll use this to bring you back to the right mentor at the right time.`);

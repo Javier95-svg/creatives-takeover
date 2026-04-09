@@ -48,6 +48,7 @@ const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const PromptLibrary = lazy(() => import("./pages/PromptLibrary"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
+const SavedMentorsPage = lazy(() => import("./pages/SavedMentorsPage"));
 const Blog = lazy(() => import("./pages/Blog"));
 const VCSearchPage = lazy(() => import("./pages/VCSearchPage"));
 const EmailTemplatesPage = lazy(() => import("./pages/EmailTemplatesPage"));
@@ -210,6 +211,7 @@ function App() {
                         <Route path="/reset-password" element={<ResetPassword />} />
                         <Route path="/onboarding" element={<Onboarding />} />
                         <Route path="/dashboard" element={<Dashboard />} />
+                        <Route path="/saved-mentors" element={<SavedMentorsPage />} />
                         <Route path="/account" element={<Account />} />
                         <Route path="/setup-quiz" element={<SetupQuiz />} />
                         <Route path="/focus-funnel" element={<FocusFunnel />} />

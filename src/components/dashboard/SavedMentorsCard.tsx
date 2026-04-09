@@ -8,7 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { SavedMentor, useMentorSaves } from '@/hooks/useMentorSaves';
 import { trackRetentionEvent } from '@/lib/retentionSystem';
 
-const SAVED_MENTORS_URL = '/community?mentorSource=saved';
+const SAVED_MENTORS_URL = '/saved-mentors';
 const MAX_VISIBLE_MENTORS = 3;
 
 type VisibleSavedMentor = SavedMentor & {
@@ -60,7 +60,7 @@ export function SavedMentorsCard() {
   };
 
   return (
-    <Card id="saved-mentors" className="scroll-mt-28 border-primary/20 bg-gradient-to-br from-card via-card to-primary/10 shadow-sm">
+    <Card className="border-primary/20 bg-gradient-to-br from-card via-card to-primary/10 shadow-sm">
       <CardHeader className="space-y-3">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="space-y-2">

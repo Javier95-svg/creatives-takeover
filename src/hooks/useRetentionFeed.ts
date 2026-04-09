@@ -189,7 +189,7 @@ export const useRetentionFeed = (): RetentionFeedState => {
             ? `Go back to ${savedMentorNames.slice(0, 2).join(' and ')} and move one relationship forward today.`
             : 'Saved mentors are your best bridge from browsing to real follow-up.',
           actionLabel: 'View saved mentors',
-          actionUrl: '/community?mentorSource=saved',
+          actionUrl: '/saved-mentors',
         });
       }
 
