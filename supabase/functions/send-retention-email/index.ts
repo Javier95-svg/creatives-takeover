@@ -38,8 +38,8 @@ interface RetentionEmailRequest {
   unreadMessageCount?: number;
   weeklyCommitment?: string;
   weeklyOutcome?: string;
-  weeklyReflection?: string | null;
-  activeDaysLast7?: number;
+  weeklyOutcomeState?: "completed" | "missed" | "open";
+  activeDaysLast14?: number;
   suggestedFocus?: string;
 }
 
@@ -279,21 +279,32 @@ function buildSequenceEmail(args: {
     case "weekly_scorecard": {
       const commitment = truncateText(args.weeklyCommitment?.trim() || "No weekly commitment recorded.", 160);
       const outcome = args.weeklyOutcome?.trim() || "Still open";
-      const activeDaysLast7 = Math.max(0, Math.min(args.activeDaysLast7 ?? 0, 7));
-      const reflection = args.weeklyReflection?.trim()
-        ? ` Blocker: ${truncateText(args.weeklyReflection.trim(), 120)}`
-        : "";
+      const activeDaysLast14 = Math.max(0, Math.min(args.activeDaysLast14 ?? 0, 14));
       const suggestedFocus = truncateText(
         args.suggestedFocus?.trim() || "Set one smaller commitment for next week and finish it early.",
         160,
       );
+      const outcomeState = args.weeklyOutcomeState ?? "open";
+      const subject = outcomeState === "completed"
+        ? `${args.name}, you closed the week on your word`
+        : outcomeState === "missed"
+          ? `${args.name}, your weekly scorecard`
+          : `${args.name}, close the week honestly`;
+      const title = outcomeState === "completed"
+        ? `${args.name}, this week closed well`
+        : outcomeState === "missed"
+          ? `${args.name}, this week closed short`
+          : `${args.name}, your weekly scorecard`;
 
       return {
-        subject: `${args.name}, your weekly scorecard`,
+        subject,
         html: buildEmailShell({
-          title: `${args.name}, your weekly scorecard`,
+          title,
           intro: `This week: ${commitment}`,
-          body: `Result: ${outcome}. Active ${activeDaysLast7} of the last 7 days.${reflection}\n\nNext week: ${suggestedFocus}`,
+          bulletPoints: [
+            `Result: ${outcome}. Active ${activeDaysLast14} of the last 14 days.`,
+            `Next week: ${suggestedFocus}`,
+          ],
           ctaLabel: args.ctaLabel,
           ctaUrl: args.ctaUrl,
         }),

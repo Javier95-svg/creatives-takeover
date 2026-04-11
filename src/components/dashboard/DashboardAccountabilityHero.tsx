@@ -7,6 +7,8 @@ import { Badge } from '@/components/ui/badge';
 import { PartnerMatchingModal } from '@/components/social/PartnerMatchingModal';
 import { useAuth } from '@/contexts/AuthContext';
 import { useMentorRecommendations } from '@/hooks/useMentorRecommendations';
+import { useAccountabilityPartners } from '@/hooks/useAccountabilityPartners';
+import { useAccountabilitySignals } from '@/hooks/useAccountabilitySignals';
 import {
   trackDashboardAccountabilityInterventionClicked,
   trackDashboardAccountabilityStateViewed,
@@ -15,6 +17,7 @@ import { trackActivity } from '@/lib/activity';
 import { useWeeklyMission } from '@/hooks/decision-engine/useWeeklyMission';
 import { buildMentorMarketplaceRoute, type MentorRecommendationTrack } from '@/lib/mentorDemand';
 import { getMentorProfileUrl } from '@/utils/mentorSlug';
+import { formatActiveDaysLabel } from '@/lib/accountabilityPreferences';
 
 interface DashboardAccountabilityHeroProps {
   founderName: string;
@@ -54,6 +57,8 @@ interface AccountabilityInterventionPanelProps {
   title: string;
   description: string;
   mentorRoute: string;
+  resourceHref?: string;
+  resourceLabel?: string;
   onMentorClick: () => void;
   onPartnerClick: () => void;
 }
@@ -65,6 +70,8 @@ function AccountabilityInterventionPanel({
   title,
   description,
   mentorRoute,
+  resourceHref,
+  resourceLabel,
   onMentorClick,
   onPartnerClick,
 }: AccountabilityInterventionPanelProps) {
@@ -125,6 +132,13 @@ function AccountabilityInterventionPanel({
       </div>
 
       <div className="mt-4 flex flex-wrap gap-3">
+        {resourceHref && resourceLabel ? (
+          <Button asChild variant="ghost">
+            <Link to={resourceHref}>
+              {resourceLabel}
+            </Link>
+          </Button>
+        ) : null}
         <Button asChild variant="secondary">
           <Link to={mentorProfileRoute} onClick={onMentorClick}>
             {mentorCtaLabel}
@@ -139,9 +153,71 @@ function AccountabilityInterventionPanel({
   );
 }
 
+function getStageInterventionCopy(stage?: string | null) {
+  const normalizedStage = stage?.trim().toLowerCase() ?? '';
+
+  if (normalizedStage.includes('fundrais')) {
+    return {
+      title: 'Your fundraising narrative needs pressure, not more polishing.',
+      description:
+        'Do not keep widening the deck. Tighten the next proof point, refresh the investor map, and get one expert outside read before outreach slips again.',
+      resourceHref: '/insighta/pitch-deck-analyzer',
+      resourceLabel: 'Pressure-test Deck',
+    };
+  }
+
+  if (
+    normalizedStage.includes('mvp') ||
+    normalizedStage.includes('prototype') ||
+    normalizedStage.includes('build')
+  ) {
+    return {
+      title: 'You are stuck in build mode.',
+      description:
+        'Most founders drift here by polishing instead of exposing the product to users. Shrink the build target and ship one version that can be seen this week.',
+      resourceHref: '/mvp-builder',
+      resourceLabel: 'Ship a Smaller Build',
+    };
+  }
+
+  if (
+    normalizedStage.includes('launch') ||
+    normalizedStage.includes('gtm') ||
+    normalizedStage.includes('market') ||
+    normalizedStage.includes('sales')
+  ) {
+    return {
+      title: 'The launch lane is losing shape.',
+      description:
+        'Stop adding parallel ideas. Pick one distribution move, one outreach sequence, and one concrete proof point to advance before the week closes.',
+      resourceHref: '/go-to-market',
+      resourceLabel: 'Focus the Launch Move',
+    };
+  }
+
+  return {
+    title: 'Validation is drifting into abstraction.',
+    description:
+      'The fix is not more theory. Run one sharper customer-learning move, name the riskiest assumption, and use that to decide what belongs on the mission.',
+    resourceHref: '/icp-builder',
+    resourceLabel: 'Sharpen Validation',
+  };
+}
+
 export function DashboardAccountabilityHero({ founderName, businessStage, currentStreak }: DashboardAccountabilityHeroProps) {
   const { user } = useAuth();
   const { currentMission, recentMissions, isLoading, error } = useWeeklyMission();
+  const {
+    partnerships,
+    recentNudges,
+  } = useAccountabilityPartners();
+  const {
+    activeDaysLast14,
+    activeDaysLabel,
+    daysSinceLastActivity,
+    hasRecentMilestoneCompletion,
+    stageStaleDays,
+  } = useAccountabilitySignals(user?.id);
   const [isPartnerMatchingOpen, setIsPartnerMatchingOpen] = useState(false);
   const lastTrackedStateRef = useRef<string | null>(null);
 
@@ -160,40 +236,58 @@ export function DashboardAccountabilityHero({ founderName, businessStage, curren
   const recentMissedMissions = reviewedRecentMissions.filter(
     (mission) => mission.commitment_outcome === 'missed' || mission.status === 'abandoned',
   );
+  const activePartners = partnerships.filter((partnership) => partnership.status === 'active');
+  const activePartnerNames = activePartners
+    .map((partnership) => (
+      partnership.requester_id === user?.id
+        ? partnership.partner_profile?.full_name
+        : partnership.requester_profile?.full_name
+    ))
+    .filter(Boolean) as string[];
+  const latestNudge = recentNudges[0];
   const repeatedMissPattern = recentMissedMissions.length >= 2;
   const repeatedMissSummary = repeatedMissPattern
     ? `${recentMissedMissions.length} missed commitments in the last ${reviewedRecentMissions.length} reviewed weeks`
     : null;
 
-  const consistencySignal = currentStreak >= 7
+  const consistencySignal = activeDaysLast14 >= 10
     ? {
-        label: 'Locked in',
-        detail: `${currentStreak}-day streak`,
-        description: 'You have a real rhythm. Protect it by closing the commitment before adding new work.',
+        label: 'Consistent',
+        detail: activeDaysLabel,
+        description: 'The work rhythm is real. Keep the commitment narrow so the week closes with proof, not more open loops.',
       }
-    : currentStreak >= 3
+    : activeDaysLast14 >= 6
     ? {
-        label: 'Building rhythm',
-        detail: `${currentStreak}-day streak`,
-        description: 'The habit is forming. Keep the week narrow enough to finish.',
+        label: 'Holding shape',
+        detail: activeDaysLabel,
+        description: 'There is enough motion to finish the week, but only if the commitment stays singular.',
       }
-    : currentStreak >= 1
+    : activeDaysLast14 >= 3
     ? {
-        label: 'Fragile rhythm',
-        detail: `${currentStreak}-day streak`,
-        description: 'A little consistency is there, but the week can still slip if the commitment stays vague.',
+        label: 'Fragile',
+        detail: activeDaysLabel,
+        description: 'The week is still recoverable, but drift is already visible. Cut scope and finish the part that matters.',
       }
     : {
-        label: 'No rhythm yet',
-        detail: '0-day streak',
-        description: 'You need a shorter commitment and one concrete action today to create momentum.',
+        label: 'Cold',
+        detail: formatActiveDaysLabel(0),
+        description: 'No steady motion is visible yet. Shorten the commitment and create one concrete reason to return today.',
       };
 
+  const stageStalled = Boolean(businessStage && stageStaleDays >= 14 && !hasRecentMilestoneCompletion);
+  const inactiveAgainstMission = Boolean(
+    currentMission &&
+    currentMission.status === 'active' &&
+    daysSinceLastActivity !== null &&
+    daysSinceLastActivity >= 5,
+  );
   const isStuck = Boolean(
     repeatedMissPattern ||
+    stageStalled ||
+    inactiveAgainstMission ||
     (currentMission && (
       missedCommitment ||
-      (isActive && daysRemaining !== null && daysRemaining <= 0 && currentStreak === 0)
+      (isActive && daysRemaining !== null && daysRemaining <= 0 && activeDaysLast14 === 0)
     )),
   );
   const isAtRisk = Boolean(
@@ -203,24 +297,33 @@ export function DashboardAccountabilityHero({ founderName, businessStage, curren
     isActive &&
     daysRemaining !== null &&
     daysRemaining <= 2 &&
-    (currentStreak <= 1 || recentMissedMissions.length >= 1),
+    (activeDaysLast14 <= 4 || recentMissedMissions.length >= 1 || (daysSinceLastActivity !== null && daysSinceLastActivity >= 3)),
   );
 
+  const stageIntervention = getStageInterventionCopy(businessStage);
   const interventionTitle = repeatedMissPattern
     ? 'This is becoming a pattern.'
+    : stageStalled
+    ? stageIntervention.title
+    : inactiveAgainstMission
+    ? 'Your commitment is active, but your motion is gone.'
     : isStuck
-    ? 'You look stuck. Do not solve this week alone.'
+    ? 'This week is stuck. Do not solve it alone.'
     : isAtRisk
     ? 'This week is drifting.'
     : null;
   const interventionDescription = repeatedMissPattern
     ? `You have missed multiple recent commitments. ${repeatedMissSummary}. Break the pattern with outside pressure and a smaller next commitment.`
+    : stageStalled
+    ? `${stageIntervention.description} You have been in the same stage for ${stageStaleDays} days without a recent milestone completion.`
+    : inactiveAgainstMission
+    ? `You have been away ${daysSinceLastActivity} days while this commitment is still open. ${stageIntervention.description}`
     : isStuck
-    ? 'The commitment either missed or ran out of runway with no execution rhythm. Get outside pressure before next week repeats this one.'
+    ? `The commitment either missed or ran out of runway with weak consistency. ${stageIntervention.description}`
     : isAtRisk
     ? recentMissedMissions.length >= 1
-      ? 'You still have time, but the last missed week plus a weak execution signal suggest this commitment is slipping toward another miss.'
-      : 'You still have time, but the signal says the week is losing shape. Pressure-test the next move now instead of waiting for the review.'
+      ? `You still have time, but the last missed week plus ${activeDaysLabel.toLowerCase()} suggest this commitment is slipping toward another miss.`
+      : `You still have time, but ${activeDaysLabel.toLowerCase()} says the week is losing shape. ${stageIntervention.description}`
     : null;
   const interventionState = isStuck ? 'stuck' : isAtRisk ? 'at_risk' : 'on_track';
   const accountabilityStateProps = useMemo(() => ({
@@ -229,20 +332,26 @@ export function DashboardAccountabilityHero({ founderName, businessStage, curren
     missionStatus: currentMission?.status ?? 'none',
     commitmentOutcome: currentMission?.commitment_outcome ?? null,
     currentStreak,
+    activeDaysLast14,
     daysRemaining,
     repeatedMissPattern,
     recentMissCount: recentMissedMissions.length,
     reviewedWeeksCount: reviewedRecentMissions.length,
+    stageStalled,
+    inactiveAgainstMission,
   }), [
     interventionState,
     mentorTrack,
     currentMission?.status,
     currentMission?.commitment_outcome,
     currentStreak,
+    activeDaysLast14,
     daysRemaining,
     repeatedMissPattern,
     recentMissedMissions.length,
     reviewedRecentMissions.length,
+    stageStalled,
+    inactiveAgainstMission,
   ]);
 
   useEffect(() => {
@@ -325,7 +434,7 @@ export function DashboardAccountabilityHero({ founderName, businessStage, curren
   const heroDescription = !currentMission
     ? 'Write one commitment before the rest of the dashboard competes for attention.'
     : isActive
-    ? 'Keep this sentence visible. The rest of the dashboard should help you finish it.'
+    ? 'Keep this sentence visible. The rest of the War Room should earn its place by helping you finish it.'
     : missedCommitment
     ? 'Review what blocked the week, then tighten the next commitment until it is finishable.'
     : 'Use that momentum to pick the next bottleneck and commit to one clear finish line.';
@@ -353,6 +462,13 @@ export function DashboardAccountabilityHero({ founderName, businessStage, curren
     : 'bg-green-500/10 text-green-700 dark:text-green-300 border-green-500/20';
 
   const reflection = currentMission?.reflection_text?.trim();
+  const partnerStatus = latestNudge?.nudger_profile?.full_name
+    ? `${latestNudge.nudger_profile.full_name} is waiting on your response.`
+    : activePartnerNames.length === 1
+    ? `${activePartnerNames[0]} is your accountability partner this week.`
+    : activePartnerNames.length > 1
+    ? `${activePartnerNames.length} accountability partners can see whether this week closes.`
+    : null;
 
   return (
     <Card className="border-primary/25 bg-[radial-gradient(circle_at_top_left,_hsl(var(--primary)/0.16),_transparent_40%),linear-gradient(135deg,hsl(var(--background)),hsl(var(--card))_62%)] shadow-lg shadow-primary/5">
@@ -373,6 +489,11 @@ export function DashboardAccountabilityHero({ founderName, businessStage, curren
               <p className="max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
                 {heroDescription}
               </p>
+              {partnerStatus ? (
+                <div className="rounded-2xl border border-border/60 bg-background/75 px-4 py-3 text-sm text-muted-foreground">
+                  <span className="font-medium text-foreground">Social pressure:</span> {partnerStatus}
+                </div>
+              ) : null}
             </div>
 
             <div className="rounded-3xl border border-border/60 bg-background/85 p-5 shadow-sm backdrop-blur-sm">
@@ -469,6 +590,8 @@ export function DashboardAccountabilityHero({ founderName, businessStage, curren
                 title={interventionTitle}
                 description={interventionDescription}
                 mentorRoute={mentorRoute}
+                resourceHref={stageIntervention.resourceHref}
+                resourceLabel={stageIntervention.resourceLabel}
                 onMentorClick={() => trackInterventionClick('mentor')}
                 onPartnerClick={() => {
                   trackInterventionClick('partner');

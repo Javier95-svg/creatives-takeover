@@ -1,7 +1,25 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Lightbulb,
   Users,
@@ -14,6 +32,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { normalizeAccountabilityPreferences } from "@/lib/accountabilityPreferences";
 
 interface Milestone {
   id: string;
@@ -56,26 +75,100 @@ const milestoneColors: Record<string, string> = {
 export const MilestonesTimeline = ({ userId, isOwnProfile }: MilestonesTimelineProps) => {
   const [milestones, setMilestones] = useState<Milestone[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [profilePreferences, setProfilePreferences] = useState<Record<string, unknown> | null>(null);
+  const [profileName, setProfileName] = useState<string | null>(null);
+  const [newMilestone, setNewMilestone] = useState({
+    title: "",
+    description: "",
+    milestone_type: "custom",
+  });
 
-  useEffect(() => {
-    loadMilestones();
-  }, [userId]);
-
-  const loadMilestones = async () => {
+  const loadMilestones = useCallback(async () => {
     try {
-      const { data, error } = await supabase
-        .from('founder_milestones')
-        .select('*')
-        .eq('user_id', userId)
-        .order('achieved_at', { ascending: false });
+      const [milestonesResult, profileResult] = await Promise.all([
+        supabase
+          .from('founder_milestones')
+          .select('*')
+          .eq('user_id', userId)
+          .order('achieved_at', { ascending: false }),
+        supabase
+          .from('profiles')
+          .select('full_name, user_preferences')
+          .eq('id', userId)
+          .maybeSingle(),
+      ]);
 
-      if (error) throw error;
-      setMilestones(data || []);
+      if (milestonesResult.error) throw milestonesResult.error;
+      if (profileResult.error) throw profileResult.error;
+      setMilestones(milestonesResult.data || []);
+      setProfilePreferences((profileResult.data?.user_preferences as Record<string, unknown> | null) ?? null);
+      setProfileName(profileResult.data?.full_name ?? null);
     } catch (error) {
       console.error('Error loading milestones:', error);
       toast.error('Failed to load milestones');
     } finally {
       setLoading(false);
+    }
+  }, [userId]);
+
+  useEffect(() => {
+    void loadMilestones();
+  }, [loadMilestones]);
+
+  const handleAddMilestone = async () => {
+    if (!newMilestone.title.trim()) {
+      toast.error("Milestone title is required");
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const { error } = await supabase
+        .from('founder_milestones')
+        .insert({
+          user_id: userId,
+          title: newMilestone.title.trim(),
+          description: newMilestone.description.trim() || null,
+          milestone_type: newMilestone.milestone_type,
+          achieved_at: new Date().toISOString(),
+          is_pinned: false,
+        });
+
+      if (error) throw error;
+
+      const preferences = normalizeAccountabilityPreferences(profilePreferences);
+      if (preferences.auto_share_milestones) {
+        const { error: shareError } = await supabase
+          .from('community_posts')
+          .insert({
+            user_id: userId,
+            title: `${newMilestone.title.trim()}`,
+            content: `${profileName || 'A founder'} just completed a milestone: ${newMilestone.title.trim()}${newMilestone.description.trim() ? `. ${newMilestone.description.trim()}` : '.'}`,
+            tags: ['milestone', 'progress', newMilestone.milestone_type],
+          });
+
+        if (shareError) {
+          console.error('Failed to auto-share milestone', shareError);
+          toast.error('Milestone saved, but community sharing failed.');
+        }
+      }
+
+      toast.success("Milestone added");
+      setNewMilestone({
+        title: "",
+        description: "",
+        milestone_type: "custom",
+      });
+      setIsDialogOpen(false);
+      await loadMilestones();
+    } catch (error) {
+      console.error('Error creating milestone:', error);
+      toast.error('Failed to add milestone');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -90,21 +183,88 @@ export const MilestonesTimeline = ({ userId, isOwnProfile }: MilestonesTimelineP
 
   if (milestones.length === 0) {
     return (
-      <Card className="p-8 text-center">
-        <Rocket className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
-        <h3 className="text-lg font-semibold mb-2">No Milestones Yet</h3>
-        <p className="text-muted-foreground mb-4">
-          {isOwnProfile
-            ? "Start tracking your startup journey by adding your first milestone!"
-            : "This founder hasn't added any milestones yet."}
-        </p>
-        {isOwnProfile && (
-          <Button size="sm">
-            <Plus className="h-4 w-4 mr-2" />
-            Add First Milestone
-          </Button>
-        )}
-      </Card>
+      <>
+        <Card className="p-8 text-center">
+          <Rocket className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
+          <h3 className="text-lg font-semibold mb-2">No Milestones Yet</h3>
+          <p className="text-muted-foreground mb-4">
+            {isOwnProfile
+              ? "Start tracking your startup journey by adding your first milestone!"
+              : "This founder hasn't added any milestones yet."}
+          </p>
+          {isOwnProfile && (
+            <Button size="sm" onClick={() => setIsDialogOpen(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Add First Milestone
+            </Button>
+          )}
+        </Card>
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Add Milestone</DialogTitle>
+              <DialogDescription>
+                Record the milestone that moved your startup forward. If auto-share is enabled, this can also become a simple community progress post.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-2">
+              <div className="space-y-2">
+                <Label htmlFor="milestone_title_empty">Title</Label>
+                <Input
+                  id="milestone_title_empty"
+                  value={newMilestone.title}
+                  onChange={(event) => setNewMilestone((current) => ({ ...current, title: event.target.value }))}
+                  placeholder="e.g. Shipped the waitlist page"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="milestone_type_empty">Type</Label>
+                <Select
+                  value={newMilestone.milestone_type}
+                  onValueChange={(value) => setNewMilestone((current) => ({ ...current, milestone_type: value }))}
+                >
+                  <SelectTrigger id="milestone_type_empty">
+                    <SelectValue placeholder="Select milestone type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="idea-validated">Idea Validated</SelectItem>
+                    <SelectItem value="waitlist-launched">Waitlist Launched</SelectItem>
+                    <SelectItem value="first-user">First User</SelectItem>
+                    <SelectItem value="first-revenue">First Revenue</SelectItem>
+                    <SelectItem value="funding">Funding</SelectItem>
+                    <SelectItem value="launch">Launch</SelectItem>
+                    <SelectItem value="partnership">Partnership</SelectItem>
+                    <SelectItem value="custom">Custom</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="milestone_description_empty">What happened?</Label>
+                <Textarea
+                  id="milestone_description_empty"
+                  value={newMilestone.description}
+                  onChange={(event) => setNewMilestone((current) => ({ ...current, description: event.target.value }))}
+                  placeholder="What changed, what did you ship, or what did you learn?"
+                  rows={4}
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsDialogOpen(false)}
+                disabled={isSubmitting}
+              >
+                Cancel
+              </Button>
+              <Button type="button" onClick={handleAddMilestone} disabled={isSubmitting}>
+                {isSubmitting ? 'Saving...' : 'Save Milestone'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </>
     );
   }
 
@@ -113,7 +273,7 @@ export const MilestonesTimeline = ({ userId, isOwnProfile }: MilestonesTimelineP
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold">Milestone Timeline</h3>
         {isOwnProfile && (
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={() => setIsDialogOpen(true)}>
             <Plus className="h-4 w-4 mr-2" />
             Add Milestone
           </Button>
@@ -126,7 +286,7 @@ export const MilestonesTimeline = ({ userId, isOwnProfile }: MilestonesTimelineP
 
         {/* Milestones */}
         <div className="space-y-6">
-          {milestones.map((milestone, index) => {
+          {milestones.map((milestone) => {
             const Icon = milestoneIcons[milestone.milestone_type] || CheckCircle2;
             const colorClass = milestoneColors[milestone.milestone_type] || 'bg-gray-500';
 
@@ -165,6 +325,72 @@ export const MilestonesTimeline = ({ userId, isOwnProfile }: MilestonesTimelineP
           })}
         </div>
       </div>
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Milestone</DialogTitle>
+            <DialogDescription>
+              Record the milestone that moved your startup forward. If auto-share is enabled, this can also become a simple community progress post.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="milestone_title">Title</Label>
+              <Input
+                id="milestone_title"
+                value={newMilestone.title}
+                onChange={(event) => setNewMilestone((current) => ({ ...current, title: event.target.value }))}
+                placeholder="e.g. Shipped the waitlist page"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="milestone_type">Type</Label>
+              <Select
+                value={newMilestone.milestone_type}
+                onValueChange={(value) => setNewMilestone((current) => ({ ...current, milestone_type: value }))}
+              >
+                <SelectTrigger id="milestone_type">
+                  <SelectValue placeholder="Select milestone type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="idea-validated">Idea Validated</SelectItem>
+                  <SelectItem value="waitlist-launched">Waitlist Launched</SelectItem>
+                  <SelectItem value="first-user">First User</SelectItem>
+                  <SelectItem value="first-revenue">First Revenue</SelectItem>
+                  <SelectItem value="funding">Funding</SelectItem>
+                  <SelectItem value="launch">Launch</SelectItem>
+                  <SelectItem value="partnership">Partnership</SelectItem>
+                  <SelectItem value="custom">Custom</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="milestone_description">What happened?</Label>
+              <Textarea
+                id="milestone_description"
+                value={newMilestone.description}
+                onChange={(event) => setNewMilestone((current) => ({ ...current, description: event.target.value }))}
+                placeholder="What changed, what did you ship, or what did you learn?"
+                rows={4}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsDialogOpen(false)}
+              disabled={isSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button type="button" onClick={handleAddMilestone} disabled={isSubmitting}>
+              {isSubmitting ? 'Saving...' : 'Save Milestone'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

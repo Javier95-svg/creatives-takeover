@@ -130,12 +130,16 @@ export const useAccountabilityPartners = () => {
     partnerId: string, 
     partnershipType: AccountabilityPartnership['partnership_type'],
     sprintId?: string,
-    message?: string
+    message?: string,
+    settings?: Record<string, any>,
   ) => {
     if (!user) return { error: 'Not authenticated' };
 
     try {
-      const settings = message ? { request_message: message } : {};
+      const partnershipSettings = {
+        ...(message ? { request_message: message } : {}),
+        ...(settings || {}),
+      };
       
       const { error } = await supabase
         .from('accountability_partnerships')
@@ -144,7 +148,7 @@ export const useAccountabilityPartners = () => {
           partner_id: partnerId,
           sprint_id: sprintId,
           partnership_type: partnershipType,
-          partnership_settings: settings
+          partnership_settings: partnershipSettings
         });
 
       if (error) throw error;

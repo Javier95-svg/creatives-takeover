@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { 
   Dialog, 
   DialogContent, 
@@ -29,6 +29,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useAccountabilityPartners } from '@/hooks/useAccountabilityPartners';
 import { useSprints } from '@/hooks/useSprints';
 import { toast } from 'sonner';
+import { normalizeAccountabilityPreferences } from '@/lib/accountabilityPreferences';
 
 interface Profile {
   id: string;
@@ -38,6 +39,8 @@ interface Profile {
   followers_count: number;
   following_count: number;
   friends_count: number;
+  business_stage?: string | null;
+  user_preferences?: Record<string, unknown> | null;
 }
 
 interface PartnerMatchingModalProps {
@@ -56,32 +59,57 @@ export const PartnerMatchingModal = ({ open, onOpenChange }: PartnerMatchingModa
   const [selectedSprint, setSelectedSprint] = useState<string>('');
   const [requestMessage, setRequestMessage] = useState('');
   const [selectedPartner, setSelectedPartner] = useState<Profile | null>(null);
+  const [checkInMode, setCheckInMode] = useState<'async' | 'live'>('async');
+  const [viewerStage, setViewerStage] = useState<string | null>(null);
 
-  const fetchPotentialPartners = async () => {
+  const fetchPotentialPartners = useCallback(async () => {
     if (!user) return;
 
     try {
       setLoading(true);
+
+      const { data: viewerProfile, error: viewerError } = await supabase
+        .from('profiles')
+        .select('business_stage')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      if (viewerError) throw viewerError;
+      const nextViewerStage = viewerProfile?.business_stage ?? null;
+      setViewerStage(nextViewerStage);
       
       // Get profiles excluding current user and existing partners
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, full_name, avatar_url, bio, followers_count, following_count, friends_count')
+        .select('id, full_name, avatar_url, bio, followers_count, following_count, friends_count, business_stage, user_preferences')
         .neq('id', user.id)
         .not('id', 'in', `(SELECT partner_id FROM accountability_partnerships WHERE requester_id = '${user.id}' AND status IN ('pending', 'active'))`)
         .not('id', 'in', `(SELECT requester_id FROM accountability_partnerships WHERE partner_id = '${user.id}' AND status IN ('pending', 'active'))`)
         .ilike('full_name', `%${searchQuery}%`)
-        .limit(20);
+        .limit(40);
 
       if (error) throw error;
-      setPotentialPartners(data as Profile[] || []);
+      const rankedPartners = ((data as Profile[]) || [])
+        .sort((left, right) => {
+          const leftScore = (left.business_stage && nextViewerStage && left.business_stage === nextViewerStage ? 100 : 0)
+            + (normalizeAccountabilityPreferences(left.user_preferences).preferred_partner_checkin_mode === checkInMode ? 50 : 0)
+            + left.friends_count
+            + left.followers_count;
+          const rightScore = (right.business_stage && nextViewerStage && right.business_stage === nextViewerStage ? 100 : 0)
+            + (normalizeAccountabilityPreferences(right.user_preferences).preferred_partner_checkin_mode === checkInMode ? 50 : 0)
+            + right.friends_count
+            + right.followers_count;
+          return rightScore - leftScore;
+        })
+        .slice(0, 20);
+      setPotentialPartners(rankedPartners);
     } catch (error) {
       console.error('Error fetching potential partners:', error);
       toast.error('Failed to load potential partners');
     } finally {
       setLoading(false);
     }
-  };
+  }, [checkInMode, searchQuery, user]);
 
   const handleSendRequest = async () => {
     if (!selectedPartner) return;
@@ -92,7 +120,12 @@ export const PartnerMatchingModal = ({ open, onOpenChange }: PartnerMatchingModa
       selectedPartner.id,
       partnershipType,
       sprintId,
-      requestMessage
+      requestMessage,
+      {
+        preferred_checkin_mode: checkInMode,
+        requester_stage: viewerStage,
+        partner_stage: selectedPartner.business_stage || null,
+      }
     );
 
     if (!error) {
@@ -105,9 +138,9 @@ export const PartnerMatchingModal = ({ open, onOpenChange }: PartnerMatchingModa
 
   useEffect(() => {
     if (open) {
-      fetchPotentialPartners();
+      void fetchPotentialPartners();
     }
-  }, [open, searchQuery, user]);
+  }, [fetchPotentialPartners, open]);
 
   const getPartnershipIcon = (type: string) => {
     switch (type) {
@@ -154,7 +187,7 @@ export const PartnerMatchingModal = ({ open, onOpenChange }: PartnerMatchingModa
                 </div>
                 <div>
                   <Label>Partnership Type</Label>
-                  <Select value={partnershipType} onValueChange={(value: any) => setPartnershipType(value)}>
+                  <Select value={partnershipType} onValueChange={(value: 'sprint_buddy' | 'daily_accountability' | 'goal_tracker') => setPartnershipType(value)}>
                     <SelectTrigger className="w-48">
                       <SelectValue />
                     </SelectTrigger>
@@ -177,6 +210,18 @@ export const PartnerMatchingModal = ({ open, onOpenChange }: PartnerMatchingModa
                           Goal Tracker
                         </div>
                       </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Check-in Mode</Label>
+                  <Select value={checkInMode} onValueChange={(value: 'async' | 'live') => setCheckInMode(value)}>
+                    <SelectTrigger className="w-40">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="async">Async</SelectItem>
+                      <SelectItem value="live">Live</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -228,6 +273,11 @@ export const PartnerMatchingModal = ({ open, onOpenChange }: PartnerMatchingModa
                               {partner.bio || 'No bio available'}
                             </p>
                             <div className="flex items-center gap-3 mt-1">
+                              {partner.business_stage ? (
+                                <Badge variant="secondary" className="text-xs">
+                                  {partner.business_stage}
+                                </Badge>
+                              ) : null}
                               <Badge variant="outline" className="text-xs">
                                 {partner.friends_count} friends
                               </Badge>
@@ -272,6 +322,11 @@ export const PartnerMatchingModal = ({ open, onOpenChange }: PartnerMatchingModa
                              'Goal Tracker'}
                           </span>
                         </Badge>
+                        {selectedPartner.business_stage ? (
+                          <Badge variant="secondary" className="mt-1 ml-2">
+                            {selectedPartner.business_stage}
+                          </Badge>
+                        ) : null}
                       </div>
                     </div>
                   </CardContent>
@@ -304,6 +359,9 @@ export const PartnerMatchingModal = ({ open, onOpenChange }: PartnerMatchingModa
                     onChange={(e) => setRequestMessage(e.target.value)}
                     className="min-h-24"
                   />
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    This request will be tagged for a {checkInMode} weekly check-in.
+                  </p>
                 </div>
               </div>
             )}

@@ -262,7 +262,6 @@ function UpgradePreviewCard({
 }
 
 export function ProModeView({
-  userId,
   streak,
   weeklyProgress,
   tasksCompletedThisWeek,
@@ -318,9 +317,9 @@ export function ProModeView({
         <CardContent>
           <SummaryStrip
             items={[
-              { label: 'Mission status', value: `${weeklyProgress.toFixed(0)}%`, caption: 'One weekly objective should still stay visible.', icon: BarChart3 },
-              { label: 'Execution', value: String(tasksCompletedThisWeek), caption: 'Completed actions across the current fundraising week.', icon: CheckCircle2 },
-              { label: 'Operating rhythm', value: streak > 0 ? `${streak} day streak` : 'Needs attention', caption: 'Consistency compounds faster than access.', icon: Flame },
+              { label: 'Mission status', value: `${weeklyProgress.toFixed(0)}%`, caption: 'The weekly commitment is the command object for this room.', icon: BarChart3 },
+              { label: 'Execution', value: String(tasksCompletedThisWeek), caption: 'Only actions that move the commitment forward belong here.', icon: CheckCircle2 },
+              { label: 'Operating rhythm', value: streak > 0 ? `${streak} day streak` : 'Needs attention', caption: 'Consistency matters, but the hero carries the real accountability signal.', icon: Flame },
             ]}
           />
         </CardContent>
@@ -330,7 +329,7 @@ export function ProModeView({
         <div className="space-y-6">
           <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
             <div id="weekly-mission">
-              <WeeklyMissionPanel />
+              <WeeklyMissionPanel variant="compact" />
             </div>
             <div id="mode-fundraising">
               <FundraisingActionGrid />
@@ -396,17 +395,6 @@ export function ProModeView({
                 </div>
               </div>
             </SidePanelCard>
-            {userId ? (
-              <MomentumMeter
-                userId={userId}
-                stats={{
-                  activeSprints,
-                  completedSessions,
-                  currentStreak: streak,
-                  totalCheckIns,
-                }}
-              />
-            ) : null}
           </div>
         </div>
       </div>

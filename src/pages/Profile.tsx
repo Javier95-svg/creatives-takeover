@@ -23,6 +23,7 @@ import { useUpgradePrompt } from "@/contexts/UpgradePromptContext";
 import { toast } from "sonner";
 import { logError } from "@/lib/logger";
 import { createIdempotencyKey } from "@/lib/idempotency";
+import { getPublicStageLabel, shouldShowPublicStage } from "@/lib/accountabilityPreferences";
 import {
   buildDiscoveryCallRedirectUrl,
   createDiscoveryCallIntent,
@@ -55,6 +56,8 @@ interface Profile {
   creative_niche: string | null;
   business_stage: string | null;
   role: string | null;
+  updated_at?: string | null;
+  user_preferences?: Record<string, unknown> | null;
 
   // Founder-specific fields
   founder_role: 'founder' | 'co-founder' | 'solo-founder' | null;
@@ -134,12 +137,8 @@ const Profile = () => {
   const { stats } = useProfileData(profile?.id || '');
   const { openUpgradePrompt } = useUpgradePrompt();
 
-  const formatLabel = (value: string) =>
-    value
-      .split(/[\s-]+/)
-      .filter(Boolean)
-      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ');
+  const showPublicStage = profile ? shouldShowPublicStage(profile.user_preferences, isOwnProfile) : false;
+  const publicStageLabel = profile ? getPublicStageLabel(profile.business_stage, profile.startup_stage) : null;
 
   const resolveDiscoveryCallMentor = async (): Promise<DiscoveryCallMentorConfig | null> => {
     if (!profile) {
@@ -619,7 +618,7 @@ const Profile = () => {
                   </div>
                   <div className="text-center">
                     <div className="text-xl font-bold text-primary">
-                      {profile.startup_stage ? profile.startup_stage.toUpperCase() : 'N/A'}
+                      {showPublicStage ? (publicStageLabel || 'N/A') : isOwnProfile ? (publicStageLabel || 'Not set') : 'Private'}
                     </div>
                     <div className="text-xs text-muted-foreground">Stage</div>
                   </div>
@@ -785,7 +784,9 @@ const Profile = () => {
                       <div>
                         <h2 className="text-2xl font-semibold tracking-tight">This founder is building in public.</h2>
                         <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                          A real profile should show motion, not just identity. Stage, traction, current focus, and milestones give other founders something concrete to react to.
+                          {showPublicStage
+                            ? 'A real profile should show motion, not just identity. Stage, traction, current focus, and milestones give other founders something concrete to react to.'
+                            : 'A real profile should still show motion. Stage is private here, but milestones, traction, and current focus can still make progress visible.'}
                         </p>
                         <div className="pt-1">
                           <Button asChild variant="outline" size="sm">
@@ -802,7 +803,11 @@ const Profile = () => {
                       <div className="rounded-2xl border border-border/60 bg-background/80 p-4">
                         <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Stage</p>
                         <p className="mt-2 text-lg font-semibold text-foreground">
-                          {profile.startup_stage ? formatLabel(profile.startup_stage) : 'Not shared yet'}
+                          {showPublicStage
+                            ? (publicStageLabel || 'Not shared yet')
+                            : isOwnProfile
+                            ? (publicStageLabel || 'Not shared yet')
+                            : 'Private'}
                         </p>
                       </div>
                       <div className="rounded-2xl border border-border/60 bg-background/80 p-4">

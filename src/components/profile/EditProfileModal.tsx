@@ -7,10 +7,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Switch } from "@/components/ui/switch";
 import { Upload, Loader2, Bold, Italic, List, Link as LinkIcon, Image as ImageIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ProfilePictureCropModal } from "@/components/ProfilePictureCropModal";
+import {
+  mergeAccountabilityPreferences,
+  normalizeAccountabilityPreferences,
+} from "@/lib/accountabilityPreferences";
 
 interface EditProfileModalProps {
   open: boolean;
@@ -45,11 +50,13 @@ interface EditProfileModalProps {
     current_focus: string | null;
     looking_for: string[] | null;
     startup_links: any | null;
+    user_preferences?: Record<string, unknown> | null;
   };
   onSuccess: () => void;
 }
 
 export const EditProfileModal = ({ open, onClose, profile, onSuccess }: EditProfileModalProps) => {
+  const accountabilityPreferences = normalizeAccountabilityPreferences(profile.user_preferences);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     full_name: profile.full_name || "",
@@ -83,6 +90,11 @@ export const EditProfileModal = ({ open, onClose, profile, onSuccess }: EditProf
     waitlist_url: profile.startup_links?.waitlist || "",
     demo_url: profile.startup_links?.demo || "",
     loom_url: profile.startup_links?.loom || "",
+    weekly_checkin_day: accountabilityPreferences.weekly_checkin_day,
+    weekly_scorecard_local_hour: String(accountabilityPreferences.weekly_scorecard_local_hour),
+    public_stage_visible: accountabilityPreferences.public_stage_visible,
+    auto_share_milestones: accountabilityPreferences.auto_share_milestones,
+    timezone: accountabilityPreferences.timezone,
   });
   const [avatarFile, setAvatarFile] = useState<string | null>(null);
   const [showCropModal, setShowCropModal] = useState(false);
@@ -166,6 +178,17 @@ export const EditProfileModal = ({ open, onClose, profile, onSuccess }: EditProf
 
     try {
       const updateData: any = {
+        user_preferences: mergeAccountabilityPreferences(profile.user_preferences, {
+          weekly_checkin_day: formData.weekly_checkin_day,
+          weekly_scorecard_local_hour: Number(formData.weekly_scorecard_local_hour),
+          public_stage_visible: formData.public_stage_visible,
+          auto_share_milestones: formData.auto_share_milestones,
+          timezone: formData.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
+          stage_last_updated_at:
+            formData.business_stage !== (profile.business_stage || '')
+              ? new Date().toISOString()
+              : accountabilityPreferences.stage_last_updated_at,
+        }),
         full_name: formData.full_name,
         bio: formData.bio,
         bio_html: formData.bio_html,
@@ -315,6 +338,79 @@ export const EditProfileModal = ({ open, onClose, profile, onSuccess }: EditProf
                 <p className="text-xs text-muted-foreground mt-1">
                   A brief tagline about what you're building
                 </p>
+              </div>
+            </div>
+
+            <div className="space-y-4 border-t pt-4">
+              <h4 className="font-medium">Accountability Preferences</h4>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="weekly_checkin_day">Weekly Commitment Day</Label>
+                  <Select
+                    value={formData.weekly_checkin_day}
+                    onValueChange={(value) => setFormData({ ...formData, weekly_checkin_day: value })}
+                  >
+                    <SelectTrigger id="weekly_checkin_day">
+                      <SelectValue placeholder="Choose a day" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="monday">Monday</SelectItem>
+                      <SelectItem value="tuesday">Tuesday</SelectItem>
+                      <SelectItem value="wednesday">Wednesday</SelectItem>
+                      <SelectItem value="thursday">Thursday</SelectItem>
+                      <SelectItem value="friday">Friday</SelectItem>
+                      <SelectItem value="saturday">Saturday</SelectItem>
+                      <SelectItem value="sunday">Sunday</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label htmlFor="weekly_scorecard_local_hour">Weekly Scorecard Hour</Label>
+                  <Select
+                    value={formData.weekly_scorecard_local_hour}
+                    onValueChange={(value) => setFormData({ ...formData, weekly_scorecard_local_hour: value })}
+                  >
+                    <SelectTrigger id="weekly_scorecard_local_hour">
+                      <SelectValue placeholder="Choose an hour" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Array.from({ length: 24 }).map((_, hour) => (
+                        <SelectItem key={hour} value={String(hour)}>
+                          {hour.toString().padStart(2, '0')}:00
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="rounded-xl border border-border/60 bg-muted/20 p-4 text-sm text-muted-foreground">
+                Local timezone for scorecards: <span className="font-medium text-foreground">{formData.timezone}</span>
+              </div>
+
+              <div className="space-y-4">
+                <div className="flex items-center justify-between rounded-xl border border-border/60 bg-background/70 p-4">
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium text-foreground">Show stage on public profile</p>
+                    <p className="text-xs text-muted-foreground">Off by default. Enable only if you want stage progress visible to the community.</p>
+                  </div>
+                  <Switch
+                    checked={formData.public_stage_visible}
+                    onCheckedChange={(checked) => setFormData({ ...formData, public_stage_visible: checked })}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between rounded-xl border border-border/60 bg-background/70 p-4">
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium text-foreground">Auto-share meaningful milestones</p>
+                    <p className="text-xs text-muted-foreground">When you add a milestone, create a simple progress post in the community feed automatically.</p>
+                  </div>
+                  <Switch
+                    checked={formData.auto_share_milestones}
+                    onCheckedChange={(checked) => setFormData({ ...formData, auto_share_milestones: checked })}
+                  />
+                </div>
               </div>
             </div>
 

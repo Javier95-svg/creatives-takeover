@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { getCurrentWeekWindow } from '@/lib/accountabilityPreferences';
 
 // Types
 export type WeeklyCommitmentOutcome = 'completed' | 'missed';
@@ -50,28 +51,6 @@ export interface UseWeeklyMissionReturn {
 }
 
 /**
- * Get the start and end of the current week (Monday to Sunday)
- */
-function getCurrentWeekDates(): { start: string; end: string } {
-  const now = new Date();
-  const dayOfWeek = now.getDay();
-  const diff = dayOfWeek === 0 ? -6 : 1 - dayOfWeek; // Adjust to Monday
-
-  const monday = new Date(now);
-  monday.setDate(now.getDate() + diff);
-  monday.setHours(0, 0, 0, 0);
-
-  const sunday = new Date(monday);
-  sunday.setDate(monday.getDate() + 6);
-  sunday.setHours(23, 59, 59, 999);
-
-  return {
-    start: monday.toISOString().split('T')[0],
-    end: sunday.toISOString().split('T')[0]
-  };
-}
-
-/**
  * Hook to manage weekly missions (goals) for founders
  * Connects daily work to weekly outcomes
  */
@@ -83,6 +62,27 @@ export function useWeeklyMission(): UseWeeklyMissionReturn {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const getWeekDatesForUser = useCallback(async () => {
+    if (!user) {
+      return getCurrentWeekWindow();
+    }
+
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('user_preferences')
+      .eq('id', user.id)
+      .maybeSingle();
+
+    if (profileError) {
+      console.warn('Falling back to default weekly window', profileError);
+      return getCurrentWeekWindow();
+    }
+
+    return getCurrentWeekWindow(
+      (profile?.user_preferences as Record<string, unknown> | null | undefined) ?? null,
+    );
+  }, [user]);
+
   /**
    * Fetch the current active weekly mission
    */
@@ -93,7 +93,7 @@ export function useWeeklyMission(): UseWeeklyMissionReturn {
     setError(null);
 
     try {
-      const weekDates = getCurrentWeekDates();
+      const weekDates = await getWeekDatesForUser();
 
       const [currentMissionResult, recentMissionsResult] = await Promise.all([
         supabase
@@ -110,7 +110,7 @@ export function useWeeklyMission(): UseWeeklyMissionReturn {
           .select('*')
           .eq('user_id', user.id)
           .order('week_start_date', { ascending: false })
-          .limit(3),
+          .limit(6),
       ]);
 
       const { data: mission, error: missionError } = currentMissionResult;
@@ -141,7 +141,7 @@ export function useWeeklyMission(): UseWeeklyMissionReturn {
     } finally {
       setIsLoading(false);
     }
-  }, [user]);
+  }, [getWeekDatesForUser, user]);
 
   /**
    * Create a new weekly mission
@@ -161,7 +161,7 @@ export function useWeeklyMission(): UseWeeklyMissionReturn {
     }
 
     try {
-      const weekDates = getCurrentWeekDates();
+      const weekDates = await getWeekDatesForUser();
 
       // Keep one commitment per founder per week.
       const { data: existingMission } = await supabase
@@ -206,7 +206,7 @@ export function useWeeklyMission(): UseWeeklyMissionReturn {
       toast.error('Failed to create mission');
       return null;
     }
-  }, [user]);
+  }, [getWeekDatesForUser, user]);
 
   /**
    * Update an existing mission
