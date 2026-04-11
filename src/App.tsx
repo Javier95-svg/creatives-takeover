@@ -32,6 +32,7 @@ const Index = lazy(() => import("./pages/Index"));
 const About = lazy(() => import("./pages/About"));
 const PricingPage = lazy(() => import("./pages/PricingPage"));
 const CommunityPage = lazy(() => import("./pages/CommunityPage"));
+const ProgressCommunityPage = lazy(() => import("./pages/ProgressCommunityPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Careers = lazy(() => import("./pages/Careers"));
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
@@ -49,6 +50,7 @@ const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const PromptLibrary = lazy(() => import("./pages/PromptLibrary"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const SavedMentorsPage = lazy(() => import("./pages/SavedMentorsPage"));
+const Accountability = lazy(() => import("./pages/Accountability"));
 const Blog = lazy(() => import("./pages/Blog"));
 const VCSearchPage = lazy(() => import("./pages/VCSearchPage"));
 const EmailTemplatesPage = lazy(() => import("./pages/EmailTemplatesPage"));
@@ -72,7 +74,6 @@ const Messages = lazy(() => import("./pages/Messages"));
 const CreativesTakeover = lazy(() => import("./pages/CreativesTakeover"));
 const RAGTest = lazy(() => import("./pages/RAGTest"));
 const TestPhase1 = lazy(() => import("./pages/TestPhase1"));
-const MentorMarketplaceHub = lazy(() => import("./pages/community/MentorMarketplaceHub"));
 const MentorProfilePage = lazy(() => import("./pages/community/MentorProfilePage"));
 const FindCoFounder = lazy(() => import("./pages/community/FindCoFounder"));
 const CreateCoFounderPost = lazy(() => import("./pages/community/CreateCoFounderPost"));
@@ -94,8 +95,6 @@ const CoreMetricsPage = lazy(() => import("./pages/CoreMetricsPage"));
 const WeeklyMissionPage = lazy(() => import("./pages/WeeklyMissionPage"));
 const TasksPage = lazy(() => import("./pages/TasksPage"));
 const ValidateJourney = lazy(() => import("./pages/journeys/ValidateJourney"));
-const MvpJourney = lazy(() => import("./pages/journeys/MvpJourney"));
-const FirstCustomersJourney = lazy(() => import("./pages/journeys/FirstCustomersJourney"));
 const WaitlistMakerPage = lazy(() => import("./pages/WaitlistMakerPage"));
 const DirectoriesPage = lazy(() => import("./pages/DirectoriesPage"));
 const FindYourAngel = lazy(() => import("./pages/community/FindYourAngel"));
@@ -155,6 +154,7 @@ function App() {
                         <Route path="/about" element={<About />} />
                         <Route path="/pricing" element={<PricingPage />} />
                         <Route path="/community" element={<CommunityPage />} />
+                        <Route path="/community/progress" element={<ProgressCommunityPage />} />
                         <Route path="/community/mentors/:id" element={<MentorProfilePage />} />
                         <Route path="/community/book/:id" element={<MentorBookingPage />} />
                         <Route path="/community/co-founders" element={<FindCoFounder />} />
@@ -211,6 +211,7 @@ function App() {
                         <Route path="/reset-password" element={<ResetPassword />} />
                         <Route path="/onboarding" element={<Onboarding />} />
                         <Route path="/dashboard" element={<Dashboard />} />
+                        <Route path="/accountability" element={<Accountability />} />
                         <Route path="/saved-mentors" element={<SavedMentorsPage />} />
                         <Route path="/account" element={<Account />} />
                         <Route path="/setup-quiz" element={<SetupQuiz />} />

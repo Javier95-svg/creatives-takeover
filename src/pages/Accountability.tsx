@@ -22,8 +22,7 @@ const Accountability = () => {
                 Accountability Partners
               </h1>
               <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-                Stay motivated and achieve your goals with the support of trusted accountability partners. 
-                Connect, track progress, and celebrate wins together.
+                Make progress visible, add peer pressure on purpose, and turn weekly commitments into a social rhythm instead of a private promise.
               </p>
             </div>
 
