@@ -4,10 +4,12 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useWeeklyMission } from '@/hooks/decision-engine/useWeeklyMission';
+import { buildMentorMarketplaceRoute, type MentorRecommendationTrack } from '@/lib/mentorDemand';
 
 interface DashboardAccountabilityHeroProps {
   founderName: string;
   businessStage?: string | null;
+  currentStreak: number;
 }
 
 function formatWeekRange(startDate: string, endDate: string) {
@@ -17,7 +19,25 @@ function formatWeekRange(startDate: string, endDate: string) {
   return `${start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${end.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
 }
 
-export function DashboardAccountabilityHero({ founderName, businessStage }: DashboardAccountabilityHeroProps) {
+function getMentorTrackForStage(stage?: string | null): MentorRecommendationTrack {
+  const normalizedStage = stage?.trim().toLowerCase() ?? '';
+
+  if (normalizedStage.includes('fundrais')) {
+    return 'fundraising';
+  }
+
+  if (normalizedStage.includes('mvp') || normalizedStage.includes('prototype') || normalizedStage.includes('build')) {
+    return 'mvp';
+  }
+
+  if (normalizedStage.includes('launch') || normalizedStage.includes('gtm') || normalizedStage.includes('market') || normalizedStage.includes('sales')) {
+    return 'gtm';
+  }
+
+  return 'validation';
+}
+
+export function DashboardAccountabilityHero({ founderName, businessStage, currentStreak }: DashboardAccountabilityHeroProps) {
   const { currentMission, isLoading, error } = useWeeklyMission();
 
   if (isLoading) {
@@ -66,6 +86,62 @@ export function DashboardAccountabilityHero({ founderName, businessStage }: Dash
   const daysRemaining = currentMission
     ? Math.ceil((new Date(currentMission.week_end_date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))
     : null;
+  const mentorTrack = getMentorTrackForStage(businessStage);
+  const mentorRoute = buildMentorMarketplaceRoute({
+    track: mentorTrack,
+    source: 'dashboard-accountability-phase2',
+  });
+
+  const consistencySignal = currentStreak >= 7
+    ? {
+        label: 'Locked in',
+        detail: `${currentStreak}-day streak`,
+        description: 'You have a real rhythm. Protect it by closing the commitment before adding new work.',
+      }
+    : currentStreak >= 3
+    ? {
+        label: 'Building rhythm',
+        detail: `${currentStreak}-day streak`,
+        description: 'The habit is forming. Keep the week narrow enough to finish.',
+      }
+    : currentStreak >= 1
+    ? {
+        label: 'Fragile rhythm',
+        detail: `${currentStreak}-day streak`,
+        description: 'A little consistency is there, but the week can still slip if the commitment stays vague.',
+      }
+    : {
+        label: 'No rhythm yet',
+        detail: '0-day streak',
+        description: 'You need a shorter commitment and one concrete action today to create momentum.',
+      };
+
+  const isStuck = Boolean(
+    currentMission && (
+      missedCommitment ||
+      (isActive && daysRemaining !== null && daysRemaining <= 0 && currentStreak === 0)
+    ),
+  );
+  const isAtRisk = Boolean(
+    currentMission &&
+    !isStuck &&
+    isActive &&
+    daysRemaining !== null &&
+    daysRemaining <= 2 &&
+    currentStreak <= 1,
+  );
+
+  const interventionTitle = isStuck
+    ? 'You look stuck. Do not solve this week alone.'
+    : isAtRisk
+    ? 'This week is drifting.'
+    : null;
+  const interventionDescription = isStuck
+    ? 'The commitment either missed or ran out of runway with no execution rhythm. Get outside pressure before next week repeats this one.'
+    : isAtRisk
+    ? 'You still have time, but the signal says the week is losing shape. Pressure-test the next move now instead of waiting for the review.'
+    : null;
+  const interventionCtaLabel = isStuck ? 'Find the Right Mentor' : isAtRisk ? 'Get Outside Pressure' : null;
 
   const heroTitle = !currentMission
     ? `${founderName}, set the one outcome that should shape this week.`
@@ -159,6 +235,15 @@ export function DashboardAccountabilityHero({ founderName, businessStage }: Dash
 
               <div className="rounded-2xl border border-border/60 bg-background/80 p-4">
                 <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                  <CheckCircle2 className="h-3.5 w-3.5" />
+                  Consistency
+                </div>
+                <p className="text-sm font-semibold text-foreground">{consistencySignal.label}</p>
+                <p className="mt-1 text-xs leading-5 text-muted-foreground">{consistencySignal.detail}</p>
+              </div>
+
+              <div className="rounded-2xl border border-border/60 bg-background/80 p-4">
+                <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                   <Calendar className="h-3.5 w-3.5" />
                   Week
                 </div>
@@ -191,6 +276,42 @@ export function DashboardAccountabilityHero({ founderName, businessStage }: Dash
                 </p>
               </div>
             </div>
+
+            <div className="rounded-2xl border border-border/60 bg-background/80 p-4">
+              <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                {isStuck ? <AlertTriangle className="h-3.5 w-3.5 text-orange-500" /> : <Flag className="h-3.5 w-3.5" />}
+                Execution signal
+              </div>
+              <p className="text-sm font-semibold text-foreground">
+                {isStuck ? 'Stuck' : isAtRisk ? 'At risk' : 'On track'}
+              </p>
+              <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                {isStuck || isAtRisk ? interventionDescription : consistencySignal.description}
+              </p>
+            </div>
+
+            {interventionTitle && interventionDescription && interventionCtaLabel ? (
+              <div className="rounded-2xl border border-orange-500/20 bg-orange-500/10 p-4">
+                <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-orange-700 dark:text-orange-300">
+                  <AlertTriangle className="h-4 w-4" />
+                  {interventionTitle}
+                </div>
+                <p className="text-sm leading-6 text-muted-foreground">
+                  {interventionDescription}
+                </p>
+                <div className="mt-4 flex flex-wrap gap-3">
+                  <Button asChild variant="secondary">
+                    <Link to={mentorRoute}>
+                      {interventionCtaLabel}
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </Link>
+                  </Button>
+                  <Button asChild variant="outline">
+                    <Link to="/weekly-mission">Tighten Commitment</Link>
+                  </Button>
+                </div>
+              </div>
+            ) : null}
 
             <Button asChild size="lg" className="h-12 justify-between px-5 text-sm font-semibold">
               <Link to="/weekly-mission">

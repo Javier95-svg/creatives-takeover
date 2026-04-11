@@ -91,6 +91,8 @@ export const PersonalizedDashboardClassic = () => {
       totalCheckIns: 0
     } 
   };
+  const founderName = profile?.full_name?.split(' ')[0] || user?.user_metadata?.full_name?.split(' ')[0] || user?.email?.split('@')[0] || 'Creator';
+  const streak = stats?.currentStreak || currentStreak;
 
   // Determine greeting based on time
   const hour = new Date().getHours();
@@ -175,7 +177,7 @@ export const PersonalizedDashboardClassic = () => {
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                   <div className="space-y-1">
                     <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
-                      {greeting}, {profile?.full_name?.split(' ')[0] || user?.user_metadata?.full_name?.split(' ')[0] || user?.email?.split('@')[0] || 'Creator'}! 👋
+                      {greeting}, {founderName}! 👋
                     </h1>
                     <p className="text-sm text-muted-foreground" id="dashboard-welcome">
                       Welcome to your Founder Command Center.
@@ -184,11 +186,11 @@ export const PersonalizedDashboardClassic = () => {
                       Track your business progress, manage tasks, and monitor your entrepreneurial journey.
                     </span>
                   </div>
-                  {((stats?.currentStreak || currentStreak) > 0) && (
+                  {(streak > 0) && (
                     <div className="flex items-center gap-3 bg-gradient-to-r from-orange-500/20 to-orange-500/10 px-4 py-2 rounded-full border border-orange-500/20">
                       <Flame className="h-5 w-5 text-orange-500" />
                       <div className="flex flex-col">
-                        <span className="text-xl font-bold text-orange-500">{stats?.currentStreak || currentStreak}</span>
+                        <span className="text-xl font-bold text-orange-500">{streak}</span>
                         <span className="text-xs text-orange-500/80">day streak</span>
                       </div>
                     </div>
@@ -200,8 +202,9 @@ export const PersonalizedDashboardClassic = () => {
 
           <div className="animate-fade-in-up opacity-0" style={{ animationDelay: '0.01s', animationFillMode: 'forwards' }}>
             <DashboardAccountabilityHero
-              founderName={profile?.full_name?.split(' ')[0] || user?.user_metadata?.full_name?.split(' ')[0] || user?.email?.split('@')[0] || 'Creator'}
+              founderName={founderName}
               businessStage={profile?.business_stage}
+              currentStreak={streak}
             />
           </div>
         </div>

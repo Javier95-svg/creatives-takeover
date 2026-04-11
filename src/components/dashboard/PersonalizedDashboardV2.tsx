@@ -188,6 +188,7 @@ export const PersonalizedDashboardV2 = () => {
                     <DashboardAccountabilityHero
                       founderName={founderName}
                       businessStage={profile?.business_stage}
+                      currentStreak={metrics.streak}
                     />
 
                     <RetentionActionFeed />
