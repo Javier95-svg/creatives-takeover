@@ -32,6 +32,7 @@ import { RetentionActionFeed } from './RetentionActionFeed';
 import { DailyPromptResumeCard } from './DailyPromptResumeCard';
 import { useDashboardDailyPrompt } from '@/hooks/useDashboardDailyPrompt';
 import { SavedMentorsCard } from './SavedMentorsCard';
+import { DashboardAccountabilityHero } from './DashboardAccountabilityHero';
 
 export const PersonalizedDashboardClassic = () => {
   const { user } = useAuth();
@@ -195,6 +196,13 @@ export const PersonalizedDashboardClassic = () => {
                 </div>
               </CardContent>
             </Card>
+          </div>
+
+          <div className="animate-fade-in-up opacity-0" style={{ animationDelay: '0.01s', animationFillMode: 'forwards' }}>
+            <DashboardAccountabilityHero
+              founderName={profile?.full_name?.split(' ')[0] || user?.user_metadata?.full_name?.split(' ')[0] || user?.email?.split('@')[0] || 'Creator'}
+              businessStage={profile?.business_stage}
+            />
           </div>
         </div>
 

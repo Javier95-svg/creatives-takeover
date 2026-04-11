@@ -1,10 +1,9 @@
-import React, { createContext } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usePersonalizedDashboard } from '@/hooks/usePersonalizedDashboard';
 import { ArrowRight } from 'lucide-react';
 import { DailyGoalModal } from './DailyGoalModal';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
 import { useDashboardInitialization } from '@/hooks/useDashboardInitialization';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { ModeToggle, DashboardMode } from './modes/ModeToggle';
@@ -20,14 +19,14 @@ import { useSubscription } from '@/hooks/useSubscription';
 import { useDashboardMetrics } from '@/hooks/useDashboardMetrics';
 import { DailyPromptResumeCard } from './DailyPromptResumeCard';
 import { useDashboardDailyPrompt } from '@/hooks/useDashboardDailyPrompt';
+import { DashboardAccountabilityHero } from './DashboardAccountabilityHero';
+import { TaskCountContext } from './TaskCountContext';
 
 // Internal wrapper component that uses the navigation context
 interface DashboardContentWrapperProps {
   sectionIds: string[];
   children: ReactNode;
 }
-
-export const TaskCountContext = createContext(0);
 
 const DashboardContentWrapper = ({ sectionIds, children }: DashboardContentWrapperProps) => {
   useActiveSection(sectionIds);
@@ -176,8 +175,6 @@ export const PersonalizedDashboardV2 = () => {
                       />
                     ) : null}
 
-                    <RetentionActionFeed />
-
                     {/* Header */}
                     <div>
                       <h1 className="font-space-grotesk text-3xl sm:text-4xl font-semibold tracking-tight">
@@ -187,6 +184,13 @@ export const PersonalizedDashboardV2 = () => {
                         {modeConfig.subtitle}
                       </p>
                     </div>
+
+                    <DashboardAccountabilityHero
+                      founderName={founderName}
+                      businessStage={profile?.business_stage}
+                    />
+
+                    <RetentionActionFeed />
 
                     {/* Dynamic View Based on Mode */}
                     {dashboardMode === 'rookie' && <RookieModeView {...tierViewSharedProps} />}
