@@ -247,3 +247,9 @@ export const trackWeeklyMissionCompleted = (properties?: AnalyticsProperties) =>
 
 export const trackWeeklyMissionMissed = (properties?: AnalyticsProperties) =>
   captureEvent('weekly_mission_missed', properties);
+
+export const trackDashboardAccountabilityStateViewed = (properties?: AnalyticsProperties) =>
+  captureEvent('dashboard_accountability_state_viewed', properties);
+
+export const trackDashboardAccountabilityInterventionClicked = (properties?: AnalyticsProperties) =>
+  captureEvent('dashboard_accountability_intervention_clicked', properties);

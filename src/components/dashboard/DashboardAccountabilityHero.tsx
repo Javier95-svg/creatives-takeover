@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Calendar, CheckCircle2, Flag, Target, AlertTriangle } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
@@ -7,7 +7,10 @@ import { Badge } from '@/components/ui/badge';
 import { PartnerMatchingModal } from '@/components/social/PartnerMatchingModal';
 import { useAuth } from '@/contexts/AuthContext';
 import { useMentorRecommendations } from '@/hooks/useMentorRecommendations';
-import { captureEvent } from '@/lib/analytics';
+import {
+  trackDashboardAccountabilityInterventionClicked,
+  trackDashboardAccountabilityStateViewed,
+} from '@/lib/analytics';
 import { trackActivity } from '@/lib/activity';
 import { useWeeklyMission } from '@/hooks/decision-engine/useWeeklyMission';
 import { buildMentorMarketplaceRoute, type MentorRecommendationTrack } from '@/lib/mentorDemand';
@@ -140,46 +143,7 @@ export function DashboardAccountabilityHero({ founderName, businessStage, curren
   const { user } = useAuth();
   const { currentMission, recentMissions, isLoading, error } = useWeeklyMission();
   const [isPartnerMatchingOpen, setIsPartnerMatchingOpen] = useState(false);
-
-  if (isLoading) {
-    return (
-      <Card className="border-primary/25 bg-gradient-to-br from-primary/10 via-card to-card shadow-sm">
-        <CardContent className="p-6">
-          <div className="space-y-4 animate-pulse">
-            <div className="h-5 w-40 rounded bg-muted" />
-            <div className="h-10 w-3/4 rounded bg-muted" />
-            <div className="grid gap-3 md:grid-cols-3">
-              <div className="h-20 rounded-2xl bg-muted/80" />
-              <div className="h-20 rounded-2xl bg-muted/80" />
-              <div className="h-20 rounded-2xl bg-muted/80" />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (error) {
-    return (
-      <Card className="border-destructive/20 bg-card/90 shadow-sm">
-        <CardContent className="flex flex-col gap-4 p-6 lg:flex-row lg:items-center lg:justify-between">
-          <div className="space-y-2">
-            <Badge variant="secondary">Weekly accountability</Badge>
-            <h2 className="font-space-grotesk text-2xl font-semibold tracking-tight">Your weekly commitment could not load.</h2>
-            <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
-              Open the full weekly commitment page to set or review it directly.
-            </p>
-          </div>
-          <Button asChild>
-            <Link to="/weekly-mission">
-              Open Weekly Commitment
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Link>
-          </Button>
-        </CardContent>
-      </Card>
-    );
-  }
+  const lastTrackedStateRef = useRef<string | null>(null);
 
   const isActive = currentMission?.status === 'active';
   const isReviewed = Boolean(currentMission && currentMission.status !== 'active');
@@ -259,24 +223,92 @@ export function DashboardAccountabilityHero({ founderName, businessStage, curren
       : 'You still have time, but the signal says the week is losing shape. Pressure-test the next move now instead of waiting for the review.'
     : null;
   const interventionState = isStuck ? 'stuck' : isAtRisk ? 'at_risk' : 'on_track';
+  const accountabilityStateProps = useMemo(() => ({
+    state: interventionState,
+    mentorTrack,
+    missionStatus: currentMission?.status ?? 'none',
+    commitmentOutcome: currentMission?.commitment_outcome ?? null,
+    currentStreak,
+    daysRemaining,
+    repeatedMissPattern,
+    recentMissCount: recentMissedMissions.length,
+    reviewedWeeksCount: reviewedRecentMissions.length,
+  }), [
+    interventionState,
+    mentorTrack,
+    currentMission?.status,
+    currentMission?.commitment_outcome,
+    currentStreak,
+    daysRemaining,
+    repeatedMissPattern,
+    recentMissedMissions.length,
+    reviewedRecentMissions.length,
+  ]);
+
+  useEffect(() => {
+    const trackingKey = JSON.stringify(accountabilityStateProps);
+
+    if (lastTrackedStateRef.current === trackingKey) {
+      return;
+    }
+
+    lastTrackedStateRef.current = trackingKey;
+
+    trackDashboardAccountabilityStateViewed(accountabilityStateProps);
+    void trackActivity('dashboard_accountability_state_viewed', accountabilityStateProps, user?.id);
+  }, [user?.id, accountabilityStateProps]);
+
+  if (isLoading) {
+    return (
+      <Card className="border-primary/25 bg-gradient-to-br from-primary/10 via-card to-card shadow-sm">
+        <CardContent className="p-6">
+          <div className="space-y-4 animate-pulse">
+            <div className="h-5 w-40 rounded bg-muted" />
+            <div className="h-10 w-3/4 rounded bg-muted" />
+            <div className="grid gap-3 md:grid-cols-3">
+              <div className="h-20 rounded-2xl bg-muted/80" />
+              <div className="h-20 rounded-2xl bg-muted/80" />
+              <div className="h-20 rounded-2xl bg-muted/80" />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card className="border-destructive/20 bg-card/90 shadow-sm">
+        <CardContent className="flex flex-col gap-4 p-6 lg:flex-row lg:items-center lg:justify-between">
+          <div className="space-y-2">
+            <Badge variant="secondary">Weekly accountability</Badge>
+            <h2 className="font-space-grotesk text-2xl font-semibold tracking-tight">Your weekly commitment could not load.</h2>
+            <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
+              Open the full weekly commitment page to set or review it directly.
+            </p>
+          </div>
+          <Button asChild>
+            <Link to="/weekly-mission">
+              Open Weekly Commitment
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Link>
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
 
   const trackInterventionClick = (target: 'mentor' | 'partner') => {
-    captureEvent('dashboard_accountability_intervention_clicked', {
+    trackDashboardAccountabilityInterventionClicked({
       target,
-      state: interventionState,
-      mentorTrack,
-      missionStatus: currentMission?.status ?? 'none',
-      commitmentOutcome: currentMission?.commitment_outcome ?? null,
+      ...accountabilityStateProps,
     });
 
     void trackActivity(
       'dashboard_accountability_intervention_clicked',
       {
         target,
-        state: interventionState,
-        mentorTrack,
-        missionStatus: currentMission?.status ?? 'none',
-        commitmentOutcome: currentMission?.commitment_outcome ?? null,
+        ...accountabilityStateProps,
       },
       user?.id,
     );
