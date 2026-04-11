@@ -1,4 +1,5 @@
 export const ONBOARDING_RETURN_KEY = "onboarding_return_url";
+const ICP_UNLOCK_PATHNAME = "/icp-builder";
 
 const AUTH_PATH_PREFIXES = [
   "/auth",
@@ -51,4 +52,16 @@ export function appendReturnParam(path: string, returnPath?: string | null): str
   if (safeReturn === "/dashboard") return path;
   const separator = path.includes("?") ? "&" : "?";
   return `${path}${separator}return=${encodeURIComponent(safeReturn)}`;
+}
+
+export function isIcpUnlockPath(path: string | null | undefined): boolean {
+  const safePath = sanitizeReturnPath(path, "");
+  if (!safePath) return false;
+
+  try {
+    const parsed = new URL(safePath, "https://creatives-takeover.local");
+    return parsed.pathname === ICP_UNLOCK_PATHNAME && parsed.searchParams.get("unlock") === "1";
+  } catch {
+    return false;
+  }
 }

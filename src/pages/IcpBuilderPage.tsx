@@ -133,7 +133,7 @@ export default function ICPBuilderPage() {
                     <span className="takeover-gradient creatives-font">ICP Builder</span>
                   </h1>
                   <p className="mx-auto max-w-2xl text-center text-lg leading-relaxed text-foreground/80 sm:text-xl">
-                    Define the pain point you're solving, who you're solving it for, and what your moat is.
+                    Answer a few sharp questions and unlock an ICP Draft that tells you who to build for, what pain to target, what to ship first, and where your moat is.
                   </p>
                 </div>
                 {activationGuide ? (

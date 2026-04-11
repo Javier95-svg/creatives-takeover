@@ -6,7 +6,7 @@ import { getSessionSafely } from '@/integrations/supabase/auth';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import type { EmailOtpType } from '@supabase/supabase-js';
-import { appendReturnParam, buildOnboardingPath, persistOnboardingReturn, sanitizeReturnPath } from '@/lib/authRedirect';
+import { appendReturnParam, buildOnboardingPath, isIcpUnlockPath, persistOnboardingReturn, sanitizeReturnPath } from '@/lib/authRedirect';
 import { trackSignupCompleted } from '@/lib/analytics';
 import { resumePendingDiscoveryCallRedirect } from '@/services/discoveryCallService';
 
@@ -167,7 +167,7 @@ const AuthCallback = () => {
             console.error('Error resolving onboarding status after auth callback:', profileError);
           }
 
-          const destination = profile?.onboarding_completed === true
+          const destination = profile?.onboarding_completed === true || isIcpUnlockPath(returnUrl)
             ? returnUrl
             : buildOnboardingPath(returnUrl);
 

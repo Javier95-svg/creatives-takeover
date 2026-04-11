@@ -94,6 +94,14 @@ serve(async (req) => {
       .order("created_at", { ascending: false })
       .limit(5);
 
+    const { data: latestIcp } = await supabase
+      .from("icp_analysis_results")
+      .select("analysis_data, created_at")
+      .eq("user_id", user_id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
     // Generate recommendations based on context
     const recommendations = generateRecommendations({
       profile,
@@ -102,7 +110,8 @@ serve(async (req) => {
       sprints,
       checkIns,
       activity,
-      commitments
+      commitments,
+      icp: latestIcp
     });
 
     // Store only unique recommendations (limit to top 5)
@@ -181,6 +190,38 @@ function generateRecommendations(context: any): any[] {
   const biggestChallenge = context.profile?.quiz_biggest_challenge;
   const launchTimeline = context.profile?.quiz_launch_timeline;
   const lookingForCofounder = context.profile?.quiz_looking_for_cofounder;
+  const icpArtifact = context.icp?.analysis_data;
+  const icpDashboardContext = icpArtifact?.dashboardContext;
+
+  if (icpDashboardContext?.message) {
+    recs.push({
+      recommendation_type: "action",
+      title: icpDashboardContext.message,
+      description:
+        icpArtifact?.draftDocument?.confidence?.level === "low"
+          ? "Your ICP Draft is directionally useful, but it still needs stronger customer evidence."
+          : "Your ICP Draft is ready to drive the next execution step. Keep the momentum attached to that specific segment.",
+      priority: 15,
+      reason: "The latest ICP Draft should shape what the founder does next.",
+      action_url: icpDashboardContext?.prioritizedTasks?.[0]?.route || "/icp-builder",
+      metadata: { category: "icp_handoff", draft_driven: true },
+    });
+  }
+
+  if (Array.isArray(icpDashboardContext?.recommendations)) {
+    icpDashboardContext.recommendations.forEach((item: any, index: number) => {
+      if (!item?.title || !item?.actionUrl) return;
+      recs.push({
+        recommendation_type: item.type || "action",
+        title: item.title,
+        description: item.description || "Use your ICP Draft to choose the next move with intent.",
+        priority: Number(item.priority ?? 12) - index,
+        reason: item.reason || "This recommendation was generated from your latest ICP Draft.",
+        action_url: item.actionUrl,
+        metadata: { category: "icp_handoff", draft_driven: true, source_index: index },
+      });
+    });
+  }
 
   // Priority 0: Quiz-based personalized recommendations (highest priority)
   if (quizCompleted) {

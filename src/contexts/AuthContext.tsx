@@ -8,6 +8,7 @@ import { VALIDATION } from '@/config/constants';
 import {
   buildOnboardingPath,
   getOnboardingReturn,
+  isIcpUnlockPath,
   ONBOARDING_RETURN_KEY,
   persistOnboardingReturn,
   sanitizeReturnPath,
@@ -170,6 +171,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             const currentPath = `${window.location.pathname}${window.location.search}`;
             const safeCurrentPath = sanitizeReturnPath(currentPath, '/dashboard');
             const preferredReturn = getOnboardingReturn(safeCurrentPath);
+            if (isIcpUnlockPath(preferredReturn)) {
+              sessionStorage.removeItem(`onboarding_redirect_${userId}`);
+              return;
+            }
             persistOnboardingReturn(preferredReturn);
             const onboardingPath = buildOnboardingPath(preferredReturn);
             // Small delay to let UI settle

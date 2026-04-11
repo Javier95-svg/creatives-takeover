@@ -25,6 +25,7 @@ import {
 import {
   appendReturnParam,
   buildOnboardingPath,
+  isIcpUnlockPath,
   persistOnboardingReturn,
   sanitizeReturnPath,
 } from "@/lib/authRedirect";
@@ -114,7 +115,7 @@ const Signup = () => {
         const targetAfterAuth = sanitizeReturnPath(conversionSource.returnUrl, '/dashboard');
 
         // New users should complete onboarding first, then return to intent.
-        if (profile?.onboarding_completed !== true) {
+        if (profile?.onboarding_completed !== true && !isIcpUnlockPath(targetAfterAuth)) {
           persistOnboardingReturn(targetAfterAuth);
           navigate(buildOnboardingPath(targetAfterAuth), { replace: true });
           return;

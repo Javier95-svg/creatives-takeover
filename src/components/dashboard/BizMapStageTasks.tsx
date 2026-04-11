@@ -15,7 +15,15 @@ interface TaskProgressRow {
   completed_at: string | null;
 }
 
-const TASK_PROGRESS_TABLE = 'bizmap_task_progress' as any;
+interface DraftTask {
+  id: string;
+  title: string;
+  description: string;
+  priority: 'high' | 'medium' | 'low';
+  route: string;
+}
+
+const TASK_PROGRESS_TABLE = 'bizmap_task_progress';
 
 export function BizMapStageTasks() {
   const { user } = useAuth();
@@ -28,14 +36,49 @@ export function BizMapStageTasks() {
   } = useBizMapProgress();
   const [taskProgress, setTaskProgress] = useState<Record<string, TaskProgressRow>>({});
   const [isSaving, setIsSaving] = useState<string | null>(null);
+  const [draftTasks, setDraftTasks] = useState<DraftTask[]>([]);
 
   const currentStageDefinition = useMemo(
     () => BIZMAP_STAGES.find((stage) => stage.id === currentStage),
     [currentStage],
   );
 
-  const currentTasks = STAGE_TASKS[currentStage] ?? [];
+  const currentTasks = useMemo(() => {
+    if (currentStage === 'IDENTITY' && draftTasks.length > 0) {
+      return draftTasks;
+    }
+    return STAGE_TASKS[currentStage] ?? [];
+  }, [currentStage, draftTasks]);
   const nextStage = getNextStage(currentStage);
+
+  useEffect(() => {
+    const loadDraftTasks = async () => {
+      if (!user || currentStage !== 'IDENTITY') {
+        setDraftTasks([]);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('icp_analysis_results')
+        .select('analysis_data')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (error) {
+        console.error('Failed to load ICP-driven stage tasks:', error);
+        setDraftTasks([]);
+        return;
+      }
+
+      const draftAnalysis = data as { analysis_data?: { dashboardContext?: { prioritizedTasks?: DraftTask[] } } } | null;
+      const tasks = draftAnalysis?.analysis_data?.dashboardContext?.prioritizedTasks ?? [];
+      setDraftTasks(Array.isArray(tasks) ? tasks.slice(0, 5) : []);
+    };
+
+    void loadDraftTasks();
+  }, [currentStage, user]);
 
   useEffect(() => {
     const loadTaskProgress = async () => {
@@ -118,7 +161,9 @@ export function BizMapStageTasks() {
           </Badge>
         </div>
         <CardDescription>
-          Stage-aware recommendations update as you unlock the next stage.
+          {currentStage === 'IDENTITY' && draftTasks.length > 0
+            ? 'These next steps come from your latest ICP Draft.'
+            : 'Stage-aware recommendations update as you unlock the next stage.'}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -154,6 +199,9 @@ export function BizMapStageTasks() {
                     <p className={`text-sm ${done ? 'line-through text-muted-foreground' : 'text-foreground'}`}>
                       {task.title}
                     </p>
+                    {'description' in task && typeof task.description === 'string' && task.description ? (
+                      <p className="mt-1 text-xs text-muted-foreground">{task.description}</p>
+                    ) : null}
                     <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
                       <Badge variant="outline" className="capitalize">{task.priority}</Badge>
                       <Link to={task.route} className="text-primary hover:underline">

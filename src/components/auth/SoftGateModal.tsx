@@ -29,8 +29,12 @@ import { Input } from "@/components/ui/input";
 interface SoftGateModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  seed: string;
+  seed?: string;
   trigger: string;
+  title?: string;
+  description?: string;
+  returnPathOverride?: string;
+  onBeforeAuthContinue?: () => void;
 }
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -38,8 +42,12 @@ const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const SoftGateModal = ({
   open,
   onOpenChange,
-  seed,
+  seed = "",
   trigger,
+  title = "Save your ICP and keep building",
+  description = "Create your founder profile in 10 seconds. Free forever. No credit card.",
+  returnPathOverride,
+  onBeforeAuthContinue,
 }: SoftGateModalProps) => {
   const navigate = useNavigate();
   const { signUp } = useAuth();
@@ -52,7 +60,10 @@ const SoftGateModal = ({
   const hasTrackedOpenRef = useRef(false);
 
   const normalizedSeed = useMemo(() => normalizeIcpSeed(seed), [seed]);
-  const returnPath = useMemo(() => buildIcpSeedReturnPath(normalizedSeed), [normalizedSeed]);
+  const returnPath = useMemo(
+    () => returnPathOverride || buildIcpSeedReturnPath(normalizedSeed),
+    [normalizedSeed, returnPathOverride],
+  );
 
   useEffect(() => {
     if (!open) {
@@ -87,6 +98,7 @@ const SoftGateModal = ({
   const handleGoogleContinue = async () => {
     try {
       trackSignupStarted({ method: "google" });
+      onBeforeAuthContinue?.();
       persistIcpSeed(normalizedSeed);
       persistOnboardingReturn(returnPath);
       localStorage.setItem("oauth_return_url", returnPath);
@@ -118,6 +130,7 @@ const SoftGateModal = ({
 
   const handleLinkedInContinue = () => {
     trackSignupStarted({ method: "linkedin" });
+    onBeforeAuthContinue?.();
     // TODO(oauth): confirm the configured Supabase LinkedIn provider id before wiring this CTA.
     toast.error("LinkedIn OAuth is not configured in this app yet.");
   };
@@ -147,6 +160,7 @@ const SoftGateModal = ({
 
     try {
       trackSignupStarted({ method: "email" });
+      onBeforeAuthContinue?.();
       persistIcpSeed(normalizedSeed);
       persistOnboardingReturn(returnPath);
 
@@ -210,10 +224,10 @@ const SoftGateModal = ({
 
           <DialogHeader className="space-y-3 text-left">
             <DialogTitle className="pr-10 text-2xl font-semibold tracking-tight">
-              Save your ICP and keep building
+              {title}
             </DialogTitle>
             <DialogDescription className="text-sm leading-6 text-muted-foreground">
-              Create your founder profile in 10 seconds. Free forever. No credit card.
+              {description}
             </DialogDescription>
           </DialogHeader>
 
