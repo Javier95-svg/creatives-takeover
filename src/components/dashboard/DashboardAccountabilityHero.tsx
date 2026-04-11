@@ -1,10 +1,17 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Calendar, CheckCircle2, Flag, Target, AlertTriangle } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { PartnerMatchingModal } from '@/components/social/PartnerMatchingModal';
+import { useAuth } from '@/contexts/AuthContext';
+import { useMentorRecommendations } from '@/hooks/useMentorRecommendations';
+import { captureEvent } from '@/lib/analytics';
+import { trackActivity } from '@/lib/activity';
 import { useWeeklyMission } from '@/hooks/decision-engine/useWeeklyMission';
 import { buildMentorMarketplaceRoute, type MentorRecommendationTrack } from '@/lib/mentorDemand';
+import { getMentorProfileUrl } from '@/utils/mentorSlug';
 
 interface DashboardAccountabilityHeroProps {
   founderName: string;
@@ -37,8 +44,102 @@ function getMentorTrackForStage(stage?: string | null): MentorRecommendationTrac
   return 'validation';
 }
 
+interface AccountabilityInterventionPanelProps {
+  mentorTrack: MentorRecommendationTrack;
+  missionGoal?: string;
+  businessStage?: string | null;
+  title: string;
+  description: string;
+  mentorRoute: string;
+  onMentorClick: () => void;
+  onPartnerClick: () => void;
+}
+
+function AccountabilityInterventionPanel({
+  mentorTrack,
+  missionGoal,
+  businessStage,
+  title,
+  description,
+  mentorRoute,
+  onMentorClick,
+  onPartnerClick,
+}: AccountabilityInterventionPanelProps) {
+  const { loading, recommendations } = useMentorRecommendations(
+    {
+      track: mentorTrack,
+      targetAudience: businessStage ?? undefined,
+      summaryInsight: description,
+      extraKeywords: missionGoal ? [missionGoal] : undefined,
+    },
+    {
+      limit: 1,
+      source: 'dashboard-accountability-phase2-intervention',
+    },
+  );
+
+  const recommendedMentor = recommendations[0];
+  const mentorProfileRoute = recommendedMentor
+    ? getMentorProfileUrl(recommendedMentor.mentor.id, recommendedMentor.mentor.name)
+    : mentorRoute;
+  const mentorCtaLabel = recommendedMentor
+    ? `Talk to ${recommendedMentor.mentor.name}`
+    : 'Browse Matching Mentors';
+
+  return (
+    <div className="rounded-2xl border border-orange-500/20 bg-orange-500/10 p-4">
+      <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-orange-700 dark:text-orange-300">
+        <AlertTriangle className="h-4 w-4" />
+        {title}
+      </div>
+      <p className="text-sm leading-6 text-muted-foreground">
+        {description}
+      </p>
+
+      <div className="mt-4 rounded-2xl border border-border/60 bg-background/85 p-4">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Outside pressure</p>
+        {loading ? (
+          <div className="mt-3 space-y-2 animate-pulse">
+            <div className="h-4 w-32 rounded bg-muted" />
+            <div className="h-4 w-full rounded bg-muted" />
+            <div className="h-4 w-2/3 rounded bg-muted" />
+          </div>
+        ) : recommendedMentor ? (
+          <div className="mt-3 space-y-2">
+            <p className="text-sm font-semibold text-foreground">Recommended mentor: {recommendedMentor.mentor.name}</p>
+            <p className="text-sm leading-6 text-muted-foreground">{recommendedMentor.reason}</p>
+            {recommendedMentor.matchedExpertise.length > 0 ? (
+              <p className="text-xs leading-5 text-muted-foreground">
+                Best-fit expertise: {recommendedMentor.matchedExpertise.join(', ')}
+              </p>
+            ) : null}
+          </div>
+        ) : (
+          <p className="mt-3 text-sm leading-6 text-muted-foreground">
+            Browse mentors already filtered to the kind of pressure this week needs.
+          </p>
+        )}
+      </div>
+
+      <div className="mt-4 flex flex-wrap gap-3">
+        <Button asChild variant="secondary">
+          <Link to={mentorProfileRoute} onClick={onMentorClick}>
+            {mentorCtaLabel}
+            <ArrowRight className="ml-2 h-4 w-4" />
+          </Link>
+        </Button>
+        <Button variant="outline" onClick={onPartnerClick}>
+          Find Accountability Partner
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 export function DashboardAccountabilityHero({ founderName, businessStage, currentStreak }: DashboardAccountabilityHeroProps) {
-  const { currentMission, isLoading, error } = useWeeklyMission();
+  const { user } = useAuth();
+  const { currentMission, recentMissions, isLoading, error } = useWeeklyMission();
+  const [isPartnerMatchingOpen, setIsPartnerMatchingOpen] = useState(false);
 
   if (isLoading) {
     return (
@@ -91,6 +192,14 @@ export function DashboardAccountabilityHero({ founderName, businessStage, curren
     track: mentorTrack,
     source: 'dashboard-accountability-phase2',
   });
+  const reviewedRecentMissions = recentMissions.filter((mission) => mission.status !== 'active');
+  const recentMissedMissions = reviewedRecentMissions.filter(
+    (mission) => mission.commitment_outcome === 'missed' || mission.status === 'abandoned',
+  );
+  const repeatedMissPattern = recentMissedMissions.length >= 2;
+  const repeatedMissSummary = repeatedMissPattern
+    ? `${recentMissedMissions.length} missed commitments in the last ${reviewedRecentMissions.length} reviewed weeks`
+    : null;
 
   const consistencySignal = currentStreak >= 7
     ? {
@@ -117,31 +226,61 @@ export function DashboardAccountabilityHero({ founderName, businessStage, curren
       };
 
   const isStuck = Boolean(
-    currentMission && (
+    repeatedMissPattern ||
+    (currentMission && (
       missedCommitment ||
       (isActive && daysRemaining !== null && daysRemaining <= 0 && currentStreak === 0)
-    ),
+    )),
   );
   const isAtRisk = Boolean(
+    !repeatedMissPattern &&
     currentMission &&
     !isStuck &&
     isActive &&
     daysRemaining !== null &&
     daysRemaining <= 2 &&
-    currentStreak <= 1,
+    (currentStreak <= 1 || recentMissedMissions.length >= 1),
   );
 
-  const interventionTitle = isStuck
+  const interventionTitle = repeatedMissPattern
+    ? 'This is becoming a pattern.'
+    : isStuck
     ? 'You look stuck. Do not solve this week alone.'
     : isAtRisk
     ? 'This week is drifting.'
     : null;
-  const interventionDescription = isStuck
+  const interventionDescription = repeatedMissPattern
+    ? `You have missed multiple recent commitments. ${repeatedMissSummary}. Break the pattern with outside pressure and a smaller next commitment.`
+    : isStuck
     ? 'The commitment either missed or ran out of runway with no execution rhythm. Get outside pressure before next week repeats this one.'
     : isAtRisk
-    ? 'You still have time, but the signal says the week is losing shape. Pressure-test the next move now instead of waiting for the review.'
+    ? recentMissedMissions.length >= 1
+      ? 'You still have time, but the last missed week plus a weak execution signal suggest this commitment is slipping toward another miss.'
+      : 'You still have time, but the signal says the week is losing shape. Pressure-test the next move now instead of waiting for the review.'
     : null;
-  const interventionCtaLabel = isStuck ? 'Find the Right Mentor' : isAtRisk ? 'Get Outside Pressure' : null;
+  const interventionState = isStuck ? 'stuck' : isAtRisk ? 'at_risk' : 'on_track';
+
+  const trackInterventionClick = (target: 'mentor' | 'partner') => {
+    captureEvent('dashboard_accountability_intervention_clicked', {
+      target,
+      state: interventionState,
+      mentorTrack,
+      missionStatus: currentMission?.status ?? 'none',
+      commitmentOutcome: currentMission?.commitment_outcome ?? null,
+    });
+
+    void trackActivity(
+      'dashboard_accountability_intervention_clicked',
+      {
+        target,
+        state: interventionState,
+        mentorTrack,
+        missionStatus: currentMission?.status ?? 'none',
+        commitmentOutcome: currentMission?.commitment_outcome ?? null,
+      },
+      user?.id,
+    );
+  };
 
   const heroTitle = !currentMission
     ? `${founderName}, set the one outcome that should shape this week.`
@@ -286,31 +425,24 @@ export function DashboardAccountabilityHero({ founderName, businessStage, curren
                 {isStuck ? 'Stuck' : isAtRisk ? 'At risk' : 'On track'}
               </p>
               <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                {isStuck || isAtRisk ? interventionDescription : consistencySignal.description}
+                {repeatedMissSummary ?? (isStuck || isAtRisk ? interventionDescription : consistencySignal.description)}
               </p>
             </div>
 
-            {interventionTitle && interventionDescription && interventionCtaLabel ? (
-              <div className="rounded-2xl border border-orange-500/20 bg-orange-500/10 p-4">
-                <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-orange-700 dark:text-orange-300">
-                  <AlertTriangle className="h-4 w-4" />
-                  {interventionTitle}
-                </div>
-                <p className="text-sm leading-6 text-muted-foreground">
-                  {interventionDescription}
-                </p>
-                <div className="mt-4 flex flex-wrap gap-3">
-                  <Button asChild variant="secondary">
-                    <Link to={mentorRoute}>
-                      {interventionCtaLabel}
-                      <ArrowRight className="ml-2 h-4 w-4" />
-                    </Link>
-                  </Button>
-                  <Button asChild variant="outline">
-                    <Link to="/weekly-mission">Tighten Commitment</Link>
-                  </Button>
-                </div>
-              </div>
+            {interventionTitle && interventionDescription ? (
+              <AccountabilityInterventionPanel
+                mentorTrack={mentorTrack}
+                missionGoal={currentMission?.mission_goal}
+                businessStage={businessStage}
+                title={interventionTitle}
+                description={interventionDescription}
+                mentorRoute={mentorRoute}
+                onMentorClick={() => trackInterventionClick('mentor')}
+                onPartnerClick={() => {
+                  trackInterventionClick('partner');
+                  setIsPartnerMatchingOpen(true);
+                }}
+              />
             ) : null}
 
             <Button asChild size="lg" className="h-12 justify-between px-5 text-sm font-semibold">
@@ -322,6 +454,7 @@ export function DashboardAccountabilityHero({ founderName, businessStage, curren
           </div>
         </div>
       </CardContent>
+      <PartnerMatchingModal open={isPartnerMatchingOpen} onOpenChange={setIsPartnerMatchingOpen} />
     </Card>
   );
 }

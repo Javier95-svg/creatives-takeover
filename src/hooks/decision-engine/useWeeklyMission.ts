@@ -37,6 +37,7 @@ export interface WeeklyMissionTask {
 
 export interface UseWeeklyMissionReturn {
   currentMission: WeeklyMission | null;
+  recentMissions: WeeklyMission[];
   linkedTasks: WeeklyMissionTask[];
   isLoading: boolean;
   error: string | null;
@@ -77,6 +78,7 @@ function getCurrentWeekDates(): { start: string; end: string } {
 export function useWeeklyMission(): UseWeeklyMissionReturn {
   const { user } = useAuth();
   const [currentMission, setCurrentMission] = useState<WeeklyMission | null>(null);
+  const [recentMissions, setRecentMissions] = useState<WeeklyMission[]>([]);
   const [linkedTasks, setLinkedTasks] = useState<WeeklyMissionTask[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -93,20 +95,32 @@ export function useWeeklyMission(): UseWeeklyMissionReturn {
     try {
       const weekDates = getCurrentWeekDates();
 
-      // Get the current week's commitment, even after it has been reviewed.
-      const { data: mission, error: missionError } = await supabase
-        .from('weekly_missions')
-        .select('*')
-        .eq('user_id', user.id)
-        .gte('week_end_date', weekDates.start)
-        .lte('week_start_date', weekDates.end)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
+      const [currentMissionResult, recentMissionsResult] = await Promise.all([
+        supabase
+          .from('weekly_missions')
+          .select('*')
+          .eq('user_id', user.id)
+          .gte('week_end_date', weekDates.start)
+          .lte('week_start_date', weekDates.end)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+        supabase
+          .from('weekly_missions')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('week_start_date', { ascending: false })
+          .limit(3),
+      ]);
+
+      const { data: mission, error: missionError } = currentMissionResult;
+      const { data: recentMissionRows, error: recentMissionsError } = recentMissionsResult;
 
       if (missionError) throw missionError;
+      if (recentMissionsError) throw recentMissionsError;
 
       setCurrentMission(mission);
+      setRecentMissions(recentMissionRows || []);
 
       // If mission exists, fetch linked tasks
       if (mission) {
@@ -350,6 +364,7 @@ export function useWeeklyMission(): UseWeeklyMissionReturn {
 
   return {
     currentMission,
+    recentMissions,
     linkedTasks,
     isLoading,
     error,
