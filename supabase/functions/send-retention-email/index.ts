@@ -15,6 +15,7 @@ type SequenceType =
   | "activation_day2"
   | "activation_day7"
   | "weekly_digest"
+  | "weekly_scorecard"
   | "activation_nudge"
   | "progress_nudge"
   | "reengagement"
@@ -35,6 +36,19 @@ interface RetentionEmailRequest {
   contextBody?: string;
   savedMentorCount?: number;
   unreadMessageCount?: number;
+  weeklyCommitment?: string;
+  weeklyOutcome?: string;
+  weeklyReflection?: string | null;
+  activeDaysLast7?: number;
+  suggestedFocus?: string;
+}
+
+function truncateText(value: string, maxLength: number) {
+  if (value.length <= maxLength) {
+    return value;
+  }
+
+  return `${value.slice(0, Math.max(0, maxLength - 1)).trimEnd()}…`;
 }
 
 function escapeHtml(value: string) {
@@ -138,6 +152,11 @@ function buildSequenceEmail(args: {
   unreadMessageCount?: number;
   savedMentorCount?: number;
   niche?: string | null;
+  weeklyCommitment?: string;
+  weeklyOutcome?: string;
+  weeklyReflection?: string | null;
+  activeDaysLast7?: number;
+  suggestedFocus?: string;
 }) {
   const nicheText = args.niche ? ` in ${args.niche}` : "";
   const mentorLabel = args.mentorName ? args.mentorName : "your mentor shortlist";
@@ -257,6 +276,30 @@ function buildSequenceEmail(args: {
         }),
       };
 
+    case "weekly_scorecard": {
+      const commitment = truncateText(args.weeklyCommitment?.trim() || "No weekly commitment recorded.", 160);
+      const outcome = args.weeklyOutcome?.trim() || "Still open";
+      const activeDaysLast7 = Math.max(0, Math.min(args.activeDaysLast7 ?? 0, 7));
+      const reflection = args.weeklyReflection?.trim()
+        ? ` Blocker: ${truncateText(args.weeklyReflection.trim(), 120)}`
+        : "";
+      const suggestedFocus = truncateText(
+        args.suggestedFocus?.trim() || "Set one smaller commitment for next week and finish it early.",
+        160,
+      );
+
+      return {
+        subject: `${args.name}, your weekly scorecard`,
+        html: buildEmailShell({
+          title: `${args.name}, your weekly scorecard`,
+          intro: `This week: ${commitment}`,
+          body: `Result: ${outcome}. Active ${activeDaysLast7} of the last 7 days.${reflection}\n\nNext week: ${suggestedFocus}`,
+          ctaLabel: args.ctaLabel,
+          ctaUrl: args.ctaUrl,
+        }),
+      };
+    }
+
     case "activation_nudge":
       return {
         subject: `Your first founder action is still waiting`,
@@ -335,6 +378,11 @@ serve(async (req: Request): Promise<Response> => {
       contextBody,
       savedMentorCount,
       unreadMessageCount,
+      weeklyCommitment,
+      weeklyOutcome,
+      weeklyReflection,
+      activeDaysLast7,
+      suggestedFocus,
     } = body;
 
     if (!email || !sequence || !userId) {
@@ -360,6 +408,11 @@ serve(async (req: Request): Promise<Response> => {
       unreadMessageCount,
       savedMentorCount,
       niche,
+      weeklyCommitment,
+      weeklyOutcome,
+      weeklyReflection,
+      activeDaysLast7,
+      suggestedFocus,
     });
 
     const fromEmail = Deno.env.get("FROM_EMAIL") || "onboarding@resend.dev";
@@ -400,7 +453,7 @@ serve(async (req: Request): Promise<Response> => {
       resend_id: sendResult?.data?.id ?? null,
     });
 
-    console.log("send-retention-email: sent", { userId, sequence, to: email, id: sendResult?.data?.id });
+    console.warn("send-retention-email: sent", { userId, sequence, to: email, id: sendResult?.data?.id });
 
     return new Response(
       JSON.stringify({ ok: true, id: sendResult?.data?.id }),

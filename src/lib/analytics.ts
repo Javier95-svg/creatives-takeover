@@ -239,5 +239,11 @@ export const trackShareLinkConverted = (properties?: AnalyticsProperties) =>
 export const trackWeeklyMissionViewed = (properties?: AnalyticsProperties) =>
   captureEvent('weekly_mission_viewed', properties);
 
+export const trackWeeklyMissionCreated = (properties?: AnalyticsProperties) =>
+  captureEvent('weekly_mission_created', properties);
+
 export const trackWeeklyMissionCompleted = (properties?: AnalyticsProperties) =>
   captureEvent('weekly_mission_completed', properties);
+
+export const trackWeeklyMissionMissed = (properties?: AnalyticsProperties) =>
+  captureEvent('weekly_mission_missed', properties);

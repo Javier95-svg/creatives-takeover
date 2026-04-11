@@ -7896,6 +7896,7 @@ export type Database = {
       }
       weekly_missions: {
         Row: {
+          commitment_outcome: string | null
           completed_at: string | null
           completion_percentage: number | null
           created_at: string | null
@@ -7903,6 +7904,8 @@ export type Database = {
           id: string
           mission_goal: string
           mission_type: string | null
+          reflection_text: string | null
+          reviewed_at: string | null
           status: string | null
           target_metric: string | null
           target_value: number | null
@@ -7912,6 +7915,7 @@ export type Database = {
           week_start_date: string
         }
         Insert: {
+          commitment_outcome?: string | null
           completed_at?: string | null
           completion_percentage?: number | null
           created_at?: string | null
@@ -7919,6 +7923,8 @@ export type Database = {
           id?: string
           mission_goal: string
           mission_type?: string | null
+          reflection_text?: string | null
+          reviewed_at?: string | null
           status?: string | null
           target_metric?: string | null
           target_value?: number | null
@@ -7928,6 +7934,7 @@ export type Database = {
           week_start_date: string
         }
         Update: {
+          commitment_outcome?: string | null
           completed_at?: string | null
           completion_percentage?: number | null
           created_at?: string | null
@@ -7935,6 +7942,8 @@ export type Database = {
           id?: string
           mission_goal?: string
           mission_type?: string | null
+          reflection_text?: string | null
+          reviewed_at?: string | null
           status?: string | null
           target_metric?: string | null
           target_value?: number | null

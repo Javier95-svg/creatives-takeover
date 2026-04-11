@@ -4,6 +4,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
 // Types
+export type WeeklyCommitmentOutcome = 'completed' | 'missed';
+
 export interface WeeklyMission {
   id: string;
   user_id: string;
@@ -16,6 +18,9 @@ export interface WeeklyMission {
   current_value?: number;
   completion_percentage: number;
   status: 'active' | 'completed' | 'abandoned';
+  commitment_outcome?: WeeklyCommitmentOutcome | null;
+  reflection_text?: string | null;
+  reviewed_at?: string | null;
   created_at: string;
   updated_at: string;
   completed_at?: string;
@@ -37,8 +42,7 @@ export interface UseWeeklyMissionReturn {
   error: string | null;
   createMission: (goal: string, missionType?: string) => Promise<WeeklyMission | null>;
   updateMission: (id: string, updates: Partial<WeeklyMission>) => Promise<void>;
-  completeMission: (id: string) => Promise<void>;
-  abandonMission: (id: string) => Promise<void>;
+  reviewMission: (id: string, outcome: WeeklyCommitmentOutcome, reflection?: string) => Promise<void>;
   linkTaskToMission: (taskId: string, isCritical?: boolean, weight?: number) => Promise<void>;
   unlinkTaskFromMission: (taskId: string) => Promise<void>;
   refresh: () => Promise<void>;
@@ -89,12 +93,11 @@ export function useWeeklyMission(): UseWeeklyMissionReturn {
     try {
       const weekDates = getCurrentWeekDates();
 
-      // Get active mission for current week
+      // Get the current week's commitment, even after it has been reviewed.
       const { data: mission, error: missionError } = await supabase
         .from('weekly_missions')
         .select('*')
         .eq('user_id', user.id)
-        .eq('status', 'active')
         .gte('week_end_date', weekDates.start)
         .lte('week_start_date', weekDates.end)
         .order('created_at', { ascending: false })
@@ -146,18 +149,17 @@ export function useWeeklyMission(): UseWeeklyMissionReturn {
     try {
       const weekDates = getCurrentWeekDates();
 
-      // Check if there's already an active mission for this week
+      // Keep one commitment per founder per week.
       const { data: existingMission } = await supabase
         .from('weekly_missions')
         .select('id')
         .eq('user_id', user.id)
-        .eq('status', 'active')
         .gte('week_end_date', weekDates.start)
         .lte('week_start_date', weekDates.end)
         .maybeSingle();
 
       if (existingMission) {
-        toast.error('You already have an active mission for this week');
+        toast.error('You already set a weekly commitment for this week');
         return null;
       }
 
@@ -171,7 +173,10 @@ export function useWeeklyMission(): UseWeeklyMissionReturn {
           mission_goal: goal,
           mission_type: missionType || 'general',
           status: 'active',
-          completion_percentage: 0
+          completion_percentage: 0,
+          commitment_outcome: null,
+          reflection_text: null,
+          reviewed_at: null
         })
         .select()
         .single();
@@ -179,7 +184,7 @@ export function useWeeklyMission(): UseWeeklyMissionReturn {
       if (createError) throw createError;
 
       setCurrentMission(newMission);
-      toast.success('Weekly mission created! 🎯');
+      toast.success('Weekly commitment set');
 
       return newMission;
     } catch (err) {
@@ -222,56 +227,39 @@ export function useWeeklyMission(): UseWeeklyMissionReturn {
   /**
    * Mark a mission as completed
    */
-  const completeMission = useCallback(async (id: string): Promise<void> => {
+  const reviewMission = useCallback(async (
+    id: string,
+    outcome: WeeklyCommitmentOutcome,
+    reflection?: string
+  ): Promise<void> => {
     if (!user) return;
 
     try {
-      const { error: completeError } = await supabase
+      const normalizedReflection = reflection?.trim() || null;
+      const now = new Date().toISOString();
+      const { error: reviewError } = await supabase
         .from('weekly_missions')
         .update({
-          status: 'completed',
-          completed_at: new Date().toISOString(),
-          completion_percentage: 100,
-          updated_at: new Date().toISOString()
+          status: outcome === 'completed' ? 'completed' : 'abandoned',
+          completed_at: outcome === 'completed' ? now : null,
+          commitment_outcome: outcome,
+          reflection_text: outcome === 'missed' ? normalizedReflection : null,
+          reviewed_at: now,
+          completion_percentage: outcome === 'completed' ? 100 : currentMission?.completion_percentage ?? 0,
+          updated_at: now
         })
         .eq('id', id)
         .eq('user_id', user.id);
 
-      if (completeError) throw completeError;
+      if (reviewError) throw reviewError;
 
-      toast.success('Mission completed! 🎉');
+      toast.success(outcome === 'completed' ? 'Weekly commitment completed' : 'Weekly reflection saved');
       await fetchCurrentMission();
     } catch (err) {
-      console.error('Error completing mission:', err);
-      toast.error('Failed to complete mission');
+      console.error('Error reviewing mission:', err);
+      toast.error('Failed to save weekly review');
     }
-  }, [user, fetchCurrentMission]);
-
-  /**
-   * Abandon a mission
-   */
-  const abandonMission = useCallback(async (id: string): Promise<void> => {
-    if (!user) return;
-
-    try {
-      const { error: abandonError } = await supabase
-        .from('weekly_missions')
-        .update({
-          status: 'abandoned',
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', id)
-        .eq('user_id', user.id);
-
-      if (abandonError) throw abandonError;
-
-      toast.success('Mission abandoned');
-      await fetchCurrentMission();
-    } catch (err) {
-      console.error('Error abandoning mission:', err);
-      toast.error('Failed to abandon mission');
-    }
-  }, [user, fetchCurrentMission]);
+  }, [currentMission?.completion_percentage, fetchCurrentMission, user]);
 
   /**
    * Link a task to the current weekly mission
@@ -367,8 +355,7 @@ export function useWeeklyMission(): UseWeeklyMissionReturn {
     error,
     createMission,
     updateMission,
-    completeMission,
-    abandonMission,
+    reviewMission,
     linkTaskToMission,
     unlinkTaskFromMission,
     refresh: fetchCurrentMission

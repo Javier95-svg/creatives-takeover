@@ -23,6 +23,7 @@ export type RetentionSequence =
   | 'activation_day2'
   | 'activation_day7'
   | 'weekly_digest'
+  | 'weekly_scorecard'
   | 'activation_nudge'
   | 'progress_nudge'
   | 'reengagement'
