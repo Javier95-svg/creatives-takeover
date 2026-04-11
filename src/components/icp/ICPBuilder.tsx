@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { ArrowLeft, ArrowRight, CheckCircle2, Loader2, RotateCcw, Sparkles } from "lucide-react";
 
-import { SoftGateModal } from "@/components/auth/SoftGateModal";
+import SoftGateModal from "@/components/auth/SoftGateModal";
 import { ICPDraftDocument } from "@/components/icp/ICPDraftDocument";
 import ICPNicheProfile from "@/components/icp/ICPNicheProfile";
 import ICPPainPoints from "@/components/icp/ICPPainPoints";
