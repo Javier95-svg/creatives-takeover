@@ -45,7 +45,8 @@ export const PersonalizedDashboardV2 = () => {
   const {
     data,
     loading,
-    trackActivity
+    trackActivity,
+    refreshDashboard,
   } = usePersonalizedDashboard();
   const {
     showDailyGoal,
@@ -209,6 +210,7 @@ export const PersonalizedDashboardV2 = () => {
                     <MyFilesSection
                       files={data?.dashboardFiles || []}
                       primaryIcp={data?.primaryIcp ?? null}
+                      refreshDashboard={refreshDashboard}
                     />
                   </div>
 

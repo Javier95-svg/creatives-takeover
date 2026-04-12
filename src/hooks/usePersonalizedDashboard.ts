@@ -49,6 +49,14 @@ export interface DashboardFileRecord {
   source_table: string;
   source_id: string;
   preview_payload: any;
+  origin: string;
+  storage_path: string | null;
+  mime_type: string | null;
+  file_extension: string | null;
+  file_size_bytes: number | null;
+  extracted_text: string | null;
+  upload_status: string;
+  is_protected: boolean;
   created_at: string;
   updated_at: string;
 }

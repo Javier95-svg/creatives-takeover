@@ -2432,37 +2432,61 @@ export type Database = {
       dashboard_files: {
         Row: {
           created_at: string
+          extracted_text: string | null
           file_kind: string
+          file_extension: string | null
+          file_size_bytes: number | null
           id: string
+          is_protected: boolean
+          mime_type: string | null
+          origin: string
           preview_payload: Json | null
           source_id: string
           source_table: string
+          storage_path: string | null
           summary: string | null
           title: string
+          upload_status: string
           updated_at: string
           user_id: string
         }
         Insert: {
           created_at?: string
+          extracted_text?: string | null
           file_kind: string
+          file_extension?: string | null
+          file_size_bytes?: number | null
           id?: string
+          is_protected?: boolean
+          mime_type?: string | null
+          origin?: string
           preview_payload?: Json | null
           source_id: string
           source_table: string
+          storage_path?: string | null
           summary?: string | null
           title: string
+          upload_status?: string
           updated_at?: string
           user_id: string
         }
         Update: {
           created_at?: string
+          extracted_text?: string | null
           file_kind?: string
+          file_extension?: string | null
+          file_size_bytes?: number | null
           id?: string
+          is_protected?: boolean
+          mime_type?: string | null
+          origin?: string
           preview_payload?: Json | null
           source_id?: string
           source_table?: string
+          storage_path?: string | null
           summary?: string | null
           title?: string
+          upload_status?: string
           updated_at?: string
           user_id?: string
         }

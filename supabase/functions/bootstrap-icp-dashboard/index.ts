@@ -149,9 +149,12 @@ serve(async (req) => {
           file_kind: "icp_draft",
           title: `${summary.personaName} ICP Draft`,
           summary: summary.valueProposition,
+          origin: "system_generated",
           source_table: "icp_analysis_results",
           source_id: analysisId,
           preview_payload: filePreview,
+          upload_status: "ready",
+          is_protected: true,
           updated_at: now,
         },
         {
