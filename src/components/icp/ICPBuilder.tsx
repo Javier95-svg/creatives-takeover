@@ -763,8 +763,8 @@ const ICPBuilder: React.FC = () => {
         <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#32b8c6]">ICP Builder</p>
         <h1 className="takeover-gradient creatives-font text-4xl font-semibold tracking-tight sm:text-5xl">Build your ICP Draft</h1>
         <p className="mx-auto max-w-3xl text-base leading-7 text-muted-foreground sm:text-lg">
-          This takes about 5 minutes. You'll walk away with a clear picture of your ideal customer, their core problem,
-          and why your startup wins.
+          This takes about 5 minutes. You'll walk away with a clear picture of your ideal customer, their main pain
+          points, and how to position your offer in the market.
         </p>
       </div>
 
