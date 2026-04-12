@@ -10,72 +10,99 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, idempotency-key",
 };
 
-type Mode = "preview" | "save";
+const ICP_RESULTS_TABLE = "icp_analysis_results";
 
-interface IcpAnswers {
-  problemStatement: string;
-  targetAudience: string;
-  currentBehavior: string;
-  desiredOutcome: string;
-  solutionDifferentiator: string;
+type SaveMode = "preview" | "save";
+type EntryMode = "fast" | "guided";
+type Operation = "seed_prefill" | "build_draft";
+
+interface SeedPrefillRequest {
+  operation: "seed_prefill";
+  seed: string;
+}
+
+interface GuidedInput {
+  seed: string;
+  persona: {
+    role: string;
+    industry: string;
+    experience: string;
+  };
+  specificity: string;
+  pain: string;
+  workaround: string;
+  solutionCompletion: string;
+  marketContext: "different_customer" | "too_expensive_or_complex" | "manual_or_no_product" | "new_problem_recently";
   founderEdge: string;
 }
 
-interface Clarification {
-  question: string;
-  answer: string;
+interface FastInput {
+  description: string;
 }
 
-interface RequestPayload {
-  mode: Mode;
-  answers: IcpAnswers;
-  clarification?: Clarification | null;
+interface BuildDraftRequest {
+  operation: "build_draft";
+  mode: SaveMode;
+  entryMode: EntryMode;
+  fastInput?: FastInput | null;
+  guidedInput?: GuidedInput | null;
+  personaEditedSignificantly?: boolean;
 }
 
-const ICP_RESULTS_TABLE = "icp_analysis_results";
-
-const buildDescription = (answers: IcpAnswers) =>
-  [
-    `Painful moment: ${answers.problemStatement}`,
-    `Ideal customer: ${answers.targetAudience}`,
-    `Current workaround: ${answers.currentBehavior}`,
-    `Desired outcome: ${answers.desiredOutcome}`,
-    `Structural advantage: ${answers.solutionDifferentiator}`,
-    `Why this founder can win now: ${answers.founderEdge}`,
-  ].join("\n\n");
+type RequestPayload = SeedPrefillRequest | BuildDraftRequest;
 
 const isNonEmpty = (value: unknown, min = 12) => typeof value === "string" && value.trim().length >= min;
 
+function validateGuidedInput(input: GuidedInput | null | undefined) {
+  const issues: string[] = [];
+  if (!input) {
+    issues.push("guidedInput is required");
+    return issues;
+  }
+
+  if (!isNonEmpty(input.seed, 8)) issues.push("seed must be at least 8 characters");
+  if (!isNonEmpty(input.persona?.role, 2)) issues.push("persona.role is required");
+  if (!isNonEmpty(input.persona?.industry, 2)) issues.push("persona.industry is required");
+  if (!isNonEmpty(input.persona?.experience, 2)) issues.push("persona.experience is required");
+  if (!isNonEmpty(input.specificity, 8)) issues.push("specificity must be at least 8 characters");
+  if (!isNonEmpty(input.pain, 12)) issues.push("pain must be at least 12 characters");
+  if (!isNonEmpty(input.workaround, 6)) issues.push("workaround must be at least 6 characters");
+  if (!isNonEmpty(input.solutionCompletion, 6)) issues.push("solutionCompletion must be at least 6 characters");
+  if (!isNonEmpty(input.founderEdge, 12)) issues.push("founderEdge must be at least 12 characters");
+  if (!input.marketContext) issues.push("marketContext is required");
+
+  return issues;
+}
+
 function validatePayload(payload: Partial<RequestPayload>) {
   const issues: string[] = [];
+  if (payload.operation === "seed_prefill") {
+    if (!isNonEmpty(payload.seed, 8)) issues.push("seed must be at least 8 characters");
+    return issues;
+  }
+
+  if (payload.operation !== "build_draft") {
+    issues.push("operation must be seed_prefill or build_draft");
+    return issues;
+  }
+
   if (payload.mode !== "preview" && payload.mode !== "save") {
     issues.push("mode must be preview or save");
   }
 
-  const answers = payload.answers;
-  if (!answers) {
-    issues.push("answers are required");
+  if (payload.entryMode === "fast") {
+    if (!isNonEmpty(payload.fastInput?.description, 40)) {
+      issues.push("fastInput.description must be at least 40 characters");
+    }
     return issues;
   }
 
-  ([
-    "problemStatement",
-    "targetAudience",
-    "currentBehavior",
-    "desiredOutcome",
-    "solutionDifferentiator",
-    "founderEdge",
-  ] as const).forEach((field) => {
-    if (!isNonEmpty(answers[field])) {
-      issues.push(`${field} must be at least 12 characters`);
-    }
-  });
-
-  if (payload.clarification) {
-    if (!isNonEmpty(payload.clarification.question, 8)) issues.push("clarification question is invalid");
-    if (!isNonEmpty(payload.clarification.answer, 8)) issues.push("clarification answer is invalid");
+  if (payload.entryMode === "guided") {
+    issues.push(...validateGuidedInput(payload.guidedInput));
+    return issues;
   }
 
+  issues.push("entryMode must be fast or guided");
   return issues;
 }
 
@@ -94,21 +121,19 @@ function buildDashboardContext(draftDocument: Record<string, any>) {
   const nextActions = Array.isArray(draftDocument?.nextActions) ? draftDocument.nextActions : [];
   const defaultRoute = level === "low" ? "/pmf-lab" : "/waitlist";
 
-  const prioritizedTasks = nextActions.slice(0, 5).map((action: any, index: number) => ({
-    id: `icp-draft-task-${index + 1}`,
-    title: typeof action?.title === "string" ? action.title : `Next action ${index + 1}`,
-    description:
-      typeof action?.description === "string"
-        ? action.description
-        : "Use the ICP Draft to move from analysis into execution.",
-    priority: index === 0 ? "high" : index < 3 ? "medium" : "low",
-    route: normalizeRoute(action?.route, defaultRoute),
-  }));
-
   return {
     message: "We know who you’re building for — here’s what to do next.",
     suggestedStage: "IDENTITY",
-    prioritizedTasks,
+    prioritizedTasks: nextActions.slice(0, 5).map((action: any, index: number) => ({
+      id: `icp-draft-task-${index + 1}`,
+      title: typeof action?.title === "string" ? action.title : `Next action ${index + 1}`,
+      description:
+        typeof action?.description === "string"
+          ? action.description
+          : "Use the ICP Draft to move from analysis into execution.",
+      priority: index === 0 ? "high" : index < 3 ? "medium" : "low",
+      route: normalizeRoute(action?.route, defaultRoute),
+    })),
     recommendations: [
       {
         title: "We know who you’re building for — here’s what to do next",
@@ -120,7 +145,7 @@ function buildDashboardContext(draftDocument: Record<string, any>) {
           level === "low"
             ? "Low-confidence drafts should produce better evidence, not more assumptions."
             : "A sharper ICP should immediately change what you build or test next.",
-        actionUrl: prioritizedTasks[0]?.route || defaultRoute,
+        actionUrl: nextActions[0]?.route ? normalizeRoute(nextActions[0].route, defaultRoute) : defaultRoute,
         priority: 12,
         type: "action",
       },
@@ -147,58 +172,114 @@ function buildDashboardContext(draftDocument: Record<string, any>) {
   };
 }
 
-function buildPrompt(mode: Mode, answers: IcpAnswers, clarification: Clarification | null, marketSignals: string[]) {
-  const clarificationText = clarification
-    ? `\nClarification asked: ${clarification.question}\nClarification answer: ${clarification.answer}`
-    : "";
-  const enrichmentText =
-    mode === "save" && marketSignals.length > 0
-      ? `\nMarket signals:\n${marketSignals.map((signal) => `- ${signal}`).join("\n")}`
-      : "";
-
-  return `You are helping a founder get strategic clarity, not filling out a template.
-Use the founder's wording wherever possible.
-Do not over-generalize.
-If the founder input is still too thin and no clarification has been used yet, return:
-{"status":"needs_clarification","clarificationQuestion":"string"}
-
-Otherwise return JSON only in this shape:
+function buildSeedPrompt(seed: string) {
+  return `You are helping a founder clarify who they are building for.
+Return valid JSON only in this shape:
 {
-  "status":"draft_ready",
-  "draftDocument":{
-    "who":{"title":"Who","summary":"string","bullets":["string"]},
-    "painPoint":{"title":"Primary pain point","summary":"string","severity":"Critical|High|Medium|Low","frequency":"string","bullets":["string"]},
-    "buildRecommendation":{"title":"What to build first","summary":"string","bullets":["string"]},
-    "moat":{"title":"Moat","summary":"string","bullets":["string"],"weakClaims":["string"]},
-    "confidence":{"level":"high|medium|low","summary":"string","missingSignals":["string"]},
-    "nextActions":[{"title":"string","description":"string","route":"waitlist|pmf|mvp|gtm|mentor"}]
-  },
-  "enrichment":{"contradictionFlag":boolean,"marketSignals":["string"],"mentorDomain":"string|null"}
+  "role": "string",
+  "industry": "string",
+  "experience": "string",
+  "suggestedPain": "string"
 }
 
 Rules:
-- Keep the draft founder-specific and execution-oriented.
-- Rank the pain by severity and frequency.
-- Recommend the first product or service scope tied directly to that pain.
-- Separate true moat signals from weak claims.
-- Confidence must include caveats when evidence is weak.
-- Next actions must be concrete and usable this week.
+- Be specific, not generic.
+- Infer the most plausible user role from the idea.
+- Keep the role, industry, and experience easy for a founder to edit.
+- suggestedPain must be one concrete frustration, not a broad market statement.
 
-Founder input:
-Painful moment: ${answers.problemStatement}
-Ideal customer: ${answers.targetAudience}
-Current workaround: ${answers.currentBehavior}
-Desired outcome: ${answers.desiredOutcome}
-Structural advantage: ${answers.solutionDifferentiator}
-Why this founder can win now: ${answers.founderEdge}${clarificationText}${enrichmentText}`;
+Startup idea:
+${seed}`;
 }
 
-async function fetchMarketSignals(serviceClient: ReturnType<typeof createClient>, req: Request, answers: IcpAnswers) {
+function buildDraftPrompt(
+  request: BuildDraftRequest,
+  marketSignals: string[],
+  competitorLinks: Array<{ name: string; url: string | null }>,
+) {
+  const guidedContext =
+    request.entryMode === "guided" && request.guidedInput
+      ? `Startup idea: ${request.guidedInput.seed}
+Confirmed persona role: ${request.guidedInput.persona.role}
+Confirmed persona industry: ${request.guidedInput.persona.industry}
+Confirmed persona experience: ${request.guidedInput.persona.experience}
+Specific segment: ${request.guidedInput.specificity}
+Emotional pain: ${request.guidedInput.pain}
+Current workaround: ${request.guidedInput.workaround}
+Product sentence completion: ${request.guidedInput.solutionCompletion}
+Competitive landscape: ${request.guidedInput.marketContext}
+Founder edge: ${request.guidedInput.founderEdge}
+Founder substantially revised the suggested persona: ${request.personaEditedSignificantly ? "yes" : "no"}`
+      : "";
+
+  const fastContext =
+    request.entryMode === "fast" && request.fastInput
+      ? `Founder description:
+${request.fastInput.description}`
+      : "";
+
+  const signalBlock = marketSignals.length > 0
+    ? `Market signals:
+${marketSignals.map((signal) => `- ${signal}`).join("\n")}`
+    : "";
+
+  const competitorBlock = competitorLinks.length > 0
+    ? `Competitors with URLs:
+${competitorLinks.map((item) => `- ${item.name}${item.url ? ` (${item.url})` : ""}`).join("\n")}`
+    : "";
+
+  return `You are generating a founder-ready ICP Draft document.
+This is not a template fill. It must feel specific, grounded, and usable.
+Use the founder's wording wherever possible.
+Do not ask clarifying questions.
+Do not output generic startup language.
+Return valid JSON only in this shape:
+{
+  "status":"draft_ready",
+  "draftDocument":{
+    "gatePreview":{"personaName":"string","roleLine":"string","painLine":"string"},
+    "customer":{"personaName":"string","roleLine":"string","metaLine":"string","summary":"string","whereToFind":["string"]},
+    "pain":{"quote":"string","rootCause":"string","whyItHurts":"string","triggerMoment":"string"},
+    "build":{"valueProposition":"string","replaces":["string"],"coreFeatures":[{"title":"string","description":"string"}],"outcome":"string"},
+    "moat":{"moatType":"string","edge":"string","incumbentGap":"string","startupsToStudy":[{"name":"string","url":"string|null"}]},
+    "confidence":{"level":"high|medium|low","summary":"string","missingSignals":["string"]},
+    "nextActions":[{"title":"string","description":"string","route":"waitlist|pmf|mvp|gtm|mentor"}]
+  },
+  "enrichment":{"contradictionFlag":boolean,"mentorDomain":"string|null"}
+}
+
+Rules:
+- The customer section must read like one person with one context, not a vague market.
+- pain.quote must feel like a line the founder could repeat to a cofounder or designer.
+- build.valueProposition must define the first product or service clearly.
+- coreFeatures must be exactly 3 items.
+- moat.moatType should be a concise badge-style phrase.
+- startupsToStudy can include 0-3 items. Use provided URLs when available. If no reliable URL exists, use null.
+- confidence must admit missing evidence instead of faking precision.
+- nextActions must be concrete and usable in the next week.
+
+Entry mode: ${request.entryMode}
+${guidedContext}
+${fastContext}
+${signalBlock}
+${competitorBlock}`;
+}
+
+async function fetchMarketSignals(serviceClient: ReturnType<typeof createClient>, req: Request, request: BuildDraftRequest) {
   try {
+    const businessIdea =
+      request.entryMode === "guided" && request.guidedInput
+        ? request.guidedInput.seed
+        : request.fastInput?.description || "";
+    const targetMarket =
+      request.entryMode === "guided" && request.guidedInput
+        ? request.guidedInput.specificity || request.guidedInput.persona.role
+        : "";
+
     const validationResponse = await serviceClient.functions.invoke("market-validation-engine", {
       body: {
-        business_idea: buildDescription(answers),
-        target_market: answers.targetAudience,
+        business_idea: businessIdea,
+        target_market: targetMarket,
       },
       headers: {
         Authorization: req.headers.get("Authorization") || "",
@@ -206,13 +287,23 @@ async function fetchMarketSignals(serviceClient: ReturnType<typeof createClient>
     });
 
     const score = validationResponse.data?.validation_score;
-    const competitorNames = (score?.top_competitors || []).slice(0, 3).map((item: any) => item?.name).filter(Boolean);
-    const discussionTitles = (score?.reddit_discussions || []).slice(0, 2).map((item: any) => item?.title).filter(Boolean);
-    const gaps = (score?.competitor_gaps || []).slice(0, 2).map((item: any) => (typeof item === "string" ? item : item?.gap)).filter(Boolean);
-    return [...competitorNames, ...discussionTitles, ...gaps];
+    const competitors = (score?.top_competitors || [])
+      .slice(0, 3)
+      .map((item: any) => ({
+        name: item?.name || "",
+        url: item?.website || null,
+      }))
+      .filter((item: { name: string; url: string | null }) => item.name);
+    const marketSignals = [
+      ...(score?.top_competitors || []).slice(0, 3).map((item: any) => item?.name).filter(Boolean),
+      ...(score?.reddit_discussions || []).slice(0, 2).map((item: any) => item?.title).filter(Boolean),
+      ...(score?.competitor_gaps || []).slice(0, 2).map((item: any) => (typeof item === "string" ? item : item?.gap)).filter(Boolean),
+    ];
+
+    return { marketSignals, competitors };
   } catch (error) {
     console.warn("ICP analyzer enrichment failed, continuing without market signals", error);
-    return [] as string[];
+    return { marketSignals: [] as string[], competitors: [] as Array<{ name: string; url: string | null }> };
   }
 }
 
@@ -237,11 +328,50 @@ serve(async (req) => {
     }
 
     const serviceClient = createClient(supabaseUrl, supabaseKey);
-    const clarification = payload.clarification ?? null;
+
+    if (payload.operation === "seed_prefill") {
+      const completion = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${openaiApiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "gpt-4o-mini",
+          response_format: { type: "json_object" },
+          temperature: 0.35,
+          max_tokens: 400,
+          messages: [
+            { role: "system", content: "Return valid JSON only." },
+            { role: "user", content: buildSeedPrompt(payload.seed) },
+          ],
+        }),
+      });
+
+      if (!completion.ok) {
+        throw new Error(`OpenAI API Error: ${completion.status}`);
+      }
+
+      const aiData = await completion.json();
+      const parsed = JSON.parse(aiData.choices[0].message.content);
+
+      return new Response(JSON.stringify({
+        success: true,
+        persona: {
+          role: parsed.role,
+          industry: parsed.industry,
+          experience: parsed.experience,
+          suggestedPain: parsed.suggestedPain,
+        },
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     let user = null;
-    let creditCost = CREDIT_COSTS.ICP_ANALYSIS;
     let creditResult: { success: boolean; newBalance: number; error?: string; errorCode?: string } = { success: true, newBalance: 0 };
     let marketSignals: string[] = [];
+    let competitorLinks: Array<{ name: string; url: string | null }> = [];
 
     if (payload.mode === "save") {
       user = await getUserFromAuth(req);
@@ -258,23 +388,25 @@ serve(async (req) => {
         requestFingerprint: payload,
       });
 
-      if (creditCost > 0) {
-        creditResult = await checkAndDeductCredits(user.id, creditCost, "ICP Analysis", undefined, { idempotencyKey });
-        if (!creditResult.success) {
-          return new Response(JSON.stringify({
-            success: false,
-            error: creditResult.error || "Credit deduction failed",
-            creditError: true,
-            errorCode: creditResult.errorCode,
-            requiredCredits: creditCost,
-          }), {
-            status: 402,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          });
-        }
+      creditResult = await checkAndDeductCredits(user.id, CREDIT_COSTS.ICP_ANALYSIS, "ICP Analysis", undefined, {
+        idempotencyKey,
+      });
+      if (!creditResult.success) {
+        return new Response(JSON.stringify({
+          success: false,
+          error: creditResult.error || "Credit deduction failed",
+          creditError: true,
+          errorCode: creditResult.errorCode,
+          requiredCredits: CREDIT_COSTS.ICP_ANALYSIS,
+        }), {
+          status: 402,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
       }
 
-      marketSignals = await fetchMarketSignals(serviceClient, req, payload.answers);
+      const enrichment = await fetchMarketSignals(serviceClient, req, payload);
+      marketSignals = enrichment.marketSignals;
+      competitorLinks = enrichment.competitors;
     }
 
     try {
@@ -288,10 +420,10 @@ serve(async (req) => {
           model: payload.mode === "save" ? "gpt-4o" : "gpt-4o-mini",
           response_format: { type: "json_object" },
           temperature: 0.45,
-          max_tokens: payload.mode === "save" ? 2200 : 1600,
+          max_tokens: payload.mode === "save" ? 2600 : 2000,
           messages: [
             { role: "system", content: "Return valid JSON only." },
-            { role: "user", content: buildPrompt(payload.mode, payload.answers, clarification, marketSignals) },
+            { role: "user", content: buildDraftPrompt(payload, marketSignals, competitorLinks) },
           ],
         }),
       });
@@ -302,27 +434,20 @@ serve(async (req) => {
 
       const aiData = await completion.json();
       const parsed = JSON.parse(aiData.choices[0].message.content);
-
-      if (parsed.status === "needs_clarification") {
-        return new Response(JSON.stringify({
-          success: true,
-          status: "needs_clarification",
-          clarificationQuestion: parsed.clarificationQuestion,
-        }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-
+      const draftDocument = parsed.draftDocument;
       const artifact = {
-        version: 2,
+        version: 3,
         generatedAt: new Date().toISOString(),
-        founderInputs: payload.answers,
-        clarification,
-        draftDocument: parsed.draftDocument,
-        dashboardContext: buildDashboardContext(parsed.draftDocument),
+        founderInputs: {
+          mode: payload.entryMode,
+          fastDescription: payload.entryMode === "fast" ? payload.fastInput?.description ?? null : null,
+          guided: payload.entryMode === "guided" ? payload.guidedInput ?? null : null,
+        },
+        draftDocument,
+        dashboardContext: buildDashboardContext(draftDocument),
         enrichment: {
           contradictionFlag: Boolean(parsed.enrichment?.contradictionFlag),
-          marketSignals: payload.mode === "save" ? marketSignals : [],
+          marketSignals,
           mentorDomain: parsed.enrichment?.mentorDomain ?? null,
         },
       };
@@ -337,14 +462,23 @@ serve(async (req) => {
         });
       }
 
+      const businessDescription =
+        payload.entryMode === "guided"
+          ? payload.guidedInput?.seed || ""
+          : payload.fastInput?.description || "";
+      const targetAudience =
+        payload.entryMode === "guided"
+          ? payload.guidedInput?.specificity || payload.guidedInput?.persona.role
+          : draftDocument?.customer?.roleLine || null;
+
       const { data: storedAnalysis, error: storeError } = await serviceClient
         .from(ICP_RESULTS_TABLE as any)
         .insert({
           user_id: user.id,
-          business_description: buildDescription(payload.answers),
-          target_audience: payload.answers.targetAudience,
-          niche_score: artifact.draftDocument.confidence.level === "high" ? 82 : artifact.draftDocument.confidence.level === "medium" ? 64 : 41,
-          verdict: artifact.draftDocument.confidence.level === "high" ? "Highly Viable" : artifact.draftDocument.confidence.level === "medium" ? "Promising" : "Needs Refinement",
+          business_description: businessDescription,
+          target_audience: targetAudience,
+          niche_score: draftDocument.confidence.level === "high" ? 82 : draftDocument.confidence.level === "medium" ? 64 : 41,
+          verdict: draftDocument.confidence.level === "high" ? "Highly Viable" : draftDocument.confidence.level === "medium" ? "Promising" : "Needs Refinement",
           analysis_data: artifact,
         })
         .select("id")
@@ -359,14 +493,14 @@ serve(async (req) => {
         status: "draft_ready",
         artifact,
         analysisId: (storedAnalysis as { id?: string }).id ?? null,
-        creditsUsed: creditCost,
+        creditsUsed: CREDIT_COSTS.ICP_ANALYSIS,
         newBalance: creditResult.newBalance,
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     } catch (error) {
-      if (payload.mode === "save" && user && creditCost > 0) {
-        await refundCredits(user.id, creditCost, "ICP Analysis", "Refund: ICP draft generation failed", {
+      if (payload.mode === "save" && user) {
+        await refundCredits(user.id, CREDIT_COSTS.ICP_ANALYSIS, "ICP Analysis", "Refund: ICP draft generation failed", {
           error: error instanceof Error ? error.message : String(error),
         });
       }

@@ -1,99 +1,98 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "react-router-dom";
-import { ArrowLeft, ArrowRight, CheckCircle2, Loader2, RotateCcw, Sparkles } from "lucide-react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { ArrowLeft, ArrowRight, Loader2, RotateCcw } from "lucide-react";
 
-import SoftGateModal from "@/components/auth/SoftGateModal";
-import { ICPDraftDocument } from "@/components/icp/ICPDraftDocument";
-import ICPNicheProfile from "@/components/icp/ICPNicheProfile";
-import ICPPainPoints from "@/components/icp/ICPPainPoints";
-import ICPPositioning from "@/components/icp/ICPPositioning";
-import ICPNicheScore from "@/components/icp/ICPNicheScore";
-import { Badge } from "@/components/ui/badge";
+import { IcpFolioDocument } from "@/components/icp/IcpFolioDocument";
+import { IcpProgressBar } from "@/components/icp/IcpProgressBar";
+import { IcpSynthesisLoader } from "@/components/icp/IcpSynthesisLoader";
+import { IcpUnlockGate } from "@/components/icp/IcpUnlockGate";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useActivationJourney } from "@/hooks/useActivationJourney";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { captureEvent, trackActivationCompleted, trackICPBuilderCompleted, trackICPBuilderStarted } from "@/lib/analytics";
-import { icpInputFormSchema, type IcpInputSchema } from "@/lib/icpBuilderSchema";
+import { captureEvent, trackICPBuilderCompleted, trackICPBuilderStarted } from "@/lib/analytics";
+import {
+  fastIcpInputSchema,
+  guidedIcpInputSchema,
+  ICP_MARKET_CONTEXT_OPTIONS,
+  type IcpPersonaSuggestion,
+} from "@/lib/icpBuilderSchema";
 import {
   buildIcpUnlockReturnPath,
+  buildEmptyGuidedAnswers,
   clearIcpBuilderSession,
   createEmptyIcpBuilderSession,
   persistIcpBuilderSession,
   readIcpBuilderSession,
+  type IcpBuilderMode,
   type IcpBuilderSession,
-  type IcpClarificationExchange,
-  type IcpDashboardContext,
+  type IcpFlowScreen,
   type StoredIcpArtifact,
 } from "@/lib/icpBuilderSession";
+import { buildBuilderSessionFromArtifact, normalizeStoredArtifact } from "@/lib/icpDraftArtifacts";
 import { consumeStoredIcpSeed, normalizeIcpSeed } from "@/lib/icpSeed";
 import { markFirstArtifactCreated, sendRetentionEmail } from "@/lib/retentionSystem";
 
-type LegacyAnalysis = Record<string, any>;
-
 const ICP_RESULTS_TABLE = "icp_analysis_results";
-const PREVIEW_TIMEOUT_MS = 30000;
-const SAVE_TIMEOUT_MS = 45000;
+const SEED_TIMEOUT_MS = 20000;
+const PREVIEW_TIMEOUT_MS = 45000;
+const SAVE_TIMEOUT_MS = 55000;
+const SEED_ANALYSIS_MIN_MS = 2200;
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-const CORE_STEPS: Array<{
-  field: keyof IcpInputSchema;
-  eyebrow: string;
-  question: string;
-  hint: string;
-  placeholder: string;
-}> = [
-  {
-    field: "problemStatement",
-    eyebrow: "Question 1",
-    question: "What painful moment are you solving?",
-    hint: "Name the specific moment where work breaks, slows down, or gets expensive.",
-    placeholder:
-      "Example: Boutique agencies lose hours turning vague client briefs into clear campaign plans, so strategy work gets delayed and the team ships late.",
-  },
-  {
-    field: "targetAudience",
-    eyebrow: "Question 2",
-    question: "Who feels this problem most acutely?",
-    hint: "Be narrow. Role, company type, team shape, and context matter more than broad demographics.",
-    placeholder:
-      "Example: Small agency owners and strategy leads running 3-10 person teams with multiple active client campaigns.",
-  },
-  {
-    field: "currentBehavior",
-    eyebrow: "Question 3",
-    question: "What do they do today instead?",
-    hint: "Describe the real workaround, not the ideal process.",
-    placeholder:
-      "Example: They stitch together Google Docs, old campaign decks, and Slack threads, then one strategist manually turns it into a usable plan.",
-  },
-  {
-    field: "desiredOutcome",
-    eyebrow: "Question 4",
-    question: "What outcome are they actually trying to get?",
-    hint: "Describe the result they would gladly pay for, not the features you want to ship.",
-    placeholder:
-      "Example: They want a launch-ready strategy brief in under 30 minutes so the team can move straight into execution without clarification loops.",
-  },
-  {
-    field: "solutionDifferentiator",
-    eyebrow: "Question 5",
-    question: "Why is your solution structurally better?",
-    hint: "Focus on speed, effort, workflow fit, trust, or some other real advantage.",
-    placeholder:
-      "Example: Instead of generic AI copy, the product turns briefs into agency-style strategy outputs using reusable client context and campaign templates.",
-  },
-  {
-    field: "founderEdge",
-    eyebrow: "Question 6",
-    question: "Why are you positioned to win now?",
-    hint: "Use lived experience, access, timing, or a unique asset. Empty ambition is not a moat.",
-    placeholder:
-      "Example: I ran strategy inside agencies for years, already know the messy briefing workflow, and have direct access to early design partners who feel this weekly.",
-  },
+const GUIDED_SCREEN_ORDER: IcpFlowScreen[] = [
+  "guided_seed",
+  "guided_persona",
+  "guided_specificity",
+  "guided_pain",
+  "guided_workaround",
+  "guided_solution",
+  "guided_market_context",
+  "guided_founder_edge",
 ];
+
+const PROGRESS_BY_SCREEN: Record<IcpFlowScreen | "seed_loading" | "synthesis", number> = {
+  mode_select: 0,
+  fast_input: 50,
+  guided_seed: 10,
+  guided_persona: 22,
+  guided_specificity: 34,
+  guided_pain: 46,
+  guided_workaround: 58,
+  guided_solution: 70,
+  guided_market_context: 82,
+  guided_founder_edge: 94,
+  seed_loading: 22,
+  synthesis: 97,
+  gate: 100,
+};
+
+type LoadingPhase = "seed_loading" | "synthesis" | null;
+
+type SeedPrefillResponse = {
+  success: boolean;
+  persona?: IcpPersonaSuggestion;
+  error?: string;
+};
+
+type ResumeDraftResponse = {
+  success: boolean;
+  artifact?: StoredIcpArtifact;
+  error?: string;
+};
+
+type QueueEmailDraftResponse = {
+  success: boolean;
+  queued?: boolean;
+  error?: string;
+};
+
+type LegacyAnalysis = Record<string, unknown>;
+type FallbackEmailState = "idle" | "submitting" | "submitted";
 
 const withTimeout = async <T,>(promise: Promise<T>, timeoutMs: number) => {
   let timeoutHandle: number | null = null;
@@ -112,353 +111,470 @@ const withTimeout = async <T,>(promise: Promise<T>, timeoutMs: number) => {
   }
 };
 
-function buildDraftTasks(artifact: StoredIcpArtifact): IcpDashboardContext["prioritizedTasks"] {
-  return artifact.draftDocument.nextActions.slice(0, 5).map((action, index) => ({
-    id: `icp-draft-task-${index + 1}`,
-    title: action.title,
-    description: action.description,
-    priority: index === 0 ? "high" : index < 3 ? "medium" : "low",
-    route: action.route,
-  }));
+function normaliseText(value: string | null | undefined) {
+  return (value || "").trim().replace(/\s+/g, " ").toLowerCase();
 }
 
-function buildDashboardContext(artifact: StoredIcpArtifact): IcpDashboardContext {
-  const confidence = artifact.draftDocument.confidence.level;
-  return {
-    message: "We know who you’re building for — here’s what to do next.",
-    suggestedStage: "IDENTITY",
-    prioritizedTasks: buildDraftTasks(artifact),
-    recommendations: [
-      {
-        title: "We know who you’re building for — here’s what to do next",
-        description:
-          confidence === "low"
-            ? "Validate the pain fast before you commit to a build path."
-            : "Turn the ICP Draft into a concrete next move without losing momentum.",
-        reason:
-          confidence === "low"
-            ? "Low-confidence drafts should produce better evidence, not more assumptions."
-            : "A sharper ICP should immediately change what you build or test next.",
-        actionUrl: confidence === "low" ? "/pmf-lab" : artifact.draftDocument.nextActions[0]?.route || "/waitlist",
-        priority: 12,
-        type: "action",
-      },
-      {
-        title: confidence === "low" ? "Pressure-test the pain in PMF Lab" : "Capture demand with Waitlist Maker",
-        description:
-          confidence === "low"
-            ? "Run interviews and demand checks against the exact segment the draft recommends."
-            : "Use the ICP Draft language to create a clear waitlist message before you build more.",
-        reason: "The best next move should follow from the draft, not from generic startup advice.",
-        actionUrl: confidence === "low" ? "/pmf-lab" : "/waitlist",
-        priority: 11,
-        type: "action",
-      },
-      {
-        title: "Get founder-context help from a mentor",
-        description: "Use the draft to ask sharper questions about the segment, pain, and offer.",
-        reason: "A first ICP usually improves fastest when someone challenges the assumptions directly.",
-        actionUrl: "/community/mentor-marketplace",
-        priority: 10,
-        type: "mentor",
-      },
-    ],
-  };
+function hasSignificantPersonaChange(
+  suggestion: IcpPersonaSuggestion | null,
+  value: { role?: string; industry?: string; experience?: string } | null | undefined,
+) {
+  if (!suggestion || !value) return false;
+
+  const checks: Array<[string, string]> = [
+    [suggestion.role, value.role || ""],
+    [suggestion.industry, value.industry || ""],
+    [suggestion.experience, value.experience || ""],
+  ];
+
+  return checks.some(([original, edited]) => {
+    const normalizedOriginal = normaliseText(original);
+    const normalizedEdited = normaliseText(edited);
+    if (!normalizedOriginal || !normalizedEdited || normalizedOriginal === normalizedEdited) {
+      return false;
+    }
+
+    const overlap = normalizedEdited
+      .split(" ")
+      .filter((token) => normalizedOriginal.includes(token))
+      .join(" ").length;
+    return overlap / Math.max(normalizedOriginal.length, 1) < 0.5;
+  });
 }
 
-function mapLegacyAnalysisToArtifact(
-  analysisData: LegacyAnalysis,
-  targetAudience: string | null,
-  businessDescription: string,
-  verdict: string | null,
-): StoredIcpArtifact | null {
-  const topPain = Array.isArray(analysisData?.painPoints) ? analysisData.painPoints[0] : null;
-  const nicheProfile = analysisData?.nicheProfile;
-  const positioning = analysisData?.positioningStrategy ?? analysisData?.positioning;
-  const nicheScore = analysisData?.nicheScore;
-
-  if (!nicheProfile && !topPain && !positioning && !nicheScore) {
-    return null;
+function getPreviousScreen(screen: IcpFlowScreen, mode: IcpBuilderMode | null): IcpFlowScreen | null {
+  if (screen === "mode_select") return null;
+  if (screen === "fast_input") return "mode_select";
+  if (screen === "gate") {
+    return mode === "fast" ? "fast_input" : "guided_founder_edge";
   }
 
-  const artifact: StoredIcpArtifact = {
-    version: 2,
-    generatedAt: analysisData?.generatedAt ?? new Date().toISOString(),
-    founderInputs: {
-      problemStatement: businessDescription || "Legacy ICP analysis",
-      targetAudience: targetAudience || nicheProfile?.nicheName || "",
-      currentBehavior: topPain?.currentSolution || topPain?.currentWorkaround || "",
-      desiredOutcome: positioning?.uniqueValueProposition || positioning?.valueProposition || "",
-      solutionDifferentiator: positioning?.positioningStatement || positioning?.oneLiner || "",
-      founderEdge: positioning?.keyDifferentiators?.[0] || positioning?.differentiators?.[0] || "",
-    },
-    clarification: null,
-    draftDocument: {
-      who: { title: "Who", summary: "", bullets: [] },
-      painPoint: { title: "Primary pain point", summary: "", bullets: [], severity: "Medium", frequency: "Recurring" },
-      buildRecommendation: { title: "What to build first", summary: "", bullets: [] },
-      moat: { title: "Moat", summary: "", bullets: [], weakClaims: [] },
-      confidence: { level: "medium", summary: "", missingSignals: [] },
-      nextActions: [],
-    },
-    dashboardContext: { message: "", suggestedStage: "IDENTITY", prioritizedTasks: [], recommendations: [] },
-    enrichment: null,
-  };
-
-  artifact.draftDocument.who = {
-    title: "Who",
-    summary:
-      nicheProfile?.nicheDescription ||
-      targetAudience ||
-      "A clear target segment was identified in the saved ICP analysis.",
-    bullets: [
-      nicheProfile?.demographics?.occupation ? `Occupation: ${nicheProfile.demographics.occupation}` : null,
-      nicheProfile?.demographics?.location ? `Location: ${nicheProfile.demographics.location}` : null,
-      nicheProfile?.buyingBehavior?.decisionProcess
-        ? `Buying motion: ${nicheProfile.buyingBehavior.decisionProcess}`
-        : null,
-    ].filter((item): item is string => Boolean(item)),
-  };
-
-  artifact.draftDocument.painPoint = {
-    title: "Primary pain point",
-    summary:
-      topPain?.painPoint ||
-      topPain?.painPointDescription ||
-      "The saved analysis identified a meaningful customer pain worth testing.",
-    severity: topPain?.severity || verdict || "Medium",
-    frequency: topPain?.frequency || topPain?.whenItShowsUp || "Recurring",
-    bullets: [
-      topPain?.gapInCurrentSolution ? `Why current options fail: ${topPain.gapInCurrentSolution}` : null,
-      topPain?.currentSolution ? `Current workaround: ${topPain.currentSolution}` : null,
-      topPain?.whyUnresolved ? `Why it persists: ${topPain.whyUnresolved}` : null,
-    ].filter((item): item is string => Boolean(item)),
-  };
-
-  artifact.draftDocument.buildRecommendation = {
-    title: "What to build first",
-    summary:
-      positioning?.uniqueValueProposition ||
-      positioning?.valueProposition ||
-      "Build the smallest offer that directly removes the core pain identified in the analysis.",
-    bullets: (analysisData?.actionPlan || [])
-      .slice(0, 3)
-      .map((action: any) => action?.action || action?.description)
-      .filter((item: unknown): item is string => typeof item === "string" && item.length > 0),
-  };
-
-  artifact.draftDocument.moat = {
-    title: "Moat",
-    summary:
-      positioning?.positioningStatement ||
-      positioning?.oneLiner ||
-      "The saved analysis found an angle that differentiates this offer from current alternatives.",
-    bullets: (positioning?.keyDifferentiators || positioning?.differentiators || []).slice(0, 4),
-    weakClaims: [],
-  };
-
-  artifact.draftDocument.confidence = {
-    level:
-      nicheScore?.verdict === "Highly Viable"
-        ? "high"
-        : nicheScore?.verdict === "Promising" || verdict === "Promising"
-          ? "medium"
-          : "low",
-    summary:
-      nicheScore?.reasoning ||
-      "This draft was mapped from an older ICP analysis, so confidence should be validated against fresh customer evidence.",
-    missingSignals: Array.isArray(analysisData?.recommendation?.openQuestions)
-      ? analysisData.recommendation.openQuestions.slice(0, 3)
-      : ["Run a few customer conversations to confirm the top pain and switching trigger."],
-  };
-
-  artifact.draftDocument.nextActions = (analysisData?.actionPlan || [])
-    .slice(0, 3)
-    .map((action: any, index: number) => ({
-      title: action?.action || `Next action ${index + 1}`,
-      description: action?.description || "Use this saved ICP analysis to drive the next execution step.",
-      route:
-        action?.channel?.toLowerCase?.().includes("mentor")
-          ? "/community/mentor-marketplace"
-          : index === 0
-            ? "/pmf-lab"
-            : "/waitlist",
-    }));
-
-  artifact.dashboardContext = buildDashboardContext(artifact);
-  return artifact;
+  const currentIndex = GUIDED_SCREEN_ORDER.indexOf(screen);
+  if (currentIndex === -1) return "mode_select";
+  if (currentIndex === 0) return "mode_select";
+  return GUIDED_SCREEN_ORDER[currentIndex - 1] ?? "mode_select";
 }
 
-function normalizeStoredArtifact(row: {
-  analysis_data?: LegacyAnalysis | null;
-  target_audience?: string | null;
-  business_description?: string | null;
-  verdict?: string | null;
-}) {
-  const analysisData = row.analysis_data ?? null;
-  if (!analysisData) {
-    return { artifact: null, legacyAvailable: false };
+function getNextGuidedScreen(screen: IcpFlowScreen) {
+  const currentIndex = GUIDED_SCREEN_ORDER.indexOf(screen);
+  return GUIDED_SCREEN_ORDER[currentIndex + 1] ?? null;
+}
+
+function getDisplayProgress(screen: IcpFlowScreen, loadingPhase: LoadingPhase) {
+  if (loadingPhase) return PROGRESS_BY_SCREEN[loadingPhase];
+  return PROGRESS_BY_SCREEN[screen];
+}
+
+function getScreenTitle(screen: IcpFlowScreen, session: IcpBuilderSession) {
+  const role = session.guided.persona?.role || session.personaSuggestion?.role || "this customer";
+
+  switch (screen) {
+    case "fast_input":
+      return "Describe your startup idea, who it's for, and what problem it solves.";
+    case "guided_seed":
+      return "What's your startup idea?";
+    case "guided_persona":
+      return "Based on your idea, here's who we think you're building for.";
+    case "guided_specificity":
+      return "Now narrow it down. Who exactly?";
+    case "guided_pain":
+      return "What specific problem does this person face that drives them crazy?";
+    case "guided_workaround":
+      return `What does ${role} use today to deal with this problem?`;
+    case "guided_solution":
+      return "In one sentence, what does your product do for them?";
+    case "guided_market_context":
+      return "Which best describes your competitive landscape?";
+    case "guided_founder_edge":
+      return "Why are you the right person to build this?";
+    default:
+      return "";
   }
+}
 
-  if (analysisData.version === 2 && analysisData.draftDocument) {
-    return { artifact: analysisData as StoredIcpArtifact, legacyAvailable: false };
-  }
-
-  const artifact = mapLegacyAnalysisToArtifact(
-    analysisData,
-    row.target_audience ?? null,
-    row.business_description ?? "",
-    row.verdict ?? null,
-  );
-
-  return {
-    artifact,
-    legacyAvailable: Boolean(artifact),
-    legacyAnalysis: artifact ? analysisData : null,
-  };
+function getEnterHint(screen: IcpFlowScreen) {
+  if (screen === "guided_market_context" || screen === "mode_select") return "";
+  return "Press Enter ↵";
 }
 
 const ICPBuilder: React.FC = () => {
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuth();
   const { toast } = useToast();
   const { refreshActivation } = useActivationJourney("stage_i");
 
   const [session, setSession] = useState<IcpBuilderSession>(() => readIcpBuilderSession() ?? createEmptyIcpBuilderSession());
-  const [artifact, setArtifact] = useState<StoredIcpArtifact | null>(() => readIcpBuilderSession()?.draftPreview ?? null);
+  const [loadingPhase, setLoadingPhase] = useState<LoadingPhase>(null);
+  const [loadingStartedAt, setLoadingStartedAt] = useState<number | null>(null);
+  const [isPersisting, setIsPersisting] = useState(false);
+  const [isHydratingEdit, setIsHydratingEdit] = useState(false);
+  const [isHydratingResume, setIsHydratingResume] = useState(false);
+  const [showLegacy, setShowLegacy] = useState(false);
   const [legacyAnalysis, setLegacyAnalysis] = useState<LegacyAnalysis | null>(null);
   const [legacyAvailable, setLegacyAvailable] = useState(false);
-  const [showLegacy, setShowLegacy] = useState(false);
-  const [unlockOpen, setUnlockOpen] = useState(false);
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-  const [hydratedSavedAnalysis, setHydratedSavedAnalysis] = useState(false);
+  const [fallbackEmail, setFallbackEmail] = useState("");
+  const [fallbackEmailError, setFallbackEmailError] = useState<string | null>(null);
+  const [fallbackEmailState, setFallbackEmailState] = useState<FallbackEmailState>("idle");
 
-  const totalSteps = CORE_STEPS.length;
-  const safeStepIndex = Math.min(session.currentStep, totalSteps - 1);
-  const currentStepConfig = CORE_STEPS[safeStepIndex]!;
-  const currentValue = currentStepConfig ? session.answers[currentStepConfig.field] ?? "" : "";
   const unlockPath = buildIcpUnlockReturnPath();
-  const shouldRestoreUnlock = searchParams.get("unlock") === "1";
-  const progressPercent = Math.round(((session.currentStep + 1) / totalSteps) * 100);
-  const validatedAnswers = useMemo(() => icpInputFormSchema.safeParse(session.answers), [session.answers]);
-  const canContinue = currentValue.trim().length >= 12;
+  const editDraftId = searchParams.get("edit");
+  const resumeToken = searchParams.get("resume");
+  const progress = getDisplayProgress(session.currentScreen, loadingPhase);
+  const synthesisElapsedMs = loadingPhase === "synthesis" && loadingStartedAt ? Date.now() - loadingStartedAt : 0;
+
+  const validatedGuided = useMemo(() => guidedIcpInputSchema.safeParse(session.guided), [session.guided]);
+  const validatedFast = useMemo(() => fastIcpInputSchema.safeParse({ description: session.fastDescription }), [session.fastDescription]);
 
   useEffect(() => {
     persistIcpBuilderSession(session);
   }, [session]);
 
   useEffect(() => {
+    if (!loadingStartedAt || loadingPhase !== "synthesis") return;
+
+    const timer = window.setInterval(() => {
+      setLoadingStartedAt((value) => (value ? value : Date.now()));
+    }, 250);
+
+    return () => window.clearInterval(timer);
+  }, [loadingPhase, loadingStartedAt]);
+
+  useEffect(() => {
     const restoredSeed = normalizeIcpSeed(searchParams.get("seed"));
     const storedSeed = normalizeIcpSeed(window.sessionStorage.getItem("ct_icp_seed"));
     const effectiveSeed = restoredSeed || storedSeed;
 
-    if (!effectiveSeed || session.answers.problemStatement) return;
+    if (!effectiveSeed) return;
+    if (session.fastDescription || session.guided.seed) return;
 
     setSession((previous) => ({
       ...previous,
-      answers: {
-        ...previous.answers,
-        problemStatement: effectiveSeed,
+      fastDescription: effectiveSeed,
+      guided: {
+        ...buildEmptyGuidedAnswers(effectiveSeed),
+        ...previous.guided,
+        seed: effectiveSeed,
       },
     }));
     consumeStoredIcpSeed();
-    trackActivationCompleted({ artifact: "icp_seed_prefilled" });
 
     if (restoredSeed) {
       const nextParams = new URLSearchParams(searchParams);
       nextParams.delete("seed");
       setSearchParams(nextParams, { replace: true });
     }
-  }, [searchParams, session.answers.problemStatement, setSearchParams]);
+  }, [searchParams, session.fastDescription, session.guided.seed, setSearchParams]);
 
   useEffect(() => {
-    if (!user || artifact || session.draftPreview) {
-      setHydratedSavedAnalysis(true);
+    if (!editDraftId || !user) return;
+    if (session.savedAnalysisId === editDraftId) return;
+
+    let cancelled = false;
+
+    const hydrateEditDraft = async () => {
+      setIsHydratingEdit(true);
+      try {
+        const { data, error } = await supabase
+          .from(ICP_RESULTS_TABLE)
+          .select("id, analysis_data, target_audience, business_description, verdict")
+          .eq("id", editDraftId)
+          .eq("user_id", user.id)
+          .maybeSingle();
+
+        if (cancelled) return;
+        if (error || !data) {
+          toast({
+            title: "Draft unavailable",
+            description: "We could not load that ICP Draft for editing.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        const normalized = normalizeStoredArtifact(data);
+        if (!normalized.artifact) {
+          toast({
+            title: "Draft unavailable",
+            description: "That ICP Draft could not be mapped into the new editor.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        setLegacyAvailable(Boolean(normalized.legacyAvailable));
+        setLegacyAnalysis(normalized.legacyAnalysis);
+        setSession(buildBuilderSessionFromArtifact(normalized.artifact, editDraftId));
+      } catch (error) {
+        console.error("Failed to load ICP draft for editing", error);
+      } finally {
+        if (!cancelled) {
+          setIsHydratingEdit(false);
+        }
+      }
+    };
+
+    void hydrateEditDraft();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [editDraftId, session.savedAnalysisId, toast, user]);
+
+  useEffect(() => {
+    if (!resumeToken || session.draftPreview || session.savedAnalysisId || isHydratingResume) {
       return;
     }
 
     let cancelled = false;
 
-    const loadLatestSavedAnalysis = async () => {
+    const loadResumeDraft = async () => {
+      setIsHydratingResume(true);
       try {
-        const { data, error } = await supabase
-          .from(ICP_RESULTS_TABLE)
-          .select("analysis_data, target_audience, business_description, verdict")
-          .eq("user_id", user.id)
-          .order("created_at", { ascending: false })
-          .limit(1)
-          .maybeSingle();
+        const { data, error } = await supabase.functions.invoke("load-icp-email-draft", {
+          body: { resumeToken },
+        });
 
-        if (cancelled || error || !data) {
-          setHydratedSavedAnalysis(true);
-          return;
+        if (cancelled) return;
+        const payload = data as ResumeDraftResponse | null;
+        if (error || !payload?.success || !payload.artifact) {
+          throw error || new Error(payload?.error || "We could not restore that ICP Draft.");
         }
 
-        const normalized = normalizeStoredArtifact(data as Record<string, any>);
-        if (normalized.artifact) {
-          setArtifact(normalized.artifact);
-          setLegacyAvailable(Boolean(normalized.legacyAvailable));
-          setLegacyAnalysis((normalized as { legacyAnalysis?: LegacyAnalysis | null }).legacyAnalysis ?? null);
-        }
+        const restoredSession = buildBuilderSessionFromArtifact(payload.artifact, null);
+        setSession({
+          ...restoredSession,
+          currentScreen: "gate",
+          draftPreview: payload.artifact,
+          unlockRequired: true,
+        });
       } catch (error) {
-        console.error("Failed to restore latest ICP Draft", error);
+        toast({
+          title: "Draft unavailable",
+          description: error instanceof Error ? error.message : "We could not restore that ICP Draft.",
+          variant: "destructive",
+        });
       } finally {
         if (!cancelled) {
-          setHydratedSavedAnalysis(true);
+          setIsHydratingResume(false);
         }
       }
     };
 
-    void loadLatestSavedAnalysis();
+    void loadResumeDraft();
+
     return () => {
       cancelled = true;
     };
-  }, [artifact, session.draftPreview, user]);
+  }, [isHydratingResume, resumeToken, session.draftPreview, session.savedAnalysisId, toast]);
 
   useEffect(() => {
-    if (!user || !session.draftPreview || session.savedAnalysisId || isSaving) return;
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      if (loadingPhase) return;
 
-    let active = true;
+      const previousScreen = getPreviousScreen(session.currentScreen, session.mode);
+      if (!previousScreen) return;
+      event.preventDefault();
+      setSession((previous) => ({
+        ...previous,
+        currentScreen: previousScreen,
+      }));
+    };
 
-    const persistUnlockedDraft = async () => {
-      try {
-        setIsSaving(true);
-        const validated = icpInputFormSchema.parse(session.answers);
-        const { data, error } = await withTimeout(
+    window.addEventListener("keydown", handleEscape);
+    return () => window.removeEventListener("keydown", handleEscape);
+  }, [loadingPhase, session.currentScreen, session.mode]);
+
+  const canContinue = useMemo(() => {
+    switch (session.currentScreen) {
+      case "fast_input":
+        return validatedFast.success;
+      case "guided_seed":
+        return (session.guided.seed || "").trim().length >= 8;
+      case "guided_persona":
+        return Boolean(
+          session.guided.persona?.role?.trim() &&
+            session.guided.persona?.industry?.trim() &&
+            session.guided.persona?.experience?.trim(),
+        );
+      case "guided_specificity":
+        return (session.guided.specificity || "").trim().length >= 8;
+      case "guided_pain":
+        return (session.guided.pain || "").trim().length >= 12;
+      case "guided_workaround":
+        return (session.guided.workaround || "").trim().length >= 6;
+      case "guided_solution":
+        return (session.guided.solutionCompletion || "").trim().length >= 6;
+      case "guided_market_context":
+        return Boolean(session.guided.marketContext);
+      case "guided_founder_edge":
+        return (session.guided.founderEdge || "").trim().length >= 12;
+      default:
+        return false;
+    }
+  }, [session, validatedFast.success]);
+
+  const updateGuided = <K extends keyof IcpBuilderSession["guided"]>(field: K, value: IcpBuilderSession["guided"][K]) => {
+    setSession((previous) => ({
+      ...previous,
+      guided: {
+        ...previous.guided,
+        [field]: value,
+      },
+    }));
+  };
+
+  const resetBuilder = () => {
+    clearIcpBuilderSession();
+    setSession(createEmptyIcpBuilderSession());
+    setLegacyAnalysis(null);
+    setLegacyAvailable(false);
+    setShowLegacy(false);
+    navigate("/icp-builder", { replace: true });
+  };
+
+  const invokeSeedPrefill = async () => {
+    const seed = (session.guided.seed || "").trim();
+    if (seed.length < 8) {
+      toast({
+        title: "Add a rough idea first",
+        description: "One or two sentences are enough to start.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setLoadingPhase("seed_loading");
+    setLoadingStartedAt(Date.now());
+
+    try {
+      const [{ data, error }] = await Promise.all([
+        withTimeout(
           supabase.functions.invoke("icp-analyzer", {
             body: {
-              mode: "save",
-              answers: validated,
-              clarification: session.clarification,
+              operation: "seed_prefill",
+              seed,
             },
           }),
-          SAVE_TIMEOUT_MS,
-        );
+          SEED_TIMEOUT_MS,
+        ),
+        new Promise((resolve) => window.setTimeout(resolve, SEED_ANALYSIS_MIN_MS)),
+      ]);
 
-        if (error || !data?.success || !data?.artifact || !data?.analysisId) {
-          throw error || new Error(data?.error || "Failed to save ICP Draft.");
-        }
+      if (error || !(data as SeedPrefillResponse | null)?.success || !(data as SeedPrefillResponse | null)?.persona) {
+        throw error || new Error((data as SeedPrefillResponse | null)?.error || "We could not analyse the idea yet.");
+      }
 
-        if (!active) return;
+      const persona = (data as SeedPrefillResponse).persona as IcpPersonaSuggestion;
+      setSession((previous) => ({
+        ...previous,
+        personaSuggestion: persona,
+        mode: "guided",
+        guided: {
+          ...previous.guided,
+          persona: {
+            role: persona.role,
+            industry: persona.industry,
+            experience: persona.experience,
+          },
+        },
+        currentScreen: "guided_persona",
+      }));
+    } catch (error) {
+      toast({
+        title: "Could not analyse the idea",
+        description: error instanceof Error ? error.message : "Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingPhase(null);
+      setLoadingStartedAt(null);
+    }
+  };
 
-        const savedArtifact = data.artifact as StoredIcpArtifact;
-        setArtifact(savedArtifact);
-        setLegacyAvailable(false);
-        setLegacyAnalysis(null);
+  const completeDraftGeneration = useCallback(async (persist: boolean) => {
+    const mode = session.mode;
+    if (!mode) return;
+
+    const body =
+      mode === "fast"
+        ? {
+            operation: "build_draft",
+            mode: persist ? "save" : "preview",
+            entryMode: "fast",
+            fastInput: validatedFast.success ? validatedFast.data : null,
+          }
+        : {
+            operation: "build_draft",
+            mode: persist ? "save" : "preview",
+            entryMode: "guided",
+            guidedInput: validatedGuided.success ? validatedGuided.data : null,
+            personaEditedSignificantly: session.personaEditedSignificantly,
+          };
+
+    if ((mode === "fast" && !validatedFast.success) || (mode === "guided" && !validatedGuided.success)) {
+      toast({
+        title: "Complete the current draft first",
+        description: "Every answer needs enough detail before we can generate a trustworthy ICP Draft.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setLoadingPhase("synthesis");
+    setLoadingStartedAt(Date.now());
+    setFallbackEmailError(null);
+    setFallbackEmailState("idle");
+
+    try {
+      trackICPBuilderStarted({ page_path: "/icp-builder", mode });
+      captureEvent("icp_builder_started", {
+        page_path: "/icp-builder",
+        entry_mode: mode,
+        isAuthenticated: Boolean(user),
+      });
+
+      const { data, error } = await withTimeout(
+        supabase.functions.invoke("icp-analyzer", { body }),
+        persist ? SAVE_TIMEOUT_MS : PREVIEW_TIMEOUT_MS,
+      );
+
+      if (error || !data?.success || data.status !== "draft_ready" || !data.artifact) {
+        throw error || new Error(data?.error || "Draft generation failed.");
+      }
+
+      const artifact = data.artifact as StoredIcpArtifact;
+
+      if (!persist) {
         setSession((previous) => ({
           ...previous,
-          draftPreview: savedArtifact,
-          unlockRequired: false,
-          savedAnalysisId: data.analysisId as string,
+          draftPreview: artifact,
+          unlockRequired: true,
+          currentScreen: "gate",
         }));
+        return;
+      }
 
+      const analysisId = typeof data.analysisId === "string" ? data.analysisId : null;
+      if (!analysisId) {
+        throw new Error("The saved ICP Draft is missing its analysis id.");
+      }
+
+      setSession((previous) => ({
+        ...previous,
+        draftPreview: artifact,
+        unlockRequired: false,
+        savedAnalysisId: analysisId,
+      }));
+
+      if (user) {
         await markFirstArtifactCreated({
           userId: user.id,
           artifactType: "icp_analysis",
-          artifactId: data.analysisId as string,
-          label: `ICP: ${validated.targetAudience}`,
-          resumeUrl: "/icp-builder",
+          artifactId: analysisId,
+          label: artifact.draftDocument.customer.personaName,
+          resumeUrl: `/icp/draft/${analysisId}`,
           source: "icp_builder",
         });
 
@@ -478,386 +594,645 @@ const ICPBuilder: React.FC = () => {
         await supabase.functions.invoke("generate-recommendations", {
           body: { user_id: user.id },
         });
-        await refreshActivation();
-
-        const nextParams = new URLSearchParams(searchParams);
-        if (nextParams.get("unlock") === "1") {
-          nextParams.delete("unlock");
-          setSearchParams(nextParams, { replace: true });
-        }
-      } catch (error) {
-        console.error("Failed to persist unlocked ICP Draft", error);
-        if (active) {
-          toast({
-            title: "Draft unlocked, save pending",
-            description: "Your draft is visible, but we could not save it to your dashboard yet. Refresh and try again.",
-            variant: "destructive",
-          });
-        }
-      } finally {
-        if (active) {
-          setIsSaving(false);
-        }
       }
-    };
 
-    if (shouldRestoreUnlock || session.unlockRequired || !session.savedAnalysisId) {
-      void persistUnlockedDraft();
-    }
-
-    return () => {
-      active = false;
-    };
-  }, [isSaving, refreshActivation, searchParams, session.answers, session.clarification, session.draftPreview, session.savedAnalysisId, session.unlockRequired, setSearchParams, shouldRestoreUnlock, toast, user]);
-
-  const updateAnswer = (value: string) => {
-    if (!currentStepConfig) return;
-
-    setSession((previous) => ({
-      ...previous,
-      answers: {
-        ...previous.answers,
-        [currentStepConfig.field]: value,
-      },
-    }));
-  };
-
-  const handleReset = () => {
-    clearIcpBuilderSession();
-    setSession(createEmptyIcpBuilderSession());
-    setArtifact(null);
-    setLegacyAnalysis(null);
-    setLegacyAvailable(false);
-    setShowLegacy(false);
-    setUnlockOpen(false);
-  };
-
-  const runDraftGeneration = async (clarification: IcpClarificationExchange | null) => {
-    if (!validatedAnswers.success) {
-      toast({
-        title: "Complete the required answers",
-        description: "Each step needs enough detail before we can generate a trustworthy ICP Draft.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      setIsGenerating(true);
-      trackICPBuilderStarted({ page_path: "/icp-builder" });
-      captureEvent("icp_builder_started", {
+      await refreshActivation();
+      trackICPBuilderCompleted({
         page_path: "/icp-builder",
-        has_clarification: Boolean(clarification?.answer),
-        isAuthenticated: Boolean(user),
+        mode,
+        confidence: artifact.draftDocument.confidence.level,
       });
 
-      const { data, error } = await withTimeout(
-        supabase.functions.invoke("icp-analyzer", {
-          body: {
-            mode: "preview",
-            answers: validatedAnswers.data,
-            clarification,
-          },
-        }),
-        PREVIEW_TIMEOUT_MS,
-      );
-
-      if (error || !data?.success) {
-        throw error || new Error(data?.error || "Draft generation failed.");
-      }
-
-      if (data.status === "needs_clarification" && data.clarificationQuestion) {
-        setSession((previous) => ({
-          ...previous,
-          clarification: {
-            question: data.clarificationQuestion as string,
-            answer: "",
-          },
-        }));
-        return;
-      }
-
-      if (data.status !== "draft_ready" || !data.artifact) {
-        throw new Error("The ICP analyzer returned an unexpected response.");
-      }
-
-      const nextArtifact = data.artifact as StoredIcpArtifact;
-      const nextSession: IcpBuilderSession = {
-        ...session,
-        answers: validatedAnswers.data,
-        clarification,
-        draftPreview: nextArtifact,
-        unlockRequired: !user,
-      };
-
-      setArtifact(nextArtifact);
-      setLegacyAnalysis(null);
-      setLegacyAvailable(false);
-      setSession(nextSession);
-      persistIcpBuilderSession(nextSession);
-
-      captureEvent("icp_builder_completed", {
-        page_path: "/icp-builder",
-        success: true,
-        confidence: nextArtifact.draftDocument.confidence.level,
-        requires_unlock: !user,
-      });
-
-      if (!user) {
-        toast({
-          title: "Your ICP Draft is ready",
-          description: "Create a free account to unlock it.",
-        });
-      } else {
-        trackICPBuilderCompleted({
-          page_path: "/icp-builder",
-          confidence: nextArtifact.draftDocument.confidence.level,
-        });
-      }
+      navigate(`/icp/draft/${analysisId}`, { replace: true });
     } catch (error) {
       console.error("ICP draft generation failed", error);
       toast({
-        title: "Could not build the draft",
+        title: persist ? "Could not save the draft" : "Could not build the draft",
         description: error instanceof Error ? error.message : "Please try again.",
         variant: "destructive",
       });
     } finally {
-      setIsGenerating(false);
+      setLoadingPhase(null);
+      setLoadingStartedAt(null);
     }
-  };
+  }, [navigate, refreshActivation, session.mode, session.personaEditedSignificantly, toast, user, validatedFast, validatedGuided]);
+
+  const persistDraftAndContinue = useCallback(async () => {
+    if (isPersisting) return;
+    setIsPersisting(true);
+    try {
+      await completeDraftGeneration(true);
+    } finally {
+      setIsPersisting(false);
+    }
+  }, [completeDraftGeneration, isPersisting]);
+
+  useEffect(() => {
+    if (!user || !session.draftPreview || !session.unlockRequired || session.savedAnalysisId || isPersisting) {
+      return;
+    }
+
+    void persistDraftAndContinue();
+  }, [isPersisting, persistDraftAndContinue, session.draftPreview, session.savedAnalysisId, session.unlockRequired, user]);
+
+  const handleFallbackEmailSubmit = useCallback(async () => {
+    if (fallbackEmailState === "submitting" || fallbackEmailState === "submitted") return;
+
+    const email = fallbackEmail.trim();
+    if (!emailRegex.test(email)) {
+      setFallbackEmailError("Enter a valid email address.");
+      return;
+    }
+
+    if ((session.mode === "fast" && !validatedFast.success) || (session.mode === "guided" && !validatedGuided.success)) {
+      setFallbackEmailError("Finish the current answers first so we can send the right draft.");
+      return;
+    }
+
+    setFallbackEmailError(null);
+    setFallbackEmailState("submitting");
+
+    try {
+      const body =
+        session.mode === "fast"
+          ? {
+              email,
+              entryMode: "fast" as const,
+              fastInput: validatedFast.data,
+            }
+          : {
+              email,
+              entryMode: "guided" as const,
+              guidedInput: validatedGuided.data,
+              personaEditedSignificantly: session.personaEditedSignificantly,
+            };
+
+      const { data, error } = await supabase.functions.invoke("request-icp-draft-email", {
+        body,
+      });
+      const payload = data as QueueEmailDraftResponse | null;
+
+      if (error || !payload?.success) {
+        throw error || new Error(payload?.error || "We could not queue the email draft.");
+      }
+
+      setFallbackEmailState("submitted");
+      toast({
+        title: "Email queued",
+        description: "We’ll send you a link to resume and unlock this ICP Draft.",
+      });
+    } catch (error) {
+      setFallbackEmailState("idle");
+      setFallbackEmailError(error instanceof Error ? error.message : "We could not queue the email draft.");
+    }
+  }, [
+    fallbackEmail,
+    fallbackEmailState,
+    session.mode,
+    session.personaEditedSignificantly,
+    toast,
+    validatedFast,
+    validatedGuided,
+  ]);
 
   const handleContinue = async () => {
     if (!canContinue) {
       toast({
-        title: "Add more detail",
-        description: "The answer is still too thin to make the next decision useful.",
+        title: "Add a bit more detail",
+        description: "The next step should feel obvious from this answer.",
         variant: "destructive",
       });
       return;
     }
 
-    if (session.currentStep < totalSteps - 1) {
+    if (session.currentScreen === "fast_input") {
+      await completeDraftGeneration(Boolean(user));
+      return;
+    }
+
+    if (session.currentScreen === "guided_seed") {
+      await invokeSeedPrefill();
+      return;
+    }
+
+    if (session.currentScreen === "guided_persona") {
+      const personaEditedSignificantly = hasSignificantPersonaChange(session.personaSuggestion, session.guided.persona);
       setSession((previous) => ({
         ...previous,
-        currentStep: previous.currentStep + 1,
+        personaEditedSignificantly,
+        currentScreen: "guided_specificity",
       }));
       return;
     }
 
-    await runDraftGeneration(session.clarification);
-  };
-
-  const handleClarificationSubmit = async () => {
-    if (!session.clarification?.answer.trim()) {
-      toast({
-        title: "Answer the follow-up first",
-        description: "This is the last missing signal before we can produce a reliable draft.",
-        variant: "destructive",
-      });
+    if (session.currentScreen === "guided_founder_edge") {
+      await completeDraftGeneration(Boolean(user));
       return;
     }
 
-    await runDraftGeneration(session.clarification);
+    const nextScreen = getNextGuidedScreen(session.currentScreen);
+    if (nextScreen) {
+      setSession((previous) => ({
+        ...previous,
+        currentScreen: nextScreen,
+      }));
+    }
   };
 
-  const questionBody = session.clarification ? (
-    <Card className="border-primary/20 bg-primary/5">
-      <CardHeader>
-        <Badge variant="outline" className="w-fit">One smart follow-up</Badge>
-        <CardTitle className="text-2xl">We need one sharper signal before we write the draft</CardTitle>
-        <CardDescription>{session.clarification.question}</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <Textarea
-          value={session.clarification.answer}
-          onChange={(event) =>
+  const handleBack = () => {
+    if (loadingPhase) return;
+    const previousScreen = getPreviousScreen(session.currentScreen, session.mode);
+    if (!previousScreen) return;
+    setSession((previous) => ({
+      ...previous,
+      currentScreen: previousScreen,
+    }));
+  };
+
+  const handleFieldSubmit = (event: React.KeyboardEvent<HTMLElement>) => {
+    if (event.key !== "Enter" || event.shiftKey) return;
+    if (event.currentTarget instanceof HTMLTextAreaElement) {
+      event.preventDefault();
+    }
+    void handleContinue();
+  };
+
+  const renderModeSelect = () => (
+    <div className="mx-auto flex min-h-screen max-w-5xl flex-col justify-center px-4 pb-20 pt-16 text-slate-950 sm:px-6">
+      <div className="space-y-5 text-center">
+        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#32b8c6]">ICP Builder</p>
+        <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">Build your ICP Draft</h1>
+        <p className="mx-auto max-w-3xl text-base leading-7 text-slate-600 sm:text-lg">
+          This takes about 5 minutes. You'll walk away with a clear picture of your ideal customer, their core problem,
+          and why your startup wins.
+        </p>
+      </div>
+
+      <div className="mt-10 grid gap-5 lg:grid-cols-2">
+        <button
+          type="button"
+          className="rounded-[2rem] border border-slate-200 bg-white p-6 text-left shadow-[0_28px_90px_-52px_rgba(15,23,42,0.3)] transition-transform hover:-translate-y-1"
+          onClick={() =>
             setSession((previous) => ({
               ...previous,
-              clarification: previous.clarification
-                ? { ...previous.clarification, answer: event.target.value }
-                : previous.clarification,
+              mode: "fast",
+              currentScreen: "fast_input",
             }))
           }
-          rows={7}
-          placeholder="Add the missing detail in plain language."
-          className="resize-none rounded-2xl"
-        />
-        <div className="flex flex-col gap-3 sm:flex-row">
-          <Button type="button" variant="outline" onClick={() => setSession((previous) => ({ ...previous, clarification: null }))}>
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to answers
-          </Button>
-          <Button type="button" size="lg" onClick={() => void handleClarificationSubmit()} disabled={isGenerating}>
-            {isGenerating ? (
+        >
+          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#32b8c6]">Fast Mode</p>
+          <p className="mt-4 text-xl font-semibold text-slate-950">I can describe my startup idea clearly</p>
+          <p className="mt-4 text-sm leading-6 text-slate-600">
+            Paste a paragraph about your idea and get your ICP Draft in under 60 seconds.
+          </p>
+        </button>
+
+        <button
+          type="button"
+          className="rounded-[2rem] border border-slate-200 bg-white p-6 text-left shadow-[0_28px_90px_-52px_rgba(15,23,42,0.3)] transition-transform hover:-translate-y-1"
+          onClick={() =>
+            setSession((previous) => ({
+              ...previous,
+              mode: "guided",
+              currentScreen: "guided_seed",
+              guided: previous.guided.seed ? previous.guided : buildEmptyGuidedAnswers(previous.fastDescription),
+            }))
+          }
+        >
+          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#32b8c6]">Guided Mode</p>
+          <p className="mt-4 text-xl font-semibold text-slate-950">I'm still figuring things out</p>
+          <p className="mt-4 text-sm leading-6 text-slate-600">
+            Answer 8 simple questions, one at a time, and we'll build the draft together.
+          </p>
+        </button>
+      </div>
+    </div>
+  );
+
+  const renderQuestionShell = (content: React.ReactNode) => (
+    <div className="mx-auto flex min-h-screen max-w-3xl flex-col px-4 pb-28 pt-16 text-slate-950 sm:px-6">
+      <div className="mb-8 flex items-center gap-4">
+        <button
+          type="button"
+          onClick={handleBack}
+          className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+          disabled={!getPreviousScreen(session.currentScreen, session.mode)}
+          aria-label="Go back"
+        >
+          <ArrowLeft className="h-4 w-4" />
+        </button>
+      </div>
+
+      <div className="flex-1">{content}</div>
+
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/95 px-4 py-4 backdrop-blur sm:static sm:mt-12 sm:border-t-0 sm:bg-transparent sm:px-0 sm:py-0">
+        <div className="mx-auto flex max-w-3xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="text-xs uppercase tracking-[0.18em] text-slate-400">{getEnterHint(session.currentScreen)}</div>
+          <Button
+            type="button"
+            className="h-12 min-w-[180px] self-end text-base font-semibold"
+            onClick={() => void handleContinue()}
+            disabled={!canContinue || loadingPhase !== null}
+          >
+            {loadingPhase === "synthesis" ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Building your draft...
               </>
+            ) : session.currentScreen === "guided_founder_edge" || session.currentScreen === "fast_input" ? (
+              "Generate my ICP Draft"
             ) : (
               <>
-                Generate my ICP Draft
-                <Sparkles className="ml-2 h-4 w-4" />
+                Continue
+                <ArrowRight className="ml-2 h-4 w-4" />
               </>
             )}
           </Button>
         </div>
-      </CardContent>
-    </Card>
-  ) : (
-    <div className="space-y-6">
-      <div className="rounded-[1.75rem] border border-border/60 bg-background/80 p-5 shadow-sm">
-        <div className="mb-5 flex items-center justify-between gap-3">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">{currentStepConfig.eyebrow}</p>
-            <p className="mt-2 text-sm text-muted-foreground">One question at a time. This should feel like a clarity session, not a form.</p>
-          </div>
-          <div className="text-right text-sm font-medium text-muted-foreground">
-            {session.currentStep + 1} / {totalSteps}
-          </div>
-        </div>
-        <div className="h-2 rounded-full bg-muted">
-          <div className="h-2 rounded-full bg-primary transition-all" style={{ width: `${progressPercent}%` }} />
-        </div>
       </div>
-
-      <Card className="rounded-[1.75rem] border-border/60 shadow-sm">
-        <CardHeader className="space-y-3">
-          <CardTitle className="text-2xl leading-snug md:text-[2rem]">{currentStepConfig.question}</CardTitle>
-          <CardDescription className="text-sm leading-6">{currentStepConfig.hint}</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-5">
-          <Textarea
-            value={currentValue}
-            onChange={(event) => updateAnswer(event.target.value)}
-            placeholder={currentStepConfig.placeholder}
-            rows={8}
-            className="resize-none rounded-[1.35rem] border-border/60 bg-muted/20 p-5 text-base leading-relaxed"
-          />
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="text-sm text-muted-foreground">
-              {canContinue ? "Good. This is specific enough to move forward." : "Add enough detail to make the next decision obvious."}
-            </div>
-            <div className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
-              Autosaved in this browser
-            </div>
-          </div>
-          <div className="flex flex-col gap-3 sm:flex-row">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() =>
-                setSession((previous) => ({
-                  ...previous,
-                  currentStep: Math.max(previous.currentStep - 1, 0),
-                }))
-              }
-              disabled={session.currentStep === 0}
-            >
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back
-            </Button>
-            <Button type="button" size="lg" className="sm:flex-1" onClick={() => void handleContinue()} disabled={isGenerating}>
-              {isGenerating ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Building your draft...
-                </>
-              ) : session.currentStep === totalSteps - 1 ? (
-                <>
-                  Generate my ICP Draft
-                  <Sparkles className="ml-2 h-4 w-4" />
-                </>
-              ) : (
-                <>
-                  Continue
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </>
-              )}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 
-  return (
-    <div className="space-y-6">
-      <Card className="border-primary/20 bg-gradient-to-br from-primary/10 via-card to-card">
-        <CardHeader className="space-y-4">
-          <div className="flex flex-wrap items-center gap-2">
-            <Badge variant="outline">5-minute clarity session</Badge>
-            <Badge variant="outline">No signup required to start</Badge>
-          </div>
-          <div className="space-y-2">
-            <CardTitle className="text-2xl md:text-3xl">Leave with a founder-specific ICP Draft, not a generic report</CardTitle>
-            <CardDescription className="max-w-3xl text-sm sm:text-base">
-              Answer six direct questions. We turn them into a draft you can hand to a designer, marketer, or co-founder and use to decide what to do next.
-            </CardDescription>
-          </div>
-        </CardHeader>
-      </Card>
+  const renderFastInput = () =>
+    renderQuestionShell(
+      <div className="space-y-5">
+        <div className="space-y-3">
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#32b8c6]">Fast Mode</p>
+          <h1 className="text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">{getScreenTitle(session.currentScreen, session)}</h1>
+          <p className="text-base leading-7 text-slate-600">
+            The more detail you give, the better your ICP Draft will be. 3–5 sentences is ideal.
+          </p>
+        </div>
 
-      {artifact ? (
-        <div className="space-y-6">
-          <ICPDraftDocument
-            artifact={artifact}
-            locked={!user && session.unlockRequired}
-            onUnlock={() => setUnlockOpen(true)}
-            onViewLegacy={() => setShowLegacy((previous) => !previous)}
-            showLegacyFallback={legacyAvailable}
+        <Textarea
+          rows={8}
+          value={session.fastDescription}
+          onChange={(event) =>
+            setSession((previous) => ({
+              ...previous,
+              fastDescription: event.target.value,
+            }))
+          }
+          onKeyDown={handleFieldSubmit}
+          placeholder="e.g. I'm building a client feedback tool for freelance designers. Right now they manage revisions through email and WhatsApp, which causes things to get lost and makes them look unprofessional. My tool puts all revision feedback in one place with version tracking. I'm a freelance designer myself so I know this market well."
+          className="min-h-[280px] rounded-[2rem] border-slate-200 bg-white px-5 py-5 text-base leading-7 shadow-sm"
+        />
+      </div>,
+    );
+
+  const renderGuidedScreen = () => {
+    const role = session.guided.persona?.role || session.personaSuggestion?.role || "Freelance graphic designers";
+
+    switch (session.currentScreen) {
+      case "guided_seed":
+        return renderQuestionShell(
+          <div className="space-y-5">
+            <div className="space-y-3">
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#32b8c6]">Guided Mode</p>
+              <h1 className="text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">{getScreenTitle(session.currentScreen, session)}</h1>
+              <p className="text-base leading-7 text-slate-600">One or two sentences. Don't overthink it — rough is fine.</p>
+            </div>
+
+            <Textarea
+              rows={3}
+              value={session.guided.seed || ""}
+              onChange={(event) => updateGuided("seed", event.target.value)}
+              onKeyDown={handleFieldSubmit}
+              placeholder="e.g. A tool that helps freelancers manage client feedback without drowning in email threads"
+              className="rounded-[2rem] border-slate-200 bg-white px-5 py-5 text-base leading-7 shadow-sm"
+            />
+          </div>,
+        );
+
+      case "guided_persona":
+        return renderQuestionShell(
+          <div className="space-y-5">
+            <div className="space-y-3">
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#32b8c6]">Guided Mode</p>
+              <h1 className="text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">{getScreenTitle(session.currentScreen, session)}</h1>
+              <p className="text-base leading-7 text-slate-600">Edit anything that doesn't feel right.</p>
+            </div>
+
+            <div className="space-y-4 rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm">
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-slate-700">Role</label>
+                <Input
+                  value={session.guided.persona?.role || ""}
+                  onChange={(event) =>
+                    updateGuided("persona", {
+                      role: event.target.value,
+                      industry: session.guided.persona?.industry || "",
+                      experience: session.guided.persona?.experience || "",
+                    })
+                  }
+                  placeholder="Freelance Graphic Designer"
+                  className="h-12 rounded-xl border-slate-200 bg-[#eef8fa]"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-slate-700">Industry</label>
+                <Input
+                  value={session.guided.persona?.industry || ""}
+                  onChange={(event) =>
+                    updateGuided("persona", {
+                      role: session.guided.persona?.role || "",
+                      industry: event.target.value,
+                      experience: session.guided.persona?.experience || "",
+                    })
+                  }
+                  placeholder="Creative Services"
+                  className="h-12 rounded-xl border-slate-200 bg-[#eef8fa]"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-slate-700">Experience</label>
+                <Input
+                  value={session.guided.persona?.experience || ""}
+                  onChange={(event) =>
+                    updateGuided("persona", {
+                      role: session.guided.persona?.role || "",
+                      industry: session.guided.persona?.industry || "",
+                      experience: event.target.value,
+                    })
+                  }
+                  placeholder="2–5 years, working solo or with 1 assistant"
+                  className="h-12 rounded-xl border-slate-200 bg-[#eef8fa]"
+                />
+              </div>
+            </div>
+          </div>,
+        );
+
+      case "guided_specificity":
+        return renderQuestionShell(
+          <div className="space-y-5">
+            <div className="space-y-3">
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#32b8c6]">Guided Mode</p>
+              <h1 className="text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">{getScreenTitle(session.currentScreen, session)}</h1>
+              <p className="text-base leading-7 text-slate-600">
+                "Small business owners" is too broad. "{role} with [specific constraint]" is better.
+              </p>
+            </div>
+            <Input
+              value={session.guided.specificity || ""}
+              onChange={(event) => updateGuided("specificity", event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                  event.preventDefault();
+                  void handleContinue();
+                }
+              }}
+              placeholder={`e.g. ${role} who manage 3+ client projects at once`}
+              className="h-14 rounded-[1.5rem] border-slate-200 bg-white px-5 text-base shadow-sm"
+            />
+          </div>,
+        );
+
+      case "guided_pain":
+        return renderQuestionShell(
+          <div className="space-y-5">
+            <div className="space-y-3">
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#32b8c6]">Guided Mode</p>
+              <h1 className="text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">{getScreenTitle(session.currentScreen, session)}</h1>
+              <p className="text-base leading-7 text-slate-600">
+                Think about a moment of frustration. What makes them want to throw their laptop? What do they complain about to friends?
+              </p>
+            </div>
+
+            <Textarea
+              rows={3}
+              value={session.guided.pain || ""}
+              onChange={(event) => updateGuided("pain", event.target.value)}
+              onKeyDown={handleFieldSubmit}
+              placeholder="e.g. They lose clients because revision feedback is scattered across email, WhatsApp, and voice notes — and nothing gets tracked"
+              className="rounded-[2rem] border-slate-200 bg-white px-5 py-5 text-base leading-7 shadow-sm"
+            />
+          </div>,
+        );
+
+      case "guided_workaround":
+        return renderQuestionShell(
+          <div className="space-y-5">
+            <div className="space-y-3">
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#32b8c6]">Guided Mode</p>
+              <h1 className="text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">{getScreenTitle(session.currentScreen, session)}</h1>
+              <p className="text-base leading-7 text-slate-600">
+                Even if it's messy — email, spreadsheets, WhatsApp, sticky notes, or nothing at all.
+              </p>
+            </div>
+            <Input
+              value={session.guided.workaround || ""}
+              onChange={(event) => updateGuided("workaround", event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                  event.preventDefault();
+                  void handleContinue();
+                }
+              }}
+              placeholder="e.g. A mix of email threads, Google Drive comments, and hoping clients remember what they said"
+              className="h-14 rounded-[1.5rem] border-slate-200 bg-white px-5 text-base shadow-sm"
+            />
+          </div>,
+        );
+
+      case "guided_solution":
+        return renderQuestionShell(
+          <div className="space-y-5">
+            <div className="space-y-3">
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#32b8c6]">Guided Mode</p>
+              <h1 className="text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">{getScreenTitle(session.currentScreen, session)}</h1>
+              <p className="text-base leading-7 text-slate-600">Complete this: "My product helps {role} to ___"</p>
+            </div>
+
+            <div className="rounded-[2rem] border border-slate-200 bg-white p-4 shadow-sm">
+              <div className="flex flex-col gap-3 md:flex-row md:items-center">
+                <span className="rounded-xl bg-slate-100 px-4 py-3 text-sm font-medium text-slate-500">
+                  My product helps {role} to
+                </span>
+                <Input
+                  value={session.guided.solutionCompletion || ""}
+                  onChange={(event) => updateGuided("solutionCompletion", event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") {
+                      event.preventDefault();
+                      void handleContinue();
+                    }
+                  }}
+                  placeholder="centralize client feedback without context switching"
+                  className="h-14 rounded-[1.25rem] border-slate-200 bg-white px-4 text-base"
+                />
+              </div>
+            </div>
+          </div>,
+        );
+
+      case "guided_market_context":
+        return renderQuestionShell(
+          <div className="space-y-5">
+            <div className="space-y-3">
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#32b8c6]">Guided Mode</p>
+              <h1 className="text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">{getScreenTitle(session.currentScreen, session)}</h1>
+            </div>
+
+            <div className="space-y-3">
+              {ICP_MARKET_CONTEXT_OPTIONS.map((option) => {
+                const selected = session.guided.marketContext === option.value;
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => updateGuided("marketContext", option.value)}
+                    className={`w-full rounded-[1.5rem] border px-5 py-5 text-center text-sm font-medium transition-colors sm:text-base ${
+                      selected
+                        ? "border-[#32b8c6] bg-[#32b8c6] text-white"
+                        : "border-slate-200 bg-white text-slate-700 hover:border-slate-300"
+                    }`}
+                  >
+                    {option.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>,
+        );
+
+      case "guided_founder_edge":
+        return renderQuestionShell(
+          <div className="space-y-5">
+            <div className="space-y-3">
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#32b8c6]">Guided Mode</p>
+              <h1 className="text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">{getScreenTitle(session.currentScreen, session)}</h1>
+              <p className="text-base leading-7 text-slate-600">
+                Your background, your access to this community, your personal experience with the problem — anything that gives you an unfair advantage.
+              </p>
+            </div>
+
+            <Textarea
+              rows={3}
+              value={session.guided.founderEdge || ""}
+              onChange={(event) => updateGuided("founderEdge", event.target.value)}
+              onKeyDown={handleFieldSubmit}
+              placeholder="e.g. I'm a freelance designer myself — I've lost clients because of this exact problem, and I know 50+ designers who feel the same way"
+              className="rounded-[2rem] border-slate-200 bg-white px-5 py-5 text-base leading-7 shadow-sm"
+            />
+          </div>,
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  if (isHydratingEdit || isHydratingResume) {
+    return (
+      <div className="min-h-screen bg-white">
+        <IcpProgressBar progress={0} />
+        <div className="flex min-h-screen items-center justify-center px-6">
+          <Card className="rounded-[2rem] border-slate-200 bg-white shadow-sm">
+            <CardContent className="flex items-center gap-3 px-6 py-8 text-slate-500">
+              <Loader2 className="h-5 w-5 animate-spin" />
+              {isHydratingEdit ? "Restoring your ICP Draft for editing..." : "Restoring your ICP Draft..."}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  if (loadingPhase === "seed_loading") {
+    return (
+      <div className="min-h-screen bg-white">
+        <IcpProgressBar progress={progress} pulse />
+        <div className="flex min-h-screen items-center justify-center px-6 text-center">
+          <div className="space-y-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#32b8c6]">Guided Mode</p>
+            <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">Analysing your idea...</h1>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (loadingPhase === "synthesis") {
+    return (
+      <div className="min-h-screen bg-white">
+        <IcpProgressBar progress={progress} pulse />
+        <IcpSynthesisLoader
+          elapsedMs={synthesisElapsedMs}
+          fallbackEmail={fallbackEmail}
+          fallbackEmailError={fallbackEmailError}
+          fallbackState={fallbackEmailState}
+          onFallbackEmailChange={(value) => {
+            setFallbackEmail(value);
+            if (fallbackEmailError) {
+              setFallbackEmailError(null);
+            }
+          }}
+          onFallbackEmailSubmit={handleFallbackEmailSubmit}
+        />
+      </div>
+    );
+  }
+
+  if (session.currentScreen === "gate" && session.draftPreview) {
+    return (
+      <div className="relative min-h-screen overflow-hidden bg-[#f6f7fb]">
+        <IcpProgressBar progress={progress} />
+        <div className="absolute inset-0">
+          <IcpFolioDocument draft={session.draftPreview.draftDocument} blurred className="pointer-events-none" />
+        </div>
+        <div className="relative z-10 min-h-screen bg-white/10 backdrop-blur-[1px]">
+          <IcpUnlockGate
+            artifact={session.draftPreview}
+            seed={session.mode === "fast" ? session.fastDescription : session.guided.seed}
+            returnPath={unlockPath}
+            onBeforeAuthContinue={() => persistIcpBuilderSession(session)}
           />
-
-          <div className="flex flex-wrap items-center gap-3">
-            <Button type="button" variant="outline" onClick={handleReset}>
-              <RotateCcw className="mr-2 h-4 w-4" />
-              Start a new ICP
-            </Button>
-            {user && isSaving ? (
-              <Badge variant="outline">
-                <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
-                Saving to dashboard...
-              </Badge>
-            ) : null}
-            {user && session.savedAnalysisId ? (
-              <Badge className="bg-emerald-500/10 text-emerald-700 border-emerald-500/20">
-                <CheckCircle2 className="mr-2 h-3.5 w-3.5" />
-                Draft synced to your dashboard
-              </Badge>
-            ) : null}
-          </div>
-
-          {showLegacy && legacyAnalysis ? (
-            <div className="space-y-6">
-              {legacyAnalysis?.nicheProfile ? <ICPNicheProfile profile={legacyAnalysis.nicheProfile} /> : null}
-              {legacyAnalysis?.painPoints ? <ICPPainPoints painPoints={legacyAnalysis.painPoints} /> : null}
-              {legacyAnalysis?.positioningStrategy ? <ICPPositioning positioning={legacyAnalysis.positioningStrategy} /> : null}
-              {legacyAnalysis?.nicheScore ? (
-                <ICPNicheScore score={legacyAnalysis.nicheScore} actionPlan={legacyAnalysis.actionPlan || []} />
-              ) : null}
+          {legacyAvailable ? (
+            <div className="relative z-20 mx-auto mt-4 max-w-xl px-4 pb-8">
+              <Button type="button" variant="ghost" className="w-full text-slate-600" onClick={() => setShowLegacy((value) => !value)}>
+                {showLegacy ? "Hide legacy analysis" : "View legacy analysis"}
+              </Button>
             </div>
           ) : null}
         </div>
-      ) : hydratedSavedAnalysis ? (
-        questionBody
-      ) : (
-        <Card>
-          <CardContent className="flex items-center gap-3 py-10 text-muted-foreground">
-            <Loader2 className="h-5 w-5 animate-spin" />
-            Restoring your latest ICP context...
-          </CardContent>
-        </Card>
-      )}
+      </div>
+    );
+  }
 
-      <SoftGateModal
-        open={unlockOpen}
-        onOpenChange={setUnlockOpen}
-        trigger="icp-draft-unlock"
-        seed={session.answers.problemStatement}
-        title="Your ICP Draft is ready"
-        description="Create a free account to unlock it and keep building."
-        returnPathOverride={unlockPath}
-        onBeforeAuthContinue={() => persistIcpBuilderSession(session)}
-      />
+  return (
+    <div className="min-h-screen bg-white">
+      <IcpProgressBar progress={progress} />
+
+      {session.currentScreen === "mode_select" ? renderModeSelect() : null}
+      {session.currentScreen === "fast_input" ? renderFastInput() : null}
+      {session.currentScreen !== "mode_select" &&
+      session.currentScreen !== "fast_input" &&
+      session.currentScreen !== "gate"
+        ? renderGuidedScreen()
+        : null}
+
+      {showLegacy && legacyAnalysis ? (
+        <div className="mx-auto max-w-4xl px-4 pb-10 sm:px-6">
+          <Card className="rounded-[2rem] border-slate-200 bg-slate-50 shadow-sm">
+            <CardContent className="space-y-4 p-6 text-sm leading-7 text-slate-600">
+              <p className="font-semibold text-slate-950">Legacy analysis</p>
+              <pre className="overflow-auto whitespace-pre-wrap font-mono text-xs text-slate-600">
+                {JSON.stringify(legacyAnalysis, null, 2)}
+              </pre>
+            </CardContent>
+          </Card>
+        </div>
+      ) : null}
+
+      {(session.currentScreen === "fast_input" || session.currentScreen.startsWith("guided_")) && session.mode ? (
+        <div className="fixed right-4 top-5 z-40 sm:right-6">
+          <Button type="button" variant="ghost" className="text-slate-500" onClick={resetBuilder}>
+            <RotateCcw className="mr-2 h-4 w-4" />
+            Start over
+          </Button>
+        </div>
+      ) : null}
     </div>
   );
 };

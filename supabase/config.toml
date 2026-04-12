@@ -60,6 +60,12 @@ verify_jwt = false
 [functions.resend-email-events]
 verify_jwt = false
 
+[functions.request-icp-draft-email]
+verify_jwt = false
+
+[functions.load-icp-email-draft]
+verify_jwt = false
+
 [functions.signup-direct]
 verify_jwt = false
 

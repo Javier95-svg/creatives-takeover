@@ -86,6 +86,8 @@ const MyBookings = lazy(() => import("./pages/community/MyBookings"));
 const AdminMentorEditor = lazy(() => import("./pages/community/AdminMentorEditor"));
 const PMFLabPage = lazy(() => import("./pages/PMFLabPage"));
 const ICPBuilderPage = lazy(() => import("./pages/IcpBuilderPage"));
+const IcpDraftPage = lazy(() => import("./pages/IcpDraftPage"));
+const IcpPublicDraftPage = lazy(() => import("./pages/IcpPublicDraftPage"));
 const ValidateJourneyPage = lazy(() => import("./pages/ValidateJourneyPage"));
 const TechStackPage = lazy(() => import("./pages/TechStackPage"));
 const AppBuilderPage = lazy(() => import("./pages/AppBuilderPage"));
@@ -193,6 +195,8 @@ function App() {
                         <Route path="/tech-stack" element={<TechStackPage />} />
                         <Route path="/bizmap-ai/tech-stack" element={<Navigate to="/tech-stack" replace />} />
                         <Route path="/icp-builder" element={<ICPBuilderPage />} />
+                        <Route path="/icp/draft/:draftId" element={<IcpDraftPage />} />
+                        <Route path="/icp/:draftId/public" element={<IcpPublicDraftPage />} />
                         <Route path="/bizmap-ai/icp-builder" element={<Navigate to="/icp-builder" replace />} />
                         <Route path="/decision-sprint" element={<ValidateJourneyPage />} />
                         <Route path="/validate" element={<ValidateJourney />} />

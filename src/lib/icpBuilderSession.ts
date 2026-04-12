@@ -1,24 +1,68 @@
-import type { IcpInputSchema } from "@/lib/icpBuilderSchema";
+import type {
+  FastIcpInputSchema,
+  GuidedIcpInputSchema,
+  IcpMarketContextValue,
+  IcpPersonaSuggestion,
+} from "@/lib/icpBuilderSchema";
 
-export const ICP_BUILDER_SESSION_KEY = "ct_icp_builder_session_v2";
+export const ICP_BUILDER_SESSION_KEY = "ct_icp_builder_session_v3";
 
 export type IcpConfidenceLevel = "high" | "medium" | "low";
+export type IcpBuilderMode = "fast" | "guided";
 
-export interface IcpDraftSection {
+export type IcpFlowScreen =
+  | "mode_select"
+  | "fast_input"
+  | "guided_seed"
+  | "guided_persona"
+  | "guided_specificity"
+  | "guided_pain"
+  | "guided_workaround"
+  | "guided_solution"
+  | "guided_market_context"
+  | "guided_founder_edge"
+  | "gate";
+
+export interface IcpDraftCoreFeature {
   title: string;
-  summary: string;
-  bullets: string[];
+  description: string;
+}
+
+export interface IcpDraftLinkPill {
+  name: string;
+  url: string | null;
 }
 
 export interface IcpDraftDocument {
-  who: IcpDraftSection;
-  painPoint: IcpDraftSection & {
-    severity: string;
-    frequency: string;
+  gatePreview: {
+    personaName: string;
+    roleLine: string;
+    painLine: string;
   };
-  buildRecommendation: IcpDraftSection;
-  moat: IcpDraftSection & {
-    weakClaims: string[];
+  customer: {
+    personaName: string;
+    roleLine: string;
+    metaLine: string;
+    summary: string;
+    whereToFind: string[];
+  };
+  pain: {
+    quote: string;
+    rootCause: string;
+    whyItHurts: string;
+    triggerMoment: string;
+  };
+  build: {
+    valueProposition: string;
+    replaces: string[];
+    coreFeatures: IcpDraftCoreFeature[];
+    outcome: string;
+  };
+  moat: {
+    moatType: string;
+    edge: string;
+    incumbentGap: string;
+    startupsToStudy: IcpDraftLinkPill[];
   };
   confidence: {
     level: IcpConfidenceLevel;
@@ -30,11 +74,6 @@ export interface IcpDraftDocument {
     description: string;
     route: string;
   }>;
-}
-
-export interface IcpClarificationExchange {
-  question: string;
-  answer: string;
 }
 
 export interface IcpDashboardTask {
@@ -62,10 +101,13 @@ export interface IcpDashboardContext {
 }
 
 export interface StoredIcpArtifact {
-  version: 2;
+  version: 3;
   generatedAt: string;
-  founderInputs: IcpInputSchema;
-  clarification: IcpClarificationExchange | null;
+  founderInputs: {
+    mode: IcpBuilderMode;
+    fastDescription: FastIcpInputSchema["description"] | null;
+    guided: GuidedIcpInputSchema | null;
+  };
   draftDocument: IcpDraftDocument;
   dashboardContext: IcpDashboardContext;
   enrichment: {
@@ -76,10 +118,13 @@ export interface StoredIcpArtifact {
 }
 
 export interface IcpBuilderSession {
-  version: 2;
-  answers: Partial<IcpInputSchema>;
-  currentStep: number;
-  clarification: IcpClarificationExchange | null;
+  version: 3;
+  mode: IcpBuilderMode | null;
+  currentScreen: IcpFlowScreen;
+  fastDescription: string;
+  guided: Partial<GuidedIcpInputSchema>;
+  personaSuggestion: IcpPersonaSuggestion | null;
+  personaEditedSignificantly: boolean;
   draftPreview: StoredIcpArtifact | null;
   unlockRequired: boolean;
   savedAnalysisId: string | null;
@@ -92,10 +137,13 @@ export function buildIcpUnlockReturnPath() {
 
 export function createEmptyIcpBuilderSession(): IcpBuilderSession {
   return {
-    version: 2,
-    answers: {},
-    currentStep: 0,
-    clarification: null,
+    version: 3,
+    mode: null,
+    currentScreen: "mode_select",
+    fastDescription: "",
+    guided: {},
+    personaSuggestion: null,
+    personaEditedSignificantly: false,
     draftPreview: null,
     unlockRequired: false,
     savedAnalysisId: null,
@@ -111,7 +159,7 @@ export function readIcpBuilderSession(): IcpBuilderSession | null {
     if (!raw) return null;
     const parsed = JSON.parse(raw) as Partial<IcpBuilderSession>;
 
-    if (parsed.version !== 2) {
+    if (parsed.version !== 3) {
       window.localStorage.removeItem(ICP_BUILDER_SESSION_KEY);
       return null;
     }
@@ -119,7 +167,7 @@ export function readIcpBuilderSession(): IcpBuilderSession | null {
     return {
       ...createEmptyIcpBuilderSession(),
       ...parsed,
-      version: 2,
+      version: 3,
     };
   } catch (error) {
     console.error("Failed to restore ICP Builder session", error);
@@ -142,4 +190,21 @@ export function persistIcpBuilderSession(session: IcpBuilderSession) {
 export function clearIcpBuilderSession() {
   if (typeof window === "undefined") return;
   window.localStorage.removeItem(ICP_BUILDER_SESSION_KEY);
+}
+
+export function buildEmptyGuidedAnswers(seed = ""): Partial<GuidedIcpInputSchema> {
+  return {
+    seed,
+    persona: {
+      role: "",
+      industry: "",
+      experience: "",
+    },
+    specificity: "",
+    pain: "",
+    workaround: "",
+    solutionCompletion: "",
+    marketContext: undefined as IcpMarketContextValue | undefined,
+    founderEdge: "",
+  };
 }
