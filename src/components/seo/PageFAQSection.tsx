@@ -41,7 +41,14 @@ export default function PageFAQSection({
               {faq.question}
             </AccordionTrigger>
             <AccordionContent className="pb-5 text-sm leading-relaxed text-muted-foreground">
-              {faq.answer}
+              <div className="space-y-3">
+                {faq.answer
+                  .split("\n\n")
+                  .filter((paragraph) => paragraph.trim().length > 0)
+                  .map((paragraph) => (
+                    <p key={paragraph}>{paragraph}</p>
+                  ))}
+              </div>
             </AccordionContent>
           </AccordionItem>
         ))}
