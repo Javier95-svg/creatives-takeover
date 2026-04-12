@@ -2429,6 +2429,60 @@ export type Database = {
         }
         Relationships: []
       }
+      dashboard_files: {
+        Row: {
+          created_at: string
+          file_kind: string
+          id: string
+          preview_payload: Json | null
+          source_id: string
+          source_table: string
+          summary: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          file_kind: string
+          id?: string
+          preview_payload?: Json | null
+          source_id: string
+          source_table: string
+          summary?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          file_kind?: string
+          id?: string
+          preview_payload?: Json | null
+          source_id?: string
+          source_table?: string
+          summary?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dashboard_files_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "active_subscriptions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dashboard_files_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       dashboard_widgets: {
         Row: {
           created_at: string | null
@@ -5430,6 +5484,8 @@ export type Database = {
           credits: number | null
           current_focus: string | null
           date_of_birth: string | null
+          dashboard_bootstrap_source: string | null
+          dashboard_initialized_at: string | null
           facebook_url: string | null
           followers_count: number
           following_count: number
@@ -5454,6 +5510,7 @@ export type Database = {
           positioning_line: string | null
           preferred_dashboard_mode: string | null
           preferred_dashboard_view: string | null
+          primary_icp_analysis_id: string | null
           profile_completion_percentage: number | null
           quiz_biggest_challenge: string | null
           quiz_completed: boolean | null
@@ -5501,6 +5558,8 @@ export type Database = {
           credits?: number | null
           current_focus?: string | null
           date_of_birth?: string | null
+          dashboard_bootstrap_source?: string | null
+          dashboard_initialized_at?: string | null
           facebook_url?: string | null
           followers_count?: number
           following_count?: number
@@ -5525,6 +5584,7 @@ export type Database = {
           positioning_line?: string | null
           preferred_dashboard_mode?: string | null
           preferred_dashboard_view?: string | null
+          primary_icp_analysis_id?: string | null
           profile_completion_percentage?: number | null
           quiz_biggest_challenge?: string | null
           quiz_completed?: boolean | null
@@ -5572,6 +5632,8 @@ export type Database = {
           credits?: number | null
           current_focus?: string | null
           date_of_birth?: string | null
+          dashboard_bootstrap_source?: string | null
+          dashboard_initialized_at?: string | null
           facebook_url?: string | null
           followers_count?: number
           following_count?: number
@@ -5596,6 +5658,7 @@ export type Database = {
           positioning_line?: string | null
           preferred_dashboard_mode?: string | null
           preferred_dashboard_view?: string | null
+          primary_icp_analysis_id?: string | null
           profile_completion_percentage?: number | null
           quiz_biggest_challenge?: string | null
           quiz_completed?: boolean | null
@@ -5628,7 +5691,15 @@ export type Database = {
           website_url?: string | null
           youtube_url?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_primary_icp_analysis_id_fkey"
+            columns: ["primary_icp_analysis_id"]
+            isOneToOne: false
+            referencedRelation: "icp_analysis_results"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       project_artifacts: {
         Row: {

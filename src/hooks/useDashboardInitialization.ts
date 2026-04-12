@@ -12,12 +12,10 @@ export const useDashboardInitialization = () => {
 
     const checkAndInitialize = async () => {
       try {
-        // Check if user has any KPI goals (indicator of initialization)
-        const { data: existingGoal, error } = await supabase
-          .from('kpi_goals')
-          .select('id')
-          .eq('user_id', user.id)
-          .limit(1)
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('dashboard_initialized_at')
+          .eq('id', user.id)
           .maybeSingle();
 
         if (error && error.code !== 'PGRST116') {
@@ -25,7 +23,7 @@ export const useDashboardInitialization = () => {
           return;
         }
 
-        if (existingGoal) {
+        if (profile?.dashboard_initialized_at) {
           setIsInitialized(true);
           return;
         }

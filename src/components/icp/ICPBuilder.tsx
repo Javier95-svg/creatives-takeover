@@ -611,9 +611,13 @@ const ICPBuilder: React.FC = () => {
           });
         }
 
-        await supabase.functions.invoke("generate-recommendations", {
-          body: { user_id: user.id },
+        const { error: bootstrapError } = await supabase.functions.invoke("bootstrap-icp-dashboard", {
+          body: { analysisId },
         });
+
+        if (bootstrapError) {
+          throw bootstrapError;
+        }
       }
 
       await refreshActivation();
@@ -623,12 +627,17 @@ const ICPBuilder: React.FC = () => {
         confidence: artifact.draftDocument.confidence.level,
       });
 
-      navigate(`/icp/draft/${analysisId}`, { replace: true });
+      navigate("/dashboard", { replace: true });
     } catch (error) {
       console.error("ICP draft generation failed", error);
       toast({
-        title: persist ? "Could not save the draft" : "Could not build the draft",
-        description: error instanceof Error ? error.message : "Please try again.",
+        title: persist ? "Could not finish the dashboard handoff" : "Could not build the draft",
+        description:
+          error instanceof Error
+            ? error.message
+            : persist
+              ? "The draft was saved, but the dashboard setup did not finish."
+              : "Please try again.",
         variant: "destructive",
       });
     } finally {

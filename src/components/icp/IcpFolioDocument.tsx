@@ -12,6 +12,7 @@ interface IcpFolioDocumentProps {
   blurred?: boolean;
   className?: string;
   tone?: "folio" | "platformPreview";
+  layout?: "page" | "embedded";
 }
 
 function FeatureIndex({ index, tone }: { index: number; tone: "folio" | "platformPreview" }) {
@@ -36,12 +37,17 @@ export function IcpFolioDocument({
   blurred = false,
   className = "",
   tone = "folio",
+  layout = "page",
 }: IcpFolioDocumentProps) {
   const isPlatformPreview = tone === "platformPreview";
 
   const wrapperClasses = isPlatformPreview
-    ? "min-h-[max(42rem,100vh)] bg-transparent px-3 pb-12 pt-6 text-foreground sm:px-6 lg:px-8"
-    : "min-h-screen bg-[#f6f7fb] px-4 pb-12 pt-8 text-slate-950 sm:px-6 lg:px-8";
+    ? layout === "embedded"
+      ? "bg-transparent px-0 pb-0 pt-0 text-foreground"
+      : "min-h-[max(42rem,100vh)] bg-transparent px-3 pb-12 pt-6 text-foreground sm:px-6 lg:px-8"
+    : layout === "embedded"
+      ? "bg-[#f6f7fb] px-0 pb-0 pt-0 text-slate-950"
+      : "min-h-screen bg-[#f6f7fb] px-4 pb-12 pt-8 text-slate-950 sm:px-6 lg:px-8";
 
   const contentClasses = blurred ? "pointer-events-none select-none blur-[16px]" : "";
   const sectionClasses = isPlatformPreview

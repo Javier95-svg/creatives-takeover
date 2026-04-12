@@ -2,6 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { buildIcpDashboardSnapshot, normalizeStoredArtifact, type IcpDashboardSnapshot } from '@/lib/icpDraftArtifacts';
+import type { StoredIcpArtifact } from '@/lib/icpBuilderSession';
 
 export interface PersonalizedRecommendation {
   id: string;
@@ -32,13 +34,36 @@ export interface UserProfile {
   creative_niche?: string;
   business_stage?: string;
   onboarding_completed?: boolean;
+  dashboard_initialized_at?: string | null;
+  dashboard_bootstrap_source?: string | null;
+  primary_icp_analysis_id?: string | null;
   preferred_dashboard_view?: string;
   user_preferences?: any;
+}
+
+export interface DashboardFileRecord {
+  id: string;
+  file_kind: string;
+  title: string;
+  summary: string | null;
+  source_table: string;
+  source_id: string;
+  preview_payload: any;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PrimaryIcpDashboardData {
+  analysisId: string;
+  artifact: StoredIcpArtifact;
+  summary: IcpDashboardSnapshot;
 }
 
 export interface DashboardData {
   profile: UserProfile | null;
   recommendations: PersonalizedRecommendation[];
+  dashboardFiles: DashboardFileRecord[];
+  primaryIcp: PrimaryIcpDashboardData | null;
   widgets: DashboardWidget[];
   stats: {
     activeSprints: number;
@@ -53,6 +78,8 @@ export const usePersonalizedDashboard = () => {
   const [data, setData] = useState<DashboardData>({
     profile: null,
     recommendations: [],
+    dashboardFiles: [],
+    primaryIcp: null,
     widgets: [],
     stats: {
       activeSprints: 0,
@@ -119,48 +146,54 @@ export const usePersonalizedDashboard = () => {
       isLoadingRef.current = true;
       setLoading(true);
 
-      // Load profile
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
-
-      // Load recommendations
-      const { data: recommendations } = await supabase
-        .from('personalized_recommendations')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('is_dismissed', false)
-        .gte('expires_at', new Date().toISOString())
-        .order('priority', { ascending: false })
-        .limit(5);
-
-      // Load widgets
-      const { data: widgets } = await supabase
-        .from('dashboard_widgets')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('is_visible', true)
-        .order('position');
-
-      // Load real stats
-      const { count: activeSprints } = await supabase
-        .from('sprints')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', user.id)
-        .eq('status', 'active');
-
-      const { count: completedSessions } = await supabase
-        .from('chat_sessions')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', user.id)
-        .eq('is_completed', true);
-
-      const { count: totalCheckIns } = await supabase
-        .from('daily_check_ins')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', user.id);
+      const [
+        { data: profile },
+        { data: recommendations },
+        { data: widgets },
+        { data: dashboardFiles },
+        { count: activeSprints },
+        { count: completedSessions },
+        { count: totalCheckIns },
+      ] = await Promise.all([
+        supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single(),
+        supabase
+          .from('personalized_recommendations')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('is_dismissed', false)
+          .gte('expires_at', new Date().toISOString())
+          .order('priority', { ascending: false })
+          .limit(5),
+        supabase
+          .from('dashboard_widgets')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('is_visible', true)
+          .order('position'),
+        supabase
+          .from('dashboard_files')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('updated_at', { ascending: false }),
+        supabase
+          .from('sprints')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', user.id)
+          .eq('status', 'active'),
+        supabase
+          .from('chat_sessions')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', user.id)
+          .eq('is_completed', true),
+        supabase
+          .from('daily_check_ins')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', user.id),
+      ]);
 
       // Calculate current streak
       const { data: checkIns } = await supabase
@@ -191,9 +224,32 @@ export const usePersonalizedDashboard = () => {
         }
       }
 
+      let primaryIcp: PrimaryIcpDashboardData | null = null;
+      if (profile?.primary_icp_analysis_id) {
+        const { data: primaryIcpRow } = await supabase
+          .from('icp_analysis_results')
+          .select('id, analysis_data, target_audience, business_description, verdict')
+          .eq('id', profile.primary_icp_analysis_id)
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        if (primaryIcpRow) {
+          const normalized = normalizeStoredArtifact(primaryIcpRow);
+          if (normalized.artifact) {
+            primaryIcp = {
+              analysisId: primaryIcpRow.id,
+              artifact: normalized.artifact,
+              summary: buildIcpDashboardSnapshot(normalized.artifact),
+            };
+          }
+        }
+      }
+
       const newData = {
         profile: profile as UserProfile,
         recommendations: (recommendations || []) as PersonalizedRecommendation[],
+        dashboardFiles: (dashboardFiles || []) as DashboardFileRecord[],
+        primaryIcp,
         widgets: (widgets || []) as DashboardWidget[],
         stats: {
           activeSprints: activeSprints ?? 0,
@@ -216,7 +272,7 @@ export const usePersonalizedDashboard = () => {
         await generateRecommendations();
       }
     } catch (error) {
-      logError('Error loading dashboard data', error);
+      console.error('Error loading dashboard data', error);
       toast.error('Failed to load dashboard');
     } finally {
       setLoading(false);
@@ -228,7 +284,7 @@ export const usePersonalizedDashboard = () => {
     if (!user) return;
 
     try {
-      const { data, error } = await supabase.functions.invoke('generate-recommendations', {
+      const { error } = await supabase.functions.invoke('generate-recommendations', {
         body: { user_id: user.id }
       });
 

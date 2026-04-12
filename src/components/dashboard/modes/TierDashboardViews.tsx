@@ -3,7 +3,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import {
   ArrowRight,
   BarChart3,
-  Calendar,
   CheckCircle2,
   Compass,
   Flame,
@@ -30,6 +29,7 @@ import { CommunityActivityCard } from '../CommunityActivityCard';
 import { InsightaActivityCard } from '../InsightaActivityCard';
 import type { PersonalizedRecommendation } from '@/hooks/usePersonalizedDashboard';
 import { getDashboardModeConfig } from '@/config/planPermissions';
+import type { IcpDashboardSnapshot } from '@/lib/icpDraftArtifacts';
 
 interface TierDashboardViewProps {
   userId: string;
@@ -46,6 +46,7 @@ interface TierDashboardViewProps {
   completedSessions: number;
   totalCheckIns: number;
   recommendations: PersonalizedRecommendation[];
+  icpSummary?: IcpDashboardSnapshot | null;
 }
 
 type ActionItem = {
@@ -231,33 +232,6 @@ function LinkListCard({
         ))}
       </div>
     </SidePanelCard>
-  );
-}
-
-function UpgradePreviewCard({
-  eyebrow,
-  title,
-  description,
-  cta,
-}: {
-  eyebrow: string;
-  title: string;
-  description: string;
-  cta: string;
-}) {
-  return (
-    <Card className="border-dashed border-primary/30 bg-gradient-to-br from-primary/8 via-card to-card">
-      <CardHeader>
-        <Badge variant="outline" className="w-fit">{eyebrow}</Badge>
-        <CardTitle className="text-lg">{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <Button asChild variant="outline" size="sm">
-          <Link to="/pricing">{cta}</Link>
-        </Button>
-      </CardContent>
-    </Card>
   );
 }
 
@@ -608,7 +582,7 @@ function ToolLauncherGrid({ title, description }: { title: string; description: 
   );
 }
 
-export function RookieModeView({ founderName, recommendations }: TierDashboardViewProps) {
+export function RookieModeView({ founderName, recommendations, icpSummary }: TierDashboardViewProps) {
   const modeConfig = getDashboardModeConfig('rookie');
   const actionItems = buildActionItems(recommendations, [
     {
@@ -640,19 +614,35 @@ export function RookieModeView({ founderName, recommendations }: TierDashboardVi
         <Card className="border-primary/20 bg-gradient-to-br from-primary/12 via-card to-card shadow-sm">
           <CardHeader className="space-y-3">
             <Badge variant="outline" className="w-fit">Rookie Mode</Badge>
-            <CardTitle className="text-2xl sm:text-3xl">Welcome, {founderName}. Start with the founder signal that matters most.</CardTitle>
+            <CardTitle className="text-2xl sm:text-3xl">
+              {icpSummary
+                ? `Welcome, ${founderName}. Your ICP is already shaping the next move.`
+                : `Welcome, ${founderName}. Start with the founder signal that matters most.`}
+            </CardTitle>
             <CardDescription className="max-w-2xl text-sm sm:text-base">
-              This dashboard is intentionally quiet. Nail Stage 1 first so every later move has a real customer behind it.
+              {icpSummary
+                ? `You already have a draft for ${icpSummary.personaName}. Keep the next steps tied to ${icpSummary.corePainPoint} instead of falling back to generic founder advice.`
+                : 'This dashboard is intentionally quiet. Nail Stage 1 first so every later move has a real customer behind it.'}
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Today&apos;s Priority</p>
-              <p className="mt-1 text-lg font-semibold">Define your ICP before touching build or growth tools.</p>
-              <p className="mt-1 text-sm text-muted-foreground">A sharp ICP tells the rest of the platform what to prioritize for you next.</p>
+              <p className="mt-1 text-lg font-semibold">
+                {icpSummary
+                  ? `Execute against the ${icpSummary.roleLine} pain you already identified.`
+                  : 'Define your ICP before touching build or growth tools.'}
+              </p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {icpSummary
+                  ? `The dashboard is using your ${icpSummary.industry} draft as the first planning signal.`
+                  : 'A sharp ICP tells the rest of the platform what to prioritize for you next.'}
+              </p>
             </div>
             <Button asChild size="lg" className="shrink-0">
-              <Link to="/icp-builder">Open ICP Builder</Link>
+              <Link to={icpSummary ? '/dashboard#my-files' : '/icp-builder'}>
+                {icpSummary ? 'Open My Files' : 'Open ICP Builder'}
+              </Link>
             </Button>
           </CardContent>
         </Card>

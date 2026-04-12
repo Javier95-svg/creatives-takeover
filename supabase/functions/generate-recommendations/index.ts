@@ -1,6 +1,13 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
+import {
+  buildIcpRecommendationSeeds,
+  buildIcpTaskSeeds,
+  readIcpArtifact,
+  summarizeIcpArtifact,
+} from "../_shared/icp-dashboard.ts";
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -36,6 +43,8 @@ serve(async (req) => {
       .select(`
         creative_niche,
         business_stage,
+        dashboard_bootstrap_source,
+        primary_icp_analysis_id,
         onboarding_completed,
         quiz_completed,
         quiz_is_first_startup,
@@ -94,13 +103,27 @@ serve(async (req) => {
       .order("created_at", { ascending: false })
       .limit(5);
 
-    const { data: latestIcp } = await supabase
-      .from("icp_analysis_results")
-      .select("analysis_data, created_at")
-      .eq("user_id", user_id)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
+    let latestIcp = null;
+    if (profile?.dashboard_bootstrap_source === "icp_unlock" && profile?.primary_icp_analysis_id) {
+      const { data: primaryIcp } = await supabase
+        .from("icp_analysis_results")
+        .select("id, analysis_data, created_at, industry, target_audience")
+        .eq("user_id", user_id)
+        .eq("id", profile.primary_icp_analysis_id)
+        .maybeSingle();
+      latestIcp = primaryIcp;
+    }
+
+    if (!latestIcp) {
+      const { data: fallbackIcp } = await supabase
+        .from("icp_analysis_results")
+        .select("id, analysis_data, created_at, industry, target_audience")
+        .eq("user_id", user_id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      latestIcp = fallbackIcp;
+    }
 
     // Generate recommendations based on context
     const recommendations = generateRecommendations({
@@ -190,37 +213,37 @@ function generateRecommendations(context: any): any[] {
   const biggestChallenge = context.profile?.quiz_biggest_challenge;
   const launchTimeline = context.profile?.quiz_launch_timeline;
   const lookingForCofounder = context.profile?.quiz_looking_for_cofounder;
-  const icpArtifact = context.icp?.analysis_data;
-  const icpDashboardContext = icpArtifact?.dashboardContext;
+  const icpArtifact = readIcpArtifact(context.icp?.analysis_data);
+  const isIcpUnlockBootstrap = context.profile?.dashboard_bootstrap_source === "icp_unlock";
 
-  if (icpDashboardContext?.message) {
-    recs.push({
-      recommendation_type: "action",
-      title: icpDashboardContext.message,
-      description:
-        icpArtifact?.draftDocument?.confidence?.level === "low"
-          ? "Your ICP Draft is directionally useful, but it still needs stronger customer evidence."
-          : "Your ICP Draft is ready to drive the next execution step. Keep the momentum attached to that specific segment.",
-      priority: 15,
-      reason: "The latest ICP Draft should shape what the founder does next.",
-      action_url: icpDashboardContext?.prioritizedTasks?.[0]?.route || "/icp-builder",
-      metadata: { category: "icp_handoff", draft_driven: true },
-    });
-  }
+  if (icpArtifact) {
+    const icpSummary = summarizeIcpArtifact(
+      icpArtifact,
+      context.icp?.industry,
+      context.icp?.target_audience,
+    );
+    const icpTasks = buildIcpTaskSeeds(icpArtifact, icpSummary);
+    const icpRecommendations = buildIcpRecommendationSeeds(icpArtifact, icpSummary, icpTasks);
 
-  if (Array.isArray(icpDashboardContext?.recommendations)) {
-    icpDashboardContext.recommendations.forEach((item: any, index: number) => {
-      if (!item?.title || !item?.actionUrl) return;
+    icpRecommendations.forEach((item: any, index: number) => {
       recs.push({
         recommendation_type: item.type || "action",
         title: item.title,
         description: item.description || "Use your ICP Draft to choose the next move with intent.",
-        priority: Number(item.priority ?? 12) - index,
+        priority: Number(item.priority ?? 100) - index,
         reason: item.reason || "This recommendation was generated from your latest ICP Draft.",
         action_url: item.actionUrl,
-        metadata: { category: "icp_handoff", draft_driven: true, source_index: index },
+        metadata: {
+          category: isIcpUnlockBootstrap ? "icp_bootstrap" : "icp_handoff",
+          draft_driven: true,
+          source_index: index,
+        },
       });
     });
+
+    if (isIcpUnlockBootstrap && recs.length >= 5) {
+      return recs.slice(0, 5);
+    }
   }
 
   // Priority 0: Quiz-based personalized recommendations (highest priority)

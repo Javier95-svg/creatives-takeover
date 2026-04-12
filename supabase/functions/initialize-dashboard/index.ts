@@ -26,15 +26,45 @@ serve(async (req) => {
     
     if (userError || !user) throw new Error("User not authenticated");
 
-    // Check if user already has dashboard data initialized
+    const now = new Date().toISOString();
+
+    const { data: profile, error: profileError } = await supabaseClient
+      .from('profiles')
+      .select('dashboard_initialized_at, dashboard_bootstrap_source')
+      .eq('id', user.id)
+      .maybeSingle();
+
+    if (profileError && profileError.code !== 'PGRST116') {
+      throw profileError;
+    }
+
+    if (profile?.dashboard_initialized_at) {
+      return new Response(
+        JSON.stringify({
+          message: "Dashboard already initialized",
+          source: profile.dashboard_bootstrap_source ?? 'generic',
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Check legacy initialization state for existing users and backfill the profile flag.
     const { data: existingGoal } = await supabaseClient
       .from('kpi_goals')
       .select('id')
       .eq('user_id', user.id)
       .limit(1)
-      .single();
+      .maybeSingle();
 
     if (existingGoal) {
+      await supabaseClient
+        .from('profiles')
+        .update({
+          dashboard_initialized_at: now,
+          dashboard_bootstrap_source: 'generic',
+        })
+        .eq('id', user.id);
+
       return new Response(
         JSON.stringify({ message: "Dashboard already initialized" }), 
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -42,8 +72,7 @@ serve(async (req) => {
     }
 
     // Initialize sample data for all dashboard components
-    const today = new Date().toISOString().split('T')[0];
-    const now = new Date().toISOString();
+    const today = now.split('T')[0];
 
     // 1. Create primary KPI goal
     await supabaseClient.from('kpi_goals').insert({
@@ -150,6 +179,14 @@ serve(async (req) => {
       },
     ];
     await supabaseClient.from('daily_tasks').insert(tasks);
+
+    await supabaseClient
+      .from('profiles')
+      .update({
+        dashboard_initialized_at: now,
+        dashboard_bootstrap_source: 'generic',
+      })
+      .eq('id', user.id);
 
     return new Response(
       JSON.stringify({ 

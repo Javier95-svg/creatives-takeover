@@ -284,6 +284,31 @@ export function buildDraftDashboardContext(artifact: StoredIcpArtifact) {
   };
 }
 
+export interface IcpDashboardSnapshot {
+  industry: string;
+  personaName: string;
+  roleLine: string;
+  corePainPoint: string;
+  suggestedStage: string;
+  confidenceLevel: string;
+  valueProposition: string;
+}
+
+export function buildIcpDashboardSnapshot(artifact: StoredIcpArtifact): IcpDashboardSnapshot {
+  return {
+    industry:
+      artifact.founderInputs.guided?.persona.industry ||
+      artifact.draftDocument.customer.metaLine ||
+      "Emerging market",
+    personaName: artifact.draftDocument.customer.personaName,
+    roleLine: artifact.draftDocument.customer.roleLine,
+    corePainPoint: artifact.draftDocument.pain.quote,
+    suggestedStage: artifact.dashboardContext?.suggestedStage || "IDENTITY",
+    confidenceLevel: artifact.draftDocument.confidence.level,
+    valueProposition: artifact.draftDocument.build.valueProposition,
+  };
+}
+
 export function buildBuilderSessionFromArtifact(artifact: StoredIcpArtifact, savedAnalysisId: string | null): IcpBuilderSession {
   const mode: IcpBuilderMode = artifact.founderInputs.mode;
   const guided = artifact.founderInputs.guided ?? {

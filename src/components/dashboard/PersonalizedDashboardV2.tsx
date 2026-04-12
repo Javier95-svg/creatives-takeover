@@ -21,6 +21,8 @@ import { DailyPromptResumeCard } from './DailyPromptResumeCard';
 import { useDashboardDailyPrompt } from '@/hooks/useDashboardDailyPrompt';
 import { DashboardAccountabilityHero } from './DashboardAccountabilityHero';
 import { TaskCountContext } from './TaskCountContext';
+import { IcpDashboardSummaryCard } from './IcpDashboardSummaryCard';
+import { MyFilesSection } from './MyFilesSection';
 
 // Internal wrapper component that uses the navigation context
 interface DashboardContentWrapperProps {
@@ -109,6 +111,7 @@ export const PersonalizedDashboardV2 = () => {
     creativeNiche: profile?.creative_niche,
     businessStage: profile?.business_stage,
     recommendations: data?.recommendations || [],
+    icpSummary: data?.primaryIcp?.summary ?? null,
     ...metrics,
   };
 
@@ -185,6 +188,10 @@ export const PersonalizedDashboardV2 = () => {
                       </p>
                     </div>
 
+                    {data?.primaryIcp && profile?.dashboard_bootstrap_source === 'icp_unlock' ? (
+                      <IcpDashboardSummaryCard primaryIcp={data.primaryIcp} />
+                    ) : null}
+
                     <DashboardAccountabilityHero
                       founderName={founderName}
                       businessStage={profile?.business_stage}
@@ -198,6 +205,11 @@ export const PersonalizedDashboardV2 = () => {
                     {dashboardMode === 'starter' && <StarterModeView {...tierViewSharedProps} />}
                     {dashboardMode === 'rising' && <RisingModeView {...tierViewSharedProps} />}
                     {dashboardMode === 'pro' && <ProModeView {...tierViewSharedProps} />}
+
+                    <MyFilesSection
+                      files={data?.dashboardFiles || []}
+                      primaryIcp={data?.primaryIcp ?? null}
+                    />
                   </div>
 
                   {/* Daily Goal Modal */}
@@ -218,4 +230,3 @@ export const PersonalizedDashboardV2 = () => {
     </ErrorBoundary>
   );
 };
-

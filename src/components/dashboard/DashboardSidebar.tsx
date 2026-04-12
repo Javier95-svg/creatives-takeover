@@ -162,6 +162,7 @@ export const DashboardSidebar = () => {
 
   const navIconMap: Record<DashboardNavIconKey, LucideIcon> = {
     home: Home,
+    folder_open: FolderOpen,
     bookmark_check: BookmarkCheck,
     calendar: Calendar,
     check_square: CheckSquare,
