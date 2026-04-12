@@ -3794,6 +3794,7 @@ export type Database = {
           image_url: string
           is_active: boolean | null
           position: number
+          storage_path: string | null
           updated_at: string | null
         }
         Insert: {
@@ -3803,6 +3804,7 @@ export type Database = {
           image_url: string
           is_active?: boolean | null
           position: number
+          storage_path?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -3812,6 +3814,7 @@ export type Database = {
           image_url?: string
           is_active?: boolean | null
           position?: number
+          storage_path?: string | null
           updated_at?: string | null
         }
         Relationships: []

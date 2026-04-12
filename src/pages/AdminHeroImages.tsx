@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2, Shield, AlertTriangle, Image as ImageIcon, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { HERO_IMAGE_ALLOWED_TYPES, HERO_IMAGE_MAX_SIZE_BYTES } from "@/lib/heroImages";
 
 interface HeroImage {
   id: string;
@@ -18,6 +19,8 @@ interface HeroImage {
   image_url: string;
   alt_text: string | null;
   is_active: boolean;
+  storage_path: string | null;
+  updated_at: string | null;
 }
 
 const AdminHeroImages = () => {
@@ -73,7 +76,9 @@ const AdminHeroImages = () => {
           position: pos,
           image_url: '',
           alt_text: `Hero image ${pos}`,
-          is_active: false
+          is_active: false,
+          storage_path: null,
+          updated_at: null,
         };
       });
 
@@ -96,16 +101,12 @@ const AdminHeroImages = () => {
   };
 
   const handleImageUpload = async (position: number, file: File, event?: React.ChangeEvent<HTMLInputElement>) => {
-    // Validate file type - only JPG and PNG
-    const allowedTypes = ['image/jpeg', 'image/png'];
-    if (!allowedTypes.includes(file.type)) {
-      toast.error('Invalid file type. Please upload a JPG or PNG image.');
+    if (!HERO_IMAGE_ALLOWED_TYPES.includes(file.type as (typeof HERO_IMAGE_ALLOWED_TYPES)[number])) {
+      toast.error('Invalid file type. Please upload a JPEG, PNG, or WebP image.');
       return;
     }
 
-    // Validate file size (5MB = 5242880 bytes)
-    const maxSize = 5242880;
-    if (file.size > maxSize) {
+    if (file.size > HERO_IMAGE_MAX_SIZE_BYTES) {
       toast.error('File size exceeds 5MB limit. Please upload a smaller image.');
       return;
     }
@@ -185,6 +186,7 @@ const AdminHeroImages = () => {
       const imageData = {
         position,
         image_url: publicUrl,
+        storage_path: fileName,
         alt_text: `Hero image ${position}`,
         is_active: true
       };
@@ -470,7 +472,7 @@ const AdminHeroImages = () => {
                               }
                             }}
                             type="file"
-                            accept="image/jpeg,image/png"
+                            accept={HERO_IMAGE_ALLOWED_TYPES.join(",")}
                             onChange={(e) => {
                               console.log('📂 File input onChange triggered for position', position);
                               const file = e.target.files?.[0];
@@ -522,7 +524,7 @@ const AdminHeroImages = () => {
                           </Button>
                         </div>
                         <p className="text-xs text-muted-foreground">
-                          Upload a hero image (max 5MB). Supported formats: JPG, PNG.
+                          Upload a hero image under 1MB when possible. Supported formats: JPG, PNG, WebP.
                         </p>
                       </div>
 
