@@ -16,7 +16,7 @@ interface HeroImage {
 
 const Hero = () => {
   const { isAuthenticated, user } = useAuth();
-  const { trackTriggerView, trackEngagement, trackSignupStarted } = useConversionTracking();
+  const { trackTriggerView, trackEngagement } = useConversionTracking();
   const heroRef = useRef<HTMLElement>(null);
   const hasTrackedView = useRef(false);
   const [heroImages, setHeroImages] = useState<HeroImage[]>([]);
@@ -370,7 +370,6 @@ const Hero = () => {
   // Handle CTA clicks
   const handlePrimaryCTAClick = () => {
     trackEngagement('hero-primary-cta', 85);
-    trackSignupStarted('hero-primary-cta');
   };
 
   const handleDashboardCTAClick = () => {
@@ -466,8 +465,8 @@ const Hero = () => {
 	                  {/* FIX(retention): homepage — restored the previous hero CTA pair so first-time visitors see the original signup and feature-exploration entry points again. */}
                   <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-center justify-center px-4 sm:px-0">
 		                <Button size="lg" className="w-full sm:w-auto min-h-[44px] touch-manipulation" asChild>
-		                  <Link to="/signup" onClick={handlePrimaryCTAClick}>
-		                    Join Today
+		                  <Link to="/icp-builder" onClick={handlePrimaryCTAClick}>
+		                    Start Here
 		                    <ArrowRight className="w-4 h-4" />
 		                  </Link>
 		                </Button>

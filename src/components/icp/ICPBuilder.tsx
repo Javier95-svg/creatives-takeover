@@ -6,6 +6,7 @@ import { IcpFolioDocument } from "@/components/icp/IcpFolioDocument";
 import { IcpProgressBar } from "@/components/icp/IcpProgressBar";
 import { IcpSynthesisLoader } from "@/components/icp/IcpSynthesisLoader";
 import { IcpUnlockGate } from "@/components/icp/IcpUnlockGate";
+import PageFAQSection from "@/components/seo/PageFAQSection";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -72,6 +73,24 @@ const PROGRESS_BY_SCREEN: Record<IcpFlowScreen | "seed_loading" | "synthesis", n
 };
 
 type LoadingPhase = "seed_loading" | "synthesis" | null;
+
+const ICP_BUILDER_FAQS = [
+  {
+    question: "What is the Ideal Customer Profile (ICP) and why is it so important?",
+    answer:
+      "Your Ideal Customer Profile is the specific type of customer most likely to need your product, feel the pain acutely, and act on it. It matters because it shapes your messaging, product decisions, validation interviews, and go-to-market strategy from the start.",
+  },
+  {
+    question: "Why does ICP definition matter before building?",
+    answer:
+      "It affects product scope, messaging, interviews, and customer acquisition. If the ICP is vague, the rest of the startup plan becomes vague too.",
+  },
+  {
+    question: "Can ICP Builder help with positioning?",
+    answer:
+      "Yes. The tool is designed to connect customer targeting with pain point clarity and positioning so you can explain the product more clearly.",
+  },
+];
 
 type SeedPrefillResponse = {
   success: boolean;
@@ -821,6 +840,14 @@ const ICPBuilder: React.FC = () => {
             <ArrowRight className="h-4 w-4" />
           </div>
         </button>
+      </div>
+
+      <div className="mt-14 sm:mt-16">
+        <PageFAQSection
+          title="Common founder questions"
+          description="If this is your first time defining an ICP, start here before choosing Fast Mode or Guided Mode."
+          faqs={ICP_BUILDER_FAQS}
+        />
       </div>
     </div>
   );
