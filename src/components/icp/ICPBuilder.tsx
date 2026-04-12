@@ -6,6 +6,7 @@ import { IcpFolioDocument } from "@/components/icp/IcpFolioDocument";
 import { IcpProgressBar } from "@/components/icp/IcpProgressBar";
 import { IcpSynthesisLoader } from "@/components/icp/IcpSynthesisLoader";
 import { IcpUnlockGate } from "@/components/icp/IcpUnlockGate";
+import Footer from "@/components/Footer";
 import PageFAQSection from "@/components/seo/PageFAQSection";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -231,7 +232,7 @@ const ICPBuilder: React.FC = () => {
   const [isHydratingResume, setIsHydratingResume] = useState(false);
   const [showLegacy, setShowLegacy] = useState(false);
   const [legacyAnalysis, setLegacyAnalysis] = useState<LegacyAnalysis | null>(null);
-  const [legacyAvailable, setLegacyAvailable] = useState(false);
+  const [_legacyAvailable, setLegacyAvailable] = useState(false);
   const [fallbackEmail, setFallbackEmail] = useState("");
   const [fallbackEmailError, setFallbackEmailError] = useState<string | null>(null);
   const [fallbackEmailState, setFallbackEmailState] = useState<FallbackEmailState>("idle");
@@ -1219,25 +1220,32 @@ const ICPBuilder: React.FC = () => {
 
   if (session.currentScreen === "gate" && session.draftPreview) {
     return (
-      <div className="relative min-h-screen overflow-x-hidden bg-background">
+      <div className="relative min-h-screen overflow-x-hidden bg-transparent">
         <IcpProgressBar progress={progress} shellOffset />
-        <div className="absolute inset-0">
-          <IcpFolioDocument draft={session.draftPreview.draftDocument} blurred className="pointer-events-none" />
+        <div className="relative z-10 pt-24 sm:pt-28 md:pt-32">
+          <div className="mx-auto w-full max-w-7xl px-4 pb-12 sm:px-6 lg:px-8">
+            <section className="relative overflow-hidden rounded-[2.5rem] border border-border/60 bg-white/45 shadow-[0_40px_140px_-80px_rgba(15,23,42,0.55)] backdrop-blur-xl dark:bg-slate-950/45">
+              <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(50,184,198,0.12),transparent_42%),linear-gradient(180deg,rgba(255,255,255,0.08),rgba(255,255,255,0))] dark:bg-[radial-gradient(circle_at_top,rgba(50,184,198,0.16),transparent_42%),linear-gradient(180deg,rgba(15,23,42,0.24),rgba(15,23,42,0))]" />
+              <div className="relative">
+                <IcpFolioDocument
+                  draft={session.draftPreview.draftDocument}
+                  blurred
+                  tone="platformPreview"
+                  className="pointer-events-none"
+                />
+              </div>
+            </section>
+          </div>
+          <Footer />
         </div>
-        <div className="relative z-10 min-h-screen bg-background/20 backdrop-blur-[1px]">
+        <div className="pointer-events-none fixed inset-0 z-[70] flex items-center justify-center p-4 sm:p-6">
           <IcpUnlockGate
             artifact={session.draftPreview}
             seed={session.mode === "fast" ? session.fastDescription : session.guided.seed}
             returnPath={unlockPath}
             onBeforeAuthContinue={() => persistIcpBuilderSession(session)}
+            className="pointer-events-auto max-w-xl"
           />
-          {legacyAvailable ? (
-            <div className="relative z-20 mx-auto mt-4 max-w-xl px-4 pb-8">
-              <Button type="button" variant="ghost" className="w-full text-muted-foreground" onClick={() => setShowLegacy((value) => !value)}>
-                {showLegacy ? "Hide legacy analysis" : "View legacy analysis"}
-              </Button>
-            </div>
-          ) : null}
         </div>
       </div>
     );

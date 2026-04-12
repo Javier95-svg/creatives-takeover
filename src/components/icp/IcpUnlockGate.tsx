@@ -14,6 +14,7 @@ interface IcpUnlockGateProps {
   seed?: string;
   returnPath: string;
   onBeforeAuthContinue?: () => void;
+  className?: string;
 }
 
 export function IcpUnlockGate({
@@ -21,6 +22,7 @@ export function IcpUnlockGate({
   seed = "",
   returnPath,
   onBeforeAuthContinue,
+  className = "",
 }: IcpUnlockGateProps) {
   const navigate = useNavigate();
   const normalizedSeed = useMemo(() => normalizeIcpSeed(seed), [seed]);
@@ -64,7 +66,7 @@ export function IcpUnlockGate({
   };
 
   return (
-    <div className="relative z-20 mx-auto w-full max-w-xl px-4 py-16 sm:py-20">
+    <div className={`relative z-20 w-full ${className}`}>
       <div className="w-full rounded-[2rem] border border-border/60 bg-white/80 p-6 shadow-[0_34px_120px_-55px_rgba(15,23,42,0.45)] backdrop-blur dark:bg-slate-950/75 sm:p-8">
         <div className="space-y-4 text-center">
           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#e6f7fa] text-[#0f5b64] dark:bg-[#0f5b64]/20 dark:text-[#8fe6ef]">
