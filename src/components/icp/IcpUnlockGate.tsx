@@ -85,7 +85,7 @@ export function IcpUnlockGate({
             disabled={isGoogleLoading}
             onClick={handleSignUpRedirect}
           >
-            Sign Up to Unlock your ICP Draft
+            Sign Up to unlock
           </Button>
 
           <Button
