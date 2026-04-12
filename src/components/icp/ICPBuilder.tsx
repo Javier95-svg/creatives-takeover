@@ -758,7 +758,7 @@ const ICPBuilder: React.FC = () => {
   };
 
   const renderModeSelect = () => (
-    <div className="mx-auto flex min-h-screen max-w-5xl flex-col justify-center px-4 pb-20 pt-16 text-slate-950 sm:px-6">
+    <div className="mx-auto flex min-h-screen max-w-5xl flex-col justify-center px-4 pb-20 pt-32 text-slate-950 sm:px-6 md:pt-36">
       <div className="space-y-5 text-center">
         <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#32b8c6]">ICP Builder</p>
         <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">Build your ICP Draft</h1>
@@ -810,7 +810,7 @@ const ICPBuilder: React.FC = () => {
   );
 
   const renderQuestionShell = (content: React.ReactNode) => (
-    <div className="mx-auto flex min-h-screen max-w-3xl flex-col px-4 pb-28 pt-16 text-slate-950 sm:px-6">
+    <div className="mx-auto flex min-h-screen max-w-3xl flex-col px-4 pb-28 pt-32 text-slate-950 sm:px-6 md:pt-36">
       <div className="mb-8 flex items-center gap-4">
         <button
           type="button"
@@ -1126,7 +1126,7 @@ const ICPBuilder: React.FC = () => {
   if (isHydratingEdit || isHydratingResume) {
     return (
       <div className="min-h-screen bg-white">
-        <IcpProgressBar progress={0} />
+        <IcpProgressBar progress={0} shellOffset />
         <div className="flex min-h-screen items-center justify-center px-6">
           <Card className="rounded-[2rem] border-slate-200 bg-white shadow-sm">
             <CardContent className="flex items-center gap-3 px-6 py-8 text-slate-500">
@@ -1142,7 +1142,7 @@ const ICPBuilder: React.FC = () => {
   if (loadingPhase === "seed_loading") {
     return (
       <div className="min-h-screen bg-white">
-        <IcpProgressBar progress={progress} pulse />
+        <IcpProgressBar progress={progress} pulse shellOffset />
         <div className="flex min-h-screen items-center justify-center px-6 text-center">
           <div className="space-y-4">
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#32b8c6]">Guided Mode</p>
@@ -1156,7 +1156,7 @@ const ICPBuilder: React.FC = () => {
   if (loadingPhase === "synthesis") {
     return (
       <div className="min-h-screen bg-white">
-        <IcpProgressBar progress={progress} pulse />
+        <IcpProgressBar progress={progress} pulse shellOffset />
         <IcpSynthesisLoader
           elapsedMs={synthesisElapsedMs}
           fallbackEmail={fallbackEmail}
@@ -1177,7 +1177,7 @@ const ICPBuilder: React.FC = () => {
   if (session.currentScreen === "gate" && session.draftPreview) {
     return (
       <div className="relative min-h-screen overflow-hidden bg-[#f6f7fb]">
-        <IcpProgressBar progress={progress} />
+        <IcpProgressBar progress={progress} shellOffset />
         <div className="absolute inset-0">
           <IcpFolioDocument draft={session.draftPreview.draftDocument} blurred className="pointer-events-none" />
         </div>
@@ -1202,7 +1202,7 @@ const ICPBuilder: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-white">
-      <IcpProgressBar progress={progress} />
+      <IcpProgressBar progress={progress} shellOffset />
 
       {session.currentScreen === "mode_select" ? renderModeSelect() : null}
       {session.currentScreen === "fast_input" ? renderFastInput() : null}
