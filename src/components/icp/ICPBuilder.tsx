@@ -761,7 +761,9 @@ const ICPBuilder: React.FC = () => {
     <div className="mx-auto flex min-h-screen max-w-5xl flex-col justify-center px-4 pb-20 pt-32 text-foreground sm:px-6 md:pt-36">
       <div className="space-y-5 text-center">
         <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#32b8c6]">ICP Builder</p>
-        <h1 className="takeover-gradient creatives-font text-4xl font-semibold tracking-tight sm:text-5xl">Build your ICP Draft</h1>
+        <h1 className="takeover-gradient creatives-font pb-3 text-4xl font-semibold leading-[1.12] tracking-tight sm:pb-4 sm:text-5xl">
+          Get your ICP Draft
+        </h1>
         <p className="mx-auto max-w-3xl text-base leading-7 text-muted-foreground sm:text-lg">
           This takes about 5 minutes. You'll walk away with a clear picture of your ideal customer, their main pain
           points, and how to position your offer in the market.
@@ -771,7 +773,7 @@ const ICPBuilder: React.FC = () => {
       <div className="mt-10 grid gap-5 lg:grid-cols-2">
         <button
           type="button"
-          className="rounded-[2rem] border border-border/60 bg-white/80 p-6 text-left shadow-[0_28px_90px_-52px_rgba(15,23,42,0.3)] backdrop-blur transition-transform hover:-translate-y-1 dark:bg-slate-950/70"
+          className="group relative overflow-hidden rounded-[2rem] border border-border/60 bg-white/80 p-6 text-left shadow-[0_28px_90px_-52px_rgba(15,23,42,0.3)] backdrop-blur transition-transform duration-300 hover:-translate-y-1 hover:border-[#32b8c6]/40 hover:shadow-[0_32px_100px_-54px_rgba(50,184,198,0.4)] motion-safe:animate-[float_5.8s_ease-in-out_infinite] dark:bg-slate-950/70"
           onClick={() =>
             setSession((previous) => ({
               ...previous,
@@ -780,16 +782,22 @@ const ICPBuilder: React.FC = () => {
             }))
           }
         >
+          <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(120deg,transparent_0%,rgba(50,184,198,0.12)_48%,transparent_100%)] opacity-0 transition-opacity duration-300 group-hover:opacity-100 motion-safe:animate-[shine_3.4s_linear_infinite]" />
           <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#32b8c6]">Fast Mode</p>
           <p className="mt-4 text-xl font-semibold text-foreground">I can describe my startup idea clearly</p>
           <p className="mt-4 text-sm leading-6 text-muted-foreground">
             Paste a paragraph about your idea and get your ICP Draft in under 60 seconds.
           </p>
+          <div className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-[#32b8c6]">
+            Start here
+            <ArrowRight className="h-4 w-4 motion-safe:animate-[bounce-x_1.2s_ease-in-out_infinite]" />
+          </div>
         </button>
 
         <button
           type="button"
-          className="rounded-[2rem] border border-border/60 bg-white/80 p-6 text-left shadow-[0_28px_90px_-52px_rgba(15,23,42,0.3)] backdrop-blur transition-transform hover:-translate-y-1 dark:bg-slate-950/70"
+          className="group relative overflow-hidden rounded-[2rem] border border-border/60 bg-white/80 p-6 text-left shadow-[0_28px_90px_-52px_rgba(15,23,42,0.3)] backdrop-blur transition-transform duration-300 hover:-translate-y-1 hover:border-[#32b8c6]/40 hover:shadow-[0_32px_100px_-54px_rgba(50,184,198,0.4)] motion-safe:animate-[float_5.8s_ease-in-out_infinite] dark:bg-slate-950/70"
+          style={{ animationDelay: "0.45s" }}
           onClick={() =>
             setSession((previous) => ({
               ...previous,
@@ -799,11 +807,16 @@ const ICPBuilder: React.FC = () => {
             }))
           }
         >
+          <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(120deg,transparent_0%,rgba(50,184,198,0.12)_48%,transparent_100%)] opacity-0 transition-opacity duration-300 group-hover:opacity-100 motion-safe:animate-[shine_3.6s_linear_infinite]" />
           <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#32b8c6]">Guided Mode</p>
           <p className="mt-4 text-xl font-semibold text-foreground">I'm still figuring things out</p>
           <p className="mt-4 text-sm leading-6 text-muted-foreground">
             Answer 8 simple questions, one at a time, and we'll build the draft together.
           </p>
+          <div className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-[#32b8c6]">
+            Start here
+            <ArrowRight className="h-4 w-4 motion-safe:animate-[bounce-x_1.2s_ease-in-out_infinite]" />
+          </div>
         </button>
       </div>
     </div>
