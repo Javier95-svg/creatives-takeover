@@ -78,17 +78,17 @@ const ICP_BUILDER_FAQS = [
   {
     question: "What is the Ideal Customer Profile (ICP) and why is it so important?",
     answer:
-      "Your Ideal Customer Profile is the specific type of customer most likely to need your product, feel the pain acutely, and act on it. It matters because it shapes your messaging, product decisions, validation interviews, and go-to-market strategy from the start.",
+      "Your Ideal Customer Profile is the specific type of customer most likely to need your product, feel the pain acutely, and take action when they see your offer. It is more specific than saying \"small businesses\" or \"creators\" because it forces you to define who has the problem, what situation they are in, and why the problem feels urgent right now. This matters because your ICP influences almost everything else: your messaging, your landing page copy, the features you prioritize, the interviews you run, and the channels you use to reach people. If your ICP is vague, the rest of your strategy becomes vague too. A clear ICP helps you stop trying to talk to everyone and start speaking directly to the people most likely to care.",
   },
   {
     question: "Why does ICP definition matter before building?",
     answer:
-      "It affects product scope, messaging, interviews, and customer acquisition. If the ICP is vague, the rest of the startup plan becomes vague too.",
+      "Defining the ICP before building helps you avoid wasting time on the wrong product, the wrong features, and the wrong audience. If you do not know exactly who you are building for, it becomes much harder to decide what belongs in version one, what pain point should be front and center, and what success signal actually proves demand. Founders often build too broadly because they want to keep every option open, but that usually creates weak positioning and confusing offers. A sharper ICP gives you a practical filter for product decisions, customer interviews, onboarding, pricing assumptions, and early acquisition. It turns building from guesswork into a more focused test.",
   },
   {
     question: "Can ICP Builder help with positioning?",
     answer:
-      "Yes. The tool is designed to connect customer targeting with pain point clarity and positioning so you can explain the product more clearly.",
+      "Yes. ICP Builder is not only about naming a customer segment; it also helps you understand the pain points, frustrations, and context that make that segment worth targeting first. That gives you the raw material for stronger positioning. Once you know who the customer is, what problem they are actively trying to solve, and what alternatives they are using today, it becomes much easier to explain why your offer matters and how it should be framed. Better positioning usually means clearer copy, stronger hooks, more relevant outreach, and a product story that feels specific instead of generic. In practice, that makes your startup easier for people to understand and easier for the right users to say yes to.",
   },
 ];
 
@@ -844,7 +844,7 @@ const ICPBuilder: React.FC = () => {
 
       <div className="mt-14 sm:mt-16">
         <PageFAQSection
-          title="Common founder questions"
+          title="FAQ"
           description="If this is your first time defining an ICP, start here before choosing Fast Mode or Guided Mode."
           faqs={ICP_BUILDER_FAQS}
         />
