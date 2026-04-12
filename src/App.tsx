@@ -210,7 +210,8 @@ function App() {
 
                         <Route path="/auth" element={<Auth />} />
                         <Route path="/login" element={<Login />} />
-                        <Route path="/signup" element={<Signup />} />
+                <Route path="/sign-up" element={<SignUpAlias />} />
+                <Route path="/signup" element={<Signup />} />
                         <Route path="/forgot-password" element={<ForgotPassword />} />
                         <Route path="/reset-password" element={<ResetPassword />} />
                         <Route path="/onboarding" element={<Onboarding />} />
@@ -256,6 +257,11 @@ function App() {
       </Suspense>
     </ErrorBoundary>
   );
+};
+
+const SignUpAlias = () => {
+  const location = useLocation();
+  return <Navigate replace to={`/signup${location.search}`} />;
 };
 
 export default App;

@@ -1219,7 +1219,7 @@ const ICPBuilder: React.FC = () => {
 
   if (session.currentScreen === "gate" && session.draftPreview) {
     return (
-      <div className="relative min-h-screen overflow-hidden bg-background">
+      <div className="relative min-h-screen overflow-x-hidden bg-background">
         <IcpProgressBar progress={progress} shellOffset />
         <div className="absolute inset-0">
           <IcpFolioDocument draft={session.draftPreview.draftDocument} blurred className="pointer-events-none" />
