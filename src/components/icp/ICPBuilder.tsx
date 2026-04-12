@@ -773,7 +773,7 @@ const ICPBuilder: React.FC = () => {
       <div className="mt-10 grid gap-5 lg:grid-cols-2">
         <button
           type="button"
-          className="group relative overflow-hidden rounded-[2rem] border border-border/60 bg-white/80 p-6 text-left shadow-[0_28px_90px_-52px_rgba(15,23,42,0.3)] backdrop-blur transition-transform duration-300 hover:-translate-y-1 hover:border-[#32b8c6]/40 hover:shadow-[0_32px_100px_-54px_rgba(50,184,198,0.4)] motion-safe:animate-[float_5.8s_ease-in-out_infinite] dark:bg-slate-950/70"
+          className="group relative overflow-hidden rounded-[2rem] border border-border/60 bg-white/80 p-6 text-left shadow-[0_28px_90px_-52px_rgba(15,23,42,0.3)] backdrop-blur transition-transform duration-300 hover:-translate-y-1 hover:border-[#32b8c6]/40 hover:shadow-[0_32px_100px_-54px_rgba(50,184,198,0.4)] motion-safe:animate-[glow_4.8s_ease-in-out_infinite_alternate] dark:bg-slate-950/70"
           onClick={() =>
             setSession((previous) => ({
               ...previous,
@@ -782,7 +782,7 @@ const ICPBuilder: React.FC = () => {
             }))
           }
         >
-          <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(120deg,transparent_0%,rgba(50,184,198,0.12)_48%,transparent_100%)] opacity-0 transition-opacity duration-300 group-hover:opacity-100 motion-safe:animate-[shine_3.4s_linear_infinite]" />
+          <div className="pointer-events-none absolute inset-0 rounded-[2rem] border border-[#32b8c6]/15 opacity-60 motion-safe:animate-[pulse-slow_4s_ease-in-out_infinite]" />
           <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#32b8c6]">Fast Mode</p>
           <p className="mt-4 text-xl font-semibold text-foreground">I can describe my startup idea clearly</p>
           <p className="mt-4 text-sm leading-6 text-muted-foreground">
@@ -790,13 +790,13 @@ const ICPBuilder: React.FC = () => {
           </p>
           <div className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-[#32b8c6]">
             Start here
-            <ArrowRight className="h-4 w-4 motion-safe:animate-[bounce-x_1.2s_ease-in-out_infinite]" />
+            <ArrowRight className="h-4 w-4" />
           </div>
         </button>
 
         <button
           type="button"
-          className="group relative overflow-hidden rounded-[2rem] border border-border/60 bg-white/80 p-6 text-left shadow-[0_28px_90px_-52px_rgba(15,23,42,0.3)] backdrop-blur transition-transform duration-300 hover:-translate-y-1 hover:border-[#32b8c6]/40 hover:shadow-[0_32px_100px_-54px_rgba(50,184,198,0.4)] motion-safe:animate-[float_5.8s_ease-in-out_infinite] dark:bg-slate-950/70"
+          className="group relative overflow-hidden rounded-[2rem] border border-border/60 bg-white/80 p-6 text-left shadow-[0_28px_90px_-52px_rgba(15,23,42,0.3)] backdrop-blur transition-transform duration-300 hover:-translate-y-1 hover:border-[#32b8c6]/40 hover:shadow-[0_32px_100px_-54px_rgba(50,184,198,0.4)] motion-safe:animate-[glow_4.8s_ease-in-out_infinite_alternate] dark:bg-slate-950/70"
           style={{ animationDelay: "0.45s" }}
           onClick={() =>
             setSession((previous) => ({
@@ -807,7 +807,10 @@ const ICPBuilder: React.FC = () => {
             }))
           }
         >
-          <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(120deg,transparent_0%,rgba(50,184,198,0.12)_48%,transparent_100%)] opacity-0 transition-opacity duration-300 group-hover:opacity-100 motion-safe:animate-[shine_3.6s_linear_infinite]" />
+          <div
+            className="pointer-events-none absolute inset-0 rounded-[2rem] border border-[#32b8c6]/15 opacity-60 motion-safe:animate-[pulse-slow_4s_ease-in-out_infinite]"
+            style={{ animationDelay: "0.45s" }}
+          />
           <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#32b8c6]">Guided Mode</p>
           <p className="mt-4 text-xl font-semibold text-foreground">I'm still figuring things out</p>
           <p className="mt-4 text-sm leading-6 text-muted-foreground">
@@ -815,7 +818,7 @@ const ICPBuilder: React.FC = () => {
           </p>
           <div className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-[#32b8c6]">
             Start here
-            <ArrowRight className="h-4 w-4 motion-safe:animate-[bounce-x_1.2s_ease-in-out_infinite]" />
+            <ArrowRight className="h-4 w-4" />
           </div>
         </button>
       </div>
