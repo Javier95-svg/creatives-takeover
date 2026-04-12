@@ -758,11 +758,11 @@ const ICPBuilder: React.FC = () => {
   };
 
   const renderModeSelect = () => (
-    <div className="mx-auto flex min-h-screen max-w-5xl flex-col justify-center px-4 pb-20 pt-32 text-slate-950 sm:px-6 md:pt-36">
+    <div className="mx-auto flex min-h-screen max-w-5xl flex-col justify-center px-4 pb-20 pt-32 text-foreground sm:px-6 md:pt-36">
       <div className="space-y-5 text-center">
         <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#32b8c6]">ICP Builder</p>
-        <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">Build your ICP Draft</h1>
-        <p className="mx-auto max-w-3xl text-base leading-7 text-slate-600 sm:text-lg">
+        <h1 className="takeover-gradient creatives-font text-4xl font-semibold tracking-tight sm:text-5xl">Build your ICP Draft</h1>
+        <p className="mx-auto max-w-3xl text-base leading-7 text-muted-foreground sm:text-lg">
           This takes about 5 minutes. You'll walk away with a clear picture of your ideal customer, their core problem,
           and why your startup wins.
         </p>
@@ -771,7 +771,7 @@ const ICPBuilder: React.FC = () => {
       <div className="mt-10 grid gap-5 lg:grid-cols-2">
         <button
           type="button"
-          className="rounded-[2rem] border border-slate-200 bg-white p-6 text-left shadow-[0_28px_90px_-52px_rgba(15,23,42,0.3)] transition-transform hover:-translate-y-1"
+          className="rounded-[2rem] border border-border/60 bg-white/80 p-6 text-left shadow-[0_28px_90px_-52px_rgba(15,23,42,0.3)] backdrop-blur transition-transform hover:-translate-y-1 dark:bg-slate-950/70"
           onClick={() =>
             setSession((previous) => ({
               ...previous,
@@ -781,15 +781,15 @@ const ICPBuilder: React.FC = () => {
           }
         >
           <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#32b8c6]">Fast Mode</p>
-          <p className="mt-4 text-xl font-semibold text-slate-950">I can describe my startup idea clearly</p>
-          <p className="mt-4 text-sm leading-6 text-slate-600">
+          <p className="mt-4 text-xl font-semibold text-foreground">I can describe my startup idea clearly</p>
+          <p className="mt-4 text-sm leading-6 text-muted-foreground">
             Paste a paragraph about your idea and get your ICP Draft in under 60 seconds.
           </p>
         </button>
 
         <button
           type="button"
-          className="rounded-[2rem] border border-slate-200 bg-white p-6 text-left shadow-[0_28px_90px_-52px_rgba(15,23,42,0.3)] transition-transform hover:-translate-y-1"
+          className="rounded-[2rem] border border-border/60 bg-white/80 p-6 text-left shadow-[0_28px_90px_-52px_rgba(15,23,42,0.3)] backdrop-blur transition-transform hover:-translate-y-1 dark:bg-slate-950/70"
           onClick={() =>
             setSession((previous) => ({
               ...previous,
@@ -800,8 +800,8 @@ const ICPBuilder: React.FC = () => {
           }
         >
           <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#32b8c6]">Guided Mode</p>
-          <p className="mt-4 text-xl font-semibold text-slate-950">I'm still figuring things out</p>
-          <p className="mt-4 text-sm leading-6 text-slate-600">
+          <p className="mt-4 text-xl font-semibold text-foreground">I'm still figuring things out</p>
+          <p className="mt-4 text-sm leading-6 text-muted-foreground">
             Answer 8 simple questions, one at a time, and we'll build the draft together.
           </p>
         </button>
@@ -810,12 +810,12 @@ const ICPBuilder: React.FC = () => {
   );
 
   const renderQuestionShell = (content: React.ReactNode) => (
-    <div className="mx-auto flex min-h-screen max-w-3xl flex-col px-4 pb-28 pt-32 text-slate-950 sm:px-6 md:pt-36">
+    <div className="mx-auto flex min-h-screen max-w-3xl flex-col px-4 pb-28 pt-32 text-foreground sm:px-6 md:pt-36">
       <div className="mb-8 flex items-center gap-4">
         <button
           type="button"
           onClick={handleBack}
-          className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+          className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-border/60 bg-white/80 text-foreground shadow-sm backdrop-blur transition-colors hover:bg-white dark:bg-slate-950/70 dark:hover:bg-slate-950 disabled:cursor-not-allowed disabled:opacity-40"
           disabled={!getPreviousScreen(session.currentScreen, session.mode)}
           aria-label="Go back"
         >
@@ -825,9 +825,9 @@ const ICPBuilder: React.FC = () => {
 
       <div className="flex-1">{content}</div>
 
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/95 px-4 py-4 backdrop-blur sm:static sm:mt-12 sm:border-t-0 sm:bg-transparent sm:px-0 sm:py-0">
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border/60 bg-background/92 px-4 py-4 backdrop-blur sm:static sm:mt-12 sm:border-t-0 sm:bg-transparent sm:px-0 sm:py-0">
         <div className="mx-auto flex max-w-3xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="text-xs uppercase tracking-[0.18em] text-slate-400">{getEnterHint(session.currentScreen)}</div>
+          <div className="text-xs uppercase tracking-[0.18em] text-muted-foreground">{getEnterHint(session.currentScreen)}</div>
           <Button
             type="button"
             className="h-12 min-w-[180px] self-end text-base font-semibold"
@@ -859,7 +859,7 @@ const ICPBuilder: React.FC = () => {
         <div className="space-y-3">
           <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#32b8c6]">Fast Mode</p>
           <h1 className="text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">{getScreenTitle(session.currentScreen, session)}</h1>
-          <p className="text-base leading-7 text-slate-600">
+          <p className="text-base leading-7 text-muted-foreground">
             The more detail you give, the better your ICP Draft will be. 3–5 sentences is ideal.
           </p>
         </div>
@@ -875,7 +875,7 @@ const ICPBuilder: React.FC = () => {
           }
           onKeyDown={handleFieldSubmit}
           placeholder="e.g. I'm building a client feedback tool for freelance designers. Right now they manage revisions through email and WhatsApp, which causes things to get lost and makes them look unprofessional. My tool puts all revision feedback in one place with version tracking. I'm a freelance designer myself so I know this market well."
-          className="min-h-[280px] rounded-[2rem] border-slate-200 bg-white px-5 py-5 text-base leading-7 shadow-sm"
+          className="min-h-[280px] rounded-[2rem] border-border/60 bg-white/85 px-5 py-5 text-base leading-7 shadow-sm dark:bg-slate-950/70"
         />
       </div>,
     );
@@ -890,7 +890,7 @@ const ICPBuilder: React.FC = () => {
             <div className="space-y-3">
               <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#32b8c6]">Guided Mode</p>
               <h1 className="text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">{getScreenTitle(session.currentScreen, session)}</h1>
-              <p className="text-base leading-7 text-slate-600">One or two sentences. Don't overthink it — rough is fine.</p>
+              <p className="text-base leading-7 text-muted-foreground">One or two sentences. Don't overthink it — rough is fine.</p>
             </div>
 
             <Textarea
@@ -899,7 +899,7 @@ const ICPBuilder: React.FC = () => {
               onChange={(event) => updateGuided("seed", event.target.value)}
               onKeyDown={handleFieldSubmit}
               placeholder="e.g. A tool that helps freelancers manage client feedback without drowning in email threads"
-              className="rounded-[2rem] border-slate-200 bg-white px-5 py-5 text-base leading-7 shadow-sm"
+              className="rounded-[2rem] border-border/60 bg-white/85 px-5 py-5 text-base leading-7 shadow-sm dark:bg-slate-950/70"
             />
           </div>,
         );
@@ -910,12 +910,12 @@ const ICPBuilder: React.FC = () => {
             <div className="space-y-3">
               <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#32b8c6]">Guided Mode</p>
               <h1 className="text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">{getScreenTitle(session.currentScreen, session)}</h1>
-              <p className="text-base leading-7 text-slate-600">Edit anything that doesn't feel right.</p>
+              <p className="text-base leading-7 text-muted-foreground">Edit anything that doesn't feel right.</p>
             </div>
 
-            <div className="space-y-4 rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm">
+            <div className="space-y-4 rounded-[2rem] border border-border/60 bg-white/80 p-5 shadow-sm backdrop-blur dark:bg-slate-950/70">
               <div className="space-y-2">
-                <label className="text-sm font-semibold text-slate-700">Role</label>
+                <label className="text-sm font-semibold text-foreground/85">Role</label>
                 <Input
                   value={session.guided.persona?.role || ""}
                   onChange={(event) =>
@@ -926,11 +926,11 @@ const ICPBuilder: React.FC = () => {
                     })
                   }
                   placeholder="Freelance Graphic Designer"
-                  className="h-12 rounded-xl border-slate-200 bg-[#eef8fa]"
+                  className="h-12 rounded-xl border-border/60 bg-sky-50/70 dark:bg-slate-900/70"
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-semibold text-slate-700">Industry</label>
+                <label className="text-sm font-semibold text-foreground/85">Industry</label>
                 <Input
                   value={session.guided.persona?.industry || ""}
                   onChange={(event) =>
@@ -941,11 +941,11 @@ const ICPBuilder: React.FC = () => {
                     })
                   }
                   placeholder="Creative Services"
-                  className="h-12 rounded-xl border-slate-200 bg-[#eef8fa]"
+                  className="h-12 rounded-xl border-border/60 bg-sky-50/70 dark:bg-slate-900/70"
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-semibold text-slate-700">Experience</label>
+                <label className="text-sm font-semibold text-foreground/85">Experience</label>
                 <Input
                   value={session.guided.persona?.experience || ""}
                   onChange={(event) =>
@@ -956,7 +956,7 @@ const ICPBuilder: React.FC = () => {
                     })
                   }
                   placeholder="2–5 years, working solo or with 1 assistant"
-                  className="h-12 rounded-xl border-slate-200 bg-[#eef8fa]"
+                  className="h-12 rounded-xl border-border/60 bg-sky-50/70 dark:bg-slate-900/70"
                 />
               </div>
             </div>
@@ -969,7 +969,7 @@ const ICPBuilder: React.FC = () => {
             <div className="space-y-3">
               <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#32b8c6]">Guided Mode</p>
               <h1 className="text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">{getScreenTitle(session.currentScreen, session)}</h1>
-              <p className="text-base leading-7 text-slate-600">
+              <p className="text-base leading-7 text-muted-foreground">
                 "Small business owners" is too broad. "{role} with [specific constraint]" is better.
               </p>
             </div>
@@ -983,7 +983,7 @@ const ICPBuilder: React.FC = () => {
                 }
               }}
               placeholder={`e.g. ${role} who manage 3+ client projects at once`}
-              className="h-14 rounded-[1.5rem] border-slate-200 bg-white px-5 text-base shadow-sm"
+              className="h-14 rounded-[1.5rem] border-border/60 bg-white/85 px-5 text-base shadow-sm dark:bg-slate-950/70"
             />
           </div>,
         );
@@ -994,7 +994,7 @@ const ICPBuilder: React.FC = () => {
             <div className="space-y-3">
               <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#32b8c6]">Guided Mode</p>
               <h1 className="text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">{getScreenTitle(session.currentScreen, session)}</h1>
-              <p className="text-base leading-7 text-slate-600">
+              <p className="text-base leading-7 text-muted-foreground">
                 Think about a moment of frustration. What makes them want to throw their laptop? What do they complain about to friends?
               </p>
             </div>
@@ -1005,7 +1005,7 @@ const ICPBuilder: React.FC = () => {
               onChange={(event) => updateGuided("pain", event.target.value)}
               onKeyDown={handleFieldSubmit}
               placeholder="e.g. They lose clients because revision feedback is scattered across email, WhatsApp, and voice notes — and nothing gets tracked"
-              className="rounded-[2rem] border-slate-200 bg-white px-5 py-5 text-base leading-7 shadow-sm"
+              className="rounded-[2rem] border-border/60 bg-white/85 px-5 py-5 text-base leading-7 shadow-sm dark:bg-slate-950/70"
             />
           </div>,
         );
@@ -1016,7 +1016,7 @@ const ICPBuilder: React.FC = () => {
             <div className="space-y-3">
               <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#32b8c6]">Guided Mode</p>
               <h1 className="text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">{getScreenTitle(session.currentScreen, session)}</h1>
-              <p className="text-base leading-7 text-slate-600">
+              <p className="text-base leading-7 text-muted-foreground">
                 Even if it's messy — email, spreadsheets, WhatsApp, sticky notes, or nothing at all.
               </p>
             </div>
@@ -1030,7 +1030,7 @@ const ICPBuilder: React.FC = () => {
                 }
               }}
               placeholder="e.g. A mix of email threads, Google Drive comments, and hoping clients remember what they said"
-              className="h-14 rounded-[1.5rem] border-slate-200 bg-white px-5 text-base shadow-sm"
+              className="h-14 rounded-[1.5rem] border-border/60 bg-white/85 px-5 text-base shadow-sm dark:bg-slate-950/70"
             />
           </div>,
         );
@@ -1041,12 +1041,12 @@ const ICPBuilder: React.FC = () => {
             <div className="space-y-3">
               <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#32b8c6]">Guided Mode</p>
               <h1 className="text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">{getScreenTitle(session.currentScreen, session)}</h1>
-              <p className="text-base leading-7 text-slate-600">Complete this: "My product helps {role} to ___"</p>
+              <p className="text-base leading-7 text-muted-foreground">Complete this: "My product helps {role} to ___"</p>
             </div>
 
-            <div className="rounded-[2rem] border border-slate-200 bg-white p-4 shadow-sm">
+            <div className="rounded-[2rem] border border-border/60 bg-white/80 p-4 shadow-sm backdrop-blur dark:bg-slate-950/70">
               <div className="flex flex-col gap-3 md:flex-row md:items-center">
-                <span className="rounded-xl bg-slate-100 px-4 py-3 text-sm font-medium text-slate-500">
+                <span className="rounded-xl bg-muted px-4 py-3 text-sm font-medium text-muted-foreground">
                   My product helps {role} to
                 </span>
                 <Input
@@ -1059,7 +1059,7 @@ const ICPBuilder: React.FC = () => {
                     }
                   }}
                   placeholder="centralize client feedback without context switching"
-                  className="h-14 rounded-[1.25rem] border-slate-200 bg-white px-4 text-base"
+                  className="h-14 rounded-[1.25rem] border-border/60 bg-white/85 px-4 text-base dark:bg-slate-950/70"
                 />
               </div>
             </div>
@@ -1085,7 +1085,7 @@ const ICPBuilder: React.FC = () => {
                     className={`w-full rounded-[1.5rem] border px-5 py-5 text-center text-sm font-medium transition-colors sm:text-base ${
                       selected
                         ? "border-[#32b8c6] bg-[#32b8c6] text-white"
-                        : "border-slate-200 bg-white text-slate-700 hover:border-slate-300"
+                        : "border-border/60 bg-white/80 text-foreground hover:border-border dark:bg-slate-950/70"
                     }`}
                   >
                     {option.label}
@@ -1102,7 +1102,7 @@ const ICPBuilder: React.FC = () => {
             <div className="space-y-3">
               <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#32b8c6]">Guided Mode</p>
               <h1 className="text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">{getScreenTitle(session.currentScreen, session)}</h1>
-              <p className="text-base leading-7 text-slate-600">
+              <p className="text-base leading-7 text-muted-foreground">
                 Your background, your access to this community, your personal experience with the problem — anything that gives you an unfair advantage.
               </p>
             </div>
@@ -1113,7 +1113,7 @@ const ICPBuilder: React.FC = () => {
               onChange={(event) => updateGuided("founderEdge", event.target.value)}
               onKeyDown={handleFieldSubmit}
               placeholder="e.g. I'm a freelance designer myself — I've lost clients because of this exact problem, and I know 50+ designers who feel the same way"
-              className="rounded-[2rem] border-slate-200 bg-white px-5 py-5 text-base leading-7 shadow-sm"
+              className="rounded-[2rem] border-border/60 bg-white/85 px-5 py-5 text-base leading-7 shadow-sm dark:bg-slate-950/70"
             />
           </div>,
         );
@@ -1125,11 +1125,11 @@ const ICPBuilder: React.FC = () => {
 
   if (isHydratingEdit || isHydratingResume) {
     return (
-      <div className="min-h-screen bg-white">
+      <div className="min-h-screen bg-transparent">
         <IcpProgressBar progress={0} shellOffset />
         <div className="flex min-h-screen items-center justify-center px-6">
-          <Card className="rounded-[2rem] border-slate-200 bg-white shadow-sm">
-            <CardContent className="flex items-center gap-3 px-6 py-8 text-slate-500">
+          <Card className="rounded-[2rem] border-border/60 bg-white/80 shadow-sm backdrop-blur dark:bg-slate-950/75">
+            <CardContent className="flex items-center gap-3 px-6 py-8 text-muted-foreground">
               <Loader2 className="h-5 w-5 animate-spin" />
               {isHydratingEdit ? "Restoring your ICP Draft for editing..." : "Restoring your ICP Draft..."}
             </CardContent>
@@ -1141,7 +1141,7 @@ const ICPBuilder: React.FC = () => {
 
   if (loadingPhase === "seed_loading") {
     return (
-      <div className="min-h-screen bg-white">
+      <div className="min-h-screen bg-transparent">
         <IcpProgressBar progress={progress} pulse shellOffset />
         <div className="flex min-h-screen items-center justify-center px-6 text-center">
           <div className="space-y-4">
@@ -1155,7 +1155,7 @@ const ICPBuilder: React.FC = () => {
 
   if (loadingPhase === "synthesis") {
     return (
-      <div className="min-h-screen bg-white">
+      <div className="min-h-screen bg-transparent">
         <IcpProgressBar progress={progress} pulse shellOffset />
         <IcpSynthesisLoader
           elapsedMs={synthesisElapsedMs}
@@ -1176,12 +1176,12 @@ const ICPBuilder: React.FC = () => {
 
   if (session.currentScreen === "gate" && session.draftPreview) {
     return (
-      <div className="relative min-h-screen overflow-hidden bg-[#f6f7fb]">
+      <div className="relative min-h-screen overflow-hidden bg-background">
         <IcpProgressBar progress={progress} shellOffset />
         <div className="absolute inset-0">
           <IcpFolioDocument draft={session.draftPreview.draftDocument} blurred className="pointer-events-none" />
         </div>
-        <div className="relative z-10 min-h-screen bg-white/10 backdrop-blur-[1px]">
+        <div className="relative z-10 min-h-screen bg-background/20 backdrop-blur-[1px]">
           <IcpUnlockGate
             artifact={session.draftPreview}
             seed={session.mode === "fast" ? session.fastDescription : session.guided.seed}
@@ -1190,7 +1190,7 @@ const ICPBuilder: React.FC = () => {
           />
           {legacyAvailable ? (
             <div className="relative z-20 mx-auto mt-4 max-w-xl px-4 pb-8">
-              <Button type="button" variant="ghost" className="w-full text-slate-600" onClick={() => setShowLegacy((value) => !value)}>
+              <Button type="button" variant="ghost" className="w-full text-muted-foreground" onClick={() => setShowLegacy((value) => !value)}>
                 {showLegacy ? "Hide legacy analysis" : "View legacy analysis"}
               </Button>
             </div>
@@ -1201,7 +1201,7 @@ const ICPBuilder: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-transparent">
       <IcpProgressBar progress={progress} shellOffset />
 
       {session.currentScreen === "mode_select" ? renderModeSelect() : null}
@@ -1214,10 +1214,10 @@ const ICPBuilder: React.FC = () => {
 
       {showLegacy && legacyAnalysis ? (
         <div className="mx-auto max-w-4xl px-4 pb-10 sm:px-6">
-          <Card className="rounded-[2rem] border-slate-200 bg-slate-50 shadow-sm">
-            <CardContent className="space-y-4 p-6 text-sm leading-7 text-slate-600">
-              <p className="font-semibold text-slate-950">Legacy analysis</p>
-              <pre className="overflow-auto whitespace-pre-wrap font-mono text-xs text-slate-600">
+          <Card className="rounded-[2rem] border-border/60 bg-white/80 shadow-sm backdrop-blur dark:bg-slate-950/75">
+            <CardContent className="space-y-4 p-6 text-sm leading-7 text-muted-foreground">
+              <p className="font-semibold text-foreground">Legacy analysis</p>
+              <pre className="overflow-auto whitespace-pre-wrap font-mono text-xs text-muted-foreground">
                 {JSON.stringify(legacyAnalysis, null, 2)}
               </pre>
             </CardContent>
@@ -1226,8 +1226,8 @@ const ICPBuilder: React.FC = () => {
       ) : null}
 
       {(session.currentScreen === "fast_input" || session.currentScreen.startsWith("guided_")) && session.mode ? (
-        <div className="fixed right-4 top-5 z-40 sm:right-6">
-          <Button type="button" variant="ghost" className="text-slate-500" onClick={resetBuilder}>
+        <div className="fixed right-3 top-[92px] z-40 sm:right-6 sm:top-[100px] md:top-[108px]">
+          <Button type="button" variant="ghost" className="border border-border/60 bg-background/90 text-muted-foreground shadow-sm backdrop-blur hover:bg-background" onClick={resetBuilder}>
             <RotateCcw className="mr-2 h-4 w-4" />
             Start over
           </Button>
