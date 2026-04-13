@@ -32,7 +32,7 @@ const Index = () => {
   const { user, loading: authLoading } = useAuth();
   const { showExitIntent, closeExitIntent } = useExitIntent();
   const { trackTriggerView, trackDismissal } = useConversionTracking();
-  const showHeroWedge = !authLoading && !user;
+  // Always show the previous Hero section design
   const [softGateOpen, setSoftGateOpen] = useState(false);
   const [softGateSeed, setSoftGateSeed] = useState('');
   const hasTrackedLandingView = useRef(false);
@@ -105,25 +105,12 @@ const Index = () => {
         url="/"
         image="/lovable-uploads/new-favicon.png"
         structuredData={structuredData}
-        // TODO: Add your Google Search Console verification code here
-        // Get it from: https://search.google.com/search-console
-        // googleSiteVerification="paste-your-verification-code-here"
       />
       <Navigation />
       <main>
         {isMobile ? (
           <PullToRefresh onRefresh={handleRefresh}>
-            {showHeroWedge ? (
-              <HeroWedge
-                onRequestSoftGate={(seed) => {
-                  setSoftGateSeed(seed);
-                  setSoftGateOpen(true);
-                }}
-                softGateEnabled={true}
-              />
-            ) : (
-              <Hero />
-            )}
+            <Hero />
             <div className="homepage-band-muted">
               <EntrepreneurProblems />
             </div>
@@ -140,17 +127,7 @@ const Index = () => {
           </PullToRefresh>
         ) : (
           <>
-            {showHeroWedge ? (
-              <HeroWedge
-                onRequestSoftGate={(seed) => {
-                  setSoftGateSeed(seed);
-                  setSoftGateOpen(true);
-                }}
-                softGateEnabled={true}
-              />
-            ) : (
-              <Hero />
-            )}
+            <Hero />
             <div className="homepage-band-muted">
               <EntrepreneurProblems />
             </div>
@@ -168,21 +145,12 @@ const Index = () => {
         )}
       </main>
       <Footer />
-      
-      {/* Sticky Mobile CTA - appears after scroll on mobile */}
       <StickyMobileCTA />
-
-      {/* Exit intent modal - fires once per session after 20s for logged-out visitors */}
       <ExitIntentModal
         isOpen={showExitIntent}
         onClose={() => { closeExitIntent(); trackDismissal('exit-intent'); }}
       />
-      <SoftGateModal
-        open={showHeroWedge && softGateOpen}
-        onOpenChange={setSoftGateOpen}
-        seed={softGateSeed}
-        trigger="hero"
-      />
+      {/* SoftGateModal intentionally omitted for this hero design */}
     </div>
   );
 };
