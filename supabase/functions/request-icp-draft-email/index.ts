@@ -156,9 +156,16 @@ async function processEmailDraftRequest(payload: EmailDraftRequest) {
     html: buildEmailHtml({ appUrl, resumeToken, artifact: generated.artifact }),
   });
 
+  const now = new Date();
+  const followup1At = new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString();
+
   await serviceClient
     .from("icp_guest_drafts")
-    .update({ delivered_at: new Date().toISOString() })
+    .update({
+      delivered_at: now.toISOString(),
+      next_followup_at: followup1At,
+      followup_count: 0,
+    })
     .eq("resume_token", resumeToken);
 }
 

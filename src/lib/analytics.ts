@@ -132,7 +132,7 @@ export const bootstrapPosthog = () => {
     return;
   }
 
-  window.setTimeout(start, 1500);
+  setTimeout(start, 1500);
 };
 
 export const captureEvent = (eventName: string, properties?: AnalyticsProperties) => {
@@ -216,6 +216,18 @@ export const trackIcpBuilderStartedUngated = (properties: { source: string }) =>
 
 export const trackICPBuilderCompleted = (properties?: AnalyticsProperties) =>
   captureEvent('icp_builder_completed', properties);
+
+export const trackICPBuilderStepCompleted = (properties: {
+  step: string;
+  step_index: number;
+  mode: 'fast' | 'guided';
+  is_authenticated: boolean;
+}) => captureEvent('icp_builder_step_completed', properties);
+
+export const trackICPBuilderModeSelected = (properties: {
+  mode: 'fast' | 'guided';
+  is_authenticated: boolean;
+}) => captureEvent('icp_builder_mode_selected', properties);
 
 export const trackWaitlistCreated = (properties?: AnalyticsProperties) =>
   captureEvent('waitlist_created', properties);

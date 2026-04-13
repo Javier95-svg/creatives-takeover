@@ -52,6 +52,13 @@ serve(async (req) => {
       });
     }
 
+    // Mark as converted so the drip sequence stops firing
+    await serviceClient
+      .from("icp_guest_drafts")
+      .update({ converted_at: new Date().toISOString() })
+      .eq("resume_token", resumeToken)
+      .is("converted_at", null);
+
     return new Response(JSON.stringify({
       success: true,
       artifact: data.artifact,

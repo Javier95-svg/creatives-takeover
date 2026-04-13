@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Loader2, LockKeyhole, Users } from "lucide-react";
+import { Clock, Loader2, LockKeyhole, Users } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -33,6 +33,12 @@ export function IcpUnlockGate({
   const personaName = gatePreview?.personaName || artifact.draftDocument.customer.personaName;
   const roleLine = gatePreview?.roleLine || artifact.draftDocument.customer.roleLine;
   const painLine = gatePreview?.painLine || artifact.draftDocument.pain.quote;
+
+  const hoursRemaining = useMemo(() => {
+    const generatedAt = artifact.generatedAt ? new Date(artifact.generatedAt).getTime() : Date.now();
+    const expiresAt = generatedAt + 48 * 60 * 60 * 1000;
+    return Math.max(1, Math.ceil((expiresAt - Date.now()) / (60 * 60 * 1000)));
+  }, [artifact.generatedAt]);
 
   const handleGoogleContinue = async () => {
     try {
@@ -113,6 +119,10 @@ export function IcpUnlockGate({
             </h2>
             <p className="text-sm text-muted-foreground">
               Create your account to save this draft and keep building from here.
+            </p>
+            <p className="inline-flex items-center gap-1.5 text-xs font-medium text-amber-600 dark:text-amber-400">
+              <Clock className="h-3 w-3 shrink-0" />
+              Draft saved for {hoursRemaining}h — free account keeps it permanently
             </p>
           </div>
 

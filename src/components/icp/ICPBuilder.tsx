@@ -16,7 +16,7 @@ import { useActivationJourney } from "@/hooks/useActivationJourney";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { captureEvent, trackICPBuilderCompleted, trackICPBuilderStarted } from "@/lib/analytics";
+import { captureEvent, trackICPBuilderCompleted, trackICPBuilderModeSelected, trackICPBuilderStarted, trackICPBuilderStepCompleted } from "@/lib/analytics";
 import {
   fastIcpInputSchema,
   guidedIcpInputSchema,
@@ -790,6 +790,28 @@ const ICPBuilder: React.FC = () => {
     validatedGuided,
   ]);
 
+  const trackStepCompleted = (screen: IcpFlowScreen) => {
+    const stepIndexMap: Partial<Record<IcpFlowScreen, number>> = {
+      fast_input: 1,
+      guided_seed: 1,
+      guided_persona: 2,
+      guided_specificity: 3,
+      guided_pain: 4,
+      guided_workaround: 5,
+      guided_solution: 6,
+      guided_market_context: 7,
+      guided_founder_edge: 8,
+    };
+    const index = stepIndexMap[screen];
+    if (!index || !session.mode) return;
+    trackICPBuilderStepCompleted({
+      step: screen,
+      step_index: index,
+      mode: session.mode,
+      is_authenticated: Boolean(user),
+    });
+  };
+
   const handleContinue = async () => {
     if (!canContinue) {
       toast({
@@ -801,16 +823,19 @@ const ICPBuilder: React.FC = () => {
     }
 
     if (session.currentScreen === "fast_input") {
+      trackStepCompleted("fast_input");
       await completeDraftGeneration(Boolean(user));
       return;
     }
 
     if (session.currentScreen === "guided_seed") {
+      trackStepCompleted("guided_seed");
       await invokeSeedPrefill();
       return;
     }
 
     if (session.currentScreen === "guided_persona") {
+      trackStepCompleted("guided_persona");
       const personaEditedSignificantly = hasSignificantPersonaChange(session.personaSuggestion, session.guided.persona);
       setSession((previous) => ({
         ...previous,
@@ -821,12 +846,14 @@ const ICPBuilder: React.FC = () => {
     }
 
     if (session.currentScreen === "guided_founder_edge") {
+      trackStepCompleted("guided_founder_edge");
       await completeDraftGeneration(Boolean(user));
       return;
     }
 
     const nextScreen = getNextGuidedScreen(session.currentScreen);
     if (nextScreen) {
+      trackStepCompleted(session.currentScreen);
       setSession((previous) => ({
         ...previous,
         currentScreen: nextScreen,
@@ -869,13 +896,14 @@ const ICPBuilder: React.FC = () => {
         <button
           type="button"
           className="group relative overflow-hidden rounded-[2rem] border border-border/60 bg-white/80 p-6 text-left shadow-[0_28px_90px_-52px_rgba(15,23,42,0.3)] backdrop-blur transition-transform duration-300 hover:-translate-y-1 hover:border-[#32b8c6]/40 hover:shadow-[0_32px_100px_-54px_rgba(50,184,198,0.4)] motion-safe:animate-[glow_4.8s_ease-in-out_infinite_alternate] dark:bg-slate-950/70"
-          onClick={() =>
+          onClick={() => {
+            trackICPBuilderModeSelected({ mode: "fast", is_authenticated: Boolean(user) });
             setSession((previous) => ({
               ...previous,
               mode: "fast",
               currentScreen: "fast_input",
-            }))
-          }
+            }));
+          }}
         >
           <div className="pointer-events-none absolute inset-0 rounded-[2rem] border border-[#32b8c6]/15 opacity-60 motion-safe:animate-[pulse-slow_4s_ease-in-out_infinite]" />
           <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#32b8c6]">Fast Mode</p>
@@ -893,14 +921,15 @@ const ICPBuilder: React.FC = () => {
           type="button"
           className="group relative overflow-hidden rounded-[2rem] border border-border/60 bg-white/80 p-6 text-left shadow-[0_28px_90px_-52px_rgba(15,23,42,0.3)] backdrop-blur transition-transform duration-300 hover:-translate-y-1 hover:border-[#32b8c6]/40 hover:shadow-[0_32px_100px_-54px_rgba(50,184,198,0.4)] motion-safe:animate-[glow_4.8s_ease-in-out_infinite_alternate] dark:bg-slate-950/70"
           style={{ animationDelay: "0.45s" }}
-          onClick={() =>
+          onClick={() => {
+            trackICPBuilderModeSelected({ mode: "guided", is_authenticated: Boolean(user) });
             setSession((previous) => ({
               ...previous,
               mode: "guided",
               currentScreen: "guided_seed",
               guided: previous.guided.seed ? previous.guided : buildEmptyGuidedAnswers(previous.fastDescription),
-            }))
-          }
+            }));
+          }}
         >
           <div
             className="pointer-events-none absolute inset-0 rounded-[2rem] border border-[#32b8c6]/15 opacity-60 motion-safe:animate-[pulse-slow_4s_ease-in-out_infinite]"
