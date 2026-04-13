@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { Loader2 } from "lucide-react";
+import { ArrowRight, Loader2 } from "lucide-react";
 
 import { IcpFolioDocument } from "@/components/icp/IcpFolioDocument";
 import { IcpProgressBar } from "@/components/icp/IcpProgressBar";
@@ -81,8 +81,17 @@ export default function IcpPublicDraftPage() {
       <IcpFolioDocument
         draft={draft}
         footer={
-          <div className="pb-6 text-center text-sm text-slate-500">
-            Built with Creatives Takeover — the platform for first-time founders.
+          <div className="pb-10 text-center">
+            <p className="mb-4 text-sm text-slate-500">
+              Built with Creatives Takeover — the platform for first-time founders.
+            </p>
+            <Link
+              to="/icp-builder"
+              className="inline-flex items-center gap-2 rounded-full bg-[#0f5b64] px-6 py-3 text-sm font-semibold text-white shadow-[0_8px_24px_-12px_rgba(15,91,100,0.55)] transition-opacity hover:opacity-90"
+            >
+              Build your own ICP Draft — it's free
+              <ArrowRight className="h-4 w-4" />
+            </Link>
           </div>
         }
       />

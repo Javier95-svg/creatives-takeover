@@ -128,13 +128,6 @@ const SoftGateModal = ({
     }
   };
 
-  const handleLinkedInContinue = () => {
-    trackSignupStarted({ method: "linkedin" });
-    onBeforeAuthContinue?.();
-    // TODO(oauth): confirm the configured Supabase LinkedIn provider id before wiring this CTA.
-    toast.error("LinkedIn OAuth is not configured in this app yet.");
-  };
-
   const handleEmailSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
@@ -239,16 +232,6 @@ const SoftGateModal = ({
               type="button"
             >
               Continue with Google
-            </Button>
-
-            <Button
-              className="h-12 w-full text-base font-semibold"
-              disabled={isLoading}
-              onClick={handleLinkedInContinue}
-              type="button"
-              variant="outline"
-            >
-              Continue with LinkedIn
             </Button>
 
             <button

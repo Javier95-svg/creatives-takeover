@@ -1,6 +1,5 @@
 import { useEffect, lazy, Suspense, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useFeatureFlagEnabled } from "posthog-js/react";
 import Navigation from "@/components/Navigation";
 import Hero from "@/components/Hero";
 import HeroWedge from "@/components/home/Hero";
@@ -33,9 +32,7 @@ const Index = () => {
   const { user, loading: authLoading } = useAuth();
   const { showExitIntent, closeExitIntent } = useExitIntent();
   const { trackTriggerView, trackDismissal } = useConversionTracking();
-  const homepageHeroWedgeEnabled = useFeatureFlagEnabled('homepage-hero-wedge');
-  const softGateModalEnabled = useFeatureFlagEnabled('soft-gate-modal');
-  const showHeroWedge = !authLoading && !user && !!homepageHeroWedgeEnabled;
+  const showHeroWedge = !authLoading && !user;
   const [softGateOpen, setSoftGateOpen] = useState(false);
   const [softGateSeed, setSoftGateSeed] = useState('');
   const hasTrackedLandingView = useRef(false);
@@ -122,7 +119,7 @@ const Index = () => {
                   setSoftGateSeed(seed);
                   setSoftGateOpen(true);
                 }}
-                softGateEnabled={!!softGateModalEnabled}
+                softGateEnabled={true}
               />
             ) : (
               <Hero />
@@ -149,7 +146,7 @@ const Index = () => {
                   setSoftGateSeed(seed);
                   setSoftGateOpen(true);
                 }}
-                softGateEnabled={!!softGateModalEnabled}
+                softGateEnabled={true}
               />
             ) : (
               <Hero />
@@ -181,7 +178,7 @@ const Index = () => {
         onClose={() => { closeExitIntent(); trackDismissal('exit-intent'); }}
       />
       <SoftGateModal
-        open={showHeroWedge && !!softGateModalEnabled && softGateOpen}
+        open={showHeroWedge && softGateOpen}
         onOpenChange={setSoftGateOpen}
         seed={softGateSeed}
         trigger="hero"
