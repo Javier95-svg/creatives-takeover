@@ -9,6 +9,7 @@ export const ICP_BUILDER_SESSION_KEY = "ct_icp_builder_session_v3";
 
 export type IcpConfidenceLevel = "high" | "medium" | "low";
 export type IcpBuilderMode = "fast" | "guided";
+export type IcpArtifactVersion = 3 | 4;
 
 export type IcpFlowScreen =
   | "mode_select"
@@ -33,6 +34,19 @@ export interface IcpDraftLinkPill {
   url: string | null;
 }
 
+export interface IcpDraftSectionEvidence {
+  confidence: IcpConfidenceLevel;
+  evidence: string;
+  missingSignalPrompt: string | null;
+}
+
+export interface IcpDraftCompetitor {
+  name: string;
+  url: string | null;
+  doesWell: string;
+  gap: string;
+}
+
 export interface IcpDraftDocument {
   gatePreview: {
     personaName: string;
@@ -44,25 +58,42 @@ export interface IcpDraftDocument {
     roleLine: string;
     metaLine: string;
     summary: string;
+    behaviors: string[];
+    motivations: string[];
     whereToFind: string[];
+    triggerContext: string;
+    actionTrigger: string;
+    evidence: IcpDraftSectionEvidence;
   };
   pain: {
     quote: string;
     rootCause: string;
     whyItHurts: string;
     triggerMoment: string;
+    costOfInaction: string;
+    evidence: IcpDraftSectionEvidence;
   };
   build: {
     valueProposition: string;
     replaces: string[];
     coreFeatures: IcpDraftCoreFeature[];
     outcome: string;
+    evidence: IcpDraftSectionEvidence;
   };
   moat: {
     moatType: string;
     edge: string;
+    edgeSource: string;
+    whyHardToCopy: string;
     incumbentGap: string;
     startupsToStudy: IcpDraftLinkPill[];
+    evidence: IcpDraftSectionEvidence;
+  };
+  competition: {
+    summary: string;
+    directCompetitors: IcpDraftCompetitor[];
+    exploitableGap: string;
+    evidence: IcpDraftSectionEvidence;
   };
   confidence: {
     level: IcpConfidenceLevel;
@@ -101,7 +132,7 @@ export interface IcpDashboardContext {
 }
 
 export interface StoredIcpArtifact {
-  version: 3;
+  version: IcpArtifactVersion;
   generatedAt: string;
   founderInputs: {
     mode: IcpBuilderMode;

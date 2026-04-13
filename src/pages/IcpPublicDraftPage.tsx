@@ -7,6 +7,7 @@ import { IcpProgressBar } from "@/components/icp/IcpProgressBar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { getIcpDraftShareBySlug, isIcpDraftSharedSnapshot } from "@/lib/icpDraftSharing";
+import { normalizeIcpDraftDocument } from "@/lib/icpDraftArtifacts";
 import type { IcpDraftDocument } from "@/lib/icpBuilderSession";
 
 export default function IcpPublicDraftPage() {
@@ -24,7 +25,7 @@ export default function IcpPublicDraftPage() {
       try {
         const record = await getIcpDraftShareBySlug(draftId);
         if (record && isIcpDraftSharedSnapshot(record.snapshot)) {
-          setDraft(record.snapshot.draftDocument);
+          setDraft(normalizeIcpDraftDocument(record.snapshot.draftDocument));
         }
       } catch (error) {
         console.error("Failed to load public ICP Draft", error);

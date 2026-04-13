@@ -2,6 +2,11 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { Resend } from "npm:resend@2.0.0";
+import {
+  generateIcpDraftArtifact,
+  type DraftRequestShape,
+  type GuidedInput,
+} from "../_shared/icp-draft.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -10,36 +15,19 @@ const corsHeaders = {
 
 type EntryMode = "fast" | "guided";
 
-interface GuidedInput {
-  seed: string;
-  persona: {
-    role: string;
-    industry: string;
-    experience: string;
-  };
-  specificity: string;
-  pain: string;
-  workaround: string;
-  solutionCompletion: string;
-  marketContext: "different_customer" | "too_expensive_or_complex" | "manual_or_no_product" | "new_problem_recently";
-  founderEdge: string;
-}
-
 interface FastInput {
   description: string;
 }
 
-interface EmailDraftRequest {
+interface EmailDraftRequest extends DraftRequestShape {
   email: string;
   entryMode: EntryMode;
   fastInput?: FastInput | null;
   guidedInput?: GuidedInput | null;
-  personaEditedSignificantly?: boolean;
 }
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
-const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
+const emailRegex = /^[^\s@]+@[^\s@]+$/;
 const isNonEmpty = (value: unknown, min = 12) => typeof value === "string" && value.trim().length >= min;
 
 function validateGuidedInput(input: GuidedInput | null | undefined) {
@@ -95,83 +83,6 @@ function escapeHtml(value: string) {
     .replaceAll("'", "&#39;");
 }
 
-function buildDashboardContext(draftDocument: Record<string, any>) {
-  const level = draftDocument?.confidence?.level ?? "medium";
-  const nextActions = Array.isArray(draftDocument?.nextActions) ? draftDocument.nextActions : [];
-  const defaultRoute = level === "low" ? "/pmf-lab" : "/waitlist";
-
-  return {
-    message: "We know who you’re building for — here’s what to do next.",
-    suggestedStage: "IDENTITY",
-    prioritizedTasks: nextActions.slice(0, 5).map((action: any, index: number) => ({
-      id: `icp-draft-task-${index + 1}`,
-      title: typeof action?.title === "string" ? action.title : `Next action ${index + 1}`,
-      description:
-        typeof action?.description === "string"
-          ? action.description
-          : "Use the ICP Draft to move from analysis into execution.",
-      priority: index === 0 ? "high" : index < 3 ? "medium" : "low",
-      route: defaultRoute,
-    })),
-    recommendations: [],
-  };
-}
-
-function buildDraftPrompt(request: EmailDraftRequest) {
-  const guidedContext =
-    request.entryMode === "guided" && request.guidedInput
-      ? `Startup idea: ${request.guidedInput.seed}
-Confirmed persona role: ${request.guidedInput.persona.role}
-Confirmed persona industry: ${request.guidedInput.persona.industry}
-Confirmed persona experience: ${request.guidedInput.persona.experience}
-Specific segment: ${request.guidedInput.specificity}
-Emotional pain: ${request.guidedInput.pain}
-Current workaround: ${request.guidedInput.workaround}
-Product sentence completion: ${request.guidedInput.solutionCompletion}
-Competitive landscape: ${request.guidedInput.marketContext}
-Founder edge: ${request.guidedInput.founderEdge}
-Founder substantially revised the suggested persona: ${request.personaEditedSignificantly ? "yes" : "no"}`
-      : "";
-
-  const fastContext =
-    request.entryMode === "fast" && request.fastInput
-      ? `Founder description:
-${request.fastInput.description}`
-      : "";
-
-  return `You are generating a founder-ready ICP Draft document.
-This is not a template fill. It must feel specific, grounded, and usable.
-Use the founder's wording wherever possible.
-Do not ask clarifying questions.
-Do not output generic startup language.
-Return valid JSON only in this shape:
-{
-  "status":"draft_ready",
-  "draftDocument":{
-    "gatePreview":{"personaName":"string","roleLine":"string","painLine":"string"},
-    "customer":{"personaName":"string","roleLine":"string","metaLine":"string","summary":"string","whereToFind":["string"]},
-    "pain":{"quote":"string","rootCause":"string","whyItHurts":"string","triggerMoment":"string"},
-    "build":{"valueProposition":"string","replaces":["string"],"coreFeatures":[{"title":"string","description":"string"}],"outcome":"string"},
-    "moat":{"moatType":"string","edge":"string","incumbentGap":"string","startupsToStudy":[{"name":"string","url":"string|null"}]},
-    "confidence":{"level":"high|medium|low","summary":"string","missingSignals":["string"]},
-    "nextActions":[{"title":"string","description":"string","route":"waitlist|pmf|mvp|gtm|mentor"}]
-  }
-}
-
-Rules:
-- The customer section must read like one person with one context, not a vague market.
-- pain.quote must feel like a line the founder could repeat to a cofounder or designer.
-- build.valueProposition must define the first product or service clearly.
-- coreFeatures must be exactly 3 items.
-- moat.moatType should be a concise badge-style phrase.
-- confidence must admit missing evidence instead of faking precision.
-- nextActions must be concrete and usable in the next week.
-
-Entry mode: ${request.entryMode}
-${guidedContext}
-${fastContext}`;
-}
-
 function buildEmailHtml(args: {
   appUrl: string;
   resumeToken: string;
@@ -217,50 +128,20 @@ async function processEmailDraftRequest(payload: EmailDraftRequest) {
   }
 
   const serviceClient = createClient(supabaseUrl, supabaseKey);
-  const completion = await fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${openaiApiKey}`,
-      "Content-Type": "application/json",
+  const generated = await generateIcpDraftArtifact({
+    openaiApiKey,
+    request: payload,
+    enrichment: {
+      marketSignals: [],
+      competitorLinks: [],
     },
-    body: JSON.stringify({
-      model: "gpt-4o-mini",
-      response_format: { type: "json_object" },
-      temperature: 0.45,
-      max_tokens: 2000,
-      messages: [
-        { role: "system", content: "Return valid JSON only." },
-        { role: "user", content: buildDraftPrompt(payload) },
-      ],
-    }),
   });
-
-  if (!completion.ok) {
-    throw new Error(`OpenAI API Error: ${completion.status}`);
-  }
-
-  const aiData = await completion.json();
-  const parsed = JSON.parse(aiData.choices[0].message.content);
-  const draftDocument = parsed.draftDocument;
-
-  const artifact = {
-    version: 3,
-    generatedAt: new Date().toISOString(),
-    founderInputs: {
-      mode: payload.entryMode,
-      fastDescription: payload.entryMode === "fast" ? payload.fastInput?.description ?? null : null,
-      guided: payload.entryMode === "guided" ? payload.guidedInput ?? null : null,
-    },
-    draftDocument,
-    dashboardContext: buildDashboardContext(draftDocument),
-    enrichment: null,
-  };
 
   const resumeToken = crypto.randomUUID();
   const { error: insertError } = await serviceClient.from("icp_guest_drafts").insert({
     email: payload.email.trim().toLowerCase(),
     resume_token: resumeToken,
-    artifact,
+    artifact: generated.artifact,
     builder_payload: payload,
   });
 
@@ -272,7 +153,7 @@ async function processEmailDraftRequest(payload: EmailDraftRequest) {
     from: "Creatives Takeover <noreply@updates.creativestakeover.com>",
     to: [payload.email.trim()],
     subject: "Your ICP Draft is ready",
-    html: buildEmailHtml({ appUrl, resumeToken, artifact }),
+    html: buildEmailHtml({ appUrl, resumeToken, artifact: generated.artifact }),
   });
 
   await serviceClient

@@ -3,7 +3,15 @@ import {
   buildMarketContextLabel,
   type GuidedIcpInputSchema,
 } from "@/lib/icpBuilderSchema";
-import type { IcpBuilderMode, IcpBuilderSession, StoredIcpArtifact } from "@/lib/icpBuilderSession";
+import type {
+  IcpBuilderMode,
+  IcpBuilderSession,
+  IcpConfidenceLevel,
+  IcpDraftCompetitor,
+  IcpDraftDocument,
+  IcpDraftSectionEvidence,
+  StoredIcpArtifact,
+} from "@/lib/icpBuilderSession";
 
 type LegacyAnalysis = Record<string, unknown>;
 
@@ -23,12 +31,245 @@ function normalizeSectionList(value: unknown) {
   return value.filter((item): item is string => typeof item === "string" && item.trim().length > 0);
 }
 
+function normalizeConfidence(value: unknown, fallback: IcpConfidenceLevel = "medium"): IcpConfidenceLevel {
+  return value === "high" || value === "medium" || value === "low" ? value : fallback;
+}
+
 function buildArtifactGatePreview(artifact: StoredIcpArtifact) {
   return {
     personaName: artifact.draftDocument.customer.personaName,
     roleLine: artifact.draftDocument.customer.roleLine,
     painLine: artifact.draftDocument.pain.quote,
   };
+}
+
+function buildSectionEvidence(
+  value: Partial<IcpDraftSectionEvidence> | null | undefined,
+  fallback: {
+    confidence?: IcpConfidenceLevel;
+    evidence: string;
+    missingSignalPrompt?: string | null;
+  },
+): IcpDraftSectionEvidence {
+  return {
+    confidence: normalizeConfidence(value?.confidence, fallback.confidence ?? "medium"),
+    evidence:
+      typeof value?.evidence === "string" && value.evidence.trim().length > 0
+        ? value.evidence
+        : fallback.evidence,
+    missingSignalPrompt:
+      typeof value?.missingSignalPrompt === "string" ? value.missingSignalPrompt : fallback.missingSignalPrompt ?? null,
+  };
+}
+
+function normalizeCompetitors(
+  value: unknown,
+  fallback: IcpDraftCompetitor[] = [],
+): IcpDraftCompetitor[] {
+  if (!Array.isArray(value)) return fallback;
+
+  return value
+    .filter((item): item is Record<string, unknown> => Boolean(item) && typeof item === "object")
+    .map((item) => ({
+      name: typeof item.name === "string" && item.name.trim().length > 0 ? item.name : "Unnamed competitor",
+      url: typeof item.url === "string" && item.url.trim().length > 0 ? item.url : null,
+      doesWell:
+        typeof item.doesWell === "string" && item.doesWell.trim().length > 0
+          ? item.doesWell
+          : typeof item.strengths === "string" && item.strengths.trim().length > 0
+            ? item.strengths
+            : "Recognized alternative in the broader category.",
+      gap:
+        typeof item.gap === "string" && item.gap.trim().length > 0
+          ? item.gap
+          : typeof item.weaknesses === "string" && item.weaknesses.trim().length > 0
+            ? item.weaknesses
+            : "The niche-specific gap still needs stronger founder evidence.",
+    }))
+    .filter((item) => item.name.trim().length > 0);
+}
+
+export function normalizeIcpDraftDocument(
+  draft: Partial<IcpDraftDocument> | null | undefined,
+  artifact?: Partial<StoredIcpArtifact> | null,
+): IcpDraftDocument | null {
+  if (!draft?.customer?.roleLine) return null;
+
+  const confidenceLevel = normalizeConfidence(draft.confidence?.level, "medium");
+  const roleLine = draft.customer.roleLine;
+  const personaName =
+    typeof draft.customer.personaName === "string" && draft.customer.personaName.trim().length > 0
+      ? draft.customer.personaName
+      : inferPersonaName(roleLine);
+  const painQuote =
+    typeof draft.pain?.quote === "string" && draft.pain.quote.trim().length > 0
+      ? draft.pain.quote
+      : "The founder has not yet described one pain sharp enough to anchor the product around.";
+  const fallbackCompetitors = Array.isArray(draft.moat?.startupsToStudy)
+    ? draft.moat.startupsToStudy
+        .filter((item): item is { name: string; url: string | null } => Boolean(item?.name))
+        .map((item) => ({
+          name: item.name,
+          url: item.url,
+          doesWell: "Recognized alternative in the broader category.",
+          gap: "The niche-specific gap still needs sharper founder evidence.",
+        }))
+    : [];
+
+  return {
+    gatePreview: {
+      personaName: draft.gatePreview?.personaName || personaName,
+      roleLine: draft.gatePreview?.roleLine || roleLine,
+      painLine: draft.gatePreview?.painLine || painQuote,
+    },
+    customer: {
+      personaName,
+      roleLine,
+      metaLine: draft.customer.metaLine || "",
+      summary:
+        typeof draft.customer.summary === "string" && draft.customer.summary.trim().length > 0
+          ? draft.customer.summary
+          : "The customer profile still needs sharper founder-specific context before it should guide execution.",
+      behaviors: normalizeSectionList(draft.customer.behaviors),
+      motivations: normalizeSectionList(draft.customer.motivations),
+      whereToFind: normalizeSectionList(draft.customer.whereToFind),
+      triggerContext:
+        typeof draft.customer.triggerContext === "string" && draft.customer.triggerContext.trim().length > 0
+          ? draft.customer.triggerContext
+          : "The exact moment this customer feels the pain still needs clearer evidence.",
+      actionTrigger:
+        typeof draft.customer.actionTrigger === "string" && draft.customer.actionTrigger.trim().length > 0
+          ? draft.customer.actionTrigger
+          : "The draft needs a stronger founder signal for what makes this customer act now.",
+      evidence: buildSectionEvidence(draft.customer.evidence, {
+        confidence: confidenceLevel,
+        evidence: "Customer profile inferred from the founder's niche, pain, workaround, and solution inputs.",
+        missingSignalPrompt: "What moment makes this customer actively search for a better solution?",
+      }),
+    },
+    pain: {
+      quote: painQuote,
+      rootCause:
+        typeof draft.pain?.rootCause === "string" && draft.pain.rootCause.trim().length > 0
+          ? draft.pain.rootCause
+          : "The root cause still needs a sharper explanation tied to the founder's evidence.",
+      whyItHurts:
+        typeof draft.pain?.whyItHurts === "string" && draft.pain.whyItHurts.trim().length > 0
+          ? draft.pain.whyItHurts
+          : "The real consequence of this pain is still under-specified.",
+      triggerMoment:
+        typeof draft.pain?.triggerMoment === "string" && draft.pain.triggerMoment.trim().length > 0
+          ? draft.pain.triggerMoment
+          : "The triggering moment still needs a clearer founder example.",
+      costOfInaction:
+        typeof draft.pain?.costOfInaction === "string" && draft.pain.costOfInaction.trim().length > 0
+          ? draft.pain.costOfInaction
+          : "The cost of leaving this unsolved still needs to be made explicit.",
+      evidence: buildSectionEvidence(draft.pain?.evidence, {
+        confidence: confidenceLevel,
+        evidence: "Pain diagnosis grounded in the founder's pain statement and current workaround.",
+        missingSignalPrompt: "Describe one recent example where this pain caused delay, loss, or frustration.",
+      }),
+    },
+    build: {
+      valueProposition:
+        typeof draft.build?.valueProposition === "string" && draft.build.valueProposition.trim().length > 0
+          ? draft.build.valueProposition
+          : "The first product promise still needs to be made more concrete.",
+      replaces: normalizeSectionList(draft.build?.replaces),
+      coreFeatures: Array.isArray(draft.build?.coreFeatures)
+        ? draft.build.coreFeatures.filter(
+            (feature): feature is { title: string; description: string } =>
+              Boolean(feature?.title) && Boolean(feature?.description),
+          )
+        : [],
+      outcome:
+        typeof draft.build?.outcome === "string" && draft.build.outcome.trim().length > 0
+          ? draft.build.outcome
+          : "The immediate customer outcome still needs a sharper articulation.",
+      evidence: buildSectionEvidence(draft.build?.evidence, {
+        confidence: confidenceLevel,
+        evidence: "Build recommendation grounded in the founder's stated problem and product direction.",
+        missingSignalPrompt: "What should the customer stop doing manually if this product works exactly as intended?",
+      }),
+    },
+    moat: {
+      moatType:
+        typeof draft.moat?.moatType === "string" && draft.moat.moatType.trim().length > 0
+          ? draft.moat.moatType
+          : "Founder advantage",
+      edge:
+        typeof draft.moat?.edge === "string" && draft.moat.edge.trim().length > 0
+          ? draft.moat.edge
+          : "The founder advantage still needs a clearer explanation tied to this niche.",
+      edgeSource:
+        typeof draft.moat?.edgeSource === "string" && draft.moat.edgeSource.trim().length > 0
+          ? draft.moat.edgeSource
+          : "The source of the advantage is not yet explicit enough.",
+      whyHardToCopy:
+        typeof draft.moat?.whyHardToCopy === "string" && draft.moat.whyHardToCopy.trim().length > 0
+          ? draft.moat.whyHardToCopy
+          : "Why this advantage is hard to copy still needs stronger proof.",
+      incumbentGap:
+        typeof draft.moat?.incumbentGap === "string" && draft.moat.incumbentGap.trim().length > 0
+          ? draft.moat.incumbentGap
+          : "The draft needs a sharper explanation of why current alternatives miss this niche.",
+      startupsToStudy: Array.isArray(draft.moat?.startupsToStudy)
+        ? draft.moat.startupsToStudy.filter(
+            (item): item is { name: string; url: string | null } => Boolean(item?.name),
+          )
+        : [],
+      evidence: buildSectionEvidence(draft.moat?.evidence, {
+        confidence: confidenceLevel,
+        evidence: "Moat inferred from the founder's edge statement and the niche-specific workflow gap.",
+        missingSignalPrompt: "What access, trust, distribution, or lived insight do you have that a generic competitor does not?",
+      }),
+    },
+    competition: {
+      summary:
+        typeof draft.competition?.summary === "string" && draft.competition.summary.trim().length > 0
+          ? draft.competition.summary
+          : "The competitive landscape still needs more signal before it can be stated confidently.",
+      directCompetitors: normalizeCompetitors(draft.competition?.directCompetitors, fallbackCompetitors),
+      exploitableGap:
+        typeof draft.competition?.exploitableGap === "string" && draft.competition.exploitableGap.trim().length > 0
+          ? draft.competition.exploitableGap
+          : "The exploitable competitive gap still needs clearer founder or market evidence.",
+      evidence: buildSectionEvidence(draft.competition?.evidence, {
+        confidence: confidenceLevel === "low" ? "low" : "medium",
+        evidence:
+          artifact?.enrichment?.marketSignals?.length
+            ? "Competition informed by founder inputs plus targeted market-signal enrichment."
+            : "Competition inferred from founder inputs only; treat it as provisional until the current alternatives are more explicit.",
+        missingSignalPrompt: "Name the tools, services, or manual alternatives this customer uses today so the competitive landscape can be sharpened.",
+      }),
+    },
+    confidence: {
+      level: confidenceLevel,
+      summary:
+        typeof draft.confidence?.summary === "string" && draft.confidence.summary.trim().length > 0
+          ? draft.confidence.summary
+          : "This draft should be treated as directional until stronger founder evidence is added.",
+      missingSignals: normalizeSectionList(draft.confidence?.missingSignals),
+    },
+    nextActions: Array.isArray(draft.nextActions)
+      ? draft.nextActions.filter(
+          (action): action is { title: string; description: string; route: string } =>
+            Boolean(action?.title) && Boolean(action?.description) && Boolean(action?.route),
+        )
+      : [],
+  };
+}
+
+function normalizeArtifactShape(artifact: StoredIcpArtifact) {
+  const draftDocument = normalizeIcpDraftDocument(artifact.draftDocument, artifact);
+  if (!draftDocument) return null;
+
+  return {
+    ...artifact,
+    version: artifact.version === 4 ? 4 : 3,
+    draftDocument,
+  } satisfies StoredIcpArtifact;
 }
 
 export function normalizeStoredArtifact(row: {
@@ -42,8 +283,11 @@ export function normalizeStoredArtifact(row: {
     return { artifact: null, legacyAvailable: false, legacyAnalysis: null };
   }
 
-  if (analysisData.version === 3 && analysisData.draftDocument?.customer) {
-    const artifact = analysisData as StoredIcpArtifact;
+  if ((analysisData.version === 3 || analysisData.version === 4) && analysisData.draftDocument?.customer) {
+    const artifact = normalizeArtifactShape(analysisData as StoredIcpArtifact);
+    if (!artifact) {
+      return { artifact: null, legacyAvailable: false, legacyAnalysis: null };
+    }
     artifact.draftDocument.gatePreview = buildArtifactGatePreview(artifact);
     return { artifact, legacyAvailable: false, legacyAnalysis: null };
   }
@@ -142,7 +386,16 @@ export function mapLegacyAnalysisToArtifact(
         roleLine,
         metaLine: metaBits.join(" · "),
         summary,
+        behaviors: [],
+        motivations: [],
         whereToFind: normalizeSectionList(nicheProfile?.buyingBehavior?.preferredChannels).slice(0, 4),
+        triggerContext: "The exact pain trigger still needs fresher founder evidence.",
+        actionTrigger: "A clearer buying trigger still needs to be confirmed.",
+        evidence: {
+          confidence: "medium",
+          evidence: "Customer profile mapped from a legacy ICP analysis.",
+          missingSignalPrompt: "What exact moment makes this customer actively look for a better solution?",
+        },
       },
       pain: {
         quote: painSummary,
@@ -158,13 +411,16 @@ export function mapLegacyAnalysisToArtifact(
           topPain?.whenItShowsUp ||
           topPain?.frequency ||
           "The pain spikes when a customer or stakeholder expects clarity fast.",
+        costOfInaction: "The founder still needs clearer evidence for the cost of leaving this pain unresolved.",
+        evidence: {
+          confidence: "medium",
+          evidence: "Pain section mapped from the saved pain point and current workaround.",
+          missingSignalPrompt: "Describe one recent example of how this pain caused delay, loss, or frustration.",
+        },
       },
       build: {
         valueProposition: buildSummary,
-        replaces: normalizeSectionList([
-          topPain?.currentSolution,
-          topPain?.currentWorkaround,
-        ]).slice(0, 3),
+        replaces: normalizeSectionList([topPain?.currentSolution, topPain?.currentWorkaround]).slice(0, 3),
         coreFeatures: normalizeSectionList(analysisData?.actionPlan)
           .slice(0, 3)
           .map((item, index) => ({
@@ -172,21 +428,43 @@ export function mapLegacyAnalysisToArtifact(
             description:
               typeof item === "string"
                 ? item
-                : typeof item?.action === "string"
+                : typeof item === "object" && item !== null && "action" in item && typeof item.action === "string"
                   ? item.action
                   : "Translate the customer pain into one decisive capability.",
           })),
         outcome:
           analysisData?.draftDocument?.nextActions?.[0]?.description ||
           "The first version should make the customer feel more in control immediately.",
+        evidence: {
+          confidence: "medium",
+          evidence: "Build recommendation mapped from the legacy value proposition and action plan.",
+          missingSignalPrompt: "What should the customer stop doing manually once this product works?",
+        },
       },
       moat: {
         moatType: "Founder expertise",
         edge: moatSummary,
+        edgeSource: "The founder edge was inferred from the saved positioning analysis.",
+        whyHardToCopy: "Why this edge is hard to copy needs fresher founder context.",
         incumbentGap:
           normalizeSectionList(positioning?.keyDifferentiators || positioning?.differentiators)[0] ||
           "Incumbents optimize for broader workflows, not this exact user and moment.",
         startupsToStudy: [],
+        evidence: {
+          confidence: "low",
+          evidence: "Moat mapped from older positioning language and should be pressure-tested.",
+          missingSignalPrompt: "What access, trust, or lived insight gives you an advantage that a competitor cannot quickly copy?",
+        },
+      },
+      competition: {
+        summary: "This legacy draft did not include a dedicated competitive landscape section.",
+        directCompetitors: [],
+        exploitableGap: "Competitive gap still needs named alternatives or external market evidence.",
+        evidence: {
+          confidence: "low",
+          evidence: "Competition data was not preserved in the older artifact shape.",
+          missingSignalPrompt: "Name the tools, services, or manual alternatives your customer uses today.",
+        },
       },
       confidence: {
         level:
@@ -229,9 +507,12 @@ export function mapLegacyAnalysisToArtifact(
     enrichment: null,
   };
 
-  artifact.draftDocument.gatePreview = buildArtifactGatePreview(artifact);
-  artifact.dashboardContext = buildDraftDashboardContext(artifact);
-  return artifact;
+  const normalizedArtifact = normalizeArtifactShape(artifact);
+  if (!normalizedArtifact) return null;
+
+  normalizedArtifact.draftDocument.gatePreview = buildArtifactGatePreview(normalizedArtifact);
+  normalizedArtifact.dashboardContext = buildDraftDashboardContext(normalizedArtifact);
+  return normalizedArtifact;
 }
 
 export function buildDraftDashboardContext(artifact: StoredIcpArtifact) {

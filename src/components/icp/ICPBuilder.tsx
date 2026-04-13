@@ -650,11 +650,77 @@ const ICPBuilder: React.FC = () => {
     if (isPersisting) return;
     setIsPersisting(true);
     try {
+      if (user && session.draftPreview && session.unlockRequired) {
+        const { data, error } = await withTimeout(
+          supabase.functions.invoke("icp-analyzer", {
+            body: {
+              operation: "save_existing_artifact",
+              artifact: session.draftPreview,
+            },
+          }),
+          SAVE_TIMEOUT_MS,
+        );
+
+        if (error || !data?.success || data.status !== "draft_ready" || !data.analysisId) {
+          throw error || new Error(data?.error || "Could not save the unlocked ICP Draft.");
+        }
+
+        const analysisId = data.analysisId as string;
+        const artifact = (data.artifact as StoredIcpArtifact) ?? session.draftPreview;
+
+        setSession((previous) => ({
+          ...previous,
+          draftPreview: artifact,
+          unlockRequired: false,
+          savedAnalysisId: analysisId,
+        }));
+
+        await markFirstArtifactCreated({
+          userId: user.id,
+          artifactType: "icp_analysis",
+          artifactId: analysisId,
+          label: artifact.draftDocument.customer.personaName,
+          resumeUrl: `/icp/draft/${analysisId}`,
+          source: "icp_builder",
+        });
+
+        if (user.email) {
+          await sendRetentionEmail({
+            userId: user.id,
+            email: user.email,
+            fullName: user.user_metadata?.full_name ?? null,
+            sequence: "activation_day0",
+            ctaUrl: "/dashboard",
+            ctaLabel: "Open dashboard",
+            contextHeadline: "Your ICP Draft is unlocked.",
+            contextBody: "Open the dashboard to see the first tasks and recommendations generated from your ICP Draft.",
+          });
+        }
+
+        const { error: bootstrapError } = await supabase.functions.invoke("bootstrap-icp-dashboard", {
+          body: { analysisId },
+        });
+
+        if (bootstrapError) {
+          throw bootstrapError;
+        }
+
+        await refreshActivation();
+        trackICPBuilderCompleted({
+          page_path: "/icp-builder",
+          mode: session.mode,
+          confidence: artifact.draftDocument.confidence.level,
+        });
+
+        navigate("/dashboard", { replace: true });
+        return;
+      }
+
       await completeDraftGeneration(true);
     } finally {
       setIsPersisting(false);
     }
-  }, [completeDraftGeneration, isPersisting]);
+  }, [completeDraftGeneration, isPersisting, navigate, refreshActivation, session.draftPreview, session.mode, session.unlockRequired, user]);
 
   useEffect(() => {
     if (!user || !session.draftPreview || !session.unlockRequired || session.savedAnalysisId || isPersisting) {

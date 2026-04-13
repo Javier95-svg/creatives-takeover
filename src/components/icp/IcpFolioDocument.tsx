@@ -28,6 +28,32 @@ function FeatureIndex({ index, tone }: { index: number; tone: "folio" | "platfor
   );
 }
 
+function SectionEvidenceNote({
+  evidence,
+  tone,
+}: {
+  evidence: IcpDraftDocument["customer"]["evidence"];
+  tone: "folio" | "platformPreview";
+}) {
+  const isPlatformPreview = tone === "platformPreview";
+  const wrapperClasses = isPlatformPreview
+    ? "rounded-[1.4rem] border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-sm backdrop-blur"
+    : "rounded-[1.4rem] border border-amber-200 bg-amber-50 px-4 py-3 text-sm";
+  const metaClasses = isPlatformPreview ? "text-foreground/85" : "text-slate-800";
+  const mutedClasses = isPlatformPreview ? "text-muted-foreground" : "text-slate-600";
+
+  const showNote = evidence.confidence !== "high" || evidence.missingSignalPrompt;
+  if (!showNote) return null;
+
+  return (
+    <div className={wrapperClasses}>
+      <p className={`font-medium ${metaClasses}`}>Confidence: {evidence.confidence}</p>
+      <p className={`mt-1 ${mutedClasses}`}>{evidence.evidence}</p>
+      {evidence.missingSignalPrompt ? <p className={`mt-2 ${mutedClasses}`}>Need to sharpen: {evidence.missingSignalPrompt}</p> : null}
+    </div>
+  );
+}
+
 export function IcpFolioDocument({
   draft,
   documentRef,
@@ -91,6 +117,29 @@ export function IcpFolioDocument({
 
           <div className={`mt-6 ${insetSurfaceClasses}`}>{draft.customer.summary}</div>
 
+          {(draft.customer.behaviors.length > 0 || draft.customer.motivations.length > 0) ? (
+            <div className="mt-6 grid gap-4 md:grid-cols-2">
+              <div className={tileClasses}>
+                <p className={`text-sm font-semibold ${tileTitleClasses}`}>Behavior signals</p>
+                <div className={`mt-3 space-y-2 text-sm leading-6 ${tileBodyClasses}`}>
+                  {draft.customer.behaviors.length > 0
+                    ? draft.customer.behaviors.map((item) => <p key={item}>• {item}</p>)
+                    : <p>Behavior patterns still need sharper evidence.</p>}
+                </div>
+              </div>
+              <div className={tileClasses}>
+                <p className={`text-sm font-semibold ${tileTitleClasses}`}>Motivations and trigger</p>
+                <div className={`mt-3 space-y-3 text-sm leading-6 ${tileBodyClasses}`}>
+                  {draft.customer.motivations.length > 0
+                    ? draft.customer.motivations.map((item) => <p key={item}>• {item}</p>)
+                    : <p>Motivations still need sharper founder evidence.</p>}
+                  <p><span className="font-medium">Context:</span> {draft.customer.triggerContext}</p>
+                  <p><span className="font-medium">Why they act now:</span> {draft.customer.actionTrigger}</p>
+                </div>
+              </div>
+            </div>
+          ) : null}
+
           {draft.customer.whereToFind.length > 0 ? (
             <div className="mt-6 space-y-3">
               <p className={`text-sm font-medium ${metaClasses}`}>Where to find them</p>
@@ -103,6 +152,10 @@ export function IcpFolioDocument({
               </div>
             </div>
           ) : null}
+
+          <div className="mt-6">
+            <SectionEvidenceNote evidence={draft.customer.evidence} tone={tone} />
+          </div>
         </section>
 
         <section className={sectionClasses}>
@@ -114,7 +167,7 @@ export function IcpFolioDocument({
             <p className={`text-xs font-semibold uppercase tracking-[0.22em] ${sectionLabelClasses}`}>Section 2</p>
           </div>
 
-          <div className="mt-8 grid gap-4 md:grid-cols-3">
+          <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             <div className={tileClasses}>
               <p className={`text-sm font-semibold ${tileTitleClasses}`}>Root cause</p>
               <p className={`mt-3 text-sm leading-6 ${tileBodyClasses}`}>{draft.pain.rootCause}</p>
@@ -127,6 +180,14 @@ export function IcpFolioDocument({
               <p className={`text-sm font-semibold ${tileTitleClasses}`}>Trigger moment</p>
               <p className={`mt-3 text-sm leading-6 ${tileBodyClasses}`}>{draft.pain.triggerMoment}</p>
             </div>
+            <div className={tileClasses}>
+              <p className={`text-sm font-semibold ${tileTitleClasses}`}>Cost of inaction</p>
+              <p className={`mt-3 text-sm leading-6 ${tileBodyClasses}`}>{draft.pain.costOfInaction}</p>
+            </div>
+          </div>
+
+          <div className="mt-6">
+            <SectionEvidenceNote evidence={draft.pain.evidence} tone={tone} />
           </div>
         </section>
 
@@ -155,12 +216,16 @@ export function IcpFolioDocument({
           </div>
 
           {draft.build.outcome ? <p className={`mt-8 text-sm font-medium ${headingBodyClasses}`}>Outcome: "{draft.build.outcome}"</p> : null}
+
+          <div className="mt-6">
+            <SectionEvidenceNote evidence={draft.build.evidence} tone={tone} />
+          </div>
         </section>
 
         <section className={sectionClasses}>
           <div className="flex items-start justify-between gap-4">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#32b8c6]">Your Startup Moat</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#32b8c6]">Moat & Competitive Landscape</p>
               <div className="mt-5">
                 <Badge className={moatBadgeClasses}>{draft.moat.moatType}</Badge>
               </div>
@@ -168,41 +233,77 @@ export function IcpFolioDocument({
             <p className={`text-xs font-semibold uppercase tracking-[0.22em] ${sectionLabelClasses}`}>Section 4</p>
           </div>
 
-          <div className="mt-8 grid gap-6">
-            <div>
-              <p className={`text-sm font-semibold ${mutedTitleClasses}`}>Your edge</p>
-              <p className={`mt-3 text-sm leading-6 ${mutedBodyClasses}`}>{draft.moat.edge}</p>
-            </div>
-            <div>
-              <p className={`text-sm font-semibold ${mutedTitleClasses}`}>Why incumbents miss it</p>
-              <p className={`mt-3 text-sm leading-6 ${mutedBodyClasses}`}>{draft.moat.incumbentGap}</p>
-            </div>
-            {draft.moat.startupsToStudy.length > 0 ? (
+          <div className="mt-8 grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
+            <div className="space-y-6">
               <div>
-                <p className={`text-sm font-semibold ${mutedTitleClasses}`}>Startups to study</p>
-                <div className="mt-4 flex flex-wrap gap-3">
-                  {draft.moat.startupsToStudy.map((company) =>
-                    company.url ? (
-                      <a
-                        key={`${company.name}-${company.url}`}
-                        href={company.url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className={`rounded-full border px-4 py-2 text-sm font-medium transition-colors hover:border-[#32b8c6] hover:text-[#0f5b64] ${
-                          isPlatformPreview ? "border-border/60 bg-white/70 text-foreground/80 backdrop-blur dark:bg-slate-900/70" : "border-slate-300 text-slate-700"
-                        }`}
-                      >
-                        {company.name}
-                      </a>
-                    ) : (
-                      <Badge key={company.name} variant="outline" className={chipClasses}>
-                        {company.name}
-                      </Badge>
-                    ),
-                  )}
+                <p className={`text-sm font-semibold ${mutedTitleClasses}`}>Your edge</p>
+                <p className={`mt-3 text-sm leading-6 ${mutedBodyClasses}`}>{draft.moat.edge}</p>
+              </div>
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className={tileClasses}>
+                  <p className={`text-sm font-semibold ${tileTitleClasses}`}>Source of advantage</p>
+                  <p className={`mt-3 text-sm leading-6 ${tileBodyClasses}`}>{draft.moat.edgeSource}</p>
+                </div>
+                <div className={tileClasses}>
+                  <p className={`text-sm font-semibold ${tileTitleClasses}`}>Why it is hard to copy</p>
+                  <p className={`mt-3 text-sm leading-6 ${tileBodyClasses}`}>{draft.moat.whyHardToCopy}</p>
                 </div>
               </div>
-            ) : null}
+              <div>
+                <p className={`text-sm font-semibold ${mutedTitleClasses}`}>Why incumbents miss it</p>
+                <p className={`mt-3 text-sm leading-6 ${mutedBodyClasses}`}>{draft.moat.incumbentGap}</p>
+              </div>
+              {draft.moat.startupsToStudy.length > 0 ? (
+                <div>
+                  <p className={`text-sm font-semibold ${mutedTitleClasses}`}>Startups to study</p>
+                  <div className="mt-4 flex flex-wrap gap-3">
+                    {draft.moat.startupsToStudy.map((company) =>
+                      company.url ? (
+                        <a
+                          key={`${company.name}-${company.url}`}
+                          href={company.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className={`rounded-full border px-4 py-2 text-sm font-medium transition-colors hover:border-[#32b8c6] hover:text-[#0f5b64] ${
+                            isPlatformPreview ? "border-border/60 bg-white/70 text-foreground/80 backdrop-blur dark:bg-slate-900/70" : "border-slate-300 text-slate-700"
+                          }`}
+                        >
+                          {company.name}
+                        </a>
+                      ) : (
+                        <Badge key={company.name} variant="outline" className={chipClasses}>
+                          {company.name}
+                        </Badge>
+                      ),
+                    )}
+                  </div>
+                </div>
+              ) : null}
+              <SectionEvidenceNote evidence={draft.moat.evidence} tone={tone} />
+            </div>
+
+            <div className="space-y-4">
+              <div className={tileClasses}>
+                <p className={`text-sm font-semibold ${tileTitleClasses}`}>Competitive summary</p>
+                <p className={`mt-3 text-sm leading-6 ${tileBodyClasses}`}>{draft.competition.summary}</p>
+              </div>
+              {draft.competition.directCompetitors.length > 0 ? (
+                <div className="space-y-4">
+                  {draft.competition.directCompetitors.map((competitor) => (
+                    <div key={`${competitor.name}-${competitor.url ?? "no-url"}`} className={tileClasses}>
+                      <p className={`text-sm font-semibold ${tileTitleClasses}`}>{competitor.name}</p>
+                      <p className={`mt-3 text-sm leading-6 ${tileBodyClasses}`}><span className="font-medium">What they do well:</span> {competitor.doesWell}</p>
+                      <p className={`mt-2 text-sm leading-6 ${tileBodyClasses}`}><span className="font-medium">Gap:</span> {competitor.gap}</p>
+                    </div>
+                  ))}
+                </div>
+              ) : null}
+              <div className={tileClasses}>
+                <p className={`text-sm font-semibold ${tileTitleClasses}`}>Gap to exploit</p>
+                <p className={`mt-3 text-sm leading-6 ${tileBodyClasses}`}>{draft.competition.exploitableGap}</p>
+              </div>
+              <SectionEvidenceNote evidence={draft.competition.evidence} tone={tone} />
+            </div>
           </div>
         </section>
 
