@@ -14,11 +14,11 @@ export interface SprintCommitment {
   status: 'active' | 'achieved' | 'failed' | 'cancelled';
   is_public: boolean;
   verification_method: 'self_report' | 'peer_verified' | 'checkin_based';
-  verification_data: any;
+  verification_data: Record<string, unknown> | null;
   verified_by: string[];
   verified_at: string | null;
   achievement_notes: string | null;
-  community_reactions: any;
+  community_reactions: Record<string, unknown> | null;
   created_at: string;
   updated_at: string;
   user?: {
@@ -39,11 +39,8 @@ export const useCommitments = (sprintId?: string) => {
     setLoading(true);
     try {
       let query = supabase
-        .from('sprint_commitments' as any)
-        .select(`
-          *,
-          user:profiles(full_name, avatar_url)
-        `)
+        .from('sprint_commitments')
+        .select('*')
         .order('created_at', { ascending: false });
 
       if (sprintId) {
@@ -53,7 +50,37 @@ export const useCommitments = (sprintId?: string) => {
       const { data, error } = await query;
 
       if (error) throw error;
-      setCommitments((data as SprintCommitment[]) || []);
+
+      const baseCommitments = (data as SprintCommitment[]) || [];
+      if (baseCommitments.length === 0) {
+        setCommitments([]);
+        return;
+      }
+
+      const userIds = Array.from(new Set(baseCommitments.map((commitment) => commitment.user_id).filter(Boolean)));
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, full_name, avatar_url')
+        .in('id', userIds);
+
+      if (profilesError) throw profilesError;
+
+      const profilesById = new Map(
+        (profiles || []).map((profile) => [
+          profile.id,
+          {
+            full_name: profile.full_name ?? 'Anonymous founder',
+            avatar_url: profile.avatar_url ?? '',
+          },
+        ]),
+      );
+
+      setCommitments(
+        baseCommitments.map((commitment) => ({
+          ...commitment,
+          user: profilesById.get(commitment.user_id),
+        })),
+      );
     } catch (error) {
       logError('Error fetching commitments', error);
     } finally {

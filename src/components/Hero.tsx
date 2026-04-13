@@ -86,36 +86,6 @@ const Hero = () => {
     }
   }, [heroImages]);
 
-  useEffect(() => {
-    const topRowImages = heroImages.filter((image) => image.position <= 2);
-    if (topRowImages.length === 0 || typeof document === "undefined" || !document.head) return;
-
-    topRowImages.forEach((image) => {
-      const href = image.storage_path ? buildHeroImageUrl(image.storage_path, 640) : image.image_url;
-      if (!href) return;
-
-      const linkId = `hero-preload-${image.position}`;
-      let preloadLink = document.getElementById(linkId) as HTMLLinkElement | null;
-
-      if (!preloadLink) {
-        preloadLink = document.createElement("link");
-        preloadLink.id = linkId;
-        preloadLink.rel = "preload";
-        preloadLink.as = "image";
-        preloadLink.setAttribute("fetchpriority", "high");
-        document.head.appendChild(preloadLink);
-      }
-
-      preloadLink.href = href;
-    });
-
-    return () => {
-      topRowImages.forEach((image) => {
-        document.getElementById(`hero-preload-${image.position}`)?.remove();
-      });
-    };
-  }, [heroImages]);
-
   const handleImageUpload = async (position: number, file: File, event?: React.ChangeEvent<HTMLInputElement>) => {
     if (!isAdmin) {
       toast.error("Only admins can upload hero images");

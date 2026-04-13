@@ -2,6 +2,8 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
+const browserLockNoOp = async <T>(_name: string, _acquireTimeout: number, fn: () => Promise<T>) => fn();
+
 // Prefer environment variables so keys are not committed to source.
 // In development create a `.env` with VITE_SUPABASE_URL and VITE_SUPABASE_KEY (do NOT commit it).
 const SUPABASE_URL = (import.meta.env.VITE_SUPABASE_URL ?? '') as string;
@@ -13,7 +15,6 @@ if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
   // Example (local .env, do NOT commit):
   // VITE_SUPABASE_URL=https://your-project.supabase.co
   // VITE_SUPABASE_KEY=public-anon-key
-  // eslint-disable-next-line no-console
   console.warn('Missing Supabase env vars: VITE_SUPABASE_URL or VITE_SUPABASE_KEY. Falling back to empty strings.');
 }
 
@@ -24,5 +25,6 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     autoRefreshToken: true,
     detectSessionInUrl: true,
     flowType: 'pkce',
+    lock: browserLockNoOp,
   }
 });

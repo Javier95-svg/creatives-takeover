@@ -23,6 +23,7 @@ import {
   LineChart,
   Filter,
   Handshake,
+  FolderOpen,
   type LucideIcon,
 } from 'lucide-react';
 import {
