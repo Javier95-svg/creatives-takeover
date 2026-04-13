@@ -1,7 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import * as pdfjsLib from "https://esm.sh/pdfjs-dist@4.2.67/legacy/build/pdf.mjs";
-import * as mammoth from "https://esm.sh/mammoth@1.9.0";
 import { corsHeaders } from "../_shared/response.ts";
 
 interface DocumentParseRequest {
@@ -221,27 +219,11 @@ function buildPreviewExcerpt(text: string) {
 }
 
 async function parsePDF(data: Uint8Array): Promise<ParsedDocument> {
-  const loadingTask = pdfjsLib.getDocument({ data, disableWorker: true });
-  const pdf = await loadingTask.promise;
-
-  let text = "";
-  for (let pageNum = 1; pageNum <= pdf.numPages; pageNum += 1) {
-    const page = await pdf.getPage(pageNum);
-    const content = await page.getTextContent();
-    const pageText = content.items
-      .map((item: { str?: string }) => item.str || "")
-      .join(" ")
-      .replace(/\s+/g, " ")
-      .trim();
-    if (pageText) {
-      text += `${pageText}\n`;
-    }
-  }
+  const text = extractPdfText(data);
 
   return {
-    text: text.trim(),
+    text: text.trim() || "We uploaded this PDF, but its preview text is unavailable right now.",
     metadata: {
-      page_count: pdf.numPages,
       word_count: text.trim() ? text.trim().split(/\s+/).length : 0,
       file_type: "pdf",
       extracted_at: new Date().toISOString(),
@@ -249,13 +231,45 @@ async function parsePDF(data: Uint8Array): Promise<ParsedDocument> {
   };
 }
 
+function extractPdfText(data: Uint8Array) {
+  const decoded = new TextDecoder("latin1").decode(data);
+  const literalStrings = [...decoded.matchAll(/\(([^()]|\\.){2,}\)/g)].map((match) =>
+    match[0]
+      .slice(1, -1)
+      .replace(/\\([nrtbf()\\])/g, " ")
+      .replace(/\\\d{3}/g, " ")
+      .replace(/\s+/g, " ")
+      .trim(),
+  );
+
+  const hexStrings = [...decoded.matchAll(/<([0-9A-Fa-f]{8,})>/g)].map((match) => {
+    const hex = match[1];
+    let output = "";
+    for (let index = 0; index < hex.length - 1; index += 2) {
+      const code = Number.parseInt(hex.slice(index, index + 2), 16);
+      if (Number.isFinite(code) && code >= 32 && code <= 126) {
+        output += String.fromCharCode(code);
+      } else if (code === 10 || code === 13) {
+        output += "\n";
+      } else {
+        output += " ";
+      }
+    }
+    return output.replace(/\s+/g, " ").trim();
+  });
+
+  return [...literalStrings, ...hexStrings]
+    .filter((segment) => /[A-Za-z]/.test(segment))
+    .join("\n")
+    .trim();
+}
+
 async function parseDocx(data: Uint8Array): Promise<ParsedDocument> {
-  const arrayBuffer = data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength);
-  const result = await mammoth.extractRawText({ arrayBuffer });
-  const text = result.value.replace(/\s+\n/g, "\n").trim();
+  const documentXml = await extractDocxXml(data, "word/document.xml");
+  const text = documentXml ? extractTextFromWordXml(documentXml) : "";
 
   return {
-    text,
+    text: text || "We uploaded this Word document, but its preview text is unavailable right now.",
     metadata: {
       word_count: text ? text.split(/\s+/).length : 0,
       file_type: "docx",
@@ -286,6 +300,78 @@ function extractLegacyWordText(data: Uint8Array) {
     .join("\n");
 
   return text.trim() || "We uploaded this Word document, but its preview text is unavailable right now.";
+}
+
+async function extractDocxXml(data: Uint8Array, targetPath: string): Promise<string | null> {
+  const view = new DataView(data.buffer, data.byteOffset, data.byteLength);
+  let offset = 0;
+
+  while (offset + 30 <= view.byteLength) {
+    const signature = view.getUint32(offset, true);
+    if (signature !== 0x04034b50) {
+      break;
+    }
+
+    const compressionMethod = view.getUint16(offset + 8, true);
+    const compressedSize = view.getUint32(offset + 18, true);
+    const fileNameLength = view.getUint16(offset + 26, true);
+    const extraFieldLength = view.getUint16(offset + 28, true);
+
+    const fileNameStart = offset + 30;
+    const fileNameEnd = fileNameStart + fileNameLength;
+    const extraStart = fileNameEnd + extraFieldLength;
+    const dataStart = extraStart;
+    const dataEnd = dataStart + compressedSize;
+
+    if (dataEnd > view.byteLength) {
+      return null;
+    }
+
+    const fileNameBytes = data.subarray(fileNameStart, fileNameEnd);
+    const fileName = new TextDecoder("utf-8").decode(fileNameBytes);
+
+    if (fileName === targetPath) {
+      const fileBytes = data.subarray(dataStart, dataEnd);
+
+      if (compressionMethod === 0) {
+        return new TextDecoder("utf-8").decode(fileBytes);
+      }
+
+      if (compressionMethod === 8) {
+        const decompressed = await inflateRaw(fileBytes);
+        return new TextDecoder("utf-8").decode(decompressed);
+      }
+
+      return null;
+    }
+
+    offset = dataEnd;
+  }
+
+  return null;
+}
+
+async function inflateRaw(data: Uint8Array): Promise<Uint8Array> {
+  const stream = new Blob([data]).stream().pipeThrough(new DecompressionStream("deflate-raw"));
+  const buffer = await new Response(stream).arrayBuffer();
+  return new Uint8Array(buffer);
+}
+
+function extractTextFromWordXml(xml: string) {
+  return xml
+    .replace(/<\/w:p>/g, "\n")
+    .replace(/<w:tab[^>]*\/>/g, "\t")
+    .replace(/<w:br[^>]*\/>/g, "\n")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'")
+    .replace(/\s+\n/g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .replace(/[ \t]{2,}/g, " ")
+    .trim();
 }
 
 async function parseExcel(data: Uint8Array): Promise<ParsedDocument> {
