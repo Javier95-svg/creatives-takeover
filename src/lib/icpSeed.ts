@@ -1,3 +1,5 @@
+import { getSafeSessionStorage } from "@/lib/safeStorage";
+
 export const ICP_SEED_STORAGE_KEY = 'ct_icp_seed';
 
 export function normalizeIcpSeed(seed: string | null | undefined): string {
@@ -20,10 +22,11 @@ export function persistIcpSeed(seed: string | null | undefined): string {
     return normalizedSeed;
   }
 
+  const storage = getSafeSessionStorage();
   if (normalizedSeed) {
-    window.sessionStorage.setItem(ICP_SEED_STORAGE_KEY, normalizedSeed);
+    storage.setItem(ICP_SEED_STORAGE_KEY, normalizedSeed);
   } else {
-    window.sessionStorage.removeItem(ICP_SEED_STORAGE_KEY);
+    storage.removeItem(ICP_SEED_STORAGE_KEY);
   }
 
   return normalizedSeed;
@@ -34,7 +37,8 @@ export function consumeStoredIcpSeed(): string {
     return '';
   }
 
-  const normalizedSeed = normalizeIcpSeed(window.sessionStorage.getItem(ICP_SEED_STORAGE_KEY));
-  window.sessionStorage.removeItem(ICP_SEED_STORAGE_KEY);
+  const storage = getSafeSessionStorage();
+  const normalizedSeed = normalizeIcpSeed(storage.getItem(ICP_SEED_STORAGE_KEY));
+  storage.removeItem(ICP_SEED_STORAGE_KEY);
   return normalizedSeed;
 }

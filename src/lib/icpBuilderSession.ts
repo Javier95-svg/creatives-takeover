@@ -4,6 +4,7 @@ import type {
   IcpMarketContextValue,
   IcpPersonaSuggestion,
 } from "@/lib/icpBuilderSchema";
+import { getSafeLocalStorage } from "@/lib/safeStorage";
 
 export const ICP_BUILDER_SESSION_KEY = "ct_icp_builder_session_v3";
 
@@ -186,12 +187,12 @@ export function readIcpBuilderSession(): IcpBuilderSession | null {
   if (typeof window === "undefined") return null;
 
   try {
-    const raw = window.localStorage.getItem(ICP_BUILDER_SESSION_KEY);
+    const raw = getSafeLocalStorage().getItem(ICP_BUILDER_SESSION_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as Partial<IcpBuilderSession>;
 
     if (parsed.version !== 3) {
-      window.localStorage.removeItem(ICP_BUILDER_SESSION_KEY);
+      getSafeLocalStorage().removeItem(ICP_BUILDER_SESSION_KEY);
       return null;
     }
 
@@ -209,18 +210,26 @@ export function readIcpBuilderSession(): IcpBuilderSession | null {
 export function persistIcpBuilderSession(session: IcpBuilderSession) {
   if (typeof window === "undefined") return;
 
-  window.localStorage.setItem(
-    ICP_BUILDER_SESSION_KEY,
-    JSON.stringify({
-      ...session,
-      updatedAt: Date.now(),
-    }),
-  );
+  try {
+    getSafeLocalStorage().setItem(
+      ICP_BUILDER_SESSION_KEY,
+      JSON.stringify({
+        ...session,
+        updatedAt: Date.now(),
+      }),
+    );
+  } catch (error) {
+    console.warn("Failed to persist ICP Builder session", error);
+  }
 }
 
 export function clearIcpBuilderSession() {
   if (typeof window === "undefined") return;
-  window.localStorage.removeItem(ICP_BUILDER_SESSION_KEY);
+  try {
+    getSafeLocalStorage().removeItem(ICP_BUILDER_SESSION_KEY);
+  } catch (error) {
+    console.warn("Failed to clear ICP Builder session", error);
+  }
 }
 
 export function buildEmptyGuidedAnswers(seed = ""): Partial<GuidedIcpInputSchema> {

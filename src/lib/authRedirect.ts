@@ -1,3 +1,5 @@
+import { getSafeLocalStorage } from "@/lib/safeStorage";
+
 export const ONBOARDING_RETURN_KEY = "onboarding_return_url";
 const ICP_UNLOCK_PATHNAME = "/icp-builder";
 
@@ -33,17 +35,17 @@ export function buildOnboardingPath(returnPath?: string | null): string {
 
 export function persistOnboardingReturn(path: string | null | undefined): void {
   const safeReturn = sanitizeReturnPath(path, "/dashboard");
-  localStorage.setItem(ONBOARDING_RETURN_KEY, safeReturn);
+  getSafeLocalStorage().setItem(ONBOARDING_RETURN_KEY, safeReturn);
 }
 
 export function getOnboardingReturn(fallback = "/dashboard"): string {
-  const stored = localStorage.getItem(ONBOARDING_RETURN_KEY);
+  const stored = getSafeLocalStorage().getItem(ONBOARDING_RETURN_KEY);
   return sanitizeReturnPath(stored, fallback);
 }
 
 export function consumeOnboardingReturn(fallback = "/dashboard"): string {
   const safeReturn = getOnboardingReturn(fallback);
-  localStorage.removeItem(ONBOARDING_RETURN_KEY);
+  getSafeLocalStorage().removeItem(ONBOARDING_RETURN_KEY);
   return safeReturn;
 }
 

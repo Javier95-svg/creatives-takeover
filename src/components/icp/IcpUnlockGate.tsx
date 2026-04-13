@@ -5,6 +5,7 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import { getSafeLocalStorage } from "@/lib/safeStorage";
 import { persistOnboardingReturn } from "@/lib/authRedirect";
 import { normalizeIcpSeed, persistIcpSeed } from "@/lib/icpSeed";
 import type { StoredIcpArtifact } from "@/lib/icpBuilderSession";
@@ -34,8 +35,9 @@ export function IcpUnlockGate({
       onBeforeAuthContinue?.();
       persistIcpSeed(normalizedSeed);
       persistOnboardingReturn(returnPath);
-      localStorage.setItem("oauth_return_url", returnPath);
-      localStorage.setItem("oauth_source", "icp-draft-unlock");
+      const storage = getSafeLocalStorage();
+      storage.setItem("oauth_return_url", returnPath);
+      storage.setItem("oauth_source", "icp-draft-unlock");
 
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
