@@ -84,6 +84,8 @@ export const MARC_BRIGHT_EMAIL = 'marc_bright@me.com';
 export const MARC_BRIGHT_USER_ID = '4eea3ae6-40ec-4bd0-a373-4005343a9e25';
 export const ALBERT_HOVHANNISYAN_EMAIL = 'albert.hovhannisian@gmail.com';
 export const ALBERT_HOVHANNISYAN_USER_ID = 'e8ddb66e-142b-4d88-9d4f-7ce3cf18ce14';
+export const ANDRII_STAKHOV_EMAIL = 'andrewstahow0@gmail.com';
+export const ANDRII_STAKHOV_USER_ID = '0f4cac90-83df-4cb7-a3a6-e62cd4a7cb9c';
 
 // Karolina Żurawska's email constant
 export const KAROLINA_ZURAWSKA_EMAIL = 'kz.zurawska@gmail.com';
@@ -538,6 +540,13 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
       mentorNameNormalized.includes('hovhannisyan')
     ) {
       return ALBERT_HOVHANNISYAN_USER_ID;
+    }
+
+    if (
+      mentorNameNormalized.includes('andrii') &&
+      mentorNameNormalized.includes('stakhov')
+    ) {
+      return ANDRII_STAKHOV_USER_ID;
     }
 
     if (mentor.user_id && mentor.user_id.trim() !== '') {
