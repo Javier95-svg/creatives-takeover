@@ -215,6 +215,10 @@ export const MentorCard = ({ mentor, className, priority = false }: MentorCardPr
     ) {
       return 'Hungary';
     }
+    // Special case: Andrii Stakhov is from Estonia
+    if (mentor.name.toLowerCase().includes('andrii') && mentor.name.toLowerCase().includes('stakhov')) {
+      return 'Estonia';
+    }
     return null;
   };
 

@@ -127,6 +127,9 @@ export function getCountryFlag(country: string | null | undefined): string {
     'RS': '🇷🇸',
     'SERBIA': '🇷🇸',
     'SERBIAN': '🇷🇸',
+    'EE': '🇪🇪',
+    'ESTONIA': '🇪🇪',
+    'ESTONIAN': '🇪🇪',
   };
   
   // Check direct match
