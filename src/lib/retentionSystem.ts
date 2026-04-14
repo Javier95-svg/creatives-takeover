@@ -27,6 +27,10 @@ export type RetentionSequence =
   | 'activation_nudge'
   | 'progress_nudge'
   | 'reengagement'
+  | 'reengagement_30d'
+  | 'reengagement_60d'
+  | 'milestone_celebration'
+  | 'profile_incomplete_nudge'
   | 'celebration';
 
 type RetentionEventProperties = Record<string, unknown>;

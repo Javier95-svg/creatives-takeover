@@ -12,7 +12,11 @@ type SequenceType =
   | "activation_day7"
   | "weekly_digest"
   | "activation_nudge"
-  | "progress_nudge";
+  | "progress_nudge"
+  | "reengagement_30d"
+  | "reengagement_60d"
+  | "milestone_celebration"
+  | "profile_incomplete_nudge";
 
 type JsonRecord = Record<string, unknown>;
 
@@ -47,6 +51,8 @@ interface SequenceDecision {
 const DAY_2_MS = 2 * 24 * 60 * 60 * 1000;
 const DAY_7_MS = 7 * 24 * 60 * 60 * 1000;
 const DAY_14_MS = 14 * 24 * 60 * 60 * 1000;
+const DAY_30_MS = 30 * 24 * 60 * 60 * 1000;
+const DAY_60_MS = 60 * 24 * 60 * 60 * 1000;
 
 const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
 const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
@@ -154,6 +160,41 @@ function buildSequenceDecision(args: {
     }
 
     return null;
+  }
+
+  // 60-day deep re-engagement — fires before 30d check so the more severe window wins
+  if (inactiveFor >= DAY_60_MS) {
+    return {
+      sequence: "reengagement_60d",
+      ctaUrl: `${appBaseUrl}/dashboard`,
+      contextHeadline: "It's been two months. Your account is still here.",
+      contextBody: "Jump back in with one focused action — no need to restart from scratch.",
+    };
+  }
+
+  // 30-day re-engagement
+  if (inactiveFor >= DAY_30_MS) {
+    return {
+      sequence: "reengagement_30d",
+      ctaUrl:
+        assets.unreadMessageCount > 0
+          ? `${appBaseUrl}/messages`
+          : assets.savedMentorCount > 0
+            ? `${appBaseUrl}/community?mentorSource=saved`
+            : `${appBaseUrl}/newspaper`,
+      contextHeadline:
+        assets.unreadMessageCount > 0
+          ? `You have ${assets.unreadMessageCount} message ${assets.unreadMessageCount === 1 ? "reply" : "replies"} waiting.`
+          : assets.savedMentorCount > 0
+            ? `Your saved mentors and new platform updates are waiting for you.`
+            : "New articles and founder resources have been published since your last visit.",
+      contextBody:
+        assets.unreadMessageCount > 0
+          ? "Pick up your messages before the thread goes completely cold."
+          : assets.savedMentorCount > 0
+            ? `Revisit ${latestSavedMentor} and decide if it's worth turning into a real next step.`
+            : "Check the Newspaper for relevant founder articles, then open the tool that maps to your current stage.",
+    };
   }
 
   if (inactiveFor >= DAY_14_MS && (assets.savedMentorCount > 0 || assets.unreadMessageCount > 0 || assets.hasDiscoveryCall || assets.hasIcpAnalysis)) {
@@ -376,6 +417,10 @@ serve(async (req: Request): Promise<Response> => {
         activation_day2: 0,
         activation_day7: 0,
         weekly_digest: 0,
+        reengagement_30d: 0,
+        reengagement_60d: 0,
+        milestone_celebration: 0,
+        profile_incomplete_nudge: 0,
       },
       failures: [] as Array<{ user_id: string; reason: string }>,
     };

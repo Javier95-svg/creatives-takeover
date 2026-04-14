@@ -23,6 +23,7 @@ import { DashboardAccountabilityHero } from './DashboardAccountabilityHero';
 import { TaskCountContext } from './TaskCountContext';
 import { IcpDashboardSummaryCard } from './IcpDashboardSummaryCard';
 import { MyFilesSection } from './MyFilesSection';
+import { WelcomeBackBanner } from './WelcomeBackBanner';
 
 // Internal wrapper component that uses the navigation context
 interface DashboardContentWrapperProps {
@@ -188,6 +189,8 @@ export const PersonalizedDashboardV2 = () => {
                         {modeConfig.subtitle}
                       </p>
                     </div>
+
+                    <WelcomeBackBanner />
 
                     {data?.primaryIcp && profile?.dashboard_bootstrap_source === 'icp_unlock' ? (
                       <IcpDashboardSummaryCard primaryIcp={data.primaryIcp} />

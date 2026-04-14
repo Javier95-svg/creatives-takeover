@@ -19,6 +19,10 @@ type SequenceType =
   | "activation_nudge"
   | "progress_nudge"
   | "reengagement"
+  | "reengagement_30d"
+  | "reengagement_60d"
+  | "milestone_celebration"
+  | "profile_incomplete_nudge"
   | "celebration";
 
 interface RetentionEmailRequest {
@@ -342,6 +346,73 @@ function buildSequenceEmail(args: {
           title: `Come back to one concrete move, ${args.name}`,
           intro: "The fastest way back into momentum is not a fresh start. It is reopening the strongest thread already connected to your account.",
           body: "Use the dashboard after you move one real conversation, saved mentor, or discovery action forward.",
+          ctaLabel: args.ctaLabel,
+          ctaUrl: args.ctaUrl,
+        }),
+      };
+
+    case "reengagement_30d":
+      return {
+        subject: `${args.name}, here's what you've been missing`,
+        html: buildEmailShell({
+          title: `It's been a while, ${args.name}`,
+          intro: "You haven't been back in a while — here's what's been happening on Creatives Takeover:",
+          bulletPoints: [
+            args.savedMentorCount && args.savedMentorCount > 0
+              ? `You still have ${savedCountText} saved to your account.`
+              : "New mentors have joined the platform since your last visit.",
+            args.unreadMessageCount && args.unreadMessageCount > 0
+              ? `You have ${unreadText} waiting in your inbox.`
+              : "Fresh articles and founder resources have been published in the Newspaper.",
+            "The community keeps building. Come back and pick up where you left off.",
+          ],
+          body: "The fastest way back into momentum is not a fresh start. Reopen the strongest thread already connected to your account.",
+          ctaLabel: args.ctaLabel,
+          ctaUrl: args.ctaUrl,
+        }),
+      };
+
+    case "reengagement_60d":
+      return {
+        subject: `${args.name}, your account is still here`,
+        html: buildEmailShell({
+          title: `Still here when you're ready, ${args.name}`,
+          intro: "It's been two months. Your account and everything you saved is still here — no reset needed.",
+          bulletPoints: [
+            "Jump back into BizMap, ICP Builder, or Mentor Discovery.",
+            "Check the Newspaper for founder-relevant articles published since your last visit.",
+            "One focused session is enough to restart momentum.",
+          ],
+          body: "We're not going anywhere. When you're ready to build again, start with one concrete action.",
+          ctaLabel: args.ctaLabel,
+          ctaUrl: args.ctaUrl,
+        }),
+      };
+
+    case "milestone_celebration":
+      return {
+        subject: `${args.name}, you hit a milestone`,
+        html: buildEmailShell({
+          title: `Nice progress, ${args.name}`,
+          intro: args.headline || "You just crossed a meaningful threshold in your founder journey.",
+          body: args.body || "Keep stacking small wins. The compound effect of consistent action is what separates founders who ship from founders who plan.",
+          ctaLabel: args.ctaLabel,
+          ctaUrl: args.ctaUrl,
+        }),
+      };
+
+    case "profile_incomplete_nudge":
+      return {
+        subject: `Complete your profile to unlock the full network`,
+        html: buildEmailShell({
+          title: `${args.name}, your profile isn't finished yet`,
+          intro: "A complete profile makes you discoverable to co-founders, mentors, and the broader community.",
+          bulletPoints: [
+            "Add your startup stage and biggest challenge.",
+            "Set your niche so we can surface relevant mentors and articles.",
+            "A complete profile gets matched first in co-founder search.",
+          ],
+          body: "It takes under two minutes and makes every other feature work better.",
           ctaLabel: args.ctaLabel,
           ctaUrl: args.ctaUrl,
         }),
