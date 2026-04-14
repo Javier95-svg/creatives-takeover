@@ -25,7 +25,7 @@ export default function WaitlistModeSelect({
 
   const handleManualClick = () => {
     if (isGuest) {
-      navigate('/signup?redirect=' + encodeURIComponent('/waitlist?skipModeSelect=1'));
+      navigate('/auth?redirect=' + encodeURIComponent('/waitlist?skipModeSelect=1'));
       return;
     }
     onChooseManual();

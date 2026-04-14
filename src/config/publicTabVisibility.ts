@@ -14,14 +14,8 @@ export const PUBLIC_TAB_VISIBILITY: Record<string, PublicTabConfig> = {
     featureName: 'ICP Builder',
   },
   '/waitlist': {
-    state: 'locked',
+    state: 'accessible',
     featureName: 'Waitlist Maker',
-    description: 'Turn your ICP into a live demand test with a polished waitlist page and launch-ready positioning.',
-    previewItems: [
-      'See how your promise, CTA, and waitlist flow come together before launch.',
-      'Preview the builder shell and publishing flow, then sign up to generate your page.',
-      'Use it right after ICP Builder to validate whether real people want what you are building.',
-    ],
   },
   '/pmf-lab': {
     state: 'locked',
