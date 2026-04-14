@@ -224,7 +224,7 @@ export default function WaitlistMakerPage() {
             {screen === 'editor' && editorNode}
 
             <div className="mx-auto mt-10 max-w-5xl space-y-8 px-2">
-              <PageFAQSection title="Frequent Questions" faqs={faqs} />
+              <PageFAQSection title="FAQ" description="Design your landing page, show what you have to offer, and validate your idea before building." faqs={faqs} />
             </div>
           </div>
         </main>
