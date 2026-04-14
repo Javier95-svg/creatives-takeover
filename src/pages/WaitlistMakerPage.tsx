@@ -181,9 +181,9 @@ export default function WaitlistMakerPage() {
               <h1 className="pb-2 text-center font-bold leading-[0.95] text-4xl sm:text-5xl md:text-6xl lg:text-7xl">
                 <span className="takeover-gradient creatives-font">Waitlist Maker</span>
               </h1>
-              <p className="text-lg leading-relaxed text-muted-foreground md:text-xl">
-                Design your landing page, show what you have to offer, and validate real demand before building.
-              </p>
+                <p className="text-lg leading-relaxed text-muted-foreground md:text-xl">
+                  Two paths to a live, founder-grade waitlist page in under 5 minutes.
+                </p>
             </div>
 
             {screen === 'mode_select' && (
