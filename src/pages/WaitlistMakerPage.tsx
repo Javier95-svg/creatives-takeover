@@ -193,6 +193,7 @@ export default function WaitlistMakerPage() {
                 icpCtaLoading={latestIcpLoading}
                 onChooseIcpPowered={handleChooseIcpPowered}
                 onChooseManual={handleChooseManual}
+                isGuest={!user}
               />
             )}
 

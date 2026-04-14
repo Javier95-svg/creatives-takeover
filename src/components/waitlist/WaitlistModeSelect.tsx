@@ -1,4 +1,5 @@
 import { ArrowRight, CheckCircle2, Sparkles, Wand2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
@@ -9,6 +10,7 @@ export interface WaitlistModeSelectProps {
   onChooseIcpPowered: () => void;
   onChooseManual: () => void;
   icpCtaLoading?: boolean;
+  isGuest?: boolean;
 }
 
 export default function WaitlistModeSelect({
@@ -17,7 +19,18 @@ export default function WaitlistModeSelect({
   onChooseIcpPowered,
   onChooseManual,
   icpCtaLoading = false,
+  isGuest = false,
 }: WaitlistModeSelectProps) {
+  const navigate = useNavigate();
+
+  const handleManualClick = () => {
+    if (isGuest) {
+      navigate('/signup?redirect=' + encodeURIComponent('/waitlist?skipModeSelect=1'));
+      return;
+    }
+    onChooseManual();
+  };
+
   return (
     <div className="mx-auto w-full max-w-5xl px-2">
 
@@ -83,7 +96,7 @@ export default function WaitlistModeSelect({
 
         <Card
           className="group flex h-full cursor-pointer flex-col justify-between overflow-hidden border-2 p-6 transition-all hover:border-foreground/40 hover:shadow-lg"
-          onClick={onChooseManual}
+          onClick={handleManualClick}
         >
           <div className="space-y-4">
             <div className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-foreground/5 text-foreground">
@@ -117,7 +130,7 @@ export default function WaitlistModeSelect({
             className="mt-6 w-full justify-between"
             onClick={(event) => {
               event.stopPropagation();
-              onChooseManual();
+              handleManualClick();
             }}
           >
             <span>Start from scratch</span>
