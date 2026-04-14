@@ -111,19 +111,19 @@ export default function WaitlistMakerPage() {
   const faqs = useMemo(
     () => [
       {
-        question: 'Why should founders build a waitlist before an MVP?',
+        question: 'Why should founders build a waitlist before writing any code?',
         answer:
-          'A waitlist is a lightweight way to test demand before you build. If people will not sign up for the idea, that is an important signal to catch early.',
+          "A waitlist page lets you test whether real people are willing to raise their hand for your idea before you invest months building it. If the page converts, you have signal. If it does not, you learn that cheaply and can adjust the positioning or the audience without sunk engineering cost.\n\nThe goal is not to collect a large list. The goal is to find out whether the problem and the offer are framed clearly enough that strangers take action. Even ten signups from people who genuinely match your target customer tells you more than any survey or focus group.\n\nBuilding first and validating later is one of the most common and expensive mistakes early founders make. A waitlist flips that sequence.",
       },
       {
-        question: 'What should a startup waitlist page include?',
+        question: 'What should a strong pre-launch waitlist page include?',
         answer:
-          'It should clearly explain the problem, the offer, who it is for, and why someone should sign up now instead of waiting.',
+          "A strong waitlist page does a few specific things: it names the problem plainly, states clearly who the product is for, explains the core outcome in one or two sentences, and gives someone a concrete reason to sign up now rather than wait.\n\nThe most common mistake is making the page too generic. Broad claims like 'the easiest tool for teams' say nothing to the person reading it. Specific claims like 'built for solo founders managing client work without a CRM' immediately signal whether this is for them or not.\n\nA good page also handles the trust question. That means a founder name, a plausible timeline, and either a social proof signal or a concrete commitment you are making to early signups. Vague pages get low conversion. Specific, honest pages build early community.",
       },
       {
         question: 'Can a waitlist page help with investor conversations?',
         answer:
-          'Yes. Even early signup interest can strengthen your story by showing that real people responded to the positioning and offer.',
+          "Yes, meaningfully. Investors at the pre-seed and seed stage are trying to assess whether there is genuine demand for what you are building. A waitlist page with real signups is one of the clearest proof points you can show because it demonstrates that people responded to your positioning without being prompted by a personal relationship.\n\nIt also shows that you understand your customer well enough to write copy that resonates. Founders who can explain the problem clearly and attract early interest before a product exists tend to be better at customer development, positioning, and eventually sales.\n\nEven a small list of highly qualified signups — people who clearly match your ICP and signed up unprompted — is a stronger signal than a large but unfiltered list.",
       },
     ],
     [],
@@ -182,7 +182,7 @@ export default function WaitlistMakerPage() {
                 <span className="takeover-gradient creatives-font">Waitlist Maker</span>
               </h1>
                 <p className="text-lg leading-relaxed text-muted-foreground md:text-xl">
-                  Two paths to a live, founder-grade waitlist page in under 5 minutes.
+                  Turn your idea into a landing page that attracts early believers before you write a line of code.
                 </p>
             </div>
 
@@ -224,7 +224,7 @@ export default function WaitlistMakerPage() {
             {screen === 'editor' && editorNode}
 
             <div className="mx-auto mt-10 max-w-5xl space-y-8 px-2">
-              <PageFAQSection title="FAQ" description="Design your landing page, show what you have to offer, and validate your idea before building." faqs={faqs} />
+              <PageFAQSection title="FAQ" description="Two paths to a live, founder-grade waitlist page in under 5 minutes." faqs={faqs} />
             </div>
           </div>
         </main>
