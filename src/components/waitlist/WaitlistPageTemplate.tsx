@@ -556,12 +556,29 @@ export default function WaitlistPageTemplate({
               <img src={normalized.logoUrl} alt={`${productName} logo`} className="mb-4 h-10 w-auto rounded bg-white/10 p-1" />
             ) : null}
 
-            <p
-              className="mb-4 inline-flex rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em]"
-              style={{ borderColor: `${palette.textPrimary}40`, color: palette.textPrimary }}
-            >
-              {productName || 'Startup'}
-            </p>
+            <div className="mb-4 flex flex-wrap items-center gap-2">
+              <p
+                className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em]"
+                style={{
+                  backgroundColor: `${accentHex}22`,
+                  color: accentHex,
+                  border: `1px solid ${accentHex}55`,
+                }}
+              >
+                <span
+                  className="inline-block h-1.5 w-1.5 rounded-full"
+                  style={{ backgroundColor: accentHex }}
+                  aria-hidden
+                />
+                Pre-launch
+              </p>
+              <p
+                className="inline-flex rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em]"
+                style={{ borderColor: `${palette.textPrimary}40`, color: palette.textPrimary }}
+              >
+                {productName || 'Startup'}
+              </p>
+            </div>
 
             {normalized.launchDate ? (
               <p className="mb-3 text-xs uppercase tracking-widest" style={{ color: palette.textSecondary }}>
@@ -643,16 +660,32 @@ export default function WaitlistPageTemplate({
 
       {visibility.problemSolution ? (
         <section className="border-t px-6" style={sectionStyle}>
-          <div className="mx-auto grid gap-8 md:grid-cols-2" style={{ maxWidth: `${spacing.contentMaxWidth}px` }}>
-            <div className={textAlignClass}>
-              <h2 className="mb-2 text-lg font-semibold" style={{ color: accentHex }}>The problem</h2>
-              <p style={{ fontSize: `${typography.bodySize}px`, color: palette.textSecondary }}>
+          <div className="mx-auto grid gap-6 md:grid-cols-2" style={{ maxWidth: `${spacing.contentMaxWidth}px` }}>
+            <div
+              className={`${textAlignClass} rounded-2xl p-5`}
+              style={{
+                borderLeft: `3px solid ${accentHex}`,
+                backgroundColor: `${accentHex}08`,
+              }}
+            >
+              <h2 className="mb-2 text-[11px] font-semibold uppercase tracking-[0.22em]" style={{ color: accentHex }}>
+                The problem
+              </h2>
+              <p style={{ fontSize: `${typography.bodySize + 1}px`, lineHeight: 1.6, color: palette.textPrimary }}>
                 {renderText('problemStatement', normalized.problemStatement, true)}
               </p>
             </div>
-            <div className={textAlignClass}>
-              <h2 className="mb-2 text-lg font-semibold" style={{ color: accentHex }}>The solution</h2>
-              <p style={{ fontSize: `${typography.bodySize}px`, color: palette.textSecondary }}>
+            <div
+              className={`${textAlignClass} rounded-2xl p-5`}
+              style={{
+                borderLeft: `3px solid ${palette.textPrimary}`,
+                backgroundColor: `${palette.textPrimary}06`,
+              }}
+            >
+              <h2 className="mb-2 text-[11px] font-semibold uppercase tracking-[0.22em]" style={{ color: palette.textPrimary }}>
+                The solution
+              </h2>
+              <p style={{ fontSize: `${typography.bodySize + 1}px`, lineHeight: 1.6, color: palette.textPrimary }}>
                 {renderText('solutionSummary', normalized.solutionSummary, true)}
               </p>
             </div>
@@ -668,14 +701,25 @@ export default function WaitlistPageTemplate({
               {normalized.benefits.map((benefit, index) => (
                 <div
                   key={`${benefit}-${index}`}
-                  className="border p-5"
+                  className="relative overflow-hidden border p-5 transition-shadow"
                   style={{
                     borderRadius: `${spacing.cardRadius}px`,
                     borderColor: palette.borderColor,
                     backgroundColor: palette.sectionBackground,
                   }}
                 >
-                  <p style={{ fontSize: `${typography.bodySize}px`, color: palette.textSecondary }}>
+                  <div
+                    className="mb-3 inline-flex h-8 w-8 items-center justify-center rounded-lg text-sm font-bold"
+                    style={{
+                      backgroundColor: `${accentHex}1a`,
+                      color: accentHex,
+                      border: `1px solid ${accentHex}33`,
+                    }}
+                    aria-hidden
+                  >
+                    {String(index + 1).padStart(2, '0')}
+                  </div>
+                  <p style={{ fontSize: `${typography.bodySize + 1}px`, lineHeight: 1.55, color: palette.textPrimary }}>
                     {editable ? (
                       <EditableField
                         value={benefit}

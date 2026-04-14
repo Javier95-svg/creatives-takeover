@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Copy, Download, Loader2, PencilLine, Share2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, Copy, Download, Loader2, PencilLine, Share2, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 
 import { IcpFolioDocument } from "@/components/icp/IcpFolioDocument";
@@ -178,6 +178,38 @@ export default function IcpDraftPage() {
   return (
     <div className="min-h-screen bg-[#f6f7fb]">
       <IcpProgressBar progress={100} />
+
+      <div className="mx-auto max-w-6xl px-4 pt-6 sm:px-6 lg:px-8">
+        <div className="group relative overflow-hidden rounded-[1.75rem] border border-slate-200 bg-gradient-to-br from-[#0f172a] via-[#111827] to-[#1e1b4b] p-6 shadow-[0_24px_60px_-44px_rgba(15,23,42,0.4)] sm:p-7">
+          <div className="absolute -right-8 -top-8 h-40 w-40 rounded-full bg-[#32b8c6]/20 blur-3xl" aria-hidden />
+          <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-start gap-4">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/10 text-[#7dd3fc] ring-1 ring-white/15">
+                <Sparkles className="h-5 w-5" />
+              </div>
+              <div className="space-y-1">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#7dd3fc]">Next step</p>
+                <h2 className="text-xl font-semibold text-white sm:text-2xl">
+                  You built your ICP. Now let’s get your first users.
+                </h2>
+                <p className="max-w-xl text-sm leading-6 text-slate-300">
+                  Turn this ICP into a live, founder-grade waitlist page — pre-filled with your persona, pain points, and value props.
+                </p>
+              </div>
+            </div>
+            <Button
+              type="button"
+              size="lg"
+              className="shrink-0 gap-2 bg-white text-slate-950 hover:bg-white/90"
+              onClick={() => navigate(`/waitlist?icp=${draftId}`)}
+            >
+              <span>Build your waitlist</span>
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      </div>
+
       <IcpFolioDocument
         draft={artifact.draftDocument}
         documentRef={documentRef}

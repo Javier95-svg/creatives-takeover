@@ -228,7 +228,18 @@ function readGuestBrowserDraft(): {
   }
 }
 
-export default function WaitlistEditor() {
+export interface WaitlistEditorInitialSeed {
+  productName?: string;
+  content: Partial<WaitlistContent>;
+  source?: 'icp' | 'manual';
+  icpDraftId?: string | null;
+}
+
+export interface WaitlistEditorProps {
+  initialSeed?: WaitlistEditorInitialSeed | null;
+}
+
+export default function WaitlistEditor({ initialSeed = null }: WaitlistEditorProps = {}) {
   const { user, loading: authLoading } = useAuth();
   const { refreshProgress } = useBizMapProgress();
   const { refreshActivation } = useActivationJourney();
@@ -426,7 +437,32 @@ export default function WaitlistEditor() {
       setIsHydrating(true);
       const browserDraft = readGuestBrowserDraft();
 
+      const seededName = initialSeed?.productName?.trim() || '';
+      const seededContent = initialSeed
+        ? normalizeWaitlistContent(
+            { ...getDefaultWaitlistContent(seededName || 'Your Product'), ...initialSeed.content },
+            seededName || 'Your Product',
+          )
+        : null;
+
       if (!user) {
+        if (seededContent) {
+          applyDraftState({
+            productName: seededName,
+            content: seededContent,
+            draftId: null,
+            currentSlug: null,
+            status: 'draft',
+          });
+          setSignupCount(0);
+          setViewCount(0);
+          setRecentSignups([]);
+          setEvents([]);
+          setAllPages([]);
+          setRestorableGuestDraft(browserDraft);
+          setIsHydrating(false);
+          return;
+        }
         if (browserDraft) {
           applyDraftState({
             productName: browserDraft.productName,
@@ -468,7 +504,15 @@ export default function WaitlistEditor() {
       const { data } = latestPageResult as { data: WaitlistPageRow | null };
 
       if (!data) {
-        if (browserDraft) {
+        if (seededContent) {
+          applyDraftState({
+            productName: seededName,
+            content: seededContent,
+            draftId: null,
+            currentSlug: null,
+            status: 'draft',
+          });
+        } else if (browserDraft) {
           applyDraftState({
             productName: browserDraft.productName,
             content: browserDraft.content,
@@ -498,7 +542,7 @@ export default function WaitlistEditor() {
     };
 
     void initialize();
-  }, [applyDraftState, authLoading, fetchAnalytics, loadAllPages, loadPageIntoEditor, user]);
+  }, [applyDraftState, authLoading, fetchAnalytics, initialSeed, loadAllPages, loadPageIntoEditor, user]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
