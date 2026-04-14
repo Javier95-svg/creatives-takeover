@@ -1,7 +1,6 @@
 import { ArrowRight, CheckCircle2, Sparkles, Wand2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
 export interface WaitlistModeSelectProps {
@@ -21,20 +20,6 @@ export default function WaitlistModeSelect({
 }: WaitlistModeSelectProps) {
   return (
     <div className="mx-auto w-full max-w-5xl px-2">
-      <div className="mb-8 text-center">
-        <Badge variant="secondary" className="mb-3 inline-flex items-center gap-1.5 text-xs uppercase tracking-wider">
-          <Sparkles className="h-3 w-3" />
-          Choose how to start
-        </Badge>
-        <h2 className="text-balance text-2xl font-semibold tracking-tight md:text-3xl">
-          {hasCompletedIcp
-            ? 'You built your ICP. Now let’s get your first users.'
-            : 'Let’s build your pre-launch waitlist'}
-        </h2>
-        <p className="mx-auto mt-3 max-w-2xl text-sm text-muted-foreground md:text-base">
-          Two paths to a live, founder-grade waitlist page in under 5 minutes.
-        </p>
-      </div>
 
       <div className="grid gap-5 md:grid-cols-2">
         <Card
