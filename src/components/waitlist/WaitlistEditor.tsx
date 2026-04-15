@@ -859,6 +859,7 @@ export default function WaitlistEditor({ initialSeed = null }: WaitlistEditorPro
           productName: productName.trim() || 'Product',
           pitch: content.problemStatement || content.solutionSummary || '',
           audience: content.subheadline || '',
+          ...(initialSeed?.icpDraftId ? { icpDraftId: initialSeed.icpDraftId } : {}),
         },
       });
 
@@ -1556,16 +1557,22 @@ export default function WaitlistEditor({ initialSeed = null }: WaitlistEditorPro
                   <div className="space-y-2"><Label>Sender name</Label><Input value={content.emailSetup?.senderName || ''} onChange={(event) => updateContent({ emailSetup: { ...content.emailSetup!, senderName: event.target.value } })} placeholder="Your startup name" /></div>
                   <div className="space-y-2"><Label>Reply-to email</Label><Input value={content.emailSetup?.replyToEmail || ''} onChange={(event) => updateContent({ emailSetup: { ...content.emailSetup!, replyToEmail: event.target.value } })} placeholder="founder@yourstartup.com" /></div>
 
-                  <Card className="border border-dashed border-border/60 bg-slate-50/80 text-slate-950 shadow-none dark:border-white/15 dark:bg-white/5 dark:text-white">
-                    <CardHeader className="pb-3"><CardTitle className="text-sm text-slate-950 dark:text-white">DNS setup guide</CardTitle></CardHeader>
-                    <CardContent className="space-y-2 text-xs text-slate-600 dark:text-slate-200">
-                      <p>Add these DNS records in your domain provider:</p>
-                      <div className="rounded border border-border/60 bg-white p-2 font-mono text-slate-900 dark:border-white/15 dark:bg-slate-950/60 dark:text-slate-100">TXT @ ct-waitlist-verification={content.domainSetup?.verificationToken}</div>
-                      <div className="rounded border border-border/60 bg-white p-2 font-mono text-slate-900 dark:border-white/15 dark:bg-slate-950/60 dark:text-slate-100">TXT @ v=spf1 include:_spf.resend.com ~all</div>
-                      <div className="rounded border border-border/60 bg-white p-2 font-mono text-slate-900 dark:border-white/15 dark:bg-slate-950/60 dark:text-slate-100">CNAME ct1._domainkey ct1._domainkey.resend.com</div>
-                      <p className="text-slate-500 dark:text-slate-300">After adding DNS records, click Validate DNS. Propagation can take a few minutes.</p>
-                    </CardContent>
-                  </Card>
+                  {content.domainSetup?.verificationToken ? (
+                    <Card className="border border-dashed border-border/60 bg-slate-50/80 text-slate-950 shadow-none dark:border-white/15 dark:bg-white/5 dark:text-white">
+                      <CardHeader className="pb-3"><CardTitle className="text-sm text-slate-950 dark:text-white">DNS setup guide</CardTitle></CardHeader>
+                      <CardContent className="space-y-2 text-xs text-slate-600 dark:text-slate-200">
+                        <p>Add these DNS records in your domain provider:</p>
+                        <div className="rounded border border-border/60 bg-white p-2 font-mono text-slate-900 dark:border-white/15 dark:bg-slate-950/60 dark:text-slate-100">TXT @ ct-waitlist-verification={content.domainSetup.verificationToken}</div>
+                        <div className="rounded border border-border/60 bg-white p-2 font-mono text-slate-900 dark:border-white/15 dark:bg-slate-950/60 dark:text-slate-100">TXT @ v=spf1 include:_spf.resend.com ~all</div>
+                        <div className="rounded border border-border/60 bg-white p-2 font-mono text-slate-900 dark:border-white/15 dark:bg-slate-950/60 dark:text-slate-100">CNAME ct1._domainkey ct1._domainkey.resend.com</div>
+                        <p className="text-slate-500 dark:text-slate-300">After adding DNS records, click Validate DNS. Propagation can take a few minutes.</p>
+                      </CardContent>
+                    </Card>
+                  ) : (
+                    <p className="rounded-md border border-dashed border-border/60 bg-slate-50/80 p-3 text-xs text-slate-500 dark:border-white/15 dark:bg-white/5 dark:text-slate-300">
+                      Save your draft first to generate a verification token for DNS setup.
+                    </p>
+                  )}
 
                   <div className="rounded-md border border-border/60 p-3 text-xs space-y-2 dark:border-white/10">
                     <div className="flex items-center justify-between"><span>Verification TXT</span>{content.domainSetup?.verificationValid ? <Unlock className="w-4 h-4 text-emerald-600" /> : <Lock className="w-4 h-4 text-amber-500" />}</div>
