@@ -285,6 +285,7 @@ export default function WaitlistEditor({ initialSeed = null }: WaitlistEditorPro
   const [slugDraft, setSlugDraft] = useState(initialState?.slugDraft || '');
   const [slugAvailable, setSlugAvailable] = useState<boolean | null>(null);
   const [isCheckingDns, setIsCheckingDns] = useState(false);
+  const [isRefiningWithAi, setIsRefiningWithAi] = useState(false);
   const [lastSavedSnapshot, setLastSavedSnapshot] = useState(
     initialState
       ? buildEditorSnapshot(
@@ -840,6 +841,67 @@ export default function WaitlistEditor({ initialSeed = null }: WaitlistEditorPro
     navigator.clipboard.writeText(liveUrl).then(() => toast.success('Public link copied.'));
   };
 
+  const handleRefineWithAi = async () => {
+    if (!user) {
+      promptSignIn('refine with AI');
+      return;
+    }
+    const requiredCredits = ensureCredits('WAITLIST_GENERATION', {
+      featureName: 'AI Refine',
+      description: 'Rewrite your waitlist copy using AI based on your product description.',
+    });
+    if (requiredCredits === null) return;
+
+    setIsRefiningWithAi(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('waitlist-generator', {
+        body: {
+          productName: productName.trim() || 'Product',
+          pitch: content.problemStatement || content.solutionSummary || '',
+          audience: content.subheadline || '',
+        },
+      });
+
+      if (error || !data) {
+        toast.error('AI refine failed. Your credits were not charged.');
+        return;
+      }
+
+      const result = data as {
+        headline?: string;
+        headlineVariantB?: string;
+        subheadline?: string;
+        problemStatement?: string;
+        solutionSummary?: string;
+        benefits?: string[];
+        howItWorks?: string[];
+        trustItems?: string[];
+        ctaText?: string;
+        emailPlaceholder?: string;
+      };
+
+      updateContent({
+        ...(result.headline ? { headline: result.headline } : {}),
+        ...(result.headlineVariantB ? { headlineVariantB: result.headlineVariantB } : {}),
+        ...(result.subheadline ? { subheadline: result.subheadline } : {}),
+        ...(result.problemStatement ? { problemStatement: result.problemStatement } : {}),
+        ...(result.solutionSummary ? { solutionSummary: result.solutionSummary } : {}),
+        ...(result.benefits?.length ? { benefits: result.benefits } : {}),
+        ...(result.howItWorks?.length ? { howItWorks: result.howItWorks } : {}),
+        ...(result.ctaText ? { ctaText: result.ctaText } : {}),
+        ...(result.emailPlaceholder ? { emailPlaceholder: result.emailPlaceholder } : {}),
+      });
+      if (result.benefits?.length) setBenefitsDraft(linesToText(result.benefits));
+      if (result.howItWorks?.length) setHowItWorksDraft(linesToText(result.howItWorks));
+
+      toast.success(`Copy refined with AI. (Used ${requiredCredits} credits)`);
+    } catch {
+      toast.error('AI refine failed. Please try again.');
+    } finally {
+      setIsRefiningWithAi(false);
+    }
+  };
+
   const checkSlugAvailability = (value: string) => {
     const slug = sanitizeSlug(value);
     setSlugDraft(slug);
@@ -1070,7 +1132,7 @@ export default function WaitlistEditor({ initialSeed = null }: WaitlistEditorPro
                     className={primaryButtonClass}
                     onClick={() => {
                       if (!hasUnsavedChanges || window.confirm('Your draft is saved in this browser. Continue to create an account?')) {
-                        window.location.href = '/signup?return=/waitlist';
+                        window.location.href = '/auth?redirect=' + encodeURIComponent('/waitlist?skipModeSelect=1');
                       }
                     }}
                   >
@@ -1200,6 +1262,18 @@ export default function WaitlistEditor({ initialSeed = null }: WaitlistEditorPro
                   <div className="space-y-2"><Label>Subheadline</Label><Textarea value={content.subheadline} onChange={(event) => updateContent({ subheadline: event.target.value })} rows={2} /></div>
                   <div className="space-y-2"><Label>Problem statement</Label><Textarea value={content.problemStatement} onChange={(event) => updateContent({ problemStatement: event.target.value })} rows={3} /></div>
                   <div className="space-y-2"><Label>Solution summary</Label><Textarea value={content.solutionSummary} onChange={(event) => updateContent({ solutionSummary: event.target.value })} rows={3} /></div>
+
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className={`w-full justify-center gap-2 ${actionButtonClass}`}
+                    onClick={handleRefineWithAi}
+                    disabled={isRefiningWithAi || !user}
+                    title={!user ? 'Sign in to refine with AI' : undefined}
+                  >
+                    {isRefiningWithAi ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                    {isRefiningWithAi ? 'Refining…' : 'Refine with AI'}
+                  </Button>
 
                   <div className="space-y-2">
                     <Label>Benefits (one per line)</Label>

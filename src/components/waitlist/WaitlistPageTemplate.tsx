@@ -416,7 +416,8 @@ export default function WaitlistPageTemplate({
   const editable = mode === 'preview';
   const change = onContentChange ?? (() => undefined);
   const normalized = normalizeWaitlistContent(content, productName);
-  const [formState, setFormState] = useState<WaitlistFormState>(() => createInitialFormState(normalized.referralMessage));
+  const [heroFormState, setHeroFormState] = useState<WaitlistFormState>(() => createInitialFormState(normalized.referralMessage));
+  const [footerFormState, setFooterFormState] = useState<WaitlistFormState>(() => createInitialFormState(normalized.referralMessage));
 
   const accentHex = getAccentHex(normalized.accentColor || 'indigo');
   const heroBackground = (normalized.theme === 'light'
@@ -434,7 +435,9 @@ export default function WaitlistPageTemplate({
 
   useEffect(() => {
     if (mode !== 'public') return;
-    setFormState(createInitialFormState(normalized.referralMessage));
+    const initial = createInitialFormState(normalized.referralMessage);
+    setHeroFormState(initial);
+    setFooterFormState(initial);
   }, [mode, normalized.referralMessage, productName, publicUrl]);
 
   const sectionStyle: CSSProperties = {
@@ -459,6 +462,9 @@ export default function WaitlistPageTemplate({
 
   const renderFormSection = (instanceId: string) => {
     const fields = normalized.customFields?.filter((field) => field.enabled) || [];
+    const isHero = instanceId === 'waitlist-hero-form';
+    const formState = isHero ? heroFormState : footerFormState;
+    const setFormState = isHero ? setHeroFormState : setFooterFormState;
 
     if (mode === 'public' && onEmailSubmit) {
       return (
