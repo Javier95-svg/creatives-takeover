@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import {
-  CheckCircle2,
   ChevronLeft,
   ChevronRight,
   Edit2,
@@ -369,50 +368,6 @@ const PMFEvidenceForm: React.FC<PMFEvidenceFormProps> = ({ onSubmit, isSubmittin
     scrollToRef(interviewStepRef);
   };
 
-  const StepProgress = () => (
-    <div className="flex items-center gap-1.5">
-      {STEPS.map((item, index) => {
-        const isDone = index < currentStep || isReview;
-        const isActive = index === currentStep && !isReview;
-        const hasValue = stepHasValue(index);
-
-        return (
-          <React.Fragment key={item.number}>
-            {isDone && hasValue ? (
-              <button
-                type="button"
-                onClick={() => setCurrentStep(index)}
-                className="relative flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[11px] font-bold transition-all duration-300 cursor-pointer bg-primary text-primary-foreground shadow-sm"
-                title={`Edit: ${item.title}`}
-              >
-                <CheckCircle2 className="h-3 w-3" />
-              </button>
-            ) : (
-              <div
-                aria-current={isActive ? 'step' : undefined}
-                className={cn(
-                  'relative flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[11px] font-bold transition-all duration-300',
-                  isActive
-                    ? 'border-2 border-primary bg-primary/10 text-primary ring-2 ring-primary/20'
-                    : 'bg-muted text-muted-foreground'
-                )}
-              >
-                {item.number}
-              </div>
-            )}
-            {index < totalSteps - 1 && (
-              <div
-                className={cn(
-                  'h-0.5 max-w-[1rem] flex-1 rounded-full transition-all duration-500',
-                  index < currentStep ? 'bg-primary' : 'bg-muted'
-                )}
-              />
-            )}
-          </React.Fragment>
-        );
-      })}
-    </div>
-  );
 
   const renderInterviewList = () => {
     if (interviews.length === 0) {
@@ -993,10 +948,6 @@ const PMFEvidenceForm: React.FC<PMFEvidenceFormProps> = ({ onSubmit, isSubmittin
             )}
 
             <div className="space-y-3 pt-2">
-              <div className="flex items-center justify-between gap-3">
-                <StepProgress />
-                <span className="text-xs text-muted-foreground tabular-nums">Review</span>
-              </div>
               <div className="flex gap-3">
                 <Button type="button" variant="outline" onClick={goBack} className="gap-2">
                   <ChevronLeft className="w-4 h-4" />
@@ -1072,10 +1023,6 @@ const PMFEvidenceForm: React.FC<PMFEvidenceFormProps> = ({ onSubmit, isSubmittin
           {renderCurrentStep()}
 
           <div className="space-y-3">
-            <div className="flex items-center justify-between gap-3">
-              <StepProgress />
-              <span className="text-xs text-muted-foreground tabular-nums">{currentStep + 1} of {totalSteps}</span>
-            </div>
             <div className="flex gap-3">
               {currentStep > 0 && (
                 <Button type="button" variant="outline" onClick={goBack} className="gap-2">
