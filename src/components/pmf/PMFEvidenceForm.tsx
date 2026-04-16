@@ -369,60 +369,48 @@ const PMFEvidenceForm: React.FC<PMFEvidenceFormProps> = ({ onSubmit, isSubmittin
     scrollToRef(interviewStepRef);
   };
 
-  const StepIndicator = () => (
-    <div className="mb-8 rounded-[1.5rem] border border-border/60 bg-background/80 p-4 shadow-sm">
-      <div className="mb-4 flex items-center justify-between gap-4">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Evidence Brief</p>
-          <p className="mt-1 text-sm text-foreground/80">Log your validation evidence across five dimensions.</p>
-        </div>
-        <div className="rounded-2xl bg-muted px-3 py-2 text-right">
-          <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Progress</p>
-          <p className="text-sm font-semibold">{Math.min(currentStep + (isReview ? 0 : 1), totalSteps)} / {totalSteps}</p>
-        </div>
-      </div>
-      <div className="flex items-center justify-center gap-1">
-        {STEPS.map((item, index) => {
-          const isDone = index < currentStep || isReview;
-          const isActive = index === currentStep && !isReview;
-          const hasValue = stepHasValue(index);
+  const StepProgress = () => (
+    <div className="flex items-center gap-1.5">
+      {STEPS.map((item, index) => {
+        const isDone = index < currentStep || isReview;
+        const isActive = index === currentStep && !isReview;
+        const hasValue = stepHasValue(index);
 
-          return (
-            <React.Fragment key={item.number}>
-              {isDone && hasValue ? (
-                <button
-                  type="button"
-                  onClick={() => setCurrentStep(index)}
-                  className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[11px] font-bold transition-all duration-300 cursor-pointer bg-primary text-primary-foreground shadow-sm"
-                  title={`Edit: ${item.title}`}
-                >
-                  <CheckCircle2 className="h-3.5 w-3.5" />
-                </button>
-              ) : (
-                <div
-                  aria-current={isActive ? 'step' : undefined}
-                  className={cn(
-                    'relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[11px] font-bold transition-all duration-300',
-                    isActive
-                      ? 'border-2 border-primary bg-primary/10 text-primary ring-2 ring-primary/20'
-                      : 'bg-muted text-muted-foreground'
-                  )}
-                >
-                  {item.number}
-                </div>
-              )}
-              {index < totalSteps - 1 && (
-                <div
-                  className={cn(
-                    'h-0.5 max-w-[1.25rem] flex-1 rounded-full transition-all duration-500',
-                    index < currentStep ? 'bg-primary' : 'bg-muted'
-                  )}
-                />
-              )}
-            </React.Fragment>
-          );
-        })}
-      </div>
+        return (
+          <React.Fragment key={item.number}>
+            {isDone && hasValue ? (
+              <button
+                type="button"
+                onClick={() => setCurrentStep(index)}
+                className="relative flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[11px] font-bold transition-all duration-300 cursor-pointer bg-primary text-primary-foreground shadow-sm"
+                title={`Edit: ${item.title}`}
+              >
+                <CheckCircle2 className="h-3 w-3" />
+              </button>
+            ) : (
+              <div
+                aria-current={isActive ? 'step' : undefined}
+                className={cn(
+                  'relative flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[11px] font-bold transition-all duration-300',
+                  isActive
+                    ? 'border-2 border-primary bg-primary/10 text-primary ring-2 ring-primary/20'
+                    : 'bg-muted text-muted-foreground'
+                )}
+              >
+                {item.number}
+              </div>
+            )}
+            {index < totalSteps - 1 && (
+              <div
+                className={cn(
+                  'h-0.5 max-w-[1rem] flex-1 rounded-full transition-all duration-500',
+                  index < currentStep ? 'bg-primary' : 'bg-muted'
+                )}
+              />
+            )}
+          </React.Fragment>
+        );
+      })}
     </div>
   );
 
@@ -925,8 +913,6 @@ const PMFEvidenceForm: React.FC<PMFEvidenceFormProps> = ({ onSubmit, isSubmittin
   if (isReview) {
     return (
       <form onSubmit={handleSubmit} className="max-w-4xl mx-auto space-y-6">
-        <StepIndicator />
-
         <StepView stepKey={totalSteps}>
           <div className="space-y-4">
             <div className="text-center space-y-1 mb-6">
@@ -1006,31 +992,37 @@ const PMFEvidenceForm: React.FC<PMFEvidenceFormProps> = ({ onSubmit, isSubmittin
               </div>
             )}
 
-            <div className="flex gap-3 pt-2">
-              <Button type="button" variant="outline" onClick={goBack} className="gap-2">
-                <ChevronLeft className="w-4 h-4" />
-                Back
-              </Button>
-              <Button
-                type={canSubmit ? "submit" : "button"}
-                onClick={canSubmit ? undefined : handleBlockedAnalysis}
-                disabled={isSubmitting}
-                variant={canSubmit ? "default" : "outline"}
-                className="flex-1 btn-magnetic gap-2"
-                size="lg"
-              >
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Analyzing...
-                  </>
-                ) : (
-                  <>
-                    <FlaskConical className="w-4 h-4" />
-                    Analyze Logged Interviews
-                  </>
-                )}
-              </Button>
+            <div className="space-y-3 pt-2">
+              <div className="flex items-center justify-between gap-3">
+                <StepProgress />
+                <span className="text-xs text-muted-foreground tabular-nums">Review</span>
+              </div>
+              <div className="flex gap-3">
+                <Button type="button" variant="outline" onClick={goBack} className="gap-2">
+                  <ChevronLeft className="w-4 h-4" />
+                  Back
+                </Button>
+                <Button
+                  type={canSubmit ? "submit" : "button"}
+                  onClick={canSubmit ? undefined : handleBlockedAnalysis}
+                  disabled={isSubmitting}
+                  variant={canSubmit ? "default" : "outline"}
+                  className="flex-1 btn-magnetic gap-2"
+                  size="lg"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Analyzing...
+                    </>
+                  ) : (
+                    <>
+                      <FlaskConical className="w-4 h-4" />
+                      Analyze Logged Interviews
+                    </>
+                  )}
+                </Button>
+              </div>
             </div>
             {!canSubmit && (
               <p className="text-xs text-right text-muted-foreground">
@@ -1059,8 +1051,6 @@ const PMFEvidenceForm: React.FC<PMFEvidenceFormProps> = ({ onSubmit, isSubmittin
         </p>
       </div>
 
-      <StepIndicator />
-
       <StepView stepKey={currentStep}>
         <div className="space-y-6">
           <div className="rounded-[1.75rem] border border-border/60 bg-background/85 p-6 shadow-sm">
@@ -1081,32 +1071,38 @@ const PMFEvidenceForm: React.FC<PMFEvidenceFormProps> = ({ onSubmit, isSubmittin
 
           {renderCurrentStep()}
 
-          <div className="flex gap-3">
-            {currentStep > 0 && (
-              <Button type="button" variant="outline" onClick={goBack} className="gap-2">
-                <ChevronLeft className="w-4 h-4" />
-                Back
-              </Button>
-            )}
-            <Button
-              type="button"
-              onClick={canContinue ? goNext : handleBlockedContinue}
-              variant={canContinue ? "default" : "outline"}
-              className={cn('flex-1 gap-2 btn-magnetic', currentStep === 0 && 'w-full')}
-              size="lg"
-            >
-              {currentStep === totalSteps - 1 ? (
-                <>
-                  Review Answers
-                  <ChevronRight className="w-4 h-4" />
-                </>
-              ) : (
-                <>
-                  Continue
-                  <ChevronRight className="w-4 h-4" />
-                </>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between gap-3">
+              <StepProgress />
+              <span className="text-xs text-muted-foreground tabular-nums">{currentStep + 1} of {totalSteps}</span>
+            </div>
+            <div className="flex gap-3">
+              {currentStep > 0 && (
+                <Button type="button" variant="outline" onClick={goBack} className="gap-2">
+                  <ChevronLeft className="w-4 h-4" />
+                  Back
+                </Button>
               )}
-            </Button>
+              <Button
+                type="button"
+                onClick={canContinue ? goNext : handleBlockedContinue}
+                variant={canContinue ? "default" : "outline"}
+                className={cn('flex-1 gap-2 btn-magnetic', currentStep === 0 && 'w-full')}
+                size="lg"
+              >
+                {currentStep === totalSteps - 1 ? (
+                  <>
+                    Review Answers
+                    <ChevronRight className="w-4 h-4" />
+                  </>
+                ) : (
+                  <>
+                    Continue
+                    <ChevronRight className="w-4 h-4" />
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
           {!canContinue && (
             <p className="text-xs text-right text-muted-foreground">
