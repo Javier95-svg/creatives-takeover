@@ -160,7 +160,7 @@ export default function PMFLabPage() {
                     PMF Lab
                   </h1>
                   <p className="mx-auto max-w-4xl text-lg leading-relaxed text-muted-foreground sm:text-xl">
-                    PMF Lab is Phase 3 of the BizMap journey. Run at least {PMF_REQUIRED_SIGNALS} one-to-one interviews with potential customers, then submit your evidence here to find out if demand is strong enough to start building.
+                    The PMF Lab evaluates user feedback to score and explain a product's chances of market success, guiding whether to build or iterate.
                   </p>
                 </div>
               </div>
