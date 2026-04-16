@@ -24,6 +24,8 @@ import { TaskCountContext } from './TaskCountContext';
 import { IcpDashboardSummaryCard } from './IcpDashboardSummaryCard';
 import { MyFilesSection } from './MyFilesSection';
 import { WelcomeBackBanner } from './WelcomeBackBanner';
+import { InterviewTrackerCard } from './InterviewTrackerCard';
+import { useBizMapProgress } from '@/hooks/useBizMapProgress';
 
 // Internal wrapper component that uses the navigation context
 interface DashboardContentWrapperProps {
@@ -42,6 +44,7 @@ export const PersonalizedDashboardV2 = () => {
   const navigate = useNavigate();
   const { isInitializing } = useDashboardInitialization();
   const { subscriptionData } = useSubscription();
+  const { currentStage } = useBizMapProgress();
   const dashboardMetrics = useDashboardMetrics();
   const {
     data,
@@ -203,6 +206,9 @@ export const PersonalizedDashboardV2 = () => {
                     />
 
                     <RetentionActionFeed />
+
+                    {/* Interview Tracker for Stage III (Validation) users */}
+                    {currentStage === 'VALIDATING' && <InterviewTrackerCard />}
 
                     {/* Dynamic View Based on Mode */}
                     {dashboardMode === 'rookie' && <RookieModeView {...tierViewSharedProps} />}

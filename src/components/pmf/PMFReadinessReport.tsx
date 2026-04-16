@@ -1,13 +1,15 @@
-import React from 'react';
-import { Save, Download, RefreshCw, CheckCircle2, XCircle, ArrowRight, AlertTriangle, MessageSquareWarning, Share2, Sparkles } from 'lucide-react';
+import React, { useState } from 'react';
+import { Save, Download, RefreshCw, CheckCircle2, XCircle, ArrowRight, AlertTriangle, MessageSquareWarning, Share2, Sparkles, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import PMFScoreCircle from './PMFScoreCircle';
 import PMFDimensionBars from './PMFDimensionBars';
 import PMFRecommendations from './PMFRecommendations';
+import PMFSegmentBreakdown from './PMFSegmentBreakdown';
 import { ContextualMentorRecommendations } from '@/components/mentor-marketplace/ContextualMentorRecommendations';
-import type { PMFReadinessAnalysis } from '@/hooks/usePMFLab';
+import type { PMFReadinessAnalysis, PMFInterviewLog } from '@/hooks/usePMFLab';
 import { Link } from 'react-router-dom';
 import { PMF_REQUIRED_SIGNALS } from '@/lib/bizmapStages';
 import { BizMapShareDialog } from '@/components/bizmap/BizMapShareDialog';
@@ -33,6 +35,7 @@ const PMFReadinessReport: React.FC<PMFReadinessReportProps> = ({
   onExport,
   onReanalyze,
 }) => {
+  const [interviewPreviewOpen, setInterviewPreviewOpen] = useState(false);
   const isReady = analysis.verdict === 'ready';
   const meetsThreshold = analysis.overallScore >= 75;
   const decisionTitle = analysis.recommendedActionTitle ?? (meetsThreshold ? 'Move to Building' : 'Iterate Before Building');
@@ -48,6 +51,7 @@ const PMFReadinessReport: React.FC<PMFReadinessReportProps> = ({
     ? analysis.improvementsBeforeRetest
     : analysis.recommendations.slice(0, 3).map((item) => item.action);
   const loggedInterviews = analysis.evidenceAnswers?.interviews ?? [];
+  const belowSampleThreshold = loggedInterviews.length < PMF_REQUIRED_SIGNALS;
   const interviewSegments = Array.from(new Set(
     loggedInterviews.map((item) => item.segment.trim()).filter(Boolean)
   ));
@@ -95,12 +99,17 @@ const PMFReadinessReport: React.FC<PMFReadinessReportProps> = ({
   return (
     <div className="max-w-3xl mx-auto space-y-8">
       <div className="grid gap-6 lg:grid-cols-[220px,1fr]">
-        <div className="rounded-3xl border border-border/60 bg-background/90 p-6 text-center shadow-sm">
+        <div className="rounded-3xl border border-border/60 bg-background/90 p-6 text-center shadow-sm space-y-3">
           <PMFScoreCircle
             score={analysis.overallScore}
             verdict={analysis.verdict}
             verdictLabel={analysis.verdictLabel}
           />
+          {belowSampleThreshold && (
+            <Badge variant="secondary" className="bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/30 text-[10px]">
+              Low sample size — score reliability reduced
+            </Badge>
+          )}
         </div>
 
         <div className="rounded-3xl border border-border/60 bg-background/90 p-6 shadow-sm">
@@ -206,6 +215,14 @@ const PMFReadinessReport: React.FC<PMFReadinessReportProps> = ({
 
       {/* Dimension bars */}
       <PMFDimensionBars dimensions={analysis.dimensions} />
+
+      {/* Segment signal breakdown */}
+      {loggedInterviews.length > 0 && (
+        <>
+          <Separator />
+          <PMFSegmentBreakdown interviews={loggedInterviews} />
+        </>
+      )}
 
       <Separator />
 
@@ -347,6 +364,70 @@ const PMFReadinessReport: React.FC<PMFReadinessReportProps> = ({
             : 'These mentors are strongest when your validation is promising but still unclear. Use them to interpret objections, sharpen the offer, and decide what to test next.'
         }
       />
+
+      {/* Collapsible interview evidence preview */}
+      {loggedInterviews.length > 0 && (
+        <div className="rounded-2xl border border-border/60 bg-background/70">
+          <button
+            type="button"
+            onClick={() => setInterviewPreviewOpen((prev) => !prev)}
+            className="flex w-full items-center justify-between gap-3 p-4 text-left"
+          >
+            <div className="space-y-0.5">
+              <p className="text-sm font-semibold text-foreground">
+                Interview evidence log ({loggedInterviews.length} interviews)
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Raw interview data that fed this PMF score
+              </p>
+            </div>
+            {interviewPreviewOpen ? (
+              <ChevronUp className="h-4 w-4 text-muted-foreground shrink-0" />
+            ) : (
+              <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />
+            )}
+          </button>
+          {interviewPreviewOpen && (
+            <div className="border-t border-border/60 p-4 space-y-3">
+              {loggedInterviews.map((interview: PMFInterviewLog, index: number) => (
+                <div
+                  key={interview.id || index}
+                  className="rounded-xl border border-border/40 bg-muted/10 p-3"
+                >
+                  <div className="flex flex-wrap items-center gap-2 text-sm">
+                    <span className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-primary/15 bg-primary/10 text-[10px] font-semibold text-primary">
+                      {index + 1}
+                    </span>
+                    <span className="font-medium text-foreground">{interview.intervieweeName}</span>
+                    <span className="text-muted-foreground">·</span>
+                    <span className="text-xs text-muted-foreground">{interview.segment}</span>
+                    <span className="ml-auto flex items-center gap-1.5 text-xs text-muted-foreground">
+                      <span className="rounded-full border border-border/60 px-2 py-0.5">
+                        Interest {interview.interestLevel}/5
+                      </span>
+                      <span className={cn(
+                        'rounded-full border px-2 py-0.5',
+                        interview.buyingIntent === 'ready_to_pay'
+                          ? 'border-green-500/30 bg-green-500/10 text-green-700 dark:text-green-400'
+                          : interview.buyingIntent === 'high'
+                          ? 'border-primary/30 bg-primary/10 text-primary'
+                          : 'border-border/60'
+                      )}>
+                        {interview.buyingIntent === 'ready_to_pay' ? 'Ready to pay' : interview.buyingIntent === 'high' ? 'High intent' : interview.buyingIntent === 'medium' ? 'Some interest' : 'Low intent'}
+                      </span>
+                    </span>
+                  </div>
+                  {interview.mainFeedback && (
+                    <p className="mt-2 text-xs text-muted-foreground leading-relaxed pl-8">
+                      {interview.mainFeedback}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Bottom CTA */}
       <div className="flex flex-wrap gap-3 pt-4 pb-8">

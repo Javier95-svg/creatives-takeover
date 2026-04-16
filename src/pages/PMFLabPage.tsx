@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import SEO, { createBreadcrumbSchema, createFAQSchema } from '@/components/SEO';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
@@ -9,12 +9,14 @@ import { usePMFLab } from '@/hooks/usePMFLab';
 import PMFEvidenceForm from '@/components/pmf/PMFEvidenceForm';
 import PMFScoringLoader from '@/components/pmf/PMFScoringLoader';
 import PMFReadinessReport from '@/components/pmf/PMFReadinessReport';
+import { PMFContextBanner } from '@/components/pmf/PMFContextBanner';
 import { ActivationJourneyStrip } from '@/components/activation/ActivationJourneyStrip';
 import { ArrowRight, Rocket } from 'lucide-react';
 import { getToolJourneyGuide } from '@/lib/activationJourney';
 import { PMF_REQUIRED_SIGNALS } from '@/lib/bizmapStages';
 import { getPublicTabConfig } from '@/config/publicTabVisibility';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 
 const structuredData = [
   {
@@ -30,6 +32,42 @@ export default function PMFLabPage() {
   const { user } = useAuth();
   const publicTab = getPublicTabConfig('/pmf-lab');
   const { markToolUsed } = useLeanStartupStore();
+
+  const [icpPersonaName, setIcpPersonaName] = useState<string | null>(null);
+  const [waitlistProductName, setWaitlistProductName] = useState<string | null>(null);
+  const [contextLoading, setContextLoading] = useState(false);
+
+  useEffect(() => {
+    if (!user) return;
+
+    let active = true;
+    const loadContext = async () => {
+      setContextLoading(true);
+      const [icpRes, waitlistRes] = await Promise.all([
+        supabase
+          .from('icp_analysis_results')
+          .select('target_audience')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+        supabase
+          .from('waitlist_pages')
+          .select('product_name')
+          .eq('user_id', user.id)
+          .order('updated_at', { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+      ]);
+      if (!active) return;
+      setIcpPersonaName((icpRes.data as { target_audience: string | null } | null)?.target_audience ?? null);
+      setWaitlistProductName((waitlistRes.data as { product_name: string | null } | null)?.product_name ?? null);
+      setContextLoading(false);
+    };
+
+    void loadContext();
+    return () => { active = false; };
+  }, [user]);
   const faqs = [
     {
       question: 'What is a good product-market fit score?',
@@ -126,10 +164,19 @@ export default function PMFLabPage() {
                     PMF Lab
                   </h1>
                   <p className="mx-auto max-w-4xl text-lg leading-relaxed text-muted-foreground sm:text-xl">
-                    Pitch your waitlist, interview at least {PMF_REQUIRED_SIGNALS} potential customers, and let PMF Lab tell you if demand is enough to start building.
+                    PMF Lab is Phase 3 of the BizMap journey. Run at least {PMF_REQUIRED_SIGNALS} one-to-one interviews with potential customers, then submit your evidence here to find out if demand is strong enough to start building.
                   </p>
                 </div>
               </div>
+
+              {phase === 'intake' && user && (
+                <PMFContextBanner
+                  icpPersonaName={icpPersonaName}
+                  waitlistProductName={waitlistProductName}
+                  loading={contextLoading}
+                  className="mb-2"
+                />
+              )}
 
               {phase === 'intake' && (
                 <>

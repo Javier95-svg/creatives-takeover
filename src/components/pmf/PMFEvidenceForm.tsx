@@ -156,11 +156,13 @@ const StepView: React.FC<{ children: React.ReactNode; stepKey: number }> = ({ ch
 interface PMFEvidenceFormProps {
   onSubmit: (answers: PMFEvidenceAnswers) => void;
   isSubmitting?: boolean;
+  belowThresholdOverride?: boolean;
 }
 
 const PMFEvidenceForm: React.FC<PMFEvidenceFormProps> = ({ onSubmit, isSubmitting = false }) => {
   const [testTypes, setTestTypes] = useState<string[]>([]);
   const [peopleReached, setPeopleReached] = useState(0);
+  const [belowThresholdAcknowledged, setBelowThresholdAcknowledged] = useState(false);
   const [interviews, setInterviews] = useState<PMFInterviewLog[]>([]);
   const [draftInterview, setDraftInterview] = useState<PMFInterviewLog>(createEmptyInterview());
   const [editingInterviewId, setEditingInterviewId] = useState<string | null>(null);
@@ -260,7 +262,9 @@ const PMFEvidenceForm: React.FC<PMFEvidenceFormProps> = ({ onSubmit, isSubmittin
     }
   };
 
-  const isValid = testTypes.length > 0 && conversationCount >= PMF_REQUIRED_SIGNALS;
+  const meetsInterviewThreshold = conversationCount >= PMF_REQUIRED_SIGNALS;
+  const canSubmit = testTypes.length > 0 && (meetsInterviewThreshold || belowThresholdAcknowledged);
+  const isValid = testTypes.length > 0 && meetsInterviewThreshold;
 
   const stepHasValue = (index: number) => {
     if (index === 0) {
@@ -303,14 +307,14 @@ const PMFEvidenceForm: React.FC<PMFEvidenceFormProps> = ({ onSubmit, isSubmittin
   }, [canContinue, currentStep, stepFeedback]);
 
   useEffect(() => {
-    if (stepFeedback?.step === totalSteps && isValid) {
+    if (stepFeedback?.step === totalSteps && canSubmit) {
       setStepFeedback(null);
     }
-  }, [isValid, stepFeedback, totalSteps]);
+  }, [canSubmit, stepFeedback, totalSteps]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isValid) return;
+    if (!canSubmit) return;
 
     onSubmit({
       testTypes,
@@ -988,16 +992,44 @@ const PMFEvidenceForm: React.FC<PMFEvidenceFormProps> = ({ onSubmit, isSubmittin
                   </Card>
                 ))}
 
+                {/* Soft warning for below-threshold interview count */}
+                {testTypes.length > 0 && !meetsInterviewThreshold && (
+                  <div className="rounded-2xl border border-amber-500/25 bg-amber-500/8 p-4 space-y-3">
+                    <div className="flex items-start gap-3">
+                      <div className="mt-0.5 rounded-xl bg-amber-500/10 p-1.5">
+                        <FlaskConical className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-sm font-semibold text-foreground">
+                          You have {conversationCount} of {PMF_REQUIRED_SIGNALS} recommended interviews
+                        </p>
+                        <p className="text-sm leading-relaxed text-muted-foreground">
+                          PMF Lab can still run, but the score reliability is reduced with fewer than {PMF_REQUIRED_SIGNALS} interviews. We recommend reaching the full target before analyzing.
+                        </p>
+                      </div>
+                    </div>
+                    <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer pl-10">
+                      <input
+                        type="checkbox"
+                        checked={belowThresholdAcknowledged}
+                        onChange={(e) => setBelowThresholdAcknowledged(e.target.checked)}
+                        className="h-4 w-4 rounded border-border accent-amber-600"
+                      />
+                      I understand the results may be less accurate with fewer interviews
+                    </label>
+                  </div>
+                )}
+
                 <div className="flex gap-3 pt-2">
                   <Button type="button" variant="outline" onClick={goBack} className="gap-2">
                     <ChevronLeft className="w-4 h-4" />
                     Back
                   </Button>
                   <Button
-                    type={isValid ? "submit" : "button"}
-                    onClick={isValid ? undefined : handleBlockedAnalysis}
+                    type={canSubmit ? "submit" : "button"}
+                    onClick={canSubmit ? undefined : handleBlockedAnalysis}
                     disabled={isSubmitting}
-                    variant={isValid ? "default" : "outline"}
+                    variant={canSubmit ? "default" : "outline"}
                     className="flex-1 btn-magnetic gap-2"
                     size="lg"
                   >
@@ -1014,11 +1046,13 @@ const PMFEvidenceForm: React.FC<PMFEvidenceFormProps> = ({ onSubmit, isSubmittin
                     )}
                   </Button>
                 </div>
-                {!isValid && (
+                {!canSubmit && (
                   <p className="text-xs text-right text-muted-foreground">
                     {stepFeedback?.step === totalSteps
                       ? stepFeedback.message
-                      : `Add at least one validation method and ${PMF_REQUIRED_SIGNALS} logged interviews to unlock AI scoring.`}
+                      : testTypes.length === 0
+                        ? 'Select at least one validation method to unlock AI scoring.'
+                        : `Log ${PMF_REQUIRED_SIGNALS} interviews or acknowledge the warning above to run the analysis.`}
                   </p>
                 )}
               </div>
@@ -1042,6 +1076,16 @@ const PMFEvidenceForm: React.FC<PMFEvidenceFormProps> = ({ onSubmit, isSubmittin
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
+          {/* Pre-requisite callout */}
+          <div className="rounded-2xl border border-amber-500/25 bg-amber-500/8 px-4 py-3">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-600 dark:text-amber-400 mb-1">
+              Before you start
+            </p>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Run at least <span className="font-semibold text-foreground">{PMF_REQUIRED_SIGNALS} one-to-one customer interviews</span> before using PMF Lab. Results based on fewer interviews will be flagged as potentially inaccurate.
+            </p>
+          </div>
+
           <StepIndicator />
 
           <StepView stepKey={currentStep}>
