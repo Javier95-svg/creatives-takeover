@@ -1049,10 +1049,13 @@ const PMFEvidenceForm: React.FC<PMFEvidenceFormProps> = ({ onSubmit, isSubmittin
 
   return (
     <form onSubmit={handleSubmit} className="max-w-4xl mx-auto space-y-6">
-      {/* Pre-requisite note */}
-      <div className="rounded-2xl border border-border/60 bg-muted/20 px-4 py-3">
-        <p className="text-sm text-muted-foreground">
-          PMF Lab works best with at least <span className="font-semibold text-foreground">{PMF_REQUIRED_SIGNALS} customer interviews</span> logged. Fewer interviews will produce a less reliable score.
+      {/* Pre-requisite callout */}
+      <div className="rounded-2xl border border-amber-500/25 bg-amber-500/8 px-4 py-3">
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-600 dark:text-amber-400 mb-1">
+          Before you start
+        </p>
+        <p className="text-sm text-muted-foreground leading-relaxed">
+          Run at least <span className="font-semibold text-foreground">{PMF_REQUIRED_SIGNALS} one-to-one customer interviews</span> before using PMF Lab. Results based on fewer interviews will be flagged as potentially inaccurate.
         </p>
       </div>
 
