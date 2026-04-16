@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Save, Download, RefreshCw, CheckCircle2, XCircle, ArrowRight, AlertTriangle, MessageSquareWarning, Share2, Sparkles, ChevronDown, ChevronUp } from 'lucide-react';
+import { Save, Download, RefreshCw, CheckCircle2, XCircle, ArrowRight, AlertTriangle, MessageSquareWarning, Share2, Sparkles, ChevronDown, ChevronUp, Zap, GitFork, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -38,19 +38,34 @@ const PMFReadinessReport: React.FC<PMFReadinessReportProps> = ({
   const [interviewPreviewOpen, setInterviewPreviewOpen] = useState(false);
   const isReady = analysis.verdict === 'ready';
   const meetsThreshold = analysis.overallScore >= 75;
-  const decisionTitle = analysis.recommendedActionTitle ?? (meetsThreshold ? 'Move to Building' : 'Iterate Before Building');
-  const scoreMeaning =
-    analysis.scoreMeaning ??
-    (meetsThreshold
-      ? 'Your interviews show enough pain, demand, and buying intent to justify moving into Stage IV: Building.'
-      : 'The evidence is not strong enough yet. You should improve the offer, landing page, or feature promise before building.');
-  const missingFeatures = analysis.missingFeatures?.length ? analysis.missingFeatures : analysis.gaps.slice(0, 3);
-  const commonObjections = analysis.commonObjections?.length ? analysis.commonObjections : analysis.gaps.slice(0, 3);
-  const buyingSignals = analysis.buyingSignals?.length ? analysis.buyingSignals : analysis.strengths.slice(0, 3);
-  const improvementsBeforeRetest = analysis.improvementsBeforeRetest?.length
-    ? analysis.improvementsBeforeRetest
-    : analysis.recommendations.slice(0, 3).map((item) => item.action);
+  const decisionTitle = analysis.recommendedActionTitle;
+  const scoreMeaning = analysis.scoreMeaning;
+  const missingFeatures = analysis.missingFeatures;
+  const commonObjections = analysis.commonObjections;
+  const buyingSignals = analysis.buyingSignals;
+  const improvementsBeforeRetest = analysis.improvementsBeforeRetest;
   const loggedInterviews = analysis.evidenceAnswers?.interviews ?? [];
+
+  // Primary Finding — lowest-scoring dimension
+  const dimensionEntries = Object.entries(analysis.dimensions) as [string, { score: number; explanation: string }][];
+  const lowestDimension = dimensionEntries.reduce((prev, curr) => curr[1].score < prev[1].score ? curr : prev);
+  const dimensionDisplayNames: Record<string, string> = {
+    painClarity: 'Pain Clarity',
+    urgency: 'Urgency',
+    consistency: 'Consistency',
+    demandProof: 'Demand Proof',
+    founderSelfAwareness: 'Founder Self-Awareness',
+  };
+  const lowestDimName = dimensionDisplayNames[lowestDimension[0]] ?? lowestDimension[0];
+  const lowestDimScore = lowestDimension[1].score;
+  const lowestDimExplanation = lowestDimension[1].explanation;
+
+  // Priority Action — first critical recommendation
+  const criticalRec = analysis.recommendations.find((r) => r.priority === 'critical');
+  const remainingRecs = criticalRec
+    ? analysis.recommendations.filter((r) => r !== criticalRec)
+    : analysis.recommendations;
+
   const belowSampleThreshold = loggedInterviews.length < PMF_REQUIRED_SIGNALS;
   const interviewSegments = Array.from(new Set(
     loggedInterviews.map((item) => item.segment.trim()).filter(Boolean)
@@ -98,6 +113,43 @@ const PMFReadinessReport: React.FC<PMFReadinessReportProps> = ({
 
   return (
     <div className="max-w-3xl mx-auto space-y-8">
+      {/* Primary Finding card */}
+      <div className={cn(
+        'rounded-2xl border p-5 flex items-start gap-4',
+        lowestDimScore <= 7
+          ? 'border-red-500/25 bg-red-500/8'
+          : lowestDimScore <= 13
+          ? 'border-amber-500/25 bg-amber-500/8'
+          : 'border-primary/20 bg-primary/5'
+      )}>
+        <div className={cn(
+          'mt-0.5 rounded-xl p-2 shrink-0',
+          lowestDimScore <= 7
+            ? 'bg-red-500/15 text-red-600 dark:text-red-400'
+            : lowestDimScore <= 13
+            ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400'
+            : 'bg-primary/15 text-primary'
+        )}>
+          <TrendingUp className="h-4 w-4" />
+        </div>
+        <div className="space-y-1 min-w-0">
+          <p className={cn(
+            'text-xs font-semibold uppercase tracking-[0.18em]',
+            lowestDimScore <= 7
+              ? 'text-red-600 dark:text-red-400'
+              : lowestDimScore <= 13
+              ? 'text-amber-600 dark:text-amber-400'
+              : 'text-primary'
+          )}>
+            Primary Finding
+          </p>
+          <p className="text-sm font-semibold text-foreground">
+            Your biggest gap: {lowestDimName} ({lowestDimScore}/20)
+          </p>
+          <p className="text-sm leading-relaxed text-muted-foreground">{lowestDimExplanation}</p>
+        </div>
+      </div>
+
       <div className="grid gap-6 lg:grid-cols-[220px,1fr]">
         <div className="rounded-3xl border border-border/60 bg-background/90 p-6 text-center shadow-sm space-y-3">
           <PMFScoreCircle
@@ -213,8 +265,36 @@ const PMFReadinessReport: React.FC<PMFReadinessReportProps> = ({
         </div>
       </div>
 
+      {/* Diagnosis */}
+      {analysis.diagnosis && (
+        <div className="rounded-2xl border border-primary/15 bg-primary/5 p-5 space-y-2">
+          <div className="flex items-center gap-2">
+            <Sparkles className="h-4 w-4 text-primary shrink-0" />
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary/70">What the evidence pattern means</p>
+          </div>
+          <p className="text-sm leading-relaxed text-foreground">{analysis.diagnosis}</p>
+        </div>
+      )}
+
       {/* Dimension bars */}
       <PMFDimensionBars dimensions={analysis.dimensions} />
+
+      {/* Contradictions panel */}
+      {analysis.contradictions && analysis.contradictions.length > 0 && (
+        <div className="rounded-2xl border border-amber-500/25 bg-amber-500/8 p-5 space-y-3">
+          <div className="flex items-center gap-2">
+            <GitFork className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0" />
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-600 dark:text-amber-400">Tensions in your data</p>
+          </div>
+          <div className="space-y-2">
+            {analysis.contradictions.map((item, i) => (
+              <div key={i} className="rounded-xl border border-amber-500/20 bg-background/60 px-4 py-3">
+                <p className="text-sm leading-relaxed text-foreground">{item}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Segment signal breakdown */}
       {loggedInterviews.length > 0 && (
@@ -338,9 +418,30 @@ const PMFReadinessReport: React.FC<PMFReadinessReportProps> = ({
 
       <Separator />
 
+      {/* Priority Action card */}
+      {criticalRec && (
+        <div className="rounded-2xl border-2 border-primary/30 bg-primary/5 p-5 space-y-3">
+          <div className="flex items-start gap-3">
+            <div className="mt-0.5 rounded-xl bg-primary/15 p-2 shrink-0">
+              <Zap className="h-4 w-4 text-primary" />
+            </div>
+            <div className="space-y-1 min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Do this first</p>
+                <span className="rounded-full border border-primary/20 bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
+                  {criticalRec.timeframe}
+                </span>
+              </div>
+              <h3 className="text-base font-semibold text-foreground">{criticalRec.title}</h3>
+              <p className="text-sm leading-relaxed text-muted-foreground">{criticalRec.action}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Recommendations */}
       <PMFRecommendations
-        recommendations={analysis.recommendations}
+        recommendations={remainingRecs}
         nextExperiment={analysis.nextExperiment}
       />
 

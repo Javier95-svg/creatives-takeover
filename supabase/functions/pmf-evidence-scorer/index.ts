@@ -143,6 +143,11 @@ IMPORTANT PRODUCT RULES:
 • If conversationCount is below ${MIN_INTERVIEWS_FOR_READY}, overallScore MUST be capped at 74 and recommendedAction MUST be "iterate_before_building".
 • If the founder logs many interviews but the records are thin, vague, repetitive, or missing objections/missing-feature detail, lower the score for evidence quality.
 
+SPECIFICITY RULES — these are non-negotiable:
+• When writing summaryInsight, strengths, gaps, diagnosis, or contradictions: reference specific interviewees by name and segment when the interview log supports it. Do NOT use phrases like "several participants", "some users", or "many interviewees". Name the pattern AND the person. Example: "Maria Gomez (B2B agency owner) and two others independently raised the same Slack integration blocker."
+• scoreMeaning must be specific to the actual score value and the evidence submitted. Do not use generic template phrases like "your interviews show enough pain". Connect the score to what was actually found.
+• nextExperiment must describe a specific test the founder can run given their actual product, segments, and gaps. It must never be a generic instruction like "run more interviews".
+
 SCORING RUBRIC — five dimensions, each 0–20 points:
 
 1. PAIN CLARITY (0–20)
@@ -193,6 +198,16 @@ RECOMMENDATION RULES:
 • For score ≥ 75 but a dimension could be stronger: priority = "nice"
 • Each recommendation must be specific and executable — no generic advice like "talk to more users"
 • The "action" field must be a concrete thing to do (e.g., "DM 10 ops managers on LinkedIn using this exact opening: 'Hey [name], how do you currently track...'")
+• Always include at least one "critical" recommendation even if all dimensions score above 8 — there is always one highest-leverage action
+
+DIAGNOSIS RULES:
+• diagnosis is a 3–5 sentence paragraph that synthesizes the five dimension scores into a specific pattern interpretation. It goes beyond describing what was found and explains what the pattern means for this specific product and founder. Example: "You have genuine pain signal (Pain Clarity: 16) but the buying intent is weak (Demand Proof: 7). This gap typically means the problem is real but your current solution framing is not landing as the obvious fix. The segment consistency is also low, which suggests you may be reaching too broad a range of profiles — the pain is real for some but not acute enough for others to act."
+
+CONTRADICTION RULES:
+• contradictions is an array of 1–2 specific tensions in the evidence. A contradiction is when two signals point in opposite directions and together reveal something important the founder should address. Examples:
+  - "High urgency (16/20) but zero demand behaviors (no pricing asks, no waitlist signups) — this means people feel the pain but do not yet see your solution as the fix."
+  - "Three interviewees said they would pay, but the same three also listed missing integrations as blockers. This suggests willingness to pay is conditional, not confirmed."
+• If there are no genuine contradictions, return an empty array.
 
 OUTPUT: Return ONLY valid JSON matching this exact schema:
 
@@ -200,23 +215,25 @@ OUTPUT: Return ONLY valid JSON matching this exact schema:
   "overallScore": number,
   "verdict": "ready" | "partial" | "weak",
   "verdictLabel": "Strong Validation" | "Partial Validation" | "Insufficient Evidence",
-  "summaryInsight": "string — 2–3 sentences of honest, direct assessment of the evidence quality",
-  "scoreMeaning": "string — explain plainly what this score means for the founder right now",
+  "summaryInsight": "string — 2–3 sentences grounded in specific evidence from the interview log",
+  "scoreMeaning": "string — specific to this score and evidence; explain what it means for this founder right now, not generically",
+  "diagnosis": "string — 3–5 sentence paragraph synthesizing the dimension pattern into a specific product/founder interpretation",
   "recommendedAction": "move_to_building" | "iterate_before_building",
   "recommendedActionTitle": "Move to Building" | "Iterate Before Building",
   "dimensions": {
-    "painClarity":          { "score": number, "explanation": "string — 1–2 sentences on what evidence supports or hurts this score" },
+    "painClarity":          { "score": number, "explanation": "string — 1–2 sentences on what specific evidence supports or hurts this score" },
     "urgency":              { "score": number, "explanation": "string" },
     "consistency":          { "score": number, "explanation": "string" },
     "demandProof":          { "score": number, "explanation": "string" },
     "founderSelfAwareness": { "score": number, "explanation": "string" }
   },
-  "strengths": ["string", "string"],
-  "gaps": ["string", "string"],
-  "missingFeatures": ["string — what users think is missing before they would adopt or buy"],
-  "commonObjections": ["string — recurring objections, concerns, or blockers"],
-  "buyingSignals": ["string — strongest evidence of real demand or intent"],
-  "improvementsBeforeRetest": ["string — what the founder should improve before running the next interview round"],
+  "contradictions": ["string — 1–2 specific tensions in the evidence; empty array if none"],
+  "strengths": ["string — reference named interviewees where applicable"],
+  "gaps": ["string — reference named interviewees where applicable"],
+  "missingFeatures": ["string — what specific users said is missing before they would adopt or buy"],
+  "commonObjections": ["string — recurring objections with context about who raised them"],
+  "buyingSignals": ["string — strongest specific evidence of real demand or intent"],
+  "improvementsBeforeRetest": ["string — specific thing to change before the next interview round"],
   "recommendations": [
     {
       "priority": "critical" | "important" | "nice",
@@ -226,7 +243,7 @@ OUTPUT: Return ONLY valid JSON matching this exact schema:
     }
   ],
   "readyToScope": boolean,
-  "nextExperiment": "string — only when verdict is partial or weak; specific test to run next"
+  "nextExperiment": "string — specific test to run next given the actual product, segments, and gaps found; never generic"
 }`;
 
     const userPrompt = `EVIDENCE SUBMITTED BY FOUNDER:
@@ -275,7 +292,7 @@ Apply the scoring rubric to this evidence and return the PMF readiness JSON. Mak
           ],
           response_format: { type: 'json_object' },
           temperature: 0.3,
-          max_tokens: 2500,
+          max_tokens: 3500,
         }),
       });
 

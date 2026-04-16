@@ -71,9 +71,10 @@ export interface PMFReadinessAnalysis {
   verdict: 'ready' | 'partial' | 'weak';
   verdictLabel: string;
   summaryInsight: string;
-  scoreMeaning?: string;
-  recommendedAction?: 'move_to_building' | 'iterate_before_building';
-  recommendedActionTitle?: string;
+  scoreMeaning: string;
+  diagnosis: string;
+  recommendedAction: 'move_to_building' | 'iterate_before_building';
+  recommendedActionTitle: string;
   dimensions: {
     painClarity: PMFDimension;
     urgency: PMFDimension;
@@ -81,15 +82,16 @@ export interface PMFReadinessAnalysis {
     demandProof: PMFDimension;
     founderSelfAwareness: PMFDimension;
   };
+  contradictions: string[];
   strengths: string[];
   gaps: string[];
-  missingFeatures?: string[];
-  commonObjections?: string[];
-  buyingSignals?: string[];
-  improvementsBeforeRetest?: string[];
+  missingFeatures: string[];
+  commonObjections: string[];
+  buyingSignals: string[];
+  improvementsBeforeRetest: string[];
   recommendations: PMFRecommendation[];
   readyToScope: boolean;
-  nextExperiment?: string;
+  nextExperiment: string;
   evidenceAnswers: PMFEvidenceAnswers;
   generatedAt: string;
 }
