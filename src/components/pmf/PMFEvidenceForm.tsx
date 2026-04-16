@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import {
   CheckCircle2,
   ChevronLeft,
@@ -45,62 +45,40 @@ const STEPS = [
   {
     number: '01',
     title: 'Validation setup',
-    hint: 'Define how you tested demand and how many people you reached before you start scoring PMF.',
+    question: 'How did you test demand with real people?',
+    hint: 'Select every method you used and how many people you reached.',
     objective: 'Sets the context for the interview evidence PMF Lab will trust',
   },
   {
     number: '02',
     title: 'Interview tracker',
-    hint: `Log every customer interview with profile, objections, missing features, and buying intent until you reach ${PMF_REQUIRED_SIGNALS}.`,
+    question: 'What did each customer tell you?',
+    hint: 'Log every interview with profile, objections, and buying intent.',
     objective: 'Makes sure the PMF score is based on recorded discovery work, not just a summary claim',
   },
   {
     number: '03',
     title: 'Pattern summary',
-    hint: 'Summarize the strongest repeated pain, urgency, and missing-feature patterns you saw across the interviews.',
+    question: 'What patterns repeated across your interviews?',
+    hint: 'Summarize the strongest pain, urgency, and missing-feature signals.',
     objective: 'Helps AI identify the strongest recurring signals across your log',
   },
   {
     number: '04',
     title: 'Demand signal quality',
-    hint: 'Review the demand behaviors captured in your interviews and add any important pricing context.',
+    question: 'How strong is the buying intent you captured?',
+    hint: 'These counts come from your interview log. Add pricing context below.',
     objective: 'Separates real buying intent from polite encouragement',
   },
   {
     number: '05',
     title: 'Founder decision check',
-    hint: 'Record what still feels uncertain before you commit to Building.',
+    question: 'What are you still uncertain about?',
+    hint: 'Record what feels unresolved before you commit to building.',
     objective: 'Keeps the recommendation grounded in honest founder judgment',
   },
 ] as const;
 
-const SMART_QUESTION_SETS = [
-  [
-    'How did you test your concept with your target niche?',
-    'How many people did you reach to source these interviews?',
-    'Which customer segments are you trying to validate before you build?',
-  ],
-  [
-    'Who exactly did you interview, and what segment do they represent?',
-    'What was their main feedback, objection, and missing feature request?',
-    'Did they show low curiosity, strong intent, or real willingness to buy?',
-  ],
-  [
-    'What pain kept repeating across multiple interviews in similar language?',
-    'What objections came up often enough to block building right now?',
-    'What missing feature did people ask for before they would adopt or buy?',
-  ],
-  [
-    'How many interviewees asked about pricing, joined your waitlist, or offered to pay?',
-    'Which logged interviews show the clearest buying intent?',
-    'What did people say about timing, budget, or commitment?',
-  ],
-  [
-    'What are you still unsure about even after logging these interviews?',
-    `If your score is below 75, what should you improve before another round of ${PMF_REQUIRED_SIGNALS} interviews?`,
-    'What specific evidence would make you confident enough to move to Building?',
-  ],
-];
 
 const newInterviewId = () => {
   if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
@@ -392,48 +370,59 @@ const PMFEvidenceForm: React.FC<PMFEvidenceFormProps> = ({ onSubmit, isSubmittin
   };
 
   const StepIndicator = () => (
-    <div className="flex items-center justify-center gap-1 mb-8">
-      {STEPS.map((item, index) => {
-        const isDone = index < currentStep || isReview;
-        const isActive = index === currentStep && !isReview;
-        const hasValue = stepHasValue(index);
+    <div className="mb-8 rounded-[1.5rem] border border-border/60 bg-background/80 p-4 shadow-sm">
+      <div className="mb-4 flex items-center justify-between gap-4">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Evidence Brief</p>
+          <p className="mt-1 text-sm text-foreground/80">Log your validation evidence across five dimensions.</p>
+        </div>
+        <div className="rounded-2xl bg-muted px-3 py-2 text-right">
+          <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Progress</p>
+          <p className="text-sm font-semibold">{Math.min(currentStep + (isReview ? 0 : 1), totalSteps)} / {totalSteps}</p>
+        </div>
+      </div>
+      <div className="flex items-center justify-center gap-1">
+        {STEPS.map((item, index) => {
+          const isDone = index < currentStep || isReview;
+          const isActive = index === currentStep && !isReview;
+          const hasValue = stepHasValue(index);
 
-        return (
-          <React.Fragment key={item.number}>
-            {isDone && hasValue ? (
-              <button
-                type="button"
-                onClick={() => setCurrentStep(index)}
-                className="relative w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-bold transition-all duration-300 shrink-0 bg-primary text-primary-foreground cursor-pointer shadow-sm"
-                title={`Edit: ${item.title}`}
-              >
-                {/* FIX(dead-click): /pmf-lab — future step indicators are now non-interactive until the step is actually reachable. */}
-                <CheckCircle2 className="w-3.5 h-3.5" />
-              </button>
-            ) : (
-              <div
-                aria-current={isActive ? 'step' : undefined}
-                className={cn(
-                  'relative w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-bold transition-all duration-300 shrink-0',
-                  isActive
-                    ? 'bg-primary/10 text-primary border-2 border-primary ring-2 ring-primary/20'
-                    : 'bg-muted text-muted-foreground'
-                )}
-              >
-                {item.number}
-              </div>
-            )}
-            {index < totalSteps - 1 && (
-              <div
-                className={cn(
-                  'h-0.5 flex-1 max-w-[1.25rem] rounded-full transition-all duration-500',
-                  index < currentStep ? 'bg-primary' : 'bg-muted'
-                )}
-              />
-            )}
-          </React.Fragment>
-        );
-      })}
+          return (
+            <React.Fragment key={item.number}>
+              {isDone && hasValue ? (
+                <button
+                  type="button"
+                  onClick={() => setCurrentStep(index)}
+                  className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[11px] font-bold transition-all duration-300 cursor-pointer bg-primary text-primary-foreground shadow-sm"
+                  title={`Edit: ${item.title}`}
+                >
+                  <CheckCircle2 className="h-3.5 w-3.5" />
+                </button>
+              ) : (
+                <div
+                  aria-current={isActive ? 'step' : undefined}
+                  className={cn(
+                    'relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[11px] font-bold transition-all duration-300',
+                    isActive
+                      ? 'border-2 border-primary bg-primary/10 text-primary ring-2 ring-primary/20'
+                      : 'bg-muted text-muted-foreground'
+                  )}
+                >
+                  {item.number}
+                </div>
+              )}
+              {index < totalSteps - 1 && (
+                <div
+                  className={cn(
+                    'h-0.5 max-w-[1.25rem] flex-1 rounded-full transition-all duration-500',
+                    index < currentStep ? 'bg-primary' : 'bg-muted'
+                  )}
+                />
+              )}
+            </React.Fragment>
+          );
+        })}
+      </div>
     </div>
   );
 
@@ -505,37 +494,45 @@ const PMFEvidenceForm: React.FC<PMFEvidenceFormProps> = ({ onSubmit, isSubmittin
   const renderCurrentStep = () => {
     if (currentStep === 0) {
       return (
-        <div ref={validationSetupRef} className="space-y-5">
-          <div className="flex flex-wrap gap-2">
-            {TEST_TYPES.map((type) => (
-              <button
-                key={type}
-                type="button"
-                onClick={() => toggleTestType(type)}
-                className={cn(
-                  'px-3 py-1.5 rounded-full text-sm border transition-all',
-                  testTypes.includes(type)
-                    ? 'bg-primary text-primary-foreground border-primary'
-                    : 'border-border text-muted-foreground hover:border-primary/50 hover:text-foreground'
-                )}
-              >
-                {type}
-              </button>
-            ))}
-          </div>
-          {testTypes.length === 0 && (
-            <p className="text-xs text-muted-foreground">Select at least one validation method to continue.</p>
-          )}
-          <div className="grid gap-4 sm:grid-cols-2">
-            <NumberInput label="How many people did you reach or contact?" value={peopleReached} onChange={setPeopleReached} />
-            <div className="rounded-2xl border border-border/60 bg-muted/20 p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary/70">Scoring rule</p>
-              <p className="mt-2 text-sm text-muted-foreground">
-                PMF Lab treats the interview log as the source of truth. The AI score only becomes reliable once you record at least {PMF_REQUIRED_SIGNALS} completed interviews.
-              </p>
+        <Card ref={validationSetupRef} className="rounded-[1.75rem] border border-border/60 shadow-sm">
+          <CardContent className="space-y-5 pt-6">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Validation methods</p>
+                <p className="mt-1 text-sm text-foreground/70">Select every method you used to test demand.</p>
+              </div>
+              <div className="rounded-full bg-muted px-3 py-1.5 text-xs text-muted-foreground">
+                {testTypes.length} selected
+              </div>
             </div>
-          </div>
-        </div>
+            <div className="flex flex-wrap gap-2">
+              {TEST_TYPES.map((type) => (
+                <button
+                  key={type}
+                  type="button"
+                  onClick={() => toggleTestType(type)}
+                  className={cn(
+                    'px-3 py-1.5 rounded-full text-sm border transition-all',
+                    testTypes.includes(type)
+                      ? 'bg-primary text-primary-foreground border-primary'
+                      : 'border-border text-muted-foreground hover:border-primary/50 hover:text-foreground'
+                  )}
+                >
+                  {type}
+                </button>
+              ))}
+            </div>
+            {testTypes.length === 0 && (
+              <p className="text-xs text-muted-foreground">Select at least one validation method to continue.</p>
+            )}
+            <div className="max-w-xs">
+              <NumberInput label="How many people did you reach or contact?" value={peopleReached} onChange={setPeopleReached} />
+            </div>
+            <p className="text-xs text-muted-foreground">
+              The AI score becomes reliable after {PMF_REQUIRED_SIGNALS} logged interviews.
+            </p>
+          </CardContent>
+        </Card>
       );
     }
 
@@ -576,7 +573,7 @@ const PMFEvidenceForm: React.FC<PMFEvidenceFormProps> = ({ onSubmit, isSubmittin
             </div>
           </div>
 
-          <div className="rounded-3xl border border-border/60 bg-background/80 p-5 space-y-5">
+          <div className="rounded-[1.75rem] border border-border/60 bg-background/80 p-5 space-y-5">
             <div className="flex items-center justify-between gap-3">
               <div>
                 <h3 className="text-base font-semibold">
@@ -785,116 +782,120 @@ const PMFEvidenceForm: React.FC<PMFEvidenceFormProps> = ({ onSubmit, isSubmittin
 
     if (currentStep === 2) {
       return (
-        <div className="space-y-4">
-          <div className="space-y-1.5">
-            <Label className="text-xs text-muted-foreground">What repeated pain sounded strongest across your logged interviews?</Label>
-            <Textarea
-              placeholder={'e.g. "We lose deals because proposal feedback is scattered across email and Slack."'}
-              value={mostPainfulQuote}
-              onChange={(e) => setMostPainfulQuote(e.target.value)}
-              className="text-sm min-h-[80px] resize-none"
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs text-muted-foreground">What do people do today, and what did that reveal about urgency?</Label>
-            <Textarea
-              placeholder="e.g. Most still stitch together email, docs, and Slack. Three already pay for a clunky workaround because the problem is urgent every week."
-              value={urgencyProxy}
-              onChange={(e) => setUrgencyProxy(e.target.value)}
-              className="text-sm min-h-[80px] resize-none"
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs text-muted-foreground">What objections or missing-feature patterns repeated enough to matter?</Label>
-            <Textarea
-              placeholder="e.g. Agencies liked the concept, but many said they would need Slack and client approval workflows before switching."
-              value={consistencyNote}
-              onChange={(e) => setConsistencyNote(e.target.value)}
-              className="text-sm min-h-[80px] resize-none"
-            />
-          </div>
-        </div>
+        <Card className="rounded-[1.75rem] border border-border/60 shadow-sm">
+          <CardContent className="space-y-4 pt-6">
+            <div className="space-y-1.5">
+              <Label className="text-xs text-muted-foreground">What repeated pain sounded strongest across your logged interviews?</Label>
+              <Textarea
+                placeholder={'e.g. "We lose deals because proposal feedback is scattered across email and Slack."'}
+                value={mostPainfulQuote}
+                onChange={(e) => setMostPainfulQuote(e.target.value)}
+                className="text-sm min-h-[80px] resize-none"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs text-muted-foreground">What do people do today, and what did that reveal about urgency?</Label>
+              <Textarea
+                placeholder="e.g. Most still stitch together email, docs, and Slack. Three already pay for a clunky workaround because the problem is urgent every week."
+                value={urgencyProxy}
+                onChange={(e) => setUrgencyProxy(e.target.value)}
+                className="text-sm min-h-[80px] resize-none"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs text-muted-foreground">What objections or missing-feature patterns repeated enough to matter?</Label>
+              <Textarea
+                placeholder="e.g. Agencies liked the concept, but many said they would need Slack and client approval workflows before switching."
+                value={consistencyNote}
+                onChange={(e) => setConsistencyNote(e.target.value)}
+                className="text-sm min-h-[80px] resize-none"
+              />
+            </div>
+          </CardContent>
+        </Card>
       );
     }
 
     if (currentStep === 3) {
       return (
-        <div className="space-y-5">
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <div className="rounded-2xl border border-border/60 bg-background/70 p-4">
-              <p className="text-xs text-muted-foreground">Asked about pricing</p>
-              <p className="mt-2 text-2xl font-semibold">{askedAboutPricing}</p>
+        <Card className="rounded-[1.75rem] border border-border/60 shadow-sm">
+          <CardContent className="space-y-5 pt-6">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="rounded-2xl border border-border/60 bg-background/70 p-4">
+                <p className="text-xs text-muted-foreground">Asked about pricing</p>
+                <p className="mt-2 text-2xl font-semibold">{askedAboutPricing}</p>
+              </div>
+              <div className="rounded-2xl border border-border/60 bg-background/70 p-4">
+                <p className="text-xs text-muted-foreground">Joined waitlist</p>
+                <p className="mt-2 text-2xl font-semibold">{joinedWaitlist}</p>
+              </div>
+              <div className="rounded-2xl border border-border/60 bg-background/70 p-4">
+                <p className="text-xs text-muted-foreground">Shared or referred</p>
+                <p className="mt-2 text-2xl font-semibold">{sharedWithSomeone}</p>
+              </div>
+              <div className="rounded-2xl border border-border/60 bg-background/70 p-4">
+                <p className="text-xs text-muted-foreground">Offered to pay</p>
+                <p className="mt-2 text-2xl font-semibold">{offeredToPay}</p>
+              </div>
             </div>
-            <div className="rounded-2xl border border-border/60 bg-background/70 p-4">
-              <p className="text-xs text-muted-foreground">Joined waitlist</p>
-              <p className="mt-2 text-2xl font-semibold">{joinedWaitlist}</p>
-            </div>
-            <div className="rounded-2xl border border-border/60 bg-background/70 p-4">
-              <p className="text-xs text-muted-foreground">Shared or referred</p>
-              <p className="mt-2 text-2xl font-semibold">{sharedWithSomeone}</p>
-            </div>
-            <div className="rounded-2xl border border-border/60 bg-background/70 p-4">
-              <p className="text-xs text-muted-foreground">Offered to pay</p>
-              <p className="mt-2 text-2xl font-semibold">{offeredToPay}</p>
-            </div>
-          </div>
-          <div className="rounded-2xl border border-border/60 bg-muted/20 p-4">
-            <p className="text-sm text-muted-foreground">
-              These counts are derived directly from the interview log above. That keeps the final score tied to recorded customer evidence instead of self-reported totals.
+            <p className="text-xs text-muted-foreground">
+              These counts are derived directly from the interview log. The final score stays tied to recorded customer evidence.
             </p>
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs text-muted-foreground">What did people say about pricing, commitment, or buying timing?</Label>
-            <Textarea
-              placeholder="e.g. Two interviewees asked if this would cost less than their current stack. One said they would pay immediately if it plugged into Slack and Notion."
-              value={wtpDetail}
-              onChange={(e) => setWtpDetail(e.target.value)}
-              className="text-sm min-h-[90px] resize-none"
-            />
-          </div>
-        </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs text-muted-foreground">What did people say about pricing, commitment, or buying timing?</Label>
+              <Textarea
+                placeholder="e.g. Two interviewees asked if this would cost less than their current stack. One said they would pay immediately if it plugged into Slack and Notion."
+                value={wtpDetail}
+                onChange={(e) => setWtpDetail(e.target.value)}
+                className="text-sm min-h-[90px] resize-none"
+              />
+            </div>
+          </CardContent>
+        </Card>
       );
     }
 
     return (
-      <div className="space-y-4">
-        <div className="space-y-1.5">
-          <Label className="text-xs text-muted-foreground">What are you still unsure about before building?</Label>
-          <Textarea
-            placeholder="e.g. I still need to confirm whether agencies with 5 to 20 people feel this pain strongly enough to switch without deeper integrations."
-            value={founderUncertainties}
-            onChange={(e) => setFounderUncertainties(e.target.value)}
-            className="text-sm min-h-[80px] resize-none"
-          />
-        </div>
-        <div className="space-y-1.5">
-          <Label className="text-xs text-muted-foreground">What evidence would make you iterate before building again?</Label>
-          <Textarea
-            placeholder="e.g. If the next interview round keeps repeating the same integration objection and nobody asks about pricing, I should revise the landing page and offer before building."
-            value={whatWouldChangeMind}
-            onChange={(e) => setWhatWouldChangeMind(e.target.value)}
-            className="text-sm min-h-[80px] resize-none"
-          />
-        </div>
-        <div className="space-y-2">
-          <Label className="text-xs text-muted-foreground">
-            Confidence level in your evidence (1 = no idea, 10 = very confident):{' '}
-            <span className="font-medium text-foreground">{confidenceLevel}</span>
-          </Label>
-          <input
-            type="range"
-            min={1}
-            max={10}
-            value={confidenceLevel}
-            onChange={(e) => setConfidenceLevel(Number(e.target.value))}
-            className="w-full accent-primary"
-          />
-          <div className="flex justify-between text-xs text-muted-foreground">
-            <span>No idea</span>
-            <span>Very confident</span>
+      <Card className="rounded-[1.75rem] border border-border/60 shadow-sm">
+        <CardContent className="space-y-4 pt-6">
+          <div className="space-y-1.5">
+            <Label className="text-xs text-muted-foreground">What are you still unsure about before building?</Label>
+            <Textarea
+              placeholder="e.g. I still need to confirm whether agencies with 5 to 20 people feel this pain strongly enough to switch without deeper integrations."
+              value={founderUncertainties}
+              onChange={(e) => setFounderUncertainties(e.target.value)}
+              className="text-sm min-h-[80px] resize-none"
+            />
           </div>
-        </div>
-      </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs text-muted-foreground">What evidence would make you iterate before building again?</Label>
+            <Textarea
+              placeholder="e.g. If the next interview round keeps repeating the same integration objection and nobody asks about pricing, I should revise the landing page and offer before building."
+              value={whatWouldChangeMind}
+              onChange={(e) => setWhatWouldChangeMind(e.target.value)}
+              className="text-sm min-h-[80px] resize-none"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label className="text-xs text-muted-foreground">
+              Confidence level in your evidence (1 = no idea, 10 = very confident):{' '}
+              <span className="font-medium text-foreground">{confidenceLevel}</span>
+            </Label>
+            <input
+              type="range"
+              min={1}
+              max={10}
+              value={confidenceLevel}
+              onChange={(e) => setConfidenceLevel(Number(e.target.value))}
+              className="w-full accent-primary"
+            />
+            <div className="flex justify-between text-xs text-muted-foreground">
+              <span>No idea</span>
+              <span>Very confident</span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     );
   };
 
@@ -923,243 +924,198 @@ const PMFEvidenceForm: React.FC<PMFEvidenceFormProps> = ({ onSubmit, isSubmittin
 
   if (isReview) {
     return (
-      <form onSubmit={handleSubmit} className="max-w-4xl mx-auto">
-        <Card className="border-border/60">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FlaskConical className="w-5 h-5 text-primary" />
-              PMF Lab
-            </CardTitle>
-            <CardDescription>
-              Review your recorded interviews and generate your PMF readiness analysis.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <StepIndicator />
+      <form onSubmit={handleSubmit} className="max-w-4xl mx-auto space-y-6">
+        <StepIndicator />
 
-            <div className="rounded-2xl border border-primary/15 bg-primary/5 px-4 py-3 text-sm text-muted-foreground">
-              PMF Lab bases the final score on the interview log you recorded here. You need at least {PMF_REQUIRED_SIGNALS} completed interviews before AI scoring becomes a reliable build versus iterate decision.
+        <StepView stepKey={totalSteps}>
+          <div className="space-y-4">
+            <div className="text-center space-y-1 mb-6">
+              <p className="text-xs font-mono text-primary/60 uppercase tracking-widest">Review</p>
+              <h2 className="text-xl font-semibold">Your PMF validation brief</h2>
+              <p className="text-sm text-muted-foreground">Confirm your logged evidence, then run PMF Lab.</p>
             </div>
 
-            <StepView stepKey={totalSteps}>
-              <div className="space-y-4">
-                <div className="text-center space-y-1 mb-6">
-                  <p className="text-xs font-mono text-primary/60 uppercase tracking-widest">Review</p>
-                  <h2 className="text-xl font-semibold">Your PMF validation brief</h2>
-                  <p className="text-sm text-muted-foreground">Confirm your logged evidence, then run PMF Lab.</p>
-                </div>
-
-                <div className="rounded-2xl border border-border/60 bg-background/70 p-4">
-                  <div className="flex flex-wrap items-start justify-between gap-4">
-                    <div className="space-y-2">
-                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary/70">Interview log status</p>
-                      <p className="text-sm text-muted-foreground">
-                        {conversationCount} recorded interviews, {interviewCoverage} with landing page shown and solution pitched, {strongInterestCount} with high interest.
-                      </p>
-                      {topSegments.length > 0 && (
-                        <p className="text-sm text-muted-foreground">Top segments: {topSegments.join(', ')}</p>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2 rounded-full border border-primary/15 bg-primary/10 px-3 py-1 text-sm font-medium text-primary">
-                      <UserRound className="h-4 w-4" />
-                      {conversationCount}/{PMF_REQUIRED_SIGNALS}
-                    </div>
-                  </div>
-                </div>
-
-                {reviewItems.map((item, index) => (
-                  <Card key={item.title} className="hover-lift border-border/60 group">
-                    <CardContent className="pt-4 pb-4">
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex items-start gap-3 flex-1 min-w-0">
-                          <span className="text-xs font-mono text-primary/50 mt-0.5 shrink-0">{STEPS[index].number}</span>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-xs text-muted-foreground mb-1">{item.title}</p>
-                            <p className="text-sm font-medium text-foreground whitespace-pre-wrap break-words">{item.content}</p>
-                          </div>
-                        </div>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity h-7 w-7 p-0"
-                          onClick={() => setCurrentStep(index)}
-                        >
-                          <Edit2 className="w-3.5 h-3.5" />
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-
-                {/* Soft warning for below-threshold interview count */}
-                {testTypes.length > 0 && !meetsInterviewThreshold && (
-                  <div className="rounded-2xl border border-amber-500/25 bg-amber-500/8 p-4 space-y-3">
-                    <div className="flex items-start gap-3">
-                      <div className="mt-0.5 rounded-xl bg-amber-500/10 p-1.5">
-                        <FlaskConical className="h-4 w-4 text-amber-600 dark:text-amber-400" />
-                      </div>
-                      <div className="space-y-1">
-                        <p className="text-sm font-semibold text-foreground">
-                          You have {conversationCount} of {PMF_REQUIRED_SIGNALS} recommended interviews
-                        </p>
-                        <p className="text-sm leading-relaxed text-muted-foreground">
-                          PMF Lab can still run, but the score reliability is reduced with fewer than {PMF_REQUIRED_SIGNALS} interviews. We recommend reaching the full target before analyzing.
-                        </p>
-                      </div>
-                    </div>
-                    <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer pl-10">
-                      <input
-                        type="checkbox"
-                        checked={belowThresholdAcknowledged}
-                        onChange={(e) => setBelowThresholdAcknowledged(e.target.checked)}
-                        className="h-4 w-4 rounded border-border accent-amber-600"
-                      />
-                      I understand the results may be less accurate with fewer interviews
-                    </label>
-                  </div>
-                )}
-
-                <div className="flex gap-3 pt-2">
-                  <Button type="button" variant="outline" onClick={goBack} className="gap-2">
-                    <ChevronLeft className="w-4 h-4" />
-                    Back
-                  </Button>
-                  <Button
-                    type={canSubmit ? "submit" : "button"}
-                    onClick={canSubmit ? undefined : handleBlockedAnalysis}
-                    disabled={isSubmitting}
-                    variant={canSubmit ? "default" : "outline"}
-                    className="flex-1 btn-magnetic gap-2"
-                    size="lg"
-                  >
-                    {isSubmitting ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        Analyzing...
-                      </>
-                    ) : (
-                      <>
-                        <FlaskConical className="w-4 h-4" />
-                        Analyze Logged Interviews
-                      </>
-                    )}
-                  </Button>
-                </div>
-                {!canSubmit && (
-                  <p className="text-xs text-right text-muted-foreground">
-                    {stepFeedback?.step === totalSteps
-                      ? stepFeedback.message
-                      : testTypes.length === 0
-                        ? 'Select at least one validation method to unlock AI scoring.'
-                        : `Log ${PMF_REQUIRED_SIGNALS} interviews or acknowledge the warning above to run the analysis.`}
+            <div className="rounded-2xl border border-border/60 bg-background/70 p-4">
+              <div className="flex flex-wrap items-start justify-between gap-4">
+                <div className="space-y-2">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary/70">Interview log status</p>
+                  <p className="text-sm text-muted-foreground">
+                    {conversationCount} recorded interviews, {interviewCoverage} with landing page shown and solution pitched, {strongInterestCount} with high interest.
                   </p>
-                )}
+                  {topSegments.length > 0 && (
+                    <p className="text-sm text-muted-foreground">Top segments: {topSegments.join(', ')}</p>
+                  )}
+                </div>
+                <div className="flex items-center gap-2 rounded-full border border-primary/15 bg-primary/10 px-3 py-1 text-sm font-medium text-primary">
+                  <UserRound className="h-4 w-4" />
+                  {conversationCount}/{PMF_REQUIRED_SIGNALS}
+                </div>
               </div>
-            </StepView>
-          </CardContent>
-        </Card>
+            </div>
+
+            {reviewItems.map((item, index) => (
+              <Card key={item.title} className="hover-lift border-border/60 group rounded-[1.5rem]">
+                <CardContent className="pt-4 pb-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-start gap-3 flex-1 min-w-0">
+                      <span className="text-xs font-mono text-primary/50 mt-0.5 shrink-0">{STEPS[index].number}</span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs text-muted-foreground mb-1">{item.title}</p>
+                        <p className="text-sm font-medium text-foreground whitespace-pre-wrap break-words">{item.content}</p>
+                      </div>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity h-7 w-7 p-0"
+                      onClick={() => setCurrentStep(index)}
+                    >
+                      <Edit2 className="w-3.5 h-3.5" />
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+
+            {/* Soft warning for below-threshold interview count */}
+            {testTypes.length > 0 && !meetsInterviewThreshold && (
+              <div className="rounded-2xl border border-amber-500/25 bg-amber-500/8 p-4 space-y-3">
+                <div className="flex items-start gap-3">
+                  <div className="mt-0.5 rounded-xl bg-amber-500/10 p-1.5">
+                    <FlaskConical className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-sm font-semibold text-foreground">
+                      You have {conversationCount} of {PMF_REQUIRED_SIGNALS} recommended interviews
+                    </p>
+                    <p className="text-sm leading-relaxed text-muted-foreground">
+                      PMF Lab can still run, but the score reliability is reduced with fewer than {PMF_REQUIRED_SIGNALS} interviews. We recommend reaching the full target before analyzing.
+                    </p>
+                  </div>
+                </div>
+                <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer pl-10">
+                  <input
+                    type="checkbox"
+                    checked={belowThresholdAcknowledged}
+                    onChange={(e) => setBelowThresholdAcknowledged(e.target.checked)}
+                    className="h-4 w-4 rounded border-border accent-amber-600"
+                  />
+                  I understand the results may be less accurate with fewer interviews
+                </label>
+              </div>
+            )}
+
+            <div className="flex gap-3 pt-2">
+              <Button type="button" variant="outline" onClick={goBack} className="gap-2">
+                <ChevronLeft className="w-4 h-4" />
+                Back
+              </Button>
+              <Button
+                type={canSubmit ? "submit" : "button"}
+                onClick={canSubmit ? undefined : handleBlockedAnalysis}
+                disabled={isSubmitting}
+                variant={canSubmit ? "default" : "outline"}
+                className="flex-1 btn-magnetic gap-2"
+                size="lg"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Analyzing...
+                  </>
+                ) : (
+                  <>
+                    <FlaskConical className="w-4 h-4" />
+                    Analyze Logged Interviews
+                  </>
+                )}
+              </Button>
+            </div>
+            {!canSubmit && (
+              <p className="text-xs text-right text-muted-foreground">
+                {stepFeedback?.step === totalSteps
+                  ? stepFeedback.message
+                  : testTypes.length === 0
+                    ? 'Select at least one validation method to unlock AI scoring.'
+                    : `Log ${PMF_REQUIRED_SIGNALS} interviews or acknowledge the warning above to run the analysis.`}
+              </p>
+            )}
+          </div>
+        </StepView>
       </form>
     );
   }
 
   return (
-    <form onSubmit={handleSubmit} className="max-w-4xl mx-auto">
-      <Card className="border-border/60">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <FlaskConical className="w-5 h-5 text-primary" />
-            PMF Lab
-          </CardTitle>
-          <CardDescription>
-            Track the full interview validation process, then let AI score how ready you are to build.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Pre-requisite callout */}
-          <div className="rounded-2xl border border-amber-500/25 bg-amber-500/8 px-4 py-3">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-600 dark:text-amber-400 mb-1">
-              Before you start
-            </p>
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              Run at least <span className="font-semibold text-foreground">{PMF_REQUIRED_SIGNALS} one-to-one customer interviews</span> before using PMF Lab. Results based on fewer interviews will be flagged as potentially inaccurate.
-            </p>
-          </div>
+    <form onSubmit={handleSubmit} className="max-w-4xl mx-auto space-y-6">
+      {/* Pre-requisite note */}
+      <div className="rounded-2xl border border-border/60 bg-muted/20 px-4 py-3">
+        <p className="text-sm text-muted-foreground">
+          PMF Lab works best with at least <span className="font-semibold text-foreground">{PMF_REQUIRED_SIGNALS} customer interviews</span> logged. Fewer interviews will produce a less reliable score.
+        </p>
+      </div>
 
-          <StepIndicator />
+      <StepIndicator />
 
-          <StepView stepKey={currentStep}>
-            <div className="space-y-6">
-              <div className="space-y-3">
-                <div className="flex items-center gap-3">
-                  <span className="text-4xl font-bold font-mono text-primary/20 leading-none select-none">{step.number}</span>
-                  <div className="h-px flex-1 bg-gradient-to-r from-primary/20 to-transparent" />
-                  <span className="text-xs text-muted-foreground tabular-nums">
-                    {currentStep + 1} of {totalSteps}
-                  </span>
-                </div>
-                <h2 className="text-xl md:text-2xl font-semibold leading-snug">{step.title}</h2>
-                <p className="text-sm text-muted-foreground">{step.hint}</p>
+      <StepView stepKey={currentStep}>
+        <div className="space-y-6">
+          <div className="rounded-[1.75rem] border border-border/60 bg-background/85 p-6 shadow-sm">
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <span className="select-none text-4xl font-bold leading-none text-primary/20">{step.number}</span>
+                <div className="h-px flex-1 bg-gradient-to-r from-primary/20 to-transparent" />
+                <span className="text-xs tabular-nums text-muted-foreground">{currentStep + 1} of {totalSteps}</span>
               </div>
-
-              <div className="inline-flex items-center gap-1.5 text-xs text-primary/70 bg-primary/5 border border-primary/10 rounded-full px-3 py-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-primary/40 shrink-0" />
+              <h2 className="text-2xl font-semibold leading-snug md:text-[2rem]">{step.question}</h2>
+              <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground">{step.hint}</p>
+              <div className="inline-flex items-center gap-1.5 rounded-full border border-primary/10 bg-primary/5 px-3 py-1 text-xs text-primary/80">
+                <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary/40" />
                 {step.objective}
               </div>
-
-              <div className="rounded-2xl border border-border/60 bg-muted/20 p-4 space-y-2">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Smart questions PMF Lab wants answered here</p>
-                <ul className="space-y-2">
-                  {SMART_QUESTION_SETS[currentStep].map((question) => (
-                    <li key={question} className="text-sm text-muted-foreground">
-                      {question}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              {renderCurrentStep()}
-
-              <div className="flex gap-3">
-                {currentStep > 0 && (
-                  <Button type="button" variant="outline" onClick={goBack} className="gap-2">
-                    <ChevronLeft className="w-4 h-4" />
-                    Back
-                  </Button>
-                )}
-                <Button
-                  type="button"
-                  onClick={canContinue ? goNext : handleBlockedContinue}
-                  variant={canContinue ? "default" : "outline"}
-                  className={cn('flex-1 gap-2 btn-magnetic', currentStep === 0 && 'w-full')}
-                  size="lg"
-                >
-                  {currentStep === totalSteps - 1 ? (
-                    <>
-                      Review Answers
-                      <ChevronRight className="w-4 h-4" />
-                    </>
-                  ) : (
-                    <>
-                      Continue
-                      <ChevronRight className="w-4 h-4" />
-                    </>
-                  )}
-                </Button>
-              </div>
-              {!canContinue && (
-                <p className="text-xs text-right text-muted-foreground">
-                  {stepFeedback?.step === currentStep
-                    ? stepFeedback.message
-                    : currentStep === 0
-                      ? 'Select at least one validation method to continue.'
-                      : 'Add your first interview to continue.'}
-                </p>
-              )}
             </div>
-          </StepView>
-        </CardContent>
-      </Card>
+          </div>
+
+          {renderCurrentStep()}
+
+          <div className="flex gap-3">
+            {currentStep > 0 && (
+              <Button type="button" variant="outline" onClick={goBack} className="gap-2">
+                <ChevronLeft className="w-4 h-4" />
+                Back
+              </Button>
+            )}
+            <Button
+              type="button"
+              onClick={canContinue ? goNext : handleBlockedContinue}
+              variant={canContinue ? "default" : "outline"}
+              className={cn('flex-1 gap-2 btn-magnetic', currentStep === 0 && 'w-full')}
+              size="lg"
+            >
+              {currentStep === totalSteps - 1 ? (
+                <>
+                  Review Answers
+                  <ChevronRight className="w-4 h-4" />
+                </>
+              ) : (
+                <>
+                  Continue
+                  <ChevronRight className="w-4 h-4" />
+                </>
+              )}
+            </Button>
+          </div>
+          {!canContinue && (
+            <p className="text-xs text-right text-muted-foreground">
+              {stepFeedback?.step === currentStep
+                ? stepFeedback.message
+                : currentStep === 0
+                  ? 'Select at least one validation method to continue.'
+                  : 'Add your first interview to continue.'}
+            </p>
+          )}
+        </div>
+      </StepView>
     </form>
   );
 };
