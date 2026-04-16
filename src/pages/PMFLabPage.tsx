@@ -10,9 +10,7 @@ import PMFEvidenceForm from '@/components/pmf/PMFEvidenceForm';
 import PMFScoringLoader from '@/components/pmf/PMFScoringLoader';
 import PMFReadinessReport from '@/components/pmf/PMFReadinessReport';
 import { PMFContextBanner } from '@/components/pmf/PMFContextBanner';
-import { ActivationJourneyStrip } from '@/components/activation/ActivationJourneyStrip';
 import { ArrowRight, Rocket } from 'lucide-react';
-import { getToolJourneyGuide } from '@/lib/activationJourney';
 import { PMF_REQUIRED_SIGNALS } from '@/lib/bizmapStages';
 import { getPublicTabConfig } from '@/config/publicTabVisibility';
 import { useAuth } from '@/contexts/AuthContext';
@@ -111,8 +109,6 @@ export default function PMFLabPage() {
     exportReport,
     resetToIntake,
   } = usePMFLab();
-  const activationGuide = getToolJourneyGuide('/pmf-lab');
-
   const ruleCards = [
     {
       label: 'Score 75 or higher',
@@ -180,19 +176,6 @@ export default function PMFLabPage() {
 
               {phase === 'intake' && (
                 <>
-                  {activationGuide ? (
-                    <ActivationJourneyStrip
-                      stageLabel={activationGuide.stageLabel}
-                      title={activationGuide.title}
-                      description={activationGuide.description}
-                      doneLabel={activationGuide.doneLabel}
-                      completedLabel={activationGuide.completedLabel}
-                      nextRoute={activationGuide.nextRoute}
-                      nextLabel={activationGuide.nextLabel}
-                      isComplete={hasSavedReport}
-                      className="mb-6"
-                    />
-                  ) : null}
                   <div className="grid gap-4 md:grid-cols-2">
                     {ruleCards.map(({ label, title, description, icon: Icon, tone }) => (
                       <div key={title} className={`rounded-2xl border p-5 ${tone}`}>
@@ -221,15 +204,6 @@ export default function PMFLabPage() {
                   showPricingCta={publicTab.showPricingCta}
                 >
                   <div className="space-y-6">
-                    {activationGuide ? (
-                      <ActivationJourneyStrip
-                        stageLabel={activationGuide.stageLabel}
-                        title={activationGuide.title}
-                        description={activationGuide.description}
-                        doneLabel={activationGuide.doneLabel}
-                        completedLabel={activationGuide.completedLabel}
-                      />
-                    ) : null}
                     <PMFEvidenceForm
                       onSubmit={() => {}}
                       isSubmitting={false}
@@ -253,18 +227,6 @@ export default function PMFLabPage() {
                 {/* Phase C — PMF Readiness Report */}
                 {phase === 'results' && analysis && (
                   <div className="space-y-6">
-                    {activationGuide ? (
-                      <ActivationJourneyStrip
-                        stageLabel={activationGuide.stageLabel}
-                        title={activationGuide.title}
-                        description={activationGuide.description}
-                        doneLabel={activationGuide.doneLabel}
-                        completedLabel={activationGuide.completedLabel}
-                        nextRoute={activationGuide.nextRoute}
-                        nextLabel={activationGuide.nextLabel}
-                        isComplete={hasSavedReport}
-                      />
-                    ) : null}
                     <PMFReadinessReport
                       analysis={analysis}
                       analysisId={analysisId}
