@@ -1,23 +1,117 @@
-import { useEffect, useState } from 'react';
-import { X, Newspaper, MessageSquare, Users } from 'lucide-react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { ArrowRight, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { captureEvent } from '@/lib/analytics';
+import { useBizMapProgress } from '@/hooks/useBizMapProgress';
+import {
+  BIZMAP_STAGES,
+  BIZMAP_TOOLS,
+  DEFAULT_CURRENT_STAGE,
+  getStageIndex,
+  getNextStage,
+  type BizMapStage,
+} from '@/lib/bizmapStages';
+import { cn } from '@/lib/utils';
 
-const THREE_DAYS_MS = 3 * 24 * 60 * 60 * 1000;
+const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000;
+const FIRST_LOGIN_THRESHOLD_MS = 5 * 60 * 1000;
+const AUTO_DISMISS_MS = 12000;
+const DISMISS_STORAGE_KEY = 'ct_welcome_back_dismissed_at';
 
-interface WelcomeBackData {
-  newArticleCount: number;
-  unreadMessageCount: number;
-  newMentorCount: number;
-  lastSeenAt: string;
+function getPrimaryToolRoute(stage: BizMapStage): { route: string; name: string } {
+  const stageDef = BIZMAP_STAGES.find((s) => s.id === stage);
+  const tool = stageDef?.tools[0] ?? BIZMAP_TOOLS.find((t) => t.stage === stage);
+  return { route: tool?.route ?? '/dashboard', name: tool?.name ?? 'your current tool' };
+}
+
+function getStageName(stage: BizMapStage): string {
+  const names: Record<BizMapStage, string> = {
+    IDENTITY: 'Identity',
+    PROTOTYPE: 'Prototype',
+    VALIDATING: 'Validating',
+    BUILDING: 'Building',
+    LAUNCH: 'Launch',
+  };
+  return names[stage] ?? stage;
+}
+
+interface BannerContent {
+  subText: string;
+  ctaRoute: string;
+}
+
+function buildBannerContent(
+  currentStage: BizMapStage,
+  lastActiveMs: number,
+  completionTimestamps: Record<string, string | null>
+): BannerContent {
+  const primary = getPrimaryToolRoute(currentStage);
+  const stageName = getStageName(currentStage);
+
+  // Check if any stage was completed since last visit
+  const completedSinceLastVisit = Object.entries(completionTimestamps).find(([, ts]) => {
+    if (!ts) return false;
+    return new Date(ts).getTime() > lastActiveMs;
+  });
+
+  if (completedSinceLastVisit) {
+    // Derive the completed stage name from the key (e.g. "identityCompletedAt" → IDENTITY)
+    const keyToStage: Record<string, BizMapStage> = {
+      identityCompletedAt: 'IDENTITY',
+      prototypeCompletedAt: 'PROTOTYPE',
+      validatingCompletedAt: 'VALIDATING',
+      buildingCompletedAt: 'BUILDING',
+      launchCompletedAt: 'LAUNCH',
+    };
+    const completedStage = keyToStage[completedSinceLastVisit[0]];
+    const completedName = completedStage ? getStageName(completedStage) : stageName;
+    const nextStage = completedStage ? getNextStage(completedStage) : null;
+    const nextName = nextStage ? getStageName(nextStage) : null;
+    const nextRoute = nextStage ? getPrimaryToolRoute(nextStage).route : primary.route;
+
+    return {
+      subText: nextName
+        ? `You finished ${completedName} since your last visit. Next up: ${nextName}.`
+        : `You finished ${completedName} since your last visit. Keep the momentum going.`,
+      ctaRoute: nextRoute,
+    };
+  }
+
+  // Default: in-progress or no activity
+  return {
+    subText: `You're at ${stageName}. Your next step is ${primary.name}.`,
+    ctaRoute: primary.route,
+  };
 }
 
 export function WelcomeBackBanner() {
   const { user } = useAuth();
-  const [data, setData] = useState<WelcomeBackData | null>(null);
-  const [dismissed, setDismissed] = useState(false);
+  const { currentStage, progress } = useBizMapProgress();
+  const [visible, setVisible] = useState(false);
+  const [fading, setFading] = useState(false);
+  const [content, setContent] = useState<BannerContent | null>(null);
+  const [firstName, setFirstName] = useState<string | null>(null);
+  const autoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const dismiss = useCallback((manual: boolean) => {
+    if (manual) {
+      localStorage.setItem(DISMISS_STORAGE_KEY, Date.now().toString());
+      captureEvent('journey_welcome_back_dismissed', { user_id: user?.id });
+    }
+    setFading(true);
+    setTimeout(() => setVisible(false), 700);
+  }, [user?.id]);
+
+  const startAutoTimer = useCallback(() => {
+    if (autoTimer.current) clearTimeout(autoTimer.current);
+    autoTimer.current = setTimeout(() => dismiss(false), AUTO_DISMISS_MS);
+  }, [dismiss]);
+
+  const pauseAutoTimer = useCallback(() => {
+    if (autoTimer.current) clearTimeout(autoTimer.current);
+  }, []);
 
   useEffect(() => {
     if (!user) return;
@@ -25,155 +119,126 @@ export function WelcomeBackBanner() {
     const init = async () => {
       const { data: profile } = await supabase
         .from('profiles')
-        .select('last_seen_at, last_activity_at, last_active_at, updated_at')
+        .select('full_name, last_active_at, last_activity_at, last_seen_at, created_at')
         .eq('id', user.id)
         .single();
 
-      const rawLastSeen =
-        profile?.last_seen_at ??
-        profile?.last_activity_at ??
-        profile?.last_active_at ??
-        profile?.updated_at;
+      if (!profile) return;
 
-      if (!rawLastSeen) return;
+      // Resolve last active timestamp
+      const rawLastActive =
+        profile.last_active_at ??
+        profile.last_activity_at ??
+        profile.last_seen_at;
 
-      const lastSeenAt = rawLastSeen;
-      const lastSeen = new Date(lastSeenAt).getTime();
-      const now = Date.now();
-      const gap = now - lastSeen;
+      // Detect first-ever login: no prior activity recorded, and account is fresh
+      const accountAgeMs = Date.now() - new Date(profile.created_at).getTime();
+      if (!rawLastActive && accountAgeMs < FIRST_LOGIN_THRESHOLD_MS) return;
 
-      if (gap < THREE_DAYS_MS) return;
+      // If no timestamp at all, nothing to compare
+      if (!rawLastActive) return;
 
-      const lastSeenIso = new Date(lastSeen).toISOString();
+      const lastActiveMs = new Date(rawLastActive).getTime();
+      const gapMs = Date.now() - lastActiveMs;
 
-      const [articlesResult, messagesResult, mentorsResult] = await Promise.allSettled([
-        supabase
-          .from('stories_articles')
-          .select('id', { count: 'exact', head: true })
-          .eq('status', 'published')
-          .gte('published_at', lastSeenIso),
-        supabase
-          .from('conversations')
-          .select('id')
-          .contains('participants', [user.id])
-          .then(async ({ data: convs }) => {
-            if (!convs || convs.length === 0) return { count: 0 };
-            const ids = convs.map((c) => c.id);
-            const { count } = await supabase
-              .from('messages')
-              .select('id', { count: 'exact', head: true })
-              .in('conversation_id', ids)
-              .neq('sender_id', user.id)
-              .eq('is_read', false);
-            return { count: count ?? 0 };
-          }),
-        supabase
-          .from('mentors')
-          .select('id', { count: 'exact', head: true })
-          .gte('created_at', lastSeenIso),
-      ]);
+      // Only show if away for 24+ hours
+      if (gapMs < TWENTY_FOUR_HOURS_MS) return;
 
-      const newArticleCount =
-        articlesResult.status === 'fulfilled' ? (articlesResult.value.count ?? 0) : 0;
-      const unreadMessageCount =
-        messagesResult.status === 'fulfilled' ? (messagesResult.value.count ?? 0) : 0;
-      const newMentorCount =
-        mentorsResult.status === 'fulfilled' ? (mentorsResult.value.count ?? 0) : 0;
+      // Check dismiss suppression
+      const dismissedAt = localStorage.getItem(DISMISS_STORAGE_KEY);
+      if (dismissedAt && Date.now() - Number(dismissedAt) < TWENTY_FOUR_HOURS_MS) return;
 
-      if (newArticleCount === 0 && unreadMessageCount === 0 && newMentorCount === 0) return;
+      const name = profile.full_name?.split(' ')[0]?.trim() || null;
+      const stage = currentStage ?? DEFAULT_CURRENT_STAGE;
 
-      setData({ newArticleCount, unreadMessageCount, newMentorCount, lastSeenAt });
+      const completionTimestamps: Record<string, string | null> = {
+        identityCompletedAt: progress?.identity_completed_at ?? null,
+        prototypeCompletedAt: progress?.prototype_completed_at ?? null,
+        validatingCompletedAt: progress?.validating_completed_at ?? null,
+        buildingCompletedAt: progress?.building_completed_at ?? null,
+        launchCompletedAt: progress?.launch_completed_at ?? null,
+      };
 
-      captureEvent('welcome_back_shown', {
+      setFirstName(name);
+      setContent(buildBannerContent(stage, lastActiveMs, completionTimestamps));
+      setVisible(true);
+
+      captureEvent('journey_welcome_back_shown', {
         user_id: user.id,
-        days_away: Math.floor(gap / (24 * 60 * 60 * 1000)),
-        new_articles: newArticleCount,
-        unread_messages: unreadMessageCount,
-        new_mentors: newMentorCount,
+        days_away: Math.floor(gapMs / TWENTY_FOUR_HOURS_MS),
+        current_stage: stage,
       });
     };
 
     void init();
-  }, [user]);
+  }, [user, currentStage, completionSignals]);
 
-  if (!data || dismissed) return null;
+  // Start auto-dismiss timer when banner becomes visible
+  useEffect(() => {
+    if (visible && !fading) {
+      startAutoTimer();
+    }
+    return () => {
+      if (autoTimer.current) clearTimeout(autoTimer.current);
+    };
+  }, [visible, fading, startAutoTimer]);
 
-  const { newArticleCount, unreadMessageCount, newMentorCount } = data;
+  if (!visible || !content) return null;
 
-  const primaryCta =
-    unreadMessageCount > 0
-      ? { label: 'Open Messages', to: '/messages' }
-      : newArticleCount > 0
-        ? { label: 'Read the Newspaper', to: '/newspaper' }
-        : { label: 'Discover Mentors', to: '/community' };
-
-  const handleDismiss = () => {
-    setDismissed(true);
-    captureEvent('welcome_back_dismissed', { user_id: user?.id });
-  };
+  const stage = currentStage ?? DEFAULT_CURRENT_STAGE;
+  const stageNumber = getStageIndex(stage) + 1;
+  const totalStages = 5;
+  const heading = firstName ? `Welcome back, ${firstName}.` : 'Welcome back.';
 
   const handleCtaClick = () => {
-    captureEvent('welcome_back_cta_clicked', {
+    captureEvent('journey_welcome_back_cta_clicked', {
       user_id: user?.id,
-      cta: primaryCta.label,
+      cta_route: content.ctaRoute,
+      current_stage: stage,
     });
   };
 
   return (
-    <div className="relative rounded-[1.75rem] border border-teal-500/25 bg-teal-500/10 px-5 py-5 shadow-sm backdrop-blur-sm">
+    <div
+      className={cn(
+        'relative rounded-[1.75rem] border border-primary/25 bg-primary/[0.07] px-5 py-5 shadow-sm backdrop-blur-sm transition-opacity duration-700',
+        fading ? 'opacity-0' : 'opacity-100'
+      )}
+      onMouseEnter={pauseAutoTimer}
+      onMouseLeave={startAutoTimer}
+    >
       <button
-        onClick={handleDismiss}
-        className="absolute right-4 top-4 rounded-full p-1 text-muted-foreground hover:text-foreground"
+        onClick={() => dismiss(true)}
+        className="absolute right-4 top-4 rounded-full p-1 text-muted-foreground hover:text-foreground transition-colors"
         aria-label="Dismiss welcome back banner"
         type="button"
       >
         <X className="h-4 w-4" />
       </button>
 
-      <p className="text-xs font-semibold uppercase tracking-widest text-teal-600 dark:text-teal-400 mb-2">
-        Welcome back
-      </p>
-      <p className="text-lg font-semibold mb-4">
-        Here's what happened while you were away
-      </p>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6 pr-8">
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-2 flex-wrap">
+            <p className="text-xs font-semibold uppercase tracking-widest text-primary/70">
+              Welcome back
+            </p>
+            <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+              Stage {stageNumber} of {totalStages}
+            </span>
+          </div>
+          <p className="text-lg font-semibold">{heading}</p>
+          <p className="text-sm text-muted-foreground max-w-md">{content.subText}</p>
+        </div>
 
-      <div className="flex flex-wrap gap-3 mb-5">
-        {newArticleCount > 0 && (
-          <div className="flex items-center gap-2 rounded-xl border border-border/60 bg-background/65 px-3 py-2 text-sm">
-            <Newspaper className="h-4 w-4 text-teal-500 shrink-0" />
-            <span>
-              <strong>{newArticleCount}</strong>{' '}
-              {newArticleCount === 1 ? 'new article' : 'new articles'} in the Newspaper
-            </span>
-          </div>
-        )}
-        {unreadMessageCount > 0 && (
-          <div className="flex items-center gap-2 rounded-xl border border-border/60 bg-background/65 px-3 py-2 text-sm">
-            <MessageSquare className="h-4 w-4 text-teal-500 shrink-0" />
-            <span>
-              <strong>{unreadMessageCount}</strong>{' '}
-              {unreadMessageCount === 1 ? 'unread message' : 'unread messages'}
-            </span>
-          </div>
-        )}
-        {newMentorCount > 0 && (
-          <div className="flex items-center gap-2 rounded-xl border border-border/60 bg-background/65 px-3 py-2 text-sm">
-            <Users className="h-4 w-4 text-teal-500 shrink-0" />
-            <span>
-              <strong>{newMentorCount}</strong>{' '}
-              {newMentorCount === 1 ? 'new mentor' : 'new mentors'} joined
-            </span>
-          </div>
-        )}
+        <Link
+          to={content.ctaRoute}
+          onClick={handleCtaClick}
+          className="inline-flex shrink-0 items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors self-start sm:self-auto"
+        >
+          Continue
+          <ArrowRight className="h-4 w-4" />
+        </Link>
       </div>
-
-      <Link
-        to={primaryCta.to}
-        onClick={handleCtaClick}
-        className="inline-flex items-center gap-2 rounded-full bg-teal-500 px-5 py-2 text-sm font-semibold text-white hover:bg-teal-600 transition-colors"
-      >
-        {primaryCta.label}
-      </Link>
     </div>
   );
 }
