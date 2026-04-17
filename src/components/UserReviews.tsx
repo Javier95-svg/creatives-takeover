@@ -68,7 +68,7 @@ const cycleSteps: CycleStep[] = [
     shortLabel: "Branding",
     title: "Stage 6: Branding",
     description:
-      "This is the stage where visibility becomes your most valuable asset. Founders need a brand story that sticks, a consistent presence across the right spaces, and credibility built through real partnerships and communities. It's also where the groundwork for scale gets laid. Accelerator applications, early investor conversations, and positioning that signals you're ready for the next level.\n\nCreatives Takeover supports this through Insighta and Community, giving founders the networking and outreach tools to show up in the right rooms and build the relationships that move the needle.",
+      "This is the stage where visibility becomes your most valuable asset. Founders need a brand story that sticks, a consistent presence across the right spaces, and credibility built through real partnerships and communities. It's also where the groundwork for scale gets laid through accelerator applications, early investor conversations, and positioning that signals you're ready for the next level.\n\nCreatives Takeover supports this through Insighta and Community, giving founders the networking and outreach tools to show up in the right rooms and build the relationships that move the needle.",
     icon: Megaphone,
     color: "from-pink-500/20 to-pink-600/20"
   },
