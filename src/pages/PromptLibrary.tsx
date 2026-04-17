@@ -224,7 +224,7 @@ const PromptLibrary = () => {
   if (selectedConcept) {
     const step = selectedConcept.steps.find(s => s.step === currentStep);
     const isStepLocked = !canAccessStep(selectedConcept, currentStep);
-    const isPremiumPrompt = normalizePromptTier(selectedConcept.requiredTier) !== "rookie";
+    const isPremiumPrompt = normalizePlan(selectedConcept.requiredTier) !== "rookie";
     const requiredUpgradePlan = getRequiredUpgradePlan(selectedConcept);
     const requiredUpgradeLabel = requiredUpgradePlan.charAt(0).toUpperCase() + requiredUpgradePlan.slice(1);
     const getTierIcon = () => {
@@ -470,7 +470,7 @@ const PromptLibrary = () => {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-5 sm:gap-6">
               {filteredPrompts.map((prompt) => {
-                const isLocked = !hasAccessToPrompt(prompt) && normalizePromptTier(prompt.requiredTier) !== "rookie";
+                const isLocked = !hasAccessToPrompt(prompt) && normalizePlan(prompt.requiredTier) !== "rookie";
 
                 return (
                 <Card 
