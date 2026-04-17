@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,92 +8,98 @@ import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { ChevronLeft, ChevronRight, Loader2, Save } from 'lucide-react';
+import { ArrowRight, ChevronLeft, ChevronRight, Loader2, Save, Sparkles, Users } from 'lucide-react';
 import Navigation from '@/components/Navigation';
 import { AccountWallpaper } from '@/components/AccountWallpaper';
+import {
+  assignStage,
+  shouldRecommendCofounder,
+  STAGES,
+  type QuizAnswers,
+  type StageId,
+} from '@/lib/stageDiagnostic';
 
-interface QuizAnswers {
-  isFirstStartup: string;
-  currentStage: string;
-  biggestChallenge: string;
-  launchTimeline: string;
-  lookingForCofounder: string;
-}
+type PartialAnswers = Partial<QuizAnswers>;
+
+type QuestionDef = {
+  id: keyof QuizAnswers;
+  question: string;
+  description?: string;
+  options: { value: string; label: string }[];
+};
+
+const QUESTIONS: QuestionDef[] = [
+  {
+    id: 'q1',
+    question: 'Where are you right now with your startup?',
+    options: [
+      { value: 'have_idea', label: 'I have an idea but haven\'t really started' },
+      { value: 'actively_building', label: 'I\'m actively building something' },
+      { value: 'launched', label: 'I\'ve launched and have users or revenue' },
+      { value: 'ready_to_raise', label: 'I\'m ready (or close) to raising money' },
+    ],
+  },
+  {
+    id: 'q2',
+    question: 'What\'s the biggest thing slowing you down?',
+    options: [
+      { value: 'dont_know_customer', label: 'I don\'t know who my real customer is' },
+      { value: 'not_sure_anyone_pays', label: 'I\'m not sure anyone would actually pay for this' },
+      { value: 'need_build_help', label: 'I need help actually building the product' },
+      { value: 'feeling_alone', label: 'I\'m doing this alone and it\'s a lot' },
+    ],
+  },
+  {
+    id: 'q3',
+    question: 'Have you talked to real potential customers about your idea?',
+    options: [
+      { value: 'no', label: 'No, not really' },
+      { value: 'yes_friends', label: 'Yes, but mostly friends and family' },
+      { value: 'yes_strangers', label: 'Yes, including strangers in my target market' },
+    ],
+  },
+  {
+    id: 'q4',
+    question: 'How long have you been working on this?',
+    options: [
+      { value: 'less_than_three', label: 'Less than 3 months' },
+      { value: 'three_to_six', label: '3 to 6 months' },
+      { value: 'six_to_twelve', label: '6 to 12 months' },
+      { value: 'more_than_year', label: 'More than a year' },
+      { value: 'already_launched', label: 'I\'ve already launched' },
+    ],
+  },
+  {
+    id: 'q5',
+    question: 'Which of these feels most true today?',
+    options: [
+      { value: 'just_starting', label: 'I\'m just starting and trying to figure out the direction' },
+      { value: 'have_clarity', label: 'I have clarity on the idea and I\'m shaping it' },
+      { value: 'validating', label: 'I\'m validating demand with real people' },
+      { value: 'building', label: 'I\'m heads-down building the product' },
+      { value: 'post_launch', label: 'I\'m live and focused on growth' },
+    ],
+  },
+];
+
+const TOTAL_QUESTIONS = QUESTIONS.length;
 
 const SetupQuiz = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
-  const [answers, setAnswers] = useState<QuizAnswers>({
-    isFirstStartup: '',
-    currentStage: '',
-    biggestChallenge: '',
-    launchTimeline: '',
-    lookingForCofounder: '',
-  });
+  const [answers, setAnswers] = useState<PartialAnswers>({});
+  const [resultStage, setResultStage] = useState<StageId | null>(null);
+  const [showCofounderCard, setShowCofounderCard] = useState(false);
 
-  const totalSteps = 5;
-  const progress = (currentStep / totalSteps) * 100;
-
-  const questions = [
-    {
-      id: 'isFirstStartup',
-      question: 'Is this your first startup?',
-      options: [
-        { value: 'yes', label: 'Yes, this is my first one' },
-        { value: 'no', label: "No, I've built before" },
-      ],
-    },
-    {
-      id: 'currentStage',
-      question: "What best describes your current stage?",
-      options: [
-        { value: 'idea', label: 'Just an idea' },
-        { value: 'building-mvp', label: 'Building an MVP' },
-        { value: 'mvp-ready', label: 'MVP is ready' },
-        { value: 'early-users', label: 'Already have early users' },
-      ],
-    },
-    {
-      id: 'biggestChallenge',
-      question: "What's your biggest challenge right now?",
-      options: [
-        { value: 'idea-to-product', label: 'Turning an idea into a real product' },
-        { value: 'users-validation', label: 'Finding users or validation' },
-        { value: 'focus-accountability', label: 'Staying focused and accountable' },
-        { value: 'find-team', label: 'Find the right people (team)' },
-        { value: 'not-sure', label: 'Not sure yet' },
-      ],
-    },
-    {
-      id: 'launchTimeline',
-      question: 'When do you want to launch or validate publicly?',
-      options: [
-        { value: '30-days', label: 'Within 30 days' },
-        { value: '60-days', label: 'Within 60 days' },
-        { value: '90-plus-days', label: 'Within 90+ days' },
-        { value: 'not-sure', label: 'Not sure yet' },
-      ],
-    },
-    {
-      id: 'lookingForCofounder',
-      question: 'Are you currently looking for a co-founder?',
-      options: [
-        { value: 'yes', label: 'Yes' },
-        { value: 'no', label: 'No' },
-      ],
-    },
-  ];
-
-  const currentQuestion = questions[currentStep - 1];
-  const currentAnswer = answers[currentQuestion.id as keyof QuizAnswers];
+  const progress = (currentStep / TOTAL_QUESTIONS) * 100;
+  const currentQuestion = QUESTIONS[currentStep - 1];
+  const currentAnswer = currentQuestion ? answers[currentQuestion.id] : undefined;
 
   const handleAnswerChange = (value: string) => {
-    setAnswers({
-      ...answers,
-      [currentQuestion.id]: value,
-    });
+    if (!currentQuestion) return;
+    setAnswers((prev) => ({ ...prev, [currentQuestion.id]: value as QuizAnswers[typeof currentQuestion.id] }));
   };
 
   const handleNext = () => {
@@ -101,16 +107,13 @@ const SetupQuiz = () => {
       toast.error('Please select an answer to continue');
       return;
     }
-
-    if (currentStep < totalSteps) {
+    if (currentStep < TOTAL_QUESTIONS) {
       setCurrentStep(currentStep + 1);
     }
   };
 
   const handleBack = () => {
-    if (currentStep > 1) {
-      setCurrentStep(currentStep - 1);
-    }
+    if (currentStep > 1) setCurrentStep(currentStep - 1);
   };
 
   const handleSubmit = async () => {
@@ -118,49 +121,35 @@ const SetupQuiz = () => {
       toast.error('Please select an answer to continue');
       return;
     }
-
     if (!user) {
       toast.error('You must be logged in to save your answers');
       return;
     }
 
+    const completeAnswers = answers as QuizAnswers;
+    const stage = assignStage(completeAnswers);
+    const cofounderRecommended = shouldRecommendCofounder(completeAnswers);
+
     setLoading(true);
     try {
-      // Save quiz answers to database
       const { error } = await supabase
         .from('profiles')
         .update({
-          quiz_is_first_startup: answers.isFirstStartup,
-          quiz_current_stage: answers.currentStage,
-          quiz_biggest_challenge: answers.biggestChallenge,
-          quiz_launch_timeline: answers.launchTimeline,
-          quiz_looking_for_cofounder: answers.lookingForCofounder,
+          quiz_answers_v2: completeAnswers,
+          assigned_stage: stage,
           quiz_completed: true,
           quiz_completed_at: new Date().toISOString(),
-        })
+        } as never)
         .eq('id', user.id);
 
       if (error) throw error;
 
-      // Check if user is looking for a co-founder
-      if (answers.lookingForCofounder === 'yes') {
-        toast.success('Setup complete! Let\'s create your co-founder post...');
-
-        // Redirect to create co-founder post page
-        setTimeout(() => {
-          navigate('/community/co-founders/create');
-        }, 1000);
-      } else {
-        toast.success('Setup complete! Redirecting to your dashboard...');
-
-        // Redirect to dashboard after 1 second
-        setTimeout(() => {
-          navigate('/dashboard');
-        }, 1000);
-      }
-    } catch (error: any) {
+      setResultStage(stage);
+      setShowCofounderCard(cofounderRecommended);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
       console.error('Error saving quiz answers:', error);
-      toast.error('Failed to save your answers: ' + error.message);
+      toast.error('Failed to save your answers: ' + message);
     } finally {
       setLoading(false);
     }
@@ -187,44 +176,138 @@ const SetupQuiz = () => {
     );
   }
 
+  if (resultStage !== null) {
+    const meta = STAGES[resultStage];
+    return (
+      <div className="relative min-h-screen overflow-hidden">
+        <AccountWallpaper />
+        <div className="relative z-10">
+          <Navigation />
+          <div className="container mx-auto px-6 pt-24 pb-12">
+            <div className="max-w-3xl mx-auto space-y-8">
+              <div className="text-center space-y-4">
+                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/30 text-sm font-medium text-primary">
+                  <Sparkles className="w-4 h-4" />
+                  Your diagnostic is ready
+                </div>
+                <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight">
+                  <span className="bg-gradient-to-r from-white via-blue-100 to-purple-200 bg-clip-text text-transparent">
+                    Stage {meta.id} — {meta.name}
+                  </span>
+                </h1>
+                <p className="text-base md:text-lg text-slate-300 max-w-2xl mx-auto">
+                  {meta.description}
+                </p>
+              </div>
+
+              <Card className="backdrop-blur-sm bg-card/80 border-border/50">
+                <CardHeader>
+                  <CardTitle className="text-2xl">Your top focus right now</CardTitle>
+                  <CardDescription>
+                    These are the two tools that will move you forward the fastest at this stage.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {meta.topFocus.map((focus) => (
+                    <Button
+                      key={focus.href}
+                      asChild
+                      variant="outline"
+                      className="w-full justify-between h-auto py-4 text-base"
+                    >
+                      <Link to={focus.href}>
+                        <span>{focus.label}</span>
+                        <ArrowRight className="w-4 h-4 ml-2" />
+                      </Link>
+                    </Button>
+                  ))}
+                </CardContent>
+              </Card>
+
+              {showCofounderCard && (
+                <Card className="backdrop-blur-sm bg-card/80 border-primary/40">
+                  <CardHeader>
+                    <div className="flex items-start gap-3">
+                      <div className="p-2 rounded-lg bg-primary/10">
+                        <Users className="w-5 h-5 text-primary" />
+                      </div>
+                      <div>
+                        <CardTitle className="text-xl">You don't have to build alone</CardTitle>
+                        <CardDescription>
+                          Many founders at this stage find momentum by pairing up with a co-founder. Our Co-Founder Marketplace can help.
+                        </CardDescription>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <Button asChild className="w-full">
+                      <Link to="/community/co-founders">
+                        Explore Co-Founder Marketplace
+                        <ArrowRight className="w-4 h-4 ml-2" />
+                      </Link>
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
+
+              {resultStage === 7 && (
+                <Card className="backdrop-blur-sm bg-card/60 border-border/50">
+                  <CardContent className="pt-6">
+                    <p className="text-sm text-slate-300">
+                      Most founders started where you did. Stage 1 through Stage 6 are all available inside Creatives Takeover whenever you need to revisit an earlier part of the journey.
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
+
+              <div className="flex justify-center">
+                <Button size="lg" onClick={() => navigate('/dashboard')}>
+                  Go to my dashboard
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="relative min-h-screen overflow-hidden">
       <AccountWallpaper />
       <div className="relative z-10">
         <Navigation />
         <div className="container mx-auto px-6 pt-24 pb-12">
-          {/* Header */}
           <div className="text-center py-8 space-y-4">
             <h1 className="text-3xl md:text-4xl lg:text-5xl font-extrabold tracking-tight">
               <span className="bg-gradient-to-r from-white via-blue-100 to-purple-200 bg-clip-text text-transparent">
-                Let's Get Started
+                Find your stage
               </span>
             </h1>
             <p className="text-base md:text-lg text-slate-300 max-w-2xl mx-auto">
-              Answer a few quick questions so we can personalize your experience
+              Five quick questions. We'll tell you exactly where you are and the next move to make.
             </p>
           </div>
 
-          {/* Progress Bar */}
           <div className="max-w-2xl mx-auto mb-8">
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm text-slate-400">
-                Question {currentStep} of {totalSteps}
+                Question {currentStep} of {TOTAL_QUESTIONS}
               </span>
               <span className="text-sm text-slate-400">{Math.round(progress)}%</span>
             </div>
             <Progress value={progress} className="h-2" />
           </div>
 
-          {/* Question Card */}
           <div className="max-w-2xl mx-auto">
             <Card className="backdrop-blur-sm bg-card/80 border-border/50">
               <CardHeader>
                 <CardTitle className="text-2xl">{currentQuestion.question}</CardTitle>
-                <CardDescription>Select the option that best describes you</CardDescription>
+                <CardDescription>Pick the option that best describes you today</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                <RadioGroup value={currentAnswer} onValueChange={handleAnswerChange}>
+                <RadioGroup value={currentAnswer ?? ''} onValueChange={handleAnswerChange}>
                   <div className="space-y-3">
                     {currentQuestion.options.map((option) => (
                       <div
@@ -236,9 +319,9 @@ const SetupQuiz = () => {
                         }`}
                         onClick={() => handleAnswerChange(option.value)}
                       >
-                        <RadioGroupItem value={option.value} id={option.value} />
+                        <RadioGroupItem value={option.value} id={`${currentQuestion.id}-${option.value}`} />
                         <Label
-                          htmlFor={option.value}
+                          htmlFor={`${currentQuestion.id}-${option.value}`}
                           className="flex-1 cursor-pointer text-base font-medium"
                         >
                           {option.label}
@@ -248,7 +331,6 @@ const SetupQuiz = () => {
                   </div>
                 </RadioGroup>
 
-                {/* Navigation Buttons */}
                 <div className="flex items-center justify-between pt-6 border-t">
                   <Button
                     variant="outline"
@@ -259,7 +341,7 @@ const SetupQuiz = () => {
                     Back
                   </Button>
 
-                  {currentStep < totalSteps ? (
+                  {currentStep < TOTAL_QUESTIONS ? (
                     <Button onClick={handleNext} disabled={!currentAnswer}>
                       Next
                       <ChevronRight className="w-4 h-4 ml-2" />
@@ -274,7 +356,7 @@ const SetupQuiz = () => {
                       ) : (
                         <>
                           <Save className="w-4 h-4 mr-2" />
-                          Save Changes
+                          See my stage
                         </>
                       )}
                     </Button>

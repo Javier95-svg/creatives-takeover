@@ -33,6 +33,8 @@ import { DailyPromptResumeCard } from './DailyPromptResumeCard';
 import { useDashboardDailyPrompt } from '@/hooks/useDashboardDailyPrompt';
 import { SavedMentorsCard } from './SavedMentorsCard';
 import { DashboardAccountabilityHero } from './DashboardAccountabilityHero';
+import { StageBadge } from './StageBadge';
+import { useAssignedStage } from '@/hooks/useAssignedStage';
 
 export const PersonalizedDashboardClassic = () => {
   const { user } = useAuth();
@@ -43,6 +45,7 @@ export const PersonalizedDashboardClassic = () => {
     loading,
     trackActivity
   } = usePersonalizedDashboard();
+  const assignedStage = useAssignedStage();
   const {
     showDailyGoal,
     modalMode,
@@ -198,6 +201,10 @@ export const PersonalizedDashboardClassic = () => {
                 </div>
               </CardContent>
             </Card>
+          </div>
+
+          <div className="animate-fade-in-up opacity-0" style={{ animationDelay: '0.005s', animationFillMode: 'forwards' }}>
+            <StageBadge stage={assignedStage} />
           </div>
 
           <div className="animate-fade-in-up opacity-0" style={{ animationDelay: '0.01s', animationFillMode: 'forwards' }}>

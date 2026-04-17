@@ -27,14 +27,15 @@ const Onboarding = () => {
         // Check if user has already completed onboarding
         const { data: profile } = await supabase
           .from('profiles')
-          .select('onboarding_completed')
+          .select('onboarding_completed, quiz_completed')
           .eq('id', user.id)
           .single();
 
-        // STRICT CHECK: Only redirect if onboarding_completed is explicitly true
-        // This ensures users who completed onboarding NEVER see this page again
         if (profile?.onboarding_completed === true) {
-          // Already onboarded, immediately redirect to dashboard
+          if (profile?.quiz_completed !== true) {
+            navigate('/setup-quiz', { replace: true });
+            return;
+          }
           navigate('/dashboard', { replace: true });
           return;
         }
@@ -59,8 +60,8 @@ const Onboarding = () => {
     checkOnboardingStatus();
   }, [user, isAuthenticated, authLoading, navigate]);
 
-  const handleComplete = (startRoute?: string) => {
-    navigate(startRoute ?? '/icp-builder');
+  const handleComplete = (_startRoute?: string) => {
+    navigate('/setup-quiz');
   };
 
   return (

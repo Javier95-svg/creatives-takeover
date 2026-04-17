@@ -33,7 +33,7 @@ const Dashboard = () => {
 
       const { data: profile, error } = await supabase
         .from('profiles')
-        .select('use_classic_dashboard, onboarding_completed, dashboard_bootstrap_source')
+        .select('use_classic_dashboard, onboarding_completed, dashboard_bootstrap_source, quiz_completed')
         .eq('id', user.id)
         .single();
 
@@ -49,6 +49,11 @@ const Dashboard = () => {
 
       if (profile?.onboarding_completed === false && profile?.dashboard_bootstrap_source !== 'icp_unlock') {
         navigate('/onboarding');
+        return;
+      }
+
+      if (profile?.onboarding_completed === true && profile?.quiz_completed !== true) {
+        navigate('/setup-quiz');
         return;
       }
 

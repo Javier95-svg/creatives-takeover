@@ -24,6 +24,8 @@ import { TaskCountContext } from './TaskCountContext';
 import { IcpDashboardSummaryCard } from './IcpDashboardSummaryCard';
 import { MyFilesSection } from './MyFilesSection';
 import { WelcomeBackBanner } from './WelcomeBackBanner';
+import { StageBadge } from './StageBadge';
+import { useAssignedStage } from '@/hooks/useAssignedStage';
 import { InterviewTrackerCard } from './InterviewTrackerCard';
 import { useBizMapProgress } from '@/hooks/useBizMapProgress';
 
@@ -45,6 +47,7 @@ export const PersonalizedDashboardV2 = () => {
   const { isInitializing } = useDashboardInitialization();
   const { subscriptionData } = useSubscription();
   const { currentStage } = useBizMapProgress();
+  const assignedStage = useAssignedStage();
   const dashboardMetrics = useDashboardMetrics();
   const {
     data,
@@ -194,6 +197,8 @@ export const PersonalizedDashboardV2 = () => {
                     </div>
 
                     <WelcomeBackBanner />
+
+                    <StageBadge stage={assignedStage} />
 
                     {data?.primaryIcp && profile?.dashboard_bootstrap_source === 'icp_unlock' ? (
                       <IcpDashboardSummaryCard primaryIcp={data.primaryIcp} />

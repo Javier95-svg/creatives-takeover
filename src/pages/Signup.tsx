@@ -102,7 +102,7 @@ const Signup = () => {
       try {
         const { data: profile } = await supabase
           .from('profiles')
-          .select('onboarding_completed')
+          .select('onboarding_completed, quiz_completed')
           .eq('id', user.id)
           .maybeSingle();
 
@@ -118,6 +118,11 @@ const Signup = () => {
         if (profile?.onboarding_completed !== true && !isIcpUnlockPath(targetAfterAuth)) {
           persistOnboardingReturn(targetAfterAuth);
           navigate(buildOnboardingPath(targetAfterAuth), { replace: true });
+          return;
+        }
+
+        if (profile?.onboarding_completed === true && profile?.quiz_completed !== true) {
+          navigate('/setup-quiz', { replace: true });
           return;
         }
 
