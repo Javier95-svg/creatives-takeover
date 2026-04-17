@@ -132,14 +132,15 @@ const SetupQuiz = () => {
 
     setLoading(true);
     try {
-      const { error } = await supabase
-        .from('profiles')
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const profilesTable = supabase.from('profiles') as any;
+      const { error } = await profilesTable
         .update({
           quiz_answers_v2: completeAnswers,
           assigned_stage: stage,
           quiz_completed: true,
           quiz_completed_at: new Date().toISOString(),
-        } as never)
+        })
         .eq('id', user.id);
 
       if (error) throw error;
@@ -280,13 +281,13 @@ const SetupQuiz = () => {
         <Navigation />
         <div className="container mx-auto px-6 pt-24 pb-12">
           <div className="text-center py-8 space-y-4">
-            <h1 className="text-3xl md:text-4xl lg:text-5xl font-extrabold tracking-tight">
-              <span className="bg-gradient-to-r from-white via-blue-100 to-purple-200 bg-clip-text text-transparent">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight">
+              <span className="text-primary [text-shadow:0_0_22px_rgba(59,130,246,0.28)]">
                 Find your stage
               </span>
             </h1>
             <p className="text-base md:text-lg text-slate-300 max-w-2xl mx-auto">
-              Five quick questions. We'll tell you exactly where you are and the next move to make.
+              We'll tell you exactly where you are and the next move to make.
             </p>
           </div>
 
