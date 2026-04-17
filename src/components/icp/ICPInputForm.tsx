@@ -4,9 +4,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useAuth } from '@/contexts/AuthContext';
 import {
+  AlertTriangle,
   CheckCircle2,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
   Edit2,
@@ -17,6 +20,134 @@ import {
 import { cn } from '@/lib/utils';
 import { AdvancedFieldsSection } from '@/components/pmf/AdvancedFieldsSection';
 import { getIcpDraftStorageKey } from '@/lib/icpDraftStorage';
+
+// ---------------------------------------------------------------------------
+// Vagueness check engine
+// ---------------------------------------------------------------------------
+
+interface VaguenessWarning {
+  id: string;
+  message: string;
+  whyItMatters: string;
+}
+
+const CUSTOMER_TYPE_NOUNS = ['freelancers', 'freelancer', 'smbs', 'enterprises', 'enterprise', 'startups', 'startup', 'agencies', 'agency', 'consultants', 'consultancies'];
+
+function checkVagueness(field: string, value: string): VaguenessWarning[] {
+  const text = value.trim();
+  if (!text) return [];
+  const lower = text.toLowerCase();
+  const warnings: VaguenessWarning[] = [];
+
+  if (field === 'targetAudience') {
+    // 1. Over-broad age range (diff > 15 years, or "all ages" / "any age")
+    const ageRangeMatch = lower.match(/\b(\d{1,3})\s*(?:–|-|to)\s*(\d{1,3})\s*(?:years?(?:\s+old)?|yr|yrs)?/);
+    if (ageRangeMatch) {
+      const lo = parseInt(ageRangeMatch[1], 10);
+      const hi = parseInt(ageRangeMatch[2], 10);
+      if (hi - lo > 15) {
+        warnings.push({
+          id: 'age-range',
+          message: "Your age range covers too many different life stages and needs. The more specific you are, the more useful your ICP becomes. Try narrowing to a 10-year window.",
+          whyItMatters: "A 25-year-old and a 50-year-old have fundamentally different budgets, priorities, and buying behaviours — treating them as one customer makes positioning impossible.",
+        });
+      }
+    }
+    if (/\ball ages\b|\bany age\b/.test(lower)) {
+      warnings.push({
+        id: 'age-range',
+        message: "Your age range covers too many different life stages and needs. The more specific you are, the more useful your ICP becomes. Try narrowing to a 10-year window.",
+        whyItMatters: "A 25-year-old and a 50-year-old have fundamentally different budgets, priorities, and buying behaviours — treating them as one customer makes positioning impossible.",
+      });
+    }
+
+    // 2. Generic occupation
+    const genericOccupationPhrases = [
+      'entrepreneurs', 'professionals', 'business owners', 'anyone', 'people who', 'individuals who',
+    ];
+    const hasGenericOccupation = genericOccupationPhrases.some((phrase) => lower.includes(phrase));
+    if (hasGenericOccupation) {
+      warnings.push({
+        id: 'generic-occupation',
+        message: "Words like 'entrepreneurs' or 'professionals' describe tens of millions of people. Who specifically? A 28-year-old solo SaaS founder is different from a 50-year-old agency owner. Name the specific type.",
+        whyItMatters: "Generic segments produce generic messaging. The narrower the ICP, the sharper the outreach, pricing, and product decisions.",
+      });
+    }
+
+    // 4. Aspirational customer
+    const aspirationalPhrases = ['eventually', 'ideally', 'in the future', 'when they grow'];
+    const hasAspirational = aspirationalPhrases.some((phrase) => lower.includes(phrase));
+    if (hasAspirational) {
+      warnings.push({
+        id: 'aspirational',
+        message: "This sounds like your aspirational customer, not your current one. Your ICP should describe the person who has this problem right now and would pay to solve it today.",
+        whyItMatters: "Building for a future customer means you won't get the early-signal feedback loops that actually validate a product.",
+      });
+    }
+
+    // 5. Too many customer types
+    const typeMatches = CUSTOMER_TYPE_NOUNS.filter((noun) => lower.includes(noun));
+    const andCount = (lower.match(/ and /g) || []).length;
+    if (typeMatches.length >= 2 && andCount >= 1) {
+      warnings.push({
+        id: 'too-many-types',
+        message: "You've described multiple different customer types. Each one has different needs, budgets, and decision-making processes. Pick one and build your ICP around them. You can add more later.",
+        whyItMatters: "Serving multiple segments at once fragments your go-to-market effort and dilutes positioning before you have product-market fit.",
+      });
+    }
+  }
+
+  if (field === 'problemStatement') {
+    // 3. Missing pain specificity
+    const wordCount = text.split(/\s+/).filter(Boolean).length;
+    const vaguePhrases = ['they need help with', 'they want to', 'they struggle with'];
+    const hasVaguePhrase = vaguePhrases.some((phrase) => lower.includes(phrase));
+    if (wordCount < 20 || hasVaguePhrase) {
+      warnings.push({
+        id: 'pain-specificity',
+        message: "Your problem statement is too abstract. A useful ICP describes the exact moment the pain occurs — what are they doing, what goes wrong, and what does it cost them?",
+        whyItMatters: "Vague problems attract vague solutions. Specificity here is the single biggest lever on the quality of your ICP output.",
+      });
+    }
+  }
+
+  return warnings;
+}
+
+// ---------------------------------------------------------------------------
+// VaguenessWarningCard component
+// ---------------------------------------------------------------------------
+
+const VaguenessWarningCard: React.FC<{ warning: VaguenessWarning }> = ({ warning }) => {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="rounded-xl border-l-4 border-amber-400 bg-amber-50 px-4 py-3 dark:bg-amber-950/30">
+      <div className="flex items-start gap-2">
+        <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
+        <div className="flex-1 space-y-1">
+          <p className="text-sm">
+            <span className="font-semibold text-amber-800 dark:text-amber-300">Let's sharpen this: </span>
+            <span className="text-amber-900 dark:text-amber-200">{warning.message}</span>
+          </p>
+          <Collapsible open={open} onOpenChange={setOpen}>
+            <CollapsibleTrigger asChild>
+              <button
+                type="button"
+                className="inline-flex items-center gap-1 text-xs text-amber-600 underline-offset-2 hover:underline dark:text-amber-400"
+              >
+                Why this matters
+                <ChevronDown className={cn('h-3 w-3 transition-transform duration-200', open && 'rotate-180')} />
+              </button>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <p className="mt-1 text-xs text-amber-700 dark:text-amber-300">{warning.whyItMatters}</p>
+            </CollapsibleContent>
+          </Collapsible>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export interface ICPInputFormData {
   problemStatement: string;
@@ -172,6 +303,8 @@ const ICPInputForm: React.FC<ICPInputFormProps> = ({
   const [saveState, setSaveState] = useState<'idle' | 'restored' | 'saving' | 'saved'>('idle');
   const [lastSavedAt, setLastSavedAt] = useState<number | null>(null);
   const [stepFeedback, setStepFeedback] = useState<{ step: number; message: string } | null>(null);
+  const [fieldWarnings, setFieldWarnings] = useState<Partial<Record<keyof ICPInputFormData, VaguenessWarning[]>>>({});
+  const [blurredFields, setBlurredFields] = useState<Partial<Record<keyof ICPInputFormData, boolean>>>({});
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const hasHydratedDraft = useRef(false);
 
@@ -373,6 +506,26 @@ const ICPInputForm: React.FC<ICPInputFormProps> = ({
               </p>
             </div>
 
+            {/* Vagueness summary banner */}
+            {(() => {
+              const allWarns = [
+                ...(fieldWarnings['problemStatement'] ?? []),
+                ...(fieldWarnings['targetAudience'] ?? []),
+              ];
+              if (allWarns.length >= 2) {
+                return (
+                  <div className="flex items-start gap-3 rounded-xl border-l-4 border-amber-400 bg-amber-50 px-4 py-3 dark:bg-amber-950/30">
+                    <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
+                    <p className="text-sm text-amber-900 dark:text-amber-200">
+                      <span className="font-semibold">Your ICP has {allWarns.length} areas that could make your output less useful.</span>{' '}
+                      Consider refining before generating.
+                    </p>
+                  </div>
+                );
+              }
+              return null;
+            })()}
+
             <Card className="rounded-[1.75rem] border-primary/20 bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.12),transparent_42%),rgba(14,165,233,0.05)]">
               <CardContent className="pt-6">
                 <div className="flex items-start gap-3">
@@ -523,7 +676,23 @@ const ICPInputForm: React.FC<ICPInputFormProps> = ({
               </Button>
               <Button
                 type="button"
-                onClick={() => onSubmit(formData)}
+                onClick={() => {
+                  // Run vagueness checks on key fields before submitting (non-blocking)
+                  const checkedFields: (keyof ICPInputFormData)[] = ['problemStatement', 'targetAudience'];
+                  setFieldWarnings((prev) => {
+                    const next = { ...prev };
+                    checkedFields.forEach((f) => {
+                      next[f] = checkVagueness(f, formData[f] as string);
+                    });
+                    return next;
+                  });
+                  setBlurredFields((prev) => {
+                    const next = { ...prev };
+                    checkedFields.forEach((f) => { next[f] = true; });
+                    return next;
+                  });
+                  onSubmit(formData);
+                }}
                 disabled={isSubmitting}
                 className="flex-1 gap-2"
                 size="lg"
@@ -588,6 +757,11 @@ const ICPInputForm: React.FC<ICPInputFormProps> = ({
                 ref={textareaRef}
                 value={currentValue}
                 onChange={(e) => setField(step.field, e.target.value)}
+                onBlur={() => {
+                  const result = checkVagueness(step.field, currentValue);
+                  setFieldWarnings((prev) => ({ ...prev, [step.field]: result }));
+                  setBlurredFields((prev) => ({ ...prev, [step.field]: true }));
+                }}
                 placeholder={step.placeholder}
                 rows={8}
                 className={cn(
@@ -614,6 +788,26 @@ const ICPInputForm: React.FC<ICPInputFormProps> = ({
                       )}
                     </p>
                   </div>
+                  {/* Vagueness warnings */}
+                  {blurredFields[step.field] && canContinue && (() => {
+                    const warns = fieldWarnings[step.field] ?? [];
+                    if (warns.length > 0) {
+                      return (
+                        <div className="space-y-2 pt-1">
+                          {warns.map((w) => <VaguenessWarningCard key={w.id} warning={w} />)}
+                        </div>
+                      );
+                    }
+                    if (currentValue.trim().split(/\s+/).filter(Boolean).length >= 5) {
+                      return (
+                        <div className="flex items-center gap-2 rounded-xl border border-green-200 bg-green-50 px-4 py-2.5 text-sm text-green-800 dark:border-green-800/40 dark:bg-green-950/30 dark:text-green-300">
+                          <CheckCircle2 className="h-4 w-4 shrink-0 text-green-500" />
+                          Your inputs look specific — great foundation for a useful ICP.
+                        </div>
+                      );
+                    }
+                    return null;
+                  })()}
                 </div>
               </CardContent>
             </Card>
