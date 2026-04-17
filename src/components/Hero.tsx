@@ -327,7 +327,7 @@ const Hero = () => {
             <p className="homepage-hero__copy font-sans text-[15px] sm:text-base md:text-lg text-muted-foreground text-center mb-6 sm:mb-9 max-w-[34rem] mx-auto leading-[1.8] px-2 sm:px-0">
               {isAuthenticated
                 ? "Set up your profile, then head to your dashboard to see what matters now, plan your next steps, and keep moving forward one task at a time."
-                : "Creatives Takeover hands first-time founders the system, the tools, and the network that used to be reserved for the well-connected. No cohort, no gatekeepers, no BS."}
+                : "Stop guessing what to do next. Creatives Takeover gives first-time founders a proven path to validate their ideas, build the right product, and launch with confidence. Backed by mentors and investors who've been where you are."}
             </p>
 
             <div className="mb-4 sm:mb-8 md:mb-10">
