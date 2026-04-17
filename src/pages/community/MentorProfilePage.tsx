@@ -87,7 +87,7 @@ const MentorProfilePage = () => {
 
     // Check if user is authenticated
     if (!isAuthenticated || !user) {
-      window.open(normalizedCalendlyUrl, '_blank', 'noopener,noreferrer');
+      navigate(`/signup?source=book-discovery-call&return=${encodeURIComponent(location.pathname)}`);
       return;
     }
 
