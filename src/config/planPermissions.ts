@@ -45,7 +45,8 @@ export type DashboardNavIconKey =
   | 'check_square'
   | 'target'
   | 'clipboard_list'
-  | 'bar_chart_3';
+  | 'bar_chart_3'
+  | 'gift';
 
 export type DashboardSidebarToolKey =
   | 'icp_builder'
@@ -258,6 +259,7 @@ export const DASHBOARD_MODE_CONFIG: Record<DashboardModeVariant, DashboardModeCo
       { path: '/dashboard', label: 'My Files', iconKey: 'folder_open', sectionId: 'my-files' },
       { path: '/saved-mentors', label: 'Saved Mentors', iconKey: 'bookmark_check' },
       { path: '/tasks', label: 'Your Tasks', iconKey: 'check_square' },
+      { path: '/dashboard/referral', label: 'Referral Program', iconKey: 'gift' },
     ],
     visibleTools: ['icp_builder', 'find_mentor', 'find_cofounder'],
   },
@@ -275,6 +277,7 @@ export const DASHBOARD_MODE_CONFIG: Record<DashboardModeVariant, DashboardModeCo
       { path: '/saved-mentors', label: 'Saved Mentors', iconKey: 'bookmark_check' },
       { path: '/weekly-mission', label: 'Weekly Mission', iconKey: 'calendar' },
       { path: '/tasks', label: 'Your Tasks', iconKey: 'check_square' },
+      { path: '/dashboard/referral', label: 'Referral Program', iconKey: 'gift' },
     ],
     visibleTools: ['icp_builder', 'waitlist_maker', 'pmf_lab', 'find_mentor', 'find_cofounder', 'vc_search', 'accelerator_hunt', 'email_templates', 'prompt_library'],
   },
@@ -295,6 +298,7 @@ export const DASHBOARD_MODE_CONFIG: Record<DashboardModeVariant, DashboardModeCo
       { path: '/core-metrics', label: 'Core Metrics', iconKey: 'bar_chart_3' },
       { path: '/weekly-mission', label: 'Weekly Mission', iconKey: 'calendar' },
       { path: '/tasks', label: 'Your Tasks', iconKey: 'check_square' },
+      { path: '/dashboard/referral', label: 'Referral Program', iconKey: 'gift' },
     ],
     visibleTools: ['icp_builder', 'waitlist_maker', 'pmf_lab', 'mvp_builder', 'tech_stack', 'gtm_strategist', 'directories', 'find_mentor', 'find_cofounder', 'vc_search', 'accelerator_hunt', 'email_templates', 'pitch_deck_analyzer', 'insighta_test', 'newspaper', 'prompt_library'],
   },
@@ -315,6 +319,7 @@ export const DASHBOARD_MODE_CONFIG: Record<DashboardModeVariant, DashboardModeCo
       { path: '/core-metrics', label: 'Core Metrics', iconKey: 'bar_chart_3' },
       { path: '/weekly-mission', label: 'Weekly Mission', iconKey: 'calendar' },
       { path: '/tasks', label: 'Your Tasks', iconKey: 'check_square' },
+      { path: '/dashboard/referral', label: 'Referral Program', iconKey: 'gift' },
     ],
     visibleTools: ['icp_builder', 'waitlist_maker', 'pmf_lab', 'mvp_builder', 'tech_stack', 'gtm_strategist', 'directories', 'find_mentor', 'find_cofounder', 'find_angel', 'vc_search', 'accelerator_hunt', 'email_templates', 'pitch_deck_analyzer', 'insighta_test', 'newspaper', 'prompt_library'],
   },

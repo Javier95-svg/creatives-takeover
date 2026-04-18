@@ -15,6 +15,8 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import ScrollToTop from "./components/ScrollToTop";
 import ProUpgradeBanner from "@/components/ProUpgradeBanner";
 import { useInteractionTelemetry } from "@/hooks/useInteractionTelemetry";
+import { captureReferralFromUrl } from "@/lib/referral";
+import { useEffect } from "react";
 
 const PulseWidget = lazy(() => import("@/components/pulse/PulseWidget"));
 const MobileBottomNav = lazy(() =>
@@ -101,6 +103,8 @@ const WaitlistMakerPage = lazy(() => import("./pages/WaitlistMakerPage"));
 const DirectoriesPage = lazy(() => import("./pages/DirectoriesPage"));
 const FindYourAngel = lazy(() => import("./pages/community/FindYourAngel"));
 const AdminAngelEditor = lazy(() => import("./pages/community/AdminAngelEditor"));
+const ReferralProgram = lazy(() => import("./pages/ReferralProgram"));
+const ReferralDashboardPage = lazy(() => import("./pages/ReferralDashboardPage"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -130,6 +134,14 @@ const InteractionTelemetryBridge = () => {
   return null;
 };
 
+const ReferralCaptureBridge = () => {
+  const location = useLocation();
+  useEffect(() => {
+    captureReferralFromUrl();
+  }, [location.search]);
+  return null;
+};
+
 function App() {
   const { hasUpdate, refreshApp } = useVersionCheck();
 
@@ -148,6 +160,7 @@ function App() {
                   <Suspense fallback={null}>
                     <ScrollToTop />
                     <InteractionTelemetryBridge />
+                    <ReferralCaptureBridge />
                     <UpgradePromptProvider>
                       <ProUpgradeBanner />
                       <PulseWidgetWrapper />
@@ -216,6 +229,8 @@ function App() {
                         <Route path="/reset-password" element={<ResetPassword />} />
                         <Route path="/onboarding" element={<Onboarding />} />
                         <Route path="/dashboard" element={<Dashboard />} />
+                        <Route path="/dashboard/referral" element={<ReferralDashboardPage />} />
+                        <Route path="/referral-program" element={<ReferralProgram />} />
                         <Route path="/accountability" element={<Accountability />} />
                         <Route path="/saved-mentors" element={<SavedMentorsPage />} />
                         <Route path="/account" element={<Account />} />

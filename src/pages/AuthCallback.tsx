@@ -9,6 +9,7 @@ import type { EmailOtpType } from '@supabase/supabase-js';
 import { appendReturnParam, buildOnboardingPath, isIcpUnlockPath, persistOnboardingReturn, sanitizeReturnPath } from '@/lib/authRedirect';
 import { trackSignupCompleted } from '@/lib/analytics';
 import { resumePendingDiscoveryCallRedirect } from '@/services/discoveryCallService';
+import { consumeReferralCode } from '@/lib/referral';
 
 const AuthCallback = () => {
   const navigate = useNavigate();
@@ -88,6 +89,17 @@ const AuthCallback = () => {
         if (session?.user) {
           console.warn('Auth successful, checking for return URL...');
           setStatus('success');
+
+          // Claim referral (OAuth path) if present in localStorage.
+          const referralCode = consumeReferralCode();
+          if (referralCode) {
+            try {
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              await (supabase as any).rpc('claim_referral', { p_code: referralCode });
+            } catch (referralError) {
+              console.warn('Failed to claim referral after OAuth:', referralError);
+            }
+          }
           
           // Show appropriate success message
           if (isEmailConfirmation) {

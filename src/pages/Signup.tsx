@@ -36,6 +36,7 @@ import {
   sanitizeCheckoutIntent,
   redirectToCheckoutIntent,
 } from "@/lib/checkoutRedirect";
+import { consumeReferralCode } from "@/lib/referral";
 
 const Signup = () => {
   const defaultPostSignupPath = '/community/angels?preview=rookie-welcome';
@@ -319,6 +320,17 @@ const Signup = () => {
           returnUrl: conversionSource.returnUrl,
         });
         trackSignupCompleted(triggerType);
+
+        // Claim referral if the signup came from a referral link.
+        const referralCode = consumeReferralCode();
+        if (referralCode) {
+          try {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            await (supabase as any).rpc('claim_referral', { p_code: referralCode });
+          } catch (referralError) {
+            console.warn('Failed to claim referral:', referralError);
+          }
+        }
 
         try {
           await trackActivity('user:signup', { source: conversionSource.source });

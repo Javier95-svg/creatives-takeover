@@ -24,6 +24,7 @@ import {
   Filter,
   Handshake,
   FolderOpen,
+  Gift,
   type LucideIcon,
 } from 'lucide-react';
 import {
@@ -170,6 +171,7 @@ export const DashboardSidebar = () => {
     target: Target,
     clipboard_list: ClipboardList,
     bar_chart_3: BarChart3,
+    gift: Gift,
   };
 
   const dashboardNavItems = modeConfig.navItems.map((item) => ({

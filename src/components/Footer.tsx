@@ -53,6 +53,11 @@ const Footer = () => {
                   Terms of Service
                 </Link>
               </li>
+              <li>
+                <Link className="inline-flex items-center min-h-[44px] py-2 hover:underline underline-offset-4 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-sm transition-colors" to="/referral-program">
+                  Referral Program
+                </Link>
+              </li>
             </ul>
           </nav>
 
