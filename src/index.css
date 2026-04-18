@@ -542,6 +542,31 @@ All colors MUST be HSL.
     border-right: 1px solid hsl(var(--border) / 0.2);
   }
 
+  .dashboard-sidebar-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--border) / 0.95) transparent;
+  }
+
+  .dashboard-sidebar-scroll::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .dashboard-sidebar-scroll::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .dashboard-sidebar-scroll::-webkit-scrollbar-thumb {
+    background: hsl(var(--border) / 0.95);
+    border-radius: 999px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+
+  .dashboard-sidebar-scroll::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.4);
+    background-clip: padding-box;
+  }
+
   /* Glassmorphism Input */
   .glass-chat-input {
     background: hsl(var(--background) / 0.6);

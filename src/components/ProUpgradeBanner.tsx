@@ -10,6 +10,8 @@ const ProUpgradeBanner = () => {
         location.pathname === '/login' ||
         location.pathname === '/signup' ||
         location.pathname === '/auth' ||
+        location.pathname === '/dashboard' ||
+        location.pathname.startsWith('/dashboard/') ||
         location.pathname === '/icp-builder' ||
         location.pathname.startsWith('/bizmap-ai/icp-builder') ||
         location.pathname.startsWith('/mvp-builder');

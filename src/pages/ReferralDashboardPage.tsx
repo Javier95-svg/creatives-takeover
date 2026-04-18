@@ -26,26 +26,21 @@ const ReferralDashboardPage = () => {
           <DashboardSidebar />
           <SidebarInset>
             <div className="min-h-screen relative overflow-hidden bg-background">
-              <div
-                style={{ top: 'var(--banner-height, 0)' } as React.CSSProperties}
-                className="fixed left-0 right-0 z-50 bg-background/90 backdrop-blur-md border-b border-border/60"
-              >
-                <div className="container mx-auto px-6 py-3 max-w-7xl">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <SidebarTrigger />
-                      <span className="text-sm font-medium text-muted-foreground">Referral Program</span>
-                    </div>
-                    <button
-                      onClick={() => navigate('/dashboard')}
-                      className="rounded-md border border-border/60 bg-background/80 px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground hover:border-primary/30 hover:bg-muted/40 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 flex items-center gap-2"
-                      aria-label="Back to dashboard"
-                      type="button"
-                    >
-                      <span>Dashboard</span>
-                      <ArrowRight className="h-4 w-4" aria-hidden="true" />
-                    </button>
+              <div className="pointer-events-none fixed inset-x-0 top-0 z-50">
+                <div className="container mx-auto flex max-w-7xl items-start justify-between px-6 pt-4">
+                  <div className="pointer-events-auto flex items-center gap-4">
+                    <SidebarTrigger className="rounded-full border border-border/70 bg-background/88 shadow-sm backdrop-blur-md" />
+                    <span className="text-sm font-medium text-muted-foreground">Referral Program</span>
                   </div>
+                  <button
+                    onClick={() => navigate('/dashboard')}
+                    className="pointer-events-auto inline-flex items-center gap-2 rounded-full border border-border/70 bg-background/88 px-4 py-2 text-sm font-medium text-muted-foreground shadow-sm backdrop-blur-md transition-colors hover:border-primary/30 hover:bg-background hover:text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                    aria-label="Back to dashboard"
+                    type="button"
+                  >
+                    <span>Dashboard</span>
+                    <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                  </button>
                 </div>
               </div>
 
