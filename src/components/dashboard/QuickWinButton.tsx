@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Sparkles, Loader2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
@@ -80,7 +80,7 @@ export const QuickWinButton = ({ onWinAdded }: QuickWinButtonProps) => {
       setOpen(false);
       setWinText('');
       onWinAdded?.();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error saving win:', error);
       toast.error('Failed to save win. Please try again.');
     } finally {
@@ -99,16 +99,19 @@ export const QuickWinButton = ({ onWinAdded }: QuickWinButtonProps) => {
         <span className="font-semibold">Add a Win</span>
       </Button>
 
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-2xl flex items-center gap-2">
-              <Sparkles className="w-6 h-6 text-primary" />
-              What's Your Win?
-            </DialogTitle>
-          </DialogHeader>
+        <Dialog open={open} onOpenChange={setOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="text-2xl flex items-center gap-2">
+                <Sparkles className="w-6 h-6 text-primary" />
+                What's Your Win?
+              </DialogTitle>
+              <DialogDescription>
+                Log a small or large win so it shows up in your momentum tracking on the dashboard.
+              </DialogDescription>
+            </DialogHeader>
 
-          <div className="space-y-4 py-4">
+            <div className="space-y-4 py-4">
             <p className="text-sm text-muted-foreground">
               Celebrate your progress! No win is too small. 🎉
             </p>

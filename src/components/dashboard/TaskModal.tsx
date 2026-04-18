@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
@@ -57,7 +57,7 @@ export const TaskModal = ({ open, onOpenChange, selectedDate, onTaskAdded }: Tas
       setDeadlineTime('23:59');
       onOpenChange(false);
       onTaskAdded?.();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error adding task:', error);
       toast.error('Failed to add task. Please try again.');
     } finally {
@@ -73,6 +73,9 @@ export const TaskModal = ({ open, onOpenChange, selectedDate, onTaskAdded }: Tas
             <CalendarIcon className="w-6 h-6 text-primary" />
             Add Task
           </DialogTitle>
+          <DialogDescription>
+            Create a dated task with a deadline so it appears in your dashboard workflow and reminder cycle.
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
@@ -135,7 +138,10 @@ export const TaskModal = ({ open, onOpenChange, selectedDate, onTaskAdded }: Tas
 
           <div className="space-y-2">
             <Label>Priority</Label>
-            <RadioGroup value={priority} onValueChange={(value: any) => setPriority(value)}>
+            <RadioGroup
+              value={priority}
+              onValueChange={(value: 'low' | 'medium' | 'high') => setPriority(value)}
+            >
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="low" id="low" />
                 <Label htmlFor="low" className="cursor-pointer font-normal">

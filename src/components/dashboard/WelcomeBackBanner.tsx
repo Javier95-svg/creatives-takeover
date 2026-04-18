@@ -171,7 +171,15 @@ export function WelcomeBackBanner() {
     };
 
     void init();
-  }, [user, currentStage, completionSignals]);
+  }, [
+    user,
+    currentStage,
+    progress?.identity_completed_at,
+    progress?.prototype_completed_at,
+    progress?.validating_completed_at,
+    progress?.building_completed_at,
+    progress?.launch_completed_at,
+  ]);
 
   // Start auto-dismiss timer when banner becomes visible
   useEffect(() => {

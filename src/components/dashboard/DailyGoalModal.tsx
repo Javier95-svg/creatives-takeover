@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
@@ -181,6 +181,11 @@ export const DailyGoalModal = ({
               </div>
             )}
           </DialogTitle>
+          <DialogDescription>
+            {isMorning
+              ? 'Set one concrete goal for today so the dashboard can anchor your next move.'
+              : 'Reflect on today so you can carry one clear lesson into tomorrow.'}
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
