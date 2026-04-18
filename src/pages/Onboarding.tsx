@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { OnboardingForm } from '@/components/OnboardingForm';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -7,10 +7,16 @@ import { Helmet } from 'react-helmet-async';
 import HomeWallpaper from '@/components/wallpapers/HomeWallpaper';
 import { captureEvent } from '@/lib/analytics';
 import { trackActivity } from '@/lib/activity';
+import { getOnboardingReturn, sanitizeReturnPath } from '@/lib/authRedirect';
+import {
+  isLegacyOnboardingExempt,
+  shouldRedirectToSetupQuiz,
+} from '@/lib/guidedOnboarding';
 
 const Onboarding = () => {
   const { user, isAuthenticated, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const hasTrackedStart = useRef(false);
 
   useEffect(() => {
@@ -27,15 +33,28 @@ const Onboarding = () => {
         // Check if user has already completed onboarding
         const { data: profile } = await supabase
           .from('profiles')
-          .select('onboarding_completed, quiz_completed')
+          .select('onboarding_completed, quiz_completed, user_preferences')
           .eq('id', user.id)
           .single();
 
+        const requestedReturn = searchParams.get('return') ?? getOnboardingReturn('/dashboard');
+        const returnTarget = sanitizeReturnPath(requestedReturn, '/dashboard');
+        const safeExitTarget =
+          returnTarget.startsWith('/onboarding') || returnTarget.startsWith('/setup-quiz')
+            ? '/dashboard'
+            : returnTarget;
+
+        if (isLegacyOnboardingExempt(profile)) {
+          navigate(safeExitTarget, { replace: true });
+          return;
+        }
+
+        if (shouldRedirectToSetupQuiz(profile)) {
+          navigate('/setup-quiz', { replace: true });
+          return;
+        }
+
         if (profile?.onboarding_completed === true) {
-          if (profile?.quiz_completed !== true) {
-            navigate('/setup-quiz', { replace: true });
-            return;
-          }
           navigate('/dashboard', { replace: true });
           return;
         }
@@ -58,7 +77,7 @@ const Onboarding = () => {
     };
 
     checkOnboardingStatus();
-  }, [user, isAuthenticated, authLoading, navigate]);
+  }, [authLoading, isAuthenticated, navigate, searchParams, user]);
 
   const handleComplete = (_startRoute?: string) => {
     navigate('/setup-quiz');

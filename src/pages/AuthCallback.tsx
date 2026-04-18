@@ -7,6 +7,10 @@ import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import type { EmailOtpType } from '@supabase/supabase-js';
 import { appendReturnParam, buildOnboardingPath, isIcpUnlockPath, persistOnboardingReturn, sanitizeReturnPath } from '@/lib/authRedirect';
+import {
+  shouldRedirectToGuidedOnboarding,
+  shouldRedirectToSetupQuiz,
+} from '@/lib/guidedOnboarding';
 import { trackSignupCompleted } from '@/lib/analytics';
 import { resumePendingDiscoveryCallRedirect } from '@/services/discoveryCallService';
 import {
@@ -152,7 +156,7 @@ const AuthCallback = () => {
           }
           
           // Get return URL from localStorage (saved before OAuth redirect)
-          const fallbackReturnUrl = isEmailConfirmation ? '/onboarding' : '/dashboard';
+          const fallbackReturnUrl = '/dashboard';
           let returnUrl = sanitizeReturnPath(localStorage.getItem('oauth_return_url') || fallbackReturnUrl, '/dashboard');
           const oauthSource = localStorage.getItem('oauth_source');
           const oauthSignupMethod = localStorage.getItem('oauth_signup_method');
@@ -198,7 +202,7 @@ const AuthCallback = () => {
           
           const { data: profile, error: profileError } = await supabase
             .from('profiles')
-            .select('onboarding_completed')
+            .select('onboarding_completed, quiz_completed, dashboard_bootstrap_source, user_preferences')
             .eq('id', session.user.id)
             .maybeSingle();
 
@@ -206,9 +210,11 @@ const AuthCallback = () => {
             console.error('Error resolving onboarding status after auth callback:', profileError);
           }
 
-          const destination = profile?.onboarding_completed === true || isIcpUnlockPath(returnUrl)
-            ? returnUrl
-            : buildOnboardingPath(returnUrl);
+          const destination = shouldRedirectToGuidedOnboarding(profile) && !isIcpUnlockPath(returnUrl)
+            ? buildOnboardingPath(returnUrl)
+            : shouldRedirectToSetupQuiz(profile)
+              ? '/setup-quiz'
+              : returnUrl;
 
           // Navigate to return URL or route incomplete users through onboarding first
           if (destination.includes('dream2plan') || (destination === returnUrl && savedBizMapProgress)) {

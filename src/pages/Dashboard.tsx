@@ -8,6 +8,10 @@ import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useActivationGate } from '@/hooks/useActivationGate';
+import {
+  shouldRedirectToGuidedOnboarding,
+  shouldRedirectToSetupQuiz,
+} from '@/lib/guidedOnboarding';
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -33,7 +37,7 @@ const Dashboard = () => {
 
       const { data: profile, error } = await supabase
         .from('profiles')
-        .select('use_classic_dashboard, onboarding_completed, dashboard_bootstrap_source, quiz_completed')
+        .select('use_classic_dashboard, onboarding_completed, dashboard_bootstrap_source, quiz_completed, user_preferences')
         .eq('id', user.id)
         .single();
 
@@ -47,13 +51,13 @@ const Dashboard = () => {
         return;
       }
 
-      if (profile?.onboarding_completed === false && profile?.dashboard_bootstrap_source !== 'icp_unlock') {
-        navigate('/onboarding');
+      if (shouldRedirectToGuidedOnboarding(profile)) {
+        navigate('/onboarding', { replace: true });
         return;
       }
 
-      if (profile?.onboarding_completed === true && profile?.quiz_completed !== true) {
-        navigate('/setup-quiz');
+      if (shouldRedirectToSetupQuiz(profile)) {
+        navigate('/setup-quiz', { replace: true });
         return;
       }
 

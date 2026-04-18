@@ -30,6 +30,10 @@ import {
   sanitizeReturnPath,
 } from "@/lib/authRedirect";
 import {
+  shouldRedirectToGuidedOnboarding,
+  shouldRedirectToSetupQuiz,
+} from "@/lib/guidedOnboarding";
+import {
   appendCheckoutIntentParam,
   consumeCheckoutIntent,
   persistCheckoutIntent,
@@ -108,7 +112,7 @@ const Signup = () => {
       try {
         const { data: profile } = await supabase
           .from('profiles')
-          .select('onboarding_completed, quiz_completed')
+          .select('onboarding_completed, quiz_completed, dashboard_bootstrap_source, user_preferences')
           .eq('id', user.id)
           .maybeSingle();
 
@@ -121,13 +125,13 @@ const Signup = () => {
         const targetAfterAuth = sanitizeReturnPath(conversionSource.returnUrl, '/dashboard');
 
         // New users should complete onboarding first, then return to intent.
-        if (profile?.onboarding_completed !== true && !isIcpUnlockPath(targetAfterAuth)) {
+        if (shouldRedirectToGuidedOnboarding(profile) && !isIcpUnlockPath(targetAfterAuth)) {
           persistOnboardingReturn(targetAfterAuth);
           navigate(buildOnboardingPath(targetAfterAuth), { replace: true });
           return;
         }
 
-        if (profile?.onboarding_completed === true && profile?.quiz_completed !== true) {
+        if (shouldRedirectToSetupQuiz(profile)) {
           navigate('/setup-quiz', { replace: true });
           return;
         }

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -18,6 +18,10 @@ import {
   type QuizAnswers,
   type StageId,
 } from '@/lib/stageDiagnostic';
+import {
+  isLegacyOnboardingExempt,
+  shouldRedirectToGuidedOnboarding,
+} from '@/lib/guidedOnboarding';
 
 type PartialAnswers = Partial<QuizAnswers>;
 
@@ -92,6 +96,48 @@ const SetupQuiz = () => {
   const [answers, setAnswers] = useState<PartialAnswers>({});
   const [resultStage, setResultStage] = useState<StageId | null>(null);
   const [showCofounderCard, setShowCofounderCard] = useState(false);
+
+  useEffect(() => {
+    if (!user) return;
+
+    let cancelled = false;
+
+    const verifyQuizAccess = async () => {
+      try {
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('onboarding_completed, quiz_completed, dashboard_bootstrap_source, user_preferences')
+          .eq('id', user.id)
+          .maybeSingle();
+
+        if (cancelled || error || !profile) {
+          return;
+        }
+
+        if (isLegacyOnboardingExempt(profile)) {
+          navigate('/dashboard', { replace: true });
+          return;
+        }
+
+        if (shouldRedirectToGuidedOnboarding(profile)) {
+          navigate('/onboarding', { replace: true });
+          return;
+        }
+
+        if (profile.quiz_completed === true) {
+          navigate('/dashboard', { replace: true });
+        }
+      } catch (error) {
+        console.error('Error checking setup quiz access:', error);
+      }
+    };
+
+    void verifyQuizAccess();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [navigate, user]);
 
   const progress = (currentStep / TOTAL_QUESTIONS) * 100;
   const currentQuestion = QUESTIONS[currentStep - 1];

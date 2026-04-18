@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { getActivationGateState, getActivationRoute, type ActivationIntent, type ActivationGateVariant } from '@/lib/retentionSystem';
+import { shouldEnforceActivationGate } from '@/lib/guidedOnboarding';
 
 interface ActivationGateState {
   loading: boolean;
   variant: ActivationGateVariant;
   activationIntent: ActivationIntent | null;
   firstArtifactType: string | null;
+  requiresGuidedOnboarding: boolean;
 }
 
 export function useActivationGate() {
@@ -16,6 +18,7 @@ export function useActivationGate() {
     variant: 'control',
     activationIntent: null,
     firstArtifactType: null,
+    requiresGuidedOnboarding: false,
   });
 
   useEffect(() => {
@@ -25,6 +28,7 @@ export function useActivationGate() {
         variant: 'control',
         activationIntent: null,
         firstArtifactType: null,
+        requiresGuidedOnboarding: false,
       });
       return;
     }
@@ -40,6 +44,7 @@ export function useActivationGate() {
           variant: nextState.activationGateVariant,
           activationIntent: nextState.activationIntent,
           firstArtifactType: nextState.firstArtifactType,
+          requiresGuidedOnboarding: nextState.requiresGuidedOnboarding,
         });
       } catch (error) {
         console.error('Failed to resolve activation gate state', error);
@@ -49,6 +54,7 @@ export function useActivationGate() {
           variant: 'control',
           activationIntent: null,
           firstArtifactType: null,
+          requiresGuidedOnboarding: false,
         });
       }
     };
@@ -63,8 +69,11 @@ export function useActivationGate() {
   const shouldEnforceGate =
     !!user &&
     !state.loading &&
-    state.variant === 'forced_gate' &&
-    !state.firstArtifactType;
+    shouldEnforceActivationGate({
+      requiresGuidedOnboarding: state.requiresGuidedOnboarding,
+      activationGateVariant: state.variant,
+      firstArtifactType: state.firstArtifactType,
+    });
 
   const redirectUrl = state.activationIntent
     ? getActivationRoute(state.activationIntent)

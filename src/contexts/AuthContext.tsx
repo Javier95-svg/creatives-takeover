@@ -13,6 +13,10 @@ import {
   persistOnboardingReturn,
   sanitizeReturnPath,
 } from '@/lib/authRedirect';
+import {
+  requiresGuidedOnboarding,
+  withGuidedOnboardingPreference,
+} from '@/lib/guidedOnboarding';
 import { resumePendingDiscoveryCallRedirect } from '@/services/discoveryCallService';
 
 interface AuthContextType {
@@ -54,7 +58,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
    * Handle post-sign-in logic (profile, admin tier, onboarding).
    * Runs at most ONCE per user session thanks to signInProcessedRef.
    */
-  const handleSignIn = useCallback(async (signedInUser: User, signedInSession: Session) => {
+  const handleSignIn = useCallback(async (signedInUser: User, _signedInSession: Session) => {
     // Skip if we already processed this user's sign-in
     if (signInProcessedRef.current === signedInUser.id) return;
     signInProcessedRef.current = signedInUser.id;
@@ -67,7 +71,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       // ── Step 1: Check if profile exists (SINGLE call) ──
       const { data: existingProfileData, error: existingProfileError } = await supabase
         .from('profiles')
-        .select('id, onboarding_completed')
+        .select('id, onboarding_completed, user_preferences')
         .eq('id', userId)
         .maybeSingle();
       let existingProfile = existingProfileData;
@@ -97,7 +101,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           : null;
       }
 
-      let profileExists = !!existingProfile;
+      const profileExistedBeforeSignIn = !!existingProfile;
+      let profileExists = profileExistedBeforeSignIn;
       let isNewProfile = false;
 
       // ── Step 2: Create profile if needed ──
@@ -122,8 +127,50 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         return;
       }
 
+      const { data: refreshedProfile, error: refreshedProfileError } = await supabase
+        .from('profiles')
+        .select('id, onboarding_completed, user_preferences')
+        .eq('id', userId)
+        .maybeSingle();
+
+      if (refreshedProfileError) {
+        logWarn('Failed to refresh profile state after sign in', {
+          userId,
+          errorCode: refreshedProfileError.code,
+          errorMessage: refreshedProfileError.message,
+        });
+      } else if (refreshedProfile) {
+        existingProfile = refreshedProfile;
+      }
+
+      if (!profileExistedBeforeSignIn) {
+        const nextUserPreferences = withGuidedOnboardingPreference(existingProfile?.user_preferences, true);
+
+        if (!requiresGuidedOnboarding(existingProfile?.user_preferences)) {
+          const { error: updateProfileError } = await supabase
+            .from('profiles')
+            .update({ user_preferences: nextUserPreferences })
+            .eq('id', userId);
+
+          if (updateProfileError) {
+            logWarn('Failed to persist guided onboarding flag for new account', {
+              userId,
+              errorCode: updateProfileError.code,
+              errorMessage: updateProfileError.message,
+            });
+          }
+        }
+
+        existingProfile = existingProfile
+          ? {
+            ...existingProfile,
+            user_preferences: nextUserPreferences,
+          }
+          : existingProfile;
+      }
+
       // ── Step 3: Run first-login updates in PARALLEL ──
-      const parallelTasks: Promise<any>[] = [];
+      const parallelTasks: Promise<unknown>[] = [];
 
       // New profile: initialize credits
       if (isNewProfile) {
@@ -163,7 +210,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       // Step 4: Handle onboarding redirect (admin never needs onboarding)
       if (!isAdmin) {
         const shouldRedirectToOnboarding =
-          isNewProfile || existingProfile?.onboarding_completed !== true;
+          requiresGuidedOnboarding(existingProfile?.user_preferences) &&
+          existingProfile?.onboarding_completed !== true;
 
         if (shouldRedirectToOnboarding) {
           const hasRedirected = sessionStorage.getItem(`onboarding_redirect_${userId}`);
@@ -186,7 +234,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
               }
             }, 500);
           }
-        } else if (existingProfile?.onboarding_completed === true) {
+        } else {
           sessionStorage.removeItem(`onboarding_redirect_${userId}`);
           localStorage.removeItem(ONBOARDING_RETURN_KEY);
         }
@@ -342,6 +390,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         date_of_birth: profileUser.user_metadata?.date_of_birth || null,
         username: finalUsername,
         subscription_tier: 'rookie',
+        user_preferences: withGuidedOnboardingPreference(null, true),
       };
 
       let { error } = await supabase

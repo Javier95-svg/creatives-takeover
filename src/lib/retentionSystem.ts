@@ -1,6 +1,7 @@
 import type { User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { captureEvent } from '@/lib/analytics';
+import { requiresGuidedOnboarding } from '@/lib/guidedOnboarding';
 
 export type ActivationIntent =
   | 'find_mentor'
@@ -241,6 +242,7 @@ export async function getActivationGateState(userId: string) {
   return {
     activationGateVariant,
     activationIntent,
+    requiresGuidedOnboarding: requiresGuidedOnboarding(profileState?.user_preferences),
     onboardingCompleted: profileState?.onboarding_completed === true,
     firstArtifactType,
     firstArtifactCreatedAt: typeof preferences.firstArtifactCreatedAt === 'string'

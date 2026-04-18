@@ -1,9 +1,7 @@
-import { useEffect, lazy, Suspense, useRef, useState } from "react";
+import { useEffect, lazy, Suspense, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import Hero from "@/components/Hero";
-import HeroWedge from "@/components/home/Hero";
-import SoftGateModal from "@/components/auth/SoftGateModal";
 import ValuePropositionCards from "@/components/ValuePropositionCards";
 import UserReviews from "@/components/UserReviews";
 import EntrepreneurProblems from "@/components/EntrepreneurProblems";
@@ -22,6 +20,7 @@ import HomeWallpaper from "@/components/wallpapers/HomeWallpaper";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { trackLandingViewed } from "@/lib/analytics";
+import { shouldRedirectToGuidedOnboarding } from "@/lib/guidedOnboarding";
 
 // Lazy load below-the-fold components for better performance
 const HomeFAQ = lazy(() => import("@/components/HomeFAQ"));
@@ -33,8 +32,6 @@ const Index = () => {
   const { showExitIntent, closeExitIntent } = useExitIntent();
   const { trackTriggerView, trackDismissal } = useConversionTracking();
   // Always show the previous Hero section design
-  const [softGateOpen, setSoftGateOpen] = useState(false);
-  const [softGateSeed, setSoftGateSeed] = useState('');
   const hasTrackedLandingView = useRef(false);
   // Track homepage analytics
   usePageAnalytics('/', 'Home - Creatives Takeover');
@@ -56,7 +53,7 @@ const Index = () => {
     sessionStorage.removeItem('credit-popup-time-seen');
   }, []);
 
-  // Redirect to onboarding only if explicitly not completed
+  // Redirect to onboarding only for accounts enrolled in the guided new-user flow.
   useEffect(() => {
     if (authLoading || !user) return;
 
@@ -64,15 +61,12 @@ const Index = () => {
       try {
         const { data: profile } = await supabase
           .from('profiles')
-          .select('onboarding_completed')
+          .select('onboarding_completed, dashboard_bootstrap_source, user_preferences')
           .eq('id', user.id)
           .maybeSingle();
 
-        if (profile) {
-          // Enforce onboarding for any non-completed state (false or null).
-          if (profile.onboarding_completed !== true) {
-            navigate('/onboarding');
-          }
+        if (shouldRedirectToGuidedOnboarding(profile)) {
+          navigate('/onboarding', { replace: true });
         }
       } catch (error) {
         console.error('Error checking onboarding status:', error);
