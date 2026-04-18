@@ -36,7 +36,12 @@ import {
   sanitizeCheckoutIntent,
   redirectToCheckoutIntent,
 } from "@/lib/checkoutRedirect";
-import { consumeReferralCode } from "@/lib/referral";
+import {
+  clearPendingReferralCode,
+  getPendingReferralCode,
+  persistPendingReferralCode,
+  setOAuthAuthIntent,
+} from "@/lib/referral";
 
 const Signup = () => {
   const defaultPostSignupPath = '/community/angels?preview=rookie-welcome';
@@ -271,6 +276,7 @@ const Signup = () => {
       trackSignupStarted(triggerType);
 
       const fullName = [formData.firstName.trim(), formData.lastName.trim()].filter(Boolean).join(" ");
+      const pendingReferralCode = getPendingReferralCode();
       persistOnboardingReturn(conversionSource.returnUrl);
       if (checkoutIntent) {
         persistCheckoutIntent(checkoutIntent);
@@ -282,12 +288,14 @@ const Signup = () => {
         fullName,
         undefined,
         normalizeUsernameInput(formData.username),
+        pendingReferralCode,
       );
 
       if (error) {
         console.error('Signup error:', error);
         toast.error(mapSignUpError(error));
       } else {
+        clearPendingReferralCode();
         let session = await getSessionSafely();
 
         // Ensure users are signed in immediately after signup.
@@ -320,17 +328,6 @@ const Signup = () => {
           returnUrl: conversionSource.returnUrl,
         });
         trackSignupCompleted(triggerType);
-
-        // Claim referral if the signup came from a referral link.
-        const referralCode = consumeReferralCode();
-        if (referralCode) {
-          try {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            await (supabase as any).rpc('claim_referral', { p_code: referralCode });
-          } catch (referralError) {
-            console.warn('Failed to claim referral:', referralError);
-          }
-        }
 
         try {
           await trackActivity('user:signup', { source: conversionSource.source });
@@ -373,6 +370,12 @@ const Signup = () => {
       // Preserve post-auth intent and complete onboarding before final return.
       localStorage.setItem('oauth_return_url', conversionSource.returnUrl);
       localStorage.setItem('oauth_source', conversionSource.source);
+      localStorage.setItem('oauth_signup_method', 'google');
+      setOAuthAuthIntent('signup');
+      const pendingReferralCode = getPendingReferralCode();
+      if (pendingReferralCode) {
+        persistPendingReferralCode(pendingReferralCode);
+      }
       persistOnboardingReturn(conversionSource.returnUrl);
 
       // Also save BizMap progress if it exists

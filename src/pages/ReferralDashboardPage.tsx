@@ -55,7 +55,7 @@ const ReferralDashboardPage = () => {
                     Referral Program
                   </h1>
                   <p className="text-muted-foreground">
-                    Share your link. Every 3 verified signups unlock a reward — automatically.
+                    Share your link. Every 3 new accounts created through it unlock a reward — automatically.
                   </p>
                 </header>
 

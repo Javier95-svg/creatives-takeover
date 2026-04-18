@@ -9,7 +9,21 @@ import type { EmailOtpType } from '@supabase/supabase-js';
 import { appendReturnParam, buildOnboardingPath, isIcpUnlockPath, persistOnboardingReturn, sanitizeReturnPath } from '@/lib/authRedirect';
 import { trackSignupCompleted } from '@/lib/analytics';
 import { resumePendingDiscoveryCallRedirect } from '@/services/discoveryCallService';
-import { consumeReferralCode } from '@/lib/referral';
+import {
+  clearOAuthAuthIntent,
+  clearPendingReferralCode,
+  getOAuthAuthIntent,
+  getPendingReferralCode,
+} from '@/lib/referral';
+
+const NEW_ACCOUNT_MAX_AGE_MS = 10 * 60 * 1000;
+
+function isNewlyCreatedUser(createdAt?: string): boolean {
+  if (!createdAt) return false;
+  const createdMs = new Date(createdAt).getTime();
+  if (Number.isNaN(createdMs)) return false;
+  return Date.now() - createdMs <= NEW_ACCOUNT_MAX_AGE_MS;
+}
 
 const AuthCallback = () => {
   const navigate = useNavigate();
@@ -90,12 +104,24 @@ const AuthCallback = () => {
           console.warn('Auth successful, checking for return URL...');
           setStatus('success');
 
-          // Claim referral (OAuth path) if present in localStorage.
-          const referralCode = consumeReferralCode();
-          if (referralCode) {
+          const authIntent = getOAuthAuthIntent();
+          const referralCode = getPendingReferralCode();
+          const shouldClaimReferral =
+            authIntent === 'signup' &&
+            Boolean(referralCode) &&
+            isNewlyCreatedUser(session.user.created_at);
+
+          if (shouldClaimReferral && referralCode) {
             try {
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              await (supabase as any).rpc('claim_referral', { p_code: referralCode });
+              const { data: referralClaimed, error: referralError } = await supabase.rpc('claim_referral', {
+                p_code: referralCode,
+              });
+              if (referralError) {
+                throw referralError;
+              }
+              if (referralClaimed === true || referralClaimed === false) {
+                clearPendingReferralCode();
+              }
             } catch (referralError) {
               console.warn('Failed to claim referral after OAuth:', referralError);
             }
@@ -147,6 +173,7 @@ const AuthCallback = () => {
           localStorage.removeItem('oauth_return_url');
           localStorage.removeItem('oauth_source');
           localStorage.removeItem('oauth_signup_method');
+          clearOAuthAuthIntent();
 
           // Preserve post-onboarding intent for first-time users.
           persistOnboardingReturn(returnUrl);

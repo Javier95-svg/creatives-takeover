@@ -8,6 +8,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { getSafeLocalStorage } from "@/lib/safeStorage";
 import { persistOnboardingReturn } from "@/lib/authRedirect";
 import { normalizeIcpSeed, persistIcpSeed } from "@/lib/icpSeed";
+import {
+  getPendingReferralCode,
+  persistPendingReferralCode,
+  setOAuthAuthIntent,
+} from "@/lib/referral";
 import type { StoredIcpArtifact } from "@/lib/icpBuilderSession";
 
 interface IcpUnlockGateProps {
@@ -49,6 +54,12 @@ export function IcpUnlockGate({
       const storage = getSafeLocalStorage();
       storage.setItem("oauth_return_url", returnPath);
       storage.setItem("oauth_source", "icp-draft-unlock");
+      storage.setItem("oauth_signup_method", "google");
+      setOAuthAuthIntent("signup");
+      const pendingReferralCode = getPendingReferralCode();
+      if (pendingReferralCode) {
+        persistPendingReferralCode(pendingReferralCode);
+      }
 
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",

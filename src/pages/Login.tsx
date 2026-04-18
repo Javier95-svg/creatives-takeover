@@ -21,6 +21,7 @@ import {
   redirectToCheckoutIntent,
   sanitizeCheckoutIntent,
 } from "@/lib/checkoutRedirect";
+import { setOAuthAuthIntent } from "@/lib/referral";
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -203,6 +204,8 @@ const Login = () => {
       
       // Preserve post-auth destination for callback + onboarding flow.
       localStorage.setItem('oauth_return_url', returnUrl);
+      localStorage.removeItem('oauth_signup_method');
+      setOAuthAuthIntent('login');
       persistOnboardingReturn(returnUrl);
       
       toast("Redirecting to Google...");

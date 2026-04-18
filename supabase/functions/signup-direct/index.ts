@@ -20,6 +20,7 @@ interface SignupDirectBody {
   fullName?: string;
   dateOfBirth?: string | null;
   username?: string | null;
+  referralCode?: string | null;
 }
 
 interface SignupDirectResponse {
@@ -212,6 +213,7 @@ serve(async (req: Request): Promise<Response> => {
   const fullName = payload.fullName?.trim() || "";
   const dateOfBirth = payload.dateOfBirth ?? null;
   const username = normalizeUsername(payload.username);
+  const referralCode = typeof payload.referralCode === "string" ? payload.referralCode.trim() || null : null;
 
   if (!email) {
     return jsonResponse({ ok: false, code: "EMAIL_REQUIRED", error: "Email is required." });
@@ -270,6 +272,7 @@ serve(async (req: Request): Promise<Response> => {
       full_name: fullName,
       date_of_birth: dateOfBirth,
       username,
+      referral_code: referralCode,
     },
   });
 

@@ -7,6 +7,7 @@ interface SignUpWithFallbackParams {
   fullName: string;
   dateOfBirth?: string;
   username?: string;
+  referralCode?: string | null;
 }
 
 interface DirectSignupResponse {
@@ -76,6 +77,7 @@ async function tryDirectSignup(params: SignUpWithFallbackParams): Promise<{
       fullName: params.fullName,
       dateOfBirth: params.dateOfBirth || null,
       username: normalizedUsername || null,
+      referralCode: params.referralCode || null,
     },
     headers: {
       "x-signup-fallback": "1",
@@ -104,6 +106,7 @@ export async function signUpWithFallback({
   fullName,
   dateOfBirth,
   username,
+  referralCode,
 }: SignUpWithFallbackParams): Promise<{ error: AuthError | null; usedDirectSignupFallback: boolean }> {
   const directFirstAttempt = await tryDirectSignup({
     email,
@@ -111,6 +114,7 @@ export async function signUpWithFallback({
     fullName,
     dateOfBirth,
     username,
+    referralCode,
   });
 
   if (directFirstAttempt.ok) {
@@ -131,6 +135,7 @@ export async function signUpWithFallback({
         full_name: fullName || "",
         date_of_birth: dateOfBirth || null,
         username: normalizedUsername || null,
+        referral_code: referralCode || null,
       },
     },
   });
@@ -149,6 +154,7 @@ export async function signUpWithFallback({
     fullName,
     dateOfBirth,
     username: normalizedUsername,
+    referralCode,
   });
 
   if (directRetryAttempt.ok) {

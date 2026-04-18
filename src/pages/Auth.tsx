@@ -19,6 +19,12 @@ import { signUpWithFallback } from '@/lib/authSignup';
 import { mapSignInError, mapSignUpError } from '@/lib/authErrors';
 import { MIN_PASSWORD_LENGTH, PASSWORD_LENGTH_ERROR } from '@/lib/passwordPolicy';
 import { persistOnboardingReturn, sanitizeReturnPath } from '@/lib/authRedirect';
+import {
+  clearPendingReferralCode,
+  getPendingReferralCode,
+  persistPendingReferralCode,
+  setOAuthAuthIntent,
+} from '@/lib/referral';
 import { resumePendingDiscoveryCallRedirect } from '@/services/discoveryCallService';
 
 const Auth: React.FC = () => {
@@ -138,17 +144,20 @@ const Auth: React.FC = () => {
     }
 
     persistOnboardingReturn(redirectUrl);
+    const pendingReferralCode = getPendingReferralCode();
 
     const { error } = await signUpWithFallback({
       email,
       password,
       fullName: [firstName.trim(), lastName.trim()].filter(Boolean).join(' '),
+      referralCode: pendingReferralCode,
     });
 
     if (error) {
       setError(mapSignUpError(error));
       setLoading(false);
     } else {
+      clearPendingReferralCode();
       let session = await getSessionSafely();
 
       // Ensure account creation immediately logs in without email confirmation gating.
@@ -191,6 +200,8 @@ const Auth: React.FC = () => {
       // If redirect is a booking flow, go to /community instead
       const finalRedirect = redirectUrl.startsWith('/community/book/') ? '/community' : redirectUrl;
       localStorage.setItem('oauth_return_url', finalRedirect);
+      localStorage.removeItem('oauth_signup_method');
+      setOAuthAuthIntent('login');
       persistOnboardingReturn(finalRedirect);
       
       // Preserve Calendly redirect for OAuth callback
@@ -235,6 +246,12 @@ const Auth: React.FC = () => {
       // If redirect is a booking flow, go to /community instead
       const finalRedirect = redirectUrl.startsWith('/community/book/') ? '/community' : redirectUrl;
       localStorage.setItem('oauth_return_url', finalRedirect);
+      localStorage.setItem('oauth_signup_method', 'google');
+      setOAuthAuthIntent('signup');
+      const pendingReferralCode = getPendingReferralCode();
+      if (pendingReferralCode) {
+        persistPendingReferralCode(pendingReferralCode);
+      }
       persistOnboardingReturn(finalRedirect);
       
       toast("Redirecting to Google...");

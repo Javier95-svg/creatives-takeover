@@ -23,7 +23,7 @@ const STEPS = [
   {
     icon: UserPlus,
     title: 'They sign up',
-    description: 'When someone creates an account through your link, it counts as a verified referral.',
+    description: 'When someone creates a new account through your link, it counts toward your referral rewards.',
   },
   {
     icon: Trophy,
@@ -46,7 +46,7 @@ const FAQ = [
   },
   {
     q: 'When does a referral count?',
-    a: 'A referral counts as soon as someone creates an account using your link. We dedupe by email, so the same person can only count once.',
+    a: 'A referral counts as soon as a new account is created using your link. We dedupe by email, so the same person can only count once.',
   },
   {
     q: 'How do I claim my reward?',
@@ -138,7 +138,7 @@ export default function ReferralProgram() {
                 Rewards by tier
               </h2>
               <p className="text-center text-muted-foreground mb-10 max-w-2xl mx-auto">
-                Every 3 verified sign-ups trigger one reward based on your current plan.
+                Every 3 new accounts created through your link trigger one reward based on your current plan.
               </p>
               <Card className="border-border/60 bg-background/70 backdrop-blur-sm overflow-hidden">
                 <div className="divide-y divide-border/60">

@@ -7777,6 +7777,93 @@ export type Database = {
           },
         ]
       }
+      referral_codes: {
+        Row: {
+          code: string
+          created_at: string
+          user_id: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          user_id: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      referral_rewards: {
+        Row: {
+          batch_number: number
+          created_at: string
+          credits_granted: number | null
+          from_tier: string | null
+          id: string
+          referral_batch_size: number
+          reward_type: string
+          to_tier: string | null
+          user_id: string
+        }
+        Insert: {
+          batch_number: number
+          created_at?: string
+          credits_granted?: number | null
+          from_tier?: string | null
+          id?: string
+          referral_batch_size?: number
+          reward_type: string
+          to_tier?: string | null
+          user_id: string
+        }
+        Update: {
+          batch_number?: number
+          created_at?: string
+          credits_granted?: number | null
+          from_tier?: string | null
+          id?: string
+          referral_batch_size?: number
+          reward_type?: string
+          to_tier?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      referrals: {
+        Row: {
+          code_used: string
+          created_at: string
+          id: string
+          referred_email: string
+          referred_user_id: string
+          referrer_user_id: string
+          status: string
+          verified_at: string | null
+        }
+        Insert: {
+          code_used: string
+          created_at?: string
+          id?: string
+          referred_email: string
+          referred_user_id: string
+          referrer_user_id: string
+          status?: string
+          verified_at?: string | null
+        }
+        Update: {
+          code_used?: string
+          created_at?: string
+          id?: string
+          referred_email?: string
+          referred_user_id?: string
+          referrer_user_id?: string
+          status?: string
+          verified_at?: string | null
+        }
+        Relationships: []
+      }
       waitlist_pages: {
         Row: {
           ab_test_enabled: boolean | null
@@ -8201,6 +8288,7 @@ export type Database = {
       cleanup_expired_ai_cache: { Args: never; Returns: undefined }
       cleanup_expired_analytics_cache: { Args: never; Returns: undefined }
       cleanup_expired_insights: { Args: never; Returns: undefined }
+      claim_referral: { Args: { p_code: string }; Returns: boolean }
       complete_daily_challenge: {
         Args: {
           p_challenge_id: string
@@ -8250,6 +8338,10 @@ export type Database = {
         Returns: Json
       }
       expire_subscriptions: { Args: never; Returns: number }
+      generate_referral_code: {
+        Args: { p_user_id: string }
+        Returns: string
+      }
       generate_profile_base_slug: {
         Args: { fallback_user_id: string; full_name: string }
         Returns: string

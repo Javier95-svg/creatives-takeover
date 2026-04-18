@@ -16,6 +16,12 @@ import {
 import { persistOnboardingReturn } from "@/lib/authRedirect";
 import { buildIcpSeedReturnPath, normalizeIcpSeed, persistIcpSeed } from "@/lib/icpSeed";
 import { MIN_PASSWORD_LENGTH, PASSWORD_LENGTH_ERROR } from "@/lib/passwordPolicy";
+import {
+  clearPendingReferralCode,
+  getPendingReferralCode,
+  persistPendingReferralCode,
+  setOAuthAuthIntent,
+} from "@/lib/referral";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -104,6 +110,11 @@ const SoftGateModal = ({
       localStorage.setItem("oauth_return_url", returnPath);
       localStorage.setItem("oauth_source", trigger);
       localStorage.setItem("oauth_signup_method", "google");
+      setOAuthAuthIntent("signup");
+      const pendingReferralCode = getPendingReferralCode();
+      if (pendingReferralCode) {
+        persistPendingReferralCode(pendingReferralCode);
+      }
 
       toast("Redirecting to Google...");
 
@@ -156,12 +167,14 @@ const SoftGateModal = ({
       onBeforeAuthContinue?.();
       persistIcpSeed(normalizedSeed);
       persistOnboardingReturn(returnPath);
+      const pendingReferralCode = getPendingReferralCode();
 
-      const { error } = await signUp(email.trim(), password, "");
+      const { error } = await signUp(email.trim(), password, "", undefined, undefined, pendingReferralCode);
       if (error) {
         toast.error(mapSignUpError(error));
         return;
       }
+      clearPendingReferralCode();
 
       let session = await getSessionSafely();
       if (!session) {

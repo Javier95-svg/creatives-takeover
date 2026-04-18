@@ -2,33 +2,16 @@ import { useEffect, useMemo, useState } from 'react';
 import { Check, Copy, Gift, Share2, Trophy } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import type { Database } from '@/integrations/supabase/types';
 import { useAuth } from '@/contexts/AuthContext';
-
-// Referral tables were added in 20260418120000_create_referral_program.sql
-// and are not yet in the generated Database types. Cast the client to access them.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const db = supabase as any;
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
 import { buildReferralLink } from '@/lib/referral';
 
-interface ReferralRow {
-  id: string;
-  referred_email: string;
-  status: 'pending' | 'verified';
-  created_at: string;
-}
-
-interface ReferralReward {
-  id: string;
-  reward_type: 'tier_upgrade' | 'credits';
-  from_tier: string | null;
-  to_tier: string | null;
-  credits_granted: number | null;
-  created_at: string;
-}
+type ReferralRow = Database['public']['Tables']['referrals']['Row'];
+type ReferralReward = Database['public']['Tables']['referral_rewards']['Row'];
 
 const BATCH_SIZE = 3;
 
@@ -66,13 +49,13 @@ export function ReferralSubtab() {
     const load = async () => {
       setLoading(true);
       const [codeRes, referralsRes, rewardsRes] = await Promise.all([
-        db.from('referral_codes').select('code').eq('user_id', user.id).maybeSingle(),
-        db
+        supabase.from('referral_codes').select('code').eq('user_id', user.id).maybeSingle(),
+        supabase
           .from('referrals')
           .select('id, referred_email, status, created_at')
           .eq('referrer_user_id', user.id)
           .order('created_at', { ascending: false }),
-        db
+        supabase
           .from('referral_rewards')
           .select('id, reward_type, from_tier, to_tier, credits_granted, created_at')
           .eq('user_id', user.id)
@@ -91,7 +74,19 @@ export function ReferralSubtab() {
         console.error('Failed to load referral rewards', rewardsRes.error);
       }
 
-      setCode((codeRes.data?.code as string | undefined) ?? null);
+      let resolvedCode = codeRes.data?.code ?? null;
+      if (!resolvedCode && !codeRes.error) {
+        const { data: generatedCode, error: generateError } = await supabase.rpc('generate_referral_code', {
+          p_user_id: user.id,
+        });
+        if (generateError) {
+          console.error('Failed to generate referral code', generateError);
+        } else {
+          resolvedCode = generatedCode;
+        }
+      }
+
+      setCode(resolvedCode);
       setReferrals((referralsRes.data as ReferralRow[] | null) ?? []);
       setRewards((rewardsRes.data as ReferralReward[] | null) ?? []);
       setLoading(false);
@@ -163,7 +158,7 @@ export function ReferralSubtab() {
             Your referral link
           </div>
           <CardTitle className="text-xl sm:text-2xl">
-            Share this link. Every 3 signups unlocks a reward.
+            Share this link. Every 3 new accounts unlock a reward.
           </CardTitle>
           <CardDescription>
             Rewards apply automatically — you don’t need to claim them.
@@ -197,7 +192,7 @@ export function ReferralSubtab() {
       <div className="grid gap-4 sm:grid-cols-3">
         <Card>
           <CardHeader className="pb-2">
-            <CardDescription>Verified referrals</CardDescription>
+            <CardDescription>New accounts through your link</CardDescription>
             <CardTitle className="text-3xl">{verifiedCount}</CardTitle>
           </CardHeader>
         </Card>
@@ -223,9 +218,9 @@ export function ReferralSubtab() {
       {/* Referrals list */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Your referrals</CardTitle>
+          <CardTitle className="text-lg">Attributed accounts</CardTitle>
           <CardDescription>
-            People who signed up through your link.
+            People who created an account through your link.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -248,7 +243,7 @@ export function ReferralSubtab() {
                         : 'bg-muted text-muted-foreground'
                     }`}
                   >
-                    {r.status === 'verified' ? 'Verified' : 'Pending'}
+                    {r.status === 'verified' ? 'Attributed' : 'Pending'}
                   </span>
                 </li>
               ))}
@@ -271,7 +266,7 @@ export function ReferralSubtab() {
         <CardContent>
           {rewards.length === 0 ? (
             <p className="text-sm text-muted-foreground">
-              No rewards yet. Your first reward unlocks at 3 verified referrals.
+              No rewards yet. Your first reward unlocks at 3 new accounts.
             </p>
           ) : (
             <ul className="divide-y divide-border/60">
