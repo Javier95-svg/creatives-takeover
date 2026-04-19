@@ -12,6 +12,7 @@ import { ThumbsDown, ThumbsUp } from "lucide-react";
 
 const PricingFAQ = () => {
   const [helpfulVotes, setHelpfulVotes] = useState<Record<number, "up" | "down" | null>>({});
+  const [openItem, setOpenItem] = useState<string | undefined>();
 
   const faqs = [
     {
@@ -95,6 +96,18 @@ The default self-serve offering now centers on Rookie, Starter, Rising, and Pro,
     }));
   };
 
+  const handleRelatedQuestionClick = (relatedIndex: number) => {
+    setOpenItem(`item-${relatedIndex}`);
+
+    if (typeof document !== "undefined") {
+      requestAnimationFrame(() => {
+        document
+          .getElementById(`pricing-faq-item-${relatedIndex}`)
+          ?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      });
+    }
+  };
+
   return (
     <section className="relative py-section-mobile lg:py-section-desktop overflow-hidden">
       <div className="container mx-auto px-4 sm:px-6 relative z-10">
@@ -108,12 +121,17 @@ The default self-serve offering now centers on Rookie, Starter, Rising, and Pro,
         </div>
 
         <Card className="max-w-4xl mx-auto rounded-2xl bg-card/80 backdrop-blur-sm border-border/60 p-8 animate-fade-in shadow-xl">
-          <Accordion type="single" collapsible className="w-full">
+          <Accordion type="single" collapsible value={openItem} onValueChange={setOpenItem} className="w-full">
             {faqs.map((faq, index) => {
               const vote = helpfulVotes[index];
 
               return (
-                <AccordionItem key={index} value={`item-${index}`} className="border-border/60">
+                <AccordionItem
+                  key={index}
+                  value={`item-${index}`}
+                  id={`pricing-faq-item-${index}`}
+                  className="border-border/60"
+                >
                   <AccordionTrigger className="text-left text-foreground hover:text-primary font-space-grotesk text-base sm:text-lg">
                     {faq.question}
                   </AccordionTrigger>
@@ -151,13 +169,14 @@ The default self-serve offering now centers on Rookie, Starter, Rising, and Pro,
                         <p className="text-sm font-medium text-foreground mb-2">Related questions:</p>
                         <div className="flex flex-wrap gap-2">
                           {faq.relatedQuestions.map((relatedIndex) => (
-                            <Badge
+                            <button
                               key={relatedIndex}
-                              variant="secondary"
-                              className="cursor-pointer rounded-full bg-background/70 border border-border/60 hover:bg-primary/10"
+                              type="button"
+                              onClick={() => handleRelatedQuestionClick(relatedIndex)}
+                              className="inline-flex items-center rounded-full bg-background/70 border border-border/60 px-2.5 py-0.5 text-xs font-medium text-foreground transition-colors hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                             >
                               {faqs[relatedIndex].question}
-                            </Badge>
+                            </button>
                           ))}
                         </div>
                       </div>

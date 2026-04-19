@@ -80,7 +80,7 @@ const FreeResources = () => {
           {resources.map((resource, index) => (
             <Card 
               key={resource.title}
-              className="glass-card hover-lift relative overflow-hidden group cursor-pointer"
+              className="glass-card relative overflow-hidden group"
               style={{ animationDelay: `${index * 0.2}s` }}
             >
               {/* Background Gradient */}
@@ -131,7 +131,7 @@ const FreeResources = () => {
             {tools.map((tool, index) => (
               <div 
                 key={tool.name}
-                className="flex items-center gap-4 p-6 rounded-xl bg-muted/5 hover:bg-muted/10 transition-colors group cursor-pointer"
+                className="flex items-center gap-4 p-6 rounded-xl bg-muted/5 transition-colors"
                 style={{ animationDelay: `${0.8 + index * 0.1}s` }}
               >
                 <div className="text-3xl">{tool.icon}</div>
@@ -139,7 +139,7 @@ const FreeResources = () => {
                   <h4 className="font-semibold mb-1">{tool.name}</h4>
                   <p className="text-sm text-muted-foreground">{tool.description}</p>
                 </div>
-                <ExternalLink className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                <ExternalLink className="w-5 h-5 text-muted-foreground" />
               </div>
             ))}
           </div>

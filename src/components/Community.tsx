@@ -86,10 +86,10 @@ const Community = () => {
                 </CardHeader>
                 <CardContent className="space-y-2">
                   <div className="p-2 rounded bg-primary/10 text-primary font-medium"># general</div>
-                  <div className="p-2 rounded hover:bg-muted/50 cursor-pointer"># showcase</div>
-                  <div className="p-2 rounded hover:bg-muted/50 cursor-pointer"># tips-tricks</div>
-                  <div className="p-2 rounded hover:bg-muted/50 cursor-pointer"># feedback</div>
-                  <div className="p-2 rounded hover:bg-muted/50 cursor-pointer"># announcements</div>
+                  <div className="p-2 rounded text-muted-foreground"># showcase</div>
+                  <div className="p-2 rounded text-muted-foreground"># tips-tricks</div>
+                  <div className="p-2 rounded text-muted-foreground"># feedback</div>
+                  <div className="p-2 rounded text-muted-foreground"># announcements</div>
                 </CardContent>
               </Card>
 

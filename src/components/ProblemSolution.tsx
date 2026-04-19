@@ -198,8 +198,8 @@ const ProblemSolution = () => {
                 {/* Transformation Arrow */}
                 <div className="lg:col-span-2 flex justify-center">
                   <div className={`relative ${isVisible ? 'animate-zoom-in' : ''}`}>
-                    <div className="w-20 h-20 rounded-full glass border-2 border-primary/30 flex items-center justify-center hover:border-primary/60 hover:scale-110 transition-all duration-500 animate-pulse-glow group cursor-pointer">
-                      <ArrowRight className={`w-10 h-10 text-primary transition-transform duration-300 group-hover:scale-125 ${index % 2 === 1 ? 'rotate-180 lg:rotate-0' : ''}`} />
+                    <div className="w-20 h-20 rounded-full glass border-2 border-primary/30 flex items-center justify-center transition-all duration-500 animate-pulse-glow">
+                      <ArrowRight className={`w-10 h-10 text-primary ${index % 2 === 1 ? 'rotate-180 lg:rotate-0' : ''}`} />
                     </div>
                     
                     {/* Enhanced Magic Effects */}

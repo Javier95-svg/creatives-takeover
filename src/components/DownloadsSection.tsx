@@ -151,7 +151,7 @@ const DownloadsSection = () => {
           {downloadCategories.map((category, index) => (
             <Card 
               key={index} 
-              className="glass border-border hover:shadow-lg transition-all duration-300 hover-lift cursor-pointer group"
+              className="glass border-border transition-all duration-300 group"
             >
               <CardHeader className="text-center pb-4">
                 <div className="mx-auto p-4 rounded-full bg-muted/30 w-fit mb-4 group-hover:scale-110 transition-transform duration-300">
@@ -184,7 +184,7 @@ const DownloadsSection = () => {
               {featuredDownloads.map((download, index) => (
                 <Card 
                   key={index} 
-                  className={`glass border-border hover:shadow-xl transition-all duration-500 hover-lift group cursor-pointer ${
+                  className={`glass border-border hover:shadow-xl transition-all duration-500 group ${
                     download.featured ? 'ring-2 ring-primary/20' : ''
                   }`}
                 >
@@ -259,7 +259,7 @@ const DownloadsSection = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 {popularDownloads.map((item, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors cursor-pointer">
+                  <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-muted/30 transition-colors">
                     <div className="flex-1">
                       <h5 className="font-medium text-sm">{item.name}</h5>
                       <p className="text-xs text-muted-foreground">{item.category}</p>

@@ -33,7 +33,7 @@ const ClientLogos = () => {
           {clients.map((client, index) => (
             <Card 
               key={client.name} 
-              className="glass-card p-4 h-20 flex flex-col items-center justify-center hover-scale transition-all duration-300 hover:shadow-lg animate-fade-in group cursor-pointer"
+              className="glass-card p-4 h-20 flex flex-col items-center justify-center transition-all duration-300 animate-fade-in group"
               style={{ animationDelay: `${index * 0.1}s` }}
             >
               <div className="text-2xl mb-1 group-hover:scale-110 transition-transform duration-300 animate-bounce-slow">

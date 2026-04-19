@@ -47,7 +47,7 @@ const CreativesTakeover = () => {
           </h2>
           
           <div className="cards grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <Card className="card glass-card hover-lift group cursor-pointer">
+            <Card className="card glass-card group">
               <div className="p-6 text-center">
                 <div className="w-16 h-16 mx-auto mb-4 bg-primary/10 rounded-full flex items-center justify-center group-hover:bg-primary/20 transition-colors">
                   <Zap className="w-8 h-8 text-primary" />
@@ -59,7 +59,7 @@ const CreativesTakeover = () => {
               </div>
             </Card>
 
-            <Card className="card glass-card hover-lift group cursor-pointer">
+            <Card className="card glass-card group">
               <div className="p-6 text-center">
                 <div className="w-16 h-16 mx-auto mb-4 bg-secondary/10 rounded-full flex items-center justify-center group-hover:bg-secondary/20 transition-colors">
                   <Palette className="w-8 h-8 text-secondary" />
@@ -71,7 +71,7 @@ const CreativesTakeover = () => {
               </div>
             </Card>
 
-            <Card className="card glass-card hover-lift group cursor-pointer">
+            <Card className="card glass-card group">
               <div className="p-6 text-center">
                 <div className="w-16 h-16 mx-auto mb-4 bg-accent/10 rounded-full flex items-center justify-center group-hover:bg-accent/20 transition-colors">
                   <Brain className="w-8 h-8 text-accent" />
@@ -83,7 +83,7 @@ const CreativesTakeover = () => {
               </div>
             </Card>
 
-            <Card className="card glass-card hover-lift group cursor-pointer">
+            <Card className="card glass-card group">
               <div className="p-6 text-center">
                 <div className="w-16 h-16 mx-auto mb-4 bg-primary/10 rounded-full flex items-center justify-center group-hover:bg-primary/20 transition-colors">
                   <Users className="w-8 h-8 text-primary" />

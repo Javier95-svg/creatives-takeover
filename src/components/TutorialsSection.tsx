@@ -148,7 +148,7 @@ const TutorialsSection = () => {
           {tutorialCategories.map((category, index) => (
             <Card 
               key={index} 
-              className="glass border-border hover:shadow-lg transition-all duration-300 hover-lift cursor-pointer group text-center"
+              className="glass border-border transition-all duration-300 group text-center"
             >
               <CardContent className="p-6">
                 <div className="mx-auto p-4 rounded-full bg-background/50 w-fit mb-4 group-hover:scale-110 transition-transform duration-300">
@@ -168,7 +168,7 @@ const TutorialsSection = () => {
             {featuredTutorials.map((tutorial, index) => (
               <Card 
                 key={index} 
-                className="glass border-border hover:shadow-xl transition-all duration-500 hover-lift group cursor-pointer relative"
+                className="glass border-border hover:shadow-xl transition-all duration-500 group relative"
               >
                 {tutorial.isPopular && (
                   <div className="absolute -top-3 left-6 z-10">

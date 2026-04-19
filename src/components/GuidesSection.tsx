@@ -149,7 +149,7 @@ const GuidesSection = () => {
           {guideCategories.map((category, index) => (
             <Card 
               key={index} 
-              className="glass border-border hover:shadow-lg transition-all duration-300 hover-lift cursor-pointer group"
+              className="glass border-border transition-all duration-300 group"
             >
               <CardHeader className="text-center pb-4">
                 <div className="mx-auto p-4 rounded-full bg-muted/30 w-fit mb-4 group-hover:scale-110 transition-transform duration-300">
@@ -174,7 +174,7 @@ const GuidesSection = () => {
             {featuredGuides.map((guide, index) => (
               <Card 
                 key={index} 
-                className={`glass border-border hover:shadow-xl transition-all duration-500 hover-lift group cursor-pointer ${
+                className={`glass border-border hover:shadow-xl transition-all duration-500 group ${
                   guide.featured ? 'ring-2 ring-primary/20' : ''
                 }`}
               >
