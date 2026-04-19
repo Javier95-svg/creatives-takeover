@@ -4,6 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "audit:cta": "node scripts/generate-cta-audit-artifacts.mjs",
     "dev": "vite",
     "build": "node scripts/generate-seo-assets.mjs && vite build && node scripts/generate-prerendered-pages.mjs",
     "build:dev": "vite build --mode development",

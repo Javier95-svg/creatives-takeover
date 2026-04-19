@@ -8,6 +8,7 @@ import { useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import { usePlanAccess } from "@/hooks/usePlanAccess";
 import { PreviewModeWrapper } from '@/components/ui/PreviewModeWrapper';
+import { BlurredToolPreview } from '@/components/ui/BlurredToolPreview';
 import { getPublicTabConfig } from "@/config/publicTabVisibility";
 import { useAuth } from "@/contexts/AuthContext";
 

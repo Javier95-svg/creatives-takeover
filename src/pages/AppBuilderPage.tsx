@@ -1,12 +1,15 @@
 import SEO, { createSoftwareApplicationSchema } from '@/components/SEO';
 import { PreviewModeWrapper } from '@/components/ui/PreviewModeWrapper';
+import { BlurredToolPreview } from '@/components/ui/BlurredToolPreview';
 import { MVPBuilder } from '@/components/mvp-builder/MVPBuilder';
 import { getPublicTabConfig } from '@/config/publicTabVisibility';
 import { useAuth } from '@/contexts/AuthContext';
+import { usePlanAccess } from '@/hooks/usePlanAccess';
 
 export default function AppBuilderPage() {
   const { user } = useAuth();
   const publicTab = getPublicTabConfig('/mvp-builder');
+  const { hasAccess, upgradeTarget } = usePlanAccess('mvp_builder');
   const structuredData = [
     createSoftwareApplicationSchema({
       name: 'MVP Builder',
@@ -33,6 +36,15 @@ export default function AppBuilderPage() {
         >
           <MVPBuilder />
         </PreviewModeWrapper>
+      ) : !hasAccess ? (
+        <BlurredToolPreview
+          featureName="MVP Builder"
+          unlockCondition="MVP Builder is available on the Rising plan and above."
+          requiredPlan={upgradeTarget}
+          locked
+        >
+          <div />
+        </BlurredToolPreview>
       ) : (
         <MVPBuilder />
       )}

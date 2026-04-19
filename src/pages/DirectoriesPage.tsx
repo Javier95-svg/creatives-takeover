@@ -2,10 +2,12 @@ import SEO, { createBreadcrumbSchema } from '@/components/SEO';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import { PreviewModeWrapper } from '@/components/ui/PreviewModeWrapper';
+import { BlurredToolPreview } from '@/components/ui/BlurredToolPreview';
 import DirectoriesTab from '@/components/launch/DirectoriesTab';
 import GTMStrategistWallpaper from '@/components/wallpapers/GTMStrategistWallpaper';
 import { getPublicTabConfig } from '@/config/publicTabVisibility';
 import { useAuth } from '@/contexts/AuthContext';
+import { usePlanAccess } from '@/hooks/usePlanAccess';
 
 const structuredData = [
   {
@@ -25,6 +27,7 @@ const structuredData = [
 export default function DirectoriesPage() {
   const { user } = useAuth();
   const publicTab = getPublicTabConfig('/directories');
+  const { hasAccess, upgradeTarget } = usePlanAccess('directories');
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-background">
@@ -51,7 +54,18 @@ export default function DirectoriesPage() {
             </div>
 
             {user ? (
-              <DirectoriesTab />
+              hasAccess ? (
+                <DirectoriesTab />
+              ) : (
+                <BlurredToolPreview
+                  featureName="Directories"
+                  unlockCondition="Directories is available on the Rising plan and above."
+                  requiredPlan={upgradeTarget}
+                  locked
+                >
+                  <div />
+                </BlurredToolPreview>
+              )
             ) : (
               publicTab && (
                 <PreviewModeWrapper

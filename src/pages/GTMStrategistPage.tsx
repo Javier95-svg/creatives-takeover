@@ -4,6 +4,7 @@ import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import PageFAQSection from '@/components/seo/PageFAQSection';
 import { PreviewModeWrapper } from '@/components/ui/PreviewModeWrapper';
+import { BlurredToolPreview } from '@/components/ui/BlurredToolPreview';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import { useGTMStrategist } from '@/hooks/useGTMStrategist';
@@ -26,6 +27,7 @@ import { createGTMSharedPayload } from '@/lib/bizmapSharing';
 import { Share2 } from 'lucide-react';
 import { getPublicTabConfig } from '@/config/publicTabVisibility';
 import { useAuth } from '@/contexts/AuthContext';
+import { usePlanAccess } from '@/hooks/usePlanAccess';
 
 const structuredData = [
   {
@@ -45,6 +47,7 @@ const structuredData = [
 export default function GTMStrategistPage() {
   const { user } = useAuth();
   const publicTab = getPublicTabConfig('/go-to-market');
+  const { hasAccess, upgradeTarget } = usePlanAccess('gtm_strategist');
   const { markToolUsed } = useLeanStartupStore();
   const faqs = [
     {
@@ -178,7 +181,7 @@ export default function GTMStrategistPage() {
 	                />
 	              </PreviewModeWrapper>
 	            )
-	          ) : (
+	          ) : hasAccess ? (
 	            <>
 	              {/* Phase A — Intake Wizard */}
 	              {phase === 'intake' && (
@@ -298,6 +301,15 @@ export default function GTMStrategistPage() {
 	                </div>
 	              )}
 	            </>
+	          ) : (
+	            <BlurredToolPreview
+	              featureName="GTM Strategist"
+	              unlockCondition="GTM Strategist is available on the Rising plan and above."
+	              requiredPlan={upgradeTarget}
+	              locked
+	            >
+	              <div />
+	            </BlurredToolPreview>
 	          )}
 	            <PageFAQSection
 	              title="Frequent Questions"

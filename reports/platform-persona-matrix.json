@@ -1,0 +1,59 @@
+{
+  "generatedAt": "2026-04-19T20:39:24.071Z",
+  "viewports": [
+    {
+      "name": "mobile",
+      "width": 390,
+      "height": 844
+    },
+    {
+      "name": "desktop",
+      "width": 1440,
+      "height": 900
+    }
+  ],
+  "personas": [
+    {
+      "id": "logged_out",
+      "authState": "logged_out",
+      "verificationState": "n/a",
+      "planTier": "none",
+      "notes": "Guest session with no authenticated user."
+    },
+    {
+      "id": "unverified_account",
+      "authState": "blocked_at_login",
+      "verificationState": "unverified",
+      "planTier": "rookie",
+      "notes": "Modeled via the login error and resend-confirmation flow because AuthContext does not expose an in-session unverified state."
+    },
+    {
+      "id": "verified_rookie",
+      "authState": "authenticated",
+      "verificationState": "verified",
+      "planTier": "rookie",
+      "notes": "Free tier."
+    },
+    {
+      "id": "verified_starter",
+      "authState": "authenticated",
+      "verificationState": "verified",
+      "planTier": "starter",
+      "notes": "Paid tier."
+    },
+    {
+      "id": "verified_rising",
+      "authState": "authenticated",
+      "verificationState": "verified",
+      "planTier": "rising",
+      "notes": "Paid tier."
+    },
+    {
+      "id": "verified_pro",
+      "authState": "authenticated",
+      "verificationState": "verified",
+      "planTier": "pro",
+      "notes": "Highest standard paid tier."
+    }
+  ]
+}

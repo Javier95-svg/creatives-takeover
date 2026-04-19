@@ -1,0 +1,818 @@
+{
+  "generatedAt": "2026-04-19T20:39:23.264Z",
+  "source": "src/App.tsx",
+  "totalRoutes": 90,
+  "userFacingRoutes": 83,
+  "routes": [
+    {
+      "path": "/",
+      "element": "Index",
+      "file": "src/App.tsx",
+      "line": 168,
+      "isCatchAll": false,
+      "isInternal": false,
+      "isUserFacing": true
+    },
+    {
+      "path": "/about",
+      "element": "About",
+      "file": "src/App.tsx",
+      "line": 169,
+      "isCatchAll": false,
+      "isInternal": false,
+      "isUserFacing": true
+    },
+    {
+      "path": "/pricing",
+      "element": "PricingPage",
+      "file": "src/App.tsx",
+      "line": 170,
+      "isCatchAll": false,
+      "isInternal": false,
+      "isUserFacing": true
+    },
+    {
+      "path": "/community",
+      "element": "CommunityPage",
+      "file": "src/App.tsx",
+      "line": 171,
+      "isCatchAll": false,
+      "isInternal": false,
+      "isUserFacing": true
+    },
+    {
+      "path": "/community/progress",
+      "element": "ProgressCommunityPage",
+      "file": "src/App.tsx",
+      "line": 172,
+      "isCatchAll": false,
+      "isInternal": false,
+      "isUserFacing": true
+    },
+    {
+      "path": "/community/mentors/:id",
+      "element": "MentorProfilePage",
+      "file": "src/App.tsx",
+      "line": 173,
+      "isCatchAll": false,
+      "isInternal": false,
+      "isUserFacing": true
+    },
+    {
+      "path": "/community/book/:id",
+      "element": "MentorBookingPage",
+      "file": "src/App.tsx",
+      "line": 174,
+      "isCatchAll": false,
+      "isInternal": false,
+      "isUserFacing": true
+    },
+    {
+      "path": "/community/co-founders",
+      "element": "FindCoFounder",
+      "file": "src/App.tsx",
+      "line": 175,
+      "isCatchAll": false,
+      "isInternal": false,
+      "isUserFacing": true
+    },
+    {
+      "path": "/community/co-founders/create",
+      "element": "CreateCoFounderPost",
+      "file": "src/App.tsx",
+      "line": 176,
+      "isCatchAll": false,
+      "isInternal": false,
+      "isUserFacing": true
+    },
+    {
+      "path": "/community/co-founders/edit/:postId",
+      "element": "EditCoFounderPost",
+      "file": "src/App.tsx",
+      "line": 177,
+      "isCatchAll": false,
+      "isInternal": false,
+      "isUserFacing": true
+    },
+    {
+      "path": "/community/angels",
+      "element": "FindYourAngel",
+      "file": "src/App.tsx",
+      "line": 178,
+      "isCatchAll": false,
+      "isInternal": false,
+      "isUserFacing": true
+    },
+    {
+      "path": "/community/angels/admin/new",
+      "element": "AdminAngelEditor",
+      "file": "src/App.tsx",
+      "line": 179,
+      "isCatchAll": false,
+      "isInternal": false,
+      "isUserFacing": true
+    },
+    {
+      "path": "/community/angels/admin/edit/:id",
+      "element": "AdminAngelEditor",
+      "file": "src/App.tsx",
+      "line": 180,
+      "isCatchAll": false,
+      "isInternal": false,
+      "isUserFacing": true
+    },
+    {
+      "path": "/community/my-bookings",
+      "element": "MyBookings",
+      "file": "src/App.tsx",
+      "line": 181,
+      "isCatchAll": false,
+      "isInternal": false,
+      "isUserFacing": true
+    },
+    {
+      "path": "/community/admin/new",
+      "element": "AdminMentorEditor",
+      "file": "src/App.tsx",
+      "line": 182,
+      "isCatchAll": false,
+      "isInternal": false,
+      "isUserFacing": true
+    },
+    {
+      "path": "/community/admin/edit/:id",
+      "element": "AdminMentorEditor",
+      "file": "src/App.tsx",
+      "line": 183,
+      "isCatchAll": false,
+      "isInternal": false,
+      "isUserFacing": true
+    },
+    {
+      "path": "/community/:slug",
+      "element": "MentorProfilePage",
+      "file": "src/App.tsx",
+      "line": 184,
+      "isCatchAll": false,
+      "isInternal": false,
+      "isUserFacing": true
+    },
+    {
+      "path": "/newspaper",
+      "element": "Stories",
+      "file": "src/App.tsx",
+      "line": 185,
+      "isCatchAll": false,
+      "isInternal": false,
+      "isUserFacing": true
+    },
+    {
+      "path": "/newspaper/rss.xml",
+      "element": "StoriesRSS",
+      "file": "src/App.tsx",
+      "line": 186,
+      "isCatchAll": false,
+      "isInternal": false,
+      "isUserFacing": true
+    },
+    {
+      "path": "/newspaper/tags/:tagSlug",
+      "element": "StoryTagPage",
+      "file": "src/App.tsx",
+      "line": 187,
+      "isCatchAll": false,
+      "isInternal": false,
+      "isUserFacing": true
+    },
+    {
+      "path": "/newspaper/admin/new",
+      "element": "AdminStoryEditor",
+      "file": "src/App.tsx",
+      "line": 188,
+      "isCatchAll": false,
+      "isInternal": false,
+      "isUserFacing": true
+    },
+    {
+      "path": "/newspaper/admin/edit/:id",
+      "element": "AdminStoryEditor",
+      "file": "src/App.tsx",
+      "line": 189,
+      "isCatchAll": false,
+      "isInternal": false,
+      "isUserFacing": true
+    },
+    {
+      "path": "/newspaper/:slug",
+      "element": "StoryArticle",
+      "file": "src/App.tsx",
+      "line": 190,
+      "isCatchAll": false,
+      "isInternal": false,
+      "isUserFacing": true
+    },
+    {
+      "path": "/stories",
+      "element": "Navigate",
+      "file": "src/App.tsx",
+      "line": 191,
+      "isCatchAll": false,
+      "isInternal": false,
+      "isUserFacing": true
+    },
+    {
+      "path": "/stories/rss.xml",
+      "element": "Navigate",
+      "file": "src/App.tsx",
+      "line": 192,
+      "isCatchAll": false,
+      "isInternal": false,
+      "isUserFacing": true
+    },
+    {
+      "path": "/stories/tags/:tagSlug",
+      "element": "StoryTagPage",
+      "file": "src/App.tsx",
+      "line": 193,
+      "isCatchAll": false,
+      "isInternal": false,
+      "isUserFacing": true
+    },
+    {
+      "path": "/stories/admin/new",
+      "element": "Navigate",
+      "file": "src/App.tsx",
+      "line": 194,
+      "isCatchAll": false,
+      "isInternal": false,
+      "isUserFacing": true
+    },
+    {
+      "path": "/stories/admin/edit/:id",
+      "element": "AdminStoryEditor",
+      "file": "src/App.tsx",
+      "line": 195,
+      "isCatchAll": false,
+      "isInternal": false,
+      "isUserFacing": true
+    },
+    {
+      "path": "/stories/:slug",
+      "element": "StoryArticle",
+      "file": "src/App.tsx",
+      "line": 196,
+      "isCatchAll": false,
+      "isInternal": false,
+      "isUserFacing": true
+    },
+    {
+      "path": "/admin/hero-images",
+      "element": "AdminHeroImages",
+      "file": "src/App.tsx",
+      "line": 197,
+      "isCatchAll": false,
+      "isInternal": true,
+      "isUserFacing": false
+    },
+    {
+      "path": "/admin/vc-management",
+      "element": "AdminVCManagement",
+      "file": "src/App.tsx",
+      "line": 198,
+      "isCatchAll": false,
+      "isInternal": true,
+      "isUserFacing": false
+    },
+    {
+      "path": "/admin/accelerator-management",
+      "element": "AdminAcceleratorManagement",
+      "file": "src/App.tsx",
+      "line": 199,
+      "isCatchAll": false,
+      "isInternal": true,
+      "isUserFacing": false
+    },
+    {
+      "path": "/careers",
+      "element": "Careers",
+      "file": "src/App.tsx",
+      "line": 200,
+      "isCatchAll": false,
+      "isInternal": false,
+      "isUserFacing": true
+    },
+    {
+      "path": "/prompt-library",
+      "element": "PromptLibrary",
+      "file": "src/App.tsx",
+      "line": 201,
+      "isCatchAll": false,
+      "isInternal": false,
+      "isUserFacing": true
+    },
+    {
+      "path": "/privacy-policy",
+      "element": "PrivacyPolicy",
+      "file": "src/App.tsx",
+      "line": 202,
+      "isCatchAll": false,
+      "isInternal": false,
+      "isUserFacing": true
+    },
+    {
+      "path": "/terms",
+      "element": "Terms",
+      "file": "src/App.tsx",
+      "line": 203,
+      "isCatchAll": false,
+      "isInternal": false,
+      "isUserFacing": true
+    },
+    {
+      "path": "/bizmap-ai",
+      "element": "BizMapJourneyHubPage",
+      "file": "src/App.tsx",
+      "line": 204,
+      "isCatchAll": false,
+      "isInternal": false,
+      "isUserFacing": true
+    },
+    {
+      "path": "/bizmap-ai/chat",
+      "element": "Dream2Plan",
+      "file": "src/App.tsx",
+      "line": 205,
+      "isCatchAll": false,
+      "isInternal": false,
+      "isUserFacing": true
+    },
+    {
+      "path": "/pmf-lab",
+      "element": "PMFLabPage",
+      "file": "src/App.tsx",
+      "line": 206,
+      "isCatchAll": false,
+      "isInternal": false,
+      "isUserFacing": true
+    },
+    {
+      "path": "/bizmap-ai/pmf-lab",
+      "element": "Navigate",
+      "file": "src/App.tsx",
+      "line": 207,
+      "isCatchAll": false,
+      "isInternal": false,
+      "isUserFacing": true
+    },
+    {
+      "path": "/tech-stack",
+      "element": "TechStackPage",
+      "file": "src/App.tsx",
+      "line": 208,
+      "isCatchAll": false,
+      "isInternal": false,
+      "isUserFacing": true
+    },
+    {
+      "path": "/bizmap-ai/tech-stack",
+      "element": "Navigate",
+      "file": "src/App.tsx",
+      "line": 209,
+      "isCatchAll": false,
+      "isInternal": false,
+      "isUserFacing": true
+    },
+    {
+      "path": "/icp-builder",
+      "element": "ICPBuilderPage",
+      "file": "src/App.tsx",
+      "line": 210,
+      "isCatchAll": false,
+      "isInternal": false,
+      "isUserFacing": true
+    },
+    {
+      "path": "/icp/draft/:draftId",
+      "element": "IcpDraftPage",
+      "file": "src/App.tsx",
+      "line": 211,
+      "isCatchAll": false,
+      "isInternal": false,
+      "isUserFacing": true
+    },
+    {
+      "path": "/icp/:draftId/public",
+      "element": "IcpPublicDraftPage",
+      "file": "src/App.tsx",
+      "line": 212,
+      "isCatchAll": false,
+      "isInternal": false,
+      "isUserFacing": true
+    },
+    {
+      "path": "/bizmap-ai/icp-builder",
+      "element": "Navigate",
+      "file": "src/App.tsx",
+      "line": 213,
+      "isCatchAll": false,
+      "isInternal": false,
+      "isUserFacing": true
+    },
+    {
+      "path": "/decision-sprint",
+      "element": "ValidateJourneyPage",
+      "file": "src/App.tsx",
+      "line": 214,
+      "isCatchAll": false,
+      "isInternal": false,
+      "isUserFacing": true
+    },
+    {
+      "path": "/validate",
+      "element": "ValidateJourney",
+      "file": "src/App.tsx",
+      "line": 215,
+      "isCatchAll": false,
+      "isInternal": false,
+      "isUserFacing": true
+    },
+    {
+      "path": "/waitlist",
+      "element": "WaitlistMakerPage",
+      "file": "src/App.tsx",
+      "line": 216,
+      "isCatchAll": false,
+      "isInternal": false,
+      "isUserFacing": true
+    },
+    {
+      "path": "/waitlist-maker",
+      "element": "Navigate",
+      "file": "src/App.tsx",
+      "line": 217,
+      "isCatchAll": false,
+      "isInternal": false,
+      "isUserFacing": true
+    },
+    {
+      "path": "/w/:slug",
+      "element": "WaitlistPublicPage",
+      "file": "src/App.tsx",
+      "line": 218,
+      "isCatchAll": false,
+      "isInternal": false,
+      "isUserFacing": true
+    },
+    {
+      "path": "/directories",
+      "element": "DirectoriesPage",
+      "file": "src/App.tsx",
+      "line": 219,
+      "isCatchAll": false,
+      "isInternal": false,
+      "isUserFacing": true
+    },
+    {
+      "path": "/mvp-builder",
+      "element": "AppBuilderPage",
+      "file": "src/App.tsx",
+      "line": 220,
+      "isCatchAll": false,
+      "isInternal": false,
+      "isUserFacing": true
+    },
+    {
+      "path": "/go-to-market",
+      "element": "GTMStrategistPage",
+      "file": "src/App.tsx",
+      "line": 221,
+      "isCatchAll": false,
+      "isInternal": false,
+      "isUserFacing": true
+    },
+    {
+      "path": "/client-acquisition",
+      "element": "Navigate",
+      "file": "src/App.tsx",
+      "line": 222,
+      "isCatchAll": false,
+      "isInternal": false,
+      "isUserFacing": true
+    },
+    {
+      "path": "/auth",
+      "element": "Auth",
+      "file": "src/App.tsx",
+      "line": 224,
+      "isCatchAll": false,
+      "isInternal": false,
+      "isUserFacing": true
+    },
+    {
+      "path": "/login",
+      "element": "Login",
+      "file": "src/App.tsx",
+      "line": 225,
+      "isCatchAll": false,
+      "isInternal": false,
+      "isUserFacing": true
+    },
+    {
+      "path": "/sign-up",
+      "element": "SignUpAlias",
+      "file": "src/App.tsx",
+      "line": 226,
+      "isCatchAll": false,
+      "isInternal": false,
+      "isUserFacing": true
+    },
+    {
+      "path": "/signup",
+      "element": "Signup",
+      "file": "src/App.tsx",
+      "line": 227,
+      "isCatchAll": false,
+      "isInternal": false,
+      "isUserFacing": true
+    },
+    {
+      "path": "/forgot-password",
+      "element": "ForgotPassword",
+      "file": "src/App.tsx",
+      "line": 228,
+      "isCatchAll": false,
+      "isInternal": false,
+      "isUserFacing": true
+    },
+    {
+      "path": "/reset-password",
+      "element": "ResetPassword",
+      "file": "src/App.tsx",
+      "line": 229,
+      "isCatchAll": false,
+      "isInternal": false,
+      "isUserFacing": true
+    },
+    {
+      "path": "/onboarding",
+      "element": "Onboarding",
+      "file": "src/App.tsx",
+      "line": 230,
+      "isCatchAll": false,
+      "isInternal": false,
+      "isUserFacing": true
+    },
+    {
+      "path": "/dashboard",
+      "element": "Dashboard",
+      "file": "src/App.tsx",
+      "line": 231,
+      "isCatchAll": false,
+      "isInternal": false,
+      "isUserFacing": true
+    },
+    {
+      "path": "/dashboard/referral",
+      "element": "ReferralDashboardPage",
+      "file": "src/App.tsx",
+      "line": 232,
+      "isCatchAll": false,
+      "isInternal": false,
+      "isUserFacing": true
+    },
+    {
+      "path": "/referral-program",
+      "element": "ReferralProgram",
+      "file": "src/App.tsx",
+      "line": 233,
+      "isCatchAll": false,
+      "isInternal": false,
+      "isUserFacing": true
+    },
+    {
+      "path": "/accountability",
+      "element": "Accountability",
+      "file": "src/App.tsx",
+      "line": 234,
+      "isCatchAll": false,
+      "isInternal": false,
+      "isUserFacing": true
+    },
+    {
+      "path": "/saved-mentors",
+      "element": "SavedMentorsPage",
+      "file": "src/App.tsx",
+      "line": 235,
+      "isCatchAll": false,
+      "isInternal": false,
+      "isUserFacing": true
+    },
+    {
+      "path": "/account",
+      "element": "Account",
+      "file": "src/App.tsx",
+      "line": 236,
+      "isCatchAll": false,
+      "isInternal": false,
+      "isUserFacing": true
+    },
+    {
+      "path": "/setup-quiz",
+      "element": "SetupQuiz",
+      "file": "src/App.tsx",
+      "line": 237,
+      "isCatchAll": false,
+      "isInternal": false,
+      "isUserFacing": true
+    },
+    {
+      "path": "/focus-funnel",
+      "element": "FocusFunnel",
+      "file": "src/App.tsx",
+      "line": 238,
+      "isCatchAll": false,
+      "isInternal": false,
+      "isUserFacing": true
+    },
+    {
+      "path": "/core-metrics",
+      "element": "CoreMetricsPage",
+      "file": "src/App.tsx",
+      "line": 239,
+      "isCatchAll": false,
+      "isInternal": false,
+      "isUserFacing": true
+    },
+    {
+      "path": "/weekly-mission",
+      "element": "WeeklyMissionPage",
+      "file": "src/App.tsx",
+      "line": 240,
+      "isCatchAll": false,
+      "isInternal": false,
+      "isUserFacing": true
+    },
+    {
+      "path": "/tasks",
+      "element": "TasksPage",
+      "file": "src/App.tsx",
+      "line": 241,
+      "isCatchAll": false,
+      "isInternal": false,
+      "isUserFacing": true
+    },
+    {
+      "path": "/insighta",
+      "element": "Blog",
+      "file": "src/App.tsx",
+      "line": 242,
+      "isCatchAll": false,
+      "isInternal": false,
+      "isUserFacing": true
+    },
+    {
+      "path": "/insighta/vc-search",
+      "element": "VCSearchPage",
+      "file": "src/App.tsx",
+      "line": 243,
+      "isCatchAll": false,
+      "isInternal": false,
+      "isUserFacing": true
+    },
+    {
+      "path": "/insighta/email-templates",
+      "element": "EmailTemplatesPage",
+      "file": "src/App.tsx",
+      "line": 244,
+      "isCatchAll": false,
+      "isInternal": false,
+      "isUserFacing": true
+    },
+    {
+      "path": "/insighta/accelerator-hunt",
+      "element": "AcceleratorHuntPage",
+      "file": "src/App.tsx",
+      "line": 245,
+      "isCatchAll": false,
+      "isInternal": false,
+      "isUserFacing": true
+    },
+    {
+      "path": "/insighta/pitch-deck-analyzer",
+      "element": "PitchDeckAnalyzerPage",
+      "file": "src/App.tsx",
+      "line": 246,
+      "isCatchAll": false,
+      "isInternal": false,
+      "isUserFacing": true
+    },
+    {
+      "path": "/insighta/test",
+      "element": "InsightaTestPage",
+      "file": "src/App.tsx",
+      "line": 247,
+      "isCatchAll": false,
+      "isInternal": false,
+      "isUserFacing": true
+    },
+    {
+      "path": "/insighta/vc/:slug",
+      "element": "VCProfilePage",
+      "file": "src/App.tsx",
+      "line": 248,
+      "isCatchAll": false,
+      "isInternal": false,
+      "isUserFacing": true
+    },
+    {
+      "path": "/insighta/accelerator/:slug",
+      "element": "AcceleratorProfilePage",
+      "file": "src/App.tsx",
+      "line": 249,
+      "isCatchAll": false,
+      "isInternal": false,
+      "isUserFacing": true
+    },
+    {
+      "path": "/demo",
+      "element": "Demo",
+      "file": "src/App.tsx",
+      "line": 250,
+      "isCatchAll": false,
+      "isInternal": true,
+      "isUserFacing": false
+    },
+    {
+      "path": "/messages/:username",
+      "element": "Messages",
+      "file": "src/App.tsx",
+      "line": 251,
+      "isCatchAll": false,
+      "isInternal": false,
+      "isUserFacing": true
+    },
+    {
+      "path": "/messages",
+      "element": "Messages",
+      "file": "src/App.tsx",
+      "line": 252,
+      "isCatchAll": false,
+      "isInternal": false,
+      "isUserFacing": true
+    },
+    {
+      "path": "/profile/:username",
+      "element": "Profile",
+      "file": "src/App.tsx",
+      "line": 253,
+      "isCatchAll": false,
+      "isInternal": false,
+      "isUserFacing": true
+    },
+    {
+      "path": "/auth/callback",
+      "element": "AuthCallback",
+      "file": "src/App.tsx",
+      "line": 254,
+      "isCatchAll": false,
+      "isInternal": false,
+      "isUserFacing": true
+    },
+    {
+      "path": "/creatives-takeover",
+      "element": "CreativesTakeover",
+      "file": "src/App.tsx",
+      "line": 255,
+      "isCatchAll": false,
+      "isInternal": false,
+      "isUserFacing": true
+    },
+    {
+      "path": "/rag-test",
+      "element": "RAGTest",
+      "file": "src/App.tsx",
+      "line": 256,
+      "isCatchAll": false,
+      "isInternal": true,
+      "isUserFacing": false
+    },
+    {
+      "path": "/test-phase1",
+      "element": "TestPhase1",
+      "file": "src/App.tsx",
+      "line": 257,
+      "isCatchAll": false,
+      "isInternal": true,
+      "isUserFacing": false
+    },
+    {
+      "path": "*",
+      "element": "NotFound",
+      "file": "src/App.tsx",
+      "line": 259,
+      "isCatchAll": true,
+      "isInternal": false,
+      "isUserFacing": false
+    }
+  ]
+}

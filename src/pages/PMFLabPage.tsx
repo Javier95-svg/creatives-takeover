@@ -4,6 +4,7 @@ import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import PageFAQSection from '@/components/seo/PageFAQSection';
 import { PreviewModeWrapper } from '@/components/ui/PreviewModeWrapper';
+import { BlurredToolPreview } from '@/components/ui/BlurredToolPreview';
 import { useLeanStartupStore } from '@/store/leanStartupStore';
 import { usePMFLab } from '@/hooks/usePMFLab';
 import PMFEvidenceForm from '@/components/pmf/PMFEvidenceForm';
@@ -14,6 +15,7 @@ import { ArrowRight, Rocket } from 'lucide-react';
 import { PMF_REQUIRED_SIGNALS } from '@/lib/bizmapStages';
 import { getPublicTabConfig } from '@/config/publicTabVisibility';
 import { useAuth } from '@/contexts/AuthContext';
+import { usePlanAccess } from '@/hooks/usePlanAccess';
 import { supabase } from '@/integrations/supabase/client';
 
 const structuredData = [
@@ -29,6 +31,7 @@ const structuredData = [
 export default function PMFLabPage() {
   const { user } = useAuth();
   const publicTab = getPublicTabConfig('/pmf-lab');
+  const { hasAccess, upgradeTarget } = usePlanAccess('pmf_lab');
   const { markToolUsed } = useLeanStartupStore();
 
   const [icpPersonaName, setIcpPersonaName] = useState<string | null>(null);
@@ -211,7 +214,7 @@ export default function PMFLabPage() {
                   </div>
                 </PreviewModeWrapper>
               )
-            ) : (
+            ) : hasAccess ? (
               <>
                 {/* Phase A — Evidence Form */}
                 {phase === 'intake' && (
@@ -239,6 +242,15 @@ export default function PMFLabPage() {
                   </div>
                 )}
               </>
+            ) : (
+              <BlurredToolPreview
+                featureName="PMF Lab"
+                unlockCondition="PMF Lab is available on the Starter plan and above."
+                requiredPlan={upgradeTarget}
+                locked
+              >
+                <div />
+              </BlurredToolPreview>
             )}
 
             <div className="mt-10 space-y-8">

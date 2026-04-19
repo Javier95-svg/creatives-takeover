@@ -92,7 +92,14 @@ test('dashboard mode config resolves from the canonical plan contract', () => {
   assert.equal(rookieMode.label, 'Rookie Mode');
   assert.deepEqual(rookieMode.activeStages, [1]);
   assert.deepEqual(rookieMode.previewStages, [4, 5]);
-  assert.deepEqual(rookieMode.navItems.map((item) => item.path), ['/dashboard', '/tasks']);
+  assert.deepEqual(rookieMode.navItems.map((item) => item.path), [
+    '/dashboard',
+    '/dashboard',
+    '/saved-mentors',
+    '/tasks',
+    '/dashboard/referral',
+  ]);
+  assert.equal(rookieMode.navItems[1]?.sectionId, 'my-files');
   assert.deepEqual(rookieMode.visibleTools, ['icp_builder', 'find_mentor', 'find_cofounder']);
 
   const proMode = getDashboardModeConfig('pro');

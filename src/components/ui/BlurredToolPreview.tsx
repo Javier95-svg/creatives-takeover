@@ -19,8 +19,8 @@ interface BlurredToolPreviewProps {
   featureName: string;
   /** What the user needs to do to unlock this tool */
   unlockCondition: string;
-  /** 'rising' | 'pro' — if set, shows an Upgrade CTA instead of a completion message */
-  requiredPlan?: 'rising' | 'pro';
+  /** Plan to show on the upgrade CTA when the tool is tier-gated */
+  requiredPlan?: 'starter' | 'rising' | 'pro';
 }
 
 export function BlurredToolPreview({
@@ -53,7 +53,7 @@ export function BlurredToolPreview({
               onClick={() => navigate('/pricing')}
               className="gap-2"
             >
-              Upgrade to {requiredPlan === 'pro' ? 'Pro' : 'Rising'}
+              Upgrade to {requiredPlan === 'pro' ? 'Pro' : requiredPlan === 'rising' ? 'Rising' : 'Starter'}
               <ArrowRight className="h-4 w-4" />
             </Button>
           ) : (

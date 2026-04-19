@@ -2,6 +2,7 @@ import SEO, { createBreadcrumbSchema } from "@/components/SEO";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { PreviewModeWrapper } from '@/components/ui/PreviewModeWrapper';
+import { BlurredToolPreview } from '@/components/ui/BlurredToolPreview';
 import { PitchDeckUploader } from "@/components/pitch-deck-analyzer/PitchDeckUploader";
 import { AnalysisResults } from "@/components/pitch-deck-analyzer/AnalysisResults";
 import { PitchDeckBuilder } from "@/components/pitch-deck-builder/PitchDeckBuilder";
@@ -12,10 +13,12 @@ import { Button } from "@/components/ui/button";
 import { Loader2, Sparkles, BarChart3, TrendingUp, Target } from "lucide-react";
 import { getPublicTabConfig } from "@/config/publicTabVisibility";
 import { useAuth } from "@/contexts/AuthContext";
+import { usePlanAccess } from "@/hooks/usePlanAccess";
 
 export default function PitchDeckAnalyzerPage() {
   const { user } = useAuth();
   const publicTab = getPublicTabConfig('/insighta/pitch-deck-analyzer');
+  const { hasAccess, upgradeTarget } = usePlanAccess('pitch_deck_analyzer');
   const { trackPageVisit } = useReadingAnalytics();
   const { analyzePitchDeck, submitFeedback, resetAnalysis, uploading, analyzing, analysis, error, isProcessing } = usePitchDeckAnalyzer();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -151,6 +154,15 @@ export default function PitchDeckAnalyzerPage() {
                   </div>
                 </PreviewModeWrapper>
               )
+            ) : !hasAccess ? (
+              <BlurredToolPreview
+                featureName="Pitch Deck Analyzer"
+                unlockCondition="Pitch Deck Analyzer is available on the Rising plan and above."
+                requiredPlan={upgradeTarget}
+                locked
+              >
+                <div />
+              </BlurredToolPreview>
             ) : !analysis ? (
               <>
                 <div className="space-y-6 animate-fade-in" style={{ animationDelay: '0.6s' }}>
