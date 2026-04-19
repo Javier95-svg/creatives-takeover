@@ -16,7 +16,7 @@ import { useActivationJourney } from "@/hooks/useActivationJourney";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { captureEvent, trackICPBuilderCompleted, trackICPBuilderModeSelected, trackICPBuilderStarted, trackICPBuilderStepCompleted } from "@/lib/analytics";
+import { captureEvent, trackActivationCompleted, trackICPBuilderCompleted, trackICPBuilderModeSelected, trackICPBuilderStarted, trackICPBuilderStepCompleted } from "@/lib/analytics";
 import {
   fastIcpInputSchema,
   guidedIcpInputSchema,
@@ -626,6 +626,7 @@ const ICPBuilder: React.FC = () => {
         mode,
         confidence: artifact.draftDocument.confidence.level,
       });
+      trackActivationCompleted({ artifact: 'icp_completed' });
 
       navigate("/dashboard", { replace: true });
     } catch (error) {
@@ -711,6 +712,7 @@ const ICPBuilder: React.FC = () => {
           mode: session.mode,
           confidence: artifact.draftDocument.confidence.level,
         });
+        trackActivationCompleted({ artifact: 'icp_completed' });
 
         navigate("/dashboard", { replace: true });
         return;

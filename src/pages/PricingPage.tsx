@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import SEO, { createProductSchema, createBreadcrumbSchema } from "@/components/SEO";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
@@ -6,9 +7,13 @@ import SubscriptionFeatures from "@/components/SubscriptionFeatures";
 import PricingComparison from "@/components/PricingComparison";
 import PricingFAQ from "@/components/PricingFAQ";
 import HomeWallpaper from "@/components/wallpapers/HomeWallpaper";
+import { trackPricingViewed } from "@/lib/analytics";
 
 
 const PricingPage = () => {
+  useEffect(() => {
+    trackPricingViewed({ source: 'direct' });
+  }, []);
   // Structured data for pricing tiers
   const structuredData = [
     createProductSchema({

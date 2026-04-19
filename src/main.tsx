@@ -1,13 +1,25 @@
-import { StrictMode } from 'react'
+import { StrictMode, useEffect } from 'react'
 import { createRoot } from 'react-dom/client'
 import { HelmetProvider } from 'react-helmet-async'
 import { PostHogProvider } from 'posthog-js/react'
+import posthog from 'posthog-js'
 import App from './App.tsx'
 import './index.css'
 import './styles/responsive-overrides.css'
 import { ThemeProvider } from './contexts/ThemeContext'
 import { reportAppError } from './lib/errorReporting'
-import { getPosthogClient, initPosthog } from './lib/analytics'
+import { getPosthogClient, initPosthog, captureUtmSuperProperties, isLikelyBot } from './lib/analytics'
+
+function AnalyticsBootstrap() {
+  useEffect(() => {
+    if (isLikelyBot()) {
+      posthog.opt_out_capturing();
+    } else {
+      captureUtmSuperProperties();
+    }
+  }, []);
+  return null;
+}
 
 const helmetContext = {};
 
@@ -64,6 +76,7 @@ void initPosthog();
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <PostHogProvider client={getPosthogClient()}>
+      <AnalyticsBootstrap />
       <ThemeProvider>
         <HelmetProvider context={helmetContext}>
           <App />

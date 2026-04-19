@@ -38,7 +38,10 @@ const Index = () => {
 
   // Track when exit intent modal fires
   useEffect(() => {
-    if (showExitIntent) trackTriggerView('exit-intent');
+    if (showExitIntent) {
+      trackTriggerView('exit-intent');
+      trackLandingViewed({ page: '/', exit_intent: true });
+    }
   }, [showExitIntent, trackTriggerView]);
 
   useEffect(() => {

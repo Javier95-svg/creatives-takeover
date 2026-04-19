@@ -265,3 +265,21 @@ export const trackDashboardAccountabilityStateViewed = (properties?: AnalyticsPr
 
 export const trackDashboardAccountabilityInterventionClicked = (properties?: AnalyticsProperties) =>
   captureEvent('dashboard_accountability_intervention_clicked', properties);
+
+export const trackPricingViewed = ({ source }: { source: string }) =>
+  captureEvent('pricing_viewed', { source });
+
+export const isLikelyBot = (): boolean => {
+  if (typeof navigator === 'undefined') return false;
+  return /bot|crawl|spider|slurp|mediapartners/i.test(navigator.userAgent);
+};
+
+export const captureUtmSuperProperties = () => {
+  const utms = getFirstTouchUtms();
+  if (!posthogClient || Object.keys(utms).length === 0) return;
+  try {
+    posthogClient.register(utms);
+  } catch (e) {
+    console.warn('PostHog UTM super-properties failed', e);
+  }
+};

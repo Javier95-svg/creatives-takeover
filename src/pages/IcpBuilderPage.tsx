@@ -1,4 +1,4 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect, useRef } from "react";
 import { Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -6,11 +6,26 @@ import Navigation from "@/components/Navigation";
 import SEO from "@/components/SEO";
 import { Button } from "@/components/ui/button";
 import { readIcpBuilderSession } from "@/lib/icpBuilderSession";
+import { trackLandingViewed, trackActivationCompleted } from "@/lib/analytics";
+import { ICP_SEED_STORAGE_KEY } from "@/lib/icpSeed";
 
 const ICPBuilder = lazy(() => import("@/components/icp/ICPBuilder"));
 
 export default function ICPBuilderPage() {
   const navigate = useNavigate();
+  const hasTracked = useRef(false);
+
+  useEffect(() => {
+    if (hasTracked.current) return;
+    hasTracked.current = true;
+
+    trackLandingViewed({ page: '/icp-builder' });
+
+    const seed = sessionStorage.getItem(ICP_SEED_STORAGE_KEY);
+    if (seed?.trim()) {
+      trackActivationCompleted({ artifact: 'icp_seed_prefilled' });
+    }
+  }, []);
 
   const handleReturnToPlatform = () => {
     const session = readIcpBuilderSession();
