@@ -1,7 +1,9 @@
 import { useEffect, lazy, Suspense, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { useFeatureFlagEnabled } from "posthog-js/react";
 import Navigation from "@/components/Navigation";
 import Hero from "@/components/Hero";
+import IcpWedgeHero from "@/components/IcpWedgeHero";
 import ValuePropositionCards from "@/components/ValuePropositionCards";
 import UserReviews from "@/components/UserReviews";
 import EntrepreneurProblems from "@/components/EntrepreneurProblems";
@@ -28,6 +30,7 @@ const HomeFAQ = lazy(() => import("@/components/HomeFAQ"));
 const Index = () => {
   const isMobile = useIsMobile();
   const navigate = useNavigate();
+  const wedgeEnabled = useFeatureFlagEnabled('homepage-hero-wedge');
   const { user, loading: authLoading } = useAuth();
   const { showExitIntent, closeExitIntent } = useExitIntent();
   const { trackTriggerView, trackDismissal } = useConversionTracking();
@@ -107,7 +110,7 @@ const Index = () => {
       <main>
         {isMobile ? (
           <PullToRefresh onRefresh={handleRefresh}>
-            <Hero />
+            {wedgeEnabled ? <IcpWedgeHero /> : <Hero />}
             <div className="homepage-band-muted">
               <EntrepreneurProblems />
             </div>
@@ -124,7 +127,7 @@ const Index = () => {
           </PullToRefresh>
         ) : (
           <>
-            <Hero />
+            {wedgeEnabled ? <IcpWedgeHero /> : <Hero />}
             <div className="homepage-band-muted">
               <EntrepreneurProblems />
             </div>
