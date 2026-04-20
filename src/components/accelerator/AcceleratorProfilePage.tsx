@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { FundingOpportunity } from "@/types/funding";
 import { useAcceleratorViewTracking } from "@/hooks/useAcceleratorViewTracking";
+import { useSubscription } from "@/hooks/useSubscription";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -11,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { PLAN_SUMMARIES, type Plan } from "@/config/planPermissions";
+import { normalizePlanId, trackUpgradeClicked } from "@/lib/analytics";
 import { toast } from "sonner";
 import {
   ArrowLeft,
@@ -32,6 +34,7 @@ import {
 const AcceleratorProfilePage = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
+  const { subscriptionData } = useSubscription();
   const [accelerator, setAccelerator] = useState<FundingOpportunity | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -177,6 +180,7 @@ const AcceleratorProfilePage = () => {
 
   const websiteUrl = accelerator.website_url || accelerator.url;
   const upgradePlan = upgradePrompt?.requiredTier ? PLAN_SUMMARIES[upgradePrompt.requiredTier] : null;
+  const upgradeTier = upgradePrompt?.requiredTier ?? "rising";
   const upgradeTierLabel = upgradePlan?.name ?? "Rising";
   const upgradeDetail = !upgradePlan || upgradePlan.acceleratorViewLimit === Infinity
     ? "Unlock unlimited accelerator views this billing cycle."
@@ -478,7 +482,17 @@ const AcceleratorProfilePage = () => {
               </Button>
             </>
           ) : (
-            <Button onClick={() => navigate("/pricing")} className="w-full sm:w-auto">
+            <Button
+              onClick={() => {
+                trackUpgradeClicked({
+                  from_plan: normalizePlanId(subscriptionData?.subscription_tier),
+                  to_plan: normalizePlanId(upgradeTier),
+                  location: "feature_gate",
+                });
+                navigate("/pricing");
+              }}
+              className="w-full sm:w-auto"
+            >
               Upgrade to {upgradeTierLabel}
             </Button>
           )}
@@ -524,7 +538,17 @@ const AcceleratorProfilePage = () => {
                     Upgrade to {upgradeTierLabel} to keep exploring. {upgradeDetail}
                   </p>
                 </div>
-                <Button onClick={() => navigate("/pricing")} className="w-full sm:w-auto">
+                <Button
+                  onClick={() => {
+                    trackUpgradeClicked({
+                      from_plan: normalizePlanId(subscriptionData?.subscription_tier),
+                      to_plan: normalizePlanId(upgradeTier),
+                      location: "feature_gate",
+                    });
+                    navigate("/pricing");
+                  }}
+                  className="w-full sm:w-auto"
+                >
                   Upgrade to {upgradeTierLabel}
                 </Button>
               </CardContent>

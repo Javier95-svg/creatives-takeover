@@ -6,6 +6,7 @@ import { Check, Crown, Sparkles, Star } from "lucide-react";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { normalizePlanId, trackUpgradeClicked } from "@/lib/analytics";
 import { PLAN_HIGHLIGHTS, PLAN_MONTHLY_CREDITS } from "@/config/planPermissions";
 
 type BillingCycle = "monthly" | "yearly";
@@ -135,6 +136,16 @@ export default function Pricing() {
   const currentTier = normalizeTierName(subscriptionData?.subscription_tier);
 
   const handleSubscribe = async (plan: PlanKey) => {
+    const shouldTrackUpgrade = plan !== "rookie" && (!user || currentTier !== plan);
+
+    if (shouldTrackUpgrade) {
+      trackUpgradeClicked({
+        from_plan: normalizePlanId(currentTier),
+        to_plan: normalizePlanId(plan),
+        location: "pricing_page",
+      });
+    }
+
     if (user && currentTier === plan) {
       navigate("/account");
       return;

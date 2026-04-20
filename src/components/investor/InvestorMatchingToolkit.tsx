@@ -5,12 +5,13 @@ import { Button } from '@/components/ui/button';
 import { useFeatureGating } from '@/hooks/useFeatureGating';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { normalizePlanId, trackUpgradeClicked } from '@/lib/analytics';
 import { toast } from 'sonner';
 
 const InvestorMatchingToolkit = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { checkFeatureAccess } = useFeatureGating();
+  const { checkFeatureAccess, currentTier } = useFeatureGating();
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
@@ -126,7 +127,18 @@ const InvestorMatchingToolkit = () => {
                 if (!matchingAccess.hasAccess) {
                   return (
                     <>
-                      <Button size="lg" className="w-full sm:w-auto" onClick={() => navigate('/pricing')}>
+                      <Button
+                        size="lg"
+                        className="w-full sm:w-auto"
+                        onClick={() => {
+                          trackUpgradeClicked({
+                            from_plan: normalizePlanId(currentTier),
+                            to_plan: 'PRO',
+                            location: 'feature_gate',
+                          });
+                          navigate('/pricing');
+                        }}
+                      >
                         <Lock className="mr-2 h-5 w-5" />
                         Upgrade to Match Investors
                       </Button>

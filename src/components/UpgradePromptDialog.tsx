@@ -9,8 +9,8 @@ import { Button } from "@/components/ui/button";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useFeatureGating } from "@/hooks/useFeatureGating";
 import { useCredits } from "@/hooks/useCredits";
-import { CREDIT_COSTS } from "@/config/constants";
 import { getNextPlan, normalizePlan, PLAN_SUMMARIES, type Plan } from "@/config/planPermissions";
+import { normalizePlanId, trackUpgradeClicked } from "@/lib/analytics";
 
 type UpgradeReason = "credits" | "limit" | "feature";
 
@@ -48,7 +48,7 @@ const UpgradePromptDialog = ({
   const recommendedTier = useMemo(() => {
     if (requiredTier) return requiredTier;
     return getNextPlan(normalizedCurrentTier);
-  }, [requiredTier, currentTier]);
+  }, [requiredTier, normalizedCurrentTier]);
 
   const tierDetails = PLAN_SUMMARIES[recommendedTier];
   const featureLabel = featureName || "this feature";
@@ -79,6 +79,12 @@ const UpgradePromptDialog = ({
     : `${tierDetails?.vcViewLimit} VC views/month`;
 
   const handleUpgrade = async () => {
+    trackUpgradeClicked({
+      from_plan: normalizePlanId(normalizedCurrentTier),
+      to_plan: normalizePlanId(recommendedTier),
+      location: "feature_gate",
+    });
+
     if (!canUpgrade) {
       navigate("/pricing");
       onOpenChange(false);
@@ -166,6 +172,11 @@ const UpgradePromptDialog = ({
           <Button
             variant="outline"
             onClick={() => {
+              trackUpgradeClicked({
+                from_plan: normalizePlanId(normalizedCurrentTier),
+                to_plan: normalizePlanId(recommendedTier),
+                location: "feature_gate",
+              });
               navigate("/pricing");
               onOpenChange(false);
             }}

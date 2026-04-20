@@ -2,6 +2,8 @@ import posthog from 'posthog-js';
 
 type AnalyticsProperties = Record<string, unknown>;
 type SignupMethod = 'google' | 'linkedin' | 'email';
+export type PlanId = 'ROOKIE' | 'STARTER' | 'RISING' | 'PRO';
+export type UpgradeLocation = 'pricing_page' | 'dashboard_banner' | 'feature_gate' | 'onboarding';
 
 const PH_KEY =
   import.meta.env.VITE_POSTHOG_API_KEY ??
@@ -265,6 +267,24 @@ export const trackDashboardAccountabilityStateViewed = (properties?: AnalyticsPr
 
 export const trackDashboardAccountabilityInterventionClicked = (properties?: AnalyticsProperties) =>
   captureEvent('dashboard_accountability_intervention_clicked', properties);
+
+export const normalizePlanId = (planLike?: string | null): PlanId => {
+  const normalized = (planLike || '').trim().toLowerCase();
+  if (normalized === 'starter') return 'STARTER';
+  if (normalized === 'creator' || normalized === 'rising') return 'RISING';
+  if (normalized === 'professional' || normalized === 'pro') return 'PRO';
+  return 'ROOKIE';
+};
+
+export const trackUpgradeClicked = ({
+  from_plan,
+  to_plan,
+  location,
+}: {
+  from_plan: PlanId;
+  to_plan: PlanId;
+  location: UpgradeLocation;
+}) => captureEvent('upgrade_clicked', { from_plan, to_plan, location });
 
 export const trackPricingViewed = ({ source }: { source: string }) =>
   captureEvent('pricing_viewed', { source });

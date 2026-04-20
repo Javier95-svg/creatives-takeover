@@ -8,6 +8,7 @@ import { X, ArrowRight, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { usePlanAccess } from '@/hooks/usePlanAccess';
+import { normalizePlanId, trackUpgradeClicked } from '@/lib/analytics';
 
 export function RookieUpgradeBanner() {
   const { plan } = usePlanAccess('dashboard_mode');
@@ -33,7 +34,16 @@ export function RookieUpgradeBanner() {
           size="sm"
           className="h-7 px-3 text-xs font-semibold bg-primary hover:bg-primary/90 text-primary-foreground"
         >
-          <Link to="/pricing">
+          <Link
+            to="/pricing"
+            onClick={() =>
+              trackUpgradeClicked({
+                from_plan: normalizePlanId(plan),
+                to_plan: 'STARTER',
+                location: 'dashboard_banner',
+              })
+            }
+          >
             Upgrade
             <ArrowRight className="ml-1 w-3 h-3" />
           </Link>

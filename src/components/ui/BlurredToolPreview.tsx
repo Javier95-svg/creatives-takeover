@@ -9,6 +9,8 @@ import type { ReactNode } from 'react';
 import { Lock, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
+import { useSubscription } from '@/hooks/useSubscription';
+import { normalizePlanId, trackUpgradeClicked } from '@/lib/analytics';
 
 interface BlurredToolPreviewProps {
   /** Content to render underneath (blurred when locked, normal when accessible) */
@@ -31,6 +33,7 @@ export function BlurredToolPreview({
   requiredPlan,
 }: BlurredToolPreviewProps) {
   const navigate = useNavigate();
+  const { subscriptionData } = useSubscription();
 
   if (!locked) return <>{children}</>;
 
@@ -50,7 +53,14 @@ export function BlurredToolPreview({
         <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
           {requiredPlan ? (
             <Button
-              onClick={() => navigate('/pricing')}
+              onClick={() => {
+                trackUpgradeClicked({
+                  from_plan: normalizePlanId(subscriptionData?.subscription_tier),
+                  to_plan: normalizePlanId(requiredPlan),
+                  location: 'feature_gate',
+                });
+                navigate('/pricing');
+              }}
               className="gap-2"
             >
               Upgrade to {requiredPlan === 'pro' ? 'Pro' : requiredPlan === 'rising' ? 'Rising' : 'Starter'}

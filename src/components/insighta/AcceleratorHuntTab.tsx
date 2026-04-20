@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Lock, UserPlus } from "lucide-react";
 import { PLAN_SUMMARIES } from "@/config/planPermissions";
 import { PREVIEW_MODE_CONTENT_BLUR, PREVIEW_MODE_OVERLAY_BACKGROUND } from "@/components/ui/previewOverlayStyles";
+import { normalizePlanId, trackUpgradeClicked } from "@/lib/analytics";
 
 const AcceleratorHuntTab = () => {
   const [filters, setFilters] = useState<AcceleratorFiltersType>({});
@@ -78,7 +79,18 @@ const AcceleratorHuntTab = () => {
               </div>
             </div>
             <Button asChild className="w-full sm:w-auto">
-              <Link to="/pricing">Upgrade to {upgradeDetails.name}</Link>
+              <Link
+                to="/pricing"
+                onClick={() =>
+                  trackUpgradeClicked({
+                    from_plan: normalizePlanId(currentTier),
+                    to_plan: normalizePlanId(upgradeTier),
+                    location: "feature_gate",
+                  })
+                }
+              >
+                Upgrade to {upgradeDetails.name}
+              </Link>
             </Button>
           </CardContent>
         </Card>

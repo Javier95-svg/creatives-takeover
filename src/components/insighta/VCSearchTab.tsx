@@ -10,6 +10,7 @@ import { useVCSearch } from "@/hooks/useVCSearch";
 import { useVCViewTracking } from "@/hooks/useVCViewTracking";
 import { VCFilters as VCFiltersType } from "@/types/insighta";
 import { PLAN_SUMMARIES } from "@/config/planPermissions";
+import { normalizePlanId, trackUpgradeClicked } from "@/lib/analytics";
 
 const VCSearchTab = () => {
   const [filters, setFilters] = useState<VCFiltersType>({});
@@ -75,7 +76,18 @@ const VCSearchTab = () => {
               </div>
             </div>
             <Button asChild className="w-full sm:w-auto">
-              <Link to="/pricing">Upgrade to {upgradeDetails.name}</Link>
+              <Link
+                to="/pricing"
+                onClick={() =>
+                  trackUpgradeClicked({
+                    from_plan: normalizePlanId(currentTier),
+                    to_plan: normalizePlanId(upgradeTier),
+                    location: "feature_gate",
+                  })
+                }
+              >
+                Upgrade to {upgradeDetails.name}
+              </Link>
             </Button>
           </CardContent>
         </Card>

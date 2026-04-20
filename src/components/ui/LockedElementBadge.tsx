@@ -20,6 +20,8 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { PLAN_LABELS } from '@/config/planPermissions';
+import { useSubscription } from '@/hooks/useSubscription';
+import { normalizePlanId, trackUpgradeClicked } from '@/lib/analytics';
 
 interface LockedElementBadgeProps {
   /** Children are rendered but overlaid / intercepted */
@@ -51,6 +53,7 @@ export function LockedElementBadge({
   className = '',
 }: LockedElementBadgeProps) {
   const [open, setOpen] = useState(false);
+  const { subscriptionData } = useSubscription();
   const planLabel = PLAN_LABELS[requiredPlan];
 
   const modalTitle =
@@ -124,7 +127,17 @@ export function LockedElementBadge({
               asChild
               className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold"
             >
-              <Link to="/pricing" onClick={() => setOpen(false)}>
+              <Link
+                to="/pricing"
+                onClick={() => {
+                  trackUpgradeClicked({
+                    from_plan: normalizePlanId(subscriptionData?.subscription_tier),
+                    to_plan: normalizePlanId(requiredPlan),
+                    location: 'feature_gate',
+                  });
+                  setOpen(false);
+                }}
+              >
                 Upgrade to {planLabel}
               </Link>
             </Button>

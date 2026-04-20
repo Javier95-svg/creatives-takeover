@@ -18,6 +18,7 @@ import { useCreditActions } from "@/hooks/useCreditActions";
 import { useUpgradePrompt } from "@/contexts/UpgradePromptContext";
 import { CREDIT_COSTS } from "@/config/constants";
 import { normalizePlan, type Plan } from "@/config/planPermissions";
+import { normalizePlanId, trackUpgradeClicked } from "@/lib/analytics";
 
 const PromptLibrary = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -340,7 +341,14 @@ const PromptLibrary = () => {
                                   </Button>
                                 )}
                                 <Button
-                                  onClick={() => window.location.href = "/pricing"}
+                                  onClick={() => {
+                                    trackUpgradeClicked({
+                                      from_plan: normalizePlanId(userTier),
+                                      to_plan: normalizePlanId(requiredUpgradePlan),
+                                      location: "feature_gate",
+                                    });
+                                    window.location.href = "/pricing";
+                                  }}
                                   className="gap-2"
                                 >
                                   {TierIcon && <TierIcon className="w-4 h-4" />}
@@ -381,7 +389,14 @@ const PromptLibrary = () => {
                         </Button>
                           {isPremiumPrompt && currentStep === 1 && !hasAccessToPrompt(selectedConcept) ? (
                           <Button
-                            onClick={() => window.location.href = "/pricing"}
+                            onClick={() => {
+                              trackUpgradeClicked({
+                                from_plan: normalizePlanId(userTier),
+                                to_plan: normalizePlanId(requiredUpgradePlan),
+                                location: "feature_gate",
+                              });
+                              window.location.href = "/pricing";
+                            }}
                             className="gap-2"
                           >
                             {TierIcon && <TierIcon className="w-4 h-4" />}

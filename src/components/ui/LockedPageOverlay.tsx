@@ -14,6 +14,8 @@ import { Lock, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { PLAN_LABELS } from '@/config/planPermissions';
+import { useSubscription } from '@/hooks/useSubscription';
+import { normalizePlanId, trackUpgradeClicked } from '@/lib/analytics';
 
 interface LockedPageOverlayProps {
   /** The minimum plan needed to unlock this feature */
@@ -32,6 +34,7 @@ export function LockedPageOverlay({
   description,
   benefits,
 }: LockedPageOverlayProps) {
+  const { subscriptionData } = useSubscription();
   const planLabel = PLAN_LABELS[requiredPlan];
 
   return (
@@ -72,7 +75,16 @@ export function LockedPageOverlay({
 
       {/* CTA */}
       <Button asChild className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold">
-        <Link to="/pricing">
+        <Link
+          to="/pricing"
+          onClick={() =>
+            trackUpgradeClicked({
+              from_plan: normalizePlanId(subscriptionData?.subscription_tier),
+              to_plan: normalizePlanId(requiredPlan),
+              location: 'feature_gate',
+            })
+          }
+        >
           Upgrade to {planLabel}
           <ArrowRight className="ml-2 w-4 h-4" />
         </Link>

@@ -11,7 +11,9 @@ import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { VCWallpaper } from "@/components/vc-search/VCWallpaper";
 import { useVCViewTracking } from "@/hooks/useVCViewTracking";
+import { useSubscription } from "@/hooks/useSubscription";
 import { PLAN_SUMMARIES, type Plan } from "@/config/planPermissions";
+import { normalizePlanId, trackUpgradeClicked } from "@/lib/analytics";
 import { toast } from "sonner";
 import {
   ArrowLeft,
@@ -28,6 +30,7 @@ import {
 const VCProfilePage = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
+  const { subscriptionData } = useSubscription();
   const [vc, setVc] = useState<Investor | null>(null);
   const [loading, setLoading] = useState(true);
   const { trackVCView, limit } = useVCViewTracking();
@@ -207,6 +210,7 @@ const VCProfilePage = () => {
         ? { label: "Visit Website", href: vc.firm_website }
         : null;
   const upgradePlan = upgradePrompt?.requiredTier ? PLAN_SUMMARIES[upgradePrompt.requiredTier] : null;
+  const upgradeTier = upgradePrompt?.requiredTier ?? "rising";
   const upgradeTierLabel = upgradePlan?.name ?? "Rising";
   const upgradeDetail = !upgradePlan || upgradePlan.vcViewLimit === Infinity
     ? "Unlock unlimited VC views this billing cycle."
@@ -475,7 +479,17 @@ const VCProfilePage = () => {
               </Button>
             </>
           ) : (
-            <Button onClick={() => navigate("/pricing")} className="w-full sm:w-auto">
+            <Button
+              onClick={() => {
+                trackUpgradeClicked({
+                  from_plan: normalizePlanId(subscriptionData?.subscription_tier),
+                  to_plan: normalizePlanId(upgradeTier),
+                  location: "feature_gate",
+                });
+                navigate("/pricing");
+              }}
+              className="w-full sm:w-auto"
+            >
               Upgrade to {upgradeTierLabel}
             </Button>
           )}
@@ -512,7 +526,17 @@ const VCProfilePage = () => {
                     Upgrade to {upgradeTierLabel} to keep exploring. {upgradeDetail}
                   </p>
                 </div>
-                <Button onClick={() => navigate("/pricing")} className="w-full sm:w-auto">
+                <Button
+                  onClick={() => {
+                    trackUpgradeClicked({
+                      from_plan: normalizePlanId(subscriptionData?.subscription_tier),
+                      to_plan: normalizePlanId(upgradeTier),
+                      location: "feature_gate",
+                    });
+                    navigate("/pricing");
+                  }}
+                  className="w-full sm:w-auto"
+                >
                   Upgrade to {upgradeTierLabel}
                 </Button>
               </CardContent>

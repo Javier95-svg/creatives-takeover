@@ -37,6 +37,7 @@ import { useFeatureGating } from "@/hooks/useFeatureGating";
 import { useUpgradePrompt } from "@/contexts/UpgradePromptContext";
 import { SignedOutFeaturePreview } from "@/components/ui/SignedOutFeaturePreview";
 import { PREVIEW_MODE_CONTENT_BLUR, PREVIEW_MODE_OVERLAY_BACKGROUND } from "@/components/ui/previewOverlayStyles";
+import { normalizePlanId, trackUpgradeClicked } from "@/lib/analytics";
 
 import { cn } from "@/lib/utils";
 import { getPublicTabConfig } from "@/config/publicTabVisibility";
@@ -749,14 +750,19 @@ const FindYourAngel = () => {
                         <Button
                           size="lg"
                           className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
-                          onClick={() =>
+                          onClick={() => {
+                            trackUpgradeClicked({
+                              from_plan: normalizePlanId(currentTier),
+                              to_plan: 'PRO',
+                              location: 'feature_gate',
+                            });
                             openUpgradePrompt({
                               reason: 'feature',
                               featureName: 'Angel Investor Profiles',
                               requiredTier: 'pro',
                               description: 'Professional plan gives you unlimited access to all angel investor profiles.',
-                            })
-                          }
+                            });
+                          }}
                         >
                           <Crown className="w-4 h-4 mr-2" />
                           Upgrade to Professional

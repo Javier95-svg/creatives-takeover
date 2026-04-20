@@ -15,12 +15,14 @@ import { useNavigate } from "react-router-dom";
 import { useBadgeSystem } from "@/hooks/useBadgeSystem";
 import { useFeatureGating } from "@/hooks/useFeatureGating";
 import { useUpgradePrompt } from "@/contexts/UpgradePromptContext";
+import type { Plan } from "@/config/planPermissions";
+import { normalizePlanId, trackUpgradeClicked } from "@/lib/analytics";
 
 const CommunityFeed: React.FC = () => {
   const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const { checkAndAwardBadges } = useBadgeSystem(user?.id);
-  const { checkFeatureAccess } = useFeatureGating();
+  const { checkFeatureAccess, currentTier } = useFeatureGating();
   const { openUpgradePrompt } = useUpgradePrompt();
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
@@ -89,7 +91,7 @@ const CommunityFeed: React.FC = () => {
         }
       }
 
-      let formattedPosts: Post[] = data.map(post => {
+      const formattedPosts: Post[] = data.map(post => {
         const authorInfo = authorMap.get(post.user_id);
         const authorName = authorInfo?.authorName || 'Anonymous';
         const authorAvatar = authorInfo?.authorAvatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(authorName)}`;
@@ -280,10 +282,11 @@ const CommunityFeed: React.FC = () => {
         case "medium":
           list = list.filter(p => (p.votes > 3 && p.votes <= 10) || (p.commentsCount > 1 && p.commentsCount <= 5));
           break;
-        case "new":
+        case "new": {
           const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
           list = list.filter(p => new Date(p.createdAt).getTime() > oneDayAgo);
           break;
+        }
       }
     }
 
@@ -404,14 +407,19 @@ const CommunityFeed: React.FC = () => {
                       {postingAccess.message || 'Upgrade to Starter plan or higher to create posts in the community'}
                     </p>
                     <Button 
-                      onClick={() =>
+                      onClick={() => {
+                        trackUpgradeClicked({
+                          from_plan: normalizePlanId(currentTier),
+                          to_plan: normalizePlanId(postingAccess.requiredTier),
+                          location: "feature_gate",
+                        });
                         openUpgradePrompt({
                           reason: 'feature',
                           featureName: 'Community posts',
                           requiredTier: postingAccess.requiredTier as Plan | undefined,
                           description: postingAccess.message,
-                        })
-                      }
+                        });
+                      }}
                       className="gap-2"
                     >
                       <Sparkles className="w-4 h-4" />
