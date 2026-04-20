@@ -35,6 +35,14 @@ export interface CreateStoryInput {
   status?: 'draft' | 'published';
 }
 
+const getStoryReleaseTimestamp = (story: Pick<StoryArticle, 'published_at' | 'created_at'>) => {
+  return new Date(story.published_at ?? story.created_at).getTime();
+};
+
+const sortStoriesByReleaseDate = (stories: StoryArticle[]) => {
+  return [...stories].sort((a, b) => getStoryReleaseTimestamp(b) - getStoryReleaseTimestamp(a));
+};
+
 export const useStories = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
@@ -47,7 +55,7 @@ export const useStories = () => {
     try {
       setLoading(true);
       
-      let query = supabase
+      const query = supabase
         .from('stories_articles')
         .select('*')
         .eq('status', 'published')
@@ -71,7 +79,7 @@ export const useStories = () => {
         });
       }
 
-      return stories;
+      return sortStoriesByReleaseDate(stories);
     } catch (error: any) {
       console.error('Error fetching stories:', error);
       toast.error('Failed to load stories');
@@ -140,7 +148,7 @@ export const useStories = () => {
           if (tags.some((tag) => tag === normalizedQueryLower)) relevance += 9;
           if (tags.some((tag) => tag.includes(queryWithoutHash))) relevance += 4;
 
-          const published = story.published_at ? new Date(story.published_at) : new Date(story.created_at);
+          const published = new Date(getStoryReleaseTimestamp(story));
           const ageInDays = Math.max(0, (Date.now() - published.getTime()) / (1000 * 60 * 60 * 24));
           const recencyBoost = Math.max(0, 2 - ageInDays / 180);
 
@@ -150,9 +158,7 @@ export const useStories = () => {
         const scoreDiff = score(b) - score(a);
         if (scoreDiff !== 0) return scoreDiff;
 
-        const dateA = a.published_at ? new Date(a.published_at).getTime() : new Date(a.created_at).getTime();
-        const dateB = b.published_at ? new Date(b.published_at).getTime() : new Date(b.created_at).getTime();
-        return dateB - dateA;
+        return getStoryReleaseTimestamp(b) - getStoryReleaseTimestamp(a);
       });
 
       return ranked;
@@ -325,6 +331,7 @@ export const useStories = () => {
         ...input,
         author_id: user.id,
         status: input.status || 'draft',
+        published_at: input.status === 'published' ? new Date().toISOString() : null,
         hashtags: input.hashtags || [],
         linkedin_post_url: input.linkedin_post_url, // Required
         banner_image_url: input.banner_image_url || null,
