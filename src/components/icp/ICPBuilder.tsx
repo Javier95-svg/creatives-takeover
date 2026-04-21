@@ -7,6 +7,7 @@ import { IcpProgressBar } from "@/components/icp/IcpProgressBar";
 import { IcpSamplePreviewSection } from "@/components/icp/IcpSamplePreviewSection";
 import { IcpSynthesisLoader } from "@/components/icp/IcpSynthesisLoader";
 import { IcpUnlockGate } from "@/components/icp/IcpUnlockGate";
+import { SAMPLE_ICP_SECTION_EXPLAINERS } from "@/components/icp/sampleIcpPreviewData";
 import Footer from "@/components/Footer";
 import PageFAQSection from "@/components/seo/PageFAQSection";
 import { Button } from "@/components/ui/button";
@@ -1044,11 +1045,7 @@ const ICPBuilder: React.FC = () => {
         </button>
       </div>
 
-      <IcpSamplePreviewSection
-        onSelectFastMode={handleSelectFastMode}
-        onSelectGuidedMode={handleSelectGuidedMode}
-        modeSelectorId="icp-mode-selector"
-      />
+      <IcpSamplePreviewSection />
 
       <div className="mt-14 sm:mt-16">
         <PageFAQSection
@@ -1364,17 +1361,12 @@ const ICPBuilder: React.FC = () => {
         <IcpProgressBar progress={progress} shellOffset />
         <div className="relative z-10 pt-24 sm:pt-28 md:pt-32">
           <div className="mx-auto w-full max-w-7xl px-4 pb-12 sm:px-6 lg:px-8">
-            <section className="relative overflow-hidden rounded-[2.5rem] border border-border/60 bg-white/45 shadow-[0_40px_140px_-80px_rgba(15,23,42,0.55)] backdrop-blur-xl dark:bg-slate-950/45">
-              <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(50,184,198,0.12),transparent_42%),linear-gradient(180deg,rgba(255,255,255,0.08),rgba(255,255,255,0))] dark:bg-[radial-gradient(circle_at_top,rgba(50,184,198,0.16),transparent_42%),linear-gradient(180deg,rgba(15,23,42,0.24),rgba(15,23,42,0))]" />
-              <div className="relative">
-                <IcpFolioDocument
-                  draft={session.draftPreview.draftDocument}
-                  blurred
-                  tone="platformPreview"
-                  className="pointer-events-none"
-                />
-              </div>
-            </section>
+            <IcpFolioDocument
+              draft={session.draftPreview.draftDocument}
+              blurred
+              tone="platformPreview"
+              sectionExplainers={SAMPLE_ICP_SECTION_EXPLAINERS}
+            />
           </div>
           <Footer />
         </div>
