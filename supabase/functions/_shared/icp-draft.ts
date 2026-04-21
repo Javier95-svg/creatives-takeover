@@ -7,12 +7,12 @@ export interface GuidedInput {
     industry: string;
     experience: string;
   };
-  specificity: string;
+  specificity?: string;
   pain: string;
   workaround: string;
-  solutionCompletion: string;
-  marketContext: "different_customer" | "too_expensive_or_complex" | "manual_or_no_product" | "new_problem_recently";
-  founderEdge: string;
+  solutionCompletion?: string;
+  marketContext?: "different_customer" | "too_expensive_or_complex" | "manual_or_no_product" | "new_problem_recently";
+  founderEdge?: string;
 }
 
 export interface FastInput {

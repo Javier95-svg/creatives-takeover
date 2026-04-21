@@ -17,12 +17,8 @@ export type IcpFlowScreen =
   | "fast_input"
   | "guided_seed"
   | "guided_persona"
-  | "guided_specificity"
   | "guided_pain"
   | "guided_workaround"
-  | "guided_solution"
-  | "guided_market_context"
-  | "guided_founder_edge"
   | "gate";
 
 export interface IcpDraftCoreFeature {
@@ -150,7 +146,7 @@ export interface StoredIcpArtifact {
 }
 
 export interface IcpBuilderSession {
-  version: 3;
+  version: 4;
   mode: IcpBuilderMode | null;
   currentScreen: IcpFlowScreen;
   fastDescription: string;
@@ -169,7 +165,7 @@ export function buildIcpUnlockReturnPath() {
 
 export function createEmptyIcpBuilderSession(): IcpBuilderSession {
   return {
-    version: 3,
+    version: 4,
     mode: null,
     currentScreen: "mode_select",
     fastDescription: "",
@@ -191,7 +187,7 @@ export function readIcpBuilderSession(): IcpBuilderSession | null {
     if (!raw) return null;
     const parsed = JSON.parse(raw) as Partial<IcpBuilderSession>;
 
-    if (parsed.version !== 3) {
+    if (parsed.version !== 4) {
       getSafeLocalStorage().removeItem(ICP_BUILDER_SESSION_KEY);
       return null;
     }
@@ -199,7 +195,7 @@ export function readIcpBuilderSession(): IcpBuilderSession | null {
     return {
       ...createEmptyIcpBuilderSession(),
       ...parsed,
-      version: 3,
+      version: 4,
     };
   } catch (error) {
     console.error("Failed to restore ICP Builder session", error);

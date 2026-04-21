@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft, ArrowRight, Loader2, RotateCcw } from "lucide-react";
+import { ArrowLeft, ArrowRight, Loader2, RotateCcw, Sparkles } from "lucide-react";
 
 import { IcpFolioDocument } from "@/components/icp/IcpFolioDocument";
 import { IcpProgressBar } from "@/components/icp/IcpProgressBar";
@@ -16,11 +16,23 @@ import { useActivationJourney } from "@/hooks/useActivationJourney";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { captureEvent, trackActivationCompleted, trackICPBuilderCompleted, trackICPBuilderModeSelected, trackICPBuilderStarted, trackICPBuilderStepCompleted } from "@/lib/analytics";
+import {
+  captureEvent,
+  trackActivationCompleted,
+  trackICPBuilderCompleted,
+  trackICPBuilderModeSelected,
+  trackICPBuilderStarted,
+  trackICPBuilderStepCompleted,
+  trackICPDashboardOpened,
+  trackICPPreviewReady,
+  trackICPResumeLinkRequested,
+  trackICPResumeRestored,
+  trackICPSeedSubmitted,
+} from "@/lib/analytics";
 import {
   fastIcpInputSchema,
   guidedIcpInputSchema,
-  ICP_MARKET_CONTEXT_OPTIONS,
+  type GuidedIcpInputSchema,
   type IcpPersonaSuggestion,
 } from "@/lib/icpBuilderSchema";
 import {
@@ -49,26 +61,18 @@ const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const GUIDED_SCREEN_ORDER: IcpFlowScreen[] = [
   "guided_seed",
   "guided_persona",
-  "guided_specificity",
   "guided_pain",
   "guided_workaround",
-  "guided_solution",
-  "guided_market_context",
-  "guided_founder_edge",
 ];
 
 const PROGRESS_BY_SCREEN: Record<IcpFlowScreen | "seed_loading" | "synthesis", number> = {
   mode_select: 0,
-  fast_input: 50,
-  guided_seed: 10,
-  guided_persona: 22,
-  guided_specificity: 34,
-  guided_pain: 46,
-  guided_workaround: 58,
-  guided_solution: 70,
-  guided_market_context: 82,
-  guided_founder_edge: 94,
-  seed_loading: 22,
+  fast_input: 48,
+  guided_seed: 16,
+  guided_persona: 42,
+  guided_pain: 68,
+  guided_workaround: 84,
+  seed_loading: 28,
   synthesis: 97,
   gate: 100,
 };
@@ -109,6 +113,14 @@ type QueueEmailDraftResponse = {
   success: boolean;
   queued?: boolean;
   error?: string;
+};
+
+type IcpUnlockEmailPayload = {
+  entryMode?: "fast" | "guided";
+  fastInput?: { description: string } | null;
+  guidedInput?: GuidedIcpInputSchema | null;
+  personaEditedSignificantly?: boolean;
+  artifact?: StoredIcpArtifact | null;
 };
 
 type LegacyAnalysis = Record<string, unknown>;
@@ -166,7 +178,7 @@ function getPreviousScreen(screen: IcpFlowScreen, mode: IcpBuilderMode | null): 
   if (screen === "mode_select") return null;
   if (screen === "fast_input") return "mode_select";
   if (screen === "gate") {
-    return mode === "fast" ? "fast_input" : "guided_founder_edge";
+    return mode === "fast" ? "fast_input" : "guided_workaround";
   }
 
   const currentIndex = GUIDED_SCREEN_ORDER.indexOf(screen);
@@ -195,25 +207,17 @@ function getScreenTitle(screen: IcpFlowScreen, session: IcpBuilderSession) {
       return "What's your startup idea?";
     case "guided_persona":
       return "Based on your idea, here's who we think you're building for.";
-    case "guided_specificity":
-      return "Now narrow it down. Who exactly?";
     case "guided_pain":
-      return "What specific problem does this person face that drives them crazy?";
+      return "What's the biggest pain this customer wants gone right now?";
     case "guided_workaround":
       return `What does ${role} use today to deal with this problem?`;
-    case "guided_solution":
-      return "In one sentence, what does your product do for them?";
-    case "guided_market_context":
-      return "Which best describes your competitive landscape?";
-    case "guided_founder_edge":
-      return "Why are you the right person to build this?";
     default:
       return "";
   }
 }
 
 function getEnterHint(screen: IcpFlowScreen) {
-  if (screen === "guided_market_context" || screen === "mode_select") return "";
+  if (screen === "mode_select") return "";
   return "Press Enter ↵";
 }
 
@@ -236,15 +240,36 @@ const ICPBuilder: React.FC = () => {
   const [fallbackEmail, setFallbackEmail] = useState("");
   const [fallbackEmailError, setFallbackEmailError] = useState<string | null>(null);
   const [fallbackEmailState, setFallbackEmailState] = useState<FallbackEmailState>("idle");
+  const [isPersonaEditorOpen, setIsPersonaEditorOpen] = useState(false);
+  const [isGateMinimized, setIsGateMinimized] = useState(false);
 
   const unlockPath = buildIcpUnlockReturnPath();
   const editDraftId = searchParams.get("edit");
   const resumeToken = searchParams.get("resume");
   const progress = getDisplayProgress(session.currentScreen, loadingPhase);
   const synthesisElapsedMs = loadingPhase === "synthesis" && loadingStartedAt ? Date.now() - loadingStartedAt : 0;
+  const quickstartSeed = session.guided.seed || "";
 
   const validatedGuided = useMemo(() => guidedIcpInputSchema.safeParse(session.guided), [session.guided]);
   const validatedFast = useMemo(() => fastIcpInputSchema.safeParse({ description: session.fastDescription }), [session.fastDescription]);
+  const unlockEmailPayload = useMemo<IcpUnlockEmailPayload | null>(() => {
+    if (!session.draftPreview) return null;
+
+    if (session.mode === "fast") {
+      return {
+        entryMode: "fast",
+        fastInput: { description: session.fastDescription },
+        artifact: session.draftPreview,
+      };
+    }
+
+    return {
+      entryMode: "guided",
+      guidedInput: validatedGuided.success ? validatedGuided.data : null,
+      personaEditedSignificantly: session.personaEditedSignificantly,
+      artifact: session.draftPreview,
+    };
+  }, [session.draftPreview, session.fastDescription, session.mode, session.personaEditedSignificantly, validatedGuided]);
 
   useEffect(() => {
     persistIcpBuilderSession(session);
@@ -259,6 +284,15 @@ const ICPBuilder: React.FC = () => {
 
     return () => window.clearInterval(timer);
   }, [loadingPhase, loadingStartedAt]);
+
+  useEffect(() => {
+    if (session.currentScreen !== "guided_persona") {
+      setIsPersonaEditorOpen(false);
+    }
+    if (session.currentScreen !== "gate") {
+      setIsGateMinimized(false);
+    }
+  }, [session.currentScreen]);
 
   useEffect(() => {
     const restoredSeed = normalizeIcpSeed(searchParams.get("seed"));
@@ -368,6 +402,10 @@ const ICPBuilder: React.FC = () => {
           draftPreview: payload.artifact,
           unlockRequired: true,
         });
+        trackICPResumeRestored({
+          source: "resume_token",
+          page_path: "/icp-builder",
+        });
       } catch (error) {
         toast({
           title: "Draft unavailable",
@@ -418,18 +456,10 @@ const ICPBuilder: React.FC = () => {
             session.guided.persona?.industry?.trim() &&
             session.guided.persona?.experience?.trim(),
         );
-      case "guided_specificity":
-        return (session.guided.specificity || "").trim().length >= 8;
       case "guided_pain":
         return (session.guided.pain || "").trim().length >= 12;
       case "guided_workaround":
         return (session.guided.workaround || "").trim().length >= 6;
-      case "guided_solution":
-        return (session.guided.solutionCompletion || "").trim().length >= 6;
-      case "guided_market_context":
-        return Boolean(session.guided.marketContext);
-      case "guided_founder_edge":
-        return (session.guided.founderEdge || "").trim().length >= 12;
       default:
         return false;
     }
@@ -445,6 +475,22 @@ const ICPBuilder: React.FC = () => {
     }));
   };
 
+  const updateQuickstartSeed = (value: string) => {
+    setSession((previous) => {
+      const previousSeed = previous.guided.seed || "";
+      const shouldMirrorFast = !previous.fastDescription || previous.fastDescription === previousSeed;
+
+      return {
+        ...previous,
+        fastDescription: shouldMirrorFast ? value : previous.fastDescription,
+        guided: {
+          ...previous.guided,
+          seed: value,
+        },
+      };
+    });
+  };
+
   const resetBuilder = () => {
     clearIcpBuilderSession();
     setSession(createEmptyIcpBuilderSession());
@@ -454,8 +500,8 @@ const ICPBuilder: React.FC = () => {
     navigate("/icp-builder", { replace: true });
   };
 
-  const invokeSeedPrefill = async () => {
-    const seed = (session.guided.seed || "").trim();
+  const invokeSeedPrefill = async (seedOverride?: string, source: "guided_seed" | "quickstart" = "guided_seed") => {
+    const seed = (seedOverride ?? session.guided.seed ?? "").trim();
     if (seed.length < 8) {
       toast({
         title: "Add a rough idea first",
@@ -467,6 +513,12 @@ const ICPBuilder: React.FC = () => {
 
     setLoadingPhase("seed_loading");
     setLoadingStartedAt(Date.now());
+    trackICPSeedSubmitted({
+      page_path: "/icp-builder",
+      source,
+      is_authenticated: Boolean(user),
+      seed_length: seed.length,
+    });
 
     try {
       const [{ data, error }] = await Promise.all([
@@ -492,15 +544,19 @@ const ICPBuilder: React.FC = () => {
         personaSuggestion: persona,
         mode: "guided",
         guided: {
+          ...buildEmptyGuidedAnswers(seed),
           ...previous.guided,
+          seed,
           persona: {
             role: persona.role,
             industry: persona.industry,
             experience: persona.experience,
           },
+          pain: previous.guided.pain || persona.suggestedPain,
         },
         currentScreen: "guided_persona",
       }));
+      setIsPersonaEditorOpen(false);
     } catch (error) {
       toast({
         title: "Could not analyse the idea",
@@ -567,6 +623,13 @@ const ICPBuilder: React.FC = () => {
       const artifact = data.artifact as StoredIcpArtifact;
 
       if (!persist) {
+        trackICPPreviewReady({
+          page_path: "/icp-builder",
+          mode,
+          confidence: artifact.draftDocument.confidence.level,
+          is_authenticated: Boolean(user),
+        });
+        setIsGateMinimized(false);
         setSession((previous) => ({
           ...previous,
           draftPreview: artifact,
@@ -627,6 +690,11 @@ const ICPBuilder: React.FC = () => {
         confidence: artifact.draftDocument.confidence.level,
       });
       trackActivationCompleted({ artifact: 'icp_completed' });
+      trackICPDashboardOpened({
+        page_path: "/icp-builder",
+        mode,
+        source: "draft_saved",
+      });
 
       navigate("/dashboard", { replace: true });
     } catch (error) {
@@ -713,6 +781,11 @@ const ICPBuilder: React.FC = () => {
           confidence: artifact.draftDocument.confidence.level,
         });
         trackActivationCompleted({ artifact: 'icp_completed' });
+        trackICPDashboardOpened({
+          page_path: "/icp-builder",
+          mode: session.mode,
+          source: "unlock_gate",
+        });
 
         navigate("/dashboard", { replace: true });
         return;
@@ -732,47 +805,78 @@ const ICPBuilder: React.FC = () => {
     void persistDraftAndContinue();
   }, [isPersisting, persistDraftAndContinue, session.draftPreview, session.savedAnalysisId, session.unlockRequired, user]);
 
+  const requestResumeLink = useCallback(async ({
+    email,
+    source,
+    includeArtifact = false,
+  }: {
+    email: string;
+    source: "synthesis_loader" | "unlock_gate";
+    includeArtifact?: boolean;
+  }) => {
+    const normalizedEmail = email.trim();
+    if (!emailRegex.test(normalizedEmail)) {
+      throw new Error("Enter a valid email address.");
+    }
+
+    const body =
+      includeArtifact && unlockEmailPayload?.artifact
+        ? {
+            email: normalizedEmail,
+            ...unlockEmailPayload,
+          }
+        : session.mode === "fast" && validatedFast.success
+          ? {
+              email: normalizedEmail,
+              entryMode: "fast" as const,
+              fastInput: validatedFast.data,
+            }
+          : session.mode === "guided" && validatedGuided.success
+            ? {
+                email: normalizedEmail,
+                entryMode: "guided" as const,
+                guidedInput: validatedGuided.data,
+                personaEditedSignificantly: session.personaEditedSignificantly,
+              }
+            : null;
+
+    if (!body) {
+      throw new Error("Finish the current answers first so we can send the right draft.");
+    }
+
+    const { data, error } = await supabase.functions.invoke("request-icp-draft-email", {
+      body,
+    });
+    const payload = data as QueueEmailDraftResponse | null;
+
+    if (error || !payload?.success) {
+      throw error || new Error(payload?.error || "We could not queue the email draft.");
+    }
+
+    trackICPResumeLinkRequested({
+      page_path: "/icp-builder",
+      source,
+      has_preview: includeArtifact,
+    });
+  }, [
+    session.mode,
+    session.personaEditedSignificantly,
+    unlockEmailPayload,
+    validatedFast,
+    validatedGuided,
+  ]);
+
   const handleFallbackEmailSubmit = useCallback(async () => {
     if (fallbackEmailState === "submitting" || fallbackEmailState === "submitted") return;
-
-    const email = fallbackEmail.trim();
-    if (!emailRegex.test(email)) {
-      setFallbackEmailError("Enter a valid email address.");
-      return;
-    }
-
-    if ((session.mode === "fast" && !validatedFast.success) || (session.mode === "guided" && !validatedGuided.success)) {
-      setFallbackEmailError("Finish the current answers first so we can send the right draft.");
-      return;
-    }
 
     setFallbackEmailError(null);
     setFallbackEmailState("submitting");
 
     try {
-      const body =
-        session.mode === "fast"
-          ? {
-              email,
-              entryMode: "fast" as const,
-              fastInput: validatedFast.data,
-            }
-          : {
-              email,
-              entryMode: "guided" as const,
-              guidedInput: validatedGuided.data,
-              personaEditedSignificantly: session.personaEditedSignificantly,
-            };
-
-      const { data, error } = await supabase.functions.invoke("request-icp-draft-email", {
-        body,
+      await requestResumeLink({
+        email: fallbackEmail,
+        source: "synthesis_loader",
       });
-      const payload = data as QueueEmailDraftResponse | null;
-
-      if (error || !payload?.success) {
-        throw error || new Error(payload?.error || "We could not queue the email draft.");
-      }
-
       setFallbackEmailState("submitted");
       toast({
         title: "Email queued",
@@ -782,27 +886,15 @@ const ICPBuilder: React.FC = () => {
       setFallbackEmailState("idle");
       setFallbackEmailError(error instanceof Error ? error.message : "We could not queue the email draft.");
     }
-  }, [
-    fallbackEmail,
-    fallbackEmailState,
-    session.mode,
-    session.personaEditedSignificantly,
-    toast,
-    validatedFast,
-    validatedGuided,
-  ]);
+  }, [fallbackEmail, fallbackEmailState, requestResumeLink, toast]);
 
   const trackStepCompleted = (screen: IcpFlowScreen) => {
     const stepIndexMap: Partial<Record<IcpFlowScreen, number>> = {
       fast_input: 1,
       guided_seed: 1,
       guided_persona: 2,
-      guided_specificity: 3,
-      guided_pain: 4,
-      guided_workaround: 5,
-      guided_solution: 6,
-      guided_market_context: 7,
-      guided_founder_edge: 8,
+      guided_pain: 3,
+      guided_workaround: 4,
     };
     const index = stepIndexMap[screen];
     if (!index || !session.mode) return;
@@ -812,6 +904,31 @@ const ICPBuilder: React.FC = () => {
       mode: session.mode,
       is_authenticated: Boolean(user),
     });
+  };
+
+  const handleQuickstartSubmit = async () => {
+    const seed = quickstartSeed.trim();
+    if (seed.length < 8) {
+      toast({
+        title: "Start with one sentence",
+        description: "A rough idea is enough for us to draft your customer and pain.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setSession((previous) => ({
+      ...previous,
+      mode: "guided",
+      currentScreen: "guided_seed",
+      guided: {
+        ...buildEmptyGuidedAnswers(seed),
+        ...previous.guided,
+        seed,
+      },
+    }));
+
+    await invokeSeedPrefill(seed, "quickstart");
   };
 
   const handleContinue = async () => {
@@ -842,13 +959,13 @@ const ICPBuilder: React.FC = () => {
       setSession((previous) => ({
         ...previous,
         personaEditedSignificantly,
-        currentScreen: "guided_specificity",
+        currentScreen: "guided_pain",
       }));
       return;
     }
 
-    if (session.currentScreen === "guided_founder_edge") {
-      trackStepCompleted("guided_founder_edge");
+    if (session.currentScreen === "guided_workaround") {
+      trackStepCompleted("guided_workaround");
       await completeDraftGeneration(Boolean(user));
       return;
     }
@@ -883,76 +1000,115 @@ const ICPBuilder: React.FC = () => {
 
   const renderModeSelect = () => (
     <div className="mx-auto flex min-h-screen max-w-5xl flex-col justify-center px-4 pb-20 pt-32 text-foreground sm:px-6 md:pt-36">
-      <div className="space-y-5 text-center">
+      <div className="mx-auto max-w-4xl space-y-5 text-center">
         <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#32b8c6]">ICP Builder</p>
-        <h1 className="takeover-gradient creatives-font pb-3 text-4xl font-semibold leading-[1.12] tracking-tight sm:pb-4 sm:text-5xl">
-          Get your ICP Draft
+        <h1 className="takeover-gradient creatives-font pb-3 text-4xl font-semibold leading-[1.08] tracking-tight sm:pb-4 sm:text-5xl">
+          Find your best-fit customer before you build
         </h1>
         <p className="mx-auto max-w-3xl text-base leading-7 text-muted-foreground sm:text-lg">
-          This takes about 5 minutes. You'll walk away with a clear picture of your ideal customer, their main pain
-          points, and how to position your offer in the market.
+          Start with one sentence. We&apos;ll draft your customer, pain, and positioning for free before you create an
+          account.
         </p>
       </div>
 
-      <div className="mt-10 grid gap-5 lg:grid-cols-2">
-        <button
-          type="button"
-          className="group relative overflow-hidden rounded-[2rem] border border-border/60 bg-white/80 p-6 text-left shadow-[0_28px_90px_-52px_rgba(15,23,42,0.3)] backdrop-blur transition-transform duration-300 hover:-translate-y-1 hover:border-[#32b8c6]/40 hover:shadow-[0_32px_100px_-54px_rgba(50,184,198,0.4)] motion-safe:animate-[glow_4.8s_ease-in-out_infinite_alternate] dark:bg-slate-950/70"
-          onClick={() => {
-            trackICPBuilderModeSelected({ mode: "fast", is_authenticated: Boolean(user) });
-            setSession((previous) => ({
-              ...previous,
-              mode: "fast",
-              currentScreen: "fast_input",
-            }));
-          }}
-        >
-          <div className="pointer-events-none absolute inset-0 rounded-[2rem] border border-[#32b8c6]/15 opacity-60 motion-safe:animate-[pulse-slow_4s_ease-in-out_infinite]" />
-          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#32b8c6]">Fast Mode</p>
-          <p className="mt-4 text-xl font-semibold text-foreground">I can describe my startup idea clearly</p>
-          <p className="mt-4 text-sm leading-6 text-muted-foreground">
-            Paste a paragraph about your idea and get your ICP Draft in under 60 seconds.
-          </p>
-          <div className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-[#32b8c6]">
-            Start here
-            <ArrowRight className="h-4 w-4" />
-          </div>
-        </button>
+      <div className="mt-10 rounded-[2.5rem] border border-border/60 bg-white/80 p-6 shadow-[0_34px_120px_-70px_rgba(15,23,42,0.4)] backdrop-blur-xl dark:bg-slate-950/70 sm:p-8">
+        <div className="grid gap-8 lg:grid-cols-[1.35fr,0.95fr] lg:items-start">
+          <div className="space-y-6">
+            <div className="inline-flex items-center gap-2 rounded-full border border-[#32b8c6]/30 bg-[#32b8c6]/10 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-[#0f5b64] dark:text-[#8fe6ef]">
+              <Sparkles className="h-3.5 w-3.5" />
+              Start with one sentence
+            </div>
 
-        <button
-          type="button"
-          className="group relative overflow-hidden rounded-[2rem] border border-border/60 bg-white/80 p-6 text-left shadow-[0_28px_90px_-52px_rgba(15,23,42,0.3)] backdrop-blur transition-transform duration-300 hover:-translate-y-1 hover:border-[#32b8c6]/40 hover:shadow-[0_32px_100px_-54px_rgba(50,184,198,0.4)] motion-safe:animate-[glow_4.8s_ease-in-out_infinite_alternate] dark:bg-slate-950/70"
-          style={{ animationDelay: "0.45s" }}
-          onClick={() => {
-            trackICPBuilderModeSelected({ mode: "guided", is_authenticated: Boolean(user) });
-            setSession((previous) => ({
-              ...previous,
-              mode: "guided",
-              currentScreen: "guided_seed",
-              guided: previous.guided.seed ? previous.guided : buildEmptyGuidedAnswers(previous.fastDescription),
-            }));
-          }}
-        >
-          <div
-            className="pointer-events-none absolute inset-0 rounded-[2rem] border border-[#32b8c6]/15 opacity-60 motion-safe:animate-[pulse-slow_4s_ease-in-out_infinite]"
-            style={{ animationDelay: "0.45s" }}
-          />
-          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#32b8c6]">Guided Mode</p>
-          <p className="mt-4 text-xl font-semibold text-foreground">I'm still figuring things out</p>
-          <p className="mt-4 text-sm leading-6 text-muted-foreground">
-            Answer 8 simple questions, one at a time, and we'll build the draft together.
-          </p>
-          <div className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-[#32b8c6]">
-            Start here
-            <ArrowRight className="h-4 w-4" />
+            <div className="space-y-3">
+              <h2 className="text-3xl font-semibold tracking-tight sm:text-[2.2rem]">Describe your idea in one sentence</h2>
+              <p className="max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
+                We&apos;ll show you a predicted customer, their main pain, and a draft positioning angle before any account wall.
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              <Textarea
+                rows={4}
+                value={quickstartSeed}
+                onChange={(event) => updateQuickstartSeed(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" && !event.shiftKey) {
+                    event.preventDefault();
+                    void handleQuickstartSubmit();
+                  }
+                }}
+                placeholder="e.g. AI scheduling tool for freelance designers juggling client calls across time zones"
+                className="min-h-[156px] rounded-[2rem] border-border/60 bg-white/85 px-5 py-5 text-base leading-7 shadow-sm dark:bg-slate-950/70"
+              />
+
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-sm text-muted-foreground">No account required to see your first preview.</p>
+                <Button
+                  type="button"
+                  className="h-12 min-w-[220px] text-base font-semibold"
+                  disabled={quickstartSeed.trim().length < 8 || loadingPhase !== null}
+                  onClick={() => void handleQuickstartSubmit()}
+                >
+                  Generate my free draft
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </div>
+            </div>
           </div>
-        </button>
+
+          <div className="space-y-4 rounded-[2rem] border border-border/60 bg-background/70 p-5">
+            <div>
+              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#32b8c6]">What you&apos;ll get first</p>
+              <ul className="mt-4 space-y-3 text-sm leading-6 text-muted-foreground">
+                <li>A predicted customer profile you can confirm or edit</li>
+                <li>The sharpest pain to build around first</li>
+                <li>A draft positioning angle you can save later</li>
+              </ul>
+            </div>
+
+            <div className="space-y-3 border-t border-border/60 pt-4">
+              <button
+                type="button"
+                className="w-full rounded-[1.5rem] border border-border/60 bg-white/80 px-4 py-4 text-left transition-colors hover:border-[#32b8c6]/40 dark:bg-slate-950/70"
+                onClick={() => {
+                  trackICPBuilderModeSelected({ mode: "fast", is_authenticated: Boolean(user) });
+                  setSession((previous) => ({
+                    ...previous,
+                    mode: "fast",
+                    currentScreen: "fast_input",
+                    fastDescription: previous.fastDescription || previous.guided.seed || "",
+                  }));
+                }}
+              >
+                <p className="text-sm font-semibold text-foreground">Paste 3-5 sentences instead</p>
+                <p className="mt-1 text-sm text-muted-foreground">Use Fast Mode if you can describe the startup clearly already.</p>
+              </button>
+
+              <button
+                type="button"
+                className="w-full rounded-[1.5rem] border border-border/60 bg-white/80 px-4 py-4 text-left transition-colors hover:border-[#32b8c6]/40 dark:bg-slate-950/70"
+                onClick={() => {
+                  trackICPBuilderModeSelected({ mode: "guided", is_authenticated: Boolean(user) });
+                  setSession((previous) => ({
+                    ...previous,
+                    mode: "guided",
+                    currentScreen: "guided_seed",
+                    guided: buildEmptyGuidedAnswers(previous.guided.seed || previous.fastDescription),
+                  }));
+                }}
+              >
+                <p className="text-sm font-semibold text-foreground">Need help? Use guided questions</p>
+                <p className="mt-1 text-sm text-muted-foreground">We&apos;ll walk through the pain and current workaround one step at a time.</p>
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="mt-14 sm:mt-16">
         <PageFAQSection
           title="FAQ"
-          description="If this is your first time defining an ICP, start here before choosing Fast Mode or Guided Mode."
+          description="If this is your first time defining an ICP, start here before you keep building the draft."
           faqs={ICP_BUILDER_FAQS}
         />
       </div>
@@ -989,8 +1145,8 @@ const ICPBuilder: React.FC = () => {
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Building your draft...
               </>
-            ) : session.currentScreen === "guided_founder_edge" || session.currentScreen === "fast_input" ? (
-              "Generate my ICP Draft"
+            ) : session.currentScreen === "guided_workaround" || session.currentScreen === "fast_input" ? (
+              "Generate my free draft"
             ) : (
               <>
                 Continue
@@ -1031,7 +1187,7 @@ const ICPBuilder: React.FC = () => {
     );
 
   const renderGuidedScreen = () => {
-    const role = session.guided.persona?.role || session.personaSuggestion?.role || "Freelance graphic designers";
+    const suggestedPain = session.guided.pain || session.personaSuggestion?.suggestedPain || "";
 
     switch (session.currentScreen) {
       case "guided_seed":
@@ -1040,13 +1196,15 @@ const ICPBuilder: React.FC = () => {
             <div className="space-y-3">
               <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#32b8c6]">Guided Mode</p>
               <h1 className="text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">{getScreenTitle(session.currentScreen, session)}</h1>
-              <p className="text-base leading-7 text-muted-foreground">One or two sentences. Don't overthink it — rough is fine.</p>
+              <p className="text-base leading-7 text-muted-foreground">
+                One or two sentences is enough. We&apos;ll predict the customer first, then pressure-test their pain and workaround.
+              </p>
             </div>
 
             <Textarea
               rows={3}
               value={session.guided.seed || ""}
-              onChange={(event) => updateGuided("seed", event.target.value)}
+              onChange={(event) => updateQuickstartSeed(event.target.value)}
               onKeyDown={handleFieldSubmit}
               placeholder="e.g. A tool that helps freelancers manage client feedback without drowning in email threads"
               className="rounded-[2rem] border-border/60 bg-white/85 px-5 py-5 text-base leading-7 shadow-sm dark:bg-slate-950/70"
@@ -1058,83 +1216,94 @@ const ICPBuilder: React.FC = () => {
         return renderQuestionShell(
           <div className="space-y-5">
             <div className="space-y-3">
-              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#32b8c6]">Guided Mode</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#32b8c6]">Predicted ICP</p>
               <h1 className="text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">{getScreenTitle(session.currentScreen, session)}</h1>
-              <p className="text-base leading-7 text-muted-foreground">Edit anything that doesn't feel right.</p>
+              <p className="text-base leading-7 text-muted-foreground">
+                We used your idea to draft the most likely early customer. Keep it if it feels right, or edit the details.
+              </p>
             </div>
 
             <div className="space-y-4 rounded-[2rem] border border-border/60 bg-white/80 p-5 shadow-sm backdrop-blur dark:bg-slate-950/70">
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-foreground/85">Role</label>
-                <Input
-                  value={session.guided.persona?.role || ""}
-                  onChange={(event) =>
-                    updateGuided("persona", {
-                      role: event.target.value,
-                      industry: session.guided.persona?.industry || "",
-                      experience: session.guided.persona?.experience || "",
-                    })
-                  }
-                  placeholder="Freelance Graphic Designer"
-                  className="h-12 rounded-xl border-border/60 bg-sky-50/70 dark:bg-slate-900/70"
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-foreground/85">Industry</label>
-                <Input
-                  value={session.guided.persona?.industry || ""}
-                  onChange={(event) =>
-                    updateGuided("persona", {
-                      role: session.guided.persona?.role || "",
-                      industry: event.target.value,
-                      experience: session.guided.persona?.experience || "",
-                    })
-                  }
-                  placeholder="Creative Services"
-                  className="h-12 rounded-xl border-border/60 bg-sky-50/70 dark:bg-slate-900/70"
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-foreground/85">Experience</label>
-                <Input
-                  value={session.guided.persona?.experience || ""}
-                  onChange={(event) =>
-                    updateGuided("persona", {
-                      role: session.guided.persona?.role || "",
-                      industry: session.guided.persona?.industry || "",
-                      experience: event.target.value,
-                    })
-                  }
-                  placeholder="2–5 years, working solo or with 1 assistant"
-                  className="h-12 rounded-xl border-border/60 bg-sky-50/70 dark:bg-slate-900/70"
-                />
-              </div>
-            </div>
-          </div>,
-        );
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                <div className="space-y-2">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#32b8c6]">Best-fit customer</p>
+                  <div>
+                    <h2 className="text-2xl font-semibold tracking-tight text-foreground">{session.guided.persona?.role || "Ideal customer"}</h2>
+                    <p className="mt-1 text-sm text-muted-foreground">{session.guided.persona?.industry || "Industry"}</p>
+                    <p className="text-sm text-muted-foreground">{session.guided.persona?.experience || "Experience band"}</p>
+                  </div>
+                </div>
 
-      case "guided_specificity":
-        return renderQuestionShell(
-          <div className="space-y-5">
-            <div className="space-y-3">
-              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#32b8c6]">Guided Mode</p>
-              <h1 className="text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">{getScreenTitle(session.currentScreen, session)}</h1>
-              <p className="text-base leading-7 text-muted-foreground">
-                "Small business owners" is too broad. "{role} with [specific constraint]" is better.
-              </p>
+                <button
+                  type="button"
+                  className="inline-flex items-center justify-center rounded-full border border-border/60 px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
+                  onClick={() => setIsPersonaEditorOpen((value) => !value)}
+                >
+                  {isPersonaEditorOpen ? "Looks right" : "Edit details"}
+                </button>
+              </div>
+
+              {suggestedPain ? (
+                <div className="rounded-[1.5rem] border border-[#32b8c6]/20 bg-[#32b8c6]/8 px-4 py-4">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#0f5b64] dark:text-[#8fe6ef]">Pain we expect first</p>
+                  <p className="mt-2 text-sm leading-6 text-foreground">{suggestedPain}</p>
+                </div>
+              ) : null}
+
+              {isPersonaEditorOpen ? (
+                <div className="grid gap-4 sm:grid-cols-3">
+                  <div className="space-y-2">
+                    <label className="text-sm font-semibold text-foreground/85">Role</label>
+                    <Input
+                      value={session.guided.persona?.role || ""}
+                      onChange={(event) =>
+                        updateGuided("persona", {
+                          role: event.target.value,
+                          industry: session.guided.persona?.industry || "",
+                          experience: session.guided.persona?.experience || "",
+                        })
+                      }
+                      placeholder="Freelance Graphic Designer"
+                      className="h-12 rounded-xl border-border/60 bg-sky-50/70 dark:bg-slate-900/70"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-semibold text-foreground/85">Industry</label>
+                    <Input
+                      value={session.guided.persona?.industry || ""}
+                      onChange={(event) =>
+                        updateGuided("persona", {
+                          role: session.guided.persona?.role || "",
+                          industry: event.target.value,
+                          experience: session.guided.persona?.experience || "",
+                        })
+                      }
+                      placeholder="Creative Services"
+                      className="h-12 rounded-xl border-border/60 bg-sky-50/70 dark:bg-slate-900/70"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-semibold text-foreground/85">Experience</label>
+                    <Input
+                      value={session.guided.persona?.experience || ""}
+                      onChange={(event) =>
+                        updateGuided("persona", {
+                          role: session.guided.persona?.role || "",
+                          industry: session.guided.persona?.industry || "",
+                          experience: event.target.value,
+                        })
+                      }
+                      placeholder="2–5 years, working solo or with 1 assistant"
+                      className="h-12 rounded-xl border-border/60 bg-sky-50/70 dark:bg-slate-900/70"
+                    />
+                  </div>
+                </div>
+              ) : (
+                <p className="text-sm leading-6 text-muted-foreground">
+                  Continue if this looks directionally right. You can sharpen the positioning and founder edge after you unlock the full draft.
+                </p>
+              )}
             </div>
-            <Input
-              value={session.guided.specificity || ""}
-              onChange={(event) => updateGuided("specificity", event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key === "Enter") {
-                  event.preventDefault();
-                  void handleContinue();
-                }
-              }}
-              placeholder={`e.g. ${role} who manage 3+ client projects at once`}
-              className="h-14 rounded-[1.5rem] border-border/60 bg-white/85 px-5 text-base shadow-sm dark:bg-slate-950/70"
-            />
           </div>,
         );
 
@@ -1145,7 +1314,7 @@ const ICPBuilder: React.FC = () => {
               <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#32b8c6]">Guided Mode</p>
               <h1 className="text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">{getScreenTitle(session.currentScreen, session)}</h1>
               <p className="text-base leading-7 text-muted-foreground">
-                Think about a moment of frustration. What makes them want to throw their laptop? What do they complain about to friends?
+                Think about the moment this customer gets most frustrated. What breaks, what gets delayed, or what makes them look bad?
               </p>
             </div>
 
@@ -1167,7 +1336,7 @@ const ICPBuilder: React.FC = () => {
               <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#32b8c6]">Guided Mode</p>
               <h1 className="text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">{getScreenTitle(session.currentScreen, session)}</h1>
               <p className="text-base leading-7 text-muted-foreground">
-                Even if it's messy — email, spreadsheets, WhatsApp, sticky notes, or nothing at all.
+                Even if it&apos;s messy. Email, spreadsheets, agencies, WhatsApp, or just brute force all count.
               </p>
             </div>
             <Input
@@ -1182,89 +1351,9 @@ const ICPBuilder: React.FC = () => {
               placeholder="e.g. A mix of email threads, Google Drive comments, and hoping clients remember what they said"
               className="h-14 rounded-[1.5rem] border-border/60 bg-white/85 px-5 text-base shadow-sm dark:bg-slate-950/70"
             />
-          </div>,
-        );
-
-      case "guided_solution":
-        return renderQuestionShell(
-          <div className="space-y-5">
-            <div className="space-y-3">
-              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#32b8c6]">Guided Mode</p>
-              <h1 className="text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">{getScreenTitle(session.currentScreen, session)}</h1>
-              <p className="text-base leading-7 text-muted-foreground">Complete this: "My product helps {role} to ___"</p>
-            </div>
-
-            <div className="rounded-[2rem] border border-border/60 bg-white/80 p-4 shadow-sm backdrop-blur dark:bg-slate-950/70">
-              <div className="flex flex-col gap-3 md:flex-row md:items-center">
-                <span className="rounded-xl bg-muted px-4 py-3 text-sm font-medium text-muted-foreground">
-                  My product helps {role} to
-                </span>
-                <Input
-                  value={session.guided.solutionCompletion || ""}
-                  onChange={(event) => updateGuided("solutionCompletion", event.target.value)}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter") {
-                      event.preventDefault();
-                      void handleContinue();
-                    }
-                  }}
-                  placeholder="centralize client feedback without context switching"
-                  className="h-14 rounded-[1.25rem] border-border/60 bg-white/85 px-4 text-base dark:bg-slate-950/70"
-                />
-              </div>
-            </div>
-          </div>,
-        );
-
-      case "guided_market_context":
-        return renderQuestionShell(
-          <div className="space-y-5">
-            <div className="space-y-3">
-              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#32b8c6]">Guided Mode</p>
-              <h1 className="text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">{getScreenTitle(session.currentScreen, session)}</h1>
-            </div>
-
-            <div className="space-y-3">
-              {ICP_MARKET_CONTEXT_OPTIONS.map((option) => {
-                const selected = session.guided.marketContext === option.value;
-                return (
-                  <button
-                    key={option.value}
-                    type="button"
-                    onClick={() => updateGuided("marketContext", option.value)}
-                    className={`w-full rounded-[1.5rem] border px-5 py-5 text-center text-sm font-medium transition-colors sm:text-base ${
-                      selected
-                        ? "border-[#32b8c6] bg-[#32b8c6] text-white"
-                        : "border-border/60 bg-white/80 text-foreground hover:border-border dark:bg-slate-950/70"
-                    }`}
-                  >
-                    {option.label}
-                  </button>
-                );
-              })}
-            </div>
-          </div>,
-        );
-
-      case "guided_founder_edge":
-        return renderQuestionShell(
-          <div className="space-y-5">
-            <div className="space-y-3">
-              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#32b8c6]">Guided Mode</p>
-              <h1 className="text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">{getScreenTitle(session.currentScreen, session)}</h1>
-              <p className="text-base leading-7 text-muted-foreground">
-                Your background, your access to this community, your personal experience with the problem — anything that gives you an unfair advantage.
-              </p>
-            </div>
-
-            <Textarea
-              rows={3}
-              value={session.guided.founderEdge || ""}
-              onChange={(event) => updateGuided("founderEdge", event.target.value)}
-              onKeyDown={handleFieldSubmit}
-              placeholder="e.g. I'm a freelance designer myself — I've lost clients because of this exact problem, and I know 50+ designers who feel the same way"
-              className="rounded-[2rem] border-border/60 bg-white/85 px-5 py-5 text-base leading-7 shadow-sm dark:bg-slate-950/70"
-            />
+            <p className="text-sm leading-6 text-muted-foreground">
+              We&apos;ll use this to generate your preview now. You can sharpen solution angle, founder edge, and market context after you unlock the full draft.
+            </p>
           </div>,
         );
 
@@ -1344,15 +1433,40 @@ const ICPBuilder: React.FC = () => {
           </div>
           <Footer />
         </div>
-        <div className="pointer-events-none fixed inset-0 z-[70] flex items-center justify-center p-4 sm:p-6">
-          <IcpUnlockGate
-            artifact={session.draftPreview}
-            seed={session.mode === "fast" ? session.fastDescription : session.guided.seed}
-            returnPath={unlockPath}
-            onBeforeAuthContinue={() => persistIcpBuilderSession(session)}
-            className="pointer-events-auto max-w-xl"
-          />
-        </div>
+        {isGateMinimized ? (
+          <div className="fixed inset-x-0 bottom-4 z-[70] px-4 sm:px-6">
+            <div className="mx-auto max-w-2xl rounded-[1.75rem] border border-border/60 bg-background/92 px-5 py-4 shadow-[0_24px_70px_-40px_rgba(15,23,42,0.5)] backdrop-blur-xl">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-sm font-semibold text-foreground">Keep this draft and come back later</p>
+                  <p className="text-sm leading-6 text-muted-foreground">
+                    Reopen the prompt to create a free account or email yourself a resume link.
+                  </p>
+                </div>
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <Button type="button" variant="outline" onClick={() => setIsGateMinimized(false)}>
+                    Email me a link
+                  </Button>
+                  <Button type="button" onClick={() => setIsGateMinimized(false)}>
+                    Unlock full draft
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="pointer-events-none fixed inset-0 z-[70] flex items-center justify-center p-4 sm:p-6">
+            <IcpUnlockGate
+              artifact={session.draftPreview}
+              seed={session.mode === "fast" ? session.fastDescription : session.guided.seed}
+              returnPath={unlockPath}
+              onBeforeAuthContinue={() => persistIcpBuilderSession(session)}
+              onEmailLinkRequest={(email) => requestResumeLink({ email, source: "unlock_gate", includeArtifact: true })}
+              onDismiss={() => setIsGateMinimized(true)}
+              className="pointer-events-auto max-w-xl"
+            />
+          </div>
+        )}
       </div>
     );
   }

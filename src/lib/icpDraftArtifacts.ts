@@ -352,7 +352,7 @@ export function mapLegacyAnalysisToArtifact(
     "The saved analysis found a wedge that differentiates this offer from current alternatives.";
 
   const artifact: StoredIcpArtifact = {
-    version: 3,
+    version: 4,
     generatedAt: analysisData?.generatedAt ?? new Date().toISOString(),
     founderInputs: {
       mode: "guided",
@@ -604,7 +604,7 @@ export function buildBuilderSessionFromArtifact(artifact: StoredIcpArtifact, sav
   };
 
   return {
-    version: 3,
+    version: 4,
     mode,
     currentScreen: mode === "fast" ? "fast_input" : "guided_seed",
     fastDescription: artifact.founderInputs.fastDescription ?? "",
@@ -637,11 +637,15 @@ export function buildGuidedSummary(guided: GuidedIcpInputSchema) {
   return [
     `Startup idea: ${guided.seed}`,
     `Persona: ${guided.persona.role} in ${guided.persona.industry} (${guided.persona.experience})`,
-    `Specific segment: ${guided.specificity}`,
     `Core frustration: ${guided.pain}`,
     `Current workaround: ${guided.workaround}`,
-    `Solution sentence: ${buildGuidedSolutionSentence(guided.persona.role, guided.solutionCompletion)}`,
-    `Market context: ${buildMarketContextLabel(guided.marketContext)}`,
-    `Founder edge: ${guided.founderEdge}`,
-  ].join("\n\n");
+    guided.specificity ? `Specific segment: ${guided.specificity}` : null,
+    guided.solutionCompletion
+      ? `Solution sentence: ${buildGuidedSolutionSentence(guided.persona.role, guided.solutionCompletion)}`
+      : null,
+    guided.marketContext ? `Market context: ${buildMarketContextLabel(guided.marketContext)}` : null,
+    guided.founderEdge ? `Founder edge: ${guided.founderEdge}` : null,
+  ]
+    .filter((value): value is string => Boolean(value))
+    .join("\n\n");
 }

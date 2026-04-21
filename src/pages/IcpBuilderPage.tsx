@@ -51,7 +51,7 @@ export default function ICPBuilderPage() {
     <div className="relative min-h-screen overflow-x-hidden bg-background">
       <SEO
         title="Build your ICP Draft | Creatives Takeover"
-        description="Build a founder-specific ICP Draft in one guided flow and turn it into a usable customer document."
+        description="Describe your idea and get a draft of your best-fit customer, core pain, and positioning before you create an account."
         url="/icp-builder"
       />
 

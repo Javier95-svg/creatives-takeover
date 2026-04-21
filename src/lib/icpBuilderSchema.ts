@@ -30,17 +30,17 @@ export const guidedPersonaSchema = z.object({
 export const guidedIcpInputSchema = z.object({
   seed: z.string().trim().min(8, "Add a rough startup idea.").max(4000),
   persona: guidedPersonaSchema,
-  specificity: z.string().trim().min(8, "Narrow the customer segment further.").max(3000),
+  specificity: z.string().trim().max(3000).optional(),
   pain: z.string().trim().min(12, "Describe the emotional version of the pain.").max(3000),
   workaround: z.string().trim().min(6, "Describe the current workaround.").max(3000),
-  solutionCompletion: z.string().trim().min(6, "Complete the product sentence.").max(3000),
+  solutionCompletion: z.string().trim().max(3000).optional(),
   marketContext: z.enum([
     "different_customer",
     "too_expensive_or_complex",
     "manual_or_no_product",
     "new_problem_recently",
-  ]),
-  founderEdge: z.string().trim().min(12, "Explain the founder edge.").max(3000),
+  ]).optional(),
+  founderEdge: z.string().trim().max(3000).optional(),
 });
 
 export const fastIcpInputSchema = z.object({

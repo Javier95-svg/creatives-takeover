@@ -19,11 +19,13 @@ interface FastInput {
   description: string;
 }
 
-interface EmailDraftRequest extends DraftRequestShape {
+interface EmailDraftRequest {
   email: string;
-  entryMode: EntryMode;
+  entryMode?: EntryMode;
   fastInput?: FastInput | null;
   guidedInput?: GuidedInput | null;
+  personaEditedSignificantly?: boolean;
+  artifact?: Record<string, any> | null;
 }
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
@@ -41,12 +43,8 @@ function validateGuidedInput(input: GuidedInput | null | undefined) {
   if (!isNonEmpty(input.persona?.role, 2)) issues.push("persona.role is required");
   if (!isNonEmpty(input.persona?.industry, 2)) issues.push("persona.industry is required");
   if (!isNonEmpty(input.persona?.experience, 2)) issues.push("persona.experience is required");
-  if (!isNonEmpty(input.specificity, 8)) issues.push("specificity must be at least 8 characters");
   if (!isNonEmpty(input.pain, 12)) issues.push("pain must be at least 12 characters");
   if (!isNonEmpty(input.workaround, 6)) issues.push("workaround must be at least 6 characters");
-  if (!isNonEmpty(input.solutionCompletion, 6)) issues.push("solutionCompletion must be at least 6 characters");
-  if (!isNonEmpty(input.founderEdge, 12)) issues.push("founderEdge must be at least 12 characters");
-  if (!input.marketContext) issues.push("marketContext is required");
 
   return issues;
 }
@@ -56,6 +54,16 @@ function validatePayload(payload: Partial<EmailDraftRequest>) {
 
   if (!payload.email || !emailRegex.test(payload.email.trim())) {
     issues.push("A valid email is required");
+  }
+
+  if (payload.artifact && typeof payload.artifact === "object") {
+    if (!payload.artifact?.draftDocument?.customer?.roleLine) {
+      issues.push("artifact.draftDocument.customer.roleLine is required");
+    }
+    if (!payload.artifact?.draftDocument?.pain?.quote) {
+      issues.push("artifact.draftDocument.pain.quote is required");
+    }
+    return issues;
   }
 
   if (payload.entryMode === "fast") {
@@ -117,6 +125,25 @@ function buildEmailHtml(args: {
   `;
 }
 
+function hasStoredArtifact(payload: EmailDraftRequest): payload is EmailDraftRequest & { artifact: Record<string, any> } {
+  return Boolean(payload.artifact && typeof payload.artifact === "object");
+}
+
+function buildDraftRequest(payload: EmailDraftRequest): DraftRequestShape {
+  if (payload.entryMode === "fast") {
+    return {
+      entryMode: "fast",
+      fastInput: payload.fastInput ?? null,
+    };
+  }
+
+  return {
+    entryMode: "guided",
+    guidedInput: payload.guidedInput ?? null,
+    personaEditedSignificantly: payload.personaEditedSignificantly,
+  };
+}
+
 async function processEmailDraftRequest(payload: EmailDraftRequest) {
   const openaiApiKey = Deno.env.get("OPENAI_API_KEY");
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
@@ -128,14 +155,19 @@ async function processEmailDraftRequest(payload: EmailDraftRequest) {
   }
 
   const serviceClient = createClient(supabaseUrl, supabaseKey);
-  const generated = await generateIcpDraftArtifact({
-    openaiApiKey,
-    request: payload,
-    enrichment: {
-      marketSignals: [],
-      competitorLinks: [],
-    },
-  });
+  const generated = hasStoredArtifact(payload)
+    ? {
+        status: "draft_ready" as const,
+        artifact: payload.artifact,
+      }
+    : await generateIcpDraftArtifact({
+        openaiApiKey,
+        request: buildDraftRequest(payload),
+        enrichment: {
+          marketSignals: [],
+          competitorLinks: [],
+        },
+      });
 
   const resumeToken = crypto.randomUUID();
   const { error: insertError } = await serviceClient.from("icp_guest_drafts").insert({

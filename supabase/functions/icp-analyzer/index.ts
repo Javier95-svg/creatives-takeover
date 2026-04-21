@@ -51,12 +51,8 @@ function validateGuidedInput(input: GuidedInput | null | undefined) {
   if (!isNonEmpty(input.persona?.role, 2)) issues.push("persona.role is required");
   if (!isNonEmpty(input.persona?.industry, 2)) issues.push("persona.industry is required");
   if (!isNonEmpty(input.persona?.experience, 2)) issues.push("persona.experience is required");
-  if (!isNonEmpty(input.specificity, 8)) issues.push("specificity must be at least 8 characters");
   if (!isNonEmpty(input.pain, 12)) issues.push("pain must be at least 12 characters");
   if (!isNonEmpty(input.workaround, 6)) issues.push("workaround must be at least 6 characters");
-  if (!isNonEmpty(input.solutionCompletion, 6)) issues.push("solutionCompletion must be at least 6 characters");
-  if (!isNonEmpty(input.founderEdge, 12)) issues.push("founderEdge must be at least 12 characters");
-  if (!input.marketContext) issues.push("marketContext is required");
 
   return issues;
 }

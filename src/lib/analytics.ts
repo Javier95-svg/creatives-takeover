@@ -231,6 +231,30 @@ export const trackICPBuilderModeSelected = (properties: {
   is_authenticated: boolean;
 }) => captureEvent('icp_builder_mode_selected', properties);
 
+export const trackICPSeedSubmitted = (properties?: AnalyticsProperties) =>
+  captureEvent('icp_seed_submitted', properties);
+
+export const trackICPPreviewReady = (properties?: AnalyticsProperties) =>
+  captureEvent('icp_preview_ready', properties);
+
+export const trackICPUnlockGateShown = (properties?: AnalyticsProperties) =>
+  captureEvent('icp_unlock_gate_shown', properties);
+
+export const trackICPUnlockClicked = (properties?: AnalyticsProperties) =>
+  captureEvent('icp_unlock_clicked', properties);
+
+export const trackICPLoginClicked = (properties?: AnalyticsProperties) =>
+  captureEvent('icp_login_clicked', properties);
+
+export const trackICPResumeLinkRequested = (properties?: AnalyticsProperties) =>
+  captureEvent('icp_resume_link_requested', properties);
+
+export const trackICPResumeRestored = (properties?: AnalyticsProperties) =>
+  captureEvent('icp_resume_restored', properties);
+
+export const trackICPDashboardOpened = (properties?: AnalyticsProperties) =>
+  captureEvent('icp_dashboard_opened', properties);
+
 export const trackWaitlistCreated = (properties?: AnalyticsProperties) =>
   captureEvent('waitlist_created', properties);
 
