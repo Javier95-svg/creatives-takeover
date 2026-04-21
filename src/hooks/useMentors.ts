@@ -11,6 +11,7 @@ const ALBERT_HOVHANNISYAN_USER_ID = 'e8ddb66e-142b-4d88-9d4f-7ce3cf18ce14';
 const ARTUR_SINDARSKY_USER_ID = '1f0fe62a-7744-4153-bfcf-4f20b6e820d3';
 const CAROLINA_BARTHALOT_USER_ID = '1b0d63d2-13b8-4829-b5a9-75a7bb2f313b';
 const DAIANA_TOKPAYEVA_USER_ID = 'cc157118-0681-4600-a5fc-d37f5f4b4f31';
+const DAN_ALBAGHDADI_USER_ID = '0c160536-d5d3-483b-b222-f801c057fde6';
 const DELRAJ_SINGH_UPPAL_USER_ID = '2cd4b8ec-5631-4de3-b480-d3c71de5d366';
 const GABOR_HOMIK_USER_ID = '5658607e-80ca-4478-8b3b-74148f1b959d';
 const JOHNNY_BOU_MALHAB_USER_ID = 'dd972b4a-7e02-41c4-a722-bacead700c9b';
@@ -48,6 +49,11 @@ const isCarolinaBarthalotMentor = (name?: string | null): boolean => {
 const isDaianaTokpayevaMentor = (name?: string | null): boolean => {
   const normalizedName = (name || '').toLowerCase();
   return normalizedName.includes('daiana') && normalizedName.includes('tokpayeva');
+};
+
+const isDanAlbaghdadiMentor = (name?: string | null): boolean => {
+  const normalizedName = (name || '').toLowerCase();
+  return normalizedName.includes('dan') && normalizedName.includes('albaghdadi');
 };
 
 const isDelrajSinghUppalMentor = (name?: string | null): boolean => {
@@ -197,6 +203,8 @@ const convertToMentor = (data: any): Mentor => {
               ? CAROLINA_BARTHALOT_USER_ID
               : isDaianaTokpayevaMentor(data.name)
               ? DAIANA_TOKPAYEVA_USER_ID
+                : isDanAlbaghdadiMentor(data.name)
+                  ? DAN_ALBAGHDADI_USER_ID
                 : isDelrajSinghUppalMentor(data.name)
                   ? DELRAJ_SINGH_UPPAL_USER_ID
                   : isGaborHomikMentor(data.name)

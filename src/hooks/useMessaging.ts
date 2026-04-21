@@ -50,6 +50,8 @@ export const MATIAS_PANCORVO_EMAIL = 'pancorvomatias@gmail.com';
 export const MATIAS_PANCORVO_USER_ID = 'd4d2ec5d-75ca-482a-8126-2e5a9ff9b98c';
 export const DAIANA_TOKPAYEVA_EMAIL = 'daiana.tokpayeva@outlook.com';
 export const DAIANA_TOKPAYEVA_USER_ID = 'cc157118-0681-4600-a5fc-d37f5f4b4f31';
+export const DAN_ALBAGHDADI_EMAIL = 'albaghdadidan@gmail.com';
+export const DAN_ALBAGHDADI_USER_ID = '0c160536-d5d3-483b-b222-f801c057fde6';
 export const KATIE_BRETT_EMAIL = 'katie@pocketplanit.com';
 export const KATIE_BRETT_USER_ID = 'a786507a-b45c-4044-9b92-d9db40340f47';
 export const JOHNNY_BOU_MALHAB_EMAIL = 'johnny@monochrome.digital';
@@ -181,6 +183,13 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
         userId: DAIANA_TOKPAYEVA_USER_ID
       });
       return DAIANA_TOKPAYEVA_USER_ID;
+    }
+
+    if (email.toLowerCase() === DAN_ALBAGHDADI_EMAIL.toLowerCase()) {
+      logInfo('getUserIdByEmail: Using known Dan Albaghdadi user ID', {
+        userId: DAN_ALBAGHDADI_USER_ID
+      });
+      return DAN_ALBAGHDADI_USER_ID;
     }
 
     if (email.toLowerCase() === KATIE_BRETT_EMAIL.toLowerCase()) {
@@ -426,6 +435,13 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
       mentorNameNormalized.includes('tokpayeva')
     ) {
       return DAIANA_TOKPAYEVA_USER_ID;
+    }
+
+    if (
+      mentorNameNormalized.includes('dan') &&
+      mentorNameNormalized.includes('albaghdadi')
+    ) {
+      return DAN_ALBAGHDADI_USER_ID;
     }
 
     if (
