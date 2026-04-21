@@ -588,6 +588,13 @@ export function getDashboardModeConfig(mode: DashboardModeVariant): DashboardMod
   return DASHBOARD_MODE_CONFIG[mode];
 }
 
+export function getPlanThatActivatesStage(stageId: number): Plan | undefined {
+  return PLAN_SEQUENCE.find((plan) => {
+    const mode = resolveDashboardMode(plan);
+    return DASHBOARD_MODE_CONFIG[mode].activeStages.includes(stageId);
+  });
+}
+
 export function resolveDashboardSurfaceAccess(
   feature: DashboardSurfaceFeature,
   plan: Plan

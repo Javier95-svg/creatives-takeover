@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import { ReactNode, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   ArrowRight,
@@ -28,12 +28,21 @@ import { MomentumMeter } from '../MomentumMeter';
 import { CommunityActivityCard } from '../CommunityActivityCard';
 import { InsightaActivityCard } from '../InsightaActivityCard';
 import type { PersonalizedRecommendation } from '@/hooks/usePersonalizedDashboard';
-import { getDashboardModeConfig } from '@/config/planPermissions';
+import { getDashboardModeConfig, getPlanThatActivatesStage, PLAN_LABELS } from '@/config/planPermissions';
 import type { IcpDashboardSnapshot } from '@/lib/icpDraftArtifacts';
+import {
+  RookieEmptyState,
+  StarterEmptyState,
+  RisingOnboardingStrip,
+  ProInvestorMotionEmpty,
+} from './ModeEmptyStates';
+
+const RISING_ONBOARDING_DISMISSED_KEY = 'ct_rising_onboarding_dismissed';
 
 interface TierDashboardViewProps {
   userId: string;
   founderName: string;
+  startupName?: string | null;
   creativeNiche?: string;
   businessStage?: string;
   streak: number;
@@ -119,6 +128,14 @@ function StageProgressPanel({
         {STAGE_DEFINITIONS.map((stage) => {
           const isActive = activeStages.includes(stage.id);
           const isPreview = previewStages?.includes(stage.id) ?? false;
+          const unlockPlan = !isActive && !isPreview ? getPlanThatActivatesStage(stage.id) : undefined;
+          const unlockLabel = unlockPlan ? `Unlocks with ${PLAN_LABELS[unlockPlan]}` : 'Locked';
+          const stateLabel = isActive ? 'Active' : isPreview ? 'Preview' : unlockLabel;
+          const stateAriaLabel = isActive
+            ? `Stage ${stage.id}: Active`
+            : isPreview
+              ? `Stage ${stage.id}: Preview`
+              : `Stage ${stage.id}: ${unlockLabel}`;
           const wrapperClass = isActive
             ? 'border-primary/30 bg-primary/8'
             : isPreview
@@ -132,8 +149,12 @@ function StageProgressPanel({
                   <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Stage {stage.id}</p>
                   <p className="mt-1 text-sm font-semibold text-foreground">{stage.title}</p>
                 </div>
-                <Badge variant={isActive ? 'default' : 'outline'} className="shrink-0">
-                  {isActive ? 'Active' : isPreview ? 'Preview' : 'Locked'}
+                <Badge
+                  variant={isActive ? 'default' : 'outline'}
+                  className="shrink-0"
+                  aria-label={stateAriaLabel}
+                >
+                  {stateLabel}
                 </Badge>
               </div>
               <p className="mt-2 text-sm text-muted-foreground">{stage.summary}</p>
@@ -243,7 +264,9 @@ export function ProModeView({
   activeSprints,
   totalCheckIns,
   recommendations,
+  startupName,
 }: TierDashboardViewProps) {
+  const hasInvestorActivity = completedSessions > 0 || totalCheckIns > 0;
   const modeConfig = getDashboardModeConfig('pro');
   const navigate = useNavigate();
   const actionItems = buildActionItems(recommendations, [
@@ -277,7 +300,7 @@ export function ProModeView({
           <div className="flex flex-wrap items-center justify-between gap-2">
             <CardTitle className="flex items-center gap-2 text-2xl text-white">
               <Rocket className="h-5 w-5 text-primary" />
-              Pro War Room
+              {startupName ? `War Room — ${startupName}` : 'Pro War Room'}
             </CardTitle>
             <div className="flex flex-wrap gap-2">
               <Badge className="bg-primary/20 text-primary-foreground">Fundraising mode</Badge>
@@ -325,11 +348,26 @@ export function ProModeView({
         </div>
 
         <div className="space-y-6">
-          <ActionRadarCard
-            title="Investor priorities"
-            description="This side panel ranks the next move so support and reference surfaces never drown the fundraising thread."
-            actions={actionItems}
-          />
+          {hasInvestorActivity ? (
+            <ActionRadarCard
+              title="Investor priorities"
+              description="This side panel ranks the next move so support and reference surfaces never drown the fundraising thread."
+              actions={actionItems}
+            />
+          ) : (
+            <Card className="border-border/70 bg-card/80 backdrop-blur-sm">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <Target className="h-5 w-5 text-primary" />
+                  Investor priorities
+                </CardTitle>
+                <CardDescription>Start your investor motion below — this panel will rank your next moves as you go.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ProInvestorMotionEmpty />
+              </CardContent>
+            </Card>
+          )}
 
           <div id="mode-support">
             <LinkListCard
@@ -582,8 +620,13 @@ function ToolLauncherGrid({ title, description }: { title: string; description: 
   );
 }
 
-export function RookieModeView({ founderName, recommendations, icpSummary }: TierDashboardViewProps) {
+export function RookieModeView({ founderName, recommendations, icpSummary, totalCheckIns, completedSessions }: TierDashboardViewProps) {
+  const isEmptyState = totalCheckIns === 0 && completedSessions === 0 && !icpSummary;
   const modeConfig = getDashboardModeConfig('rookie');
+
+  if (isEmptyState) {
+    return <RookieEmptyState founderName={founderName} />;
+  }
   const actionItems = buildActionItems(recommendations, [
     {
       id: 'rookie-icp',
@@ -699,6 +742,7 @@ export function RookieModeView({ founderName, recommendations, icpSummary }: Tie
 
 export function StarterModeView({
   userId,
+  founderName,
   tasksCompletedToday,
   totalTasksToday,
   weeklyProgress,
@@ -707,8 +751,14 @@ export function StarterModeView({
   streak,
   totalCheckIns,
   recommendations,
+  icpSummary,
 }: TierDashboardViewProps) {
+  const isEmptyState = totalCheckIns === 0 && completedSessions === 0 && !icpSummary;
   const modeConfig = getDashboardModeConfig('starter');
+
+  if (isEmptyState) {
+    return <StarterEmptyState founderName={founderName} />;
+  }
   const tasksRemainingToday = Math.max(totalTasksToday - tasksCompletedToday, 0);
   const actionItems = buildActionItems(recommendations, [
     {
@@ -838,8 +888,17 @@ export function RisingModeView({
   totalCheckIns,
   recommendations,
 }: TierDashboardViewProps) {
+  const [onboardingDismissed, setOnboardingDismissed] = useState<boolean>(() => {
+    try { return Boolean(localStorage.getItem(RISING_ONBOARDING_DISMISSED_KEY)); } catch { return false; }
+  });
+  const showOnboardingStrip = totalCheckIns === 0 && completedSessions === 0 && !onboardingDismissed;
   const modeConfig = getDashboardModeConfig('rising');
   const navigate = useNavigate();
+
+  function handleDismissOnboarding() {
+    try { localStorage.setItem(RISING_ONBOARDING_DISMISSED_KEY, '1'); } catch { /* silent */ }
+    setOnboardingDismissed(true);
+  }
   const todayCompletion = totalTasksToday > 0 ? Math.round((tasksCompletedToday / totalTasksToday) * 100) : 0;
   const weeklyCompletion = totalTasksThisWeek > 0 ? Math.round((tasksCompletedThisWeek / totalTasksThisWeek) * 100) : 0;
   const actionItems = buildActionItems(recommendations, [
@@ -868,6 +927,9 @@ export function RisingModeView({
 
   return (
     <div className="space-y-6">
+      {showOnboardingStrip && (
+        <RisingOnboardingStrip onDismiss={handleDismissOnboarding} />
+      )}
       <div className="grid gap-6 xl:grid-cols-[1.25fr_0.95fr]">
         <Card className="border-primary/20 bg-gradient-to-br from-primary/10 via-card to-card shadow-sm">
           <CardHeader>

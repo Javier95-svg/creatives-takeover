@@ -33,6 +33,7 @@ export interface UserProfile {
   full_name: string;
   creative_niche?: string;
   business_stage?: string;
+  startup_name?: string | null;
   onboarding_completed?: boolean;
   dashboard_initialized_at?: string | null;
   dashboard_bootstrap_source?: string | null;

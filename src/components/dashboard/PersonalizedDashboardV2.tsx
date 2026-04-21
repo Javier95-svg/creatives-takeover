@@ -28,6 +28,8 @@ import { StageBadge } from './StageBadge';
 import { useAssignedStage } from '@/hooks/useAssignedStage';
 import { InterviewTrackerCard } from './InterviewTrackerCard';
 import { useBizMapProgress } from '@/hooks/useBizMapProgress';
+import { UpgradeTriggerProvider } from '@/contexts/UpgradeTriggerContext';
+import { UpgradeTriggerBanner } from './UpgradeTriggerBanner';
 
 // Internal wrapper component that uses the navigation context
 interface DashboardContentWrapperProps {
@@ -116,6 +118,7 @@ export const PersonalizedDashboardV2 = () => {
   const tierViewSharedProps = {
     userId: user?.id || '',
     founderName,
+    startupName: profile?.startup_name ?? null,
     creativeNiche: profile?.creative_niche,
     businessStage: profile?.business_stage,
     recommendations: data?.recommendations || [],
@@ -125,6 +128,7 @@ export const PersonalizedDashboardV2 = () => {
 
   return (
     <ErrorBoundary>
+      <UpgradeTriggerProvider>
       <SidebarProvider>
         <DashboardNavigationProvider>
           <TaskCountContext.Provider value={incompleteTaskCount}>
@@ -206,6 +210,9 @@ export const PersonalizedDashboardV2 = () => {
 
                     <RetentionActionFeed />
 
+                    {/* Single-surface upgrade trigger banner — only one fires at a time */}
+                    <UpgradeTriggerBanner />
+
                     {/* Interview Tracker for Stage III (Validation) users */}
                     {currentStage === 'VALIDATING' && <InterviewTrackerCard />}
 
@@ -237,6 +244,7 @@ export const PersonalizedDashboardV2 = () => {
           </TaskCountContext.Provider>
         </DashboardNavigationProvider>
       </SidebarProvider>
+      </UpgradeTriggerProvider>
     </ErrorBoundary>
   );
 };

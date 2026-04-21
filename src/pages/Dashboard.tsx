@@ -1,4 +1,3 @@
-import { PersonalizedDashboardClassic } from '@/components/dashboard/PersonalizedDashboardClassic';
 import { PersonalizedDashboardV2 } from '@/components/dashboard/PersonalizedDashboardV2';
 import DashboardPreview from '@/components/DashboardPreview';
 import { useAuth } from '@/contexts/AuthContext';
@@ -17,7 +16,6 @@ const Dashboard = () => {
   const { user } = useAuth();
   const { checkFeatureAccess } = useFeatureGating();
   const navigate = useNavigate();
-  const [useClassicDashboard, setUseClassicDashboard] = useState(false);
   const [profileLoading, setProfileLoading] = useState(true);
   const activationGate = useActivationGate();
 
@@ -25,7 +23,6 @@ const Dashboard = () => {
     let isCancelled = false;
 
     if (!user) {
-      setUseClassicDashboard(false);
       setProfileLoading(false);
       return () => {
         isCancelled = true;
@@ -37,7 +34,7 @@ const Dashboard = () => {
 
       const { data: profile, error } = await supabase
         .from('profiles')
-        .select('use_classic_dashboard, onboarding_completed, dashboard_bootstrap_source, quiz_completed, user_preferences')
+        .select('onboarding_completed, dashboard_bootstrap_source, quiz_completed, user_preferences')
         .eq('id', user.id)
         .single();
 
@@ -61,7 +58,6 @@ const Dashboard = () => {
         return;
       }
 
-      setUseClassicDashboard(Boolean(profile?.use_classic_dashboard));
       setProfileLoading(false);
     };
 
@@ -95,7 +91,6 @@ const Dashboard = () => {
     return null;
   }
 
-  // Check access before rendering
   let access;
   try {
     access = checkFeatureAccess('dashboard_access');
@@ -123,8 +118,7 @@ const Dashboard = () => {
     );
   }
 
-  // Render the appropriate dashboard version based on user preference
-  return useClassicDashboard ? <PersonalizedDashboardClassic /> : <PersonalizedDashboardV2 />;
+  return <PersonalizedDashboardV2 />;
 };
 
 export default Dashboard;
