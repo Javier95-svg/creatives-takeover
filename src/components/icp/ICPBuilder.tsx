@@ -4,6 +4,7 @@ import { ArrowLeft, ArrowRight, Loader2, RotateCcw } from "lucide-react";
 
 import { IcpFolioDocument } from "@/components/icp/IcpFolioDocument";
 import { IcpProgressBar } from "@/components/icp/IcpProgressBar";
+import { IcpSamplePreviewSection } from "@/components/icp/IcpSamplePreviewSection";
 import { IcpSynthesisLoader } from "@/components/icp/IcpSynthesisLoader";
 import { IcpUnlockGate } from "@/components/icp/IcpUnlockGate";
 import Footer from "@/components/Footer";
@@ -971,6 +972,25 @@ const ICPBuilder: React.FC = () => {
     void handleContinue();
   };
 
+  const handleSelectFastMode = useCallback(() => {
+    trackICPBuilderModeSelected({ mode: "fast", is_authenticated: Boolean(user) });
+    setSession((previous) => ({
+      ...previous,
+      mode: "fast",
+      currentScreen: "fast_input",
+    }));
+  }, [user]);
+
+  const handleSelectGuidedMode = useCallback(() => {
+    trackICPBuilderModeSelected({ mode: "guided", is_authenticated: Boolean(user) });
+    setSession((previous) => ({
+      ...previous,
+      mode: "guided",
+      currentScreen: "guided_seed",
+      guided: previous.guided.seed ? previous.guided : buildEmptyGuidedAnswers(previous.fastDescription),
+    }));
+  }, [user]);
+
   const renderModeSelect = () => (
     <div className="mx-auto flex min-h-screen max-w-5xl flex-col justify-center px-4 pb-20 pt-32 text-foreground sm:px-6 md:pt-36">
       <div className="space-y-5 text-center">
@@ -984,18 +1004,11 @@ const ICPBuilder: React.FC = () => {
         </p>
       </div>
 
-      <div className="mt-10 grid gap-5 lg:grid-cols-2">
+      <div id="icp-mode-selector" className="mt-10 grid gap-5 lg:grid-cols-2">
         <button
           type="button"
           className="group relative overflow-hidden rounded-[2rem] border border-border/60 bg-white/80 p-6 text-left shadow-[0_28px_90px_-52px_rgba(15,23,42,0.3)] backdrop-blur transition-transform duration-300 hover:-translate-y-1 hover:border-[#32b8c6]/40 hover:shadow-[0_32px_100px_-54px_rgba(50,184,198,0.4)] motion-safe:animate-[glow_4.8s_ease-in-out_infinite_alternate] dark:bg-slate-950/70"
-          onClick={() => {
-            trackICPBuilderModeSelected({ mode: "fast", is_authenticated: Boolean(user) });
-            setSession((previous) => ({
-              ...previous,
-              mode: "fast",
-              currentScreen: "fast_input",
-            }));
-          }}
+          onClick={handleSelectFastMode}
         >
           <div className="pointer-events-none absolute inset-0 rounded-[2rem] border border-[#32b8c6]/15 opacity-60 motion-safe:animate-[pulse-slow_4s_ease-in-out_infinite]" />
           <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#32b8c6]">Fast Mode</p>
@@ -1013,15 +1026,7 @@ const ICPBuilder: React.FC = () => {
           type="button"
           className="group relative overflow-hidden rounded-[2rem] border border-border/60 bg-white/80 p-6 text-left shadow-[0_28px_90px_-52px_rgba(15,23,42,0.3)] backdrop-blur transition-transform duration-300 hover:-translate-y-1 hover:border-[#32b8c6]/40 hover:shadow-[0_32px_100px_-54px_rgba(50,184,198,0.4)] motion-safe:animate-[glow_4.8s_ease-in-out_infinite_alternate] dark:bg-slate-950/70"
           style={{ animationDelay: "0.45s" }}
-          onClick={() => {
-            trackICPBuilderModeSelected({ mode: "guided", is_authenticated: Boolean(user) });
-            setSession((previous) => ({
-              ...previous,
-              mode: "guided",
-              currentScreen: "guided_seed",
-              guided: previous.guided.seed ? previous.guided : buildEmptyGuidedAnswers(previous.fastDescription),
-            }));
-          }}
+          onClick={handleSelectGuidedMode}
         >
           <div
             className="pointer-events-none absolute inset-0 rounded-[2rem] border border-[#32b8c6]/15 opacity-60 motion-safe:animate-[pulse-slow_4s_ease-in-out_infinite]"
@@ -1038,6 +1043,12 @@ const ICPBuilder: React.FC = () => {
           </div>
         </button>
       </div>
+
+      <IcpSamplePreviewSection
+        onSelectFastMode={handleSelectFastMode}
+        onSelectGuidedMode={handleSelectGuidedMode}
+        modeSelectorId="icp-mode-selector"
+      />
 
       <div className="mt-14 sm:mt-16">
         <PageFAQSection
