@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft, ArrowRight, Loader2, RotateCcw, Sparkles } from "lucide-react";
+import { ArrowLeft, ArrowRight, Loader2, RotateCcw } from "lucide-react";
 
 import { IcpFolioDocument } from "@/components/icp/IcpFolioDocument";
 import { IcpProgressBar } from "@/components/icp/IcpProgressBar";
@@ -248,8 +248,6 @@ const ICPBuilder: React.FC = () => {
   const resumeToken = searchParams.get("resume");
   const progress = getDisplayProgress(session.currentScreen, loadingPhase);
   const synthesisElapsedMs = loadingPhase === "synthesis" && loadingStartedAt ? Date.now() - loadingStartedAt : 0;
-  const quickstartSeed = session.guided.seed || "";
-
   const validatedGuided = useMemo(() => guidedIcpInputSchema.safeParse(session.guided), [session.guided]);
   const validatedFast = useMemo(() => fastIcpInputSchema.safeParse({ description: session.fastDescription }), [session.fastDescription]);
   const unlockEmailPayload = useMemo<IcpUnlockEmailPayload | null>(() => {
@@ -906,31 +904,6 @@ const ICPBuilder: React.FC = () => {
     });
   };
 
-  const handleQuickstartSubmit = async () => {
-    const seed = quickstartSeed.trim();
-    if (seed.length < 8) {
-      toast({
-        title: "Start with one sentence",
-        description: "A rough idea is enough for us to draft your customer and pain.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setSession((previous) => ({
-      ...previous,
-      mode: "guided",
-      currentScreen: "guided_seed",
-      guided: {
-        ...buildEmptyGuidedAnswers(seed),
-        ...previous.guided,
-        seed,
-      },
-    }));
-
-    await invokeSeedPrefill(seed, "quickstart");
-  };
-
   const handleContinue = async () => {
     if (!canContinue) {
       toast({
@@ -1000,115 +973,76 @@ const ICPBuilder: React.FC = () => {
 
   const renderModeSelect = () => (
     <div className="mx-auto flex min-h-screen max-w-5xl flex-col justify-center px-4 pb-20 pt-32 text-foreground sm:px-6 md:pt-36">
-      <div className="mx-auto max-w-4xl space-y-5 text-center">
+      <div className="space-y-5 text-center">
         <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#32b8c6]">ICP Builder</p>
-        <h1 className="takeover-gradient creatives-font pb-3 text-4xl font-semibold leading-[1.08] tracking-tight sm:pb-4 sm:text-5xl">
-          Find your best-fit customer before you build
+        <h1 className="takeover-gradient creatives-font pb-3 text-4xl font-semibold leading-[1.12] tracking-tight sm:pb-4 sm:text-5xl">
+          Get your ICP Draft
         </h1>
         <p className="mx-auto max-w-3xl text-base leading-7 text-muted-foreground sm:text-lg">
-          Start with one sentence. We&apos;ll draft your customer, pain, and positioning for free before you create an
-          account.
+          This takes about 5 minutes. You&apos;ll walk away with a clear picture of your ideal customer, their main pain
+          points, and how to position your offer in the market.
         </p>
       </div>
 
-      <div className="mt-10 rounded-[2.5rem] border border-border/60 bg-white/80 p-6 shadow-[0_34px_120px_-70px_rgba(15,23,42,0.4)] backdrop-blur-xl dark:bg-slate-950/70 sm:p-8">
-        <div className="grid gap-8 lg:grid-cols-[1.35fr,0.95fr] lg:items-start">
-          <div className="space-y-6">
-            <div className="inline-flex items-center gap-2 rounded-full border border-[#32b8c6]/30 bg-[#32b8c6]/10 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-[#0f5b64] dark:text-[#8fe6ef]">
-              <Sparkles className="h-3.5 w-3.5" />
-              Start with one sentence
-            </div>
-
-            <div className="space-y-3">
-              <h2 className="text-3xl font-semibold tracking-tight sm:text-[2.2rem]">Describe your idea in one sentence</h2>
-              <p className="max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
-                We&apos;ll show you a predicted customer, their main pain, and a draft positioning angle before any account wall.
-              </p>
-            </div>
-
-            <div className="space-y-3">
-              <Textarea
-                rows={4}
-                value={quickstartSeed}
-                onChange={(event) => updateQuickstartSeed(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter" && !event.shiftKey) {
-                    event.preventDefault();
-                    void handleQuickstartSubmit();
-                  }
-                }}
-                placeholder="e.g. AI scheduling tool for freelance designers juggling client calls across time zones"
-                className="min-h-[156px] rounded-[2rem] border-border/60 bg-white/85 px-5 py-5 text-base leading-7 shadow-sm dark:bg-slate-950/70"
-              />
-
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <p className="text-sm text-muted-foreground">No account required to see your first preview.</p>
-                <Button
-                  type="button"
-                  className="h-12 min-w-[220px] text-base font-semibold"
-                  disabled={quickstartSeed.trim().length < 8 || loadingPhase !== null}
-                  onClick={() => void handleQuickstartSubmit()}
-                >
-                  Generate my free draft
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              </div>
-            </div>
+      <div className="mt-10 grid gap-5 lg:grid-cols-2">
+        <button
+          type="button"
+          className="group relative overflow-hidden rounded-[2rem] border border-border/60 bg-white/80 p-6 text-left shadow-[0_28px_90px_-52px_rgba(15,23,42,0.3)] backdrop-blur transition-transform duration-300 hover:-translate-y-1 hover:border-[#32b8c6]/40 hover:shadow-[0_32px_100px_-54px_rgba(50,184,198,0.4)] motion-safe:animate-[glow_4.8s_ease-in-out_infinite_alternate] dark:bg-slate-950/70"
+          onClick={() => {
+            trackICPBuilderModeSelected({ mode: "fast", is_authenticated: Boolean(user) });
+            setSession((previous) => ({
+              ...previous,
+              mode: "fast",
+              currentScreen: "fast_input",
+            }));
+          }}
+        >
+          <div className="pointer-events-none absolute inset-0 rounded-[2rem] border border-[#32b8c6]/15 opacity-60 motion-safe:animate-[pulse-slow_4s_ease-in-out_infinite]" />
+          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#32b8c6]">Fast Mode</p>
+          <p className="mt-4 text-xl font-semibold text-foreground">I can describe my startup idea clearly</p>
+          <p className="mt-4 text-sm leading-6 text-muted-foreground">
+            Paste a paragraph about your idea and get your ICP Draft in under 60 seconds.
+          </p>
+          <div className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-[#32b8c6]">
+            Start here
+            <ArrowRight className="h-4 w-4" />
           </div>
+        </button>
 
-          <div className="space-y-4 rounded-[2rem] border border-border/60 bg-background/70 p-5">
-            <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#32b8c6]">What you&apos;ll get first</p>
-              <ul className="mt-4 space-y-3 text-sm leading-6 text-muted-foreground">
-                <li>A predicted customer profile you can confirm or edit</li>
-                <li>The sharpest pain to build around first</li>
-                <li>A draft positioning angle you can save later</li>
-              </ul>
-            </div>
-
-            <div className="space-y-3 border-t border-border/60 pt-4">
-              <button
-                type="button"
-                className="w-full rounded-[1.5rem] border border-border/60 bg-white/80 px-4 py-4 text-left transition-colors hover:border-[#32b8c6]/40 dark:bg-slate-950/70"
-                onClick={() => {
-                  trackICPBuilderModeSelected({ mode: "fast", is_authenticated: Boolean(user) });
-                  setSession((previous) => ({
-                    ...previous,
-                    mode: "fast",
-                    currentScreen: "fast_input",
-                    fastDescription: previous.fastDescription || previous.guided.seed || "",
-                  }));
-                }}
-              >
-                <p className="text-sm font-semibold text-foreground">Paste 3-5 sentences instead</p>
-                <p className="mt-1 text-sm text-muted-foreground">Use Fast Mode if you can describe the startup clearly already.</p>
-              </button>
-
-              <button
-                type="button"
-                className="w-full rounded-[1.5rem] border border-border/60 bg-white/80 px-4 py-4 text-left transition-colors hover:border-[#32b8c6]/40 dark:bg-slate-950/70"
-                onClick={() => {
-                  trackICPBuilderModeSelected({ mode: "guided", is_authenticated: Boolean(user) });
-                  setSession((previous) => ({
-                    ...previous,
-                    mode: "guided",
-                    currentScreen: "guided_seed",
-                    guided: buildEmptyGuidedAnswers(previous.guided.seed || previous.fastDescription),
-                  }));
-                }}
-              >
-                <p className="text-sm font-semibold text-foreground">Need help? Use guided questions</p>
-                <p className="mt-1 text-sm text-muted-foreground">We&apos;ll walk through the pain and current workaround one step at a time.</p>
-              </button>
-            </div>
+        <button
+          type="button"
+          className="group relative overflow-hidden rounded-[2rem] border border-border/60 bg-white/80 p-6 text-left shadow-[0_28px_90px_-52px_rgba(15,23,42,0.3)] backdrop-blur transition-transform duration-300 hover:-translate-y-1 hover:border-[#32b8c6]/40 hover:shadow-[0_32px_100px_-54px_rgba(50,184,198,0.4)] motion-safe:animate-[glow_4.8s_ease-in-out_infinite_alternate] dark:bg-slate-950/70"
+          style={{ animationDelay: "0.45s" }}
+          onClick={() => {
+            trackICPBuilderModeSelected({ mode: "guided", is_authenticated: Boolean(user) });
+            setSession((previous) => ({
+              ...previous,
+              mode: "guided",
+              currentScreen: "guided_seed",
+              guided: previous.guided.seed ? previous.guided : buildEmptyGuidedAnswers(previous.fastDescription),
+            }));
+          }}
+        >
+          <div
+            className="pointer-events-none absolute inset-0 rounded-[2rem] border border-[#32b8c6]/15 opacity-60 motion-safe:animate-[pulse-slow_4s_ease-in-out_infinite]"
+            style={{ animationDelay: "0.45s" }}
+          />
+          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#32b8c6]">Guided Mode</p>
+          <p className="mt-4 text-xl font-semibold text-foreground">I&apos;m still figuring things out</p>
+          <p className="mt-4 text-sm leading-6 text-muted-foreground">
+            Answer 8 simple questions, one at a time, and we&apos;ll build the draft together.
+          </p>
+          <div className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-[#32b8c6]">
+            Start here
+            <ArrowRight className="h-4 w-4" />
           </div>
-        </div>
+        </button>
       </div>
 
       <div className="mt-14 sm:mt-16">
         <PageFAQSection
           title="FAQ"
-          description="If this is your first time defining an ICP, start here before you keep building the draft."
+          description="If this is your first time defining an ICP, start here before choosing Fast Mode or Guided Mode."
           faqs={ICP_BUILDER_FAQS}
         />
       </div>
