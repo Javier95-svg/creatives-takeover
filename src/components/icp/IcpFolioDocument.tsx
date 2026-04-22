@@ -561,7 +561,7 @@ export function IcpFolioDocument({
             >
               <div>
                 <p className="text-sm font-medium text-foreground/60">
-                  Creatives Takeover: ICP Draft
+                  ICP Draft: {draft.customer.personaName}
                 </p>
                 <h1 className="mt-3 text-3xl font-semibold tracking-tight text-foreground sm:text-[2rem]">
                   {draft.customer.personaName}
