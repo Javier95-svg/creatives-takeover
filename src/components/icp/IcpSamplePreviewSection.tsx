@@ -61,9 +61,6 @@ export function IcpSamplePreviewSection() {
           >
             Samples
           </h2>
-          <p className="mx-auto max-w-3xl text-base leading-7 text-muted-foreground sm:text-lg">
-            These are real ICP draft examples across different business profiles. Hover over any section to see what it is and why it matters.
-          </p>
         </div>
 
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
