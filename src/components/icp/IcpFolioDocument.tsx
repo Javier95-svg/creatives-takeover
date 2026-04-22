@@ -23,6 +23,7 @@ interface IcpSectionExplainer {
 interface IcpFolioDocumentProps {
   draft: IcpDraftDocument;
   documentRef?: RefObject<HTMLDivElement>;
+  documentLabel?: string;
   topBar?: ReactNode;
   bottomBar?: ReactNode;
   footer?: ReactNode;
@@ -331,6 +332,7 @@ function DocumentSection({
 export function IcpFolioDocument({
   draft,
   documentRef,
+  documentLabel = "Creatives Takeover: ICP Draft",
   topBar,
   bottomBar,
   footer,
@@ -561,7 +563,7 @@ export function IcpFolioDocument({
             >
               <div>
                 <p className="text-sm font-medium text-foreground/60">
-                  ICP Draft: {draft.customer.personaName}
+                  {documentLabel}
                 </p>
                 <h1 className="mt-3 text-3xl font-semibold tracking-tight text-foreground sm:text-[2rem]">
                   {draft.customer.personaName}

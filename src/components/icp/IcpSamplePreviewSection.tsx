@@ -93,6 +93,7 @@ export function IcpSamplePreviewSection() {
           <IcpFolioDocument
             key={renderedSample.key}
             draft={renderedSample.draft}
+            documentLabel={`ICP Draft: ${renderedSample.label}`}
             tone="landingPreview"
             layout="embedded"
             sectionExplainers={SAMPLE_ICP_SECTION_EXPLAINERS}
