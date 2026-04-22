@@ -329,11 +329,22 @@ const Hero = () => {
               </span>
             </h1>
 
-            <p className="homepage-hero__copy font-sans text-[15px] sm:text-base md:text-lg text-muted-foreground text-center mb-6 sm:mb-9 max-w-[34rem] mx-auto leading-[1.8] px-2 sm:px-0">
-              {isAuthenticated
-                ? "Set up your profile, then head to your dashboard to see what matters now, plan your next steps, and keep moving forward one task at a time."
-                : "Creatives Takeover gives first-time founders a proven path to validate their ideas, build the right product, and launch with confidence. Backed by mentors and investors who've been where you are."}
-            </p>
+            <div className="homepage-hero__copy font-sans text-[15px] sm:text-base md:text-lg text-muted-foreground text-center mb-6 sm:mb-9 max-w-[34rem] mx-auto leading-[1.8] px-2 sm:px-0 space-y-4">
+              {isAuthenticated ? (
+                <p>
+                  Set up your profile, then head to your dashboard to see what matters now, plan your next steps, and keep moving forward one task at a time.
+                </p>
+              ) : (
+                <>
+                  <p>
+                    Starting a company is rarely a motivation problem. It is usually a clarity problem. Creatives Takeover helps first-time founders turn scattered ideas into a sharper direction, so they can validate faster, build smarter, and avoid wasting time on the wrong path.
+                  </p>
+                  <p>
+                    From early validation to launch decisions, the system is designed to guide you through the messy parts of building. Backed by mentors who have already faced the same questions, tradeoffs, and risks.
+                  </p>
+                </>
+              )}
+            </div>
 
             <div className="mb-4 sm:mb-8 md:mb-10">
               {isAuthenticated ? (
