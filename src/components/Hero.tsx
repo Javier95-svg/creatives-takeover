@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, Cpu, Image as ImageIcon, LayoutDashboard, Loader2, Upload, User } from "lucide-react";
+import { ArrowRight, Compass, Cpu, Image as ImageIcon, LayoutDashboard, Loader2, Upload, User } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -320,8 +320,13 @@ const Hero = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-10 lg:gap-14 xl:gap-20 items-center">
           <div className="homepage-hero__content text-center flex flex-col items-center justify-center max-w-2xl lg:max-w-[34rem] mx-auto">
             <h1 className="homepage-hero__title font-space-grotesk text-[2.125rem] sm:text-[2.75rem] md:text-[3.5rem] lg:text-[4.1rem] font-semibold mb-5 sm:mb-6 leading-[1.12] tracking-tight text-center">
-              <span className="text-primary block [text-shadow:0_0_22px_rgba(59,130,246,0.28)]">Where Founders</span>
-              <span className="block text-white [text-shadow:0_0_24px_rgba(255,255,255,0.18),0_2px_10px_rgba(15,23,42,0.28)]">Come to Thrive</span>
+              <span className="text-primary block [text-shadow:0_0_22px_rgba(59,130,246,0.28)]">
+                The Founders&rsquo;
+              </span>
+              <span className="mt-1 inline-flex items-center justify-center gap-3 text-white [text-shadow:0_0_24px_rgba(255,255,255,0.18),0_2px_10px_rgba(15,23,42,0.28)]">
+                <span>Compass</span>
+                <Compass className="h-[0.95em] w-[0.95em] shrink-0 text-white" aria-hidden="true" />
+              </span>
             </h1>
 
             <p className="homepage-hero__copy font-sans text-[15px] sm:text-base md:text-lg text-muted-foreground text-center mb-6 sm:mb-9 max-w-[34rem] mx-auto leading-[1.8] px-2 sm:px-0">
