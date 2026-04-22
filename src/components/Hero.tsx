@@ -317,19 +317,20 @@ const Hero = () => {
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-primary/[0.035] to-transparent pointer-events-none" />
 
       <div className="container mx-auto max-w-7xl relative z-10">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-10 lg:gap-14 xl:gap-20 items-center">
-          <div className="homepage-hero__content text-center flex flex-col items-center justify-center max-w-2xl lg:max-w-[34rem] mx-auto">
-            <h1 className="homepage-hero__title font-space-grotesk text-[2.125rem] sm:text-[2.75rem] md:text-[3.5rem] lg:text-[4.1rem] font-semibold mb-5 sm:mb-6 leading-[1.12] tracking-tight text-center">
+        <div className="grid grid-cols-1 gap-y-10 sm:gap-y-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:items-center lg:gap-x-16 xl:gap-x-20">
+          <div className="homepage-hero__content flex w-full min-w-0 flex-col justify-center self-center text-left lg:justify-self-start">
+            <div className="w-full max-w-2xl lg:max-w-[34rem]">
+            <h1 className="homepage-hero__title font-space-grotesk text-[2.125rem] sm:text-[2.75rem] md:text-[3.5rem] lg:text-[4.1rem] font-semibold mb-5 sm:mb-6 leading-[1.12] tracking-tight text-center lg:text-left">
               <span className="text-primary block [text-shadow:0_0_22px_rgba(59,130,246,0.28)]">
                 The Founders&rsquo;
               </span>
-              <span className="mt-1 inline-flex items-center justify-center gap-3 text-white [text-shadow:0_0_24px_rgba(255,255,255,0.18),0_2px_10px_rgba(15,23,42,0.28)]">
+              <span className="mt-1 inline-flex items-center justify-center gap-3 text-white [text-shadow:0_0_24px_rgba(255,255,255,0.18),0_2px_10px_rgba(15,23,42,0.28)] lg:justify-start">
                 <span>Compass</span>
                 <Compass className="h-[0.95em] w-[0.95em] shrink-0 text-white" aria-hidden="true" />
               </span>
             </h1>
 
-            <div className="homepage-hero__copy font-sans text-[15px] sm:text-base md:text-lg text-muted-foreground text-center mb-6 sm:mb-9 max-w-[34rem] mx-auto leading-[1.8] px-2 sm:px-0 space-y-4">
+            <div className="homepage-hero__copy mb-6 max-w-[34rem] space-y-4 px-2 font-sans text-[15px] leading-[1.8] text-muted-foreground sm:mb-9 sm:px-0 sm:text-base md:text-lg text-center lg:text-left">
               {isAuthenticated ? (
                 <p>
                   Set up your profile, then head to your dashboard to see what matters now, plan your next steps, and keep moving forward one task at a time.
@@ -348,7 +349,7 @@ const Hero = () => {
 
             <div className="mb-4 sm:mb-8 md:mb-10">
               {isAuthenticated ? (
-                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-center lg:items-start justify-center lg:justify-start px-4 sm:px-0">
+                <div className="flex flex-col items-stretch justify-start gap-3 px-2 sm:flex-row sm:gap-4 sm:px-0">
                   <Button size="lg" variant="outline" className="w-full sm:w-auto min-w-[180px] min-h-[44px] touch-manipulation" asChild>
                     <Link to={userUsername ? `/profile/${userUsername}` : "/dashboard"}>
                       <User className="w-5 h-5" />
@@ -364,8 +365,8 @@ const Hero = () => {
                   </Button>
                 </div>
               ) : (
-                <div className="flex flex-col gap-3 items-center justify-center px-4 sm:px-0">
-                  <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-center justify-center px-4 sm:px-0">
+                <div className="flex flex-col gap-3 px-2 sm:px-0">
+                  <div className="flex flex-col items-stretch justify-start gap-3 sm:flex-row sm:gap-4">
                     <Button size="lg" className="w-full sm:w-auto min-h-[44px] touch-manipulation" asChild>
                       <Link to="/icp-builder" onClick={handlePrimaryCTAClick}>
                         Start Here
@@ -381,9 +382,11 @@ const Hero = () => {
                 </div>
               )}
             </div>
+            </div>
           </div>
 
-          <div className="homepage-hero__media w-full max-w-[22rem] sm:max-w-[30rem] lg:max-w-[640px] mx-auto lg:pt-6 xl:pt-8 lg:ml-auto">
+          <div className="homepage-hero__media w-full min-w-0 self-center lg:justify-self-end">
+            <div className="mx-auto w-full max-w-[22rem] sm:max-w-[30rem] lg:mx-0 lg:max-w-[640px] lg:pt-6 xl:pt-8">
             <div className="rounded-[28px] sm:rounded-[30px] border border-border/80 bg-card/90 shadow-[0_32px_80px_-52px_rgba(15,23,42,0.32)] p-2.5 sm:p-4 md:p-5 backdrop-blur-sm">
               <div className="grid grid-cols-2 gap-2 sm:gap-3 md:gap-4 w-full">
                 {[1, 2, 3, 4].map((position) => {
@@ -510,6 +513,7 @@ const Hero = () => {
                   );
                 })}
               </div>
+            </div>
             </div>
           </div>
         </div>
