@@ -1,4 +1,5 @@
 import {
+  useCallback,
   type MutableRefObject,
   type ReactNode,
   type RefObject,
@@ -7,16 +8,11 @@ import {
   useState,
 } from "react";
 
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import type { IcpDraftDocument } from "@/lib/icpBuilderSession";
 
 type IcpFolioTone = "folio" | "platformPreview" | "landingPreview";
 type IcpFolioSectionKey = "customer" | "pain" | "build" | "moat";
-type IcpExplainerSide = "left" | "right" | "bottom";
+type IcpExplainerPlacement = "top" | "bottom";
 
 interface IcpSectionExplainer {
   what: string;
@@ -38,6 +34,8 @@ interface IcpFolioDocumentProps {
 }
 
 const VIEWPORT_MARGIN = 16;
+const EXPLAINER_OFFSET = 12;
+const EXPLAINER_MAX_WIDTH = 384;
 
 function setExternalDocumentRef(
   ref: RefObject<HTMLDivElement> | undefined,
@@ -74,30 +72,44 @@ function formatConfidenceLabel(confidence: IcpDraftDocument["customer"]["evidenc
   return confidence.charAt(0).toUpperCase() + confidence.slice(1);
 }
 
+function clamp(value: number, min: number, max: number) {
+  return Math.min(Math.max(value, min), max);
+}
+
 function SectionExplainerContent({
   explainer,
+  onClose,
 }: {
   explainer: IcpSectionExplainer;
+  onClose: () => void;
 }) {
   return (
-    <div className="space-y-4 text-left">
+    <div className="relative space-y-4 pr-8 text-left">
+      <button
+        type="button"
+        aria-label="Close explanation"
+        onClick={onClose}
+        className="absolute right-0 top-0 text-lg leading-none text-popover-foreground/55 transition-opacity hover:text-popover-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      >
+        ×
+      </button>
       <div>
-        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-popover-foreground/65">
           What this section is
         </p>
-        <p className="mt-1.5 text-sm leading-6 text-slate-700">{explainer.what}</p>
+        <p className="mt-1.5 text-sm leading-6 text-popover-foreground">{explainer.what}</p>
       </div>
       <div>
-        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-popover-foreground/65">
           Why it matters
         </p>
-        <p className="mt-1.5 text-sm leading-6 text-slate-700">{explainer.why}</p>
+        <p className="mt-1.5 text-sm leading-6 text-popover-foreground">{explainer.why}</p>
       </div>
       <div>
-        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-popover-foreground/65">
           How the Builder generates it
         </p>
-        <p className="mt-1.5 text-sm leading-6 text-slate-700">{explainer.how}</p>
+        <p className="mt-1.5 text-sm leading-6 text-popover-foreground">{explainer.how}</p>
       </div>
     </div>
   );
@@ -111,17 +123,19 @@ function SectionEvidenceNote({
   title?: string;
 }) {
   return (
-    <div className="mt-8 border-t border-slate-200 pt-5">
+    <div className="mt-8 border-t border-border/80 pt-5">
       <div className="space-y-3">
-        <p className="text-sm font-semibold text-slate-900">{title}</p>
-        <p className="text-sm leading-7 text-slate-600">{evidence.evidence}</p>
-        <p className="text-xs font-medium uppercase tracking-[0.16em] text-slate-500">
+        <p className="text-sm font-semibold text-foreground dark:text-foreground/88">{title}</p>
+        <p className="text-sm leading-7 text-foreground">{evidence.evidence}</p>
+        <p className="text-xs font-medium uppercase tracking-[0.16em] text-foreground/60">
           Confidence: {formatConfidenceLabel(evidence.confidence)}
         </p>
         {evidence.missingSignalPrompt ? (
           <div className="space-y-2 pt-2">
-            <p className="text-sm font-semibold text-slate-900">Need to validate</p>
-            <p className="text-sm leading-7 text-slate-600">{evidence.missingSignalPrompt}</p>
+            <p className="text-sm font-semibold text-foreground dark:text-foreground/88">
+              Need to validate
+            </p>
+            <p className="text-sm leading-7 text-foreground">{evidence.missingSignalPrompt}</p>
           </div>
         ) : null}
       </div>
@@ -129,7 +143,7 @@ function SectionEvidenceNote({
   );
 }
 
-type DocumentTableTone = "blue" | "emerald" | "amber";
+type DocumentTableTone = "primary" | "success" | "destructive";
 
 const DOCUMENT_TABLE_TONE_STYLES: Record<
   DocumentTableTone,
@@ -141,26 +155,26 @@ const DOCUMENT_TABLE_TONE_STYLES: Record<
     accentText: string;
   }
 > = {
-  blue: {
-    frame: "border-sky-200/80",
-    headerRow: "border-sky-200/80 bg-sky-50/80",
-    headerText: "text-sky-700",
-    rowBorder: "border-sky-100/80",
-    accentText: "text-sky-600",
+  primary: {
+    frame: "border-[hsl(var(--blue-primary)/0.28)]",
+    headerRow: "border-[hsl(var(--blue-primary)/0.22)] bg-[hsl(var(--blue-primary)/0.09)]",
+    headerText: "text-[hsl(var(--blue-primary))]",
+    rowBorder: "border-[hsl(var(--blue-primary)/0.14)]",
+    accentText: "text-[hsl(var(--blue-primary))]",
   },
-  emerald: {
-    frame: "border-emerald-200/80",
-    headerRow: "border-emerald-200/80 bg-emerald-50/80",
-    headerText: "text-emerald-700",
-    rowBorder: "border-emerald-100/80",
-    accentText: "text-emerald-600",
+  success: {
+    frame: "border-[hsl(var(--green-primary)/0.3)]",
+    headerRow: "border-[hsl(var(--green-primary)/0.24)] bg-[hsl(var(--green-primary)/0.09)]",
+    headerText: "text-[hsl(var(--green-primary))]",
+    rowBorder: "border-[hsl(var(--green-primary)/0.14)]",
+    accentText: "text-[hsl(var(--green-primary))]",
   },
-  amber: {
-    frame: "border-amber-200/80",
-    headerRow: "border-amber-200/80 bg-amber-50/80",
-    headerText: "text-amber-700",
-    rowBorder: "border-amber-100/80",
-    accentText: "text-amber-700",
+  destructive: {
+    frame: "border-[hsl(var(--red-primary)/0.3)]",
+    headerRow: "border-[hsl(var(--red-primary)/0.24)] bg-[hsl(var(--red-primary)/0.08)]",
+    headerText: "text-[hsl(var(--red-primary))]",
+    rowBorder: "border-[hsl(var(--red-primary)/0.14)]",
+    accentText: "text-[hsl(var(--red-primary))]",
   },
 };
 
@@ -179,7 +193,7 @@ function DocumentSingleColumnTable({
 
   return (
     <div className={`mt-3 overflow-hidden border ${styles.frame}`}>
-      <table className="w-full border-collapse text-left text-sm text-slate-600">
+      <table className="w-full border-collapse text-left text-sm text-foreground">
         <thead>
           <tr className={`border-b ${styles.headerRow}`}>
             <th className={`w-14 px-3 py-2 font-medium ${styles.headerText}`}>#</th>
@@ -196,12 +210,12 @@ function DocumentSingleColumnTable({
                 <td className={`px-3 py-3 align-top font-medium ${styles.accentText}`}>
                   {String(index + 1).padStart(2, "0")}
                 </td>
-                <td className="px-3 py-3 leading-7 text-slate-700">{item}</td>
+                <td className="px-3 py-3 leading-7 text-foreground">{item}</td>
               </tr>
             ))
           ) : (
             <tr>
-              <td colSpan={2} className="px-3 py-3 leading-7 text-slate-500">
+              <td colSpan={2} className="px-3 py-3 leading-7 text-foreground/65">
                 {emptyText}
               </td>
             </tr>
@@ -226,7 +240,7 @@ function DocumentDetailTable({
 
   return (
     <div className={`mt-3 overflow-hidden border ${styles.frame}`}>
-      <table className="w-full border-collapse text-left text-sm text-slate-600">
+      <table className="w-full border-collapse text-left text-sm text-foreground">
         <thead>
           <tr className={`border-b ${styles.headerRow}`}>
             <th className={`w-40 px-3 py-2 font-medium ${styles.headerText}`}>Type</th>
@@ -243,12 +257,12 @@ function DocumentDetailTable({
                 <td className={`px-3 py-3 align-top font-medium ${styles.accentText}`}>
                   {row.label}
                 </td>
-                <td className="px-3 py-3 leading-7 text-slate-700">{row.value}</td>
+                <td className="px-3 py-3 leading-7 text-foreground">{row.value}</td>
               </tr>
             ))
           ) : (
             <tr>
-              <td colSpan={2} className="px-3 py-3 leading-7 text-slate-500">
+              <td colSpan={2} className="px-3 py-3 leading-7 text-foreground/65">
                 {emptyText ?? "Additional detail still needs sharper founder evidence."}
               </td>
             </tr>
@@ -262,41 +276,48 @@ function DocumentDetailTable({
 function DocumentSection({
   sectionKey,
   explainer,
-  popoverSide,
-  open,
   registerSection,
-  onOpenChange,
-  onPrepareOpen,
+  active,
+  onHoverStart,
+  onHoverEnd,
+  onToggleOpen,
+  onFocusOpen,
   children,
 }: {
   sectionKey: IcpFolioSectionKey;
   explainer?: IcpSectionExplainer;
-  popoverSide: IcpExplainerSide;
-  open: boolean;
   registerSection: (sectionKey: IcpFolioSectionKey, node: HTMLElement | null) => void;
-  onOpenChange: (sectionKey: IcpFolioSectionKey, open: boolean) => void;
-  onPrepareOpen: (sectionKey: IcpFolioSectionKey, clickX?: number) => void;
+  active: boolean;
+  onHoverStart: (sectionKey: IcpFolioSectionKey) => void;
+  onHoverEnd: (sectionKey: IcpFolioSectionKey, nextTarget: EventTarget | null) => void;
+  onToggleOpen: (sectionKey: IcpFolioSectionKey) => void;
+  onFocusOpen: (sectionKey: IcpFolioSectionKey) => void;
   children: ReactNode;
 }) {
-  const section = (
+  return (
     <section
       ref={(node) => registerSection(sectionKey, node)}
       className={
         explainer
-          ? "cursor-pointer rounded-sm transition-colors hover:bg-slate-50/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300"
+          ? "cursor-pointer rounded-sm transition-colors hover:bg-foreground/[0.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/70"
           : undefined
       }
       tabIndex={explainer ? 0 : undefined}
       role={explainer ? "button" : undefined}
+      aria-expanded={explainer ? active : undefined}
       aria-label={explainer ? `Show explanation for ${sectionKey} section` : undefined}
-      onClick={explainer ? (event) => onPrepareOpen(sectionKey, event.clientX) : undefined}
+      onMouseEnter={explainer ? () => onHoverStart(sectionKey) : undefined}
+      onMouseLeave={
+        explainer ? (event) => onHoverEnd(sectionKey, event.relatedTarget) : undefined
+      }
+      onFocus={explainer ? () => onFocusOpen(sectionKey) : undefined}
+      onClick={explainer ? () => onToggleOpen(sectionKey) : undefined}
       onKeyDown={
         explainer
           ? (event) => {
               if (event.key === "Enter" || event.key === " ") {
                 event.preventDefault();
-                onPrepareOpen(sectionKey);
-                (event.currentTarget as HTMLElement).click();
+                onToggleOpen(sectionKey);
               }
             }
           : undefined
@@ -304,25 +325,6 @@ function DocumentSection({
     >
       {children}
     </section>
-  );
-
-  if (!explainer) {
-    return section;
-  }
-
-  return (
-    <Popover open={open} onOpenChange={(nextOpen) => onOpenChange(sectionKey, nextOpen)}>
-      <PopoverTrigger asChild>{section}</PopoverTrigger>
-      <PopoverContent
-        side={popoverSide}
-        align="center"
-        sideOffset={16}
-        collisionPadding={VIEWPORT_MARGIN}
-        className="w-[min(24rem,calc(100vw-2rem))] rounded-2xl border-slate-200 bg-white p-4 shadow-[0_24px_70px_-40px_rgba(15,23,42,0.45)]"
-      >
-        <SectionExplainerContent explainer={explainer} />
-      </PopoverContent>
-    </Popover>
   );
 }
 
@@ -345,9 +347,16 @@ export function IcpFolioDocument({
     build: null,
     moat: null,
   });
+  const explainerRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobileViewport();
   const [activeSection, setActiveSection] = useState<IcpFolioSectionKey | null>(null);
-  const [activeExplainerSide, setActiveExplainerSide] = useState<IcpExplainerSide>("right");
+  const [dismissedSection, setDismissedSection] = useState<IcpFolioSectionKey | null>(null);
+  const [explainerPosition, setExplainerPosition] = useState<{
+    left: number;
+    top: number;
+    width: number;
+    placement: IcpExplainerPlacement;
+  } | null>(null);
 
   useEffect(() => {
     setExternalDocumentRef(documentRef, articleRef.current);
@@ -356,6 +365,8 @@ export function IcpFolioDocument({
   useEffect(() => {
     if (blurred) {
       setActiveSection(null);
+      setDismissedSection(null);
+      setExplainerPosition(null);
     }
   }, [blurred]);
 
@@ -363,62 +374,160 @@ export function IcpFolioDocument({
     sectionRefs.current[sectionKey] = node;
   };
 
-  const getExplainerSide = (
-    sectionKey: IcpFolioSectionKey,
-    clickX?: number,
-  ): IcpExplainerSide => {
-    if (isMobile) {
-      return "bottom";
-    }
+  const updateExplainerPosition = useCallback((sectionKey: IcpFolioSectionKey) => {
+    const articleNode = articleRef.current;
+    const sectionNode = sectionRefs.current[sectionKey];
 
-    const viewportWidth = window.innerWidth;
-    const sectionRect = sectionRefs.current[sectionKey]?.getBoundingClientRect();
-    const referenceX =
-      typeof clickX === "number"
-        ? clickX
-        : sectionRect
-          ? sectionRect.left + sectionRect.width / 2
-          : viewportWidth / 2;
-    const preferredSide: Exclude<IcpExplainerSide, "bottom"> =
-      referenceX <= viewportWidth / 2 ? "right" : "left";
-
-    if (!sectionRect) {
-      return preferredSide;
-    }
-
-    const minimumComfortSpace = 220;
-    const spaceLeft = sectionRect.left - VIEWPORT_MARGIN;
-    const spaceRight = viewportWidth - sectionRect.right - VIEWPORT_MARGIN;
-
-    if (preferredSide === "right" && spaceRight >= minimumComfortSpace) {
-      return "right";
-    }
-
-    if (preferredSide === "left" && spaceLeft >= minimumComfortSpace) {
-      return "left";
-    }
-
-    return spaceRight >= spaceLeft ? "right" : "left";
-  };
-
-  const prepareExplainer = (sectionKey: IcpFolioSectionKey, clickX?: number) => {
-    if (!sectionExplainers?.[sectionKey] || blurred) return;
-    setActiveExplainerSide(getExplainerSide(sectionKey, clickX));
-  };
-
-  const handleExplainerOpenChange = (sectionKey: IcpFolioSectionKey, open: boolean) => {
-    if (!sectionExplainers?.[sectionKey] || blurred) {
-      setActiveSection(null);
+    if (!articleNode || !sectionNode) {
+      setExplainerPosition(null);
       return;
     }
 
-    setActiveSection((current) => {
-      if (open) {
-        return sectionKey;
+    const articleRect = articleNode.getBoundingClientRect();
+    const sectionRect = sectionNode.getBoundingClientRect();
+    const overlayHeight = explainerRef.current?.offsetHeight ?? 0;
+    const width = Math.min(
+      EXPLAINER_MAX_WIDTH,
+      Math.max(220, articleRect.width - VIEWPORT_MARGIN * 2),
+    );
+    const centeredLeft =
+      sectionRect.left - articleRect.left + sectionRect.width / 2 - width / 2;
+    const left = clamp(
+      centeredLeft,
+      VIEWPORT_MARGIN,
+      Math.max(VIEWPORT_MARGIN, articleRect.width - VIEWPORT_MARGIN - width),
+    );
+
+    let placement: IcpExplainerPlacement = "top";
+    let top =
+      sectionRect.top -
+      articleRect.top -
+      overlayHeight -
+      EXPLAINER_OFFSET;
+
+    if (overlayHeight > 0 && top < VIEWPORT_MARGIN) {
+      placement = "bottom";
+      top =
+        sectionRect.bottom -
+        articleRect.top +
+        EXPLAINER_OFFSET;
+    }
+
+    if (overlayHeight > 0) {
+      top = clamp(
+        top,
+        VIEWPORT_MARGIN,
+        Math.max(
+          VIEWPORT_MARGIN,
+          articleRect.height - VIEWPORT_MARGIN - overlayHeight,
+        ),
+      );
+    }
+
+    setExplainerPosition({ left, top, width, placement });
+  }, []);
+
+  useEffect(() => {
+    if (!activeSection || blurred) {
+      setExplainerPosition(null);
+      return;
+    }
+
+    const sync = () => updateExplainerPosition(activeSection);
+    const frame = window.requestAnimationFrame(sync);
+
+    window.addEventListener("resize", sync);
+    window.addEventListener("scroll", sync, true);
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.removeEventListener("resize", sync);
+      window.removeEventListener("scroll", sync, true);
+    };
+  }, [activeSection, blurred, isMobile, updateExplainerPosition]);
+
+  useEffect(() => {
+    if (!activeSection) return;
+
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target as Node | null;
+      const activeNode = sectionRefs.current[activeSection];
+      if (explainerRef.current?.contains(target) || activeNode?.contains(target)) {
+        return;
       }
 
-      return current === sectionKey ? null : current;
-    });
+      setActiveSection(null);
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    return () => document.removeEventListener("pointerdown", handlePointerDown);
+  }, [activeSection]);
+
+  const openExplainer = (sectionKey: IcpFolioSectionKey) => {
+    if (!sectionExplainers?.[sectionKey] || blurred) return;
+    setActiveSection(sectionKey);
+  };
+
+  const handleHoverStart = (sectionKey: IcpFolioSectionKey) => {
+    if (isMobile) return;
+    if (dismissedSection === sectionKey) {
+      setDismissedSection(null);
+    }
+    openExplainer(sectionKey);
+  };
+
+  const handleHoverEnd = (sectionKey: IcpFolioSectionKey, nextTarget: EventTarget | null) => {
+    if (isMobile) return;
+
+    const nextNode = nextTarget instanceof Node ? nextTarget : null;
+    if (dismissedSection === sectionKey) {
+      setDismissedSection(null);
+    }
+
+    if (
+      nextNode &&
+      (explainerRef.current?.contains(nextNode) ||
+        sectionRefs.current[sectionKey]?.contains(nextNode))
+    ) {
+      return;
+    }
+
+    setActiveSection((current) => (current === sectionKey ? null : current));
+  };
+
+  const handleToggleOpen = (sectionKey: IcpFolioSectionKey) => {
+    if (!sectionExplainers?.[sectionKey] || blurred) return;
+
+    if (!isMobile && dismissedSection === sectionKey) {
+      return;
+    }
+
+    setDismissedSection(null);
+    setActiveSection((current) => (current === sectionKey && isMobile ? null : sectionKey));
+  };
+
+  const handleFocusOpen = (sectionKey: IcpFolioSectionKey) => {
+    if (!isMobile && dismissedSection === sectionKey) return;
+    openExplainer(sectionKey);
+  };
+
+  const handleDismissExplainer = () => {
+    if (!activeSection) return;
+    if (!isMobile) {
+      setDismissedSection(activeSection);
+    }
+    setActiveSection(null);
+  };
+
+  const handleExplainerMouseLeave = (nextTarget: EventTarget | null) => {
+    if (isMobile || !activeSection) return;
+
+    const nextNode = nextTarget instanceof Node ? nextTarget : null;
+    if (nextNode && sectionRefs.current[activeSection]?.contains(nextNode)) {
+      return;
+    }
+
+    setActiveSection(null);
   };
 
   const wrapperClasses =
@@ -438,58 +547,65 @@ export function IcpFolioDocument({
         <div className={surfaceBlurClasses}>
           <article
             ref={articleRef}
-            className="relative bg-white px-6 py-8 text-slate-950 sm:px-10 sm:py-10"
+            className="relative bg-background px-6 py-8 text-foreground transition-colors sm:px-10 sm:py-10"
           >
             <DocumentSection
               sectionKey="customer"
               explainer={sectionExplainers?.customer}
-              popoverSide={activeSection === "customer" ? activeExplainerSide : "right"}
-              open={activeSection === "customer"}
               registerSection={registerSection}
-              onOpenChange={handleExplainerOpenChange}
-              onPrepareOpen={prepareExplainer}
+              active={activeSection === "customer"}
+              onHoverStart={handleHoverStart}
+              onHoverEnd={handleHoverEnd}
+              onToggleOpen={handleToggleOpen}
+              onFocusOpen={handleFocusOpen}
             >
               <div>
-                <p className="text-sm font-medium text-slate-500">Creatives Takeover: ICP Draft</p>
-                <h1 className="mt-3 text-3xl font-semibold tracking-tight text-slate-950 sm:text-[2rem]">
+                <p className="text-sm font-medium text-foreground/60">
+                  Creatives Takeover: ICP Draft
+                </p>
+                <h1 className="mt-3 text-3xl font-semibold tracking-tight text-foreground sm:text-[2rem]">
                   {draft.customer.personaName}
                 </h1>
-                <p className="mt-3 text-lg leading-8 text-slate-800">{draft.customer.roleLine}</p>
+                <p className="mt-3 text-lg leading-8 text-foreground">{draft.customer.roleLine}</p>
                 {draft.customer.metaLine ? (
-                  <p className="mt-2 text-sm leading-6 text-slate-500">{draft.customer.metaLine}</p>
+                  <p className="mt-2 text-sm leading-6 text-foreground/65">
+                    {draft.customer.metaLine}
+                  </p>
                 ) : null}
 
-                <p className="mt-8 text-[1.02rem] leading-8 text-slate-700">
+                <p className="mt-8 text-[1.02rem] leading-8 text-foreground">
                   {draft.customer.summary}
                 </p>
 
                 <div className="mt-8 grid gap-8 sm:grid-cols-2">
                   <div>
-                    <h2 className="text-sm font-semibold text-slate-900">Behavior signals</h2>
+                    <h2 className="text-sm font-semibold text-foreground dark:text-foreground/88">
+                      Behavior signals
+                    </h2>
                     <DocumentSingleColumnTable
                       columnLabel="Observed behavior"
                       items={draft.customer.behaviors}
                       emptyText="Behavior patterns still need sharper evidence."
-                      tone="blue"
+                      tone="primary"
                     />
 
                     {draft.customer.whereToFind.length > 0 ? (
                       <div className="mt-8">
-                        <h2 className="text-sm font-semibold text-slate-900">
+                        <h2 className="text-sm font-semibold text-foreground dark:text-foreground/88">
                           Where to find them
                         </h2>
                         <DocumentSingleColumnTable
                           columnLabel="Channel or environment"
                           items={draft.customer.whereToFind}
                           emptyText="Distribution channels still need clearer validation."
-                          tone="emerald"
+                          tone="success"
                         />
                       </div>
                     ) : null}
                   </div>
 
                   <div>
-                    <h2 className="text-sm font-semibold text-slate-900">
+                    <h2 className="text-sm font-semibold text-foreground dark:text-foreground/88">
                       Motivations and trigger
                     </h2>
                     <DocumentDetailTable
@@ -508,7 +624,7 @@ export function IcpFolioDocument({
                         },
                       ]}
                       emptyText="Motivations still need sharper founder evidence."
-                      tone="amber"
+                      tone="destructive"
                     />
                   </div>
                 </div>
@@ -520,17 +636,18 @@ export function IcpFolioDocument({
             <DocumentSection
               sectionKey="pain"
               explainer={sectionExplainers?.pain}
-              popoverSide={activeSection === "pain" ? activeExplainerSide : "right"}
-              open={activeSection === "pain"}
               registerSection={registerSection}
-              onOpenChange={handleExplainerOpenChange}
-              onPrepareOpen={prepareExplainer}
+              active={activeSection === "pain"}
+              onHoverStart={handleHoverStart}
+              onHoverEnd={handleHoverEnd}
+              onToggleOpen={handleToggleOpen}
+              onFocusOpen={handleFocusOpen}
             >
-              <div className="border-t border-slate-200 pt-10">
-                <h2 className="text-2xl font-semibold tracking-tight text-slate-950">
+              <div className="border-t border-border/80 pt-10">
+                <h2 className="text-2xl font-semibold tracking-tight text-foreground dark:text-foreground/88">
                   Core pain point
                 </h2>
-                <blockquote className="mt-6 border-l border-slate-300 pl-5 text-xl italic leading-9 text-slate-800 sm:text-2xl">
+                <blockquote className="mt-6 border-l border-border/80 pl-5 text-xl italic leading-9 text-foreground sm:text-2xl">
                   "{draft.pain.quote}"
                 </blockquote>
 
@@ -542,8 +659,10 @@ export function IcpFolioDocument({
                     { label: "Cost of inaction", value: draft.pain.costOfInaction },
                   ].map((item) => (
                     <div key={item.label}>
-                      <dt className="text-sm font-semibold text-slate-900">{item.label}</dt>
-                      <dd className="mt-2 text-sm leading-7 text-slate-600">{item.value}</dd>
+                      <dt className="text-sm font-semibold text-foreground dark:text-foreground/88">
+                        {item.label}
+                      </dt>
+                      <dd className="mt-2 text-sm leading-7 text-foreground">{item.value}</dd>
                     </div>
                   ))}
                 </dl>
@@ -555,33 +674,40 @@ export function IcpFolioDocument({
             <DocumentSection
               sectionKey="build"
               explainer={sectionExplainers?.build}
-              popoverSide={activeSection === "build" ? activeExplainerSide : "right"}
-              open={activeSection === "build"}
               registerSection={registerSection}
-              onOpenChange={handleExplainerOpenChange}
-              onPrepareOpen={prepareExplainer}
+              active={activeSection === "build"}
+              onHoverStart={handleHoverStart}
+              onHoverEnd={handleHoverEnd}
+              onToggleOpen={handleToggleOpen}
+              onFocusOpen={handleFocusOpen}
             >
-              <div className="border-t border-slate-200 pt-10">
-                <h2 className="text-2xl font-semibold tracking-tight text-slate-950">
+              <div className="border-t border-border/80 pt-10">
+                <h2 className="text-2xl font-semibold tracking-tight text-foreground dark:text-foreground/88">
                   What you&apos;re building
                 </h2>
-                <p className="mt-6 text-lg leading-8 text-slate-900">
+                <p className="mt-6 text-lg leading-8 text-foreground">
                   {draft.build.valueProposition}
                 </p>
 
                 {draft.build.replaces.length > 0 ? (
-                  <p className="mt-4 text-sm leading-7 text-slate-600">
-                    <span className="font-medium text-slate-900">Replaces:</span>{" "}
+                  <p className="mt-4 text-sm leading-7 text-foreground">
+                    <span className="font-medium text-foreground dark:text-foreground/88">
+                      Replaces:
+                    </span>{" "}
                     {draft.build.replaces.join(", ")}
                   </p>
                 ) : null}
 
                 <div className="mt-8">
-                  <h3 className="text-sm font-semibold text-slate-900">Core features</h3>
-                  <ol className="mt-3 list-decimal space-y-4 pl-5 text-sm leading-7 text-slate-600">
+                  <h3 className="text-sm font-semibold text-foreground dark:text-foreground/88">
+                    Core features
+                  </h3>
+                  <ol className="mt-3 list-decimal space-y-4 pl-5 text-sm leading-7 text-foreground">
                     {draft.build.coreFeatures.map((feature) => (
                       <li key={feature.title}>
-                        <span className="font-semibold text-slate-900">{feature.title}.</span>{" "}
+                        <span className="font-semibold text-foreground dark:text-foreground/88">
+                          {feature.title}.
+                        </span>{" "}
                         {feature.description}
                       </li>
                     ))}
@@ -589,8 +715,10 @@ export function IcpFolioDocument({
                 </div>
 
                 {draft.build.outcome ? (
-                  <p className="mt-8 text-sm leading-7 text-slate-600">
-                    <span className="font-medium text-slate-900">Outcome:</span>{" "}
+                  <p className="mt-8 text-sm leading-7 text-foreground">
+                    <span className="font-medium text-foreground dark:text-foreground/88">
+                      Outcome:
+                    </span>{" "}
                     {draft.build.outcome}
                   </p>
                 ) : null}
@@ -602,58 +730,71 @@ export function IcpFolioDocument({
             <DocumentSection
               sectionKey="moat"
               explainer={sectionExplainers?.moat}
-              popoverSide={activeSection === "moat" ? activeExplainerSide : "right"}
-              open={activeSection === "moat"}
               registerSection={registerSection}
-              onOpenChange={handleExplainerOpenChange}
-              onPrepareOpen={prepareExplainer}
+              active={activeSection === "moat"}
+              onHoverStart={handleHoverStart}
+              onHoverEnd={handleHoverEnd}
+              onToggleOpen={handleToggleOpen}
+              onFocusOpen={handleFocusOpen}
             >
-              <div className="border-t border-slate-200 pt-10">
-                <h2 className="text-2xl font-semibold tracking-tight text-slate-950">
+              <div className="border-t border-border/80 pt-10">
+                <h2 className="text-2xl font-semibold tracking-tight text-foreground dark:text-foreground/88">
                   Moat and competitive landscape
                 </h2>
 
                 <div className="mt-8 space-y-8">
                   <div>
-                    <p className="text-sm font-semibold text-slate-900">Moat</p>
-                    <p className="mt-3 text-sm leading-7 text-slate-600">
-                      <span className="font-medium text-slate-900">Moat type:</span>{" "}
+                    <p className="text-sm font-semibold text-foreground dark:text-foreground/88">
+                      Moat
+                    </p>
+                    <p className="mt-3 text-sm leading-7 text-foreground">
+                      <span className="font-medium text-foreground dark:text-foreground/88">
+                        Moat type:
+                      </span>{" "}
                       {draft.moat.moatType}
                     </p>
-                    <p className="mt-3 text-sm leading-7 text-slate-600">
-                      <span className="font-medium text-slate-900">Your edge:</span>{" "}
+                    <p className="mt-3 text-sm leading-7 text-foreground">
+                      <span className="font-medium text-foreground dark:text-foreground/88">
+                        Your edge:
+                      </span>{" "}
                       {draft.moat.edge}
                     </p>
                   </div>
 
                   <dl className="grid gap-6 sm:grid-cols-2">
                     <div>
-                      <dt className="text-sm font-semibold text-slate-900">Source of advantage</dt>
-                      <dd className="mt-2 text-sm leading-7 text-slate-600">
+                      <dt className="text-sm font-semibold text-foreground dark:text-foreground/88">
+                        Source of advantage
+                      </dt>
+                      <dd className="mt-2 text-sm leading-7 text-foreground">
                         {draft.moat.edgeSource}
                       </dd>
                     </div>
                     <div>
-                      <dt className="text-sm font-semibold text-slate-900">Why it is hard to copy</dt>
-                      <dd className="mt-2 text-sm leading-7 text-slate-600">
+                      <dt className="text-sm font-semibold text-foreground dark:text-foreground/88">
+                        Why it is hard to copy
+                      </dt>
+                      <dd className="mt-2 text-sm leading-7 text-foreground">
                         {draft.moat.whyHardToCopy}
                       </dd>
                     </div>
                   </dl>
 
                   <div>
-                    <h3 className="text-sm font-semibold text-slate-900">
+                    <h3 className="text-sm font-semibold text-foreground dark:text-foreground/88">
                       Why incumbents miss it
                     </h3>
-                    <p className="mt-2 text-sm leading-7 text-slate-600">
+                    <p className="mt-2 text-sm leading-7 text-foreground">
                       {draft.moat.incumbentGap}
                     </p>
                   </div>
 
                   {draft.moat.startupsToStudy.length > 0 ? (
                     <div>
-                      <h3 className="text-sm font-semibold text-slate-900">Startups to study</h3>
-                      <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-7 text-slate-600">
+                      <h3 className="text-sm font-semibold text-foreground dark:text-foreground/88">
+                        Startups to study
+                      </h3>
+                      <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-7 text-foreground">
                         {draft.moat.startupsToStudy.map((company) => (
                           <li key={`${company.name}-${company.url ?? "no-url"}`}>
                             {company.url ? (
@@ -661,7 +802,7 @@ export function IcpFolioDocument({
                                 href={company.url}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="text-slate-700 underline decoration-slate-300 underline-offset-4 transition-colors hover:text-slate-950"
+                                className="text-foreground underline decoration-border underline-offset-4 transition-opacity hover:opacity-80"
                               >
                                 {company.name}
                               </a>
@@ -676,11 +817,11 @@ export function IcpFolioDocument({
 
                   <SectionEvidenceNote evidence={draft.moat.evidence} title="Moat evidence" />
 
-                  <div className="border-t border-slate-200 pt-8">
-                    <h3 className="text-sm font-semibold text-slate-900">
+                  <div className="border-t border-border/80 pt-8">
+                    <h3 className="text-sm font-semibold text-foreground dark:text-foreground/88">
                       Competitive summary
                     </h3>
-                    <p className="mt-3 text-sm leading-7 text-slate-600">
+                    <p className="mt-3 text-sm leading-7 text-foreground">
                       {draft.competition.summary}
                     </p>
                   </div>
@@ -689,13 +830,13 @@ export function IcpFolioDocument({
                     <div className="space-y-6">
                       {draft.competition.directCompetitors.map((competitor) => (
                         <div key={`${competitor.name}-${competitor.url ?? "no-url"}`}>
-                          <h4 className="text-sm font-semibold text-slate-900">
+                          <h4 className="text-sm font-semibold text-foreground dark:text-foreground/88">
                             {competitor.url ? (
                               <a
                                 href={competitor.url}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="text-slate-900 underline decoration-slate-300 underline-offset-4 transition-colors hover:text-slate-700"
+                                className="text-foreground underline decoration-border underline-offset-4 transition-opacity hover:opacity-80"
                               >
                                 {competitor.name}
                               </a>
@@ -703,12 +844,16 @@ export function IcpFolioDocument({
                               competitor.name
                             )}
                           </h4>
-                          <p className="mt-2 text-sm leading-7 text-slate-600">
-                            <span className="font-medium text-slate-900">What they do well:</span>{" "}
+                          <p className="mt-2 text-sm leading-7 text-foreground">
+                            <span className="font-medium text-foreground dark:text-foreground/88">
+                              What they do well:
+                            </span>{" "}
                             {competitor.doesWell}
                           </p>
-                          <p className="mt-2 text-sm leading-7 text-slate-600">
-                            <span className="font-medium text-slate-900">Gap:</span>{" "}
+                          <p className="mt-2 text-sm leading-7 text-foreground">
+                            <span className="font-medium text-foreground dark:text-foreground/88">
+                              Gap:
+                            </span>{" "}
                             {competitor.gap}
                           </p>
                         </div>
@@ -717,8 +862,10 @@ export function IcpFolioDocument({
                   ) : null}
 
                   <div>
-                    <h3 className="text-sm font-semibold text-slate-900">Gap to exploit</h3>
-                    <p className="mt-2 text-sm leading-7 text-slate-600">
+                    <h3 className="text-sm font-semibold text-foreground dark:text-foreground/88">
+                      Gap to exploit
+                    </h3>
+                    <p className="mt-2 text-sm leading-7 text-foreground">
                       {draft.competition.exploitableGap}
                     </p>
                   </div>
@@ -730,6 +877,24 @@ export function IcpFolioDocument({
                 </div>
               </div>
             </DocumentSection>
+
+            {activeSection && sectionExplainers?.[activeSection] && explainerPosition ? (
+              <div
+                ref={explainerRef}
+                className="absolute z-20 rounded-xl border border-border/80 bg-popover p-4 text-popover-foreground shadow-[0_18px_48px_-28px_hsl(var(--foreground)/0.28)] transition-colors dark:shadow-none"
+                style={{
+                  left: `${explainerPosition.left}px`,
+                  top: `${explainerPosition.top}px`,
+                  width: `${explainerPosition.width}px`,
+                }}
+                onMouseLeave={(event) => handleExplainerMouseLeave(event.relatedTarget)}
+              >
+                <SectionExplainerContent
+                  explainer={sectionExplainers[activeSection]}
+                  onClose={handleDismissExplainer}
+                />
+              </div>
+            ) : null}
           </article>
         </div>
 
