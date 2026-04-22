@@ -592,11 +592,12 @@ export function IcpFolioDocument({
 
   return (
     <div className={`${wrapperClasses} ${className}`}>
-      <div className="mx-auto w-full max-w-6xl">
+      <div className="mx-auto w-full max-w-4xl">
         {topBar ? <div className="mb-6">{topBar}</div> : null}
 
-        <div className={`lg:grid lg:grid-cols-[14rem_minmax(0,1fr)] lg:gap-10 ${surfaceBlurClasses}`}>
-          <aside className="hidden lg:block">
+        <div className={surfaceBlurClasses}>
+          <div className="relative mx-auto w-full max-w-4xl">
+            <aside className="absolute left-0 top-0 hidden w-56 -translate-x-[calc(100%+2rem)] xl:block">
             <div className="sticky top-24">
               <nav
                 aria-label="ICP draft sections"
@@ -636,10 +637,10 @@ export function IcpFolioDocument({
             </div>
           </aside>
 
-          <article
-            ref={articleRef}
-            className="relative mx-auto w-full max-w-4xl bg-background px-6 py-8 text-foreground transition-colors sm:px-10 sm:py-10"
-          >
+            <article
+              ref={articleRef}
+              className="relative w-full bg-background px-6 py-8 text-foreground transition-colors sm:px-10 sm:py-10"
+            >
             <DocumentSection
               sectionKey="customer"
               explainer={sectionExplainers?.customer}
@@ -986,7 +987,8 @@ export function IcpFolioDocument({
                 />
               </div>
             ) : null}
-          </article>
+            </article>
+          </div>
         </div>
 
         {bottomBar ? <div className="mt-6">{bottomBar}</div> : null}
