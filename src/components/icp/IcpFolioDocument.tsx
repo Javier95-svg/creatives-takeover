@@ -344,6 +344,19 @@ export function IcpFolioDocument({
                       items={draft.customer.behaviors}
                       emptyText="Behavior patterns still need sharper evidence."
                     />
+
+                    {draft.customer.whereToFind.length > 0 ? (
+                      <div className="mt-8">
+                        <h2 className="text-sm font-semibold text-slate-900">
+                          Where to find them
+                        </h2>
+                        <DocumentSingleColumnTable
+                          columnLabel="Channel or environment"
+                          items={draft.customer.whereToFind}
+                          emptyText="Distribution channels still need clearer validation."
+                        />
+                      </div>
+                    ) : null}
                   </div>
 
                   <div>
@@ -369,17 +382,6 @@ export function IcpFolioDocument({
                     />
                   </div>
                 </div>
-
-                {draft.customer.whereToFind.length > 0 ? (
-                  <div className="mt-8">
-                    <h2 className="text-sm font-semibold text-slate-900">Where to find them</h2>
-                    <DocumentSingleColumnTable
-                      columnLabel="Channel or environment"
-                      items={draft.customer.whereToFind}
-                      emptyText="Distribution channels still need clearer validation."
-                    />
-                  </div>
-                ) : null}
 
                 <SectionEvidenceNote evidence={draft.customer.evidence} />
               </div>
