@@ -337,10 +337,10 @@ const Hero = () => {
               ) : (
                 <>
                   <p>
-                    Starting a company is rarely a motivation problem. It is usually a clarity problem. Creatives Takeover helps first-time founders turn scattered ideas into a sharper direction, so they can validate faster, build smarter, and avoid wasting time on the wrong path.
+                    Creatives Takeover helps first-time founders turn scattered ideas into a sharper direction, so they can validate faster, build smarter, and avoid wasting time on the wrong path.
                   </p>
                   <p>
-                    From early validation to launch decisions, the system is designed to guide you through the messy parts of building. Backed by mentors who have already faced the same questions, tradeoffs, and risks.
+                    Backed by mentors & ex-founders who have already faced the same questions, tradeoffs, and risks.
                   </p>
                 </>
               )}
