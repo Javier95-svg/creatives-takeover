@@ -3,11 +3,21 @@ import {
   type ReactNode,
   type RefObject,
   useEffect,
-  useMemo,
   useRef,
   useState,
 } from "react";
 
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import type { IcpDraftDocument } from "@/lib/icpBuilderSession";
 
 type IcpFolioTone = "folio" | "platformPreview" | "landingPreview";
@@ -32,14 +42,6 @@ interface IcpFolioDocumentProps {
   sectionExplainers?: Partial<Record<IcpFolioSectionKey, IcpSectionExplainer>>;
 }
 
-interface ExplainerPosition {
-  left: number;
-  top: number;
-  width: number;
-}
-
-const SECTION_KEYS: IcpFolioSectionKey[] = ["customer", "pain", "build", "moat"];
-const EXPLAINER_MAX_WIDTH = 320;
 const VIEWPORT_MARGIN = 16;
 
 function setExternalDocumentRef(
@@ -135,63 +137,58 @@ function SectionEvidenceNote({
 function DocumentSection({
   sectionKey,
   explainer,
-  registerSection,
   isMobile,
-  onActivate,
-  onDeactivate,
-  onToggle,
   children,
 }: {
   sectionKey: IcpFolioSectionKey;
   explainer?: IcpSectionExplainer;
-  registerSection: (key: IcpFolioSectionKey, node: HTMLElement | null) => void;
   isMobile: boolean;
-  onActivate: (key: IcpFolioSectionKey) => void;
-  onDeactivate: () => void;
-  onToggle: (key: IcpFolioSectionKey) => void;
   children: ReactNode;
 }) {
-  const isInteractive = Boolean(explainer);
-
-  return (
+  const section = (
     <section
-      ref={(node) => registerSection(sectionKey, node)}
-      className={isInteractive ? "cursor-help focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300" : undefined}
-      tabIndex={isInteractive ? 0 : undefined}
-      onMouseEnter={isInteractive && !isMobile ? () => onActivate(sectionKey) : undefined}
-      onMouseLeave={isInteractive && !isMobile ? onDeactivate : undefined}
-      onFocus={isInteractive ? () => onActivate(sectionKey) : undefined}
-      onBlur={
-        isInteractive
-          ? (event) => {
-              if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
-                onDeactivate();
-              }
-            }
-          : undefined
-      }
-      onClick={isInteractive && isMobile ? () => onToggle(sectionKey) : undefined}
-      onKeyDown={
-        isInteractive
-          ? (event) => {
-              if (event.key === "Enter" || event.key === " ") {
-                event.preventDefault();
-                if (isMobile) {
-                  onToggle(sectionKey);
-                } else {
-                  onActivate(sectionKey);
-                }
-              }
-
-              if (event.key === "Escape") {
-                onDeactivate();
-              }
-            }
-          : undefined
-      }
+      className={explainer ? "cursor-help focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300" : undefined}
+      tabIndex={explainer ? 0 : undefined}
+      aria-label={explainer ? `Explain ${sectionKey} section` : undefined}
     >
       {children}
     </section>
+  );
+
+  if (!explainer) {
+    return section;
+  }
+
+  if (isMobile) {
+    return (
+      <Popover>
+        <PopoverTrigger asChild>{section}</PopoverTrigger>
+        <PopoverContent
+          side="bottom"
+          align="center"
+          sideOffset={12}
+          collisionPadding={VIEWPORT_MARGIN}
+          className="w-[min(24rem,calc(100vw-2rem))] rounded-2xl border-slate-200 bg-white p-4 shadow-[0_24px_70px_-40px_rgba(15,23,42,0.45)] md:hidden"
+        >
+          <SectionExplainerContent explainer={explainer} />
+        </PopoverContent>
+      </Popover>
+    );
+  }
+
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>{section}</TooltipTrigger>
+      <TooltipContent
+        side="top"
+        align="start"
+        sideOffset={12}
+        collisionPadding={VIEWPORT_MARGIN}
+        className="hidden max-w-sm rounded-2xl border-slate-200 bg-white p-4 shadow-[0_24px_70px_-40px_rgba(15,23,42,0.45)] md:block"
+      >
+        <SectionExplainerContent explainer={explainer} />
+      </TooltipContent>
+    </Tooltip>
   );
 }
 
@@ -208,144 +205,11 @@ export function IcpFolioDocument({
   sectionExplainers,
 }: IcpFolioDocumentProps) {
   const articleRef = useRef<HTMLDivElement>(null);
-  const closeTimeoutRef = useRef<number | null>(null);
-  const overlayRef = useRef<HTMLDivElement>(null);
-  const sectionRefs = useRef<Record<IcpFolioSectionKey, HTMLElement | null>>({
-    customer: null,
-    pain: null,
-    build: null,
-    moat: null,
-  });
-
-  const [activeSection, setActiveSection] = useState<IcpFolioSectionKey | null>(null);
-  const [explainerPosition, setExplainerPosition] = useState<ExplainerPosition | null>(null);
   const isMobile = useIsMobileViewport();
-
-  const hasExplainers = useMemo(
-    () =>
-      Boolean(
-        sectionExplainers &&
-          SECTION_KEYS.some((key) => Boolean(sectionExplainers[key])),
-      ),
-    [sectionExplainers],
-  );
 
   useEffect(() => {
     setExternalDocumentRef(documentRef, articleRef.current);
   }, [documentRef]);
-
-  useEffect(() => {
-    return () => {
-      if (closeTimeoutRef.current !== null) {
-        window.clearTimeout(closeTimeoutRef.current);
-      }
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!hasExplainers || blurred) {
-      setActiveSection(null);
-    }
-  }, [blurred, hasExplainers]);
-
-  const clearCloseTimeout = () => {
-    if (closeTimeoutRef.current !== null) {
-      window.clearTimeout(closeTimeoutRef.current);
-      closeTimeoutRef.current = null;
-    }
-  };
-
-  const closeExplainer = () => {
-    clearCloseTimeout();
-    setActiveSection(null);
-  };
-
-  const queueCloseExplainer = () => {
-    clearCloseTimeout();
-    closeTimeoutRef.current = window.setTimeout(() => {
-      setActiveSection(null);
-      closeTimeoutRef.current = null;
-    }, 80);
-  };
-
-  const openExplainer = (sectionKey: IcpFolioSectionKey) => {
-    if (!hasExplainers || blurred || !sectionExplainers?.[sectionKey]) return;
-    clearCloseTimeout();
-    setActiveSection(sectionKey);
-  };
-
-  const toggleExplainer = (sectionKey: IcpFolioSectionKey) => {
-    if (!hasExplainers || blurred || !sectionExplainers?.[sectionKey]) return;
-    clearCloseTimeout();
-    setActiveSection((current) => (current === sectionKey ? null : sectionKey));
-  };
-
-  const registerSection = (key: IcpFolioSectionKey, node: HTMLElement | null) => {
-    sectionRefs.current[key] = node;
-  };
-
-  useEffect(() => {
-    if (!activeSection || !sectionExplainers?.[activeSection]) {
-      setExplainerPosition(null);
-      return;
-    }
-
-    const updatePosition = () => {
-      const activeElement = sectionRefs.current[activeSection];
-      if (!activeElement) return;
-
-      const rect = activeElement.getBoundingClientRect();
-      const viewportWidth = window.innerWidth;
-      const width = Math.min(EXPLAINER_MAX_WIDTH, viewportWidth - VIEWPORT_MARGIN * 2);
-
-      const nextLeft = isMobile
-        ? Math.min(
-            Math.max(rect.left + rect.width / 2 - width / 2, VIEWPORT_MARGIN),
-            viewportWidth - width - VIEWPORT_MARGIN,
-          )
-        : Math.min(
-            Math.max(rect.right + 18, VIEWPORT_MARGIN),
-            viewportWidth - width - VIEWPORT_MARGIN,
-          );
-
-      const nextTop = isMobile
-        ? rect.bottom + 12
-        : Math.max(rect.top - 8, VIEWPORT_MARGIN);
-
-      setExplainerPosition({
-        left: nextLeft,
-        top: nextTop,
-        width,
-      });
-    };
-
-    updatePosition();
-
-    window.addEventListener("resize", updatePosition);
-    window.addEventListener("scroll", updatePosition, true);
-
-    return () => {
-      window.removeEventListener("resize", updatePosition);
-      window.removeEventListener("scroll", updatePosition, true);
-    };
-  }, [activeSection, isMobile, sectionExplainers]);
-
-  useEffect(() => {
-    if (!activeSection || !isMobile) return;
-
-    const handlePointerDown = (event: PointerEvent) => {
-      const target = event.target as Node | null;
-      if (!target) return;
-
-      if (overlayRef.current?.contains(target)) return;
-      if (sectionRefs.current[activeSection]?.contains(target)) return;
-
-      setActiveSection(null);
-    };
-
-    document.addEventListener("pointerdown", handlePointerDown);
-    return () => document.removeEventListener("pointerdown", handlePointerDown);
-  }, [activeSection, isMobile]);
 
   const wrapperClasses =
     layout === "embedded"
@@ -358,22 +222,19 @@ export function IcpFolioDocument({
 
   return (
     <div className={`${wrapperClasses} ${className}`}>
-      <div className="mx-auto w-full max-w-4xl">
-        {topBar ? <div className="mb-6">{topBar}</div> : null}
+      <TooltipProvider delayDuration={120}>
+        <div className="mx-auto w-full max-w-4xl">
+          {topBar ? <div className="mb-6">{topBar}</div> : null}
 
-        <div className={surfaceBlurClasses}>
-          <article
-            ref={articleRef}
-            className="relative bg-white px-6 py-8 text-slate-950 sm:px-10 sm:py-10"
-          >
+          <div className={surfaceBlurClasses}>
+            <article
+              ref={articleRef}
+              className="relative bg-white px-6 py-8 text-slate-950 sm:px-10 sm:py-10"
+            >
             <DocumentSection
               sectionKey="customer"
               explainer={sectionExplainers?.customer}
-              registerSection={registerSection}
               isMobile={isMobile}
-              onActivate={openExplainer}
-              onDeactivate={queueCloseExplainer}
-              onToggle={toggleExplainer}
             >
               <div>
                 <p className="text-sm font-medium text-slate-500">Ideal customer profile</p>
@@ -449,11 +310,7 @@ export function IcpFolioDocument({
             <DocumentSection
               sectionKey="pain"
               explainer={sectionExplainers?.pain}
-              registerSection={registerSection}
               isMobile={isMobile}
-              onActivate={openExplainer}
-              onDeactivate={queueCloseExplainer}
-              onToggle={toggleExplainer}
             >
               <div className="border-t border-slate-200 pt-10">
                 <h2 className="text-2xl font-semibold tracking-tight text-slate-950">
@@ -484,11 +341,7 @@ export function IcpFolioDocument({
             <DocumentSection
               sectionKey="build"
               explainer={sectionExplainers?.build}
-              registerSection={registerSection}
               isMobile={isMobile}
-              onActivate={openExplainer}
-              onDeactivate={queueCloseExplainer}
-              onToggle={toggleExplainer}
             >
               <div className="border-t border-slate-200 pt-10">
                 <h2 className="text-2xl font-semibold tracking-tight text-slate-950">
@@ -531,11 +384,7 @@ export function IcpFolioDocument({
             <DocumentSection
               sectionKey="moat"
               explainer={sectionExplainers?.moat}
-              registerSection={registerSection}
               isMobile={isMobile}
-              onActivate={openExplainer}
-              onDeactivate={queueCloseExplainer}
-              onToggle={toggleExplainer}
             >
               <div className="border-t border-slate-200 pt-10">
                 <h2 className="text-2xl font-semibold tracking-tight text-slate-950">
@@ -659,28 +508,13 @@ export function IcpFolioDocument({
                 </div>
               </div>
             </DocumentSection>
-          </article>
-        </div>
+            </article>
+          </div>
 
-        {bottomBar ? <div className="mt-6">{bottomBar}</div> : null}
-        {footer ? <div className="mt-6">{footer}</div> : null}
-      </div>
-
-      {activeSection && explainerPosition && sectionExplainers?.[activeSection] ? (
-        <div
-          ref={overlayRef}
-          className={`fixed z-50 rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_24px_70px_-40px_rgba(15,23,42,0.45)] ${
-            isMobile ? "pointer-events-auto" : "pointer-events-none"
-          }`}
-          style={{
-            left: explainerPosition.left,
-            top: explainerPosition.top,
-            width: explainerPosition.width,
-          }}
-        >
-          <SectionExplainerContent explainer={sectionExplainers[activeSection]!} />
+          {bottomBar ? <div className="mt-6">{bottomBar}</div> : null}
+          {footer ? <div className="mt-6">{footer}</div> : null}
         </div>
-      ) : null}
+      </TooltipProvider>
     </div>
   );
 }
