@@ -37,6 +37,12 @@ interface IcpFolioDocumentProps {
 const VIEWPORT_MARGIN = 16;
 const EXPLAINER_OFFSET = 12;
 const EXPLAINER_MAX_WIDTH = 384;
+const SECTION_NAV_ITEMS: Array<{ key: IcpFolioSectionKey; label: string }> = [
+  { key: "customer", label: "Ideal customer" },
+  { key: "pain", label: "Core pain point" },
+  { key: "build", label: "What you are building" },
+  { key: "moat", label: "Moat and competition" },
+];
 
 function setExternalDocumentRef(
   ref: RefObject<HTMLDivElement> | undefined,
@@ -352,6 +358,7 @@ export function IcpFolioDocument({
   const explainerRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobileViewport();
   const [activeSection, setActiveSection] = useState<IcpFolioSectionKey | null>(null);
+  const [activeNavSection, setActiveNavSection] = useState<IcpFolioSectionKey>("customer");
   const [dismissedSection, setDismissedSection] = useState<IcpFolioSectionKey | null>(null);
   const [explainerPosition, setExplainerPosition] = useState<{
     left: number;
@@ -367,6 +374,7 @@ export function IcpFolioDocument({
   useEffect(() => {
     if (blurred) {
       setActiveSection(null);
+      setActiveNavSection("customer");
       setDismissedSection(null);
       setExplainerPosition(null);
     }
@@ -465,6 +473,39 @@ export function IcpFolioDocument({
     return () => document.removeEventListener("pointerdown", handlePointerDown);
   }, [activeSection]);
 
+  useEffect(() => {
+    const syncActiveNavSection = () => {
+      const sectionEntries = SECTION_NAV_ITEMS.map(({ key }) => {
+        const node = sectionRefs.current[key];
+        if (!node) return null;
+        const rect = node.getBoundingClientRect();
+        return { key, rect };
+      }).filter(
+        (entry): entry is { key: IcpFolioSectionKey; rect: DOMRect } => Boolean(entry),
+      );
+
+      if (sectionEntries.length === 0) return;
+
+      const viewportAnchor = window.innerHeight * 0.28;
+      const nearestSection = sectionEntries.reduce((current, entry) => {
+        const currentDistance = Math.abs(current.rect.top - viewportAnchor);
+        const entryDistance = Math.abs(entry.rect.top - viewportAnchor);
+        return entryDistance < currentDistance ? entry : current;
+      });
+
+      setActiveNavSection(nearestSection.key);
+    };
+
+    syncActiveNavSection();
+    window.addEventListener("scroll", syncActiveNavSection, true);
+    window.addEventListener("resize", syncActiveNavSection);
+
+    return () => {
+      window.removeEventListener("scroll", syncActiveNavSection, true);
+      window.removeEventListener("resize", syncActiveNavSection);
+    };
+  }, []);
+
   const openExplainer = (sectionKey: IcpFolioSectionKey) => {
     if (!sectionExplainers?.[sectionKey] || blurred) return;
     setActiveSection(sectionKey);
@@ -532,6 +573,14 @@ export function IcpFolioDocument({
     setActiveSection(null);
   };
 
+  const handleJumpToSection = (sectionKey: IcpFolioSectionKey) => {
+    const sectionNode = sectionRefs.current[sectionKey];
+    if (!sectionNode) return;
+
+    setActiveNavSection(sectionKey);
+    sectionNode.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
   const wrapperClasses =
     layout === "embedded"
       ? "px-0 pb-0 pt-0"
@@ -543,13 +592,53 @@ export function IcpFolioDocument({
 
   return (
     <div className={`${wrapperClasses} ${className}`}>
-      <div className="mx-auto w-full max-w-4xl">
+      <div className="mx-auto w-full max-w-6xl">
         {topBar ? <div className="mb-6">{topBar}</div> : null}
 
-        <div className={surfaceBlurClasses}>
+        <div className={`lg:grid lg:grid-cols-[14rem_minmax(0,1fr)] lg:gap-10 ${surfaceBlurClasses}`}>
+          <aside className="hidden lg:block">
+            <div className="sticky top-24">
+              <nav
+                aria-label="ICP draft sections"
+                className="rounded-xl border border-border/70 bg-background/92 p-3 text-sm backdrop-blur-sm transition-colors"
+              >
+                <p className="px-2 pb-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-foreground/60">
+                  Jump to section
+                </p>
+                <div className="space-y-1">
+                  {SECTION_NAV_ITEMS.map((item) => {
+                    const isActive = item.key === activeNavSection;
+
+                    return (
+                      <button
+                        key={item.key}
+                        type="button"
+                        onClick={() => handleJumpToSection(item.key)}
+                        className={`flex w-full items-center justify-between rounded-lg px-2 py-2 text-left transition-colors ${
+                          isActive
+                            ? "bg-foreground/[0.06] text-foreground"
+                            : "text-foreground/68 hover:bg-foreground/[0.04] hover:text-foreground"
+                        }`}
+                        aria-current={isActive ? "true" : undefined}
+                      >
+                        <span>{item.label}</span>
+                        <span
+                          className={`h-2 w-2 rounded-full transition-colors ${
+                            isActive ? "bg-primary" : "bg-border"
+                          }`}
+                          aria-hidden="true"
+                        />
+                      </button>
+                    );
+                  })}
+                </div>
+              </nav>
+            </div>
+          </aside>
+
           <article
             ref={articleRef}
-            className="relative bg-background px-6 py-8 text-foreground transition-colors sm:px-10 sm:py-10"
+            className="relative mx-auto w-full max-w-4xl bg-background px-6 py-8 text-foreground transition-colors sm:px-10 sm:py-10"
           >
             <DocumentSection
               sectionKey="customer"
@@ -561,7 +650,7 @@ export function IcpFolioDocument({
               onToggleOpen={handleToggleOpen}
               onFocusOpen={handleFocusOpen}
             >
-              <div>
+              <div id="icp-section-customer">
                 <p className="text-sm font-medium text-foreground/60">
                   {documentLabel}
                 </p>
@@ -645,7 +734,7 @@ export function IcpFolioDocument({
               onToggleOpen={handleToggleOpen}
               onFocusOpen={handleFocusOpen}
             >
-              <div className="border-t border-border/80 pt-10">
+              <div id="icp-section-pain" className="border-t border-border/80 pt-10">
                 <h2 className="text-2xl font-semibold tracking-tight text-foreground dark:text-foreground/88">
                   Core pain point
                 </h2>
@@ -683,7 +772,7 @@ export function IcpFolioDocument({
               onToggleOpen={handleToggleOpen}
               onFocusOpen={handleFocusOpen}
             >
-              <div className="border-t border-border/80 pt-10">
+              <div id="icp-section-build" className="border-t border-border/80 pt-10">
                 <h2 className="text-2xl font-semibold tracking-tight text-foreground dark:text-foreground/88">
                   What you&apos;re building
                 </h2>
@@ -739,7 +828,7 @@ export function IcpFolioDocument({
               onToggleOpen={handleToggleOpen}
               onFocusOpen={handleFocusOpen}
             >
-              <div className="border-t border-border/80 pt-10">
+              <div id="icp-section-moat" className="border-t border-border/80 pt-10">
                 <h2 className="text-2xl font-semibold tracking-tight text-foreground dark:text-foreground/88">
                   Moat and competitive landscape
                 </h2>
