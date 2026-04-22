@@ -8,7 +8,7 @@ import {
   type IcpSampleProfileKey,
 } from "@/components/icp/sampleIcpPreviewData";
 
-const DEFAULT_SAMPLE_KEY: IcpSampleProfileKey = "revops_smb_saas";
+const DEFAULT_SAMPLE_KEY: IcpSampleProfileKey = "ai_powered_personal_finance_coach";
 const TRANSITION_MS = 180;
 
 export function IcpSamplePreviewSection() {

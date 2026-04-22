@@ -9,10 +9,10 @@ export interface IcpPreviewSectionExplainer {
 }
 
 export type IcpSampleProfileKey =
-  | "revops_smb_saas"
-  | "d2c_ecommerce_brand"
-  | "b2b_professional_services"
-  | "early_stage_startup_pre_pmf";
+  | "ai_powered_personal_finance_coach"
+  | "creator_analytics_growth_platform"
+  | "sustainability_compliance_consulting"
+  | "ai_voice_assistant_for_seniors";
 
 export interface IcpSamplePreviewProfile {
   key: IcpSampleProfileKey;
@@ -20,729 +20,733 @@ export interface IcpSamplePreviewProfile {
   draft: IcpDraftDocument;
 }
 
-const revOpsSmbSaasDraft: IcpDraftDocument = {
+const aiPoweredPersonalFinanceCoachDraft: IcpDraftDocument = {
   gatePreview: {
-    personaName: "RevOps-led SMB SaaS team",
-    roleLine: "Revenue operations manager at a scaling B2B SaaS company.",
-    painLine: "We keep leaking pipeline because every handoff lives in a different tool.",
+    personaName: "Financially anxious millennial professional",
+    roleLine: "Early-career knowledge worker trying to stay on top of cash flow, debt, and savings goals.",
+    painLine:
+      "I use three money apps and still do not know if I am actually improving or just reacting month to month.",
   },
   customer: {
-    personaName: "RevOps-led SMB SaaS team",
+    personaName: "Financially anxious millennial professional",
     roleLine:
-      "Revenue operations manager at a 20-75 person B2B SaaS company trying to stop pipeline leakage before the next board review.",
+      "Early-career salaried or freelance professional trying to manage variable expenses, debt payoff, and savings goals without feeling overwhelmed every payday.",
     metaLine:
-      "North America and UK | Series A-B SaaS | $2M-$15M ARR | 5-12 person GTM team",
+      "US and UK | Ages 24-38 | $45k-$120k income | Uses 2-4 fintech tools already",
     summary:
-      "This draft focuses on RevOps-led SaaS teams that already have HubSpot or Salesforce in place, feel pressure to improve forecast accuracy, and need a cleaner way to catch deal-risk signals before leadership asks why revenue slipped again.",
+      "This draft focuses on digitally comfortable young professionals who already care about their money but still struggle to translate budgeting, spending, and saving data into calm, confident decisions. They are not beginners to personal finance content. They are stuck between generic advice and the day-to-day reality of irregular expenses, rising costs, and inconsistent follow-through.",
     behaviors: [
-      "Audits CRM hygiene every week because pipeline trust is low.",
-      "Builds temporary spreadsheet layers when handoffs between SDR, AE, and CS start breaking.",
-      "Pulls evidence from Gong, CRM notes, and Slack before board prep.",
+      "Checks banking and budgeting apps multiple times a week after spending spikes or payday hits.",
+      "Moves between spreadsheets, finance apps, and note-taking tools to keep goals, bills, and debt plans organized.",
+      "Consumes personal finance content on TikTok, YouTube, Reddit, or newsletters but still struggles to apply it consistently.",
     ],
     motivations: [
-      "Protect credibility with founders and the board by making pipeline reporting more defensible.",
-      "Reduce manual reconciliation work so the GTM team can act on risk earlier.",
-      "Create one operating rhythm that sales, success, and leadership all trust.",
+      "Feel more in control of monthly money decisions without needing to become a finance expert.",
+      "Make visible progress on debt, emergency savings, or investing instead of starting over every month.",
+      "Replace guilt-driven money management with a realistic routine that adapts to real spending behavior.",
     ],
     whereToFind: [
-      "RevOps Co-op",
-      "LinkedIn RevOps operators",
-      "Pavilion",
-      "HubSpot and Salesforce communities",
-      "Revenue-focused newsletters and podcasts",
+      "Reddit personal finance communities",
+      "Money-focused TikTok and YouTube creators",
+      "Monarch, YNAB, and budgeting app communities",
+      "Fintech newsletters and podcasts",
+      "Career and productivity communities for young professionals",
     ],
     triggerContext:
-      "A missed quarter, a shaky board deck, or a leadership push for better forecast visibility creates urgency.",
+      "The pain becomes urgent after an expensive month, a missed savings goal, rising debt stress, or a major life change like moving, freelancing, or starting to invest.",
     actionTrigger:
-      "They act when forecast trust drops enough that leadership starts demanding a new system instead of another spreadsheet patch.",
+      "They act when they realize tracking alone is not changing behavior and they want proactive guidance instead of another static dashboard.",
     evidence: {
       confidence: "high",
       evidence:
-        "The persona is tightly aligned to a recurring workflow problem owned by one clear operator with budget influence and cross-functional visibility.",
+        "The buyer is easy to picture, digitally reachable, and tied to a recurring emotional and financial workflow that already includes messy tool-switching behavior.",
       missingSignalPrompt:
-        "Validate whether the first wedge is RevOps-led companies below $10M ARR or larger GTM teams with more complex handoffs.",
+        "Validate whether the first paid wedge is debt reduction, inconsistent cash-flow planning, or goal-based budgeting for young professionals with rising income.",
     },
   },
   pain: {
     quote:
-      "We keep leaking pipeline because every handoff lives in a different tool, so by the time leadership notices the risk, it is already too late to fix.",
+      "I use three money apps and still do not know if I am actually improving or just reacting month to month.",
     rootCause:
-      "Critical deal, onboarding, and churn signals are scattered across the CRM, call notes, spreadsheets, and Slack rather than living in one operating layer.",
+      "Most finance tools track transactions well enough, but they do not turn messy real-life spending patterns into guidance that feels specific, timely, and realistic.",
     whyItHurts:
-      "The RevOps lead becomes the manual source of truth, forecast trust drops, and every leadership review turns into a clean-up exercise instead of a decision-making moment.",
+      "The user keeps feeling behind, second-guesses everyday spending, and loses confidence because financial progress depends on willpower rather than a system that adapts to their habits.",
     triggerMoment:
-      "The pain spikes before board meetings, after a missed target, or when leadership asks why pipeline coverage looked healthy but slipped anyway.",
+      "The pain spikes after payday, after a category overspend, when bills cluster unexpectedly, or when a financial goal slips for the second or third month in a row.",
     costOfInaction:
-      "Revenue surprises keep happening, reps lose trust in process changes, and the company delays hiring or spend decisions because the number is too noisy.",
+      "They stay trapped in reactive budgeting, delay savings and investing goals, and keep bouncing between advice sources without building a durable money routine.",
     evidence: {
       confidence: "high",
       evidence:
-        "The pain is operational, urgent, and measurable. It has a visible owner and a clear financial downside, which makes it a strong early ICP anchor.",
+        "The pain is frequent, emotional, and measurable. It directly affects trust in the product category and creates room for a more action-oriented wedge.",
       missingSignalPrompt:
-        "Pressure-test whether the first painful moment is forecast accuracy, handoff delays, or post-sale churn visibility so the message stays sharp.",
+        "Pressure-test whether buyers care most about reducing anxiety, improving consistency, or accelerating progress toward one visible financial milestone.",
     },
   },
   build: {
     valueProposition:
-      "A revenue signal layer that surfaces deal-risk, handoff breakdowns, and forecast blind spots before they show up in the board deck.",
+      "An AI money coach that turns spending behavior, upcoming obligations, and financial goals into proactive weekly guidance a busy professional can actually follow.",
     replaces: [
-      "CRM exports",
-      "manual RevOps spreadsheets",
-      "Slack escalation threads",
+      "passive budgeting dashboards",
+      "manual spreadsheet planning",
+      "generic personal finance content consumption",
     ],
     coreFeatures: [
       {
-        title: "Unified revenue signal dashboard",
+        title: "Behavior-aware weekly money plan",
         description:
-          "Pull risk indicators from CRM activity, call notes, and customer health into one operator view.",
+          "Translate spending patterns, bills, and goals into one clear plan for the next seven days instead of another monthly snapshot.",
       },
       {
-        title: "Handoff and forecast alerts",
+        title: "Personalized coaching nudges",
         description:
-          "Flag stalled deals, missing follow-ups, and cross-functional handoff gaps before they compound.",
+          "Give users context-sensitive prompts around overspending, savings pacing, and tradeoffs before they drift off plan.",
       },
       {
-        title: "Leadership-ready reporting",
+        title: "Goal and cash-flow scenario guidance",
         description:
-          "Turn messy operator work into a clean narrative leaders can trust without extra spreadsheet prep.",
+          "Help users understand how short-term choices affect debt payoff, emergency savings, and investing progress.",
       },
     ],
     outcome:
-      "Give RevOps a faster way to protect forecast trust, reduce manual reporting work, and catch revenue risk one to two weeks earlier.",
+      "Help users feel more confident, more consistent, and less reactive about money within the first two to four weeks of use.",
     evidence: {
       confidence: "high",
       evidence:
-        "The recommended build direction matches the pain owner, the timing of the problem, and the existing messy workaround stack.",
+        "The build direction fits the buyer's current workaround stack and points toward a more coach-like product rather than another passive fintech dashboard.",
       missingSignalPrompt:
-        "Confirm whether the first paid use case is board-report prep, weekly forecast calls, or post-sale handoff visibility.",
+        "Confirm whether the first paid habit loop should center on weekly planning, savings goals, or debt-payoff coaching.",
     },
   },
   moat: {
-    moatType: "Workflow moat",
+    moatType: "Behavior and trust moat",
     edge:
-      "The product wins by becoming the operating layer between fragmented GTM systems, not by replacing the CRM itself.",
+      "The product wins by building a trusted coaching relationship around everyday money behavior, not by trying to out-report every budgeting app in the market.",
     edgeSource:
-      "It fits into an already painful weekly workflow and learns from the exact handoff patterns that operators are already stitching together manually.",
+      "It sits inside a recurring emotional workflow where users already want more timely, personalized guidance than existing tools provide.",
     whyHardToCopy:
-      "Competitors optimize for broad CRM workflows, while this wedge is built around the specific decisions RevOps teams need to make under board-level pressure.",
+      "Most incumbents either focus on transaction tracking or generic education. This wedge depends on turning individual behavior patterns into helpful guidance users trust enough to revisit weekly.",
     incumbentGap:
-      "Incumbents provide storage and reporting, but they do not package scattered risk signals into one practical operating rhythm for smaller GTM teams.",
+      "Existing tools show where money went, but they rarely coach the user through what to do next in a way that feels personal and realistic.",
     startupsToStudy: [
-      { name: "Attention", url: "https://www.attention.com" },
-      { name: "Scratchpad", url: "https://scratchpad.com" },
-      { name: "Clari", url: "https://www.clari.com" },
+      { name: "Monarch Money", url: "https://www.monarchmoney.com" },
+      { name: "YNAB", url: "https://www.ynab.com" },
+      { name: "Rocket Money", url: "https://www.rocketmoney.com" },
     ],
     evidence: {
       confidence: "medium",
       evidence:
-        "The moat is credible if the workflow becomes sticky and the product keeps surfacing signal earlier than existing reporting setups.",
+        "The moat becomes stronger if the product creates a repeat guidance habit and improves financial confidence faster than static finance tools do.",
       missingSignalPrompt:
-        "Prove whether operators will trust this layer enough to change their weekly operating rhythm, not just read another dashboard.",
+        "Validate whether users will trust AI-generated financial suggestions enough to change behavior without needing a human advisor layer.",
     },
   },
   competition: {
     summary:
-      "The market already has CRM systems, forecasting tools, and sales execution add-ons, but smaller GTM teams still bridge the gap with manual operator work.",
+      "Consumers already use budgeting apps, banking tools, and finance content, but many still feel unsupported when trying to make better money decisions in the moment.",
     directCompetitors: [
       {
-        name: "Clari",
-        url: "https://www.clari.com",
-        doesWell: "Owns top-down forecasting and enterprise pipeline visibility.",
-        gap: "Feels too heavy and expensive for smaller SaaS teams that mostly need cleaner handoffs and signal visibility.",
+        name: "Monarch Money",
+        url: "https://www.monarchmoney.com",
+        doesWell: "Provides a polished consolidated money dashboard for budgeting and planning.",
+        gap: "Still leans more toward visibility than ongoing coaching tailored to daily behavior shifts.",
       },
       {
-        name: "Scratchpad",
-        url: "https://scratchpad.com",
-        doesWell: "Improves rep-side CRM hygiene and pipeline workflows.",
-        gap: "Does not fully package the cross-functional revenue-risk layer leadership and RevOps want.",
+        name: "YNAB",
+        url: "https://www.ynab.com",
+        doesWell: "Creates strong budgeting discipline for users willing to commit to a method.",
+        gap: "Can feel rigid or effort-heavy for users who want adaptive guidance rather than a system they must actively maintain.",
       },
       {
-        name: "HubSpot reporting",
-        url: "https://www.hubspot.com",
-        doesWell: "Already exists in the stack and is familiar.",
-        gap: "Teams still build spreadsheet workarounds because the insight layer is not opinionated enough.",
+        name: "Rocket Money",
+        url: "https://www.rocketmoney.com",
+        doesWell: "Solves obvious consumer pain around subscriptions and spending awareness.",
+        gap: "Does not fully own the coach-like decision layer around long-term money behavior and goal tradeoffs.",
       },
     ],
     exploitableGap:
-      "Own the mid-market wedge where teams are sophisticated enough to feel real pipeline pain but too lean to buy heavyweight enterprise forecasting software.",
+      "Own the middle ground between transaction visibility and human financial advising by giving young professionals a product that feels proactive, personal, and easy to revisit every week.",
     evidence: {
       confidence: "medium",
       evidence:
-        "There is a visible gap between generic reporting and expensive enterprise revenue intelligence, but the wedge depends on strong positioning and workflow fit.",
+        "There is a visible gap between tracking and coaching, but the wedge depends on building trust and behavioral utility fast enough to justify paid retention.",
       missingSignalPrompt:
-        "Interview buyers who recently tried to fix this with reporting layers or sales tools and still fell back to spreadsheets.",
+        "Interview users who already tried budgeting tools but still feel anxious or inconsistent to understand what guidance they wish existed.",
     },
   },
   confidence: {
     level: "high",
     summary:
-      "This sample draft has strong operator clarity, painful timing, and a believable wedge. It still needs live buyer interviews to confirm the first paid use case.",
+      "This sample draft has strong consumer pain, a reachable user segment, and a differentiated product angle. It still needs validation on which guidance loop creates willingness to pay fastest.",
     missingSignals: [
-      "Which exact meeting or workflow makes the buyer feel the pain first.",
-      "Whether RevOps owns the budget or needs a sales leader champion to buy.",
-      "Which signal source creates the strongest habit loop after onboarding.",
+      "Which money milestone drives the strongest initial conversion to paid.",
+      "How much automation users want before they feel loss of control.",
+      "Whether the first loyal segment is salaried professionals, freelancers, or users actively paying down debt.",
     ],
   },
   nextActions: [
     {
-      title: "Interview 5 RevOps leads",
-      description: "Pressure-test the trigger moment and current workaround stack.",
+      title: "Interview 5 finance-tool switchers",
+      description: "Map where budgeting tools stop helping and money anxiety stays high.",
       route: "/pmf-lab",
     },
     {
-      title: "Draft positioning copy",
-      description: "Turn the pain, trigger, and outcome into a sharper offer narrative.",
+      title: "Write the coaching-led narrative",
+      description: "Turn the pain into sharper messaging around guidance, confidence, and consistency.",
       route: "/waitlist",
     },
     {
-      title: "Scope the MVP",
-      description: "Reduce the build to one signal dashboard plus one alert loop.",
+      title: "Scope a weekly coaching MVP",
+      description: "Reduce the build to one behavior-aware weekly plan plus one guidance loop.",
       route: "/mvp-builder",
     },
   ],
 };
 
-const d2cEcommerceBrandDraft: IcpDraftDocument = {
+const creatorAnalyticsGrowthPlatformDraft: IcpDraftDocument = {
   gatePreview: {
-    personaName: "D2C E-commerce brand operator",
-    roleLine: "Founder or growth lead at a consumer brand selling online.",
-    painLine: "We are paying to acquire customers, but we still cannot tell which buyers will come back.",
+    personaName: "Multi-platform creator nearing full-time income",
+    roleLine: "Independent creator trying to turn content momentum into repeatable growth and revenue.",
+    painLine:
+      "My metrics are everywhere, and I still cannot tell which content decisions actually grow audience and income.",
   },
   customer: {
-    personaName: "D2C E-commerce brand operator",
+    personaName: "Multi-platform creator nearing full-time income",
     roleLine:
-      "Founder or growth lead at a 2-20 person D2C e-commerce brand trying to improve repeat purchase performance without wasting more paid spend.",
+      "Independent creator or small creator team monetizing across YouTube, TikTok, Instagram, or newsletters and trying to make content decisions with more confidence.",
     metaLine:
-      "Shopify-first | Health, beauty, wellness, or lifestyle products | $500k-$8M annual revenue | Lean in-house team",
+      "50k-500k combined followers | Solo creator or 2-4 person team | Ads, sponsorships, courses, or memberships | Creator-led business",
     summary:
-      "This draft focuses on consumer brands that already know how to generate top-of-funnel demand but still struggle to turn first-time buyers into profitable repeat customers. The target operator owns performance, retention, and merchandising decisions closely enough to feel the downside every week.",
+      "This draft focuses on creators who already have audience momentum and some monetization, but still struggle to understand which content patterns, posting rhythms, and audience segments actually drive durable growth and business results. The target buyer is no longer experimenting casually. They are trying to run a media business with tools that still feel fragmented and reactive.",
     behaviors: [
-      "Checks Shopify, Meta, and Klaviyo dashboards every day looking for small retention lifts.",
-      "Tests offers, bundles, and email flows manually because lifecycle performance is inconsistent.",
-      "Reviews cohort and reorder data before deciding whether to spend more on acquisition.",
+      "Checks platform analytics daily and screenshots metrics because each channel tells a partial story.",
+      "Reviews hooks, thumbnails, retention curves, and audience feedback manually before planning the next publishing cycle.",
+      "Balances brand deals, launches, and content output while still relying on intuition for most growth decisions.",
     ],
     motivations: [
-      "Raise contribution margin by increasing repeat purchase rate instead of buying every sale again.",
-      "Understand which customer segments are most likely to reorder before scaling spend.",
-      "Create a more reliable retention playbook that does not depend on guesswork or one-off promotions.",
+      "Make clearer decisions about what to publish, where to focus, and what formats actually compound audience growth.",
+      "Reduce burnout by replacing endless experimentation with a more trustworthy planning system.",
+      "Connect content performance to business outcomes like subscribers, sponsorship leverage, and product sales.",
     ],
     whereToFind: [
-      "Shopify partner ecosystem",
-      "D2C founder and operator Slack groups",
-      "Twitter and LinkedIn e-commerce operators",
-      "Retention-focused newsletters",
-      "Klaviyo and Triple Whale communities",
+      "Creator economy newsletters and podcasts",
+      "YouTube, TikTok, and Instagram creator communities",
+      "Discord and Slack groups for full-time creators",
+      "Creator education programs and mastermind groups",
+      "Tools ecosystems around beehiiv, Kajabi, ConvertKit, and Notion",
     ],
     triggerContext:
-      "Acquisition costs rise, new customer growth slows, or an investor asks why repeat revenue is not improving with more traffic.",
+      "The pain becomes urgent when growth plateaus, a creator hires help, or revenue starts depending on more deliberate cross-platform planning.",
     actionTrigger:
-      "They act when the brand keeps paying for first purchases but post-purchase behavior stays too unpredictable to scale profitably.",
+      "They act when they realize the next stage of growth cannot rely on gut feel alone and existing analytics still do not tell them what to do next.",
     evidence: {
       confidence: "high",
       evidence:
-        "The buyer is clear, the workflow is measurable, and the problem directly affects margin, CAC efficiency, and inventory decisions.",
+        "The buyer has visible pain, a digital-native workflow, and clear willingness to invest in tools that improve content leverage and business predictability.",
       missingSignalPrompt:
-        "Validate whether the sharpest first wedge is consumables, beauty, or higher-frequency lifestyle products where repeat behavior matters fastest.",
+        "Validate whether the first paid wedge is for education creators, business creators, or entertainment creators with more frequent publishing cycles.",
     },
   },
   pain: {
     quote:
-      "We can get people to buy once, but we still cannot see early enough who is likely to reorder and which offers actually improve retention.",
+      "My metrics are everywhere, and I still cannot tell which content decisions actually grow audience and income.",
     rootCause:
-      "Customer behavior data lives across acquisition dashboards, Shopify reports, and lifecycle tools without one clear view of which signals predict repeat purchases.",
+      "Creators have access to huge amounts of platform data, but almost none of it translates directly into confident decisions across multiple channels and revenue streams.",
     whyItHurts:
-      "The operator keeps making discounting and spend decisions with partial information, which compresses margin and makes growth feel fragile.",
+      "They keep overanalyzing past performance, second-guessing content strategy, and spending creative energy on trial-and-error instead of compounding what works.",
     triggerMoment:
-      "The pain spikes after a high-spend campaign, before inventory planning, or when a retention push fails to move repeat purchase rate meaningfully.",
+      "The pain spikes after a launch underperforms, a creator hires an editor or strategist, or one platform changes enough that the old playbook stops working.",
     costOfInaction:
-      "The brand keeps overpaying for new customers, underinvests in its best cohorts, and misses the window to build predictable repeat revenue.",
+      "Growth stays inconsistent, burnout increases, and monetization opportunities get left on the table because planning never feels fully informed.",
     evidence: {
       confidence: "high",
       evidence:
-        "The pain is tied to a recurring revenue mechanic with visible operational and financial consequences, which creates real urgency for a D2C operator.",
+        "This is a recurring operational pain with strong emotional and commercial consequences for creators treating content like a real business.",
       missingSignalPrompt:
-        "Pressure-test whether the first buying moment is around reorder forecasting, campaign measurement, or lifecycle merchandising decisions.",
+        "Pressure-test whether buyers care most about audience growth, monetization insight, or content-planning clarity as the first job to solve.",
     },
   },
   build: {
     valueProposition:
-      "A retention intelligence layer that shows which customer cohorts are most likely to reorder, what nudges improve repeat purchase behavior, and where margin is being lost.",
+      "A creator growth operating layer that turns fragmented cross-platform analytics into clear next-content and next-revenue decisions.",
     replaces: [
-      "spreadsheet cohort analysis",
-      "fragmented Shopify and Klaviyo views",
-      "manual campaign postmortems",
+      "native platform dashboards",
+      "manual content postmortems",
+      "spreadsheet planning across channels",
     ],
     coreFeatures: [
       {
-        title: "Repeat-purchase signal dashboard",
+        title: "Cross-platform growth view",
         description:
-          "Bring cohort behavior, reorder timing, and campaign response into one retention decision view.",
+          "Combine audience, retention, and conversion signals across channels so creators can see what patterns travel and what does not.",
       },
       {
-        title: "Segment-level retention recommendations",
+        title: "Content pattern recommendations",
         description:
-          "Surface which buyer segments need urgency, replenishment, bundles, or education rather than blanket discounts.",
+          "Surface which hooks, topics, formats, and posting rhythms are most likely to drive the next round of growth.",
       },
       {
-        title: "Margin-aware experiment tracking",
+        title: "Monetization impact tracking",
         description:
-          "Measure whether retention tactics actually improve LTV without quietly damaging contribution margin.",
+          "Connect content performance to sponsorship outcomes, product sales, or subscriber growth instead of vanity metrics alone.",
       },
     ],
     outcome:
-      "Help the brand operator grow repeat revenue with more confidence, better segmentation, and fewer margin-damaging guesses.",
+      "Help creators make faster, calmer, higher-confidence decisions about what to publish and how to grow revenue without burning out.",
     evidence: {
       confidence: "high",
       evidence:
-        "The product direction fits the operator, the current tool stack, and the exact decisions the team is already making manually.",
+        "The build direction maps tightly to the creator's current data sprawl and points toward a more actionable decision layer than platform-native analytics provide.",
       missingSignalPrompt:
-        "Confirm whether the first paid use case should anchor on replenishment brands, promotional brands, or subscription-adjacent repeat behavior.",
+        "Confirm whether the first habit loop should center on weekly planning, content diagnosis, or monetization optimization.",
     },
   },
   moat: {
-    moatType: "Decision-support moat",
+    moatType: "Workflow and intelligence moat",
     edge:
-      "The product wins by turning messy retention and merchandising signals into actions a small brand team can use immediately, not by becoming another generic analytics dashboard.",
+      "The product wins by becoming the creator's planning and growth interpretation layer, not by trying to replace every native analytics surface.",
     edgeSource:
-      "It sits close to recurring decisions around lifecycle campaigns, reorder timing, and customer segmentation where lean operators already feel pain.",
+      "It sits inside a high-frequency workflow where creators already spend time reviewing performance, planning content, and tying output back to business goals.",
     whyHardToCopy:
-      "Most tools either optimize campaign execution or report on historical data, but few package retention insight in a way that directly changes weekly D2C operating decisions.",
+      "Platform analytics are channel-specific, and generic dashboards rarely speak the language of creator decisions. The moat comes from translating scattered signals into creator-native recommendations.",
     incumbentGap:
-      "Incumbents provide raw reporting and campaign infrastructure, but smaller brands still need a clearer decision layer to know what will increase repeat buying profitably.",
+      "Most tools either report metrics or manage links and monetization, but they do not fully connect cross-platform performance to a creator's next strategic move.",
     startupsToStudy: [
-      { name: "RetentionX", url: "https://www.retentionx.com" },
-      { name: "Peel", url: "https://www.peelinsights.com" },
-      { name: "Triple Whale", url: "https://www.triplewhale.com" },
+      { name: "vidIQ", url: "https://vidiq.com" },
+      { name: "TubeBuddy", url: "https://www.tubebuddy.com" },
+      { name: "HypeAuditor", url: "https://hypeauditor.com" },
     ],
     evidence: {
       confidence: "medium",
       evidence:
-        "The wedge is strongest if the product can consistently help operators act on retention signals faster than existing reporting tools alone.",
+        "The moat becomes more credible if the product consistently helps creators plan better content and monetize more effectively than native analytics alone.",
       missingSignalPrompt:
-        "Validate whether operators will pay for decision support separately from the analytics and email tools they already use.",
+        "Validate whether creators will trust recommendations enough to change publishing behavior rather than just consume more analytics.",
     },
   },
   competition: {
     summary:
-      "Brands already use Shopify analytics, lifecycle platforms, and performance dashboards, but they still piece together the retention story manually when deciding what to do next.",
+      "Creators already use platform analytics, creator education, and niche optimization tools, but they still stitch strategy together manually when planning what to do next.",
     directCompetitors: [
       {
-        name: "Triple Whale",
-        url: "https://www.triplewhale.com",
-        doesWell: "Combines e-commerce performance data into a more operator-friendly reporting layer.",
-        gap: "Still skews broad on measurement rather than the specific repeat-purchase decision layer this buyer wants.",
+        name: "vidIQ",
+        url: "https://vidiq.com",
+        doesWell: "Offers strong YouTube-oriented optimization and idea support.",
+        gap: "Skews platform-specific and does not fully own cross-platform business planning for diversified creators.",
       },
       {
-        name: "RetentionX",
-        url: "https://www.retentionx.com",
-        doesWell: "Offers strong retention and cohort analytics for e-commerce teams.",
-        gap: "Can feel more analytical than prescriptive for lean operators who need action-ready guidance.",
+        name: "TubeBuddy",
+        url: "https://www.tubebuddy.com",
+        doesWell: "Helps creators improve YouTube workflows and channel optimization.",
+        gap: "Feels more tactical than strategic for creators running a broader content business.",
       },
       {
-        name: "Klaviyo reporting",
-        url: "https://www.klaviyo.com",
-        doesWell: "Lives close to the lifecycle execution layer and already has campaign data.",
-        gap: "Does not fully connect retention decisions to broader cohort economics and merchandising tradeoffs.",
+        name: "HypeAuditor",
+        url: "https://hypeauditor.com",
+        doesWell: "Provides strong analytics around audiences and influencer marketing data.",
+        gap: "Leans more toward brand and campaign analysis than creator-side planning and growth decisions.",
       },
     ],
     exploitableGap:
-      "Own the segment of lean D2C brands that need retention decisions translated into clear weekly actions rather than another reporting surface.",
+      "Own the segment of serious creators who need a business-minded growth decision layer across channels instead of another analytics tab for one platform.",
     evidence: {
       confidence: "medium",
       evidence:
-        "There is room between raw analytics and heavyweight retention tooling, but the wedge depends on making insights operational enough to change behavior quickly.",
+        "There is room between platform analytics and generic creator tooling, but the wedge depends on making the insights prescriptive enough to influence actual publishing behavior.",
       missingSignalPrompt:
-        "Interview operators who already use analytics tools but still rely on spreadsheets or intuition when choosing retention plays.",
+        "Interview creators who already use analytics tools but still rely on instinct for cross-platform strategy and monetization planning.",
     },
   },
   confidence: {
     level: "high",
     summary:
-      "This sample draft has strong operator clarity and a direct link to revenue efficiency, but it still needs live validation on the first retention workflow worth monetizing.",
+      "This sample draft has a clear operator, frequent workflow pain, and a believable product angle. It still needs validation on which creator segment will pay first for decision support rather than more analytics.",
     missingSignals: [
-      "Which retention decision buyers want solved first.",
-      "How much margin context needs to be built into the product to feel indispensable.",
-      "Whether the first champion is the founder, growth lead, or lifecycle manager.",
+      "Which creator business model creates the highest urgency for this workflow.",
+      "Whether the first champion is the creator, an operator, or a strategist working with them.",
+      "What form of recommendation feels actionable without over-automating creative judgment.",
     ],
   },
   nextActions: [
     {
-      title: "Interview 5 D2C operators",
-      description: "Map how they currently make repeat-purchase and retention decisions.",
+      title: "Interview 5 growth-stage creators",
+      description: "Map how they currently turn fragmented analytics into publishing decisions.",
       route: "/pmf-lab",
     },
     {
-      title: "Write retention-focused positioning",
-      description: "Translate the pain into a sharper consumer-brand operator narrative.",
+      title: "Write the creator growth narrative",
+      description: "Turn the pain into sharper messaging around clarity, leverage, and calmer decision-making.",
       route: "/waitlist",
     },
     {
-      title: "Scope a retention MVP",
-      description: "Reduce the build to one insight dashboard plus one action layer.",
+      title: "Scope a creator planning MVP",
+      description: "Start with one cross-platform growth view plus one recommendation loop.",
       route: "/mvp-builder",
     },
   ],
 };
 
-const b2bProfessionalServicesDraft: IcpDraftDocument = {
+const sustainabilityComplianceConsultingDraft: IcpDraftDocument = {
   gatePreview: {
-    personaName: "B2B professional services firm",
-    roleLine: "Managing partner or operations lead at a consultancy selling to enterprise clients.",
-    painLine: "We win good client work, but delivery still depends too much on senior people firefighting every engagement.",
+    personaName: "Mid-market operations lead facing sustainability disclosure pressure",
+    roleLine: "Operator at a manufacturing or supply-chain business now being asked for ESG and compliance answers it cannot produce easily.",
+    painLine:
+      "Big customers keep asking for sustainability documentation, and we are still chasing spreadsheets and suppliers to answer them.",
   },
   customer: {
-    personaName: "B2B professional services firm",
+    personaName: "Mid-market operations lead facing sustainability disclosure pressure",
     roleLine:
-      "Managing partner or operations lead at a 10-80 person consultancy or agency trying to standardize delivery quality while still selling bespoke enterprise work.",
+      "Operations, compliance, or sustainability lead at a mid-market manufacturer, distributor, or supplier trying to respond to growing ESG and disclosure pressure without building an internal specialist team overnight.",
     metaLine:
-      "Consulting, advisory, or agency model | Mid-market to enterprise clients | Project-based revenue | High reliance on senior staff",
+      "50-500 employees | B2B industrial or supply-chain business | Enterprise customers | Limited in-house sustainability expertise",
     summary:
-      "This draft focuses on services firms that have found demand but now struggle to scale delivery consistency, margin, and client confidence without keeping their most senior people in every project detail. The buyer feels pressure from both sales and delivery because growth exposes the cracks in the operating model.",
+      "This draft focuses on mid-market companies that are not climate-tech natives and did not build for sustainability reporting first, but now face increasing pressure from enterprise buyers, procurement teams, regulators, and board stakeholders. The buyer feels the pain operationally because requests keep arriving, data is scattered, and the business risks looking unprepared in high-stakes commercial conversations.",
     behaviors: [
-      "Reviews pipeline and delivery capacity together because new sales create immediate resourcing pressure.",
-      "Uses templates, playbooks, and QA checklists inconsistently across teams and engagements.",
-      "Gets pulled into escalations when client outcomes vary too much by account lead or delivery team.",
+      "Pulls data manually from finance, procurement, facilities, and supplier teams whenever a major customer sends a new request.",
+      "Uses spreadsheets, shared drives, and consultant decks as the default system for sustainability and compliance responses.",
+      "Balances reporting demands with day-to-day operations because no dedicated in-house team fully owns the workflow.",
     ],
     motivations: [
-      "Improve gross margin by making delivery more repeatable without flattening the firm's expertise.",
-      "Protect client trust and retention by reducing execution variability across projects.",
-      "Free senior leaders from constant intervention so they can focus on growth, hiring, and key client strategy.",
+      "Reduce commercial risk by answering customer and regulator requests with more confidence and less scramble.",
+      "Build a repeatable reporting process before disclosure pressure becomes a larger operational burden.",
+      "Protect reputation with enterprise buyers while avoiding a full-time headcount commitment too early.",
     ],
     whereToFind: [
-      "Agency and consulting operator communities",
-      "LinkedIn professional services leaders",
-      "EO and peer advisory groups",
-      "Operations and delivery podcasts",
-      "Professional services software ecosystems",
+      "Manufacturing and operations leadership associations",
+      "Procurement and supply-chain communities",
+      "LinkedIn sustainability and compliance leaders",
+      "Industry conferences focused on ESG and regulation",
+      "Consulting and software ecosystems around disclosure and procurement workflows",
     ],
     triggerContext:
-      "The pain appears when the firm wins more enterprise work, hires quickly, or sees margin pressure because too much delivery knowledge still lives in senior heads.",
+      "The pain becomes urgent when a major customer requests supplier disclosures, new regulations approach, or leadership realizes ESG reporting is no longer optional for winning and retaining business.",
     actionTrigger:
-      "They act when growth makes it obvious that delivery quality and team utilization are too dependent on ad hoc interventions.",
+      "They act when manual reporting work starts threatening customer confidence, sales cycles, or internal credibility.",
     evidence: {
       confidence: "high",
       evidence:
-        "The buyer owns a recurring operational problem with clear commercial consequences across margin, client satisfaction, and scalability.",
+        "The buyer owns a painful commercial workflow with clear downside across enterprise relationships, audit readiness, and operational overhead.",
       missingSignalPrompt:
-        "Validate whether the first wedge is strategy consultancies, digital agencies, or implementation firms with more structured project workflows.",
+        "Validate whether the first sharpest wedge is manufacturing suppliers, food and packaging businesses, or industrial firms selling into enterprise procurement chains.",
     },
   },
   pain: {
     quote:
-      "We keep selling high-value work, but every time delivery gets busy the same senior people have to step in and rescue quality.",
+      "Big customers keep asking for sustainability documentation, and we are still chasing spreadsheets and suppliers to answer them.",
     rootCause:
-      "The firm has expertise and good client demand, but repeatable delivery systems, resourcing visibility, and knowledge transfer are still too inconsistent.",
+      "Most mid-market operators do not have one owned system for collecting sustainability data, interpreting requirements, and packaging credible responses for buyers or auditors.",
     whyItHurts:
-      "Senior staff become the bottleneck, junior teams ramp slowly, utilization gets distorted, and the firm cannot scale revenue cleanly without risking client trust.",
+      "The team scrambles repeatedly, senior operators get dragged into low-leverage reporting work, and the business risks slowing deals or looking non-compliant when stakes are rising.",
     triggerMoment:
-      "The pain spikes when multiple enterprise projects overlap, new hires join quickly, or a key client escalates because delivery quality slipped.",
+      "The pain spikes during procurement reviews, annual reporting cycles, customer renewals, or after a board conversation about regulatory readiness.",
     costOfInaction:
-      "The firm limits growth, protects too much work behind senior talent, and sees margin erode because every engagement needs rescue work.",
+      "The company keeps spending expensive internal time on manual compliance work, risks losing enterprise opportunities, and delays building a scalable response process until pressure becomes worse.",
     evidence: {
       confidence: "high",
       evidence:
-        "This is a durable services-firm pain with visible operational owners and strong impact on margin, growth capacity, and retention.",
+        "This pain is recurring, commercially relevant, and increasingly urgent in sectors exposed to supplier scrutiny and sustainability reporting pressure.",
       missingSignalPrompt:
-        "Pressure-test whether the sharpest pain lands in staffing visibility, delivery quality control, or codifying repeatable execution.",
+        "Pressure-test whether urgency is driven more by customer procurement, regulation, or board-level risk visibility in the first wedge market.",
     },
   },
   build: {
     valueProposition:
-      "An operating layer for professional services firms that standardizes delivery workflows, exposes resourcing risk early, and makes quality more repeatable across teams.",
+      "A sustainability compliance consulting offer that helps mid-market operators build a repeatable disclosure workflow, close reporting gaps, and respond to customer pressure without chaos.",
     replaces: [
-      "scattered playbooks",
-      "manual resourcing spreadsheets",
-      "partner-led delivery rescue loops",
+      "ad hoc consultant decks",
+      "manual ESG spreadsheet chasing",
+      "reactive customer-request fire drills",
     ],
     coreFeatures: [
       {
-        title: "Engagement health and delivery visibility",
+        title: "Disclosure readiness assessment",
         description:
-          "Show which projects are drifting off-plan, where staffing pressure is building, and where execution quality is at risk.",
+          "Map current reporting gaps, data sources, and commercial risk exposure across sustainability and compliance requests.",
       },
       {
-        title: "Repeatable delivery templates",
+        title: "Operational reporting playbook",
         description:
-          "Turn high-performing engagement patterns into structured workflows teams can actually follow.",
+          "Turn a scattered response process into a repeatable system for gathering data, coordinating owners, and packaging answers.",
       },
       {
-        title: "Quality and escalation checkpoints",
+        title: "Priority roadmap for customer and regulatory requirements",
         description:
-          "Create lightweight operating controls that reduce last-minute partner intervention.",
+          "Help teams decide what to fix first so they can satisfy external pressure without overbuilding an internal ESG function too soon.",
       },
     ],
     outcome:
-      "Help the firm scale delivery capacity and margin with less heroics, more consistency, and stronger client confidence.",
+      "Help the operator respond faster, look more credible with buyers, and reduce the internal scramble around sustainability requests.",
     evidence: {
       confidence: "high",
       evidence:
-        "The build direction maps directly to a common services-firm bottleneck and fits the current patchwork of spreadsheets, templates, and leadership oversight.",
+        "The recommended offer aligns with a consulting-led wedge where the buyer needs structure, expertise, and implementation help before they are ready to buy software alone.",
       missingSignalPrompt:
-        "Confirm whether the first paid use case should anchor on staffing visibility, delivery QA, or reusable engagement systems.",
+        "Confirm whether the first paid offer should anchor on assessment, roadmap delivery, or ongoing compliance support.",
     },
   },
   moat: {
-    moatType: "Operational workflow moat",
+    moatType: "Expertise and workflow moat",
     edge:
-      "The product wins by packaging elite delivery habits into a usable firm operating system, not by acting like generic project management software.",
+      "The offer wins by combining domain interpretation with practical operational setup, not by acting like generic ESG strategy consulting or software resale.",
     edgeSource:
-      "It sits at the intersection of delivery quality, staffing, and partner oversight where professional services firms feel compounding friction as they grow.",
+      "It sits close to the exact reporting and buyer-pressure moments where operators need both clarity and implementation help quickly.",
     whyHardToCopy:
-      "Horizontal PM tools help teams track work, but they rarely encode the commercial and quality-control logic that services firms need to scale expert delivery.",
+      "Large consultancies are expensive and broad, while software tools assume more process maturity than many mid-market teams actually have. This wedge owns the in-between stage.",
     incumbentGap:
-      "Existing systems manage tasks or resources, but they do not translate the firm's delivery standards into a practical operating cadence leaders can trust.",
+      "Existing options either overwhelm teams with strategy or hand them tooling before the workflow and ownership model are ready.",
     startupsToStudy: [
-      { name: "Parallax", url: "https://www.getparallax.com" },
-      { name: "Kantata", url: "https://www.kantata.com" },
-      { name: "Productive", url: "https://productive.io" },
+      { name: "Anthesis", url: "https://www.anthesisgroup.com" },
+      { name: "ERM", url: "https://www.erm.com" },
+      { name: "Watershed", url: "https://watershed.com" },
     ],
     evidence: {
       confidence: "medium",
       evidence:
-        "The moat becomes more credible if the workflow meaningfully reduces partner intervention and improves delivery consistency across teams.",
+        "The moat is strongest if the consulting workflow becomes repeatable enough to feel specialized and practical for one pressured operator segment.",
       missingSignalPrompt:
-        "Validate whether firms will adopt a new operating layer if they already have PM, PSA, or resource-planning tools in place.",
+        "Validate whether buyers prefer a consulting-first relationship or want software paired with advisory support from the start.",
     },
   },
   competition: {
     summary:
-      "Professional services firms already use project management, resource planning, and PSA tools, but many still depend on custom spreadsheets and senior oversight to maintain delivery quality.",
+      "Buyers already see big-name consultancies, disclosure platforms, and scattered internal process workarounds, but many still lack a practical path from pressure to operational readiness.",
     directCompetitors: [
       {
-        name: "Kantata",
-        url: "https://www.kantata.com",
-        doesWell: "Handles project operations and resource management for larger services organizations.",
-        gap: "Can feel heavyweight and systems-oriented for firms mainly trying to standardize delivery quality and partner oversight.",
+        name: "Anthesis",
+        url: "https://www.anthesisgroup.com",
+        doesWell: "Offers broad sustainability strategy and advisory support for larger organizations.",
+        gap: "Can feel heavier and more strategic than what a mid-market operator needs to solve near-term reporting pressure.",
       },
       {
-        name: "Productive",
-        url: "https://productive.io",
-        doesWell: "Combines agency operations, finance, and project management in one platform.",
-        gap: "Still leaves many firms to define their own delivery standards and escalation logic.",
+        name: "ERM",
+        url: "https://www.erm.com",
+        doesWell: "Provides deep environmental and regulatory consulting expertise.",
+        gap: "Often better suited to larger enterprises than lean operators trying to build a first repeatable compliance workflow.",
       },
       {
-        name: "Parallax",
-        url: "https://www.getparallax.com",
-        doesWell: "Improves capacity and resource planning for services firms.",
-        gap: "Does not fully own the quality-control and repeatable-delivery layer that senior leaders care about.",
+        name: "Watershed",
+        url: "https://watershed.com",
+        doesWell: "Offers strong software-led reporting and emissions management infrastructure.",
+        gap: "Assumes more internal process maturity than many mid-market businesses have when pressure first appears.",
       },
     ],
     exploitableGap:
-      "Own the wedge where firms need delivery consistency and quality control more than another generic project tracker or finance-heavy PSA system.",
+      "Own the segment where mid-market operators need practical sustainability readiness support before heavyweight consulting or software-only solutions feel right.",
     evidence: {
       confidence: "medium",
       evidence:
-        "There is room between task tools and enterprise PSA platforms, but the wedge depends on showing faster operational value than firms can get from internal process clean-up alone.",
+        "There is a clear services wedge between enterprise-grade sustainability programs and in-house spreadsheet chaos, but positioning and segment focus will matter heavily.",
       missingSignalPrompt:
-        "Interview firms that already bought services software but still rely on partner intervention to keep delivery quality on track.",
+        "Interview operators who recently faced customer disclosure requests and still lacked a reliable response workflow.",
     },
   },
   confidence: {
     level: "high",
     summary:
-      "This sample draft is grounded in a common scaling problem for services firms, but it still needs buyer interviews to confirm which operational pain gets budgeted first.",
+      "This sample draft has real commercial urgency and a believable consulting wedge. It still needs validation on which segment feels both enough pressure and enough budget to buy quickly.",
     missingSignals: [
-      "Whether the first champion is the managing partner, COO, or delivery lead.",
-      "Which workflow creates the fastest visible ROI after onboarding.",
-      "How much firms want standardization versus flexibility across engagements.",
+      "Which industries feel the sharpest customer-driven urgency first.",
+      "Whether the first champion is operations, procurement, finance, or a newly assigned sustainability owner.",
+      "How much of the early offer should be advisory versus implementation support.",
     ],
   },
   nextActions: [
     {
-      title: "Interview 5 services leaders",
-      description: "Map where delivery quality and margin break first as firms grow.",
+      title: "Interview 5 pressured operators",
+      description: "Map the exact disclosure requests and internal scramble they face today.",
       route: "/pmf-lab",
     },
     {
-      title: "Write a scale-without-firefighting narrative",
-      description: "Turn the pain into positioning that speaks to firm operators and partners.",
+      title: "Write the readiness narrative",
+      description: "Turn the pain into positioning around customer pressure, credibility, and response speed.",
       route: "/waitlist",
     },
     {
-      title: "Scope a services-ops MVP",
-      description: "Start with delivery health, staffing risk, and one repeatable workflow system.",
+      title: "Scope the consulting wedge",
+      description: "Start with one readiness assessment plus one repeatable reporting workflow offer.",
       route: "/mvp-builder",
     },
   ],
 };
 
-const earlyStageStartupPrePmfDraft: IcpDraftDocument = {
+const aiVoiceAssistantForSeniorsDraft: IcpDraftDocument = {
   gatePreview: {
-    personaName: "Early-stage startup (pre-PMF)",
-    roleLine: "Founder-led startup still validating its first real customer.",
-    painLine: "We keep talking to users and shipping changes, but we still do not know which customer is urgent enough to buy now.",
+    personaName: "Remote family caregiver for an aging parent",
+    roleLine: "Adult child coordinating reminders, check-ins, and peace of mind from another home or city.",
+    painLine:
+      "I cannot be there all day, but I still need to know my parent is okay and remembering the important things.",
   },
   customer: {
-    personaName: "Early-stage startup (pre-PMF)",
+    personaName: "Remote family caregiver for an aging parent",
     roleLine:
-      "Founder-led startup team of 1-6 people trying to identify the first customer segment with a painful enough problem to drive early traction.",
+      "Adult child or primary family caregiver supporting an older parent who still lives independently but increasingly needs reminders, check-ins, and low-friction daily support.",
     metaLine:
-      "Pre-seed or bootstrapped | Pre-PMF | Founder selling directly | Iterating on product and messaging weekly",
+      "Ages 35-60 | Coordinating care from another home or city | Balancing work, family, and elder care | Household decision-maker",
     summary:
-      "This draft focuses on founders who already have a product direction or early prototype but are still unclear about which customer segment feels the problem most urgently. The buyer here is still the founder because the company is using the ICP to guide interviews, positioning, and the first real go-to-market wedge.",
+      "This draft focuses on family caregivers who are not looking for a full medical device or assisted-living transition yet. They need a simpler, more reassuring way to help an aging parent remember medications, stay connected, and get help when needed without adding another complicated app or device to the household. The emotional urgency is high because the buyer is balancing love, worry, guilt, and logistics at the same time.",
     behaviors: [
-      "Runs customer interviews, landing page tests, and product changes in parallel.",
-      "Collects a lot of user feedback but struggles to separate curiosity from real buying intent.",
-      "Shifts messaging and feature priorities frequently because evidence is still noisy.",
+      "Sets manual phone reminders, sticky notes, or repeated check-in calls because support still depends on the caregiver remembering everything.",
+      "Researches aging-in-place tools, voice assistants, and caregiver communities late at night while juggling work and family obligations.",
+      "Tests low-friction tech options carefully because the older parent may resist anything that feels confusing or infantilizing.",
     ],
     motivations: [
-      "Find the first segment that will actually commit time, money, or urgency instead of offering polite interest.",
-      "Reduce wasted product cycles by building around one painful problem first.",
-      "Create enough clarity to support sharper outreach, waitlist copy, and MVP scope decisions.",
+      "Create more peace of mind without needing to call or monitor the parent constantly throughout the day.",
+      "Support independence longer while reducing the risk of missed routines, isolation, or preventable emergencies.",
+      "Choose a solution the older parent can actually use without a long training curve.",
     ],
     whereToFind: [
-      "Founder communities",
-      "Early customer interview channels",
-      "Startup accelerators and incubators",
-      "LinkedIn and niche operator groups",
-      "Reddit and product-specific communities",
+      "Caregiver Facebook groups and forums",
+      "AARP and aging-in-place communities",
+      "Hospital discharge and senior support resource networks",
+      "Adult caregiver newsletters and podcasts",
+      "Search-driven channels around dementia, elder care, and medication reminders",
     ],
     triggerContext:
-      "The pain shows up when a founder keeps hearing mixed feedback, sees weak conversion from broad messaging, or cannot tell which user segment is worth pursuing first.",
+      "The pain becomes urgent after a missed medication, a scare at home, a hospital discharge, or the realization that current check-in routines are no longer enough.",
     actionTrigger:
-      "They act when too many product and go-to-market decisions are blocked by a fuzzy picture of who the first real customer is.",
+      "They act when the caregiver needs more reassurance and structure but still wants to preserve the older parent's dignity and independence.",
     evidence: {
       confidence: "high",
       evidence:
-        "The ICP use case is tightly matched to a founder-stage workflow where better customer clarity immediately changes what gets built, tested, and said next.",
+        "The buyer feels clear emotional and operational pain, has strong motivation to act, and is already piecing together imperfect workarounds to reduce care friction.",
       missingSignalPrompt:
-        "Validate whether the first wedge should anchor on one operator role, one problem moment, or one buying context before expanding the segment.",
+        "Validate whether the first wedge is medication support, social check-ins, or general daily routine assistance for aging-in-place households.",
     },
   },
   pain: {
     quote:
-      "We keep learning interesting things from users, but we still do not know which customer has a painful enough problem to buy now instead of later.",
+      "I cannot be there all day, but I still need to know my parent is okay and remembering the important things.",
     rootCause:
-      "The founder is collecting fragmented feedback from multiple user types without a disciplined way to separate urgency, frequency, and willingness to act.",
+      "Caregiving support is fragmented across calls, reminders, family coordination, and generic consumer devices that were not designed around older adult usability and caregiver reassurance together.",
     whyItHurts:
-      "Messaging stays broad, roadmap choices stay noisy, and the startup risks burning time building for people who like the idea but do not need it enough.",
+      "The caregiver carries constant low-grade stress, the parent may miss key routines, and every small incident makes the family question whether independent living is still sustainable.",
     triggerMoment:
-      "The pain spikes after weak waitlist conversion, low-energy customer interviews, or repeated product changes that still do not move traction.",
+      "The pain spikes after a missed medication, a forgotten appointment, a fall scare, or a week where the caregiver realizes the current support routine is becoming unmanageable.",
     costOfInaction:
-      "The team keeps iterating without signal, spends too long exploring the wrong segment, and delays the moment when traction becomes testable.",
+      "Stress increases for both caregiver and parent, minor risks compound, and the family may move toward more expensive or premature care decisions because daily support feels unreliable.",
     evidence: {
       confidence: "high",
       evidence:
-        "This is one of the most common and consequential pre-PMF founder pains because it affects positioning, product scope, distribution, and early revenue all at once.",
+        "This is a repeated, emotionally charged pain with a clear buyer and a strong willingness to look for simpler, more supportive tools.",
       missingSignalPrompt:
-        "Pressure-test which user segment currently feels the problem often enough, painfully enough, and urgently enough to move first.",
+        "Pressure-test whether the first purchase driver is reassurance for the caregiver, usability for the senior, or prevention of missed daily routines.",
     },
   },
   build: {
     valueProposition:
-      "A founder-facing ICP and customer validation workspace that turns scattered user feedback into one focused first-customer decision.",
+      "A senior-friendly AI voice assistant that helps aging adults remember routines, stay connected, and give family caregivers more peace of mind without adding complexity.",
     replaces: [
-      "messy interview notes",
-      "broad audience guesses",
-      "founder intuition-only segmentation",
+      "manual reminder systems",
+      "constant caregiver check-in calls",
+      "generic smart speaker setups that still need heavy customization",
     ],
     coreFeatures: [
       {
-        title: "Segment synthesis workspace",
+        title: "Simple voice-based reminders and routines",
         description:
-          "Organize interview patterns, user types, and problem signals into one comparable view.",
+          "Guide medication, appointments, hydration, and daily check-ins through a senior-friendly conversational interface.",
       },
       {
-        title: "Urgency and evidence scoring",
+        title: "Caregiver reassurance loop",
         description:
-          "Help the founder distinguish interesting feedback from high-priority buying pain.",
+          "Provide lightweight confirmations, missed-routine alerts, or summaries so family members know when extra follow-up is needed.",
       },
       {
-        title: "Action-ready ICP output",
+        title: "Connection and support prompts",
         description:
-          "Turn the selected wedge into messaging, validation tests, and immediate next steps for building and outreach.",
+          "Use voice interactions to reduce isolation, encourage engagement, and make help feel easy to access.",
       },
     ],
     outcome:
-      "Help the founder choose one sharper initial customer segment faster and make every next validation step more coherent.",
+      "Help families support independent living longer with less stress, fewer missed routines, and more confidence in the daily care experience.",
     evidence: {
       confidence: "high",
       evidence:
-        "The product angle is aligned with a real founder workflow where better customer focus has immediate downstream value across discovery and execution.",
+        "The product direction matches the emotional and operational reality of family caregiving and points toward a more senior-native workflow than generic assistants usually provide.",
       missingSignalPrompt:
-        "Confirm whether the first must-have behavior is interview synthesis, segment prioritization, or turning the decision into sharper messaging and tests.",
+        "Confirm whether the first must-have value is reminders, caregiver visibility, or low-friction companionship and engagement.",
     },
   },
   moat: {
-    moatType: "Workflow and context moat",
+    moatType: "Trust and workflow moat",
     edge:
-      "The product wins by helping founders make a better first customer decision inside an already messy validation workflow, not by acting like a generic CRM or notes app.",
+      "The product wins by serving both the older adult's usability needs and the caregiver's reassurance needs in one workflow, not by acting like a generic household assistant.",
     edgeSource:
-      "It sits close to founder interviews, segmentation decisions, and early positioning work where teams are highly motivated to get to clarity faster.",
+      "It sits inside a repeated care-support routine where trust, simplicity, and family peace of mind matter more than feature breadth.",
     whyHardToCopy:
-      "Founders do not just need storage for notes or broad AI summaries. They need a system that turns noisy evidence into an actionable ICP choice they can build and sell against.",
+      "General voice assistants are broad but not designed around elder-care moments, while healthcare products often feel clinical or complex. This wedge needs empathy, simplicity, and dependable caregiver value together.",
     incumbentGap:
-      "Existing tools capture information, but they rarely structure early customer discovery around one concrete first-segment decision with execution consequences.",
+      "Most alternatives either optimize for the senior user alone or for monitoring-heavy care tools, leaving a gap for supportive, low-friction day-to-day assistance.",
     startupsToStudy: [
-      { name: "Delve", url: "https://www.delvetool.com" },
-      { name: "Dovetail", url: "https://dovetail.com" },
-      { name: "June", url: "https://june.so" },
+      { name: "ElliQ", url: "https://elliq.com" },
+      { name: "CarePredict", url: "https://www.carepredict.com" },
+      { name: "Amazon Alexa", url: "https://www.amazon.com/alexa" },
     ],
     evidence: {
       confidence: "medium",
       evidence:
-        "The wedge is credible if founders feel the tool helps them move from ambiguity to one stronger customer decision faster than their current manual process.",
+        "The moat becomes stronger if the product creates trust on both sides of the relationship and fits naturally into daily care routines without feeling intrusive.",
       missingSignalPrompt:
-        "Validate whether founders will adopt a dedicated ICP decision workflow rather than relying on docs, spreadsheets, and advisor conversations.",
+        "Validate whether families want supportive voice workflows first or whether they expect more monitoring and healthcare integration from day one.",
     },
   },
   competition: {
     summary:
-      "Founders already use notes tools, research repositories, AI chats, and analytics products during discovery, but they still struggle to convert all that input into a single usable first-customer decision.",
+      "Families already use smart speakers, reminder apps, and caregiver coordination workarounds, but they still struggle to create a senior-friendly daily support system that feels reassuring and easy to maintain.",
     directCompetitors: [
       {
-        name: "Dovetail",
-        url: "https://dovetail.com",
-        doesWell: "Stores and synthesizes user research effectively.",
-        gap: "Skews toward research teams rather than founder-stage ICP decisions tied to immediate product and GTM choices.",
+        name: "ElliQ",
+        url: "https://elliq.com",
+        doesWell: "Focuses directly on older adults with a companionship and engagement angle.",
+        gap: "May not fully own the caregiver reassurance and daily routine coordination wedge for broader family support.",
       },
       {
-        name: "Notion",
-        url: "https://www.notion.so",
-        doesWell: "Acts as a flexible home for interview notes, ideas, and planning.",
-        gap: "Requires founders to build their own decision process and does not tell them which segment should win.",
+        name: "Amazon Alexa",
+        url: "https://www.amazon.com/alexa",
+        doesWell: "Provides familiar voice infrastructure and broad consumer adoption.",
+        gap: "Requires customization and does not fully package an elder-care-native workflow for families under stress.",
       },
       {
-        name: "ChatGPT and generic AI tools",
-        url: "https://chat.openai.com",
-        doesWell: "Helps summarize and reason through messy information quickly.",
-        gap: "Does not provide a structured, repeatable ICP workflow grounded in one evolving startup context.",
+        name: "CarePredict",
+        url: "https://www.carepredict.com",
+        doesWell: "Offers stronger monitoring and care visibility for senior support environments.",
+        gap: "Can feel more monitoring-heavy than what families want when they are still trying to preserve independence at home.",
       },
     ],
     exploitableGap:
-      "Own the gap between information capture and one usable first-customer decision that directly shapes what the founder tests next.",
+      "Own the segment of families who want supportive, low-friction daily assistance for aging in place before they are ready for more clinical or monitoring-heavy solutions.",
     evidence: {
       confidence: "medium",
       evidence:
-        "There is strong founder pain here, but the wedge depends on making the workflow concrete enough to beat a patchwork of flexible general-purpose tools.",
+        "The gap is credible if the product feels materially easier and more reassuring than generic assistants while staying less intimidating than formal care technology.",
       missingSignalPrompt:
-        "Interview founders who already collect customer feedback but still cannot choose a segment with confidence.",
+        "Interview families who tried reminders, smart speakers, or caregiver apps but still feel daily support is too manual and fragile.",
     },
   },
   confidence: {
     level: "high",
     summary:
-      "This sample draft is tightly aligned to a pre-PMF founder problem, but it still needs validation on how much structure founders want before they feel it beats their current ad hoc process.",
+      "This sample draft has a strong emotional trigger, a clear buyer, and a believable wedge around aging-in-place support. It still needs validation on the first value promise families are willing to pay for quickly.",
     missingSignals: [
-      "Which founder stage feels this pain most urgently.",
-      "What proof makes the winning segment feel credible enough to act on.",
-      "How much automation versus guided judgment founders actually want.",
+      "Which care scenario creates the fastest purchase urgency.",
+      "How much caregiver visibility feels reassuring without feeling invasive.",
+      "Whether the first buyer is the adult child, spouse, or care coordinator in the household.",
     ],
   },
   nextActions: [
     {
-      title: "Interview 5 pre-PMF founders",
-      description: "Map how they currently turn interviews into segment choices.",
+      title: "Interview 5 family caregivers",
+      description: "Map the exact daily routines and scares that make support feel too manual today.",
       route: "/pmf-lab",
     },
     {
-      title: "Write a first-customer clarity narrative",
-      description: "Translate the pain into sharper founder-stage positioning.",
+      title: "Write the reassurance-led narrative",
+      description: "Translate the pain into positioning around peace of mind, independence, and usability.",
       route: "/waitlist",
     },
     {
-      title: "Scope an ICP decision MVP",
-      description: "Start with one segment comparison workflow and one action-ready output.",
+      title: "Scope a voice-support MVP",
+      description: "Start with reminders, one caregiver reassurance loop, and one connection workflow.",
       route: "/mvp-builder",
     },
   ],
@@ -750,24 +754,24 @@ const earlyStageStartupPrePmfDraft: IcpDraftDocument = {
 
 export const SAMPLE_ICP_PREVIEW_SAMPLES: IcpSamplePreviewProfile[] = [
   {
-    key: "revops_smb_saas",
-    label: "RevOps-led SMB SaaS",
-    draft: revOpsSmbSaasDraft,
+    key: "ai_powered_personal_finance_coach",
+    label: "AI-Powered Personal Finance Coach",
+    draft: aiPoweredPersonalFinanceCoachDraft,
   },
   {
-    key: "d2c_ecommerce_brand",
-    label: "D2C E-commerce Brand",
-    draft: d2cEcommerceBrandDraft,
+    key: "creator_analytics_growth_platform",
+    label: "Creator Analytics & Growth Platform",
+    draft: creatorAnalyticsGrowthPlatformDraft,
   },
   {
-    key: "b2b_professional_services",
-    label: "B2B Professional Services Firm",
-    draft: b2bProfessionalServicesDraft,
+    key: "sustainability_compliance_consulting",
+    label: "Sustainability Compliance Consulting",
+    draft: sustainabilityComplianceConsultingDraft,
   },
   {
-    key: "early_stage_startup_pre_pmf",
-    label: "Early-Stage Startup (Pre-PMF)",
-    draft: earlyStageStartupPrePmfDraft,
+    key: "ai_voice_assistant_for_seniors",
+    label: "AI Voice Assistant for Seniors",
+    draft: aiVoiceAssistantForSeniorsDraft,
   },
 ];
 
