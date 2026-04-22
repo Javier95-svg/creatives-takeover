@@ -12,16 +12,11 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import type { IcpDraftDocument } from "@/lib/icpBuilderSession";
 
 type IcpFolioTone = "folio" | "platformPreview" | "landingPreview";
 type IcpFolioSectionKey = "customer" | "pain" | "build" | "moat";
+type IcpExplainerSide = "left" | "right" | "bottom";
 
 interface IcpSectionExplainer {
   what: string;
@@ -267,19 +262,45 @@ function DocumentDetailTable({
 function DocumentSection({
   sectionKey,
   explainer,
-  isMobile,
+  popoverSide,
+  open,
+  registerSection,
+  onOpenChange,
+  onPrepareOpen,
   children,
 }: {
   sectionKey: IcpFolioSectionKey;
   explainer?: IcpSectionExplainer;
-  isMobile: boolean;
+  popoverSide: IcpExplainerSide;
+  open: boolean;
+  registerSection: (sectionKey: IcpFolioSectionKey, node: HTMLElement | null) => void;
+  onOpenChange: (sectionKey: IcpFolioSectionKey, open: boolean) => void;
+  onPrepareOpen: (sectionKey: IcpFolioSectionKey, clickX?: number) => void;
   children: ReactNode;
 }) {
   const section = (
     <section
-      className={explainer ? "cursor-help focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300" : undefined}
+      ref={(node) => registerSection(sectionKey, node)}
+      className={
+        explainer
+          ? "cursor-pointer rounded-sm transition-colors hover:bg-slate-50/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300"
+          : undefined
+      }
       tabIndex={explainer ? 0 : undefined}
-      aria-label={explainer ? `Explain ${sectionKey} section` : undefined}
+      role={explainer ? "button" : undefined}
+      aria-label={explainer ? `Show explanation for ${sectionKey} section` : undefined}
+      onClick={explainer ? (event) => onPrepareOpen(sectionKey, event.clientX) : undefined}
+      onKeyDown={
+        explainer
+          ? (event) => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                onPrepareOpen(sectionKey);
+                (event.currentTarget as HTMLElement).click();
+              }
+            }
+          : undefined
+      }
     >
       {children}
     </section>
@@ -289,36 +310,19 @@ function DocumentSection({
     return section;
   }
 
-  if (isMobile) {
-    return (
-      <Popover>
-        <PopoverTrigger asChild>{section}</PopoverTrigger>
-        <PopoverContent
-          side="bottom"
-          align="center"
-          sideOffset={12}
-          collisionPadding={VIEWPORT_MARGIN}
-          className="w-[min(24rem,calc(100vw-2rem))] rounded-2xl border-slate-200 bg-white p-4 shadow-[0_24px_70px_-40px_rgba(15,23,42,0.45)] md:hidden"
-        >
-          <SectionExplainerContent explainer={explainer} />
-        </PopoverContent>
-      </Popover>
-    );
-  }
-
   return (
-    <Tooltip>
-      <TooltipTrigger asChild>{section}</TooltipTrigger>
-      <TooltipContent
-        side="top"
-        align="start"
-        sideOffset={12}
+    <Popover open={open} onOpenChange={(nextOpen) => onOpenChange(sectionKey, nextOpen)}>
+      <PopoverTrigger asChild>{section}</PopoverTrigger>
+      <PopoverContent
+        side={popoverSide}
+        align="center"
+        sideOffset={16}
         collisionPadding={VIEWPORT_MARGIN}
-        className="hidden max-w-sm rounded-2xl border-slate-200 bg-white p-4 shadow-[0_24px_70px_-40px_rgba(15,23,42,0.45)] md:block"
+        className="w-[min(24rem,calc(100vw-2rem))] rounded-2xl border-slate-200 bg-white p-4 shadow-[0_24px_70px_-40px_rgba(15,23,42,0.45)]"
       >
         <SectionExplainerContent explainer={explainer} />
-      </TooltipContent>
-    </Tooltip>
+      </PopoverContent>
+    </Popover>
   );
 }
 
@@ -335,11 +339,87 @@ export function IcpFolioDocument({
   sectionExplainers,
 }: IcpFolioDocumentProps) {
   const articleRef = useRef<HTMLDivElement>(null);
+  const sectionRefs = useRef<Record<IcpFolioSectionKey, HTMLElement | null>>({
+    customer: null,
+    pain: null,
+    build: null,
+    moat: null,
+  });
   const isMobile = useIsMobileViewport();
+  const [activeSection, setActiveSection] = useState<IcpFolioSectionKey | null>(null);
+  const [activeExplainerSide, setActiveExplainerSide] = useState<IcpExplainerSide>("right");
 
   useEffect(() => {
     setExternalDocumentRef(documentRef, articleRef.current);
   }, [documentRef]);
+
+  useEffect(() => {
+    if (blurred) {
+      setActiveSection(null);
+    }
+  }, [blurred]);
+
+  const registerSection = (sectionKey: IcpFolioSectionKey, node: HTMLElement | null) => {
+    sectionRefs.current[sectionKey] = node;
+  };
+
+  const getExplainerSide = (
+    sectionKey: IcpFolioSectionKey,
+    clickX?: number,
+  ): IcpExplainerSide => {
+    if (isMobile) {
+      return "bottom";
+    }
+
+    const viewportWidth = window.innerWidth;
+    const sectionRect = sectionRefs.current[sectionKey]?.getBoundingClientRect();
+    const referenceX =
+      typeof clickX === "number"
+        ? clickX
+        : sectionRect
+          ? sectionRect.left + sectionRect.width / 2
+          : viewportWidth / 2;
+    const preferredSide: Exclude<IcpExplainerSide, "bottom"> =
+      referenceX <= viewportWidth / 2 ? "right" : "left";
+
+    if (!sectionRect) {
+      return preferredSide;
+    }
+
+    const minimumComfortSpace = 220;
+    const spaceLeft = sectionRect.left - VIEWPORT_MARGIN;
+    const spaceRight = viewportWidth - sectionRect.right - VIEWPORT_MARGIN;
+
+    if (preferredSide === "right" && spaceRight >= minimumComfortSpace) {
+      return "right";
+    }
+
+    if (preferredSide === "left" && spaceLeft >= minimumComfortSpace) {
+      return "left";
+    }
+
+    return spaceRight >= spaceLeft ? "right" : "left";
+  };
+
+  const prepareExplainer = (sectionKey: IcpFolioSectionKey, clickX?: number) => {
+    if (!sectionExplainers?.[sectionKey] || blurred) return;
+    setActiveExplainerSide(getExplainerSide(sectionKey, clickX));
+  };
+
+  const handleExplainerOpenChange = (sectionKey: IcpFolioSectionKey, open: boolean) => {
+    if (!sectionExplainers?.[sectionKey] || blurred) {
+      setActiveSection(null);
+      return;
+    }
+
+    setActiveSection((current) => {
+      if (open) {
+        return sectionKey;
+      }
+
+      return current === sectionKey ? null : current;
+    });
+  };
 
   const wrapperClasses =
     layout === "embedded"
@@ -352,19 +432,22 @@ export function IcpFolioDocument({
 
   return (
     <div className={`${wrapperClasses} ${className}`}>
-      <TooltipProvider delayDuration={120}>
-        <div className="mx-auto w-full max-w-4xl">
-          {topBar ? <div className="mb-6">{topBar}</div> : null}
+      <div className="mx-auto w-full max-w-4xl">
+        {topBar ? <div className="mb-6">{topBar}</div> : null}
 
-          <div className={surfaceBlurClasses}>
-            <article
-              ref={articleRef}
-              className="relative bg-white px-6 py-8 text-slate-950 sm:px-10 sm:py-10"
-            >
+        <div className={surfaceBlurClasses}>
+          <article
+            ref={articleRef}
+            className="relative bg-white px-6 py-8 text-slate-950 sm:px-10 sm:py-10"
+          >
             <DocumentSection
               sectionKey="customer"
               explainer={sectionExplainers?.customer}
-              isMobile={isMobile}
+              popoverSide={activeSection === "customer" ? activeExplainerSide : "right"}
+              open={activeSection === "customer"}
+              registerSection={registerSection}
+              onOpenChange={handleExplainerOpenChange}
+              onPrepareOpen={prepareExplainer}
             >
               <div>
                 <p className="text-sm font-medium text-slate-500">Creatives Takeover: ICP Draft</p>
@@ -437,7 +520,11 @@ export function IcpFolioDocument({
             <DocumentSection
               sectionKey="pain"
               explainer={sectionExplainers?.pain}
-              isMobile={isMobile}
+              popoverSide={activeSection === "pain" ? activeExplainerSide : "right"}
+              open={activeSection === "pain"}
+              registerSection={registerSection}
+              onOpenChange={handleExplainerOpenChange}
+              onPrepareOpen={prepareExplainer}
             >
               <div className="border-t border-slate-200 pt-10">
                 <h2 className="text-2xl font-semibold tracking-tight text-slate-950">
@@ -468,7 +555,11 @@ export function IcpFolioDocument({
             <DocumentSection
               sectionKey="build"
               explainer={sectionExplainers?.build}
-              isMobile={isMobile}
+              popoverSide={activeSection === "build" ? activeExplainerSide : "right"}
+              open={activeSection === "build"}
+              registerSection={registerSection}
+              onOpenChange={handleExplainerOpenChange}
+              onPrepareOpen={prepareExplainer}
             >
               <div className="border-t border-slate-200 pt-10">
                 <h2 className="text-2xl font-semibold tracking-tight text-slate-950">
@@ -511,7 +602,11 @@ export function IcpFolioDocument({
             <DocumentSection
               sectionKey="moat"
               explainer={sectionExplainers?.moat}
-              isMobile={isMobile}
+              popoverSide={activeSection === "moat" ? activeExplainerSide : "right"}
+              open={activeSection === "moat"}
+              registerSection={registerSection}
+              onOpenChange={handleExplainerOpenChange}
+              onPrepareOpen={prepareExplainer}
             >
               <div className="border-t border-slate-200 pt-10">
                 <h2 className="text-2xl font-semibold tracking-tight text-slate-950">
@@ -635,13 +730,12 @@ export function IcpFolioDocument({
                 </div>
               </div>
             </DocumentSection>
-            </article>
-          </div>
-
-          {bottomBar ? <div className="mt-6">{bottomBar}</div> : null}
-          {footer ? <div className="mt-6">{footer}</div> : null}
+          </article>
         </div>
-      </TooltipProvider>
+
+        {bottomBar ? <div className="mt-6">{bottomBar}</div> : null}
+        {footer ? <div className="mt-6">{footer}</div> : null}
+      </div>
     </div>
   );
 }
