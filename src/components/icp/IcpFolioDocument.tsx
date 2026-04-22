@@ -134,22 +134,61 @@ function SectionEvidenceNote({
   );
 }
 
+type DocumentTableTone = "blue" | "emerald" | "amber";
+
+const DOCUMENT_TABLE_TONE_STYLES: Record<
+  DocumentTableTone,
+  {
+    frame: string;
+    headerRow: string;
+    headerText: string;
+    rowBorder: string;
+    accentText: string;
+  }
+> = {
+  blue: {
+    frame: "border-sky-200/80",
+    headerRow: "border-sky-200/80 bg-sky-50/80",
+    headerText: "text-sky-700",
+    rowBorder: "border-sky-100/80",
+    accentText: "text-sky-600",
+  },
+  emerald: {
+    frame: "border-emerald-200/80",
+    headerRow: "border-emerald-200/80 bg-emerald-50/80",
+    headerText: "text-emerald-700",
+    rowBorder: "border-emerald-100/80",
+    accentText: "text-emerald-600",
+  },
+  amber: {
+    frame: "border-amber-200/80",
+    headerRow: "border-amber-200/80 bg-amber-50/80",
+    headerText: "text-amber-700",
+    rowBorder: "border-amber-100/80",
+    accentText: "text-amber-700",
+  },
+};
+
 function DocumentSingleColumnTable({
   columnLabel,
   items,
   emptyText,
+  tone,
 }: {
   columnLabel: string;
   items: string[];
   emptyText: string;
+  tone: DocumentTableTone;
 }) {
+  const styles = DOCUMENT_TABLE_TONE_STYLES[tone];
+
   return (
-    <div className="mt-3 overflow-hidden border border-slate-200">
+    <div className={`mt-3 overflow-hidden border ${styles.frame}`}>
       <table className="w-full border-collapse text-left text-sm text-slate-600">
         <thead>
-          <tr className="border-b border-slate-200 bg-slate-50">
-            <th className="w-14 px-3 py-2 font-medium text-slate-500">#</th>
-            <th className="px-3 py-2 font-medium text-slate-500">{columnLabel}</th>
+          <tr className={`border-b ${styles.headerRow}`}>
+            <th className={`w-14 px-3 py-2 font-medium ${styles.headerText}`}>#</th>
+            <th className={`px-3 py-2 font-medium ${styles.headerText}`}>{columnLabel}</th>
           </tr>
         </thead>
         <tbody>
@@ -157,9 +196,9 @@ function DocumentSingleColumnTable({
             items.map((item, index) => (
               <tr
                 key={`${columnLabel}-${item}-${index}`}
-                className="border-b border-slate-200 last:border-b-0"
+                className={`border-b ${styles.rowBorder} last:border-b-0`}
               >
-                <td className="px-3 py-3 align-top font-medium text-slate-400">
+                <td className={`px-3 py-3 align-top font-medium ${styles.accentText}`}>
                   {String(index + 1).padStart(2, "0")}
                 </td>
                 <td className="px-3 py-3 leading-7 text-slate-700">{item}</td>
@@ -181,19 +220,22 @@ function DocumentSingleColumnTable({
 function DocumentDetailTable({
   rows,
   emptyText,
+  tone,
 }: {
   rows: Array<{ label: string; value: string }>;
   emptyText?: string;
+  tone: DocumentTableTone;
 }) {
   const populatedRows = rows.filter((row) => row.value.trim().length > 0);
+  const styles = DOCUMENT_TABLE_TONE_STYLES[tone];
 
   return (
-    <div className="mt-3 overflow-hidden border border-slate-200">
+    <div className={`mt-3 overflow-hidden border ${styles.frame}`}>
       <table className="w-full border-collapse text-left text-sm text-slate-600">
         <thead>
-          <tr className="border-b border-slate-200 bg-slate-50">
-            <th className="w-40 px-3 py-2 font-medium text-slate-500">Type</th>
-            <th className="px-3 py-2 font-medium text-slate-500">Detail</th>
+          <tr className={`border-b ${styles.headerRow}`}>
+            <th className={`w-40 px-3 py-2 font-medium ${styles.headerText}`}>Type</th>
+            <th className={`px-3 py-2 font-medium ${styles.headerText}`}>Detail</th>
           </tr>
         </thead>
         <tbody>
@@ -201,9 +243,11 @@ function DocumentDetailTable({
             populatedRows.map((row, index) => (
               <tr
                 key={`${row.label}-${index}`}
-                className="border-b border-slate-200 last:border-b-0"
+                className={`border-b ${styles.rowBorder} last:border-b-0`}
               >
-                <td className="px-3 py-3 align-top font-medium text-slate-900">{row.label}</td>
+                <td className={`px-3 py-3 align-top font-medium ${styles.accentText}`}>
+                  {row.label}
+                </td>
                 <td className="px-3 py-3 leading-7 text-slate-700">{row.value}</td>
               </tr>
             ))
@@ -343,6 +387,7 @@ export function IcpFolioDocument({
                       columnLabel="Observed behavior"
                       items={draft.customer.behaviors}
                       emptyText="Behavior patterns still need sharper evidence."
+                      tone="blue"
                     />
 
                     {draft.customer.whereToFind.length > 0 ? (
@@ -354,6 +399,7 @@ export function IcpFolioDocument({
                           columnLabel="Channel or environment"
                           items={draft.customer.whereToFind}
                           emptyText="Distribution channels still need clearer validation."
+                          tone="emerald"
                         />
                       </div>
                     ) : null}
@@ -379,6 +425,7 @@ export function IcpFolioDocument({
                         },
                       ]}
                       emptyText="Motivations still need sharper founder evidence."
+                      tone="amber"
                     />
                   </div>
                 </div>
