@@ -134,6 +134,92 @@ function SectionEvidenceNote({
   );
 }
 
+function DocumentSingleColumnTable({
+  columnLabel,
+  items,
+  emptyText,
+}: {
+  columnLabel: string;
+  items: string[];
+  emptyText: string;
+}) {
+  return (
+    <div className="mt-3 overflow-hidden border border-slate-200">
+      <table className="w-full border-collapse text-left text-sm text-slate-600">
+        <thead>
+          <tr className="border-b border-slate-200 bg-slate-50">
+            <th className="w-14 px-3 py-2 font-medium text-slate-500">#</th>
+            <th className="px-3 py-2 font-medium text-slate-500">{columnLabel}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {items.length > 0 ? (
+            items.map((item, index) => (
+              <tr
+                key={`${columnLabel}-${item}-${index}`}
+                className="border-b border-slate-200 last:border-b-0"
+              >
+                <td className="px-3 py-3 align-top font-medium text-slate-400">
+                  {String(index + 1).padStart(2, "0")}
+                </td>
+                <td className="px-3 py-3 leading-7 text-slate-700">{item}</td>
+              </tr>
+            ))
+          ) : (
+            <tr>
+              <td colSpan={2} className="px-3 py-3 leading-7 text-slate-500">
+                {emptyText}
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function DocumentDetailTable({
+  rows,
+  emptyText,
+}: {
+  rows: Array<{ label: string; value: string }>;
+  emptyText?: string;
+}) {
+  const populatedRows = rows.filter((row) => row.value.trim().length > 0);
+
+  return (
+    <div className="mt-3 overflow-hidden border border-slate-200">
+      <table className="w-full border-collapse text-left text-sm text-slate-600">
+        <thead>
+          <tr className="border-b border-slate-200 bg-slate-50">
+            <th className="w-40 px-3 py-2 font-medium text-slate-500">Type</th>
+            <th className="px-3 py-2 font-medium text-slate-500">Detail</th>
+          </tr>
+        </thead>
+        <tbody>
+          {populatedRows.length > 0 ? (
+            populatedRows.map((row, index) => (
+              <tr
+                key={`${row.label}-${index}`}
+                className="border-b border-slate-200 last:border-b-0"
+              >
+                <td className="px-3 py-3 align-top font-medium text-slate-900">{row.label}</td>
+                <td className="px-3 py-3 leading-7 text-slate-700">{row.value}</td>
+              </tr>
+            ))
+          ) : (
+            <tr>
+              <td colSpan={2} className="px-3 py-3 leading-7 text-slate-500">
+                {emptyText ?? "Additional detail still needs sharper founder evidence."}
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 function DocumentSection({
   sectionKey,
   explainer,
@@ -237,7 +323,7 @@ export function IcpFolioDocument({
               isMobile={isMobile}
             >
               <div>
-                <p className="text-sm font-medium text-slate-500">Ideal customer profile</p>
+                <p className="text-sm font-medium text-slate-500">Creatives Takeover: ICP Draft</p>
                 <h1 className="mt-3 text-3xl font-semibold tracking-tight text-slate-950 sm:text-[2rem]">
                   {draft.customer.personaName}
                 </h1>
@@ -253,53 +339,45 @@ export function IcpFolioDocument({
                 <div className="mt-8 grid gap-8 sm:grid-cols-2">
                   <div>
                     <h2 className="text-sm font-semibold text-slate-900">Behavior signals</h2>
-                    {draft.customer.behaviors.length > 0 ? (
-                      <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-7 text-slate-600">
-                        {draft.customer.behaviors.map((item) => (
-                          <li key={item}>{item}</li>
-                        ))}
-                      </ul>
-                    ) : (
-                      <p className="mt-3 text-sm leading-7 text-slate-600">
-                        Behavior patterns still need sharper evidence.
-                      </p>
-                    )}
+                    <DocumentSingleColumnTable
+                      columnLabel="Observed behavior"
+                      items={draft.customer.behaviors}
+                      emptyText="Behavior patterns still need sharper evidence."
+                    />
                   </div>
 
                   <div>
                     <h2 className="text-sm font-semibold text-slate-900">
                       Motivations and trigger
                     </h2>
-                    <div className="mt-3 space-y-3 text-sm leading-7 text-slate-600">
-                      {draft.customer.motivations.length > 0 ? (
-                        <ul className="list-disc space-y-2 pl-5">
-                          {draft.customer.motivations.map((item) => (
-                            <li key={item}>{item}</li>
-                          ))}
-                        </ul>
-                      ) : (
-                        <p>Motivations still need sharper founder evidence.</p>
-                      )}
-                      <p>
-                        <span className="font-medium text-slate-900">Context:</span>{" "}
-                        {draft.customer.triggerContext}
-                      </p>
-                      <p>
-                        <span className="font-medium text-slate-900">Why they act now:</span>{" "}
-                        {draft.customer.actionTrigger}
-                      </p>
-                    </div>
+                    <DocumentDetailTable
+                      rows={[
+                        ...draft.customer.motivations.map((item) => ({
+                          label: "Motivation",
+                          value: item,
+                        })),
+                        {
+                          label: "Context",
+                          value: draft.customer.triggerContext,
+                        },
+                        {
+                          label: "Why they act now",
+                          value: draft.customer.actionTrigger,
+                        },
+                      ]}
+                      emptyText="Motivations still need sharper founder evidence."
+                    />
                   </div>
                 </div>
 
                 {draft.customer.whereToFind.length > 0 ? (
                   <div className="mt-8">
                     <h2 className="text-sm font-semibold text-slate-900">Where to find them</h2>
-                    <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-7 text-slate-600">
-                      {draft.customer.whereToFind.map((item) => (
-                        <li key={item}>{item}</li>
-                      ))}
-                    </ul>
+                    <DocumentSingleColumnTable
+                      columnLabel="Channel or environment"
+                      items={draft.customer.whereToFind}
+                      emptyText="Distribution channels still need clearer validation."
+                    />
                   </div>
                 ) : null}
 
