@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Loader2, LockKeyhole, Mail, Users, X } from "lucide-react";
+import { Loader2, Mail, Users, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -52,8 +52,6 @@ export function IcpUnlockGate({
   const roleLine = gatePreview?.roleLine || artifact.draftDocument.customer.roleLine;
   const painLine = gatePreview?.painLine || artifact.draftDocument.pain.quote;
   const customerSummary = artifact.draftDocument.customer.summary;
-  const buildOutcome = artifact.draftDocument.build.outcome;
-  const corePain = artifact.draftDocument.pain.quote;
 
   useEffect(() => {
     trackICPUnlockGateShown({
@@ -184,21 +182,6 @@ export function IcpUnlockGate({
             ) : null}
           </div>
 
-          <div className="relative mt-4 overflow-hidden rounded-[1.5rem] border border-border/50 bg-background/60 px-4 py-4" aria-hidden="true">
-            <div className="select-none space-y-2 blur-[4px]">
-              <p className="text-sm font-semibold text-foreground">What to build</p>
-              <p className="text-sm leading-6 text-foreground/80">{buildOutcome || corePain}</p>
-              <div className="h-3 w-3/4 rounded bg-slate-200 dark:bg-slate-700" />
-              <div className="h-3 w-full rounded bg-slate-200 dark:bg-slate-700" />
-              <div className="h-3 w-2/3 rounded bg-slate-200 dark:bg-slate-700" />
-            </div>
-            <div className="absolute inset-0 flex items-start justify-start p-4">
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-border/50 bg-white/90 px-3 py-1 text-[11px] font-semibold text-[#0f5b64] dark:bg-slate-900/90 dark:text-[#8fe6ef]">
-                <LockKeyhole className="h-3 w-3" />
-                What to build, moat, and next steps unlock after signup
-              </span>
-            </div>
-          </div>
         </div>
 
         <div className="px-6 py-6 sm:px-8">
