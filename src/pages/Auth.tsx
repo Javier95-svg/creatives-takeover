@@ -11,6 +11,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { supabase } from '@/integrations/supabase/client';
 import { getSessionSafely } from '@/integrations/supabase/auth';
 import { toast } from 'sonner';
+import { AuthSocialButtons } from '@/components/auth/AuthSocialButtons';
 import AuthWallpaper from '@/components/wallpapers/AuthWallpaper';
 import MobileFormOptimizer from '@/components/MobileFormOptimizer';
 import { useFeedbackCredits } from '@/hooks/useFeedbackCredits';
@@ -25,7 +26,16 @@ import {
   persistPendingReferralCode,
   setOAuthAuthIntent,
 } from '@/lib/referral';
-import { resumePendingDiscoveryCallRedirect } from '@/services/discoveryCallService';
+import {
+  getSocialAuthSignupMethod,
+  startSocialOAuth,
+  type SocialAuthIntent,
+  type SocialAuthProviderId,
+} from '@/lib/socialAuth';
+import {
+  PENDING_DISCOVERY_CALL_KEY,
+  resumePendingDiscoveryCallRedirect,
+} from '@/services/discoveryCallService';
 
 const Auth: React.FC = () => {
   const navigate = useNavigate();
@@ -189,100 +199,50 @@ const Auth: React.FC = () => {
     }
   };
 
-  // Google OAuth login
-  const handleGoogleLogin = async () => {
-    try {
-      console.log("Starting Google OAuth...");
-      
-      // Check for pending Calendly redirect - if exists, preserve it
-      const pendingCalendlyUrl = localStorage.getItem(CALENDLY_REDIRECT_KEY);
-      
-      // If redirect is a booking flow, go to /community instead
-      const finalRedirect = redirectUrl.startsWith('/community/book/') ? '/community' : redirectUrl;
-      localStorage.setItem('oauth_return_url', finalRedirect);
-      localStorage.removeItem('oauth_signup_method');
-      setOAuthAuthIntent('login');
-      persistOnboardingReturn(finalRedirect);
-      
-      // Preserve Calendly redirect for OAuth callback
-      if (pendingCalendlyUrl) {
-        localStorage.setItem('oauth_calendly_redirect', pendingCalendlyUrl);
-      }
-      
-      toast("Redirecting to Google...");
-      
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
-          queryParams: {
-            access_type: 'offline',
-            prompt: 'select_account',
-          },
+  const handleSocialAuth = async (
+    intent: SocialAuthIntent,
+    provider: SocialAuthProviderId,
+  ) => {
+    const finalRedirect = redirectUrl.startsWith('/community/book/') ? '/community' : redirectUrl;
+    const signupMethod = getSocialAuthSignupMethod(provider);
+
+    await startSocialOAuth({
+      provider,
+      intent,
+      beforeRedirect: () => {
+        if (intent === 'login') {
+          const pendingCalendlyUrl = localStorage.getItem(PENDING_DISCOVERY_CALL_KEY);
+
+          localStorage.setItem('oauth_return_url', finalRedirect);
+          localStorage.removeItem('oauth_signup_method');
+          setOAuthAuthIntent('login');
+          persistOnboardingReturn(finalRedirect);
+
+          if (pendingCalendlyUrl) {
+            localStorage.setItem('oauth_calendly_redirect', pendingCalendlyUrl);
+          }
+
+          return;
         }
-      });
-      
-      console.log("OAuth response:", { data, error });
-      
-      if (error) {
-        console.error("OAuth error:", error);
-        toast.error(`Google sign-in error: ${error.message}`);
-        return;
-      }
-      
-      // If we get here without error, the redirect should have happened
-      console.log("OAuth initiated successfully");
-      
-    } catch (err) {
-      console.error("Caught error:", err);
-      toast.error(`Google sign-in failed: ${err instanceof Error ? err.message : 'Unknown error'}`);
-    }
+
+        localStorage.setItem('oauth_return_url', finalRedirect);
+        localStorage.setItem('oauth_signup_method', signupMethod);
+        setOAuthAuthIntent('signup');
+
+        const pendingReferralCode = getPendingReferralCode();
+        if (pendingReferralCode) {
+          persistPendingReferralCode(pendingReferralCode);
+        }
+
+        persistOnboardingReturn(finalRedirect);
+      },
+    });
   };
 
-  const handleGoogleSignup = async () => {
-    try {
-      console.log("Starting Google OAuth signup...");
-      
-      // If redirect is a booking flow, go to /community instead
-      const finalRedirect = redirectUrl.startsWith('/community/book/') ? '/community' : redirectUrl;
-      localStorage.setItem('oauth_return_url', finalRedirect);
-      localStorage.setItem('oauth_signup_method', 'google');
-      setOAuthAuthIntent('signup');
-      const pendingReferralCode = getPendingReferralCode();
-      if (pendingReferralCode) {
-        persistPendingReferralCode(pendingReferralCode);
-      }
-      persistOnboardingReturn(finalRedirect);
-      
-      toast("Redirecting to Google...");
-      
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
-          queryParams: {
-            access_type: 'offline',
-            prompt: 'select_account',
-          },
-        }
-      });
-      
-      console.log("OAuth response:", { data, error });
-      
-      if (error) {
-        console.error("OAuth error:", error);
-        toast.error(`Google sign-up error: ${error.message}`);
-        return;
-      }
-      
-      // If we get here without error, the redirect should have happened
-      console.log("OAuth initiated successfully");
-      
-    } catch (err) {
-      console.error("Caught error:", err);
-      toast.error(`Google sign-up failed: ${err instanceof Error ? err.message : 'Unknown error'}`);
-    }
-  };
+  const handleGoogleLogin = () => handleSocialAuth('login', 'google');
+  const handleLinkedInLogin = () => handleSocialAuth('login', 'linkedin_oidc');
+  const handleGoogleSignup = () => handleSocialAuth('signup', 'google');
+  const handleLinkedInSignup = () => handleSocialAuth('signup', 'linkedin_oidc');
 
   return (
     <div className="relative min-h-dvh flex items-center justify-center p-4 overflow-hidden safe-area-inset"
@@ -426,37 +386,12 @@ const Auth: React.FC = () => {
               </div>
 
               {/* Google Sign In Button */}
-              <div className="mt-6">
-                <div
-                  className="p-[1px] rounded-md"
-                  style={{
-                    background: 'linear-gradient(90deg, hsl(var(--blue-primary)), hsl(var(--red-primary)), #EAB308, hsl(var(--green-primary)))'
-                  }}
-                >
-                  <Button
-                    type="button"
-                    variant="outline"
-                    disabled={loading}
-                    onClick={handleGoogleLogin}
-                    className="h-12 w-full font-medium relative bg-background hover:bg-muted/50 transition-all duration-200 border-0"
-                  >
-                    <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
-                      <path fill="hsl(var(--blue-primary))" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                      <path fill="hsl(var(--red-primary))" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                      <path fill="#EAB308" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
-                      <path fill="hsl(var(--green-primary))" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
-                    </svg>
-                    <span
-                      className="bg-clip-text text-transparent font-medium"
-                      style={{
-                        backgroundImage: 'linear-gradient(90deg, hsl(var(--blue-primary)), hsl(var(--red-primary)), #EAB308, hsl(var(--green-primary)))'
-                      }}
-                    >
-                      Continue with Google
-                    </span>
-                  </Button>
-                </div>
-              </div>
+              <AuthSocialButtons
+                className="mt-6"
+                disabled={loading}
+                onGoogleContinue={handleGoogleLogin}
+                onLinkedInContinue={handleLinkedInLogin}
+              />
             </TabsContent>
 
             <TabsContent value="signup">
@@ -599,37 +534,12 @@ const Auth: React.FC = () => {
               </div>
 
               {/* Google Sign Up Button */}
-              <div className="mt-6">
-                <div
-                  className="p-[1px] rounded-md"
-                  style={{
-                    background: 'linear-gradient(90deg, hsl(var(--blue-primary)), hsl(var(--red-primary)), #EAB308, hsl(var(--green-primary)))'
-                  }}
-                >
-                  <Button
-                    type="button"
-                    variant="outline"
-                    disabled={loading}
-                    onClick={handleGoogleSignup}
-                    className="h-12 w-full font-medium relative bg-background hover:bg-muted/50 transition-all duration-200 border-0"
-                  >
-                    <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
-                      <path fill="hsl(var(--blue-primary))" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                      <path fill="hsl(var(--red-primary))" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                      <path fill="#EAB308" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
-                      <path fill="hsl(var(--green-primary))" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
-                    </svg>
-                    <span
-                      className="bg-clip-text text-transparent font-medium"
-                      style={{
-                        backgroundImage: 'linear-gradient(90deg, hsl(var(--blue-primary)), hsl(var(--red-primary)), #EAB308, hsl(var(--green-primary)))'
-                      }}
-                    >
-                      Continue with Google
-                    </span>
-                  </Button>
-                </div>
-              </div>
+              <AuthSocialButtons
+                className="mt-6"
+                disabled={loading}
+                onGoogleContinue={handleGoogleSignup}
+                onLinkedInContinue={handleLinkedInSignup}
+              />
             </TabsContent>
           </Tabs>
         </CardContent>

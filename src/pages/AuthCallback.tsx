@@ -191,10 +191,14 @@ const AuthCallback = () => {
           }
           
           // Track OAuth signup if source exists
-          if (oauthSource && oauthSource !== 'direct') {
+          if (
+            oauthSource &&
+            oauthSource !== 'direct' &&
+            (oauthSignupMethod === 'google' || oauthSignupMethod === 'linkedin')
+          ) {
             try {
               const { trackActivity } = await import('@/lib/activity');
-              await trackActivity('user:signup_oauth', { provider: 'google', source: oauthSource });
+              await trackActivity('user:signup_oauth', { provider: oauthSignupMethod, source: oauthSource });
             } catch (trackingError) {
               console.warn('Failed to track OAuth signup source:', trackingError);
             }
