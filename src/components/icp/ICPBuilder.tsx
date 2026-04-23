@@ -1005,9 +1005,6 @@ const ICPBuilder: React.FC = () => {
         <h1 className="takeover-gradient creatives-font pb-3 text-4xl font-semibold leading-[1.12] tracking-tight sm:pb-4 sm:text-5xl">
           Get your ICP Draft
         </h1>
-        <p className="mx-auto max-w-3xl text-base leading-7 text-muted-foreground sm:text-lg">
-          Describe your startup idea and get your ideal customer and their core pain drafted for free — before you create an account. Then unlock the full draft to save it and keep building.
-        </p>
       </div>
 
       <div id="icp-mode-selector" className="mt-10 grid gap-5 lg:grid-cols-2">
