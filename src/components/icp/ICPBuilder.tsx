@@ -241,7 +241,6 @@ const ICPBuilder: React.FC = () => {
   const [fallbackEmailError, setFallbackEmailError] = useState<string | null>(null);
   const [fallbackEmailState, setFallbackEmailState] = useState<FallbackEmailState>("idle");
   const [isPersonaEditorOpen, setIsPersonaEditorOpen] = useState(false);
-  const [pendingFastAutoGenerate, setPendingFastAutoGenerate] = useState(false);
 
   const unlockPath = buildIcpUnlockReturnPath();
   const editDraftId = searchParams.get("edit");
@@ -711,15 +710,6 @@ const ICPBuilder: React.FC = () => {
     }
   }, [navigate, refreshActivation, session.mode, session.personaEditedSignificantly, toast, user, validatedFast, validatedGuided]);
 
-  useEffect(() => {
-    if (!pendingFastAutoGenerate) return;
-    if (session.mode !== "fast" || session.currentScreen !== "fast_input") return;
-    if (!validatedFast.success) return;
-    if (loadingPhase !== null) return;
-    setPendingFastAutoGenerate(false);
-    void completeDraftGeneration(Boolean(user));
-  }, [pendingFastAutoGenerate, session.mode, session.currentScreen, validatedFast.success, loadingPhase, completeDraftGeneration, user]);
-
   const persistDraftAndContinue = useCallback(async () => {
     if (isPersisting) return;
     setIsPersisting(true);
@@ -978,6 +968,15 @@ const ICPBuilder: React.FC = () => {
     void handleContinue();
   };
 
+  const handleSelectFastMode = useCallback(() => {
+    trackICPBuilderModeSelected({ mode: "fast", is_authenticated: Boolean(user) });
+    setSession((previous) => ({
+      ...previous,
+      mode: "fast",
+      currentScreen: "fast_input",
+    }));
+  }, [user]);
+
   const handleSelectGuidedMode = useCallback(() => {
     trackICPBuilderModeSelected({ mode: "guided", is_authenticated: Boolean(user) });
     setSession((previous) => ({
@@ -988,95 +987,57 @@ const ICPBuilder: React.FC = () => {
     }));
   }, [user]);
 
-  const handleLandingFastSubmit = () => {
-    if (!validatedFast.success) {
-      toast({
-        title: "Add a bit more detail",
-        description: "Give us 2–3 sentences about your idea so we can build a useful draft.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    trackICPBuilderModeSelected({ mode: "fast", is_authenticated: Boolean(user) });
-    setSession((previous) => ({
-      ...previous,
-      mode: "fast",
-      currentScreen: "fast_input",
-    }));
-    setPendingFastAutoGenerate(true);
-  };
-
-  const handleLandingFastKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (event.key !== "Enter" || event.shiftKey) return;
-    event.preventDefault();
-    handleLandingFastSubmit();
-  };
-
   const renderModeSelect = () => (
-    <div className="mx-auto flex min-h-screen max-w-3xl flex-col px-4 pb-20 pt-32 text-foreground sm:px-6 md:pt-36">
+    <div className="mx-auto flex min-h-screen max-w-5xl flex-col justify-center px-4 pb-20 pt-32 text-foreground sm:px-6 md:pt-36">
       <div className="space-y-5 text-center">
         <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#32b8c6]">ICP Builder</p>
         <h1 className="takeover-gradient creatives-font pb-3 text-4xl font-semibold leading-[1.12] tracking-tight sm:pb-4 sm:text-5xl">
           Get your ICP Draft
         </h1>
-        <p className="mx-auto max-w-2xl text-base leading-7 text-muted-foreground sm:text-lg">
-          Describe your startup idea below and we&apos;ll draft your ideal customer and their core pain in under 60 seconds. Create a free account to unlock the full draft.
+        <p className="mx-auto max-w-3xl text-base leading-7 text-muted-foreground sm:text-lg">
+          This takes about 5 minutes. You&apos;ll see the first part of your personalized result before signup, then unlock the
+          full draft to save it and keep building.
         </p>
       </div>
 
-      <div id="icp-mode-selector" className="mt-10 space-y-4">
-        <label htmlFor="icp-landing-fast-input" className="sr-only">
-          Describe your startup idea
-        </label>
-        <Textarea
-          id="icp-landing-fast-input"
-          rows={8}
-          value={session.fastDescription}
-          onChange={(event) =>
-            setSession((previous) => ({
-              ...previous,
-              fastDescription: event.target.value,
-            }))
-          }
-          onKeyDown={handleLandingFastKeyDown}
-          placeholder="e.g. I'm building a client feedback tool for freelance designers. Right now they manage revisions through email and WhatsApp, which causes things to get lost and makes them look unprofessional. My tool puts all revision feedback in one place with version tracking. I'm a freelance designer myself so I know this market well."
-          className="min-h-[240px] rounded-[2rem] border-border/60 bg-white/85 px-5 py-5 text-base leading-7 shadow-sm dark:bg-slate-950/70"
-        />
-
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-xs text-muted-foreground">
-            3–5 sentences is ideal. See your customer and pain first, then create a free account to unlock the full draft.
+      <div id="icp-mode-selector" className="mt-10 grid gap-5 lg:grid-cols-2">
+        <button
+          type="button"
+          className="group relative overflow-hidden rounded-[2rem] border border-border/60 bg-white/80 p-6 text-left shadow-[0_28px_90px_-52px_rgba(15,23,42,0.3)] backdrop-blur transition-transform duration-300 hover:-translate-y-1 hover:border-[#32b8c6]/40 hover:shadow-[0_32px_100px_-54px_rgba(50,184,198,0.4)] motion-safe:animate-[glow_4.8s_ease-in-out_infinite_alternate] dark:bg-slate-950/70"
+          onClick={handleSelectFastMode}
+        >
+          <div className="pointer-events-none absolute inset-0 rounded-[2rem] border border-[#32b8c6]/15 opacity-60 motion-safe:animate-[pulse-slow_4s_ease-in-out_infinite]" />
+          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#32b8c6]">Fast Mode</p>
+          <p className="mt-4 text-xl font-semibold text-foreground">I can describe my startup idea clearly</p>
+          <p className="mt-4 text-sm leading-6 text-muted-foreground">
+            Paste a paragraph about your idea and see your customer and pain preview in under 60 seconds.
           </p>
-          <Button
-            type="button"
-            className="h-12 min-w-[200px] text-base font-semibold"
-            onClick={handleLandingFastSubmit}
-            disabled={!validatedFast.success || loadingPhase !== null}
-          >
-            {loadingPhase === "synthesis" ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Building your draft...
-              </>
-            ) : (
-              <>
-                Generate my free draft
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </>
-            )}
-          </Button>
-        </div>
+          <div className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-[#32b8c6]">
+            Start here
+            <ArrowRight className="h-4 w-4" />
+          </div>
+        </button>
 
-        <div className="pt-2 text-center">
-          <button
-            type="button"
-            onClick={handleSelectGuidedMode}
-            className="text-sm font-medium text-primary underline-offset-4 transition-opacity hover:opacity-80 hover:underline"
-          >
-            Still figuring things out? Use Guided Mode instead →
-          </button>
-        </div>
+        <button
+          type="button"
+          className="group relative overflow-hidden rounded-[2rem] border border-border/60 bg-white/80 p-6 text-left shadow-[0_28px_90px_-52px_rgba(15,23,42,0.3)] backdrop-blur transition-transform duration-300 hover:-translate-y-1 hover:border-[#32b8c6]/40 hover:shadow-[0_32px_100px_-54px_rgba(50,184,198,0.4)] motion-safe:animate-[glow_4.8s_ease-in-out_infinite_alternate] dark:bg-slate-950/70"
+          style={{ animationDelay: "0.45s" }}
+          onClick={handleSelectGuidedMode}
+        >
+          <div
+            className="pointer-events-none absolute inset-0 rounded-[2rem] border border-[#32b8c6]/15 opacity-60 motion-safe:animate-[pulse-slow_4s_ease-in-out_infinite]"
+            style={{ animationDelay: "0.45s" }}
+          />
+          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#32b8c6]">Guided Mode</p>
+          <p className="mt-4 text-xl font-semibold text-foreground">I&apos;m still figuring things out</p>
+          <p className="mt-4 text-sm leading-6 text-muted-foreground">
+            Answer 8 simple questions, one at a time, and we&apos;ll reveal the sharpest part of the draft before signup.
+          </p>
+          <div className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-[#32b8c6]">
+            Start here
+            <ArrowRight className="h-4 w-4" />
+          </div>
+        </button>
       </div>
 
       <IcpSamplePreviewSection />
@@ -1084,7 +1045,7 @@ const ICPBuilder: React.FC = () => {
       <div className="mt-14 sm:mt-16">
         <PageFAQSection
           title="FAQ"
-          description="If this is your first time defining an ICP, start here before writing your idea above."
+          description="If this is your first time defining an ICP, start here before choosing Fast Mode or Guided Mode."
           faqs={ICP_BUILDER_FAQS}
         />
       </div>
