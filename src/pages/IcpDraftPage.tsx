@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, ArrowRight, Copy, Download, Loader2, PencilLine, Share2, Sparkles } from "lucide-react";
+import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { ArrowLeft, ArrowRight, CheckCircle2, Copy, Download, Loader2, PencilLine, Share2, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 
 import { IcpFolioDocument } from "@/components/icp/IcpFolioDocument";
@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { captureEvent, trackICPUnlockedDraftOpened } from "@/lib/analytics";
 import { normalizeStoredArtifact } from "@/lib/icpDraftArtifacts";
 import { getIcpDraftPublicUrl, upsertIcpDraftShare } from "@/lib/icpDraftSharing";
 import type { StoredIcpArtifact } from "@/lib/icpBuilderSession";
@@ -54,8 +55,10 @@ async function downloadDraftPdf(target: HTMLElement, fileName: string) {
 export default function IcpDraftPage() {
   const navigate = useNavigate();
   const { draftId } = useParams<{ draftId: string }>();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuth();
   const documentRef = useRef<HTMLDivElement>(null);
+  const hasTrackedUnlockOpenRef = useRef(false);
 
   const [artifact, setArtifact] = useState<StoredIcpArtifact | null>(null);
   const [legacyAnalysis, setLegacyAnalysis] = useState<Record<string, unknown> | null>(null);
@@ -64,6 +67,7 @@ export default function IcpDraftPage() {
   const [loading, setLoading] = useState(true);
   const [isDownloading, setIsDownloading] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
+  const isUnlockSource = searchParams.get("source") === "icp-unlock";
 
   useEffect(() => {
     const load = async () => {
@@ -98,6 +102,32 @@ export default function IcpDraftPage() {
 
     void load();
   }, [draftId, user]);
+
+  useEffect(() => {
+    if (!artifact || !draftId || !isUnlockSource || hasTrackedUnlockOpenRef.current) return;
+
+    hasTrackedUnlockOpenRef.current = true;
+    trackICPUnlockedDraftOpened({
+      draft_id: draftId,
+      page_path: `/icp/draft/${draftId}`,
+      source: "icp_unlock",
+    });
+  }, [artifact, draftId, isUnlockSource]);
+
+  const handleUnlockedDashboardClick = () => {
+    captureEvent("icp_unlocked_draft_dashboard_clicked", {
+      draft_id: draftId,
+      page_path: draftId ? `/icp/draft/${draftId}` : "/icp/draft",
+      source: "unlock_success_banner",
+    });
+    navigate("/dashboard");
+  };
+
+  const dismissUnlockBanner = () => {
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.delete("source");
+    setSearchParams(nextParams, { replace: true });
+  };
 
   const handleDownload = async () => {
     if (!artifact || !documentRef.current) return;
@@ -180,6 +210,49 @@ export default function IcpDraftPage() {
       <IcpProgressBar progress={100} />
 
       <div className="mx-auto max-w-6xl px-4 pt-6 sm:px-6 lg:px-8">
+        {isUnlockSource ? (
+          <div className="mb-5 overflow-hidden rounded-[1.75rem] border border-emerald-200 bg-gradient-to-br from-emerald-50 via-white to-cyan-50 p-6 shadow-[0_24px_60px_-44px_rgba(15,23,42,0.35)] sm:p-7">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-start gap-4">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-700 ring-1 ring-emerald-500/20">
+                  <CheckCircle2 className="h-5 w-5" />
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-emerald-700">
+                    Unlocked
+                  </p>
+                  <h2 className="text-xl font-semibold text-slate-950 sm:text-2xl">
+                    Your full ICP Draft is unlocked
+                  </h2>
+                  <p className="max-w-xl text-sm leading-6 text-slate-600">
+                    You can read the complete draft now. When you&apos;re ready, open the dashboard to turn it into your next founder tasks.
+                  </p>
+                </div>
+              </div>
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <Button
+                  type="button"
+                  size="lg"
+                  className="shrink-0 gap-2 bg-slate-950 text-white hover:bg-slate-800"
+                  onClick={handleUnlockedDashboardClick}
+                >
+                  Open dashboard
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+                <Button
+                  type="button"
+                  size="lg"
+                  variant="outline"
+                  className="shrink-0"
+                  onClick={dismissUnlockBanner}
+                >
+                  Stay on the draft
+                </Button>
+              </div>
+            </div>
+          </div>
+        ) : null}
+
         <div className="group relative overflow-hidden rounded-[1.75rem] border border-slate-200 bg-gradient-to-br from-[#0f172a] via-[#111827] to-[#1e1b4b] p-6 shadow-[0_24px_60px_-44px_rgba(15,23,42,0.4)] sm:p-7">
           <div className="absolute -right-8 -top-8 h-40 w-40 rounded-full bg-[#32b8c6]/20 blur-3xl" aria-hidden />
           <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">

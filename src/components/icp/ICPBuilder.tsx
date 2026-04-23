@@ -2,12 +2,10 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowLeft, ArrowRight, Loader2, RotateCcw } from "lucide-react";
 
-import { IcpFolioDocument } from "@/components/icp/IcpFolioDocument";
+import { IcpGuestResultView } from "@/components/icp/IcpGuestResultView";
 import { IcpProgressBar } from "@/components/icp/IcpProgressBar";
 import { IcpSamplePreviewSection } from "@/components/icp/IcpSamplePreviewSection";
 import { IcpSynthesisLoader } from "@/components/icp/IcpSynthesisLoader";
-import { IcpUnlockGate } from "@/components/icp/IcpUnlockGate";
-import { SAMPLE_ICP_SECTION_EXPLAINERS } from "@/components/icp/sampleIcpPreviewData";
 import Footer from "@/components/Footer";
 import PageFAQSection from "@/components/seo/PageFAQSection";
 import { Button } from "@/components/ui/button";
@@ -243,7 +241,6 @@ const ICPBuilder: React.FC = () => {
   const [fallbackEmailError, setFallbackEmailError] = useState<string | null>(null);
   const [fallbackEmailState, setFallbackEmailState] = useState<FallbackEmailState>("idle");
   const [isPersonaEditorOpen, setIsPersonaEditorOpen] = useState(false);
-  const [isGateMinimized, setIsGateMinimized] = useState(false);
 
   const unlockPath = buildIcpUnlockReturnPath();
   const editDraftId = searchParams.get("edit");
@@ -288,9 +285,6 @@ const ICPBuilder: React.FC = () => {
   useEffect(() => {
     if (session.currentScreen !== "guided_persona") {
       setIsPersonaEditorOpen(false);
-    }
-    if (session.currentScreen !== "gate") {
-      setIsGateMinimized(false);
     }
   }, [session.currentScreen]);
 
@@ -628,8 +622,9 @@ const ICPBuilder: React.FC = () => {
           mode,
           confidence: artifact.draftDocument.confidence.level,
           is_authenticated: Boolean(user),
+          preview_variant: "partial_before_signup",
+          revealed_sections: 2,
         });
-        setIsGateMinimized(false);
         setSession((previous) => ({
           ...previous,
           draftPreview: artifact,
@@ -787,7 +782,7 @@ const ICPBuilder: React.FC = () => {
           source: "unlock_gate",
         });
 
-        navigate("/dashboard", { replace: true });
+        navigate(`/icp/draft/${analysisId}?source=icp-unlock`, { replace: true });
         return;
       }
 
@@ -1000,8 +995,8 @@ const ICPBuilder: React.FC = () => {
           Get your ICP Draft
         </h1>
         <p className="mx-auto max-w-3xl text-base leading-7 text-muted-foreground sm:text-lg">
-          This takes about 5 minutes. You&apos;ll walk away with a clear picture of your ideal customer, their main pain
-          points, and how to position your offer in the market.
+          This takes about 5 minutes. You&apos;ll see the first part of your personalized result before signup, then unlock the
+          full draft to save it and keep building.
         </p>
       </div>
 
@@ -1015,7 +1010,7 @@ const ICPBuilder: React.FC = () => {
           <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#32b8c6]">Fast Mode</p>
           <p className="mt-4 text-xl font-semibold text-foreground">I can describe my startup idea clearly</p>
           <p className="mt-4 text-sm leading-6 text-muted-foreground">
-            Paste a paragraph about your idea and get your ICP Draft in under 60 seconds.
+            Paste a paragraph about your idea and see your customer and pain preview in under 60 seconds.
           </p>
           <div className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-[#32b8c6]">
             Start here
@@ -1036,7 +1031,7 @@ const ICPBuilder: React.FC = () => {
           <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#32b8c6]">Guided Mode</p>
           <p className="mt-4 text-xl font-semibold text-foreground">I&apos;m still figuring things out</p>
           <p className="mt-4 text-sm leading-6 text-muted-foreground">
-            Answer 8 simple questions, one at a time, and we&apos;ll build the draft together.
+            Answer 8 simple questions, one at a time, and we&apos;ll reveal the sharpest part of the draft before signup.
           </p>
           <div className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-[#32b8c6]">
             Start here
@@ -1361,49 +1356,16 @@ const ICPBuilder: React.FC = () => {
         <IcpProgressBar progress={progress} shellOffset />
         <div className="relative z-10 pt-24 sm:pt-28 md:pt-32">
           <div className="mx-auto w-full max-w-7xl px-4 pb-12 sm:px-6 lg:px-8">
-            <IcpFolioDocument
-              draft={session.draftPreview.draftDocument}
-              blurred
-              tone="platformPreview"
-              sectionExplainers={SAMPLE_ICP_SECTION_EXPLAINERS}
-            />
-          </div>
-          <Footer />
-        </div>
-        {isGateMinimized ? (
-          <div className="fixed inset-x-0 bottom-4 z-[70] px-4 sm:px-6">
-            <div className="mx-auto max-w-2xl rounded-[1.75rem] border border-border/60 bg-background/92 px-5 py-4 shadow-[0_24px_70px_-40px_rgba(15,23,42,0.5)] backdrop-blur-xl">
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <p className="text-sm font-semibold text-foreground">Keep this draft and come back later</p>
-                  <p className="text-sm leading-6 text-muted-foreground">
-                    Reopen the prompt to create a free account or email yourself a resume link.
-                  </p>
-                </div>
-                <div className="flex flex-col gap-2 sm:flex-row">
-                  <Button type="button" variant="outline" onClick={() => setIsGateMinimized(false)}>
-                    Email me a link
-                  </Button>
-                  <Button type="button" onClick={() => setIsGateMinimized(false)}>
-                    Unlock full draft
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div className="pointer-events-none fixed inset-0 z-[70] flex items-center justify-center p-4 sm:p-6">
-            <IcpUnlockGate
+            <IcpGuestResultView
               artifact={session.draftPreview}
               seed={session.mode === "fast" ? session.fastDescription : session.guided.seed}
               returnPath={unlockPath}
               onBeforeAuthContinue={() => persistIcpBuilderSession(session)}
               onEmailLinkRequest={(email) => requestResumeLink({ email, source: "unlock_gate", includeArtifact: true })}
-              onDismiss={() => setIsGateMinimized(true)}
-              className="pointer-events-auto max-w-xl"
             />
           </div>
-        )}
+          <Footer />
+        </div>
       </div>
     );
   }

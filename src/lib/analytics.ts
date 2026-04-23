@@ -255,6 +255,9 @@ export const trackICPResumeRestored = (properties?: AnalyticsProperties) =>
 export const trackICPDashboardOpened = (properties?: AnalyticsProperties) =>
   captureEvent('icp_dashboard_opened', properties);
 
+export const trackICPUnlockedDraftOpened = (properties?: AnalyticsProperties) =>
+  captureEvent('icp_unlocked_draft_opened', properties);
+
 export const trackWaitlistCreated = (properties?: AnalyticsProperties) =>
   captureEvent('waitlist_created', properties);
 

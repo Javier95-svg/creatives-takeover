@@ -4,6 +4,7 @@ import {
   type ReactNode,
   type RefObject,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
@@ -11,7 +12,7 @@ import {
 import type { IcpDraftDocument } from "@/lib/icpBuilderSession";
 
 type IcpFolioTone = "folio" | "platformPreview" | "landingPreview";
-type IcpFolioSectionKey = "customer" | "pain" | "build" | "moat";
+export type IcpFolioSectionKey = "customer" | "pain" | "build" | "moat";
 type IcpExplainerPlacement = "top" | "bottom";
 
 interface IcpSectionExplainer {
@@ -32,6 +33,9 @@ interface IcpFolioDocumentProps {
   tone?: IcpFolioTone;
   layout?: "page" | "embedded";
   sectionExplainers?: Partial<Record<IcpFolioSectionKey, IcpSectionExplainer>>;
+  visibleSections?: readonly IcpFolioSectionKey[];
+  lockedSections?: readonly IcpFolioSectionKey[];
+  lockedSectionBreak?: ReactNode;
 }
 
 const VIEWPORT_MARGIN = 16;
@@ -347,7 +351,32 @@ export function IcpFolioDocument({
   tone = "folio",
   layout = "page",
   sectionExplainers,
+  visibleSections,
+  lockedSections = [],
+  lockedSectionBreak,
 }: IcpFolioDocumentProps) {
+  const visibleSectionSet = useMemo(
+    () => new Set<IcpFolioSectionKey>(visibleSections ?? SECTION_NAV_ITEMS.map((item) => item.key)),
+    [visibleSections],
+  );
+  const lockedSectionSet = useMemo(
+    () => new Set<IcpFolioSectionKey>(lockedSections.filter((sectionKey) => visibleSectionSet.has(sectionKey))),
+    [lockedSections, visibleSectionSet],
+  );
+  const orderedVisibleSectionKeys = useMemo(
+    () => SECTION_NAV_ITEMS.map((item) => item.key).filter((sectionKey) => visibleSectionSet.has(sectionKey)),
+    [visibleSectionSet],
+  );
+  const firstLockedSectionIndex = orderedVisibleSectionKeys.findIndex((sectionKey) => lockedSectionSet.has(sectionKey));
+  const unlockedVisibleSectionKeys =
+    firstLockedSectionIndex === -1 ? orderedVisibleSectionKeys : orderedVisibleSectionKeys.slice(0, firstLockedSectionIndex);
+  const lockedVisibleSectionKeys =
+    firstLockedSectionIndex === -1 ? [] : orderedVisibleSectionKeys.slice(firstLockedSectionIndex);
+  const navigableSections = useMemo(
+    () => SECTION_NAV_ITEMS.filter((item) => visibleSectionSet.has(item.key) && !lockedSectionSet.has(item.key)),
+    [lockedSectionSet, visibleSectionSet],
+  );
+  const initialNavSection = navigableSections[0]?.key ?? orderedVisibleSectionKeys[0] ?? "customer";
   const articleRef = useRef<HTMLDivElement>(null);
   const sectionRefs = useRef<Record<IcpFolioSectionKey, HTMLElement | null>>({
     customer: null,
@@ -358,7 +387,7 @@ export function IcpFolioDocument({
   const explainerRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobileViewport();
   const [activeSection, setActiveSection] = useState<IcpFolioSectionKey | null>(null);
-  const [activeNavSection, setActiveNavSection] = useState<IcpFolioSectionKey>("customer");
+  const [activeNavSection, setActiveNavSection] = useState<IcpFolioSectionKey>(initialNavSection);
   const [dismissedSection, setDismissedSection] = useState<IcpFolioSectionKey | null>(null);
   const [explainerPosition, setExplainerPosition] = useState<{
     left: number;
@@ -374,11 +403,17 @@ export function IcpFolioDocument({
   useEffect(() => {
     if (blurred) {
       setActiveSection(null);
-      setActiveNavSection("customer");
+      setActiveNavSection(initialNavSection);
       setDismissedSection(null);
       setExplainerPosition(null);
     }
-  }, [blurred]);
+  }, [blurred, initialNavSection]);
+
+  useEffect(() => {
+    if (!navigableSections.some((item) => item.key === activeNavSection)) {
+      setActiveNavSection(initialNavSection);
+    }
+  }, [activeNavSection, initialNavSection, navigableSections]);
 
   const registerSection = (sectionKey: IcpFolioSectionKey, node: HTMLElement | null) => {
     sectionRefs.current[sectionKey] = node;
@@ -475,7 +510,7 @@ export function IcpFolioDocument({
 
   useEffect(() => {
     const syncActiveNavSection = () => {
-      const sectionEntries = SECTION_NAV_ITEMS.map(({ key }) => {
+      const sectionEntries = navigableSections.map(({ key }) => {
         const node = sectionRefs.current[key];
         if (!node) return null;
         const rect = node.getBoundingClientRect();
@@ -504,7 +539,7 @@ export function IcpFolioDocument({
       window.removeEventListener("scroll", syncActiveNavSection, true);
       window.removeEventListener("resize", syncActiveNavSection);
     };
-  }, []);
+  }, [navigableSections]);
 
   const openExplainer = (sectionKey: IcpFolioSectionKey) => {
     if (!sectionExplainers?.[sectionKey] || blurred) return;
@@ -581,6 +616,342 @@ export function IcpFolioDocument({
     sectionNode.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
+  const renderedSections: Record<IcpFolioSectionKey, ReactNode> = {
+    customer: (
+      <DocumentSection
+        sectionKey="customer"
+        explainer={sectionExplainers?.customer}
+        registerSection={registerSection}
+        active={activeSection === "customer"}
+        onHoverStart={handleHoverStart}
+        onHoverEnd={handleHoverEnd}
+        onToggleOpen={handleToggleOpen}
+        onFocusOpen={handleFocusOpen}
+      >
+        <div id="icp-section-customer">
+          <p className="text-sm font-medium text-foreground/60">
+            {documentLabel}
+          </p>
+          <h1 className="mt-3 text-3xl font-semibold tracking-tight text-foreground sm:text-[2rem]">
+            {draft.customer.personaName}
+          </h1>
+          <p className="mt-3 text-lg leading-8 text-foreground">{draft.customer.roleLine}</p>
+          {draft.customer.metaLine ? (
+            <p className="mt-2 text-sm leading-6 text-foreground/65">
+              {draft.customer.metaLine}
+            </p>
+          ) : null}
+
+          <p className="mt-8 text-[1.02rem] leading-8 text-foreground">
+            {draft.customer.summary}
+          </p>
+
+          <div className="mt-8 grid gap-8 sm:grid-cols-2">
+            <div>
+              <h2 className="text-sm font-semibold text-foreground dark:text-foreground/88">
+                Behavior signals
+              </h2>
+              <DocumentSingleColumnTable
+                columnLabel="Observed behavior"
+                items={draft.customer.behaviors}
+                emptyText="Behavior patterns still need sharper evidence."
+                tone="primary"
+              />
+
+              {draft.customer.whereToFind.length > 0 ? (
+                <div className="mt-8">
+                  <h2 className="text-sm font-semibold text-foreground dark:text-foreground/88">
+                    Where to find them
+                  </h2>
+                  <DocumentSingleColumnTable
+                    columnLabel="Channel or environment"
+                    items={draft.customer.whereToFind}
+                    emptyText="Distribution channels still need clearer validation."
+                    tone="success"
+                  />
+                </div>
+              ) : null}
+            </div>
+
+            <div>
+              <h2 className="text-sm font-semibold text-foreground dark:text-foreground/88">
+                Motivations and trigger
+              </h2>
+              <DocumentDetailTable
+                rows={[
+                  ...draft.customer.motivations.map((item) => ({
+                    label: "Motivation",
+                    value: item,
+                  })),
+                  {
+                    label: "Context",
+                    value: draft.customer.triggerContext,
+                  },
+                  {
+                    label: "Why they act now",
+                    value: draft.customer.actionTrigger,
+                  },
+                ]}
+                emptyText="Motivations still need sharper founder evidence."
+                tone="destructive"
+              />
+            </div>
+          </div>
+
+          <SectionEvidenceNote evidence={draft.customer.evidence} />
+        </div>
+      </DocumentSection>
+    ),
+    pain: (
+      <DocumentSection
+        sectionKey="pain"
+        explainer={sectionExplainers?.pain}
+        registerSection={registerSection}
+        active={activeSection === "pain"}
+        onHoverStart={handleHoverStart}
+        onHoverEnd={handleHoverEnd}
+        onToggleOpen={handleToggleOpen}
+        onFocusOpen={handleFocusOpen}
+      >
+        <div id="icp-section-pain" className="border-t border-border/80 pt-10">
+          <h2 className="text-2xl font-semibold tracking-tight text-foreground dark:text-foreground/88">
+            Core pain point
+          </h2>
+          <blockquote className="mt-6 border-l border-border/80 pl-5 text-xl italic leading-9 text-foreground sm:text-2xl">
+            "{draft.pain.quote}"
+          </blockquote>
+
+          <dl className="mt-8 grid gap-6 sm:grid-cols-2">
+            {[
+              { label: "Root cause", value: draft.pain.rootCause },
+              { label: "Why it hurts", value: draft.pain.whyItHurts },
+              { label: "Trigger moment", value: draft.pain.triggerMoment },
+              { label: "Cost of inaction", value: draft.pain.costOfInaction },
+            ].map((item) => (
+              <div key={item.label}>
+                <dt className="text-sm font-semibold text-foreground dark:text-foreground/88">
+                  {item.label}
+                </dt>
+                <dd className="mt-2 text-sm leading-7 text-foreground">{item.value}</dd>
+              </div>
+            ))}
+          </dl>
+
+          <SectionEvidenceNote evidence={draft.pain.evidence} />
+        </div>
+      </DocumentSection>
+    ),
+    build: (
+      <DocumentSection
+        sectionKey="build"
+        explainer={sectionExplainers?.build}
+        registerSection={registerSection}
+        active={activeSection === "build"}
+        onHoverStart={handleHoverStart}
+        onHoverEnd={handleHoverEnd}
+        onToggleOpen={handleToggleOpen}
+        onFocusOpen={handleFocusOpen}
+      >
+        <div id="icp-section-build" className="border-t border-border/80 pt-10">
+          <h2 className="text-2xl font-semibold tracking-tight text-foreground dark:text-foreground/88">
+            What you&apos;re building
+          </h2>
+          <p className="mt-6 text-lg leading-8 text-foreground">
+            {draft.build.valueProposition}
+          </p>
+
+          {draft.build.replaces.length > 0 ? (
+            <p className="mt-4 text-sm leading-7 text-foreground">
+              <span className="font-medium text-foreground dark:text-foreground/88">
+                Replaces:
+              </span>{" "}
+              {draft.build.replaces.join(", ")}
+            </p>
+          ) : null}
+
+          <div className="mt-8">
+            <h3 className="text-sm font-semibold text-foreground dark:text-foreground/88">
+              Core features
+            </h3>
+            <ol className="mt-3 list-decimal space-y-4 pl-5 text-sm leading-7 text-foreground">
+              {draft.build.coreFeatures.map((feature) => (
+                <li key={feature.title}>
+                  <span className="font-semibold text-foreground dark:text-foreground/88">
+                    {feature.title}.
+                  </span>{" "}
+                  {feature.description}
+                </li>
+              ))}
+            </ol>
+          </div>
+
+          {draft.build.outcome ? (
+            <p className="mt-8 text-sm leading-7 text-foreground">
+              <span className="font-medium text-foreground dark:text-foreground/88">
+                Outcome:
+              </span>{" "}
+              {draft.build.outcome}
+            </p>
+          ) : null}
+
+          <SectionEvidenceNote evidence={draft.build.evidence} />
+        </div>
+      </DocumentSection>
+    ),
+    moat: (
+      <DocumentSection
+        sectionKey="moat"
+        explainer={sectionExplainers?.moat}
+        registerSection={registerSection}
+        active={activeSection === "moat"}
+        onHoverStart={handleHoverStart}
+        onHoverEnd={handleHoverEnd}
+        onToggleOpen={handleToggleOpen}
+        onFocusOpen={handleFocusOpen}
+      >
+        <div id="icp-section-moat" className="border-t border-border/80 pt-10">
+          <h2 className="text-2xl font-semibold tracking-tight text-foreground dark:text-foreground/88">
+            Moat and competitive landscape
+          </h2>
+
+          <div className="mt-8 space-y-8">
+            <div>
+              <p className="text-sm font-semibold text-foreground dark:text-foreground/88">
+                Moat
+              </p>
+              <p className="mt-3 text-sm leading-7 text-foreground">
+                <span className="font-medium text-foreground dark:text-foreground/88">
+                  Moat type:
+                </span>{" "}
+                {draft.moat.moatType}
+              </p>
+              <p className="mt-3 text-sm leading-7 text-foreground">
+                <span className="font-medium text-foreground dark:text-foreground/88">
+                  Your edge:
+                </span>{" "}
+                {draft.moat.edge}
+              </p>
+            </div>
+
+            <dl className="grid gap-6 sm:grid-cols-2">
+              <div>
+                <dt className="text-sm font-semibold text-foreground dark:text-foreground/88">
+                  Source of advantage
+                </dt>
+                <dd className="mt-2 text-sm leading-7 text-foreground">
+                  {draft.moat.edgeSource}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-sm font-semibold text-foreground dark:text-foreground/88">
+                  Why it is hard to copy
+                </dt>
+                <dd className="mt-2 text-sm leading-7 text-foreground">
+                  {draft.moat.whyHardToCopy}
+                </dd>
+              </div>
+            </dl>
+
+            <div>
+              <h3 className="text-sm font-semibold text-foreground dark:text-foreground/88">
+                Why incumbents miss it
+              </h3>
+              <p className="mt-2 text-sm leading-7 text-foreground">
+                {draft.moat.incumbentGap}
+              </p>
+            </div>
+
+            {draft.moat.startupsToStudy.length > 0 ? (
+              <div>
+                <h3 className="text-sm font-semibold text-foreground dark:text-foreground/88">
+                  Startups to study
+                </h3>
+                <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-7 text-foreground">
+                  {draft.moat.startupsToStudy.map((company) => (
+                    <li key={`${company.name}-${company.url ?? "no-url"}`}>
+                      {company.url ? (
+                        <a
+                          href={company.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-foreground underline decoration-border underline-offset-4 transition-opacity hover:opacity-80"
+                        >
+                          {company.name}
+                        </a>
+                      ) : (
+                        company.name
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+
+            <SectionEvidenceNote evidence={draft.moat.evidence} title="Moat evidence" />
+
+            <div className="border-t border-border/80 pt-8">
+              <h3 className="text-sm font-semibold text-foreground dark:text-foreground/88">
+                Competitive summary
+              </h3>
+              <p className="mt-3 text-sm leading-7 text-foreground">
+                {draft.competition.summary}
+              </p>
+            </div>
+
+            {draft.competition.directCompetitors.length > 0 ? (
+              <div className="space-y-6">
+                {draft.competition.directCompetitors.map((competitor) => (
+                  <div key={`${competitor.name}-${competitor.url ?? "no-url"}`}>
+                    <h4 className="text-sm font-semibold text-foreground dark:text-foreground/88">
+                      {competitor.url ? (
+                        <a
+                          href={competitor.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-foreground underline decoration-border underline-offset-4 transition-opacity hover:opacity-80"
+                        >
+                          {competitor.name}
+                        </a>
+                      ) : (
+                        competitor.name
+                      )}
+                    </h4>
+                    <p className="mt-2 text-sm leading-7 text-foreground">
+                      <span className="font-medium text-foreground dark:text-foreground/88">
+                        What they do well:
+                      </span>{" "}
+                      {competitor.doesWell}
+                    </p>
+                    <p className="mt-2 text-sm leading-7 text-foreground">
+                      <span className="font-medium text-foreground dark:text-foreground/88">
+                        Gap:
+                      </span>{" "}
+                      {competitor.gap}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            ) : null}
+
+            <div>
+              <h3 className="text-sm font-semibold text-foreground dark:text-foreground/88">
+                Gap to exploit
+              </h3>
+              <p className="mt-2 text-sm leading-7 text-foreground">
+                {draft.competition.exploitableGap}
+              </p>
+            </div>
+
+            <SectionEvidenceNote
+              evidence={draft.competition.evidence}
+              title="Competitive evidence"
+            />
+          </div>
+        </div>
+      </DocumentSection>
+    ),
+  };
+
   const wrapperClasses =
     layout === "embedded"
       ? "px-0 pb-0 pt-0"
@@ -589,6 +960,7 @@ export function IcpFolioDocument({
         : "px-4 pb-12 pt-8 sm:px-6 lg:px-8";
 
   const surfaceBlurClasses = blurred ? "pointer-events-none select-none blur-[14px]" : "";
+  const lockedSurfaceClasses = blurred ? "" : "pointer-events-none select-none blur-[12px] opacity-90";
 
   return (
     <div className={`${wrapperClasses} ${className}`}>
@@ -607,7 +979,7 @@ export function IcpFolioDocument({
                   Jump to section
                 </p>
                 <div className="space-y-1">
-                  {SECTION_NAV_ITEMS.map((item) => {
+                  {navigableSections.map((item) => {
                     const isActive = item.key === activeNavSection;
 
                     return (
@@ -641,334 +1013,24 @@ export function IcpFolioDocument({
               ref={articleRef}
               className="relative w-full bg-background px-6 py-8 text-foreground transition-colors sm:px-10 sm:py-10"
             >
-            <DocumentSection
-              sectionKey="customer"
-              explainer={sectionExplainers?.customer}
-              registerSection={registerSection}
-              active={activeSection === "customer"}
-              onHoverStart={handleHoverStart}
-              onHoverEnd={handleHoverEnd}
-              onToggleOpen={handleToggleOpen}
-              onFocusOpen={handleFocusOpen}
-            >
-              <div id="icp-section-customer">
-                <p className="text-sm font-medium text-foreground/60">
-                  {documentLabel}
-                </p>
-                <h1 className="mt-3 text-3xl font-semibold tracking-tight text-foreground sm:text-[2rem]">
-                  {draft.customer.personaName}
-                </h1>
-                <p className="mt-3 text-lg leading-8 text-foreground">{draft.customer.roleLine}</p>
-                {draft.customer.metaLine ? (
-                  <p className="mt-2 text-sm leading-6 text-foreground/65">
-                    {draft.customer.metaLine}
-                  </p>
-                ) : null}
+              {unlockedVisibleSectionKeys.map((sectionKey) => (
+                <div key={sectionKey}>{renderedSections[sectionKey]}</div>
+              ))}
 
-                <p className="mt-8 text-[1.02rem] leading-8 text-foreground">
-                  {draft.customer.summary}
-                </p>
-
-                <div className="mt-8 grid gap-8 sm:grid-cols-2">
-                  <div>
-                    <h2 className="text-sm font-semibold text-foreground dark:text-foreground/88">
-                      Behavior signals
-                    </h2>
-                    <DocumentSingleColumnTable
-                      columnLabel="Observed behavior"
-                      items={draft.customer.behaviors}
-                      emptyText="Behavior patterns still need sharper evidence."
-                      tone="primary"
-                    />
-
-                    {draft.customer.whereToFind.length > 0 ? (
-                      <div className="mt-8">
-                        <h2 className="text-sm font-semibold text-foreground dark:text-foreground/88">
-                          Where to find them
-                        </h2>
-                        <DocumentSingleColumnTable
-                          columnLabel="Channel or environment"
-                          items={draft.customer.whereToFind}
-                          emptyText="Distribution channels still need clearer validation."
-                          tone="success"
-                        />
-                      </div>
-                    ) : null}
-                  </div>
-
-                  <div>
-                    <h2 className="text-sm font-semibold text-foreground dark:text-foreground/88">
-                      Motivations and trigger
-                    </h2>
-                    <DocumentDetailTable
-                      rows={[
-                        ...draft.customer.motivations.map((item) => ({
-                          label: "Motivation",
-                          value: item,
-                        })),
-                        {
-                          label: "Context",
-                          value: draft.customer.triggerContext,
-                        },
-                        {
-                          label: "Why they act now",
-                          value: draft.customer.actionTrigger,
-                        },
-                      ]}
-                      emptyText="Motivations still need sharper founder evidence."
-                      tone="destructive"
-                    />
-                  </div>
-                </div>
-
-                <SectionEvidenceNote evidence={draft.customer.evidence} />
-              </div>
-            </DocumentSection>
-
-            <DocumentSection
-              sectionKey="pain"
-              explainer={sectionExplainers?.pain}
-              registerSection={registerSection}
-              active={activeSection === "pain"}
-              onHoverStart={handleHoverStart}
-              onHoverEnd={handleHoverEnd}
-              onToggleOpen={handleToggleOpen}
-              onFocusOpen={handleFocusOpen}
-            >
-              <div id="icp-section-pain" className="border-t border-border/80 pt-10">
-                <h2 className="text-2xl font-semibold tracking-tight text-foreground dark:text-foreground/88">
-                  Core pain point
-                </h2>
-                <blockquote className="mt-6 border-l border-border/80 pl-5 text-xl italic leading-9 text-foreground sm:text-2xl">
-                  "{draft.pain.quote}"
-                </blockquote>
-
-                <dl className="mt-8 grid gap-6 sm:grid-cols-2">
-                  {[
-                    { label: "Root cause", value: draft.pain.rootCause },
-                    { label: "Why it hurts", value: draft.pain.whyItHurts },
-                    { label: "Trigger moment", value: draft.pain.triggerMoment },
-                    { label: "Cost of inaction", value: draft.pain.costOfInaction },
-                  ].map((item) => (
-                    <div key={item.label}>
-                      <dt className="text-sm font-semibold text-foreground dark:text-foreground/88">
-                        {item.label}
-                      </dt>
-                      <dd className="mt-2 text-sm leading-7 text-foreground">{item.value}</dd>
+              {lockedVisibleSectionKeys.length > 0 ? (
+                <>
+                  {lockedSectionBreak ? (
+                    <div className="border-t border-border/80 pt-10">
+                      {lockedSectionBreak}
                     </div>
-                  ))}
-                </dl>
-
-                <SectionEvidenceNote evidence={draft.pain.evidence} />
-              </div>
-            </DocumentSection>
-
-            <DocumentSection
-              sectionKey="build"
-              explainer={sectionExplainers?.build}
-              registerSection={registerSection}
-              active={activeSection === "build"}
-              onHoverStart={handleHoverStart}
-              onHoverEnd={handleHoverEnd}
-              onToggleOpen={handleToggleOpen}
-              onFocusOpen={handleFocusOpen}
-            >
-              <div id="icp-section-build" className="border-t border-border/80 pt-10">
-                <h2 className="text-2xl font-semibold tracking-tight text-foreground dark:text-foreground/88">
-                  What you&apos;re building
-                </h2>
-                <p className="mt-6 text-lg leading-8 text-foreground">
-                  {draft.build.valueProposition}
-                </p>
-
-                {draft.build.replaces.length > 0 ? (
-                  <p className="mt-4 text-sm leading-7 text-foreground">
-                    <span className="font-medium text-foreground dark:text-foreground/88">
-                      Replaces:
-                    </span>{" "}
-                    {draft.build.replaces.join(", ")}
-                  </p>
-                ) : null}
-
-                <div className="mt-8">
-                  <h3 className="text-sm font-semibold text-foreground dark:text-foreground/88">
-                    Core features
-                  </h3>
-                  <ol className="mt-3 list-decimal space-y-4 pl-5 text-sm leading-7 text-foreground">
-                    {draft.build.coreFeatures.map((feature) => (
-                      <li key={feature.title}>
-                        <span className="font-semibold text-foreground dark:text-foreground/88">
-                          {feature.title}.
-                        </span>{" "}
-                        {feature.description}
-                      </li>
+                  ) : null}
+                  <div className={lockedSurfaceClasses} aria-hidden={lockedSurfaceClasses.length > 0}>
+                    {lockedVisibleSectionKeys.map((sectionKey) => (
+                      <div key={sectionKey}>{renderedSections[sectionKey]}</div>
                     ))}
-                  </ol>
-                </div>
-
-                {draft.build.outcome ? (
-                  <p className="mt-8 text-sm leading-7 text-foreground">
-                    <span className="font-medium text-foreground dark:text-foreground/88">
-                      Outcome:
-                    </span>{" "}
-                    {draft.build.outcome}
-                  </p>
-                ) : null}
-
-                <SectionEvidenceNote evidence={draft.build.evidence} />
-              </div>
-            </DocumentSection>
-
-            <DocumentSection
-              sectionKey="moat"
-              explainer={sectionExplainers?.moat}
-              registerSection={registerSection}
-              active={activeSection === "moat"}
-              onHoverStart={handleHoverStart}
-              onHoverEnd={handleHoverEnd}
-              onToggleOpen={handleToggleOpen}
-              onFocusOpen={handleFocusOpen}
-            >
-              <div id="icp-section-moat" className="border-t border-border/80 pt-10">
-                <h2 className="text-2xl font-semibold tracking-tight text-foreground dark:text-foreground/88">
-                  Moat and competitive landscape
-                </h2>
-
-                <div className="mt-8 space-y-8">
-                  <div>
-                    <p className="text-sm font-semibold text-foreground dark:text-foreground/88">
-                      Moat
-                    </p>
-                    <p className="mt-3 text-sm leading-7 text-foreground">
-                      <span className="font-medium text-foreground dark:text-foreground/88">
-                        Moat type:
-                      </span>{" "}
-                      {draft.moat.moatType}
-                    </p>
-                    <p className="mt-3 text-sm leading-7 text-foreground">
-                      <span className="font-medium text-foreground dark:text-foreground/88">
-                        Your edge:
-                      </span>{" "}
-                      {draft.moat.edge}
-                    </p>
                   </div>
-
-                  <dl className="grid gap-6 sm:grid-cols-2">
-                    <div>
-                      <dt className="text-sm font-semibold text-foreground dark:text-foreground/88">
-                        Source of advantage
-                      </dt>
-                      <dd className="mt-2 text-sm leading-7 text-foreground">
-                        {draft.moat.edgeSource}
-                      </dd>
-                    </div>
-                    <div>
-                      <dt className="text-sm font-semibold text-foreground dark:text-foreground/88">
-                        Why it is hard to copy
-                      </dt>
-                      <dd className="mt-2 text-sm leading-7 text-foreground">
-                        {draft.moat.whyHardToCopy}
-                      </dd>
-                    </div>
-                  </dl>
-
-                  <div>
-                    <h3 className="text-sm font-semibold text-foreground dark:text-foreground/88">
-                      Why incumbents miss it
-                    </h3>
-                    <p className="mt-2 text-sm leading-7 text-foreground">
-                      {draft.moat.incumbentGap}
-                    </p>
-                  </div>
-
-                  {draft.moat.startupsToStudy.length > 0 ? (
-                    <div>
-                      <h3 className="text-sm font-semibold text-foreground dark:text-foreground/88">
-                        Startups to study
-                      </h3>
-                      <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-7 text-foreground">
-                        {draft.moat.startupsToStudy.map((company) => (
-                          <li key={`${company.name}-${company.url ?? "no-url"}`}>
-                            {company.url ? (
-                              <a
-                                href={company.url}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="text-foreground underline decoration-border underline-offset-4 transition-opacity hover:opacity-80"
-                              >
-                                {company.name}
-                              </a>
-                            ) : (
-                              company.name
-                            )}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  ) : null}
-
-                  <SectionEvidenceNote evidence={draft.moat.evidence} title="Moat evidence" />
-
-                  <div className="border-t border-border/80 pt-8">
-                    <h3 className="text-sm font-semibold text-foreground dark:text-foreground/88">
-                      Competitive summary
-                    </h3>
-                    <p className="mt-3 text-sm leading-7 text-foreground">
-                      {draft.competition.summary}
-                    </p>
-                  </div>
-
-                  {draft.competition.directCompetitors.length > 0 ? (
-                    <div className="space-y-6">
-                      {draft.competition.directCompetitors.map((competitor) => (
-                        <div key={`${competitor.name}-${competitor.url ?? "no-url"}`}>
-                          <h4 className="text-sm font-semibold text-foreground dark:text-foreground/88">
-                            {competitor.url ? (
-                              <a
-                                href={competitor.url}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="text-foreground underline decoration-border underline-offset-4 transition-opacity hover:opacity-80"
-                              >
-                                {competitor.name}
-                              </a>
-                            ) : (
-                              competitor.name
-                            )}
-                          </h4>
-                          <p className="mt-2 text-sm leading-7 text-foreground">
-                            <span className="font-medium text-foreground dark:text-foreground/88">
-                              What they do well:
-                            </span>{" "}
-                            {competitor.doesWell}
-                          </p>
-                          <p className="mt-2 text-sm leading-7 text-foreground">
-                            <span className="font-medium text-foreground dark:text-foreground/88">
-                              Gap:
-                            </span>{" "}
-                            {competitor.gap}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  ) : null}
-
-                  <div>
-                    <h3 className="text-sm font-semibold text-foreground dark:text-foreground/88">
-                      Gap to exploit
-                    </h3>
-                    <p className="mt-2 text-sm leading-7 text-foreground">
-                      {draft.competition.exploitableGap}
-                    </p>
-                  </div>
-
-                  <SectionEvidenceNote
-                    evidence={draft.competition.evidence}
-                    title="Competitive evidence"
-                  />
-                </div>
-              </div>
-            </DocumentSection>
+                </>
+              ) : null}
 
             {activeSection && sectionExplainers?.[activeSection] && explainerPosition ? (
               <div

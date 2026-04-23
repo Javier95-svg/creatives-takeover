@@ -60,6 +60,8 @@ export function IcpUnlockGate({
       page_path: "/icp-builder",
       has_seed: Boolean(normalizedSeed),
       confidence: artifact.draftDocument.confidence.level,
+      layout: "inline",
+      locked_after: "pain",
     });
   }, [artifact.draftDocument.confidence.level, normalizedSeed]);
 
@@ -68,6 +70,7 @@ export function IcpUnlockGate({
       trackICPUnlockClicked({
         page_path: "/icp-builder",
         method: "google",
+        surface: "inline_lock_block",
       });
       setIsGoogleLoading(true);
       onBeforeAuthContinue?.();
@@ -108,6 +111,7 @@ export function IcpUnlockGate({
     trackICPUnlockClicked({
       page_path: "/icp-builder",
       method: "email",
+      surface: "inline_lock_block",
     });
     onBeforeAuthContinue?.();
     persistIcpSeed(normalizedSeed);
@@ -118,7 +122,7 @@ export function IcpUnlockGate({
   const handleLoginRedirect = () => {
     trackICPLoginClicked({
       page_path: "/icp-builder",
-      source: "unlock_gate",
+      source: "inline_lock_block",
     });
     onBeforeAuthContinue?.();
     persistIcpSeed(normalizedSeed);
@@ -147,12 +151,12 @@ export function IcpUnlockGate({
 
   return (
     <div className={`relative z-20 w-full ${className}`}>
-      <div className="w-full rounded-[2rem] border border-border/60 bg-white/85 shadow-[0_34px_120px_-55px_rgba(15,23,42,0.45)] backdrop-blur dark:bg-slate-950/80 sm:overflow-hidden">
+      <div className="w-full rounded-[2rem] border border-border/60 bg-white/95 shadow-[0_30px_90px_-60px_rgba(15,23,42,0.45)] backdrop-blur dark:bg-slate-950/90 sm:overflow-hidden">
         <div className="border-b border-border/50 px-6 py-5 sm:px-8">
           <div className="flex items-start justify-between gap-4">
             <div>
               <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.22em] text-[#32b8c6]">
-                Your ICP Draft
+                Preview ready
               </p>
               <p className="text-base font-semibold text-foreground">{personaName}</p>
               <p className="mt-0.5 text-sm text-muted-foreground">{roleLine}</p>
@@ -171,7 +175,7 @@ export function IcpUnlockGate({
           </div>
 
           <div className="mt-4 rounded-[1.5rem] border border-border/60 bg-background/70 px-4 py-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#32b8c6]">Readable preview</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#32b8c6]">What you already unlocked</p>
             <p className="mt-2 text-sm leading-6 text-foreground">{customerSummary}</p>
             {painLine ? (
               <p className="mt-3 text-sm leading-6 text-foreground/80 italic">
@@ -191,7 +195,7 @@ export function IcpUnlockGate({
             <div className="absolute inset-0 flex items-start justify-start p-4">
               <span className="inline-flex items-center gap-1.5 rounded-full border border-border/50 bg-white/90 px-3 py-1 text-[11px] font-semibold text-[#0f5b64] dark:bg-slate-900/90 dark:text-[#8fe6ef]">
                 <LockKeyhole className="h-3 w-3" />
-                Full draft, moat, and next steps are locked
+                What to build, moat, and next steps unlock after signup
               </span>
             </div>
           </div>
@@ -200,10 +204,10 @@ export function IcpUnlockGate({
         <div className="px-6 py-6 sm:px-8">
           <div className="space-y-2 text-center">
             <h2 className="text-xl font-semibold tracking-tight">
-              Your ICP draft is ready
+              Unlock the rest of your ICP Draft
             </h2>
             <p className="text-sm text-muted-foreground">
-              Create a free account to save this draft, unlock the full report, and keep refining it.
+              You already saw who this is for and why they care. Create a free account to reveal what to build next, your competitive edge, and the full draft.
             </p>
           </div>
 
@@ -217,10 +221,10 @@ export function IcpUnlockGate({
               {isGoogleLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Continuing with Google...
+                  Unlocking with Google...
                 </>
               ) : (
-                "Create free account with Google"
+                "Unlock full draft with Google"
               )}
             </Button>
 
@@ -231,9 +235,13 @@ export function IcpUnlockGate({
               disabled={isGoogleLoading}
               onClick={handleSignUpRedirect}
             >
-              Create free account with email
+              Unlock full draft with email
             </Button>
           </div>
+
+          <p className="mt-3 text-center text-xs text-muted-foreground">
+            Free forever. No credit card. Your draft will be saved to your account.
+          </p>
 
           <div className="mt-4 text-center">
             <button
@@ -247,9 +255,9 @@ export function IcpUnlockGate({
           </div>
 
           <div className="mt-5 rounded-[1.5rem] border border-border/60 bg-background/70 p-4">
-            <p className="text-sm font-medium text-foreground">Email me this draft link instead</p>
+            <p className="text-sm font-medium text-foreground">Need to come back later?</p>
             <p className="mt-1 text-sm leading-6 text-muted-foreground">
-              Get a resume link so you can come back to this exact draft later.
+              Send yourself a resume link and pick this exact draft back up later.
             </p>
             {resumeEmailState === "submitted" ? (
               <div className="mt-3 rounded-xl border border-emerald-500/25 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-800 dark:text-emerald-300">
@@ -295,7 +303,7 @@ export function IcpUnlockGate({
 
           <div className="mt-5 flex items-center justify-center gap-2 text-xs text-muted-foreground">
             <Users className="h-3.5 w-3.5 shrink-0" />
-            <span>Joined by 3,200+ founders. Free forever. No credit card.</span>
+            <span>Joined by 3,200+ founders building from sharper customer insight.</span>
           </div>
         </div>
       </div>
