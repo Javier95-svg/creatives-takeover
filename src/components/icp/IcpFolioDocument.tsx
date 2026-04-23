@@ -1024,7 +1024,11 @@ export function IcpFolioDocument({
                       {lockedSectionBreak}
                     </div>
                   ) : null}
-                  <div className={lockedSurfaceClasses} aria-hidden={lockedSurfaceClasses.length > 0}>
+                  <div
+                    className={lockedSurfaceClasses}
+                    aria-hidden={lockedSurfaceClasses.length > 0}
+                    inert={lockedSurfaceClasses.length > 0 ? true : undefined}
+                  >
                     {lockedVisibleSectionKeys.map((sectionKey) => (
                       <div key={sectionKey}>{renderedSections[sectionKey]}</div>
                     ))}

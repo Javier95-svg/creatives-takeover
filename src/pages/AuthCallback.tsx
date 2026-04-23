@@ -214,9 +214,10 @@ const AuthCallback = () => {
             console.error('Error resolving onboarding status after auth callback:', profileError);
           }
 
-          const destination = shouldRedirectToGuidedOnboarding(profile) && !isIcpUnlockPath(returnUrl)
+          const isIcpUnlockReturn = isIcpUnlockPath(returnUrl);
+          const destination = shouldRedirectToGuidedOnboarding(profile) && !isIcpUnlockReturn
             ? buildOnboardingPath(returnUrl)
-            : shouldRedirectToSetupQuiz(profile)
+            : shouldRedirectToSetupQuiz(profile) && !isIcpUnlockReturn
               ? '/setup-quiz'
               : returnUrl;
 

@@ -133,7 +133,7 @@ const Signup = () => {
           return;
         }
 
-        if (shouldRedirectToSetupQuiz(profile)) {
+        if (shouldRedirectToSetupQuiz(profile) && !isIcpUnlockPath(targetAfterAuth)) {
           navigate('/setup-quiz', { replace: true });
           return;
         }
@@ -147,7 +147,10 @@ const Signup = () => {
         navigate(targetAfterAuth, { replace: true });
       } catch (error) {
         console.error('Error resolving signup redirect:', error);
-        navigate(buildOnboardingPath(conversionSource.returnUrl), { replace: true });
+        const fallbackDestination = isIcpUnlockPath(conversionSource.returnUrl)
+          ? conversionSource.returnUrl
+          : buildOnboardingPath(conversionSource.returnUrl);
+        navigate(fallbackDestination, { replace: true });
       }
     };
 
@@ -344,7 +347,10 @@ const Signup = () => {
         toast.success("Account created successfully! Redirecting...");
 
         setTimeout(() => {
-          navigate(buildOnboardingPath(conversionSource.returnUrl), { replace: true });
+          const destination = isIcpUnlockPath(conversionSource.returnUrl)
+            ? conversionSource.returnUrl
+            : buildOnboardingPath(conversionSource.returnUrl);
+          navigate(destination, { replace: true });
         }, 300);
       }
     } catch (error) {
