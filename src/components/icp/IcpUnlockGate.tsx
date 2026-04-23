@@ -237,8 +237,12 @@ export function IcpUnlockGate({
             </button>
           </div>
 
-          <div className="mt-5 rounded-[1.5rem] border border-border/60 bg-background/70 p-4">
-            <p className="text-sm font-medium text-foreground">Need to come back later?</p>
+          <p className="mt-4 text-center text-xs text-muted-foreground">
+            Not ready? Your draft is saved in this browser — come back anytime.
+          </p>
+
+          <div className="mt-4 rounded-[1.5rem] border border-border/60 bg-background/70 p-4">
+            <p className="text-sm font-medium text-foreground">Need to come back on another device?</p>
             <p className="mt-1 text-sm leading-6 text-muted-foreground">
               Send yourself a resume link and pick this exact draft back up later.
             </p>

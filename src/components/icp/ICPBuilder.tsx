@@ -241,6 +241,8 @@ const ICPBuilder: React.FC = () => {
   const [fallbackEmailError, setFallbackEmailError] = useState<string | null>(null);
   const [fallbackEmailState, setFallbackEmailState] = useState<FallbackEmailState>("idle");
   const [isPersonaEditorOpen, setIsPersonaEditorOpen] = useState(false);
+  const [synthesisError, setSynthesisError] = useState<string | null>(null);
+  const [persistError, setPersistError] = useState<string | null>(null);
 
   const unlockPath = buildIcpUnlockReturnPath();
   const editDraftId = searchParams.get("edit");
@@ -592,6 +594,7 @@ const ICPBuilder: React.FC = () => {
       return;
     }
 
+    setSynthesisError(null);
     setLoadingPhase("synthesis");
     setLoadingStartedAt(Date.now());
     setFallbackEmailError(null);
@@ -694,16 +697,20 @@ const ICPBuilder: React.FC = () => {
       navigate("/dashboard", { replace: true });
     } catch (error) {
       console.error("ICP draft generation failed", error);
-      toast({
-        title: persist ? "Could not finish the dashboard handoff" : "Could not build the draft",
-        description:
-          error instanceof Error
-            ? error.message
-            : persist
-              ? "The draft was saved, but the dashboard setup did not finish."
-              : "Please try again.",
-        variant: "destructive",
-      });
+      if (!persist) {
+        setSynthesisError(
+          error instanceof Error ? error.message : "Something went wrong building your draft.",
+        );
+      } else {
+        toast({
+          title: "Could not finish the dashboard handoff",
+          description:
+            error instanceof Error
+              ? error.message
+              : "The draft was saved, but the dashboard setup did not finish.",
+          variant: "destructive",
+        });
+      }
     } finally {
       setLoadingPhase(null);
       setLoadingStartedAt(null);
@@ -712,6 +719,7 @@ const ICPBuilder: React.FC = () => {
 
   const persistDraftAndContinue = useCallback(async () => {
     if (isPersisting) return;
+    setPersistError(null);
     setIsPersisting(true);
     try {
       if (user && session.draftPreview && session.unlockRequired) {
@@ -787,18 +795,21 @@ const ICPBuilder: React.FC = () => {
       }
 
       await completeDraftGeneration(true);
+    } catch (error) {
+      console.error("ICP draft persist failed", error);
+      setPersistError(error instanceof Error ? error.message : "Could not save your draft. Please try again.");
     } finally {
       setIsPersisting(false);
     }
   }, [completeDraftGeneration, isPersisting, navigate, refreshActivation, session.draftPreview, session.mode, session.unlockRequired, user]);
 
   useEffect(() => {
-    if (!user || !session.draftPreview || !session.unlockRequired || session.savedAnalysisId || isPersisting) {
+    if (!user || !session.draftPreview || !session.unlockRequired || session.savedAnalysisId || isPersisting || persistError) {
       return;
     }
 
     void persistDraftAndContinue();
-  }, [isPersisting, persistDraftAndContinue, session.draftPreview, session.savedAnalysisId, session.unlockRequired, user]);
+  }, [isPersisting, persistDraftAndContinue, persistError, session.draftPreview, session.savedAnalysisId, session.unlockRequired, user]);
 
   const requestResumeLink = useCallback(async ({
     email,
@@ -995,8 +1006,7 @@ const ICPBuilder: React.FC = () => {
           Get your ICP Draft
         </h1>
         <p className="mx-auto max-w-3xl text-base leading-7 text-muted-foreground sm:text-lg">
-          This takes about 5 minutes. You&apos;ll see the first part of your personalized result before signup, then unlock the
-          full draft to save it and keep building.
+          Describe your startup idea and get your ideal customer and their core pain drafted for free — before you create an account. Then unlock the full draft to save it and keep building.
         </p>
       </div>
 
@@ -1010,7 +1020,7 @@ const ICPBuilder: React.FC = () => {
           <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#32b8c6]">Fast Mode</p>
           <p className="mt-4 text-xl font-semibold text-foreground">I can describe my startup idea clearly</p>
           <p className="mt-4 text-sm leading-6 text-muted-foreground">
-            Paste a paragraph about your idea and see your customer and pain preview in under 60 seconds.
+            Paste a paragraph about your idea and see your ideal customer and their biggest frustration in under 60 seconds.
           </p>
           <div className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-[#32b8c6]">
             Start here
@@ -1031,7 +1041,7 @@ const ICPBuilder: React.FC = () => {
           <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#32b8c6]">Guided Mode</p>
           <p className="mt-4 text-xl font-semibold text-foreground">I&apos;m still figuring things out</p>
           <p className="mt-4 text-sm leading-6 text-muted-foreground">
-            Answer 8 simple questions, one at a time, and we&apos;ll reveal the sharpest part of the draft before signup.
+            Answer 4 short questions, one at a time, and we&apos;ll reveal the sharpest part of the draft before signup. Usually 3–4 minutes.
           </p>
           <div className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-[#32b8c6]">
             Start here
@@ -1039,6 +1049,10 @@ const ICPBuilder: React.FC = () => {
           </div>
         </button>
       </div>
+
+      <p className="mt-6 text-center text-xs text-muted-foreground">
+        Free forever &middot; No credit card required &middot; See your draft before you sign up
+      </p>
 
       <IcpSamplePreviewSection />
 
@@ -1069,6 +1083,14 @@ const ICPBuilder: React.FC = () => {
       <div className="flex-1">{content}</div>
 
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border/60 bg-background/92 px-4 py-4 backdrop-blur sm:static sm:mt-12 sm:border-t-0 sm:bg-transparent sm:px-0 sm:py-0">
+        {synthesisError ? (
+          <div className="mx-auto mb-3 max-w-3xl rounded-2xl border border-destructive/30 bg-destructive/8 px-4 py-3 text-sm text-destructive">
+            <span className="font-semibold">Generation failed.</span>{" "}
+            {synthesisError.includes("timed out")
+              ? "The server took too long. Your inputs are saved — click Try again to retry."
+              : "Something went wrong. Your inputs are saved — click Try again to retry."}
+          </div>
+        ) : null}
         <div className="mx-auto flex max-w-3xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="text-xs uppercase tracking-[0.18em] text-muted-foreground">{getEnterHint(session.currentScreen)}</div>
           <Button
@@ -1082,6 +1104,8 @@ const ICPBuilder: React.FC = () => {
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Building your draft...
               </>
+            ) : synthesisError ? (
+              "Try again"
             ) : session.currentScreen === "guided_workaround" || session.currentScreen === "fast_input" ? (
               "Generate my free draft"
             ) : (
@@ -1107,19 +1131,28 @@ const ICPBuilder: React.FC = () => {
           </p>
         </div>
 
-        <Textarea
-          rows={8}
-          value={session.fastDescription}
-          onChange={(event) =>
-            setSession((previous) => ({
-              ...previous,
-              fastDescription: event.target.value,
-            }))
-          }
-          onKeyDown={handleFieldSubmit}
-          placeholder="e.g. I'm building a client feedback tool for freelance designers. Right now they manage revisions through email and WhatsApp, which causes things to get lost and makes them look unprofessional. My tool puts all revision feedback in one place with version tracking. I'm a freelance designer myself so I know this market well."
-          className="min-h-[280px] rounded-[2rem] border-border/60 bg-white/85 px-5 py-5 text-base leading-7 shadow-sm dark:bg-slate-950/70"
-        />
+        <div className="space-y-2">
+          <Textarea
+            rows={8}
+            value={session.fastDescription}
+            onChange={(event) =>
+              setSession((previous) => ({
+                ...previous,
+                fastDescription: event.target.value,
+              }))
+            }
+            onKeyDown={handleFieldSubmit}
+            placeholder="e.g. I'm building a client feedback tool for freelance designers. Right now they manage revisions through email and WhatsApp, which causes things to get lost and makes them look unprofessional. My tool puts all revision feedback in one place with version tracking. I'm a freelance designer myself so I know this market well."
+            className="min-h-[280px] rounded-[2rem] border-border/60 bg-white/85 px-5 py-5 text-base leading-7 shadow-sm dark:bg-slate-950/70"
+          />
+          {session.fastDescription.length > 0 ? (
+            <p className={`px-1 text-xs ${validatedFast.success ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground"}`}>
+              {validatedFast.success
+                ? "✓ Enough detail to generate a draft"
+                : `${session.fastDescription.length} / 40 characters minimum`}
+            </p>
+          ) : null}
+        </div>
       </div>,
     );
 
@@ -1276,17 +1309,13 @@ const ICPBuilder: React.FC = () => {
                 Even if it&apos;s messy. Email, spreadsheets, agencies, WhatsApp, or just brute force all count.
               </p>
             </div>
-            <Input
+            <Textarea
+              rows={3}
               value={session.guided.workaround || ""}
               onChange={(event) => updateGuided("workaround", event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key === "Enter") {
-                  event.preventDefault();
-                  void handleContinue();
-                }
-              }}
+              onKeyDown={handleFieldSubmit}
               placeholder="e.g. A mix of email threads, Google Drive comments, and hoping clients remember what they said"
-              className="h-14 rounded-[1.5rem] border-border/60 bg-white/85 px-5 text-base shadow-sm dark:bg-slate-950/70"
+              className="rounded-[2rem] border-border/60 bg-white/85 px-5 py-5 text-base leading-7 shadow-sm dark:bg-slate-950/70"
             />
             <p className="text-sm leading-6 text-muted-foreground">
               We&apos;ll use this to generate your preview now. You can sharpen solution angle, founder edge, and market context after you unlock the full draft.
@@ -1355,6 +1384,24 @@ const ICPBuilder: React.FC = () => {
       <div className="relative min-h-screen overflow-x-hidden bg-transparent">
         <IcpProgressBar progress={progress} shellOffset />
         <div className="relative z-10 pt-24 sm:pt-28 md:pt-32">
+          {persistError ? (
+            <div className="mx-auto mb-4 max-w-3xl px-4 sm:px-6 lg:px-8">
+              <div className="flex flex-col gap-3 rounded-2xl border border-destructive/30 bg-destructive/8 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-sm text-destructive">
+                  <span className="font-semibold">We couldn&apos;t save your draft.</span> Your account was created — click below to try saving again.
+                </p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="shrink-0 border-destructive/40 text-destructive hover:bg-destructive/10"
+                  disabled={isPersisting}
+                  onClick={() => void persistDraftAndContinue()}
+                >
+                  {isPersisting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Saving...</> : "Retry saving draft"}
+                </Button>
+              </div>
+            </div>
+          ) : null}
           <div className="mx-auto w-full max-w-7xl px-4 pb-12 sm:px-6 lg:px-8">
             <IcpGuestResultView
               artifact={session.draftPreview}
