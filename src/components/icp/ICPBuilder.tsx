@@ -1006,7 +1006,7 @@ const ICPBuilder: React.FC = () => {
           Get your ICP Draft
         </h1>
         <p className="mx-auto max-w-2xl text-base leading-7 text-muted-foreground sm:text-lg">
-          Your draft covers four things: who your ideal customer is, what pain drives them to buy, what to build for them, and your competitive edge. You&apos;ll see the first two before you create an account.
+          Your draft covers four things: who your ideal customer is, what pain drives them to buy, what to build for them, and your competitive edge.
         </p>
       </div>
 
@@ -1051,7 +1051,7 @@ const ICPBuilder: React.FC = () => {
       </div>
 
       <p className="mt-6 text-center text-xs text-muted-foreground">
-        Free forever &middot; No credit card required &middot; See your draft before you sign up
+        Free forever &middot; No credit card required
       </p>
 
       <IcpSamplePreviewSection />
