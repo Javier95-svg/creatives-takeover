@@ -1,5 +1,41 @@
 # Dead Click Audit
 
+Latest follow-up completed on `2026-04-24`.
+
+## 2026-04-24 Follow-up: Fixed Missing Route Dead Clicks
+
+Scope: verified literal internal links and CTA routes against the mounted route table in `src/App.tsx`, then reviewed remaining `cursor-pointer`, `href="#"`, and "Coming Soon" candidates for false affordances.
+
+### Fixed Elements
+
+| Priority | Location | Element type | What was broken | Expected behavior | Fix |
+| --- | --- | --- | --- | --- | --- |
+| P0 | `src/components/PricingCTA.tsx`, `src/components/StillNotSure.tsx` | Demo CTA button | Buttons navigated to `/demo-calls`, which fell through to the 404 route. | Open the demo scheduling experience. | Mounted `/demo-calls` to `src/pages/DemoCalls.tsx`. |
+| P0 | `src/pages/SubscriptionSuccess.tsx`, `src/components/CommunityNavigation.tsx`, `src/components/ServicesNavigation.tsx` | FAQ/support links | Links navigated to `/faq` or `/contact`, which fell through to the 404 route. | Open the FAQ or contact support pages. | Mounted `/faq` to `src/pages/FAQPage.tsx` and `/contact` to `src/pages/Contact.tsx`. |
+| P0 | `src/pages/SubscriptionSuccess.tsx`, `src/components/CommunityEvents.tsx` | Resources link | Links navigated to `/resources`, which fell through to the 404 route. | Open the resources page. | Mounted `/resources` to `src/pages/Resources.tsx`. |
+| P1 | `src/components/FeatureHighlights.tsx`, `src/components/GuidesSection.tsx`, `src/components/ResourcesNavigation.tsx` | Services CTA/link | Links navigated to `/services`, which fell through to the 404 route. | Open the services page. | Mounted `/services` to `src/pages/Services.tsx`. |
+| P1 | `src/components/CreditStatus.tsx`, `src/pages/SubscriptionSuccess.tsx` | Credits link/button | Links navigated to `/credits`, but no dedicated credits page exists. | Show the existing credit-pack purchase section. | Retargeted links to `/pricing#credit-packs`. |
+| P1 | `src/components/dashboard/ActiveProjects.tsx` | Dashboard "View All" button | Button navigated to `/projects-dashboard`, which fell through to the 404 route. | Open the projects dashboard. | Mounted `/projects-dashboard` to `src/components/dashboard/ProjectsDashboard.tsx`. |
+| P1 | `src/components/pmf/PMFReadinessReport.tsx` | "Go to MVP Scope" CTA | CTA navigated to `/mvp-scope`, which fell through to the 404 route. | Open the MVP scope page. | Mounted `/mvp-scope` to `src/pages/MVPBuilderBetaPage.tsx`. |
+| P2 | `src/pages/IPPolicy.tsx`, `src/pages/Software.tsx` | Canonical/self route targets | Pages existed in source but direct URLs were unreachable. | Direct visits should resolve. | Mounted `/ip-policy` and `/software`. |
+
+Additional route mounts:
+
+- `/resources`, `/services`, `/contact`, `/faq`, `/demo-calls`, `/mvp-scope`, `/projects-dashboard`, `/ip-policy`, and `/software` were added before the catch-all route.
+
+Reviewed with no code change:
+
+- `href="#"` pagination links in `src/pages/Stories.tsx` and `src/pages/community/MentorMarketplaceHub.tsx` have explicit `onClick` handlers that call `preventDefault()` and update pagination.
+- "Coming Soon" surfaces in collaboration, investor matching, revenue, and pitch-deck builder areas are disabled buttons or plain status copy, not live CTAs that silently do nothing.
+- Remaining `cursor-pointer` hits reviewed in the follow-up are tied to labels, links, buttons, tooltip triggers, selection controls, expandable rows, or copy/open handlers.
+
+Verification:
+
+- Static literal internal route comparison returned: `No missing literal internal routes found.`
+- Confirmed no remaining `/credits` route references in source.
+
+## 2026-04-19 Baseline Audit
+
 Audit completed on `2026-04-19`.
 
 ## Fixed Elements

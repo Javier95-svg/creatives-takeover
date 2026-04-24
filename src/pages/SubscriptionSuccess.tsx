@@ -16,7 +16,7 @@ export default function SubscriptionSuccess() {
   const tier = searchParams.get('tier') || 'basic';
   const [verifying, setVerifying] = useState(true);
   
-  const { refreshSubscription, subscriptionData } = useSubscription();
+  const { refreshSubscription } = useSubscription();
   const { refreshBalance, balance } = useCredits();
 
   useEffect(() => {
@@ -28,7 +28,9 @@ export default function SubscriptionSuccess() {
         toast.success('Subscription activated successfully!');
         try {
           await trackActivity('subscription:created', { tier });
-        } catch {}
+        } catch (activityError) {
+          console.warn('Unable to track subscription activity:', activityError);
+        }
       } catch (error) {
         console.error('Error verifying subscription:', error);
         toast.error('Please refresh the page to see updated subscription status');
@@ -40,7 +42,7 @@ export default function SubscriptionSuccess() {
     // Delay to allow Stripe to process
     const timer = setTimeout(verifySubscription, 2000);
     return () => clearTimeout(timer);
-  }, [refreshSubscription, refreshBalance]);
+  }, [refreshSubscription, refreshBalance, tier]);
 
   const getTierInfo = (tierName: string) => {
     const tiers = {
@@ -145,7 +147,7 @@ export default function SubscriptionSuccess() {
                       </Link>
                     </Button>
                     <Button variant="outline" asChild>
-                      <Link to="/credits">
+                      <Link to="/pricing#credit-packs">
                         View Credit Analytics
                       </Link>
                     </Button>

@@ -33,12 +33,18 @@ const Analytics = lazy(() =>
 const Index = lazy(() => import("./pages/Index"));
 const About = lazy(() => import("./pages/About"));
 const PricingPage = lazy(() => import("./pages/PricingPage"));
+const Contact = lazy(() => import("./pages/Contact"));
+const FAQPage = lazy(() => import("./pages/FAQPage"));
+const Resources = lazy(() => import("./pages/Resources"));
+const Services = lazy(() => import("./pages/Services"));
+const Software = lazy(() => import("./pages/Software"));
 const CommunityPage = lazy(() => import("./pages/CommunityPage"));
 const ProgressCommunityPage = lazy(() => import("./pages/ProgressCommunityPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Careers = lazy(() => import("./pages/Careers"));
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const Terms = lazy(() => import("./pages/Terms"));
+const IPPolicy = lazy(() => import("./pages/IPPolicy"));
 const Signup = lazy(() => import("./pages/Signup"));
 const Dream2Plan = lazy(() => import("./pages/Dream2Plan"));
 const BizMapJourneyHubPage = lazy(() => import("./pages/BizMapJourneyHubPage"));
@@ -105,6 +111,9 @@ const FindYourAngel = lazy(() => import("./pages/community/FindYourAngel"));
 const AdminAngelEditor = lazy(() => import("./pages/community/AdminAngelEditor"));
 const ReferralProgram = lazy(() => import("./pages/ReferralProgram"));
 const ReferralDashboardPage = lazy(() => import("./pages/ReferralDashboardPage"));
+const DemoCalls = lazy(() => import("./pages/DemoCalls"));
+const MVPBuilderBetaPage = lazy(() => import("./pages/MVPBuilderBetaPage"));
+const ProjectsDashboard = lazy(() => import("./components/dashboard/ProjectsDashboard"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -168,6 +177,11 @@ function App() {
                         <Route path="/" element={<Index />} />
                         <Route path="/about" element={<About />} />
                         <Route path="/pricing" element={<PricingPage />} />
+                        <Route path="/contact" element={<Contact />} />
+                        <Route path="/faq" element={<FAQPage />} />
+                        <Route path="/resources" element={<Resources />} />
+                        <Route path="/services" element={<Services />} />
+                        <Route path="/software" element={<Software />} />
                         <Route path="/community" element={<CommunityPage />} />
                         <Route path="/community/progress" element={<ProgressCommunityPage />} />
                         <Route path="/community/mentors/:id" element={<MentorProfilePage />} />
@@ -201,6 +215,7 @@ function App() {
                         <Route path="/prompt-library" element={<PromptLibrary />} />
                         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
                         <Route path="/terms" element={<Terms />} />
+                        <Route path="/ip-policy" element={<IPPolicy />} />
                         <Route path="/bizmap-ai" element={<BizMapJourneyHubPage />} />
                         <Route path="/bizmap-ai/chat" element={<Dream2Plan />} />
                         <Route path="/pmf-lab" element={<PMFLabPage />} />
@@ -218,6 +233,7 @@ function App() {
                         <Route path="/w/:slug" element={<WaitlistPublicPage />} />
                         <Route path="/directories" element={<DirectoriesPage />} />
                         <Route path="/mvp-builder" element={<AppBuilderPage />} />
+                        <Route path="/mvp-scope" element={<MVPBuilderBetaPage />} />
                         <Route path="/go-to-market" element={<GTMStrategistPage />} />
                         <Route path="/client-acquisition" element={<Navigate to="/go-to-market" replace />} />
 
@@ -230,6 +246,7 @@ function App() {
                         <Route path="/onboarding" element={<Onboarding />} />
                         <Route path="/dashboard" element={<Dashboard />} />
                         <Route path="/dashboard/referral" element={<ReferralDashboardPage />} />
+                        <Route path="/projects-dashboard" element={<ProjectsDashboard />} />
                         <Route path="/referral-program" element={<ReferralProgram />} />
                         <Route path="/accountability" element={<Accountability />} />
                         <Route path="/saved-mentors" element={<SavedMentorsPage />} />
@@ -248,6 +265,7 @@ function App() {
                         <Route path="/insighta/vc/:slug" element={<VCProfilePage />} />
                         <Route path="/insighta/accelerator/:slug" element={<AcceleratorProfilePage />} />
                         <Route path="/demo" element={<Demo />} />
+                        <Route path="/demo-calls" element={<DemoCalls />} />
                         <Route path="/messages/:username" element={<Messages />} />
                         <Route path="/messages" element={<Messages />} />
                         <Route path="/profile/:username" element={<Profile />} />

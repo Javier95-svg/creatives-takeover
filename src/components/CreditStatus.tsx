@@ -213,7 +213,7 @@ export function CreditStatus({ requiredCredits, feature, showPurchaseLink = true
                 </Button>
                 {normalizedTier !== 'rookie' && (
                   <Button size="sm" variant="outline" asChild>
-                    <Link to="/credits">
+                    <Link to="/pricing#credit-packs">
                       Learn More
                     </Link>
                   </Button>
