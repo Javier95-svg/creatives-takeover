@@ -48,7 +48,7 @@ export const BIZMAP_TOOLS: BizMapToolDefinition[] = [
     name: 'ICP Builder',
     route: '/icp-builder',
     stage: 'IDENTITY',
-    description: 'Define your ideal customer profile and the pain point you are gonna solve.',
+    description: 'Define your ideal customer profile and the pain point(s) you are gonna solve.',
     icon: Target,
   },
   {
