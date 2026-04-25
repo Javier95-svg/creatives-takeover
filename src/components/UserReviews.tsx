@@ -126,26 +126,28 @@ const UserReviews = () => {
         <br />
         We divide it into two phases: Phase A covers ideation to launch, walking founders through validation, MVP building, and getting the product in front of the right audience. Phase B focuses on traction and fundraising, giving founders the tools to grow, scale, and raise capital with confidence.
       </p>
-      <div className="mt-6 animate-in fade-in zoom-in duration-700 delay-300">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setIsAutoPlaying(!isAutoPlaying)}
-          className="gap-2 border-border/80 bg-background/70 hover:bg-background hover:scale-105 transition-transform duration-200"
-        >
-          {isAutoPlaying ? (
-            <>
-              <Pause className="w-4 h-4" />
-              Pause
-            </>
-          ) : (
-            <>
-              <Play className="w-4 h-4" />
-              Auto Play
-            </>
-          )}
-        </Button>
-      </div>
+    </div>
+  );
+  const autoPlayControl = (
+    <div className="mt-6 flex justify-center animate-in fade-in zoom-in duration-700 delay-300">
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => setIsAutoPlaying(!isAutoPlaying)}
+        className="gap-2 border-border/80 bg-background/70 hover:bg-background hover:scale-105 transition-transform duration-200"
+      >
+        {isAutoPlaying ? (
+          <>
+            <Pause className="w-4 h-4" />
+            Pause
+          </>
+        ) : (
+          <>
+            <Play className="w-4 h-4" />
+            Auto Play
+          </>
+        )}
+      </Button>
     </div>
   );
 
@@ -311,6 +313,7 @@ const UserReviews = () => {
                     );
                   })}
                 </div>
+                {autoPlayControl}
               </CardContent>
             </Card>
 
@@ -497,6 +500,7 @@ const UserReviews = () => {
                   );
                 })}
               </div>
+              {autoPlayControl}
             </CardContent>
           </Card>
 
