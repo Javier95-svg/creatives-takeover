@@ -458,7 +458,7 @@ const Navigation = () => {
                           </TooltipContent>
                         </Tooltip>
                         <DropdownMenuContent align="start" className={cn("w-72 md:w-56 sm:w-full", navDropdownClass)}>
-                          <DropdownMenuLabel>Connect & Collaborate 🌐</DropdownMenuLabel>
+                          <DropdownMenuLabel>Connect & Collab 🌐🤝</DropdownMenuLabel>
                           <DropdownMenuSeparator />
 	                          {communitySubmenu.map((subItem) => {
 	                            const SubIcon = subItem.icon;
