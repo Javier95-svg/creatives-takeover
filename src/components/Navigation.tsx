@@ -88,9 +88,6 @@ const Navigation = () => {
 
   // Insighta submenu items
   const insightaSubmenu = [
-    { name: "VC Search", href: "/insighta/vc-search", icon: UsersIcon, description: "Browse venture capital firms" },
-    { name: "Accelerator Hunt", href: "/insighta/accelerator-hunt", icon: Rocket, description: "Find top accelerator programs" },
-    { name: "Email Templates", href: "/insighta/email-templates", icon: Mail, description: "Reach out smartly" },
     { name: "Pitch Deck Analyzer", href: "/insighta/pitch-deck-analyzer", icon: BarChart3, description: "Analyze your pitch deck" },
     { name: "Insighta Test", href: "/insighta/test", icon: FlaskConical, description: "Measure your fundraising readiness" },
   ];
@@ -105,6 +102,9 @@ const Navigation = () => {
   // Resources submenu items
   const resourcesSubmenu = [
     { name: "Newspaper", href: "/newspaper", icon: FileText, description: "Insights and articles for founders" },
+    { name: "VC Search", href: "/insighta/vc-search", icon: UsersIcon, description: "Browse venture capital firms" },
+    { name: "Accelerator Hunt", href: "/insighta/accelerator-hunt", icon: Rocket, description: "Find top accelerator programs" },
+    { name: "Email Templates", href: "/insighta/email-templates", icon: Mail, description: "Reach out smartly" },
     { name: "Prompt Library", href: "/prompt-library", icon: BookOpen, description: "60+ business cases and prompts" },
   ];
 
@@ -398,7 +398,7 @@ const Navigation = () => {
                           </TooltipContent>
                         </Tooltip>
                         <DropdownMenuContent align="start" className={cn("w-72 md:w-56 sm:w-full", navDropdownClass)}>
-                          <DropdownMenuLabel>Fundraising Tools 💸</DropdownMenuLabel>
+                          <DropdownMenuLabel>Distribute📦 Fundraise💸</DropdownMenuLabel>
                           <DropdownMenuSeparator />
 	                          {insightaSubmenu.map((subItem) => {
 	                            const SubIcon = subItem.icon;
