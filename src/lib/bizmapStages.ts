@@ -72,7 +72,7 @@ export const BIZMAP_TOOLS: BizMapToolDefinition[] = [
     name: 'MVP Builder',
     route: '/mvp-builder',
     stage: 'BUILDING',
-    description: 'Scope your MVP delivery plan and saved build spec.',
+    description: 'Build the product your ICP has been asking for.',
     icon: Rocket,
   },
   {
@@ -80,7 +80,7 @@ export const BIZMAP_TOOLS: BizMapToolDefinition[] = [
     name: 'Tech Stack',
     route: '/tech-stack',
     stage: 'BUILDING',
-    description: 'Choose and save your technical stack strategy.',
+    description: 'Select the most suitable tools for your needs and get your monthly/annual budget.',
     icon: Boxes,
   },
   {
@@ -88,7 +88,7 @@ export const BIZMAP_TOOLS: BizMapToolDefinition[] = [
     name: 'GTM Strategist',
     route: '/go-to-market',
     stage: 'LAUNCH',
-    description: 'Generate and save/export your go-to-market plan.',
+    description: 'Find the right acquisition channels for your product/service.',
     icon: Globe,
   },
   {
