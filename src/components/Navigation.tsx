@@ -101,11 +101,11 @@ const Navigation = () => {
 
   // Resources submenu items
   const resourcesSubmenu = [
-    { name: "Newspaper", href: "/newspaper", icon: FileText, description: "Insights and articles for founders" },
-    { name: "VC Search", href: "/insighta/vc-search", icon: UsersIcon, description: "Browse venture capital firms" },
-    { name: "Accelerator Hunt", href: "/insighta/accelerator-hunt", icon: Rocket, description: "Find top accelerator programs" },
-    { name: "Email Templates", href: "/insighta/email-templates", icon: Mail, description: "Reach out smartly" },
-    { name: "Prompt Library", href: "/prompt-library", icon: BookOpen, description: "60+ business cases and prompts" },
+    { name: "Newspaper", href: "/newspaper", icon: FileText, description: "Business Cases & Founder Stories." },
+    { name: "VC Search", href: "/insighta/vc-search", icon: UsersIcon, description: "Browse venture capital firms." },
+    { name: "Accelerator Hunt", href: "/insighta/accelerator-hunt", icon: Rocket, description: "Find top accelerator programs." },
+    { name: "Email Templates", href: "/insighta/email-templates", icon: Mail, description: "Reach out smartly." },
+    { name: "Prompt Library", href: "/prompt-library", icon: BookOpen, description: "60 business models from 8 different industries." },
   ];
 
   // Fetch user avatar
