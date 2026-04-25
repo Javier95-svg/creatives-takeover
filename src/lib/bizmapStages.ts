@@ -80,7 +80,7 @@ export const BIZMAP_TOOLS: BizMapToolDefinition[] = [
     name: 'Tech Stack',
     route: '/tech-stack',
     stage: 'BUILDING',
-    description: 'Pick the most suitable tech stack and get your monthly/annual budget.',
+    description: 'Pick the most suitable tools and get your monthly/annual budget.',
     icon: Boxes,
   },
   {
