@@ -97,9 +97,9 @@ const Navigation = () => {
 
   // Community submenu items
   const communitySubmenu = [
-    { name: "Find a Mentor", href: "/community", icon: GraduationCap, description: "Connect with experienced mentors" },
-    { name: "Find a Co-Founder", href: "/community/co-founders", icon: Handshake, description: "Meet your business soulmate" },
-    { name: "Find your Angel", href: "/community/angels", icon: Sparkles, description: "Connect with angel investors" },
+    { name: "Find a Mentor", href: "/community", icon: GraduationCap, description: "Connect with experienced startup coaches." },
+    { name: "Find a Co-Founder", href: "/community/co-founders", icon: Handshake, description: "Meet your business soulmate." },
+    { name: "Find your Angel", href: "/community/angels", icon: Sparkles, description: "Angel investor network." },
   ];
 
   // Resources submenu items

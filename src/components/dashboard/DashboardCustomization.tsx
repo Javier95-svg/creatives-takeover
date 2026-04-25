@@ -243,21 +243,21 @@ export const DashboardCustomization = () => {
                 <ToggleItem
                   id="find-mentor"
                   title="Find a Mentor"
-                  description="Connect with experienced mentors"
+                  description="Connect with experienced startup coaches."
                   checked={preferences.showFindMentor}
                   onToggle={() => togglePreference('showFindMentor')}
                 />
                 <ToggleItem
                   id="find-cofounder"
                   title="Find a Co-Founder"
-                  description="Meet collaborators for your startup"
+                  description="Meet your business soulmate."
                   checked={preferences.showFindCoFounder}
                   onToggle={() => togglePreference('showFindCoFounder')}
                 />
                 <ToggleItem
                   id="find-angel"
                   title="Find your Angel"
-                  description="Connect with angel investors"
+                  description="Angel investor network."
                   checked={preferences.showFindAngel}
                   onToggle={() => togglePreference('showFindAngel')}
                 />
