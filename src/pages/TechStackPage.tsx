@@ -86,7 +86,7 @@ export default function TechStackPage() {
                 Tech Stack Builder
               </h1>
               <p className="text-lg sm:text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed animate-fade-in px-4" style={{ animationDelay: '0.3s' }}>
-                Compare and select the most suitable tools to<span className="gradient-text font-semibold" style={{ lineHeight: 'inherit', marginLeft: '0.25rem' }}> build and scale your startup.</span>
+                Pick one product per category and define your<span className="gradient-text font-semibold" style={{ lineHeight: 'inherit', marginLeft: '0.25rem' }}> monthly budget.</span>
               </p>
             </div>
 
