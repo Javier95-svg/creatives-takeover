@@ -169,7 +169,7 @@ const AcceleratorProfilePage = () => {
         <div className="text-center">
           <h2 className="text-2xl font-bold mb-2">Accelerator Not Found</h2>
           <p className="text-muted-foreground mb-6">The accelerator you're looking for doesn't exist.</p>
-          <Button onClick={() => navigate('/insighta/accelerator-hunt')}>
+          <Button onClick={() => navigate('/accelerator-hunt')}>
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Accelerator Hunt
           </Button>
@@ -431,7 +431,7 @@ const AcceleratorProfilePage = () => {
                 </p>
                 <Button
                   variant="outline"
-                  onClick={() => navigate('/insighta/email-templates')}
+                  onClick={() => navigate('/email-templates')}
                 >
                   <Mail className="h-4 w-4 mr-2" />
                   Browse Email Templates
@@ -520,7 +520,7 @@ const AcceleratorProfilePage = () => {
         <div className="container mx-auto max-w-4xl relative z-10">
           <Button
             variant="ghost"
-            onClick={() => navigate('/insighta/accelerator-hunt')}
+            onClick={() => navigate('/accelerator-hunt')}
             className="mb-6"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />

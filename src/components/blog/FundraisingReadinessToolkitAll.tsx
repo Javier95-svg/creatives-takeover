@@ -36,7 +36,7 @@ import {
 import { ASSESSMENT_QUESTIONS, INDUSTRY_OPTIONS, BUSINESS_MODEL_OPTIONS, SCORE_LABELS } from "@/data/assessmentQuestions";
 
 // Legacy interface kept for backwards compatibility
-interface AIAnalysis extends EnhancedAIAnalysis {}
+type AIAnalysis = EnhancedAIAnalysis;
 
 // Assessment flow steps
 type AssessmentStep = 'context-stage' | 'context-business' | 'assessment' | 'results';
@@ -602,7 +602,7 @@ const FundraisingReadinessToolkitAll = () => {
             size="lg"
             className="w-full sm:w-auto"
             onClick={() => {
-              navigate('/insighta/vc-search');
+              navigate('/vc-search');
             }}
           >
             <Users className="mr-2 h-5 w-5" />

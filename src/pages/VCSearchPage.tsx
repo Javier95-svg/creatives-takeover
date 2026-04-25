@@ -14,7 +14,7 @@ import { useAuth } from "@/contexts/AuthContext";
 
 export default function VCSearchPage() {
   const { user } = useAuth();
-  const publicTab = getPublicTabConfig('/insighta/vc-search');
+  const publicTab = getPublicTabConfig('/vc-search');
   const { trackPageVisit } = useReadingAnalytics();
   const { relatedLinks, answerSummary } = insightaPageContent.vcSearch;
 
@@ -30,7 +30,7 @@ export default function VCSearchPage() {
       "@type": "WebPage",
       "name": "Find Your Perfect VC - Venture Capital Search",
       "description": "Search and filter through venture capitalists by investment stage, industry, check size, and geography",
-      "url": "https://creatives-takeover.com/insighta/vc-search",
+      "url": "https://creatives-takeover.com/vc-search",
       "publisher": {
         "@type": "Organization",
         "name": "Creatives Takeover",
@@ -43,13 +43,12 @@ export default function VCSearchPage() {
     createSoftwareApplicationSchema({
       name: "VC Search",
       description: "Venture capital database and search tool for founders building investor target lists.",
-      url: "/insighta/vc-search",
+      url: "/vc-search",
       featureList: ["investor filters", "vc firm discovery", "stage and geography search"],
     }),
     createBreadcrumbSchema([
       { name: 'Home', url: '/' },
-      { name: 'Insighta', url: '/insighta' },
-      { name: 'VC Search', url: '/insighta/vc-search' }
+      { name: 'VC Search', url: '/vc-search' }
     ])
   ];
 
@@ -59,7 +58,7 @@ export default function VCSearchPage() {
         title="Find Your Perfect VC - Creatives Takeover"
         description="Search and filter through venture capitalists by investment stage, industry, check size, and geography. Click any VC to view their full profile and contact information."
         keywords="venture capital database, vc search tool, investor database, venture capital firms list, startup investor research"
-        url="/insighta/vc-search"
+        url="/vc-search"
         structuredData={structuredData}
       />
       <Navigation />

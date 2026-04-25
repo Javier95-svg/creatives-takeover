@@ -14,7 +14,7 @@ import { useAuth } from "@/contexts/AuthContext";
 
 export default function AcceleratorHuntPage() {
   const { user } = useAuth();
-  const publicTab = getPublicTabConfig('/insighta/accelerator-hunt');
+  const publicTab = getPublicTabConfig('/accelerator-hunt');
   const { trackPageVisit } = useReadingAnalytics();
   const { relatedLinks, answerSummary } = insightaPageContent.acceleratorHunt;
 
@@ -30,7 +30,7 @@ export default function AcceleratorHuntPage() {
       "@type": "WebPage",
       "name": "Find Your Perfect Accelerator - Accelerator Programs Search",
       "description": "Discover accelerator programs offering funding, mentorship, and resources. Filter by location, industry focus, and funding amount to find the best fit.",
-      "url": "https://creatives-takeover.com/insighta/accelerator-hunt",
+      "url": "https://creatives-takeover.com/accelerator-hunt",
       "publisher": {
         "@type": "Organization",
         "name": "Creatives Takeover",
@@ -43,13 +43,12 @@ export default function AcceleratorHuntPage() {
     createSoftwareApplicationSchema({
       name: "Accelerator Hunt",
       description: "Startup accelerator search tool for shortlisting relevant accelerators by focus, funding, and geography.",
-      url: "/insighta/accelerator-hunt",
+      url: "/accelerator-hunt",
       featureList: ["accelerator discovery", "location filters", "funding filters", "program research"],
     }),
     createBreadcrumbSchema([
       { name: 'Home', url: '/' },
-      { name: 'Insighta', url: '/insighta' },
-      { name: 'Accelerator Hunt', url: '/insighta/accelerator-hunt' }
+      { name: 'Accelerator Hunt', url: '/accelerator-hunt' }
     ])
   ];
 
@@ -59,7 +58,7 @@ export default function AcceleratorHuntPage() {
         title="Find Your Perfect Accelerator - Creatives Takeover"
         description="Discover accelerator programs offering funding, mentorship, and resources. Filter by location, industry focus, and funding amount to find the best fit."
         keywords="startup accelerator database, accelerator search, accelerator list, startup accelerator finder, y combinator alternatives"
-        url="/insighta/accelerator-hunt"
+        url="/accelerator-hunt"
         structuredData={structuredData}
       />
       <Navigation />

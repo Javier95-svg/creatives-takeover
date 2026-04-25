@@ -55,7 +55,7 @@ const ValuePropositionCards = () => {
       buttonLabel: "Share your Journey",
       description: "Every account has a founder profile where you can share posts, reels, and updates in a space built for builders. It is your personal home on the platform, a place to show who you are, what you are working on, and the progress you are making so other users can follow your ups and downs.\n\nYour profile also links to your startup, so anyone who finds you can instantly explore what you are building and the key details behind it. Share product demos, behind the scenes moments, milestones, launches, and lessons learned, and turn every update into visibility and new opportunities.",
       cta: "Find Accelerators",
-      link: "/insighta/accelerator-hunt",
+      link: "/accelerator-hunt",
       image: "https://images.unsplash.com/photo-1531482615713-2afd69097998?w=800&h=600&fit=crop&q=80&fm=webp",
       imageAlt: "Startup accelerator program session"
     },
@@ -67,7 +67,7 @@ const ValuePropositionCards = () => {
       buttonLabel: "Fundraising Tools",
       description: "Raising money starts with knowing who to talk to. VC Search lets you explore a curated database of venture capital firms filtered by industry, stage, and check size so you can build a targeted list instead of pitching blind. Find your Angel connects you directly with angel investors who are actively looking to back early stage founders.\n\nPair your outreach with the Pitch Deck Analyzer to sharpen your presentation, Email Templates to craft messages that actually feel personal, and the Insighta Test to check your fundraising readiness. It's everything you need to walk into investor conversations prepared.",
       cta: "Explore Investors",
-      link: "/insighta/vc-search",
+      link: "/vc-search",
       image: "https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=800&h=600&fit=crop&q=80&fm=webp",
       imageAlt: "Fundraising meeting with investors"
     },

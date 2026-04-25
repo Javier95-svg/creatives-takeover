@@ -170,7 +170,7 @@ No pitch, just curious how you approach it today.
           deliverable: 'Response log updated',
           toolLink: {
             label: 'Email Template Ideas',
-            href: '/insighta/email-templates',
+            href: '/email-templates',
           },
         },
       ],

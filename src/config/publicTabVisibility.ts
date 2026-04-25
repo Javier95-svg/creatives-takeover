@@ -92,7 +92,7 @@ export const PUBLIC_TAB_VISIBILITY: Record<string, PublicTabConfig> = {
     ],
     showPricingCta: true,
   },
-  '/insighta/vc-search': {
+  '/vc-search': {
     state: 'locked',
     featureName: 'VC Search',
     description: 'Search investor firms by stage, geography, and focus without burning time on low-fit outreach.',
@@ -102,7 +102,7 @@ export const PUBLIC_TAB_VISIBILITY: Record<string, PublicTabConfig> = {
       'Sign up to unlock the search experience and investor research flow.',
     ],
   },
-  '/insighta/accelerator-hunt': {
+  '/accelerator-hunt': {
     state: 'locked',
     featureName: 'Accelerator Hunt',
     description: 'Find accelerators that match your stage, geography, and startup focus before you apply.',
@@ -112,7 +112,7 @@ export const PUBLIC_TAB_VISIBILITY: Record<string, PublicTabConfig> = {
       'Sign up to unlock the full research flow.',
     ],
   },
-  '/insighta/email-templates': {
+  '/email-templates': {
     state: 'locked',
     featureName: 'Email Templates',
     description: 'Access fundraising and outreach templates built for cold intros, follow-ups, and investor updates.',
@@ -180,4 +180,3 @@ export const getPublicTabConfig = (path: string): PublicTabConfig | undefined =>
 
 export const getPublicTabState = (path: string): PublicTabVisibilityState =>
   PUBLIC_TAB_VISIBILITY[path]?.state ?? 'accessible';
-

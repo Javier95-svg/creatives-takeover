@@ -532,7 +532,7 @@ function FundraisingActionGrid() {
     {
       title: 'Email Templates',
       description: 'Use investor-ready templates for follow-ups and warm intros.',
-      href: '/insighta/email-templates',
+      href: '/email-templates',
     },
     {
       title: 'Insighta Research',

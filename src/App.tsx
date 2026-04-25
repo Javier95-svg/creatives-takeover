@@ -257,9 +257,12 @@ function App() {
                         <Route path="/weekly-mission" element={<WeeklyMissionPage />} />
                         <Route path="/tasks" element={<TasksPage />} />
                         <Route path="/insighta" element={<Blog />} />
-                        <Route path="/insighta/vc-search" element={<VCSearchPage />} />
-                        <Route path="/insighta/email-templates" element={<EmailTemplatesPage />} />
-                        <Route path="/insighta/accelerator-hunt" element={<AcceleratorHuntPage />} />
+                        <Route path="/vc-search" element={<VCSearchPage />} />
+                        <Route path="/email-templates" element={<EmailTemplatesPage />} />
+                        <Route path="/accelerator-hunt" element={<AcceleratorHuntPage />} />
+                        <Route path="/insighta/vc-search" element={<Navigate to="/vc-search" replace />} />
+                        <Route path="/insighta/email-templates" element={<Navigate to="/email-templates" replace />} />
+                        <Route path="/insighta/accelerator-hunt" element={<Navigate to="/accelerator-hunt" replace />} />
                         <Route path="/insighta/pitch-deck-analyzer" element={<PitchDeckAnalyzerPage />} />
                         <Route path="/insighta/test" element={<InsightaTestPage />} />
                         <Route path="/insighta/vc/:slug" element={<VCProfilePage />} />

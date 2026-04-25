@@ -96,7 +96,7 @@ export const STAGES: Record<StageId, StageMeta> = {
     description:
       "You have traction worth raising on. The priority is finding the right investors and walking in prepared with a story that lands.",
     topFocus: [
-      { label: "Search VCs", href: "/insighta/vc-search" },
+      { label: "Search VCs", href: "/vc-search" },
       { label: "Analyze your pitch deck", href: "/insighta/pitch-deck-analyzer" },
     ],
   },

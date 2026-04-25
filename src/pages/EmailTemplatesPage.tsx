@@ -12,7 +12,7 @@ import { usePlanAccess } from "@/hooks/usePlanAccess";
 
 export default function EmailTemplatesPage() {
   const { user } = useAuth();
-  const publicTab = getPublicTabConfig('/insighta/email-templates');
+  const publicTab = getPublicTabConfig('/email-templates');
   const { trackPageVisit } = useReadingAnalytics();
   const { hasAccess, upgradeTarget } = usePlanAccess('email_templates');
 
@@ -28,7 +28,7 @@ export default function EmailTemplatesPage() {
       "@type": "WebPage",
       "name": "Email Templates Library - Fundraising Email Templates",
       "description": "Copy-paste ready email templates for every stage of fundraising. Personalize the variables and send.",
-      "url": "https://creatives-takeover.com/insighta/email-templates",
+      "url": "https://creatives-takeover.com/email-templates",
       "publisher": {
         "@type": "Organization",
         "name": "Creatives Takeover",
@@ -40,8 +40,7 @@ export default function EmailTemplatesPage() {
     },
     createBreadcrumbSchema([
       { name: 'Home', url: '/' },
-      { name: 'Insighta', url: '/insighta' },
-      { name: 'Email Templates', url: '/insighta/email-templates' }
+      { name: 'Email Templates', url: '/email-templates' }
     ])
   ];
 
@@ -51,7 +50,7 @@ export default function EmailTemplatesPage() {
         title="Email Templates Library - Creatives Takeover"
         description="Copy-paste ready email templates for every stage of fundraising. Personalize the variables (like {{vc_name}} and {{company_name}}) and send."
         keywords="fundraising email templates, investor email, cold outreach, warm introduction, follow-up emails"
-        url="/insighta/email-templates"
+        url="/email-templates"
         structuredData={structuredData}
       />
       <Navigation />

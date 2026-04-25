@@ -44,9 +44,9 @@ export default function InsightaTestPage() {
     ]),
   ];
   const relatedLinks = [
-    { href: "/insighta/vc-search", label: "VC Search" },
-    { href: "/insighta/email-templates", label: "Email Templates" },
-    { href: "/insighta/accelerator-hunt", label: "Accelerator Search" },
+    { href: "/vc-search", label: "VC Search" },
+    { href: "/email-templates", label: "Email Templates" },
+    { href: "/accelerator-hunt", label: "Accelerator Search" },
     { href: "/insighta/pitch-deck-analyzer", label: "Pitch Deck Analyzer" },
   ];
 

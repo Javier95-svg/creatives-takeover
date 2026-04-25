@@ -19,8 +19,8 @@ export interface InsightaAnswerSummaryContent {
 export const insightaPageContent = {
   vcSearch: {
     relatedLinks: [
-      { href: "/insighta/email-templates", label: "Email Templates" },
-      { href: "/insighta/accelerator-hunt", label: "Accelerator Search" },
+      { href: "/email-templates", label: "Email Templates" },
+      { href: "/accelerator-hunt", label: "Accelerator Search" },
       { href: "/insighta/pitch-deck-analyzer", label: "Pitch Deck Analyzer" },
       { href: "/insighta/test", label: "Fundraising Assessment" },
     ] satisfies InsightaPageLink[],
@@ -53,8 +53,8 @@ export const insightaPageContent = {
   },
   acceleratorHunt: {
     relatedLinks: [
-      { href: "/insighta/vc-search", label: "VC Search" },
-      { href: "/insighta/email-templates", label: "Email Templates" },
+      { href: "/vc-search", label: "VC Search" },
+      { href: "/email-templates", label: "Email Templates" },
       { href: "/insighta/pitch-deck-analyzer", label: "Pitch Deck Analyzer" },
       { href: "/insighta/test", label: "Fundraising Assessment" },
     ] satisfies InsightaPageLink[],
