@@ -88,8 +88,8 @@ const Navigation = () => {
 
   // Insighta submenu items
   const insightaSubmenu = [
-    { name: "Pitch Deck Analyzer", href: "/insighta/pitch-deck-analyzer", icon: BarChart3, description: "Analyze your pitch deck" },
-    { name: "Insighta Test", href: "/insighta/test", icon: FlaskConical, description: "Measure your fundraising readiness" },
+    { name: "Pitch Deck Analyzer", href: "/pitch-deck-analyzer", icon: BarChart3, description: "Analyze your pitch deck" },
+    { name: "Insighta Test", href: "/insighta-test", icon: FlaskConical, description: "Measure your fundraising readiness" },
   ];
 
   // Community submenu items

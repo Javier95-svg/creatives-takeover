@@ -144,7 +144,7 @@ const FundraisingReadinessToolkitAll = () => {
   const analyzeReadiness = async () => {
     if (!isAuthenticated || !user) {
       toast.error("Please sign in to analyze your readiness");
-      navigate('/login', { state: { returnTo: '/insighta/test' } });
+      navigate('/login', { state: { returnTo: '/insighta-test' } });
       return;
     }
 
@@ -364,7 +364,7 @@ const FundraisingReadinessToolkitAll = () => {
                     </p>
                     <Button
                       size="lg"
-                      onClick={() => navigate('/login', { state: { returnTo: '/insighta/test' } })}
+                      onClick={() => navigate('/login', { state: { returnTo: '/insighta-test' } })}
                       className="w-full md:w-auto min-w-[200px]"
                     >
                       <LogIn className="h-4 w-4 mr-2" />

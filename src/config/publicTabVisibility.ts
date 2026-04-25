@@ -122,7 +122,7 @@ export const PUBLIC_TAB_VISIBILITY: Record<string, PublicTabConfig> = {
       'Sign up to unlock copy you can tailor to your raise.',
     ],
   },
-  '/insighta/pitch-deck-analyzer': {
+  '/pitch-deck-analyzer': {
     state: 'locked',
     featureName: 'Pitch Deck Analyzer',
     description: 'Upload your deck and get fast feedback on clarity, structure, traction story, and investor readiness.',
@@ -132,7 +132,7 @@ export const PUBLIC_TAB_VISIBILITY: Record<string, PublicTabConfig> = {
       'Use it when you are ready to tighten your fundraising narrative.',
     ],
   },
-  '/insighta/test': {
+  '/insighta-test': {
     state: 'locked',
     featureName: 'Insighta Test',
     description: 'Measure your fundraising readiness before you start investor outreach.',

@@ -244,7 +244,7 @@ export function ProInvestorMotionEmpty() {
           Start by pressure-testing your pitch before reaching out to any investor.
         </p>
         <Button asChild size="sm" variant="ghost" className="mt-3 px-0 text-primary hover:bg-transparent">
-          <Link to="/insighta/pitch-deck-analyzer">
+          <Link to="/pitch-deck-analyzer">
             Analyze your pitch deck
             <ArrowRight className="ml-1 h-3.5 w-3.5" />
           </Link>

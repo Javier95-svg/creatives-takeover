@@ -17,7 +17,7 @@ import { usePlanAccess } from "@/hooks/usePlanAccess";
 
 export default function PitchDeckAnalyzerPage() {
   const { user } = useAuth();
-  const publicTab = getPublicTabConfig('/insighta/pitch-deck-analyzer');
+  const publicTab = getPublicTabConfig('/pitch-deck-analyzer');
   const { hasAccess, upgradeTarget } = usePlanAccess('pitch_deck_analyzer');
   const { trackPageVisit } = useReadingAnalytics();
   const { analyzePitchDeck, submitFeedback, resetAnalysis, uploading, analyzing, analysis, error, isProcessing } = usePitchDeckAnalyzer();
@@ -51,7 +51,7 @@ export default function PitchDeckAnalyzerPage() {
       "@type": "WebPage",
       "name": "Pitch Deck Analyzer - AI-Powered Pitch Deck Assessment",
       "description": "Get instant AI-powered analysis of your pitch deck. Receive a comprehensive score across 6 key dimensions with actionable feedback to improve your fundraising success.",
-      "url": "https://creatives-takeover.com/insighta/pitch-deck-analyzer",
+      "url": "https://creatives-takeover.com/pitch-deck-analyzer",
       "publisher": {
         "@type": "Organization",
         "name": "Creatives Takeover",
@@ -63,8 +63,7 @@ export default function PitchDeckAnalyzerPage() {
     },
     createBreadcrumbSchema([
       { name: 'Home', url: '/' },
-      { name: 'Insighta', url: '/insighta' },
-      { name: 'Pitch Deck Analyzer', url: '/insighta/pitch-deck-analyzer' }
+      { name: 'Pitch Deck Analyzer', url: '/pitch-deck-analyzer' }
     ])
   ];
 
@@ -74,7 +73,7 @@ export default function PitchDeckAnalyzerPage() {
         title="Pitch Deck Analyzer - AI-Powered Assessment"
         description="Get instant AI-powered analysis of your pitch deck. Comprehensive scoring across story, market, traction, business model, team, and fundraising readiness."
         keywords="pitch deck analyzer, pitch deck score, investor presentation analysis, fundraising assessment, startup pitch analysis"
-        url="/insighta/pitch-deck-analyzer"
+        url="/pitch-deck-analyzer"
         structuredData={structuredData}
       />
       <Navigation />

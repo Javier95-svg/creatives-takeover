@@ -21,8 +21,8 @@ export const insightaPageContent = {
     relatedLinks: [
       { href: "/email-templates", label: "Email Templates" },
       { href: "/accelerator-hunt", label: "Accelerator Search" },
-      { href: "/insighta/pitch-deck-analyzer", label: "Pitch Deck Analyzer" },
-      { href: "/insighta/test", label: "Fundraising Assessment" },
+      { href: "/pitch-deck-analyzer", label: "Pitch Deck Analyzer" },
+      { href: "/insighta-test", label: "Fundraising Assessment" },
     ] satisfies InsightaPageLink[],
     answerSummary: {
       title: "How founders use VC Search",
@@ -55,8 +55,8 @@ export const insightaPageContent = {
     relatedLinks: [
       { href: "/vc-search", label: "VC Search" },
       { href: "/email-templates", label: "Email Templates" },
-      { href: "/insighta/pitch-deck-analyzer", label: "Pitch Deck Analyzer" },
-      { href: "/insighta/test", label: "Fundraising Assessment" },
+      { href: "/pitch-deck-analyzer", label: "Pitch Deck Analyzer" },
+      { href: "/insighta-test", label: "Fundraising Assessment" },
     ] satisfies InsightaPageLink[],
     answerSummary: {
       title: "How founders use Accelerator Hunt",

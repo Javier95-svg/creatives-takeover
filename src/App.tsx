@@ -263,8 +263,10 @@ function App() {
                         <Route path="/insighta/vc-search" element={<Navigate to="/vc-search" replace />} />
                         <Route path="/insighta/email-templates" element={<Navigate to="/email-templates" replace />} />
                         <Route path="/insighta/accelerator-hunt" element={<Navigate to="/accelerator-hunt" replace />} />
-                        <Route path="/insighta/pitch-deck-analyzer" element={<PitchDeckAnalyzerPage />} />
-                        <Route path="/insighta/test" element={<InsightaTestPage />} />
+                        <Route path="/pitch-deck-analyzer" element={<PitchDeckAnalyzerPage />} />
+                        <Route path="/insighta-test" element={<InsightaTestPage />} />
+                        <Route path="/insighta/pitch-deck-analyzer" element={<Navigate to="/pitch-deck-analyzer" replace />} />
+                        <Route path="/insighta/test" element={<Navigate to="/insighta-test" replace />} />
                         <Route path="/insighta/vc/:slug" element={<VCProfilePage />} />
                         <Route path="/insighta/accelerator/:slug" element={<AcceleratorProfilePage />} />
                         <Route path="/demo" element={<Demo />} />

@@ -161,7 +161,7 @@ function getStageInterventionCopy(stage?: string | null) {
       title: 'Your fundraising narrative needs pressure, not more polishing.',
       description:
         'Do not keep widening the deck. Tighten the next proof point, refresh the investor map, and get one expert outside read before outreach slips again.',
-      resourceHref: '/insighta/pitch-deck-analyzer',
+      resourceHref: '/pitch-deck-analyzer',
       resourceLabel: 'Pressure-test Deck',
     };
   }

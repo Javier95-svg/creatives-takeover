@@ -11,7 +11,7 @@ import { useAuth } from "@/contexts/AuthContext";
 
 export default function InsightaTestPage() {
   const { user } = useAuth();
-  const publicTab = getPublicTabConfig('/insighta/test');
+  const publicTab = getPublicTabConfig('/insighta-test');
   const faqs = [
     {
       question: "What is fundraising readiness?",
@@ -33,21 +33,20 @@ export default function InsightaTestPage() {
     createSoftwareApplicationSchema({
       name: "Insighta Test",
       description: "Fundraising readiness self-assessment for founders who want to evaluate investor readiness and identify what to improve.",
-      url: "/insighta/test",
+      url: "/insighta-test",
       featureList: ["readiness assessment", "fundraising gaps", "investor preparation checklist"],
     }),
     createFAQSchema(faqs),
     createBreadcrumbSchema([
       { name: "Home", url: "/" },
-      { name: "Insighta", url: "/insighta" },
-      { name: "Insighta Test", url: "/insighta/test" },
+      { name: "Insighta Test", url: "/insighta-test" },
     ]),
   ];
   const relatedLinks = [
     { href: "/vc-search", label: "VC Search" },
     { href: "/email-templates", label: "Email Templates" },
     { href: "/accelerator-hunt", label: "Accelerator Search" },
-    { href: "/insighta/pitch-deck-analyzer", label: "Pitch Deck Analyzer" },
+    { href: "/pitch-deck-analyzer", label: "Pitch Deck Analyzer" },
   ];
 
   return (
@@ -56,7 +55,7 @@ export default function InsightaTestPage() {
         title="Insighta Test - Fundraising Readiness Assessment | Creatives Takeover"
         description="Take our comprehensive self-assessment to evaluate your startup's fundraising readiness, identify gaps, and understand exactly what you need to improve before approaching investors."
         keywords="fundraising readiness assessment, investor readiness test, startup fundraising score, fundraising checklist"
-        url="/insighta/test"
+        url="/insighta-test"
         structuredData={structuredData}
       />
       <Navigation />

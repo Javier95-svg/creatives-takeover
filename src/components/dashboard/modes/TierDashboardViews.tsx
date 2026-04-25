@@ -281,7 +281,7 @@ export function ProModeView({
       id: 'pro-deck',
       title: 'Pressure-test the pitch before outreach',
       description: 'Use the analyzer and templates before you send investor communication into the market.',
-      href: '/insighta/pitch-deck-analyzer',
+      href: '/pitch-deck-analyzer',
       label: 'Deck review',
     },
     {
@@ -527,7 +527,7 @@ function FundraisingActionGrid() {
     {
       title: 'Pitch Deck Analyzer',
       description: 'Pressure-test your deck before investor outreach.',
-      href: '/insighta/pitch-deck-analyzer',
+      href: '/pitch-deck-analyzer',
     },
     {
       title: 'Email Templates',
