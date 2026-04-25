@@ -72,9 +72,16 @@ const Navigation = () => {
   };
 
   // BizMap AI submenu -- grouped by guided stages
+  type SubmenuLinkItem = {
+    name: string;
+    href: string;
+    icon: React.ComponentType<{ className?: string }>;
+    description: string;
+  };
+
   type BizMapMenuItem =
     | { type: 'label'; label: string }
-    | { type?: undefined; name: string; href: string; icon: React.ComponentType<{ className?: string }>; description: string };
+    | SubmenuLinkItem;
 
   const bizMapSubmenu: BizMapMenuItem[] = BIZMAP_STAGES.flatMap((stage) => [
     { type: 'label' as const, label: `Stage ${stage.numeral}: ${stage.title}` },
@@ -87,7 +94,11 @@ const Navigation = () => {
   ]);
 
   // Insighta submenu items
-  const insightaSubmenu = [
+  const insightaSubmenu: BizMapMenuItem[] = [
+    { type: 'label', label: "STAGE VI: TRACTION" },
+    { type: 'label', label: "STAGE VII: FUNDRAISE" },
+    { name: "VC Search", href: "/vc-search", icon: UsersIcon, description: "Browse venture capital firms." },
+    { name: "Accelerator Hunt", href: "/accelerator-hunt", icon: Rocket, description: "Find top accelerator programs." },
     { name: "Pitch Deck Analyzer", href: "/pitch-deck-analyzer", icon: BarChart3, description: "Analyze your pitch deck" },
     { name: "Insighta Test", href: "/insighta-test", icon: FlaskConical, description: "Measure your fundraising readiness" },
   ];
@@ -102,8 +113,6 @@ const Navigation = () => {
   // Resources submenu items
   const resourcesSubmenu = [
     { name: "Newspaper", href: "/newspaper", icon: FileText, description: "Business Cases & Founder Stories." },
-    { name: "VC Search", href: "/vc-search", icon: UsersIcon, description: "Browse venture capital firms." },
-    { name: "Accelerator Hunt", href: "/accelerator-hunt", icon: Rocket, description: "Find top accelerator programs." },
     { name: "Email Templates", href: "/email-templates", icon: Mail, description: "Reach out smartly." },
     { name: "Prompt Library", href: "/prompt-library", icon: BookOpen, description: "60 business models from 8 different industries." },
   ];
@@ -400,9 +409,17 @@ const Navigation = () => {
                         <DropdownMenuContent align="start" className={cn("w-72 md:w-56 sm:w-full", navDropdownClass)}>
                           <DropdownMenuLabel>Distribute📦 Fundraise💸</DropdownMenuLabel>
                           <DropdownMenuSeparator />
-	                          {insightaSubmenu.map((subItem) => {
-	                            const SubIcon = subItem.icon;
-                            const publicTabState = getSignedOutTabState(subItem.href);
+	                          {insightaSubmenu.map((subItem, idx) => {
+                              if ('type' in subItem && subItem.type === 'label') {
+                                return (
+                                  <DropdownMenuLabel key={idx} className="text-[10px] font-semibold uppercase tracking-wider text-primary mt-2 first:mt-0">
+                                    {subItem.label}
+                                  </DropdownMenuLabel>
+                                );
+                              }
+
+		                            const SubIcon = subItem.icon;
+	                            const publicTabState = getSignedOutTabState(subItem.href);
 
                             if (publicTabState === 'hidden') {
                               return null;
@@ -730,8 +747,8 @@ const Navigation = () => {
                     const active = isActive(item.href);
 
                     // Determine submenu for this item
-                    const submenuMap: Record<string, { items: typeof insightaSubmenu }> = {
-                      'BizMap AI': { items: bizMapSubmenu.filter((s): s is { name: string; href: string; icon: React.ComponentType<{ className?: string }>; description: string } => !('type' in s)) },
+                    const submenuMap: Record<string, { items: BizMapMenuItem[] }> = {
+                      'BizMap AI': { items: bizMapSubmenu.filter((s): s is SubmenuLinkItem => !('type' in s)) },
                       'Insighta': { items: insightaSubmenu },
                       'Community': { items: communitySubmenu },
                       'More': { items: resourcesSubmenu },
@@ -758,8 +775,19 @@ const Navigation = () => {
                         {submenu && (
                           <div className="ml-10 mr-2 mb-1 space-y-0.5">
 	                            {submenu.items.map((sub) => {
-	                              const SubIcon = sub.icon;
-	                              const publicTabState = getSignedOutTabState(sub.href);
+                              if ('type' in sub && sub.type === 'label') {
+                                return (
+                                  <div
+                                    key={sub.label}
+                                    className="px-3 pt-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-primary"
+                                  >
+                                    {sub.label}
+                                  </div>
+                                );
+                              }
+
+		                              const SubIcon = sub.icon;
+		                              const publicTabState = getSignedOutTabState(sub.href);
 
                               if (publicTabState === 'hidden') {
                                 return null;
