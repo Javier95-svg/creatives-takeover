@@ -68,7 +68,7 @@ const cycleSteps: CycleStep[] = [
     shortLabel: "Traction",
     title: "Stage 6: Traction",
     description:
-      "This is the stage where launch activity turns into measurable growth. Founders need to identify which acquisition channel actually works for their specific product, understand what retention looks like in the first 30 days, and decide whether they are close to channel-product fit or still forcing traction through effort instead of repeatable demand.\n\nThe focus is to map the journey from 10 users to 100 to 1,000 with clearer signals, better onboarding, stronger retention loops, and a realistic growth rhythm. Creatives Takeover supports this through GTM strategy, directories, community feedback, and execution tools that help founders turn early usage into a repeatable traction system.",
+      "This is the stage where launch activity has to turn into measurable traction. Founders need to find which acquisition channel actually works for their specific product, understand what retention looks like in the first 30 days, and see whether growth is coming from real channel-product fit or constant manual effort.\n\nCreatives Takeover supports this through GTM strategy, directories, community feedback, and execution tools that help founders map the path from 10 users to 100 to 1,000 with clearer signals, better onboarding, and a repeatable growth rhythm.",
     icon: ChartNoAxesCombined,
     color: "from-pink-500/20 to-pink-600/20"
   },
