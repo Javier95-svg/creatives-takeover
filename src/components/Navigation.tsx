@@ -99,8 +99,8 @@ const Navigation = () => {
     { type: 'label', label: "STAGE VII: FUNDRAISE" },
     { name: "VC Search", href: "/vc-search", icon: UsersIcon, description: "Browse venture capital firms." },
     { name: "Accelerator Hunt", href: "/accelerator-hunt", icon: Rocket, description: "Find top accelerator programs." },
-    { name: "Pitch Deck Analyzer", href: "/pitch-deck-analyzer", icon: BarChart3, description: "Analyze your pitch deck" },
-    { name: "Insighta Test", href: "/insighta-test", icon: FlaskConical, description: "Measure your fundraising readiness" },
+    { name: "Pitch Deck Analyzer", href: "/pitch-deck-analyzer", icon: BarChart3, description: "Analyze your pitch deck." },
+    { name: "Insighta Test", href: "/insighta-test", icon: FlaskConical, description: "Measure your fundraising readiness." },
   ];
 
   // Community submenu items
