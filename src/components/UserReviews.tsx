@@ -9,7 +9,7 @@ import {
   CheckCircle,
   Hammer,
   Rocket,
-  Megaphone,
+  ChartNoAxesCombined,
   TrendingUp,
   Play,
   Pause
@@ -65,11 +65,11 @@ const cycleSteps: CycleStep[] = [
     color: "from-purple-500/20 to-purple-600/20"
   },
   {
-    shortLabel: "Branding",
-    title: "Stage 6: Branding",
+    shortLabel: "Traction",
+    title: "Stage 6: Traction",
     description:
-      "This is the stage where visibility becomes your most valuable asset. Founders need a brand story that sticks, a consistent presence across the right spaces, and credibility built through real partnerships and communities. It's also where the groundwork for scale gets laid through accelerator applications, early investor conversations, and positioning that signals you're ready for the next level.\n\nCreatives Takeover supports this through Insighta and Community, giving founders the networking and outreach tools to show up in the right rooms and build the relationships that move the needle.",
-    icon: Megaphone,
+      "This is the stage where launch activity turns into measurable growth. Founders need to identify which acquisition channel actually works for their specific product, understand what retention looks like in the first 30 days, and decide whether they are close to channel-product fit or still forcing traction through effort instead of repeatable demand.\n\nThe focus is to map the journey from 10 users to 100 to 1,000 with clearer signals, better onboarding, stronger retention loops, and a realistic growth rhythm. Creatives Takeover supports this through GTM strategy, directories, community feedback, and execution tools that help founders turn early usage into a repeatable traction system.",
+    icon: ChartNoAxesCombined,
     color: "from-pink-500/20 to-pink-600/20"
   },
   {
