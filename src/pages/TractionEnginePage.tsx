@@ -24,6 +24,8 @@ import {
   PRODUCT_CATEGORY_LABELS,
   calculateTractionScore,
   getCurrentWeekStart,
+  getSprintWeekNumber,
+  isSprintAtBoundary,
   type TractionDecision,
   type TractionExperimentInput,
   type TractionProductCategory,
@@ -31,6 +33,7 @@ import {
 } from '@/lib/tractionEngine';
 import {
   Activity,
+  AlertTriangle,
   ArrowRight,
   CheckCircle2,
   LineChart,
@@ -98,6 +101,12 @@ const numberFromInput = (value: string) => {
   return Number.isFinite(parsed) ? parsed : 0;
 };
 
+const scoreColor = (value: number) =>
+  value >= 75 ? 'text-emerald-500' : value >= 50 ? 'text-amber-500' : 'text-rose-500';
+
+const scoreProgressColor = (value: number) =>
+  value >= 75 ? '[&>div]:bg-emerald-500' : value >= 50 ? '[&>div]:bg-amber-500' : '[&>div]:bg-rose-500';
+
 function ScoreStat({
   label,
   value,
@@ -109,9 +118,9 @@ function ScoreStat({
     <div className="space-y-2 rounded-lg border border-border/70 bg-background/70 p-4">
       <div className="flex items-center justify-between gap-3">
         <span className="text-sm font-medium text-muted-foreground">{label}</span>
-        <span className="text-lg font-semibold text-foreground">{value}</span>
+        <span className={cn('text-lg font-semibold', scoreColor(value))}>{value}</span>
       </div>
-      <Progress value={value} className="h-2" />
+      <Progress value={value} className={cn('h-2', scoreProgressColor(value))} />
     </div>
   );
 }
@@ -365,10 +374,10 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
           <div className="flex items-start justify-between gap-4">
             <div>
               <p className="text-sm text-muted-foreground">This week’s score</p>
-              <p className="mt-1 text-5xl font-bold">{score.combinedScore}</p>
+              <p className={cn(‘mt-1 text-5xl font-bold’, scoreColor(score.combinedScore))}>{score.combinedScore}</p>
             </div>
-            <Badge className={cn(score.phaseSevenReady ? 'bg-emerald-600' : 'bg-primary')}>
-              {score.phaseSevenReady ? 'Phase 7 Ready' : `${score.consistencyStreakWeeks} week streak`}
+            <Badge className={cn(score.phaseSevenReady ? ‘bg-emerald-600’ : score.combinedScore >= 75 ? ‘bg-emerald-600’ : score.combinedScore >= 50 ? ‘bg-amber-500’ : ‘bg-rose-500’)}>
+              {score.phaseSevenReady ? ‘Phase 7 Ready’ : `${score.consistencyStreakWeeks} week streak`}
             </Badge>
           </div>
           <p className="mt-4 text-sm leading-relaxed text-muted-foreground">{score.prioritizedRecommendation}</p>
@@ -384,21 +393,49 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
                 Distribution Sprint Log
               </CardTitle>
               <CardDescription>Run a maximum of two active channels. Each channel sprint lasts six weeks.</CardDescription>
+              {activeSprints.length >= 2 && (
+                <div className="mt-2 flex items-start gap-2 rounded-md border border-amber-400/40 bg-amber-500/5 px-3 py-2 text-xs text-amber-600">
+                  <AlertTriangle className="mt-0.5 h-3.5 w-3.5 flex-shrink-0" />
+                  <span>Two active channels open. Close one sprint before adding a new channel.</span>
+                </div>
+              )}
             </CardHeader>
             <CardContent className="space-y-5">
               {activeSprints.length > 0 && (
-                <div className="grid gap-3 md:grid-cols-2">
-                  {activeSprints.map((sprint) => (
-                    <div key={sprint.id} className="flex items-center justify-between gap-3 rounded-lg border border-border/70 bg-background/70 p-3">
-                      <div>
-                        <p className="text-sm font-medium">{sprint.channel}</p>
-                        <p className="text-xs text-muted-foreground">Started {sprint.cycle_start_date}</p>
+                <div className="space-y-3">
+                  {activeSprints.map((sprint) => {
+                    const weekNum = getSprintWeekNumber(sprint.cycle_start_date, currentWeekStart);
+                    const atBoundary = isSprintAtBoundary(sprint.cycle_start_date, currentWeekStart);
+                    return (
+                      <div
+                        key={sprint.id}
+                        className={cn(
+                          'rounded-lg border p-3',
+                          atBoundary
+                            ? 'border-amber-400/60 bg-amber-500/5'
+                            : 'border-border/70 bg-background/70',
+                        )}
+                      >
+                        <div className="flex items-center justify-between gap-3">
+                          <div>
+                            <p className="text-sm font-medium">{sprint.channel}</p>
+                            <p className={cn('text-xs', atBoundary ? 'font-medium text-amber-500' : 'text-muted-foreground')}>
+                              Week {weekNum} of 6{atBoundary ? ' — sprint complete' : ''}
+                            </p>
+                          </div>
+                          <Button type="button" size="sm" variant="outline" onClick={() => void closeSprint(sprint)}>
+                            Close
+                          </Button>
+                        </div>
+                        {atBoundary && (
+                          <div className="mt-2 flex items-start gap-2 rounded-md bg-amber-500/10 px-3 py-2 text-xs text-amber-600">
+                            <AlertTriangle className="mt-0.5 h-3.5 w-3.5 flex-shrink-0" />
+                            <span>This sprint has reached 6 weeks. Close it to log the summary and open a new channel if needed.</span>
+                          </div>
+                        )}
                       </div>
-                      <Button type="button" size="sm" variant="outline" onClick={() => void closeSprint(sprint)}>
-                        Close
-                      </Button>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
 
@@ -454,6 +491,7 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
                       onChange={(event) => updateExperiment(experiment.localId, { hypothesis: event.target.value })}
                       placeholder="Posting a specific problem-solution thread will generate 10 qualified signups this week."
                     />
+                    <p className="text-xs text-muted-foreground">One channel · one expected outcome · one measurable number. Be specific enough to repeat or kill next week.</p>
                   </Field>
                   <Field label="Action Taken">
                     <Textarea
@@ -461,6 +499,7 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
                       onChange={(event) => updateExperiment(experiment.localId, { actionTaken: event.target.value })}
                       placeholder="Describe exactly what you shipped, posted, sent, or tested."
                     />
+                    <p className="text-xs text-muted-foreground">Describe exactly what you did — specific enough that someone else could replicate or a future you could improve on it.</p>
                   </Field>
 
                   <div className="grid gap-4 md:grid-cols-4">
@@ -646,7 +685,7 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
                         <p className="text-sm font-medium">{log.week_start_date}</p>
                         <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{log.prioritized_recommendation}</p>
                       </div>
-                      <Badge variant={log.phase_seven_ready ? 'default' : 'secondary'}>
+                      <Badge className={cn('text-white', log.combined_score >= 75 ? 'bg-emerald-600' : log.combined_score >= 50 ? 'bg-amber-500' : 'bg-rose-500')}>
                         {log.combined_score}
                       </Badge>
                     </div>

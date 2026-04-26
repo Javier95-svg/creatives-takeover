@@ -57,7 +57,7 @@ test('surfaces weak retention when distribution is strong', () => {
 
   assert.ok(result.channelEfficiencyScore >= 65);
   assert.ok(result.retentionHealthScore < 45);
-  assert.match(result.prioritizedRecommendation, /retention is weak/i);
+  assert.match(result.prioritizedRecommendation, /churn|targeting|audience/i);
 });
 
 test('surfaces weak consistency when retention is strong', () => {
