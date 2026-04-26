@@ -448,6 +448,46 @@ export const INDEXABLE_ROUTES = [
       "Discover communities, launch platforms, and listing sites where founders can submit and promote new products.",
   },
   {
+    path: "/traction-engine",
+    title: "Traction Engine | Weekly Distribution & Retention Tracker | Creatives Takeover",
+    description:
+      "Log weekly distribution experiments, score retention by product category, and track Phase 7 fundraising readiness with a deterministic Traction Score.",
+    changefreq: "weekly",
+    priority: 0.75,
+    heroHeading: "Traction Engine",
+    heroCopy:
+      "Run focused weekly distribution sprints, measure retention, and see whether your channel is producing repeatable traction.",
+    updatedLabel: "April 2026",
+    sections: [
+      {
+        heading: "What Traction Engine measures",
+        copy: "Traction Engine combines consistency, channel efficiency, experiment quality, and retention health into a single weekly Traction Score so founders know whether this week created repeatable traction.",
+      },
+      {
+        heading: "Who should use it",
+        copy: "It is built for early-stage founders running one or two distribution channels who want a structured weekly log instead of guessing whether their growth efforts are working.",
+      },
+      {
+        heading: "What it unlocks",
+        copy: "Three consecutive weeks at 75 or above flag Phase 7 readiness, which gives founders a defensible traction story before walking into investor conversations.",
+      },
+    ],
+    faqs: [
+      {
+        question: "How does Traction Engine score traction?",
+        answer: "It blends four equally weighted dimensions: consistency streak, channel efficiency, experiment quality, and retention health, benchmarked by product category.",
+      },
+      {
+        question: "Why only two active channels at a time?",
+        answer: "Early-stage founders win by going deep on a small number of channels. Traction Engine enforces a maximum of two active channel sprints to protect focus.",
+      },
+      {
+        question: "What is Phase 7 readiness?",
+        answer: "Phase 7 readiness is the signal that your traction is strong and repeatable enough to bring into a fundraising conversation, defined as three consecutive weeks at a Traction Score of 75 or higher.",
+      },
+    ],
+  },
+  {
     path: "/insighta",
     title: "Fundraising Tools For Startups | Insighta | Creatives Takeover",
     description:

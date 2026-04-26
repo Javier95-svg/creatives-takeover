@@ -96,6 +96,7 @@ const Navigation = () => {
   // Insighta submenu items
   const insightaSubmenu: BizMapMenuItem[] = [
     { type: 'label', label: "STAGE VI: TRACTION" },
+    { name: "Traction Engine", href: "/traction-engine", icon: LineChart, description: "Track weekly distribution and retention signals." },
     { type: 'label', label: "STAGE VII: FUNDRAISE" },
     { name: "VC Search", href: "/vc-search", icon: UsersIcon, description: "Browse venture capital firms." },
     { name: "Accelerator Hunt", href: "/accelerator-hunt", icon: Rocket, description: "Find top accelerator programs." },

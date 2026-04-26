@@ -113,6 +113,7 @@ const ReferralProgram = lazy(() => import("./pages/ReferralProgram"));
 const ReferralDashboardPage = lazy(() => import("./pages/ReferralDashboardPage"));
 const DemoCalls = lazy(() => import("./pages/DemoCalls"));
 const MVPBuilderBetaPage = lazy(() => import("./pages/MVPBuilderBetaPage"));
+const TractionEnginePage = lazy(() => import("./pages/TractionEnginePage"));
 const ProjectsDashboard = lazy(() => import("./components/dashboard/ProjectsDashboard"));
 
 const queryClient = new QueryClient({
@@ -263,6 +264,8 @@ function App() {
                         <Route path="/insighta/vc-search" element={<Navigate to="/vc-search" replace />} />
                         <Route path="/insighta/email-templates" element={<Navigate to="/email-templates" replace />} />
                         <Route path="/insighta/accelerator-hunt" element={<Navigate to="/accelerator-hunt" replace />} />
+                        <Route path="/traction-engine" element={<TractionEnginePage />} />
+                        <Route path="/insighta/traction-engine" element={<Navigate to="/traction-engine" replace />} />
                         <Route path="/pitch-deck-analyzer" element={<PitchDeckAnalyzerPage />} />
                         <Route path="/insighta-test" element={<InsightaTestPage />} />
                         <Route path="/insighta/pitch-deck-analyzer" element={<Navigate to="/pitch-deck-analyzer" replace />} />

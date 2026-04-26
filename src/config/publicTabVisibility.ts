@@ -132,6 +132,16 @@ export const PUBLIC_TAB_VISIBILITY: Record<string, PublicTabConfig> = {
       'Use it when you are ready to tighten your fundraising narrative.',
     ],
   },
+  '/traction-engine': {
+    state: 'locked',
+    featureName: 'Traction Engine',
+    description: 'Log weekly distribution experiments, score retention, and track Phase 7 fundraising readiness.',
+    previewItems: [
+      'Preview the weekly traction sprint and retention scorecard founders run before fundraising.',
+      'See how channel efficiency, experiment quality, and retention combine into a single Traction Score.',
+      'Sign up to save weekly logs and unlock the Phase 7 readiness streak.',
+    ],
+  },
   '/insighta-test': {
     state: 'locked',
     featureName: 'Insighta Test',
