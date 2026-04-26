@@ -416,7 +416,7 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
             <span className="takeover-gradient creatives-font">Traction Engine</span>
           </h1>
           <p className="max-w-3xl text-base leading-relaxed text-muted-foreground md:text-lg">
-            Traction is a pattern, not a spike. Start with the acquisition channels your GTM Strategist surfaced and run one focused experiment each week. Log what you shipped, measure who came back, and repeat. Show up consistently and the score takes care of itself. Three consecutive weeks above the threshold means you have a repeatable growth loop and the Fundraise stage is within reach.
+            Traction is a pattern, not a spike. Take the channels your GTM Strategist surfaced, run one experiment per week, and measure who came back. Three consecutive weeks above the threshold and the Fundraise stage is within reach.
           </p>
         </div>
         <div className="rounded-lg border border-border bg-card p-5">
