@@ -20,6 +20,7 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
+import TractionEngineWallpaper from '@/components/wallpapers/TractionEngineWallpaper';
 import {
   PRODUCT_CATEGORY_LABELS,
   calculateTractionScore,
@@ -355,14 +356,14 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
     }
   };
 
+  const isFirstTime = !loading && recentLogs.length === 0 && activeSprints.length === 0;
+  const hasInput = experiments.some((e) => e.channel.trim() || e.resultValue > 0) || retention.newUsers > 0;
+  const showScore = hasInput || recentLogs.length > 0;
+
   return (
     <div className="space-y-8">
       <section className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
         <div className="space-y-3">
-          <Badge variant="outline" className="w-fit gap-2">
-            <LineChart className="h-3.5 w-3.5" />
-            Stage VI: Traction
-          </Badge>
           <h1 className="text-4xl font-bold leading-tight sm:text-5xl md:text-6xl">
             <span className="takeover-gradient creatives-font">Traction Engine</span>
           </h1>
@@ -371,18 +372,67 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
           </p>
         </div>
         <div className="rounded-lg border border-border bg-card p-5">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <p className="text-sm text-muted-foreground">This week's score</p>
-              <p className={cn('mt-1 text-5xl font-bold', scoreColor(score.combinedScore))}>{score.combinedScore}</p>
+          {showScore ? (
+            <>
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-sm text-muted-foreground">This week's score</p>
+                  <p className={cn('mt-1 text-5xl font-bold', scoreColor(score.combinedScore))}>{score.combinedScore}</p>
+                </div>
+                <Badge className={cn(score.phaseSevenReady ? 'bg-emerald-600' : score.combinedScore >= 75 ? 'bg-emerald-600' : score.combinedScore >= 50 ? 'bg-amber-500' : 'bg-rose-500')}>
+                  {score.phaseSevenReady ? 'Phase 7 Ready' : `${score.consistencyStreakWeeks} week streak`}
+                </Badge>
+              </div>
+              <p className="mt-4 text-sm leading-relaxed text-muted-foreground">{score.prioritizedRecommendation}</p>
+            </>
+          ) : (
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <LineChart className="h-5 w-5 text-emerald-500" />
+                <span className="text-sm font-medium">Your Traction Score will appear here</span>
+              </div>
+              <p className="text-xs text-muted-foreground leading-relaxed">Fill in the Distribution Sprint Log and Retention Snapshot below. Save the week to lock in your score and start building your streak.</p>
+              <div className="grid grid-cols-2 gap-2 pt-1">
+                {(['Consistency', 'Channel Efficiency', 'Experiment Quality', 'Retention Health'] as const).map((label) => (
+                  <div key={label} className="rounded-md border border-border/50 bg-muted/30 px-3 py-2">
+                    <p className="text-[11px] font-medium text-muted-foreground">{label}</p>
+                    <p className="mt-0.5 text-xs text-muted-foreground/60">25% weight</p>
+                  </div>
+                ))}
+              </div>
             </div>
-            <Badge className={cn(score.phaseSevenReady ? 'bg-emerald-600' : score.combinedScore >= 75 ? 'bg-emerald-600' : score.combinedScore >= 50 ? 'bg-amber-500' : 'bg-rose-500')}>
-              {score.phaseSevenReady ? 'Phase 7 Ready' : `${score.consistencyStreakWeeks} week streak`}
-            </Badge>
-          </div>
-          <p className="mt-4 text-sm leading-relaxed text-muted-foreground">{score.prioritizedRecommendation}</p>
+          )}
         </div>
       </section>
+
+      {isFirstTime && (
+        <section className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-5">
+          <p className="mb-4 text-sm font-semibold text-emerald-600 dark:text-emerald-400">How Traction Engine works</p>
+          <div className="grid gap-4 sm:grid-cols-3">
+            <div className="flex gap-3">
+              <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-emerald-500/15 text-xs font-bold text-emerald-600 dark:text-emerald-400">1</span>
+              <div>
+                <p className="text-sm font-medium">Log an experiment</p>
+                <p className="mt-0.5 text-xs text-muted-foreground">Pick one distribution channel. Write what you expected, what you did, and what happened. Set a target and record the result.</p>
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-emerald-500/15 text-xs font-bold text-emerald-600 dark:text-emerald-400">2</span>
+              <div>
+                <p className="text-sm font-medium">Snapshot retention</p>
+                <p className="mt-0.5 text-xs text-muted-foreground">Enter how many users signed up this week, how many came back at 7 and 30 days, and which channel brought them in.</p>
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-emerald-500/15 text-xs font-bold text-emerald-600 dark:text-emerald-400">3</span>
+              <div>
+                <p className="text-sm font-medium">Get your Traction Score</p>
+                <p className="mt-0.5 text-xs text-muted-foreground">Save the week to lock in your score. Three consecutive weeks at 75+ unlocks Phase 7 readiness — your traction proof layer for fundraising.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
 
       <section className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
         <div className="space-y-6">
@@ -460,6 +510,11 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
                     </Button>
                   </div>
 
+                  {isFirstTime && index === 0 && (
+                    <p className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                      Start here — name the one channel you ran this week.
+                    </p>
+                  )}
                   <div className="grid gap-4 md:grid-cols-2">
                     <Field label="Channel">
                       <Input
@@ -542,6 +597,7 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
                           ))}
                         </SelectContent>
                       </Select>
+                      <p className="text-xs text-muted-foreground">Hit target → double down. Close → iterate. Far off → kill.</p>
                     </Field>
                   </div>
                 </div>
@@ -560,7 +616,7 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
                 <Activity className="h-5 w-5 text-primary" />
                 Retention Snapshot
               </CardTitle>
-              <CardDescription>Distribution only counts when users from that channel come back.</CardDescription>
+              <CardDescription>Enter numbers from your product analytics or email tool. Distribution only counts when the users it brings come back.</CardDescription>
             </CardHeader>
             <CardContent className="grid gap-4 md:grid-cols-2">
               <Field label="New Users This Week">
@@ -676,7 +732,10 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
             </CardHeader>
             <CardContent className="space-y-3">
               {recentLogs.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No saved Traction Engine weeks yet.</p>
+                <div className="space-y-1">
+                  <p className="text-sm text-muted-foreground">No saved weeks yet.</p>
+                  <p className="text-xs text-muted-foreground/70">Fill in an experiment and a retention snapshot below, then hit "Save This Week" to lock in your first score.</p>
+                </div>
               ) : (
                 recentLogs.slice(0, 5).map((log) => (
                   <div key={log.id} className="rounded-lg border border-border/70 bg-background/70 p-3">
@@ -721,7 +780,7 @@ export default function TractionEnginePage() {
   ];
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="relative min-h-screen overflow-hidden bg-background">
       <SEO
         title="Traction Engine - Creatives Takeover"
         description="Track weekly distribution experiments, retention health, and Phase 7 fundraising readiness with a deterministic Traction Score."
@@ -729,22 +788,25 @@ export default function TractionEnginePage() {
         url="/traction-engine"
         structuredData={structuredData}
       />
-      <Navigation />
-      <main className="px-4 pt-28 pb-16 md:pt-32 md:pb-20 lg:pt-36">
-        <div className="container mx-auto max-w-7xl">
-          {user ? (
-            <TractionEngineWorkflow userId={user.id} />
-          ) : (
-            <PreviewModeWrapper
-              featureName={publicTab.featureName}
-              description={publicTab.description}
-            >
-              <TractionEngineWorkflow />
-            </PreviewModeWrapper>
-          )}
-        </div>
-      </main>
-      <Footer />
+      <TractionEngineWallpaper />
+      <div className="relative z-10">
+        <Navigation />
+        <main className="px-4 pt-28 pb-16 md:pt-32 md:pb-20 lg:pt-36">
+          <div className="container mx-auto max-w-7xl">
+            {user ? (
+              <TractionEngineWorkflow userId={user.id} />
+            ) : (
+              <PreviewModeWrapper
+                featureName={publicTab.featureName}
+                description={publicTab.description}
+              >
+                <TractionEngineWorkflow />
+              </PreviewModeWrapper>
+            )}
+          </div>
+        </main>
+        <Footer />
+      </div>
     </div>
   );
 }
