@@ -373,11 +373,11 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
         <div className="rounded-lg border border-border bg-card p-5">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <p className="text-sm text-muted-foreground">This week’s score</p>
-              <p className={cn(‘mt-1 text-5xl font-bold’, scoreColor(score.combinedScore))}>{score.combinedScore}</p>
+              <p className="text-sm text-muted-foreground">This week's score</p>
+              <p className={cn('mt-1 text-5xl font-bold', scoreColor(score.combinedScore))}>{score.combinedScore}</p>
             </div>
-            <Badge className={cn(score.phaseSevenReady ? ‘bg-emerald-600’ : score.combinedScore >= 75 ? ‘bg-emerald-600’ : score.combinedScore >= 50 ? ‘bg-amber-500’ : ‘bg-rose-500’)}>
-              {score.phaseSevenReady ? ‘Phase 7 Ready’ : `${score.consistencyStreakWeeks} week streak`}
+            <Badge className={cn(score.phaseSevenReady ? 'bg-emerald-600' : score.combinedScore >= 75 ? 'bg-emerald-600' : score.combinedScore >= 50 ? 'bg-amber-500' : 'bg-rose-500')}>
+              {score.phaseSevenReady ? 'Phase 7 Ready' : `${score.consistencyStreakWeeks} week streak`}
             </Badge>
           </div>
           <p className="mt-4 text-sm leading-relaxed text-muted-foreground">{score.prioritizedRecommendation}</p>
