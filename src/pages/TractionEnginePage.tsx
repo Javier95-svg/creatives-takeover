@@ -407,23 +407,23 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
 
       {isFirstTime && (
         <section className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-5">
-          <p className="mb-4 text-sm font-semibold text-emerald-600 dark:text-emerald-400">How Traction Engine works</p>
+          <p className="mb-4 text-center text-sm font-semibold text-emerald-600 dark:text-emerald-400">How Traction Engine works</p>
           <div className="grid gap-4 sm:grid-cols-3">
-            <div className="flex gap-3">
+            <div className="flex flex-col items-center gap-2 text-center">
               <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-emerald-500/15 text-xs font-bold text-emerald-600 dark:text-emerald-400">1</span>
               <div>
                 <p className="text-sm font-medium">Log an experiment</p>
                 <p className="mt-0.5 text-xs text-muted-foreground">Pick one distribution channel. Write what you expected, what you did, and what happened. Set a target and record the result.</p>
               </div>
             </div>
-            <div className="flex gap-3">
+            <div className="flex flex-col items-center gap-2 text-center">
               <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-emerald-500/15 text-xs font-bold text-emerald-600 dark:text-emerald-400">2</span>
               <div>
                 <p className="text-sm font-medium">Snapshot retention</p>
                 <p className="mt-0.5 text-xs text-muted-foreground">Enter how many users signed up this week, how many came back at 7 and 30 days, and which channel brought them in.</p>
               </div>
             </div>
-            <div className="flex gap-3">
+            <div className="flex flex-col items-center gap-2 text-center">
               <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-emerald-500/15 text-xs font-bold text-emerald-600 dark:text-emerald-400">3</span>
               <div>
                 <p className="text-sm font-medium">Get your Traction Score</p>
