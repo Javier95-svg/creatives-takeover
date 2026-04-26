@@ -500,10 +500,6 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
           </div>
         </section>
 
-      <div className="rounded-xl border border-border bg-card/60 p-4 backdrop-blur-sm">
-        <StepNav active={activeTab} onSelect={setActiveTab} />
-      </div>
-
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as TractionTab)}>
 
         {/* Step 1: Distribution Sprint Log */}
