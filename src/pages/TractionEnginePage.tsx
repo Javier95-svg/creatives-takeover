@@ -21,6 +21,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import TractionEngineWallpaper from '@/components/wallpapers/TractionEngineWallpaper';
+import { Tabs, TabsContent } from '@/components/ui/tabs';
 import {
   PRODUCT_CATEGORY_LABELS,
   calculateTractionScore,
@@ -37,6 +38,7 @@ import {
   AlertTriangle,
   ArrowRight,
   CheckCircle2,
+  ChevronRight,
   LineChart,
   Lock,
   Plus,
@@ -108,6 +110,45 @@ const scoreColor = (value: number) =>
 const scoreProgressColor = (value: number) =>
   value >= 75 ? '[&>div]:bg-emerald-500' : value >= 50 ? '[&>div]:bg-amber-500' : '[&>div]:bg-rose-500';
 
+type TractionTab = 'sprint' | 'retention' | 'recent' | 'signal';
+
+const TRACTION_TABS: Array<{ id: TractionTab; step: number; label: string; subtitle: string }> = [
+  { id: 'sprint',    step: 1, label: 'Distribution Sprint Log', subtitle: 'Set your sprint goals' },
+  { id: 'retention', step: 2, label: 'Retention Snapshot',      subtitle: 'Track who\'s staying'  },
+  { id: 'recent',    step: 3, label: 'Recent Weeks',            subtitle: 'Review your history'   },
+  { id: 'signal',    step: 4, label: 'Weekly Signal',           subtitle: 'Review your results'   },
+];
+
+function StepNav({ active, onSelect }: { active: TractionTab; onSelect: (t: TractionTab) => void }) {
+  return (
+    <div className="relative flex items-start justify-between">
+      <div className="absolute top-4 h-[2px] bg-border" style={{ left: '12.5%', right: '12.5%' }} />
+      {TRACTION_TABS.map((tab) => (
+        <button
+          key={tab.id}
+          type="button"
+          onClick={() => onSelect(tab.id)}
+          className={cn(
+            'relative z-10 flex flex-1 flex-col items-center gap-1.5 px-2 pb-2 text-center transition-colors focus-visible:outline-none',
+            active === tab.id ? 'text-foreground' : 'text-muted-foreground hover:text-foreground/70',
+          )}
+        >
+          <span className={cn(
+            'flex h-8 w-8 items-center justify-center rounded-full border-2 text-sm font-bold transition-colors',
+            active === tab.id
+              ? 'border-emerald-500 bg-emerald-500 text-white'
+              : 'border-border bg-card text-muted-foreground',
+          )}>
+            {tab.step}
+          </span>
+          <span className="text-[11px] font-semibold leading-tight sm:text-xs">{tab.label}</span>
+          <span className="hidden text-[10px] leading-tight text-muted-foreground sm:block">{tab.subtitle}</span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
 function ScoreStat({
   label,
   value,
@@ -149,6 +190,7 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
   const [recentLogs, setRecentLogs] = useState<WeeklyLogRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [activeTab, setActiveTab] = useState<TractionTab>('sprint');
 
   const previousLogs = useMemo(
     () => recentLogs.filter((log) => log.week_start_date !== currentWeekStart),
@@ -426,16 +468,22 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
             <div className="flex flex-col items-center gap-2 text-center">
               <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-emerald-500/15 text-xs font-bold text-emerald-600 dark:text-emerald-400">3</span>
               <div>
-                <p className="text-sm font-medium">Get your Traction Score</p>
-                <p className="mt-0.5 text-xs text-muted-foreground">Save the week to lock in your score. Three consecutive weeks at 75+ unlocks Phase 7 readiness — your traction proof layer for fundraising.</p>
+                <p className="text-sm font-medium">Review your Weekly Signal</p>
+                <p className="mt-0.5 text-xs text-muted-foreground">Save the week on the Weekly Signal tab to lock in your score. Three consecutive weeks at 75+ unlocks Phase 7 readiness.</p>
               </div>
             </div>
           </div>
         </section>
       )}
 
-      <section className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-        <div className="space-y-6">
+      <div className="rounded-xl border border-border bg-card/60 p-4 backdrop-blur-sm">
+        <StepNav active={activeTab} onSelect={setActiveTab} />
+      </div>
+
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as TractionTab)}>
+
+        {/* Step 1: Distribution Sprint Log */}
+        <TabsContent value="sprint" className="mt-0">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-xl">
@@ -609,7 +657,16 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
               </Button>
             </CardContent>
           </Card>
+          <div className="mt-4 flex items-center justify-between rounded-lg border border-border/50 bg-muted/20 px-4 py-3">
+            <p className="text-xs text-muted-foreground">Once you've logged your sprint, add your retention numbers.</p>
+            <Button type="button" variant="outline" size="sm" className="gap-1.5 shrink-0" onClick={() => setActiveTab('retention')}>
+              Retention Snapshot <ChevronRight className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+        </TabsContent>
 
+        {/* Step 2: Retention Snapshot */}
+        <TabsContent value="retention" className="mt-0">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-xl">
@@ -679,9 +736,54 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
               </Field>
             </CardContent>
           </Card>
-        </div>
+          <div className="mt-4 flex items-center justify-between rounded-lg border border-border/50 bg-muted/20 px-4 py-3">
+            <p className="text-xs text-muted-foreground">Snapshot saved in memory. Check your history before reviewing signals.</p>
+            <Button type="button" variant="outline" size="sm" className="gap-1.5 shrink-0" onClick={() => setActiveTab('recent')}>
+              Recent Weeks <ChevronRight className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+        </TabsContent>
 
-        <div className="space-y-6">
+        {/* Step 3: Recent Weeks */}
+        <TabsContent value="recent" className="mt-0">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-xl">Recent Weeks</CardTitle>
+              <CardDescription>{loading ? 'Loading history...' : 'Your latest saved traction scorecards.'}</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {recentLogs.length === 0 ? (
+                <div className="space-y-1">
+                  <p className="text-sm text-muted-foreground">No saved weeks yet.</p>
+                  <p className="text-xs text-muted-foreground/70">Fill in an experiment and a retention snapshot, then hit "Save This Week" on the Weekly Signal tab to lock in your first score.</p>
+                </div>
+              ) : (
+                recentLogs.slice(0, 5).map((log) => (
+                  <div key={log.id} className="rounded-lg border border-border/70 bg-background/70 p-3">
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <p className="text-sm font-medium">{log.week_start_date}</p>
+                        <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{log.prioritized_recommendation}</p>
+                      </div>
+                      <Badge className={cn('text-white', log.combined_score >= 75 ? 'bg-emerald-600' : log.combined_score >= 50 ? 'bg-amber-500' : 'bg-rose-500')}>
+                        {log.combined_score}
+                      </Badge>
+                    </div>
+                  </div>
+                ))
+              )}
+            </CardContent>
+          </Card>
+          <div className="mt-4 flex items-center justify-between rounded-lg border border-border/50 bg-muted/20 px-4 py-3">
+            <p className="text-xs text-muted-foreground">Ready to review this week's signal and save your score?</p>
+            <Button type="button" variant="outline" size="sm" className="gap-1.5 shrink-0" onClick={() => setActiveTab('signal')}>
+              Weekly Signal <ChevronRight className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+        </TabsContent>
+
+        {/* Step 4: Weekly Signal */}
+        <TabsContent value="signal" className="mt-0">
           <Card>
             <CardHeader>
               <CardTitle className="text-xl">Weekly Signal</CardTitle>
@@ -724,37 +826,9 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-xl">Recent Weeks</CardTitle>
-              <CardDescription>{loading ? 'Loading history...' : 'Your latest saved traction scorecards.'}</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {recentLogs.length === 0 ? (
-                <div className="space-y-1">
-                  <p className="text-sm text-muted-foreground">No saved weeks yet.</p>
-                  <p className="text-xs text-muted-foreground/70">Fill in an experiment and a retention snapshot below, then hit "Save This Week" to lock in your first score.</p>
-                </div>
-              ) : (
-                recentLogs.slice(0, 5).map((log) => (
-                  <div key={log.id} className="rounded-lg border border-border/70 bg-background/70 p-3">
-                    <div className="flex items-center justify-between gap-3">
-                      <div>
-                        <p className="text-sm font-medium">{log.week_start_date}</p>
-                        <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{log.prioritized_recommendation}</p>
-                      </div>
-                      <Badge className={cn('text-white', log.combined_score >= 75 ? 'bg-emerald-600' : log.combined_score >= 50 ? 'bg-amber-500' : 'bg-rose-500')}>
-                        {log.combined_score}
-                      </Badge>
-                    </div>
-                  </div>
-                ))
-              )}
-            </CardContent>
-          </Card>
-        </div>
-      </section>
+      </Tabs>
     </div>
   );
 }
