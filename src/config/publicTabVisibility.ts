@@ -113,14 +113,8 @@ export const PUBLIC_TAB_VISIBILITY: Record<string, PublicTabConfig> = {
     ],
   },
   '/email-templates': {
-    state: 'locked',
+    state: 'accessible',
     featureName: 'Email Templates',
-    description: 'Access fundraising and outreach templates built for cold intros, follow-ups, and investor updates.',
-    previewItems: [
-      'Preview the template library founders use once they are actively fundraising.',
-      'See how messaging blocks are structured before you unlock the full set.',
-      'Sign up to unlock copy you can tailor to your raise.',
-    ],
   },
   '/pitch-deck-analyzer': {
     state: 'locked',

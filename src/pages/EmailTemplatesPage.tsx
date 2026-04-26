@@ -1,18 +1,15 @@
 import SEO, { createBreadcrumbSchema } from "@/components/SEO";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
-import { PreviewModeWrapper } from '@/components/ui/PreviewModeWrapper';
 import { BlurredToolPreview } from '@/components/ui/BlurredToolPreview';
 import EmailTemplatesTab from "@/components/insighta/EmailTemplatesTab";
 import { useReadingAnalytics } from "@/hooks/useReadingAnalytics";
 import { useEffect } from "react";
-import { getPublicTabConfig } from "@/config/publicTabVisibility";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePlanAccess } from "@/hooks/usePlanAccess";
 
 export default function EmailTemplatesPage() {
   const { user } = useAuth();
-  const publicTab = getPublicTabConfig('/email-templates');
   const { trackPageVisit } = useReadingAnalytics();
   const { hasAccess, upgradeTarget } = usePlanAccess('email_templates');
 
@@ -81,29 +78,17 @@ export default function EmailTemplatesPage() {
               </p>
             </div>
 
-            {user ? (
-              hasAccess ? (
-                <EmailTemplatesTab />
-              ) : (
-                <BlurredToolPreview
-                  featureName="Email Templates"
-                  unlockCondition="Email Templates is available on the Starter plan and above."
-                  requiredPlan={upgradeTarget}
-                  locked
-                >
-                  <div />
-                </BlurredToolPreview>
-              )
+            {user && !hasAccess ? (
+              <BlurredToolPreview
+                featureName="Email Templates"
+                unlockCondition="Email Templates is available on the Starter plan and above."
+                requiredPlan={upgradeTarget}
+                locked
+              >
+                <div />
+              </BlurredToolPreview>
             ) : (
-              publicTab && (
-                <PreviewModeWrapper
-                  featureName={publicTab.featureName}
-                  description={publicTab.description || ''}
-                  showPricingCta={publicTab.showPricingCta}
-                >
-                  <EmailTemplatesTab />
-                </PreviewModeWrapper>
-              )
+              <EmailTemplatesTab />
             )}
           </div>
         </section>
