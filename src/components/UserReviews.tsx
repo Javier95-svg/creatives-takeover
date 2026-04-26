@@ -124,7 +124,7 @@ const UserReviews = () => {
         The Startup Development Cycle is a 7-stage roadmap built by Creatives Takeover to guide first-time founders from raw idea to funded startup.
         <br />
         <br />
-        We divide it into two phases: Phase A covers ideation to launch, walking founders through validation, MVP building, and getting the product in front of the right audience. Phase B focuses on traction and fundraising, giving founders the tools to grow, scale, and raise capital with confidence.
+        We divide it into two phases: Phase A covers ideation to launch, walking founders through validation, MVP building, and getting the product in front of the right audience. Phase B focuses on traction and fundraising, where founders need to build a repeatable acquisition system that compounds over time and inspires confidence in investors.
       </p>
     </div>
   );
