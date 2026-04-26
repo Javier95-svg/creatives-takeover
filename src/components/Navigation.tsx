@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button";
+﻿import { Button } from "@/components/ui/button";
 import { Menu, X, LogIn, LogOut, User, Settings, Gift, UserPlus, MessageCircle, Home, Bot, BookOpen, TrendingUp, Users as UsersIcon, FileText, Info, DollarSign, ChevronDown, Mail, Rocket, FlaskConical, Lightbulb, Target, Boxes, GraduationCap, Handshake, BarChart3, Filter, CheckSquare, LineChart, CalendarCheck, HeartHandshake, Sparkles, Lock } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
@@ -332,7 +332,7 @@ const Navigation = () => {
                                     </div>
                                     <div className="flex flex-col">
                                       <span className="font-medium">{linkItem.name}</span>
-                                      <span className="text-xs text-muted-foreground">Sign up to unlock</span>
+                                      <span className="text-xs text-muted-foreground">{linkItem.description}</span>
                                     </div>
                                   </Link>
                                 </DropdownMenuItem>
@@ -442,7 +442,7 @@ const Navigation = () => {
 	                                  <div className="flex flex-col">
 	                                    <span className="font-medium">{subItem.name}</span>
 	                                    <span className="text-xs text-muted-foreground">
-                                          {publicTabState === 'locked' ? 'Sign up to unlock' : subItem.description}
+                                          {subItem.description}
                                         </span>
 	                                  </div>
 	                                </Link>
@@ -502,7 +502,7 @@ const Navigation = () => {
 	                                  <div className="flex flex-col">
 	                                    <span className="font-medium">{subItem.name}</span>
 	                                    <span className="text-xs text-muted-foreground">
-                                          {publicTabState === 'locked' ? 'Sign up to unlock' : subItem.description}
+                                          {subItem.description}
                                         </span>
 	                                  </div>
 	                                </Link>
@@ -562,7 +562,7 @@ const Navigation = () => {
 	                                  <div className="flex flex-col">
 	                                    <span className="font-medium">{subItem.name}</span>
 	                                    <span className="text-xs text-muted-foreground">
-                                          {publicTabState === 'locked' ? 'Sign up to unlock' : subItem.description}
+                                          {subItem.description}
                                         </span>
 	                                  </div>
 	                                </Link>
@@ -811,7 +811,7 @@ const Navigation = () => {
                                     </div>
                                     <div className="flex flex-col text-left">
                                       <span>{sub.name}</span>
-                                      <span className="text-xs text-muted-foreground">Sign up to unlock</span>
+                                      <span className="text-xs text-muted-foreground">{sub.description}</span>
                                     </div>
                                   </Link>
                                 );
