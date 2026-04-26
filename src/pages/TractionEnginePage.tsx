@@ -38,7 +38,9 @@ import {
   AlertTriangle,
   ArrowRight,
   CheckCircle2,
+  ChevronLeft,
   ChevronRight,
+  Clock,
   LineChart,
   Lock,
   Plus,
@@ -112,11 +114,15 @@ const scoreProgressColor = (value: number) =>
 
 type TractionTab = 'sprint' | 'retention' | 'recent' | 'signal';
 
-const TRACTION_TABS: Array<{ id: TractionTab; step: number; label: string; subtitle: string }> = [
-  { id: 'sprint',    step: 1, label: 'Distribution Sprint Log', subtitle: 'Set your sprint goals' },
-  { id: 'retention', step: 2, label: 'Retention Snapshot',      subtitle: 'Track who\'s staying'  },
-  { id: 'recent',    step: 3, label: 'Recent Weeks',            subtitle: 'Review your history'   },
-  { id: 'signal',    step: 4, label: 'Weekly Signal',           subtitle: 'Review your results'   },
+const TRACTION_TABS: Array<{ id: TractionTab; step: number; label: string; subtitle: string; description: string }> = [
+  { id: 'sprint',    step: 1, label: 'Distribution Sprint Log', subtitle: 'Set your sprint goals',
+    description: 'Log one channel, one hypothesis, and one measurable outcome. Record your target metric and result at week\'s end.' },
+  { id: 'retention', step: 2, label: 'Retention Snapshot',      subtitle: 'Track who\'s staying',
+    description: 'Enter new users, 7-day actives, and 30-day actives. Distribution only counts when users come back.' },
+  { id: 'recent',    step: 3, label: 'Recent Weeks',            subtitle: 'Log what happened',
+    description: 'Review your last five saved scorecards. Spot trends and check your streak before committing to this week.' },
+  { id: 'signal',    step: 4, label: 'Weekly Signal',           subtitle: 'Review your results',
+    description: 'Your score rolls up from the three previous steps. Save to lock in your streak and check Phase 7 readiness.' },
 ];
 
 function StepNav({ active, onSelect }: { active: TractionTab; onSelect: (t: TractionTab) => void }) {
@@ -447,34 +453,52 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
         </div>
       </section>
 
-      {isFirstTime && (
-        <section className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-5">
-          <p className="mb-4 text-center text-sm font-semibold text-emerald-600 dark:text-emerald-400">How Traction Engine works</p>
-          <div className="grid gap-4 sm:grid-cols-3">
-            <div className="flex flex-col items-center gap-2 text-center">
-              <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-emerald-500/15 text-xs font-bold text-emerald-600 dark:text-emerald-400">1</span>
-              <div>
-                <p className="text-sm font-medium">Log an experiment</p>
-                <p className="mt-0.5 text-xs text-muted-foreground">Pick one distribution channel. Write what you expected, what you did, and what happened. Set a target and record the result.</p>
+      <section className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-5">
+          <p className="mb-4 text-center text-sm font-semibold text-emerald-600 dark:text-emerald-400">
+            How Traction Engine works — follow the steps in order
+          </p>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {TRACTION_TABS.map((tab) => (
+              <div key={tab.id} className="flex flex-col items-center gap-2 text-center">
+                <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-emerald-500/15 text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                  {tab.step}
+                </span>
+                <div>
+                  <p className="text-sm font-medium">{tab.label}</p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">{tab.description}</p>
+                </div>
               </div>
-            </div>
-            <div className="flex flex-col items-center gap-2 text-center">
-              <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-emerald-500/15 text-xs font-bold text-emerald-600 dark:text-emerald-400">2</span>
-              <div>
-                <p className="text-sm font-medium">Snapshot retention</p>
-                <p className="mt-0.5 text-xs text-muted-foreground">Enter how many users signed up this week, how many came back at 7 and 30 days, and which channel brought them in.</p>
-              </div>
-            </div>
-            <div className="flex flex-col items-center gap-2 text-center">
-              <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-emerald-500/15 text-xs font-bold text-emerald-600 dark:text-emerald-400">3</span>
-              <div>
-                <p className="text-sm font-medium">Review your Weekly Signal</p>
-                <p className="mt-0.5 text-xs text-muted-foreground">Save the week on the Weekly Signal tab to lock in your score. Three consecutive weeks at 75+ unlocks Phase 7 readiness.</p>
-              </div>
+            ))}
+          </div>
+          <div className="mt-5 border-t border-emerald-500/20 pt-4">
+            <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
+              {TRACTION_TABS.map((tab) => (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setActiveTab(tab.id)}
+                  className={cn(
+                    'flex flex-col items-center gap-1.5 rounded-lg border-2 px-3 py-3 text-center transition-colors focus-visible:outline-none',
+                    activeTab === tab.id
+                      ? 'border-emerald-500 bg-emerald-500/10 text-foreground'
+                      : 'border-emerald-500/20 bg-background/40 text-muted-foreground hover:border-emerald-500/40 hover:text-foreground/80',
+                  )}
+                >
+                  <span className={cn(
+                    'flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold transition-colors',
+                    activeTab === tab.id
+                      ? 'bg-emerald-500 text-white'
+                      : 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400',
+                  )}>
+                    {tab.step}
+                  </span>
+                  <span className="text-xs font-semibold leading-tight">{tab.label}</span>
+                  <span className="text-[10px] leading-tight text-muted-foreground">{tab.subtitle}</span>
+                </button>
+              ))}
             </div>
           </div>
         </section>
-      )}
 
       <div className="rounded-xl border border-border bg-card/60 p-4 backdrop-blur-sm">
         <StepNav active={activeTab} onSelect={setActiveTab} />
@@ -486,10 +510,13 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
         <TabsContent value="sprint" className="mt-0">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-xl">
-                <Target className="h-5 w-5 text-primary" />
-                Distribution Sprint Log
-              </CardTitle>
+              <div className="flex items-center justify-between gap-3">
+                <CardTitle className="flex items-center gap-2 text-xl">
+                  <Target className="h-5 w-5 text-primary" />
+                  Distribution Sprint Log
+                </CardTitle>
+                <Badge variant="outline" className="shrink-0 text-xs text-muted-foreground">Step 1 of 4</Badge>
+              </div>
               <CardDescription>Run a maximum of two active channels. Each channel sprint lasts six weeks.</CardDescription>
               {activeSprints.length >= 2 && (
                 <div className="mt-2 flex items-start gap-2 rounded-md border border-amber-400/40 bg-amber-500/5 px-3 py-2 text-xs text-amber-600">
@@ -669,10 +696,13 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
         <TabsContent value="retention" className="mt-0">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-xl">
-                <Activity className="h-5 w-5 text-primary" />
-                Retention Snapshot
-              </CardTitle>
+              <div className="flex items-center justify-between gap-3">
+                <CardTitle className="flex items-center gap-2 text-xl">
+                  <Activity className="h-5 w-5 text-primary" />
+                  Retention Snapshot
+                </CardTitle>
+                <Badge variant="outline" className="shrink-0 text-xs text-muted-foreground">Step 2 of 4</Badge>
+              </div>
               <CardDescription>Enter numbers from your product analytics or email tool. Distribution only counts when the users it brings come back.</CardDescription>
             </CardHeader>
             <CardContent className="grid gap-4 md:grid-cols-2">
@@ -748,7 +778,13 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
         <TabsContent value="recent" className="mt-0">
           <Card>
             <CardHeader>
-              <CardTitle className="text-xl">Recent Weeks</CardTitle>
+              <div className="flex items-center justify-between gap-3">
+                <CardTitle className="flex items-center gap-2 text-xl">
+                  <Clock className="h-5 w-5 text-primary" />
+                  Recent Weeks
+                </CardTitle>
+                <Badge variant="outline" className="shrink-0 text-xs text-muted-foreground">Step 3 of 4</Badge>
+              </div>
               <CardDescription>{loading ? 'Loading history...' : 'Your latest saved traction scorecards.'}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
@@ -786,7 +822,13 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
         <TabsContent value="signal" className="mt-0">
           <Card>
             <CardHeader>
-              <CardTitle className="text-xl">Weekly Signal</CardTitle>
+              <div className="flex items-center justify-between gap-3">
+                <CardTitle className="flex items-center gap-2 text-xl">
+                  <LineChart className="h-5 w-5 text-primary" />
+                  Weekly Signal
+                </CardTitle>
+                <Badge variant="outline" className="shrink-0 text-xs text-muted-foreground">Step 4 of 4</Badge>
+              </div>
               <CardDescription>Equal weighting across consistency, efficiency, experiment quality, and retention.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -826,6 +868,12 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
               )}
             </CardContent>
           </Card>
+          <div className="mt-4 flex items-center justify-between rounded-lg border border-border/50 bg-muted/20 px-4 py-3">
+            <p className="text-xs text-muted-foreground">Saved? Next week, return to Distribution Sprint Log and start the cycle again.</p>
+            <Button type="button" variant="outline" size="sm" className="gap-1.5 shrink-0" onClick={() => setActiveTab('sprint')}>
+              <ChevronLeft className="h-3.5 w-3.5" /> Sprint Log
+            </Button>
+          </div>
         </TabsContent>
 
       </Tabs>
