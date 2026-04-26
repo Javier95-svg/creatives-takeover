@@ -68,7 +68,7 @@ const cycleSteps: CycleStep[] = [
     shortLabel: "Traction",
     title: "Stage 6: Traction",
     description:
-      "Traction is where launch energy has to become a repeatable pattern. The job is no longer to get any users — it's to find which acquisition channel actually works for your specific product, understand what retention looks like in the first 30 days, and separate real channel-product fit from constant manual effort.\n\nCreatives Takeover gives you the GTM Strategist to identify your most viable acquisition channels, then the Traction Engine to pressure-test them one week at a time. Log your distribution experiments, snapshot your retention numbers, and let the weekly score tell you whether you're building a growth loop or just spinning your wheels. Three consecutive weeks above the threshold unlocks the Fundraise stage.",
+      "Traction is where launch energy has to become a repeatable pattern. The job is no longer to get any users — it's to find which acquisition channel actually works for your specific product, understand what retention looks like in the first 30 days, and separate real channel-product fit from constant manual effort.\n\nCreatives Takeover gives you the GTM Strategist to identify your best acquisition channels and the Traction Engine to test them week by week. Log experiments, snapshot retention, and let the score show whether you're building a real growth loop. Three consecutive weeks above the threshold unlocks the Fundraise stage.",
     icon: ChartNoAxesCombined,
     color: "from-pink-500/20 to-pink-600/20"
   },
