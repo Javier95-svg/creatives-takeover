@@ -411,7 +411,7 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
   return (
     <div className="space-y-8">
       <section className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
-        <div className="space-y-3">
+        <div className="space-y-6">
           <h1 className="text-4xl font-bold leading-tight sm:text-5xl md:text-6xl">
             <span className="takeover-gradient creatives-font">Traction Engine</span>
           </h1>
