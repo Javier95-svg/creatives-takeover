@@ -36,7 +36,7 @@ export default function VCSearchPage() {
         "name": "Creatives Takeover",
         "logo": {
           "@type": "ImageObject",
-          "url": "https://creatives-takeover.com/lovable-uploads/new-favicon.png"
+          "url": "https://creatives-takeover.com/favicon.png"
         }
       }
     },
