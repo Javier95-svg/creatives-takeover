@@ -1,10 +1,12 @@
 import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ArrowLeft } from 'lucide-react';
 import SEO, { createBreadcrumbSchema } from '@/components/SEO';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import WaitlistTemplateLibrary from '@/components/waitlist/WaitlistTemplateLibrary';
 import WaitlistMakerWallpaper from '@/components/wallpapers/WaitlistMakerWallpaper';
+import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import type { WaitlistTemplateDefinition } from '@/lib/waitlistTemplates';
 
@@ -71,6 +73,12 @@ export default function WaitlistTemplatesPage() {
         <main className="px-4 pt-28 pb-16 md:pt-32 md:pb-20 lg:pt-36">
           <div className="container mx-auto max-w-[1580px] space-y-8">
             <div className="mx-auto max-w-4xl space-y-4 px-2 text-center">
+              <div className="flex justify-center">
+                <Button variant="ghost" size="sm" className="gap-2" onClick={() => navigate('/waitlist')}>
+                  <ArrowLeft className="h-4 w-4" />
+                  <span>Waitlist</span>
+                </Button>
+              </div>
               <h1 className="pb-2 text-center font-bold leading-[0.95] text-4xl sm:text-[2.85rem] md:text-5xl lg:text-6xl">
                 <span className="takeover-gradient creatives-font">Pick Your Design</span>
               </h1>
