@@ -105,7 +105,7 @@ export default function WaitlistModeSelect({
             <div>
               <h3 className="text-xl font-semibold">Manual Build</h3>
               <p className="mt-1 text-sm text-muted-foreground">
-                Guided form-based builder. Drop in your product name, tagline, features, and CTA — full creative control.
+                Browse a curated landing page library, choose a founder-ready design, then edit directly on the canvas.
               </p>
             </div>
 
@@ -113,8 +113,8 @@ export default function WaitlistModeSelect({
               {[
                 'Product name, tagline, description',
                 'Up to 5 key feature highlights',
-                'Custom CTA + visual assets',
-                'Pre-Launch Product Showcase template',
+                'Custom CTA, colors, fonts, and visual assets',
+                '8 product-type landing page designs',
               ].map((item) => (
                 <li key={item} className="flex items-start gap-2 text-muted-foreground">
                   <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-foreground/60" />
@@ -133,7 +133,7 @@ export default function WaitlistModeSelect({
               handleManualClick();
             }}
           >
-            <span>Start from scratch</span>
+            <span>Browse templates</span>
             <ArrowRight className="h-4 w-4" />
           </Button>
         </Card>

@@ -6,6 +6,16 @@ export type WaitlistIntegrationProvider = 'none' | 'mailchimp' | 'convertkit';
 export type WaitlistTextAlign = 'left' | 'center';
 export type WaitlistFieldType = 'text' | 'textarea' | 'url';
 export type WaitlistDomainStatus = 'unconfigured' | 'pending' | 'verified' | 'failed';
+export type WaitlistTemplateId =
+  | 'saas'
+  | 'ai-tool'
+  | 'mobile-app'
+  | 'marketplace'
+  | 'community'
+  | 'creator-tool'
+  | 'ecommerce'
+  | 'b2b-service';
+export type WaitlistSectionId = 'problemSolution' | 'benefits' | 'howItWorks' | 'testimonials' | 'faq';
 
 export interface WaitlistSocialLinks {
   website?: string;
@@ -87,6 +97,8 @@ export interface WaitlistEmailSetup {
 }
 
 export interface WaitlistContent {
+  templateId?: WaitlistTemplateId;
+  sectionOrder?: WaitlistSectionId[];
   headline: string;
   headlineVariantB?: string;
   subheadline: string;
@@ -192,6 +204,25 @@ export const WAITLIST_FONT_PRESETS = [
   { value: '"Manrope", "Sora", "Segoe UI", sans-serif', label: 'Manrope' },
   { value: '"DM Sans", "Poppins", "Segoe UI", sans-serif', label: 'DM Sans' },
 ] as const;
+
+export const WAITLIST_TEMPLATE_IDS: WaitlistTemplateId[] = [
+  'saas',
+  'ai-tool',
+  'mobile-app',
+  'marketplace',
+  'community',
+  'creator-tool',
+  'ecommerce',
+  'b2b-service',
+];
+
+export const WAITLIST_SECTION_ORDER: WaitlistSectionId[] = [
+  'problemSolution',
+  'benefits',
+  'howItWorks',
+  'testimonials',
+  'faq',
+];
 
 export const WAITLIST_THEME_PRESETS: Record<WaitlistTheme, WaitlistColorPalette> = {
   dark: {
@@ -320,6 +351,24 @@ function normalizeProvider(input: unknown): WaitlistIntegrationProvider {
   return 'none';
 }
 
+function normalizeTemplateId(input: unknown): WaitlistTemplateId {
+  return WAITLIST_TEMPLATE_IDS.includes(input as WaitlistTemplateId) ? (input as WaitlistTemplateId) : 'saas';
+}
+
+function normalizeSectionOrder(input: unknown): WaitlistSectionId[] {
+  if (!Array.isArray(input)) return WAITLIST_SECTION_ORDER;
+  const seen = new Set<WaitlistSectionId>();
+  const ordered = input
+    .filter((item): item is WaitlistSectionId => WAITLIST_SECTION_ORDER.includes(item as WaitlistSectionId))
+    .filter((item) => {
+      if (seen.has(item)) return false;
+      seen.add(item);
+      return true;
+    });
+
+  return [...ordered, ...WAITLIST_SECTION_ORDER.filter((item) => !seen.has(item))];
+}
+
 function normalizeDomainStatus(input: unknown): WaitlistDomainStatus {
   if (input === 'pending' || input === 'verified' || input === 'failed') return input;
   return 'unconfigured';
@@ -333,6 +382,8 @@ export function getDefaultWaitlistContent(productName?: string): WaitlistContent
   const name = sanitizeText(productName, 'Your Product');
 
   return {
+    templateId: 'saas',
+    sectionOrder: WAITLIST_SECTION_ORDER,
     headline: `Get early access to ${name}`,
     headlineVariantB: `Join the first users of ${name}`,
     subheadline: 'Be first to use the product and shape the roadmap before public launch.',
@@ -434,6 +485,8 @@ export function normalizeWaitlistContent(raw: unknown, productName?: string): Wa
   const bodyFamily = sanitizeText(typographyRaw.bodyFamily, fallback.typography?.bodyFamily);
 
   return {
+    templateId: normalizeTemplateId(input.templateId),
+    sectionOrder: normalizeSectionOrder(input.sectionOrder),
     headline: sanitizeText(input.headline, fallback.headline),
     headlineVariantB: sanitizeText(input.headlineVariantB, fallback.headlineVariantB),
     subheadline: sanitizeText(input.subheadline, fallback.subheadline),

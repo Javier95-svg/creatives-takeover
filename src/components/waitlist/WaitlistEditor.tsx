@@ -19,7 +19,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { SortableList } from '@/components/ui/sortable-list';
 import { AlertTriangle, Check, Copy, Download, Eye, Globe, Loader2, Lock, Monitor, MonitorSmartphone, Plus, Save, ShieldCheck, Sparkles, Trash2, Unlock, Users } from 'lucide-react';
 import WaitlistPageTemplate, { WaitlistContent } from './WaitlistPageTemplate';
-import { WAITLIST_ACCENT_PRESETS, WAITLIST_FONT_PRESETS, createWaitlistFieldId, getDefaultWaitlistContent, getWaitlistThemePalette, normalizeWaitlistContent } from '@/lib/waitlist';
+import { WAITLIST_ACCENT_PRESETS, WAITLIST_FONT_PRESETS, WAITLIST_SECTION_ORDER, createWaitlistFieldId, getDefaultWaitlistContent, getWaitlistThemePalette, normalizeWaitlistContent, type WaitlistSectionId } from '@/lib/waitlist';
+import { getWaitlistTemplate } from '@/lib/waitlistTemplates';
 import { getToolJourneyGuide } from '@/lib/activationJourney';
 import { ActivationJourneyStrip } from '@/components/activation/ActivationJourneyStrip';
 import { captureEvent } from '@/lib/analytics';
@@ -33,6 +34,16 @@ const EVENTS_TABLE = 'waitlist_events' as any;
 const BASE_URL = typeof window !== 'undefined' ? window.location.origin : 'https://creatives-takeover.com';
 const GUEST_DRAFT_STORAGE_KEY = 'waitlist_builder_guest_draft_v1';
 const LAST_EDITOR_STORAGE_KEY = 'waitlist_builder_last_editor_v1';
+const WAITLIST_IMAGE_BUCKET = 'public-assets';
+const WAITLIST_IMAGE_MAX_SIZE_BYTES = 5 * 1024 * 1024;
+const WAITLIST_IMAGE_ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml'];
+const WAITLIST_SECTION_LABELS: Record<WaitlistSectionId, string> = {
+  problemSolution: 'Problem + Solution',
+  benefits: 'Benefits',
+  howItWorks: 'How it works',
+  testimonials: 'Testimonials',
+  faq: 'FAQ',
+};
 
 interface WaitlistPageRow {
   id: string;
@@ -286,6 +297,7 @@ export default function WaitlistEditor({ initialSeed = null }: WaitlistEditorPro
   const [slugAvailable, setSlugAvailable] = useState<boolean | null>(null);
   const [isCheckingDns, setIsCheckingDns] = useState(false);
   const [isRefiningWithAi, setIsRefiningWithAi] = useState(false);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [lastSavedSnapshot, setLastSavedSnapshot] = useState(
     initialState
       ? buildEditorSnapshot(
@@ -318,6 +330,7 @@ export default function WaitlistEditor({ initialSeed = null }: WaitlistEditorPro
     () => buildEditorSnapshot(productName, content, slugDraft || currentSlug || '', status),
     [content, currentSlug, productName, slugDraft, status]
   );
+  const activeTemplate = useMemo(() => getWaitlistTemplate(content.templateId), [content.templateId]);
   const hasUnsavedChanges = Boolean(lastSavedSnapshot) && currentSnapshot !== lastSavedSnapshot;
   const publishBlockingReason = useMemo(() => {
     if (!productName.trim()) return 'Add a project name before publishing.';
@@ -903,6 +916,54 @@ export default function WaitlistEditor({ initialSeed = null }: WaitlistEditorPro
     }
   };
 
+  const handleCanvasImageUpload = async (file: File) => {
+    if (!user) {
+      promptSignIn('upload images');
+      return;
+    }
+
+    if (!WAITLIST_IMAGE_ALLOWED_TYPES.includes(file.type)) {
+      toast.error('Upload a JPG, PNG, WebP, GIF, or SVG image.');
+      return;
+    }
+
+    if (file.size > WAITLIST_IMAGE_MAX_SIZE_BYTES) {
+      toast.error('Image must be 5MB or smaller.');
+      return;
+    }
+
+    const optimisticUrl = URL.createObjectURL(file);
+    updateContent({ imageUrl: optimisticUrl });
+    setIsUploadingImage(true);
+
+    try {
+      const fileExt = file.name.split('.').pop() || 'png';
+      const safeName = `${user.id}/waitlists/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${fileExt}`;
+      const { data, error } = await supabase.storage.from(WAITLIST_IMAGE_BUCKET).upload(safeName, file, {
+        cacheControl: '3600',
+        upsert: false,
+        contentType: file.type,
+      });
+
+      if (error || !data) {
+        throw error;
+      }
+
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from(WAITLIST_IMAGE_BUCKET).getPublicUrl(data.path);
+
+      updateContent({ imageUrl: publicUrl });
+      toast.success('Image added to your waitlist.');
+    } catch (error) {
+      updateContent({ imageUrl: '' });
+      toast.error(error instanceof Error ? error.message : 'Image upload failed.');
+    } finally {
+      URL.revokeObjectURL(optimisticUrl);
+      setIsUploadingImage(false);
+    }
+  };
+
   const checkSlugAvailability = (value: string) => {
     const slug = sanitizeSlug(value);
     setSlugDraft(slug);
@@ -1104,6 +1165,18 @@ export default function WaitlistEditor({ initialSeed = null }: WaitlistEditorPro
                 className={inputSurfaceClass}
               />
               <p className="text-xs text-slate-500 dark:text-slate-200/80">This name appears in My Waitlists and becomes the default title for the page.</p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 dark:text-slate-200/80">
+              <Badge variant="outline" className="border-border/60 bg-white/80 text-slate-700 dark:border-white/15 dark:bg-white/5 dark:text-white">
+                {activeTemplate.productType}
+              </Badge>
+              <span>{activeTemplate.name} template</span>
+              {isUploadingImage ? (
+                <span className="inline-flex items-center gap-1 text-sky-600 dark:text-sky-200">
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                  Uploading image
+                </span>
+              ) : null}
             </div>
 
             {hasUnsavedChanges ? (
@@ -1389,11 +1462,21 @@ export default function WaitlistEditor({ initialSeed = null }: WaitlistEditorPro
                   <div className="space-y-1"><Label className="text-xs">Section spacing: {content.spacing?.sectionPaddingY}px</Label><input type="range" min={36} max={120} value={content.spacing?.sectionPaddingY} onChange={(event) => updateContent({ spacing: { ...content.spacing!, sectionPaddingY: Number(event.target.value) } })} className="w-full" /></div>
                   <div className="space-y-1"><Label className="text-xs">Card radius: {content.spacing?.cardRadius}px</Label><input type="range" min={0} max={32} value={content.spacing?.cardRadius} onChange={(event) => updateContent({ spacing: { ...content.spacing!, cardRadius: Number(event.target.value) } })} className="w-full" /></div>
 
-                  <div className="space-y-2">
-                    <Label>Sections</Label>
-                    {[
-                      { key: 'problemSolution', label: 'Problem + Solution' },
-                      { key: 'benefits', label: 'Benefits' },
+	                  <div className="space-y-2">
+	                    <Label>Sections</Label>
+	                    <SortableList
+	                      items={(content.sectionOrder?.length ? content.sectionOrder : WAITLIST_SECTION_ORDER).map((id) => ({ id }))}
+	                      onReorder={(items) => updateContent({ sectionOrder: items.map((item) => item.id) })}
+	                      className="space-y-2"
+	                      renderItem={(item) => (
+	                        <div className="rounded-md border px-3 py-2 text-sm">
+	                          {WAITLIST_SECTION_LABELS[item.id]}
+	                        </div>
+	                      )}
+	                    />
+	                    {[
+	                      { key: 'problemSolution', label: 'Problem + Solution' },
+	                      { key: 'benefits', label: 'Benefits' },
                       { key: 'howItWorks', label: 'How it works' },
                       { key: 'testimonials', label: 'Testimonials' },
                       { key: 'faq', label: 'FAQ' },
@@ -1678,7 +1761,15 @@ export default function WaitlistEditor({ initialSeed = null }: WaitlistEditorPro
                       {status === 'published' ? 'Live-ready' : 'Draft preview'}
                     </Badge>
                   </div>
-                  <WaitlistPageTemplate content={content} productName={productName || 'Your Product'} mode="preview" onContentChange={updateTemplateField} signupCount={signupCount} />
+	                  <WaitlistPageTemplate
+	                    content={content}
+	                    productName={productName || 'Your Product'}
+	                    mode="preview"
+	                    onContentChange={updateTemplateField}
+	                    onImageUpload={handleCanvasImageUpload}
+	                    onSectionOrderChange={(sectionOrder) => updateContent({ sectionOrder })}
+	                    signupCount={signupCount}
+	                  />
                 </div>
               </div>
             </div>

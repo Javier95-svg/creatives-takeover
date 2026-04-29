@@ -2,6 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
+  WAITLIST_SECTION_ORDER,
+  WAITLIST_TEMPLATE_IDS,
   getDefaultWaitlistContent,
   getWaitlistThemePalette,
   normalizeWaitlistContent,
@@ -45,4 +47,36 @@ test('normalization keeps only enabled custom fields and caps the list length', 
   assert.equal(normalized.customFields?.length, 8);
   assert.ok(normalized.customFields?.every((field) => field.enabled));
   assert.ok(normalized.customFields?.every((field) => field.id !== 'notes'));
+});
+
+test('normalization accepts known template ids and falls back for unknown templates', () => {
+  const normalized = normalizeWaitlistContent({
+    templateId: 'marketplace',
+  }, 'LaunchPad');
+  const fallback = normalizeWaitlistContent({
+    templateId: 'unknown-template',
+  }, 'LaunchPad');
+
+  assert.equal(normalized.templateId, 'marketplace');
+  assert.equal(fallback.templateId, WAITLIST_TEMPLATE_IDS[0]);
+});
+
+test('normalization preserves section order, removes duplicates, and backfills missing sections', () => {
+  const normalized = normalizeWaitlistContent({
+    sectionOrder: ['faq', 'benefits', 'faq', 'not-real', 'problemSolution'],
+  }, 'LaunchPad');
+
+  assert.deepEqual(normalized.sectionOrder?.slice(0, 3), ['faq', 'benefits', 'problemSolution']);
+  assert.deepEqual([...normalized.sectionOrder!].sort(), [...WAITLIST_SECTION_ORDER].sort());
+});
+
+test('normalization persists uploaded image urls inside waitlist content', () => {
+  const imageUrl = 'https://example.com/public-assets/user/waitlist.png';
+  const normalized = normalizeWaitlistContent({
+    imageUrl,
+    logoUrl: 'https://example.com/logo.svg',
+  }, 'LaunchPad');
+
+  assert.equal(normalized.imageUrl, imageUrl);
+  assert.equal(normalized.logoUrl, 'https://example.com/logo.svg');
 });

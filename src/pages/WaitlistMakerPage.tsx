@@ -9,11 +9,14 @@ import WaitlistEditor, { type WaitlistEditorInitialSeed } from '@/components/wai
 import WaitlistMakerWallpaper from '@/components/wallpapers/WaitlistMakerWallpaper';
 import WaitlistModeSelect from '@/components/waitlist/WaitlistModeSelect';
 import WaitlistSmartHydrate from '@/components/waitlist/WaitlistSmartHydrate';
+import WaitlistTemplateLibrary from '@/components/waitlist/WaitlistTemplateLibrary';
 import { getPublicTabConfig } from '@/config/publicTabVisibility';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { normalizeWaitlistContent } from '@/lib/waitlist';
+import type { WaitlistTemplateDefinition } from '@/lib/waitlistTemplates';
 
-type Screen = 'mode_select' | 'smart_hydrate' | 'editor';
+type Screen = 'mode_select' | 'smart_hydrate' | 'template_library' | 'editor';
 
 interface LatestIcpSummary {
   draftId: string;
@@ -28,7 +31,7 @@ export default function WaitlistMakerPage() {
   const icpParam = searchParams.get('icp');
   const skipParam = searchParams.get('skipModeSelect') === '1';
 
-  const [screen, setScreen] = useState<Screen>(skipParam ? 'editor' : 'mode_select');
+  const [screen, setScreen] = useState<Screen>(skipParam ? 'template_library' : 'mode_select');
   const [seed, setSeed] = useState<WaitlistEditorInitialSeed | null>(null);
   const [latestIcp, setLatestIcp] = useState<LatestIcpSummary | null>(null);
   const [latestIcpLoading, setLatestIcpLoading] = useState(false);
@@ -80,12 +83,21 @@ export default function WaitlistMakerPage() {
 
   const handleChooseManual = () => {
     setSeed(null);
-    setScreen('editor');
+    setScreen('template_library');
     if (searchParams.has('icp')) {
       const next = new URLSearchParams(searchParams);
       next.delete('icp');
       setSearchParams(next, { replace: true });
     }
+  };
+
+  const handleChooseTemplate = (template: WaitlistTemplateDefinition) => {
+    setSeed({
+      productName: '',
+      content: normalizeWaitlistContent(template.content, 'Your Product'),
+      source: 'manual',
+    });
+    setScreen('editor');
   };
 
   const handleChooseIcpPowered = () => {
@@ -194,6 +206,13 @@ export default function WaitlistMakerPage() {
                 onChooseIcpPowered={handleChooseIcpPowered}
                 onChooseManual={handleChooseManual}
                 isGuest={!user}
+              />
+            )}
+
+            {screen === 'template_library' && (
+              <WaitlistTemplateLibrary
+                onBack={() => setScreen('mode_select')}
+                onSelectTemplate={handleChooseTemplate}
               />
             )}
 

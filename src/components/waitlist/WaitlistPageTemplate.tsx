@@ -1,12 +1,15 @@
 import { CSSProperties, useEffect, useMemo, useRef, useState } from 'react';
 import {
+  WAITLIST_SECTION_ORDER,
   WaitlistContent,
   WaitlistSignupPayload,
   WaitlistCustomField,
+  WaitlistSectionId,
   getAccentHex,
   normalizeWaitlistContent,
   type WaitlistVariant,
 } from '@/lib/waitlist';
+import { SortableList } from '@/components/ui/sortable-list';
 
 export type { WaitlistContent } from '@/lib/waitlist';
 export type SignupData = WaitlistSignupPayload;
@@ -33,6 +36,8 @@ interface WaitlistPageTemplateProps {
   signupCount?: number;
   publicUrl?: string;
   activeVariant?: WaitlistVariant;
+  onImageUpload?: (file: File) => Promise<void> | void;
+  onSectionOrderChange?: (order: WaitlistSectionId[]) => void;
 }
 
 function EditableField({
@@ -412,6 +417,8 @@ export default function WaitlistPageTemplate({
   signupCount,
   publicUrl,
   activeVariant,
+  onImageUpload,
+  onSectionOrderChange,
 }: WaitlistPageTemplateProps) {
   const editable = mode === 'preview';
   const change = onContentChange ?? (() => undefined);
@@ -432,6 +439,8 @@ export default function WaitlistPageTemplate({
   const alignCenter = normalized.textAlign !== 'left';
   const textAlignClass = alignCenter ? 'text-center' : 'text-left';
   const sectionPadding = `${spacing.sectionPaddingY}px`;
+  const sectionOrder = (normalized.sectionOrder?.length ? normalized.sectionOrder : WAITLIST_SECTION_ORDER)
+    .filter((sectionId) => visibility[sectionId]);
 
   useEffect(() => {
     if (mode !== 'public') return;
@@ -457,6 +466,69 @@ export default function WaitlistPageTemplate({
         className={className}
         onChange={(nextValue) => change(field, nextValue)}
       />
+    );
+  };
+
+  const renderImageSlot = () => {
+    if (normalized.imageUrl) {
+      return (
+        <div className="group relative">
+          <img
+            src={normalized.imageUrl}
+            alt={`${productName} preview`}
+            className="w-full object-cover"
+            style={{
+              borderRadius: `${spacing.cardRadius}px`,
+              border: `1px solid ${palette.borderColor}`,
+              backgroundColor: 'rgba(255,255,255,0.1)',
+            }}
+          />
+          {editable && onImageUpload ? (
+            <label
+              className="absolute bottom-3 right-3 cursor-pointer rounded-full px-3 py-2 text-xs font-semibold opacity-0 shadow-lg transition-opacity group-hover:opacity-100"
+              style={{ backgroundColor: palette.buttonBackground, color: palette.buttonText }}
+            >
+              Replace image
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/gif,image/svg+xml"
+                className="sr-only"
+                onChange={(event) => {
+                  const file = event.target.files?.[0];
+                  if (file) void onImageUpload(file);
+                  event.currentTarget.value = '';
+                }}
+              />
+            </label>
+          ) : null}
+        </div>
+      );
+    }
+
+    return (
+      <label
+        className={editable && onImageUpload ? 'block cursor-pointer p-6 text-sm transition-opacity hover:opacity-90' : 'block p-6 text-sm'}
+        style={{
+          borderRadius: `${spacing.cardRadius}px`,
+          border: `1px solid ${palette.borderColor}`,
+          color: palette.textSecondary,
+          backgroundColor: 'rgba(255,255,255,0.08)',
+        }}
+      >
+        {editable && onImageUpload ? 'Upload a product mockup, screenshot, or brand visual.' : 'Add an image URL in the builder to show your product mockup here.'}
+        {editable && onImageUpload ? (
+          <input
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/gif,image/svg+xml"
+            className="sr-only"
+            onChange={(event) => {
+              const file = event.target.files?.[0];
+              if (file) void onImageUpload(file);
+              event.currentTarget.value = '';
+            }}
+          />
+        ) : null}
+      </label>
     );
   };
 
@@ -531,6 +603,177 @@ export default function WaitlistPageTemplate({
         </div>
       </div>
     );
+  };
+
+  const renderSection = (sectionId: WaitlistSectionId) => {
+    switch (sectionId) {
+      case 'problemSolution':
+        return (
+          <section className="border-t px-6" style={sectionStyle}>
+            <div className="mx-auto grid gap-6 md:grid-cols-2" style={{ maxWidth: `${spacing.contentMaxWidth}px` }}>
+              <div
+                className={`${textAlignClass} rounded-2xl p-5`}
+                style={{
+                  borderLeft: `3px solid ${accentHex}`,
+                  backgroundColor: `${accentHex}08`,
+                }}
+              >
+                <h2 className="mb-2 text-[11px] font-semibold uppercase tracking-[0.22em]" style={{ color: accentHex }}>
+                  The problem
+                </h2>
+                <p style={{ fontSize: `${typography.bodySize + 1}px`, lineHeight: 1.6, color: palette.textPrimary }}>
+                  {renderText('problemStatement', normalized.problemStatement, true)}
+                </p>
+              </div>
+              <div
+                className={`${textAlignClass} rounded-2xl p-5`}
+                style={{
+                  borderLeft: `3px solid ${palette.textPrimary}`,
+                  backgroundColor: `${palette.textPrimary}06`,
+                }}
+              >
+                <h2 className="mb-2 text-[11px] font-semibold uppercase tracking-[0.22em]" style={{ color: palette.textPrimary }}>
+                  The solution
+                </h2>
+                <p style={{ fontSize: `${typography.bodySize + 1}px`, lineHeight: 1.6, color: palette.textPrimary }}>
+                  {renderText('solutionSummary', normalized.solutionSummary, true)}
+                </p>
+              </div>
+            </div>
+          </section>
+        );
+      case 'benefits':
+        return (
+          <section className="border-t px-6" style={{ ...sectionStyle, backgroundColor: palette.pageBackground }}>
+            <div className="mx-auto" style={{ maxWidth: `${spacing.contentMaxWidth}px` }}>
+              <h2 className={`mb-8 text-2xl font-bold ${textAlignClass}`} style={{ fontFamily: typography.headingFamily }}>What you get</h2>
+              <div className="grid gap-4 md:grid-cols-3">
+                {normalized.benefits.map((benefit, index) => (
+                  <div
+                    key={`${benefit}-${index}`}
+                    className="relative overflow-hidden border p-5 transition-shadow"
+                    style={{
+                      borderRadius: `${spacing.cardRadius}px`,
+                      borderColor: palette.borderColor,
+                      backgroundColor: palette.sectionBackground,
+                    }}
+                  >
+                    <div
+                      className="mb-3 inline-flex h-8 w-8 items-center justify-center rounded-lg text-sm font-bold"
+                      style={{
+                        backgroundColor: `${accentHex}1a`,
+                        color: accentHex,
+                        border: `1px solid ${accentHex}33`,
+                      }}
+                      aria-hidden
+                    >
+                      {String(index + 1).padStart(2, '0')}
+                    </div>
+                    <p style={{ fontSize: `${typography.bodySize + 1}px`, lineHeight: 1.55, color: palette.textPrimary }}>
+                      {editable ? (
+                        <EditableField
+                          value={benefit}
+                          multiline
+                          onChange={(value) => change(`benefit_${index}`, value)}
+                        />
+                      ) : benefit}
+                    </p>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-8 flex flex-wrap items-center justify-center gap-2 text-xs uppercase tracking-wide">
+                {normalized.trustItems.map((item, index) => (
+                  <span
+                    key={`${item}-${index}`}
+                    className="rounded-full border px-3 py-1"
+                    style={{ borderColor: `${accentHex}66`, color: palette.textSecondary }}
+                  >
+                    {item}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </section>
+        );
+      case 'howItWorks':
+        return (
+          <section className="border-t px-6" style={sectionStyle}>
+            <div className="mx-auto" style={{ maxWidth: `${spacing.contentMaxWidth}px` }}>
+              <h2 className={`mb-8 text-2xl font-bold ${textAlignClass}`} style={{ fontFamily: typography.headingFamily }}>How it works</h2>
+              <div className="grid gap-4 md:grid-cols-3">
+                {normalized.howItWorks.map((step, index) => (
+                  <div
+                    key={`${step}-${index}`}
+                    className="border p-5"
+                    style={{ borderRadius: `${spacing.cardRadius}px`, borderColor: palette.borderColor }}
+                  >
+                    <p className="mb-2 text-xs font-semibold uppercase tracking-widest" style={{ color: accentHex }}>Step {index + 1}</p>
+                    <p style={{ fontSize: `${typography.bodySize}px`, color: palette.textSecondary }}>
+                      {editable ? (
+                        <EditableField
+                          value={step}
+                          multiline
+                          onChange={(value) => change(`how_${index}`, value)}
+                        />
+                      ) : step}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        );
+      case 'testimonials':
+        return (
+          <section className="border-t px-6" style={{ ...sectionStyle, backgroundColor: palette.pageBackground }}>
+            <div className="mx-auto grid gap-6 md:grid-cols-2" style={{ maxWidth: `${spacing.contentMaxWidth}px` }}>
+              {normalized.testimonials.map((testimonial, index) => (
+                <div
+                  key={`${testimonial.author}-${index}`}
+                  className="border p-5"
+                  style={{
+                    borderRadius: `${spacing.cardRadius}px`,
+                    borderColor: palette.borderColor,
+                    backgroundColor: palette.sectionBackground,
+                  }}
+                >
+                  <p style={{ fontSize: `${typography.bodySize}px`, color: palette.textSecondary }}>&quot;{testimonial.quote}&quot;</p>
+                  <p className="mt-3 text-xs font-semibold uppercase tracking-widest" style={{ color: accentHex }}>
+                    {testimonial.author}{testimonial.role ? ` - ${testimonial.role}` : ''}
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            <p className="mx-auto mt-6 max-w-3xl text-center" style={{ color: palette.textSecondary }}>
+              {renderText('socialProof', normalized.socialProof, false)}
+            </p>
+          </section>
+        );
+      case 'faq':
+        return (
+          <section className="border-t px-6" style={sectionStyle}>
+            <div className="mx-auto" style={{ maxWidth: `${spacing.contentMaxWidth}px` }}>
+              <h2 className={`mb-6 text-2xl font-bold ${textAlignClass}`} style={{ fontFamily: typography.headingFamily }}>FAQ</h2>
+              <div className="space-y-3">
+                {normalized.faq.map((item, index) => (
+                  <div
+                    key={`${item.question}-${index}`}
+                    className="rounded-lg border p-4"
+                    style={{ borderColor: palette.borderColor, borderRadius: `${spacing.cardRadius}px` }}
+                  >
+                    <p className="font-semibold" style={{ color: palette.textPrimary }}>{item.question}</p>
+                    <p className="mt-1 text-sm" style={{ color: palette.textSecondary }}>{item.answer}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        );
+      default:
+        return null;
+    }
   };
 
   return (
@@ -627,30 +870,7 @@ export default function WaitlistPageTemplate({
 
           {normalized.layout === 'split' ? (
             <div className="space-y-4">
-              {normalized.imageUrl ? (
-                <img
-                  src={normalized.imageUrl}
-                  alt={`${productName} preview`}
-                  className="w-full object-cover"
-                  style={{
-                    borderRadius: `${spacing.cardRadius}px`,
-                    border: `1px solid ${palette.borderColor}`,
-                    backgroundColor: 'rgba(255,255,255,0.1)',
-                  }}
-                />
-              ) : (
-                <div
-                  className="p-6 text-sm"
-                  style={{
-                    borderRadius: `${spacing.cardRadius}px`,
-                    border: `1px solid ${palette.borderColor}`,
-                    color: palette.textSecondary,
-                    backgroundColor: 'rgba(255,255,255,0.08)',
-                  }}
-                >
-                  Add an image URL in the builder to show your product mockup here.
-                </div>
-              )}
+              {renderImageSlot()}
             </div>
           ) : null}
         </div>
@@ -664,169 +884,26 @@ export default function WaitlistPageTemplate({
         ) : null}
       </section>
 
-      {visibility.problemSolution ? (
-        <section className="border-t px-6" style={sectionStyle}>
-          <div className="mx-auto grid gap-6 md:grid-cols-2" style={{ maxWidth: `${spacing.contentMaxWidth}px` }}>
-            <div
-              className={`${textAlignClass} rounded-2xl p-5`}
-              style={{
-                borderLeft: `3px solid ${accentHex}`,
-                backgroundColor: `${accentHex}08`,
-              }}
-            >
-              <h2 className="mb-2 text-[11px] font-semibold uppercase tracking-[0.22em]" style={{ color: accentHex }}>
-                The problem
-              </h2>
-              <p style={{ fontSize: `${typography.bodySize + 1}px`, lineHeight: 1.6, color: palette.textPrimary }}>
-                {renderText('problemStatement', normalized.problemStatement, true)}
-              </p>
-            </div>
-            <div
-              className={`${textAlignClass} rounded-2xl p-5`}
-              style={{
-                borderLeft: `3px solid ${palette.textPrimary}`,
-                backgroundColor: `${palette.textPrimary}06`,
-              }}
-            >
-              <h2 className="mb-2 text-[11px] font-semibold uppercase tracking-[0.22em]" style={{ color: palette.textPrimary }}>
-                The solution
-              </h2>
-              <p style={{ fontSize: `${typography.bodySize + 1}px`, lineHeight: 1.6, color: palette.textPrimary }}>
-                {renderText('solutionSummary', normalized.solutionSummary, true)}
-              </p>
-            </div>
-          </div>
-        </section>
-      ) : null}
-
-      {visibility.benefits ? (
-        <section className="border-t px-6" style={{ ...sectionStyle, backgroundColor: palette.pageBackground }}>
-          <div className="mx-auto" style={{ maxWidth: `${spacing.contentMaxWidth}px` }}>
-            <h2 className={`mb-8 text-2xl font-bold ${textAlignClass}`} style={{ fontFamily: typography.headingFamily }}>What you get</h2>
-            <div className="grid gap-4 md:grid-cols-3">
-              {normalized.benefits.map((benefit, index) => (
-                <div
-                  key={`${benefit}-${index}`}
-                  className="relative overflow-hidden border p-5 transition-shadow"
-                  style={{
-                    borderRadius: `${spacing.cardRadius}px`,
-                    borderColor: palette.borderColor,
-                    backgroundColor: palette.sectionBackground,
-                  }}
-                >
-                  <div
-                    className="mb-3 inline-flex h-8 w-8 items-center justify-center rounded-lg text-sm font-bold"
-                    style={{
-                      backgroundColor: `${accentHex}1a`,
-                      color: accentHex,
-                      border: `1px solid ${accentHex}33`,
-                    }}
-                    aria-hidden
-                  >
-                    {String(index + 1).padStart(2, '0')}
-                  </div>
-                  <p style={{ fontSize: `${typography.bodySize + 1}px`, lineHeight: 1.55, color: palette.textPrimary }}>
-                    {editable ? (
-                      <EditableField
-                        value={benefit}
-                        multiline
-                        onChange={(value) => change(`benefit_${index}`, value)}
-                      />
-                    ) : benefit}
-                  </p>
-                </div>
-              ))}
-            </div>
-
-            <div className="mt-8 flex flex-wrap items-center justify-center gap-2 text-xs uppercase tracking-wide">
-              {normalized.trustItems.map((item, index) => (
-                <span
-                  key={`${item}-${index}`}
-                  className="rounded-full border px-3 py-1"
-                  style={{ borderColor: `${accentHex}66`, color: palette.textSecondary }}
-                >
-                  {item}
-                </span>
-              ))}
-            </div>
-          </div>
-        </section>
-      ) : null}
-
-      {visibility.howItWorks ? (
-        <section className="border-t px-6" style={sectionStyle}>
-          <div className="mx-auto" style={{ maxWidth: `${spacing.contentMaxWidth}px` }}>
-            <h2 className={`mb-8 text-2xl font-bold ${textAlignClass}`} style={{ fontFamily: typography.headingFamily }}>How it works</h2>
-            <div className="grid gap-4 md:grid-cols-3">
-              {normalized.howItWorks.map((step, index) => (
-                <div
-                  key={`${step}-${index}`}
-                  className="border p-5"
-                  style={{ borderRadius: `${spacing.cardRadius}px`, borderColor: palette.borderColor }}
-                >
-                  <p className="mb-2 text-xs font-semibold uppercase tracking-widest" style={{ color: accentHex }}>Step {index + 1}</p>
-                  <p style={{ fontSize: `${typography.bodySize}px`, color: palette.textSecondary }}>
-                    {editable ? (
-                      <EditableField
-                        value={step}
-                        multiline
-                        onChange={(value) => change(`how_${index}`, value)}
-                      />
-                    ) : step}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-      ) : null}
-
-      {visibility.testimonials ? (
-        <section className="border-t px-6" style={{ ...sectionStyle, backgroundColor: palette.pageBackground }}>
-          <div className="mx-auto grid gap-6 md:grid-cols-2" style={{ maxWidth: `${spacing.contentMaxWidth}px` }}>
-            {normalized.testimonials.map((testimonial, index) => (
+      {editable && onSectionOrderChange ? (
+        <SortableList
+          items={sectionOrder.map((id) => ({ id }))}
+          onReorder={(items) => onSectionOrderChange(items.map((item) => item.id))}
+          className="relative"
+          renderItem={(item) => (
+            <div className="group/section relative">
               <div
-                key={`${testimonial.author}-${index}`}
-                className="border p-5"
-                style={{
-                  borderRadius: `${spacing.cardRadius}px`,
-                  borderColor: palette.borderColor,
-                  backgroundColor: palette.sectionBackground,
-                }}
+                className="pointer-events-none absolute left-4 top-3 z-10 rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-wide opacity-0 shadow-sm transition-opacity group-hover/section:opacity-100"
+                style={{ backgroundColor: palette.buttonBackground, color: palette.buttonText }}
               >
-                <p style={{ fontSize: `${typography.bodySize}px`, color: palette.textSecondary }}>&quot;{testimonial.quote}&quot;</p>
-                <p className="mt-3 text-xs font-semibold uppercase tracking-widest" style={{ color: accentHex }}>
-                  {testimonial.author}{testimonial.role ? ` - ${testimonial.role}` : ''}
-                </p>
+                Drag to reorder
               </div>
-            ))}
-          </div>
-
-          <p className="mx-auto mt-6 max-w-3xl text-center" style={{ color: palette.textSecondary }}>
-            {renderText('socialProof', normalized.socialProof, false)}
-          </p>
-        </section>
-      ) : null}
-
-      {visibility.faq ? (
-        <section className="border-t px-6" style={sectionStyle}>
-          <div className="mx-auto" style={{ maxWidth: `${spacing.contentMaxWidth}px` }}>
-            <h2 className={`mb-6 text-2xl font-bold ${textAlignClass}`} style={{ fontFamily: typography.headingFamily }}>FAQ</h2>
-            <div className="space-y-3">
-              {normalized.faq.map((item, index) => (
-                <div
-                  key={`${item.question}-${index}`}
-                  className="rounded-lg border p-4"
-                  style={{ borderColor: palette.borderColor, borderRadius: `${spacing.cardRadius}px` }}
-                >
-                  <p className="font-semibold" style={{ color: palette.textPrimary }}>{item.question}</p>
-                  <p className="mt-1 text-sm" style={{ color: palette.textSecondary }}>{item.answer}</p>
-                </div>
-              ))}
+              {renderSection(item.id)}
             </div>
-          </div>
-        </section>
-      ) : null}
+          )}
+        />
+      ) : (
+        sectionOrder.map((sectionId) => <div key={sectionId}>{renderSection(sectionId)}</div>)
+      )}
 
       <section
         className="border-t px-6"
