@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { ArrowLeft, ArrowRight, CheckCircle2, Search } from 'lucide-react';
+import { ArrowRight, CheckCircle2, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -8,7 +8,6 @@ import { WAITLIST_TEMPLATE_LIBRARY, type WaitlistTemplateDefinition } from '@/li
 
 interface WaitlistTemplateLibraryProps {
   onSelectTemplate: (template: WaitlistTemplateDefinition) => void;
-  onBack: () => void;
 }
 
 const categories = ['All', ...WAITLIST_TEMPLATE_LIBRARY.map((template) => template.productType)];
@@ -56,7 +55,7 @@ function TemplateMiniPreview({ template }: { template: WaitlistTemplateDefinitio
   );
 }
 
-export default function WaitlistTemplateLibrary({ onSelectTemplate, onBack }: WaitlistTemplateLibraryProps) {
+export default function WaitlistTemplateLibrary({ onSelectTemplate }: WaitlistTemplateLibraryProps) {
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState('All');
 
@@ -76,22 +75,9 @@ export default function WaitlistTemplateLibrary({ onSelectTemplate, onBack }: Wa
 
   return (
     <div className="mx-auto w-full max-w-7xl space-y-6 px-2">
-      <div className="flex flex-col gap-4 rounded-[28px] border border-border/60 bg-white/80 p-5 shadow-sm backdrop-blur dark:border-white/10 dark:bg-slate-950/70 md:flex-row md:items-end md:justify-between">
-        <div className="max-w-3xl space-y-2">
-          <Button variant="ghost" size="sm" onClick={onBack} className="mb-1 -ml-2 gap-2">
-            <ArrowLeft className="h-4 w-4" />
-            Back
-          </Button>
-          <p className="text-xs font-semibold uppercase tracking-[0.26em] text-primary">Manual Build library</p>
-          <h2 className="text-2xl font-semibold md:text-3xl">Choose a founder-grade landing page direction</h2>
-          <p className="text-sm leading-relaxed text-muted-foreground md:text-base">
-            Every design is built to pitch a product clearly, create early trust, and collect waitlist signups before the MVP exists.
-          </p>
-        </div>
-        <div className="relative w-full md:w-80">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search product type..." className="pl-9" />
-        </div>
+      <div className="relative w-full md:ml-auto md:w-80">
+        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search product type..." className="pl-9" />
       </div>
 
       <div className="flex gap-2 overflow-x-auto pb-1">
@@ -110,10 +96,10 @@ export default function WaitlistTemplateLibrary({ onSelectTemplate, onBack }: Wa
 
       <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
         {filteredTemplates.map((template) => (
-          <Card key={template.id} className="group overflow-hidden border-border/60 bg-white/85 p-4 shadow-sm transition hover:-translate-y-1 hover:border-primary/40 hover:shadow-xl dark:border-white/10 dark:bg-slate-950/75">
+          <Card key={template.id} className="group flex h-[520px] flex-col overflow-hidden border-border/60 bg-white/85 p-4 shadow-sm transition hover:-translate-y-1 hover:border-primary/40 hover:shadow-xl dark:border-white/10 dark:bg-slate-950/75">
             <TemplateMiniPreview template={template} />
-            <div className="mt-4 space-y-3">
-              <div>
+            <div className="mt-4 flex flex-1 flex-col space-y-3">
+              <div className="min-h-[116px]">
                 <div className="flex items-center justify-between gap-3">
                   <h3 className="text-lg font-semibold">{template.name}</h3>
                   <span className="rounded-full bg-primary/10 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-primary">
@@ -126,7 +112,7 @@ export default function WaitlistTemplateLibrary({ onSelectTemplate, onBack }: Wa
                 <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
                 <span>{template.bestFor}</span>
               </div>
-              <Button className="w-full justify-between" onClick={() => onSelectTemplate(template)}>
+              <Button className="mt-auto w-full justify-between" onClick={() => onSelectTemplate(template)}>
                 <span>Use this design</span>
                 <ArrowRight className="h-4 w-4" />
               </Button>

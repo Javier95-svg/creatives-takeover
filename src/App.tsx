@@ -106,6 +106,7 @@ const WeeklyMissionPage = lazy(() => import("./pages/WeeklyMissionPage"));
 const TasksPage = lazy(() => import("./pages/TasksPage"));
 const ValidateJourney = lazy(() => import("./pages/journeys/ValidateJourney"));
 const WaitlistMakerPage = lazy(() => import("./pages/WaitlistMakerPage"));
+const WaitlistTemplatesPage = lazy(() => import("./pages/WaitlistTemplatesPage"));
 const DirectoriesPage = lazy(() => import("./pages/DirectoriesPage"));
 const FindYourAngel = lazy(() => import("./pages/community/FindYourAngel"));
 const AdminAngelEditor = lazy(() => import("./pages/community/AdminAngelEditor"));
@@ -230,6 +231,7 @@ function App() {
                         <Route path="/decision-sprint" element={<ValidateJourneyPage />} />
                         <Route path="/validate" element={<ValidateJourney />} />
                         <Route path="/waitlist" element={<WaitlistMakerPage />} />
+                        <Route path="/waitlist/templates" element={<WaitlistTemplatesPage />} />
                         <Route path="/waitlist-maker" element={<Navigate to="/waitlist" replace />} />
                         <Route path="/w/:slug" element={<WaitlistPublicPage />} />
                         <Route path="/directories" element={<DirectoriesPage />} />

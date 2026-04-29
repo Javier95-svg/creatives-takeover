@@ -17,7 +17,6 @@ export default function WaitlistModeSelect({
   hasCompletedIcp,
   icpPersonaName,
   onChooseIcpPowered,
-  onChooseManual,
   icpCtaLoading = false,
   isGuest = false,
 }: WaitlistModeSelectProps) {
@@ -25,10 +24,10 @@ export default function WaitlistModeSelect({
 
   const handleManualClick = () => {
     if (isGuest) {
-      navigate('/auth?redirect=' + encodeURIComponent('/waitlist?skipModeSelect=1'));
+      navigate('/auth?redirect=' + encodeURIComponent('/waitlist/templates'));
       return;
     }
-    onChooseManual();
+    navigate('/waitlist/templates');
   };
 
   return (

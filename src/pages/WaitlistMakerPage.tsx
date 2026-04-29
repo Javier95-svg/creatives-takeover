@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import SEO, { createBreadcrumbSchema, createFAQSchema } from '@/components/SEO';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
@@ -9,14 +9,33 @@ import WaitlistEditor, { type WaitlistEditorInitialSeed } from '@/components/wai
 import WaitlistMakerWallpaper from '@/components/wallpapers/WaitlistMakerWallpaper';
 import WaitlistModeSelect from '@/components/waitlist/WaitlistModeSelect';
 import WaitlistSmartHydrate from '@/components/waitlist/WaitlistSmartHydrate';
-import WaitlistTemplateLibrary from '@/components/waitlist/WaitlistTemplateLibrary';
 import { getPublicTabConfig } from '@/config/publicTabVisibility';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { normalizeWaitlistContent } from '@/lib/waitlist';
-import type { WaitlistTemplateDefinition } from '@/lib/waitlistTemplates';
+import { normalizeWaitlistContent, type WaitlistContent } from '@/lib/waitlist';
+import { getWaitlistTemplate } from '@/lib/waitlistTemplates';
 
-type Screen = 'mode_select' | 'smart_hydrate' | 'template_library' | 'editor';
+type Screen = 'mode_select' | 'smart_hydrate' | 'editor';
+const LAST_EDITOR_STORAGE_KEY = 'waitlist_builder_last_editor_v1';
+
+function readStoredTemplateDraft(templateId: string): { productName: string; content: WaitlistContent } | null {
+  if (typeof window === 'undefined') return null;
+
+  const raw = window.localStorage.getItem(LAST_EDITOR_STORAGE_KEY);
+  if (!raw) return null;
+
+  try {
+    const parsed = JSON.parse(raw) as { productName?: string; content?: Partial<WaitlistContent> };
+    if (!parsed?.content?.templateId || parsed.content.templateId !== templateId) return null;
+
+    return {
+      productName: parsed.productName || '',
+      content: normalizeWaitlistContent(parsed.content, parsed.productName || 'Your Product'),
+    };
+  } catch {
+    return null;
+  }
+}
 
 interface LatestIcpSummary {
   draftId: string;
@@ -26,12 +45,13 @@ interface LatestIcpSummary {
 export default function WaitlistMakerPage() {
   const { user, loading: authLoading } = useAuth();
   const publicTab = getPublicTabConfig('/waitlist');
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
   const icpParam = searchParams.get('icp');
-  const skipParam = searchParams.get('skipModeSelect') === '1';
+  const templateParam = searchParams.get('template');
 
-  const [screen, setScreen] = useState<Screen>(skipParam ? 'template_library' : 'mode_select');
+  const [screen, setScreen] = useState<Screen>(templateParam ? 'editor' : 'mode_select');
   const [seed, setSeed] = useState<WaitlistEditorInitialSeed | null>(null);
   const [hasEditorSession, setHasEditorSession] = useState(false);
   const [latestIcp, setLatestIcp] = useState<LatestIcpSummary | null>(null);
@@ -79,31 +99,22 @@ export default function WaitlistMakerPage() {
     }
   }, [icpParam, user]);
 
-  const hasCompletedIcp = Boolean(icpParam) || Boolean(latestIcp?.draftId);
-  const activeIcpDraftId = icpParam || latestIcp?.draftId || null;
+  useEffect(() => {
+    if (!templateParam) return;
+    const storedDraft = readStoredTemplateDraft(templateParam);
 
-  const handleChooseManual = () => {
-    setSeed(null);
-    setHasEditorSession(false);
-    setScreen('template_library');
-    if (searchParams.has('icp')) {
-      const next = new URLSearchParams(searchParams);
-      next.delete('icp');
-      setSearchParams(next, { replace: true });
-    }
-  };
-
-  const handleChooseTemplate = (template: WaitlistTemplateDefinition) => {
-    if (hasEditorSession && seed?.content?.templateId === template.id) {
+    if (storedDraft) {
+      setSeed({
+        productName: storedDraft.productName,
+        content: storedDraft.content,
+        source: 'manual',
+      });
+      setHasEditorSession(true);
       setScreen('editor');
       return;
     }
 
-    if (hasEditorSession && seed?.content?.templateId !== template.id) {
-      const shouldReplace = window.confirm('Replace the current editor contents with this template? Your current draft is preserved in this browser until you confirm.');
-      if (!shouldReplace) return;
-    }
-
+    const template = getWaitlistTemplate(templateParam as Parameters<typeof getWaitlistTemplate>[0]);
     setSeed({
       productName: '',
       content: normalizeWaitlistContent(template.content, 'Your Product'),
@@ -111,6 +122,20 @@ export default function WaitlistMakerPage() {
     });
     setHasEditorSession(true);
     setScreen('editor');
+  }, [templateParam]);
+
+  const hasCompletedIcp = Boolean(icpParam) || Boolean(latestIcp?.draftId);
+  const activeIcpDraftId = icpParam || latestIcp?.draftId || null;
+
+  const handleChooseManual = () => {
+    setSeed(null);
+    setHasEditorSession(false);
+    navigate('/waitlist/templates');
+    if (searchParams.has('icp')) {
+      const next = new URLSearchParams(searchParams);
+      next.delete('icp');
+      setSearchParams(next, { replace: true });
+    }
   };
 
   const handleChooseIcpPowered = () => {
@@ -174,7 +199,7 @@ export default function WaitlistMakerPage() {
   );
 
   const editorNode = user ? (
-    <WaitlistEditor initialSeed={seed} onBackToTemplates={seed?.source === 'manual' ? () => setScreen('template_library') : undefined} />
+    <WaitlistEditor initialSeed={seed} onBackToTemplates={seed?.source === 'manual' ? () => navigate('/waitlist/templates') : undefined} />
   ) : (
     publicTab && (
       <PreviewModeWrapper
@@ -182,7 +207,7 @@ export default function WaitlistMakerPage() {
         description={publicTab.description || ''}
         showPricingCta={publicTab.showPricingCta}
       >
-        <WaitlistEditor initialSeed={seed} onBackToTemplates={seed?.source === 'manual' ? () => setScreen('template_library') : undefined} />
+        <WaitlistEditor initialSeed={seed} onBackToTemplates={seed?.source === 'manual' ? () => navigate('/waitlist/templates') : undefined} />
       </PreviewModeWrapper>
     )
   );
@@ -222,13 +247,6 @@ export default function WaitlistMakerPage() {
               />
             )}
 
-            {screen === 'template_library' && (
-              <WaitlistTemplateLibrary
-                onBack={() => setScreen('mode_select')}
-                onSelectTemplate={handleChooseTemplate}
-              />
-            )}
-
             {screen === 'smart_hydrate' && activeIcpDraftId && user && (
               <WaitlistSmartHydrate
                 draftId={activeIcpDraftId}
@@ -255,11 +273,7 @@ export default function WaitlistMakerPage() {
               />
             )}
 
-            {hasEditorSession && seed ? (
-              <div className={screen === 'editor' ? '' : 'hidden'} aria-hidden={screen === 'editor' ? undefined : true}>
-                {editorNode}
-              </div>
-            ) : null}
+            {screen === 'editor' && hasEditorSession && seed ? editorNode : null}
 
             <div className="mx-auto mt-10 max-w-5xl space-y-8 px-2">
               <PageFAQSection title="FAQ" description="Two paths to a live, founder-grade waitlist page in under 5 minutes." faqs={faqs} />
