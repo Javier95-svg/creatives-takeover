@@ -337,10 +337,7 @@ const Hero = () => {
               ) : (
                 <>
                   <p>
-                    Creatives Takeover helps first-time founders turn scattered ideas into a sharper direction, so they can validate faster, build smarter, and avoid wasting time on the wrong path.
-                  </p>
-                  <p>
-                    Backed by mentors & ex-founders who have already faced the same questions, tradeoffs, and risks.
+                    Build your startup at your own pace while staying focused on the right next step. Get the structure, validation tools, and founder guidance to move faster without wasting time on the wrong path.
                   </p>
                 </>
               )}
