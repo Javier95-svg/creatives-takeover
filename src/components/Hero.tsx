@@ -337,7 +337,7 @@ const Hero = () => {
               ) : (
                 <>
                   <p>
-                    Build your startup at your own pace while staying focused on the right next step. Get the structure, validation tools, and founder guidance to move faster without wasting time on the wrong path.
+                    Build your startup at your own pace while staying focused on the right next step. Creatives Takeover helps you move with more clarity, validate faster, and make smarter decisions with support from experienced founders and mentors.
                   </p>
                 </>
               )}
