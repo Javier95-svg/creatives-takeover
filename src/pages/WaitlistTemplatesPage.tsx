@@ -71,11 +71,11 @@ export default function WaitlistTemplatesPage() {
         <main className="px-4 pt-28 pb-16 md:pt-32 md:pb-20 lg:pt-36">
           <div className="container mx-auto max-w-[1580px] space-y-8">
             <div className="mx-auto max-w-4xl space-y-4 px-2 text-center">
-              <h1 className="pb-2 text-center font-bold leading-[0.95] text-4xl sm:text-5xl md:text-6xl lg:text-7xl">
+              <h1 className="pb-2 text-center font-bold leading-[0.95] text-4xl sm:text-[2.85rem] md:text-5xl lg:text-6xl">
                 <span className="takeover-gradient creatives-font">Pick Your Design</span>
               </h1>
               <p className="text-lg leading-relaxed text-muted-foreground md:text-xl">
-                Turn your idea into a landing page that attracts early believers before you write a line of code.
+                Eight distinct designs. One purpose. Show the world what your product is about before you write a single line of code.
               </p>
             </div>
 
