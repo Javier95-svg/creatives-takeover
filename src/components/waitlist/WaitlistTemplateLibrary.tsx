@@ -1,8 +1,7 @@
 import { useMemo, useState } from 'react';
-import { ArrowRight, CheckCircle2, Search } from 'lucide-react';
+import { ArrowRight, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { WAITLIST_TEMPLATE_LIBRARY, type WaitlistTemplateDefinition } from '@/lib/waitlistTemplates';
 
@@ -56,30 +55,17 @@ function TemplateMiniPreview({ template }: { template: WaitlistTemplateDefinitio
 }
 
 export default function WaitlistTemplateLibrary({ onSelectTemplate }: WaitlistTemplateLibraryProps) {
-  const [query, setQuery] = useState('');
   const [category, setCategory] = useState('All');
 
   const filteredTemplates = useMemo(() => {
-    const normalizedQuery = query.trim().toLowerCase();
     return WAITLIST_TEMPLATE_LIBRARY.filter((template) => {
       const matchesCategory = category === 'All' || template.productType === category;
-      const matchesQuery =
-        !normalizedQuery ||
-        template.name.toLowerCase().includes(normalizedQuery) ||
-        template.productType.toLowerCase().includes(normalizedQuery) ||
-        template.description.toLowerCase().includes(normalizedQuery) ||
-        template.bestFor.toLowerCase().includes(normalizedQuery);
-      return matchesCategory && matchesQuery;
+      return matchesCategory;
     });
-  }, [category, query]);
+  }, [category]);
 
   return (
     <div className="mx-auto w-full max-w-7xl space-y-6 px-2">
-      <div className="relative w-full md:ml-auto md:w-80">
-        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search product type..." className="pl-9" />
-      </div>
-
       <div className="flex gap-2 overflow-x-auto pb-1">
         {categories.map((item) => (
           <Button

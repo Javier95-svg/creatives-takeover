@@ -65,7 +65,7 @@ export default function WaitlistTemplatesPage() {
           <div className="container mx-auto max-w-[1580px] space-y-8">
             <div className="mx-auto max-w-4xl space-y-4 px-2 text-center">
               <h1 className="pb-2 text-center font-bold leading-[0.95] text-4xl sm:text-5xl md:text-6xl lg:text-7xl">
-                <span className="takeover-gradient creatives-font">Waitlist Maker</span>
+                <span className="takeover-gradient creatives-font">Pick Your Design</span>
               </h1>
               <p className="text-lg leading-relaxed text-muted-foreground md:text-xl">
                 Turn your idea into a landing page that attracts early believers before you write a line of code.
