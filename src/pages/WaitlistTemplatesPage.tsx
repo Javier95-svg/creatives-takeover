@@ -75,7 +75,7 @@ export default function WaitlistTemplatesPage() {
                 <span className="takeover-gradient creatives-font">Pick Your Design</span>
               </h1>
               <p className="text-lg leading-relaxed text-muted-foreground md:text-xl">
-                Eight distinct designs. One purpose. Show the world what your product is about before you write a single line of code.
+                Eight distinct designs. One purpose. Show the world what your product is about before it is even built.
               </p>
             </div>
 
