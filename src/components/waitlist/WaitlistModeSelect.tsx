@@ -1,5 +1,4 @@
 import { ArrowRight, CheckCircle2, Sparkles, Wand2 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
@@ -17,17 +16,11 @@ export default function WaitlistModeSelect({
   hasCompletedIcp,
   icpPersonaName,
   onChooseIcpPowered,
+  onChooseManual,
   icpCtaLoading = false,
-  isGuest = false,
 }: WaitlistModeSelectProps) {
-  const navigate = useNavigate();
-
   const handleManualClick = () => {
-    if (isGuest) {
-      navigate('/auth?redirect=' + encodeURIComponent('/waitlist/templates'));
-      return;
-    }
-    navigate('/waitlist/templates');
+    onChooseManual();
   };
 
   return (

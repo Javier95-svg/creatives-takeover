@@ -5,12 +5,14 @@ import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import WaitlistTemplateLibrary from '@/components/waitlist/WaitlistTemplateLibrary';
 import WaitlistMakerWallpaper from '@/components/wallpapers/WaitlistMakerWallpaper';
+import { useAuth } from '@/contexts/AuthContext';
 import type { WaitlistTemplateDefinition } from '@/lib/waitlistTemplates';
 
 const LAST_EDITOR_STORAGE_KEY = 'waitlist_builder_last_editor_v1';
 
 export default function WaitlistTemplatesPage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const structuredData = useMemo(
     () => [
@@ -31,6 +33,11 @@ export default function WaitlistTemplatesPage() {
   );
 
   const handleSelectTemplate = (template: WaitlistTemplateDefinition) => {
+    if (!user) {
+      navigate('/auth?redirect=' + encodeURIComponent(`/waitlist?template=${template.id}`));
+      return;
+    }
+
     if (typeof window !== 'undefined') {
       try {
         const rawDraft = window.localStorage.getItem(LAST_EDITOR_STORAGE_KEY);
