@@ -248,9 +248,10 @@ export interface WaitlistEditorInitialSeed {
 
 export interface WaitlistEditorProps {
   initialSeed?: WaitlistEditorInitialSeed | null;
+  onBackToTemplates?: () => void;
 }
 
-export default function WaitlistEditor({ initialSeed = null }: WaitlistEditorProps = {}) {
+export default function WaitlistEditor({ initialSeed = null, onBackToTemplates }: WaitlistEditorProps = {}) {
   const { user, loading: authLoading } = useAuth();
   const { refreshProgress } = useBizMapProgress();
   const { refreshActivation } = useActivationJourney();
@@ -517,16 +518,25 @@ export default function WaitlistEditor({ initialSeed = null }: WaitlistEditorPro
       ]);
       const { data } = latestPageResult as { data: WaitlistPageRow | null };
 
+      if (seededContent) {
+        applyDraftState({
+          productName: seededName,
+          content: seededContent,
+          draftId: null,
+          currentSlug: null,
+          status: 'draft',
+        });
+        setSignupCount(0);
+        setViewCount(0);
+        setRecentSignups([]);
+        setEvents([]);
+        setRestorableGuestDraft(browserDraft);
+        setIsHydrating(false);
+        return;
+      }
+
       if (!data) {
-        if (seededContent) {
-          applyDraftState({
-            productName: seededName,
-            content: seededContent,
-            draftId: null,
-            currentSlug: null,
-            status: 'draft',
-          });
-        } else if (browserDraft) {
+        if (browserDraft) {
           applyDraftState({
             productName: browserDraft.productName,
             content: browserDraft.content,
@@ -1137,6 +1147,11 @@ export default function WaitlistEditor({ initialSeed = null }: WaitlistEditorPro
       <Card className={toolbarCardClass}>
         <CardContent className="p-4 md:p-5">
           <div className="flex flex-wrap items-center gap-2">
+            {onBackToTemplates ? (
+              <Button variant="outline" onClick={onBackToTemplates} size="sm" className={actionButtonClass}>
+                ← Templates
+              </Button>
+            ) : null}
             <Button variant="outline" onClick={resetToNew} size="sm" className={actionButtonClass}><Plus className="w-4 h-4 mr-1" /> New</Button>
             <Button variant="outline" onClick={copyUrl} size="sm" disabled={!liveUrl} className={`${actionButtonClass} disabled:text-slate-400 dark:disabled:text-white/40`}><Copy className="w-4 h-4 mr-1" /> Copy live link</Button>
             <Button variant="outline" onClick={handleExportCSV} size="sm" disabled={isGuest || !draftId} className={`${actionButtonClass} disabled:text-slate-400 dark:disabled:text-white/40`}><Download className="w-4 h-4 mr-1" /> Export CSV</Button>

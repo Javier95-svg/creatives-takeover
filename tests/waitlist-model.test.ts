@@ -8,6 +8,8 @@ import {
   getWaitlistThemePalette,
   normalizeWaitlistContent,
 } from '../src/lib/waitlist.ts';
+import { WAITLIST_TEMPLATE_LIBRARY } from '../src/lib/waitlistTemplates.ts';
+import { WAITLIST_TEMPLATE_RENDER_CONFIG } from '../src/lib/waitlistTemplateRender.ts';
 
 test('light theme preset exposes a usable light palette', () => {
   const palette = getWaitlistThemePalette('light');
@@ -79,4 +81,25 @@ test('normalization persists uploaded image urls inside waitlist content', () =>
 
   assert.equal(normalized.imageUrl, imageUrl);
   assert.equal(normalized.logoUrl, 'https://example.com/logo.svg');
+});
+
+test('all waitlist templates normalize with distinct template ids and seeded styles', () => {
+  const normalizedTemplates = WAITLIST_TEMPLATE_LIBRARY.map((template) =>
+    normalizeWaitlistContent(template.content, 'LaunchPad')
+  );
+
+  assert.equal(normalizedTemplates.length, WAITLIST_TEMPLATE_IDS.length);
+  assert.deepEqual(
+    normalizedTemplates.map((template) => template.templateId).sort(),
+    [...WAITLIST_TEMPLATE_IDS].sort(),
+  );
+  assert.equal(new Set(normalizedTemplates.map((template) => template.colors?.pageBackground)).size, WAITLIST_TEMPLATE_IDS.length);
+});
+
+test('every waitlist template maps to its own render configuration', () => {
+  const visualTypes = WAITLIST_TEMPLATE_IDS.map((templateId) => WAITLIST_TEMPLATE_RENDER_CONFIG[templateId].heroVisual);
+  const heroLayouts = WAITLIST_TEMPLATE_IDS.map((templateId) => WAITLIST_TEMPLATE_RENDER_CONFIG[templateId].heroLayoutClass);
+
+  assert.equal(new Set(visualTypes).size, WAITLIST_TEMPLATE_IDS.length);
+  assert.equal(new Set(heroLayouts).size, WAITLIST_TEMPLATE_IDS.length);
 });

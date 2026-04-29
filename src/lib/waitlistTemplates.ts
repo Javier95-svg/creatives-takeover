@@ -4,7 +4,7 @@ import {
   WAITLIST_THEME_PRESETS,
   type WaitlistContent,
   type WaitlistTemplateId,
-} from '@/lib/waitlist';
+} from './waitlist.ts';
 
 export interface WaitlistTemplateDefinition {
   id: WaitlistTemplateId;

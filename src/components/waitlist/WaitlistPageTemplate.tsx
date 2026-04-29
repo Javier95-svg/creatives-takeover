@@ -10,6 +10,7 @@ import {
   type WaitlistVariant,
 } from '@/lib/waitlist';
 import { SortableList } from '@/components/ui/sortable-list';
+import { getWaitlistTemplateRenderConfig } from '@/lib/waitlistTemplateRender';
 
 export type { WaitlistContent } from '@/lib/waitlist';
 export type SignupData = WaitlistSignupPayload;
@@ -435,9 +436,10 @@ export default function WaitlistPageTemplate({
   const typography = normalized.typography || normalizeWaitlistContent({}, productName).typography!;
   const spacing = normalized.spacing || normalizeWaitlistContent({}, productName).spacing!;
   const visibility = normalized.sectionVisibility || normalizeWaitlistContent({}, productName).sectionVisibility!;
+  const renderConfig = getWaitlistTemplateRenderConfig(normalized.templateId);
 
   const alignCenter = normalized.textAlign !== 'left';
-  const textAlignClass = alignCenter ? 'text-center' : 'text-left';
+  const textAlignClass = renderConfig.heroCopyClass || (alignCenter ? 'text-center' : 'text-left');
   const sectionPadding = `${spacing.sectionPaddingY}px`;
   const sectionOrder = (normalized.sectionOrder?.length ? normalized.sectionOrder : WAITLIST_SECTION_ORDER)
     .filter((sectionId) => visibility[sectionId]);
@@ -532,6 +534,155 @@ export default function WaitlistPageTemplate({
     );
   };
 
+  const renderGeneratedVisual = () => {
+    const cardStyle: CSSProperties = {
+      borderRadius: `${spacing.cardRadius}px`,
+      border: `1px solid ${palette.borderColor}`,
+      backgroundColor: palette.sectionBackground,
+      color: palette.textPrimary,
+      boxShadow: '0 24px 80px rgba(0,0,0,0.16)',
+    };
+
+    const mutedStyle: CSSProperties = { color: palette.textSecondary };
+    const accentStyle: CSSProperties = { backgroundColor: accentHex };
+
+    switch (renderConfig.heroVisual) {
+      case 'ai-demo':
+        return (
+          <div className="space-y-3 p-5" style={cardStyle} data-template-layout="ai-tool">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold uppercase tracking-[0.22em]" style={{ color: accentHex }}>AI output preview</span>
+              <span className="rounded-full px-2 py-1 text-[10px] font-semibold" style={{ backgroundColor: `${accentHex}22`, color: accentHex }}>Beta</span>
+            </div>
+            <div className="rounded-xl border p-4 font-mono text-xs" style={{ borderColor: `${palette.borderColor}99`, backgroundColor: palette.pageBackground }}>
+              <p style={mutedStyle}>Input: messy workflow</p>
+              <p className="mt-3" style={{ color: palette.textPrimary }}>→ clear recommendation</p>
+              <p className="mt-1" style={{ color: palette.textPrimary }}>→ next best action</p>
+              <p className="mt-1" style={{ color: palette.textPrimary }}>→ ready-to-use output</p>
+            </div>
+          </div>
+        );
+      case 'phone':
+        return (
+          <div className="mx-auto max-w-[290px] rounded-[36px] border p-3" style={{ ...cardStyle, borderRadius: 36 }} data-template-layout="mobile-app">
+            <div className="rounded-[28px] p-4" style={{ backgroundColor: palette.pageBackground }}>
+              <div className="mx-auto mb-4 h-1 w-16 rounded-full" style={accentStyle} />
+              <div className="space-y-3">
+                <div className="h-28 rounded-2xl" style={{ background: `linear-gradient(135deg, ${accentHex}66, transparent)` }} />
+                <div className="h-3 w-36 rounded-full" style={{ backgroundColor: palette.textPrimary, opacity: 0.8 }} />
+                <div className="h-3 w-48 rounded-full" style={{ backgroundColor: palette.textSecondary, opacity: 0.5 }} />
+                <div className="h-10 rounded-2xl" style={{ backgroundColor: palette.buttonBackground }} />
+              </div>
+            </div>
+          </div>
+        );
+      case 'marketplace':
+        return (
+          <div className="grid gap-3 sm:grid-cols-2" data-template-layout="marketplace">
+            {['Demand side', 'Supply side'].map((label, index) => (
+              <div key={label} className="p-5" style={cardStyle}>
+                <p className="text-xs font-semibold uppercase tracking-[0.2em]" style={{ color: accentHex }}>{label}</p>
+                <div className="mt-6 space-y-2">
+                  <div className="h-3 rounded-full" style={{ backgroundColor: palette.textPrimary, opacity: index ? 0.5 : 0.8 }} />
+                  <div className="h-3 w-2/3 rounded-full" style={{ backgroundColor: palette.textSecondary, opacity: 0.45 }} />
+                  <div className="mt-5 h-9 rounded-full" style={{ backgroundColor: index ? palette.buttonBackground : `${accentHex}44` }} />
+                </div>
+              </div>
+            ))}
+          </div>
+        );
+      case 'member-circle':
+        return (
+          <div className="p-6 text-center" style={cardStyle} data-template-layout="community">
+            <p className="text-xs font-semibold uppercase tracking-[0.22em]" style={{ color: accentHex }}>Founding circle</p>
+            <div className="relative mx-auto mt-6 h-48 w-48">
+              {[0, 1, 2, 3, 4, 5].map((item) => (
+                <span
+                  key={item}
+                  className="absolute h-14 w-14 rounded-full border"
+                  style={{
+                    borderColor: palette.borderColor,
+                    backgroundColor: item % 2 ? accentHex : palette.pageBackground,
+                    left: `${70 + Math.cos((item / 6) * Math.PI * 2) * 68}px`,
+                    top: `${70 + Math.sin((item / 6) * Math.PI * 2) * 68}px`,
+                  }}
+                />
+              ))}
+              <span className="absolute left-[66px] top-[66px] h-16 w-16 rounded-full" style={accentStyle} />
+            </div>
+          </div>
+        );
+      case 'creator-board':
+        return (
+          <div className="grid gap-3 p-4" style={cardStyle} data-template-layout="creator-tool">
+            {['Idea', 'Draft', 'Publish'].map((label, index) => (
+              <div key={label} className="rounded-xl border p-3" style={{ borderColor: palette.borderColor, backgroundColor: index === 1 ? `${accentHex}22` : palette.pageBackground }}>
+                <p className="text-xs font-semibold" style={{ color: index === 1 ? accentHex : palette.textSecondary }}>{label}</p>
+                <div className="mt-3 h-3 rounded-full" style={{ backgroundColor: palette.textPrimary, opacity: 0.7 }} />
+                <div className="mt-2 h-3 w-2/3 rounded-full" style={{ backgroundColor: palette.textSecondary, opacity: 0.4 }} />
+              </div>
+            ))}
+          </div>
+        );
+      case 'product-drop':
+        return (
+          <div className="p-5" style={cardStyle} data-template-layout="ecommerce">
+            <div className="aspect-square rounded-lg border" style={{ borderColor: palette.borderColor, background: `linear-gradient(145deg, ${accentHex}55, ${palette.pageBackground})` }} />
+            <div className="mt-4 flex items-center justify-between">
+              <div>
+                <p className="text-sm font-semibold">First drop</p>
+                <p className="text-xs" style={mutedStyle}>Early access list</p>
+              </div>
+              <span className="rounded-full px-3 py-1 text-xs font-semibold" style={{ backgroundColor: palette.buttonBackground, color: palette.buttonText }}>Reserve</span>
+            </div>
+          </div>
+        );
+      case 'service-proof':
+        return (
+          <div className="space-y-3 p-5" style={cardStyle} data-template-layout="b2b-service">
+            <p className="text-xs font-semibold uppercase tracking-[0.22em]" style={{ color: accentHex }}>Service proof</p>
+            {['Clear scope', 'Measurable outcome', 'First delivery slots'].map((label) => (
+              <div key={label} className="flex items-center gap-3 rounded-xl border p-3" style={{ borderColor: palette.borderColor, backgroundColor: palette.pageBackground }}>
+                <span className="h-3 w-3 rounded-full" style={accentStyle} />
+                <span className="text-sm font-medium">{label}</span>
+              </div>
+            ))}
+          </div>
+        );
+      case 'dashboard':
+      default:
+        return (
+          <div className="space-y-4 p-5" style={cardStyle} data-template-layout="saas">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold uppercase tracking-[0.22em]" style={{ color: accentHex }}>Workflow dashboard</span>
+              <span className="h-3 w-3 rounded-full" style={accentStyle} />
+            </div>
+            <div className="grid gap-3 sm:grid-cols-3">
+              {[72, 48, 91].map((value) => (
+                <div key={value} className="rounded-xl border p-3" style={{ borderColor: palette.borderColor, backgroundColor: palette.pageBackground }}>
+                  <p className="text-2xl font-bold">{value}%</p>
+                  <p className="text-xs" style={mutedStyle}>Signal</p>
+                </div>
+              ))}
+            </div>
+            <div className="h-28 rounded-xl" style={{ background: `linear-gradient(135deg, ${accentHex}44, transparent)` }} />
+          </div>
+        );
+    }
+  };
+
+  const renderHeroVisual = () => {
+    if (normalized.imageUrl) return renderImageSlot();
+    return (
+      <div className="space-y-3">
+        {renderGeneratedVisual()}
+        {editable && onImageUpload ? (
+          <div>{renderImageSlot()}</div>
+        ) : null}
+      </div>
+    );
+  };
+
   const renderFormSection = (instanceId: string) => {
     const fields = normalized.customFields?.filter((field) => field.enabled) || [];
     const isHero = instanceId === 'waitlist-hero-form';
@@ -610,9 +761,9 @@ export default function WaitlistPageTemplate({
       case 'problemSolution':
         return (
           <section className="border-t px-6" style={sectionStyle}>
-            <div className="mx-auto grid gap-6 md:grid-cols-2" style={{ maxWidth: `${spacing.contentMaxWidth}px` }}>
+            <div className={`mx-auto grid gap-6 ${renderConfig.problemGridClass}`} style={{ maxWidth: `${spacing.contentMaxWidth}px` }}>
               <div
-                className={`${textAlignClass} rounded-2xl p-5`}
+                className={`${textAlignClass} ${renderConfig.sectionFrameClass} p-5`}
                 style={{
                   borderLeft: `3px solid ${accentHex}`,
                   backgroundColor: `${accentHex}08`,
@@ -626,7 +777,7 @@ export default function WaitlistPageTemplate({
                 </p>
               </div>
               <div
-                className={`${textAlignClass} rounded-2xl p-5`}
+                className={`${textAlignClass} ${renderConfig.sectionFrameClass} p-5`}
                 style={{
                   borderLeft: `3px solid ${palette.textPrimary}`,
                   backgroundColor: `${palette.textPrimary}06`,
@@ -647,11 +798,11 @@ export default function WaitlistPageTemplate({
           <section className="border-t px-6" style={{ ...sectionStyle, backgroundColor: palette.pageBackground }}>
             <div className="mx-auto" style={{ maxWidth: `${spacing.contentMaxWidth}px` }}>
               <h2 className={`mb-8 text-2xl font-bold ${textAlignClass}`} style={{ fontFamily: typography.headingFamily }}>What you get</h2>
-              <div className="grid gap-4 md:grid-cols-3">
+              <div className={`grid gap-4 ${renderConfig.benefitGridClass}`}>
                 {normalized.benefits.map((benefit, index) => (
                   <div
                     key={`${benefit}-${index}`}
-                    className="relative overflow-hidden border p-5 transition-shadow"
+                    className={`relative overflow-hidden border p-5 transition-shadow ${renderConfig.sectionFrameClass}`}
                     style={{
                       borderRadius: `${spacing.cardRadius}px`,
                       borderColor: palette.borderColor,
@@ -701,11 +852,11 @@ export default function WaitlistPageTemplate({
           <section className="border-t px-6" style={sectionStyle}>
             <div className="mx-auto" style={{ maxWidth: `${spacing.contentMaxWidth}px` }}>
               <h2 className={`mb-8 text-2xl font-bold ${textAlignClass}`} style={{ fontFamily: typography.headingFamily }}>How it works</h2>
-              <div className="grid gap-4 md:grid-cols-3">
+              <div className={`grid gap-4 ${renderConfig.benefitGridClass}`}>
                 {normalized.howItWorks.map((step, index) => (
                   <div
                     key={`${step}-${index}`}
-                    className="border p-5"
+                    className={`border p-5 ${renderConfig.sectionFrameClass}`}
                     style={{ borderRadius: `${spacing.cardRadius}px`, borderColor: palette.borderColor }}
                   >
                     <p className="mb-2 text-xs font-semibold uppercase tracking-widest" style={{ color: accentHex }}>Step {index + 1}</p>
@@ -727,11 +878,11 @@ export default function WaitlistPageTemplate({
       case 'testimonials':
         return (
           <section className="border-t px-6" style={{ ...sectionStyle, backgroundColor: palette.pageBackground }}>
-            <div className="mx-auto grid gap-6 md:grid-cols-2" style={{ maxWidth: `${spacing.contentMaxWidth}px` }}>
+            <div className={`mx-auto grid gap-6 ${renderConfig.problemGridClass}`} style={{ maxWidth: `${spacing.contentMaxWidth}px` }}>
               {normalized.testimonials.map((testimonial, index) => (
                 <div
                   key={`${testimonial.author}-${index}`}
-                  className="border p-5"
+                  className={`border p-5 ${renderConfig.sectionFrameClass}`}
                   style={{
                     borderRadius: `${spacing.cardRadius}px`,
                     borderColor: palette.borderColor,
@@ -797,10 +948,11 @@ export default function WaitlistPageTemplate({
         }}
       >
         <div
-          className={`mx-auto ${normalized.layout === 'split' ? 'grid gap-10 md:grid-cols-2 md:items-center' : ''} ${textAlignClass}`}
+          className={`mx-auto ${renderConfig.heroLayoutClass}`}
           style={{ maxWidth: `${spacing.contentMaxWidth}px` }}
+          data-template-id={normalized.templateId}
         >
-          <div className={normalized.layout === 'split' ? '' : 'mx-auto max-w-3xl'}>
+          <div className={renderConfig.heroCopyClass}>
             {normalized.logoUrl ? (
               <img src={normalized.logoUrl} alt={`${productName} logo`} className="mb-4 h-10 w-auto rounded bg-white/10 p-1" />
             ) : null}
@@ -868,11 +1020,9 @@ export default function WaitlistPageTemplate({
             ) : null}
           </div>
 
-          {normalized.layout === 'split' ? (
-            <div className="space-y-4">
-              {renderImageSlot()}
-            </div>
-          ) : null}
+          <div className="space-y-4">
+            {renderHeroVisual()}
+          </div>
         </div>
 
         <div className="mx-auto mt-10" style={{ maxWidth: `${Math.min(spacing.contentMaxWidth, 960)}px` }}>

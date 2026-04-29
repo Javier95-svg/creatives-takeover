@@ -33,6 +33,7 @@ export default function WaitlistMakerPage() {
 
   const [screen, setScreen] = useState<Screen>(skipParam ? 'template_library' : 'mode_select');
   const [seed, setSeed] = useState<WaitlistEditorInitialSeed | null>(null);
+  const [hasEditorSession, setHasEditorSession] = useState(false);
   const [latestIcp, setLatestIcp] = useState<LatestIcpSummary | null>(null);
   const [latestIcpLoading, setLatestIcpLoading] = useState(false);
 
@@ -83,6 +84,7 @@ export default function WaitlistMakerPage() {
 
   const handleChooseManual = () => {
     setSeed(null);
+    setHasEditorSession(false);
     setScreen('template_library');
     if (searchParams.has('icp')) {
       const next = new URLSearchParams(searchParams);
@@ -92,11 +94,22 @@ export default function WaitlistMakerPage() {
   };
 
   const handleChooseTemplate = (template: WaitlistTemplateDefinition) => {
+    if (hasEditorSession && seed?.content?.templateId === template.id) {
+      setScreen('editor');
+      return;
+    }
+
+    if (hasEditorSession && seed?.content?.templateId !== template.id) {
+      const shouldReplace = window.confirm('Replace the current editor contents with this template? Your current draft is preserved in this browser until you confirm.');
+      if (!shouldReplace) return;
+    }
+
     setSeed({
       productName: '',
       content: normalizeWaitlistContent(template.content, 'Your Product'),
       source: 'manual',
     });
+    setHasEditorSession(true);
     setScreen('editor');
   };
 
@@ -161,7 +174,7 @@ export default function WaitlistMakerPage() {
   );
 
   const editorNode = user ? (
-    <WaitlistEditor initialSeed={seed} />
+    <WaitlistEditor initialSeed={seed} onBackToTemplates={seed?.source === 'manual' ? () => setScreen('template_library') : undefined} />
   ) : (
     publicTab && (
       <PreviewModeWrapper
@@ -169,7 +182,7 @@ export default function WaitlistMakerPage() {
         description={publicTab.description || ''}
         showPricingCta={publicTab.showPricingCta}
       >
-        <WaitlistEditor initialSeed={seed} />
+        <WaitlistEditor initialSeed={seed} onBackToTemplates={seed?.source === 'manual' ? () => setScreen('template_library') : undefined} />
       </PreviewModeWrapper>
     )
   );
@@ -227,6 +240,7 @@ export default function WaitlistMakerPage() {
                     source: 'icp',
                     icpDraftId: activeIcpDraftId,
                   });
+                  setHasEditorSession(true);
                   setScreen('editor');
                 }}
                 onCancel={handleSmartHydrateCancel}
@@ -241,7 +255,11 @@ export default function WaitlistMakerPage() {
               />
             )}
 
-            {screen === 'editor' && editorNode}
+            {hasEditorSession && seed ? (
+              <div className={screen === 'editor' ? '' : 'hidden'} aria-hidden={screen === 'editor' ? undefined : true}>
+                {editorNode}
+              </div>
+            ) : null}
 
             <div className="mx-auto mt-10 max-w-5xl space-y-8 px-2">
               <PageFAQSection title="FAQ" description="Two paths to a live, founder-grade waitlist page in under 5 minutes." faqs={faqs} />
