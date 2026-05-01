@@ -22,6 +22,7 @@ import { useDashboardDailyPrompt } from '@/hooks/useDashboardDailyPrompt';
 import { DashboardAccountabilityHero } from './DashboardAccountabilityHero';
 import { TaskCountContext } from './TaskCountContext';
 import { IcpDashboardSummaryCard } from './IcpDashboardSummaryCard';
+import { IcpCompletionHandoffBanner } from './IcpCompletionHandoffBanner';
 import { MyFilesSection } from './MyFilesSection';
 import { WelcomeBackBanner } from './WelcomeBackBanner';
 import { StageBadge } from './StageBadge';
@@ -193,6 +194,11 @@ export const PersonalizedDashboardV2 = () => {
                         {modeConfig.subtitle}
                       </p>
                     </div>
+
+                    <IcpCompletionHandoffBanner
+                      primaryIcp={data?.primaryIcp ?? null}
+                      recommendations={data?.recommendations || []}
+                    />
 
                     <WelcomeBackBanner />
 
