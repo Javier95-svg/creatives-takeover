@@ -71,7 +71,13 @@ const Dashboard = () => {
   useEffect(() => {
     if (!user || !activationGate.shouldEnforceGate) return;
 
-    // FIX(retention): dashboard — forced-gate users are redirected back to their selected activation path until they create a first artifact worth returning to.
+    // Only gate brand-new accounts (created in the last 24 hours).
+    // Returning users — regardless of activation status — always
+    // reach the dashboard so the habit loop is not broken.
+    const accountAgeMs = Date.now() - new Date(user.created_at).getTime();
+    const isNewUser = accountAgeMs < 24 * 60 * 60 * 1000;
+    if (!isNewUser) return;
+
     navigate(activationGate.redirectUrl, { replace: true });
   }, [activationGate.redirectUrl, activationGate.shouldEnforceGate, navigate, user]);
 
