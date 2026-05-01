@@ -3,7 +3,6 @@ import { createClient } from '@supabase/supabase-js';
 import { getSafeLocalStorage } from '@/lib/safeStorage';
 import type { Database } from './types';
 
-const browserLockNoOp = async <T>(_name: string, _acquireTimeout: number, fn: () => Promise<T>) => fn();
 
 // Prefer environment variables so keys are not committed to source.
 // In development create a `.env` with VITE_SUPABASE_URL and VITE_SUPABASE_KEY (do NOT commit it).
@@ -26,6 +25,5 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     autoRefreshToken: true,
     detectSessionInUrl: true,
     flowType: 'pkce',
-    lock: browserLockNoOp,
   }
 });
