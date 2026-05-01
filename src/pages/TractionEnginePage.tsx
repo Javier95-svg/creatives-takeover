@@ -51,9 +51,9 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 
-const SPRINTS_TABLE = 'traction_engine_sprints' as any;
-const LOGS_TABLE = 'traction_engine_weekly_logs' as any;
-const EXPERIMENTS_TABLE = 'traction_engine_experiments' as any;
+const SPRINTS_TABLE = 'traction_engine_sprints' as const;
+const LOGS_TABLE = 'traction_engine_weekly_logs' as const;
+const EXPERIMENTS_TABLE = 'traction_engine_experiments' as const;
 
 type SprintRow = {
   id: string;
