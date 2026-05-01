@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import SEO, { createBreadcrumbSchema } from '@/components/SEO';
+import { useSearchParams } from 'react-router-dom';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import { PreviewModeWrapper } from '@/components/ui/PreviewModeWrapper';
@@ -190,13 +191,29 @@ function Field({
 
 function TractionEngineWorkflow({ userId }: { userId?: string }) {
   const currentWeekStart = useMemo(() => getCurrentWeekStart(), []);
-  const [experiments, setExperiments] = useState<ExperimentDraft[]>([createExperimentDraft()]);
-  const [retention, setRetention] = useState<TractionRetentionInput>(defaultRetention);
+  const [experiments, setExperiments] = useState<ExperimentDraft[]>(() => {
+    try {
+      const draft = localStorage.getItem('ct_traction_draft');
+      if (draft) return JSON.parse(draft).experiments;
+    } catch { /* ignore */ }
+    return [createExperimentDraft()];
+  });
+
+  const [retention, setRetention] = useState<TractionRetentionInput>(() => {
+    try {
+      const draft = localStorage.getItem('ct_traction_draft');
+      if (draft) return JSON.parse(draft).retention;
+    } catch { /* ignore */ }
+    return defaultRetention;
+  });
   const [activeSprints, setActiveSprints] = useState<SprintRow[]>([]);
   const [recentLogs, setRecentLogs] = useState<WeeklyLogRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState<TractionTab>('sprint');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeTab = (searchParams.get('step') as TractionTab) ?? 'sprint';
+  const setActiveTab = (tab: TractionTab) =>
+    setSearchParams({ step: tab }, { replace: true });
 
   const previousLogs = useMemo(
     () => recentLogs.filter((log) => log.week_start_date !== currentWeekStart),
@@ -250,6 +267,13 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
     void loadTractionData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
+
+  useEffect(() => {
+    localStorage.setItem(
+      'ct_traction_draft',
+      JSON.stringify({ experiments, retention })
+    );
+  }, [experiments, retention]);
 
   const updateExperiment = (localId: string, patch: Partial<ExperimentDraft>) => {
     setExperiments((items) => items.map((item) => (item.localId === localId ? { ...item, ...patch } : item)));
@@ -395,6 +419,7 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
       const { error: experimentError } = await supabase.from(EXPERIMENTS_TABLE).insert(experimentRows);
       if (experimentError) throw experimentError;
 
+      localStorage.removeItem('ct_traction_draft');
       toast.success(score.phaseSevenReady ? 'Saved. Phase 7 readiness unlocked.' : 'Traction week saved.');
       await loadTractionData();
     } catch (error) {
