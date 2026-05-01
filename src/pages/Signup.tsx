@@ -50,7 +50,7 @@ import {
 import { getSocialAuthSignupMethod, startSocialOAuth, type SocialAuthProviderId } from "@/lib/socialAuth";
 
 const Signup = () => {
-  const defaultPostSignupPath = '/community/angels?preview=rookie-welcome';
+  const defaultPostSignupPath = '/dashboard';
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
