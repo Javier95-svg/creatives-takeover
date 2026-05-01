@@ -13,7 +13,6 @@ import VersionUpdateBanner from "@/components/VersionUpdateBanner";
 import { useVersionCheck } from "@/hooks/useVersionCheck";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { RouteErrorBoundary } from '@/components/RouteErrorBoundary';
-import PageLoader from '@/components/PageLoader';
 import ScrollToTop from "./components/ScrollToTop";
 import ProUpgradeBanner from "@/components/ProUpgradeBanner";
 import { useInteractionTelemetry } from "@/hooks/useInteractionTelemetry";
@@ -170,13 +169,15 @@ function App() {
                 <Toaster />
                 <Sonner />
                 <BrowserRouter>
-                  <Suspense fallback={<PageLoader />}>
+                  <Suspense fallback={null}>
                     <ScrollToTop />
                     <InteractionTelemetryBridge />
                     <ReferralCaptureBridge />
                     <UpgradePromptProvider>
                       <ProUpgradeBanner />
-                      <PulseWidgetWrapper />
+                      <Suspense fallback={null}>
+                        <PulseWidgetWrapper />
+                      </Suspense>
                       <Routes>
                         <Route path="/" element={<Index />} />
                         <Route path="/about" element={<About />} />
@@ -302,7 +303,9 @@ function App() {
                         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                         <Route path="*" element={<NotFound />} />
                       </Routes>
-                      <MobileBottomNav />
+                      <Suspense fallback={null}>
+                        <MobileBottomNav />
+                      </Suspense>
                     </UpgradePromptProvider>
                   </Suspense>
                 </BrowserRouter>

@@ -8,7 +8,7 @@ import './index.css'
 import './styles/responsive-overrides.css'
 import { ThemeProvider } from './contexts/ThemeContext'
 import { reportAppError } from './lib/errorReporting'
-import { getPosthogClient, initPosthog, captureUtmSuperProperties, isLikelyBot } from './lib/analytics'
+import { getPosthogClient, bootstrapPosthog, captureUtmSuperProperties, isLikelyBot } from './lib/analytics'
 
 function AnalyticsBootstrap() {
   useEffect(() => {
@@ -71,7 +71,7 @@ window.addEventListener('error', (event) => {
   );
 });
 
-void initPosthog();
+bootstrapPosthog();
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
