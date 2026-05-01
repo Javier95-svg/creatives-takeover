@@ -1,4 +1,5 @@
 import { PersonalizedDashboardV2 } from '@/components/dashboard/PersonalizedDashboardV2';
+import { DashboardSkeleton } from '@/components/dashboard/DashboardSkeleton';
 import DashboardPreview from '@/components/DashboardPreview';
 import { useAuth } from '@/contexts/AuthContext';
 import { useFeatureGating } from '@/hooks/useFeatureGating';
@@ -94,7 +95,7 @@ const Dashboard = () => {
   }
 
   if (activationGate.loading || profileLoading) {
-    return null;
+    return <DashboardSkeleton />;
   }
 
   let access;
