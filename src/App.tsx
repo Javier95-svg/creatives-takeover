@@ -12,6 +12,7 @@ import MobileOptimization from "@/components/MobileOptimization";
 import VersionUpdateBanner from "@/components/VersionUpdateBanner";
 import { useVersionCheck } from "@/hooks/useVersionCheck";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import PageLoader from '@/components/PageLoader';
 import ScrollToTop from "./components/ScrollToTop";
 import ProUpgradeBanner from "@/components/ProUpgradeBanner";
 import { useInteractionTelemetry } from "@/hooks/useInteractionTelemetry";
@@ -168,7 +169,7 @@ function App() {
                 <Toaster />
                 <Sonner />
                 <BrowserRouter>
-                  <Suspense fallback={null}>
+                  <Suspense fallback={<PageLoader />}>
                     <ScrollToTop />
                     <InteractionTelemetryBridge />
                     <ReferralCaptureBridge />
