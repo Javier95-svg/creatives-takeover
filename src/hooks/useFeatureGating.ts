@@ -299,6 +299,10 @@ export function useFeatureGating() {
 
       // Dashboard Access
       case 'dashboard_access':
+        // Dashboard is the core product experience — available to all
+        // authenticated users regardless of plan tier.
+        return { hasAccess: true };
+
       case 'focus_funnel':
       case 'core_metrics':
       case 'weekly_mission':
