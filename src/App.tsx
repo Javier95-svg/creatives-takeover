@@ -12,6 +12,7 @@ import MobileOptimization from "@/components/MobileOptimization";
 import VersionUpdateBanner from "@/components/VersionUpdateBanner";
 import { useVersionCheck } from "@/hooks/useVersionCheck";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { RouteErrorBoundary } from '@/components/RouteErrorBoundary';
 import PageLoader from '@/components/PageLoader';
 import ScrollToTop from "./components/ScrollToTop";
 import ProUpgradeBanner from "@/components/ProUpgradeBanner";
@@ -248,7 +249,14 @@ function App() {
                         <Route path="/forgot-password" element={<ForgotPassword />} />
                         <Route path="/reset-password" element={<ResetPassword />} />
                         <Route path="/onboarding" element={<Onboarding />} />
-                        <Route path="/dashboard" element={<Dashboard />} />
+                        <Route
+                          path="/dashboard"
+                          element={
+                            <RouteErrorBoundary routeName="Dashboard">
+                              <Dashboard />
+                            </RouteErrorBoundary>
+                          }
+                        />
                         <Route path="/dashboard/referral" element={<ReferralDashboardPage />} />
                         <Route path="/projects-dashboard" element={<ProjectsDashboard />} />
                         <Route path="/referral-program" element={<ReferralProgram />} />
@@ -267,7 +275,14 @@ function App() {
                         <Route path="/insighta/vc-search" element={<Navigate to="/vc-search" replace />} />
                         <Route path="/insighta/email-templates" element={<Navigate to="/email-templates" replace />} />
                         <Route path="/insighta/accelerator-hunt" element={<Navigate to="/accelerator-hunt" replace />} />
-                        <Route path="/traction-engine" element={<TractionEnginePage />} />
+                        <Route
+                          path="/traction-engine"
+                          element={
+                            <RouteErrorBoundary routeName="TractionEngine">
+                              <TractionEnginePage />
+                            </RouteErrorBoundary>
+                          }
+                        />
                         <Route path="/insighta/traction-engine" element={<Navigate to="/traction-engine" replace />} />
                         <Route path="/pitch-deck-analyzer" element={<PitchDeckAnalyzerPage />} />
                         <Route path="/insighta-test" element={<InsightaTestPage />} />
