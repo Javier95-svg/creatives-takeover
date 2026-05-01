@@ -4,10 +4,11 @@ import DashboardPreview from '@/components/DashboardPreview';
 import { useAuth } from '@/contexts/AuthContext';
 import { useFeatureGating } from '@/hooks/useFeatureGating';
 import { Helmet } from 'react-helmet-async';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useActivationGate } from '@/hooks/useActivationGate';
+import { CheckCircle2 } from 'lucide-react';
 import {
   shouldRedirectToGuidedOnboarding,
   shouldRedirectToSetupQuiz,
@@ -19,6 +20,14 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const [profileLoading, setProfileLoading] = useState(true);
   const activationGate = useActivationGate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const fromIcpBuilder = searchParams.get('from') === 'icp_builder';
+
+  const dismissIcpBanner = () => {
+    const next = new URLSearchParams(searchParams);
+    next.delete('from');
+    setSearchParams(next, { replace: true });
+  };
 
   useEffect(() => {
     let isCancelled = false;
@@ -125,7 +134,39 @@ const Dashboard = () => {
     );
   }
 
-  return <PersonalizedDashboardV2 />;
+  return (
+    <>
+      {fromIcpBuilder && (
+        <div className="mx-auto max-w-6xl px-4 pt-6 sm:px-6 lg:px-8">
+          <div className="mb-4 flex items-start justify-between gap-4 rounded-2xl border border-emerald-200 bg-gradient-to-br from-emerald-50 via-white to-cyan-50 p-5 shadow-sm">
+            <div className="flex items-start gap-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-700">
+                <CheckCircle2 className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-slate-900">
+                  ICP saved — your dashboard is ready.
+                </p>
+                <p className="mt-0.5 text-sm text-slate-500">
+                  Use your ICP to define your first target customer tasks
+                  and track your traction from here.
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={dismissIcpBanner}
+              className="shrink-0 text-slate-400 hover:text-slate-600"
+              aria-label="Dismiss"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
+      <PersonalizedDashboardV2 />
+    </>
+  );
 };
 
 export default Dashboard;

@@ -120,7 +120,7 @@ export default function IcpDraftPage() {
       page_path: draftId ? `/icp/draft/${draftId}` : "/icp/draft",
       source: "unlock_success_banner",
     });
-    navigate("/dashboard");
+    navigate("/dashboard?from=icp_builder");
   };
 
   const dismissUnlockBanner = () => {

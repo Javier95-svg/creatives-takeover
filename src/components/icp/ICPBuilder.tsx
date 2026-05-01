@@ -694,7 +694,7 @@ const ICPBuilder: React.FC = () => {
         source: "draft_saved",
       });
 
-      navigate(`/dashboard?icpCompleted=1&analysisId=${analysisId}`, { replace: true });
+      navigate(`/icp/draft/${analysisId}?source=icp-unlock`, { replace: true });
     } catch (error) {
       console.error("ICP draft generation failed", error);
       if (!persist) {
@@ -790,7 +790,7 @@ const ICPBuilder: React.FC = () => {
           source: "unlock_gate",
         });
 
-        navigate(`/dashboard?icpCompleted=1&analysisId=${analysisId}`, { replace: true });
+        navigate(`/icp/draft/${analysisId}?source=icp-unlock`, { replace: true });
         return;
       }
 
