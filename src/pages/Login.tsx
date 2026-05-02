@@ -4,12 +4,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Eye, EyeOff, Mail, Lock, Sparkles, Shield } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, Shield } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { toast } from "sonner";
 import AuthWallpaper from "@/components/wallpapers/AuthWallpaper";
 import MobileFormOptimizer from "@/components/MobileFormOptimizer";
+import { AuthSocialButtons } from "@/components/auth/AuthSocialButtons";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { mapSignInError } from "@/lib/authErrors";
@@ -22,6 +23,17 @@ import {
   sanitizeCheckoutIntent,
 } from "@/lib/checkoutRedirect";
 import { setOAuthAuthIntent } from "@/lib/referral";
+
+const loginHeroSlides = [
+  {
+    src: "/auth/solofounder.webp",
+    alt: "Solo founder working on a laptop in a warm workspace",
+  },
+  {
+    src: "/auth/solopreneur-female.png",
+    alt: "Female solopreneur working on a laptop in a bright studio",
+  },
+];
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -37,6 +49,8 @@ const Login = () => {
   const [rememberMe, setRememberMe] = useState(false);
   const [resendEmailLoading, setResendEmailLoading] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
+  const [activeLoginHeroSlide, setActiveLoginHeroSlide] = useState(0);
+  const [loginHeroTimerReset, setLoginHeroTimerReset] = useState(0);
   
   const { signIn, user } = useAuth();
   const location = useLocation();
@@ -52,6 +66,14 @@ const Login = () => {
     ),
     checkoutIntent,
   );
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setActiveLoginHeroSlide((currentSlide) => (currentSlide + 1) % loginHeroSlides.length);
+    }, 3600);
+
+    return () => window.clearInterval(timer);
+  }, [loginHeroTimerReset]);
 
   useEffect(() => {
     if (!checkoutIntent) return;
@@ -155,7 +177,7 @@ const Login = () => {
         toast.success("Login successful! Welcome back.");
         // Don't redirect here - let useEffect handle redirect when user state updates
       }
-    } catch (error) {
+    } catch {
       toast.error("An unexpected error occurred.");
     } finally {
       setIsLoading(false);
@@ -190,69 +212,171 @@ const Login = () => {
         toast.success('Confirmation email sent! Please check your inbox.');
         setLoginError(null);
       }
-    } catch (err) {
+    } catch {
       toast.error('Failed to resend confirmation email. Please try again.');
     } finally {
       setResendEmailLoading(false);
     }
   };
 
-  // Google OAuth login
-  const handleGoogleLogin = async () => {
+  // Social OAuth login
+  const handleSocialLogin = async (provider: 'google' | 'linkedin_oidc') => {
+    const providerName = provider === 'google' ? 'Google' : 'LinkedIn';
+
     try {
-      console.log("Starting Google OAuth...");
-      
       // Preserve post-auth destination for callback + onboarding flow.
       localStorage.setItem('oauth_return_url', returnUrl);
       localStorage.removeItem('oauth_signup_method');
       setOAuthAuthIntent('login');
       persistOnboardingReturn(returnUrl);
       
-      toast("Redirecting to Google...");
+      toast(`Redirecting to ${providerName}...`);
       
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider,
         options: {
           redirectTo: `${window.location.origin}/auth/callback`,
-          queryParams: {
-            access_type: 'offline',
-            prompt: 'select_account',
-          },
+          ...(provider === 'google'
+            ? {
+                queryParams: {
+                  access_type: 'offline',
+                  prompt: 'select_account',
+                },
+              }
+            : {}),
         }
       });
       
-      console.log("OAuth response:", { data, error });
-      
       if (error) {
         console.error("OAuth error:", error);
-        toast.error(`Google sign-in error: ${error.message}`);
+        toast.error(`${providerName} sign-in error: ${error.message}`);
         return;
       }
-      
-      // If we get here without error, the redirect should have happened
-      console.log("OAuth initiated successfully");
-      
     } catch (err) {
       console.error("Caught error:", err);
-      toast.error(`Google sign-in failed: ${err instanceof Error ? err.message : 'Unknown error'}`);
+      toast.error(`${providerName} sign-in failed: ${err instanceof Error ? err.message : 'Unknown error'}`);
     }
   };
 
+  const handleGoogleLogin = () => handleSocialLogin('google');
+  const handleLinkedInLogin = () => handleSocialLogin('linkedin_oidc');
+
   return (
-    <div className="relative min-h-dvh overflow-hidden flex items-center justify-center p-4 safe-area-inset"
-         style={{ minHeight: 'max(100vh, 100dvh)' }}>
+    <div className="signup-premium min-h-screen bg-background md:h-screen md:overflow-hidden">
       <Helmet>
         <title>Creatives Takeover</title>
         <meta name="description" content="Sign in to your Creatives Takeover account to access AI-powered creative planning tools." />
       </Helmet>
 
-      {/* Modern Animated Wallpaper */}
-      <AuthWallpaper />
+      <aside className="signup-premium-left-panel relative flex h-[520px] flex-col overflow-hidden bg-[#080c14] px-6 py-6 text-white md:fixed md:left-0 md:top-0 md:h-screen md:w-1/2 md:px-10 md:py-8 lg:px-14">
+        <div
+          aria-hidden
+          className="signup-premium-left-ambient absolute inset-0"
+          style={{
+            background:
+              "radial-gradient(circle at 18% 14%, hsl(var(--blue-primary) / 0.16), transparent 34%), radial-gradient(circle at 82% 84%, hsl(var(--green-primary) / 0.10), transparent 36%)",
+          }}
+        />
 
-      <div className="w-full max-w-md relative z-10">
+        <Link
+          to="/"
+          className="signup-premium-left-logo relative z-20 inline-flex w-fit items-center gap-3 text-base font-bold tracking-tight text-white transition-opacity hover:opacity-85"
+        >
+          <img
+            src="/auth/creatives-takeover-polished-borders.png"
+            alt="Creatives Takeover Logo"
+            className="h-12 w-12 object-contain md:h-14 md:w-14"
+          />
+        </Link>
+
+        <div className="relative z-10 mt-7 max-w-xl md:mt-8">
+          <style>{`
+            @keyframes loginTitleFlicker {
+              0%, 100% {
+                opacity: 1;
+                text-shadow: 0 0 0 rgba(255, 255, 255, 0);
+              }
+              45% {
+                opacity: 0.9;
+                text-shadow: 0 0 14px rgba(255, 255, 255, 0.26);
+              }
+              48% {
+                opacity: 0.58;
+                text-shadow: 0 0 6px rgba(255, 255, 255, 0.16);
+              }
+              51% {
+                opacity: 1;
+                text-shadow: 0 0 18px rgba(255, 255, 255, 0.32);
+              }
+              54% {
+                opacity: 0.76;
+                text-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+              }
+              58% {
+                opacity: 1;
+                text-shadow: 0 0 0 rgba(255, 255, 255, 0);
+              }
+            }
+          `}</style>
+          <h1
+            className="signup-premium-left-title text-3xl font-bold leading-tight tracking-tight text-white md:text-4xl"
+            style={{ animation: "loginTitleFlicker 3.8s ease-in-out infinite" }}
+          >
+            Build what only you can build.
+          </h1>
+        </div>
+
+        <div className="relative z-10 mt-6 flex min-h-0 flex-1 items-center justify-center md:mt-8">
+          <div className="signup-premium-carousel-shell flex h-full w-full max-w-[560px] flex-col items-center justify-center gap-2">
+            <div className="signup-premium-carousel-frame flex min-h-0 w-full flex-1 items-center justify-center overflow-hidden rounded-2xl">
+              <div
+                className="flex h-full w-full transition-transform duration-700 ease-in-out"
+                style={{ transform: `translateX(-${activeLoginHeroSlide * 100}%)` }}
+              >
+                {loginHeroSlides.map((slide) => (
+                  <div key={slide.src} className="flex h-full min-w-full items-center justify-center">
+                    <img
+                      src={slide.src}
+                      alt={slide.alt}
+                      className="signup-premium-carousel-image h-auto max-h-full w-full rounded-2xl object-contain"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="signup-premium-carousel-dots flex items-center justify-center gap-2">
+              {loginHeroSlides.map((slide, index) => (
+                <button
+                  key={slide.src}
+                  type="button"
+                  aria-label={`Show login image ${index + 1}`}
+                  aria-current={activeLoginHeroSlide === index}
+                  onClick={() => {
+                    setActiveLoginHeroSlide(index);
+                    setLoginHeroTimerReset((resetKey) => resetKey + 1);
+                  }}
+                  className={`signup-premium-carousel-dot h-2.5 w-2.5 rounded-full border border-white transition-all duration-300 ${
+                    activeLoginHeroSlide === index
+                      ? "bg-white opacity-100"
+                      : "bg-transparent opacity-45 hover:opacity-80"
+                  }`}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <main className="signup-premium-right-panel md:ml-[50vw] md:h-screen md:overflow-y-scroll">
+        <div className="signup-premium-right-surface relative flex min-h-screen items-center justify-center overflow-hidden p-4">
+          <AuthWallpaper />
+
+          <div className="relative z-10 w-full">
+            <div className="signup-premium-form-shell mx-auto w-full max-w-md">
         {/* Header */}
-        <div className="text-center mb-8">
-          <Link to="/" className="inline-flex items-center gap-3 text-2xl font-bold gradient-text hover:opacity-80 transition-opacity">
+        <div className="signup-premium-header text-center mb-8">
+          <Link to="/" className="signup-premium-brand inline-flex items-center gap-3 text-2xl font-bold gradient-text hover:opacity-80 transition-opacity">
             <img 
               src="/lovable-uploads/04a4b9d0-4213-4186-ba00-c7acd22bad98.png" 
               alt="Creatives Takeover Logo" 
@@ -260,20 +384,20 @@ const Login = () => {
             />
             Creatives Takeover
           </Link>
-          <h1 className="text-3xl font-bold mt-4 mb-2">Welcome back</h1>
+          <h1 className="signup-premium-right-title text-3xl font-bold mt-4 mb-2">Welcome back</h1>
         </div>
 
         {/* Login Form */}
         <MobileFormOptimizer>
-          <Card className="glass-card border-2 border-border/50 shadow-2xl hover:shadow-3xl transition-all duration-300">
-          <CardHeader className="space-y-1 pb-4">
-            <h2 className="text-xl font-semibold text-center">Sign in to your account</h2>
+          <Card className="signup-premium-card glass-card border-2 border-border/50 shadow-2xl hover:shadow-3xl transition-all duration-300">
+          <CardHeader className="signup-premium-card-header space-y-1 pb-4">
+            <h2 className="signup-premium-card-title text-xl font-semibold text-center">Sign in to your account</h2>
           </CardHeader>
           <CardContent>
             <form 
               onSubmit={handleSubmit} 
               autoComplete="on" 
-              className="space-y-6"
+              className="signup-premium-form space-y-6"
               name="loginForm"
               id="loginForm"
               data-password-manager-enabled="true"
@@ -439,23 +563,12 @@ const Login = () => {
               </div>
 
               {/* Social Login Buttons */}
-              <div className="grid grid-cols-1 gap-3">
-                <Button
-                  type="button"
-                  variant="outline"
-                  disabled={isLoading}
-                  onClick={handleGoogleLogin}
-                  className="h-12 border-2 hover:bg-muted/50 transition-all duration-200"
-                >
-                  <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24">
-                    <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                    <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                    <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                    <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-                  </svg>
-                  Continue with Google
-                </Button>
-              </div>
+              <AuthSocialButtons
+                variant="signupPremium"
+                disabled={isLoading}
+                onGoogleContinue={handleGoogleLogin}
+                onLinkedInContinue={handleLinkedInLogin}
+              />
 
               {/* Security Badge */}
               <div className="flex items-center justify-center gap-2 pt-2 pb-2 text-xs text-muted-foreground">
@@ -493,7 +606,10 @@ const Login = () => {
             </Link>
           </p>
         </div>
-      </div>
+            </div>
+          </div>
+        </div>
+      </main>
     </div>
   );
 };
