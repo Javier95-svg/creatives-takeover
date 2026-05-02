@@ -442,7 +442,38 @@ const Signup = () => {
         </Link>
 
         <div className="relative z-10 mt-7 max-w-xl md:mt-8">
-          <h1 className="text-3xl font-bold leading-tight tracking-tight text-white md:text-4xl">
+          <style>{`
+            @keyframes signupTitleFlicker {
+              0%, 100% {
+                opacity: 1;
+                text-shadow: 0 0 0 rgba(255, 255, 255, 0);
+              }
+              45% {
+                opacity: 0.9;
+                text-shadow: 0 0 14px rgba(255, 255, 255, 0.26);
+              }
+              48% {
+                opacity: 0.58;
+                text-shadow: 0 0 6px rgba(255, 255, 255, 0.16);
+              }
+              51% {
+                opacity: 1;
+                text-shadow: 0 0 18px rgba(255, 255, 255, 0.32);
+              }
+              54% {
+                opacity: 0.76;
+                text-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+              }
+              58% {
+                opacity: 1;
+                text-shadow: 0 0 0 rgba(255, 255, 255, 0);
+              }
+            }
+          `}</style>
+          <h1
+            className="text-3xl font-bold leading-tight tracking-tight text-white md:text-4xl"
+            style={{ animation: "signupTitleFlicker 3.8s ease-in-out infinite" }}
+          >
             Share with the world your vision.
           </h1>
         </div>
@@ -451,7 +482,7 @@ const Signup = () => {
           <img
             src="/auth/solofounder.webp"
             alt="Solo founder working on a laptop in a warm workspace"
-            className="h-auto max-h-full w-full max-w-[560px] rounded-2xl object-contain shadow-[0_28px_70px_rgba(0,0,0,0.42)] ring-1 ring-white/10 [transform:perspective(1200px)_rotateY(-7deg)_rotateX(3deg)_rotateZ(-1deg)] [transform-style:preserve-3d]"
+            className="h-auto max-h-full w-full max-w-[560px] rounded-2xl object-contain"
           />
         </div>
       </aside>
