@@ -565,7 +565,7 @@ const Signup = () => {
               <Card className="glass-card border-2 border-border/50 shadow-2xl hover:shadow-3xl transition-all duration-300">
                 <CardHeader className="space-y-1 pb-4">
                   <h2 className="text-xl font-semibold text-center">Create your account</h2>
-                  <p className="text-sm text-muted-foreground text-center">Get started with your free account today</p>
+                  <p className="text-sm text-muted-foreground text-center">Rookie plan available for free</p>
                 </CardHeader>
                 <CardContent>
                   <form onSubmit={handleSubmit} autoComplete="on" className="space-y-5">

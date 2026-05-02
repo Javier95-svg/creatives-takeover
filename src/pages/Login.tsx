@@ -261,9 +261,6 @@ const Login = () => {
             Creatives Takeover
           </Link>
           <h1 className="text-3xl font-bold mt-4 mb-2">Welcome back</h1>
-          <p className="text-muted-foreground">
-            Sign in to continue building your creative vision
-          </p>
         </div>
 
         {/* Login Form */}
