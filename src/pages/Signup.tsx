@@ -495,7 +495,7 @@ const Signup = () => {
             className="text-3xl font-bold leading-tight tracking-tight text-white md:text-4xl"
             style={{ animation: "signupTitleFlicker 3.8s ease-in-out infinite" }}
           >
-            Share with the world your vision.
+            Build what only you can build.
           </h1>
         </div>
 
