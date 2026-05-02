@@ -465,7 +465,7 @@ const Signup = () => {
           <AuthWallpaper />
 
           <div className="relative z-10 w-full">
-            <div className="w-full max-w-md">
+            <div className="mx-auto w-full max-w-md">
             {/* Header */}
             <div className="text-center mb-8">
               <Link to="/" className="inline-flex items-center gap-3 text-2xl font-bold gradient-text hover:opacity-80 transition-opacity">
