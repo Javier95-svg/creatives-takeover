@@ -435,27 +435,23 @@ const Signup = () => {
           className="relative z-20 inline-flex w-fit items-center gap-3 text-base font-bold tracking-tight text-white transition-opacity hover:opacity-85"
         >
           <img
-            src="/auth/creatives-takeover-circle.png"
+            src="/auth/creatives-takeover-polished-borders.png"
             alt="Creatives Takeover Logo"
-            className="h-12 w-12 rounded-full object-cover ring-1 ring-white/15 md:h-14 md:w-14"
+            className="h-12 w-12 object-contain md:h-14 md:w-14"
           />
-          <span>Creatives Takeover</span>
         </Link>
 
         <div className="relative z-10 mt-7 max-w-xl md:mt-8">
           <h1 className="text-3xl font-bold leading-tight tracking-tight text-white md:text-4xl">
-            Build the thing only you can build.
+            Share with the world your vision.
           </h1>
-          <p className="mt-3 max-w-md text-sm leading-6 text-white/70 md:text-base">
-            Turn raw ideas into launch-ready plans and sharper founder decisions.
-          </p>
         </div>
 
         <div className="relative z-10 mt-6 flex min-h-0 flex-1 items-center justify-center md:mt-8">
           <img
-            src="/auth/signup-founder-hero.png"
-            alt="Founder presenting a product plan to a startup team"
-            className="max-h-full w-full max-w-[500px] rounded-2xl object-contain shadow-2xl shadow-black/35"
+            src="/auth/solofounder.webp"
+            alt="Solo founder working on a laptop in a warm workspace"
+            className="h-auto max-h-full w-full max-w-[560px] rounded-2xl object-contain shadow-[0_28px_70px_rgba(0,0,0,0.42)] ring-1 ring-white/10 [transform:perspective(1200px)_rotateY(-7deg)_rotateX(3deg)_rotateZ(-1deg)] [transform-style:preserve-3d]"
           />
         </div>
       </aside>
