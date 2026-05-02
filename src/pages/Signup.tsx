@@ -460,11 +460,12 @@ const Signup = () => {
         </div>
       </aside>
 
-      <main className="relative min-h-screen overflow-y-scroll md:ml-[50vw] md:h-screen">
-        <AuthWallpaper />
+      <main className="md:ml-[50vw] md:h-screen md:overflow-y-scroll">
+        <div className="relative flex min-h-screen items-center justify-center overflow-hidden p-4">
+          <AuthWallpaper />
 
-        <div className="relative z-10 flex min-h-screen items-center justify-center p-4">
-          <div className="w-full max-w-md">
+          <div className="relative z-10 w-full">
+            <div className="w-full max-w-md">
             {/* Header */}
             <div className="text-center mb-8">
               <Link to="/" className="inline-flex items-center gap-3 text-2xl font-bold gradient-text hover:opacity-80 transition-opacity">
@@ -756,7 +757,8 @@ const Signup = () => {
             </Link>
           </p>
         </div>
-      </div>
+            </div>
+          </div>
         </div>
       </main>
     </div>
