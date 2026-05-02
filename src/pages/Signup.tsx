@@ -7,6 +7,7 @@ import { Eye, EyeOff, Mail, Lock, Sparkles, Shield, User } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { toast } from "sonner";
+import AuthWallpaper from "@/components/wallpapers/AuthWallpaper";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { getSessionSafely } from "@/integrations/supabase/auth";
@@ -419,96 +420,76 @@ const Signup = () => {
         <meta name="description" content="Create your Creatives Takeover account to start transforming creative ideas into actionable plans with AI-powered insights." />
       </Helmet>
 
-      <aside className="relative flex min-h-[560px] flex-col overflow-hidden bg-[#080c14] px-6 py-6 text-white md:fixed md:left-0 md:top-0 md:h-screen md:w-1/2 md:px-10 lg:px-14">
+      <aside className="relative flex h-[520px] flex-col overflow-hidden bg-[#080c14] px-6 py-6 text-white md:fixed md:left-0 md:top-0 md:h-screen md:w-1/2 md:px-10 md:py-8 lg:px-14">
         <div
           aria-hidden
           className="absolute inset-0"
           style={{
             background:
-              "radial-gradient(circle at 20% 15%, hsl(var(--blue-primary) / 0.22), transparent 34%), radial-gradient(circle at 82% 30%, hsl(var(--red-primary) / 0.14), transparent 32%), radial-gradient(circle at 58% 88%, hsl(var(--green-primary) / 0.16), transparent 38%)",
+              "radial-gradient(circle at 18% 14%, hsl(var(--blue-primary) / 0.16), transparent 34%), radial-gradient(circle at 82% 84%, hsl(var(--green-primary) / 0.10), transparent 36%)",
           }}
         />
-        <div aria-hidden className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/50" />
 
         <Link
           to="/"
-          className="relative z-20 inline-flex w-fit items-center gap-3 text-lg font-bold tracking-tight text-white transition-opacity hover:opacity-85"
+          className="relative z-20 inline-flex w-fit items-center gap-3 text-base font-bold tracking-tight text-white transition-opacity hover:opacity-85"
         >
           <img
             src="/auth/creatives-takeover-circle.png"
             alt="Creatives Takeover Logo"
-            className="h-12 w-12 rounded-full object-cover ring-1 ring-white/15"
+            className="h-12 w-12 rounded-full object-cover ring-1 ring-white/15 md:h-14 md:w-14"
           />
           <span>Creatives Takeover</span>
         </Link>
 
-        <div className="relative z-10 mt-10 flex flex-1 items-center justify-center md:mt-8">
-          <div className="relative w-full max-w-[520px]">
-            <div className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-white/5 shadow-2xl shadow-black/40">
-              <img
-                src="/auth/signup-founder-hero.png"
-                alt="Founder presenting a product plan to a startup team"
-                className="h-[330px] w-full object-cover sm:h-[420px] md:h-[62vh] md:max-h-[680px]"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#080c14]/90 via-[#080c14]/20 to-transparent" />
-              <div
-                className="absolute inset-0"
-                style={{
-                  background:
-                    "linear-gradient(135deg, hsl(var(--blue-primary) / 0.18), transparent 45%, hsl(var(--green-primary) / 0.12))",
-                }}
-              />
-            </div>
-
-            <div className="absolute -right-3 top-8 rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-sm font-semibold text-white shadow-xl backdrop-blur-md sm:-right-6">
-              Launch-ready plans
-            </div>
-            <div className="absolute -left-3 bottom-10 rounded-2xl border border-white/10 bg-[#080c14]/70 px-4 py-3 text-sm font-medium text-white shadow-xl backdrop-blur-md sm:-left-6">
-              Founder tools in one workspace
-            </div>
-          </div>
-        </div>
-
-        <div className="relative z-20 mt-8 max-w-xl pb-4 md:pb-8">
-          <p className="mb-4 text-sm font-semibold uppercase tracking-[0.22em] text-white/55">
-            Only for mavericks
-          </p>
-          <h1 className="max-w-lg text-4xl font-bold leading-[1.05] tracking-tight text-white sm:text-5xl lg:text-6xl">
+        <div className="relative z-10 mt-7 max-w-xl md:mt-8">
+          <h1 className="text-3xl font-bold leading-tight tracking-tight text-white md:text-4xl">
             Build the thing only you can build.
           </h1>
-          <p className="mt-5 max-w-md text-base leading-7 text-white/72">
-            Turn raw ideas into launch-ready plans, sharper decisions, and founder momentum.
+          <p className="mt-3 max-w-md text-sm leading-6 text-white/70 md:text-base">
+            Turn raw ideas into launch-ready plans and sharper founder decisions.
           </p>
+        </div>
+
+        <div className="relative z-10 mt-6 flex min-h-0 flex-1 items-center justify-center md:mt-8">
+          <img
+            src="/auth/signup-founder-hero.png"
+            alt="Founder presenting a product plan to a startup team"
+            className="max-h-full w-full max-w-[500px] rounded-2xl object-contain shadow-2xl shadow-black/35"
+          />
         </div>
       </aside>
 
-      <main className="bg-background md:ml-[50vw] md:h-screen md:overflow-y-scroll">
-        <div className="mx-auto flex min-h-screen w-full max-w-xl flex-col justify-center px-4 py-8 sm:px-6 md:min-h-0 md:justify-start md:px-10 md:py-12 lg:py-16">
-          {/* Header */}
-          <div className="mb-8 text-center md:text-left">
-            <Link to="/" className="inline-flex items-center gap-3 text-2xl font-bold gradient-text transition-opacity hover:opacity-80 md:hidden">
-              <img
-                src="/auth/creatives-takeover-circle.png"
-                alt="Creatives Takeover Logo"
-                className="h-9 w-9 rounded-full object-cover"
-              />
-              Creatives Takeover
-            </Link>
-            <h1 className="mt-5 text-3xl font-bold tracking-tight md:mt-0 md:text-4xl">Create your account</h1>
-            <p className="mt-2 text-muted-foreground">
-              Start turning your creative ideas into reality.
-            </p>
-          </div>
+      <main className="relative min-h-screen overflow-y-scroll md:ml-[50vw] md:h-screen">
+        <AuthWallpaper />
 
-          {/* Signup Form */}
-          <MobileFormOptimizer>
-            <Card className="border border-border/70 bg-card/95 shadow-xl shadow-black/5 md:border-0 md:bg-transparent md:shadow-none">
-              <CardHeader className="space-y-1 pb-4 md:px-0">
-                <h2 className="text-xl font-semibold text-center md:text-left">Join Creatives Takeover</h2>
-                <p className="text-sm text-muted-foreground text-center md:text-left">Get started with your free account today</p>
-              </CardHeader>
-              <CardContent className="md:px-0">
-                <form onSubmit={handleSubmit} autoComplete="on" className="space-y-5">
+        <div className="relative z-10 flex min-h-screen items-center justify-center p-4">
+          <div className="w-full max-w-md">
+            {/* Header */}
+            <div className="text-center mb-8">
+              <Link to="/" className="inline-flex items-center gap-3 text-2xl font-bold gradient-text hover:opacity-80 transition-opacity">
+                <img
+                  src="/lovable-uploads/04a4b9d0-4213-4186-ba00-c7acd22bad98.png"
+                  alt="Creatives Takeover Logo"
+                  className="w-8 h-8"
+                />
+                Creatives Takeover
+              </Link>
+              <h1 className="text-3xl font-bold mt-4 mb-2">Join us</h1>
+              <p className="text-muted-foreground">
+                Start turning your creative ideas into reality
+              </p>
+            </div>
+
+            {/* Signup Form */}
+            <MobileFormOptimizer>
+              <Card className="glass-card border-2 border-border/50 shadow-2xl hover:shadow-3xl transition-all duration-300">
+                <CardHeader className="space-y-1 pb-4">
+                  <h2 className="text-xl font-semibold text-center">Create your account</h2>
+                  <p className="text-sm text-muted-foreground text-center">Get started with your free account today</p>
+                </CardHeader>
+                <CardContent>
+                  <form onSubmit={handleSubmit} autoComplete="on" className="space-y-5">
                 {/* Name Fields */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-2">
@@ -776,6 +757,7 @@ const Signup = () => {
           </p>
         </div>
       </div>
+        </div>
       </main>
     </div>
   );
