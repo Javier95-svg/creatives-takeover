@@ -6,10 +6,13 @@ interface AuthSocialButtonsProps {
   onGoogleContinue: () => void | Promise<void>;
   onLinkedInContinue: () => void | Promise<void>;
   className?: string;
+  variant?: 'default' | 'signupPremium';
 }
 
 const baseButtonClassName =
   'h-12 w-full font-medium relative bg-background hover:bg-muted/50 transition-all duration-200 border-0';
+const premiumButtonClassName =
+  'signup-premium-social-button h-12 w-full font-semibold relative bg-background/85 hover:bg-background transition-all duration-300 border-0';
 
 const GoogleIcon = () => (
   <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" aria-hidden="true">
@@ -46,22 +49,32 @@ export function AuthSocialButtons({
   onGoogleContinue,
   onLinkedInContinue,
   className,
+  variant = 'default',
 }: AuthSocialButtonsProps) {
+  const isSignupPremium = variant === 'signupPremium';
+
   return (
-    <div className={cn('grid grid-cols-1 gap-3', className)}>
+    <div className={cn('grid grid-cols-1 gap-3', isSignupPremium && 'signup-premium-social-buttons', className)}>
       <div
-        className="relative p-[2px] rounded-button"
-        style={{
-          background:
-            'linear-gradient(90deg, hsl(var(--blue-primary)), hsl(var(--red-primary)), #EAB308, hsl(var(--green-primary)))',
-        }}
+        className={cn(
+          'relative p-[2px] rounded-button',
+          isSignupPremium && 'signup-premium-social-frame signup-premium-social-frame-google'
+        )}
+        style={
+          isSignupPremium
+            ? undefined
+            : {
+                background:
+                  'linear-gradient(90deg, hsl(var(--blue-primary)), hsl(var(--red-primary)), #EAB308, hsl(var(--green-primary)))',
+              }
+        }
       >
         <Button
           type="button"
           variant="outline"
           disabled={disabled}
           onClick={() => void onGoogleContinue()}
-          className={baseButtonClassName}
+          className={isSignupPremium ? premiumButtonClassName : baseButtonClassName}
         >
           <GoogleIcon />
           <span
@@ -77,15 +90,18 @@ export function AuthSocialButtons({
       </div>
 
       <div
-        className="relative p-[2px] rounded-button"
-        style={{ background: '#0A66C2' }}
+        className={cn(
+          'relative p-[2px] rounded-button',
+          isSignupPremium && 'signup-premium-social-frame signup-premium-social-frame-linkedin'
+        )}
+        style={isSignupPremium ? undefined : { background: '#0A66C2' }}
       >
         <Button
           type="button"
           variant="outline"
           disabled={disabled}
           onClick={() => void onLinkedInContinue()}
-          className={baseButtonClassName}
+          className={isSignupPremium ? premiumButtonClassName : baseButtonClassName}
         >
           <LinkedInIcon />
           <span className="font-medium text-[#0A66C2]">Continue with LinkedIn</span>

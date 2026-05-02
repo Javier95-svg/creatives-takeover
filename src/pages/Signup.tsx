@@ -435,16 +435,16 @@ const Signup = () => {
   const handleLinkedInSignup = () => handleSocialSignup('linkedin_oidc');
 
   return (
-    <div className="min-h-screen bg-background md:h-screen md:overflow-hidden">
+    <div className="signup-premium min-h-screen bg-background md:h-screen md:overflow-hidden">
       <Helmet>
         <title>Creatives Takeover</title>
         <meta name="description" content="Create your Creatives Takeover account to start transforming creative ideas into actionable plans with AI-powered insights." />
       </Helmet>
 
-      <aside className="relative flex h-[520px] flex-col overflow-hidden bg-[#080c14] px-6 py-6 text-white md:fixed md:left-0 md:top-0 md:h-screen md:w-1/2 md:px-10 md:py-8 lg:px-14">
+      <aside className="signup-premium-left-panel relative flex h-[520px] flex-col overflow-hidden bg-[#080c14] px-6 py-6 text-white md:fixed md:left-0 md:top-0 md:h-screen md:w-1/2 md:px-10 md:py-8 lg:px-14">
         <div
           aria-hidden
-          className="absolute inset-0"
+          className="signup-premium-left-ambient absolute inset-0"
           style={{
             background:
               "radial-gradient(circle at 18% 14%, hsl(var(--blue-primary) / 0.16), transparent 34%), radial-gradient(circle at 82% 84%, hsl(var(--green-primary) / 0.10), transparent 36%)",
@@ -453,7 +453,7 @@ const Signup = () => {
 
         <Link
           to="/"
-          className="relative z-20 inline-flex w-fit items-center gap-3 text-base font-bold tracking-tight text-white transition-opacity hover:opacity-85"
+          className="signup-premium-left-logo relative z-20 inline-flex w-fit items-center gap-3 text-base font-bold tracking-tight text-white transition-opacity hover:opacity-85"
         >
           <img
             src="/auth/creatives-takeover-polished-borders.png"
@@ -492,7 +492,7 @@ const Signup = () => {
             }
           `}</style>
           <h1
-            className="text-3xl font-bold leading-tight tracking-tight text-white md:text-4xl"
+            className="signup-premium-left-title text-3xl font-bold leading-tight tracking-tight text-white md:text-4xl"
             style={{ animation: "signupTitleFlicker 3.8s ease-in-out infinite" }}
           >
             Build what only you can build.
@@ -500,8 +500,8 @@ const Signup = () => {
         </div>
 
         <div className="relative z-10 mt-6 flex min-h-0 flex-1 items-center justify-center md:mt-8">
-          <div className="flex h-full w-full max-w-[560px] flex-col items-center justify-center gap-2">
-            <div className="flex min-h-0 w-full flex-1 items-center justify-center overflow-hidden rounded-2xl">
+          <div className="signup-premium-carousel-shell flex h-full w-full max-w-[560px] flex-col items-center justify-center gap-2">
+            <div className="signup-premium-carousel-frame flex min-h-0 w-full flex-1 items-center justify-center overflow-hidden rounded-2xl">
               <div
                 className="flex h-full w-full transition-transform duration-700 ease-in-out"
                 style={{ transform: `translateX(-${activeSignupHeroSlide * 100}%)` }}
@@ -511,14 +511,14 @@ const Signup = () => {
                     <img
                       src={slide.src}
                       alt={slide.alt}
-                      className="h-auto max-h-full w-full rounded-2xl object-contain"
+                      className="signup-premium-carousel-image h-auto max-h-full w-full rounded-2xl object-contain"
                     />
                   </div>
                 ))}
               </div>
             </div>
 
-            <div className="flex items-center justify-center gap-2">
+            <div className="signup-premium-carousel-dots flex items-center justify-center gap-2">
               {signupHeroSlides.map((slide, index) => (
                 <button
                   key={slide.src}
@@ -529,7 +529,7 @@ const Signup = () => {
                     setActiveSignupHeroSlide(index);
                     setSignupHeroTimerReset((resetKey) => resetKey + 1);
                   }}
-                  className={`h-2.5 w-2.5 rounded-full border border-white transition-all duration-300 ${
+                  className={`signup-premium-carousel-dot h-2.5 w-2.5 rounded-full border border-white transition-all duration-300 ${
                     activeSignupHeroSlide === index
                       ? "bg-white opacity-100"
                       : "bg-transparent opacity-45 hover:opacity-80"
@@ -541,15 +541,15 @@ const Signup = () => {
         </div>
       </aside>
 
-      <main className="md:ml-[50vw] md:h-screen md:overflow-y-scroll">
-        <div className="relative flex min-h-screen items-center justify-center overflow-hidden p-4">
+      <main className="signup-premium-right-panel md:ml-[50vw] md:h-screen md:overflow-y-scroll">
+        <div className="signup-premium-right-surface relative flex min-h-screen items-center justify-center overflow-hidden p-4">
           <AuthWallpaper />
 
           <div className="relative z-10 w-full">
-            <div className="mx-auto w-full max-w-md">
+            <div className="signup-premium-form-shell mx-auto w-full max-w-md">
             {/* Header */}
-            <div className="text-center mb-8">
-              <Link to="/" className="inline-flex items-center gap-3 text-2xl font-bold gradient-text hover:opacity-80 transition-opacity">
+            <div className="signup-premium-header text-center mb-8">
+              <Link to="/" className="signup-premium-brand inline-flex items-center gap-3 text-2xl font-bold gradient-text hover:opacity-80 transition-opacity">
                 <img
                   src="/lovable-uploads/04a4b9d0-4213-4186-ba00-c7acd22bad98.png"
                   alt="Creatives Takeover Logo"
@@ -557,18 +557,18 @@ const Signup = () => {
                 />
                 Creatives Takeover
               </Link>
-              <h1 className="text-3xl font-bold mt-4 mb-2">Join Today</h1>
+              <h1 className="signup-premium-right-title text-3xl font-bold mt-4 mb-2">Join Today</h1>
             </div>
 
             {/* Signup Form */}
             <MobileFormOptimizer>
-              <Card className="glass-card border-2 border-border/50 shadow-2xl hover:shadow-3xl transition-all duration-300">
-                <CardHeader className="space-y-1 pb-4">
-                  <h2 className="text-xl font-semibold text-center">Create your account</h2>
+              <Card className="signup-premium-card glass-card border-2 border-border/50 shadow-2xl hover:shadow-3xl transition-all duration-300">
+                <CardHeader className="signup-premium-card-header space-y-1 pb-4">
+                  <h2 className="signup-premium-card-title text-xl font-semibold text-center">Create your account</h2>
                   <p className="text-sm text-muted-foreground text-center">Rookie plan available for free</p>
                 </CardHeader>
                 <CardContent>
-                  <form onSubmit={handleSubmit} autoComplete="on" className="space-y-5">
+                  <form onSubmit={handleSubmit} autoComplete="on" className="signup-premium-form space-y-5">
                 {/* Name Fields */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-2">
@@ -762,6 +762,7 @@ const Signup = () => {
 
                 {/* Social Login Buttons - Enhanced */}
                 <AuthSocialButtons
+                  variant="signupPremium"
                   disabled={isLoading}
                   onGoogleContinue={handleGoogleSignup}
                   onLinkedInContinue={handleLinkedInSignup}
