@@ -7,7 +7,7 @@ export type SocialAuthProviderId = 'google' | 'linkedin_oidc';
 export type SocialAuthIntent = 'login' | 'signup';
 export type SocialAuthSignupMethod = 'google' | 'linkedin';
 
-const OAUTH_QUERY_PARAMS = {
+const GOOGLE_OAUTH_QUERY_PARAMS = {
   access_type: 'offline',
   prompt: 'select_account',
 } as const;
@@ -59,7 +59,11 @@ export async function startSocialOAuth({
       provider: provider as Provider,
       options: {
         redirectTo: `${window.location.origin}/auth/callback`,
-        queryParams: OAUTH_QUERY_PARAMS,
+        ...(provider === 'google'
+          ? {
+              queryParams: GOOGLE_OAUTH_QUERY_PARAMS,
+            }
+          : {}),
       },
     });
 

@@ -23,6 +23,7 @@ import {
   sanitizeCheckoutIntent,
 } from "@/lib/checkoutRedirect";
 import { setOAuthAuthIntent } from "@/lib/referral";
+import { startSocialOAuth, type SocialAuthProviderId } from "@/lib/socialAuth";
 
 const loginHeroSlides = [
   {
@@ -220,42 +221,18 @@ const Login = () => {
   };
 
   // Social OAuth login
-  const handleSocialLogin = async (provider: 'google' | 'linkedin_oidc') => {
-    const providerName = provider === 'google' ? 'Google' : 'LinkedIn';
-
-    try {
-      // Preserve post-auth destination for callback + onboarding flow.
-      localStorage.setItem('oauth_return_url', returnUrl);
-      localStorage.removeItem('oauth_signup_method');
-      setOAuthAuthIntent('login');
-      persistOnboardingReturn(returnUrl);
-      
-      toast(`Redirecting to ${providerName}...`);
-      
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider,
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
-          ...(provider === 'google'
-            ? {
-                queryParams: {
-                  access_type: 'offline',
-                  prompt: 'select_account',
-                },
-              }
-            : {}),
-        }
-      });
-      
-      if (error) {
-        console.error("OAuth error:", error);
-        toast.error(`${providerName} sign-in error: ${error.message}`);
-        return;
-      }
-    } catch (err) {
-      console.error("Caught error:", err);
-      toast.error(`${providerName} sign-in failed: ${err instanceof Error ? err.message : 'Unknown error'}`);
-    }
+  const handleSocialLogin = async (provider: SocialAuthProviderId) => {
+    await startSocialOAuth({
+      provider,
+      intent: 'login',
+      beforeRedirect: () => {
+        // Preserve post-auth destination for callback + onboarding flow.
+        localStorage.setItem('oauth_return_url', returnUrl);
+        localStorage.removeItem('oauth_signup_method');
+        setOAuthAuthIntent('login');
+        persistOnboardingReturn(returnUrl);
+      },
+    });
   };
 
   const handleGoogleLogin = () => handleSocialLogin('google');
