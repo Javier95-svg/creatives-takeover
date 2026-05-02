@@ -500,7 +500,7 @@ const Signup = () => {
         </div>
 
         <div className="relative z-10 mt-6 flex min-h-0 flex-1 items-center justify-center md:mt-8">
-          <div className="flex h-full w-full max-w-[560px] flex-col items-center justify-center gap-4">
+          <div className="flex h-full w-full max-w-[560px] flex-col items-center justify-center gap-2">
             <div className="flex min-h-0 w-full flex-1 items-center justify-center overflow-hidden rounded-2xl">
               <div
                 className="flex h-full w-full transition-transform duration-700 ease-in-out"
@@ -511,7 +511,7 @@ const Signup = () => {
                     <img
                       src={slide.src}
                       alt={slide.alt}
-                      className="h-auto max-h-full w-full rounded-2xl object-contain shadow-[0_28px_70px_rgba(0,0,0,0.42)] ring-1 ring-white/10 [transform:perspective(1200px)_rotateY(-7deg)_rotateX(3deg)_rotateZ(-1deg)] [transform-style:preserve-3d]"
+                      className="h-auto max-h-full w-full rounded-2xl object-contain"
                     />
                   </div>
                 ))}
