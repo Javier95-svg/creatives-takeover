@@ -49,6 +49,17 @@ import {
 } from "@/lib/referral";
 import { getSocialAuthSignupMethod, startSocialOAuth, type SocialAuthProviderId } from "@/lib/socialAuth";
 
+const signupHeroSlides = [
+  {
+    src: "/auth/solofounder.webp",
+    alt: "Solo founder working on a laptop in a warm workspace",
+  },
+  {
+    src: "/auth/solopreneur-female.png",
+    alt: "Female solopreneur working on a laptop in a bright studio",
+  },
+];
+
 const Signup = () => {
   const defaultPostSignupPath = '/dashboard';
   const [formData, setFormData] = useState({
@@ -68,10 +79,20 @@ const Signup = () => {
     email: "",
     password: ""
   });
+  const [activeSignupHeroSlide, setActiveSignupHeroSlide] = useState(0);
+  const [signupHeroTimerReset, setSignupHeroTimerReset] = useState(0);
 
   const { signUp, user } = useAuth();
   const navigate = useNavigate();
   const { trackSignupStarted, trackSignupCompleted } = useConversionTracking();
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setActiveSignupHeroSlide((currentSlide) => (currentSlide + 1) % signupHeroSlides.length);
+    }, 3600);
+
+    return () => window.clearInterval(timer);
+  }, [signupHeroTimerReset]);
 
   // Get conversion source from URL
   const [conversionSource] = useState(() => {
@@ -479,11 +500,44 @@ const Signup = () => {
         </div>
 
         <div className="relative z-10 mt-6 flex min-h-0 flex-1 items-center justify-center md:mt-8">
-          <img
-            src="/auth/solofounder.webp"
-            alt="Solo founder working on a laptop in a warm workspace"
-            className="h-auto max-h-full w-full max-w-[560px] rounded-2xl object-contain"
-          />
+          <div className="flex h-full w-full max-w-[560px] flex-col items-center justify-center gap-4">
+            <div className="flex min-h-0 w-full flex-1 items-center justify-center overflow-hidden rounded-2xl">
+              <div
+                className="flex h-full w-full transition-transform duration-700 ease-in-out"
+                style={{ transform: `translateX(-${activeSignupHeroSlide * 100}%)` }}
+              >
+                {signupHeroSlides.map((slide) => (
+                  <div key={slide.src} className="flex h-full min-w-full items-center justify-center">
+                    <img
+                      src={slide.src}
+                      alt={slide.alt}
+                      className="h-auto max-h-full w-full rounded-2xl object-contain shadow-[0_28px_70px_rgba(0,0,0,0.42)] ring-1 ring-white/10 [transform:perspective(1200px)_rotateY(-7deg)_rotateX(3deg)_rotateZ(-1deg)] [transform-style:preserve-3d]"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex items-center justify-center gap-2">
+              {signupHeroSlides.map((slide, index) => (
+                <button
+                  key={slide.src}
+                  type="button"
+                  aria-label={`Show signup image ${index + 1}`}
+                  aria-current={activeSignupHeroSlide === index}
+                  onClick={() => {
+                    setActiveSignupHeroSlide(index);
+                    setSignupHeroTimerReset((resetKey) => resetKey + 1);
+                  }}
+                  className={`h-2.5 w-2.5 rounded-full border border-white transition-all duration-300 ${
+                    activeSignupHeroSlide === index
+                      ? "bg-white opacity-100"
+                      : "bg-transparent opacity-45 hover:opacity-80"
+                  }`}
+                />
+              ))}
+            </div>
+          </div>
         </div>
       </aside>
 
