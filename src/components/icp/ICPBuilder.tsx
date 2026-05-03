@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowLeft, ArrowRight, Loader2, RotateCcw } from "lucide-react";
 
@@ -19,6 +19,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   captureEvent,
   trackActivationCompleted,
+  trackICPBuilderAbandoned,
   trackICPBuilderCompleted,
   trackICPBuilderModeSelected,
   trackICPBuilderStarted,
@@ -223,6 +224,21 @@ function getEnterHint(screen: IcpFlowScreen) {
   return "Press Enter ↵";
 }
 
+function getFlowScreens(mode: IcpBuilderMode | null) {
+  if (mode === "fast") return FAST_SCREEN_ORDER;
+  if (mode === "guided") return GUIDED_SCREEN_ORDER;
+  return [];
+}
+
+function getStepsCompleted(screen: IcpFlowScreen, mode: IcpBuilderMode | null) {
+  const flowScreens = getFlowScreens(mode);
+  if (flowScreens.length === 0) return 0;
+  if (screen === "gate") return flowScreens.length;
+
+  const currentIndex = flowScreens.indexOf(screen);
+  return currentIndex < 0 ? 0 : currentIndex;
+}
+
 const ICPBuilder: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -245,6 +261,11 @@ const ICPBuilder: React.FC = () => {
   const [isPersonaEditorOpen, setIsPersonaEditorOpen] = useState(false);
   const [synthesisError, setSynthesisError] = useState<string | null>(null);
   const [persistError, setPersistError] = useState<string | null>(null);
+  const completedRef = useRef(false);
+  const currentStepRef = useRef<IcpFlowScreen>(session.currentScreen);
+  const modeRef = useRef<IcpBuilderMode | null>(session.mode);
+  const stepsCompletedRef = useRef(0);
+  const totalStepsRef = useRef(0);
 
   const unlockPath = buildIcpUnlockReturnPath();
   const editDraftId = searchParams.get("edit");
@@ -275,6 +296,26 @@ const ICPBuilder: React.FC = () => {
   useEffect(() => {
     persistIcpBuilderSession(session);
   }, [session]);
+
+  useEffect(() => {
+    currentStepRef.current = session.currentScreen;
+    modeRef.current = session.mode;
+    stepsCompletedRef.current = getStepsCompleted(session.currentScreen, session.mode);
+    totalStepsRef.current = getFlowScreens(session.mode).length;
+  }, [session.currentScreen, session.mode]);
+
+  useEffect(() => {
+    return () => {
+      if (completedRef.current) return;
+
+      trackICPBuilderAbandoned({
+        last_step: currentStepRef.current,
+        mode: modeRef.current,
+        steps_completed: stepsCompletedRef.current,
+        total_steps: totalStepsRef.current,
+      });
+    };
+  }, []);
 
   useEffect(() => {
     if (!loadingStartedAt || loadingPhase !== "synthesis") return;
@@ -684,6 +725,7 @@ const ICPBuilder: React.FC = () => {
       }
 
       await refreshActivation();
+      completedRef.current = true;
       trackICPBuilderCompleted({
         page_path: "/icp-builder",
         mode,
@@ -780,6 +822,7 @@ const ICPBuilder: React.FC = () => {
         }
 
         await refreshActivation();
+        completedRef.current = true;
         trackICPBuilderCompleted({
           page_path: "/icp-builder",
           mode: session.mode,
@@ -899,7 +942,7 @@ const ICPBuilder: React.FC = () => {
   const trackStepCompleted = (screen: IcpFlowScreen) => {
     if (!session.mode) return;
 
-    const flowScreens = session.mode === "fast" ? FAST_SCREEN_ORDER : GUIDED_SCREEN_ORDER;
+    const flowScreens = getFlowScreens(session.mode);
     const stepIndex = flowScreens.indexOf(screen) + 1;
     if (stepIndex < 1) return;
 

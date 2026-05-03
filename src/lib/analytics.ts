@@ -255,6 +255,13 @@ export const trackIcpBuilderStartedUngated = (properties: { source: string }) =>
 export const trackICPBuilderCompleted = (properties?: AnalyticsProperties) =>
   captureEvent('icp_builder_completed', properties);
 
+export const trackICPBuilderAbandoned = (properties: {
+  last_step: string;
+  mode: 'fast' | 'guided' | null;
+  steps_completed: number;
+  total_steps: number;
+}) => captureEvent('icp_builder_abandoned', properties);
+
 export const trackICPBuilderStepCompleted = (properties: {
   step: number;
   step_name: string;
