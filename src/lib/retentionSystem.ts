@@ -115,6 +115,12 @@ function hashSeed(seed: string) {
   return hash;
 }
 
+function getActivationCompletedTrigger(action: ActivationArtifactIntent) {
+  if (action === 'save_mentor') return 'mentor_saved';
+  if (action === 'send_message') return 'first_message_sent';
+  return 'first_artifact_created';
+}
+
 export function getActivationGateVariantFromSeed(seed: string): ActivationGateVariant {
   return hashSeed(seed) % 2 === 0 ? 'forced_gate' : 'control';
 }
@@ -353,6 +359,7 @@ export async function completeActivationJourney(params: CompleteActivationParams
   );
 
   await trackRetentionEvent('activation_completed', {
+    trigger: getActivationCompletedTrigger(params.action),
     user_id: params.user.id,
     action: params.action,
     source: params.source,

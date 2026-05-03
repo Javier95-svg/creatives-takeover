@@ -3,6 +3,13 @@ import { getSafeSessionStorage } from '@/lib/safeStorage';
 
 type AnalyticsProperties = Record<string, unknown>;
 type SignupMethod = 'google' | 'linkedin' | 'email';
+export type ActivationCompletedTrigger =
+  | 'icp_completed'
+  | 'mentor_saved'
+  | 'first_message_sent'
+  | 'first_artifact_created'
+  | 'icp_seed_prefilled'
+  | 'first_workspace_created';
 export type PlanId = 'ROOKIE' | 'STARTER' | 'RISING' | 'PRO';
 export type UpgradeLocation = 'pricing_page' | 'dashboard_banner' | 'feature_gate' | 'onboarding';
 export type IcpBuilderOpenedSource = 'dashboard' | 'onboarding' | 'direct' | 'seed_redirect';
@@ -205,8 +212,9 @@ export const readAuthMethod = (): SignupMethod | null => {
   return method === 'google' || method === 'linkedin' || method === 'email' ? method : null;
 };
 
-export const trackActivationCompleted = ({ artifact }: { artifact: string }) =>
-  captureEvent('activation_completed', { artifact });
+export const trackActivationCompleted = (
+  properties: AnalyticsProperties & { trigger: ActivationCompletedTrigger },
+) => captureEvent('activation_completed', properties);
 
 // ─── Retention: BizMap AI events ─────────────────────────────────────────────
 

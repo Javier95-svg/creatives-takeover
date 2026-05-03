@@ -78,7 +78,7 @@ export default function ICPBuilderPage() {
     });
 
     if (seed?.trim()) {
-      trackActivationCompleted({ artifact: 'icp_seed_prefilled' });
+      trackActivationCompleted({ trigger: 'icp_seed_prefilled', artifact: 'icp_seed_prefilled' });
     }
   }, []);
 

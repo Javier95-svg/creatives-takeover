@@ -689,7 +689,7 @@ const ICPBuilder: React.FC = () => {
         mode,
         confidence: artifact.draftDocument.confidence.level,
       });
-      trackActivationCompleted({ artifact: 'icp_completed' });
+      trackActivationCompleted({ trigger: 'icp_completed', artifact: 'icp_completed' });
       trackICPDashboardOpened({
         page_path: "/icp-builder",
         mode,
@@ -785,7 +785,7 @@ const ICPBuilder: React.FC = () => {
           mode: session.mode,
           confidence: artifact.draftDocument.confidence.level,
         });
-        trackActivationCompleted({ artifact: 'icp_completed' });
+        trackActivationCompleted({ trigger: 'icp_completed', artifact: 'icp_completed' });
         trackICPDashboardOpened({
           page_path: "/icp-builder",
           mode: session.mode,
