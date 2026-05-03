@@ -3,7 +3,7 @@ import { toast } from 'sonner';
 
 import { supabase } from '@/integrations/supabase/client';
 
-export type SocialAuthProviderId = 'google' | 'linkedin_oidc' | 'twitter';
+export type SocialAuthProviderId = 'google' | 'linkedin_oidc' | 'x';
 export type SocialAuthIntent = 'login' | 'signup';
 export type SocialAuthSignupMethod = 'google' | 'linkedin' | 'x';
 
@@ -24,7 +24,7 @@ const SOCIAL_AUTH_PROVIDER_META: Record<
     providerName: 'LinkedIn',
     signupMethod: 'linkedin',
   },
-  twitter: {
+  x: {
     providerName: 'X',
     signupMethod: 'x',
   },

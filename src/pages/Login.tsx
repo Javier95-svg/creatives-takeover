@@ -237,7 +237,7 @@ const Login = () => {
 
   const handleGoogleLogin = () => handleSocialLogin('google');
   const handleLinkedInLogin = () => handleSocialLogin('linkedin_oidc');
-  const handleXLogin = () => handleSocialLogin('twitter');
+  const handleXLogin = () => handleSocialLogin('x');
 
   return (
     <div className="signup-premium min-h-screen bg-background md:h-screen md:overflow-hidden">

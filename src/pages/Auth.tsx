@@ -241,10 +241,10 @@ const Auth: React.FC = () => {
 
   const handleGoogleLogin = () => handleSocialAuth('login', 'google');
   const handleLinkedInLogin = () => handleSocialAuth('login', 'linkedin_oidc');
-  const handleXLogin = () => handleSocialAuth('login', 'twitter');
+  const handleXLogin = () => handleSocialAuth('login', 'x');
   const handleGoogleSignup = () => handleSocialAuth('signup', 'google');
   const handleLinkedInSignup = () => handleSocialAuth('signup', 'linkedin_oidc');
-  const handleXSignup = () => handleSocialAuth('signup', 'twitter');
+  const handleXSignup = () => handleSocialAuth('signup', 'x');
 
   return (
     <div className="relative min-h-dvh flex items-center justify-center p-4 overflow-hidden safe-area-inset"
