@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useRef } from "react";
+import { FormEvent, lazy, Suspense, useEffect, useRef, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -6,7 +6,7 @@ import Navigation from "@/components/Navigation";
 import SEO from "@/components/SEO";
 import { Button } from "@/components/ui/button";
 import { readIcpBuilderSession } from "@/lib/icpBuilderSession";
-import { trackLandingViewed, trackActivationCompleted } from "@/lib/analytics";
+import { captureEvent, trackLandingViewed, trackActivationCompleted } from "@/lib/analytics";
 import { ICP_SEED_STORAGE_KEY } from "@/lib/icpSeed";
 
 const ICPBuilder = lazy(() => import("@/components/icp/ICPBuilder"));
@@ -14,6 +14,19 @@ const ICPBuilder = lazy(() => import("@/components/icp/ICPBuilder"));
 export default function ICPBuilderPage() {
   const navigate = useNavigate();
   const hasTracked = useRef(false);
+  const [showLeadBanner, setShowLeadBanner] = useState(false);
+  const [leadEmail, setLeadEmail] = useState('');
+  const [leadCaptured, setLeadCaptured] = useState(false);
+
+  useEffect(() => {
+    if (localStorage.getItem('ct_lead_email')) {
+      setLeadCaptured(true);
+      return;
+    }
+
+    const timer = setTimeout(() => setShowLeadBanner(true), 20000);
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     if (hasTracked.current) return;
@@ -45,6 +58,24 @@ export default function ICPBuilderPage() {
     }
 
     navigate("/");
+  };
+
+  const handleLeadSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    const email = leadEmail.trim();
+    if (!email || !email.includes("@")) {
+      return;
+    }
+
+    localStorage.setItem('ct_lead_email', email);
+    captureEvent('icp_builder_lead_captured', { email, source: 'save_progress_banner' });
+    setLeadCaptured(true);
+    setShowLeadBanner(false);
+  };
+
+  const handleDismissLeadBanner = () => {
+    setShowLeadBanner(false);
   };
 
   return (
@@ -109,6 +140,40 @@ export default function ICPBuilderPage() {
           <ICPBuilder />
         </Suspense>
       </main>
+
+      {showLeadBanner && !leadCaptured ? (
+        <div className="fixed bottom-4 right-4 z-50 w-[320px] max-w-[calc(100vw-2rem)] rounded-xl bg-white p-4 text-slate-950 shadow-xl">
+          <button
+            type="button"
+            aria-label="Dismiss save progress banner"
+            className="absolute right-3 top-3 flex h-7 w-7 items-center justify-center rounded-full text-xl leading-none text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
+            onClick={handleDismissLeadBanner}
+          >
+            ×
+          </button>
+
+          <form className="space-y-3 pr-6" onSubmit={handleLeadSubmit}>
+            <div className="space-y-1">
+              <h2 className="text-base font-semibold text-slate-950">Save your ICP progress</h2>
+              <p className="text-sm leading-5 text-slate-600">
+                Drop your email and we'll send you a link to continue anytime.
+              </p>
+            </div>
+
+            <input
+              type="email"
+              value={leadEmail}
+              onChange={(event) => setLeadEmail(event.target.value)}
+              placeholder="your@email.com"
+              className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-950 outline-none transition focus:border-[#32b8c6] focus:ring-2 focus:ring-[#32b8c6]/20"
+            />
+
+            <Button type="submit" className="h-10 w-full rounded-lg text-sm font-semibold">
+              Save my progress
+            </Button>
+          </form>
+        </div>
+      ) : null}
     </div>
   );
 }
