@@ -11,7 +11,9 @@ import {
   shouldRedirectToGuidedOnboarding,
   shouldRedirectToSetupQuiz,
 } from '@/lib/guidedOnboarding';
-import { trackSignupCompleted } from '@/lib/analytics';
+import { readAuthMethod, trackSignupCompleted } from '@/lib/analytics';
+import { ICP_SEED_STORAGE_KEY } from '@/lib/icpSeed';
+import { getSafeSessionStorage } from '@/lib/safeStorage';
 import { resumePendingDiscoveryCallRedirect } from '@/services/discoveryCallService';
 import {
   clearOAuthAuthIntent,
@@ -27,6 +29,10 @@ function isNewlyCreatedUser(createdAt?: string): boolean {
   const createdMs = new Date(createdAt).getTime();
   if (Number.isNaN(createdMs)) return false;
   return Date.now() - createdMs <= NEW_ACCOUNT_MAX_AGE_MS;
+}
+
+function isNewSessionUser(createdAt?: string, updatedAt?: string): boolean {
+  return Boolean(createdAt && updatedAt && createdAt === updatedAt);
 }
 
 const AuthCallback = () => {
@@ -108,6 +114,12 @@ const AuthCallback = () => {
           console.warn('Auth successful, checking for return URL...');
           setStatus('success');
 
+          const authMethod = readAuthMethod();
+          const isNewUser = isNewSessionUser(session.user.created_at, session.user.updated_at);
+          if (authMethod && isNewUser) {
+            trackSignupCompleted({ method: authMethod });
+          }
+
           const authIntent = getOAuthAuthIntent();
           const referralCode = getPendingReferralCode();
           const shouldClaimReferral =
@@ -156,7 +168,9 @@ const AuthCallback = () => {
           }
           
           // Get return URL from localStorage (saved before OAuth redirect)
-          const fallbackReturnUrl = '/dashboard';
+          const fallbackReturnUrl = getSafeSessionStorage().getItem(ICP_SEED_STORAGE_KEY)
+            ? '/icp-builder'
+            : '/dashboard';
           let returnUrl = sanitizeReturnPath(localStorage.getItem('oauth_return_url') || fallbackReturnUrl, '/dashboard');
           const oauthSource = localStorage.getItem('oauth_source');
           const oauthSignupMethod = localStorage.getItem('oauth_signup_method');
@@ -182,14 +196,6 @@ const AuthCallback = () => {
           // Preserve post-onboarding intent for first-time users.
           persistOnboardingReturn(returnUrl);
 
-          if (
-            oauthSignupMethod === 'google' ||
-            oauthSignupMethod === 'linkedin' ||
-            oauthSignupMethod === 'email'
-          ) {
-            trackSignupCompleted({ method: oauthSignupMethod });
-          }
-          
           // Track OAuth signup if source exists
           if (
             oauthSource &&

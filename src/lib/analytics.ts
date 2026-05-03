@@ -1,4 +1,5 @@
 import posthog from 'posthog-js';
+import { getSafeSessionStorage } from '@/lib/safeStorage';
 
 type AnalyticsProperties = Record<string, unknown>;
 type SignupMethod = 'google' | 'linkedin' | 'email';
@@ -15,6 +16,7 @@ const PH_HOST =
   'https://us.i.posthog.com';
 
 const FIRST_TOUCH_UTM_KEY = 'ct_posthog_first_touch_utms';
+const AUTH_METHOD_STORAGE_KEY = 'ct_auth_method';
 
 let posthogClient: typeof posthog | null = null;
 let initPromise: Promise<void> | null = null;
@@ -181,6 +183,26 @@ export const trackSignupStarted = ({ method }: { method: SignupMethod }) =>
 
 export const trackSignupCompleted = ({ method }: { method: SignupMethod }) =>
   captureEvent('signup_completed', { method });
+
+export const persistAuthMethod = (method: SignupMethod) => {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  getSafeSessionStorage().setItem(AUTH_METHOD_STORAGE_KEY, method);
+};
+
+export const readAuthMethod = (): SignupMethod | null => {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+
+  const storage = getSafeSessionStorage();
+  const method = storage.getItem(AUTH_METHOD_STORAGE_KEY);
+  storage.removeItem(AUTH_METHOD_STORAGE_KEY);
+
+  return method === 'google' || method === 'linkedin' || method === 'email' ? method : null;
+};
 
 export const trackActivationCompleted = ({ artifact }: { artifact: string }) =>
   captureEvent('activation_completed', { artifact });

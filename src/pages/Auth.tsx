@@ -21,6 +21,11 @@ import { mapSignInError, mapSignUpError } from '@/lib/authErrors';
 import { MIN_PASSWORD_LENGTH, PASSWORD_LENGTH_ERROR } from '@/lib/passwordPolicy';
 import { persistOnboardingReturn, sanitizeReturnPath } from '@/lib/authRedirect';
 import {
+  persistAuthMethod,
+  readAuthMethod,
+  trackSignupCompleted,
+} from '@/lib/analytics';
+import {
   clearPendingReferralCode,
   getPendingReferralCode,
   persistPendingReferralCode,
@@ -195,6 +200,7 @@ const Auth: React.FC = () => {
       }
 
       toast.success('Account created successfully!');
+      trackSignupCompleted({ method: readAuthMethod() ?? 'email' });
       setLoading(false);
     }
   };
@@ -223,6 +229,10 @@ const Auth: React.FC = () => {
           }
 
           return;
+        }
+
+        if (signupMethod === 'google' || signupMethod === 'linkedin') {
+          persistAuthMethod(signupMethod);
         }
 
         localStorage.setItem('oauth_return_url', finalRedirect);

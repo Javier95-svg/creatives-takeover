@@ -10,6 +10,7 @@ import { getSafeLocalStorage } from "@/lib/safeStorage";
 import { persistOnboardingReturn } from "@/lib/authRedirect";
 import { normalizeIcpSeed, persistIcpSeed } from "@/lib/icpSeed";
 import {
+  persistAuthMethod,
   trackICPLoginClicked,
   trackICPUnlockClicked,
   trackICPUnlockGateShown,
@@ -71,6 +72,7 @@ export function IcpUnlockGate({
         surface: "inline_lock_block",
       });
       setIsGoogleLoading(true);
+      persistAuthMethod("google");
       onBeforeAuthContinue?.();
       persistIcpSeed(normalizedSeed);
       persistOnboardingReturn(returnPath);

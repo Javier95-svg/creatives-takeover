@@ -8,6 +8,8 @@ import { getSessionSafely } from "@/integrations/supabase/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { mapSignUpError } from "@/lib/authErrors";
 import {
+  persistAuthMethod,
+  readAuthMethod,
   trackLandingViewed,
   trackSignupCompleted,
   trackSignupStarted,
@@ -104,6 +106,7 @@ const SoftGateModal = ({
   const handleGoogleContinue = async () => {
     try {
       trackSignupStarted({ method: "google" });
+      persistAuthMethod("google");
       onBeforeAuthContinue?.();
       persistIcpSeed(normalizedSeed);
       persistOnboardingReturn(returnPath);
@@ -204,7 +207,7 @@ const SoftGateModal = ({
         return;
       }
 
-      trackSignupCompleted({ method: "email" });
+      trackSignupCompleted({ method: readAuthMethod() ?? "email" });
       closeWithoutExitTracking();
       navigate(returnPath, { replace: true });
     } catch (error) {
