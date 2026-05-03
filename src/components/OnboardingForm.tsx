@@ -8,7 +8,10 @@ import { ArrowLeft, ArrowRight, Lightbulb, Target, Hammer } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
-import { captureEvent } from '@/lib/analytics';
+import {
+  captureEvent,
+  trackOnboardingStepCompleted,
+} from '@/lib/analytics';
 import { trackActivity } from '@/lib/activity';
 import { getActivationRoute, startActivationJourney, type ActivationIntent } from '@/lib/retentionSystem';
 
@@ -70,6 +73,12 @@ const ACTIVATION_CARDS: Array<{
   },
 ];
 
+const ONBOARDING_STEPS = [
+  { id: 'startup_stage' },
+  { id: 'activation_intent' },
+  { id: 'terms_confirmation' },
+] as const;
+
 interface OnboardingFormProps {
   onComplete?: (startRoute?: string) => void;
 }
@@ -88,7 +97,7 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
     acceptedTerms: false,
   });
 
-  const totalSteps = 3;
+  const totalSteps = ONBOARDING_STEPS.length;
   const progress = ((currentStep + 1) / totalSteps) * 100;
 
   const validateStep = (step: number): boolean => {
@@ -115,8 +124,10 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
     if (!validateStep(currentStep)) return;
 
     if (currentStep < totalSteps - 1) {
-      captureEvent('onboarding_step_completed', {
+      trackOnboardingStepCompleted({
         step: currentStep + 1,
+        step_name: ONBOARDING_STEPS[currentStep].id,
+        total_steps: ONBOARDING_STEPS.length,
         stage: formData.businessStage,
         painPoint: formData.primaryPain,
       });

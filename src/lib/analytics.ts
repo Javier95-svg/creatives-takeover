@@ -13,6 +13,7 @@ export type ActivationCompletedTrigger =
 export type PlanId = 'ROOKIE' | 'STARTER' | 'RISING' | 'PRO';
 export type UpgradeLocation = 'pricing_page' | 'dashboard_banner' | 'feature_gate' | 'onboarding';
 export type IcpBuilderOpenedSource = 'dashboard' | 'onboarding' | 'direct' | 'seed_redirect';
+export type OnboardingStartedSource = 'signup_redirect' | 'dashboard_prompt' | 'direct';
 
 const PH_KEY =
   import.meta.env.VITE_POSTHOG_API_KEY ??
@@ -215,6 +216,18 @@ export const readAuthMethod = (): SignupMethod | null => {
 export const trackActivationCompleted = (
   properties: AnalyticsProperties & { trigger: ActivationCompletedTrigger },
 ) => captureEvent('activation_completed', properties);
+
+export const trackOnboardingStarted = (properties: {
+  source: OnboardingStartedSource;
+  userId?: string;
+  page_path?: string;
+}) => captureEvent('onboarding_started', properties);
+
+export const trackOnboardingStepCompleted = (properties: {
+  step: number;
+  step_name: string;
+  total_steps: number;
+} & AnalyticsProperties) => captureEvent('onboarding_step_completed', properties);
 
 // ─── Retention: BizMap AI events ─────────────────────────────────────────────
 

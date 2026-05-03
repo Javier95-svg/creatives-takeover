@@ -5,13 +5,51 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Helmet } from 'react-helmet-async';
 import HomeWallpaper from '@/components/wallpapers/HomeWallpaper';
-import { captureEvent } from '@/lib/analytics';
+import {
+  trackOnboardingStarted,
+  type OnboardingStartedSource,
+} from '@/lib/analytics';
 import { trackActivity } from '@/lib/activity';
 import { getOnboardingReturn, sanitizeReturnPath } from '@/lib/authRedirect';
 import {
   isLegacyOnboardingExempt,
   shouldRedirectToSetupQuiz,
 } from '@/lib/guidedOnboarding';
+
+const ONBOARDING_STARTED_SOURCES: OnboardingStartedSource[] = [
+  'signup_redirect',
+  'dashboard_prompt',
+  'direct',
+];
+
+function getOnboardingStartedSource(
+  searchParams: URLSearchParams,
+  userId: string,
+  returnTarget: string,
+  profileCreatedAt?: string | null,
+): OnboardingStartedSource {
+  const source = searchParams.get('source');
+  if (ONBOARDING_STARTED_SOURCES.includes(source as OnboardingStartedSource)) {
+    return source as OnboardingStartedSource;
+  }
+
+  if (sessionStorage.getItem(`onboarding_redirect_${userId}`)) {
+    return 'signup_redirect';
+  }
+
+  if (profileCreatedAt) {
+    const createdMs = new Date(profileCreatedAt).getTime();
+    if (!Number.isNaN(createdMs) && Date.now() - createdMs <= 10 * 60 * 1000) {
+      return 'signup_redirect';
+    }
+  }
+
+  if (returnTarget.startsWith('/dashboard')) {
+    return 'dashboard_prompt';
+  }
+
+  return 'direct';
+}
 
 const Onboarding = () => {
   const { user, isAuthenticated, loading: authLoading } = useAuth();
@@ -33,7 +71,7 @@ const Onboarding = () => {
         // Check if user has already completed onboarding
         const { data: profile } = await supabase
           .from('profiles')
-          .select('onboarding_completed, quiz_completed, user_preferences')
+          .select('created_at, onboarding_completed, quiz_completed, user_preferences')
           .eq('id', user.id)
           .single();
 
@@ -62,12 +100,15 @@ const Onboarding = () => {
         if (!hasTrackedStart.current) {
           hasTrackedStart.current = true;
           // FIX(retention): onboarding — emit a canonical onboarding_started event once the route is actually reached by an authenticated user.
-          captureEvent('onboarding_started', {
+          const source = getOnboardingStartedSource(searchParams, user.id, safeExitTarget, profile?.created_at);
+          trackOnboardingStarted({
+            source,
             userId: user.id,
             page_path: '/onboarding',
           });
           void trackActivity('onboarding_started', {
             page_path: '/onboarding',
+            source,
           }, user.id);
         }
       } catch (error) {
