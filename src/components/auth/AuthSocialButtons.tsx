@@ -5,6 +5,7 @@ interface AuthSocialButtonsProps {
   disabled?: boolean;
   onGoogleContinue: () => void | Promise<void>;
   onLinkedInContinue: () => void | Promise<void>;
+  onXContinue: () => void | Promise<void>;
   className?: string;
   variant?: 'default' | 'signupPremium';
 }
@@ -44,10 +45,20 @@ const LinkedInIcon = () => (
   </svg>
 );
 
+const XIcon = () => (
+  <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" aria-hidden="true">
+    <path
+      fill="currentColor"
+      d="M18.244 2.25h3.308l-7.227 8.26L22.827 21.75h-6.657l-5.214-6.817-5.967 6.817H1.68l7.73-8.835L1.254 2.25h6.827l4.713 6.231 5.45-6.231Zm-1.161 17.52h1.833L7.084 4.126H5.117L17.083 19.77Z"
+    />
+  </svg>
+);
+
 export function AuthSocialButtons({
   disabled = false,
   onGoogleContinue,
   onLinkedInContinue,
+  onXContinue,
   className,
   variant = 'default',
 }: AuthSocialButtonsProps) {
@@ -105,6 +116,29 @@ export function AuthSocialButtons({
         >
           <LinkedInIcon />
           <span className="font-medium text-[#0A66C2]">Continue with LinkedIn</span>
+        </Button>
+      </div>
+
+      <div
+        className={cn(
+          'relative p-[2px] rounded-button',
+          isSignupPremium
+            ? 'signup-premium-social-frame bg-neutral-950/80 dark:bg-white/20'
+            : 'bg-neutral-950 dark:bg-white/25'
+        )}
+      >
+        <Button
+          type="button"
+          variant="outline"
+          disabled={disabled}
+          onClick={() => void onXContinue()}
+          className={cn(
+            isSignupPremium ? premiumButtonClassName : baseButtonClassName,
+            'bg-neutral-950 text-white hover:bg-neutral-900 dark:bg-neutral-950 dark:text-white dark:hover:bg-neutral-900'
+          )}
+        >
+          <XIcon />
+          <span className="font-medium text-white">Continue with X</span>
         </Button>
       </div>
     </div>

@@ -3,9 +3,9 @@ import { toast } from 'sonner';
 
 import { supabase } from '@/integrations/supabase/client';
 
-export type SocialAuthProviderId = 'google' | 'linkedin_oidc';
+export type SocialAuthProviderId = 'google' | 'linkedin_oidc' | 'twitter';
 export type SocialAuthIntent = 'login' | 'signup';
-export type SocialAuthSignupMethod = 'google' | 'linkedin';
+export type SocialAuthSignupMethod = 'google' | 'linkedin' | 'x';
 
 const GOOGLE_OAUTH_QUERY_PARAMS = {
   access_type: 'offline',
@@ -23,6 +23,10 @@ const SOCIAL_AUTH_PROVIDER_META: Record<
   linkedin_oidc: {
     providerName: 'LinkedIn',
     signupMethod: 'linkedin',
+  },
+  twitter: {
+    providerName: 'X',
+    signupMethod: 'x',
   },
 };
 

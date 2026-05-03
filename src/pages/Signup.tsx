@@ -433,6 +433,7 @@ const Signup = () => {
 
   const handleGoogleSignup = () => handleSocialSignup('google');
   const handleLinkedInSignup = () => handleSocialSignup('linkedin_oidc');
+  const handleXSignup = () => handleSocialSignup('twitter');
 
   return (
     <div className="signup-premium min-h-screen bg-background md:h-screen md:overflow-hidden">
@@ -766,6 +767,7 @@ const Signup = () => {
                   disabled={isLoading}
                   onGoogleContinue={handleGoogleSignup}
                   onLinkedInContinue={handleLinkedInSignup}
+                  onXContinue={handleXSignup}
                 />
 
                 {/* Hype Text */}

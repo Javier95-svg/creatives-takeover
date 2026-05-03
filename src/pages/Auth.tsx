@@ -241,8 +241,10 @@ const Auth: React.FC = () => {
 
   const handleGoogleLogin = () => handleSocialAuth('login', 'google');
   const handleLinkedInLogin = () => handleSocialAuth('login', 'linkedin_oidc');
+  const handleXLogin = () => handleSocialAuth('login', 'twitter');
   const handleGoogleSignup = () => handleSocialAuth('signup', 'google');
   const handleLinkedInSignup = () => handleSocialAuth('signup', 'linkedin_oidc');
+  const handleXSignup = () => handleSocialAuth('signup', 'twitter');
 
   return (
     <div className="relative min-h-dvh flex items-center justify-center p-4 overflow-hidden safe-area-inset"
@@ -391,6 +393,7 @@ const Auth: React.FC = () => {
                 disabled={loading}
                 onGoogleContinue={handleGoogleLogin}
                 onLinkedInContinue={handleLinkedInLogin}
+                onXContinue={handleXLogin}
               />
             </TabsContent>
 
@@ -539,6 +542,7 @@ const Auth: React.FC = () => {
                 disabled={loading}
                 onGoogleContinue={handleGoogleSignup}
                 onLinkedInContinue={handleLinkedInSignup}
+                onXContinue={handleXSignup}
               />
             </TabsContent>
           </Tabs>

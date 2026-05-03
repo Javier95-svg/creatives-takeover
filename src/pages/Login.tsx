@@ -237,6 +237,7 @@ const Login = () => {
 
   const handleGoogleLogin = () => handleSocialLogin('google');
   const handleLinkedInLogin = () => handleSocialLogin('linkedin_oidc');
+  const handleXLogin = () => handleSocialLogin('twitter');
 
   return (
     <div className="signup-premium min-h-screen bg-background md:h-screen md:overflow-hidden">
@@ -545,6 +546,7 @@ const Login = () => {
                 disabled={isLoading}
                 onGoogleContinue={handleGoogleLogin}
                 onLinkedInContinue={handleLinkedInLogin}
+                onXContinue={handleXLogin}
               />
 
               {/* Security Badge */}
