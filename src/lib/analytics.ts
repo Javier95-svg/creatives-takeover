@@ -5,6 +5,7 @@ type AnalyticsProperties = Record<string, unknown>;
 type SignupMethod = 'google' | 'linkedin' | 'email';
 export type PlanId = 'ROOKIE' | 'STARTER' | 'RISING' | 'PRO';
 export type UpgradeLocation = 'pricing_page' | 'dashboard_banner' | 'feature_gate' | 'onboarding';
+export type IcpBuilderOpenedSource = 'dashboard' | 'onboarding' | 'direct' | 'seed_redirect';
 
 const PH_KEY =
   import.meta.env.VITE_POSTHOG_API_KEY ??
@@ -232,6 +233,11 @@ export const trackBizMapDemoConverted = (properties?: AnalyticsProperties) =>
 export const trackICPBuilderStarted = (properties?: AnalyticsProperties) =>
   captureEvent('icp_builder_started', properties);
 
+export const trackICPBuilderOpened = (properties: {
+  source: IcpBuilderOpenedSource;
+  seed_prefilled: boolean;
+}) => captureEvent('icp_builder_opened', properties);
+
 export const trackIcpBuilderStartedUngated = (properties: { source: string }) =>
   trackICPBuilderStarted({
     ...properties,
@@ -242,10 +248,10 @@ export const trackICPBuilderCompleted = (properties?: AnalyticsProperties) =>
   captureEvent('icp_builder_completed', properties);
 
 export const trackICPBuilderStepCompleted = (properties: {
-  step: string;
-  step_index: number;
+  step: number;
+  step_name: string;
+  total_steps: number;
   mode: 'fast' | 'guided';
-  is_authenticated: boolean;
 }) => captureEvent('icp_builder_step_completed', properties);
 
 export const trackICPBuilderModeSelected = (properties: {

@@ -65,6 +65,8 @@ const GUIDED_SCREEN_ORDER: IcpFlowScreen[] = [
   "guided_workaround",
 ];
 
+const FAST_SCREEN_ORDER: IcpFlowScreen[] = ["fast_input"];
+
 const PROGRESS_BY_SCREEN: Record<IcpFlowScreen | "seed_loading" | "synthesis", number> = {
   mode_select: 0,
   fast_input: 48,
@@ -895,20 +897,17 @@ const ICPBuilder: React.FC = () => {
   }, [fallbackEmail, fallbackEmailState, requestResumeLink, toast]);
 
   const trackStepCompleted = (screen: IcpFlowScreen) => {
-    const stepIndexMap: Partial<Record<IcpFlowScreen, number>> = {
-      fast_input: 1,
-      guided_seed: 1,
-      guided_persona: 2,
-      guided_pain: 3,
-      guided_workaround: 4,
-    };
-    const index = stepIndexMap[screen];
-    if (!index || !session.mode) return;
+    if (!session.mode) return;
+
+    const flowScreens = session.mode === "fast" ? FAST_SCREEN_ORDER : GUIDED_SCREEN_ORDER;
+    const stepIndex = flowScreens.indexOf(screen) + 1;
+    if (stepIndex < 1) return;
+
     trackICPBuilderStepCompleted({
-      step: screen,
-      step_index: index,
+      step: stepIndex,
+      step_name: screen,
+      total_steps: flowScreens.length,
       mode: session.mode,
-      is_authenticated: Boolean(user),
     });
   };
 

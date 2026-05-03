@@ -6,10 +6,45 @@ import Navigation from "@/components/Navigation";
 import SEO from "@/components/SEO";
 import { Button } from "@/components/ui/button";
 import { readIcpBuilderSession } from "@/lib/icpBuilderSession";
-import { captureEvent, trackLandingViewed, trackActivationCompleted } from "@/lib/analytics";
+import {
+  captureEvent,
+  trackActivationCompleted,
+  trackICPBuilderOpened,
+  trackLandingViewed,
+  type IcpBuilderOpenedSource,
+} from "@/lib/analytics";
 import { ICP_SEED_STORAGE_KEY } from "@/lib/icpSeed";
 
 const ICPBuilder = lazy(() => import("@/components/icp/ICPBuilder"));
+
+function getIcpBuilderOpenedSource(
+  params: URLSearchParams,
+  seedPrefilled: boolean,
+): IcpBuilderOpenedSource {
+  const source = params.get("source");
+  if (source === "dashboard" || source === "onboarding" || source === "direct" || source === "seed_redirect") {
+    return source;
+  }
+
+  if (seedPrefilled || params.has("seed")) {
+    return "seed_redirect";
+  }
+
+  if (params.has("intent")) {
+    return "onboarding";
+  }
+
+  try {
+    const referrerPath = document.referrer ? new URL(document.referrer).pathname : "";
+    if (referrerPath.startsWith("/dashboard")) {
+      return "dashboard";
+    }
+  } catch {
+    return "direct";
+  }
+
+  return "direct";
+}
 
 export default function ICPBuilderPage() {
   const navigate = useNavigate();
@@ -34,7 +69,14 @@ export default function ICPBuilderPage() {
 
     trackLandingViewed({ page: '/icp-builder' });
 
+    const params = new URLSearchParams(window.location.search);
     const seed = sessionStorage.getItem(ICP_SEED_STORAGE_KEY);
+    const seedPrefilled = seed !== null;
+    trackICPBuilderOpened({
+      source: getIcpBuilderOpenedSource(params, seedPrefilled),
+      seed_prefilled: seedPrefilled,
+    });
+
     if (seed?.trim()) {
       trackActivationCompleted({ artifact: 'icp_seed_prefilled' });
     }
