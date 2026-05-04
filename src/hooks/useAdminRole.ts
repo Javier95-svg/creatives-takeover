@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { safe } from '@/integrations/supabase/safe';
+import { isAdminEmail } from '@/lib/admin';
 
 export const useAdminRole = () => {
   const { user } = useAuth();
@@ -9,8 +10,16 @@ export const useAdminRole = () => {
 
   useEffect(() => {
     const checkAdminRole = async () => {
+      setLoading(true);
+
       if (!user) {
         setIsAdmin(false);
+        setLoading(false);
+        return;
+      }
+
+      if (isAdminEmail(user.email)) {
+        setIsAdmin(true);
         setLoading(false);
         return;
       }

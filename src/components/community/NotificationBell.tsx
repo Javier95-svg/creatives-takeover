@@ -14,7 +14,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useCommunityNotifications, type CommunityNotification } from '@/hooks/useCommunityNotifications';
 import { useAuth } from '@/contexts/AuthContext';
 import { formatDistanceToNow } from 'date-fns';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { useEffect, useState, useTransition } from 'react';
 import { cn } from '@/lib/utils';
 import { trackActivity } from '@/lib/activity';
 
@@ -22,12 +23,27 @@ export const NotificationBell = () => {
   const { user } = useAuth();
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useCommunityNotifications(user?.id);
   const navigate = useNavigate();
+  const location = useLocation();
+  const [pendingNotificationId, setPendingNotificationId] = useState<string | null>(null);
+  const [, startNotificationNavigation] = useTransition();
+
+  useEffect(() => {
+    setPendingNotificationId(null);
+  }, [location.hash, location.pathname, location.search]);
 
   // Filter out message notifications - they're handled separately in the messages icon
   const systemNotifications = notifications.filter(n => n.notification_type !== 'message');
 
   const handleNotificationClick = async (notification: CommunityNotification) => {
-    await markAsRead(notification.id);
+    if (pendingNotificationId) return;
+    setPendingNotificationId(notification.id);
+    try {
+      await markAsRead(notification.id);
+    } catch (error) {
+      console.error('Failed to mark notification as read', error);
+      setPendingNotificationId(null);
+      return;
+    }
     const actorProfilePath = notification.actor?.username
       ? `/profile/${notification.actor.username}`
       : null;
@@ -35,35 +51,44 @@ export const NotificationBell = () => {
       ? notification.metadata.route
       : null;
 
+    const navigateTo = (route: string) => {
+      startNotificationNavigation(() => {
+        navigate(route);
+      });
+      window.setTimeout(() => {
+        setPendingNotificationId(null);
+      }, 1200);
+    };
+
     // Navigate to messages if it's a message notification - go directly to /messages
     if (notification.notification_type === 'message') {
-      navigate('/messages');
+      navigateTo('/messages');
       return;
     }
 
     // Navigate to co-founders page if it's a post_published notification
     if (notification.notification_type === 'post_published') {
-      navigate('/community/co-founders');
+      navigateTo('/community/co-founders');
       return;
     }
 
     if (notification.notification_type === 'mentor_banner_created') {
-      navigate('/community');
+      navigateTo('/community');
       return;
     }
 
     if (notification.notification_type === 'angel_banner_created') {
-      navigate('/community/angels');
+      navigateTo('/community/angels');
       return;
     }
 
     if (notification.notification_type === 'cofounder_post_created') {
-      navigate('/community/co-founders');
+      navigateTo('/community/co-founders');
       return;
     }
 
     if (notification.notification_type === 'newspaper_article_published') {
-      navigate('/newspaper');
+      navigateTo('/newspaper');
       return;
     }
 
@@ -83,48 +108,51 @@ export const NotificationBell = () => {
         );
       }
 
-      navigate(metadataRoute || '/insighta');
+      navigateTo(metadataRoute || '/insighta');
       return;
     }
 
     if (notification.notification_type === 'credit_purchase_completed') {
-      navigate(metadataRoute || '/pricing#credit-packs');
+      navigateTo(metadataRoute || '/pricing#credit-packs');
       return;
     }
 
     // Navigate to profile for follow requests
     if (notification.notification_type === 'follow_request') {
-      navigate(actorProfilePath || '/community');
+      navigateTo(actorProfilePath || '/community');
       return;
     }
 
     // Navigate to profile pictures tab for new picture notifications
     if (notification.notification_type === 'follower_new_picture') {
-      navigate(actorProfilePath || '/community');
+      navigateTo(actorProfilePath || '/community');
       return;
     }
 
     // Navigate to profile for new reel notifications
     if (notification.notification_type === 'follower_new_reel') {
-      navigate(actorProfilePath || '/community');
+      navigateTo(actorProfilePath || '/community');
       return;
     }
 
     // Navigate to profile startup tab for startup updates
     if (notification.notification_type === 'follower_startup_update') {
-      navigate(actorProfilePath || '/community');
+      navigateTo(actorProfilePath || '/community');
       return;
     }
 
     if (notification.notification_type === 'task_deadline_expired') {
-      navigate('/tasks');
+      navigateTo('/tasks');
       return;
     }
 
     // Navigate to the post for community notifications
     if (notification.post_id) {
-      navigate(`/community?post=${notification.post_id}`);
+      navigateTo(`/community?post=${notification.post_id}`);
+      return;
     }
+
+    setPendingNotificationId(null);
   };
 
   const getNotificationText = (notification: CommunityNotification) => {
@@ -241,14 +269,18 @@ export const NotificationBell = () => {
               No notifications yet
             </div>
           ) : (
-            systemNotifications.map((notification) => (
-              <DropdownMenuItem
-                key={notification.id}
-                onClick={() => handleNotificationClick(notification)}
-                className={`cursor-pointer flex items-start gap-3 p-3 ${
-                  !notification.read ? 'bg-primary/5' : ''
-                }`}
-              >
+            systemNotifications.map((notification) => {
+              const isPending = pendingNotificationId === notification.id;
+
+              return (
+                <DropdownMenuItem
+                  key={notification.id}
+                  onClick={() => handleNotificationClick(notification)}
+                  aria-disabled={Boolean(pendingNotificationId)}
+                  className={`cursor-pointer flex items-start gap-3 p-3 ${
+                    !notification.read ? 'bg-primary/5' : ''
+                  } ${pendingNotificationId ? 'pointer-events-none opacity-70' : ''}`}
+                >
                 <Avatar className="h-8 w-8 flex-shrink-0">
                   <AvatarImage
                     src={getNotificationImage(notification)}
@@ -261,14 +293,15 @@ export const NotificationBell = () => {
                 <div className="flex-1 min-w-0">
                   <p className="text-sm">{getNotificationText(notification)}</p>
                   <p className="text-xs text-muted-foreground mt-1">
-                    {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
+                    {isPending ? 'Opening...' : formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
                   </p>
                 </div>
                 {!notification.read && (
                   <div className="w-2 h-2 rounded-full bg-primary flex-shrink-0" />
                 )}
-              </DropdownMenuItem>
-            ))
+                </DropdownMenuItem>
+              );
+            })
           )}
         </ScrollArea>
       </DropdownMenuContent>

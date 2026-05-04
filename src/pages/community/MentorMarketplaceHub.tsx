@@ -14,6 +14,7 @@ import { Users, Loader2, Search, GraduationCap, ArrowRight, BookmarkCheck, Messa
 import { Mentor } from "@/types/mentor";
 import { useMentors } from "@/hooks/useMentors";
 import { useAuth } from "@/contexts/AuthContext";
+import { useAdminRole } from "@/hooks/useAdminRole";
 import { useMentorSaves } from "@/hooks/useMentorSaves";
 import { sortMentorsAlphabetically } from "@/utils/mentorSort";
 import { normalizeMentorExpertiseList } from "@/utils/mentorExpertise";
@@ -55,7 +56,7 @@ const MENTOR_HIGHLIGHTS = [
 const MentorMarketplaceHub = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuth();
-  const isAdmin = user?.email?.toLowerCase() === 'admin@creatives-takeover.com';
+  const { isAdmin } = useAdminRole();
   const { fetchMentors, loading } = useMentors();
   const { savedMentors } = useMentorSaves();
   const [mentors, setMentors] = useState<Mentor[]>([]);

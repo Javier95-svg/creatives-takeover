@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState, useTransition } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import SEO, { createBreadcrumbSchema } from '@/components/SEO';
@@ -15,6 +15,9 @@ const LAST_EDITOR_STORAGE_KEY = 'waitlist_builder_last_editor_v1';
 export default function WaitlistTemplatesPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const [pendingTemplateId, setPendingTemplateId] = useState<string | null>(null);
+  const [isBackPending, startBackNavigation] = useTransition();
+  const [, startTemplateNavigation] = useTransition();
 
   const structuredData = useMemo(
     () => [
@@ -35,8 +38,16 @@ export default function WaitlistTemplatesPage() {
   );
 
   const handleSelectTemplate = (template: WaitlistTemplateDefinition) => {
+    if (!template?.id) {
+      return;
+    }
+
+    setPendingTemplateId(template.id);
+
     if (!user) {
-      navigate('/auth?redirect=' + encodeURIComponent(`/waitlist?template=${template.id}`));
+      startTemplateNavigation(() => {
+        navigate('/auth?redirect=' + encodeURIComponent(`/waitlist?template=${template.id}`));
+      });
       return;
     }
 
@@ -47,14 +58,25 @@ export default function WaitlistTemplatesPage() {
         const currentTemplateId = draft?.content?.templateId;
         if (currentTemplateId && currentTemplateId !== template.id) {
           const shouldReplace = window.confirm('Replace the current editor contents with this template? Your current draft is preserved in this browser until you confirm.');
-          if (!shouldReplace) return;
+          if (!shouldReplace) {
+            setPendingTemplateId(null);
+            return;
+          }
         }
       } catch {
         // Ignore malformed browser drafts and continue with the selected template.
       }
     }
 
-    navigate(`/waitlist?template=${template.id}`);
+    startTemplateNavigation(() => {
+      navigate(`/waitlist?template=${template.id}`);
+    });
+  };
+
+  const handleBackToWaitlist = () => {
+    startBackNavigation(() => {
+      navigate('/waitlist');
+    });
   };
 
   return (
@@ -74,9 +96,15 @@ export default function WaitlistTemplatesPage() {
           <div className="container mx-auto max-w-[1580px] space-y-8">
             <div className="relative mx-auto flex min-h-[44px] max-w-4xl items-center justify-center px-2">
               <div className="absolute left-0 top-1/2 -translate-y-1/2">
-                <Button variant="ghost" size="sm" className="gap-2" onClick={() => navigate('/waitlist')}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className={`gap-2 ${isBackPending ? 'pointer-events-none opacity-70' : ''}`}
+                  onClick={handleBackToWaitlist}
+                  disabled={isBackPending}
+                >
                   <ArrowLeft className="h-4 w-4" />
-                  <span>Waitlist</span>
+                  <span>{isBackPending ? 'Opening...' : 'Waitlist'}</span>
                 </Button>
               </div>
               <h1 className="pb-2 text-center font-bold leading-[0.95] text-4xl sm:text-[2.85rem] md:text-5xl lg:text-6xl">
@@ -91,6 +119,7 @@ export default function WaitlistTemplatesPage() {
 
             <WaitlistTemplateLibrary
               onSelectTemplate={handleSelectTemplate}
+              pendingTemplateId={pendingTemplateId}
             />
           </div>
         </main>

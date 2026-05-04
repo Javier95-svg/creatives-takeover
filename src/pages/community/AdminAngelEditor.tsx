@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useAngels } from "@/hooks/useAngels";
 import { useAuth } from "@/contexts/AuthContext";
+import { useAdminRole } from "@/hooks/useAdminRole";
 import { Save, Loader2, ArrowLeft, Trash2, User } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -37,8 +38,8 @@ const INVESTMENT_STAGE_OPTIONS = [
 const AdminAngelEditor = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { user, loading: authLoading } = useAuth();
-  const isAdmin = user?.email?.toLowerCase() === "admin@creatives-takeover.com";
+  const { loading: authLoading } = useAuth();
+  const { isAdmin, loading: adminLoading } = useAdminRole();
   const {
     fetchAngelById,
     createAngel,
@@ -226,7 +227,7 @@ const AdminAngelEditor = () => {
 
   // Wait for auth to load before checking admin status
   useEffect(() => {
-    if (authLoading) return; // Wait for auth to settle
+    if (authLoading || adminLoading) return; // Wait for auth and role checks to settle
 
     if (!isAdmin) {
       if (unauthorizedRedirectHandled.current) return;
@@ -240,7 +241,7 @@ const AdminAngelEditor = () => {
     if (id && id !== "new") {
       loadAngel(id);
     }
-  }, [authLoading, id, isAdmin, loadAngel, navigate]);
+  }, [adminLoading, authLoading, id, isAdmin, loadAngel, navigate]);
 
   const toggleSector = (sector: string) => {
     setFormData((prev) => {
@@ -314,7 +315,7 @@ const AdminAngelEditor = () => {
   };
 
   // Show loading while auth is settling
-  if (authLoading) {
+  if (authLoading || adminLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -413,7 +414,7 @@ const AdminAngelEditor = () => {
                       accept="image/jpeg,image/png,image/webp,image/gif"
                       onChange={handlePictureUpload}
                       disabled={uploadingPicture}
-                      className="cursor-pointer"
+                      className={uploadingPicture ? "pointer-events-none cursor-not-allowed opacity-50" : "cursor-pointer"}
                     />
                     {(picturePreview || formData.picture) && (
                       <Button
@@ -474,6 +475,7 @@ const AdminAngelEditor = () => {
                         variant={isSelected ? "default" : "outline"}
                         size="sm"
                         onClick={() => toggleStage(stage)}
+                        disabled={loading || saving || uploadingPicture}
                       >
                         {stage}
                       </Button>
@@ -497,6 +499,7 @@ const AdminAngelEditor = () => {
                         variant={isSelected ? "default" : "outline"}
                         size="sm"
                         onClick={() => toggleSector(sector)}
+                        disabled={loading || saving || uploadingPicture}
                       >
                         {sector}
                       </Button>

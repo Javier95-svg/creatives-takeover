@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useTransition } from 'react';
 import { CreditCostBadge } from "@/components/CreditCostTooltip";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -80,6 +80,8 @@ const TechStack: React.FC = () => {
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewReport, setPreviewReport] = useState<TechStackReport | null>(null);
+  const [loginRedirectPending, setLoginRedirectPending] = useState(false);
+  const [, startLoginNavigation] = useTransition();
 
   const currentTier = (subscriptionData.subscription_tier || 'rookie').toLowerCase();
   useEffect(() => {
@@ -176,7 +178,10 @@ const TechStack: React.FC = () => {
 
   const handleSeeBudget = async () => {
     if (!user) {
-      navigate('/login');
+      setLoginRedirectPending(true);
+      startLoginNavigation(() => {
+        navigate('/login');
+      });
       return;
     }
 
@@ -277,7 +282,10 @@ const TechStack: React.FC = () => {
 
   const handleSaveReport = async () => {
     if (!user) {
-      navigate('/login');
+      setLoginRedirectPending(true);
+      startLoginNavigation(() => {
+        navigate('/login');
+      });
       return;
     }
 
@@ -360,7 +368,9 @@ const TechStack: React.FC = () => {
   const previewBreakdown = previewReport?.budget_breakdown || [];
   const firstUnselectedCategory = techStackData.find((category) => !selectedProducts[category.id]);
   const generateButtonLabel = !user
-    ? 'Sign In to View Budget'
+    ? loginRedirectPending
+      ? 'Opening sign in...'
+      : 'Sign In to View Budget'
       : subscriptionLoading || creditsLoading
         ? 'Loading access...'
       : firstUnselectedCategory
@@ -586,9 +596,9 @@ const TechStack: React.FC = () => {
                   onClick={handleSeeBudget}
                   size="lg"
                   variant={!allCategoriesSelected && user ? "outline" : "default"}
-                  className="w-full sm:w-auto min-w-[140px]"
+                  className={`w-full sm:w-auto min-w-[140px] ${loginRedirectPending ? 'pointer-events-none opacity-70' : ''}`}
                   aria-disabled={!canGenerateBudget}
-                  disabled={Boolean(user) && (subscriptionLoading || creditsLoading)}
+                  disabled={loginRedirectPending || (Boolean(user) && (subscriptionLoading || creditsLoading))}
                 >
                   {!user ? (
                     <>

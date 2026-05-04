@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { ArrowRight, BarChart2, Target, Zap } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -14,14 +14,18 @@ const bullets = [
 const IcpWedgeHero = () => {
   const navigate = useNavigate();
   const [seed, setSeed] = useState("");
+  const [isNavigating, startNavigation] = useTransition();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (isNavigating) return;
 
     if (seed.trim()) {
       persistIcpSeed(seed);
     }
-    navigate("/icp-builder");
+    startNavigation(() => {
+      navigate("/icp-builder");
+    });
   };
 
   return (
@@ -42,17 +46,21 @@ const IcpWedgeHero = () => {
           Describe your idea. We&apos;ll draft your customer, pain, and positioning for free before you create an account.
         </p>
 
-        <form onSubmit={handleSubmit} className="mx-auto mb-4 flex max-w-xl flex-col gap-3 sm:flex-row">
+        <form
+          onSubmit={handleSubmit}
+          className={`mx-auto mb-4 flex max-w-xl flex-col gap-3 sm:flex-row ${isNavigating ? 'pointer-events-none opacity-70' : ''}`}
+        >
           <input
             type="text"
             value={seed}
             onChange={(e) => setSeed(e.target.value)}
+            disabled={isNavigating}
             placeholder="e.g. AI scheduling tool for freelance designers"
             className="h-12 flex-1 rounded-button border border-border/70 bg-background/80 px-4 text-sm text-foreground placeholder:text-muted-foreground backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
             maxLength={200}
           />
-          <Button type="submit" size="lg" className="h-12 whitespace-nowrap px-6 font-semibold">
-            Generate My Free Draft
+          <Button type="submit" size="lg" className="h-12 whitespace-nowrap px-6 font-semibold" disabled={isNavigating}>
+            {isNavigating ? "Opening builder..." : "Generate My Free Draft"}
             <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
         </form>

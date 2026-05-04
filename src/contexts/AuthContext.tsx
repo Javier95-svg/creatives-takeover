@@ -18,6 +18,8 @@ import {
   withGuidedOnboardingPreference,
 } from '@/lib/guidedOnboarding';
 import { resumePendingDiscoveryCallRedirect } from '@/services/discoveryCallService';
+import { identify } from '@/lib/analytics';
+import { isAdminEmail } from '@/lib/admin';
 
 interface AuthContextType {
   user: User | null;
@@ -52,6 +54,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true);
   // Prevent double-processing of sign-in logic
   const signInProcessedRef = useRef<string | null>(null);
+  const identifiedUserRef = useRef<string | null>(null);
   const isMountedRef = useRef(true);
 
   /**
@@ -66,7 +69,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       const userId = signedInUser.id;
       const email = signedInUser.email || '';
-      const isAdmin = email.toLowerCase() === 'admin@creatives-takeover.com';
+      const isAdmin = isAdminEmail(email);
 
       // ── Step 1: Check if profile exists (SINGLE call) ──
       const { data: existingProfileData, error: existingProfileError } = await supabase
@@ -167,6 +170,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             user_preferences: nextUserPreferences,
           }
           : existingProfile;
+      }
+
+      if (identifiedUserRef.current !== userId) {
+        identifiedUserRef.current = userId;
+        identify(userId, {
+          email,
+          full_name: signedInUser.user_metadata?.full_name || '',
+          username: signedInUser.user_metadata?.username || '',
+          onboarding_completed: existingProfile?.onboarding_completed ?? null,
+          is_admin: isAdmin,
+        });
       }
 
       // ── Step 3: Run first-login updates in PARALLEL ──
@@ -275,6 +289,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         // Clear processed ref on sign out so next sign-in gets processed
         if (event === 'SIGNED_OUT') {
           signInProcessedRef.current = null;
+          identifiedUserRef.current = null;
         }
       }
     );

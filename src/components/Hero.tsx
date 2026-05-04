@@ -28,6 +28,7 @@ const Hero = () => {
   const [heroImages, setHeroImages] = useState<HeroImageRecord[]>(() => readCachedHeroImages());
   const [uploading, setUploading] = useState<number | null>(null);
   const [optimisticPreviews, setOptimisticPreviews] = useState<Record<number, string>>({});
+  const [secondaryCtaPending, setSecondaryCtaPending] = useState(false);
   const fileInputRefs = useRef<Record<number, HTMLInputElement | null>>({});
 
   const isAdmin = user?.email?.toLowerCase() === "admin@creatives-takeover.com";
@@ -276,6 +277,8 @@ const Hero = () => {
 
   const handleSecondaryCTAClick = (e: React.MouseEvent) => {
     e.preventDefault();
+    if (secondaryCtaPending) return;
+    setSecondaryCtaPending(true);
     trackEngagement("hero-secondary-cta", 70);
 
     setTimeout(() => {
@@ -302,8 +305,14 @@ const Hero = () => {
               top: targetPosition,
               behavior: "smooth",
             });
+          } else {
+            toast.info("The system overview is loading. Please scroll down to continue.");
           }
+          setSecondaryCtaPending(false);
         }, 100);
+      }
+      if (targetSection) {
+        setTimeout(() => setSecondaryCtaPending(false), 700);
       }
     }, 10);
   };
@@ -370,9 +379,15 @@ const Hero = () => {
                       </Link>
                     </Button>
 
-                    <Button variant="outline" size="lg" className="w-full sm:w-auto min-h-[44px] touch-manipulation" onClick={handleSecondaryCTAClick}>
+                    <Button
+                      variant="outline"
+                      size="lg"
+                      className={`w-full sm:w-auto min-h-[44px] touch-manipulation ${secondaryCtaPending ? 'pointer-events-none opacity-70' : ''}`}
+                      onClick={handleSecondaryCTAClick}
+                      disabled={secondaryCtaPending}
+                    >
                       <Cpu className="w-4 h-4" />
-                      Our System
+                      {secondaryCtaPending ? "Opening..." : "Our System"}
                     </Button>
                   </div>
                 </div>

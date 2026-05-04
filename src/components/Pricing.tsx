@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -132,10 +132,15 @@ export default function Pricing() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [billingCycle, setBillingCycle] = useState<BillingCycle>("monthly");
+  const [pendingPlan, setPendingPlan] = useState<PlanKey | null>(null);
+  const [, startNavigation] = useTransition();
 
   const currentTier = normalizeTierName(subscriptionData?.subscription_tier);
 
   const handleSubscribe = async (plan: PlanKey) => {
+    if (pendingPlan) return;
+    setPendingPlan(plan);
+
     const shouldTrackUpgrade = plan !== "rookie" && (!user || currentTier !== plan);
 
     if (shouldTrackUpgrade) {
@@ -147,20 +152,30 @@ export default function Pricing() {
     }
 
     if (user && currentTier === plan) {
-      navigate("/account");
+      startNavigation(() => {
+        navigate("/account");
+      });
       return;
     }
 
     if (plan === "rookie") {
       if (user) {
-        navigate("/dashboard");
+        startNavigation(() => {
+          navigate("/dashboard");
+        });
       } else {
         window.location.href = "/auth";
       }
       return;
     }
 
-    window.location.href = PLAN_PAYMENT_LINKS[plan][billingCycle];
+    const paymentLink = PLAN_PAYMENT_LINKS[plan][billingCycle];
+    if (!paymentLink) {
+      setPendingPlan(null);
+      return;
+    }
+
+    window.location.href = paymentLink;
   };
 
   if (loading) {
@@ -207,6 +222,7 @@ export default function Pricing() {
             const isCurrentPlan = currentTier === plan.key;
             const isPopular = plan.key === "rising";
             const isPro = plan.key === "pro";
+            const isPlanPending = pendingPlan === plan.key;
             const price = billingCycle === "yearly" ? plan.yearlyPrice : plan.monthlyPrice;
             const period = billingCycle === "yearly" ? "/year" : plan.monthlyPrice === 0 ? "" : "/month";
             const cardStyle = PLAN_CARD_STYLES[plan.key];
@@ -282,11 +298,13 @@ export default function Pricing() {
 
                 <Button
                   className={`w-full ${cardStyle.button}`}
-                  disabled={actionLoading}
+                  disabled={actionLoading || Boolean(pendingPlan)}
                   onClick={() => void handleSubscribe(plan.key)}
                   variant="outline"
                 >
-                  {isCurrentPlan && user
+                  {isPlanPending
+                    ? "Opening..."
+                    : isCurrentPlan && user
                     ? "Manage Plan"
                     : plan.key === "rookie"
                       ? "Start Free"

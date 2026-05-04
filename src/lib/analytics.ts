@@ -2,6 +2,7 @@ import posthog from 'posthog-js';
 import { getSafeSessionStorage } from '@/lib/safeStorage';
 
 type AnalyticsProperties = Record<string, unknown>;
+type PostHogWithLoaded = typeof posthog & { __loaded?: boolean };
 type SignupMethod = 'google' | 'linkedin' | 'email';
 export type ActivationCompletedTrigger =
   | 'icp_completed'
@@ -33,17 +34,20 @@ let initialized = false;
 const queuedEvents: Array<{ eventName: string; properties?: AnalyticsProperties }> = [];
 const queuedIdentifies: Array<{ id: string; properties?: AnalyticsProperties }> = [];
 
+const isPosthogReady = (client: typeof posthog | null): client is typeof posthog =>
+  typeof window !== 'undefined' && Boolean((client as PostHogWithLoaded | null)?.__loaded);
+
 const flushQueue = () => {
-  if (!posthogClient) {
+  if (!isPosthogReady(posthogClient)) {
     return;
   }
 
   queuedIdentifies.splice(0).forEach(({ id, properties }) => {
-    posthogClient?.identify(id, properties);
+    posthogClient.identify(id, properties);
   });
 
   queuedEvents.splice(0).forEach(({ eventName, properties }) => {
-    posthogClient?.capture(eventName, properties ?? {});
+    posthogClient.capture(eventName, properties ?? {});
   });
 };
 
@@ -85,7 +89,7 @@ const getFirstTouchUtms = (): AnalyticsProperties => {
 };
 
 const registerFirstTouchUtms = () => {
-  if (!posthogClient) {
+  if (!isPosthogReady(posthogClient)) {
     return;
   }
 
@@ -116,15 +120,28 @@ export const initPosthog = () => {
 
   initPromise = (async () => {
     try {
-      posthog.init(PH_KEY as string, {
-        api_host: PH_HOST,
-        autocapture: true,
-        persistence: 'localStorage',
+      await new Promise<void>((resolve) => {
+        posthog.init(PH_KEY as string, {
+          api_host: PH_HOST,
+          autocapture: true,
+          persistence: 'localStorage',
+          loaded: (client) => {
+            posthogClient = client as typeof posthog;
+            registerFirstTouchUtms();
+            initialized = true;
+            flushQueue();
+            resolve();
+          },
+        });
+
+        posthogClient = posthog;
+        if (isPosthogReady(posthogClient)) {
+          registerFirstTouchUtms();
+          initialized = true;
+          flushQueue();
+          resolve();
+        }
       });
-      posthogClient = posthog;
-      registerFirstTouchUtms();
-      initialized = true;
-      flushQueue();
     } catch (error) {
       console.warn('PostHog init failed', error);
     }
@@ -149,7 +166,7 @@ export const bootstrapPosthog = () => {
 };
 
 export const captureEvent = (eventName: string, properties?: AnalyticsProperties) => {
-  if (posthogClient) {
+  if (isPosthogReady(posthogClient)) {
     try {
       posthogClient.capture(eventName, properties ?? {});
       return;
@@ -164,7 +181,7 @@ export const captureEvent = (eventName: string, properties?: AnalyticsProperties
 };
 
 export const identify = (id: string, properties?: AnalyticsProperties) => {
-  if (posthogClient) {
+  if (isPosthogReady(posthogClient)) {
     try {
       posthogClient.identify(id, properties);
       return;
@@ -176,6 +193,22 @@ export const identify = (id: string, properties?: AnalyticsProperties) => {
 
   queuedIdentifies.push({ id, properties });
   void initPosthog();
+};
+
+export const captureAuthenticatedEvent = (
+  eventName: string,
+  userId: string | null | undefined,
+  properties?: AnalyticsProperties,
+  identifyProperties?: AnalyticsProperties,
+) => {
+  if (userId) {
+    identify(userId, identifyProperties);
+  }
+
+  captureEvent(eventName, {
+    ...properties,
+    ...(userId ? { userId } : {}),
+  });
 };
 
 export const trackLandingViewed = ({ page, exit_intent }: { page: string; exit_intent?: boolean }) =>
@@ -221,7 +254,10 @@ export const trackOnboardingStarted = (properties: {
   source: OnboardingStartedSource;
   userId?: string;
   page_path?: string;
-}) => captureEvent('onboarding_started', properties);
+}) => captureAuthenticatedEvent('onboarding_started', properties.userId, properties);
+
+export const trackOnboardingCompleted = (properties: AnalyticsProperties & { userId?: string }) =>
+  captureAuthenticatedEvent('onboarding_completed', properties.userId as string | undefined, properties);
 
 export const trackOnboardingStepCompleted = (properties: {
   step: number;
@@ -251,8 +287,8 @@ export const trackBizMapDemoConverted = (properties?: AnalyticsProperties) =>
 
 // ─── Retention: Tool activation events ───────────────────────────────────────
 
-export const trackICPBuilderStarted = (properties?: AnalyticsProperties) =>
-  captureEvent('icp_builder_started', properties);
+export const trackICPBuilderStarted = (properties?: AnalyticsProperties & { userId?: string }) =>
+  captureAuthenticatedEvent('icp_builder_started', properties?.userId as string | undefined, properties);
 
 export const trackICPBuilderOpened = (properties: {
   source: IcpBuilderOpenedSource;
@@ -280,7 +316,8 @@ export const trackICPBuilderStepCompleted = (properties: {
   step_name: string;
   total_steps: number;
   mode: 'fast' | 'guided';
-}) => captureEvent('icp_builder_step_completed', properties);
+} & AnalyticsProperties) =>
+  captureAuthenticatedEvent('icp_builder_step_completed', properties.userId as string | undefined, properties);
 
 export const trackICPBuilderModeSelected = (properties: {
   mode: 'fast' | 'guided';
@@ -379,7 +416,7 @@ export const isLikelyBot = (): boolean => {
 
 export const captureUtmSuperProperties = () => {
   const utms = getFirstTouchUtms();
-  if (!posthogClient || Object.keys(utms).length === 0) return;
+  if (!isPosthogReady(posthogClient) || Object.keys(utms).length === 0) return;
   try {
     posthogClient.register(utms);
   } catch (e) {

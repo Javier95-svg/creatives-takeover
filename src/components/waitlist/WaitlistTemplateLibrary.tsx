@@ -7,6 +7,7 @@ import { WAITLIST_TEMPLATE_LIBRARY, type WaitlistTemplateDefinition } from '@/li
 
 interface WaitlistTemplateLibraryProps {
   onSelectTemplate: (template: WaitlistTemplateDefinition) => void;
+  pendingTemplateId?: string | null;
 }
 
 const categories = ['All', ...WAITLIST_TEMPLATE_LIBRARY.map((template) => template.productType)];
@@ -54,7 +55,7 @@ function TemplateMiniPreview({ template }: { template: WaitlistTemplateDefinitio
   );
 }
 
-export default function WaitlistTemplateLibrary({ onSelectTemplate }: WaitlistTemplateLibraryProps) {
+export default function WaitlistTemplateLibrary({ onSelectTemplate, pendingTemplateId = null }: WaitlistTemplateLibraryProps) {
   const [category, setCategory] = useState('All');
 
   const filteredTemplates = useMemo(() => {
@@ -81,30 +82,44 @@ export default function WaitlistTemplateLibrary({ onSelectTemplate }: WaitlistTe
       </div>
 
       <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-        {filteredTemplates.map((template) => (
-          <Card key={template.id} className="group flex h-[520px] flex-col overflow-hidden border-border/60 bg-white/85 p-4 shadow-sm transition hover:-translate-y-1 hover:border-primary/40 hover:shadow-xl dark:border-white/10 dark:bg-slate-950/75">
-            <TemplateMiniPreview template={template} />
-            <div className="mt-4 flex flex-1 flex-col space-y-3">
-              <div className="min-h-[116px]">
-                <div className="flex items-center justify-between gap-3">
-                  <h3 className="text-lg font-semibold">{template.name}</h3>
-                  <span className="rounded-full bg-primary/10 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-primary">
-                    {template.productType}
-                  </span>
+        {filteredTemplates.map((template) => {
+          const isPending = pendingTemplateId === template.id;
+
+          return (
+            <Card
+              key={template.id}
+              className={cn(
+                "group flex h-[520px] flex-col overflow-hidden border-border/60 bg-white/85 p-4 shadow-sm transition hover:-translate-y-1 hover:border-primary/40 hover:shadow-xl dark:border-white/10 dark:bg-slate-950/75",
+                isPending && "pointer-events-none opacity-70",
+              )}
+            >
+              <TemplateMiniPreview template={template} />
+              <div className="mt-4 flex flex-1 flex-col space-y-3">
+                <div className="min-h-[116px]">
+                  <div className="flex items-center justify-between gap-3">
+                    <h3 className="text-lg font-semibold">{template.name}</h3>
+                    <span className="rounded-full bg-primary/10 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-primary">
+                      {template.productType}
+                    </span>
+                  </div>
+                  <p className="mt-2 min-h-12 text-sm leading-relaxed text-muted-foreground">{template.description}</p>
                 </div>
-                <p className="mt-2 min-h-12 text-sm leading-relaxed text-muted-foreground">{template.description}</p>
+                <div className="flex items-start gap-2 rounded-lg border border-border/60 bg-muted/30 p-3 text-xs text-muted-foreground dark:border-white/10">
+                  <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                  <span>{template.bestFor}</span>
+                </div>
+                <Button
+                  className="mt-auto w-full justify-between"
+                  onClick={() => onSelectTemplate(template)}
+                  disabled={Boolean(pendingTemplateId)}
+                >
+                  <span>{isPending ? 'Opening design...' : 'Use this design'}</span>
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
               </div>
-              <div className="flex items-start gap-2 rounded-lg border border-border/60 bg-muted/30 p-3 text-xs text-muted-foreground dark:border-white/10">
-                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                <span>{template.bestFor}</span>
-              </div>
-              <Button className="mt-auto w-full justify-between" onClick={() => onSelectTemplate(template)}>
-                <span>Use this design</span>
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-            </div>
-          </Card>
-        ))}
+            </Card>
+          );
+        })}
       </div>
     </div>
   );

@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
 import {
   captureEvent,
+  trackOnboardingCompleted,
   trackOnboardingStepCompleted,
 } from '@/lib/analytics';
 import { trackActivity } from '@/lib/activity';
@@ -182,7 +183,8 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
         startRoute,
       });
       // FIX(retention): onboarding — completion is now emitted explicitly so onboarding_started/onboarding_completed can be trusted again.
-      captureEvent('onboarding_completed', {
+      trackOnboardingCompleted({
+        userId: user.id,
         stage: formData.businessStage,
         painPoint: formData.primaryPain,
         activationIntent: selectedIntent,

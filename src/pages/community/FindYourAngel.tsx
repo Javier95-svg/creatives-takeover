@@ -33,6 +33,7 @@ import { Sparkles, Loader2, Edit, Search, ChevronDown, X, ArrowLeft, Lock, Crown
 import { AngelInvestor } from "@/types/angel";
 import { useAngels } from "@/hooks/useAngels";
 import { useAuth } from "@/contexts/AuthContext";
+import { useAdminRole } from "@/hooks/useAdminRole";
 import { useFeatureGating } from "@/hooks/useFeatureGating";
 import { useUpgradePrompt } from "@/contexts/UpgradePromptContext";
 import { SignedOutFeaturePreview } from "@/components/ui/SignedOutFeaturePreview";
@@ -77,7 +78,7 @@ const FindYourAngel = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const isAdmin = user?.email?.toLowerCase() === 'admin@creatives-takeover.com';
+  const { isAdmin } = useAdminRole();
   const { currentTier } = useFeatureGating();
   const { openUpgradePrompt } = useUpgradePrompt();
   const { fetchAngels, loading } = useAngels();

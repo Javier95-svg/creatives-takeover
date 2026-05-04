@@ -12,6 +12,7 @@ import { Switch } from "@/components/ui/switch";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useMentors, CreateMentorInput } from "@/hooks/useMentors";
 import { useAuth } from "@/contexts/AuthContext";
+import { useAdminRole } from "@/hooks/useAdminRole";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Save, X, Loader2, ArrowLeft, Trash2, Upload, DollarSign, User } from "lucide-react";
 import { toast } from "sonner";
@@ -39,8 +40,8 @@ const EXPERTISE_OPTIONS = [
 const AdminMentorEditor = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const isAdmin = user?.email?.toLowerCase() === "admin@creatives-takeover.com";
+  const { loading: authLoading } = useAuth();
+  const { isAdmin, loading: adminLoading } = useAdminRole();
   const {
     fetchMentorById,
     createMentor,
@@ -72,16 +73,20 @@ const AdminMentorEditor = () => {
   });
 
   useEffect(() => {
+    if (authLoading || adminLoading) {
+      return;
+    }
+
     if (!isAdmin) {
       toast.error("Only admins can access this page");
-      navigate("/community");
+      navigate("/community", { replace: true });
       return;
     }
 
     if (id && id !== "new") {
       loadMentor(id);
     }
-  }, [id, isAdmin, navigate]);
+  }, [adminLoading, authLoading, id, isAdmin, navigate]);
 
   const loadMentor = async (mentorId: string) => {
     const found = await fetchMentorById(mentorId);
@@ -371,8 +376,32 @@ const AdminMentorEditor = () => {
     }
   };
 
+  if (authLoading || adminLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center px-6">
+        <div className="max-w-md rounded-2xl border border-border/60 bg-card p-8 text-center shadow-sm">
+          <Loader2 className="mx-auto h-8 w-8 animate-spin text-primary" />
+          <h1 className="mt-4 text-xl font-semibold">Checking admin access</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Mentor editing is restricted to admins.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   if (!isAdmin) {
-    return null;
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center px-6">
+        <div className="max-w-md rounded-2xl border border-border/60 bg-card p-8 text-center shadow-sm">
+          <Loader2 className="mx-auto h-8 w-8 animate-spin text-primary" />
+          <h1 className="mt-4 text-xl font-semibold">Redirecting to mentors</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Admin editing is restricted, so this page is redirecting you back to the mentor marketplace.
+          </p>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -451,7 +480,7 @@ const AdminMentorEditor = () => {
                       accept="image/jpeg,image/png,image/webp,image/gif"
                       onChange={handlePictureUpload}
                       disabled={uploadingPicture}
-                      className="cursor-pointer"
+                      className={uploadingPicture ? "pointer-events-none cursor-not-allowed opacity-50" : "cursor-pointer"}
                     />
                     {(picturePreview || formData.picture) && (
                       <Button
@@ -688,6 +717,7 @@ const AdminMentorEditor = () => {
                         variant={isSelected ? "default" : "outline"}
                         size="sm"
                         onClick={() => toggleExpertise(expertise)}
+                        disabled={loading || saving || uploadingPicture}
                       >
                         {expertise}
                       </Button>
@@ -721,6 +751,7 @@ const AdminMentorEditor = () => {
                     variant="outline"
                     size="sm"
                     onClick={addUniversity}
+                    disabled={loading || saving || uploadingPicture}
                   >
                     Add
                   </Button>
@@ -737,7 +768,8 @@ const AdminMentorEditor = () => {
                         <button
                           type="button"
                           onClick={() => removeUniversity(university)}
-                          className="ml-1 hover:text-destructive"
+                          disabled={loading || saving || uploadingPicture}
+                          className="ml-1 hover:text-destructive disabled:pointer-events-none disabled:opacity-50"
                         >
                           <X className="w-3 h-3" />
                         </button>

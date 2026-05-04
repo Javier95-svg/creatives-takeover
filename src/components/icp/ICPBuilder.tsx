@@ -644,11 +644,12 @@ const ICPBuilder: React.FC = () => {
     setFallbackEmailState("idle");
 
     try {
-      trackICPBuilderStarted({ page_path: "/icp-builder", mode });
+      trackICPBuilderStarted({ page_path: "/icp-builder", mode, userId: user?.id });
       captureEvent("icp_builder_started", {
         page_path: "/icp-builder",
         entry_mode: mode,
         isAuthenticated: Boolean(user),
+        userId: user?.id,
       });
 
       const { data, error } = await withTimeout(
@@ -951,6 +952,7 @@ const ICPBuilder: React.FC = () => {
       step_name: screen,
       total_steps: flowScreens.length,
       mode: session.mode,
+      userId: user?.id,
     });
   };
 
