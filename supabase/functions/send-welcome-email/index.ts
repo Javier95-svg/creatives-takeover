@@ -59,13 +59,13 @@ serve(async (req: Request): Promise<Response> => {
     const html = `
       <div style="font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, Apple Color Emoji, Segoe UI Emoji; line-height: 1.6; color: #0f172a; max-width: 560px;">
         <h1 style="margin: 0 0 16px; font-size: 24px; font-weight: 700;">Welcome to Creatives Takeover, ${safeName}</h1>
-        <p style="margin: 0 0 12px; color: #334155;">You are not being dropped into a generic dashboard. Your first job is to complete onboarding and choose the one action that should pull you back into the product.</p>
+        <p style="margin: 0 0 12px; color: #334155;">You’re not being dropped into a generic dashboard. Your first job is to complete onboarding and choose the one meaningful action to take first.</p>
         <ul style="margin: 0 0 16px; padding-left: 20px; color: #334155;">
-          <li>Save one mentor worth returning to.</li>
-          <li>Or start one conversation that can generate a reply.</li>
-          <li>Or book one discovery call with real intent.</li>
+          <li>Save one mentor worth reaching out to.</li>
+          <li>Or start one conversation that can generate a real reply.</li>
+          <li>Or book one discovery call with genuine intent.</li>
         </ul>
-        <p style="margin: 0 0 16px; color: #334155;">The goal is to leave your first session with a real thread, mentor, or next step. That is what gives the retention system something concrete to bring you back to.</p>
+        <p style="margin: 0 0 16px; color: #334155;">The goal is to leave your first session with a real thread, mentor, or next step — something concrete to come back to.</p>
         <div style="margin: 24px 0;">
           <a href="${safeOnboardingUrl}" style="background: #32b8c6; color: #fff; padding: 12px 28px; border-radius: 999px; text-decoration: none; font-weight: 600; font-size: 15px; display: inline-block;">
             Complete onboarding →
@@ -76,7 +76,7 @@ serve(async (req: Request): Promise<Response> => {
       </div>
     `;
 
-    const subject = "Complete onboarding and create your first return trigger";
+    const subject = "Welcome — here's your first step inside Creatives Takeover";
 
     const sendPayload: Record<string, unknown> = {
       from: `${fromName} <${fromEmail}>`,

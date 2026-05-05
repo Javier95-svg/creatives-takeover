@@ -35,12 +35,17 @@ export const OnboardingChecklist = ({
   const [isVisible, setIsVisible] = useState(true);
   const [hasVisitedDashboard, setHasVisitedDashboard] = useState(false);
 
-  // Check if user has visited dashboard (stored in localStorage)
+  // Check if user has visited dashboard (based on first_login_at in profiles)
   useEffect(() => {
-    const visited = localStorage.getItem(`dashboard_visited_${userId}`);
-    if (visited === 'true') {
-      setHasVisitedDashboard(true);
-    }
+    if (!userId) return;
+    supabase
+      .from('profiles')
+      .select('first_login_at')
+      .eq('id', userId)
+      .single()
+      .then(({ data }) => {
+        if (data?.first_login_at) setHasVisitedDashboard(true);
+      });
   }, [userId]);
 
   // Calculate completion status
@@ -136,7 +141,6 @@ export const OnboardingChecklist = ({
   };
 
   const handleVisitDashboard = () => {
-    localStorage.setItem(`dashboard_visited_${userId}`, 'true');
     setHasVisitedDashboard(true);
     navigate('/dashboard');
   };

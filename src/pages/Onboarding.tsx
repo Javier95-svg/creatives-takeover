@@ -1,10 +1,11 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { OnboardingForm } from '@/components/OnboardingForm';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Helmet } from 'react-helmet-async';
 import HomeWallpaper from '@/components/wallpapers/HomeWallpaper';
+import { Loader2 } from 'lucide-react';
 import {
   trackOnboardingStarted,
   type OnboardingStartedSource,
@@ -56,6 +57,8 @@ const Onboarding = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const hasTrackedStart = useRef(false);
+  const [isChecking, setIsChecking] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
   useEffect(() => {
     const checkOnboardingStatus = async () => {
@@ -64,6 +67,7 @@ const Onboarding = () => {
       if (!isAuthenticated || !user) {
         // Onboarding requires an authenticated account.
         navigate('/signup?return=/onboarding', { replace: true });
+        setIsChecking(false);
         return;
       }
 
@@ -84,16 +88,19 @@ const Onboarding = () => {
 
         if (isLegacyOnboardingExempt(profile)) {
           navigate(safeExitTarget, { replace: true });
+          setIsChecking(false);
           return;
         }
 
         if (shouldRedirectToSetupQuiz(profile)) {
           navigate('/setup-quiz', { replace: true });
+          setIsChecking(false);
           return;
         }
 
         if (profile?.onboarding_completed === true) {
           navigate('/dashboard', { replace: true });
+          setIsChecking(false);
           return;
         }
 
@@ -111,9 +118,12 @@ const Onboarding = () => {
             source,
           }, user.id);
         }
+
+        setIsChecking(false);
       } catch (error) {
         console.error('Error checking onboarding status:', error);
-        // If error, allow user to continue (they might not have a profile yet)
+        setFetchError('Unable to load your profile. Please refresh the page.');
+        setIsChecking(false);
       }
     };
 
@@ -133,15 +143,37 @@ const Onboarding = () => {
       
       {/* Home Wallpaper Background */}
       <HomeWallpaper />
-      
-      <div className="relative min-h-screen flex items-center justify-center py-8 px-4 sm:py-12">
-        <div className="w-full max-w-4xl mx-auto">
-          {/* Fade-in animation for smooth appearance */}
-          <div className="animate-fade-in-up">
-            <OnboardingForm onComplete={handleComplete} />
+
+      {isChecking ? (
+        <div className="relative min-h-screen flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      ) : fetchError ? (
+        <div className="relative min-h-screen flex items-center justify-center py-8 px-4">
+          <div className="text-center space-y-4">
+            <p className="text-destructive">{fetchError}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 rounded bg-primary text-primary-foreground text-sm"
+            >
+              Refresh
+            </button>
           </div>
         </div>
-      </div>
+      ) : (
+        <div className="relative min-h-screen flex items-center justify-center py-8 px-4 sm:py-12">
+          <div className="w-full max-w-4xl mx-auto">
+            {/* Macro progress context */}
+            <p className="text-center text-sm text-muted-foreground mb-4">
+              Getting started — Step 1 of 2: Tell us about your startup
+            </p>
+            {/* Fade-in animation for smooth appearance */}
+            <div className="animate-fade-in-up">
+              <OnboardingForm onComplete={handleComplete} />
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };

@@ -1,10 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';
-import { ArrowLeft, ArrowRight, Lightbulb, Target, Hammer } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Lightbulb, Target, Hammer, Loader2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
@@ -76,6 +76,7 @@ const ACTIVATION_CARDS: Array<{
 
 const ONBOARDING_STEPS = [
   { id: 'startup_stage' },
+  { id: 'primary_pain' },
   { id: 'activation_intent' },
   { id: 'terms_confirmation' },
 ] as const;
@@ -86,17 +87,43 @@ interface OnboardingFormProps {
 
 export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
   const { user } = useAuth();
-  const [currentStep, setCurrentStep] = useState(0);
+  const [currentStep, setCurrentStep] = useState(() => {
+    try {
+      const draft = sessionStorage.getItem(`onboarding_draft_${user?.id}`);
+      return draft ? (JSON.parse(draft).currentStep ?? 0) : 0;
+    } catch { return 0; }
+  });
   const [isLoading, setIsLoading] = useState(false);
   const [startedAt] = useState(Date.now());
   const [errors, setErrors] = useState<Partial<Record<keyof OnboardingData, string>>>({});
 
-  const [formData, setFormData] = useState<OnboardingData>({
-    businessStage: '',
-    primaryPain: '',
-    activationIntent: '',
-    acceptedTerms: false,
+  const [formData, setFormData] = useState<OnboardingData>(() => {
+    try {
+      const draft = sessionStorage.getItem(`onboarding_draft_${user?.id}`);
+      if (draft) {
+        const parsed = JSON.parse(draft);
+        return {
+          businessStage: parsed.businessStage ?? '',
+          primaryPain: parsed.primaryPain ?? '',
+          activationIntent: parsed.activationIntent ?? '',
+          acceptedTerms: false,
+        };
+      }
+    } catch { /* ignore */ }
+    return { businessStage: '', primaryPain: '', activationIntent: '', acceptedTerms: false };
   });
+
+  useEffect(() => {
+    if (!user?.id) return;
+    try {
+      sessionStorage.setItem(`onboarding_draft_${user.id}`, JSON.stringify({
+        currentStep,
+        businessStage: formData.businessStage,
+        primaryPain: formData.primaryPain,
+        activationIntent: formData.activationIntent,
+      }));
+    } catch { /* ignore */ }
+  }, [currentStep, formData.businessStage, formData.primaryPain, formData.activationIntent, user?.id]);
 
   const totalSteps = ONBOARDING_STEPS.length;
   const progress = ((currentStep + 1) / totalSteps) * 100;
@@ -107,12 +134,14 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
     switch (step) {
       case 0:
         if (!formData.businessStage) newErrors.businessStage = 'Please select where you are in your journey';
-        if (!formData.primaryPain) newErrors.primaryPain = 'Please select your biggest challenge';
         break;
       case 1:
-        if (!formData.activationIntent) newErrors.activationIntent = 'Choose the first action that should create your return trigger';
+        if (!formData.primaryPain) newErrors.primaryPain = 'Please select your biggest challenge';
         break;
       case 2:
+        if (!formData.activationIntent) newErrors.activationIntent = 'Choose the first action that should create your return trigger';
+        break;
+      case 3:
         if (!formData.acceptedTerms) newErrors.acceptedTerms = 'You must accept the terms to continue';
         break;
     }
@@ -199,6 +228,8 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
 
       toast.success("One last step: complete your first value action before you explore the rest of the platform.");
 
+      try { sessionStorage.removeItem(`onboarding_draft_${user.id}`); } catch { /* ignore */ }
+
       if (onComplete) {
         const separator = startRoute.includes('?') ? '&' : '?';
         onComplete(`${startRoute}${separator}activation=1&intent=${selectedIntent}`);
@@ -215,7 +246,7 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
     switch (currentStep) {
       case 0:
         return (
-          <div className="space-y-8">
+          <div className="space-y-6">
             <div>
               <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight mb-2 font-space-grotesk">
                 Where are you in your startup journey?
@@ -256,36 +287,45 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
               })}
               {errors.businessStage && <p className="text-sm text-destructive">{errors.businessStage}</p>}
             </div>
-
-            <div>
-              <Label className="text-base font-semibold mb-3 block font-space-grotesk">
-                What's your biggest challenge right now? *
-              </Label>
-              <RadioGroup
-                value={formData.primaryPain}
-                onValueChange={(value) => {
-                  setFormData((prev) => ({ ...prev, primaryPain: value }));
-                  setErrors((e) => ({ ...e, primaryPain: undefined }));
-                }}
-                className="space-y-2"
-              >
-                {PRIMARY_PAIN_OPTIONS.map((pain) => (
-                  <Label
-                    key={pain.value}
-                    htmlFor={`pain-${pain.value}`}
-                    className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60 cursor-pointer"
-                  >
-                    <RadioGroupItem value={pain.value} id={`pain-${pain.value}`} />
-                    <span className="flex-1 text-sm">{pain.label}</span>
-                  </Label>
-                ))}
-              </RadioGroup>
-              {errors.primaryPain && <p className="text-sm text-destructive mt-1">{errors.primaryPain}</p>}
-            </div>
           </div>
         );
 
       case 1:
+        return (
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight mb-2 font-space-grotesk">
+                What's your biggest challenge right now?
+              </h2>
+              <p className="text-muted-foreground">
+                This helps us point you at the right tool first.
+              </p>
+            </div>
+
+            <RadioGroup
+              value={formData.primaryPain}
+              onValueChange={(value) => {
+                setFormData((prev) => ({ ...prev, primaryPain: value }));
+                setErrors((e) => ({ ...e, primaryPain: undefined }));
+              }}
+              className="space-y-2"
+            >
+              {PRIMARY_PAIN_OPTIONS.map((pain) => (
+                <Label
+                  key={pain.value}
+                  htmlFor={`pain-${pain.value}`}
+                  className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60 cursor-pointer"
+                >
+                  <RadioGroupItem value={pain.value} id={`pain-${pain.value}`} />
+                  <span className="flex-1 text-sm">{pain.label}</span>
+                </Label>
+              ))}
+            </RadioGroup>
+            {errors.primaryPain && <p className="text-sm text-destructive mt-1">{errors.primaryPain}</p>}
+          </div>
+        );
+
+      case 2:
         return (
           <div className="space-y-6">
             <div>
@@ -324,7 +364,7 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
           </div>
         );
 
-      case 2:
+      case 3:
         return (
           <div className="space-y-6">
             <div>
@@ -433,7 +473,10 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
               style={{ backgroundColor: currentStep === totalSteps - 1 ? '#32b8c6' : undefined }}
             >
               {isLoading ? (
-                'Saving...'
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Saving...
+                </>
               ) : currentStep === totalSteps - 1 ? (
                 'Start First Value Action →'
               ) : (

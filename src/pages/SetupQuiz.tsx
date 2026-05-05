@@ -91,11 +91,22 @@ const TOTAL_QUESTIONS = QUESTIONS.length;
 const SetupQuiz = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [currentStep, setCurrentStep] = useState(1);
+  const [currentStep, setCurrentStep] = useState(() => {
+    try {
+      const saved = sessionStorage.getItem(`quiz_step_draft_${user?.id}`);
+      return saved ? Number(saved) : 1;
+    } catch { return 1; }
+  });
   const [loading, setLoading] = useState(false);
-  const [answers, setAnswers] = useState<PartialAnswers>({});
+  const [answers, setAnswers] = useState<PartialAnswers>(() => {
+    try {
+      const saved = sessionStorage.getItem(`quiz_answers_draft_${user?.id}`);
+      return saved ? JSON.parse(saved) : {};
+    } catch { return {}; }
+  });
   const [resultStage, setResultStage] = useState<StageId | null>(null);
   const [showCofounderCard, setShowCofounderCard] = useState(false);
+  const [redirectCountdown, setRedirectCountdown] = useState<number | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -138,6 +149,32 @@ const SetupQuiz = () => {
       cancelled = true;
     };
   }, [navigate, user]);
+
+  // Persist quiz draft to sessionStorage
+  useEffect(() => {
+    if (!user?.id) return;
+    try {
+      sessionStorage.setItem(`quiz_answers_draft_${user.id}`, JSON.stringify(answers));
+      sessionStorage.setItem(`quiz_step_draft_${user.id}`, String(currentStep));
+    } catch { /* ignore */ }
+  }, [answers, currentStep, user?.id]);
+
+  // Auto-redirect countdown after result is shown
+  useEffect(() => {
+    if (resultStage === null) return;
+    setRedirectCountdown(8);
+    const interval = setInterval(() => {
+      setRedirectCountdown((prev) => {
+        if (prev === null || prev <= 1) {
+          clearInterval(interval);
+          navigate('/dashboard');
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [resultStage, navigate]);
 
   const progress = (currentStep / TOTAL_QUESTIONS) * 100;
   const currentQuestion = QUESTIONS[currentStep - 1];
@@ -190,6 +227,11 @@ const SetupQuiz = () => {
         .eq('id', user.id);
 
       if (error) throw error;
+
+      try {
+        sessionStorage.removeItem(`quiz_answers_draft_${user.id}`);
+        sessionStorage.removeItem(`quiz_step_draft_${user.id}`);
+      } catch { /* ignore */ }
 
       setResultStage(stage);
       setShowCofounderCard(cofounderRecommended);
@@ -244,6 +286,9 @@ const SetupQuiz = () => {
                 </h1>
                 <p className="text-base md:text-lg text-slate-300 max-w-2xl mx-auto">
                   {meta.description}
+                </p>
+                <p className="text-sm text-slate-400 max-w-xl mx-auto">
+                  Your dashboard and recommended tools are now personalized for this stage. You can retake this diagnostic from Account settings at any time.
                 </p>
               </div>
 
@@ -307,11 +352,14 @@ const SetupQuiz = () => {
                 </Card>
               )}
 
-              <div className="flex justify-center">
-                <Button size="lg" onClick={() => navigate('/dashboard')}>
+              <div className="flex flex-col items-center gap-2">
+                <Button size="lg" onClick={() => { setRedirectCountdown(null); navigate('/dashboard'); }}>
                   Go to my dashboard
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
+                {redirectCountdown !== null && redirectCountdown > 0 && (
+                  <p className="text-xs text-slate-400">Redirecting in {redirectCountdown}s…</p>
+                )}
               </div>
             </div>
           </div>
@@ -327,6 +375,9 @@ const SetupQuiz = () => {
         <Navigation />
         <div className="container mx-auto px-6 pt-24 pb-12">
           <div className="text-center py-8 space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Getting started — Step 2 of 2: Your startup diagnostic
+            </p>
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight">
               <span className="text-primary [text-shadow:0_0_22px_rgba(59,130,246,0.28)]">
                 Find your stage

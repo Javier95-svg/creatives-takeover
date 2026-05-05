@@ -271,11 +271,9 @@ export async function startActivationJourney(params: StartActivationParams) {
     .from('profiles')
     .update({
       business_stage: params.businessStage,
-      quiz_completed: true,
-      quiz_completed_at: startedAt,
       quiz_current_stage: params.businessStage,
       quiz_biggest_challenge: params.primaryPain,
-      onboarding_completed: false,
+      onboarding_completed: true,
     })
     .eq('id', params.userId);
 

@@ -9,6 +9,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useActivationGate } from '@/hooks/useActivationGate';
 import { CheckCircle2 } from 'lucide-react';
+import { toast } from 'sonner';
 import {
   shouldRedirectToGuidedOnboarding,
   shouldRedirectToSetupQuiz,
@@ -88,7 +89,11 @@ const Dashboard = () => {
     const isNewUser = accountAgeMs < 24 * 60 * 60 * 1000;
     if (!isNewUser) return;
 
-    navigate(activationGate.redirectUrl, { replace: true });
+    toast.info('Complete your first action to unlock your full dashboard.');
+    const timer = setTimeout(() => {
+      navigate(activationGate.redirectUrl, { replace: true });
+    }, 1500);
+    return () => clearTimeout(timer);
   }, [activationGate.redirectUrl, activationGate.shouldEnforceGate, navigate, user]);
 
   if (!user) {

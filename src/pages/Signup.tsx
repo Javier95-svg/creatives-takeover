@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Eye, EyeOff, Mail, Lock, Sparkles, Shield, User } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, Sparkles, Shield, User, Loader2 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { toast } from "sonner";
@@ -76,6 +76,7 @@ const Signup = () => {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isRedirecting, setIsRedirecting] = useState(false);
   const [usernameStatus, setUsernameStatus] = useState<"idle" | "checking" | "available" | "taken">("idle");
   const [errors, setErrors] = useState({
     firstName: "",
@@ -368,6 +369,8 @@ const Signup = () => {
 
         toast.success("Account created successfully! Redirecting...");
 
+        setIsRedirecting(true);
+
         setTimeout(() => {
           const destination = isIcpUnlockPath(conversionSource.returnUrl)
             ? conversionSource.returnUrl
@@ -441,6 +444,13 @@ const Signup = () => {
   const handleXSignup = () => handleSocialSignup('x');
 
   return (
+    <>
+      {isRedirecting && (
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-3 bg-background">
+          <Loader2 className="h-10 w-10 animate-spin text-primary" />
+          <p className="text-sm text-muted-foreground">Setting up your account…</p>
+        </div>
+      )}
     <div className="signup-premium min-h-screen bg-background md:h-screen md:overflow-hidden">
       <Helmet>
         <title>Creatives Takeover</title>
@@ -848,6 +858,7 @@ const Signup = () => {
         </div>
       </main>
     </div>
+    </>
   );
 };
 
