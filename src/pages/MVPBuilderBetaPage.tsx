@@ -9,6 +9,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/contexts/AuthContext';
+import { useFeatureGating } from '@/hooks/useFeatureGating';
+import { useUpgradePrompt } from '@/contexts/UpgradePromptContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useBizMapProgress } from '@/hooks/useBizMapProgress';
@@ -47,7 +49,46 @@ function formatDateTime(value: string | null): string | null {
 
 export default function MVPBuilderBetaPage() {
   const { user } = useAuth();
+  const { checkFeatureAccess } = useFeatureGating();
+  const { openUpgradePrompt } = useUpgradePrompt();
   const { refreshProgress, stageState } = useBizMapProgress();
+
+  const mvpAccess = checkFeatureAccess('mvp_builder');
+
+  // Gate access for unauthenticated or insufficient-tier users
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col">
+        <Navigation />
+        <main className="flex-1 flex items-center justify-center">
+          <div className="text-center space-y-4 px-6">
+            <h2 className="text-2xl font-bold">Sign in to access MVP Builder</h2>
+            <p className="text-muted-foreground">Create an account to scope and save your MVP.</p>
+            <Button asChild><Link to="/signup?source=mvp-scope&return=/mvp-scope">Get Started</Link></Button>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (!mvpAccess.isLoading && !mvpAccess.hasAccess) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col">
+        <Navigation />
+        <main className="flex-1 flex items-center justify-center">
+          <div className="text-center space-y-4 px-6">
+            <h2 className="text-2xl font-bold">MVP Builder requires Rising or higher</h2>
+            <p className="text-muted-foreground">{mvpAccess.message || 'Upgrade to access this tool.'}</p>
+            <Button onClick={() => openUpgradePrompt({ reason: 'feature', featureName: 'MVP Builder', requiredTier: 'rising' })}>
+              Upgrade Plan
+            </Button>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
   const [artifactId, setArtifactId] = useState<string | null>(null);
   const [artifactStatus, setArtifactStatus] = useState<'draft' | 'saved' | null>(null);
   const [lastSavedAt, setLastSavedAt] = useState<string | null>(null);

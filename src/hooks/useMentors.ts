@@ -12,6 +12,7 @@ const ARTUR_SINDARSKY_USER_ID = '1f0fe62a-7744-4153-bfcf-4f20b6e820d3';
 const CAROLINA_BARTHALOT_USER_ID = '1b0d63d2-13b8-4829-b5a9-75a7bb2f313b';
 const DAIANA_TOKPAYEVA_USER_ID = 'cc157118-0681-4600-a5fc-d37f5f4b4f31';
 const DAN_ALBAGHDADI_USER_ID = '0c160536-d5d3-483b-b222-f801c057fde6';
+const DANIEL_KAZANI_USER_ID = '127434fb-f706-44a5-b230-ac1b9b17dc8c';
 const DELRAJ_SINGH_UPPAL_USER_ID = '2cd4b8ec-5631-4de3-b480-d3c71de5d366';
 const GABOR_HOMIK_USER_ID = '5658607e-80ca-4478-8b3b-74148f1b959d';
 const JOHNNY_BOU_MALHAB_USER_ID = 'dd972b4a-7e02-41c4-a722-bacead700c9b';
@@ -25,6 +26,7 @@ const SHARON_PRAISE_AKPUNNE_USER_ID = '77283f92-7d90-45e2-97aa-3ec500781656';
 const SOPHIA_LOPEZ_PIMENTA_USER_ID = '50695a54-30c6-4b57-969e-b2de733bcd73';
 const VIVIAN_UBOCHI_USER_ID = '5e919674-60ba-42b9-bd18-813f484f7c24';
 const YASMINE_CAXEIRO_USER_ID = '357b97ca-c578-43b1-8e48-b438142312ec';
+const UELMAN_LOU_RUBIO_USER_ID = 'e6248878-3f18-4866-9e2e-7ad39f0339de';
 
 const isMarcBrightMentor = (name?: string | null): boolean => {
   const normalizedName = (name || '').toLowerCase();
@@ -54,6 +56,11 @@ const isDaianaTokpayevaMentor = (name?: string | null): boolean => {
 const isDanAlbaghdadiMentor = (name?: string | null): boolean => {
   const normalizedName = (name || '').toLowerCase();
   return normalizedName.includes('dan') && normalizedName.includes('albaghdadi');
+};
+
+const isDanielKazaniMentor = (name?: string | null): boolean => {
+  const normalizedName = (name || '').toLowerCase();
+  return normalizedName.includes('daniel') && normalizedName.includes('kazani');
 };
 
 const isDelrajSinghUppalMentor = (name?: string | null): boolean => {
@@ -202,11 +209,13 @@ const convertToMentor = (data: any): Mentor => {
             : isCarolinaBarthalotMentor(data.name)
               ? CAROLINA_BARTHALOT_USER_ID
               : isDaianaTokpayevaMentor(data.name)
-              ? DAIANA_TOKPAYEVA_USER_ID
+                ? DAIANA_TOKPAYEVA_USER_ID
                 : isDanAlbaghdadiMentor(data.name)
                   ? DAN_ALBAGHDADI_USER_ID
-                : isDelrajSinghUppalMentor(data.name)
-                  ? DELRAJ_SINGH_UPPAL_USER_ID
+                  : isDanielKazaniMentor(data.name)
+                    ? DANIEL_KAZANI_USER_ID
+                    : isDelrajSinghUppalMentor(data.name)
+                      ? DELRAJ_SINGH_UPPAL_USER_ID
                   : isGaborHomikMentor(data.name)
                     ? GABOR_HOMIK_USER_ID
                   : isJohnnyBouMalhabMentor(data.name)

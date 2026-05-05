@@ -1,34 +1,24 @@
 import { ReactNode, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import {
   ArrowRight,
   BarChart3,
   CheckCircle2,
   Compass,
   Flame,
-  FolderOpen,
   Library,
-  MessageSquare,
   Rocket,
-  Sparkles,
   Target,
-  TrendingUp,
   Users,
-  Wrench,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { WeeklyMissionPanel } from '../decision-engine/WeeklyMissionPanel';
-import { DecisionSprintCard } from '../DecisionSprintCard';
 import { TodaysMissionWidget } from '../TodaysMissionWidget';
-import { FocusFunnelWidget } from '@/components/focus-funnel/FocusFunnelWidget';
 import { QuotaCounterWidgets } from '../QuotaCounterWidgets';
 import { MomentumMeter } from '../MomentumMeter';
-import { CommunityActivityCard } from '../CommunityActivityCard';
-import { InsightaActivityCard } from '../InsightaActivityCard';
 import type { PersonalizedRecommendation } from '@/hooks/usePersonalizedDashboard';
-import { getDashboardModeConfig, getPlanThatActivatesStage, PLAN_LABELS } from '@/config/planPermissions';
 import type { IcpDashboardSnapshot } from '@/lib/icpDraftArtifacts';
 import {
   RookieEmptyState,
@@ -66,13 +56,6 @@ type ActionItem = {
   label: string;
 };
 
-type StageDefinition = {
-  id: number;
-  title: string;
-  summary: string;
-  href?: string;
-};
-
 type SummaryItem = {
   label: string;
   value: string;
@@ -85,94 +68,6 @@ type LinkItem = {
   description: string;
   href: string;
 };
-
-const STAGE_DEFINITIONS: StageDefinition[] = [
-  { id: 1, title: 'Define your ICP', summary: 'Clarify who you are building for.', href: '/icp-builder' },
-  { id: 2, title: 'Launch a Waitlist', summary: 'Capture early demand and outreach signals.', href: '/waitlist' },
-  { id: 3, title: 'Pressure Test PMF', summary: 'Use PMF Lab to validate early traction.', href: '/pmf-lab' },
-  { id: 4, title: 'Build Your Stack', summary: 'Move into MVP Builder and Tech Stack execution.' },
-  { id: 5, title: 'Go To Market', summary: 'Coordinate GTM Strategist and Directories.' },
-];
-
-const TOOL_LINKS = [
-  { label: 'ICP Builder', href: '/icp-builder', icon: Target },
-  { label: 'Waitlist Maker', href: '/waitlist', icon: MessageSquare },
-  { label: 'PMF Lab', href: '/pmf-lab', icon: Compass },
-  { label: 'MVP Builder', href: '/mvp-builder', icon: Rocket },
-  { label: 'Tech Stack', href: '/tech-stack', icon: Wrench },
-  { label: 'GTM Strategist', href: '/go-to-market', icon: TrendingUp },
-  { label: 'Directories', href: '/directories', icon: FolderOpen },
-];
-
-function StageProgressPanel({
-  activeStages,
-  previewStages,
-  title,
-  description,
-}: {
-  activeStages: number[];
-  previewStages?: number[];
-  title: string;
-  description: string;
-}) {
-  return (
-    <Card className="border-border/70 bg-card/85 backdrop-blur-sm">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-lg">
-          <Compass className="h-5 w-5 text-primary" />
-          {title}
-        </CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        {STAGE_DEFINITIONS.map((stage) => {
-          const isActive = activeStages.includes(stage.id);
-          const isPreview = previewStages?.includes(stage.id) ?? false;
-          const unlockPlan = !isActive && !isPreview ? getPlanThatActivatesStage(stage.id) : undefined;
-          const unlockLabel = unlockPlan ? `Unlocks with ${PLAN_LABELS[unlockPlan]}` : 'Locked';
-          const stateLabel = isActive ? 'Active' : isPreview ? 'Preview' : unlockLabel;
-          const stateAriaLabel = isActive
-            ? `Stage ${stage.id}: Active`
-            : isPreview
-              ? `Stage ${stage.id}: Preview`
-              : `Stage ${stage.id}: ${unlockLabel}`;
-          const wrapperClass = isActive
-            ? 'border-primary/30 bg-primary/8'
-            : isPreview
-              ? 'border-dashed border-border/70 bg-muted/30'
-              : 'border-border/60 bg-background/70';
-
-          return (
-            <div key={stage.id} className={`rounded-xl border p-4 ${wrapperClass}`}>
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Stage {stage.id}</p>
-                  <p className="mt-1 text-sm font-semibold text-foreground">{stage.title}</p>
-                </div>
-                <Badge
-                  variant={isActive ? 'default' : 'outline'}
-                  className="shrink-0"
-                  aria-label={stateAriaLabel}
-                >
-                  {stateLabel}
-                </Badge>
-              </div>
-              <p className="mt-2 text-sm text-muted-foreground">{stage.summary}</p>
-              {isActive && stage.href ? (
-                <Button asChild size="sm" variant="ghost" className="mt-3 px-0 text-primary hover:bg-transparent">
-                  <Link to={stage.href}>
-                    Open stage
-                    <ArrowRight className="ml-1 h-3.5 w-3.5" />
-                  </Link>
-                </Button>
-              ) : null}
-            </div>
-          );
-        })}
-      </CardContent>
-    </Card>
-  );
-}
 
 function SummaryStrip({ items }: { items: SummaryItem[] }) {
   return (
@@ -267,8 +162,6 @@ export function ProModeView({
   startupName,
 }: TierDashboardViewProps) {
   const hasInvestorActivity = completedSessions > 0 || totalCheckIns > 0;
-  const modeConfig = getDashboardModeConfig('pro');
-  const navigate = useNavigate();
   const actionItems = buildActionItems(recommendations, [
     {
       id: 'pro-angels',
@@ -304,11 +197,10 @@ export function ProModeView({
             </CardTitle>
             <div className="flex flex-wrap gap-2">
               <Badge className="bg-primary/20 text-primary-foreground">Fundraising mode</Badge>
-              <Badge variant="outline" className="border-white/20 text-white/85">Cleaned up for motion</Badge>
             </div>
           </div>
           <CardDescription className="max-w-3xl text-slate-300">
-            Pro should feel like a command surface for investor motion. Everything that does not directly move fundraising forward belongs in the side panel or a dedicated route.
+            Pro should feel like a command surface for investor motion. Open the Focus Funnel for stage map, Your Tasks for execution.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -324,24 +216,12 @@ export function ProModeView({
 
       <div className="grid gap-6 xl:grid-cols-[1.22fr_0.78fr]">
         <div className="space-y-6">
-          <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
-            <div id="weekly-mission">
-              <WeeklyMissionPanel variant="compact" />
-            </div>
-            <div id="mode-fundraising">
-              <FundraisingActionGrid />
-            </div>
+          <div id="weekly-mission">
+            <WeeklyMissionPanel variant="compact" />
           </div>
-
-          <div className="grid gap-6 lg:grid-cols-2">
-            <div id="decision-sprint">
-              <DecisionSprintCard />
-            </div>
-            <div id="focus-funnel">
-              <FocusFunnelWidget compact onOpenAIPartner={() => navigate('/focus-funnel')} />
-            </div>
+          <div id="mode-fundraising">
+            <FundraisingActionGrid />
           </div>
-
           <div id="your-tasks">
             <TodaysMissionWidget compact />
           </div>
@@ -351,7 +231,7 @@ export function ProModeView({
           {hasInvestorActivity ? (
             <ActionRadarCard
               title="Investor priorities"
-              description="This side panel ranks the next move so support and reference surfaces never drown the fundraising thread."
+              description="The next move, ranked. Open Focus Funnel for the full stage map."
               actions={actionItems}
             />
           ) : (
@@ -373,7 +253,7 @@ export function ProModeView({
             <LinkListCard
               eyebrow="Side panel"
               title="Founder access and support"
-              description="Support should stay reachable without competing with the War Room for attention."
+              description="Support stays reachable without competing with the War Room for attention."
               links={[
                 { label: 'Angels Network', description: 'Open the investor layer when you are ready to move a relationship forward.', href: '/community/angels' },
                 { label: 'Founder support', description: 'Use community support for blockers, feedback, and quick operator help.', href: '/community' },
@@ -382,31 +262,8 @@ export function ProModeView({
             />
           </div>
 
-          <div id="mode-stage">
-            <StageProgressPanel
-              activeStages={modeConfig.activeStages}
-              previewStages={modeConfig.previewStages}
-              title="Strategic stage map"
-              description="Every stage stays live, but the map belongs in the side panel so fundraising motion stays central."
-            />
-          </div>
-
           <div id="mode-usage" className="space-y-6">
             <QuotaCounterWidgets />
-            <SidePanelCard
-              eyebrow="Executive check"
-              title="Keep the side panel for support and context"
-              description="These reminders stay visible without recreating the old cluttered right-column tower."
-            >
-              <div className="space-y-3 text-sm text-muted-foreground">
-                <div className="rounded-xl border border-border/60 bg-background/70 p-4">
-                  Keep research, community activity, and mentor follow-up in their own lanes. The War Room is for fundraising action.
-                </div>
-                <div className="rounded-xl border border-border/60 bg-background/70 p-4">
-                  Active sprints: {activeSprints}. Completed sessions: {completedSessions}. Total check-ins: {totalCheckIns}.
-                </div>
-              </div>
-            </SidePanelCard>
           </div>
         </div>
       </div>
@@ -584,45 +441,8 @@ function buildActionItems(
   return mappedRecommendations.length > 0 ? mappedRecommendations : fallbackActions;
 }
 
-function ToolLauncherGrid({ title, description }: { title: string; description: string }) {
-  return (
-    <Card className="border-border/70 bg-card/80 backdrop-blur-sm">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-lg">
-          <Sparkles className="h-5 w-5 text-primary" />
-          {title}
-        </CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <CardContent className="grid gap-3 sm:grid-cols-2">
-        {TOOL_LINKS.map((tool) => {
-          const Icon = tool.icon;
-          return (
-            <Link
-              key={tool.label}
-              to={tool.href}
-              className="rounded-xl border border-border/70 bg-background/80 p-4 transition-colors hover:border-primary/30 hover:bg-background"
-            >
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                  <Icon className="h-4.5 w-4.5" />
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-foreground">{tool.label}</p>
-                  <p className="text-xs text-muted-foreground">Launch tool</p>
-                </div>
-              </div>
-            </Link>
-          );
-        })}
-      </CardContent>
-    </Card>
-  );
-}
-
 export function RookieModeView({ founderName, recommendations, icpSummary, totalCheckIns, completedSessions }: TierDashboardViewProps) {
   const isEmptyState = totalCheckIns === 0 && completedSessions === 0 && !icpSummary;
-  const modeConfig = getDashboardModeConfig('rookie');
 
   if (isEmptyState) {
     return <RookieEmptyState founderName={founderName} />;
@@ -683,7 +503,7 @@ export function RookieModeView({ founderName, recommendations, icpSummary, total
               </p>
             </div>
             <Button asChild size="lg" className="shrink-0">
-              <Link to={icpSummary ? '/dashboard#my-files' : '/icp-builder'}>
+              <Link to={icpSummary ? '/files' : '/icp-builder'}>
                 {icpSummary ? 'Open My Files' : 'Open ICP Builder'}
               </Link>
             </Button>
@@ -691,22 +511,26 @@ export function RookieModeView({ founderName, recommendations, icpSummary, total
         </Card>
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-        <div id="mode-stage">
-          <StageProgressPanel
-            activeStages={modeConfig.activeStages}
-            previewStages={modeConfig.previewStages}
-            title="Your Startup Development Cycle"
-            description="Stage 1 is where the platform begins guiding you. Later stages stay visible so the upgrade path feels concrete."
-          />
-        </div>
-        <div id="mode-usage" className="space-y-6">
-          <QuotaCounterWidgets />
-          <ActionRadarCard
-            title="Next Steps"
-            description="The dashboard collapses the path to the few actions that actually matter at Rookie level."
-            actions={actionItems}
-          />
+      <div id="mode-usage" className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
+        <ActionRadarCard
+          title="Next Steps"
+          description="The dashboard collapses the path to the few actions that actually matter at Rookie level."
+          actions={actionItems}
+        />
+        <QuotaCounterWidgets />
+      </div>
+
+      <div className="rounded-2xl border border-dashed border-border/60 bg-background/60 p-5">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="space-y-1">
+            <p className="text-sm font-semibold text-foreground">See where you stand on the Startup Development Cycle</p>
+            <p className="text-sm text-muted-foreground">
+              Open Focus Funnel for the full stage map — what's done, active, and what unlocks next.
+            </p>
+          </div>
+          <Button asChild variant="outline">
+            <Link to="/focus-funnel">Open Focus Funnel</Link>
+          </Button>
         </div>
       </div>
 
@@ -754,7 +578,6 @@ export function StarterModeView({
   icpSummary,
 }: TierDashboardViewProps) {
   const isEmptyState = totalCheckIns === 0 && completedSessions === 0 && !icpSummary;
-  const modeConfig = getDashboardModeConfig('starter');
 
   if (isEmptyState) {
     return <StarterEmptyState founderName={founderName} />;
@@ -788,14 +611,6 @@ export function StarterModeView({
     <div className="space-y-6">
       <div className="grid gap-6 xl:grid-cols-[1.2fr_0.85fr]">
         <div className="space-y-6">
-          <div id="mode-stage">
-            <StageProgressPanel
-              activeStages={modeConfig.activeStages}
-              previewStages={modeConfig.previewStages}
-              title="Active Stages"
-              description="Starter keeps you progressing in order: define the audience, capture demand, then pressure test PMF."
-            />
-          </div>
           <Card id="mode-tasks" className="border-border/70 bg-card/80 backdrop-blur-sm">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg">

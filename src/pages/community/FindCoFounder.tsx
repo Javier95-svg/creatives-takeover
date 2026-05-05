@@ -8,9 +8,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PreviewModeWrapper } from "@/components/ui/PreviewModeWrapper";
-import { Handshake, Search, Filter, MapPin, Briefcase, Users, Star, Plus, Calendar, CheckCircle, Edit2, Trash2, MessageCircle } from "lucide-react";
+import { Handshake, Search, Filter, MapPin, Briefcase, Users, Star, Plus, Calendar, CheckCircle, Edit2, Trash2, MessageCircle, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useMessaging } from "@/hooks/useMessaging";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
@@ -53,10 +54,12 @@ const FindCoFounder = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const publicTab = getPublicTabConfig('/community/co-founders');
+  const { startConversation } = useMessaging({ autoLoad: false });
   const [posts, setPosts] = useState<CofounderPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [postToDelete, setPostToDelete] = useState<string | null>(null);
+  const [messagingPostId, setMessagingPostId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchPosts();
@@ -326,12 +329,61 @@ const FindCoFounder = () => {
                   </div>
                 ) : (
                   <div className="flex gap-3 pt-2">
-                    <Button variant="default" className="flex-1">
+                    <Button
+                      variant="default"
+                      className="flex-1"
+                      onClick={() => {
+                        if (!user) {
+                          navigate(`/signup?source=cofounder-connect&return=${encodeURIComponent('/community/co-founders')}`);
+                          return;
+                        }
+                        if (post.author?.username) {
+                          navigate(`/profile/${post.author.username}`);
+                        } else {
+                          toast.info('View this founder\'s profile to connect with them.');
+                        }
+                      }}
+                    >
                       <Handshake className="w-4 h-4 mr-2" />
                       Connect
                     </Button>
-                    <Button variant="outline" className="flex-1">
-                      <MessageCircle className="w-4 h-4 mr-2" />
+                    <Button
+                      variant="outline"
+                      className="flex-1"
+                      disabled={messagingPostId === post.id}
+                      onClick={async () => {
+                        if (!user) {
+                          navigate(`/signup?source=cofounder-message&return=${encodeURIComponent('/community/co-founders')}`);
+                          return;
+                        }
+                        if (!post.user_id) {
+                          toast.error('This founder does not have messaging enabled.');
+                          return;
+                        }
+                        if (post.user_id === user.id) {
+                          toast.error('You cannot message yourself.');
+                          return;
+                        }
+                        setMessagingPostId(post.id);
+                        try {
+                          const conversationId = await startConversation(post.user_id);
+                          if (conversationId) {
+                            navigate(`/messages?conversationId=${conversationId}`);
+                          } else {
+                            toast.error('Failed to start conversation. Please try again.');
+                          }
+                        } catch {
+                          toast.error('Failed to start conversation. Please try again.');
+                        } finally {
+                          setMessagingPostId(null);
+                        }
+                      }}
+                    >
+                      {messagingPostId === post.id ? (
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      ) : (
+                        <MessageCircle className="w-4 h-4 mr-2" />
+                      )}
                       Message
                     </Button>
                   </div>

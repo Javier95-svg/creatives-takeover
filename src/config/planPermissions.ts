@@ -65,7 +65,11 @@ export type DashboardSidebarToolKey =
   | 'pitch_deck_analyzer'
   | 'insighta_test'
   | 'newspaper'
-  | 'prompt_library';
+  | 'prompt_library'
+  | 'saved_mentors'
+  | 'decision_sprint'
+  | 'core_metrics'
+  | 'ai_goals';
 
 export interface DashboardNavItem {
   path: string;
@@ -245,83 +249,59 @@ export const PLAN_HIGHLIGHTS: Record<Plan, string[]> = {
   ],
 };
 
+const SHARED_DASHBOARD_NAV_ITEMS: DashboardNavItem[] = [
+  { path: '/dashboard', label: 'Home', iconKey: 'home' },
+  { path: '/files', label: 'My Files', iconKey: 'folder_open' },
+  { path: '/tasks', label: 'Your Tasks', iconKey: 'check_square' },
+  { path: '/weekly-mission', label: 'Weekly Mission', iconKey: 'calendar' },
+  { path: '/dashboard/referral', label: 'Referral Program', iconKey: 'gift' },
+  { path: '/focus-funnel', label: 'Focus Funnel', iconKey: 'target' },
+];
+
 export const DASHBOARD_MODE_CONFIG: Record<DashboardModeVariant, DashboardModeConfig> = {
   rookie: {
     label: 'Rookie Mode',
     badgeDescription: 'Guided and simplified',
     subtitle: 'A simplified dashboard for getting the first signal right.',
-    sectionIds: ['mode-welcome', 'mode-stage', 'mode-usage', 'mode-preview', 'my-files'],
+    sectionIds: ['mode-welcome', 'mode-usage', 'mode-preview'],
     activeStages: [1],
     previewStages: [4, 5],
     showUpgradeBanner: true,
-    navItems: [
-      { path: '/dashboard', label: 'Home', iconKey: 'home' },
-      { path: '/dashboard', label: 'My Files', iconKey: 'folder_open', sectionId: 'my-files' },
-      { path: '/saved-mentors', label: 'Saved Mentors', iconKey: 'bookmark_check' },
-      { path: '/tasks', label: 'Your Tasks', iconKey: 'check_square' },
-      { path: '/dashboard/referral', label: 'Referral Program', iconKey: 'gift' },
-    ],
-    visibleTools: ['icp_builder', 'find_mentor', 'find_cofounder'],
+    navItems: SHARED_DASHBOARD_NAV_ITEMS,
+    visibleTools: ['icp_builder', 'saved_mentors', 'find_mentor', 'find_cofounder'],
   },
   starter: {
     label: 'Starter Mode',
     badgeDescription: 'Structured and progressing',
     subtitle: 'A structured workspace for moving through Stages 1 to 3.',
-    sectionIds: ['mode-stage', 'mode-tasks', 'mode-usage', 'my-files'],
+    sectionIds: ['mode-tasks', 'mode-usage'],
     activeStages: [1, 2, 3],
     previewStages: [4, 5],
     showUpgradeBanner: true,
-    navItems: [
-      { path: '/dashboard', label: 'Home', iconKey: 'home' },
-      { path: '/dashboard', label: 'My Files', iconKey: 'folder_open', sectionId: 'my-files' },
-      { path: '/saved-mentors', label: 'Saved Mentors', iconKey: 'bookmark_check' },
-      { path: '/weekly-mission', label: 'Weekly Mission', iconKey: 'calendar' },
-      { path: '/tasks', label: 'Your Tasks', iconKey: 'check_square' },
-      { path: '/dashboard/referral', label: 'Referral Program', iconKey: 'gift' },
-    ],
-    visibleTools: ['icp_builder', 'waitlist_maker', 'pmf_lab', 'find_mentor', 'find_cofounder', 'vc_search', 'accelerator_hunt', 'email_templates', 'prompt_library'],
+    navItems: SHARED_DASHBOARD_NAV_ITEMS,
+    visibleTools: ['icp_builder', 'waitlist_maker', 'pmf_lab', 'saved_mentors', 'find_mentor', 'find_cofounder', 'vc_search', 'accelerator_hunt', 'email_templates', 'prompt_library', 'ai_goals'],
   },
   rising: {
     label: 'Rising Mode',
     badgeDescription: 'Operational and productive',
     subtitle: 'Your full operator cockpit across all five stages.',
-    sectionIds: ['mode-stage', 'mode-usage', 'weekly-mission', 'decision-sprint', 'focus-funnel', 'your-tasks', 'mode-tools', 'my-files'],
+    sectionIds: ['mode-usage', 'weekly-mission', 'your-tasks'],
     activeStages: [1, 2, 3, 4, 5],
     previewStages: [],
     showUpgradeBanner: false,
-    navItems: [
-      { path: '/dashboard', label: 'Home', iconKey: 'home' },
-      { path: '/dashboard', label: 'My Files', iconKey: 'folder_open', sectionId: 'my-files' },
-      { path: '/saved-mentors', label: 'Saved Mentors', iconKey: 'bookmark_check' },
-      { path: '/focus-funnel', label: 'Focus Funnel', iconKey: 'target' },
-      { path: '/decision-sprint', label: 'Decision Sprint', iconKey: 'clipboard_list' },
-      { path: '/core-metrics', label: 'Core Metrics', iconKey: 'bar_chart_3' },
-      { path: '/weekly-mission', label: 'Weekly Mission', iconKey: 'calendar' },
-      { path: '/tasks', label: 'Your Tasks', iconKey: 'check_square' },
-      { path: '/dashboard/referral', label: 'Referral Program', iconKey: 'gift' },
-    ],
-    visibleTools: ['icp_builder', 'waitlist_maker', 'pmf_lab', 'mvp_builder', 'tech_stack', 'gtm_strategist', 'directories', 'find_mentor', 'find_cofounder', 'vc_search', 'accelerator_hunt', 'email_templates', 'pitch_deck_analyzer', 'insighta_test', 'newspaper', 'prompt_library'],
+    navItems: SHARED_DASHBOARD_NAV_ITEMS,
+    visibleTools: ['icp_builder', 'waitlist_maker', 'pmf_lab', 'mvp_builder', 'tech_stack', 'gtm_strategist', 'directories', 'saved_mentors', 'decision_sprint', 'core_metrics', 'ai_goals', 'find_mentor', 'find_cofounder', 'vc_search', 'accelerator_hunt', 'email_templates', 'pitch_deck_analyzer', 'insighta_test', 'newspaper', 'prompt_library'],
   },
   pro: {
     label: 'Pro Mode',
     badgeDescription: 'Strategic and data-rich',
     subtitle: 'Your fundraising-aware command layer with premium support.',
-    sectionIds: ['mode-stage', 'mode-support', 'mode-fundraising', 'mode-usage', 'weekly-mission', 'decision-sprint', 'focus-funnel', 'your-tasks', 'my-files'],
+    sectionIds: ['mode-support', 'mode-fundraising', 'mode-usage', 'weekly-mission', 'your-tasks'],
     activeStages: [1, 2, 3, 4, 5],
     previewStages: [],
     showUpgradeBanner: false,
-    navItems: [
-      { path: '/dashboard', label: 'War Room', iconKey: 'home' },
-      { path: '/dashboard', label: 'My Files', iconKey: 'folder_open', sectionId: 'my-files' },
-      { path: '/saved-mentors', label: 'Saved Mentors', iconKey: 'bookmark_check' },
-      { path: '/focus-funnel', label: 'Focus Funnel', iconKey: 'target' },
-      { path: '/decision-sprint', label: 'Decision Sprint', iconKey: 'clipboard_list' },
-      { path: '/core-metrics', label: 'Core Metrics', iconKey: 'bar_chart_3' },
-      { path: '/weekly-mission', label: 'Weekly Mission', iconKey: 'calendar' },
-      { path: '/tasks', label: 'Your Tasks', iconKey: 'check_square' },
-      { path: '/dashboard/referral', label: 'Referral Program', iconKey: 'gift' },
-    ],
-    visibleTools: ['icp_builder', 'waitlist_maker', 'pmf_lab', 'mvp_builder', 'tech_stack', 'gtm_strategist', 'directories', 'find_mentor', 'find_cofounder', 'find_angel', 'vc_search', 'accelerator_hunt', 'email_templates', 'pitch_deck_analyzer', 'insighta_test', 'newspaper', 'prompt_library'],
+    navItems: SHARED_DASHBOARD_NAV_ITEMS,
+    visibleTools: ['icp_builder', 'waitlist_maker', 'pmf_lab', 'mvp_builder', 'tech_stack', 'gtm_strategist', 'directories', 'saved_mentors', 'decision_sprint', 'core_metrics', 'ai_goals', 'find_mentor', 'find_cofounder', 'find_angel', 'vc_search', 'accelerator_hunt', 'email_templates', 'pitch_deck_analyzer', 'insighta_test', 'newspaper', 'prompt_library'],
   },
 };
 

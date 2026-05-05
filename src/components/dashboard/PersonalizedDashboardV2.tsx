@@ -8,7 +8,6 @@ import { useDashboardInitialization } from '@/hooks/useDashboardInitialization';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { ModeToggle, DashboardMode } from './modes/ModeToggle';
 import { RookieModeView, StarterModeView, RisingModeView, ProModeView } from './modes/TierDashboardViews';
-import { RetentionActionFeed } from './RetentionActionFeed';
 import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 import { DashboardNavigationProvider } from '@/contexts/DashboardNavigationContext';
 import { DashboardSidebar } from './DashboardSidebar';
@@ -21,14 +20,10 @@ import { DailyPromptResumeCard } from './DailyPromptResumeCard';
 import { useDashboardDailyPrompt } from '@/hooks/useDashboardDailyPrompt';
 import { DashboardAccountabilityHero } from './DashboardAccountabilityHero';
 import { TaskCountContext } from './TaskCountContext';
-import { IcpDashboardSummaryCard } from './IcpDashboardSummaryCard';
 import { IcpCompletionHandoffBanner } from './IcpCompletionHandoffBanner';
-import { MyFilesSection } from './MyFilesSection';
 import { WelcomeBackBanner } from './WelcomeBackBanner';
 import { StageBadge } from './StageBadge';
 import { useAssignedStage } from '@/hooks/useAssignedStage';
-import { InterviewTrackerCard } from './InterviewTrackerCard';
-import { useBizMapProgress } from '@/hooks/useBizMapProgress';
 import { UpgradeTriggerProvider } from '@/contexts/UpgradeTriggerContext';
 import { UpgradeTriggerBanner } from './UpgradeTriggerBanner';
 
@@ -49,14 +44,12 @@ export const PersonalizedDashboardV2 = () => {
   const navigate = useNavigate();
   const { isInitializing } = useDashboardInitialization();
   const { subscriptionData } = useSubscription();
-  const { currentStage } = useBizMapProgress();
   const assignedStage = useAssignedStage();
   const dashboardMetrics = useDashboardMetrics();
   const {
     data,
     loading,
     trackActivity,
-    refreshDashboard,
   } = usePersonalizedDashboard();
   const {
     showDailyGoal,
@@ -204,35 +197,20 @@ export const PersonalizedDashboardV2 = () => {
 
                     <StageBadge stage={assignedStage} />
 
-                    {data?.primaryIcp && profile?.dashboard_bootstrap_source === 'icp_unlock' ? (
-                      <IcpDashboardSummaryCard primaryIcp={data.primaryIcp} />
-                    ) : null}
-
                     <DashboardAccountabilityHero
                       founderName={founderName}
                       businessStage={profile?.business_stage}
                       currentStreak={metrics.streak}
                     />
 
-                    <RetentionActionFeed />
-
                     {/* Single-surface upgrade trigger banner — only one fires at a time */}
                     <UpgradeTriggerBanner />
 
-                    {/* Interview Tracker for Stage III (Validation) users */}
-                    {currentStage === 'VALIDATING' && <InterviewTrackerCard />}
-
-                    {/* Dynamic View Based on Mode */}
+                    {/* Mode-specific view: ranked next actions + per-tier extras */}
                     {dashboardMode === 'rookie' && <RookieModeView {...tierViewSharedProps} />}
                     {dashboardMode === 'starter' && <StarterModeView {...tierViewSharedProps} />}
                     {dashboardMode === 'rising' && <RisingModeView {...tierViewSharedProps} />}
                     {dashboardMode === 'pro' && <ProModeView {...tierViewSharedProps} />}
-
-                    <MyFilesSection
-                      files={data?.dashboardFiles || []}
-                      primaryIcp={data?.primaryIcp ?? null}
-                      refreshDashboard={refreshDashboard}
-                    />
                   </div>
 
                   {/* Daily Goal Modal */}

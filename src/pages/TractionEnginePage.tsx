@@ -701,7 +701,7 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
                 </div>
               ))}
 
-              <Button type="button" variant="outline" className="gap-2" onClick={addExperiment}>
+              <Button type="button" variant="outline" className="gap-2" onClick={addExperiment} disabled={experiments.length >= 2}>
                 <Plus className="h-4 w-4" />
                 Add Experiment
               </Button>

@@ -14,6 +14,11 @@ import { Loader2, Sparkles, BarChart3, TrendingUp, Target } from "lucide-react";
 import { getPublicTabConfig } from "@/config/publicTabVisibility";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePlanAccess } from "@/hooks/usePlanAccess";
+import { toast } from "sonner";
+
+const ALLOWED_EXTENSIONS = ['.pdf', '.pptx', '.ppt'];
+const MAX_FILE_SIZE_MB = 20;
+const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
 
 export default function PitchDeckAnalyzerPage() {
   const { user } = useAuth();
@@ -28,6 +33,15 @@ export default function PitchDeckAnalyzerPage() {
   }, [trackPageVisit]);
 
   const handleFileSelected = (file: File) => {
+    const ext = '.' + file.name.split('.').pop()?.toLowerCase();
+    if (!ALLOWED_EXTENSIONS.includes(ext)) {
+      toast.error(`Unsupported file type. Please upload a PDF, PPTX, or PPT file.`);
+      return;
+    }
+    if (file.size > MAX_FILE_SIZE_BYTES) {
+      toast.error(`File is too large. Maximum size is ${MAX_FILE_SIZE_MB} MB.`);
+      return;
+    }
     setSelectedFile(file);
   };
 

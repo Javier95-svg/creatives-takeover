@@ -1,6 +1,6 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Crown, Coins, CreditCard, TrendingUp } from "lucide-react";
+import { Crown, Coins, CreditCard, TrendingUp, Loader2 } from "lucide-react";
 import { CreditPriceList } from "@/components/CreditPriceList";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Card, CardContent } from "@/components/ui/card";
@@ -11,6 +11,7 @@ import { useFeatureGating } from "@/hooks/useFeatureGating";
 import { useCredits } from "@/hooks/useCredits";
 import { getNextPlan, normalizePlan, PLAN_SUMMARIES, type Plan } from "@/config/planPermissions";
 import { normalizePlanId, trackUpgradeClicked } from "@/lib/analytics";
+import { toast } from "sonner";
 
 type UpgradeReason = "credits" | "limit" | "feature";
 
@@ -44,6 +45,7 @@ const UpgradePromptDialog = ({
   const { currentTier } = useFeatureGating();
   const { balance } = useCredits();
   const normalizedCurrentTier = normalizePlan(currentTier);
+  const [isCheckingOut, setIsCheckingOut] = useState(false);
 
   const recommendedTier = useMemo(() => {
     if (requiredTier) return requiredTier;
@@ -90,9 +92,18 @@ const UpgradePromptDialog = ({
       onOpenChange(false);
       return;
     }
-    await createCheckout(recommendedTier);
-    onUpgrade?.();
-    onOpenChange(false);
+
+    setIsCheckingOut(true);
+    try {
+      await createCheckout(recommendedTier);
+      onUpgrade?.();
+      onOpenChange(false);
+    } catch (err) {
+      console.error('Checkout failed:', err);
+      toast.error('Unable to start checkout. Please try again or contact support.');
+    } finally {
+      setIsCheckingOut(false);
+    }
   };
 
   return (
@@ -183,8 +194,12 @@ const UpgradePromptDialog = ({
           >
             Compare Plans
           </Button>
-          <Button onClick={handleUpgrade} className="gap-2">
-            <CreditCard className="h-4 w-4" />
+          <Button onClick={handleUpgrade} className="gap-2" disabled={isCheckingOut}>
+            {isCheckingOut ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <CreditCard className="h-4 w-4" />
+            )}
             {subscriptionData.subscribed ? "Upgrade Now" : "Get Started"}
           </Button>
         </DialogFooter>

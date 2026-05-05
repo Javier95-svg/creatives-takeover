@@ -13,6 +13,7 @@ import { generateMentorSlug } from "@/utils/mentorSlug";
 import { useMentorSaves } from "@/hooks/useMentorSaves";
 import { completeActivationJourney, trackRetentionEvent } from "@/lib/retentionSystem";
 import { clearPendingValueCapture, persistPendingValueCapture, readPendingValueCapture } from "@/lib/valueCapture";
+import { useMemo } from "react";
 import { useEffect, useRef } from "react";
 import { useUpgradePrompt } from "@/contexts/UpgradePromptContext";
 import { buildDiscoveryCallRedirectUrl, createDiscoveryCallIntent, openDeferredExternalTab } from "@/services/discoveryCallService";
@@ -222,7 +223,7 @@ export const MentorCard = ({ mentor, className, priority = false }: MentorCardPr
     return null;
   };
 
-  const countryFlag = getCountryFlag(getNationality());
+  const countryFlag = useMemo(() => getCountryFlag(getNationality()), [mentor.id, mentor.nationality, mentor.name]);
 
   const renderStars = (ratingValue: number) => {
     return (

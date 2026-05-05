@@ -566,7 +566,7 @@ const Profile = () => {
                       <>
                         <div className="flex items-start gap-3 mb-3">
                           {profile.startup_logo_url && (
-                            <img src={profile.startup_logo_url} alt={profile.startup_name} className="h-12 w-12 rounded-lg object-cover" />
+                            <img src={profile.startup_logo_url} alt={profile.startup_name} className="h-12 w-12 rounded-lg object-cover" loading="lazy" decoding="async" />
                           )}
                           <div className="flex-1 min-w-0">
                             <h2 className="text-xl font-semibold mb-1 truncate flex items-center gap-2">

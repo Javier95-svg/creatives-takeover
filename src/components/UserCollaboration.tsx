@@ -221,10 +221,10 @@ const UserCollaboration = () => {
 
           <div className="text-center">
             <Button size="lg" className="text-lg px-8 py-6" asChild>
-              <Link to="#join-community">
+              <a href="#join-community">
                 Join Our Creative Community
                 <ArrowRight className="ml-2 h-5 w-5" />
-              </Link>
+              </a>
             </Button>
           </div>
         </div>

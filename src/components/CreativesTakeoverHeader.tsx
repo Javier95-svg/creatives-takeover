@@ -29,18 +29,18 @@ const CreativesTakeoverHeader = () => {
             className="hidden md:flex items-center gap-2 rounded-full border border-border/60 bg-background/80 px-2 py-1 shadow-sm text-sm"
             aria-hidden="false"
           >
-            <Link to="#work" className="rounded-full px-3 py-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors">
+            <a href="#work" className="rounded-full px-3 py-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors">
               Work
-            </Link>
-            <Link to="#services" className="rounded-full px-3 py-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors">
+            </a>
+            <a href="#services" className="rounded-full px-3 py-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors">
               Services
-            </Link>
-            <Link to="#about" className="rounded-full px-3 py-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors">
+            </a>
+            <a href="#about" className="rounded-full px-3 py-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors">
               About
-            </Link>
-            <Link to="#contact" className="rounded-full px-3 py-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors">
+            </a>
+            <a href="#contact" className="rounded-full px-3 py-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors">
               Contact
-            </Link>
+            </a>
           </nav>
 
           {/* Mobile Menu Button */}
@@ -71,34 +71,34 @@ const CreativesTakeoverHeader = () => {
           aria-hidden={!isNavOpen}
         >
           <div className="rounded-2xl border border-border/60 bg-background/95 backdrop-blur-xl px-4 py-4 shadow-sm space-y-3">
-            <Link 
-              to="#work" 
+            <a 
+              href="#work" 
               className="block rounded-lg px-3 py-2 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
               onClick={closeNav}
             >
               Work
-            </Link>
-            <Link 
-              to="#services" 
+            </a>
+            <a 
+              href="#services" 
               className="block rounded-lg px-3 py-2 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
               onClick={closeNav}
             >
               Services
-            </Link>
-            <Link 
-              to="#about" 
+            </a>
+            <a 
+              href="#about" 
               className="block rounded-lg px-3 py-2 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
               onClick={closeNav}
             >
               About
-            </Link>
-            <Link 
-              to="#contact" 
+            </a>
+            <a 
+              href="#contact" 
               className="block rounded-lg px-3 py-2 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
               onClick={closeNav}
             >
               Contact
-            </Link>
+            </a>
           </div>
         </nav>
       </div>

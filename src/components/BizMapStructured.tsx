@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { getAccessTokenSafely } from "@/integrations/supabase/auth";
 import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 interface BizMapStructuredProps {
   sessionId?: string;
@@ -131,6 +132,7 @@ export const BizMapStructured = ({ sessionId: initialSessionId, onComplete }: Bi
       }
     } catch (error: any) {
       console.error('Failed to load session:', error);
+      toast.error('Failed to load session. Please refresh or try again.');
     }
   };
 

@@ -52,6 +52,8 @@ export const DAIANA_TOKPAYEVA_EMAIL = 'daiana.tokpayeva@outlook.com';
 export const DAIANA_TOKPAYEVA_USER_ID = 'cc157118-0681-4600-a5fc-d37f5f4b4f31';
 export const DAN_ALBAGHDADI_EMAIL = 'albaghdadidan@gmail.com';
 export const DAN_ALBAGHDADI_USER_ID = '0c160536-d5d3-483b-b222-f801c057fde6';
+export const DANIEL_KAZANI_EMAIL = 'danielkazani@gmail.com';
+export const DANIEL_KAZANI_USER_ID = '127434fb-f706-44a5-b230-ac1b9b17dc8c';
 export const KATIE_BRETT_EMAIL = 'katie@pocketplanit.com';
 export const KATIE_BRETT_USER_ID = 'a786507a-b45c-4044-9b92-d9db40340f47';
 export const JOHNNY_BOU_MALHAB_EMAIL = 'johnny@monochrome.digital';
@@ -88,6 +90,10 @@ export const ALBERT_HOVHANNISYAN_EMAIL = 'albert.hovhannisian@gmail.com';
 export const ALBERT_HOVHANNISYAN_USER_ID = 'e8ddb66e-142b-4d88-9d4f-7ce3cf18ce14';
 export const ANDRII_STAKHOV_EMAIL = 'andrewstahow0@gmail.com';
 export const ANDRII_STAKHOV_USER_ID = '0f4cac90-83df-4cb7-a3a6-e62cd4a7cb9c';
+export const UELMAN_LOU_RUBIO_EMAIL = 'dendysan@gmail.com';
+export const UELMAN_LOU_RUBIO_USER_ID = 'e6248878-3f18-4866-9e2e-7ad39f0339de';
+export const JELENA_OSTROVSKA_EMAIL = 'jelenaostrovskaya@gmail.com';
+export const JELENA_OSTROVSKA_USER_ID = 'be9930e2-5f4b-4a62-80d9-bd1f00c05bfe';
 
 // Karolina Żurawska's email constant
 export const KAROLINA_ZURAWSKA_EMAIL = 'kz.zurawska@gmail.com';
@@ -190,6 +196,13 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
         userId: DAN_ALBAGHDADI_USER_ID
       });
       return DAN_ALBAGHDADI_USER_ID;
+    }
+
+    if (email.toLowerCase() === DANIEL_KAZANI_EMAIL.toLowerCase()) {
+      logInfo('getUserIdByEmail: Using known Daniel Kazani user ID', {
+        userId: DANIEL_KAZANI_USER_ID
+      });
+      return DANIEL_KAZANI_USER_ID;
     }
 
     if (email.toLowerCase() === KATIE_BRETT_EMAIL.toLowerCase()) {
@@ -309,6 +322,13 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
         userId: ALBERT_HOVHANNISYAN_USER_ID
       });
       return ALBERT_HOVHANNISYAN_USER_ID;
+    }
+
+    if (email.toLowerCase() === JELENA_OSTROVSKA_EMAIL.toLowerCase()) {
+      logInfo('getUserIdByEmail: Using known Jelena Ostrovska user ID', {
+        userId: JELENA_OSTROVSKA_USER_ID
+      });
+      return JELENA_OSTROVSKA_USER_ID;
     }
 
     try {
@@ -445,6 +465,13 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
     }
 
     if (
+      mentorNameNormalized.includes('daniel') &&
+      mentorNameNormalized.includes('kazani')
+    ) {
+      return DANIEL_KAZANI_USER_ID;
+    }
+
+    if (
       mentorNameNormalized.includes('katie') &&
       mentorNameNormalized.includes('brett')
     ) {
@@ -563,6 +590,13 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
       mentorNameNormalized.includes('stakhov')
     ) {
       return ANDRII_STAKHOV_USER_ID;
+    }
+
+    if (
+      mentorNameNormalized.includes('jelena') &&
+      mentorNameNormalized.includes('ostrovska')
+    ) {
+      return JELENA_OSTROVSKA_USER_ID;
     }
 
     if (mentor.user_id && mentor.user_id.trim() !== '') {

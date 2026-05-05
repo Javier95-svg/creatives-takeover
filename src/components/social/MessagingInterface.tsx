@@ -8,6 +8,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { Send, MessageCircle, Trash2, Menu, Check, CheckCheck } from "lucide-react";
 import { useMessaging, Conversation } from "@/hooks/useMessaging";
 import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { useDeviceType } from "@/hooks/use-device-type";
@@ -414,13 +415,17 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
     if (!newMessage.trim() || !activeConversationId || sending) return;
 
     const messageToSend = newMessage;
-    // Clear the input immediately so the user can type the next message
-    setNewMessage("");
 
     // Store current scroll position to prevent unwanted scrolling
     const scrollY = window.scrollY;
 
-    await sendMessage(activeConversationId, messageToSend);
+    try {
+      await sendMessage(activeConversationId, messageToSend);
+      // Only clear input after successful send
+      setNewMessage("");
+    } catch {
+      toast.error('Failed to send message. Please try again.');
+    }
 
     // Restore scroll position if it changed
     setTimeout(() => {

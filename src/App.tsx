@@ -102,6 +102,8 @@ const TechStackPage = lazy(() => import("./pages/TechStackPage"));
 const AppBuilderPage = lazy(() => import("./pages/AppBuilderPage"));
 const GTMStrategistPage = lazy(() => import("./pages/GTMStrategistPage"));
 const FocusFunnel = lazy(() => import("./pages/FocusFunnel"));
+const FilesPage = lazy(() => import("./pages/FilesPage"));
+const AiGoalsPage = lazy(() => import("./pages/AiGoalsPage"));
 const CoreMetricsPage = lazy(() => import("./pages/CoreMetricsPage"));
 const WeeklyMissionPage = lazy(() => import("./pages/WeeklyMissionPage"));
 const TasksPage = lazy(() => import("./pages/TasksPage"));
@@ -265,7 +267,10 @@ function App() {
                         <Route path="/saved-mentors" element={<SavedMentorsPage />} />
                         <Route path="/account" element={<Account />} />
                         <Route path="/setup-quiz" element={<SetupQuiz />} />
+                        <Route path="/files" element={<FilesPage />} />
+                        <Route path="/dashboard/files" element={<Navigate to="/files" replace />} />
                         <Route path="/focus-funnel" element={<FocusFunnel />} />
+                        <Route path="/ai-goals" element={<AiGoalsPage />} />
                         <Route path="/core-metrics" element={<CoreMetricsPage />} />
                         <Route path="/weekly-mission" element={<WeeklyMissionPage />} />
                         <Route path="/tasks" element={<TasksPage />} />

@@ -3,6 +3,7 @@ import { useState, useEffect, useContext } from 'react';
 import { TaskCountContext } from './TaskCountContext';
 import {
   BookmarkCheck,
+  Brain,
   Target,
   Calendar,
   CheckSquare,
@@ -73,6 +74,10 @@ interface SidebarPreferences {
   showInsightaTest: boolean;
   showNewspaper: boolean;
   showPromptLibrary: boolean;
+  showSavedMentors: boolean;
+  showDecisionSprint: boolean;
+  showCoreMetrics: boolean;
+  showAiGoals: boolean;
 }
 
 type LegacySidebarPreferences = Partial<SidebarPreferences> & {
@@ -98,6 +103,10 @@ const defaultSidebarPreferences: SidebarPreferences = {
   showInsightaTest: true,
   showNewspaper: true,
   showPromptLibrary: true,
+  showSavedMentors: true,
+  showDecisionSprint: true,
+  showCoreMetrics: true,
+  showAiGoals: true,
 };
 
 const normalizePreferences = (raw: LegacySidebarPreferences | null | undefined): SidebarPreferences => {
@@ -227,6 +236,10 @@ export const DashboardSidebar = () => {
     { toolKey: 'tech_stack', path: '/tech-stack', label: 'Tech Stack', icon: Zap, prefKey: 'showTechStack', featureKey: 'tech_stack' },
     { toolKey: 'gtm_strategist', path: '/go-to-market', label: 'GTM Strategist', icon: LineChart, prefKey: 'showGTMStrategist', featureKey: 'gtm_strategist' },
     { toolKey: 'directories', path: '/directories', label: 'Directories', icon: Filter, prefKey: 'showDirectories', featureKey: 'directories' },
+    { toolKey: 'saved_mentors', path: '/saved-mentors', label: 'Saved Mentors', icon: BookmarkCheck, prefKey: 'showSavedMentors' },
+    { toolKey: 'decision_sprint', path: '/decision-sprint', label: 'Decision Sprint', icon: ClipboardList, prefKey: 'showDecisionSprint' },
+    { toolKey: 'core_metrics', path: '/core-metrics', label: 'Core Metrics', icon: BarChart3, prefKey: 'showCoreMetrics' },
+    { toolKey: 'ai_goals', path: '/ai-goals', label: 'AI Goals Planner', icon: Brain, prefKey: 'showAiGoals' },
     { toolKey: 'find_mentor', path: '/community', label: 'Find a Mentor', icon: Users, prefKey: 'showFindMentor' },
     { toolKey: 'find_cofounder', path: '/community/co-founders', label: 'Find a Co-Founder', icon: Handshake, prefKey: 'showFindCoFounder' },
     { toolKey: 'find_angel', path: '/community/angels', label: 'Find your Angel', icon: Sparkles, prefKey: 'showFindAngel', featureKey: 'angels_community' },

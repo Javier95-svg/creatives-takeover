@@ -69,6 +69,8 @@ const AcceleratorCard = ({ accelerator, profileLink }: AcceleratorCardProps) => 
                 src={resolvedLogo}
                 alt={`${accelerator.title} logo`}
                 className="h-full w-full object-contain p-1"
+                loading="lazy"
+                decoding="async"
                 onError={() => setResolvedLogo(null)}
               />
             ) : (

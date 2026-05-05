@@ -62,6 +62,8 @@ const VCCard = ({ vc, canViewProfile = true }: VCCardProps) => {
                 src={resolvedLogo}
                 alt={`${vc.firm_name} logo`}
                 className="w-full h-full object-contain p-1"
+                loading="lazy"
+                decoding="async"
                 onError={() => setResolvedLogo(null)}
               />
             ) : (

@@ -4,7 +4,7 @@ import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckCircle, Crown, ArrowRight, Loader2 } from "lucide-react";
+import { CheckCircle, Crown, ArrowRight, Loader2, AlertCircle } from "lucide-react";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useCredits } from "@/hooks/useCredits";
 import { Helmet } from "react-helmet-async";
@@ -15,34 +15,59 @@ export default function SubscriptionSuccess() {
   const [searchParams] = useSearchParams();
   const tier = searchParams.get('tier') || 'basic';
   const [verifying, setVerifying] = useState(true);
+  const [verified, setVerified] = useState(false);
+  const [verifyError, setVerifyError] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
+  const MAX_RETRIES = 3;
   
-  const { refreshSubscription } = useSubscription();
+  const { refreshSubscription, subscriptionData } = useSubscription();
   const { refreshBalance, balance } = useCredits();
 
   useEffect(() => {
-    // Verify subscription and refresh data
     const verifySubscription = async () => {
-      try {
-        await refreshSubscription();
-        await refreshBalance();
-        toast.success('Subscription activated successfully!');
+      setVerifying(true);
+      setVerifyError(false);
+
+      for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
         try {
-          await trackActivity('subscription:created', { tier });
-        } catch (activityError) {
-          console.warn('Unable to track subscription activity:', activityError);
+          await refreshSubscription();
+          await refreshBalance();
+
+          // Confirm subscription is actually active after refresh
+          if (subscriptionData?.subscribed) {
+            setVerified(true);
+            toast.success('Subscription activated successfully!');
+            try {
+              await trackActivity('subscription:created', { tier });
+            } catch (activityError) {
+              console.warn('Unable to track subscription activity:', activityError);
+            }
+            setVerifying(false);
+            return;
+          }
+
+          // Not yet active — wait and retry
+          if (attempt < MAX_RETRIES) {
+            await new Promise((resolve) => setTimeout(resolve, 2000));
+          }
+        } catch (error) {
+          console.error(`Subscription verification attempt ${attempt} failed:`, error);
+          if (attempt < MAX_RETRIES) {
+            await new Promise((resolve) => setTimeout(resolve, 2000));
+          }
         }
-      } catch (error) {
-        console.error('Error verifying subscription:', error);
-        toast.error('Please refresh the page to see updated subscription status');
-      } finally {
-        setVerifying(false);
       }
+
+      // All retries exhausted — show error state
+      setVerifyError(true);
+      setVerifying(false);
     };
 
-    // Delay to allow Stripe to process
+    // Initial delay to allow Stripe webhook to settle
     const timer = setTimeout(verifySubscription, 2000);
     return () => clearTimeout(timer);
-  }, [refreshSubscription, refreshBalance, tier]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [retryCount]);
 
   const getTierInfo = (tierName: string) => {
     const tiers = {
@@ -71,6 +96,49 @@ export default function SubscriptionSuccess() {
         <div className="container mx-auto px-6 py-12">
           <div className="max-w-2xl mx-auto text-center space-y-8">
             
+            {/* Verifying state */}
+            {verifying && (
+              <div className="space-y-4">
+                <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto">
+                  <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                </div>
+                <h1 className="text-3xl font-bold">Activating your plan…</h1>
+                <p className="text-muted-foreground text-lg">
+                  Please wait while we confirm your subscription with Stripe.
+                </p>
+              </div>
+            )}
+
+            {/* Error state */}
+            {!verifying && verifyError && (
+              <div className="space-y-6">
+                <div className="space-y-4">
+                  <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto">
+                    <AlertCircle className="w-8 h-8 text-yellow-600" />
+                  </div>
+                  <h1 className="text-3xl font-bold">Confirming your subscription</h1>
+                  <p className="text-muted-foreground text-lg">
+                    We couldn't confirm your subscription automatically. This sometimes happens when Stripe takes a moment to process. If you were charged, your plan will be active within a few minutes.
+                  </p>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                  <Button onClick={() => setRetryCount((c) => c + 1)}>
+                    <Loader2 className="w-4 h-4 mr-2" />
+                    Check Again
+                  </Button>
+                  <Button variant="outline" asChild>
+                    <Link to="/contact">Contact Support</Link>
+                  </Button>
+                  <Button variant="ghost" asChild>
+                    <Link to="/dashboard">Go to Dashboard</Link>
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* Success state */}
+            {!verifying && verified && (
+              <>
             {/* Success Header */}
             <div className="space-y-4">
               <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
@@ -91,12 +159,6 @@ export default function SubscriptionSuccess() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-                {verifying ? (
-                  <div className="flex items-center justify-center gap-2 text-muted-foreground py-4">
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    <span>Verifying your subscription...</span>
-                  </div>
-                ) : (
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
                     <div className="space-y-2">
                       <div className="text-2xl font-bold text-primary">{tierInfo.credits}</div>
@@ -196,8 +258,8 @@ export default function SubscriptionSuccess() {
                 <Link to="/faq" className="hover:underline">FAQ</Link>
               </div>
             </div>
-
-          </div>
+            </>
+            )}
         </div>
       </main>
       
