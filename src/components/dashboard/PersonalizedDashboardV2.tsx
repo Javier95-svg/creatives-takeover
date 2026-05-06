@@ -1,288 +1,368 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { usePersonalizedDashboard } from '@/hooks/usePersonalizedDashboard';
-import { ArrowRight, X } from 'lucide-react';
-import { DailyGoalModal } from './DailyGoalModal';
-import { useAuth } from '@/contexts/AuthContext';
-import { useDashboardInitialization } from '@/hooks/useDashboardInitialization';
-import { ErrorBoundary } from '@/components/ErrorBoundary';
-import { ModeToggle, DashboardMode } from './modes/ModeToggle';
-import { RookieModeView, StarterModeView, RisingModeView, ProModeView } from './modes/TierDashboardViews';
-import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
-import { DashboardNavigationProvider } from '@/contexts/DashboardNavigationContext';
-import { DashboardSidebar } from './DashboardSidebar';
-import { useActiveSection } from '@/hooks/useActiveSection';
-import { ReactNode } from 'react';
-import { getDashboardModeConfig, normalizePlan, resolveDashboardMode } from '@/config/planPermissions';
-import { useSubscription } from '@/hooks/useSubscription';
-import { useDashboardMetrics } from '@/hooks/useDashboardMetrics';
-import { DailyPromptResumeCard } from './DailyPromptResumeCard';
-import { useDashboardDailyPrompt } from '@/hooks/useDashboardDailyPrompt';
-import { DashboardAccountabilityHero } from './DashboardAccountabilityHero';
-import { TaskCountContext } from './TaskCountContext';
-import { IcpCompletionHandoffBanner } from './IcpCompletionHandoffBanner';
-import { WelcomeBackBanner } from './WelcomeBackBanner';
-import { StageBadge } from './StageBadge';
-import { useAssignedStage } from '@/hooks/useAssignedStage';
-import { UpgradeTriggerProvider } from '@/contexts/UpgradeTriggerContext';
-import { UpgradeTriggerBanner } from './UpgradeTriggerBanner';
-import { supabase } from '@/integrations/supabase/client';
+import { useEffect, useMemo, type ReactNode } from 'react';
+import { Link } from 'react-router-dom';
+import {
+  ArrowRight,
+  Calendar,
+  CheckCircle2,
+  Circle,
+  FileText,
+  Flame,
+  FolderOpen,
+  Gift,
+  Loader2,
+  Map,
+  Target,
+} from 'lucide-react';
+
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
+import { DashboardLayout } from './DashboardLayout';
+import { DashboardSkeleton } from './DashboardSkeleton';
+import { TaskCountContext } from './TaskCountContext';
+import { usePersonalizedDashboard } from '@/hooks/usePersonalizedDashboard';
+import { useUnifiedTasks } from '@/hooks/useUnifiedTasks';
+import { useWeeklyMission } from '@/hooks/decision-engine/useWeeklyMission';
+import { useDashboardMetrics } from '@/hooks/useDashboardMetrics';
+import { useBizMapProgress } from '@/hooks/useBizMapProgress';
+import { useDashboardInitialization } from '@/hooks/useDashboardInitialization';
+import { useSubscription } from '@/hooks/useSubscription';
+import { BIZMAP_STAGES, STAGE_TASKS, getStageIndex, type BizMapStage } from '@/lib/bizmapStages';
+import { PLAN_LABELS, normalizePlan, type Plan } from '@/config/planPermissions';
+import { cn } from '@/lib/utils';
 
-// Internal wrapper component that uses the navigation context
-interface DashboardContentWrapperProps {
-  sectionIds: string[];
-  children: ReactNode;
-}
-
-const DashboardContentWrapper = ({ sectionIds, children }: DashboardContentWrapperProps) => {
-  useActiveSection(sectionIds);
-
-  return <>{children}</>;
+const planDepth: Record<Plan, { label: string; description: string; maxTasks: number; showAdvanced: boolean }> = {
+  rookie: {
+    label: 'Guided',
+    description: 'One clear move. Keep the noise out until the first customer signal is real.',
+    maxTasks: 3,
+    showAdvanced: false,
+  },
+  starter: {
+    label: 'Structured',
+    description: 'Move through customer clarity, demand capture, and validation in order.',
+    maxTasks: 4,
+    showAdvanced: false,
+  },
+  rising: {
+    label: 'Operating',
+    description: 'Run multiple stage workstreams without losing the next most important action.',
+    maxTasks: 5,
+    showAdvanced: true,
+  },
+  pro: {
+    label: 'Strategic',
+    description: 'A richer command center for execution, traction, and fundraising readiness.',
+    maxTasks: 6,
+    showAdvanced: true,
+  },
 };
 
-export const PersonalizedDashboardV2 = () => {
-  const { user } = useAuth();
-  const navigate = useNavigate();
-  const { isInitializing } = useDashboardInitialization();
-  const { subscriptionData } = useSubscription();
-  const assignedStage = useAssignedStage();
-  const dashboardMetrics = useDashboardMetrics();
-  const [isFirstVisit, setIsFirstVisit] = useState(false);
-  const [firstVisitDismissed, setFirstVisitDismissed] = useState(() => {
-    try { return localStorage.getItem(`first_visit_dismissed_${user?.id}`) === 'true'; }
-    catch { return false; }
-  });
+function getStageDefinition(stage: BizMapStage) {
+  return BIZMAP_STAGES.find((item) => item.id === stage) ?? BIZMAP_STAGES[0];
+}
 
-  useEffect(() => {
-    if (!user?.id) return;
-    supabase.from('profiles').select('first_login_at').eq('id', user.id).single().then(({ data }) => {
-      if (!data?.first_login_at) return;
-      const elapsed = (Date.now() - new Date(data.first_login_at).getTime()) / 1000;
-      if (elapsed <= 300) setIsFirstVisit(true);
-    });
-  }, [user?.id]);
+function getPrimaryAction(stage: BizMapStage, hasIcp: boolean) {
+  const stageTasks = STAGE_TASKS[stage] ?? [];
+  const task = stageTasks.find((item) => item.priority === 'high') ?? stageTasks[0];
 
-  const handleDismissFirstVisit = () => {
-    setFirstVisitDismissed(true);
-    try { localStorage.setItem(`first_visit_dismissed_${user?.id}`, 'true'); } catch { /* ignore */ }
-  };
-  const {
-    data,
-    loading,
-    trackActivity,
-  } = usePersonalizedDashboard();
-  const {
-    showDailyGoal,
-    modalMode,
-    todaysCheckInId,
-    currentStreak,
-    hasUnresolvedPrompt,
-    unresolvedMode,
-    handleDailyGoalOpenChange,
-    handlePromptResume,
-    handleCheckInComplete,
-  } = useDashboardDailyPrompt({
-    onFirstView: () => {
-      trackActivity('dashboard_view');
-    },
-  });
-
-  const metrics = {
-    streak: data?.stats?.currentStreak || currentStreak,
-    tasksCompletedToday: dashboardMetrics.tasksCompletedToday,
-    totalTasksToday: dashboardMetrics.totalTasksToday,
-    weeklyProgress: dashboardMetrics.weeklyProgress,
-    tasksCompletedThisWeek: dashboardMetrics.tasksCompletedThisWeek,
-    totalTasksThisWeek: dashboardMetrics.totalTasksThisWeek,
-    activeSprints: data?.stats?.activeSprints || 0,
-    completedSessions: data?.stats?.completedSessions || 0,
-    totalCheckIns: data?.stats?.totalCheckIns || 0,
-  };
-  const incompleteTaskCount = Math.max(metrics.totalTasksToday - metrics.tasksCompletedToday, 0);
-  const currentPlan = normalizePlan(subscriptionData.subscription_tier);
-  const dashboardMode = resolveDashboardMode(currentPlan) as DashboardMode;
-  const modeConfig = getDashboardModeConfig(dashboardMode);
-
-  if (loading || isInitializing || dashboardMetrics.isLoading) {
-    return (
-      <div className="container mx-auto p-6 space-y-6">
-        <div className="animate-pulse space-y-6">
-          <div className="h-32 bg-muted rounded-lg" />
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div className="h-40 bg-muted rounded-lg" />
-            <div className="h-40 bg-muted rounded-lg" />
-            <div className="h-40 bg-muted rounded-lg" />
-          </div>
-        </div>
-        {isInitializing && (
-          <div className="text-center text-muted-foreground">
-            Setting up your dashboard...
-          </div>
-        )}
-      </div>
-    );
+  if (stage === 'IDENTITY' && hasIcp) {
+    return {
+      title: 'Turn your ICP into today’s target customer action',
+      description: 'Your draft is saved. Use it to choose the next validation move instead of browsing tools.',
+      route: '/tasks',
+      label: 'Open tasks',
+    };
   }
 
-  const { profile } = data || { profile: null };
-
-  // Determine greeting based on time
-  const hour = new Date().getHours();
-  const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
-  const founderName = profile?.full_name?.split(' ')[0] || 'Founder';
-  const tierViewSharedProps = {
-    userId: user?.id || '',
-    founderName,
-    startupName: profile?.startup_name ?? null,
-    creativeNiche: profile?.creative_niche,
-    businessStage: profile?.business_stage,
-    recommendations: data?.recommendations || [],
-    icpSummary: data?.primaryIcp?.summary ?? null,
-    ...metrics,
+  return {
+    title: task?.title ?? 'Choose the next action for your current stage',
+    description: 'This is the one action the dashboard is asking you to complete before your next visit.',
+    route: task?.route ?? '/focus-funnel',
+    label: 'Start action',
   };
+}
+
+function CommandCard({
+  className,
+  children,
+}: {
+  className?: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className={cn('rounded-2xl border border-white/10 bg-white/[0.045] shadow-2xl shadow-black/20 backdrop-blur-xl', className)}>
+      {children}
+    </div>
+  );
+}
+
+export const PersonalizedDashboardV2 = () => {
+  const { isInitializing } = useDashboardInitialization();
+  const { subscriptionData } = useSubscription();
+  const { data, loading, trackActivity } = usePersonalizedDashboard();
+  const { currentStage, stageState, loading: progressLoading } = useBizMapProgress();
+  const { allTasks, isLoading: tasksLoading } = useUnifiedTasks();
+  const { currentMission, isLoading: missionLoading } = useWeeklyMission();
+  const dashboardMetrics = useDashboardMetrics();
+
+  const currentPlan = normalizePlan(subscriptionData?.subscription_tier);
+  const depth = planDepth[currentPlan];
+  const stage = currentStage;
+  const stageDef = getStageDefinition(stage);
+  const stageNumber = getStageIndex(stage) + 1;
+  const activeTasks = allTasks.filter((task) => !task.isCompleted).slice(0, depth.maxTasks);
+  const completedStages = Object.values(stageState).filter((item) => item.completed).length;
+  const primaryAction = getPrimaryAction(stage, Boolean(data?.primaryIcp));
+  const founderName = data?.profile?.full_name?.split(' ')[0] || 'Founder';
+  const filesCount = data?.dashboardFiles?.length ?? 0;
+  const incompleteTaskCount = Math.max(dashboardMetrics.totalTasksToday - dashboardMetrics.tasksCompletedToday, 0);
+
+  useEffect(() => {
+    void trackActivity('dashboard_home_view', {
+      plan: currentPlan,
+      stage,
+    });
+  }, [currentPlan, stage, trackActivity]);
+
+  const tomorrowReason = useMemo(() => {
+    if (currentMission?.mission_goal) return `Come back tomorrow to move this week’s mission: ${currentMission.mission_goal}`;
+    if (activeTasks[0]) return `Come back tomorrow to finish: ${activeTasks[0].title}`;
+    return `Come back tomorrow to move Stage ${stageNumber}: ${stageDef.title}.`;
+  }, [activeTasks, currentMission?.mission_goal, stageDef.title, stageNumber]);
+
+  if (loading || isInitializing || progressLoading || tasksLoading || missionLoading || dashboardMetrics.isLoading) {
+    return <DashboardSkeleton />;
+  }
 
   return (
-    <ErrorBoundary>
-      <UpgradeTriggerProvider>
-      <SidebarProvider>
-        <DashboardNavigationProvider>
-          <TaskCountContext.Provider value={incompleteTaskCount}>
-            <DashboardContentWrapper sectionIds={modeConfig.sectionIds}>
-              <DashboardSidebar />
-              <SidebarInset>
-                <div className="min-h-screen relative overflow-hidden bg-background">
-                  <div className="pointer-events-none fixed inset-x-0 top-0 z-50">
-                    <div className="container mx-auto flex max-w-7xl items-start justify-between px-6 pt-4">
-                      <div className="pointer-events-auto flex items-center gap-4">
-                        <SidebarTrigger className="rounded-full border border-border/70 bg-background/88 shadow-sm backdrop-blur-md" />
-                        <ModeToggle currentMode={dashboardMode} />
-                      </div>
-                      <button
-                        onClick={() => navigate('/')}
-                        className="pointer-events-auto inline-flex items-center gap-2 rounded-full border border-border/70 bg-background/88 px-4 py-2 text-sm font-medium text-muted-foreground shadow-sm backdrop-blur-md transition-colors hover:border-primary/30 hover:bg-background hover:text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                        aria-label="Exit dashboard and return to platform"
-                        type="button"
-                      >
-                        <span>Platform</span>
-                        <ArrowRight className="h-4 w-4" aria-hidden="true" />
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Refined Background */}
-                  <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                    <div className="absolute inset-0 bg-background" />
-                    <div
-                      className="absolute inset-0"
-                      style={{
-                        backgroundImage:
-                          'radial-gradient(circle at 15% 20%, hsl(var(--primary) / 0.08), transparent 40%), radial-gradient(circle at 85% 30%, hsl(var(--accent) / 0.06), transparent 45%)'
-                      }}
-                    />
-                    <div
-                      className="absolute inset-0 opacity-[0.03] dark:opacity-[0.06]"
-                      style={{
-                        backgroundImage:
-                          'linear-gradient(to right, hsl(var(--foreground)) 1px, transparent 1px), linear-gradient(to bottom, hsl(var(--foreground)) 1px, transparent 1px)',
-                        backgroundSize: '64px 64px'
-                      }}
-                    />
-                  </div>
-
-                  {/* Dashboard Content */}
-                  <div className="relative z-10 container mx-auto p-6 pb-24 space-y-8 max-w-7xl pt-24">
-                    {hasUnresolvedPrompt ? (
-                      // FIX(retention): dashboard — snoozed daily prompts now leave a pinned unresolved card so the habit loop still has a visible next step.
-                      <DailyPromptResumeCard
-                        mode={unresolvedMode}
-                        onResume={handlePromptResume}
-                      />
-                    ) : null}
-
-                    {/* First-visit welcome banner */}
-                    {isFirstVisit && !firstVisitDismissed && (
-                      <div className="relative flex items-start justify-between gap-4 rounded-2xl border border-primary/30 bg-primary/5 p-5">
-                        <div className="space-y-1">
-                          <p className="font-semibold text-foreground font-space-grotesk">
-                            Welcome, {founderName} — your dashboard is ready
-                          </p>
-                          {assignedStage.meta && (
-                            <p className="text-sm text-muted-foreground">
-                              You’re in Stage {assignedStage.stage} — {assignedStage.meta.name}. Here’s what matters most right now.
-                            </p>
-                          )}
-                          {assignedStage.meta?.topFocus?.[0] && (
-                            <Button
-                              size="sm"
-                              className="mt-3"
-                              onClick={() => { handleDismissFirstVisit(); navigate(assignedStage.meta!.topFocus[0].href); }}
-                            >
-                              {assignedStage.meta.topFocus[0].label}
-                              <ArrowRight className="ml-2 h-4 w-4" />
-                            </Button>
-                          )}
-                        </div>
-                        <button
-                          onClick={handleDismissFirstVisit}
-                          className="flex-shrink-0 rounded-full p-1 text-muted-foreground hover:text-foreground"
-                          aria-label="Dismiss welcome banner"
-                        >
-                          <X className="h-4 w-4" />
-                        </button>
-                      </div>
-                    )}
-
-                    {/* Header */}
-                    <div>
-                      <h1 className="font-space-grotesk text-3xl sm:text-4xl font-semibold tracking-tight">
-                        {greeting}, {founderName} 👋
-                      </h1>
-                      <p className="text-muted-foreground mt-1">
-                        {modeConfig.subtitle}
-                      </p>
-                    </div>
-
-                    <IcpCompletionHandoffBanner
-                      primaryIcp={data?.primaryIcp ?? null}
-                      recommendations={data?.recommendations || []}
-                    />
-
-                    <WelcomeBackBanner />
-
-                    <StageBadge stage={assignedStage} />
-
-                    <DashboardAccountabilityHero
-                      founderName={founderName}
-                      businessStage={profile?.business_stage}
-                      currentStreak={metrics.streak}
-                    />
-
-                    {/* Single-surface upgrade trigger banner — only one fires at a time */}
-                    <UpgradeTriggerBanner />
-
-                    {/* Mode-specific view: ranked next actions + per-tier extras */}
-                    {dashboardMode === 'rookie' && <RookieModeView {...tierViewSharedProps} />}
-                    {dashboardMode === 'starter' && <StarterModeView {...tierViewSharedProps} />}
-                    {dashboardMode === 'rising' && <RisingModeView {...tierViewSharedProps} />}
-                    {dashboardMode === 'pro' && <ProModeView {...tierViewSharedProps} />}
-                  </div>
-
-                  {/* Daily Goal Modal */}
-                  <DailyGoalModal
-                    open={showDailyGoal}
-                    onOpenChange={handleDailyGoalOpenChange}
-                    currentStreak={currentStreak}
-                    mode={modalMode}
-                    todaysCheckInId={todaysCheckInId}
-                    onCheckInComplete={handleCheckInComplete}
-                  />
+    <TaskCountContext.Provider value={incompleteTaskCount}>
+      <DashboardLayout
+        title="Home"
+        subtitle="Your next founder move, not a feature dump."
+        contentClassName="space-y-6"
+      >
+        <div className="grid gap-6 xl:grid-cols-[1.3fr_0.75fr]">
+          <CommandCard className="overflow-hidden">
+            <div className="border-b border-white/10 px-5 py-4 sm:px-6">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <p className="text-xs font-medium uppercase tracking-[0.22em] text-cyan-300">Today’s command</p>
+                  <h2 className="mt-2 font-space-grotesk text-2xl font-semibold text-white sm:text-3xl">
+                    {founderName}, focus on Stage {stageNumber}: {stageDef.title}
+                  </h2>
                 </div>
-              </SidebarInset>
-            </DashboardContentWrapper>
-          </TaskCountContext.Provider>
-        </DashboardNavigationProvider>
-      </SidebarProvider>
-      </UpgradeTriggerProvider>
-    </ErrorBoundary>
+                <Badge className="border-cyan-400/20 bg-cyan-400/10 text-cyan-100 hover:bg-cyan-400/10">
+                  {PLAN_LABELS[currentPlan]} · {depth.label}
+                </Badge>
+              </div>
+            </div>
+
+            <div className="grid gap-0 lg:grid-cols-[1.2fr_0.8fr]">
+              <div className="space-y-5 px-5 py-6 sm:px-6">
+                <div className="rounded-2xl border border-cyan-400/20 bg-cyan-400/[0.07] p-5">
+                  <div className="flex items-start gap-4">
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-cyan-400/15 text-cyan-200">
+                      <Target className="h-5 w-5" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-200">Do this next</p>
+                      <h3 className="mt-2 text-xl font-semibold text-white">{primaryAction.title}</h3>
+                      <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-400">{primaryAction.description}</p>
+                      <Button asChild className="mt-5 bg-cyan-300 text-slate-950 hover:bg-cyan-200">
+                        <Link to={primaryAction.route}>
+                          {primaryAction.label}
+                          <ArrowRight className="ml-2 h-4 w-4" />
+                        </Link>
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid gap-3 sm:grid-cols-3">
+                  <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                    <p className="text-xs text-slate-500">Cycle progress</p>
+                    <p className="mt-2 text-2xl font-semibold text-white">{completedStages}/5</p>
+                    <p className="text-xs text-slate-500">stages completed</p>
+                  </div>
+                  <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                    <p className="text-xs text-slate-500">Today</p>
+                    <p className="mt-2 text-2xl font-semibold text-white">
+                      {dashboardMetrics.tasksCompletedToday}/{dashboardMetrics.totalTasksToday}
+                    </p>
+                    <p className="text-xs text-slate-500">tasks done</p>
+                  </div>
+                  <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                    <p className="text-xs text-slate-500">Streak</p>
+                    <p className="mt-2 text-2xl font-semibold text-white">{data?.stats?.currentStreak ?? 0}</p>
+                    <p className="text-xs text-slate-500">daily check-ins</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="border-t border-white/10 bg-black/20 px-5 py-6 lg:border-l lg:border-t-0 sm:px-6">
+                <p className="text-sm font-semibold text-white">Startup Development Cycle</p>
+                <p className="mt-1 text-sm leading-6 text-slate-500">{stageDef.description}</p>
+                <div className="mt-5 space-y-3">
+                  {BIZMAP_STAGES.map((item) => {
+                    const itemState = stageState[item.id];
+                    const isCurrent = item.id === stage;
+
+                    return (
+                      <div key={item.id} className="flex items-center gap-3">
+                        <div
+                          className={cn(
+                            'flex h-8 w-8 items-center justify-center rounded-full border text-xs font-semibold',
+                            itemState.completed
+                              ? 'border-emerald-400/40 bg-emerald-400/15 text-emerald-200'
+                              : isCurrent
+                                ? 'border-cyan-400/40 bg-cyan-400/15 text-cyan-100'
+                                : 'border-white/10 bg-white/[0.03] text-slate-500',
+                          )}
+                        >
+                          {item.order}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className={cn('text-sm font-medium', isCurrent ? 'text-white' : 'text-slate-400')}>{item.title}</p>
+                          {isCurrent ? <Progress value={dashboardMetrics.weeklyProgress} className="mt-2 h-1.5 bg-white/10" /> : null}
+                        </div>
+                        {itemState.completed ? <CheckCircle2 className="h-4 w-4 text-emerald-300" /> : null}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </CommandCard>
+
+          <div className="space-y-6">
+            <CommandCard className="p-5">
+              <div className="flex items-center gap-3">
+                <Calendar className="h-5 w-5 text-pink-300" />
+                <div>
+                  <p className="text-sm font-semibold text-white">Weekly Mission</p>
+                  <p className="text-xs text-slate-500">Resets every Monday</p>
+                </div>
+              </div>
+              <p className="mt-4 text-sm leading-6 text-slate-300">
+                {currentMission?.mission_goal ?? 'A stage-based mission will appear here when the week starts.'}
+              </p>
+              <div className="mt-4 space-y-2">
+                <div className="flex items-center justify-between text-xs text-slate-500">
+                  <span>Mission progress</span>
+                  <span>{dashboardMetrics.weeklyProgress.toFixed(0)}%</span>
+                </div>
+                <Progress value={dashboardMetrics.weeklyProgress} className="h-2 bg-white/10" />
+              </div>
+              <Button asChild variant="outline" className="mt-5 w-full border-white/10 bg-white/[0.03] text-slate-200 hover:bg-white/[0.08] hover:text-white">
+                <Link to="/weekly-mission">Open mission</Link>
+              </Button>
+            </CommandCard>
+
+            <CommandCard className="p-5">
+              <div className="flex items-center gap-3">
+                <Flame className="h-5 w-5 text-orange-300" />
+                <p className="text-sm font-semibold text-white">Reason to return</p>
+              </div>
+              <p className="mt-3 text-sm leading-6 text-slate-400">{tomorrowReason}</p>
+            </CommandCard>
+          </div>
+        </div>
+
+        <div className="grid gap-6 lg:grid-cols-3">
+          <CommandCard className="p-5 lg:col-span-2">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <p className="text-sm font-semibold text-white">Your next tasks</p>
+                <p className="text-sm text-slate-500">{depth.description}</p>
+              </div>
+              <Button asChild variant="ghost" className="text-cyan-200 hover:bg-cyan-400/10 hover:text-cyan-100">
+                <Link to="/tasks">
+                  View all
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
+            </div>
+            <div className="mt-5 space-y-3">
+              {activeTasks.length > 0 ? (
+                activeTasks.map((task, index) => (
+                  <div key={task.id} className="flex items-start gap-3 rounded-2xl border border-white/10 bg-black/20 p-4">
+                    <Circle className={cn('mt-0.5 h-5 w-5', index === 0 ? 'text-cyan-300' : 'text-slate-600')} />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="text-sm font-medium text-white">{task.title}</p>
+                        <Badge variant="outline" className="border-white/10 text-slate-400">{index === 0 ? 'Now' : index === 1 ? 'Next' : 'Later'}</Badge>
+                      </div>
+                      <p className="mt-1 text-xs text-slate-500">{task.sourceLabel}</p>
+                    </div>
+                    {task.actionRoute ? (
+                      <Link to={task.actionRoute} className="text-sm text-cyan-200 hover:text-cyan-100">
+                        Open
+                      </Link>
+                    ) : null}
+                  </div>
+                ))
+              ) : (
+                <div className="rounded-2xl border border-dashed border-white/10 bg-black/20 p-5 text-sm text-slate-500">
+                  No active tasks. Open Focus Funnel to choose the next stage action.
+                </div>
+              )}
+            </div>
+          </CommandCard>
+
+          <div className="grid gap-6">
+            <CommandCard className="p-5">
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <FolderOpen className="h-5 w-5 text-cyan-300" />
+                  <div>
+                    <p className="text-sm font-semibold text-white">My Files</p>
+                    <p className="text-xs text-slate-500">{filesCount} saved document{filesCount === 1 ? '' : 's'}</p>
+                  </div>
+                </div>
+                <Button asChild size="sm" variant="outline" className="border-white/10 bg-white/[0.03] text-slate-200 hover:bg-white/[0.08] hover:text-white">
+                  <Link to="/files">Open</Link>
+                </Button>
+              </div>
+              {data?.primaryIcp?.summary ? (
+                <div className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-4">
+                  <div className="flex items-start gap-3">
+                    <FileText className="mt-0.5 h-4 w-4 text-cyan-300" />
+                    <div>
+                      <p className="text-sm font-medium text-white">{data.primaryIcp.summary.personaName}</p>
+                      <p className="mt-1 text-xs leading-5 text-slate-500">{data.primaryIcp.summary.corePainPoint}</p>
+                    </div>
+                  </div>
+                </div>
+              ) : null}
+            </CommandCard>
+
+            <CommandCard className="p-5">
+              <div className="grid gap-3">
+                <Link to="/focus-funnel" className="flex items-center justify-between rounded-2xl border border-white/10 bg-black/20 p-4 text-sm text-slate-300 hover:border-cyan-400/25 hover:text-white">
+                  <span className="inline-flex items-center gap-2"><Map className="h-4 w-4 text-cyan-300" /> Focus Funnel</span>
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+                <Link to="/dashboard/referral" className="flex items-center justify-between rounded-2xl border border-white/10 bg-black/20 p-4 text-sm text-slate-300 hover:border-cyan-400/25 hover:text-white">
+                  <span className="inline-flex items-center gap-2"><Gift className="h-4 w-4 text-pink-300" /> Referral Program</span>
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </div>
+            </CommandCard>
+          </div>
+        </div>
+
+        {depth.showAdvanced ? (
+          <CommandCard className="p-5">
+            <div className="flex items-center gap-3">
+              <Loader2 className="h-4 w-4 text-slate-500" />
+              <p className="text-sm text-slate-400">
+                Advanced plan context is available inside each tab. Home stays focused on the next action.
+              </p>
+            </div>
+          </CommandCard>
+        ) : null}
+      </DashboardLayout>
+    </TaskCountContext.Provider>
   );
 };

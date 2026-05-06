@@ -9,8 +9,8 @@ const TasksPage = () => {
 
   return (
     <DashboardLayout
-      title="Task Manager"
-      subtitle="All your tasks across BizMap, daily goals, community challenges, and commitments"
+      title="Your Tasks"
+      subtitle="Specific actions tied to your current Startup Development Cycle stage."
     >
       <FullTaskManager />
     </DashboardLayout>

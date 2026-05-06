@@ -13,11 +13,13 @@ import {
   Trophy,
   Handshake,
 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useUnifiedTasks, type TaskSource, type UnifiedTask } from '@/hooks/useUnifiedTasks';
+import { useSubscription } from '@/hooks/useSubscription';
+import { normalizePlan } from '@/config/planPermissions';
 
 // ── source config ──────────────────────────────────────────────────────────────
 
@@ -51,7 +53,7 @@ function TaskRow({ task }: { task: UnifiedTask }) {
 
   return (
     <div
-      className={`flex items-start gap-3 rounded-lg border border-border/60 bg-background/70 p-3 transition-opacity ${task.isCompleted ? 'opacity-55' : ''}`}
+      className={`flex items-start gap-3 rounded-2xl border border-white/10 bg-black/20 p-4 transition-opacity ${task.isCompleted ? 'opacity-55' : ''}`}
     >
       <button
         type="button"
@@ -69,7 +71,7 @@ function TaskRow({ task }: { task: UnifiedTask }) {
 
       <div className="min-w-0 flex-1">
         <p
-          className={`text-sm leading-snug ${task.isCompleted ? 'line-through text-muted-foreground' : 'text-foreground'}`}
+          className={`text-sm leading-snug ${task.isCompleted ? 'line-through text-slate-500' : 'text-white'}`}
         >
           {task.title}
         </p>
@@ -129,6 +131,9 @@ function CollapsibleSection({ title, tasks, defaultOpen = true }: { title: strin
 
 export function FullTaskManager() {
   const { allTasks, completedToday, totalToday, isLoading, createDailyTask } = useUnifiedTasks();
+  const { subscriptionData } = useSubscription();
+  const plan = normalizePlan(subscriptionData?.subscription_tier);
+  const showAdvancedFilters = plan === 'rising' || plan === 'pro';
 
   const [filterSource, setFilterSource] = useState<FilterSource>('all');
   const [filterPriority, setFilterPriority] = useState<FilterPriority>('all');
@@ -170,83 +175,89 @@ export function FullTaskManager() {
   return (
     <div className="space-y-6">
       {/* Header bar */}
-      <div className="flex flex-wrap items-center justify-between gap-4">
+      <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-white/10 bg-white/[0.045] p-4 backdrop-blur-xl">
         <div className="flex flex-wrap items-center gap-2">
-          <Badge variant="secondary">{completedToday}/{totalToday} done today</Badge>
-          {(['all', 'high', 'medium', 'low'] as FilterPriority[]).map((p) => (
-            <button
-              key={p}
-              type="button"
-              onClick={() => setFilterPriority(p)}
-              className={`rounded-full px-3 py-1 text-xs font-medium capitalize transition-colors border ${
-                filterPriority === p
-                  ? 'bg-foreground text-background border-foreground'
-                  : 'bg-background text-muted-foreground border-border hover:border-foreground/40'
-              }`}
-            >
-              {p === 'all' ? 'All priorities' : p}
-            </button>
-          ))}
-          <button
-            type="button"
-            onClick={() => setFilterStatus(filterStatus === 'active' ? 'completed' : 'active')}
-            className="rounded-full px-3 py-1 text-xs font-medium border bg-background text-muted-foreground border-border hover:border-foreground/40 transition-colors flex items-center gap-1"
-          >
-            <Filter className="h-3 w-3" />
-            {filterStatus === 'active' ? 'Show completed' : 'Show active'}
-          </button>
+          <Badge className="border-cyan-400/20 bg-cyan-400/10 text-cyan-100 hover:bg-cyan-400/10">{completedToday}/{totalToday} done today</Badge>
+          {showAdvancedFilters ? (
+            <>
+              {(['all', 'high', 'medium', 'low'] as FilterPriority[]).map((p) => (
+                <button
+                  key={p}
+                  type="button"
+                  onClick={() => setFilterPriority(p)}
+                  className={`rounded-full border px-3 py-1 text-xs font-medium capitalize transition-colors ${
+                    filterPriority === p
+                      ? 'border-cyan-300 bg-cyan-300 text-slate-950'
+                      : 'border-white/10 bg-white/[0.03] text-slate-400 hover:border-cyan-300/40 hover:text-white'
+                  }`}
+                >
+                  {p === 'all' ? 'All priorities' : p}
+                </button>
+              ))}
+              <button
+                type="button"
+                onClick={() => setFilterStatus(filterStatus === 'active' ? 'completed' : 'active')}
+                className="flex items-center gap-1 rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 text-xs font-medium text-slate-400 transition-colors hover:border-cyan-300/40 hover:text-white"
+              >
+                <Filter className="h-3 w-3" />
+                {filterStatus === 'active' ? 'Show completed' : 'Show active'}
+              </button>
+            </>
+          ) : null}
         </div>
-        <Button size="sm" variant="outline" className="h-8 gap-1" onClick={() => setShowInput((v) => !v)}>
+        <Button size="sm" variant="outline" className="h-8 gap-1 border-white/10 bg-white/[0.03] text-slate-200 hover:bg-white/[0.08] hover:text-white" onClick={() => setShowInput((v) => !v)}>
           <Plus className="h-3.5 w-3.5" /> New Task
         </Button>
       </div>
 
       {/* Source filter tabs */}
-      <div className="flex flex-wrap gap-1.5">
-        {sourceBadges.map((tab) => (
-          <button
-            key={tab.id}
-            type="button"
-            onClick={() => setFilterSource(tab.id)}
-            className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
-              filterSource === tab.id
-                ? 'bg-primary text-primary-foreground'
-                : 'bg-muted text-muted-foreground hover:bg-muted/80'
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
+      {showAdvancedFilters ? (
+        <div className="flex flex-wrap gap-1.5">
+          {sourceBadges.map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setFilterSource(tab.id)}
+              className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+                filterSource === tab.id
+                  ? 'bg-cyan-300 text-slate-950'
+                  : 'bg-white/[0.04] text-slate-400 hover:bg-white/[0.08] hover:text-white'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      ) : null}
 
       {/* Inline add task */}
       {showInput && (
         <div className="flex gap-2">
           <Input
-            className="h-9 text-sm"
+            className="h-9 border-white/10 bg-black/30 text-sm text-white placeholder:text-slate-600"
             placeholder="New task description…"
             value={newTaskText}
             onChange={(e) => setNewTaskText(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleAddTask()}
             autoFocus
           />
-          <Button size="sm" className="h-9" onClick={handleAddTask} disabled={isAdding}>
+          <Button size="sm" className="h-9 bg-cyan-300 text-slate-950 hover:bg-cyan-200" onClick={handleAddTask} disabled={isAdding}>
             {isAdding ? '…' : 'Add'}
           </Button>
         </div>
       )}
 
       {/* Task list */}
-      <Card className="border-border/70 bg-card/90">
+      <Card className="border-white/10 bg-white/[0.045] text-slate-100 backdrop-blur-xl">
         <CardContent className="pt-4 space-y-4">
           {isLoading ? (
             <div className="space-y-2">
               {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="h-12 animate-pulse rounded-lg bg-muted" />
+                <div key={i} className="h-12 animate-pulse rounded-2xl bg-white/10" />
               ))}
             </div>
           ) : filtered.length === 0 ? (
-            <div className="py-8 text-center text-sm text-muted-foreground">
+            <div className="py-8 text-center text-sm text-slate-500">
               {filterStatus === 'completed'
                 ? 'No completed tasks yet. Keep going!'
                 : 'No tasks matching your filters. Add one above.'}

@@ -40,7 +40,7 @@ const FocusFunnel = () => {
           ) : null}
 
           {loading ? (
-            <div className="flex items-center justify-center rounded-3xl border border-border/60 bg-card/70 p-12 text-sm text-muted-foreground">
+            <div className="flex items-center justify-center rounded-3xl border border-white/10 bg-white/[0.045] p-12 text-sm text-slate-500 backdrop-blur-xl">
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               Loading your stage map…
             </div>
@@ -62,7 +62,7 @@ const FocusFunnel = () => {
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-dashed border-border/60 bg-background/60 p-5">
+              <div className="rounded-2xl border border-dashed border-white/10 bg-white/[0.035] p-5 text-slate-100">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div className="space-y-1">
                     <p className="text-sm font-semibold text-foreground">Want to plan beyond the stages?</p>
@@ -70,7 +70,7 @@ const FocusFunnel = () => {
                       The AI Goals Planner turns broader outcomes into strategies and next actions.
                     </p>
                   </div>
-                  <Button asChild variant="outline">
+                  <Button asChild variant="outline" className="border-white/10 bg-white/[0.03] text-slate-200 hover:bg-white/[0.08] hover:text-white">
                     <Link to="/ai-goals">Open AI Goals Planner</Link>
                   </Button>
                 </div>

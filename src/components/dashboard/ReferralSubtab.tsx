@@ -151,9 +151,9 @@ export function ReferralSubtab() {
   return (
     <div className="space-y-6">
       {/* Link hero */}
-      <Card className="border-primary/30 bg-primary/5">
+      <Card className="border-cyan-400/20 bg-cyan-400/[0.07] text-slate-100 backdrop-blur-xl">
         <CardHeader>
-          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-primary">
+          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-cyan-200">
             <Gift className="h-4 w-4" />
             Your referral link
           </div>
@@ -166,11 +166,11 @@ export function ReferralSubtab() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-            <div className="flex-1 rounded-lg border border-border/60 bg-background/80 px-4 py-3 font-mono text-sm break-all">
+            <div className="flex-1 rounded-xl border border-white/10 bg-black/30 px-4 py-3 font-mono text-sm break-all text-slate-200">
               {referralLink || 'Generating your link…'}
             </div>
             <div className="flex gap-2">
-              <Button onClick={handleCopy} disabled={!referralLink} className="rounded-full">
+              <Button onClick={handleCopy} disabled={!referralLink} className="rounded-full bg-cyan-300 text-slate-950 hover:bg-cyan-200">
                 {copied ? <Check className="h-4 w-4 mr-2" /> : <Copy className="h-4 w-4 mr-2" />}
                 {copied ? 'Copied' : 'Copy'}
               </Button>
@@ -178,7 +178,7 @@ export function ReferralSubtab() {
                 onClick={handleShare}
                 disabled={!referralLink}
                 variant="outline"
-                className="rounded-full"
+                className="rounded-full border-white/10 bg-white/[0.03] text-slate-200 hover:bg-white/[0.08] hover:text-white"
               >
                 <Share2 className="h-4 w-4 mr-2" />
                 Share
@@ -190,19 +190,19 @@ export function ReferralSubtab() {
 
       {/* Stats */}
       <div className="grid gap-4 sm:grid-cols-3">
-        <Card>
+        <Card className="border-white/10 bg-white/[0.045] text-slate-100 backdrop-blur-xl">
           <CardHeader className="pb-2">
             <CardDescription>New accounts through your link</CardDescription>
             <CardTitle className="text-3xl">{verifiedCount}</CardTitle>
           </CardHeader>
         </Card>
-        <Card>
+        <Card className="border-white/10 bg-white/[0.045] text-slate-100 backdrop-blur-xl">
           <CardHeader className="pb-2">
             <CardDescription>Rewards unlocked</CardDescription>
             <CardTitle className="text-3xl">{rewardsUnlocked}</CardTitle>
           </CardHeader>
         </Card>
-        <Card>
+        <Card className="border-white/10 bg-white/[0.045] text-slate-100 backdrop-blur-xl">
           <CardHeader className="pb-2">
             <CardDescription>Progress to next reward</CardDescription>
             <CardTitle className="text-3xl">
@@ -216,7 +216,7 @@ export function ReferralSubtab() {
       </div>
 
       {/* Referrals list */}
-      <Card>
+      <Card className="border-white/10 bg-white/[0.045] text-slate-100 backdrop-blur-xl">
         <CardHeader>
           <CardTitle className="text-lg">Attributed accounts</CardTitle>
           <CardDescription>
@@ -229,7 +229,7 @@ export function ReferralSubtab() {
               No referrals yet. Share your link to get started.
             </p>
           ) : (
-            <ul className="divide-y divide-border/60">
+            <ul className="divide-y divide-white/10">
               {referrals.map((r) => (
                 <li key={r.id} className="flex items-center justify-between py-3">
                   <div>
@@ -253,10 +253,10 @@ export function ReferralSubtab() {
       </Card>
 
       {/* Rewards history */}
-      <Card>
+      <Card className="border-white/10 bg-white/[0.045] text-slate-100 backdrop-blur-xl">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
-            <Trophy className="h-4 w-4 text-primary" />
+            <Trophy className="h-4 w-4 text-cyan-300" />
             Rewards earned
           </CardTitle>
           <CardDescription>
@@ -269,7 +269,7 @@ export function ReferralSubtab() {
               No rewards yet. Your first reward unlocks at 3 new accounts.
             </p>
           ) : (
-            <ul className="divide-y divide-border/60">
+            <ul className="divide-y divide-white/10">
               {rewards.map((reward) => (
                 <li key={reward.id} className="flex items-center justify-between py-3">
                   <div>

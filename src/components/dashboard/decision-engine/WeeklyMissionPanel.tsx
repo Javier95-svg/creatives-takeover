@@ -4,7 +4,7 @@ import { Progress } from '@/components/ui/progress';
 import { Textarea } from '@/components/ui/textarea';
 import { useWeeklyMission } from '@/hooks/decision-engine/useWeeklyMission';
 import { Target, TrendingUp, CheckCircle2, Calendar, Edit2, Plus, AlertTriangle } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import {
   trackWeeklyMissionViewed,
   trackWeeklyMissionCreated,
@@ -28,9 +28,50 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { MoreHorizontal } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useBizMapProgress } from '@/hooks/useBizMapProgress';
+import { useSubscription } from '@/hooks/useSubscription';
+import { normalizePlan, type Plan } from '@/config/planPermissions';
+import type { BizMapStage } from '@/lib/bizmapStages';
 
 interface WeeklyMissionPanelProps {
   variant?: 'default' | 'compact';
+}
+
+const STAGE_MISSION_TEMPLATES: Record<BizMapStage, Record<Plan, string>> = {
+  IDENTITY: {
+    rookie: 'complete my ICP draft and identify the single customer pain I will validate next',
+    starter: 'turn my ICP into a clear waitlist promise and one validation question',
+    rising: 'tighten the ICP, buying trigger, and first traction hypothesis before expanding execution',
+    pro: 'pressure-test the ICP against the highest-value customer segment and investor narrative',
+  },
+  PROTOTYPE: {
+    rookie: 'turn my customer pain into a simple landing promise I can explain clearly',
+    starter: 'publish or improve my waitlist page and share it with qualified target customers',
+    rising: 'ship the strongest demand-capture version and review early signup quality',
+    pro: 'connect prototype messaging to traction proof and investor-ready positioning',
+  },
+  VALIDATING: {
+    rookie: 'collect one honest customer signal and write down what it changes',
+    starter: 'run a focused validation loop and record the strongest buying or rejection signal',
+    rising: 'increase validation evidence and decide what must change before building',
+    pro: 'separate real pull from polite feedback and translate the signal into a sharper growth thesis',
+  },
+  BUILDING: {
+    rookie: 'define the smallest useful version of the product before adding scope',
+    starter: 'convert validation signals into a build-ready task list',
+    rising: 'ship one meaningful MVP improvement tied directly to validated demand',
+    pro: 'move the build toward a traction milestone that strengthens the fundraising story',
+  },
+  LAUNCH: {
+    rookie: 'choose one launch channel and one message to test',
+    starter: 'prepare one launch asset and send it to a small qualified audience',
+    rising: 'run a focused GTM experiment and measure the result',
+    pro: 'turn launch activity into a measurable traction update for partners or investors',
+  },
+};
+
+function buildStageMission(stage: BizMapStage, plan: Plan) {
+  return STAGE_MISSION_TEMPLATES[stage]?.[plan] ?? STAGE_MISSION_TEMPLATES.IDENTITY.rookie;
 }
 
 export function WeeklyMissionPanel({ variant = 'default' }: WeeklyMissionPanelProps) {
@@ -44,6 +85,10 @@ export function WeeklyMissionPanel({ variant = 'default' }: WeeklyMissionPanelPr
     updateMission,
     reviewMission,
   } = useWeeklyMission();
+  const { currentStage } = useBizMapProgress();
+  const { subscriptionData } = useSubscription();
+  const plan = normalizePlan(subscriptionData?.subscription_tier);
+  const didAutoCreate = useRef(false);
 
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -57,6 +102,13 @@ export function WeeklyMissionPanel({ variant = 'default' }: WeeklyMissionPanelPr
   useEffect(() => {
     trackWeeklyMissionViewed();
   }, []);
+
+  useEffect(() => {
+    if (didAutoCreate.current || isLoading || error || currentMission) return;
+
+    didAutoCreate.current = true;
+    void createMission(buildStageMission(currentStage, plan), 'stage_weekly');
+  }, [createMission, currentMission, currentStage, error, isLoading, plan]);
 
   // Handle create mission
   const handleCreateMission = async () => {
@@ -142,7 +194,7 @@ export function WeeklyMissionPanel({ variant = 'default' }: WeeklyMissionPanelPr
   // Loading state
   if (isLoading) {
     return (
-      <Card className="border-2 border-blue-500/20 bg-gradient-to-br from-blue-500/5 to-background">
+      <Card className="border-white/10 bg-white/[0.045] text-slate-100 backdrop-blur-xl">
         <CardHeader>
           <div className="flex items-center gap-2">
             <Target className="h-5 w-5 text-blue-500 animate-pulse" />
@@ -157,7 +209,7 @@ export function WeeklyMissionPanel({ variant = 'default' }: WeeklyMissionPanelPr
   // Error state
   if (error) {
     return (
-      <Card className="border-2 border-destructive/20">
+      <Card className="border-destructive/30 bg-destructive/10 text-slate-100">
         <CardHeader>
           <CardTitle className="text-destructive">Unable to load weekly mission</CardTitle>
           <CardDescription>{error}</CardDescription>
@@ -170,7 +222,7 @@ export function WeeklyMissionPanel({ variant = 'default' }: WeeklyMissionPanelPr
   if (!currentMission) {
     if (isCompact) {
       return (
-        <Card className="border-border/70 bg-card/80 backdrop-blur-sm">
+        <Card className="border-white/10 bg-white/[0.045] text-slate-100 backdrop-blur-xl">
           <CardHeader>
             <div className="flex items-center gap-2">
               <Target className="h-5 w-5 text-blue-500" />
@@ -186,7 +238,7 @@ export function WeeklyMissionPanel({ variant = 'default' }: WeeklyMissionPanelPr
             {historyItems.length > 0 ? (
               <div className="space-y-3">
                 {historyItems.map((mission) => (
-                  <div key={mission.id} className="rounded-xl border border-border/60 bg-background/80 p-4">
+                <div key={mission.id} className="rounded-xl border border-white/10 bg-black/20 p-4">
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
                         {new Date(mission.week_start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - {new Date(mission.week_end_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
@@ -205,7 +257,7 @@ export function WeeklyMissionPanel({ variant = 'default' }: WeeklyMissionPanelPr
                 ))}
               </div>
             ) : (
-              <div className="rounded-xl border border-dashed border-border/70 bg-background/70 p-4 text-sm text-muted-foreground">
+              <div className="rounded-xl border border-dashed border-white/10 bg-black/20 p-4 text-sm text-slate-500">
                 No accountability history yet. Set this week&apos;s commitment in the hero, then close it out here at the end of the week.
               </div>
             )}
@@ -218,7 +270,7 @@ export function WeeklyMissionPanel({ variant = 'default' }: WeeklyMissionPanelPr
     }
 
     return (
-      <Card className="border-2 border-dashed border-muted-foreground/30 bg-muted/20">
+      <Card className="border border-dashed border-white/15 bg-white/[0.035] text-slate-100 backdrop-blur-xl">
         <CardHeader>
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-2">
@@ -261,7 +313,7 @@ export function WeeklyMissionPanel({ variant = 'default' }: WeeklyMissionPanelPr
                   />
                 </div>
 
-                <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
+                <div className="bg-cyan-400/10 border border-cyan-400/20 rounded-lg p-3">
                   <p className="text-xs text-muted-foreground">
                     Great commitments are outcome-focused, uncomfortable enough to matter, and small enough to finish this week.
                   </p>
@@ -312,7 +364,7 @@ export function WeeklyMissionPanel({ variant = 'default' }: WeeklyMissionPanelPr
   if (isReviewed) {
     if (isCompact) {
       return (
-        <Card className="border-border/70 bg-card/80 backdrop-blur-sm">
+        <Card className="border-white/10 bg-white/[0.045] text-slate-100 backdrop-blur-xl">
           <CardHeader>
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-center gap-2">
@@ -330,7 +382,7 @@ export function WeeklyMissionPanel({ variant = 'default' }: WeeklyMissionPanelPr
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="rounded-xl border border-border/60 bg-background/80 p-4">
+            <div className="rounded-xl border border-white/10 bg-black/20 p-4">
               <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Last commitment</p>
               <p className="mt-2 text-sm font-medium leading-relaxed">{currentMission.mission_goal}</p>
               {currentMission.reflection_text?.trim() ? (
@@ -342,7 +394,7 @@ export function WeeklyMissionPanel({ variant = 'default' }: WeeklyMissionPanelPr
             {historyItems.length > 0 ? (
               <div className="space-y-3">
                 {historyItems.map((mission) => (
-                  <div key={mission.id} className="rounded-xl border border-border/60 bg-background/80 p-4">
+                  <div key={mission.id} className="rounded-xl border border-white/10 bg-black/20 p-4">
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
                         {new Date(mission.week_start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - {new Date(mission.week_end_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
@@ -365,7 +417,7 @@ export function WeeklyMissionPanel({ variant = 'default' }: WeeklyMissionPanelPr
     }
 
     return (
-      <Card className="border-2 border-blue-500/30 bg-gradient-to-br from-blue-500/5 via-background to-background">
+      <Card className="border-white/10 bg-white/[0.045] text-slate-100 backdrop-blur-xl">
         <CardHeader>
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-center gap-2">
@@ -384,7 +436,7 @@ export function WeeklyMissionPanel({ variant = 'default' }: WeeklyMissionPanelPr
         </CardHeader>
 
         <CardContent className="space-y-4">
-          <div className="rounded-xl border border-border/60 bg-background/80 p-4">
+          <div className="rounded-xl border border-white/10 bg-black/20 p-4">
             <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">This week, I will</p>
             <p className="mt-2 text-sm font-medium leading-relaxed">{currentMission.mission_goal}</p>
           </div>
@@ -416,7 +468,7 @@ export function WeeklyMissionPanel({ variant = 'default' }: WeeklyMissionPanelPr
   }
 
   return (
-    <Card className={isCompact ? 'border-border/70 bg-card/80 backdrop-blur-sm' : 'border-2 border-blue-500/30 bg-gradient-to-br from-blue-500/5 via-background to-background'}>
+    <Card className="border-white/10 bg-white/[0.045] text-slate-100 backdrop-blur-xl">
       <CardHeader>
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-2">
@@ -458,7 +510,7 @@ export function WeeklyMissionPanel({ variant = 'default' }: WeeklyMissionPanelPr
       </CardHeader>
 
       <CardContent className="space-y-4">
-        <div className="rounded-xl border border-border/60 bg-background/80 p-4">
+        <div className="rounded-xl border border-white/10 bg-black/20 p-4">
           <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">{isCompact ? 'Current commitment' : 'This week, I will'}</p>
           <p className="mt-2 text-sm font-medium leading-relaxed">{currentMission.mission_goal}</p>
         </div>
@@ -511,7 +563,7 @@ export function WeeklyMissionPanel({ variant = 'default' }: WeeklyMissionPanelPr
           <div className="space-y-3 border-t border-border/60 pt-4">
             <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Recent weeks</p>
             {historyItems.map((mission) => (
-              <div key={mission.id} className="rounded-xl border border-border/60 bg-background/80 p-4">
+              <div key={mission.id} className="rounded-xl border border-white/10 bg-black/20 p-4">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
                     {new Date(mission.week_start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - {new Date(mission.week_end_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
@@ -602,7 +654,7 @@ export function WeeklyMissionPanel({ variant = 'default' }: WeeklyMissionPanelPr
           </DialogHeader>
 
           <div className="space-y-4 py-4">
-            <div className="rounded-xl border border-border/60 bg-background/80 p-4">
+            <div className="rounded-xl border border-white/10 bg-black/20 p-4">
               <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">This week, I will</p>
               <p className="mt-2 text-sm font-medium leading-relaxed">{currentMission.mission_goal}</p>
             </div>

@@ -10,7 +10,7 @@ const WeeklyMissionPage = () => {
   return (
     <DashboardLayout
       title="Weekly Mission"
-      subtitle="Set and track your weekly goals"
+      subtitle="A stage-based weekly challenge that resets every Monday."
     >
       <div className="space-y-6">
         <WeeklyMissionPanel />
