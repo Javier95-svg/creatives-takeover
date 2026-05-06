@@ -17,6 +17,8 @@ interface DashboardLayoutProps {
 
 export const DashboardLayout = ({ children, title, subtitle, maxWidthClassName = 'max-w-7xl', contentClassName }: DashboardLayoutProps) => {
   const navigate = useNavigate();
+  void title;
+  void subtitle;
 
   return (
     <ErrorBoundary>
@@ -29,12 +31,6 @@ export const DashboardLayout = ({ children, title, subtitle, maxWidthClassName =
                 <div className={cn('container mx-auto flex items-start justify-between px-4 pt-4 sm:px-6', maxWidthClassName)}>
                   <div className="pointer-events-auto flex items-start gap-4">
                     <SidebarTrigger className="rounded-full border border-white/10 bg-slate-950/80 text-slate-200 shadow-xl shadow-black/20 backdrop-blur-md hover:bg-white/[0.06]" />
-                    <div className="pt-1">
-                      <h1 className="font-space-grotesk text-xl font-semibold text-white">{title}</h1>
-                      {subtitle && (
-                        <p className="text-sm text-slate-500">{subtitle}</p>
-                      )}
-                    </div>
                   </div>
                   <button
                     onClick={() => navigate('/')}

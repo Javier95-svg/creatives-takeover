@@ -6,12 +6,24 @@ import { useLocation } from "react-router-dom";
 const ProUpgradeBanner = () => {
     const { isAuthenticated, loading } = useAuth();
     const location = useLocation();
+    const dashboardSurfacePaths = [
+        '/dashboard',
+        '/files',
+        '/tasks',
+        '/weekly-mission',
+        '/focus-funnel',
+        '/ai-goals',
+        '/core-metrics',
+        '/projects-dashboard',
+    ];
+    const isDashboardSurface = dashboardSurfacePaths.some((path) =>
+        location.pathname === path || location.pathname.startsWith(`${path}/`)
+    );
     const hideForAuthRoutes =
         location.pathname === '/login' ||
         location.pathname === '/signup' ||
         location.pathname === '/auth' ||
-        location.pathname === '/dashboard' ||
-        location.pathname.startsWith('/dashboard/') ||
+        isDashboardSurface ||
         location.pathname === '/icp-builder' ||
         location.pathname.startsWith('/bizmap-ai/icp-builder') ||
         location.pathname.startsWith('/mvp-builder');
