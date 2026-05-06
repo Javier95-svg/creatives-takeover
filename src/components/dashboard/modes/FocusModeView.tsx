@@ -34,7 +34,7 @@ export function FocusModeView({
         <div id="focus-funnel">
           <FocusFunnelWidget
             compact
-            onOpenAIPartner={() => navigate('/focus-funnel')}
+            onOpenAIPartner={() => navigate('/dashboard/focus-funnel')}
           />
         </div>
         <div id="weekly-mission">

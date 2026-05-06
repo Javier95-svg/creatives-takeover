@@ -72,7 +72,7 @@ export const DashboardSidebar = () => {
               {modeConfig.navItems.map((item) => {
                 const Icon = navIconMap[item.iconKey];
                 const isActive = location.pathname === item.path;
-                const isTasksItem = item.path === '/tasks';
+                const isTasksItem = item.path === '/dashboard/tasks';
 
                 return (
                   <SidebarMenuItem key={item.path}>

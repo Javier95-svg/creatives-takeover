@@ -87,14 +87,14 @@ export function DashboardModeView({
       id: 'tasks',
       title: tasksRemainingToday > 0 ? `Close ${tasksRemainingToday} remaining task${tasksRemainingToday === 1 ? '' : 's'}` : 'Plan your next task block',
       description: 'Use Your Tasks to lock in clear execution for today.',
-      actionUrl: '/tasks',
+      actionUrl: '/dashboard/tasks',
       priorityLabel: 'Now',
     },
     {
       id: 'mission',
       title: 'Review your weekly mission',
       description: 'Confirm that this week still aligns with your current stage.',
-      actionUrl: '/weekly-mission',
+      actionUrl: '/dashboard/weekly-mission',
       priorityLabel: 'Next',
     },
     {
@@ -286,7 +286,7 @@ export function DashboardModeView({
           </CardHeader>
           <CardContent>
             <Button asChild variant="outline" className="w-full justify-between">
-              <Link to="/tasks">
+              <Link to="/dashboard/tasks">
                 Go to Your Tasks
                 <ArrowRight className="h-4 w-4" />
               </Link>
@@ -300,7 +300,7 @@ export function DashboardModeView({
           </CardHeader>
           <CardContent>
             <Button asChild variant="outline" className="w-full justify-between">
-              <Link to="/weekly-mission">
+              <Link to="/dashboard/weekly-mission">
                 Open Weekly Mission
                 <ArrowRight className="h-4 w-4" />
               </Link>
@@ -314,7 +314,7 @@ export function DashboardModeView({
           </CardHeader>
           <CardContent>
             <Button asChild variant="outline" className="w-full justify-between">
-              <Link to="/focus-funnel">
+              <Link to="/dashboard/focus-funnel">
                 Open Focus Funnel
                 <ArrowRight className="h-4 w-4" />
               </Link>

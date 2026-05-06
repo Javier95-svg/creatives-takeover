@@ -397,7 +397,7 @@ export function DashboardAccountabilityHero({ founderName, businessStage, curren
             </p>
           </div>
           <Button asChild>
-            <Link to="/weekly-mission">
+            <Link to="/dashboard/weekly-mission">
               Open Weekly Commitment
               <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
@@ -601,7 +601,7 @@ export function DashboardAccountabilityHero({ founderName, businessStage, curren
             ) : null}
 
             <Button asChild size="lg" className="h-12 justify-between px-5 text-sm font-semibold">
-              <Link to="/weekly-mission">
+              <Link to="/dashboard/weekly-mission">
                 {primaryActionLabel}
                 <ArrowRight className="h-4 w-4" />
               </Link>

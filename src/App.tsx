@@ -58,6 +58,7 @@ const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const PromptLibrary = lazy(() => import("./pages/PromptLibrary"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
+const DashboardShell = lazy(() => import("./components/dashboard/DashboardShell"));
 const SavedMentorsPage = lazy(() => import("./pages/SavedMentorsPage"));
 const Accountability = lazy(() => import("./pages/Accountability"));
 const Blog = lazy(() => import("./pages/Blog"));
@@ -256,24 +257,29 @@ function App() {
                           path="/dashboard"
                           element={
                             <RouteErrorBoundary routeName="Dashboard">
-                              <Dashboard />
+                              <DashboardShell />
                             </RouteErrorBoundary>
                           }
-                        />
-                        <Route path="/dashboard/referral" element={<ReferralDashboardPage />} />
+                        >
+                          <Route index element={<Dashboard />} />
+                          <Route path="files" element={<FilesPage />} />
+                          <Route path="tasks" element={<TasksPage />} />
+                          <Route path="weekly-mission" element={<WeeklyMissionPage />} />
+                          <Route path="referral" element={<ReferralDashboardPage />} />
+                          <Route path="focus-funnel" element={<FocusFunnel />} />
+                        </Route>
                         <Route path="/projects-dashboard" element={<ProjectsDashboard />} />
                         <Route path="/referral-program" element={<ReferralProgram />} />
                         <Route path="/accountability" element={<Accountability />} />
                         <Route path="/saved-mentors" element={<SavedMentorsPage />} />
                         <Route path="/account" element={<Account />} />
                         <Route path="/setup-quiz" element={<SetupQuiz />} />
-                        <Route path="/files" element={<FilesPage />} />
-                        <Route path="/dashboard/files" element={<Navigate to="/files" replace />} />
-                        <Route path="/focus-funnel" element={<FocusFunnel />} />
+                        <Route path="/files" element={<Navigate to="/dashboard/files" replace />} />
+                        <Route path="/focus-funnel" element={<Navigate to="/dashboard/focus-funnel" replace />} />
                         <Route path="/ai-goals" element={<AiGoalsPage />} />
                         <Route path="/core-metrics" element={<CoreMetricsPage />} />
-                        <Route path="/weekly-mission" element={<WeeklyMissionPage />} />
-                        <Route path="/tasks" element={<TasksPage />} />
+                        <Route path="/weekly-mission" element={<Navigate to="/dashboard/weekly-mission" replace />} />
+                        <Route path="/tasks" element={<Navigate to="/dashboard/tasks" replace />} />
                         <Route path="/insighta" element={<Blog />} />
                         <Route path="/vc-search" element={<VCSearchPage />} />
                         <Route path="/email-templates" element={<EmailTemplatesPage />} />

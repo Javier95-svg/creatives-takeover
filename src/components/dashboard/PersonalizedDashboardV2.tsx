@@ -17,18 +17,10 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { DashboardLayout } from './DashboardLayout';
 import { DashboardSkeleton } from './DashboardSkeleton';
-import { TaskCountContext } from './TaskCountContext';
-import { usePersonalizedDashboard } from '@/hooks/usePersonalizedDashboard';
-import { useUnifiedTasks } from '@/hooks/useUnifiedTasks';
-import { useWeeklyMission } from '@/hooks/decision-engine/useWeeklyMission';
-import { useDashboardMetrics } from '@/hooks/useDashboardMetrics';
-import { useBizMapProgress } from '@/hooks/useBizMapProgress';
-import { useDashboardInitialization } from '@/hooks/useDashboardInitialization';
-import { useSubscription } from '@/hooks/useSubscription';
+import { useDashboardData } from '@/contexts/DashboardDataContext';
 import { BIZMAP_STAGES, STAGE_TASKS, getStageIndex, type BizMapStage } from '@/lib/bizmapStages';
-import { PLAN_LABELS, normalizePlan, type Plan } from '@/config/planPermissions';
+import { PLAN_LABELS, type Plan } from '@/config/planPermissions';
 import { cn } from '@/lib/utils';
 
 const planDepth: Record<Plan, { label: string; description: string; maxTasks: number; showAdvanced: boolean }> = {
@@ -70,7 +62,7 @@ function getPrimaryAction(stage: BizMapStage, hasIcp: boolean) {
     return {
       title: 'Turn your ICP into today’s target customer action',
       description: 'Your draft is saved. Use it to choose the next validation move instead of browsing tools.',
-      route: '/tasks',
+      route: '/dashboard/tasks',
       label: 'Open tasks',
     };
   }
@@ -78,7 +70,7 @@ function getPrimaryAction(stage: BizMapStage, hasIcp: boolean) {
   return {
     title: task?.title ?? 'Choose the next action for your current stage',
     description: 'This is the one action the dashboard is asking you to complete before your next visit.',
-    route: task?.route ?? '/focus-funnel',
+    route: task?.route ?? '/dashboard/focus-funnel',
     label: 'Start action',
   };
 }
@@ -98,15 +90,20 @@ function CommandCard({
 }
 
 export const PersonalizedDashboardV2 = () => {
-  const { isInitializing } = useDashboardInitialization();
-  const { subscriptionData } = useSubscription();
-  const { data, loading, trackActivity } = usePersonalizedDashboard();
-  const { currentStage, stageState, loading: progressLoading } = useBizMapProgress();
-  const { allTasks, isLoading: tasksLoading } = useUnifiedTasks();
-  const { currentMission, isLoading: missionLoading } = useWeeklyMission();
-  const dashboardMetrics = useDashboardMetrics();
+  const {
+    personalized,
+    progress,
+    tasks,
+    weeklyMission,
+    metrics: dashboardMetrics,
+    currentPlan,
+    initialLoading,
+  } = useDashboardData();
+  const { data, trackActivity } = personalized;
+  const { currentStage, stageState } = progress;
+  const { allTasks } = tasks;
+  const { currentMission } = weeklyMission;
 
-  const currentPlan = normalizePlan(subscriptionData?.subscription_tier);
   const depth = planDepth[currentPlan];
   const stage = currentStage;
   const stageDef = getStageDefinition(stage);
@@ -116,7 +113,6 @@ export const PersonalizedDashboardV2 = () => {
   const primaryAction = getPrimaryAction(stage, Boolean(data?.primaryIcp));
   const founderName = data?.profile?.full_name?.split(' ')[0] || 'Founder';
   const filesCount = data?.dashboardFiles?.length ?? 0;
-  const incompleteTaskCount = Math.max(dashboardMetrics.totalTasksToday - dashboardMetrics.tasksCompletedToday, 0);
 
   useEffect(() => {
     void trackActivity('dashboard_home_view', {
@@ -131,17 +127,12 @@ export const PersonalizedDashboardV2 = () => {
     return `Come back tomorrow to move Stage ${stageNumber}: ${stageDef.title}.`;
   }, [activeTasks, currentMission?.mission_goal, stageDef.title, stageNumber]);
 
-  if (loading || isInitializing || progressLoading || tasksLoading || missionLoading || dashboardMetrics.isLoading) {
+  if (initialLoading) {
     return <DashboardSkeleton />;
   }
 
   return (
-    <TaskCountContext.Provider value={incompleteTaskCount}>
-      <DashboardLayout
-        title="Home"
-        subtitle="Your next founder move, not a feature dump."
-        contentClassName="space-y-6"
-      >
+    <div className="space-y-6">
         <div className="grid gap-6 xl:grid-cols-[1.3fr_0.75fr]">
           <CommandCard className="overflow-hidden">
             <div className="border-b border-white/10 px-5 py-4 sm:px-6">
@@ -255,7 +246,7 @@ export const PersonalizedDashboardV2 = () => {
                 <Progress value={dashboardMetrics.weeklyProgress} className="h-2 bg-white/10" />
               </div>
               <Button asChild variant="outline" className="mt-5 w-full border-white/10 bg-white/[0.03] text-slate-200 hover:bg-white/[0.08] hover:text-white">
-                <Link to="/weekly-mission">Open mission</Link>
+                <Link to="/dashboard/weekly-mission">Open mission</Link>
               </Button>
             </CommandCard>
 
@@ -277,7 +268,7 @@ export const PersonalizedDashboardV2 = () => {
                 <p className="text-sm text-slate-500">{depth.description}</p>
               </div>
               <Button asChild variant="ghost" className="text-cyan-200 hover:bg-cyan-400/10 hover:text-cyan-100">
-                <Link to="/tasks">
+                <Link to="/dashboard/tasks">
                   View all
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
@@ -321,7 +312,7 @@ export const PersonalizedDashboardV2 = () => {
                   </div>
                 </div>
                 <Button asChild size="sm" variant="outline" className="border-white/10 bg-white/[0.03] text-slate-200 hover:bg-white/[0.08] hover:text-white">
-                  <Link to="/files">Open</Link>
+                  <Link to="/dashboard/files">Open</Link>
                 </Button>
               </div>
               {data?.primaryIcp?.summary ? (
@@ -339,7 +330,7 @@ export const PersonalizedDashboardV2 = () => {
 
             <CommandCard className="p-5">
               <div className="grid gap-3">
-                <Link to="/focus-funnel" className="flex items-center justify-between rounded-2xl border border-white/10 bg-black/20 p-4 text-sm text-slate-300 hover:border-cyan-400/25 hover:text-white">
+                <Link to="/dashboard/focus-funnel" className="flex items-center justify-between rounded-2xl border border-white/10 bg-black/20 p-4 text-sm text-slate-300 hover:border-cyan-400/25 hover:text-white">
                   <span className="inline-flex items-center gap-2"><Map className="h-4 w-4 text-cyan-300" /> Focus Funnel</span>
                   <ArrowRight className="h-4 w-4" />
                 </Link>
@@ -362,7 +353,6 @@ export const PersonalizedDashboardV2 = () => {
             </div>
           </CommandCard>
         ) : null}
-      </DashboardLayout>
-    </TaskCountContext.Provider>
+    </div>
   );
 };

@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
+import { Helmet } from 'react-helmet-async';
 import { WeeklyMissionPanel } from '@/components/dashboard/decision-engine/WeeklyMissionPanel';
 import { useLeanStartupStore } from '@/store/leanStartupStore';
 
@@ -8,14 +8,14 @@ const WeeklyMissionPage = () => {
   useEffect(() => { markToolUsed('weekly-mission'); }, [markToolUsed]);
 
   return (
-    <DashboardLayout
-      title="Weekly Mission"
-      subtitle="A stage-based weekly challenge that resets every Monday."
-    >
+    <>
+      <Helmet>
+        <title>Weekly Mission — Creatives Takeover</title>
+      </Helmet>
       <div className="space-y-6">
         <WeeklyMissionPanel />
       </div>
-    </DashboardLayout>
+    </>
   );
 };
 

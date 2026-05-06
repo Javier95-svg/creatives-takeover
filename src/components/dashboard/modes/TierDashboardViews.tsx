@@ -503,7 +503,7 @@ export function RookieModeView({ founderName, recommendations, icpSummary, total
               </p>
             </div>
             <Button asChild size="lg" className="shrink-0">
-              <Link to={icpSummary ? '/files' : '/icp-builder'}>
+            <Link to={icpSummary ? '/dashboard/files' : '/icp-builder'}>
                 {icpSummary ? 'Open My Files' : 'Open ICP Builder'}
               </Link>
             </Button>
@@ -529,7 +529,7 @@ export function RookieModeView({ founderName, recommendations, icpSummary, total
             </p>
           </div>
           <Button asChild variant="outline">
-            <Link to="/focus-funnel">Open Focus Funnel</Link>
+            <Link to="/dashboard/focus-funnel">Open Focus Funnel</Link>
           </Button>
         </div>
       </div>
@@ -792,7 +792,7 @@ export function RisingModeView({
               <DecisionSprintCard />
             </div>
             <div id="focus-funnel">
-              <FocusFunnelWidget compact onOpenAIPartner={() => navigate('/focus-funnel')} />
+              <FocusFunnelWidget compact onOpenAIPartner={() => navigate('/dashboard/focus-funnel')} />
             </div>
           </div>
           <div id="your-tasks">

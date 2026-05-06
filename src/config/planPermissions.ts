@@ -251,11 +251,11 @@ export const PLAN_HIGHLIGHTS: Record<Plan, string[]> = {
 
 const SHARED_DASHBOARD_NAV_ITEMS: DashboardNavItem[] = [
   { path: '/dashboard', label: 'Home', iconKey: 'home' },
-  { path: '/files', label: 'My Files', iconKey: 'folder_open' },
-  { path: '/tasks', label: 'Your Tasks', iconKey: 'check_square' },
-  { path: '/weekly-mission', label: 'Weekly Mission', iconKey: 'calendar' },
+  { path: '/dashboard/files', label: 'My Files', iconKey: 'folder_open' },
+  { path: '/dashboard/tasks', label: 'Your Tasks', iconKey: 'check_square' },
+  { path: '/dashboard/weekly-mission', label: 'Weekly Mission', iconKey: 'calendar' },
   { path: '/dashboard/referral', label: 'Referral Program', iconKey: 'gift' },
-  { path: '/focus-funnel', label: 'Focus Funnel', iconKey: 'target' },
+  { path: '/dashboard/focus-funnel', label: 'Focus Funnel', iconKey: 'target' },
 ];
 
 export const DASHBOARD_MODE_CONFIG: Record<DashboardModeVariant, DashboardModeConfig> = {
@@ -306,11 +306,11 @@ export const DASHBOARD_MODE_CONFIG: Record<DashboardModeVariant, DashboardModeCo
 };
 
 const DASHBOARD_SURFACE_PATHS: Record<Exclude<DashboardSurfaceFeature, 'dashboard_access'>, string> = {
-  focus_funnel: '/focus-funnel',
+  focus_funnel: '/dashboard/focus-funnel',
   core_metrics: '/core-metrics',
-  weekly_mission: '/weekly-mission',
+  weekly_mission: '/dashboard/weekly-mission',
   decision_sprint: '/decision-sprint',
-  your_tasks: '/tasks',
+  your_tasks: '/dashboard/tasks',
 };
 
 export const FEATURE_LABELS: Record<FeatureKey, string> = {

@@ -67,7 +67,7 @@ export function ControlCenterView({
 
       <div className="grid gap-6 lg:grid-cols-[1.6fr_1fr]">
         <div id="focus-funnel">
-          <FocusFunnelWidget onOpenAIPartner={() => navigate('/focus-funnel')} />
+          <FocusFunnelWidget onOpenAIPartner={() => navigate('/dashboard/focus-funnel')} />
         </div>
         <div id="decision-sprint">
           <DecisionSprintCard />

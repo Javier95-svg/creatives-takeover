@@ -224,7 +224,7 @@ export function TodaysMissionWidget({ compact = false }: TodaysMissionWidgetProp
         {!compact && totalToday > 0 && (
           <div className="pt-2 text-right">
             <Link
-              to="/tasks"
+              to="/dashboard/tasks"
               className="text-xs text-primary hover:underline inline-flex items-center gap-0.5"
             >
               See all tasks <ArrowRight className="h-3 w-3" />
@@ -235,7 +235,7 @@ export function TodaysMissionWidget({ compact = false }: TodaysMissionWidgetProp
         {compact && allTasks.length > 4 && (
           <div className="pt-2 text-right">
             <Link
-              to="/tasks"
+              to="/dashboard/tasks"
               className="text-xs text-primary hover:underline inline-flex items-center gap-0.5"
             >
               +{allTasks.length - 4} more tasks <ArrowRight className="h-3 w-3" />
