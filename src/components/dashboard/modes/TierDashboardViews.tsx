@@ -156,7 +156,6 @@ export function ProModeView({
   weeklyProgress,
   tasksCompletedThisWeek,
   completedSessions,
-  activeSprints,
   totalCheckIns,
   recommendations,
   startupName,

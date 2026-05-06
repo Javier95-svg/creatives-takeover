@@ -1,308 +1,276 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  ArrowRight,
   CheckCircle2,
   Circle,
-  Clock3,
-  Compass,
-  Flag,
-  Filter,
-  Handshake,
   Plus,
-  Sparkles,
+  ArrowRight,
+  Filter,
+  ChevronDown,
+  ChevronRight,
+  Compass,
   Star,
   Trophy,
+  Handshake,
 } from 'lucide-react';
-
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useDashboardData } from '@/contexts/DashboardDataContext';
-import { normalizePlan } from '@/config/planPermissions';
-import type { TaskLayer, UnifiedTask } from '@/hooks/useUnifiedTasks';
-import { cn } from '@/lib/utils';
+import { useUnifiedTasks, type TaskSource, type UnifiedTask } from '@/hooks/useUnifiedTasks';
 
-const layerConfig: Record<TaskLayer, { label: string; icon: React.ComponentType<{ className?: string }>; className: string }> = {
-  stage: {
-    label: 'Stage',
-    icon: Compass,
-    className: 'border-cyan-400/25 bg-cyan-400/10 text-cyan-100',
-  },
-  mission: {
-    label: 'Mission',
-    icon: Sparkles,
-    className: 'border-pink-400/25 bg-pink-400/10 text-pink-100',
-  },
-  manual: {
-    label: 'Custom',
-    icon: Star,
-    className: 'border-orange-400/25 bg-orange-400/10 text-orange-100',
-  },
-  community: {
-    label: 'Community',
-    icon: Trophy,
-    className: 'border-purple-400/25 bg-purple-400/10 text-purple-100',
-  },
-  commitment: {
-    label: 'Commitment',
-    icon: Handshake,
-    className: 'border-emerald-400/25 bg-emerald-400/10 text-emerald-100',
-  },
+// ── source config ──────────────────────────────────────────────────────────────
+
+const SOURCE_CONFIG: Record<
+  TaskSource,
+  { label: string; color: string; icon: React.ComponentType<{ className?: string }> }
+> = {
+  bizmap:     { label: 'BizMap',      color: 'bg-primary/10 text-primary border-primary/20',             icon: Compass  },
+  daily:      { label: 'Daily',       color: 'bg-orange-500/10 text-orange-600 border-orange-500/20',     icon: Star     },
+  challenge:  { label: 'Challenge',   color: 'bg-purple-500/10 text-purple-600 border-purple-500/20',     icon: Trophy   },
+  commitment: { label: 'Commitment',  color: 'bg-green-500/10 text-green-700 border-green-500/20',        icon: Handshake},
+  priority:   { label: 'Priority',    color: 'bg-rose-500/10 text-rose-600 border-rose-500/20',           icon: Star     },
 };
 
+type FilterSource = 'all' | TaskSource;
 type FilterPriority = 'all' | 'high' | 'medium' | 'low';
 type FilterStatus = 'active' | 'completed' | 'all';
 
-function TaskRow({ task, onChanged }: { task: UnifiedTask; onChanged: () => Promise<void> }) {
+// ── task row ────────────────────────────────────────────────────────────────────
+
+function TaskRow({ task }: { task: UnifiedTask }) {
   const [saving, setSaving] = useState(false);
-  const config = layerConfig[task.layer];
-  const Icon = config.icon;
+  const cfg = SOURCE_CONFIG[task.source];
+  const Icon = cfg.icon;
 
   const handleToggle = async () => {
     setSaving(true);
-    try {
-      await task.onComplete();
-      await onChanged();
-    } finally {
-      setSaving(false);
-    }
+    await task.onComplete();
+    setSaving(false);
   };
 
   return (
-    <div className={cn('flex gap-3 rounded-2xl border border-white/10 bg-black/20 p-4', task.isCompleted && 'opacity-55')}>
+    <div
+      className={`flex items-start gap-3 rounded-lg border border-border/60 bg-background/70 p-3 transition-opacity ${task.isCompleted ? 'opacity-55' : ''}`}
+    >
       <button
         type="button"
         onClick={handleToggle}
         disabled={saving}
-        className="mt-0.5 shrink-0 text-slate-500 transition-colors hover:text-cyan-200 disabled:opacity-50"
-        aria-label={task.isCompleted ? 'Mark task incomplete' : 'Mark task complete'}
+        className="mt-0.5 shrink-0"
+        aria-label={task.isCompleted ? 'Mark incomplete' : 'Mark complete'}
       >
-        {task.isCompleted ? <CheckCircle2 className="h-5 w-5 text-emerald-300" /> : <Circle className="h-5 w-5" />}
+        {task.isCompleted ? (
+          <CheckCircle2 className="h-5 w-5 text-green-600" />
+        ) : (
+          <Circle className="h-5 w-5 text-muted-foreground" />
+        )}
       </button>
 
       <div className="min-w-0 flex-1">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <p className={cn('text-sm font-medium leading-6 text-white', task.isCompleted && 'line-through text-slate-500')}>
-            {task.title}
-          </p>
-          {task.actionRoute ? (
-            <Button asChild size="sm" variant="ghost" className="h-7 px-2 text-xs text-cyan-200 hover:bg-cyan-400/10 hover:text-cyan-100">
-              <Link to={task.actionRoute}>
-                {task.actionLabel ?? 'Open'}
-                <ArrowRight className="ml-1 h-3 w-3" />
-              </Link>
-            </Button>
-          ) : null}
-        </div>
-
-        <div className="mt-2 flex flex-wrap items-center gap-2">
-          <span className={cn('inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium', config.className)}>
+        <p
+          className={`text-sm leading-snug ${task.isCompleted ? 'line-through text-muted-foreground' : 'text-foreground'}`}
+        >
+          {task.title}
+        </p>
+        <div className="mt-1 flex flex-wrap items-center gap-2">
+          <span
+            className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium ${cfg.color}`}
+          >
             <Icon className="h-3 w-3" />
-            {config.label}
+            {cfg.label}
           </span>
-          <Badge variant="outline" className="border-white/10 text-xs capitalize text-slate-300">
-            <Flag className="mr-1 h-3 w-3" />
-            {task.priority}
-          </Badge>
-          <Badge variant="outline" className="border-white/10 text-xs text-slate-300">
-            <Clock3 className="mr-1 h-3 w-3" />
-            {task.estimatedMinutes ?? 15} min
-          </Badge>
-          <span className="text-xs text-slate-500">{task.sourceLabel}</span>
+          {task.priority === 'high' && (
+            <Badge variant="outline" className="text-xs border-red-400/30 text-red-500">High</Badge>
+          )}
+          {task.deadline && (
+            <span className="text-xs text-muted-foreground">
+              Due {new Date(task.deadline).toLocaleDateString()}
+            </span>
+          )}
+          {task.actionRoute && (
+            <Link to={task.actionRoute} className="text-xs text-primary hover:underline flex items-center gap-0.5">
+              Go to source <ArrowRight className="h-3 w-3" />
+            </Link>
+          )}
         </div>
       </div>
     </div>
   );
 }
 
-function TaskSection({
-  title,
-  description,
-  tasks,
-  empty,
-  onChanged,
-}: {
-  title: string;
-  description: string;
-  tasks: UnifiedTask[];
-  empty: string;
-  onChanged: () => Promise<void>;
-}) {
+// ── collapsible section ──────────────────────────────────────────────────────────
+
+function CollapsibleSection({ title, tasks, defaultOpen = true }: { title: string; tasks: UnifiedTask[]; defaultOpen?: boolean }) {
+  const [open, setOpen] = useState(defaultOpen);
+  if (tasks.length === 0) return null;
+
   return (
-    <section className="rounded-2xl border border-white/10 bg-white/[0.045] p-4 text-slate-100 backdrop-blur-xl">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <h2 className="text-sm font-semibold text-white">{title}</h2>
-          <p className="mt-1 text-sm leading-6 text-slate-500">{description}</p>
+    <div>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="flex w-full items-center gap-2 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors"
+      >
+        {open ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
+        {title}
+        <Badge variant="secondary" className="ml-auto text-xs">{tasks.length}</Badge>
+      </button>
+      {open && (
+        <div className="space-y-2 mt-1">
+          {tasks.map((task) => <TaskRow key={task.id} task={task} />)}
         </div>
-        <Badge className="border-white/10 bg-white/[0.06] text-slate-300 hover:bg-white/[0.06]">{tasks.length}</Badge>
-      </div>
-      <div className="mt-4 space-y-3">
-        {tasks.length > 0 ? (
-          tasks.map((task) => <TaskRow key={`${task.source}-${task.id}`} task={task} onChanged={onChanged} />)
-        ) : (
-          <div className="rounded-2xl border border-dashed border-white/10 bg-black/20 p-4 text-sm text-slate-500">
-            {empty}
-          </div>
-        )}
-      </div>
-    </section>
+      )}
+    </div>
   );
 }
 
-export function FullTaskManager() {
-  const { tasks, subscription, refreshDashboardData } = useDashboardData();
-  const { allTasks, completedToday, totalToday, isLoading, createDailyTask } = tasks;
-  const plan = normalizePlan(subscription.subscriptionData?.subscription_tier);
-  const showAdvancedFilters = plan === 'rising' || plan === 'pro';
+// ── main component ───────────────────────────────────────────────────────────────
 
+export function FullTaskManager() {
+  const { allTasks, completedToday, totalToday, isLoading, createDailyTask } = useUnifiedTasks();
+
+  const [filterSource, setFilterSource] = useState<FilterSource>('all');
   const [filterPriority, setFilterPriority] = useState<FilterPriority>('all');
   const [filterStatus, setFilterStatus] = useState<FilterStatus>('active');
   const [newTaskText, setNewTaskText] = useState('');
-  const [newTaskPriority, setNewTaskPriority] = useState<'high' | 'medium' | 'low'>('medium');
+  const [showInput, setShowInput] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
-
-  const filteredTasks = useMemo(() => {
-    return allTasks.filter((task) => {
-      if (filterPriority !== 'all' && task.priority !== filterPriority) return false;
-      if (filterStatus === 'active' && task.isCompleted) return false;
-      if (filterStatus === 'completed' && !task.isCompleted) return false;
-      return true;
-    });
-  }, [allTasks, filterPriority, filterStatus]);
-
-  const stageTasks = filteredTasks.filter((task) => task.layer === 'stage');
-  const missionTasks = filteredTasks.filter((task) => task.layer === 'mission');
-  const customTasks = filteredTasks.filter((task) => task.layer === 'manual');
-  const secondaryTasks = filteredTasks.filter((task) => task.layer === 'community' || task.layer === 'commitment');
 
   const handleAddTask = async () => {
     if (!newTaskText.trim()) return;
     setIsAdding(true);
-    try {
-      await createDailyTask(newTaskText.trim(), newTaskPriority);
-      await refreshDashboardData();
-      setNewTaskText('');
-      setNewTaskPriority('medium');
-    } finally {
-      setIsAdding(false);
-    }
+    await createDailyTask(newTaskText.trim());
+    setNewTaskText('');
+    setIsAdding(false);
+    setShowInput(false);
   };
+
+  // Apply filters
+  const filtered = allTasks.filter((t) => {
+    if (filterSource !== 'all' && t.source !== filterSource) return false;
+    if (filterPriority !== 'all' && t.priority !== filterPriority) return false;
+    if (filterStatus === 'active' && t.isCompleted) return false;
+    if (filterStatus === 'completed' && !t.isCompleted) return false;
+    return true;
+  });
+
+  const activeTasks = filtered.filter((t) => !t.isCompleted);
+  const completedTasks = filtered.filter((t) => t.isCompleted);
+
+  const sourceBadges: { id: FilterSource; label: string }[] = [
+    { id: 'all', label: 'All' },
+    { id: 'priority', label: 'Priorities' },
+    { id: 'bizmap', label: 'BizMap' },
+    { id: 'daily', label: 'Daily' },
+    { id: 'challenge', label: 'Community' },
+    { id: 'commitment', label: 'Commitments' },
+  ];
 
   return (
     <div className="space-y-6">
-      <div className="rounded-2xl border border-white/10 bg-white/[0.045] p-4 text-slate-100 backdrop-blur-xl">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <Badge className="border-cyan-400/20 bg-cyan-400/10 text-cyan-100 hover:bg-cyan-400/10">
-            {completedToday}/{totalToday} done today
-          </Badge>
-
-          {showAdvancedFilters ? (
-            <div className="flex flex-wrap items-center gap-2">
-              {(['all', 'high', 'medium', 'low'] as FilterPriority[]).map((priority) => (
-                <button
-                  key={priority}
-                  type="button"
-                  onClick={() => setFilterPriority(priority)}
-                  className={cn(
-                    'rounded-full border px-3 py-1 text-xs font-medium capitalize transition-colors',
-                    filterPriority === priority
-                      ? 'border-cyan-300 bg-cyan-300 text-slate-950'
-                      : 'border-white/10 bg-white/[0.03] text-slate-400 hover:border-cyan-300/40 hover:text-white',
-                  )}
-                >
-                  {priority === 'all' ? 'All priorities' : priority}
-                </button>
-              ))}
-              <button
-                type="button"
-                onClick={() => setFilterStatus(filterStatus === 'active' ? 'completed' : 'active')}
-                className="flex items-center gap-1 rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 text-xs font-medium text-slate-400 transition-colors hover:border-cyan-300/40 hover:text-white"
-              >
-                <Filter className="h-3 w-3" />
-                {filterStatus === 'active' ? 'Show completed' : 'Show active'}
-              </button>
-            </div>
-          ) : null}
+      {/* Header bar */}
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="flex flex-wrap items-center gap-2">
+          <Badge variant="secondary">{completedToday}/{totalToday} done today</Badge>
+          {(['all', 'high', 'medium', 'low'] as FilterPriority[]).map((p) => (
+            <button
+              key={p}
+              type="button"
+              onClick={() => setFilterPriority(p)}
+              className={`rounded-full px-3 py-1 text-xs font-medium capitalize transition-colors border ${
+                filterPriority === p
+                  ? 'bg-foreground text-background border-foreground'
+                  : 'bg-background text-muted-foreground border-border hover:border-foreground/40'
+              }`}
+            >
+              {p === 'all' ? 'All priorities' : p}
+            </button>
+          ))}
+          <button
+            type="button"
+            onClick={() => setFilterStatus(filterStatus === 'active' ? 'completed' : 'active')}
+            className="rounded-full px-3 py-1 text-xs font-medium border bg-background text-muted-foreground border-border hover:border-foreground/40 transition-colors flex items-center gap-1"
+          >
+            <Filter className="h-3 w-3" />
+            {filterStatus === 'active' ? 'Show completed' : 'Show active'}
+          </button>
         </div>
-
-        <div className="mt-4 grid gap-3 md:grid-cols-[1fr_auto_auto]">
-          <Input
-            className="h-10 border-white/10 bg-black/30 text-sm text-white placeholder:text-slate-600"
-            placeholder="Add a custom task..."
-            value={newTaskText}
-            onChange={(event) => setNewTaskText(event.target.value)}
-            onKeyDown={(event) => {
-              if (event.key === 'Enter') void handleAddTask();
-            }}
-          />
-          <div className="flex gap-2">
-            {(['high', 'medium', 'low'] as const).map((priority) => (
-              <button
-                key={priority}
-                type="button"
-                onClick={() => setNewTaskPriority(priority)}
-                className={cn(
-                  'h-10 rounded-xl border px-3 text-xs font-medium capitalize transition-colors',
-                  newTaskPriority === priority
-                    ? 'border-cyan-300 bg-cyan-300 text-slate-950'
-                    : 'border-white/10 bg-white/[0.03] text-slate-400 hover:border-cyan-300/40 hover:text-white',
-                )}
-              >
-                {priority}
-              </button>
-            ))}
-          </div>
-          <Button className="h-10 bg-cyan-300 text-slate-950 hover:bg-cyan-200" onClick={handleAddTask} disabled={isAdding || !newTaskText.trim()}>
-            <Plus className="mr-2 h-4 w-4" />
-            {isAdding ? 'Adding' : 'Add task'}
-          </Button>
-        </div>
+        <Button size="sm" variant="outline" className="h-8 gap-1" onClick={() => setShowInput((v) => !v)}>
+          <Plus className="h-3.5 w-3.5" /> New Task
+        </Button>
       </div>
 
-      {isLoading ? (
-        <div className="rounded-2xl border border-white/10 bg-white/[0.045] p-4 backdrop-blur-xl">
-          <div className="space-y-3">
-            {[1, 2, 3].map((item) => (
-              <div key={item} className="h-16 animate-pulse rounded-2xl bg-white/10" />
-            ))}
-          </div>
+      {/* Source filter tabs */}
+      <div className="flex flex-wrap gap-1.5">
+        {sourceBadges.map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            onClick={() => setFilterSource(tab.id)}
+            className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+              filterSource === tab.id
+                ? 'bg-primary text-primary-foreground'
+                : 'bg-muted text-muted-foreground hover:bg-muted/80'
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Inline add task */}
+      {showInput && (
+        <div className="flex gap-2">
+          <Input
+            className="h-9 text-sm"
+            placeholder="New task description…"
+            value={newTaskText}
+            onChange={(e) => setNewTaskText(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleAddTask()}
+            autoFocus
+          />
+          <Button size="sm" className="h-9" onClick={handleAddTask} disabled={isAdding}>
+            {isAdding ? '…' : 'Add'}
+          </Button>
         </div>
-      ) : (
-        <>
-          <TaskSection
-            title="Stage tasks"
-            description="Auto-generated from your active Startup Development Cycle stage."
-            tasks={stageTasks}
-            empty="No stage tasks are active right now."
-            onChanged={refreshDashboardData}
-          />
-          <TaskSection
-            title="This week's mission"
-            description="Recommended actions that move the current Weekly Mission forward."
-            tasks={missionTasks}
-            empty="Open Weekly Mission to generate this week's recommended mission tasks."
-            onChanged={refreshDashboardData}
-          />
-          <TaskSection
-            title="Custom tasks"
-            description="Tasks you add manually for today."
-            tasks={customTasks}
-            empty="Add a custom task above when something specific needs your attention."
-            onChanged={refreshDashboardData}
-          />
-          {secondaryTasks.length > 0 ? (
-            <TaskSection
-              title="Community and commitments"
-              description="Secondary accountability tasks connected to community activity."
-              tasks={secondaryTasks}
-              empty=""
-              onChanged={refreshDashboardData}
-            />
-          ) : null}
-        </>
       )}
+
+      {/* Task list */}
+      <Card className="border-border/70 bg-card/90">
+        <CardContent className="pt-4 space-y-4">
+          {isLoading ? (
+            <div className="space-y-2">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="h-12 animate-pulse rounded-lg bg-muted" />
+              ))}
+            </div>
+          ) : filtered.length === 0 ? (
+            <div className="py-8 text-center text-sm text-muted-foreground">
+              {filterStatus === 'completed'
+                ? 'No completed tasks yet. Keep going!'
+                : 'No tasks matching your filters. Add one above.'}
+            </div>
+          ) : (
+            <>
+              {filterStatus !== 'completed' && (
+                <CollapsibleSection
+                  title={`Active (${activeTasks.length})`}
+                  tasks={activeTasks}
+                  defaultOpen
+                />
+              )}
+              {filterStatus !== 'active' && completedTasks.length > 0 && (
+                <CollapsibleSection
+                  title={`Completed (${completedTasks.length})`}
+                  tasks={completedTasks}
+                  defaultOpen={filterStatus === 'completed'}
+                />
+              )}
+            </>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

@@ -501,7 +501,7 @@ export function MyFilesSection({ files, primaryIcp, refreshDashboard }: MyFilesS
 
   return (
     <section id="my-files" className="space-y-6">
-      <Card className="border-white/10 bg-white/[0.045] text-slate-100 backdrop-blur-xl">
+      <Card className="border-border/70 bg-card/80 backdrop-blur-sm">
         <CardHeader className="space-y-4">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div className="space-y-2">
@@ -513,7 +513,7 @@ export function MyFilesSection({ files, primaryIcp, refreshDashboard }: MyFilesS
                 Upload notes, decks, and source docs here. Your ICP Draft stays here automatically as a protected system file.
               </CardDescription>
             </div>
-            <div className="w-full max-w-sm space-y-2 rounded-2xl border border-white/10 bg-black/20 p-4">
+            <div className="w-full max-w-sm space-y-2 rounded-2xl border border-border/60 bg-background/60 p-4">
               <div className="flex items-center justify-between gap-3 text-sm">
                 <span className="text-muted-foreground">Storage used</span>
                 <span className="font-medium text-foreground">
@@ -552,7 +552,7 @@ export function MyFilesSection({ files, primaryIcp, refreshDashboard }: MyFilesS
             className={`rounded-2xl border border-dashed px-5 py-5 transition-colors ${
               isDragActive
                 ? 'border-primary/50 bg-primary/10'
-                : 'border-white/10 bg-black/20 hover:border-cyan-400/30 hover:bg-white/[0.04]'
+                : 'border-border/70 bg-background/60 hover:border-primary/30 hover:bg-background/80'
             }`}
           >
             <input
@@ -573,7 +573,7 @@ export function MyFilesSection({ files, primaryIcp, refreshDashboard }: MyFilesS
                   Drag files here or choose PDF, Word, TXT, or Markdown documents up to 10MB each.
                 </p>
               </div>
-              <Button type="button" variant="outline" className="shrink-0 border-white/10 bg-white/[0.03] text-slate-200 hover:bg-white/[0.08] hover:text-white">
+              <Button type="button" variant="outline" className="shrink-0">
                 <Upload className="h-4 w-4" />
                 Upload files
               </Button>
@@ -582,7 +582,7 @@ export function MyFilesSection({ files, primaryIcp, refreshDashboard }: MyFilesS
         </CardHeader>
         <CardContent>
           {localFiles.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-white/10 bg-black/20 p-6 text-sm text-slate-500">
+            <div className="rounded-2xl border border-dashed border-border/70 bg-background/60 p-6 text-sm text-muted-foreground">
               Upload your first document here. Your ICP Draft will also appear automatically once it is created.
             </div>
           ) : (
@@ -599,8 +599,8 @@ export function MyFilesSection({ files, primaryIcp, refreshDashboard }: MyFilesS
                     onClick={() => setSelectedFileId(file.id)}
                     className={`rounded-2xl border p-4 text-left transition-colors ${
                       isSelected
-                        ? 'border-cyan-400/40 bg-cyan-400/10'
-                        : 'border-white/10 bg-black/20 hover:border-cyan-400/30 hover:bg-white/[0.04]'
+                        ? 'border-primary/40 bg-primary/10'
+                        : 'border-border/60 bg-background/70 hover:border-primary/30 hover:bg-background'
                     }`}
                   >
                     <div className="flex items-start justify-between gap-3">
@@ -656,7 +656,7 @@ export function MyFilesSection({ files, primaryIcp, refreshDashboard }: MyFilesS
       </Card>
 
       {selectedFile ? (
-        <Card className="border-white/10 bg-white/[0.045] text-slate-100 backdrop-blur-xl">
+        <Card className="border-border/70 bg-card/80 backdrop-blur-sm">
           <CardHeader className="space-y-4">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
               <div className="space-y-3">
@@ -723,13 +723,13 @@ export function MyFilesSection({ files, primaryIcp, refreshDashboard }: MyFilesS
                 {selectedFile.origin === 'user_upload' ? (
                   <>
                     {editingFileId !== selectedFile.id ? (
-                      <Button type="button" variant="outline" size="sm" className="border-white/10 bg-white/[0.03] text-slate-200 hover:bg-white/[0.08] hover:text-white" onClick={() => handleRenameStart(selectedFile)}>
+                      <Button type="button" variant="outline" size="sm" onClick={() => handleRenameStart(selectedFile)}>
                         <Pencil className="h-4 w-4" />
                         Rename
                       </Button>
                     ) : null}
                     {!selectedFile.is_protected ? (
-                      <Button type="button" variant="outline" size="sm" className="border-white/10 bg-white/[0.03] text-slate-200 hover:bg-white/[0.08] hover:text-white" onClick={() => setDeleteTarget(selectedFile)}>
+                      <Button type="button" variant="outline" size="sm" onClick={() => setDeleteTarget(selectedFile)}>
                         <Trash2 className="h-4 w-4" />
                         Delete
                       </Button>
@@ -737,7 +737,7 @@ export function MyFilesSection({ files, primaryIcp, refreshDashboard }: MyFilesS
                   </>
                 ) : null}
                 {selectedAnalysisId ? (
-                  <Button asChild variant="outline" className="shrink-0 border-white/10 bg-white/[0.03] text-slate-200 hover:bg-white/[0.08] hover:text-white">
+                  <Button asChild variant="outline" className="shrink-0">
                     <Link to={`/icp/draft/${selectedAnalysisId}`}>
                       Open dedicated draft page
                       <ArrowRight className="ml-2 h-4 w-4" />
@@ -749,16 +749,16 @@ export function MyFilesSection({ files, primaryIcp, refreshDashboard }: MyFilesS
           </CardHeader>
           <CardContent className="space-y-4">
             {isLoading ? (
-              <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-black/20 px-4 py-6 text-sm text-slate-500">
+              <div className="flex items-center gap-3 rounded-2xl border border-border/60 bg-background/70 px-4 py-6 text-sm text-muted-foreground">
                 <Loader2 className="h-4 w-4 animate-spin" />
                 Loading the full file...
               </div>
             ) : loadError ? (
-              <div className="rounded-2xl border border-white/10 bg-black/20 px-4 py-6 text-sm text-slate-500">
+              <div className="rounded-2xl border border-border/60 bg-background/70 px-4 py-6 text-sm text-muted-foreground">
                 {loadError}
               </div>
             ) : selectedArtifact ? (
-              <div className="overflow-hidden rounded-[2rem] border border-white/10 bg-black/20">
+              <div className="overflow-hidden rounded-[2rem] border border-border/60 bg-background/40">
                 <IcpFolioDocument
                   draft={selectedArtifact.draftDocument}
                   tone="platformPreview"
@@ -767,7 +767,7 @@ export function MyFilesSection({ files, primaryIcp, refreshDashboard }: MyFilesS
                 />
               </div>
             ) : selectedPdfUrl ? (
-              <div className="overflow-hidden rounded-[2rem] border border-white/10 bg-black/20">
+              <div className="overflow-hidden rounded-[2rem] border border-border/60 bg-background/40">
                 <iframe
                   src={selectedPdfUrl}
                   title={selectedFile.title}
@@ -775,7 +775,7 @@ export function MyFilesSection({ files, primaryIcp, refreshDashboard }: MyFilesS
                 />
               </div>
             ) : selectedFile.file_extension === 'md' ? (
-              <div className="rounded-[2rem] border border-white/10 bg-black/20 p-5">
+              <div className="rounded-[2rem] border border-border/60 bg-background/50 p-5">
                 <div className="prose prose-sm max-w-none dark:prose-invert prose-p:my-3 prose-headings:mt-5 prose-headings:mb-2">
                   <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]}>
                     {selectedFile.extracted_text ?? ''}
@@ -783,7 +783,7 @@ export function MyFilesSection({ files, primaryIcp, refreshDashboard }: MyFilesS
                 </div>
               </div>
             ) : (
-              <div className="rounded-[2rem] border border-white/10 bg-black/20 p-5">
+              <div className="rounded-[2rem] border border-border/60 bg-background/50 p-5">
                 <div className="whitespace-pre-wrap text-sm leading-7 text-foreground/90">
                   {selectedFile.extracted_text ?? 'This file preview is still being prepared.'}
                 </div>

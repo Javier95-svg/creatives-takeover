@@ -5,20 +5,15 @@ import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/s
 import { DashboardNavigationProvider } from '@/contexts/DashboardNavigationContext';
 import { DashboardSidebar } from './DashboardSidebar';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
-import { cn } from '@/lib/utils';
 
 interface DashboardLayoutProps {
   children: ReactNode;
   title: string;
   subtitle?: string;
-  maxWidthClassName?: string;
-  contentClassName?: string;
 }
 
-export const DashboardLayout = ({ children, title, subtitle, maxWidthClassName = 'max-w-7xl', contentClassName }: DashboardLayoutProps) => {
+export const DashboardLayout = ({ children, title, subtitle }: DashboardLayoutProps) => {
   const navigate = useNavigate();
-  void title;
-  void subtitle;
 
   return (
     <ErrorBoundary>
@@ -26,15 +21,21 @@ export const DashboardLayout = ({ children, title, subtitle, maxWidthClassName =
         <DashboardNavigationProvider>
           <DashboardSidebar />
           <SidebarInset>
-            <div className="relative min-h-screen overflow-hidden bg-[#090a0f] text-slate-100">
+            <div className="min-h-screen relative overflow-hidden bg-background">
               <div className="pointer-events-none fixed inset-x-0 top-0 z-50">
-                <div className={cn('container mx-auto flex items-start justify-between px-4 pt-4 sm:px-6', maxWidthClassName)}>
+                <div className="container mx-auto flex max-w-7xl items-start justify-between px-6 pt-4">
                   <div className="pointer-events-auto flex items-start gap-4">
-                    <SidebarTrigger className="rounded-full border border-white/10 bg-slate-950/80 text-slate-200 shadow-xl shadow-black/20 backdrop-blur-md hover:bg-white/[0.06]" />
+                    <SidebarTrigger className="rounded-full border border-border/70 bg-background/88 shadow-sm backdrop-blur-md" />
+                    <div className="pt-1">
+                      <h1 className="font-space-grotesk text-xl font-semibold">{title}</h1>
+                      {subtitle && (
+                        <p className="text-sm text-muted-foreground">{subtitle}</p>
+                      )}
+                    </div>
                   </div>
                   <button
                     onClick={() => navigate('/')}
-                    className="pointer-events-auto inline-flex items-center gap-2 rounded-full border border-white/10 bg-slate-950/80 px-4 py-2 text-sm font-medium text-slate-400 shadow-xl shadow-black/20 backdrop-blur-md transition-colors hover:border-cyan-400/30 hover:bg-white/[0.06] hover:text-white focus:outline-none focus:ring-2 focus:ring-cyan-400/40"
+                    className="pointer-events-auto inline-flex items-center gap-2 rounded-full border border-border/70 bg-background/88 px-4 py-2 text-sm font-medium text-muted-foreground shadow-sm backdrop-blur-md transition-colors hover:border-primary/30 hover:bg-background hover:text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
                     aria-label="Exit dashboard and return to platform"
                     type="button"
                   >
@@ -44,20 +45,21 @@ export const DashboardLayout = ({ children, title, subtitle, maxWidthClassName =
                 </div>
               </div>
 
+              {/* Background */}
               <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute inset-0 bg-[#090a0f]" />
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_0%,rgba(34,211,238,0.09),transparent_34%),radial-gradient(circle_at_82%_16%,rgba(244,114,182,0.07),transparent_30%)]" />
+                <div className="absolute inset-0 bg-background" />
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/3 via-transparent to-transparent" />
                 <div
-                  className="absolute inset-0 opacity-[0.06]"
+                  className="absolute inset-0 opacity-[0.015]"
                   style={{
-                    backgroundImage:
-                      'linear-gradient(to right, rgba(255,255,255,0.06) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.06) 1px, transparent 1px)',
-                    backgroundSize: '56px 56px',
+                    backgroundImage: `radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0)`,
+                    backgroundSize: '32px 32px',
                   }}
                 />
               </div>
 
-              <div className={cn('relative z-10 container mx-auto px-4 pb-24 pt-24 sm:px-6', maxWidthClassName, contentClassName)}>
+              {/* Page Content */}
+              <div className="relative z-10 container mx-auto p-6 pb-24 max-w-7xl pt-24">
                 {children}
               </div>
             </div>

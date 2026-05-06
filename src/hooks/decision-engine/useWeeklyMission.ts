@@ -42,11 +42,7 @@ export interface UseWeeklyMissionReturn {
   linkedTasks: WeeklyMissionTask[];
   isLoading: boolean;
   error: string | null;
-  createMission: (
-    goal: string,
-    missionType?: string,
-    options?: { targetMetric?: string; targetValue?: number; currentValue?: number },
-  ) => Promise<WeeklyMission | null>;
+  createMission: (goal: string, missionType?: string) => Promise<WeeklyMission | null>;
   updateMission: (id: string, updates: Partial<WeeklyMission>) => Promise<void>;
   reviewMission: (id: string, outcome: WeeklyCommitmentOutcome, reflection?: string) => Promise<void>;
   linkTaskToMission: (taskId: string, isCritical?: boolean, weight?: number) => Promise<void>;
@@ -152,8 +148,7 @@ export function useWeeklyMission(): UseWeeklyMissionReturn {
    */
   const createMission = useCallback(async (
     goal: string,
-    missionType?: string,
-    options?: { targetMetric?: string; targetValue?: number; currentValue?: number },
+    missionType?: string
   ): Promise<WeeklyMission | null> => {
     if (!user) {
       toast.error('You must be logged in to create a mission');
@@ -191,9 +186,6 @@ export function useWeeklyMission(): UseWeeklyMissionReturn {
           week_end_date: weekDates.end,
           mission_goal: goal,
           mission_type: missionType || 'general',
-          target_metric: options?.targetMetric ?? null,
-          target_value: options?.targetValue ?? null,
-          current_value: options?.currentValue ?? 0,
           status: 'active',
           completion_percentage: 0,
           commitment_outcome: null,

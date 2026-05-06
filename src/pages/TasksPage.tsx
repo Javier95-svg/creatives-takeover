@@ -10,7 +10,7 @@ const TasksPage = () => {
   return (
     <>
       <Helmet>
-        <title>Your Tasks — Creatives Takeover</title>
+        <title>Task Manager — Creatives Takeover</title>
       </Helmet>
       <FullTaskManager />
     </>
