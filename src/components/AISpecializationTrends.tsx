@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { TrendingUp, Target, Zap, BarChart3 } from "lucide-react";
+import { Target, Zap } from "lucide-react";
 import {
   LineChart,
   Line,
@@ -15,7 +15,6 @@ import {
   Legend
 } from "recharts";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
-import { useCountUp } from "@/hooks/useCountUp";
 import { useTypingAnimation } from "@/hooks/useTypingAnimation";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -71,29 +70,18 @@ const AISpecializationTrends = () => {
     }
   }, [textSectionIsVisible, textSectionVisible]);
 
-  // Animated counters
-  const { count: revenueCount, ref: revenueRef } = useCountUp(1.8, 2000);
-  const { count: speedCount, ref: speedRef } = useCountUp(12, 2000);
-  const { count: marginCount, ref: marginRef } = useCountUp(85, 2000);
-
-  // Chart 1: Operational Velocity (Small Teams vs Legacy)
-  const operationalVelocityData = [
-    { year: '2020', legacy: 10, aiNative: 15 },
-    { year: '2021', legacy: 12, aiNative: 35 },
-    { year: '2022', legacy: 13, aiNative: 85 },
-    { year: '2023', legacy: 13, aiNative: 180 },
-    { year: '2024', legacy: 14, aiNative: 320 },
-    { year: '2025', legacy: 15, aiNative: 580 },
+  const founderLeverageData = [
+    { stage: 'Manual Ops', traditional: 1, aiEnabled: 1.2 },
+    { stage: 'AI Assist', traditional: 1.3, aiEnabled: 3.5 },
+    { stage: 'AI Workflows', traditional: 1.6, aiEnabled: 8 },
+    { stage: 'Agent Stack', traditional: 1.9, aiEnabled: 16 },
   ];
 
-  // Chart 2: Market Value Capture (Disrupters vs Incumbents)
-  const marketValueData = [
-    { year: '2020', incumbents: 90, disrupters: 10 },
-    { year: '2021', incumbents: 82, disrupters: 18 },
-    { year: '2022', incumbents: 70, disrupters: 30 },
-    { year: '2023', incumbents: 55, disrupters: 45 },
-    { year: '2024', incumbents: 40, disrupters: 60 },
-    { year: '2025', incumbents: 25, disrupters: 75 },
+  const marketReachData = [
+    { stage: 'Local', enterpriseOnly: 18, smallTeamAccess: 22 },
+    { stage: 'Niche', enterpriseOnly: 36, smallTeamAccess: 55 },
+    { stage: 'National', enterpriseOnly: 64, smallTeamAccess: 78 },
+    { stage: 'Global', enterpriseOnly: 88, smallTeamAccess: 96 },
   ];
 
 
@@ -158,65 +146,21 @@ const AISpecializationTrends = () => {
         </div>
 
         <div ref={chartAnimationRef}>
-        {/* Key Statistics */}
-        {!isMobile && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-            <Card className="surface-panel trust-outline overflow-hidden">
-              <CardContent className="p-6 text-center">
-                <div ref={revenueRef} className="text-3xl md:text-4xl font-bold text-primary mb-2">
-                  ${revenueCount.toFixed(1)}M
-                </div>
-                <div className="text-sm text-muted-foreground mb-1">Revenue Per Employee</div>
-                <div className="flex items-center justify-center gap-1 mt-2">
-                  <TrendingUp className="w-4 h-4 text-green-600" />
-                  <span className="text-xs text-green-600">4.5x Industry Avg</span>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="surface-panel trust-outline overflow-hidden">
-              <CardContent className="p-6 text-center">
-                <div ref={speedRef} className="text-3xl md:text-4xl font-bold text-muted-foreground mb-2">
-                  {speedCount.toFixed(0)}x
-                </div>
-                <div className="text-sm text-muted-foreground mb-1">Faster Time-to-Market</div>
-                <div className="flex items-center justify-center gap-1 mt-2">
-                  <Zap className="w-4 h-4 text-accent" />
-                  <span className="text-xs text-accent">vs Legacy Enterprise</span>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="surface-panel trust-outline overflow-hidden">
-              <CardContent className="p-6 text-center">
-                <div ref={marginRef} className="text-3xl md:text-4xl font-bold text-accent mb-2">
-                  {marginCount.toFixed(0)}%
-                </div>
-                <div className="text-sm text-muted-foreground mb-1">Profit Margins</div>
-                <div className="flex items-center justify-center gap-1 mt-2">
-                  <TrendingUp className="w-4 h-4 text-green-600" />
-                  <span className="text-xs text-green-600">vs 20% Legacy Avg</span>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
-
         {/* Charts Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
-          {/* Chart 1: Operational Velocity */}
+          {/* Chart 1: Founder Leverage */}
           <Card className="surface-panel trust-outline overflow-hidden hover:shadow-[0_22px_44px_-30px_rgba(15,23,42,0.2)] transition-shadow">
             <CardHeader>
               <CardTitle className="font-space-grotesk text-base sm:text-lg flex items-center gap-2">
                 <Zap className="w-5 h-5 text-primary" />
-                Operational Velocity
+                AI Leverage Per Founder
               </CardTitle>
             </CardHeader>
             <CardContent className={isMobile ? "px-4 pb-5" : undefined}>
               {chartVisible && (
                 <div className="chart-container mx-auto w-full max-w-[340px] sm:max-w-none">
                   <ResponsiveContainer width="100%" height={isMobile ? 220 : 300}>
-                    <LineChart data={operationalVelocityData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+                    <LineChart data={founderLeverageData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
                       <defs>
                         <linearGradient id="nicheGradient" x1="0" y1="0" x2="0" y2="1">
                           <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={1} />
@@ -225,13 +169,14 @@ const AISpecializationTrends = () => {
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
                       <XAxis
-                        dataKey="year"
+                        dataKey="stage"
                         stroke="hsl(var(--muted-foreground))"
                         style={{ fontSize: '12px' }}
                       />
                       <YAxis
                         stroke="hsl(var(--muted-foreground))"
                         style={{ fontSize: '12px' }}
+                        unit="x"
                       />
                       <Tooltip
                         contentStyle={{
@@ -258,7 +203,7 @@ const AISpecializationTrends = () => {
                       />
                       <Line
                         type="monotone"
-                        dataKey="aiNative"
+                        dataKey="aiEnabled"
                         stroke="hsl(var(--primary))"
                         strokeWidth={3}
                         className="chart-line"
@@ -280,7 +225,7 @@ const AISpecializationTrends = () => {
                             transition: 'all 0.3s ease'
                           }
                         }}
-                        name="AI-Native Teams"
+                        name="AI-Enabled Solo Founder"
                         animationBegin={0}
                         animationDuration={2500}
                         animationEasing="ease-out"
@@ -290,7 +235,7 @@ const AISpecializationTrends = () => {
                       />
                       <Line
                         type="monotone"
-                        dataKey="legacy"
+                        dataKey="traditional"
                         stroke="hsl(var(--muted-foreground))"
                         strokeWidth={2.5}
                         strokeDasharray="5 5"
@@ -312,7 +257,7 @@ const AISpecializationTrends = () => {
                             transition: 'all 0.3s ease'
                           }
                         }}
-                        name="Legacy Enterprise"
+                        name="Traditional Solo Founder"
                         animationBegin={600}
                         animationDuration={2500}
                         animationEasing="ease-out"
@@ -325,24 +270,24 @@ const AISpecializationTrends = () => {
                 </div>
               )}
               <p className="text-sm text-muted-foreground mt-4">
-                Small, AI-native teams are executing 12x faster than legacy enterprises, removing the traditional scale advantage.
+                AI turns one founder into a multi-function operating team, compounding output across research, product, marketing, and support.
               </p>
             </CardContent>
           </Card>
 
-          {/* Chart 2: Market Value Capture */}
+          {/* Chart 2: Market Reach */}
           <Card className="surface-panel trust-outline overflow-hidden hover:shadow-[0_22px_44px_-30px_rgba(15,23,42,0.2)] transition-shadow">
             <CardHeader>
               <CardTitle className="font-space-grotesk text-base sm:text-lg flex items-center gap-2">
                 <Target className="w-5 h-5 text-primary" />
-                Market Value Capture
+                Market Reach Without Headcount
               </CardTitle>
             </CardHeader>
             <CardContent className={isMobile ? "px-4 pb-5" : undefined}>
               {chartVisible && (
                 <div className="chart-container mx-auto w-full max-w-[340px] sm:max-w-none" style={{ animationDelay: '0.2s' }}>
                   <ResponsiveContainer width="100%" height={isMobile ? 220 : 300}>
-                    <AreaChart data={marketValueData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+                    <AreaChart data={marketReachData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
                       <defs>
                         <linearGradient id="specializedGradient" x1="0" y1="0" x2="0" y2="1">
                           <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.9} />
@@ -355,7 +300,7 @@ const AISpecializationTrends = () => {
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
                       <XAxis
-                        dataKey="year"
+                        dataKey="stage"
                         stroke="hsl(var(--muted-foreground))"
                         style={{ fontSize: '12px' }}
                       />
@@ -389,13 +334,12 @@ const AISpecializationTrends = () => {
                       />
                       <Area
                         type="monotone"
-                        dataKey="disrupters"
-                        stackId="1"
+                        dataKey="smallTeamAccess"
                         stroke="hsl(var(--primary))"
                         strokeWidth={2.5}
                         fill="url(#specializedGradient)"
                         fillOpacity={0.7}
-                        name="Disrupters"
+                        name="Small Team Access"
                         className="chart-area"
                         animationBegin={0}
                         animationDuration={2800}
@@ -406,13 +350,12 @@ const AISpecializationTrends = () => {
                       />
                       <Area
                         type="monotone"
-                        dataKey="incumbents"
-                        stackId="1"
+                        dataKey="enterpriseOnly"
                         stroke="hsl(var(--muted-foreground))"
                         strokeWidth={2}
                         fill="url(#generalGradient)"
                         fillOpacity={0.4}
-                        name="Incumbents"
+                        name="Enterprise-Only Access"
                         className="chart-area"
                         animationBegin={500}
                         animationDuration={2800}
@@ -426,7 +369,7 @@ const AISpecializationTrends = () => {
                 </div>
               )}
               <p className="text-sm text-muted-foreground mt-4">
-                By 2025, agile disrupters are projected to capture 75% of new market value, leaving incumbents behind.
+                AI tooling gives small teams access to research, production, support, and distribution workflows once reserved for larger companies.
               </p>
             </CardContent>
           </Card>
