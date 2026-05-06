@@ -13,6 +13,7 @@ interface ActivationGateState {
 
 export function useActivationGate() {
   const { user } = useAuth();
+  const userId = user?.id ?? null;
   const [state, setState] = useState<ActivationGateState>({
     loading: Boolean(user),
     variant: 'control',
@@ -22,7 +23,7 @@ export function useActivationGate() {
   });
 
   useEffect(() => {
-    if (!user) {
+    if (!userId) {
       setState({
         loading: false,
         variant: 'control',
@@ -37,7 +38,7 @@ export function useActivationGate() {
 
     const loadState = async () => {
       try {
-        const nextState = await getActivationGateState(user.id);
+        const nextState = await getActivationGateState(userId);
         if (cancelled) return;
         setState({
           loading: false,
@@ -64,7 +65,7 @@ export function useActivationGate() {
     return () => {
       cancelled = true;
     };
-  }, [user]);
+  }, [userId]);
 
   const shouldEnforceGate =
     !!user &&

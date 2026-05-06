@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { Outlet, useNavigate } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
 import { toast } from 'sonner';
@@ -20,6 +20,7 @@ import {
 } from '@/lib/guidedOnboarding';
 import { cn } from '@/lib/utils';
 import { DashboardSidebar } from './DashboardSidebar';
+import { DashboardTabsHost } from './DashboardTabsHost';
 import { TaskCountContext } from './TaskCountContext';
 
 const DASHBOARD_MAX_WIDTH = 'max-w-7xl';
@@ -66,7 +67,7 @@ function DashboardFrame() {
               </div>
 
               <div className={cn('relative z-10 container mx-auto px-4 pb-24 pt-24 sm:px-6', DASHBOARD_MAX_WIDTH)}>
-                <Outlet />
+                <DashboardTabsHost />
               </div>
             </div>
           </SidebarInset>
@@ -82,11 +83,22 @@ export function DashboardShell() {
   const activationGate = useActivationGate();
   const navigate = useNavigate();
   const [profileLoading, setProfileLoading] = useState(true);
+  const validatedUserIdRef = useRef<string | null>(null);
+  const userId = user?.id ?? null;
+  const userCreatedAt = user?.created_at ?? null;
 
   useEffect(() => {
     let isCancelled = false;
 
-    if (!user) {
+    if (!userId) {
+      validatedUserIdRef.current = null;
+      setProfileLoading(false);
+      return () => {
+        isCancelled = true;
+      };
+    }
+
+    if (validatedUserIdRef.current === userId) {
       setProfileLoading(false);
       return () => {
         isCancelled = true;
@@ -99,7 +111,7 @@ export function DashboardShell() {
       const { data: profile, error } = await supabase
         .from('profiles')
         .select('onboarding_completed, dashboard_bootstrap_source, quiz_completed, user_preferences')
-        .eq('id', user.id)
+        .eq('id', userId)
         .single();
 
       if (isCancelled) return;
@@ -120,6 +132,7 @@ export function DashboardShell() {
         return;
       }
 
+      validatedUserIdRef.current = userId;
       setProfileLoading(false);
     };
 
@@ -128,12 +141,12 @@ export function DashboardShell() {
     return () => {
       isCancelled = true;
     };
-  }, [navigate, user]);
+  }, [navigate, userId]);
 
   useEffect(() => {
-    if (!user || !activationGate.shouldEnforceGate) return;
+    if (!userId || !userCreatedAt || !activationGate.shouldEnforceGate) return;
 
-    const accountAgeMs = Date.now() - new Date(user.created_at).getTime();
+    const accountAgeMs = Date.now() - new Date(userCreatedAt).getTime();
     const isNewUser = accountAgeMs < 24 * 60 * 60 * 1000;
     if (!isNewUser) return;
 
@@ -142,7 +155,7 @@ export function DashboardShell() {
       navigate(activationGate.redirectUrl, { replace: true });
     }, 1500);
     return () => clearTimeout(timer);
-  }, [activationGate.redirectUrl, activationGate.shouldEnforceGate, navigate, user]);
+  }, [activationGate.redirectUrl, activationGate.shouldEnforceGate, navigate, userCreatedAt, userId]);
 
   if (!user) {
     return (
