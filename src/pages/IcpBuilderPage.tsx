@@ -1,5 +1,5 @@
 import { FormEvent, lazy, Suspense, useEffect, useRef, useState } from "react";
-import { Loader2 } from "lucide-react";
+import { CheckCircle2, Loader2, Mail, ShieldCheck, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 import Navigation from "@/components/Navigation";
@@ -52,6 +52,7 @@ export default function ICPBuilderPage() {
   const [showLeadBanner, setShowLeadBanner] = useState(false);
   const [leadEmail, setLeadEmail] = useState('');
   const [leadCaptured, setLeadCaptured] = useState(false);
+  const [leadSubmitState, setLeadSubmitState] = useState<"idle" | "submitted">("idle");
 
   useEffect(() => {
     if (localStorage.getItem('ct_lead_email')) {
@@ -113,7 +114,8 @@ export default function ICPBuilderPage() {
     localStorage.setItem('ct_lead_email', email);
     captureEvent('icp_builder_lead_captured', { email, source: 'save_progress_banner' });
     setLeadCaptured(true);
-    setShowLeadBanner(false);
+    setLeadSubmitState("submitted");
+    window.setTimeout(() => setShowLeadBanner(false), 2200);
   };
 
   const handleDismissLeadBanner = () => {
@@ -183,37 +185,75 @@ export default function ICPBuilderPage() {
         </Suspense>
       </main>
 
-      {showLeadBanner && !leadCaptured ? (
-        <div className="fixed bottom-4 right-4 z-50 w-[320px] max-w-[calc(100vw-2rem)] rounded-xl bg-white p-4 text-slate-950 shadow-xl">
+      {showLeadBanner && (!leadCaptured || leadSubmitState === "submitted") ? (
+        <div className="fixed inset-x-4 bottom-4 z-50 mx-auto w-auto max-w-[24rem] overflow-hidden rounded-[1.5rem] border border-white/70 bg-white/90 text-slate-950 shadow-[0_28px_80px_-32px_rgba(15,23,42,0.45)] backdrop-blur-2xl dark:border-white/10 dark:bg-slate-950/90 dark:text-white sm:left-auto sm:right-5 sm:mx-0">
+          <div className="pointer-events-none absolute -right-16 -top-20 h-36 w-36 rounded-full bg-[#32b8c6]/25 blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-20 left-6 h-28 w-28 rounded-full bg-emerald-400/20 blur-3xl" />
+
           <button
             type="button"
             aria-label="Dismiss save progress banner"
-            className="absolute right-3 top-3 flex h-7 w-7 items-center justify-center rounded-full text-xl leading-none text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
+            className="absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full border border-slate-200/70 bg-white/80 text-slate-500 shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-950 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#32b8c6]/50 dark:border-white/10 dark:bg-white/10 dark:text-slate-300 dark:hover:bg-white dark:hover:text-slate-950"
             onClick={handleDismissLeadBanner}
           >
-            ×
+            <X className="h-4 w-4" />
           </button>
 
-          <form className="space-y-3 pr-6" onSubmit={handleLeadSubmit}>
-            <div className="space-y-1">
-              <h2 className="text-base font-semibold text-slate-950">Save your ICP progress</h2>
-              <p className="text-sm leading-5 text-slate-600">
-                Drop your email and we'll send you a link to continue anytime.
-              </p>
-            </div>
+          <div className="relative p-5 pr-14">
+            {leadSubmitState === "submitted" ? (
+              <div className="flex items-start gap-3 pr-1">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-emerald-500/12 text-emerald-600 dark:text-emerald-300">
+                  <CheckCircle2 className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-slate-950 dark:text-white">Resume link saved</p>
+                  <p className="mt-1 text-sm leading-5 text-slate-600 dark:text-slate-300">
+                    Your ICP Draft progress is connected to this email.
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <form className="space-y-4" onSubmit={handleLeadSubmit}>
+                <div className="space-y-2">
+                  <div className="inline-flex items-center gap-2 rounded-full border border-[#32b8c6]/20 bg-[#32b8c6]/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#168996]">
+                    <ShieldCheck className="h-3.5 w-3.5" />
+                    ICP Draft checkpoint
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-semibold tracking-tight text-slate-950 dark:text-white">
+                      Save your ICP Draft progress
+                    </h2>
+                    <p className="mt-1 text-sm leading-5 text-slate-600 dark:text-slate-300">
+                      Send yourself a resume link so you can pick up this customer profile later.
+                    </p>
+                  </div>
+                </div>
 
-            <input
-              type="email"
-              value={leadEmail}
-              onChange={(event) => setLeadEmail(event.target.value)}
-              placeholder="your@email.com"
-              className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-950 outline-none transition focus:border-[#32b8c6] focus:ring-2 focus:ring-[#32b8c6]/20"
-            />
+                <div className="rounded-2xl border border-slate-200/80 bg-slate-50/90 p-3 dark:border-white/10 dark:bg-white/5">
+                  <div className="mb-3 flex items-center justify-between gap-3 text-xs">
+                    <span className="font-medium text-slate-600 dark:text-slate-300">Draft auto-saved in this browser</span>
+                    <span className="rounded-full bg-emerald-500/10 px-2 py-1 font-semibold text-emerald-700 dark:text-emerald-300">
+                      Active
+                    </span>
+                  </div>
+                  <div className="relative">
+                    <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                    <input
+                      type="email"
+                      value={leadEmail}
+                      onChange={(event) => setLeadEmail(event.target.value)}
+                      placeholder="you@company.com"
+                      className="h-11 w-full rounded-xl border border-slate-200 bg-white pl-9 pr-3 text-sm text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-[#32b8c6] focus:ring-4 focus:ring-[#32b8c6]/15 dark:border-white/10 dark:bg-slate-950/70 dark:text-white"
+                    />
+                  </div>
+                </div>
 
-            <Button type="submit" className="h-10 w-full rounded-lg text-sm font-semibold">
-              Save my progress
-            </Button>
-          </form>
+                <Button type="submit" className="h-11 w-full rounded-xl text-sm font-semibold shadow-[0_12px_28px_-18px_rgba(50,184,198,0.7)]">
+                  Send resume link
+                </Button>
+              </form>
+            )}
+          </div>
         </div>
       ) : null}
     </div>
