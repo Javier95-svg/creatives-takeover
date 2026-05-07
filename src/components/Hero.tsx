@@ -346,7 +346,7 @@ const Hero = () => {
               ) : (
                 <>
                   <p>
-                    Build your startup at your own pace while staying focused on the right next step. Creatives Takeover helps you move with more clarity, validate faster, and make smarter decisions with support from experienced founders and mentors.
+                    Build your startup at your own pace while staying focused on the right next step. Creatives Takeover is an AI-powered business development platform that gives every founder the structured guidance of a top-tier accelerator, without the application, the equity, or the rejection.
                   </p>
                 </>
               )}
