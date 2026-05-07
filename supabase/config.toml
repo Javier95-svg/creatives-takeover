@@ -78,6 +78,9 @@ verify_jwt = false
 [functions.sprint-task-generator]
 verify_jwt = true
 
+[functions.task-reminder-service]
+verify_jwt = false
+
 [functions.chatbot-ai-engine]
 verify_jwt = false
 

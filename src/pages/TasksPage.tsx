@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { FullTaskManager } from '@/components/dashboard/FullTaskManager';
+import { TaskCalendarCommandCenter } from '@/components/dashboard/TaskCalendarCommandCenter';
 import { useLeanStartupStore } from '@/store/leanStartupStore';
 
 const TasksPage = () => {
@@ -10,9 +10,9 @@ const TasksPage = () => {
   return (
     <>
       <Helmet>
-        <title>Task Manager — Creatives Takeover</title>
+        <title>Tasks Calendar — Creatives Takeover</title>
       </Helmet>
-      <FullTaskManager />
+      <TaskCalendarCommandCenter />
     </>
   );
 };

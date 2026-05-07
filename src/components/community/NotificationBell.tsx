@@ -142,7 +142,7 @@ export const NotificationBell = () => {
     }
 
     if (notification.notification_type === 'task_deadline_expired') {
-      navigateTo('/tasks');
+      navigateTo(metadataRoute || '/dashboard/tasks');
       return;
     }
 
@@ -196,9 +196,12 @@ export const NotificationBell = () => {
       case 'follower_startup_update':
         return `${actor.name} posted a startup update`;
       case 'task_deadline_expired':
+        if (typeof metadata?.message === 'string') {
+          return metadata.message;
+        }
         return metadata?.task_text
-          ? `Deadline reached: ${metadata.task_text}`
-          : 'A task deadline has been reached';
+          ? `Task overdue: ${metadata.task_text}`
+          : 'A task is overdue';
       case 'platform_update':
         return metadata?.message || metadata?.title || 'There is a new platform update';
       case 'credit_purchase_completed':

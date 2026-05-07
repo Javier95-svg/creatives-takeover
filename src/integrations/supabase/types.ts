@@ -2313,13 +2313,25 @@ export type Database = {
           created_at: string | null
           deadline_reached_popup_shown: boolean | null
           deadline_time: string | null
+          dismissed_at: string | null
           effort_estimate: number | null
           id: string
           is_completed: boolean | null
           last_reminder_sent: string | null
+          overdue_reminder_level: number
+          overdue_reminder_sent_at: string | null
           priority: string | null
+          recommendation_key: string | null
+          recommendation_reason: string | null
+          recommendation_status: string | null
+          rescheduled_at: string | null
+          rescheduled_from_date: string | null
+          source_route: string | null
           stage_alignment_score: number | null
+          startup_stage_tag: string | null
           task_date: string
+          task_description: string | null
+          task_source: string | null
           task_text: string
           updated_at: string | null
           user_id: string
@@ -2333,13 +2345,25 @@ export type Database = {
           created_at?: string | null
           deadline_reached_popup_shown?: boolean | null
           deadline_time?: string | null
+          dismissed_at?: string | null
           effort_estimate?: number | null
           id?: string
           is_completed?: boolean | null
           last_reminder_sent?: string | null
+          overdue_reminder_level?: number
+          overdue_reminder_sent_at?: string | null
           priority?: string | null
+          recommendation_key?: string | null
+          recommendation_reason?: string | null
+          recommendation_status?: string | null
+          rescheduled_at?: string | null
+          rescheduled_from_date?: string | null
+          source_route?: string | null
           stage_alignment_score?: number | null
+          startup_stage_tag?: string | null
           task_date: string
+          task_description?: string | null
+          task_source?: string | null
           task_text: string
           updated_at?: string | null
           user_id: string
@@ -2353,13 +2377,25 @@ export type Database = {
           created_at?: string | null
           deadline_reached_popup_shown?: boolean | null
           deadline_time?: string | null
+          dismissed_at?: string | null
           effort_estimate?: number | null
           id?: string
           is_completed?: boolean | null
           last_reminder_sent?: string | null
+          overdue_reminder_level?: number
+          overdue_reminder_sent_at?: string | null
           priority?: string | null
+          recommendation_key?: string | null
+          recommendation_reason?: string | null
+          recommendation_status?: string | null
+          rescheduled_at?: string | null
+          rescheduled_from_date?: string | null
+          source_route?: string | null
           stage_alignment_score?: number | null
+          startup_stage_tag?: string | null
           task_date?: string
+          task_description?: string | null
+          task_source?: string | null
           task_text?: string
           updated_at?: string | null
           user_id?: string
@@ -6669,6 +6705,44 @@ export type Database = {
           tier_name?: string
         }
         Relationships: []
+      }
+      task_recommendation_events: {
+        Row: {
+          created_at: string
+          event_type: string
+          id: string
+          metadata: Json
+          recommendation_key: string
+          task_id: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_type: string
+          id?: string
+          metadata?: Json
+          recommendation_key: string
+          task_id?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          id?: string
+          metadata?: Json
+          recommendation_key?: string
+          task_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_recommendation_events_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "daily_tasks"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       tech_stack_reports: {
         Row: {
