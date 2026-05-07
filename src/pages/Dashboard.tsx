@@ -2,7 +2,7 @@ import { Helmet } from 'react-helmet-async';
 import { useSearchParams } from 'react-router-dom';
 import { CheckCircle2 } from 'lucide-react';
 
-import { PersonalizedDashboardV2 } from '@/components/dashboard/PersonalizedDashboardV2';
+import StartupHomeCommandCenter from '@/components/dashboard/StartupHomeCommandCenter';
 
 const Dashboard = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -44,7 +44,7 @@ const Dashboard = () => {
           </button>
         </div>
       ) : null}
-      <PersonalizedDashboardV2 />
+      <StartupHomeCommandCenter />
     </>
   );
 };

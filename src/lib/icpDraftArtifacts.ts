@@ -2,7 +2,7 @@ import {
   buildGuidedSolutionSentence,
   buildMarketContextLabel,
   type GuidedIcpInputSchema,
-} from "@/lib/icpBuilderSchema";
+} from "./icpBuilderSchema.ts";
 import type {
   IcpBuilderMode,
   IcpBuilderSession,
@@ -11,7 +11,7 @@ import type {
   IcpDraftDocument,
   IcpDraftSectionEvidence,
   StoredIcpArtifact,
-} from "@/lib/icpBuilderSession";
+} from "./icpBuilderSession.ts";
 
 type LegacyAnalysis = Record<string, unknown>;
 
