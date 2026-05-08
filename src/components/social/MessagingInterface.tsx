@@ -198,7 +198,6 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
   const [activeReactionMenuMessageId, setActiveReactionMenuMessageId] = useState<string | null>(null);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [messageSearchQuery, setMessageSearchQuery] = useState("");
-  const [searchCurrentConversationOnly, setSearchCurrentConversationOnly] = useState(true);
   const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
   const { trigger: triggerHaptic } = useHapticFeedback();
 
@@ -498,18 +497,13 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
     }
 
     const timeoutId = window.setTimeout(() => {
-      void searchMessages(
-        query,
-        searchCurrentConversationOnly ? activeConversationId : null
-      );
+      void searchMessages(query, null);
     }, 250);
 
     return () => window.clearTimeout(timeoutId);
   }, [
-    activeConversationId,
     clearMessageSearch,
     messageSearchQuery,
-    searchCurrentConversationOnly,
     searchMessages
   ]);
 
@@ -1266,15 +1260,74 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
   // Conversation list renderer (reusable for desktop and mobile)
   const renderConversationList = (onSelect: (id: string) => void) => (
     <>
-      <div className="p-4 border-b">
+      <div className="space-y-3 border-b p-4">
         <h3 className="font-semibold flex items-center gap-2">
           <MessageCircle className="h-5 w-5" />
           Messages
         </h3>
+        <div className="relative">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={messageSearchQuery}
+            onChange={(event) => setMessageSearchQuery(event.target.value)}
+            placeholder="Search messages"
+            className="h-9 pl-9 pr-9"
+          />
+          {messageSearchQuery && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2 p-0"
+              onClick={() => setMessageSearchQuery('')}
+              aria-label="Clear search"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
       </div>
       
       <ScrollArea className={isMobile ? "h-[calc(var(--vh,1vh)*100-120px)]" : "h-[calc(600px-80px)]"}>
-        {conversations.length === 0 ? (
+        {messageSearchQuery.trim() ? (
+          <div className="p-2">
+            {searchLoading ? (
+              <div className="flex items-center gap-2 px-3 py-2 text-xs text-muted-foreground">
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                Searching
+              </div>
+            ) : searchResults.length > 0 ? (
+              <div className="space-y-1">
+                {searchResults.map((result) => {
+                  const resultConversation = conversations.find((conversation) => conversation.id === result.conversation_id);
+
+                  return (
+                    <button
+                      key={result.id}
+                      type="button"
+                      className="block w-full rounded-md px-3 py-2 text-left hover:bg-muted/60"
+                      onClick={() => {
+                        onSelect(result.conversation_id);
+                        setMessageSearchQuery('');
+                        requestAnimationFrame(() => {
+                          const element = document.querySelector(`[data-message-id="${result.id}"]`);
+                          element?.scrollIntoView({ block: 'center' });
+                        });
+                      }}
+                    >
+                      <p className="truncate text-xs font-medium">
+                        {resultConversation ? getConversationName(resultConversation) : 'Conversation'}
+                      </p>
+                      <p className="truncate text-xs text-muted-foreground">{result.content}</p>
+                    </button>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="px-3 py-2 text-xs text-muted-foreground">No messages found</div>
+            )}
+          </div>
+        ) : conversations.length === 0 ? (
           <div className="p-4 text-center text-muted-foreground">
             <MessageCircle className="h-8 w-8 mx-auto mb-2 opacity-50" />
             <p className="text-sm">No conversations yet</p>
@@ -1464,76 +1517,6 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
 	                  </>
 	                );
 	              })()}
-	            </div>
-
-	            <div className="border-b bg-card/40 px-3 py-2 md:px-4">
-	              <div className="flex items-center gap-2">
-	                <div className="relative flex-1">
-	                  <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-	                  <Input
-	                    value={messageSearchQuery}
-	                    onChange={(event) => setMessageSearchQuery(event.target.value)}
-	                    placeholder="Search messages"
-	                    className="h-9 pl-9 pr-9"
-	                  />
-	                  {messageSearchQuery && (
-	                    <Button
-	                      type="button"
-	                      variant="ghost"
-	                      size="sm"
-	                      className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2 p-0"
-	                      onClick={() => setMessageSearchQuery('')}
-	                      aria-label="Clear search"
-	                    >
-	                      <X className="h-4 w-4" />
-	                    </Button>
-	                  )}
-	                </div>
-	                <Button
-	                  type="button"
-	                  variant={searchCurrentConversationOnly ? 'secondary' : 'outline'}
-	                  size="sm"
-	                  className="h-9 whitespace-nowrap"
-	                  onClick={() => setSearchCurrentConversationOnly((current) => !current)}
-	                >
-	                  {searchCurrentConversationOnly ? 'Thread' : 'All'}
-	                </Button>
-	              </div>
-	              {messageSearchQuery.trim() && (
-	                <div className="mt-2 max-h-40 overflow-y-auto rounded-md border border-border/60 bg-background">
-	                  {searchLoading ? (
-	                    <div className="flex items-center gap-2 px-3 py-2 text-xs text-muted-foreground">
-	                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
-	                      Searching
-	                    </div>
-	                  ) : searchResults.length > 0 ? (
-	                    searchResults.map((result) => (
-	                      <button
-	                        key={result.id}
-	                        type="button"
-	                        className="block w-full border-b border-border/50 px-3 py-2 text-left last:border-b-0 hover:bg-muted/60"
-	                        onClick={() => {
-	                          setActiveConversationId(result.conversation_id);
-	                          setMessageSearchQuery('');
-	                          requestAnimationFrame(() => {
-	                            const element = document.querySelector(`[data-message-id="${result.id}"]`);
-	                            element?.scrollIntoView({ block: 'center' });
-	                          });
-	                        }}
-	                      >
-	                        <p className="truncate text-xs font-medium">
-	                          {conversations.find((conversation) => conversation.id === result.conversation_id)
-	                            ? getConversationName(conversations.find((conversation) => conversation.id === result.conversation_id)!)
-	                            : 'Conversation'}
-	                        </p>
-	                        <p className="truncate text-xs text-muted-foreground">{result.content}</p>
-	                      </button>
-	                    ))
-	                  ) : (
-	                    <div className="px-3 py-2 text-xs text-muted-foreground">No messages found</div>
-	                  )}
-	                </div>
-	              )}
 	            </div>
 
 	            {/* Messages */}
