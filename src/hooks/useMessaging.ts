@@ -17,6 +17,29 @@ export interface Conversation {
   updated_at: string;
 }
 
+export interface ConversationUserSettings {
+  conversation_id: string;
+  user_id: string;
+  archived_at?: string | null;
+  muted_until?: string | null;
+  pinned_at?: string | null;
+}
+
+export interface MessageAttachment {
+  id?: string;
+  message_id?: string;
+  uploader_id?: string;
+  storage_path?: string;
+  file_name: string;
+  mime_type: string;
+  file_size: number;
+  width?: number | null;
+  height?: number | null;
+  signed_url?: string | null;
+}
+
+export type MessageDeliveryStatus = 'pending' | 'sent' | 'delivered' | 'read' | 'failed';
+
 export interface Message {
   id: string;
   conversation_id: string;
@@ -24,6 +47,12 @@ export interface Message {
   content: string;
   message_type: 'text' | 'image' | 'file';
   attachments?: any;
+  attachment_rows?: MessageAttachment[];
+  client_message_id?: string | null;
+  delivery_status?: MessageDeliveryStatus;
+  error_message?: string;
+  upload_progress?: number;
+  local_failed?: boolean;
   is_read: boolean;
   reply_to_id?: string;
   created_at: string;
@@ -32,6 +61,43 @@ export interface Message {
     id: string;
     full_name?: string;
     avatar_url?: string;
+  };
+}
+
+export interface LoadMessagesOptions {
+  before?: {
+    created_at: string;
+    id: string;
+  };
+  limit?: number;
+  mode?: 'replace' | 'prepend' | 'append';
+}
+
+export interface MessageSearchResult {
+  id: string;
+  conversation_id: string;
+  sender_id: string;
+  content: string;
+  message_type: 'text' | 'image' | 'file';
+  attachments?: any;
+  client_message_id?: string | null;
+  created_at: string;
+  updated_at: string;
+  rank: number;
+}
+
+export interface SendMessageOptions {
+  replyToId?: string;
+  clientMessageId?: string;
+  files?: File[];
+}
+
+export interface MessagePageState {
+  hasMore: boolean;
+  loadingOlder: boolean;
+  oldestCursor?: {
+    created_at: string;
+    id: string;
   };
 }
 
@@ -103,6 +169,95 @@ type UseMessagingOptions = {
   suppressLoadErrors?: boolean;
 };
 
+const MESSAGE_PAGE_SIZE = 50;
+const FAILED_MESSAGES_STORAGE_KEY = 'ct_failed_direct_messages_v1';
+const MESSAGE_ATTACHMENT_BUCKET = 'message-attachments';
+const MAX_MESSAGE_ATTACHMENT_BYTES = 10 * 1024 * 1024;
+const ALLOWED_MESSAGE_ATTACHMENT_TYPES = new Set([
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/gif',
+  'application/pdf',
+  'text/plain',
+  'application/zip'
+]);
+
+type StoredFailedMessage = {
+  id: string;
+  conversation_id: string;
+  sender_id: string;
+  content: string;
+  client_message_id: string;
+  created_at: string;
+  updated_at: string;
+  error_message?: string;
+};
+
+const generateClientMessageId = (): string => {
+  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
+    return crypto.randomUUID();
+  }
+
+  return `${Date.now()}-${Math.random().toString(36).slice(2, 12)}`;
+};
+
+const sortMessagesAscending = (items: Message[]): Message[] =>
+  [...items].sort((a, b) => {
+    const timeDiff = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+    if (timeDiff !== 0) return timeDiff;
+    return a.id.localeCompare(b.id);
+  });
+
+const mergeMessageLists = (currentMessages: Message[], incomingMessages: Message[]): Message[] => {
+  const byStableKey = new Map<string, Message>();
+
+  currentMessages.forEach((message) => {
+    const stableKey = message.client_message_id || message.id;
+    byStableKey.set(stableKey, message);
+  });
+
+  incomingMessages.forEach((message) => {
+    const stableKey = message.client_message_id || message.id;
+    const existing = byStableKey.get(stableKey);
+
+    if (!existing) {
+      byStableKey.set(stableKey, message);
+      return;
+    }
+
+    const existingUpdatedAt = new Date(existing.updated_at || existing.created_at).getTime();
+    const incomingUpdatedAt = new Date(message.updated_at || message.created_at).getTime();
+    const shouldPreferIncoming =
+      incomingUpdatedAt >= existingUpdatedAt ||
+      existing.local_failed ||
+      existing.delivery_status === 'pending';
+
+    byStableKey.set(stableKey, shouldPreferIncoming ? { ...existing, ...message } : existing);
+  });
+
+  return sortMessagesAscending(Array.from(byStableKey.values()));
+};
+
+const loadStoredFailedMessages = (userId: string): StoredFailedMessage[] => {
+  if (typeof window === 'undefined') return [];
+
+  try {
+    const raw = window.localStorage.getItem(`${FAILED_MESSAGES_STORAGE_KEY}:${userId}`);
+    return raw ? JSON.parse(raw) as StoredFailedMessage[] : [];
+  } catch {
+    return [];
+  }
+};
+
+const saveStoredFailedMessages = (userId: string, messages: StoredFailedMessage[]) => {
+  if (typeof window === 'undefined') return;
+  window.localStorage.setItem(`${FAILED_MESSAGES_STORAGE_KEY}:${userId}`, JSON.stringify(messages));
+};
+
+const toSafeStorageName = (fileName: string): string =>
+  fileName.replace(/[^a-zA-Z0-9._-]/g, '-').replace(/-+/g, '-').slice(0, 120) || 'attachment';
+
 const normalizeIdentity = (value: string): string =>
   value
     .toLowerCase()
@@ -126,6 +281,10 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [messages, setMessages] = useState<Record<string, Message[]>>({});
   const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
+  const [messagePageState, setMessagePageState] = useState<Record<string, MessagePageState>>({});
+  const [conversationSettings, setConversationSettings] = useState<Record<string, ConversationUserSettings>>({});
+  const [searchResults, setSearchResults] = useState<MessageSearchResult[]>([]);
+  const [searchLoading, setSearchLoading] = useState(false);
   const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
@@ -689,6 +848,111 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
     }
   }, [user]);
 
+  const mapMessagesWithRelatedData = useCallback(async (rows: any[]): Promise<Message[]> => {
+    if (rows.length === 0) return [];
+
+    const senderIds = [...new Set(rows.map((message) => message.sender_id).filter(Boolean))];
+    const messageIds = rows.map((message) => message.id).filter(Boolean);
+
+    const [{ data: profilesData, error: profilesError }, { data: attachmentData, error: attachmentError }, { data: receiptData, error: receiptError }] = await Promise.all([
+      senderIds.length > 0
+        ? supabase.from('profiles').select('id, full_name, avatar_url').in('id', senderIds)
+        : Promise.resolve({ data: [], error: null }),
+      messageIds.length > 0
+        ? (supabase as any).from('message_attachments').select('*').in('message_id', messageIds)
+        : Promise.resolve({ data: [], error: null }),
+      messageIds.length > 0
+        ? (supabase as any).from('message_receipts').select('message_id, user_id, delivered_at, read_at').in('message_id', messageIds)
+        : Promise.resolve({ data: [], error: null })
+    ]);
+
+    if (profilesError) throw profilesError;
+    if (attachmentError) throw attachmentError;
+    if (receiptError) throw receiptError;
+
+    const profilesMap = new Map((profilesData || []).map((profile) => [profile.id, profile]));
+    const attachmentsByMessage = new Map<string, MessageAttachment[]>();
+    const receiptsByMessage = new Map<string, any[]>();
+
+    (attachmentData || []).forEach((attachment: any) => {
+      const current = attachmentsByMessage.get(attachment.message_id) || [];
+      current.push({
+        id: attachment.id,
+        message_id: attachment.message_id,
+        uploader_id: attachment.uploader_id,
+        storage_path: attachment.storage_path,
+        file_name: attachment.file_name,
+        mime_type: attachment.mime_type,
+        file_size: Number(attachment.file_size || 0),
+        width: attachment.width,
+        height: attachment.height
+      });
+      attachmentsByMessage.set(attachment.message_id, current);
+    });
+
+    (receiptData || []).forEach((receipt: any) => {
+      const current = receiptsByMessage.get(receipt.message_id) || [];
+      current.push(receipt);
+      receiptsByMessage.set(receipt.message_id, current);
+    });
+
+    return rows.map((message) => {
+      const messageReceipts = receiptsByMessage.get(message.id) || [];
+      const recipientReceipts = messageReceipts.filter((receipt) => receipt.user_id !== message.sender_id);
+      const hasReadReceipt = recipientReceipts.some((receipt) => !!receipt.read_at);
+      const hasDeliveredReceipt = recipientReceipts.some((receipt) => !!receipt.delivered_at);
+      const deliveryStatus: MessageDeliveryStatus = message.sender_id === user?.id
+        ? hasReadReceipt || message.is_read
+          ? 'read'
+          : hasDeliveredReceipt
+            ? 'delivered'
+            : 'sent'
+        : message.is_read
+          ? 'read'
+          : 'delivered';
+
+      return {
+        ...message,
+        client_message_id: message.client_message_id || null,
+        message_type: message.message_type as 'text' | 'image' | 'file',
+        attachment_rows: attachmentsByMessage.get(message.id) || [],
+        delivery_status: deliveryStatus,
+        sender: profilesMap.get(message.sender_id) || undefined
+      } as Message;
+    });
+  }, [user?.id]);
+
+  const loadConversationSettings = useCallback(async (conversationIds: string[]): Promise<Record<string, ConversationUserSettings>> => {
+    if (!user || conversationIds.length === 0) {
+      setConversationSettings({});
+      return {};
+    }
+
+    try {
+      const { data, error } = await (supabase as any)
+        .from('conversation_user_settings')
+        .select('*')
+        .eq('user_id', user.id)
+        .in('conversation_id', conversationIds);
+
+      if (error) throw error;
+
+      const settingsByConversation = (data || []).reduce(
+        (acc: Record<string, ConversationUserSettings>, setting: ConversationUserSettings) => {
+          acc[setting.conversation_id] = setting;
+          return acc;
+        },
+        {}
+      );
+
+      setConversationSettings(settingsByConversation);
+      return settingsByConversation;
+    } catch (error) {
+      logError('Error loading conversation settings', error);
+      return {};
+    }
+  }, [user]);
+
   const loadConversationsFromServer = useCallback(async () => {
     if (!user) return;
 
@@ -703,10 +967,33 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
 
       if (error) throw error;
 
-      const loadedConversations = (data || []) as Conversation[];
-      setConversations(loadedConversations);
+      const rawConversations = (data || []) as Conversation[];
+      const conversationIds = rawConversations.map((conversation) => conversation.id);
+      const settingsByConversation = await loadConversationSettings(conversationIds);
+      const failedMessages = loadStoredFailedMessages(user.id);
+      const failedConversationIds = new Set(failedMessages.map((message) => message.conversation_id));
+      const loadedConversations = rawConversations.filter((conversation) => {
+        const settings = settingsByConversation[conversation.id];
+        return !settings?.archived_at || failedConversationIds.has(conversation.id);
+      });
 
-      const conversationIds = loadedConversations.map((conversation) => conversation.id);
+      const sortedConversations = [...loadedConversations].sort((a, b) => {
+        const aSettings = settingsByConversation[a.id];
+        const bSettings = settingsByConversation[b.id];
+        const aPinnedAt = aSettings?.pinned_at ? new Date(aSettings.pinned_at).getTime() : 0;
+        const bPinnedAt = bSettings?.pinned_at ? new Date(bSettings.pinned_at).getTime() : 0;
+
+        if (aPinnedAt || bPinnedAt) {
+          return bPinnedAt - aPinnedAt;
+        }
+
+        const aTime = new Date(a.last_message_at || a.created_at).getTime();
+        const bTime = new Date(b.last_message_at || b.created_at).getTime();
+        return bTime - aTime;
+      });
+
+      setConversations(sortedConversations);
+
       await loadUnreadCounts(conversationIds);
 
       console.log('[CONVERSATION_SYNC] Reloaded conversations from backend:', {
@@ -719,7 +1006,7 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
         toast.error('Failed to load conversations. Please refresh the page.');
       }
     }
-  }, [user, loadUnreadCounts, suppressLoadErrors]);
+  }, [user, loadUnreadCounts, suppressLoadErrors, loadConversationSettings]);
 
   // Load user's conversations and keep them synced with backend as source of truth
   useEffect(() => {
@@ -796,94 +1083,121 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
     setActiveConversationId(null);
   }, [user]);
 
-  // Load messages for active conversation
+  const loadMessages = useCallback(async (
+    conversationId: string,
+    options: LoadMessagesOptions = {}
+  ): Promise<Message[]> => {
+    const limit = options.limit || MESSAGE_PAGE_SIZE;
+
+    if (options.mode === 'prepend') {
+      setMessagePageState((prev) => ({
+        ...prev,
+        [conversationId]: {
+          ...(prev[conversationId] || { hasMore: true }),
+          loadingOlder: true
+        }
+      }));
+    }
+
+    try {
+      let query = (supabase as any)
+        .from('messages')
+        .select('*')
+        .eq('conversation_id', conversationId)
+        .order('created_at', { ascending: false })
+        .order('id', { ascending: false })
+        .limit(limit);
+
+      if (options.before) {
+        query = query.lt('created_at', options.before.created_at);
+      }
+
+      const { data, error } = await safe.select(async () => await query);
+      if (error) throw error;
+
+      const rows = [...(data || [])].reverse();
+      const loadedMessages = await mapMessagesWithRelatedData(rows);
+      const storedFailedMessages = user
+        ? loadStoredFailedMessages(user.id)
+            .filter((message) => message.conversation_id === conversationId)
+            .map((message) => ({
+              ...message,
+              message_type: 'text' as const,
+              attachments: null,
+              attachment_rows: [],
+              is_read: false,
+              delivery_status: 'failed' as const,
+              local_failed: true,
+              sender: {
+                id: user.id,
+                full_name: user.user_metadata?.full_name || undefined,
+                avatar_url: user.user_metadata?.avatar_url || undefined
+              }
+            }))
+        : [];
+
+      setMessages((prev) => {
+        const current = options.mode === 'replace' || !options.mode ? [] : prev[conversationId] || [];
+        return {
+          ...prev,
+          [conversationId]: mergeMessageLists(current, [...loadedMessages, ...storedFailedMessages])
+        };
+      });
+
+      setMessagePageState((prev) => ({
+        ...prev,
+        [conversationId]: {
+          hasMore: rows.length === limit,
+          loadingOlder: false,
+          oldestCursor: rows[0]
+            ? {
+                created_at: rows[0].created_at,
+                id: rows[0].id
+              }
+            : prev[conversationId]?.oldestCursor
+        }
+      }));
+
+      const unreadForActiveConversation = loadedMessages.filter(
+        (message) => message.sender_id !== user?.id && !message.is_read
+      ).length;
+
+      setUnreadCounts((prev) => ({
+        ...prev,
+        [conversationId]: unreadForActiveConversation
+      }));
+
+      return loadedMessages;
+    } catch (error) {
+      logError('Error loading messages', error);
+      toast.error('Failed to load messages. Please try again.');
+      setMessagePageState((prev) => ({
+        ...prev,
+        [conversationId]: {
+          ...(prev[conversationId] || { hasMore: true }),
+          loadingOlder: false
+        }
+      }));
+      return [];
+    }
+  }, [mapMessagesWithRelatedData, user]);
+
+  // Load messages for active conversation and reconcile realtime events by stable IDs.
   useEffect(() => {
     if (!activeConversationId) return;
 
-    const abortController = new AbortController();
+    let isMounted = true;
 
-    const loadMessages = async () => {
-      try {
-        const { data, error } = await safe.select(async () =>
-          await supabase
-            .from('messages')
-            .select('*')
-            .eq('conversation_id', activeConversationId)
-            .order('created_at', { ascending: true })
-        );
+    void loadMessages(activeConversationId, { mode: 'replace', limit: MESSAGE_PAGE_SIZE }).then(async () => {
+      if (!isMounted || !user) return;
+      await loadUnreadCounts([activeConversationId]);
+    });
 
-        if (error) throw error;
-        if (abortController.signal.aborted) return;
-
-        // Get unique sender IDs
-        const senderIds = [...new Set((data || []).map(msg => msg.sender_id))];
-        
-        if (senderIds.length === 0) {
-          setMessages(prev => ({
-            ...prev,
-            [activeConversationId]: []
-          }));
-          setUnreadCounts(prev => ({
-            ...prev,
-            [activeConversationId]: 0
-          }));
-          return;
-        }
-
-        // Batch fetch all sender profiles in a single query
-        const { data: profilesData, error: profilesError } = await safe.select(async () =>
-          await supabase
-            .from('profiles')
-            .select('id, full_name, avatar_url')
-            .in('id', senderIds)
-        );
-
-        if (profilesError) throw profilesError;
-        if (abortController.signal.aborted) return;
-
-        // Create a map of sender ID to profile data
-        const profilesMap = new Map(
-          (profilesData || []).map(profile => [profile.id, profile])
-        );
-
-        // Map messages with sender data
-        const messagesWithSenders = (data || []).map((message) => ({
-          ...message,
-          message_type: message.message_type as 'text' | 'image' | 'file',
-          sender: profilesMap.get(message.sender_id) || undefined
-        })) as Message[];
-
-        if (!abortController.signal.aborted) {
-          setMessages(prev => ({
-            ...prev,
-            [activeConversationId]: messagesWithSenders
-          }));
-
-          const unreadForActiveConversation = messagesWithSenders.filter(
-            (message) => message.sender_id !== user?.id && !message.is_read
-          ).length;
-
-          setUnreadCounts(prev => ({
-            ...prev,
-            [activeConversationId]: unreadForActiveConversation
-          }));
-        }
-      } catch (error: any) {
-        if (!abortController.signal.aborted) {
-          logError('Error loading messages', error);
-          toast.error('Failed to load messages. Please try again.');
-        }
-      }
-    };
-
-    loadMessages();
-
-    // Subscribe to messages in this conversation (INSERT and UPDATE events)
     const messageSubscription = supabase
       .channel(`messages-${activeConversationId}`)
       .on('postgres_changes',
         {
-          event: '*', // Listen to all events: INSERT, UPDATE, DELETE
+          event: '*',
           schema: 'public',
           table: 'messages',
           filter: `conversation_id=eq.${activeConversationId}`
@@ -891,60 +1205,27 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
         async (payload) => {
           console.log('[REALTIME] Message event:', payload.eventType, payload);
 
-          if (payload.eventType === 'INSERT') {
-            // Handle new message insertion
-            const existingMessages = messagesRef.current[activeConversationId] || [];
+          if (payload.eventType === 'DELETE') {
+            setMessages(prev => ({
+              ...prev,
+              [activeConversationId]: (prev[activeConversationId] || []).filter(
+                (msg) => msg.id !== payload.old.id
+              )
+            }));
+            await loadUnreadCounts([activeConversationId]);
+            return;
+          }
 
-            // Check if message already exists (prevent duplicates)
-            if (existingMessages.some(m => m.id === payload.new.id)) {
-              return;
-            }
+          if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
+            const [mappedMessage] = await mapMessagesWithRelatedData([payload.new]);
+            if (!mappedMessage) return;
 
-            // Get sender info from existing messages if available
-            let senderData = existingMessages.find(m => m.sender_id === payload.new.sender_id)?.sender;
+            setMessages((prev) => ({
+              ...prev,
+              [activeConversationId]: mergeMessageLists(prev[activeConversationId] || [], [mappedMessage])
+            }));
 
-            // If sender not found, fetch it
-            if (!senderData) {
-              try {
-                const { data } = await supabase
-                  .from('profiles')
-                  .select('id, full_name, avatar_url')
-                  .eq('id', payload.new.sender_id)
-                  .single();
-                senderData = data || undefined;
-              } catch (error) {
-                logError('Error fetching sender profile', error);
-              }
-            }
-
-            const newMessage: Message = {
-              id: payload.new.id,
-              conversation_id: payload.new.conversation_id,
-              sender_id: payload.new.sender_id,
-              content: payload.new.content,
-              message_type: payload.new.message_type as 'text' | 'image' | 'file',
-              attachments: payload.new.attachments,
-              is_read: payload.new.is_read,
-              reply_to_id: payload.new.reply_to_id,
-              created_at: payload.new.created_at,
-              updated_at: payload.new.updated_at,
-              sender: senderData
-            };
-
-            // Use functional update to add message
-            setMessages(prev => {
-              const currentMessages = prev[activeConversationId] || [];
-              // Double-check for duplicates (race condition protection)
-              if (currentMessages.some(m => m.id === newMessage.id)) {
-                return prev;
-              }
-              return {
-                ...prev,
-                [activeConversationId]: [...currentMessages, newMessage]
-              };
-            });
-
-            if (payload.new.sender_id !== user?.id) {
+            if (payload.eventType === 'INSERT' && payload.new.sender_id !== user?.id) {
               void trackRetentionEvent('message_reply_received', {
                 user_id: user?.id,
                 conversation_id: activeConversationId,
@@ -952,48 +1233,23 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
                 source: 'messages_realtime',
               });
             }
-          } else if (payload.eventType === 'UPDATE') {
-            // Handle message updates (like is_read status changes)
-            const updatedMessage: Message = {
-              id: payload.new.id,
-              conversation_id: payload.new.conversation_id,
-              sender_id: payload.new.sender_id,
-              content: payload.new.content,
-              message_type: payload.new.message_type as 'text' | 'image' | 'file',
-              attachments: payload.new.attachments,
-              is_read: payload.new.is_read,
-              reply_to_id: payload.new.reply_to_id,
-              created_at: payload.new.created_at,
-              updated_at: payload.new.updated_at,
-              sender: messagesRef.current[activeConversationId]?.find(m => m.id === payload.new.id)?.sender
-            };
-
-            // Update the specific message in state
-            setMessages(prev => ({
-              ...prev,
-              [activeConversationId]: (prev[activeConversationId] || []).map(msg =>
-                msg.id === updatedMessage.id ? updatedMessage : msg
-              )
-            }));
-          } else if (payload.eventType === 'DELETE') {
-            setMessages(prev => ({
-              ...prev,
-              [activeConversationId]: (prev[activeConversationId] || []).filter(
-                (msg) => msg.id !== payload.old.id
-              )
-            }));
           }
 
-          loadUnreadCounts([activeConversationId]);
+          await loadUnreadCounts([activeConversationId]);
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') return;
+        if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+          void loadMessages(activeConversationId, { mode: 'replace', limit: MESSAGE_PAGE_SIZE });
+        }
+      });
 
     return () => {
-      abortController.abort();
+      isMounted = false;
       supabase.removeChannel(messageSubscription);
     };
-  }, [activeConversationId, user?.id, loadUnreadCounts]);
+  }, [activeConversationId, user?.id, loadUnreadCounts, loadMessages, mapMessagesWithRelatedData]);
 
   const startConversation = useCallback(async (participantId: string): Promise<string | null> => {
     if (!user || loading) {
@@ -1161,21 +1417,38 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
   const sendMessage = useCallback(async (
     conversationId: string,
     content: string,
-    replyToId?: string
+    optionsOrReplyToId?: SendMessageOptions | string
   ): Promise<Message | null> => {
     const trimmedContent = content.trim();
+    const options: SendMessageOptions =
+      typeof optionsOrReplyToId === 'string'
+        ? { replyToId: optionsOrReplyToId }
+        : optionsOrReplyToId || {};
+    const files = options.files || [];
 
-    if (!user || !trimmedContent) {
+    if (!user || (!trimmedContent && files.length === 0)) {
       logWarn('sendMessage: Invalid parameters', {
         hasUser: !!user,
-        hasContent: !!trimmedContent
+        hasContent: !!trimmedContent,
+        fileCount: files.length
       });
+      return null;
+    }
+
+    const invalidFile = files.find((file) =>
+      file.size > MAX_MESSAGE_ATTACHMENT_BYTES ||
+      !ALLOWED_MESSAGE_ATTACHMENT_TYPES.has(file.type)
+    );
+
+    if (invalidFile) {
+      toast.error('Attachment must be a supported file type and 10MB or smaller.');
       return null;
     }
 
     // Use separate sending state so the input stays enabled
     setSending(true);
-    const optimisticId = `temp-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+    const clientMessageId = options.clientMessageId || generateClientMessageId();
+    const optimisticId = `temp-${clientMessageId}`;
     const optimisticTimestamp = new Date().toISOString();
     const hadUserMessageBefore = (messagesRef.current[conversationId] || []).some(
       (message) => message.sender_id === user.id && !message.id.startsWith('temp-')
@@ -1188,16 +1461,33 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
       full_name: user.user_metadata?.full_name || undefined,
       avatar_url: user.user_metadata?.avatar_url || undefined
     };
+    const messageType: Message['message_type'] =
+      files.length === 0
+        ? 'text'
+        : files[0].type.startsWith('image/')
+          ? 'image'
+          : 'file';
+    const contentForMessage = trimmedContent || files.map((file) => file.name).join(', ');
+    const optimisticAttachments = files.map((file) => ({
+      file_name: file.name,
+      mime_type: file.type,
+      file_size: file.size,
+      signed_url: null
+    }));
 
     const optimisticMessage: Message = {
       id: optimisticId,
       conversation_id: conversationId,
       sender_id: user.id,
-      content: trimmedContent,
-      message_type: 'text',
+      content: contentForMessage,
+      message_type: messageType,
       attachments: null,
+      attachment_rows: optimisticAttachments,
+      client_message_id: clientMessageId,
+      delivery_status: files.length > 0 ? 'pending' : 'pending',
+      upload_progress: files.length > 0 ? 10 : undefined,
       is_read: false,
-      reply_to_id: replyToId,
+      reply_to_id: options.replyToId,
       created_at: optimisticTimestamp,
       updated_at: optimisticTimestamp,
       sender: optimisticSender
@@ -1208,7 +1498,7 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
       const currentMessages = prev[conversationId] || [];
       return {
         ...prev,
-        [conversationId]: [...currentMessages, optimisticMessage]
+        [conversationId]: mergeMessageLists(currentMessages, [optimisticMessage])
       };
     });
 
@@ -1231,19 +1521,24 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
       logInfo('sendMessage: Sending message', {
         conversationId,
         senderId: user.id,
-        contentLength: trimmedContent.length,
-        replyToId
+        contentLength: contentForMessage.length,
+        replyToId: options.replyToId,
+        clientMessageId,
+        fileCount: files.length
       });
 
       const { data, error } = await safe.insert(async () =>
-        await supabase
+        await (supabase as any)
           .from('messages')
-          .insert({
+          .upsert({
             conversation_id: conversationId,
             sender_id: user.id,
-            content: trimmedContent,
-            message_type: 'text',
-            reply_to_id: replyToId
+            content: contentForMessage,
+            message_type: messageType,
+            reply_to_id: options.replyToId,
+            client_message_id: clientMessageId
+          }, {
+            onConflict: 'conversation_id,sender_id,client_message_id'
           })
           .select()
           .single()
@@ -1276,12 +1571,73 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
         content: data.content,
         message_type: data.message_type as 'text' | 'image' | 'file',
         attachments: data.attachments,
+        attachment_rows: optimisticAttachments,
+        client_message_id: data.client_message_id || clientMessageId,
+        delivery_status: 'sent',
+        upload_progress: files.length > 0 ? 35 : undefined,
         is_read: data.is_read,
         reply_to_id: data.reply_to_id,
         created_at: data.created_at,
         updated_at: data.updated_at,
         sender: optimisticSender
       };
+
+      if (files.length > 0) {
+        const uploadedAttachments: MessageAttachment[] = [];
+
+        for (const file of files) {
+          const storagePath = `${conversationId}/${data.id}/${Date.now()}-${toSafeStorageName(file.name)}`;
+          const { error: uploadError } = await supabase.storage
+            .from(MESSAGE_ATTACHMENT_BUCKET)
+            .upload(storagePath, file, {
+              contentType: file.type,
+              upsert: false
+            });
+
+          if (uploadError) {
+            throw uploadError;
+          }
+
+          const { data: signedUrlData } = await supabase.storage
+            .from(MESSAGE_ATTACHMENT_BUCKET)
+            .createSignedUrl(storagePath, 60 * 60);
+
+          const attachmentRow = {
+            message_id: data.id,
+            uploader_id: user.id,
+            storage_path: storagePath,
+            file_name: file.name,
+            mime_type: file.type,
+            file_size: file.size
+          };
+
+          const { data: insertedAttachment, error: attachmentInsertError } = await (supabase as any)
+            .from('message_attachments')
+            .insert(attachmentRow)
+            .select()
+            .single();
+
+          if (attachmentInsertError) {
+            throw attachmentInsertError;
+          }
+
+          uploadedAttachments.push({
+            id: insertedAttachment.id,
+            message_id: insertedAttachment.message_id,
+            uploader_id: insertedAttachment.uploader_id,
+            storage_path: insertedAttachment.storage_path,
+            file_name: insertedAttachment.file_name,
+            mime_type: insertedAttachment.mime_type,
+            file_size: Number(insertedAttachment.file_size || file.size),
+            width: insertedAttachment.width,
+            height: insertedAttachment.height,
+            signed_url: signedUrlData?.signedUrl || null
+          });
+        }
+
+        persistedMessage.attachment_rows = uploadedAttachments;
+        persistedMessage.upload_progress = 100;
+      }
 
       // Replace optimistic message with persisted row and prevent duplicates if realtime already inserted it.
       setMessages(prev => {
@@ -1291,15 +1647,20 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
         if (withoutOptimistic.some((message) => message.id === persistedMessage.id)) {
           return {
             ...prev,
-            [conversationId]: withoutOptimistic
+            [conversationId]: mergeMessageLists(withoutOptimistic, [persistedMessage])
           };
         }
 
         return {
           ...prev,
-          [conversationId]: [...withoutOptimistic, persistedMessage]
+          [conversationId]: mergeMessageLists(withoutOptimistic, [persistedMessage])
         };
       });
+
+      const storedFailures = loadStoredFailedMessages(user.id).filter(
+        (message) => message.client_message_id !== clientMessageId
+      );
+      saveStoredFailedMessages(user.id, storedFailures);
 
       // Update conversation's last message timestamp
       const { error: updateError } = await safe.update(async () =>
@@ -1356,28 +1717,134 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
 
       return persistedMessage;
     } catch (error) {
-      // Remove optimistic message if backend write failed.
-      setMessages(prev => ({
-        ...prev,
-        [conversationId]: (prev[conversationId] || []).filter(
-          (message) => message.id !== optimisticId
-        )
-      }));
-
       const appError = handleError(error);
       logError('sendMessage: Error sending message', appError, {
         conversationId,
         senderId: user?.id
       });
-      
-      // Provide more specific error messages
+
       const errorMessage = getUserMessage(error);
+      const failedMessage: Message = {
+        ...optimisticMessage,
+        id: optimisticId,
+        local_failed: true,
+        delivery_status: 'failed',
+        error_message: errorMessage,
+        upload_progress: undefined,
+        updated_at: new Date().toISOString()
+      };
+
+      setMessages(prev => ({
+        ...prev,
+        [conversationId]: mergeMessageLists(prev[conversationId] || [], [failedMessage])
+      }));
+
+      if (files.length === 0) {
+        const nextFailures = [
+          ...loadStoredFailedMessages(user.id).filter(
+            (message) => message.client_message_id !== clientMessageId
+          ),
+          {
+            id: optimisticId,
+            conversation_id: conversationId,
+            sender_id: user.id,
+            content: contentForMessage,
+            client_message_id: clientMessageId,
+            created_at: optimisticTimestamp,
+            updated_at: new Date().toISOString(),
+            error_message: errorMessage
+          }
+        ];
+        saveStoredFailedMessages(user.id, nextFailures);
+      }
+
       toast.error(errorMessage);
-      return null;
+      return failedMessage;
     } finally {
       setSending(false);
     }
   }, [user]);
+
+  const retryFailedMessage = useCallback(async (
+    conversationId: string,
+    clientMessageId: string
+  ): Promise<Message | null> => {
+    const failedMessage = (messagesRef.current[conversationId] || []).find(
+      (message) => message.client_message_id === clientMessageId && message.local_failed
+    );
+
+    if (!failedMessage) {
+      return null;
+    }
+
+    return sendMessage(conversationId, failedMessage.content, { clientMessageId });
+  }, [sendMessage]);
+
+  const discardFailedMessage = useCallback((conversationId: string, clientMessageId: string) => {
+    if (!user) return;
+
+    setMessages((prev) => ({
+      ...prev,
+      [conversationId]: (prev[conversationId] || []).filter(
+        (message) => message.client_message_id !== clientMessageId
+      )
+    }));
+
+    saveStoredFailedMessages(
+      user.id,
+      loadStoredFailedMessages(user.id).filter(
+        (message) => message.client_message_id !== clientMessageId
+      )
+    );
+  }, [user]);
+
+  const updateConversationSettings = useCallback(async (
+    conversationId: string,
+    patch: Partial<Pick<ConversationUserSettings, 'archived_at' | 'muted_until' | 'pinned_at'>>
+  ): Promise<boolean> => {
+    if (!user) return false;
+
+    const nextSettings: ConversationUserSettings = {
+      conversation_id: conversationId,
+      user_id: user.id,
+      ...(conversationSettings[conversationId] || {}),
+      ...patch
+    };
+
+    setConversationSettings((prev) => ({
+      ...prev,
+      [conversationId]: nextSettings
+    }));
+
+    try {
+      const { error } = await (supabase as any)
+        .from('conversation_user_settings')
+        .upsert(nextSettings, { onConflict: 'conversation_id,user_id' });
+
+      if (error) throw error;
+
+      await loadConversationsFromServer();
+      return true;
+    } catch (error) {
+      logError('Error updating conversation settings', error);
+      toast.error('Failed to update conversation settings.');
+      return false;
+    }
+  }, [conversationSettings, loadConversationsFromServer, user]);
+
+  const pinConversation = useCallback((conversationId: string, shouldPin: boolean) =>
+    updateConversationSettings(conversationId, { pinned_at: shouldPin ? new Date().toISOString() : null }),
+  [updateConversationSettings]);
+
+  const muteConversation = useCallback((conversationId: string, shouldMute: boolean) => {
+    const mutedUntil = new Date();
+    mutedUntil.setFullYear(mutedUntil.getFullYear() + 1);
+    return updateConversationSettings(conversationId, { muted_until: shouldMute ? mutedUntil.toISOString() : null });
+  }, [updateConversationSettings]);
+
+  const archiveConversation = useCallback((conversationId: string, shouldArchive = true) =>
+    updateConversationSettings(conversationId, { archived_at: shouldArchive ? new Date().toISOString() : null }),
+  [updateConversationSettings]);
 
   const deleteMessage = useCallback(async (conversationId: string, messageId: string): Promise<boolean> => {
     if (!user) {
@@ -1548,6 +2015,32 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
         updatedCount
       });
 
+      const unreadMessages = (messagesRef.current[conversationId] || []).filter(
+        (message) => message.sender_id !== user.id && !message.is_read && !message.id.startsWith('temp-')
+      );
+
+      if (unreadMessages.length > 0) {
+        const now = new Date().toISOString();
+        const { error: receiptError } = await (supabase as any)
+          .from('message_receipts')
+          .upsert(
+            unreadMessages.map((message) => ({
+              message_id: message.id,
+              user_id: user.id,
+              delivered_at: now,
+              read_at: now
+            })),
+            { onConflict: 'message_id,user_id' }
+          );
+
+        if (receiptError) {
+          logWarn('markAsRead: Failed to update message receipts', {
+            conversationId,
+            error: receiptError.message
+          });
+        }
+      }
+
       // CRITICAL: Update local state immediately (don't wait for real-time subscription)
       // This ensures unread badges clear instantly
       setMessages(prev => {
@@ -1556,7 +2049,7 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
           ...prev,
           [conversationId]: conversationMessages.map(msg =>
             msg.sender_id !== user.id && !msg.is_read
-              ? { ...msg, is_read: true }
+              ? { ...msg, is_read: true, delivery_status: 'read' as const }
               : msg
           )
         };
@@ -1743,6 +2236,125 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
     }
   }, [user, conversations, activeConversationId, setActiveConversationId, loadConversationsFromServer]);
 
+  const searchMessages = useCallback(async (
+    query: string,
+    conversationId?: string | null
+  ): Promise<MessageSearchResult[]> => {
+    const trimmedQuery = query.trim();
+
+    if (!trimmedQuery) {
+      setSearchResults([]);
+      return [];
+    }
+
+    setSearchLoading(true);
+
+    try {
+      const { data, error } = await supabase.rpc('search_messages' as any, {
+        p_query: trimmedQuery,
+        p_conversation_id: conversationId || null,
+        p_limit: 20,
+        p_offset: 0
+      });
+
+      if (error) throw error;
+
+      const results = ((data || []) as any[]).map((result) => ({
+        ...result,
+        message_type: result.message_type as 'text' | 'image' | 'file',
+      })) as MessageSearchResult[];
+
+      setSearchResults(results);
+      return results;
+    } catch (error) {
+      logError('Error searching messages', error);
+      toast.error('Message search failed.');
+      return [];
+    } finally {
+      setSearchLoading(false);
+    }
+  }, []);
+
+  const clearMessageSearch = useCallback(() => {
+    setSearchResults([]);
+    setSearchLoading(false);
+  }, []);
+
+  const reportMessage = useCallback(async (
+    messageId: string,
+    reason = 'other',
+    details?: string
+  ): Promise<boolean> => {
+    if (!user) return false;
+
+    try {
+      const { error } = await (supabase as any)
+        .from('message_reports')
+        .upsert({
+          message_id: messageId,
+          reporter_id: user.id,
+          reason,
+          details: details || null
+        }, {
+          onConflict: 'message_id,reporter_id'
+        });
+
+      if (error) throw error;
+
+      toast.success('Message reported');
+      return true;
+    } catch (error) {
+      logError('Error reporting message', error);
+      toast.error('Failed to report message.');
+      return false;
+    }
+  }, [user]);
+
+  const blockUser = useCallback(async (
+    blockedUserId: string,
+    conversationId?: string
+  ): Promise<boolean> => {
+    if (!user || blockedUserId === user.id) return false;
+
+    try {
+      const { error } = await (supabase as any)
+        .from('user_blocks')
+        .upsert({
+          blocker_id: user.id,
+          blocked_id: blockedUserId
+        }, {
+          onConflict: 'blocker_id,blocked_id'
+        });
+
+      if (error) throw error;
+
+      if (conversationId) {
+        await archiveConversation(conversationId, true);
+      }
+
+      toast.success('User blocked');
+      return true;
+    } catch (error) {
+      logError('Error blocking user', error);
+      toast.error('Failed to block user.');
+      return false;
+    }
+  }, [archiveConversation, user]);
+
+  const getAttachmentSignedUrl = useCallback(async (storagePath: string): Promise<string | null> => {
+    const { data, error } = await supabase.storage
+      .from(MESSAGE_ATTACHMENT_BUCKET)
+      .createSignedUrl(storagePath, 60 * 60);
+
+    if (error) {
+      logError('Error creating attachment signed URL', error);
+      toast.error('Unable to open attachment.');
+      return null;
+    }
+
+    return data?.signedUrl || null;
+  }, []);
+
   // Add reaction to a message
   const addReaction = useCallback(async (messageId: string, emoji: string) => {
     if (!user) {
@@ -1803,17 +2415,32 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
   return {
     conversations,
     messages,
+    messagePageState,
+    conversationSettings,
+    searchResults,
+    searchLoading,
     loading,
     sending,
     activeConversationId,
     setActiveConversationId,
     startConversation,
     sendMessage,
+    retryFailedMessage,
+    discardFailedMessage,
+    loadMessages,
     deleteMessage,
     markAsRead,
     getUnreadCount,
     getTotalUnreadCount,
     deleteConversation,
+    pinConversation,
+    muteConversation,
+    archiveConversation,
+    reportMessage,
+    blockUser,
+    searchMessages,
+    clearMessageSearch,
+    getAttachmentSignedUrl,
     getUserIdByEmail,
     resolveMentorUserId,
     getUserIdByUsername,

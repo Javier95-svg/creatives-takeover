@@ -1,12 +1,43 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Send, MessageCircle, Trash2, Menu, Check, CheckCheck } from "lucide-react";
-import { useMessaging, Conversation } from "@/hooks/useMessaging";
+import { Badge } from "@/components/ui/badge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Send,
+  MessageCircle,
+  Trash2,
+  Menu,
+  Check,
+  CheckCheck,
+  Paperclip,
+  Search,
+  X,
+  MoreVertical,
+  Pin,
+  BellOff,
+  Archive,
+  Ban,
+  Flag,
+  RotateCcw,
+  Download,
+  FileText,
+  Image as ImageIcon,
+  Loader2
+} from "lucide-react";
+import { useVirtualizer } from "@tanstack/react-virtual";
+import { useMessaging, Conversation, Message } from "@/hooks/useMessaging";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
@@ -117,15 +148,30 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
   const {
     conversations,
     messages,
+    messagePageState,
+    conversationSettings,
+    searchResults,
+    searchLoading,
     loading,
     sending,
     activeConversationId,
     setActiveConversationId,
     sendMessage,
+    retryFailedMessage,
+    discardFailedMessage,
+    loadMessages,
     deleteMessage,
     markAsRead,
     getUnreadCount,
     deleteConversation,
+    pinConversation,
+    muteConversation,
+    archiveConversation,
+    reportMessage,
+    blockUser,
+    searchMessages,
+    clearMessageSearch,
+    getAttachmentSignedUrl,
     addReaction,
     removeReaction
   } = useMessaging();
@@ -133,7 +179,8 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
   const [newMessage, setNewMessage] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
-  const scrollAreaRef = useRef<React.ElementRef<typeof ScrollArea>>(null);
+  const scrollViewportRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const hasSetInitialConversation = useRef(false);
   const previousInitialConversationId = useRef<string | undefined>(undefined);
   const [participantProfiles, setParticipantProfiles] = useState<Record<string, ParticipantProfile>>({});
@@ -149,6 +196,9 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
   const lastTypingBroadcastAtRef = useRef(0);
   const [messageReactions, setMessageReactions] = useState<Record<string, MessageReaction[]>>({});
   const [activeReactionMenuMessageId, setActiveReactionMenuMessageId] = useState<string | null>(null);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [messageSearchQuery, setMessageSearchQuery] = useState("");
+  const [searchCurrentConversationOnly, setSearchCurrentConversationOnly] = useState(true);
   const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
   const { trigger: triggerHaptic } = useHapticFeedback();
 
@@ -167,6 +217,7 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
   const messageCount = activeMessages.length;
   const lastMessage = messageCount > 0 ? activeMessages[messageCount - 1] : null;
   const currentUserId = user?.id ?? null;
+  const activePageState = activeConversationId ? messagePageState[activeConversationId] : undefined;
   const messageIdsKey = useMemo(
     () => activeMessages.map((message) => message.id).join('|'),
     [activeMessages]
@@ -174,9 +225,9 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
 
   // Auto-scroll to bottom when new messages arrive (only within ScrollArea, not the page)
   useEffect(() => {
-    if (!scrollAreaRef.current || !activeConversationId) return;
+    if (!scrollViewportRef.current || !activeConversationId) return;
 
-    const scrollContainer = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]') as HTMLElement;
+    const scrollContainer = scrollViewportRef.current;
     if (!scrollContainer) return;
 
     const isUserMessage = lastMessage?.sender_id === user?.id;
@@ -438,19 +489,81 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
     };
   }, [activeConversationId, currentUserId, messageIdsKey]);
 
+  useEffect(() => {
+    const query = messageSearchQuery.trim();
+
+    if (!query) {
+      clearMessageSearch();
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      void searchMessages(
+        query,
+        searchCurrentConversationOnly ? activeConversationId : null
+      );
+    }, 250);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [
+    activeConversationId,
+    clearMessageSearch,
+    messageSearchQuery,
+    searchCurrentConversationOnly,
+    searchMessages
+  ]);
+
+  const handleLoadOlderMessages = useCallback(async () => {
+    if (!activeConversationId || !activePageState?.oldestCursor || activePageState.loadingOlder) {
+      return;
+    }
+
+    const scrollContainer = scrollViewportRef.current;
+    const previousScrollHeight = scrollContainer?.scrollHeight || 0;
+
+    await loadMessages(activeConversationId, {
+      before: activePageState.oldestCursor,
+      limit: 50,
+      mode: 'prepend'
+    });
+
+    requestAnimationFrame(() => {
+      if (!scrollContainer) return;
+      scrollContainer.scrollTop += scrollContainer.scrollHeight - previousScrollHeight;
+    });
+  }, [activeConversationId, activePageState?.loadingOlder, activePageState?.oldestCursor, loadMessages]);
+
+  const handleFileSelection = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || []);
+    const acceptedFiles = files.filter((file) => file.size <= 10 * 1024 * 1024);
+
+    if (acceptedFiles.length !== files.length) {
+      toast.error('Attachments must be 10MB or smaller.');
+    }
+
+    setSelectedFiles((current) => [...current, ...acceptedFiles].slice(0, 4));
+    event.target.value = '';
+  }, []);
+
+  const removeSelectedFile = useCallback((fileIndex: number) => {
+    setSelectedFiles((current) => current.filter((_, index) => index !== fileIndex));
+  }, []);
+
   const submitCurrentMessage = useCallback(async () => {
-    if (!newMessage.trim() || !activeConversationId || sending) return;
+    if ((!newMessage.trim() && selectedFiles.length === 0) || !activeConversationId || sending) return;
 
     const messageToSend = newMessage;
+    const filesToSend = selectedFiles;
 
     // Store current scroll position to prevent unwanted scrolling
     const scrollY = window.scrollY;
 
     try {
-      const sentMessage = await sendMessage(activeConversationId, messageToSend);
+      const sentMessage = await sendMessage(activeConversationId, messageToSend, { files: filesToSend });
       // Only clear input after successful send
-      if (sentMessage) {
+      if (sentMessage && sentMessage.delivery_status !== 'failed' && !sentMessage.local_failed) {
         setNewMessage("");
+        setSelectedFiles([]);
       }
     } catch {
       toast.error('Failed to send message. Please try again.');
@@ -462,7 +575,7 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
         window.scrollTo(0, scrollY);
       }
     }, 0);
-  }, [activeConversationId, newMessage, sendMessage, sending]);
+  }, [activeConversationId, newMessage, selectedFiles, sendMessage, sending]);
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
@@ -486,10 +599,10 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
     });
   }, [activeConversationId, user?.id]);
 
-  const getOtherParticipant = (conversation: Conversation): string | undefined => {
+  const getOtherParticipant = useCallback((conversation: Conversation): string | undefined => {
     if (!user) return undefined;
     return conversation.participants.find((id: string) => id !== user.id);
-  };
+  }, [user]);
 
   // Fetch participant profiles for conversations
   useEffect(() => {
@@ -666,6 +779,32 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
     setMessageToDelete(null);
   };
 
+  const handleRetryFailedMessage = useCallback((message: Message) => {
+    if (!activeConversationId || !message.client_message_id) return;
+    void retryFailedMessage(activeConversationId, message.client_message_id);
+  }, [activeConversationId, retryFailedMessage]);
+
+  const handleDiscardFailedMessage = useCallback((message: Message) => {
+    if (!activeConversationId || !message.client_message_id) return;
+    discardFailedMessage(activeConversationId, message.client_message_id);
+  }, [activeConversationId, discardFailedMessage]);
+
+  const handleReportMessage = useCallback((message: Message) => {
+    void reportMessage(message.id, 'other');
+    setActiveReactionMenuMessageId(null);
+  }, [reportMessage]);
+
+  const handleBlockActiveParticipant = useCallback(() => {
+    if (!activeConversationId) return;
+    const activeConversation = conversations.find((conversation) => conversation.id === activeConversationId);
+    if (!activeConversation) return;
+
+    const otherParticipant = getOtherParticipant(activeConversation);
+    if (!otherParticipant) return;
+
+    void blockUser(otherParticipant, activeConversationId);
+  }, [activeConversationId, blockUser, conversations, getOtherParticipant]);
+
   const updateMessageReactionState = useCallback((messageId: string, emoji: string, shouldAdd: boolean) => {
     setMessageReactions((prev) => {
       const current = prev[messageId] || [];
@@ -800,7 +939,65 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
     return elements;
   };
 
-  const getMessageReceiptState = (message: { id: string; is_read: boolean }) => {
+  const handleAttachmentOpen = useCallback(async (storagePath?: string) => {
+    if (!storagePath) return;
+    const signedUrl = await getAttachmentSignedUrl(storagePath);
+    if (signedUrl) {
+      window.open(signedUrl, '_blank', 'noopener,noreferrer');
+    }
+  }, [getAttachmentSignedUrl]);
+
+  const renderMessageAttachments = (message: Message, isOwnMessage: boolean) => {
+    const attachments = message.attachment_rows || [];
+    if (attachments.length === 0) return null;
+
+    return (
+      <div className="mt-2 space-y-2">
+        {message.upload_progress !== undefined && message.upload_progress < 100 && (
+          <div className={`h-1.5 overflow-hidden rounded-full ${isOwnMessage ? 'bg-primary-foreground/25' : 'bg-background'}`}>
+            <div
+              className={isOwnMessage ? 'h-full bg-primary-foreground' : 'h-full bg-primary'}
+              style={{ width: `${message.upload_progress}%` }}
+            />
+          </div>
+        )}
+
+        {attachments.map((attachment, index) => {
+          const isImage = attachment.mime_type.startsWith('image/');
+
+          return (
+            <button
+              key={`${message.id}-${attachment.storage_path || attachment.file_name}-${index}`}
+              type="button"
+              onClick={(event) => {
+                event.stopPropagation();
+                void handleAttachmentOpen(attachment.storage_path);
+              }}
+              className={`flex w-full items-center gap-2 rounded-md border px-2 py-2 text-left text-xs transition-colors ${
+                isOwnMessage
+                  ? 'border-primary-foreground/20 bg-primary-foreground/10 hover:bg-primary-foreground/15'
+                  : 'border-border/60 bg-background/70 hover:bg-background'
+              }`}
+            >
+              {isImage ? <ImageIcon className="h-4 w-4 flex-shrink-0" /> : <FileText className="h-4 w-4 flex-shrink-0" />}
+              <span className="min-w-0 flex-1 truncate">{attachment.file_name}</span>
+              {attachment.storage_path ? (
+                <Download className="h-3.5 w-3.5 flex-shrink-0 opacity-70" />
+              ) : (
+                <Loader2 className="h-3.5 w-3.5 flex-shrink-0 animate-spin opacity-70" />
+              )}
+            </button>
+          );
+        })}
+      </div>
+    );
+  };
+
+  const getMessageReceiptState = (message: { id: string; is_read: boolean; delivery_status?: string }) => {
+    if (message.delivery_status) {
+      return message.delivery_status as 'pending' | 'sent' | 'delivered' | 'read' | 'failed';
+    }
+
     // Optimistic client-side messages use temp IDs until backend persistence.
     // This maps to "not received yet" (single check) in the UI.
     if (message.id.startsWith('temp-')) {
@@ -831,6 +1028,13 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
 
     return groups;
   }, []), [activeMessages]);
+
+  const messageVirtualizer = useVirtualizer({
+    count: groupedMessages.length,
+    getScrollElement: () => scrollViewportRef.current,
+    estimateSize: () => 96,
+    overscan: 8,
+  });
 
   const renderMessageGroup = (
     messageGroup: typeof activeMessages,
@@ -871,8 +1075,8 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
         )}
 
         <div className="flex flex-col gap-1 max-w-[88%] sm:max-w-[84%] md:max-w-[78%] lg:max-w-[72%] xl:max-w-[68%]">
-          {messageGroup.map((message, idx) => (
-            <div key={message.id} className="group">
+	          {messageGroup.map((message, idx) => (
+	            <div key={message.id} data-message-id={message.id} className="group">
               <div
                 data-reaction-trigger
                 onContextMenu={(event) => {
@@ -881,15 +1085,17 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
                 }}
                 onClick={(event) => handleReactionMenuTap(event, message.id)}
                 onTouchStart={(event) => handleMessageTouchStart(event, message.id)}
-                onTouchMove={clearLongPressTimer}
-                onTouchEnd={clearLongPressTimer}
-                onTouchCancel={clearLongPressTimer}
-                className={`relative px-3 py-2 ${
-                  isOwnMessage
-                    ? 'bg-primary text-primary-foreground rounded-2xl rounded-br-sm'
-                    : 'bg-muted rounded-2xl rounded-bl-sm'
-                }`}
-              >
+	                onTouchMove={clearLongPressTimer}
+	                onTouchEnd={clearLongPressTimer}
+	                onTouchCancel={clearLongPressTimer}
+	                className={`relative px-3 py-2 ${
+	                  message.delivery_status === 'failed'
+	                    ? 'bg-destructive/10 text-destructive border border-destructive/30 rounded-2xl rounded-br-sm'
+	                    : isOwnMessage
+	                    ? 'bg-primary text-primary-foreground rounded-2xl rounded-br-sm'
+	                    : 'bg-muted rounded-2xl rounded-bl-sm'
+	                }`}
+	              >
                 {/* Speech bubble tail only on last message in group */}
                 {idx === messageGroup.length - 1 && (
                   isOwnMessage ? (
@@ -905,20 +1111,44 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
                   )
                 )}
 
-                <p className="text-sm whitespace-pre-wrap break-words">{renderMessageContent(message.content)}</p>
+	                {message.content && (
+	                  <p className="text-sm whitespace-pre-wrap break-words">{renderMessageContent(message.content)}</p>
+	                )}
 
-                {isOwnMessage && !message.id.startsWith('temp-') && (
-                  <Button
+	                {renderMessageAttachments(message, isOwnMessage)}
+
+	                {isOwnMessage && !message.id.startsWith('temp-') && (
+	                  <Button
                     type="button"
                     variant="ghost"
                     size="sm"
                     onClick={(e) => handleDeleteMessageClick(e, message.id)}
                     className="absolute top-1 right-1 h-6 w-6 p-0 opacity-70 md:opacity-0 md:group-hover:opacity-100 transition-opacity text-primary-foreground/70 hover:text-primary-foreground hover:bg-primary-foreground/15"
-                    aria-label="Delete message"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </Button>
-                )}
+	                    aria-label="Delete message"
+	                  >
+	                    <Trash2 className="h-3.5 w-3.5" />
+	                  </Button>
+	                )}
+
+	                {!message.id.startsWith('temp-') && (
+	                  <Button
+	                    type="button"
+	                    variant="ghost"
+	                    size="sm"
+	                    onClick={(event) => {
+	                      event.stopPropagation();
+	                      handleReportMessage(message);
+	                    }}
+	                    className={`absolute top-1 ${isOwnMessage ? 'right-8' : 'right-1'} h-6 w-6 p-0 opacity-0 transition-opacity md:group-hover:opacity-100 ${
+	                      isOwnMessage
+	                        ? 'text-primary-foreground/70 hover:bg-primary-foreground/15 hover:text-primary-foreground'
+	                        : 'text-muted-foreground hover:bg-background/80'
+	                    }`}
+	                    aria-label="Report message"
+	                  >
+	                    <Flag className="h-3.5 w-3.5" />
+	                  </Button>
+	                )}
 
                 {/* Timestamp and read receipt only on last message */}
                 {idx === messageGroup.length - 1 && (
@@ -926,10 +1156,14 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
                     <p className="text-xs opacity-70">
                       {formatDistanceToNow(new Date(message.created_at))} ago
                     </p>
-                    {isOwnMessage && (() => {
-                      const receiptState = getMessageReceiptState(message);
+	                    {isOwnMessage && (() => {
+	                      const receiptState = getMessageReceiptState(message);
 
-                      if (receiptState === 'read') {
+	                      if (receiptState === 'failed') {
+	                        return <span className="text-xs font-medium">Not sent</span>;
+	                      }
+
+	                      if (receiptState === 'read') {
                         return (
                           <span className="text-xs flex items-center" title="Read">
                             <CheckCheck className="h-3 w-3 text-blue-500" />
@@ -950,10 +1184,35 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
                           <Check className="h-3 w-3 opacity-70" />
                         </span>
                       );
-                    })()}
-                  </div>
-                )}
-              </div>
+	                    })()}
+	                  </div>
+	                )}
+	              </div>
+
+	              {message.local_failed && (
+	                <div className="mt-1 flex justify-end gap-1">
+	                  <Button
+	                    type="button"
+	                    variant="outline"
+	                    size="sm"
+	                    className="h-7 gap-1 px-2 text-xs"
+	                    onClick={() => handleRetryFailedMessage(message)}
+	                  >
+	                    <RotateCcw className="h-3 w-3" />
+	                    Retry
+	                  </Button>
+	                  <Button
+	                    type="button"
+	                    variant="ghost"
+	                    size="sm"
+	                    className="h-7 gap-1 px-2 text-xs"
+	                    onClick={() => handleDiscardFailedMessage(message)}
+	                  >
+	                    <X className="h-3 w-3" />
+	                    Remove
+	                  </Button>
+	                </div>
+	              )}
 
               {activeReactionMenuMessageId === message.id && (
                 <div className={`mt-1 flex ${isOwnMessage ? 'justify-end' : 'justify-start'}`}>
@@ -1024,6 +1283,7 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
           <div className="p-2 space-y-1">
             {conversations.map((conversation) => {
               const unreadCount = getUnreadCount(conversation.id);
+              const settings = conversationSettings[conversation.id];
               
               return (
                 <div
@@ -1051,12 +1311,18 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
                         })()}
                       </div>
                       
-                      <div className="flex-1 text-left min-w-0">
-                        <p className="font-medium text-sm truncate">
-                          {getConversationName(conversation)}
-                        </p>
-                        {conversation.last_message_at && (
-                          <p className="text-xs text-muted-foreground">
+	                      <div className="flex-1 text-left min-w-0">
+	                        <div className="flex min-w-0 items-center gap-1">
+	                          <p className="font-medium text-sm truncate">
+	                            {getConversationName(conversation)}
+	                          </p>
+	                          {settings?.pinned_at && <Pin className="h-3 w-3 flex-shrink-0 text-primary" />}
+	                          {settings?.muted_until && new Date(settings.muted_until) > new Date() && (
+	                            <BellOff className="h-3 w-3 flex-shrink-0 text-muted-foreground" />
+	                          )}
+	                        </div>
+	                        {conversation.last_message_at && (
+	                          <p className="text-xs text-muted-foreground">
                             {formatDistanceToNow(new Date(conversation.last_message_at))} ago
                           </p>
                         )}
@@ -1131,45 +1397,193 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
                 const activeConversation = conversations.find(c => c.id === activeConversationId);
                 if (!activeConversation) return null;
 
-                const conversationName = getConversationName(activeConversation);
-                const conversationAvatar = getConversationAvatar(activeConversation);
+	                const conversationName = getConversationName(activeConversation);
+	                const conversationAvatar = getConversationAvatar(activeConversation);
+	                const settings = conversationSettings[activeConversation.id];
+	                const isPinned = !!settings?.pinned_at;
+	                const isMuted = !!settings?.muted_until && new Date(settings.muted_until) > new Date();
 
-                const otherParticipantId = getOtherParticipant(activeConversation);
+	                const otherParticipantId = getOtherParticipant(activeConversation);
 
-                return (
-                  <div className="flex items-center gap-2 flex-1 min-w-0">
-                    <div className="relative">
-                      <Avatar className="h-8 w-8 flex-shrink-0">
-                        <AvatarImage src={conversationAvatar || undefined} />
-                        <AvatarFallback>
-                          {conversationName.charAt(0).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      {otherParticipantId && presenceData[otherParticipantId]?.status === 'online' && (
-                        <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-background" />
-                      )}
-                    </div>
-                    <h4 className="font-semibold text-sm md:text-base truncate">
-                      {conversationName}
-                    </h4>
-                  </div>
-                );
-              })()}
-            </div>
+	                return (
+	                  <>
+	                    <div className="flex items-center gap-2 flex-1 min-w-0">
+	                      <div className="relative">
+	                        <Avatar className="h-8 w-8 flex-shrink-0">
+	                          <AvatarImage src={conversationAvatar || undefined} />
+	                          <AvatarFallback>
+	                            {conversationName.charAt(0).toUpperCase()}
+	                          </AvatarFallback>
+	                        </Avatar>
+	                        {otherParticipantId && presenceData[otherParticipantId]?.status === 'online' && (
+	                          <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-background" />
+	                        )}
+	                      </div>
+	                      <div className="min-w-0">
+	                        <h4 className="font-semibold text-sm md:text-base truncate">
+	                          {conversationName}
+	                        </h4>
+	                        <div className="flex items-center gap-1">
+	                          {isPinned && <Badge variant="secondary" className="h-5 px-1.5 text-[10px]">Pinned</Badge>}
+	                          {isMuted && <Badge variant="outline" className="h-5 px-1.5 text-[10px]">Muted</Badge>}
+	                        </div>
+	                      </div>
+	                    </div>
+	                    <DropdownMenu>
+	                      <DropdownMenuTrigger asChild>
+	                        <Button
+	                          type="button"
+	                          variant="ghost"
+	                          size="sm"
+	                          className="h-10 w-10 p-0"
+	                          aria-label="Conversation actions"
+	                        >
+	                          <MoreVertical className="h-5 w-5" />
+	                        </Button>
+	                      </DropdownMenuTrigger>
+	                      <DropdownMenuContent align="end" className="w-48">
+	                        <DropdownMenuItem onClick={() => void pinConversation(activeConversation.id, !isPinned)}>
+	                          <Pin className="mr-2 h-4 w-4" />
+	                          {isPinned ? 'Unpin' : 'Pin'}
+	                        </DropdownMenuItem>
+	                        <DropdownMenuItem onClick={() => void muteConversation(activeConversation.id, !isMuted)}>
+	                          <BellOff className="mr-2 h-4 w-4" />
+	                          {isMuted ? 'Unmute' : 'Mute'}
+	                        </DropdownMenuItem>
+	                        <DropdownMenuItem onClick={() => void archiveConversation(activeConversation.id, true)}>
+	                          <Archive className="mr-2 h-4 w-4" />
+	                          Archive
+	                        </DropdownMenuItem>
+	                        <DropdownMenuSeparator />
+	                        <DropdownMenuItem onClick={handleBlockActiveParticipant} className="text-destructive">
+	                          <Ban className="mr-2 h-4 w-4" />
+	                          Block user
+	                        </DropdownMenuItem>
+	                      </DropdownMenuContent>
+	                    </DropdownMenu>
+	                  </>
+	                );
+	              })()}
+	            </div>
 
-            {/* Messages */}
-            <ScrollArea ref={scrollAreaRef} className="flex-1 p-3 md:p-4">
-              <div className="space-y-3 md:space-y-4">
-                {groupedMessages.map((messageGroup, groupIndex) => (
-                  renderMessageGroup(
-                    messageGroup,
-                    groupIndex,
-                    groupIndex === groupedMessages.length - 1
-                  )
-                ))}
-                {otherUserTyping && (() => {
-                  const activeConversation = conversations.find(c => c.id === activeConversationId);
-                  if (!activeConversation) return null;
+	            <div className="border-b bg-card/40 px-3 py-2 md:px-4">
+	              <div className="flex items-center gap-2">
+	                <div className="relative flex-1">
+	                  <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+	                  <Input
+	                    value={messageSearchQuery}
+	                    onChange={(event) => setMessageSearchQuery(event.target.value)}
+	                    placeholder="Search messages"
+	                    className="h-9 pl-9 pr-9"
+	                  />
+	                  {messageSearchQuery && (
+	                    <Button
+	                      type="button"
+	                      variant="ghost"
+	                      size="sm"
+	                      className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2 p-0"
+	                      onClick={() => setMessageSearchQuery('')}
+	                      aria-label="Clear search"
+	                    >
+	                      <X className="h-4 w-4" />
+	                    </Button>
+	                  )}
+	                </div>
+	                <Button
+	                  type="button"
+	                  variant={searchCurrentConversationOnly ? 'secondary' : 'outline'}
+	                  size="sm"
+	                  className="h-9 whitespace-nowrap"
+	                  onClick={() => setSearchCurrentConversationOnly((current) => !current)}
+	                >
+	                  {searchCurrentConversationOnly ? 'Thread' : 'All'}
+	                </Button>
+	              </div>
+	              {messageSearchQuery.trim() && (
+	                <div className="mt-2 max-h-40 overflow-y-auto rounded-md border border-border/60 bg-background">
+	                  {searchLoading ? (
+	                    <div className="flex items-center gap-2 px-3 py-2 text-xs text-muted-foreground">
+	                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+	                      Searching
+	                    </div>
+	                  ) : searchResults.length > 0 ? (
+	                    searchResults.map((result) => (
+	                      <button
+	                        key={result.id}
+	                        type="button"
+	                        className="block w-full border-b border-border/50 px-3 py-2 text-left last:border-b-0 hover:bg-muted/60"
+	                        onClick={() => {
+	                          setActiveConversationId(result.conversation_id);
+	                          setMessageSearchQuery('');
+	                          requestAnimationFrame(() => {
+	                            const element = document.querySelector(`[data-message-id="${result.id}"]`);
+	                            element?.scrollIntoView({ block: 'center' });
+	                          });
+	                        }}
+	                      >
+	                        <p className="truncate text-xs font-medium">
+	                          {conversations.find((conversation) => conversation.id === result.conversation_id)
+	                            ? getConversationName(conversations.find((conversation) => conversation.id === result.conversation_id)!)
+	                            : 'Conversation'}
+	                        </p>
+	                        <p className="truncate text-xs text-muted-foreground">{result.content}</p>
+	                      </button>
+	                    ))
+	                  ) : (
+	                    <div className="px-3 py-2 text-xs text-muted-foreground">No messages found</div>
+	                  )}
+	                </div>
+	              )}
+	            </div>
+
+	            {/* Messages */}
+	            <div ref={scrollViewportRef} className="flex-1 overflow-y-auto p-3 md:p-4">
+	              <div className="mb-3 flex justify-center">
+	                {activePageState?.hasMore ? (
+	                  <Button
+	                    type="button"
+	                    variant="outline"
+	                    size="sm"
+	                    className="h-8 gap-2 text-xs"
+	                    onClick={handleLoadOlderMessages}
+	                    disabled={activePageState.loadingOlder}
+	                  >
+	                    {activePageState.loadingOlder && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+	                    Load older
+	                  </Button>
+	                ) : activeMessages.length > 0 ? (
+	                  <span className="text-xs text-muted-foreground">Beginning of conversation</span>
+	                ) : null}
+	              </div>
+
+	              <div
+	                className="relative"
+	                style={{ height: `${messageVirtualizer.getTotalSize()}px` }}
+	              >
+	                {messageVirtualizer.getVirtualItems().map((virtualItem) => {
+	                  const messageGroup = groupedMessages[virtualItem.index];
+	                  return (
+	                    <div
+	                      key={virtualItem.key}
+	                      data-index={virtualItem.index}
+	                      ref={messageVirtualizer.measureElement}
+	                      className="absolute left-0 top-0 w-full pb-3 md:pb-4"
+	                      style={{ transform: `translateY(${virtualItem.start}px)` }}
+	                    >
+	                      {renderMessageGroup(
+	                        messageGroup,
+	                        virtualItem.index,
+	                        virtualItem.index === groupedMessages.length - 1
+	                      )}
+	                    </div>
+	                  );
+	                })}
+	              </div>
+
+	              <div className="space-y-3 md:space-y-4">
+	                {otherUserTyping && (() => {
+	                  const activeConversation = conversations.find(c => c.id === activeConversationId);
+	                  if (!activeConversation) return null;
 
                   const otherParticipantId = getOtherParticipant(activeConversation);
                   const otherParticipant = otherParticipantId ? participantProfiles[otherParticipantId] : null;
@@ -1180,16 +1594,56 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
                       userName={otherParticipant?.full_name}
                     />
                   );
-                })()}
-                <div ref={messagesEndRef} />
-              </div>
-            </ScrollArea>
+	                })()}
+	                <div ref={messagesEndRef} />
+	              </div>
+	            </div>
 
-            {/* Message Input - Sticky on mobile */}
-            <form onSubmit={handleSendMessage} className={`p-3 md:p-4 border-t bg-card/50 ${isMobile ? 'sticky bottom-0' : ''}`}>
-              <div className="flex gap-2">
-                <Textarea
-                  ref={inputRef}
+	            {/* Message Input - Sticky on mobile */}
+	            <form onSubmit={handleSendMessage} className={`p-3 md:p-4 border-t bg-card/50 ${isMobile ? 'sticky bottom-0' : ''}`}>
+	              {selectedFiles.length > 0 && (
+	                <div className="mb-2 flex flex-wrap gap-2">
+	                  {selectedFiles.map((file, index) => (
+	                    <div
+	                      key={`${file.name}-${file.size}-${index}`}
+	                      className="flex max-w-full items-center gap-2 rounded-md border border-border/60 bg-background px-2 py-1 text-xs"
+	                    >
+	                      {file.type.startsWith('image/') ? <ImageIcon className="h-3.5 w-3.5" /> : <FileText className="h-3.5 w-3.5" />}
+	                      <span className="max-w-[180px] truncate">{file.name}</span>
+	                      <Button
+	                        type="button"
+	                        variant="ghost"
+	                        size="sm"
+	                        className="h-5 w-5 p-0"
+	                        onClick={() => removeSelectedFile(index)}
+	                        aria-label="Remove attachment"
+	                      >
+	                        <X className="h-3 w-3" />
+	                      </Button>
+	                    </div>
+	                  ))}
+	                </div>
+	              )}
+	              <div className="flex gap-2">
+	                <input
+	                  ref={fileInputRef}
+	                  type="file"
+	                  multiple
+	                  className="hidden"
+	                  accept="image/jpeg,image/png,image/webp,image/gif,application/pdf,text/plain,application/zip"
+	                  onChange={handleFileSelection}
+	                />
+	                <Button
+	                  type="button"
+	                  variant="outline"
+	                  className="min-h-[44px] min-w-[44px] px-3 touch-manipulation"
+	                  onClick={() => fileInputRef.current?.click()}
+	                  aria-label="Attach files"
+	                >
+	                  <Paperclip className="h-4 w-4" />
+	                </Button>
+	                <Textarea
+	                  ref={inputRef}
                   value={newMessage}
                   onChange={(e) => {
                     setNewMessage(e.target.value);
@@ -1206,11 +1660,11 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
                   className="min-h-[44px] max-h-[120px] resize-none text-base md:text-sm"
                   rows={1}
                 />
-                <Button
-                  type="submit"
-                  disabled={sending || !newMessage.trim()}
-                  className="min-h-[44px] min-w-[44px] px-3 touch-manipulation"
-                >
+	                <Button
+	                  type="submit"
+	                  disabled={sending || (!newMessage.trim() && selectedFiles.length === 0)}
+	                  className="min-h-[44px] min-w-[44px] px-3 touch-manipulation"
+	                >
                   <Send className="h-4 w-4" />
                 </Button>
               </div>
