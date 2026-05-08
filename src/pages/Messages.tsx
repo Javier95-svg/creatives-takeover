@@ -39,28 +39,6 @@ const Messages = () => {
       window.history.replaceState(null, '', window.location.pathname + window.location.search);
     }
 
-    // Prevent scroll when focusing elements (like input fields)
-    const handleFocus = (e: FocusEvent) => {
-      const target = e.target as HTMLElement;
-      // Only prevent scroll for elements within the messages card
-      const messagesCard = document.querySelector('[class*="max-w-6xl"]');
-      if (messagesCard && messagesCard.contains(target)) {
-        // Use preventScroll option if supported (available in modern browsers)
-        try {
-          // Check if preventScroll is supported by attempting to use it
-          const focusOptions: FocusOptions = { preventScroll: true };
-          if (target.focus && typeof target.focus === 'function') {
-            target.focus(focusOptions);
-          }
-        } catch {
-          // Fallback: use scrollIntoView with nearest positioning
-          if (target.scrollIntoView) {
-            target.scrollIntoView({ behavior: 'auto', block: 'nearest', inline: 'nearest' });
-          }
-        }
-      }
-    };
-
     // Prevent unwanted scroll on form submissions
     const handleSubmit = (e: Event) => {
       const form = e.target as HTMLFormElement;
@@ -75,11 +53,9 @@ const Messages = () => {
       }
     };
 
-    document.addEventListener('focusin', handleFocus, true);
     document.addEventListener('submit', handleSubmit, true);
 
     return () => {
-      document.removeEventListener('focusin', handleFocus, true);
       document.removeEventListener('submit', handleSubmit, true);
     };
   }, []);

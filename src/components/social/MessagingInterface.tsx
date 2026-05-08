@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -42,6 +42,11 @@ type MessageReaction = {
   emoji: string;
   count: number;
   userReacted: boolean;
+};
+type TypingBroadcastPayload = {
+  payload?: {
+    user_id?: string;
+  };
 };
 
 const QUICK_REACTIONS = ['❤️', '👍', '😂', '😮', '😢', '🙏', '🔥', '👏', '🎉', '🤔', '👀', '💯'] as const;
@@ -140,23 +145,32 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
   const [mobileSheetOpen, setMobileSheetOpen] = useState(false);
   const [otherUserTyping, setOtherUserTyping] = useState(false);
   const typingTimeoutRef = useRef<NodeJS.Timeout>();
+  const typingChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  const lastTypingBroadcastAtRef = useRef(0);
   const [messageReactions, setMessageReactions] = useState<Record<string, MessageReaction[]>>({});
   const [activeReactionMenuMessageId, setActiveReactionMenuMessageId] = useState<string | null>(null);
   const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
   const { trigger: triggerHaptic } = useHapticFeedback();
 
   // Get all participant IDs for presence tracking
-  const participantIds = conversations.flatMap(c => c.participants).filter(id => id !== user?.id);
+  const participantIds = useMemo(
+    () => Array.from(new Set(conversations.flatMap(c => c.participants).filter(id => id !== user?.id))),
+    [conversations, user?.id]
+  );
   const { presenceData } = usePresence(participantIds);
 
   // Track message count to detect new messages
-  const messageCount = activeConversationId ? (messages[activeConversationId]?.length || 0) : 0;
-  const lastMessage = activeConversationId && messages[activeConversationId]?.length > 0
-    ? messages[activeConversationId][messages[activeConversationId].length - 1]
-    : null;
-  const activeMessages = activeConversationId ? messages[activeConversationId] || [] : [];
+  const activeMessages = useMemo(
+    () => (activeConversationId ? messages[activeConversationId] || [] : []),
+    [activeConversationId, messages]
+  );
+  const messageCount = activeMessages.length;
+  const lastMessage = messageCount > 0 ? activeMessages[messageCount - 1] : null;
   const currentUserId = user?.id ?? null;
-  const messageIdsKey = activeMessages.map((message) => message.id).join('|');
+  const messageIdsKey = useMemo(
+    () => activeMessages.map((message) => message.id).join('|'),
+    [activeMessages]
+  );
 
   // Auto-scroll to bottom when new messages arrive (only within ScrollArea, not the page)
   useEffect(() => {
@@ -181,7 +195,7 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
         }
       });
     }
-  }, [messageCount, activeConversationId, user?.id, lastMessage?.id]);
+  }, [messageCount, activeConversationId, user?.id, lastMessage?.id, lastMessage?.sender_id]);
 
   // Set initial conversation ID from URL parameter
   useEffect(() => {
@@ -289,7 +303,7 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
     if (!activeConversationId) return;
 
     const channel = supabase.channel(`typing-${activeConversationId}`)
-      .on('broadcast', { event: 'typing' }, (payload: any) => {
+      .on('broadcast', { event: 'typing' }, (payload: TypingBroadcastPayload) => {
         if (payload.payload?.user_id !== user?.id) {
           setOtherUserTyping(true);
 
@@ -304,7 +318,13 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
       })
       .subscribe();
 
+    typingChannelRef.current = channel;
+
     return () => {
+      typingChannelRef.current = null;
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
       supabase.removeChannel(channel);
     };
   }, [activeConversationId, user?.id]);
@@ -345,6 +365,7 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
   // Load and subscribe to reactions for active conversation
   useEffect(() => {
     if (!activeConversationId || !currentUserId) return;
+    const activeMessageIds = new Set(messageIdsKey ? messageIdsKey.split('|') : []);
 
     const loadReactions = async () => {
       const messageIds = messageIdsKey ? messageIdsKey.split('|') : [];
@@ -399,8 +420,15 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
         event: '*',
         schema: 'public',
         table: 'message_reactions'
-      }, () => {
-        // Reload reactions when changes occur
+      }, (payload) => {
+        const changedMessageId =
+          (payload.new as { message_id?: string } | null)?.message_id ||
+          (payload.old as { message_id?: string } | null)?.message_id;
+
+        if (!changedMessageId || !activeMessageIds.has(changedMessageId)) {
+          return;
+        }
+
         loadReactions();
       })
       .subscribe();
@@ -410,8 +438,7 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
     };
   }, [activeConversationId, currentUserId, messageIdsKey]);
 
-  const handleSendMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const submitCurrentMessage = useCallback(async () => {
     if (!newMessage.trim() || !activeConversationId || sending) return;
 
     const messageToSend = newMessage;
@@ -420,9 +447,11 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
     const scrollY = window.scrollY;
 
     try {
-      await sendMessage(activeConversationId, messageToSend);
+      const sentMessage = await sendMessage(activeConversationId, messageToSend);
       // Only clear input after successful send
-      setNewMessage("");
+      if (sentMessage) {
+        setNewMessage("");
+      }
     } catch {
       toast.error('Failed to send message. Please try again.');
     }
@@ -433,18 +462,28 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
         window.scrollTo(0, scrollY);
       }
     }, 0);
+  }, [activeConversationId, newMessage, sendMessage, sending]);
+
+  const handleSendMessage = (e: React.FormEvent) => {
+    e.preventDefault();
+    void submitCurrentMessage();
   };
 
   // Broadcast typing events
   const handleTyping = useCallback(() => {
     if (!activeConversationId) return;
+    const now = Date.now();
 
-    supabase.channel(`typing-${activeConversationId}`)
-      .send({
-        type: 'broadcast',
-        event: 'typing',
-        payload: { user_id: user?.id }
-      });
+    if (now - lastTypingBroadcastAtRef.current < 1200) {
+      return;
+    }
+
+    lastTypingBroadcastAtRef.current = now;
+    typingChannelRef.current?.send({
+      type: 'broadcast',
+      event: 'typing',
+      payload: { user_id: user?.id }
+    });
   }, [activeConversationId, user?.id]);
 
   const getOtherParticipant = (conversation: Conversation): string | undefined => {
@@ -777,7 +816,7 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
   };
 
   // Group messages by sender and time (within 5 minutes)
-  const groupedMessages = activeMessages.reduce<typeof activeMessages[]>((groups, message, index) => {
+  const groupedMessages = useMemo(() => activeMessages.reduce<typeof activeMessages[]>((groups, message, index) => {
     const prevMessage = activeMessages[index - 1];
     const shouldGroup =
       prevMessage &&
@@ -791,19 +830,25 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
     }
 
     return groups;
-  }, []);
+  }, []), [activeMessages]);
 
-  // Message group component for rendering grouped messages
-  const MessageGroup = ({ messages }: { messages: typeof activeMessages }) => {
-    if (messages.length === 0) return null;
+  const renderMessageGroup = (
+    messageGroup: typeof activeMessages,
+    groupIndex: number,
+    shouldAnimate: boolean
+  ) => {
+    if (messageGroup.length === 0) return null;
 
-    const firstMessage = messages[0];
+    const firstMessage = messageGroup[0];
     const isOwnMessage = firstMessage.sender_id === user?.id;
 
     return (
-      <div className={`flex gap-2 md:gap-3 animate-in slide-in-from-bottom-2 duration-300 ${
+      <div
+        key={firstMessage.id || groupIndex}
+        className={`flex gap-2 md:gap-3 ${shouldAnimate ? 'animate-in slide-in-from-bottom-2 duration-300' : ''} ${
         isOwnMessage ? 'justify-end' : 'justify-start'
-      }`}>
+      }`}
+      >
         {!isOwnMessage && (
           <div className="relative">
             <Avatar className="h-7 w-7 md:h-8 md:w-8 flex-shrink-0 self-end">
@@ -826,7 +871,7 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
         )}
 
         <div className="flex flex-col gap-1 max-w-[88%] sm:max-w-[84%] md:max-w-[78%] lg:max-w-[72%] xl:max-w-[68%]">
-          {messages.map((message, idx) => (
+          {messageGroup.map((message, idx) => (
             <div key={message.id} className="group">
               <div
                 data-reaction-trigger
@@ -846,7 +891,7 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
                 }`}
               >
                 {/* Speech bubble tail only on last message in group */}
-                {idx === messages.length - 1 && (
+                {idx === messageGroup.length - 1 && (
                   isOwnMessage ? (
                     <div
                       className="absolute bottom-0 -right-2 w-4 h-4 bg-primary"
@@ -876,7 +921,7 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
                 )}
 
                 {/* Timestamp and read receipt only on last message */}
-                {idx === messages.length - 1 && (
+                {idx === messageGroup.length - 1 && (
                   <div className="flex items-center gap-1 mt-1">
                     <p className="text-xs opacity-70">
                       {formatDistanceToNow(new Date(message.created_at))} ago
@@ -959,8 +1004,8 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
     );
   };
 
-  // Conversation list component (reusable for desktop and mobile)
-  const ConversationList = ({ onSelect }: { onSelect: (id: string) => void }) => (
+  // Conversation list renderer (reusable for desktop and mobile)
+  const renderConversationList = (onSelect: (id: string) => void) => (
     <>
       <div className="p-4 border-b">
         <h3 className="font-semibold flex items-center gap-2">
@@ -1047,7 +1092,7 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
       {/* Desktop & Tablet Conversations List */}
       {!isMobile && (
         <div className={`${isTablet ? 'w-64' : 'w-80'} border-r bg-card/50 flex-shrink-0`}>
-          <ConversationList onSelect={handleConversationSelect} />
+          {renderConversationList(handleConversationSelect)}
         </div>
       )}
 
@@ -1059,7 +1104,7 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
               <SheetTitle>Conversations</SheetTitle>
             </SheetHeader>
             <div className="h-full bg-card/50">
-              <ConversationList onSelect={handleConversationSelect} />
+              {renderConversationList(handleConversationSelect)}
             </div>
           </SheetContent>
         </Sheet>
@@ -1116,10 +1161,11 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
             <ScrollArea ref={scrollAreaRef} className="flex-1 p-3 md:p-4">
               <div className="space-y-3 md:space-y-4">
                 {groupedMessages.map((messageGroup, groupIndex) => (
-                  <MessageGroup
-                    key={messageGroup[0]?.id || groupIndex}
-                    messages={messageGroup}
-                  />
+                  renderMessageGroup(
+                    messageGroup,
+                    groupIndex,
+                    groupIndex === groupedMessages.length - 1
+                  )
                 ))}
                 {otherUserTyping && (() => {
                   const activeConversation = conversations.find(c => c.id === activeConversationId);
@@ -1152,7 +1198,7 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && !e.shiftKey) {
                       e.preventDefault();
-                      handleSendMessage(e as any);
+                      void submitCurrentMessage();
                     }
                   }}
                   placeholder="Type a message..."

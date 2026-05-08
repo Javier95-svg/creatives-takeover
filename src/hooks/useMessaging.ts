@@ -1158,7 +1158,11 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
     }
   }, [user, loading, conversations, setActiveConversationId]);
 
-  const sendMessage = useCallback(async (conversationId: string, content: string, replyToId?: string) => {
+  const sendMessage = useCallback(async (
+    conversationId: string,
+    content: string,
+    replyToId?: string
+  ): Promise<Message | null> => {
     const trimmedContent = content.trim();
 
     if (!user || !trimmedContent) {
@@ -1166,7 +1170,7 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
         hasUser: !!user,
         hasContent: !!trimmedContent
       });
-      return;
+      return null;
     }
 
     // Use separate sending state so the input stays enabled
@@ -1329,21 +1333,28 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
       }
 
       if (!hadUserMessageBefore) {
-        await trackRetentionEvent('first_message_sent', {
-          user_id: user.id,
-          conversation_id: conversationId,
-          source: 'messages',
-        });
-        await completeActivationJourney({
-          user,
-          action: 'send_message',
-          source: 'messages',
-          conversationId,
-          actionUrl: `/messages?conversationId=${conversationId}`,
-        });
+        try {
+          await trackRetentionEvent('first_message_sent', {
+            user_id: user.id,
+            conversation_id: conversationId,
+            source: 'messages',
+          });
+          await completeActivationJourney({
+            user,
+            action: 'send_message',
+            source: 'messages',
+            conversationId,
+            actionUrl: `/messages?conversationId=${conversationId}`,
+          });
+        } catch (trackingError) {
+          logWarn('sendMessage: Message sent but retention tracking failed', {
+            conversationId,
+            error: trackingError instanceof Error ? trackingError.message : String(trackingError)
+          });
+        }
       }
 
-      return data;
+      return persistedMessage;
     } catch (error) {
       // Remove optimistic message if backend write failed.
       setMessages(prev => ({
@@ -1362,6 +1373,7 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
       // Provide more specific error messages
       const errorMessage = getUserMessage(error);
       toast.error(errorMessage);
+      return null;
     } finally {
       setSending(false);
     }
