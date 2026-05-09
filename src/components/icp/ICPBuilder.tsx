@@ -57,6 +57,7 @@ const SEED_TIMEOUT_MS = 20000;
 const PREVIEW_TIMEOUT_MS = 45000;
 const SAVE_TIMEOUT_MS = 55000;
 const SEED_ANALYSIS_MIN_MS = 2200;
+const ICP_ANALYZER_ERROR_MESSAGE = "Something went wrong — please try again.";
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const GUIDED_SCREEN_ORDER: IcpFlowScreen[] = [
@@ -118,6 +119,14 @@ type QueueEmailDraftResponse = {
   error?: string;
 };
 
+type IcpDraftGenerationResponse = {
+  success?: boolean;
+  status?: string;
+  artifact?: StoredIcpArtifact;
+  analysisId?: string;
+  error?: string;
+};
+
 type IcpUnlockEmailPayload = {
   entryMode?: "fast" | "guided";
   fastInput?: { description: string } | null;
@@ -143,6 +152,29 @@ const withTimeout = async <T,>(promise: Promise<T>, timeoutMs: number) => {
     if (timeoutHandle !== null) {
       window.clearTimeout(timeoutHandle);
     }
+  }
+};
+
+const invokeIcpAnalyzer = async <T,>(body: unknown, timeoutMs: number, context: string): Promise<T | null> => {
+  try {
+    const { data, error } = await withTimeout(
+      supabase.functions.invoke("icp-analyzer", { body }),
+      timeoutMs,
+    );
+
+    if (error) {
+      console.error(context, error);
+      throw new Error(ICP_ANALYZER_ERROR_MESSAGE);
+    }
+
+    return (data ?? null) as T | null;
+  } catch (error) {
+    if (error instanceof Error && error.message === ICP_ANALYZER_ERROR_MESSAGE) {
+      throw error;
+    }
+
+    console.error(context, error);
+    throw new Error(ICP_ANALYZER_ERROR_MESSAGE);
   }
 };
 
@@ -221,7 +253,8 @@ function getScreenTitle(screen: IcpFlowScreen, session: IcpBuilderSession) {
 
 function getEnterHint(screen: IcpFlowScreen) {
   if (screen === "mode_select") return "";
-  return "Press Enter ↵";
+  if (screen === "guided_persona") return "Press Enter ↵";
+  return "Press Ctrl/Cmd+Enter ↵";
 }
 
 function getFlowScreens(mode: IcpBuilderMode | null) {
@@ -431,7 +464,8 @@ const ICPBuilder: React.FC = () => {
         if (cancelled) return;
         const payload = data as ResumeDraftResponse | null;
         if (error || !payload?.success || !payload.artifact) {
-          throw error || new Error(payload?.error || "We could not restore that ICP Draft.");
+          console.error("ICP email draft restore returned an error", error || payload?.error || data);
+          throw new Error("We could not restore that ICP Draft.");
         }
 
         const restoredSession = buildBuilderSessionFromArtifact(payload.artifact, null);
@@ -446,9 +480,10 @@ const ICPBuilder: React.FC = () => {
           page_path: "/icp-builder",
         });
       } catch (error) {
+        console.error("ICP email draft restore failed", error);
         toast({
           title: "Draft unavailable",
-          description: error instanceof Error ? error.message : "We could not restore that ICP Draft.",
+          description: "We could not restore that ICP Draft.",
           variant: "destructive",
         });
       } finally {
@@ -550,6 +585,7 @@ const ICPBuilder: React.FC = () => {
       return;
     }
 
+    setSynthesisError(null);
     setLoadingPhase("seed_loading");
     setLoadingStartedAt(Date.now());
     trackICPSeedSubmitted({
@@ -560,24 +596,24 @@ const ICPBuilder: React.FC = () => {
     });
 
     try {
-      const [{ data, error }] = await Promise.all([
-        withTimeout(
-          supabase.functions.invoke("icp-analyzer", {
-            body: {
-              operation: "seed_prefill",
-              seed,
-            },
-          }),
+      const [data] = await Promise.all([
+        invokeIcpAnalyzer<SeedPrefillResponse>(
+          {
+            operation: "seed_prefill",
+            seed,
+          },
           SEED_TIMEOUT_MS,
+          "ICP seed prefill invocation failed",
         ),
         new Promise((resolve) => window.setTimeout(resolve, SEED_ANALYSIS_MIN_MS)),
       ]);
 
-      if (error || !(data as SeedPrefillResponse | null)?.success || !(data as SeedPrefillResponse | null)?.persona) {
-        throw error || new Error((data as SeedPrefillResponse | null)?.error || "We could not analyse the idea yet.");
+      if (!data?.success || !data.persona) {
+        console.error("ICP seed prefill returned an error", data?.error || data);
+        throw new Error(ICP_ANALYZER_ERROR_MESSAGE);
       }
 
-      const persona = (data as SeedPrefillResponse).persona as IcpPersonaSuggestion;
+      const persona = data.persona as IcpPersonaSuggestion;
       setSession((previous) => ({
         ...previous,
         personaSuggestion: persona,
@@ -597,9 +633,11 @@ const ICPBuilder: React.FC = () => {
       }));
       setIsPersonaEditorOpen(false);
     } catch (error) {
+      console.error("ICP seed prefill failed", error);
+      setSynthesisError(ICP_ANALYZER_ERROR_MESSAGE);
       toast({
         title: "Could not analyse the idea",
-        description: error instanceof Error ? error.message : "Please try again.",
+        description: ICP_ANALYZER_ERROR_MESSAGE,
         variant: "destructive",
       });
     } finally {
@@ -652,13 +690,15 @@ const ICPBuilder: React.FC = () => {
         userId: user?.id,
       });
 
-      const { data, error } = await withTimeout(
-        supabase.functions.invoke("icp-analyzer", { body }),
+      const data = await invokeIcpAnalyzer<IcpDraftGenerationResponse>(
+        body,
         persist ? SAVE_TIMEOUT_MS : PREVIEW_TIMEOUT_MS,
+        "ICP draft generation invocation failed",
       );
 
-      if (error || !data?.success || data.status !== "draft_ready" || !data.artifact) {
-        throw error || new Error(data?.error || "Draft generation failed.");
+      if (!data?.success || data.status !== "draft_ready" || !data.artifact) {
+        console.error("ICP draft generation returned an error", data?.error || data);
+        throw new Error(ICP_ANALYZER_ERROR_MESSAGE);
       }
 
       const artifact = data.artifact as StoredIcpArtifact;
@@ -683,7 +723,8 @@ const ICPBuilder: React.FC = () => {
 
       const analysisId = typeof data.analysisId === "string" ? data.analysisId : null;
       if (!analysisId) {
-        throw new Error("The saved ICP Draft is missing its analysis id.");
+        console.error("ICP draft generation returned no analysis id", data);
+        throw new Error(ICP_ANALYZER_ERROR_MESSAGE);
       }
 
       setSession((previous) => ({
@@ -743,16 +784,11 @@ const ICPBuilder: React.FC = () => {
     } catch (error) {
       console.error("ICP draft generation failed", error);
       if (!persist) {
-        setSynthesisError(
-          error instanceof Error ? error.message : "Something went wrong building your draft.",
-        );
+        setSynthesisError(ICP_ANALYZER_ERROR_MESSAGE);
       } else {
         toast({
           title: "Could not finish the dashboard handoff",
-          description:
-            error instanceof Error
-              ? error.message
-              : "The draft was saved, but the dashboard setup did not finish.",
+          description: ICP_ANALYZER_ERROR_MESSAGE,
           variant: "destructive",
         });
       }
@@ -768,18 +804,18 @@ const ICPBuilder: React.FC = () => {
     setIsPersisting(true);
     try {
       if (user && session.draftPreview && session.unlockRequired) {
-        const { data, error } = await withTimeout(
-          supabase.functions.invoke("icp-analyzer", {
-            body: {
-              operation: "save_existing_artifact",
-              artifact: session.draftPreview,
-            },
-          }),
+        const data = await invokeIcpAnalyzer<IcpDraftGenerationResponse>(
+          {
+            operation: "save_existing_artifact",
+            artifact: session.draftPreview,
+          },
           SAVE_TIMEOUT_MS,
+          "ICP unlocked draft save invocation failed",
         );
 
-        if (error || !data?.success || data.status !== "draft_ready" || !data.analysisId) {
-          throw error || new Error(data?.error || "Could not save the unlocked ICP Draft.");
+        if (!data?.success || data.status !== "draft_ready" || !data.analysisId) {
+          console.error("ICP unlocked draft save returned an error", data?.error || data);
+          throw new Error(ICP_ANALYZER_ERROR_MESSAGE);
         }
 
         const analysisId = data.analysisId as string;
@@ -843,7 +879,7 @@ const ICPBuilder: React.FC = () => {
       await completeDraftGeneration(true);
     } catch (error) {
       console.error("ICP draft persist failed", error);
-      setPersistError(error instanceof Error ? error.message : "Could not save your draft. Please try again.");
+      setPersistError(ICP_ANALYZER_ERROR_MESSAGE);
     } finally {
       setIsPersisting(false);
     }
@@ -902,7 +938,8 @@ const ICPBuilder: React.FC = () => {
     const payload = data as QueueEmailDraftResponse | null;
 
     if (error || !payload?.success) {
-      throw error || new Error(payload?.error || "We could not queue the email draft.");
+      console.error("ICP draft email request returned an error", error || payload?.error || data);
+      throw new Error("We could not queue the email draft.");
     }
 
     trackICPResumeLinkRequested({
@@ -957,6 +994,8 @@ const ICPBuilder: React.FC = () => {
   };
 
   const handleContinue = async () => {
+    if (loadingPhase) return;
+
     if (!canContinue) {
       toast({
         title: "Add a bit more detail",
@@ -1018,9 +1057,16 @@ const ICPBuilder: React.FC = () => {
   const handleFieldSubmit = (event: React.KeyboardEvent<HTMLElement>) => {
     if (event.key !== "Enter" || event.shiftKey) return;
     if (event.currentTarget instanceof HTMLTextAreaElement) {
-      event.preventDefault();
+      if (!event.metaKey && !event.ctrlKey) return;
     }
+    event.preventDefault();
     void handleContinue();
+  };
+
+  const handleModeCardKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>, selectMode: () => void) => {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    event.preventDefault();
+    selectMode();
   };
 
   const handleSelectFastMode = useCallback(() => {
@@ -1057,39 +1103,49 @@ const ICPBuilder: React.FC = () => {
       <div id="icp-mode-selector" className="mt-10 grid gap-5 lg:grid-cols-2">
         <button
           type="button"
-          className="group relative overflow-hidden rounded-[2rem] border border-border/60 bg-white/80 p-6 text-left shadow-[0_28px_90px_-52px_rgba(15,23,42,0.3)] backdrop-blur transition-transform duration-300 hover:-translate-y-1 hover:border-[#32b8c6]/40 hover:shadow-[0_32px_100px_-54px_rgba(50,184,198,0.4)] motion-safe:animate-[glow_4.8s_ease-in-out_infinite_alternate] dark:bg-slate-950/70"
+          role="button"
+          tabIndex={0}
+          className="group relative overflow-hidden rounded-[2rem] border border-border/60 bg-white/80 p-6 text-left shadow-[0_28px_90px_-52px_rgba(15,23,42,0.3)] backdrop-blur transition-transform duration-300 hover:-translate-y-1 hover:border-[#32b8c6]/40 hover:shadow-[0_32px_100px_-54px_rgba(50,184,198,0.4)] motion-safe:animate-[glow_4.8s_ease-in-out_infinite_alternate] dark:bg-slate-950/70 [&_*]:pointer-events-none"
           onClick={handleSelectFastMode}
+          onKeyDown={(event) => handleModeCardKeyDown(event, handleSelectFastMode)}
         >
           <div className="pointer-events-none absolute inset-0 rounded-[2rem] border border-[#32b8c6]/15 opacity-60 motion-safe:animate-[pulse-slow_4s_ease-in-out_infinite]" />
-          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#32b8c6]">Fast Mode</p>
-          <p className="mt-4 text-xl font-semibold text-foreground">I can describe my startup idea clearly</p>
-          <p className="mt-4 text-sm leading-6 text-muted-foreground">
-            Paste a paragraph about your idea and see your ideal customer and their biggest frustration in under 60 seconds.
-          </p>
-          <div className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-[#32b8c6]">
-            Start here
-            <ArrowRight className="h-4 w-4" />
+          <div className="pointer-events-none relative z-10">
+            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#32b8c6]">Fast Mode</p>
+            <p className="mt-4 text-xl font-semibold text-foreground">I can describe my startup idea clearly</p>
+            <p className="mt-4 text-sm leading-6 text-muted-foreground">
+              Paste a paragraph about your idea and see your ideal customer and their biggest frustration in under 60 seconds.
+            </p>
+            <div className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-[#32b8c6]">
+              Start here
+              <ArrowRight className="h-4 w-4" />
+            </div>
           </div>
         </button>
 
         <button
           type="button"
-          className="group relative overflow-hidden rounded-[2rem] border border-border/60 bg-white/80 p-6 text-left shadow-[0_28px_90px_-52px_rgba(15,23,42,0.3)] backdrop-blur transition-transform duration-300 hover:-translate-y-1 hover:border-[#32b8c6]/40 hover:shadow-[0_32px_100px_-54px_rgba(50,184,198,0.4)] motion-safe:animate-[glow_4.8s_ease-in-out_infinite_alternate] dark:bg-slate-950/70"
+          role="button"
+          tabIndex={0}
+          className="group relative overflow-hidden rounded-[2rem] border border-border/60 bg-white/80 p-6 text-left shadow-[0_28px_90px_-52px_rgba(15,23,42,0.3)] backdrop-blur transition-transform duration-300 hover:-translate-y-1 hover:border-[#32b8c6]/40 hover:shadow-[0_32px_100px_-54px_rgba(50,184,198,0.4)] motion-safe:animate-[glow_4.8s_ease-in-out_infinite_alternate] dark:bg-slate-950/70 [&_*]:pointer-events-none"
           style={{ animationDelay: "0.45s" }}
           onClick={handleSelectGuidedMode}
+          onKeyDown={(event) => handleModeCardKeyDown(event, handleSelectGuidedMode)}
         >
           <div
             className="pointer-events-none absolute inset-0 rounded-[2rem] border border-[#32b8c6]/15 opacity-60 motion-safe:animate-[pulse-slow_4s_ease-in-out_infinite]"
             style={{ animationDelay: "0.45s" }}
           />
-          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#32b8c6]">Guided Mode</p>
-          <p className="mt-4 text-xl font-semibold text-foreground">I&apos;m still figuring things out</p>
-          <p className="mt-4 text-sm leading-6 text-muted-foreground">
-            Answer 4 short questions, one at a time, and we&apos;ll reveal the sharpest part of the draft before signup. Usually 3–4 minutes.
-          </p>
-          <div className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-[#32b8c6]">
-            Start here
-            <ArrowRight className="h-4 w-4" />
+          <div className="pointer-events-none relative z-10">
+            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#32b8c6]">Guided Mode</p>
+            <p className="mt-4 text-xl font-semibold text-foreground">I&apos;m still figuring things out</p>
+            <p className="mt-4 text-sm leading-6 text-muted-foreground">
+              Answer 4 short questions, one at a time, and we&apos;ll reveal the sharpest part of the draft before signup. Usually 3–4 minutes.
+            </p>
+            <div className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-[#32b8c6]">
+              Start here
+              <ArrowRight className="h-4 w-4" />
+            </div>
           </div>
         </button>
       </div>
@@ -1126,22 +1182,22 @@ const ICPBuilder: React.FC = () => {
 
       <div className="flex-1">{content}</div>
 
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border/60 bg-background/92 px-4 py-4 backdrop-blur sm:static sm:mt-12 sm:border-t-0 sm:bg-transparent sm:px-0 sm:py-0">
+      <div className="pointer-events-auto fixed inset-x-0 bottom-0 z-[60] border-t border-border/60 bg-background/92 px-4 py-4 backdrop-blur sm:static sm:mt-12 sm:border-t-0 sm:bg-transparent sm:px-0 sm:py-0">
         {synthesisError ? (
-          <div className="mx-auto mb-3 max-w-3xl rounded-2xl border border-destructive/30 bg-destructive/8 px-4 py-3 text-sm text-destructive">
-            <span className="font-semibold">Generation failed.</span>{" "}
-            {synthesisError.includes("timed out")
-              ? "The server took too long. Your inputs are saved — click Try again to retry."
-              : "Something went wrong. Your inputs are saved — click Try again to retry."}
+          <div className="relative z-[70] mx-auto mb-3 max-w-3xl rounded-2xl border border-destructive/30 bg-destructive/8 px-4 py-3 text-sm text-destructive">
+            <span className="font-semibold">
+              {session.currentScreen === "guided_seed" ? "Analysis failed." : "Generation failed."}
+            </span>{" "}
+            {synthesisError}
           </div>
         ) : null}
-        <div className="mx-auto flex max-w-3xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="relative z-[70] mx-auto flex max-w-3xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="text-xs uppercase tracking-[0.18em] text-muted-foreground">{getEnterHint(session.currentScreen)}</div>
           <Button
             type="button"
-            className="h-12 min-w-[180px] self-end text-base font-semibold"
+            className="relative z-[80] h-12 min-w-[180px] self-end text-base font-semibold"
             onClick={() => void handleContinue()}
-            disabled={!canContinue || loadingPhase !== null}
+            disabled={loadingPhase !== null}
           >
             {loadingPhase === "synthesis" ? (
               <>
@@ -1277,6 +1333,7 @@ const ICPBuilder: React.FC = () => {
                           experience: session.guided.persona?.experience || "",
                         })
                       }
+                      onKeyDown={handleFieldSubmit}
                       placeholder="Freelance Graphic Designer"
                       className="h-12 rounded-xl border-border/60 bg-sky-50/70 dark:bg-slate-900/70"
                     />
@@ -1292,6 +1349,7 @@ const ICPBuilder: React.FC = () => {
                           experience: session.guided.persona?.experience || "",
                         })
                       }
+                      onKeyDown={handleFieldSubmit}
                       placeholder="Creative Services"
                       className="h-12 rounded-xl border-border/60 bg-sky-50/70 dark:bg-slate-900/70"
                     />
@@ -1307,6 +1365,7 @@ const ICPBuilder: React.FC = () => {
                           experience: event.target.value,
                         })
                       }
+                      onKeyDown={handleFieldSubmit}
                       placeholder="2–5 years, working solo or with 1 assistant"
                       className="h-12 rounded-xl border-border/60 bg-sky-50/70 dark:bg-slate-900/70"
                     />
