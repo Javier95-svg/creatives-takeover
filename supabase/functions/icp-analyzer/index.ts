@@ -38,6 +38,16 @@ interface SaveExistingArtifactRequest {
 
 type RequestPayload = SeedPrefillRequest | BuildDraftRequest | SaveExistingArtifactRequest;
 
+type AuthenticatedUser = {
+  id: string;
+  email?: string | null;
+};
+
+type IcpSprintProfile = {
+  fullName: string | null;
+  niche: string | null;
+};
+
 const isNonEmpty = (value: unknown, min = 12) => typeof value === "string" && value.trim().length >= min;
 
 function validateGuidedInput(input: GuidedInput | null | undefined) {
@@ -225,6 +235,89 @@ async function storeArtifact({
   return (storedAnalysis as { id?: string }).id ?? null;
 }
 
+function cleanOptionalText(value: unknown) {
+  return typeof value === "string" && value.trim().length > 0 ? value.trim() : null;
+}
+
+function getArtifactNicheFallback(artifact: Record<string, any>) {
+  return (
+    cleanOptionalText(artifact?.founderInputs?.guided?.persona?.industry) ||
+    cleanOptionalText(artifact?.draftDocument?.customer?.metaLine) ||
+    cleanOptionalText(artifact?.draftDocument?.customer?.roleLine) ||
+    cleanOptionalText(artifact?.draftDocument?.customer?.personaName)
+  );
+}
+
+async function getIcpSprintProfile(
+  serviceClient: ReturnType<typeof createClient>,
+  userId: string,
+  artifact: Record<string, any>,
+): Promise<IcpSprintProfile> {
+  const artifactNiche = getArtifactNicheFallback(artifact);
+
+  try {
+    const { data, error } = await serviceClient
+      .from("profiles" as any)
+      .select("full_name, creative_niche")
+      .eq("id", userId)
+      .maybeSingle();
+
+    if (error) {
+      console.warn("ICP sprint profile lookup failed:", error);
+      return { fullName: null, niche: artifactNiche };
+    }
+
+    const profile = data as { full_name?: string | null; creative_niche?: string | null } | null;
+    return {
+      fullName: cleanOptionalText(profile?.full_name),
+      niche: cleanOptionalText(profile?.creative_niche) || artifactNiche,
+    };
+  } catch (error) {
+    console.warn("ICP sprint profile lookup failed:", error);
+    return { fullName: null, niche: artifactNiche };
+  }
+}
+
+function triggerIcpSprint({
+  supabaseUrl,
+  supabaseKey,
+  user,
+  analysisId,
+  artifact,
+  profile,
+}: {
+  supabaseUrl: string;
+  supabaseKey: string;
+  user: AuthenticatedUser;
+  analysisId: string | null;
+  artifact: Record<string, any>;
+  profile: IcpSprintProfile;
+}) {
+  const email = cleanOptionalText(user.email);
+  if (!email) {
+    console.warn("trigger-icp-sprint skipped: missing user email", { userId: user.id, analysisId });
+    return;
+  }
+
+  const body = {
+    userId: user.id,
+    email,
+    fullName: profile.fullName,
+    icpId: analysisId,
+    niche: profile.niche || getArtifactNicheFallback(artifact),
+  };
+
+  fetch(`${supabaseUrl}/functions/v1/trigger-icp-sprint`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${supabaseKey}`,
+    },
+    body: JSON.stringify(body),
+    signal: AbortSignal.timeout(3000),
+  }).catch((err) => console.warn("trigger-icp-sprint fire failed:", err));
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -300,6 +393,15 @@ serve(async (req) => {
         userId: user.id,
         artifact: payload.artifact,
       });
+      const profile = await getIcpSprintProfile(serviceClient, user.id, payload.artifact);
+      triggerIcpSprint({
+        supabaseUrl,
+        supabaseKey,
+        user,
+        analysisId,
+        artifact: payload.artifact,
+        profile,
+      });
 
       return new Response(JSON.stringify({
         success: true,
@@ -371,6 +473,15 @@ serve(async (req) => {
         serviceClient,
         userId: user!.id,
         artifact: generated.artifact,
+      });
+      const profile = await getIcpSprintProfile(serviceClient, user!.id, generated.artifact);
+      triggerIcpSprint({
+        supabaseUrl,
+        supabaseKey,
+        user: user!,
+        analysisId,
+        artifact: generated.artifact,
+        profile,
       });
 
       return new Response(JSON.stringify({

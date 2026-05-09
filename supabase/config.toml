@@ -66,6 +66,12 @@ verify_jwt = false
 [functions.load-icp-email-draft]
 verify_jwt = false
 
+[functions.trigger-icp-sprint]
+verify_jwt = false
+
+[functions.process-icp-sprint-emails]
+verify_jwt = false
+
 [functions.signup-direct]
 verify_jwt = false
 
