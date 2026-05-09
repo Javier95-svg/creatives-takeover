@@ -110,7 +110,7 @@ export const useSocial = (targetUserId?: string) => {
         const requestsWithSenders = await Promise.all(
           (data || []).map(async (request) => {
             const { data: senderData } = await supabase
-              .from('profiles')
+              .from('public_profiles')
               .select('id, full_name, avatar_url')
               .eq('id', request.sender_id)
               .single();
@@ -150,7 +150,7 @@ export const useSocial = (targetUserId?: string) => {
         const requestsWithFollowers = await Promise.all(
           (data || []).map(async (request) => {
             const { data: followerData } = await supabase
-              .from('profiles')
+              .from('public_profiles')
               .select('id, full_name, avatar_url, username')
               .eq('id', request.follower_id)
               .single();

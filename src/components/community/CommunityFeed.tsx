@@ -73,7 +73,7 @@ const CommunityFeed: React.FC = () => {
 
       if (uniqueUserIds.length > 0) {
         const { data: profileRows, error: profileError } = await supabase
-          .from('profiles')
+          .from('public_profiles')
           .select('id, full_name, avatar_url, username')
           .in('id', uniqueUserIds);
 

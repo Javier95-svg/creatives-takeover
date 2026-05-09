@@ -29,18 +29,16 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useAccountabilityPartners } from '@/hooks/useAccountabilityPartners';
 import { useSprints } from '@/hooks/useSprints';
 import { toast } from 'sonner';
-import { normalizeAccountabilityPreferences } from '@/lib/accountabilityPreferences';
 
 interface Profile {
   id: string;
-  full_name: string;
-  avatar_url?: string;
-  bio?: string;
+  full_name: string | null;
+  avatar_url?: string | null;
+  bio?: string | null;
   followers_count: number;
   following_count: number;
   friends_count: number;
   business_stage?: string | null;
-  user_preferences?: Record<string, unknown> | null;
 }
 
 interface PartnerMatchingModalProps {
@@ -80,8 +78,8 @@ export const PartnerMatchingModal = ({ open, onOpenChange }: PartnerMatchingModa
       
       // Get profiles excluding current user and existing partners
       const { data, error } = await supabase
-        .from('profiles')
-        .select('id, full_name, avatar_url, bio, followers_count, following_count, friends_count, business_stage, user_preferences')
+        .from('public_profiles')
+        .select('id, full_name, avatar_url, bio, followers_count, following_count')
         .neq('id', user.id)
         .not('id', 'in', `(SELECT partner_id FROM accountability_partnerships WHERE requester_id = '${user.id}' AND status IN ('pending', 'active'))`)
         .not('id', 'in', `(SELECT requester_id FROM accountability_partnerships WHERE partner_id = '${user.id}' AND status IN ('pending', 'active'))`)
@@ -89,16 +87,35 @@ export const PartnerMatchingModal = ({ open, onOpenChange }: PartnerMatchingModa
         .limit(40);
 
       if (error) throw error;
-      const rankedPartners = ((data as Profile[]) || [])
+      const rankedPartners = ((data || []) as Array<{
+        id: string | null;
+        full_name: string | null;
+        avatar_url: string | null;
+        bio: string | null;
+        followers_count: number | null;
+        following_count: number | null;
+      }>)
+        .filter((profile): profile is {
+          id: string;
+          full_name: string | null;
+          avatar_url: string | null;
+          bio: string | null;
+          followers_count: number | null;
+          following_count: number | null;
+        } => Boolean(profile.id))
+        .map((profile): Profile => ({
+          id: profile.id,
+          full_name: profile.full_name,
+          avatar_url: profile.avatar_url,
+          bio: profile.bio,
+          followers_count: profile.followers_count ?? 0,
+          following_count: profile.following_count ?? 0,
+          friends_count: 0,
+          business_stage: null,
+        }))
         .sort((left, right) => {
-          const leftScore = (left.business_stage && nextViewerStage && left.business_stage === nextViewerStage ? 100 : 0)
-            + (normalizeAccountabilityPreferences(left.user_preferences).preferred_partner_checkin_mode === checkInMode ? 50 : 0)
-            + left.friends_count
-            + left.followers_count;
-          const rightScore = (right.business_stage && nextViewerStage && right.business_stage === nextViewerStage ? 100 : 0)
-            + (normalizeAccountabilityPreferences(right.user_preferences).preferred_partner_checkin_mode === checkInMode ? 50 : 0)
-            + right.friends_count
-            + right.followers_count;
+          const leftScore = left.followers_count + left.following_count;
+          const rightScore = right.followers_count + right.following_count;
           return rightScore - leftScore;
         })
         .slice(0, 20);
@@ -109,7 +126,7 @@ export const PartnerMatchingModal = ({ open, onOpenChange }: PartnerMatchingModa
     } finally {
       setLoading(false);
     }
-  }, [checkInMode, searchQuery, user]);
+  }, [searchQuery, user]);
 
   const handleSendRequest = async () => {
     if (!selectedPartner) return;

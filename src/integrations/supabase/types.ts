@@ -8296,6 +8296,33 @@ export type Database = {
         }
         Relationships: []
       }
+      public_profiles: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          creative_niche: string | null
+          facebook_url: string | null
+          followers_count: number | null
+          following_count: number | null
+          full_name: string | null
+          github_url: string | null
+          id: string | null
+          instagram_url: string | null
+          linkedin_url: string | null
+          location: string | null
+          positioning_line: string | null
+          startup_industry: string[] | null
+          startup_name: string | null
+          startup_stage: string | null
+          startup_tagline: string | null
+          tiktok_url: string | null
+          twitter_url: string | null
+          username: string | null
+          website_url: string | null
+          youtube_url: string | null
+        }
+        Relationships: []
+      }
       trending_market_topics: {
         Row: {
           avg_relevance: number | null

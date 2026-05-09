@@ -34,6 +34,56 @@ import {
 // Calendly link for Samuel Starkman
 const SAMUEL_STARKMAN_CALENDLY_URL = 'https://calendly.com/samstarkman/1-on-1-with-sam?month=2025-12';
 
+const PUBLIC_PROFILE_SELECT = [
+  'id',
+  'username',
+  'full_name',
+  'avatar_url',
+  'bio',
+  'positioning_line',
+  'creative_niche',
+  'followers_count',
+  'following_count',
+  'location',
+  'startup_name',
+  'startup_tagline',
+  'startup_stage',
+  'startup_industry',
+  'website_url',
+  'twitter_url',
+  'linkedin_url',
+  'instagram_url',
+  'facebook_url',
+  'youtube_url',
+  'github_url',
+  'tiktok_url',
+].join(', ');
+
+interface PublicProfileRow {
+  id: string | null;
+  username: string | null;
+  full_name: string | null;
+  avatar_url: string | null;
+  bio: string | null;
+  positioning_line: string | null;
+  creative_niche: string | null;
+  followers_count: number | null;
+  following_count: number | null;
+  location: string | null;
+  startup_name: string | null;
+  startup_tagline: string | null;
+  startup_stage: string | null;
+  startup_industry: string[] | null;
+  website_url: string | null;
+  twitter_url: string | null;
+  linkedin_url: string | null;
+  instagram_url: string | null;
+  facebook_url: string | null;
+  youtube_url: string | null;
+  github_url: string | null;
+  tiktok_url: string | null;
+}
+
 interface Profile {
   id: string;
   username: string | null;
@@ -49,7 +99,8 @@ interface Profile {
   facebook_url: string | null;
   youtube_url: string | null;
   github_url: string | null;
-  created_at: string;
+  tiktok_url: string | null;
+  created_at: string | null;
   followers_count: number;
   following_count: number;
   friends_count: number;
@@ -60,7 +111,7 @@ interface Profile {
   user_preferences?: Record<string, unknown> | null;
 
   // Founder-specific fields
-  founder_role: 'founder' | 'co-founder' | 'solo-founder' | null;
+  founder_role: string | null;
   location: string | null;
   positioning_line: string | null;
   last_active_at: string | null;
@@ -69,7 +120,7 @@ interface Profile {
   startup_name: string | null;
   startup_tagline: string | null;
   startup_logo_url: string | null;
-  startup_stage: 'idea' | 'prototype' | 'mvp' | 'launch' | 'growth' | 'scale' | null;
+  startup_stage: string | null;
   startup_industry: string[] | null;
   startup_description: string | null;
 
@@ -82,6 +133,7 @@ interface Profile {
     demo?: string;
     website?: string;
     github?: string;
+    loom?: string;
   } | null;
 
   // Traction metrics
@@ -92,6 +144,48 @@ interface Profile {
     growth_rate?: number;
   } | null;
 }
+
+const mapPublicProfile = (profile: PublicProfileRow): Profile => ({
+  id: profile.id ?? '',
+  username: profile.username,
+  full_name: profile.full_name,
+  avatar_url: profile.avatar_url,
+  banner_url: null,
+  bio: profile.bio,
+  bio_html: null,
+  website_url: profile.website_url,
+  twitter_url: profile.twitter_url,
+  linkedin_url: profile.linkedin_url,
+  instagram_url: profile.instagram_url,
+  facebook_url: profile.facebook_url,
+  youtube_url: profile.youtube_url,
+  github_url: profile.github_url,
+  tiktok_url: profile.tiktok_url,
+  created_at: null,
+  followers_count: profile.followers_count ?? 0,
+  following_count: profile.following_count ?? 0,
+  friends_count: 0,
+  creative_niche: profile.creative_niche,
+  business_stage: null,
+  role: null,
+  updated_at: null,
+  user_preferences: null,
+  founder_role: null,
+  location: profile.location,
+  positioning_line: profile.positioning_line,
+  last_active_at: null,
+  startup_name: profile.startup_name,
+  startup_tagline: profile.startup_tagline,
+  startup_logo_url: null,
+  startup_stage: profile.startup_stage,
+  startup_industry: profile.startup_industry,
+  startup_description: null,
+  current_focus: null,
+  looking_for: null,
+  startup_links: null,
+  traction_visible: false,
+  traction_metrics: null,
+});
 
 interface Post {
   id: string;
@@ -265,31 +359,34 @@ const Profile = () => {
       try {
         setLoading(true);
 
-        // Load profile by username
+        // Public profile pages read from a safe projection. Full profile rows
+        // are only loaded when the viewed profile belongs to the signed-in user.
         const { data: profileData, error: profileError } = await supabase
-          .from('profiles')
-          .select('*')
+          .from('public_profiles')
+          .select(PUBLIC_PROFILE_SELECT)
           .eq('username', username)
-          .single();
+          .maybeSingle();
 
-        let finalProfileData = profileData;
+        let publicProfileData = profileData as PublicProfileRow | null;
         
-        if (profileError) {
-          console.error('Profile lookup error:', profileError);
+        if (profileError || !publicProfileData) {
+          if (profileError) {
+            console.error('Profile lookup error:', profileError);
+          }
           console.error('Looking for username:', username);
-          console.error('Error code:', profileError.code);
-          console.error('Error message:', profileError.message);
+          console.error('Error code:', profileError?.code);
+          console.error('Error message:', profileError?.message);
           
           // Try to find if there's a similar username (case-insensitive fallback)
           const { data: fallbackData, error: fallbackError } = await supabase
-            .from('profiles')
-            .select('*')
+            .from('public_profiles')
+            .select(PUBLIC_PROFILE_SELECT)
             .ilike('username', username)
             .maybeSingle();
           
           if (fallbackData) {
             console.warn('Found profile with case-insensitive match:', fallbackData.id);
-            finalProfileData = fallbackData;
+            publicProfileData = fallbackData as PublicProfileRow;
           } else {
             // Additional fallback: Try to find profile by matching full_name
             // This handles edge cases where username might not match exactly
@@ -301,14 +398,14 @@ const Profile = () => {
               // Try to find profiles where full_name contains parts of the username
               // This is a best-effort fallback for edge cases
               const { data: nameFallbackData } = await supabase
-                .from('profiles')
-                .select('*')
+                .from('public_profiles')
+                .select(PUBLIC_PROFILE_SELECT)
                 .ilike('full_name', `%${baseUsername}%`)
                 .maybeSingle();
               
               if (nameFallbackData) {
                 console.warn('Found profile by name pattern match:', nameFallbackData.id);
-                finalProfileData = nameFallbackData;
+                publicProfileData = nameFallbackData as PublicProfileRow;
               } else {
                 // No profile found at all
                 console.error('No profile found for username:', username);
@@ -328,14 +425,33 @@ const Profile = () => {
           }
         }
         
-        if (!finalProfileData) {
+        if (!publicProfileData?.id) {
           console.error('No profile found for username:', username);
           toast.error('Profile not found');
           setLoading(false);
           return;
         }
+
+        let finalProfileData = mapPublicProfile(publicProfileData);
+
+        if (currentUser?.id === finalProfileData.id) {
+          const { data: ownProfileData, error: ownProfileError } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', currentUser.id)
+            .maybeSingle();
+
+          if (ownProfileError) {
+            console.error('Own profile lookup error:', ownProfileError);
+          } else if (ownProfileData) {
+            finalProfileData = {
+              ...finalProfileData,
+              ...(ownProfileData as Partial<Profile>),
+            };
+          }
+        }
         
-        setProfile(finalProfileData as Profile);
+        setProfile(finalProfileData);
 
         // Load user's posts (handle errors gracefully)
         try {
@@ -405,7 +521,7 @@ const Profile = () => {
     };
 
     loadProfile();
-  }, [username]);
+  }, [username, currentUser?.id]);
 
   // Real-time listener for profile updates
   useEffect(() => {
@@ -535,10 +651,12 @@ const Profile = () => {
                         </p>
                       )}
                       <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                        <span className="flex items-center gap-1">
-                          <Calendar className="h-3 w-3" />
-                          Joined {new Date(profile.created_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
-                        </span>
+                        {profile.created_at && (
+                          <span className="flex items-center gap-1">
+                            <Calendar className="h-3 w-3" />
+                            Joined {new Date(profile.created_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
+                          </span>
+                        )}
                         {profile.last_active_at && (
                           <span className="flex items-center gap-1">
                             <Zap className="h-3 w-3" />
@@ -843,12 +961,14 @@ const Profile = () => {
                   </div>
                 </Card>
 
-                <ProfileStats
-                  stats={{
-                    ...stats,
-                    joinDate: profile.created_at,
-                  }}
-                />
+                {profile.created_at && (
+                  <ProfileStats
+                    stats={{
+                      ...stats,
+                      joinDate: profile.created_at,
+                    }}
+                  />
+                )}
 
                 <MilestonesTimeline userId={profile.id} isOwnProfile={isOwnProfile} />
               </section>

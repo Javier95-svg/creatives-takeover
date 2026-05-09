@@ -87,31 +87,43 @@ export const MilestonesTimeline = ({ userId, isOwnProfile }: MilestonesTimelineP
 
   const loadMilestones = useCallback(async () => {
     try {
+      const profileQuery = isOwnProfile
+        ? supabase
+            .from('profiles')
+            .select('full_name, user_preferences')
+            .eq('id', userId)
+            .maybeSingle()
+        : supabase
+            .from('public_profiles')
+            .select('full_name')
+            .eq('id', userId)
+            .maybeSingle();
+
       const [milestonesResult, profileResult] = await Promise.all([
         supabase
           .from('founder_milestones')
           .select('*')
           .eq('user_id', userId)
           .order('achieved_at', { ascending: false }),
-        supabase
-          .from('profiles')
-          .select('full_name, user_preferences')
-          .eq('id', userId)
-          .maybeSingle(),
+        profileQuery,
       ]);
 
       if (milestonesResult.error) throw milestonesResult.error;
       if (profileResult.error) throw profileResult.error;
+      const profileData = profileResult.data as {
+        full_name?: string | null;
+        user_preferences?: Record<string, unknown> | null;
+      } | null;
       setMilestones(milestonesResult.data || []);
-      setProfilePreferences((profileResult.data?.user_preferences as Record<string, unknown> | null) ?? null);
-      setProfileName(profileResult.data?.full_name ?? null);
+      setProfilePreferences(profileData?.user_preferences ?? null);
+      setProfileName(profileData?.full_name ?? null);
     } catch (error) {
       console.error('Error loading milestones:', error);
       toast.error('Failed to load milestones');
     } finally {
       setLoading(false);
     }
-  }, [userId]);
+  }, [isOwnProfile, userId]);
 
   useEffect(() => {
     void loadMilestones();

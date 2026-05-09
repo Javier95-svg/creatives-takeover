@@ -779,7 +779,7 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
       ]);
 
       const { data, error } = await supabase
-        .from('profiles')
+        .from('public_profiles')
         .select('id, full_name, username')
         .or(orClauses.join(','))
         .limit(50);
@@ -856,7 +856,7 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
 
     const [{ data: profilesData, error: profilesError }, { data: attachmentData, error: attachmentError }, { data: receiptData, error: receiptError }] = await Promise.all([
       senderIds.length > 0
-        ? supabase.from('profiles').select('id, full_name, avatar_url').in('id', senderIds)
+        ? supabase.from('public_profiles').select('id, full_name, avatar_url').in('id', senderIds)
         : Promise.resolve({ data: [], error: null }),
       messageIds.length > 0
         ? (supabase as any).from('message_attachments').select('*').in('message_id', messageIds)
@@ -2081,7 +2081,7 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
   const getUserIdByUsername = useCallback(async (username: string): Promise<string | null> => {
     try {
       const { data, error } = await supabase
-        .from('profiles')
+        .from('public_profiles')
         .select('id')
         .eq('username', username.toLowerCase())
         .single();
@@ -2111,7 +2111,7 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
   const getUsernameByUserId = useCallback(async (userId: string): Promise<string | null> => {
     try {
       const { data, error } = await supabase
-        .from('profiles')
+        .from('public_profiles')
         .select('username')
         .eq('id', userId)
         .single();

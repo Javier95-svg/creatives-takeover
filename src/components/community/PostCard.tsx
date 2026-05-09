@@ -170,7 +170,7 @@ const PostCard = React.memo<PostCardProps>(({ post }) => {
       let profilesData = null;
       if (userIds.length > 0) {
         const { data, error: profilesError } = await supabase
-          .from('profiles')
+          .from('public_profiles')
           .select('id, full_name, avatar_url, username')
           .in('id', userIds);
 

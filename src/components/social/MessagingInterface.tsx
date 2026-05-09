@@ -625,7 +625,7 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
 
       try {
         const { data, error } = await supabase
-          .from('profiles')
+          .from('public_profiles')
           .select('id, full_name, avatar_url, username')
           .in('id', idsToFetch);
 

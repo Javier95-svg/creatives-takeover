@@ -79,7 +79,7 @@ const FindCoFounder = () => {
       const postsWithAuthors = await Promise.all(
         (data || []).map(async (post) => {
           const { data: profileData } = await supabase
-            .from('profiles')
+            .from('public_profiles')
             .select('full_name, avatar_url, username')
             .eq('id', post.user_id)
             .single();
