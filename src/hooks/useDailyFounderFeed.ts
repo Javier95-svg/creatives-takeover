@@ -15,7 +15,7 @@ export type FounderFeedLayer = 'platform' | 'founder';
 export type FounderFeedCardKind =
   | 'comeback'
   | 'task'
-  | 'weekly_mission'
+  | 'routine'
   | 'focus_funnel'
   | 'recommendation'
   | 'retention_nudge'
@@ -306,19 +306,19 @@ export function useDailyFounderFeed() {
 
     const missionCard: FounderFeedCard | null = mission
       ? {
-          id: `weekly-mission-${mission.id}`,
+          id: `routine-commitment-${mission.id}`,
           layer: 'founder',
-          kind: 'weekly_mission',
+          kind: 'routine',
           title: mission.mission_goal,
           description:
             missionDaysLeft === null
-              ? `Your weekly mission is ${Math.round(mission.completion_percentage)}% complete.`
+              ? `Your routine-linked commitment is ${Math.round(mission.completion_percentage)}% complete.`
               : `${missionDaysLeft} day${missionDaysLeft === 1 ? '' : 's'} left before reset. Current progress: ${Math.round(mission.completion_percentage)}%.`,
-          actionLabel: 'Open mission',
-          actionRoute: '/dashboard/weekly-mission',
+          actionLabel: 'Open routine',
+          actionRoute: '/dashboard/routine',
           priority: 88,
           freshnessDate: mission.updated_at ?? mission.created_at,
-          sourceLabel: 'Weekly Mission',
+          sourceLabel: 'Your Routine',
           expiresAt: mission.week_end_date,
           stage,
         }

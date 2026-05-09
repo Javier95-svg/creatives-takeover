@@ -6,9 +6,9 @@ import FilesPage from '@/pages/FilesPage';
 import FocusFunnel from '@/pages/FocusFunnel';
 import ReferralDashboardPage from '@/pages/ReferralDashboardPage';
 import TasksPage from '@/pages/TasksPage';
-import WeeklyMissionPage from '@/pages/WeeklyMissionPage';
+import YourRoutinePage from '@/pages/YourRoutinePage';
 
-type DashboardTabId = 'home' | 'files' | 'tasks' | 'weeklyMission' | 'referral' | 'focusFunnel';
+type DashboardTabId = 'home' | 'files' | 'tasks' | 'routine' | 'referral' | 'focusFunnel';
 
 interface DashboardTabDefinition {
   id: DashboardTabId;
@@ -20,12 +20,16 @@ const DASHBOARD_TABS: DashboardTabDefinition[] = [
   { id: 'home', path: '/dashboard', Component: Dashboard },
   { id: 'files', path: '/dashboard/files', Component: FilesPage },
   { id: 'tasks', path: '/dashboard/tasks', Component: TasksPage },
-  { id: 'weeklyMission', path: '/dashboard/weekly-mission', Component: WeeklyMissionPage },
+  { id: 'routine', path: '/dashboard/routine', Component: YourRoutinePage },
   { id: 'referral', path: '/dashboard/referral', Component: ReferralDashboardPage },
   { id: 'focusFunnel', path: '/dashboard/focus-funnel', Component: FocusFunnel },
 ];
 
 function resolveDashboardTab(pathname: string) {
+  if (pathname === '/dashboard/weekly-mission') {
+    return DASHBOARD_TABS.find((tab) => tab.id === 'routine') ?? DASHBOARD_TABS[0];
+  }
+
   return DASHBOARD_TABS.find((tab) => tab.path === pathname) ?? DASHBOARD_TABS[0];
 }
 

@@ -159,7 +159,7 @@ export function useDailyFocus(): UseDailyFocusReturn {
 
     // Weekly mission
     if (task.contributes_to_weekly_mission) {
-      rationale.push('🎯 Contributes to your weekly mission');
+      rationale.push('Contributes to your routine');
     }
 
     // Stage alignment

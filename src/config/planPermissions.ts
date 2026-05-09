@@ -46,7 +46,8 @@ export type DashboardNavIconKey =
   | 'target'
   | 'clipboard_list'
   | 'bar_chart_3'
-  | 'gift';
+  | 'gift'
+  | 'repeat_2';
 
 export type DashboardSidebarToolKey =
   | 'icp_builder'
@@ -94,7 +95,7 @@ export type DashboardSurfaceFeature =
   | 'dashboard_access'
   | 'focus_funnel'
   | 'core_metrics'
-  | 'weekly_mission'
+  | 'routine'
   | 'decision_sprint'
   | 'your_tasks';
 
@@ -253,7 +254,7 @@ const SHARED_DASHBOARD_NAV_ITEMS: DashboardNavItem[] = [
   { path: '/dashboard', label: 'Home', iconKey: 'home' },
   { path: '/dashboard/files', label: 'My Files', iconKey: 'folder_open' },
   { path: '/dashboard/tasks', label: 'Your Tasks', iconKey: 'check_square' },
-  { path: '/dashboard/weekly-mission', label: 'Weekly Mission', iconKey: 'calendar' },
+  { path: '/dashboard/routine', label: 'Your Routine', iconKey: 'repeat_2' },
   { path: '/dashboard/referral', label: 'Referral Program', iconKey: 'gift' },
   { path: '/dashboard/focus-funnel', label: 'Focus Funnel', iconKey: 'target' },
 ];
@@ -285,7 +286,7 @@ export const DASHBOARD_MODE_CONFIG: Record<DashboardModeVariant, DashboardModeCo
     label: 'Rising Mode',
     badgeDescription: 'Operational and productive',
     subtitle: 'Your full operator cockpit across all five stages.',
-    sectionIds: ['mode-usage', 'weekly-mission', 'your-tasks'],
+    sectionIds: ['mode-usage', 'routine', 'your-tasks'],
     activeStages: [1, 2, 3, 4, 5],
     previewStages: [],
     showUpgradeBanner: false,
@@ -296,7 +297,7 @@ export const DASHBOARD_MODE_CONFIG: Record<DashboardModeVariant, DashboardModeCo
     label: 'Pro Mode',
     badgeDescription: 'Strategic and data-rich',
     subtitle: 'Your fundraising-aware command layer with premium support.',
-    sectionIds: ['mode-support', 'mode-fundraising', 'mode-usage', 'weekly-mission', 'your-tasks'],
+    sectionIds: ['mode-support', 'mode-fundraising', 'mode-usage', 'routine', 'your-tasks'],
     activeStages: [1, 2, 3, 4, 5],
     previewStages: [],
     showUpgradeBanner: false,
@@ -308,7 +309,7 @@ export const DASHBOARD_MODE_CONFIG: Record<DashboardModeVariant, DashboardModeCo
 const DASHBOARD_SURFACE_PATHS: Record<Exclude<DashboardSurfaceFeature, 'dashboard_access'>, string> = {
   focus_funnel: '/dashboard/focus-funnel',
   core_metrics: '/core-metrics',
-  weekly_mission: '/dashboard/weekly-mission',
+  routine: '/dashboard/routine',
   decision_sprint: '/decision-sprint',
   your_tasks: '/dashboard/tasks',
 };

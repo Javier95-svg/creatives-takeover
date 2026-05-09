@@ -390,15 +390,15 @@ export function DashboardAccountabilityHero({ founderName, businessStage, curren
       <Card className="border-destructive/20 bg-card/90 shadow-sm">
         <CardContent className="flex flex-col gap-4 p-6 lg:flex-row lg:items-center lg:justify-between">
           <div className="space-y-2">
-            <Badge variant="secondary">Weekly accountability</Badge>
+            <Badge variant="secondary">Routine history</Badge>
             <h2 className="font-space-grotesk text-2xl font-semibold tracking-tight">Your weekly commitment could not load.</h2>
             <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
-              Open the full weekly commitment page to set or review it directly.
+              Open Your Routine to review preserved commitment history and keep your habits moving.
             </p>
           </div>
           <Button asChild>
-            <Link to="/dashboard/weekly-mission">
-              Open Weekly Commitment
+            <Link to="/dashboard/routine">
+              Open Your Routine
               <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
           </Button>
@@ -440,7 +440,7 @@ export function DashboardAccountabilityHero({ founderName, businessStage, curren
     : 'Use that momentum to pick the next bottleneck and commit to one clear finish line.';
 
   const primaryActionLabel = !currentMission
-    ? 'Set Weekly Commitment'
+    ? 'Build Routine'
     : isActive
     ? 'Open Commitment'
     : 'Review Commitment';
@@ -477,7 +477,7 @@ export function DashboardAccountabilityHero({ founderName, businessStage, curren
           <div className="max-w-3xl space-y-4">
             <div className="flex flex-wrap items-center gap-2">
               <Badge className="border border-primary/20 bg-primary/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-primary hover:bg-primary/10">
-                Weekly accountability
+                Routine accountability
               </Badge>
               {businessStage ? <Badge variant="outline">{businessStage}</Badge> : null}
             </div>
@@ -601,7 +601,7 @@ export function DashboardAccountabilityHero({ founderName, businessStage, curren
             ) : null}
 
             <Button asChild size="lg" className="h-12 justify-between px-5 text-sm font-semibold">
-              <Link to="/dashboard/weekly-mission">
+              <Link to="/dashboard/routine">
                 {primaryActionLabel}
                 <ArrowRight className="h-4 w-4" />
               </Link>

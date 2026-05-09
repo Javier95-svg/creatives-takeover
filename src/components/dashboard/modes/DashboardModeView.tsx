@@ -91,10 +91,10 @@ export function DashboardModeView({
       priorityLabel: 'Now',
     },
     {
-      id: 'mission',
-      title: 'Review your weekly mission',
-      description: 'Confirm that this week still aligns with your current stage.',
-      actionUrl: '/dashboard/weekly-mission',
+      id: 'routine',
+      title: 'Review your routine',
+      description: 'Confirm that your daily and weekly habits still align with your current stage.',
+      actionUrl: '/dashboard/routine',
       priorityLabel: 'Next',
     },
     {
@@ -231,7 +231,7 @@ export function DashboardModeView({
               <div className="rounded-lg border border-border/60 bg-background/70 p-3">
                 <p className="text-xs uppercase tracking-wide text-muted-foreground">Next</p>
                 <p className="mt-1 text-sm font-medium">
-                  Weekly mission is at {weeklyProgress.toFixed(0)}%: {missionStatus.toLowerCase()}.
+              Routine direction is at {weeklyProgress.toFixed(0)}%: {missionStatus.toLowerCase()}.
                 </p>
               </div>
               <div className="rounded-lg border border-border/60 bg-background/70 p-3">
@@ -300,8 +300,8 @@ export function DashboardModeView({
           </CardHeader>
           <CardContent>
             <Button asChild variant="outline" className="w-full justify-between">
-              <Link to="/dashboard/weekly-mission">
-                Open Weekly Mission
+              <Link to="/dashboard/routine">
+                Open Your Routine
                 <ArrowRight className="h-4 w-4" />
               </Link>
             </Button>

@@ -89,7 +89,7 @@ export function useFeatureGating() {
         dashboard_access: 'the dashboard',
         focus_funnel: 'Focus Funnel',
         core_metrics: 'Core Metrics',
-        weekly_mission: 'Weekly Mission',
+        routine: 'Your Routine',
         decision_sprint: 'Decision Sprint',
         your_tasks: 'Your Tasks',
       };
@@ -305,7 +305,7 @@ export function useFeatureGating() {
 
       case 'focus_funnel':
       case 'core_metrics':
-      case 'weekly_mission':
+      case 'routine':
         return checkDashboardSurfaceFeature(feature);
 
       case 'decision_sprint':

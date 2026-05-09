@@ -1,5 +1,5 @@
 import { SmartFocusCard } from '../decision-engine/SmartFocusCard';
-import { WeeklyMissionPanel } from '../decision-engine/WeeklyMissionPanel';
+import { RoutineSummaryCard } from '../RoutineSummaryCard';
 import { CoreMetrics } from '../CoreMetrics';
 import { FocusFunnelWidget } from '@/components/focus-funnel/FocusFunnelWidget';
 import { DecisionSprintCard } from '../DecisionSprintCard';
@@ -37,8 +37,8 @@ export function FocusModeView({
             onOpenAIPartner={() => navigate('/dashboard/focus-funnel')}
           />
         </div>
-        <div id="weekly-mission">
-          <WeeklyMissionPanel />
+        <div id="routine">
+          <RoutineSummaryCard compact />
         </div>
       </div>
 
@@ -66,10 +66,10 @@ export function FocusModeView({
           </CardContent>
         </Card>
 
-        {/* Weekly Mission Progress */}
+        {/* Routine Progress */}
         <Card className="border-border/70 bg-card/80 backdrop-blur-sm shadow-sm hover:shadow-md">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Weekly Mission</CardTitle>
+            <CardTitle className="text-sm font-medium">Routine</CardTitle>
             <Target className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>

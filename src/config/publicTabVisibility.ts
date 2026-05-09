@@ -170,9 +170,17 @@ export const PUBLIC_TAB_VISIBILITY: Record<string, PublicTabConfig> = {
     state: 'hidden',
     featureName: 'Core Metrics',
   },
+  '/routine': {
+    state: 'hidden',
+    featureName: 'Your Routine',
+  },
+  '/dashboard/routine': {
+    state: 'hidden',
+    featureName: 'Your Routine',
+  },
   '/weekly-mission': {
     state: 'hidden',
-    featureName: 'Weekly Mission',
+    featureName: 'Your Routine',
   },
   '/tasks': {
     state: 'hidden',

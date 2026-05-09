@@ -34,9 +34,9 @@ const dashboardPageChrome: Record<string, { title: string; subtitle?: string }> 
     title: 'Task Manager',
     subtitle: 'All your tasks across BizMap, daily goals, community challenges, and commitments.',
   },
-  '/dashboard/weekly-mission': {
-    title: 'Weekly Mission',
-    subtitle: 'Set and track your weekly goals.',
+  '/dashboard/routine': {
+    title: 'Your Routine',
+    subtitle: 'Build and maintain the founder habits that move your startup forward.',
   },
   '/dashboard/referral': {
     title: 'Referral Program',
@@ -58,6 +58,12 @@ function DashboardFrame() {
   const isHome = pathname === '/dashboard';
   const pageChrome = dashboardPageChrome[pathname];
   const incompleteTaskCount = Math.max(dashboardMetrics.totalTasksToday - dashboardMetrics.tasksCompletedToday, 0);
+
+  useEffect(() => {
+    if (pathname === '/dashboard/weekly-mission') {
+      navigate('/dashboard/routine', { replace: true });
+    }
+  }, [navigate, pathname]);
 
   return (
     <TaskCountContext.Provider value={incompleteTaskCount}>

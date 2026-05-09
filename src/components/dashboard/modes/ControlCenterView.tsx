@@ -1,5 +1,5 @@
 import { SmartFocusCard } from '../decision-engine/SmartFocusCard';
-import { WeeklyMissionPanel } from '../decision-engine/WeeklyMissionPanel';
+import { RoutineSummaryCard } from '../RoutineSummaryCard';
 import { TaskOverview } from '../TaskOverview';
 import { BizMapJourneyProgress } from '../BizMapJourneyProgress';
 import { TodaysMissionWidget } from '../TodaysMissionWidget';
@@ -60,8 +60,8 @@ export function ControlCenterView({
         <div id="dashboard-focus">
           <SmartFocusCard />
         </div>
-        <div id="weekly-mission">
-          <WeeklyMissionPanel />
+        <div id="routine">
+          <RoutineSummaryCard />
         </div>
       </div>
 

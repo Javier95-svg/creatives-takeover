@@ -106,7 +106,7 @@ const FocusFunnel = lazy(() => import("./pages/FocusFunnel"));
 const FilesPage = lazy(() => import("./pages/FilesPage"));
 const AiGoalsPage = lazy(() => import("./pages/AiGoalsPage"));
 const CoreMetricsPage = lazy(() => import("./pages/CoreMetricsPage"));
-const WeeklyMissionPage = lazy(() => import("./pages/WeeklyMissionPage"));
+const YourRoutinePage = lazy(() => import("./pages/YourRoutinePage"));
 const TasksPage = lazy(() => import("./pages/TasksPage"));
 const ValidateJourney = lazy(() => import("./pages/journeys/ValidateJourney"));
 const WaitlistMakerPage = lazy(() => import("./pages/WaitlistMakerPage"));
@@ -264,7 +264,8 @@ function App() {
                           <Route index element={<Dashboard />} />
                           <Route path="files" element={<FilesPage />} />
                           <Route path="tasks" element={<TasksPage />} />
-                          <Route path="weekly-mission" element={<WeeklyMissionPage />} />
+                          <Route path="routine" element={<YourRoutinePage />} />
+                          <Route path="weekly-mission" element={<Navigate to="/dashboard/routine" replace />} />
                           <Route path="referral" element={<ReferralDashboardPage />} />
                           <Route path="focus-funnel" element={<FocusFunnel />} />
                         </Route>
@@ -278,7 +279,8 @@ function App() {
                         <Route path="/focus-funnel" element={<Navigate to="/dashboard/focus-funnel" replace />} />
                         <Route path="/ai-goals" element={<AiGoalsPage />} />
                         <Route path="/core-metrics" element={<CoreMetricsPage />} />
-                        <Route path="/weekly-mission" element={<Navigate to="/dashboard/weekly-mission" replace />} />
+                        <Route path="/routine" element={<Navigate to="/dashboard/routine" replace />} />
+                        <Route path="/weekly-mission" element={<Navigate to="/dashboard/routine" replace />} />
                         <Route path="/tasks" element={<Navigate to="/dashboard/tasks" replace />} />
                         <Route path="/insighta" element={<Blog />} />
                         <Route path="/vc-search" element={<VCSearchPage />} />

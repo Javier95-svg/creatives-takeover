@@ -105,7 +105,7 @@ export function SmartFocusCard() {
               </Badge>
               {task.contributes_to_weekly_mission && (
                 <Badge variant="outline" className="text-xs bg-blue-500/10 text-blue-600 border-blue-500/30">
-                  🎯 Weekly Mission
+                  Routine
                 </Badge>
               )}
             </div>

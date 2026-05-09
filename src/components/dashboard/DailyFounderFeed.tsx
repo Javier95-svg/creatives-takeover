@@ -20,7 +20,7 @@ interface DailyFounderFeedProps {
 const iconByKind: Record<FounderFeedCardKind | 'daily_prompt', typeof Sparkles> = {
   comeback: Sparkles,
   task: ClipboardList,
-  weekly_mission: CalendarClock,
+  routine: CalendarClock,
   focus_funnel: Compass,
   recommendation: Sparkles,
   retention_nudge: Bell,
@@ -232,4 +232,3 @@ export function DailyFounderFeed({
     </div>
   );
 }
-

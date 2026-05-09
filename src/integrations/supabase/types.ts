@@ -5580,8 +5580,11 @@ export type Database = {
           quiz_is_first_startup: string | null
           quiz_launch_timeline: string | null
           quiz_looking_for_cofounder: string | null
-          role: string | null
-          sidebar_preferences: Json | null
+	          role: string | null
+	          routine_config: Json
+	          routine_primary_goal: string | null
+	          routine_reminder_preferences: Json
+	          sidebar_preferences: Json | null
           startup_description: string | null
           startup_industry: string[] | null
           startup_links: Json | null
@@ -5655,8 +5658,11 @@ export type Database = {
           quiz_is_first_startup?: string | null
           quiz_launch_timeline?: string | null
           quiz_looking_for_cofounder?: string | null
-          role?: string | null
-          sidebar_preferences?: Json | null
+	          role?: string | null
+	          routine_config?: Json
+	          routine_primary_goal?: string | null
+	          routine_reminder_preferences?: Json
+	          sidebar_preferences?: Json | null
           startup_description?: string | null
           startup_industry?: string[] | null
           startup_links?: Json | null
@@ -5730,8 +5736,11 @@ export type Database = {
           quiz_is_first_startup?: string | null
           quiz_launch_timeline?: string | null
           quiz_looking_for_cofounder?: string | null
-          role?: string | null
-          sidebar_preferences?: Json | null
+	          role?: string | null
+	          routine_config?: Json
+	          routine_primary_goal?: string | null
+	          routine_reminder_preferences?: Json
+	          sidebar_preferences?: Json | null
           startup_description?: string | null
           startup_industry?: string[] | null
           startup_links?: Json | null
@@ -5981,7 +5990,7 @@ export type Database = {
         }
         Relationships: []
       }
-      reputation_transactions: {
+	      reputation_transactions: {
         Row: {
           action_type: string
           created_at: string | null
@@ -6024,9 +6033,60 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
-        ]
-      }
-      revenue_metrics: {
+	        ]
+	      }
+	      routine_task_completions: {
+	        Row: {
+	          completed_at: string | null
+	          created_at: string
+	          id: string
+	          period_date: string
+	          period_type: string
+	          routine_task_id: string
+	          status: string
+	          task_title: string
+	          user_id: string
+	        }
+	        Insert: {
+	          completed_at?: string | null
+	          created_at?: string
+	          id?: string
+	          period_date: string
+	          period_type: string
+	          routine_task_id: string
+	          status: string
+	          task_title: string
+	          user_id: string
+	        }
+	        Update: {
+	          completed_at?: string | null
+	          created_at?: string
+	          id?: string
+	          period_date?: string
+	          period_type?: string
+	          routine_task_id?: string
+	          status?: string
+	          task_title?: string
+	          user_id?: string
+	        }
+	        Relationships: [
+	          {
+	            foreignKeyName: "routine_task_completions_user_id_fkey"
+	            columns: ["user_id"]
+	            isOneToOne: false
+	            referencedRelation: "active_subscriptions"
+	            referencedColumns: ["id"]
+	          },
+	          {
+	            foreignKeyName: "routine_task_completions_user_id_fkey"
+	            columns: ["user_id"]
+	            isOneToOne: false
+	            referencedRelation: "profiles"
+	            referencedColumns: ["id"]
+	          },
+	        ]
+	      }
+	      revenue_metrics: {
         Row: {
           active_customers: number | null
           churn_rate: number | null
