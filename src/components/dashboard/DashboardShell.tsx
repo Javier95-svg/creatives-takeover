@@ -66,21 +66,24 @@ function DashboardFrame() {
           <DashboardSidebar />
           <SidebarInset>
             <div className="relative min-h-screen overflow-hidden bg-background">
-              <div className="pointer-events-none fixed inset-x-0 top-0 z-50">
-                <div className={cn('container mx-auto flex items-start justify-between px-6 pt-4', DASHBOARD_MAX_WIDTH)}>
+              <div className="pointer-events-none absolute inset-x-0 top-0 z-50">
+                <div className={cn('container mx-auto grid grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-4 px-6 pt-4', DASHBOARD_MAX_WIDTH)}>
                   <div className="pointer-events-auto flex items-start gap-4">
                     <SidebarTrigger className="rounded-full border border-border/70 bg-background/88 shadow-sm backdrop-blur-md" />
                     {isHome ? (
                       <ModeToggle currentMode={dashboardMode} />
-                    ) : (
-                      <div className="pt-1">
-                        <h1 className="font-space-grotesk text-xl font-semibold">{pageChrome?.title ?? 'Dashboard'}</h1>
-                        {pageChrome?.subtitle ? (
-                          <p className="text-sm text-muted-foreground">{pageChrome.subtitle}</p>
-                        ) : null}
-                      </div>
-                    )}
+                    ) : null}
                   </div>
+                  {!isHome ? (
+                    <div className="pointer-events-auto min-w-0 px-2 pt-1 text-center">
+                      <h1 className="font-space-grotesk text-xl font-semibold">{pageChrome?.title ?? 'Dashboard'}</h1>
+                      {pageChrome?.subtitle ? (
+                        <p className="mx-auto max-w-2xl text-sm text-muted-foreground">{pageChrome.subtitle}</p>
+                      ) : null}
+                    </div>
+                  ) : (
+                    <div aria-hidden="true" />
+                  )}
                   <button
                     onClick={() => navigate('/')}
                     className="pointer-events-auto inline-flex items-center gap-2 rounded-full border border-border/70 bg-background/88 px-4 py-2 text-sm font-medium text-muted-foreground shadow-sm backdrop-blur-md transition-colors hover:border-primary/30 hover:bg-background hover:text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
