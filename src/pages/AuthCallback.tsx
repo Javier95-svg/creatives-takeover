@@ -6,11 +6,7 @@ import { getSessionSafely } from '@/integrations/supabase/auth';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import type { EmailOtpType } from '@supabase/supabase-js';
-import { appendReturnParam, buildOnboardingPath, isIcpUnlockPath, persistOnboardingReturn, sanitizeReturnPath } from '@/lib/authRedirect';
-import {
-  shouldRedirectToGuidedOnboarding,
-  shouldRedirectToSetupQuiz,
-} from '@/lib/guidedOnboarding';
+import { appendReturnParam, persistOnboardingReturn, sanitizeReturnPath } from '@/lib/authRedirect';
 import { readAuthMethod, trackSignupCompleted } from '@/lib/analytics';
 import { ICP_SEED_STORAGE_KEY } from '@/lib/icpSeed';
 import { getSafeSessionStorage } from '@/lib/safeStorage';
@@ -210,7 +206,7 @@ const AuthCallback = () => {
             }
           }
           
-          const { data: profile, error: profileError } = await supabase
+          const { error: profileError } = await supabase
             .from('profiles')
             .select('onboarding_completed, quiz_completed, dashboard_bootstrap_source, user_preferences')
             .eq('id', session.user.id)
@@ -220,14 +216,9 @@ const AuthCallback = () => {
             console.error('Error resolving onboarding status after auth callback:', profileError);
           }
 
-          const isIcpUnlockReturn = isIcpUnlockPath(returnUrl);
-          const destination = shouldRedirectToGuidedOnboarding(profile) && !isIcpUnlockReturn
-            ? buildOnboardingPath(returnUrl)
-            : shouldRedirectToSetupQuiz(profile) && !isIcpUnlockReturn
-              ? '/setup-quiz'
-              : returnUrl;
+          const destination = returnUrl;
 
-          // Navigate to return URL or route incomplete users through onboarding first
+          // Navigate to return URL. First-time dashboard users now see Day 1 Welcome on /dashboard.
           if (destination.includes('dream2plan') || (destination === returnUrl && savedBizMapProgress)) {
             toast.success("Restoring your business plan...");
             setTimeout(() => {

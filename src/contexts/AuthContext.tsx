@@ -6,14 +6,6 @@ import { logError, logInfo, logWarn } from '@/lib/logger';
 import { signUpWithFallback } from '@/lib/authSignup';
 import { VALIDATION } from '@/config/constants';
 import {
-  buildOnboardingPath,
-  getOnboardingReturn,
-  isIcpUnlockPath,
-  ONBOARDING_RETURN_KEY,
-  persistOnboardingReturn,
-  sanitizeReturnPath,
-} from '@/lib/authRedirect';
-import {
   requiresGuidedOnboarding,
   withGuidedOnboardingPreference,
 } from '@/lib/guidedOnboarding';
@@ -221,37 +213,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         await Promise.all(parallelTasks);
       }
 
-      // Step 4: Handle onboarding redirect (admin never needs onboarding)
+      // New users now see the Day 1 Welcome gate on /dashboard instead of
+      // being forced through the legacy /onboarding route.
       if (!isAdmin) {
-        const shouldRedirectToOnboarding =
-          requiresGuidedOnboarding(existingProfile?.user_preferences) &&
-          existingProfile?.onboarding_completed !== true;
-
-        if (shouldRedirectToOnboarding) {
-          const hasRedirected = sessionStorage.getItem(`onboarding_redirect_${userId}`);
-          if (!hasRedirected && !window.location.pathname.includes('/onboarding')) {
-            sessionStorage.setItem(`onboarding_redirect_${userId}`, 'true');
-            const currentPath = `${window.location.pathname}${window.location.search}`;
-            const safeCurrentPath = sanitizeReturnPath(currentPath, '/dashboard');
-            const preferredReturn = getOnboardingReturn(safeCurrentPath);
-            if (isIcpUnlockPath(preferredReturn)) {
-              sessionStorage.removeItem(`onboarding_redirect_${userId}`);
-              return;
-            }
-            persistOnboardingReturn(preferredReturn);
-            const onboardingPath = buildOnboardingPath(preferredReturn);
-            // Small delay to let UI settle
-            setTimeout(() => {
-              if (isMountedRef.current && !window.location.pathname.includes('/onboarding')) {
-                window.location.href = onboardingPath;
-                logInfo('Redirected first-time user to onboarding page', { userId, onboardingPath });
-              }
-            }, 500);
-          }
-        } else {
-          sessionStorage.removeItem(`onboarding_redirect_${userId}`);
-          localStorage.removeItem(ONBOARDING_RETURN_KEY);
-        }
+        sessionStorage.removeItem(`onboarding_redirect_${userId}`);
       }
 
       const hasPendingDiscoveryCall = localStorage.getItem('pending_calendly_redirect');

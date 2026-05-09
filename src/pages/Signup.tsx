@@ -30,15 +30,9 @@ import {
 } from "@/lib/username";
 import {
   appendReturnParam,
-  buildOnboardingPath,
-  isIcpUnlockPath,
   persistOnboardingReturn,
   sanitizeReturnPath,
 } from "@/lib/authRedirect";
-import {
-  shouldRedirectToGuidedOnboarding,
-  shouldRedirectToSetupQuiz,
-} from "@/lib/guidedOnboarding";
 import {
   appendCheckoutIntentParam,
   consumeCheckoutIntent,
@@ -139,12 +133,6 @@ const Signup = () => {
 
     const redirectAuthenticatedUser = async () => {
       try {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('onboarding_completed, quiz_completed, dashboard_bootstrap_source, user_preferences')
-          .eq('id', user.id)
-          .maybeSingle();
-
         const pendingCheckoutIntent = consumeCheckoutIntent();
         if (pendingCheckoutIntent) {
           redirectToCheckoutIntent(pendingCheckoutIntent, user);
@@ -152,18 +140,6 @@ const Signup = () => {
         }
 
         const targetAfterAuth = sanitizeReturnPath(conversionSource.returnUrl, '/dashboard');
-
-        // New users should complete onboarding first, then return to intent.
-        if (shouldRedirectToGuidedOnboarding(profile) && !isIcpUnlockPath(targetAfterAuth)) {
-          persistOnboardingReturn(targetAfterAuth);
-          navigate(buildOnboardingPath(targetAfterAuth), { replace: true });
-          return;
-        }
-
-        if (shouldRedirectToSetupQuiz(profile) && !isIcpUnlockPath(targetAfterAuth)) {
-          navigate('/setup-quiz', { replace: true });
-          return;
-        }
 
         const savedProgress = localStorage.getItem('bizmap_progress');
         if (savedProgress && targetAfterAuth.includes('dream2plan')) {
@@ -174,9 +150,7 @@ const Signup = () => {
         navigate(targetAfterAuth, { replace: true });
       } catch (error) {
         console.error('Error resolving signup redirect:', error);
-        const fallbackDestination = isIcpUnlockPath(conversionSource.returnUrl)
-          ? conversionSource.returnUrl
-          : buildOnboardingPath(conversionSource.returnUrl);
+        const fallbackDestination = sanitizeReturnPath(conversionSource.returnUrl, '/dashboard');
         navigate(fallbackDestination, { replace: true });
       }
     };
@@ -372,9 +346,7 @@ const Signup = () => {
         setIsRedirecting(true);
 
         setTimeout(() => {
-          const destination = isIcpUnlockPath(conversionSource.returnUrl)
-            ? conversionSource.returnUrl
-            : buildOnboardingPath(conversionSource.returnUrl);
+          const destination = sanitizeReturnPath(conversionSource.returnUrl, '/dashboard');
           navigate(destination, { replace: true });
         }, 300);
       }

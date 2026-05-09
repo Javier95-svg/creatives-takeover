@@ -1,5 +1,4 @@
 import { useEffect, lazy, Suspense, useRef } from "react";
-import { useNavigate } from "react-router-dom";
 import { useFeatureFlagEnabled } from "posthog-js/react";
 import Navigation from "@/components/Navigation";
 import Hero from "@/components/Hero";
@@ -19,19 +18,14 @@ import SEO, { createOrganizationSchema, createWebSiteSchema, createBreadcrumbSch
 import Footer from "@/components/Footer";
 import { usePageAnalytics } from "@/hooks/usePageAnalytics";
 import HomeWallpaper from "@/components/wallpapers/HomeWallpaper";
-import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
 import { trackLandingViewed } from "@/lib/analytics";
-import { shouldRedirectToGuidedOnboarding } from "@/lib/guidedOnboarding";
 
 // Lazy load below-the-fold components for better performance
 const HomeFAQ = lazy(() => import("@/components/HomeFAQ"));
 
 const Index = () => {
   const isMobile = useIsMobile();
-  const navigate = useNavigate();
   const wedgeEnabled = useFeatureFlagEnabled('homepage-hero-wedge');
-  const { user, loading: authLoading } = useAuth();
   const { showExitIntent, closeExitIntent } = useExitIntent();
   const { trackTriggerView, trackDismissal } = useConversionTracking();
   // Always show the previous Hero section design
@@ -59,29 +53,6 @@ const Index = () => {
     sessionStorage.removeItem('credit-popup-time-seen');
   }, []);
 
-  // Redirect to onboarding only for accounts enrolled in the guided new-user flow.
-  useEffect(() => {
-    if (authLoading || !user) return;
-
-    const checkOnboardingRedirect = async () => {
-      try {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('onboarding_completed, dashboard_bootstrap_source, user_preferences')
-          .eq('id', user.id)
-          .maybeSingle();
-
-        if (shouldRedirectToGuidedOnboarding(profile)) {
-          navigate('/onboarding', { replace: true });
-        }
-      } catch (error) {
-        console.error('Error checking onboarding status:', error);
-      }
-    };
-
-    checkOnboardingRedirect();
-  }, [user, authLoading, navigate]);
-  
   const handleRefresh = async () => {
     window.location.reload();
   };

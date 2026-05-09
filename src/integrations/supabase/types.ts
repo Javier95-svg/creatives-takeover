@@ -5567,6 +5567,7 @@ export type Database = {
           memory_preference: string | null
           monthly_credits: number | null
           onboarding_completed: boolean | null
+          onboarding_steps_completed: Json
           positioning_line: string | null
           preferred_dashboard_mode: string | null
           preferred_dashboard_view: string | null
@@ -5641,6 +5642,7 @@ export type Database = {
           memory_preference?: string | null
           monthly_credits?: number | null
           onboarding_completed?: boolean | null
+          onboarding_steps_completed?: Json
           positioning_line?: string | null
           preferred_dashboard_mode?: string | null
           preferred_dashboard_view?: string | null
@@ -5715,6 +5717,7 @@ export type Database = {
           memory_preference?: string | null
           monthly_credits?: number | null
           onboarding_completed?: boolean | null
+          onboarding_steps_completed?: Json
           positioning_line?: string | null
           preferred_dashboard_mode?: string | null
           preferred_dashboard_view?: string | null

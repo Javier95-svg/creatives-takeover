@@ -5,6 +5,7 @@ import { Helmet } from 'react-helmet-async';
 import { toast } from 'sonner';
 
 import DashboardPreview from '@/components/DashboardPreview';
+import { Day1Welcome, type Day1Profile } from '@/components/dashboard/Day1Welcome';
 import { DashboardSkeleton } from '@/components/dashboard/DashboardSkeleton';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
@@ -15,10 +16,6 @@ import { useActivationGate } from '@/hooks/useActivationGate';
 import { useFeatureGating } from '@/hooks/useFeatureGating';
 import { useDashboardMetrics } from '@/hooks/useDashboardMetrics';
 import { useSubscription } from '@/hooks/useSubscription';
-import {
-  shouldRedirectToGuidedOnboarding,
-  shouldRedirectToSetupQuiz,
-} from '@/lib/guidedOnboarding';
 import { normalizePlan, resolveDashboardMode } from '@/config/planPermissions';
 import { cn } from '@/lib/utils';
 import { DashboardSidebar } from './DashboardSidebar';
@@ -132,6 +129,7 @@ export function DashboardShell() {
   const activationGate = useActivationGate();
   const navigate = useNavigate();
   const [profileLoading, setProfileLoading] = useState(true);
+  const [day1Profile, setDay1Profile] = useState<Day1Profile | null>(null);
   const validatedUserIdRef = useRef<string | null>(null);
   const userId = user?.id ?? null;
   const userCreatedAt = user?.created_at ?? null;
@@ -141,6 +139,7 @@ export function DashboardShell() {
 
     if (!userId) {
       validatedUserIdRef.current = null;
+      setDay1Profile(null);
       setProfileLoading(false);
       return () => {
         isCancelled = true;
@@ -159,7 +158,7 @@ export function DashboardShell() {
 
       const { data: profile, error } = await supabase
         .from('profiles')
-        .select('onboarding_completed, dashboard_bootstrap_source, quiz_completed, user_preferences')
+        .select('onboarding_completed, onboarding_steps_completed, quiz_completed, quiz_current_stage, quiz_biggest_challenge')
         .eq('id', userId)
         .single();
 
@@ -171,16 +170,7 @@ export function DashboardShell() {
         return;
       }
 
-      if (shouldRedirectToGuidedOnboarding(profile)) {
-        navigate('/onboarding', { replace: true });
-        return;
-      }
-
-      if (shouldRedirectToSetupQuiz(profile)) {
-        navigate('/setup-quiz', { replace: true });
-        return;
-      }
-
+      setDay1Profile(profile);
       validatedUserIdRef.current = userId;
       setProfileLoading(false);
     };
@@ -190,7 +180,11 @@ export function DashboardShell() {
     return () => {
       isCancelled = true;
     };
-  }, [navigate, userId]);
+  }, [userId]);
+
+  const handleDay1ProfilePatch = (patch: Partial<Day1Profile>) => {
+    setDay1Profile((current) => (current ? { ...current, ...patch } : current));
+  };
 
   useEffect(() => {
     if (!userId || !userCreatedAt || !activationGate.shouldEnforceGate) return;
@@ -240,6 +234,10 @@ export function DashboardShell() {
         <DashboardPreview />
       </>
     );
+  }
+
+  if (day1Profile && day1Profile.onboarding_completed !== true) {
+    return <Day1Welcome profile={day1Profile} onProfilePatch={handleDay1ProfilePatch} />;
   }
 
   return (
