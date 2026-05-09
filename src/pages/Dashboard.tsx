@@ -1,29 +1,12 @@
-import { useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useSearchParams } from 'react-router-dom';
 import { CheckCircle2 } from 'lucide-react';
 
-import { DailyMissionCard } from '@/components/dashboard/DailyMissionCard';
 import StartupHomeCommandCenter from '@/components/dashboard/StartupHomeCommandCenter';
-import { cn } from '@/lib/utils';
 
 const Dashboard = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const fromIcpBuilder = searchParams.get('from') === 'icp_builder';
-  const highlightDailyMission = searchParams.get('highlight') === 'daily-mission';
-
-  useEffect(() => {
-    if (!highlightDailyMission) return;
-
-    const frame = window.requestAnimationFrame(() => {
-      document.getElementById('todays-mission')?.scrollIntoView({
-        behavior: 'smooth',
-        block: 'center',
-      });
-    });
-
-    return () => window.cancelAnimationFrame(frame);
-  }, [highlightDailyMission]);
 
   const dismissIcpBanner = () => {
     const next = new URLSearchParams(searchParams);
@@ -61,15 +44,6 @@ const Dashboard = () => {
           </button>
         </div>
       ) : null}
-      <div
-        id="todays-mission"
-        className={cn(
-          'mb-6 rounded-xl transition-shadow',
-          highlightDailyMission && 'ring-2 ring-primary ring-offset-4 ring-offset-background shadow-lg shadow-primary/20',
-        )}
-      >
-        <DailyMissionCard />
-      </div>
       <StartupHomeCommandCenter />
     </>
   );

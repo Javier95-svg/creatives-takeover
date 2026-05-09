@@ -209,7 +209,7 @@ export function Day1Welcome({ profile, onProfilePatch }: Day1WelcomeProps) {
       await updateStep('daily_mission', { onboarding_completed: true });
       setCelebrating(true);
       window.setTimeout(() => {
-        navigate('/dashboard?highlight=daily-mission', { replace: true });
+        navigate('/dashboard/tasks', { replace: true });
       }, 1400);
     } catch (error) {
       console.error('Failed to prepare daily mission:', error);
