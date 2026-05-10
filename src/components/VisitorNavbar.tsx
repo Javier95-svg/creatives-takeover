@@ -118,7 +118,7 @@ const VisitorNavbar = () => {
                 <span className="font-space-grotesk text-sm font-semibold text-foreground">
                   Creatives Takeover
                 </span>
-                <span className="text-[11px] text-muted-foreground">Startup operating system</span>
+                <span className="text-[11px] text-muted-foreground">Startup incubator platform</span>
               </span>
             </Link>
 
