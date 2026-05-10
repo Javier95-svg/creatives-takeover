@@ -9,6 +9,7 @@ import {
   Map,
   Menu,
   Newspaper,
+  Rocket,
   Users,
   X,
 } from "lucide-react";
@@ -141,9 +142,10 @@ const VisitorNavbar = () => {
 
             <div className="ml-auto hidden items-center gap-2 lg:flex">
               <ThemeToggle />
-              <Button asChild variant="ghost" size="sm">
-                <Link to="/login" onClick={() => trackNavClick("Sign In")}>
-                  Sign In
+              <Button asChild variant="ghost" size="sm" className="gap-2">
+                <Link to="/login" onClick={() => trackNavClick("Join Today")}>
+                  <Rocket className="h-4 w-4" aria-hidden="true" />
+                  Join Today
                 </Link>
               </Button>
               <Button asChild size="sm" className="gap-2">
@@ -199,8 +201,9 @@ const VisitorNavbar = () => {
 
                 <div className="grid gap-2 border-t border-border/70 pt-3">
                   <Button asChild variant="outline" className="w-full">
-                    <Link to="/login" onClick={() => trackNavClick("Mobile Sign In")}>
-                      Sign In
+                    <Link to="/login" onClick={() => trackNavClick("Mobile Join Today")}>
+                      <Rocket className="mr-2 h-4 w-4" aria-hidden="true" />
+                      Join Today
                     </Link>
                   </Button>
                   <Button asChild className="w-full">
