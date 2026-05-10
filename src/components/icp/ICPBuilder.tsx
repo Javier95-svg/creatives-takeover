@@ -294,11 +294,16 @@ const ICPBuilder: React.FC = () => {
   const [isPersonaEditorOpen, setIsPersonaEditorOpen] = useState(false);
   const [synthesisError, setSynthesisError] = useState<string | null>(null);
   const [persistError, setPersistError] = useState<string | null>(null);
+  const [showCelebration, setShowCelebration] = useState(false);
+  const [pendingNavigatePath, setPendingNavigatePath] = useState<string | null>(null);
   const completedRef = useRef(false);
   const currentStepRef = useRef<IcpFlowScreen>(session.currentScreen);
   const modeRef = useRef<IcpBuilderMode | null>(session.mode);
   const stepsCompletedRef = useRef(0);
   const totalStepsRef = useRef(0);
+  const hasStartedTypingRef = useRef(false);
+  const fastInputRef = useRef<HTMLTextAreaElement>(null);
+  const guidedSeedRef = useRef<HTMLTextAreaElement>(null);
 
   const unlockPath = buildIcpUnlockReturnPath();
   const editDraftId = searchParams.get("edit");
@@ -307,6 +312,10 @@ const ICPBuilder: React.FC = () => {
   const synthesisElapsedMs = loadingPhase === "synthesis" && loadingStartedAt ? Date.now() - loadingStartedAt : 0;
   const validatedGuided = useMemo(() => guidedIcpInputSchema.safeParse(session.guided), [session.guided]);
   const validatedFast = useMemo(() => fastIcpInputSchema.safeParse({ description: session.fastDescription }), [session.fastDescription]);
+  const fastWordCount = useMemo(
+    () => (session.fastDescription.trim() ? session.fastDescription.trim().split(/\s+/).length : 0),
+    [session.fastDescription],
+  );
   const unlockEmailPayload = useMemo<IcpUnlockEmailPayload | null>(() => {
     if (!session.draftPreview) return null;
 
@@ -338,9 +347,21 @@ const ICPBuilder: React.FC = () => {
   }, [session.currentScreen, session.mode]);
 
   useEffect(() => {
-    return () => {
+    const handleBeforeUnload = () => {
       if (completedRef.current) return;
+      trackICPBuilderAbandoned({
+        last_step: currentStepRef.current,
+        mode: modeRef.current,
+        steps_completed: stepsCompletedRef.current,
+        total_steps: totalStepsRef.current,
+      });
+    };
 
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      if (completedRef.current) return;
       trackICPBuilderAbandoned({
         last_step: currentStepRef.current,
         mode: modeRef.current,
@@ -365,6 +386,20 @@ const ICPBuilder: React.FC = () => {
       setIsPersonaEditorOpen(false);
     }
   }, [session.currentScreen]);
+
+  useEffect(() => {
+    if (session.currentScreen === "fast_input") {
+      requestAnimationFrame(() => fastInputRef.current?.focus());
+    } else if (session.currentScreen === "guided_seed") {
+      requestAnimationFrame(() => guidedSeedRef.current?.focus());
+    }
+  }, [session.currentScreen]);
+
+  useEffect(() => {
+    if (!showCelebration || !pendingNavigatePath) return;
+    const timer = window.setTimeout(() => navigate(pendingNavigatePath, { replace: true }), 2000);
+    return () => window.clearTimeout(timer);
+  }, [showCelebration, pendingNavigatePath, navigate]);
 
   useEffect(() => {
     const restoredSeed = normalizeIcpSeed(searchParams.get("seed"));
@@ -521,7 +556,7 @@ const ICPBuilder: React.FC = () => {
   const canContinue = useMemo(() => {
     switch (session.currentScreen) {
       case "fast_input":
-        return validatedFast.success;
+        return fastWordCount >= 50;
       case "guided_seed":
         return (session.guided.seed || "").trim().length >= 8;
       case "guided_persona":
@@ -537,9 +572,13 @@ const ICPBuilder: React.FC = () => {
       default:
         return false;
     }
-  }, [session, validatedFast.success]);
+  }, [session, fastWordCount]);
 
   const updateGuided = <K extends keyof IcpBuilderSession["guided"]>(field: K, value: IcpBuilderSession["guided"][K]) => {
+    if (!hasStartedTypingRef.current) {
+      hasStartedTypingRef.current = true;
+      trackICPBuilderStarted({ page_path: "/icp-builder", mode: session.mode, userId: user?.id });
+    }
     setSession((previous) => ({
       ...previous,
       guided: {
@@ -550,6 +589,10 @@ const ICPBuilder: React.FC = () => {
   };
 
   const updateQuickstartSeed = (value: string) => {
+    if (!hasStartedTypingRef.current) {
+      hasStartedTypingRef.current = true;
+      trackICPBuilderStarted({ page_path: "/icp-builder", mode: session.mode, userId: user?.id });
+    }
     setSession((previous) => {
       const previousSeed = previous.guided.seed || "";
       const shouldMirrorFast = !previous.fastDescription || previous.fastDescription === previousSeed;
@@ -566,6 +609,7 @@ const ICPBuilder: React.FC = () => {
   };
 
   const resetBuilder = () => {
+    hasStartedTypingRef.current = false;
     clearIcpBuilderSession();
     setSession(createEmptyIcpBuilderSession());
     setLegacyAnalysis(null);
@@ -682,14 +726,6 @@ const ICPBuilder: React.FC = () => {
     setFallbackEmailState("idle");
 
     try {
-      trackICPBuilderStarted({ page_path: "/icp-builder", mode, userId: user?.id });
-      captureEvent("icp_builder_started", {
-        page_path: "/icp-builder",
-        entry_mode: mode,
-        isAuthenticated: Boolean(user),
-        userId: user?.id,
-      });
-
       const data = await invokeIcpAnalyzer<IcpDraftGenerationResponse>(
         body,
         persist ? SAVE_TIMEOUT_MS : PREVIEW_TIMEOUT_MS,
@@ -779,8 +815,14 @@ const ICPBuilder: React.FC = () => {
         mode,
         source: "draft_saved",
       });
-
-      navigate(`/icp/draft/${analysisId}?source=icp-unlock`, { replace: true });
+      captureEvent("icp_analysis_completed", {
+        mode,
+        persona_name: artifact.draftDocument.customer.personaName,
+        confidence: artifact.draftDocument.confidence.level,
+        userId: user?.id,
+      });
+      setPendingNavigatePath(`/icp/draft/${analysisId}?source=icp-unlock`);
+      setShowCelebration(true);
     } catch (error) {
       console.error("ICP draft generation failed", error);
       if (!persist) {
@@ -871,8 +913,14 @@ const ICPBuilder: React.FC = () => {
           mode: session.mode,
           source: "unlock_gate",
         });
-
-        navigate(`/icp/draft/${analysisId}?source=icp-unlock`, { replace: true });
+        captureEvent("icp_analysis_completed", {
+          mode: session.mode,
+          persona_name: artifact.draftDocument.customer.personaName,
+          confidence: artifact.draftDocument.confidence.level,
+          userId: user?.id,
+        });
+        setPendingNavigatePath(`/icp/draft/${analysisId}?source=icp-unlock`);
+        setShowCelebration(true);
         return;
       }
 
@@ -1100,6 +1148,42 @@ const ICPBuilder: React.FC = () => {
         </p>
       </div>
 
+      {session.mode !== null && (
+        <div className="mt-6 flex flex-col items-start justify-between gap-4 rounded-[2rem] border border-[#32b8c6]/30 bg-[#32b8c6]/8 px-5 py-4 sm:flex-row sm:items-center">
+          <div>
+            <p className="text-sm font-semibold text-foreground">You have an unfinished ICP draft</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">Pick up where you left off, or start fresh.</p>
+          </div>
+          <div className="flex shrink-0 items-center gap-3">
+            <button
+              type="button"
+              className="text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground"
+              onClick={resetBuilder}
+            >
+              Start over
+            </button>
+            <Button
+              type="button"
+              size="sm"
+              className="h-9 rounded-full px-4 text-xs font-semibold"
+              onClick={() =>
+                setSession((prev) => ({
+                  ...prev,
+                  currentScreen:
+                    prev.currentScreen === "mode_select"
+                      ? prev.mode === "fast"
+                        ? "fast_input"
+                        : "guided_seed"
+                      : prev.currentScreen,
+                }))
+              }
+            >
+              Continue where I left off
+            </Button>
+          </div>
+        </div>
+      )}
+
       <div id="icp-mode-selector" className="mt-10 grid gap-5 lg:grid-cols-2">
         <button
           type="button"
@@ -1166,59 +1250,83 @@ const ICPBuilder: React.FC = () => {
     </div>
   );
 
-  const renderQuestionShell = (content: React.ReactNode) => (
-    <div className="mx-auto flex min-h-screen max-w-3xl flex-col px-4 pb-28 pt-32 text-foreground sm:px-6 md:pt-36">
-      <div className="mb-8 flex items-center gap-4">
-        <button
-          type="button"
-          onClick={handleBack}
-          className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-border/60 bg-white/80 text-foreground shadow-sm backdrop-blur transition-colors hover:bg-white dark:bg-slate-950/70 dark:hover:bg-slate-950 disabled:cursor-not-allowed disabled:opacity-40"
-          disabled={!getPreviousScreen(session.currentScreen, session.mode)}
-          aria-label="Go back"
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </button>
-      </div>
+  const renderQuestionShell = (content: React.ReactNode) => {
+    const guidedStep = GUIDED_SCREEN_ORDER.indexOf(session.currentScreen);
+    const isGuided = guidedStep >= 0;
+    const guidedPct = isGuided ? ((guidedStep + 1) / GUIDED_SCREEN_ORDER.length) * 100 : 0;
 
-      <div className="flex-1">{content}</div>
-
-      <div className="pointer-events-auto fixed inset-x-0 bottom-0 z-[60] border-t border-border/60 bg-background/92 px-4 py-4 backdrop-blur sm:static sm:mt-12 sm:border-t-0 sm:bg-transparent sm:px-0 sm:py-0">
-        {synthesisError ? (
-          <div className="relative z-[70] mx-auto mb-3 max-w-3xl rounded-2xl border border-destructive/30 bg-destructive/8 px-4 py-3 text-sm text-destructive">
-            <span className="font-semibold">
-              {session.currentScreen === "guided_seed" ? "Analysis failed." : "Generation failed."}
-            </span>{" "}
-            {synthesisError}
+    return (
+      <div className="mx-auto flex min-h-screen max-w-3xl flex-col px-4 pb-28 pt-32 text-foreground sm:px-6 md:pt-36">
+        <div className="mb-8 space-y-3">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <button
+                type="button"
+                onClick={handleBack}
+                className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-border/60 bg-white/80 text-foreground shadow-sm backdrop-blur transition-colors hover:bg-white dark:bg-slate-950/70 dark:hover:bg-slate-950 disabled:cursor-not-allowed disabled:opacity-40"
+                disabled={!getPreviousScreen(session.currentScreen, session.mode)}
+                aria-label="Go back"
+              >
+                <ArrowLeft className="h-4 w-4" />
+              </button>
+              {isGuided && (
+                <span className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                  Question {guidedStep + 1} of {GUIDED_SCREEN_ORDER.length}
+                </span>
+              )}
+            </div>
+            <span className="select-none text-[11px] text-muted-foreground/60">Auto-saved</span>
           </div>
-        ) : null}
-        <div className="relative z-[70] mx-auto flex max-w-3xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="text-xs uppercase tracking-[0.18em] text-muted-foreground">{getEnterHint(session.currentScreen)}</div>
-          <Button
-            type="button"
-            className="relative z-[80] h-12 min-w-[180px] self-end text-base font-semibold"
-            onClick={() => void handleContinue()}
-            disabled={loadingPhase !== null}
-          >
-            {loadingPhase === "synthesis" ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Building your draft...
-              </>
-            ) : synthesisError ? (
-              "Try again"
-            ) : session.currentScreen === "guided_workaround" || session.currentScreen === "fast_input" ? (
-              "Generate my free draft"
-            ) : (
-              <>
-                Continue
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </>
-            )}
-          </Button>
+          {isGuided && (
+            <div className="h-1 w-full overflow-hidden rounded-full bg-border/40">
+              <div
+                className="h-full rounded-full bg-[#32b8c6] transition-all duration-500 ease-out"
+                style={{ width: `${guidedPct}%` }}
+              />
+            </div>
+          )}
+        </div>
+
+        <div className="flex-1">{content}</div>
+
+        <div className="pointer-events-auto fixed inset-x-0 bottom-0 z-[60] border-t border-border/60 bg-background/92 px-4 py-4 backdrop-blur sm:static sm:mt-12 sm:border-t-0 sm:bg-transparent sm:px-0 sm:py-0">
+          {synthesisError ? (
+            <div className="relative z-[70] mx-auto mb-3 max-w-3xl rounded-2xl border border-destructive/30 bg-destructive/8 px-4 py-3 text-sm text-destructive">
+              <span className="font-semibold">
+                {session.currentScreen === "guided_seed" ? "Analysis failed." : "Generation failed."}
+              </span>{" "}
+              {synthesisError}
+            </div>
+          ) : null}
+          <div className="relative z-[70] mx-auto flex max-w-3xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="text-xs uppercase tracking-[0.18em] text-muted-foreground">{getEnterHint(session.currentScreen)}</div>
+            <Button
+              type="button"
+              className="relative z-[80] h-12 min-w-[180px] self-end text-base font-semibold"
+              onClick={() => void handleContinue()}
+              disabled={loadingPhase !== null || !canContinue}
+            >
+              {loadingPhase === "synthesis" ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Building your draft...
+                </>
+              ) : synthesisError ? (
+                "Try again"
+              ) : session.currentScreen === "guided_workaround" || session.currentScreen === "fast_input" ? (
+                "Generate my free draft"
+              ) : (
+                <>
+                  Continue
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </>
+              )}
+            </Button>
+          </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const renderFastInput = () =>
     renderQuestionShell(
@@ -1233,23 +1341,26 @@ const ICPBuilder: React.FC = () => {
 
         <div className="space-y-2">
           <Textarea
+            ref={fastInputRef}
             rows={8}
             value={session.fastDescription}
-            onChange={(event) =>
+            onChange={(event) => {
+              if (!hasStartedTypingRef.current) {
+                hasStartedTypingRef.current = true;
+                trackICPBuilderStarted({ page_path: "/icp-builder", mode: session.mode, userId: user?.id });
+              }
               setSession((previous) => ({
                 ...previous,
                 fastDescription: event.target.value,
-              }))
-            }
+              }));
+            }}
             onKeyDown={handleFieldSubmit}
             placeholder="e.g. I'm building a client feedback tool for freelance designers. Right now they manage revisions through email and WhatsApp, which causes things to get lost and makes them look unprofessional. My tool puts all revision feedback in one place with version tracking. I'm a freelance designer myself so I know this market well."
             className="min-h-[280px] rounded-[2rem] border-border/60 bg-white/85 px-5 py-5 text-base leading-7 shadow-sm dark:bg-slate-950/70"
           />
           {session.fastDescription.length > 0 ? (
-            <p className={`px-1 text-xs ${validatedFast.success ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground"}`}>
-              {validatedFast.success
-                ? "✓ Enough detail to generate a draft"
-                : `${session.fastDescription.length} / 40 characters minimum`}
+            <p className={`px-1 text-xs transition-colors ${fastWordCount >= 50 ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground"}`}>
+              {fastWordCount >= 50 ? "✓ Ready to generate" : `${fastWordCount} / 50 words minimum`}
             </p>
           ) : null}
         </div>
@@ -1272,6 +1383,7 @@ const ICPBuilder: React.FC = () => {
             </div>
 
             <Textarea
+              ref={guidedSeedRef}
               rows={3}
               value={session.guided.seed || ""}
               onChange={(event) => updateQuickstartSeed(event.target.value)}
@@ -1430,6 +1542,22 @@ const ICPBuilder: React.FC = () => {
         return null;
     }
   };
+
+  if (showCelebration) {
+    return (
+      <div className="fixed inset-0 z-[200] flex items-center justify-center bg-background/95 backdrop-blur">
+        <div
+          className="flex flex-col items-center gap-4 text-center"
+          style={{ animation: "fadeInScale 0.4s cubic-bezier(0.34,1.56,0.64,1) both" }}
+        >
+          <p className="text-5xl" role="img" aria-label="Celebration">🎉</p>
+          <h1 className="text-3xl font-semibold tracking-tight text-foreground">Your ICP is ready</h1>
+          <p className="text-sm text-muted-foreground">Taking you to your dashboard...</p>
+        </div>
+        <style>{`@keyframes fadeInScale { from { opacity: 0; transform: scale(0.88); } to { opacity: 1; transform: scale(1); } }`}</style>
+      </div>
+    );
+  }
 
   if (isHydratingEdit || isHydratingResume) {
     return (
