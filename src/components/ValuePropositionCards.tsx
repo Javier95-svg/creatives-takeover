@@ -40,7 +40,7 @@ const ValuePropositionCards = () => {
       icon: Lightbulb,
       title: "Build Your Product & Validate Demand",
       subtitle: "BizMap AI",
-      buttonLabel: "Validate-Build-Launch",
+      buttonLabel: "Validate - Build - Launch",
       description: "BizMap AI is your personal business planning partner that walks you through every stage of building a product and getting it into the right hands. From defining your ideal customer with ICP Builder to validating demand with PMF Lab, choosing your tech stack, and mapping out your go-to-market strategy, every tool works together to keep you moving forward.\n\nThink of it as having a co-founder who never sleeps. Chat with the Business Planner about any challenge, get tailored recommendations, and export polished plans when you need to share your vision with investors or partners.",
       cta: "Start Building",
       link: "/bizmap-ai",
