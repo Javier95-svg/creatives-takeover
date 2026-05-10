@@ -123,7 +123,8 @@ const AdminAngelEditor = () => {
       return;
     }
 
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    // image/jpg is non-standard but commonly reported by Windows/Edge for JPEG files
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
     if (!allowedTypes.includes(file.type)) {
       toast.error('Invalid file type. Please upload a JPEG, PNG, WebP, or GIF image.');
       return;
@@ -411,7 +412,7 @@ const AdminAngelEditor = () => {
                   <div className="flex gap-2">
                     <Input
                       type="file"
-                      accept="image/jpeg,image/png,image/webp,image/gif"
+                      accept="image/jpeg,image/jpg,image/png,image/webp,image/gif"
                       onChange={handlePictureUpload}
                       disabled={uploadingPicture}
                       className={uploadingPicture ? "pointer-events-none cursor-not-allowed opacity-50" : "cursor-pointer"}
