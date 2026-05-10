@@ -17,6 +17,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { usePageAnalytics } from "@/hooks/usePageAnalytics";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import ThemeToggle from "@/components/ThemeToggle";
+import VisitorNavbar from "@/components/VisitorNavbar";
 import { useDeviceType } from "@/hooks/use-device-type";
 import { TabletNavigation } from "@/components/navigation/TabletNavigation";
 import ctLogoPolished from "@/assets/ct-logo-polished-borders.png";
@@ -229,6 +230,10 @@ const Navigation = () => {
   const navActionButtonClass =
     "nav-action-button relative h-10 w-10 rounded-[14px] text-muted-foreground hover:text-foreground";
   const getSignedOutTabState = (href: string) => (!user ? getPublicTabState(href) : 'accessible');
+
+  if (!loading && !user) {
+    return <VisitorNavbar />;
+  }
 
   return (
     <TooltipProvider delayDuration={200}>
