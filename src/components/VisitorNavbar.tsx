@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { ArrowRight, Menu, X } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ThemeToggle from "@/components/ThemeToggle";
 import ctLogoPolished from "@/assets/ct-logo-polished-borders.png";
@@ -111,10 +111,14 @@ const VisitorNavbar = () => {
 
             <div className="ml-auto hidden items-center gap-2 lg:flex">
               <ThemeToggle />
+              <Button asChild variant="ghost" size="sm">
+                <Link to="/login" onClick={() => trackNavClick("Sign In")}>
+                  Sign In
+                </Link>
+              </Button>
               <Button asChild size="sm" className="gap-2">
-                <Link to="/icp-builder" onClick={() => trackNavClick("Build My Persona")}>
-                  Build My Persona
-                  <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                <Link to="/signup" onClick={() => trackNavClick("Sign Up")}>
+                  Sign Up
                 </Link>
               </Button>
             </div>
@@ -159,11 +163,15 @@ const VisitorNavbar = () => {
                   </Link>
                 ))}
 
-                <div className="border-t border-border/70 pt-3">
+                <div className="grid gap-2 border-t border-border/70 pt-3">
+                  <Button asChild variant="outline" className="w-full">
+                    <Link to="/login" onClick={() => trackNavClick("Mobile Sign In")}>
+                      Sign In
+                    </Link>
+                  </Button>
                   <Button asChild className="w-full">
-                    <Link to="/icp-builder" onClick={() => trackNavClick("Mobile Build My Persona")}>
-                      Build My Persona
-                      <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
+                    <Link to="/signup" onClick={() => trackNavClick("Mobile Sign Up")}>
+                      Sign Up
                     </Link>
                   </Button>
                 </div>

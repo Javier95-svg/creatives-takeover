@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, Compass, Cpu, Image as ImageIcon, LayoutDashboard, Loader2, Upload, User } from "lucide-react";
+import { ArrowRight, Compass, Image as ImageIcon, LayoutDashboard, Loader2, Upload, User } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -28,7 +28,6 @@ const Hero = () => {
   const [heroImages, setHeroImages] = useState<HeroImageRecord[]>(() => readCachedHeroImages());
   const [uploading, setUploading] = useState<number | null>(null);
   const [optimisticPreviews, setOptimisticPreviews] = useState<Record<number, string>>({});
-  const [secondaryCtaPending, setSecondaryCtaPending] = useState(false);
   const fileInputRefs = useRef<Record<number, HTMLInputElement | null>>({});
 
   const isAdmin = user?.email?.toLowerCase() === "admin@creatives-takeover.com";
@@ -275,48 +274,6 @@ const Hero = () => {
     trackEngagement("hero-dashboard-cta", 90);
   };
 
-  const handleSecondaryCTAClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    if (secondaryCtaPending) return;
-    setSecondaryCtaPending(true);
-    trackEngagement("hero-secondary-cta", 70);
-
-    setTimeout(() => {
-      if (typeof document === "undefined" || typeof window === "undefined") return;
-
-      const targetSection = document.getElementById("startup-development-cycle");
-      if (targetSection) {
-        const navHeight = 64;
-        const targetPosition = targetSection.getBoundingClientRect().top + window.pageYOffset - navHeight;
-
-        window.scrollTo({
-          top: targetPosition,
-          behavior: "smooth",
-        });
-      } else {
-        setTimeout(() => {
-          if (typeof document === "undefined" || typeof window === "undefined") return;
-
-          const delayedTargetSection = document.getElementById("startup-development-cycle");
-          if (delayedTargetSection) {
-            const navHeight = 64;
-            const targetPosition = delayedTargetSection.getBoundingClientRect().top + window.pageYOffset - navHeight;
-            window.scrollTo({
-              top: targetPosition,
-              behavior: "smooth",
-            });
-          } else {
-            toast.info("The system overview is loading. Please scroll down to continue.");
-          }
-          setSecondaryCtaPending(false);
-        }, 100);
-      }
-      if (targetSection) {
-        setTimeout(() => setSecondaryCtaPending(false), 700);
-      }
-    }, 10);
-  };
-
   return (
     <section
       ref={heroRef}
@@ -371,23 +328,12 @@ const Hero = () => {
                 </div>
               ) : (
                 <div className="flex flex-col gap-3 items-center justify-center px-4 sm:px-0">
-                  <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-center justify-center px-4 sm:px-0">
+                  <div className="flex w-full justify-center px-4 sm:px-0">
                     <Button size="lg" className="w-full sm:w-auto min-h-[44px] touch-manipulation" asChild>
                       <Link to="/icp-builder" onClick={handlePrimaryCTAClick}>
-                        Start Here
+                        Build My Persona
                         <ArrowRight className="w-4 h-4" />
                       </Link>
-                    </Button>
-
-                    <Button
-                      variant="outline"
-                      size="lg"
-                      className={`w-full sm:w-auto min-h-[44px] touch-manipulation ${secondaryCtaPending ? 'pointer-events-none opacity-70' : ''}`}
-                      onClick={handleSecondaryCTAClick}
-                      disabled={secondaryCtaPending}
-                    >
-                      <Cpu className="w-4 h-4" />
-                      {secondaryCtaPending ? "Opening..." : "Our System"}
                     </Button>
                   </div>
                 </div>
