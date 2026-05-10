@@ -142,15 +142,15 @@ const VisitorNavbar = () => {
 
             <div className="ml-auto hidden items-center gap-2 lg:flex">
               <ThemeToggle />
-              <Button asChild variant="ghost" size="sm" className="gap-2">
-                <Link to="/login" onClick={() => trackNavClick("Join Today")}>
-                  <Rocket className="h-4 w-4" aria-hidden="true" />
-                  Join Today
+              <Button asChild variant="ghost" size="sm">
+                <Link to="/login" onClick={() => trackNavClick("Sign In")}>
+                  Sign In
                 </Link>
               </Button>
               <Button asChild size="sm" className="gap-2">
-                <Link to="/signup" onClick={() => trackNavClick("Sign Up")}>
-                  Sign Up
+                <Link to="/signup" onClick={() => trackNavClick("Join Today")}>
+                  <Rocket className="h-4 w-4" aria-hidden="true" />
+                  Join Today
                 </Link>
               </Button>
             </div>
@@ -201,14 +201,14 @@ const VisitorNavbar = () => {
 
                 <div className="grid gap-2 border-t border-border/70 pt-3">
                   <Button asChild variant="outline" className="w-full">
-                    <Link to="/login" onClick={() => trackNavClick("Mobile Join Today")}>
-                      <Rocket className="mr-2 h-4 w-4" aria-hidden="true" />
-                      Join Today
+                    <Link to="/login" onClick={() => trackNavClick("Mobile Sign In")}>
+                      Sign In
                     </Link>
                   </Button>
                   <Button asChild className="w-full">
-                    <Link to="/signup" onClick={() => trackNavClick("Mobile Sign Up")}>
-                      Sign Up
+                    <Link to="/signup" onClick={() => trackNavClick("Mobile Join Today")}>
+                      <Rocket className="mr-2 h-4 w-4" aria-hidden="true" />
+                      Join Today
                     </Link>
                   </Button>
                 </div>
