@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 
 const ScrollToTop = () => {
-  const { pathname, hash } = useLocation();
+  const { pathname, hash, state } = useLocation();
   const previousPathRef = useRef(pathname);
 
   useEffect(() => {
@@ -14,11 +14,20 @@ const ScrollToTop = () => {
 
     if (isDashboardInternalNavigation) return;
 
-    if (hash) {
-      let attempts = 0;
-      const targetId = decodeURIComponent(hash.slice(1));
+    const stateScrollTarget =
+      state &&
+      typeof state === 'object' &&
+      'scrollToSection' in state &&
+      typeof state.scrollToSection === 'string'
+        ? state.scrollToSection
+        : null;
 
-      const scrollToHashTarget = () => {
+    const targetId = hash ? decodeURIComponent(hash.slice(1)) : stateScrollTarget;
+
+    if (targetId) {
+      let attempts = 0;
+
+      const scrollToTarget = () => {
         const candidates = Array.from(document.querySelectorAll<HTMLElement>('[id]'));
         const target =
           candidates.find((element) => {
@@ -31,7 +40,7 @@ const ScrollToTop = () => {
         if (!target) {
           attempts += 1;
           if (attempts <= 10) {
-            window.setTimeout(scrollToHashTarget, 50);
+            window.setTimeout(scrollToTarget, 50);
           }
           return;
         }
@@ -47,12 +56,12 @@ const ScrollToTop = () => {
         });
       };
 
-      window.setTimeout(scrollToHashTarget, 0);
+      window.setTimeout(scrollToTarget, 0);
       return;
     }
 
     window.scrollTo(0, 0);
-  }, [pathname, hash]);
+  }, [pathname, hash, state]);
 
   return null;
 };

@@ -1,5 +1,6 @@
+import type { MouseEvent } from "react";
 import { useEffect, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   DollarSign,
   Home,
@@ -19,8 +20,8 @@ import { usePageAnalytics } from "@/hooks/usePageAnalytics";
 
 const visitorLinks = [
   { label: "Home", href: "/", icon: Home },
-  { label: "How It Works", href: "/#startup-development-cycle", icon: Map },
-  { label: "Features", href: "/#what-you-get", icon: LayoutGrid },
+  { label: "How It Works", href: "/", icon: Map, sectionId: "startup-development-cycle" },
+  { label: "Features", href: "/", icon: LayoutGrid, sectionId: "what-you-get" },
   { label: "Coaches", href: "/community", icon: Users },
   { label: "Newspaper", href: "/newspaper", icon: Newspaper },
   { label: "About Us", href: "/about", icon: Info },
@@ -31,6 +32,7 @@ const VisitorNavbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
   const { trackClick } = usePageAnalytics();
 
   useEffect(() => {
@@ -44,9 +46,9 @@ const VisitorNavbar = () => {
     setMobileOpen(false);
   }, [location.pathname, location.hash]);
 
-  const isActive = (href: string) => {
-    if (href.startsWith("/#")) {
-      return location.pathname === "/" && location.hash === href.slice(1);
+  const isActive = (href: string, sectionId?: string) => {
+    if (sectionId) {
+      return false;
     }
 
     if (href === "/") {
@@ -60,10 +62,24 @@ const VisitorNavbar = () => {
     trackClick(`VisitorNavbar - ${label}`, "Navigation");
   };
 
-  const linkClassName = (href: string) =>
+  const handleNavClick = (
+    event: MouseEvent<HTMLAnchorElement>,
+    item: (typeof visitorLinks)[number],
+    trackingLabel = item.label
+  ) => {
+    trackNavClick(trackingLabel);
+
+    if (!item.sectionId) return;
+
+    event.preventDefault();
+    setMobileOpen(false);
+    navigate("/", { state: { scrollToSection: item.sectionId } });
+  };
+
+  const linkClassName = (href: string, sectionId?: string) =>
     cn(
       "rounded-[14px] px-3.5 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-      isActive(href)
+      isActive(href, sectionId)
         ? "bg-background text-foreground shadow-sm"
         : "text-muted-foreground hover:bg-background/80 hover:text-foreground"
     );
@@ -86,7 +102,7 @@ const VisitorNavbar = () => {
           <div className="flex h-16 items-center gap-3 px-3 sm:px-4 lg:h-[70px] lg:px-6">
             <Link
               to="/"
-              className="flex min-w-0 items-center gap-3 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              className="flex min-w-0 items-center gap-4 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               aria-label="Creatives Takeover home"
               onClick={() => trackNavClick("Logo")}
             >
@@ -111,10 +127,10 @@ const VisitorNavbar = () => {
                 const Icon = item.icon;
                 return (
                   <Link
-                    key={item.href}
+                    key={item.label}
                     to={item.href}
-                    className={cn(linkClassName(item.href), "inline-flex items-center gap-2")}
-                    onClick={() => trackNavClick(item.label)}
+                    className={cn(linkClassName(item.href, item.sectionId), "inline-flex items-center gap-2")}
+                    onClick={(event) => handleNavClick(event, item)}
                   >
                     <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
                     {item.label}
@@ -131,8 +147,8 @@ const VisitorNavbar = () => {
                 </Link>
               </Button>
               <Button asChild size="sm" className="gap-2">
-                <Link to="/signup" onClick={() => trackNavClick("Sign Up Free")}>
-                  Sign Up for Free
+                <Link to="/signup" onClick={() => trackNavClick("Sign Up")}>
+                  Sign Up
                 </Link>
               </Button>
             </div>
@@ -165,15 +181,15 @@ const VisitorNavbar = () => {
                   const Icon = item.icon;
                   return (
                     <Link
-                      key={item.href}
+                      key={item.label}
                       to={item.href}
                       className={cn(
                         "flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-colors",
-                        isActive(item.href)
+                        isActive(item.href, item.sectionId)
                           ? "bg-background text-foreground"
                           : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
                       )}
-                      onClick={() => trackNavClick(`Mobile ${item.label}`)}
+                      onClick={(event) => handleNavClick(event, item, `Mobile ${item.label}`)}
                     >
                       <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
                       {item.label}
@@ -188,8 +204,8 @@ const VisitorNavbar = () => {
                     </Link>
                   </Button>
                   <Button asChild className="w-full">
-                    <Link to="/signup" onClick={() => trackNavClick("Mobile Sign Up Free")}>
-                      Sign Up for Free
+                    <Link to="/signup" onClick={() => trackNavClick("Mobile Sign Up")}>
+                      Sign Up
                     </Link>
                   </Button>
                 </div>
