@@ -1,6 +1,16 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X } from "lucide-react";
+import {
+  DollarSign,
+  Home,
+  Info,
+  LayoutGrid,
+  Map,
+  Menu,
+  Newspaper,
+  Users,
+  X,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ThemeToggle from "@/components/ThemeToggle";
 import ctLogoPolished from "@/assets/ct-logo-polished-borders.png";
@@ -8,13 +18,13 @@ import { cn } from "@/lib/utils";
 import { usePageAnalytics } from "@/hooks/usePageAnalytics";
 
 const visitorLinks = [
-  { label: "Home", href: "/" },
-  { label: "How It Works", href: "/#startup-development-cycle" },
-  { label: "Features", href: "/#what-you-get" },
-  { label: "Coaches", href: "/community" },
-  { label: "Newspaper", href: "/newspaper" },
-  { label: "About Us", href: "/about" },
-  { label: "Pricing", href: "/pricing" },
+  { label: "Home", href: "/", icon: Home },
+  { label: "How It Works", href: "/#startup-development-cycle", icon: Map },
+  { label: "Features", href: "/#what-you-get", icon: LayoutGrid },
+  { label: "Coaches", href: "/community", icon: Users },
+  { label: "Newspaper", href: "/newspaper", icon: Newspaper },
+  { label: "About Us", href: "/about", icon: Info },
+  { label: "Pricing", href: "/pricing", icon: DollarSign },
 ];
 
 const VisitorNavbar = () => {
@@ -76,14 +86,14 @@ const VisitorNavbar = () => {
           <div className="flex h-16 items-center gap-3 px-3 sm:px-4 lg:h-[70px] lg:px-6">
             <Link
               to="/"
-              className="flex min-w-0 items-center gap-2 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              className="flex min-w-0 items-center gap-3 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               aria-label="Creatives Takeover home"
               onClick={() => trackNavClick("Logo")}
             >
               <img
                 src={ctLogoPolished}
                 alt="Creatives Takeover"
-                className="h-11 w-11 shrink-0"
+                className="site-nav-logo animate-logo-breathing nav-logo-hover h-11 w-11 shrink-0"
                 width={44}
                 height={44}
                 decoding="async"
@@ -97,16 +107,20 @@ const VisitorNavbar = () => {
             </Link>
 
             <div className="hidden flex-1 items-center justify-center gap-1 lg:flex">
-              {visitorLinks.map((item) => (
-                <Link
-                  key={item.href}
-                  to={item.href}
-                  className={linkClassName(item.href)}
-                  onClick={() => trackNavClick(item.label)}
-                >
-                  {item.label}
-                </Link>
-              ))}
+              {visitorLinks.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <Link
+                    key={item.href}
+                    to={item.href}
+                    className={cn(linkClassName(item.href), "inline-flex items-center gap-2")}
+                    onClick={() => trackNavClick(item.label)}
+                  >
+                    <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
+                    {item.label}
+                  </Link>
+                );
+              })}
             </div>
 
             <div className="ml-auto hidden items-center gap-2 lg:flex">
@@ -117,8 +131,8 @@ const VisitorNavbar = () => {
                 </Link>
               </Button>
               <Button asChild size="sm" className="gap-2">
-                <Link to="/signup" onClick={() => trackNavClick("Sign Up")}>
-                  Sign Up
+                <Link to="/signup" onClick={() => trackNavClick("Sign Up Free")}>
+                  Sign Up for Free
                 </Link>
               </Button>
             </div>
@@ -147,21 +161,25 @@ const VisitorNavbar = () => {
           >
             <div className="min-h-0">
               <div className="space-y-2 border-t border-border/70 px-3 py-4 sm:px-4">
-                {visitorLinks.map((item) => (
-                  <Link
-                    key={item.href}
-                    to={item.href}
-                    className={cn(
-                      "block rounded-xl px-4 py-3 text-sm font-medium transition-colors",
-                      isActive(item.href)
-                        ? "bg-background text-foreground"
-                        : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
-                    )}
-                    onClick={() => trackNavClick(`Mobile ${item.label}`)}
-                  >
-                    {item.label}
-                  </Link>
-                ))}
+                {visitorLinks.map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <Link
+                      key={item.href}
+                      to={item.href}
+                      className={cn(
+                        "flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-colors",
+                        isActive(item.href)
+                          ? "bg-background text-foreground"
+                          : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+                      )}
+                      onClick={() => trackNavClick(`Mobile ${item.label}`)}
+                    >
+                      <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
+                      {item.label}
+                    </Link>
+                  );
+                })}
 
                 <div className="grid gap-2 border-t border-border/70 pt-3">
                   <Button asChild variant="outline" className="w-full">
@@ -170,8 +188,8 @@ const VisitorNavbar = () => {
                     </Link>
                   </Button>
                   <Button asChild className="w-full">
-                    <Link to="/signup" onClick={() => trackNavClick("Mobile Sign Up")}>
-                      Sign Up
+                    <Link to="/signup" onClick={() => trackNavClick("Mobile Sign Up Free")}>
+                      Sign Up for Free
                     </Link>
                   </Button>
                 </div>
