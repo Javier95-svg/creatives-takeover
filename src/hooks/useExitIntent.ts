@@ -5,7 +5,7 @@ export const useExitIntent = () => {
 
   useEffect(() => {
     // Check if user has already seen the exit intent in this session
-    const hasSeenExitIntent = sessionStorage.getItem('exit-intent-seen');
+    const hasSeenExitIntent = sessionStorage.getItem('exit_intent_shown');
     if (hasSeenExitIntent) return;
 
     let isExitIntentTriggered = false;
@@ -16,14 +16,14 @@ export const useExitIntent = () => {
         isExitIntentTriggered = true;
         setShowExitIntent(true);
         // Mark as seen for this session
-        sessionStorage.setItem('exit-intent-seen', 'true');
+        sessionStorage.setItem('exit_intent_shown', 'true');
       }
     };
 
     // Add much longer delay before enabling exit intent detection
     const timer = setTimeout(() => {
       document.addEventListener('mouseleave', handleMouseLeave);
-    }, 20000); // Wait 20 seconds before enabling exit intent
+    }, 30000); // Wait 30 seconds before enabling exit intent
 
     return () => {
       clearTimeout(timer);

@@ -935,8 +935,9 @@ const PMFEvidenceForm: React.FC<PMFEvidenceFormProps> = ({ onSubmit, isSubmittin
                     </p>
                   </div>
                 </div>
-                <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer pl-10">
+                <label htmlFor="pmf-below-threshold-ack" className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer pl-10">
                   <input
+                    id="pmf-below-threshold-ack"
                     type="checkbox"
                     checked={belowThresholdAcknowledged}
                     onChange={(e) => setBelowThresholdAcknowledged(e.target.checked)}

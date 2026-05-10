@@ -274,12 +274,13 @@ const JobApplicationForm = ({ isOpen, onClose, position }: JobApplicationFormPro
                     <FormLabel>Resume/CV * (PDF, DOC, DOCX - Max 5MB)</FormLabel>
                     <FormControl>
                       <div className="flex items-center gap-2">
-                        <label className="flex items-center gap-2 cursor-pointer px-4 py-2 border border-input rounded-md hover:bg-accent transition-colors">
+                        <label htmlFor="job-application-resume-upload" className="flex items-center gap-2 cursor-pointer px-4 py-2 border border-input rounded-md hover:bg-accent transition-colors">
                           <Upload className="h-4 w-4" />
                           <span className="text-sm">
                             {value ? value.name : "Choose File"}
                           </span>
                           <input
+                            id="job-application-resume-upload"
                             type="file"
                             className="hidden"
                             accept=".pdf,.doc,.docx"

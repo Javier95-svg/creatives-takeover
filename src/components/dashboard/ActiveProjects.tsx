@@ -154,7 +154,7 @@ export const ActiveProjects = () => {
                 className="block animate-fade-in-up opacity-0"
                 style={{ animationDelay: `${index * 0.1}s`, animationFillMode: 'forwards' }}
               >
-                <div className="group p-4 bg-muted/30 rounded-lg border border-border/50 hover:border-primary/50 hover:shadow-md hover:scale-[1.02] transition-all duration-300 cursor-pointer">
+                <div className="group p-4 bg-muted/30 rounded-lg border border-border/50 hover:border-primary/50 hover:shadow-md hover:scale-[1.02] transition-all duration-300 [&_*]:pointer-events-none">
                   {/* Header Row */}
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex-1 min-w-0">

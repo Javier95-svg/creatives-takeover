@@ -6,6 +6,8 @@ import Navigation from "@/components/Navigation";
 import SEO from "@/components/SEO";
 import { Button } from "@/components/ui/button";
 import { readIcpBuilderSession } from "@/lib/icpBuilderSession";
+import { useExitIntent } from "@/hooks/useExitIntent";
+import { ExitIntentModal } from "@/components/ExitIntentModal";
 import {
   captureEvent,
   trackActivationCompleted,
@@ -49,6 +51,7 @@ function getIcpBuilderOpenedSource(
 export default function ICPBuilderPage() {
   const navigate = useNavigate();
   const hasTracked = useRef(false);
+  const { showExitIntent, closeExitIntent } = useExitIntent();
   const [showLeadBanner, setShowLeadBanner] = useState(false);
   const [leadEmail, setLeadEmail] = useState('');
   const [leadCaptured, setLeadCaptured] = useState(false);
@@ -242,6 +245,11 @@ export default function ICPBuilderPage() {
                       type="email"
                       value={leadEmail}
                       onChange={(event) => setLeadEmail(event.target.value)}
+                      onKeyDown={(event) => {
+                        if (event.key !== "Enter") return;
+                        event.preventDefault();
+                        event.currentTarget.form?.requestSubmit();
+                      }}
                       placeholder="you@company.com"
                       className="h-11 w-full rounded-xl border border-slate-200 bg-white pl-9 pr-3 text-sm text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-[#32b8c6] focus:ring-4 focus:ring-[#32b8c6]/15 dark:border-white/10 dark:bg-slate-950/70 dark:text-white"
                     />
@@ -256,6 +264,8 @@ export default function ICPBuilderPage() {
           </div>
         </div>
       ) : null}
+
+      <ExitIntentModal isOpen={showExitIntent} onClose={closeExitIntent} />
     </div>
   );
 }

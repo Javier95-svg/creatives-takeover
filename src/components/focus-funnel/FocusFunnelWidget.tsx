@@ -154,20 +154,21 @@ export function FocusFunnelWidget({ compact = false, onOpenAIPartner }: FocusFun
             </div>
             <div className="space-y-1.5">
               {highPriorityTasks.slice(0, 3).map(task => (
-                <div
+                <button
                   key={task.id}
-                  className="flex items-center gap-2 p-2 rounded-md bg-muted/50 hover:bg-muted transition-colors cursor-pointer"
+                  type="button"
+                  className="flex w-full items-center gap-2 p-2 rounded-md bg-muted/50 hover:bg-muted transition-colors [&_*]:pointer-events-none"
                   onClick={() => updateTaskStatus(task.id, 'in_progress')}
                 >
                   <div className={cn(
                     "h-2 w-2 rounded-full",
                     task.priority === 'urgent' ? 'bg-red-500' : 'bg-amber-500'
                   )} />
-                  <span className="text-sm truncate flex-1">{task.title}</span>
+                  <span className="text-sm truncate flex-1 text-left">{task.title}</span>
                   <Badge variant="outline" className="text-[10px] px-1.5">
                     {task.priority}
                   </Badge>
-                </div>
+                </button>
               ))}
             </div>
           </div>

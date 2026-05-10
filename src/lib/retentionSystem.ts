@@ -32,7 +32,8 @@ export type RetentionSequence =
   | 'reengagement_60d'
   | 'milestone_celebration'
   | 'profile_incomplete_nudge'
-  | 'celebration';
+  | 'celebration'
+  | 'exit_intent_reminder';
 
 type RetentionEventProperties = Record<string, unknown>;
 

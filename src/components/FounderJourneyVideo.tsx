@@ -275,8 +275,10 @@ const FounderJourneyVideo = ({ className = '', position = 0 }: FounderJourneyVid
             className="hidden"
             disabled={uploading}
           />
-          <div
-            className="absolute inset-0 cursor-pointer z-10"
+          <button
+            type="button"
+            aria-label="Upload video"
+            className="absolute inset-0 z-10"
             onClick={() => {
               if (!uploading && fileInputRef.current) {
                 fileInputRef.current.click();

@@ -3,9 +3,12 @@ import { useSearchParams } from 'react-router-dom';
 import { CheckCircle2 } from 'lucide-react';
 
 import StartupHomeCommandCenter from '@/components/dashboard/StartupHomeCommandCenter';
+import { useExitIntent } from '@/hooks/useExitIntent';
+import { ExitIntentModal } from '@/components/ExitIntentModal';
 
 const Dashboard = () => {
   const [searchParams, setSearchParams] = useSearchParams();
+  const { showExitIntent, closeExitIntent } = useExitIntent();
   const fromIcpBuilder = searchParams.get('from') === 'icp_builder';
 
   const dismissIcpBanner = () => {
@@ -45,6 +48,7 @@ const Dashboard = () => {
         </div>
       ) : null}
       <StartupHomeCommandCenter />
+      <ExitIntentModal isOpen={showExitIntent} onClose={closeExitIntent} />
     </>
   );
 };
