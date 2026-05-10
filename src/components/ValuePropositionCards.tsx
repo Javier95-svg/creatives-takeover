@@ -379,7 +379,7 @@ const ValuePropositionCards = () => {
             Creatives Takeover in a Nutshell
           </h2>
           <p className="homepage-section-copy value-prop-section__copy text-base sm:text-lg">
-            Everything you need, all in one place. Built on six core pillars to help solofounders validate, build, and grow a business from scratch.
+            Everything you need, all in one place. Built on six core pillars to help startup founders validate, build, and grow a business from scratch.
           </p>
         </div>
 
