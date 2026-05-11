@@ -207,10 +207,8 @@ const UserReviews = () => {
                       stroke="url(#mobileRingGradient)"
                       strokeWidth="0.25"
                       className="text-primary"
-                      
-                    >
-                      <animate attributeName="r" values="39;39.4;39" dur="3s" repeatCount="indefinite" />
-                    </circle>
+                      style={{ animation: 'cycle-ring-pulse-mobile 3s ease-in-out infinite' }}
+                    />
 
                     <path
                       d={generateConnectionPath()}
@@ -219,10 +217,8 @@ const UserReviews = () => {
                       strokeWidth="0.4"
                       className="text-primary/30"
                       strokeDasharray="2 2"
-                      
-                    >
-                      <animate attributeName="stroke-dashoffset" from="0" to="4" dur="2s" repeatCount="indefinite" />
-                    </path>
+                      style={{ animation: 'cycle-dash-spin 2s linear infinite' }}
+                    />
 
                     {stepPositions.map((_, index) => {
                       const isActiveSegment = index === activeStepIndex;
@@ -251,12 +247,8 @@ const UserReviews = () => {
                               ? "text-primary/50 opacity-70"
                               : "text-primary/10 opacity-50"
                           }`}
-                          
-                        >
-                          {isActiveSegment && (
-                            <animate attributeName="stroke-width" values="0.8;1;0.8" dur="2s" repeatCount="indefinite" />
-                          )}
-                        </path>
+                          style={isActiveSegment ? { animation: 'cycle-stroke-pulse 2s ease-in-out infinite' } : undefined}
+                        />
                       );
                     })}
                   </svg>
@@ -373,15 +365,8 @@ const UserReviews = () => {
                     stroke="url(#ringGradient)"
                     strokeWidth="0.25"
                     className="text-primary"
-                    
-                  >
-                    <animate
-                      attributeName="r"
-                      values="39;39.5;39"
-                      dur="3s"
-                      repeatCount="indefinite"
-                    />
-                  </circle>
+                    style={{ animation: 'cycle-ring-pulse 3s ease-in-out infinite' }}
+                  />
 
                   {/* Animated connection path */}
                   <path
@@ -391,16 +376,8 @@ const UserReviews = () => {
                     strokeWidth="0.4"
                     className="text-primary/30"
                     strokeDasharray="2 2"
-                    
-                  >
-                    <animate
-                      attributeName="stroke-dashoffset"
-                      from="0"
-                      to="4"
-                      dur="2s"
-                      repeatCount="indefinite"
-                    />
-                  </path>
+                    style={{ animation: 'cycle-dash-spin 2s linear infinite' }}
+                  />
 
                   {/* Progress indicator - active segment glow */}
                   {stepPositions.map((_, index) => {
@@ -430,17 +407,8 @@ const UserReviews = () => {
                             ? "text-primary/50 opacity-70"
                             : "text-primary/10 opacity-50"
                         }`}
-                        
-                      >
-                        {isActiveSegment && (
-                          <animate
-                            attributeName="stroke-width"
-                            values="0.8;1;0.8"
-                            dur="2s"
-                            repeatCount="indefinite"
-                          />
-                        )}
-                      </path>
+                        style={isActiveSegment ? { animation: 'cycle-stroke-pulse 2s ease-in-out infinite' } : undefined}
+                      />
                     );
                   })}
                 </svg>

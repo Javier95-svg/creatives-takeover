@@ -4424,3 +4424,25 @@ img {
     transform: scale(0.986);
   }
 }
+
+/* ─── Startup Development Cycle – cross-browser SVG animations ──────────────
+   Replace SMIL <animate> elements so Chrome and Firefox render identically.  */
+@keyframes cycle-dash-spin {
+  from { stroke-dashoffset: 0; }
+  to   { stroke-dashoffset: 4; }
+}
+
+@keyframes cycle-ring-pulse {
+  0%, 100% { r: 39;   }
+  50%       { r: 39.5; }
+}
+
+@keyframes cycle-ring-pulse-mobile {
+  0%, 100% { r: 39;   }
+  50%       { r: 39.4; }
+}
+
+@keyframes cycle-stroke-pulse {
+  0%, 100% { stroke-width: 0.8px; }
+  50%       { stroke-width: 1px;   }
+}
