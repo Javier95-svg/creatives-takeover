@@ -217,7 +217,7 @@ const UserReviews = () => {
                       strokeWidth="0.4"
                       className="text-primary/30"
                       strokeDasharray="2 2"
-                      style={{ animation: 'cycle-dash-spin 2s linear infinite' }}
+                      style={{ animation: 'cycle-dash-spin 8s linear infinite' }}
                     />
 
                     {stepPositions.map((_, index) => {
@@ -376,7 +376,7 @@ const UserReviews = () => {
                     strokeWidth="0.4"
                     className="text-primary/30"
                     strokeDasharray="2 2"
-                    style={{ animation: 'cycle-dash-spin 2s linear infinite' }}
+                    style={{ animation: 'cycle-dash-spin 8s linear infinite' }}
                   />
 
                   {/* Progress indicator - active segment glow */}

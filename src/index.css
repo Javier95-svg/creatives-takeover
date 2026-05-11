@@ -4426,20 +4426,22 @@ img {
 }
 
 /* ─── Startup Development Cycle – cross-browser SVG animations ──────────────
-   Replace SMIL <animate> elements so Chrome and Firefox render identically.  */
+   CSS @keyframes replace SMIL <animate> so Chrome and Firefox render identically.
+   r uses px units (required for valid CSS), spin animates the full circumference
+   (~245 SVG units at r=39) for one visible revolution per cycle. */
 @keyframes cycle-dash-spin {
   from { stroke-dashoffset: 0; }
-  to   { stroke-dashoffset: 4; }
+  to   { stroke-dashoffset: -245; }
 }
 
 @keyframes cycle-ring-pulse {
-  0%, 100% { r: 39;   }
-  50%       { r: 39.5; }
+  0%, 100% { r: 39px;   }
+  50%       { r: 39.5px; }
 }
 
 @keyframes cycle-ring-pulse-mobile {
-  0%, 100% { r: 39;   }
-  50%       { r: 39.4; }
+  0%, 100% { r: 39px;   }
+  50%       { r: 39.4px; }
 }
 
 @keyframes cycle-stroke-pulse {
