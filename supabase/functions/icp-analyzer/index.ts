@@ -205,6 +205,10 @@ function buildStoredArtifactPayload(artifact: Record<string, any>) {
   };
 }
 
+function shouldChargeIcpCredits(amount: number) {
+  return Number.isFinite(amount) && amount > 0;
+}
+
 async function storeArtifact({
   serviceClient,
   userId,
@@ -431,19 +435,26 @@ serve(async (req) => {
         requestFingerprint: payload,
       });
 
-      creditResult = await checkAndDeductCredits(user.id, CREDIT_COSTS.ICP_ANALYSIS, "ICP Analysis", undefined, {
-        idempotencyKey,
-      });
-      if (!creditResult.success) {
-        return new Response(JSON.stringify({
-          success: false,
-          error: creditResult.error || "Credit deduction failed",
-          creditError: true,
-          errorCode: creditResult.errorCode,
-          requiredCredits: CREDIT_COSTS.ICP_ANALYSIS,
-        }), {
-          status: 402,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+      if (shouldChargeIcpCredits(CREDIT_COSTS.ICP_ANALYSIS)) {
+        creditResult = await checkAndDeductCredits(user.id, CREDIT_COSTS.ICP_ANALYSIS, "ICP Analysis", undefined, {
+          idempotencyKey,
+        });
+        if (!creditResult.success) {
+          return new Response(JSON.stringify({
+            success: false,
+            error: creditResult.error || "Credit deduction failed",
+            creditError: true,
+            errorCode: creditResult.errorCode,
+            requiredCredits: CREDIT_COSTS.ICP_ANALYSIS,
+          }), {
+            status: 402,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+      } else {
+        console.info("Skipping ICP Analysis credit deduction because the configured credit cost is zero.", {
+          userId: user.id,
+          feature: "ICP Analysis",
         });
       }
     }

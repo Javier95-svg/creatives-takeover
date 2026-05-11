@@ -49,6 +49,11 @@ import {
   type StoredIcpArtifact,
 } from "@/lib/icpBuilderSession";
 import { buildBuilderSessionFromArtifact, normalizeStoredArtifact } from "@/lib/icpDraftArtifacts";
+import {
+  buildIcpDraftSaveFailureMessage,
+  readFunctionErrorDetails,
+  type FunctionFailureDetails,
+} from "@/lib/icpHandoff";
 import { consumeStoredIcpSeed, normalizeIcpSeed } from "@/lib/icpSeed";
 import { markFirstArtifactCreated, sendRetentionEmail } from "@/lib/retentionSystem";
 
@@ -156,6 +161,16 @@ const withTimeout = async <T,>(promise: Promise<T>, timeoutMs: number) => {
 };
 
 const invokeIcpAnalyzer = async <T,>(body: unknown, timeoutMs: number, context: string): Promise<T | null> => {
+  const operation = typeof body === "object" && body !== null && "operation" in body && typeof (body as { operation?: unknown }).operation === "string"
+    ? (body as { operation: string }).operation
+    : "unknown";
+  const isPersistOperation =
+    operation === "save_existing_artifact"
+    || (typeof body === "object"
+      && body !== null
+      && "mode" in body
+      && (body as { mode?: unknown }).mode === "save");
+
   try {
     const { data, error } = await withTimeout(
       supabase.functions.invoke("icp-analyzer", { body }),
@@ -163,18 +178,54 @@ const invokeIcpAnalyzer = async <T,>(body: unknown, timeoutMs: number, context: 
     );
 
     if (error) {
-      console.error(context, error);
-      throw new Error(ICP_ANALYZER_ERROR_MESSAGE);
+      const details = await readFunctionErrorDetails(error, operation);
+
+      console.error("ICP analyzer invocation failed", {
+        context,
+        operation,
+        step: details.step,
+        errorCode: details.errorCode,
+        requiredCredits: details.requiredCredits,
+        message: details.message,
+        error,
+      });
+      captureEvent("icp_analyzer_function_failed", {
+        context,
+        operation,
+        step: details.step,
+        error_code: details.errorCode,
+        required_credits: details.requiredCredits,
+        message: details.message,
+      });
+
+      const invocationError = new Error(
+        isPersistOperation ? buildIcpDraftSaveFailureMessage(details) : ICP_ANALYZER_ERROR_MESSAGE,
+      ) as Error & { details?: FunctionFailureDetails };
+      invocationError.details = details;
+      throw invocationError;
     }
 
     return (data ?? null) as T | null;
   } catch (error) {
-    if (error instanceof Error && error.message === ICP_ANALYZER_ERROR_MESSAGE) {
+    if (error instanceof Error && (error.message === ICP_ANALYZER_ERROR_MESSAGE || "details" in error)) {
       throw error;
     }
 
-    console.error(context, error);
-    throw new Error(ICP_ANALYZER_ERROR_MESSAGE);
+    console.error("ICP analyzer invocation failed", {
+      context,
+      operation,
+      timedOut: error instanceof Error && /timed out/i.test(error.message),
+      error,
+    });
+    throw new Error(
+      isPersistOperation && error instanceof Error && /timed out/i.test(error.message)
+        ? buildIcpDraftSaveFailureMessage({
+            message: error.message,
+            errorCode: null,
+            requiredCredits: null,
+          })
+        : ICP_ANALYZER_ERROR_MESSAGE,
+    );
   }
 };
 
@@ -837,8 +888,8 @@ const ICPBuilder: React.FC = () => {
         setSynthesisError(ICP_ANALYZER_ERROR_MESSAGE);
       } else {
         toast({
-          title: "Could not finish the dashboard handoff",
-          description: ICP_ANALYZER_ERROR_MESSAGE,
+          title: "Could not save your ICP Draft",
+          description: error instanceof Error ? error.message : "Your answers are still on this page, so please try again in a moment.",
           variant: "destructive",
         });
       }
@@ -944,7 +995,7 @@ const ICPBuilder: React.FC = () => {
         error: error instanceof Error ? error.message : String(error),
         userId: user?.id,
       });
-      setPersistError(ICP_ANALYZER_ERROR_MESSAGE);
+      setPersistError(error instanceof Error ? error.message : "Your answers are still on this page, so please try again in a moment.");
     } finally {
       setIsPersisting(false);
     }
@@ -1636,7 +1687,7 @@ const ICPBuilder: React.FC = () => {
             <div className="mx-auto mb-4 max-w-3xl px-4 sm:px-6 lg:px-8">
               <div className="flex flex-col gap-3 rounded-2xl border border-destructive/30 bg-destructive/8 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
                 <p className="text-sm text-destructive">
-                  <span className="font-semibold">We couldn&apos;t save your draft.</span> Your account was created — click below to try saving again.
+                  <span className="font-semibold">We couldn&apos;t save your draft.</span> {persistError}
                 </p>
                 <Button
                   type="button"
