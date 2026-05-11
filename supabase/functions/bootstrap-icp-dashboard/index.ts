@@ -19,6 +19,7 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  let step = "init";
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
@@ -69,6 +70,7 @@ serve(async (req) => {
     const recommendations = buildIcpRecommendationSeeds(artifact, summary, tasks);
     const filePreview = buildDashboardFilePreviewPayload(summary, tasks);
 
+    step = "delete_tasks";
     const { error: deleteTasksError } = await supabase
       .from("daily_tasks")
       .delete()
@@ -81,6 +83,7 @@ serve(async (req) => {
     }
 
     if (tasks.length > 0) {
+      step = "insert_tasks";
       const { error: insertTasksError } = await supabase.from("daily_tasks").insert(
         tasks.map((task, index) => ({
           user_id: user.id,
@@ -101,6 +104,7 @@ serve(async (req) => {
       }
     }
 
+    step = "delete_recommendations";
     const { error: deleteRecommendationsError } = await supabase
       .from("personalized_recommendations")
       .delete()
@@ -112,6 +116,7 @@ serve(async (req) => {
     }
 
     if (recommendations.length > 0) {
+      step = "insert_recommendations";
       const expiresAt = new Date();
       expiresAt.setDate(expiresAt.getDate() + 7);
 
@@ -141,6 +146,7 @@ serve(async (req) => {
       }
     }
 
+    step = "upsert_dashboard_file";
     const { error: upsertFileError } = await supabase
       .from("dashboard_files")
       .upsert(
@@ -166,6 +172,7 @@ serve(async (req) => {
       throw upsertFileError;
     }
 
+    step = "update_profile";
     const { error: updateProfileError } = await supabase
       .from("profiles")
       .update({
@@ -192,7 +199,7 @@ serve(async (req) => {
       },
     );
   } catch (error) {
-    console.error("Error bootstrapping ICP dashboard:", error);
+    console.error(`Error bootstrapping ICP dashboard [step: ${step}]:`, error);
     return new Response(
       JSON.stringify({
         success: false,

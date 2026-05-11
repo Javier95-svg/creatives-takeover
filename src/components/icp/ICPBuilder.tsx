@@ -793,6 +793,8 @@ const ICPBuilder: React.FC = () => {
           });
         }
 
+        await supabase.auth.refreshSession();
+
         const { error: bootstrapError } = await supabase.functions.invoke("bootstrap-icp-dashboard", {
           body: { analysisId },
         });
@@ -825,6 +827,12 @@ const ICPBuilder: React.FC = () => {
       setShowCelebration(true);
     } catch (error) {
       console.error("ICP draft generation failed", error);
+      captureEvent("icp_draft_generation_failed", {
+        mode,
+        persist,
+        error: error instanceof Error ? error.message : String(error),
+        userId: user?.id,
+      });
       if (!persist) {
         setSynthesisError(ICP_ANALYZER_ERROR_MESSAGE);
       } else {
@@ -892,6 +900,8 @@ const ICPBuilder: React.FC = () => {
           });
         }
 
+        await supabase.auth.refreshSession();
+
         const { error: bootstrapError } = await supabase.functions.invoke("bootstrap-icp-dashboard", {
           body: { analysisId },
         });
@@ -927,6 +937,13 @@ const ICPBuilder: React.FC = () => {
       await completeDraftGeneration(true);
     } catch (error) {
       console.error("ICP draft persist failed", error);
+      captureEvent("icp_draft_generation_failed", {
+        mode: session.mode,
+        persist: true,
+        flow: "persist_and_continue",
+        error: error instanceof Error ? error.message : String(error),
+        userId: user?.id,
+      });
       setPersistError(ICP_ANALYZER_ERROR_MESSAGE);
     } finally {
       setIsPersisting(false);
