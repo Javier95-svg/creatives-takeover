@@ -822,40 +822,56 @@ const ICPBuilder: React.FC = () => {
       }));
 
       if (user) {
-        await markFirstArtifactCreated({
-          userId: user.id,
-          artifactType: "icp_analysis",
-          artifactId: analysisId,
-          label: artifact.draftDocument.customer.personaName,
-          resumeUrl: `/icp/draft/${analysisId}`,
-          source: "icp_builder",
-        });
-
-        if (user.email) {
-          await sendRetentionEmail({
+        try {
+          await markFirstArtifactCreated({
             userId: user.id,
-            email: user.email,
-            fullName: user.user_metadata?.full_name ?? null,
-            sequence: "activation_day0",
-            ctaUrl: "/dashboard",
-            ctaLabel: "Open dashboard",
-            contextHeadline: "Your ICP Draft is unlocked.",
-            contextBody: "Open the dashboard to see the first tasks and recommendations generated from your ICP Draft.",
+            artifactType: "icp_analysis",
+            artifactId: analysisId,
+            label: artifact.draftDocument.customer.personaName,
+            resumeUrl: `/icp/draft/${analysisId}`,
+            source: "icp_builder",
           });
+        } catch (handoffError) {
+          console.warn("ICP handoff: markFirstArtifactCreated failed (non-fatal)", handoffError);
         }
 
-        await supabase.auth.refreshSession();
+        if (user.email) {
+          try {
+            await sendRetentionEmail({
+              userId: user.id,
+              email: user.email,
+              fullName: user.user_metadata?.full_name ?? null,
+              sequence: "activation_day0",
+              ctaUrl: "/dashboard",
+              ctaLabel: "Open dashboard",
+              contextHeadline: "Your ICP Draft is unlocked.",
+              contextBody: "Open the dashboard to see the first tasks and recommendations generated from your ICP Draft.",
+            });
+          } catch (handoffError) {
+            console.warn("ICP handoff: sendRetentionEmail failed (non-fatal)", handoffError);
+          }
+        }
+
+        try {
+          await supabase.auth.refreshSession();
+        } catch {
+          // best-effort
+        }
 
         const { error: bootstrapError } = await supabase.functions.invoke("bootstrap-icp-dashboard", {
           body: { analysisId },
         });
 
         if (bootstrapError) {
-          throw bootstrapError;
+          console.warn("ICP handoff: bootstrap-icp-dashboard failed (non-fatal)", bootstrapError);
         }
       }
 
-      await refreshActivation();
+      try {
+        await refreshActivation();
+      } catch (handoffError) {
+        console.warn("ICP handoff: refreshActivation failed (non-fatal)", handoffError);
+      }
       completedRef.current = true;
       trackICPBuilderCompleted({
         page_path: "/icp-builder",
@@ -929,39 +945,55 @@ const ICPBuilder: React.FC = () => {
           savedAnalysisId: analysisId,
         }));
 
-        await markFirstArtifactCreated({
-          userId: user.id,
-          artifactType: "icp_analysis",
-          artifactId: analysisId,
-          label: artifact.draftDocument.customer.personaName,
-          resumeUrl: `/icp/draft/${analysisId}`,
-          source: "icp_builder",
-        });
-
-        if (user.email) {
-          await sendRetentionEmail({
+        try {
+          await markFirstArtifactCreated({
             userId: user.id,
-            email: user.email,
-            fullName: user.user_metadata?.full_name ?? null,
-            sequence: "activation_day0",
-            ctaUrl: "/dashboard",
-            ctaLabel: "Open dashboard",
-            contextHeadline: "Your ICP Draft is unlocked.",
-            contextBody: "Open the dashboard to see the first tasks and recommendations generated from your ICP Draft.",
+            artifactType: "icp_analysis",
+            artifactId: analysisId,
+            label: artifact.draftDocument.customer.personaName,
+            resumeUrl: `/icp/draft/${analysisId}`,
+            source: "icp_builder",
           });
+        } catch (handoffError) {
+          console.warn("ICP handoff: markFirstArtifactCreated failed (non-fatal)", handoffError);
         }
 
-        await supabase.auth.refreshSession();
+        if (user.email) {
+          try {
+            await sendRetentionEmail({
+              userId: user.id,
+              email: user.email,
+              fullName: user.user_metadata?.full_name ?? null,
+              sequence: "activation_day0",
+              ctaUrl: "/dashboard",
+              ctaLabel: "Open dashboard",
+              contextHeadline: "Your ICP Draft is unlocked.",
+              contextBody: "Open the dashboard to see the first tasks and recommendations generated from your ICP Draft.",
+            });
+          } catch (handoffError) {
+            console.warn("ICP handoff: sendRetentionEmail failed (non-fatal)", handoffError);
+          }
+        }
+
+        try {
+          await supabase.auth.refreshSession();
+        } catch {
+          // best-effort
+        }
 
         const { error: bootstrapError } = await supabase.functions.invoke("bootstrap-icp-dashboard", {
           body: { analysisId },
         });
 
         if (bootstrapError) {
-          throw bootstrapError;
+          console.warn("ICP handoff: bootstrap-icp-dashboard failed (non-fatal)", bootstrapError);
         }
 
-        await refreshActivation();
+        try {
+          await refreshActivation();
+        } catch (handoffError) {
+          console.warn("ICP handoff: refreshActivation failed (non-fatal)", handoffError);
+        }
         completedRef.current = true;
         trackICPBuilderCompleted({
           page_path: "/icp-builder",

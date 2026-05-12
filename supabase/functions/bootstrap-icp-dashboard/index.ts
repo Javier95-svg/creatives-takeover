@@ -183,7 +183,9 @@ serve(async (req) => {
       .eq("id", user.id);
 
     if (updateProfileError) {
-      throw updateProfileError;
+      // Non-fatal: profile metadata update does not affect tasks, files, or recommendations.
+      // Log and continue so the response is always 200 when the core work succeeded.
+      console.warn(`bootstrap-icp-dashboard: update_profile failed (non-fatal):`, updateProfileError);
     }
 
     return new Response(
