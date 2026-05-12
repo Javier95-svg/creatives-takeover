@@ -1,8 +1,8 @@
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { AngelInvestor, CreateAngelInput } from '@/types/angel';
+import { useAdminRole } from '@/hooks/useAdminRole';
 
 // Helper function to format error messages
 const formatErrorMessage = (error: any, defaultMessage: string): string => {
@@ -40,10 +40,8 @@ const formatErrorMessage = (error: any, defaultMessage: string): string => {
 };
 
 export const useAngels = () => {
-  const { user } = useAuth();
+  const { isAdmin } = useAdminRole();
   const [loading, setLoading] = useState(false);
-
-  const isAdmin = user?.email?.toLowerCase() === 'admin@creatives-takeover.com';
 
   // Fetch all active angel investors
   const fetchAngels = useCallback(async (): Promise<AngelInvestor[]> => {
@@ -179,7 +177,7 @@ export const useAngels = () => {
     } finally {
       setLoading(false);
     }
-  }, [isAdmin, user]);
+  }, [isAdmin]);
 
   // Update angel investor (admin only)
   const updateAngel = useCallback(async (id: string, input: Partial<CreateAngelInput>): Promise<AngelInvestor | null> => {
@@ -248,7 +246,7 @@ export const useAngels = () => {
     } finally {
       setLoading(false);
     }
-  }, [isAdmin, user]);
+  }, [isAdmin]);
 
   // Delete angel investor (admin only)
   const deleteAngel = useCallback(async (id: string): Promise<boolean> => {

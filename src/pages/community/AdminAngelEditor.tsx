@@ -35,6 +35,16 @@ const INVESTMENT_STAGE_OPTIONS = [
   "Series C+",
 ];
 
+const ANGEL_PICTURES_BUCKET = 'angel-pictures';
+
+const normalizeImageMimeType = (file: File) => {
+  if (file.type === 'image/jpg') {
+    return 'image/jpeg';
+  }
+
+  return file.type;
+};
+
 const AdminAngelEditor = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -140,6 +150,8 @@ const AdminAngelEditor = () => {
       setUploadingPicture(true);
       toast.loading('Uploading picture...', { id: 'upload-picture' });
 
+      const normalizedContentType = normalizeImageMimeType(file);
+
       // Show preview
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -152,11 +164,11 @@ const AdminAngelEditor = () => {
       const fileName = `${fileId}/${Date.now()}.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
-        .from('angel-pictures')
+        .from(ANGEL_PICTURES_BUCKET)
         .upload(fileName, file, {
           cacheControl: '3600',
-          upsert: true,
-          contentType: file.type,
+          upsert: false,
+          contentType: normalizedContentType,
         });
 
       if (uploadError) {
@@ -166,7 +178,7 @@ const AdminAngelEditor = () => {
 
       // Get public URL
       const { data: { publicUrl } } = supabase.storage
-        .from('angel-pictures')
+        .from(ANGEL_PICTURES_BUCKET)
         .getPublicUrl(fileName);
 
       setFormData((prev) => ({
