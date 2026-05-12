@@ -101,7 +101,12 @@ CREATE POLICY "Authenticated users can delete angel investors"
   ON public.angel_investors FOR DELETE
   USING (auth.uid() IS NOT NULL);
 
--- ── 5. Refresh PostgREST schema cache ───────────────────────────────────────
+-- ── 5. Explicit table grants (needed after any REVOKE ALL hardening) ─────────
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.angel_investors TO authenticated;
+GRANT SELECT                         ON TABLE public.angel_investors TO anon;
+GRANT ALL                            ON TABLE public.angel_investors TO service_role;
+
+-- ── 6. Refresh PostgREST schema cache ───────────────────────────────────────
 NOTIFY pgrst, 'reload schema';
 
 COMMIT;
