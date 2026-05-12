@@ -196,12 +196,23 @@ const AdminAngelEditor = () => {
           .eq('id', angel.id);
 
         if (dbError) {
-          toast.error(`Failed to save picture: ${dbError.message}`, { id: 'save-picture' });
-          throw dbError;
+          // Upload succeeded — the file is in Storage and the URL is in formData.
+          // Auto-save failed (schema/RLS issue). Don't throw and don't reset the
+          // preview — the user can still persist the picture by clicking Save.
+          console.error('Picture uploaded but auto-save to angel_investors failed:', {
+            message: dbError.message,
+            code: dbError.code,
+            details: dbError.details,
+            hint: dbError.hint,
+          });
+          toast.warning(
+            `Picture uploaded but could not auto-save: ${dbError.message}. Click Save to persist.`,
+            { id: 'save-picture' }
+          );
+        } else {
+          setAngel({ ...angel, picture: publicUrl });
+          toast.success('Picture uploaded and saved successfully!', { id: 'save-picture' });
         }
-
-        setAngel({ ...angel, picture: publicUrl });
-        toast.success('Picture uploaded and saved successfully!', { id: 'save-picture' });
       } else {
         toast.success('Picture uploaded! It will be saved when you create the profile.', { id: 'upload-picture' });
       }
