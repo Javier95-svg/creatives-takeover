@@ -36,7 +36,7 @@ export const TemplateModal: React.FC<TemplateModalProps> = ({ templateId, onClos
       document.body.removeChild(link);
       toast.success('Downloading PowerPoint template...');
     } else {
-      toast.info('Download coming soon!');
+      toast.info('Copy the structure while the downloadable file is being prepared.');
     }
   };
 
@@ -98,9 +98,9 @@ export const TemplateModal: React.FC<TemplateModalProps> = ({ templateId, onClos
               <Copy className="h-4 w-4 mr-2" />
               Copy Structure
             </Button>
-            <Button onClick={handleDownload} className="flex-1">
+            <Button onClick={handleDownload} className="flex-1" disabled={!template.downloadUrl}>
               <Download className="h-4 w-4 mr-2" />
-              Download Template
+              {template.downloadUrl ? 'Download Template' : 'Download Unavailable'}
             </Button>
           </div>
         </div>

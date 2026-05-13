@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ExternalLink, Lock, MapPin, DollarSign, Building2, ArrowUpRight } from "lucide-react";
+import { Lock, MapPin, DollarSign, Building2, ArrowUpRight } from "lucide-react";
 import { Investor } from "@/types/investor";
 import { Link } from "react-router-dom";
 
@@ -124,9 +124,11 @@ const VCCard = ({ vc, canViewProfile = true }: VCCardProps) => {
             </Link>
           </Button>
         ) : (
-          <Button size="sm" className="w-full mt-auto" variant="secondary" disabled>
-            <Lock className="h-3 w-3 mr-1" />
-            View limit reached
+          <Button asChild size="sm" className="w-full mt-auto" variant="secondary">
+            <Link to="/pricing">
+              <Lock className="h-3 w-3 mr-1" />
+              View limit reached
+            </Link>
           </Button>
         )}
       </CardContent>

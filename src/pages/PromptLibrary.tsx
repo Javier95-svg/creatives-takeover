@@ -335,7 +335,7 @@ const PromptLibrary = () => {
                                 {!user && (
                                   <Button
                                     variant="outline"
-                                    onClick={() => window.location.href = "/auth"}
+                                    onClick={() => window.location.href = `/login?return=${encodeURIComponent('/prompt-library')}`}
                                   >
                                     Sign In
                                   </Button>

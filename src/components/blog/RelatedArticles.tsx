@@ -36,6 +36,7 @@ const RelatedArticles = ({
         type: 'article' as const,
         score: 0,
         matchedTags: [] as string[],
+        articleUrl: '',
         category: a.tags?.[0] || '' // Use first tag as category for articles
       })),
       ...allTrends.map(t => ({ 
@@ -44,6 +45,7 @@ const RelatedArticles = ({
         excerpt: t.description || t.summary || '',
         tags: t.keywords || [],
         category: t.category,
+        articleUrl: t.article_url || '',
         readTime: 5, // Default for trends
         date: t.created_at ? new Date(t.created_at).toLocaleDateString() : new Date().toLocaleDateString(),
         type: 'trend' as const,
@@ -92,6 +94,84 @@ const RelatedArticles = ({
     return null;
   }
 
+  const renderRelatedCardContent = (item: (typeof relatedItems)[number]) => (
+    <CardContent className="p-5">
+      <div className="absolute top-3 right-3 z-10">
+        <BookmarkButton postId={item.id} size="icon" />
+      </div>
+
+      <div className="flex flex-wrap gap-2 mb-3">
+        {item.tags?.slice(0, 2).map((tag) => (
+          <Badge
+            key={tag}
+            variant={item.matchedTags.includes(tag.toLowerCase()) ? "default" : "outline"}
+            className="text-xs"
+          >
+            {tag}
+          </Badge>
+        ))}
+        {item.type === 'trend' && (
+          <Badge variant="secondary" className="text-xs">
+            <TrendingUp className="w-3 h-3 mr-1" />
+            {item.score}
+          </Badge>
+        )}
+      </div>
+
+      <h3 className="text-lg font-bold mb-2 group-hover:gradient-text transition-all duration-300 line-clamp-2">
+        {item.title}
+      </h3>
+
+      <p className="text-muted-foreground text-sm mb-4 line-clamp-2">
+        {item.excerpt}
+      </p>
+
+      <div className="flex items-center justify-between text-xs text-muted-foreground">
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1">
+            <Calendar className="w-3 h-3" />
+            <span>{item.date}</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <Clock className="w-3 h-3" />
+            <span>{item.readTime} min</span>
+          </div>
+        </div>
+        {(item.type === 'article' || item.articleUrl) && (
+          <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+        )}
+      </div>
+
+      {item.matchedTags.length > 0 && (
+        <div className="mt-3 pt-3 border-t">
+          <p className="text-xs text-muted-foreground">
+            Matches: {item.matchedTags.join(', ')}
+          </p>
+        </div>
+      )}
+    </CardContent>
+  );
+
+  const renderRelatedItemLink = (item: (typeof relatedItems)[number]) => {
+    if (item.type === 'article') {
+      return (
+        <Link to={`/newspaper/${item.slug ?? item.id}`} className="block">
+          {renderRelatedCardContent(item)}
+        </Link>
+      );
+    }
+
+    if (item.articleUrl) {
+      return (
+        <a href={item.articleUrl} target="_blank" rel="noopener noreferrer" className="block">
+          {renderRelatedCardContent(item)}
+        </a>
+      );
+    }
+
+    return <div className="block">{renderRelatedCardContent(item)}</div>;
+  };
+
   return (
     <div className="mt-16 pt-12 border-t">
       <div className="flex items-center gap-2 mb-8">
@@ -103,73 +183,11 @@ const RelatedArticles = ({
         {relatedItems.map((item) => (
           <Card 
             key={item.id} 
-            className="glass hover-lift group cursor-pointer relative overflow-hidden"
+            className={`glass hover-lift group relative overflow-hidden ${
+              item.type === 'article' || item.articleUrl ? 'cursor-pointer' : 'cursor-default'
+            }`}
           >
-            <Link 
-              to={item.type === 'article' ? `/newspaper/${item.slug ?? item.id}` : '#'}
-              onClick={item.type === 'trend' ? (e) => e.preventDefault() : undefined}
-              className="block"
-            >
-              <CardContent className="p-5">
-                {/* Bookmark Button */}
-                <div className="absolute top-3 right-3 z-10">
-                  <BookmarkButton postId={item.id} size="icon" />
-                </div>
-
-                {/* Tags with matched indicators */}
-                <div className="flex flex-wrap gap-2 mb-3">
-                  {item.tags?.slice(0, 2).map((tag) => (
-                    <Badge 
-                      key={tag}
-                      variant={item.matchedTags.includes(tag.toLowerCase()) ? "default" : "outline"}
-                      className="text-xs"
-                    >
-                      {tag}
-                    </Badge>
-                  ))}
-                  {item.type === 'trend' && (
-                    <Badge variant="secondary" className="text-xs">
-                      <TrendingUp className="w-3 h-3 mr-1" />
-                      {item.score}
-                    </Badge>
-                  )}
-                </div>
-
-                {/* Title */}
-                <h3 className="text-lg font-bold mb-2 group-hover:gradient-text transition-all duration-300 line-clamp-2">
-                  {item.title}
-                </h3>
-                
-                {/* Excerpt */}
-                <p className="text-muted-foreground text-sm mb-4 line-clamp-2">
-                  {item.excerpt}
-                </p>
-                
-                {/* Meta Info */}
-                <div className="flex items-center justify-between text-xs text-muted-foreground">
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-1">
-                      <Calendar className="w-3 h-3" />
-                      <span>{item.date}</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Clock className="w-3 h-3" />
-                      <span>{item.readTime} min</span>
-                    </div>
-                  </div>
-                  <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-                </div>
-
-                {/* Relevance indicator */}
-                {item.matchedTags.length > 0 && (
-                  <div className="mt-3 pt-3 border-t">
-                    <p className="text-xs text-muted-foreground">
-                      Matches: {item.matchedTags.join(', ')}
-                    </p>
-                  </div>
-                )}
-              </CardContent>
-            </Link>
+            {renderRelatedItemLink(item)}
           </Card>
         ))}
       </div>

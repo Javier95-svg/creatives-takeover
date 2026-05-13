@@ -147,7 +147,7 @@ const Messages = () => {
                   You need to sign in to access your messages and start conversations.
                 </p>
                 <Button asChild className="w-full">
-                  <Link to="/auth">Sign In</Link>
+                  <Link to={`/login?return=${encodeURIComponent('/messages')}`}>Sign In</Link>
                 </Button>
               </Card>
             </main>

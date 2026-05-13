@@ -135,7 +135,7 @@ export const DailyTaskList = ({ tasks, onTaskStatusChange, showAllTasks = false 
               <TaskItem
                 key={task.id}
                 task={task}
-                onClick={() => {}}
+                onClick={undefined}
                 isSelected={false}
                 getPriorityColor={getPriorityColor}
                 getStatusIcon={getStatusIcon}
@@ -157,7 +157,7 @@ export const DailyTaskList = ({ tasks, onTaskStatusChange, showAllTasks = false 
 
 interface TaskItemProps {
   task: RoadmapTask;
-  onClick: () => void;
+  onClick?: () => void;
   isSelected: boolean;
   getPriorityColor: (priority: RoadmapTask['priority']) => string;
   getStatusIcon: (status: RoadmapTask['status']) => React.ReactNode;
@@ -166,12 +166,23 @@ interface TaskItemProps {
 const TaskItem = ({ task, onClick, isSelected, getPriorityColor, getStatusIcon }: TaskItemProps) => {
   const isCompleted = task.status === 'completed';
   const isBlocked = task.status === 'blocked';
+  const isInteractive = Boolean(onClick) && !isCompleted && !isBlocked;
 
   return (
     <div
       onClick={onClick}
+      role={isInteractive ? 'button' : undefined}
+      tabIndex={isInteractive ? 0 : undefined}
+      onKeyDown={(event) => {
+        if (!isInteractive || !onClick) return;
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          onClick();
+        }
+      }}
       className={cn(
-        'group relative border rounded-lg p-4 transition-all cursor-pointer',
+        'group relative border rounded-lg p-4 transition-all',
+        isInteractive ? 'cursor-pointer' : 'cursor-default',
         isCompleted && 'opacity-60 bg-muted/50',
         isBlocked && 'border-red-500/20 bg-red-500/5',
         isSelected && 'ring-2 ring-primary',

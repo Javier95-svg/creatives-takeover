@@ -1,24 +1,21 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { Users, Search, Hourglass, ArrowRight, Sparkles, Lock } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useFeatureGating } from '@/hooks/useFeatureGating';
 import { useAuth } from '@/contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { normalizePlanId, trackUpgradeClicked } from '@/lib/analytics';
-import { toast } from 'sonner';
 
 const InvestorMatchingToolkit = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { checkFeatureAccess, currentTier } = useFeatureGating();
-  const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
     // Check if we should scroll here from readiness assessment
     const assessmentData = localStorage.getItem('ct_assessment_data');
     if (assessmentData) {
-      setIsVisible(true);
       // Clear the flag after a moment
       setTimeout(() => {
         localStorage.removeItem('ct_assessment_data');
@@ -108,8 +105,6 @@ const InvestorMatchingToolkit = () => {
             <div className="text-center pt-4">
               {(() => {
                 const matchingAccess = checkFeatureAccess('investor_matching');
-                const browseAccess = checkFeatureAccess('investor_browse');
-                
                 if (!user) {
                   return (
                     <>
@@ -151,12 +146,14 @@ const InvestorMatchingToolkit = () => {
                 
                 return (
                   <>
-                    <Button size="lg" className="w-full sm:w-auto" disabled>
-                      <Hourglass className="mr-2 h-5 w-5" />
-                      Feature Coming Soon
+                    <Button asChild size="lg" className="w-full sm:w-auto">
+                      <Link to="/vc-search">
+                        <Hourglass className="mr-2 h-5 w-5" />
+                        Browse Investors Instead
+                      </Link>
                     </Button>
                     <p className="text-sm text-muted-foreground mt-3">
-                      The full matching tool is currently being built. Check back soon!
+                      AI-powered matching is still being built. VC Search is available now.
                     </p>
                   </>
                 );

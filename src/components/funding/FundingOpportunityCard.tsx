@@ -106,9 +106,11 @@ const FundingOpportunityCard = ({
             </Link>
             </Button>
           ) : (
-            <Button size="sm" className="w-full mt-auto" variant="secondary" disabled>
-              <Lock className="h-3 w-3 mr-1" />
-              View limit reached
+            <Button asChild size="sm" className="w-full mt-auto" variant="secondary">
+              <Link to="/pricing">
+                <Lock className="h-3 w-3 mr-1" />
+                View limit reached
+              </Link>
             </Button>
           )
         ) : (

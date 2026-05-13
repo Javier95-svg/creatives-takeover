@@ -444,6 +444,10 @@ const AcceleratorProfilePage = () => {
     </Card>
   );
 
+  const acceleratorProfilePath = `/insighta/accelerator/${accelerator.slug || accelerator.id}`;
+  const acceleratorSignupPath = `/signup?source=accelerator_profile&return=${encodeURIComponent(acceleratorProfilePath)}`;
+  const acceleratorLoginPath = `/login?return=${encodeURIComponent(acceleratorProfilePath)}`;
+
   const lockedProfileContent = (
     <Card className="mb-6 overflow-hidden border border-border/60 bg-background/95 shadow-sm">
       <CardHeader className="space-y-4">
@@ -472,13 +476,13 @@ const AcceleratorProfilePage = () => {
           {requiresAuth ? (
             <>
               <Button asChild className="w-full sm:w-auto">
-                <Link to="/auth">
+                <Link to={acceleratorSignupPath}>
                   <UserPlus className="w-4 h-4 mr-2" />
                   Sign Up Free
                 </Link>
               </Button>
               <Button asChild variant="outline" className="w-full sm:w-auto">
-                <Link to="/auth">Sign In</Link>
+                <Link to={acceleratorLoginPath}>Sign In</Link>
               </Button>
             </>
           ) : (

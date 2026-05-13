@@ -1221,7 +1221,7 @@ export default function WaitlistEditor({ initialSeed = null, onBackToTemplates }
                     className={primaryButtonClass}
                     onClick={() => {
                       if (!hasUnsavedChanges || window.confirm('Your draft is saved in this browser. Continue to create an account?')) {
-                        window.location.href = '/auth?redirect=' + encodeURIComponent('/waitlist?skipModeSelect=1');
+                        window.location.href = '/signup?source=waitlist_guest_draft&return=' + encodeURIComponent('/waitlist?skipModeSelect=1');
                       }
                     }}
                   >

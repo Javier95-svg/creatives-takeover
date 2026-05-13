@@ -7,20 +7,27 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useMentors } from "@/hooks/useMentors";
-import { Loader2, ArrowLeft, CheckCircle2 } from "lucide-react";
-import { Mentor, getCurrencySymbol } from "@/types/mentor";
+import { Loader2, ArrowLeft } from "lucide-react";
+import { Mentor } from "@/types/mentor";
+import { toast } from "sonner";
+import {
+  buildDiscoveryCallRedirectUrl,
+  createDiscoveryCallIntent,
+  openDeferredExternalTab,
+} from "@/services/discoveryCallService";
+import { createIdempotencyKey } from "@/lib/idempotency";
 
 const MentorBookingPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { isAuthenticated, loading: authLoading } = useAuth();
+  const { user, isAuthenticated, loading: authLoading } = useAuth();
   const { fetchMentorById, loading: mentorLoading } = useMentors();
   const [mentor, setMentor] = useState<Mentor | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
-      navigate("/auth?redirect=/mentorship/book/" + id);
+      navigate(`/signup?source=book-discovery-call&return=${encodeURIComponent(id ? `/mentorship/book/${id}` : "/mentorship")}`);
     }
   }, [isAuthenticated, authLoading, navigate, id]);
 
@@ -39,13 +46,56 @@ const MentorBookingPage = () => {
   };
 
   const handleProceedToPayment = async () => {
-    // TODO: Create Stripe checkout session
+    if (!mentor || !user) {
+      navigate(`/signup?source=book-discovery-call&return=${encodeURIComponent(id ? `/mentorship/book/${id}` : "/mentorship")}`);
+      return;
+    }
+
+    const calendlyUrl = mentor.calendly_url?.trim();
+    if (!calendlyUrl) {
+      toast.error("This mentor does not have a booking link configured yet.");
+      navigate(`/mentorship/mentors/${mentor.id}`);
+      return;
+    }
+
+    const calendlyTab = openDeferredExternalTab();
+    if (!calendlyTab) {
+      toast.error("Popup blocked. Please allow popups and try again.");
+      return;
+    }
+
     setLoading(true);
-    // Mock implementation - will be replaced with actual Stripe checkout
-    setTimeout(() => {
+    try {
+      const bookingIntent = await createDiscoveryCallIntent({
+        mentorId: mentor.id,
+        mentorName: mentor.name,
+        source: "mentor_booking_page",
+        idempotencyKey: createIdempotencyKey(`mentor-booking-page-${mentor.id}`),
+        metadata: { mentor_id: mentor.id, mentor_name: mentor.name },
+      });
+
+      if (!bookingIntent.success || !bookingIntent.callId) {
+        calendlyTab.close();
+
+        if (bookingIntent.errorCode === "PLAN_UPGRADE_REQUIRED" || bookingIntent.errorCode === "INSUFFICIENT_CREDITS") {
+          toast.error(bookingIntent.error || "Upgrade required to book another discovery call.");
+          navigate("/pricing");
+          return;
+        }
+
+        toast.error(bookingIntent.error || "Unable to process booking. Please try again.");
+        return;
+      }
+
+      calendlyTab.location.href = buildDiscoveryCallRedirectUrl(calendlyUrl, bookingIntent.callId);
+      toast.success("Booking opened in a new tab.");
+    } catch (error) {
+      calendlyTab.close();
+      console.error("Error creating discovery call intent:", error);
+      toast.error("Unable to process booking. Please try again.");
+    } finally {
       setLoading(false);
-      // Navigate to success page
-    }, 2000);
+    }
   };
 
   if (authLoading || mentorLoading) {
@@ -74,11 +124,6 @@ const MentorBookingPage = () => {
     );
   }
 
-  const sym = getCurrencySymbol(mentor.currency);
-  const hourlyRate = mentor.hourly_rate / 100;
-  const platformFee = hourlyRate * 0.1;
-  const total = hourlyRate + platformFee;
-
   return (
     <>
       <Helmet>
@@ -99,38 +144,22 @@ const MentorBookingPage = () => {
               <Card>
                 <CardContent className="p-6 space-y-6">
                   <div>
-                    <h1 className="text-2xl font-bold mb-2">Complete Your Booking</h1>
+                    <h1 className="text-2xl font-bold mb-2">Book Your Discovery Call</h1>
                     <p className="text-muted-foreground">
-                      Review your session details and proceed to payment
+                      Review the mentor details, then continue to the mentor's booking calendar.
                     </p>
                   </div>
 
                   {/* Mentor Info */}
                   <div className="border rounded-lg p-4">
                     <h3 className="font-semibold mb-2">Mentor: {mentor.name}</h3>
-                    <p className="text-sm text-muted-foreground">8 Week Coaching Program</p>
+                    <p className="text-sm text-muted-foreground">Discovery Call</p>
                   </div>
 
-                  {/* Pricing */}
-                  <div className="space-y-2">
-                    <h3 className="font-semibold">Pricing Summary</h3>
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">8 Week Coaching Program Fee</span>
-                        <span>{sym}{hourlyRate.toFixed(2)}</span>
-                      </div>
-                      <div className="flex justify-between text-xs text-muted-foreground">
-                        <span>Platform Fee (10%)</span>
-                        <span>{sym}{platformFee.toFixed(2)}</span>
-                      </div>
-                      <div className="border-t pt-2 flex justify-between font-semibold">
-                        <span>Total</span>
-                        <span>{sym}{total.toFixed(2)}</span>
-                      </div>
-                    </div>
+                  <div className="rounded-lg border border-border/60 bg-muted/30 p-4 text-sm text-muted-foreground">
+                    Discovery calls use your plan's included monthly quota first. If you are out of quota, we will show the correct upgrade path before opening the calendar.
                   </div>
 
-                  {/* Payment Button */}
                   <Button
                     onClick={handleProceedToPayment}
                     disabled={loading}
@@ -143,12 +172,12 @@ const MentorBookingPage = () => {
                         Processing...
                       </>
                     ) : (
-                      "Proceed to Payment"
+                      "Continue to Booking Calendar"
                     )}
                   </Button>
 
                   <p className="text-xs text-center text-muted-foreground">
-                    Secure payment powered by Stripe
+                    The calendar opens in a new tab so your place in Creatives Takeover is preserved.
                   </p>
                 </CardContent>
               </Card>

@@ -445,6 +445,10 @@ const VCProfilePage = () => {
     </Card>
   );
 
+  const vcProfilePath = `/insighta/vc/${vc.slug || vc.id}`;
+  const vcSignupPath = `/signup?source=vc_profile&return=${encodeURIComponent(vcProfilePath)}`;
+  const vcLoginPath = `/login?return=${encodeURIComponent(vcProfilePath)}`;
+
   const lockedProfileContent = (
     <Card className="overflow-hidden border border-border/60 bg-background/95 shadow-sm">
       <CardHeader className="space-y-4">
@@ -469,13 +473,13 @@ const VCProfilePage = () => {
           {requiresAuth ? (
             <>
               <Button asChild className="w-full sm:w-auto">
-                <Link to="/auth">
+                <Link to={vcSignupPath}>
                   <UserPlus className="w-4 h-4 mr-2" />
                   Sign Up Free
                 </Link>
               </Button>
               <Button asChild variant="outline" className="w-full sm:w-auto">
-                <Link to="/auth">Sign In</Link>
+                <Link to={vcLoginPath}>Sign In</Link>
               </Button>
             </>
           ) : (

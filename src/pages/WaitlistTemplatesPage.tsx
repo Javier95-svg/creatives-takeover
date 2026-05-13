@@ -46,7 +46,7 @@ export default function WaitlistTemplatesPage() {
 
     if (!user) {
       startTemplateNavigation(() => {
-        navigate('/auth?redirect=' + encodeURIComponent(`/waitlist?template=${template.id}`));
+        navigate(`/signup?source=waitlist_template&return=${encodeURIComponent(`/waitlist?template=${template.id}`)}`);
       });
       return;
     }
