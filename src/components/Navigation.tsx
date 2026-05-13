@@ -413,7 +413,7 @@ const Navigation = () => {
                           </TooltipContent>
                         </Tooltip>
                         <DropdownMenuContent align="start" className={cn("w-72 md:w-56 sm:w-full", navDropdownClass)}>
-                          <DropdownMenuLabel>Distribute?? Fundraise??</DropdownMenuLabel>
+                          <DropdownMenuLabel>Distribute📦 Fundraise💸</DropdownMenuLabel>
                           <DropdownMenuSeparator />
 	                          {insightaSubmenu.map((subItem, idx) => {
                               if ('type' in subItem && subItem.type === 'label') {
