@@ -304,7 +304,7 @@ const Navigation = () => {
                           </TooltipContent>
                         </Tooltip>
                         <DropdownMenuContent align="start" className={cn("w-80 md:w-72 sm:w-64 max-h-[min(520px,80vh)] overflow-y-auto overscroll-contain", navDropdownClass)}>
-                          <DropdownMenuLabel>Validate ? Build ??? Launch ??</DropdownMenuLabel>
+                          <DropdownMenuLabel>Validate ✅ Build 🛠️ Launch 🚀</DropdownMenuLabel>
                           <DropdownMenuSeparator />
 	                          {bizMapSubmenu.map((subItem, idx) => {
 	                            if ('type' in subItem && subItem.type === 'label') {
@@ -481,7 +481,7 @@ const Navigation = () => {
                           </TooltipContent>
                         </Tooltip>
                         <DropdownMenuContent align="start" className={cn("w-72 md:w-56 sm:w-full", navDropdownClass)}>
-                          <DropdownMenuLabel>Connect & Collab ????</DropdownMenuLabel>
+                          <DropdownMenuLabel>Connect & Collab 🌐🤝</DropdownMenuLabel>
                           <DropdownMenuSeparator />
 	                          {communitySubmenu.map((subItem) => {
 	                            const SubIcon = subItem.icon;
@@ -541,7 +541,7 @@ const Navigation = () => {
                           </TooltipContent>
                         </Tooltip>
                         <DropdownMenuContent align="start" className="w-72 md:w-56 sm:w-full max-w-[calc(100vw-2rem)]">
-                          <DropdownMenuLabel>Resources for Founders ???</DropdownMenuLabel>
+                          <DropdownMenuLabel>Resources for Founders 🗂️</DropdownMenuLabel>
                           <DropdownMenuSeparator />
 	                          {resourcesSubmenu.map((subItem) => {
 	                            const SubIcon = subItem.icon;
