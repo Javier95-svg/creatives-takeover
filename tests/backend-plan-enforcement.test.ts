@@ -6,6 +6,7 @@ import {
   PLAN_MONTHLY_CREDITS,
   resolveFeatureEnforcement,
 } from '../supabase/functions/_shared/plan-enforcement.ts';
+import { CREDIT_COSTS } from '../supabase/functions/_shared/credit-constants.ts';
 
 test('normalizePlan preserves canonical and legacy aliases', () => {
   assert.equal(normalizePlan('creator'), 'rising');
@@ -52,4 +53,16 @@ test('discovery calls stay quota-based across all plans', () => {
     creditCost: 0,
   });
   assert.equal(resolveFeatureEnforcement('pro', 'DISCOVERY_CALL').monthlyLimit, Infinity);
+});
+
+test('ICP analysis remains free and included for every backend plan', () => {
+  assert.equal(CREDIT_COSTS.ICP_ANALYSIS, 0);
+
+  for (const plan of ['rookie', 'starter', 'rising', 'pro'] as const) {
+    const enforcement = resolveFeatureEnforcement(plan, 'ICP_ANALYSIS');
+    assert.equal(enforcement.feature, 'ICP_ANALYSIS');
+    assert.equal(enforcement.plan, plan);
+    assert.equal(enforcement.mode, 'included');
+    assert.equal(enforcement.creditCost, 0);
+  }
 });

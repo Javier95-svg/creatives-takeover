@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
+  CREDIT_COSTS,
   getDashboardModeConfig,
   getQuotaStatus,
   PLAN_HIGHLIGHTS,
@@ -135,6 +136,12 @@ test('plan monthly credits stay aligned with pricing', () => {
 });
 
 test('core entitlement rules reflect the pricing contract', () => {
+  assert.equal(CREDIT_COSTS.ICP_ANALYSIS, 0);
+
+  const rookieIcp = resolveEntitlement('icp_builder', 'rookie');
+  assert.equal(rookieIcp.state, 'full');
+  assert.equal(rookieIcp.creditCost, undefined);
+
   const rookiePmf = resolveEntitlement('pmf_lab', 'rookie');
   assert.equal(rookiePmf.state, 'preview_only');
   assert.equal(rookiePmf.upgradeTarget, 'starter');

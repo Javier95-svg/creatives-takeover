@@ -54,6 +54,12 @@ import {
   readFunctionErrorDetails,
   type FunctionFailureDetails,
 } from "@/lib/icpHandoff";
+import {
+  buildIcpUnlockNavigationPath,
+  isIcpDraftSaveReady,
+  runIcpPostSaveSteps,
+  type IcpPostSaveStep,
+} from "@/lib/icpUnlockFlow";
 import { consumeStoredIcpSeed, normalizeIcpSeed } from "@/lib/icpSeed";
 import { markFirstArtifactCreated, sendRetentionEmail } from "@/lib/retentionSystem";
 
@@ -741,6 +747,113 @@ const ICPBuilder: React.FC = () => {
     }
   };
 
+  const runPostSaveHandoff = useCallback(async ({
+    analysisId,
+    artifact,
+  }: {
+    analysisId: string;
+    artifact: StoredIcpArtifact;
+  }) => {
+    const handoffSteps: IcpPostSaveStep[] = [];
+
+    if (user) {
+      handoffSteps.push({
+        name: "markFirstArtifactCreated",
+        run: () => markFirstArtifactCreated({
+          userId: user.id,
+          artifactType: "icp_analysis",
+          artifactId: analysisId,
+          label: artifact.draftDocument.customer.personaName,
+          resumeUrl: `/icp/draft/${analysisId}`,
+          source: "icp_builder",
+        }),
+      });
+
+      const userEmail = user.email;
+      if (userEmail) {
+        handoffSteps.push({
+          name: "sendRetentionEmail",
+          run: () => sendRetentionEmail({
+            userId: user.id,
+            email: userEmail,
+            fullName: user.user_metadata?.full_name ?? null,
+            sequence: "activation_day0",
+            ctaUrl: "/dashboard",
+            ctaLabel: "Open dashboard",
+            contextHeadline: "Your ICP Draft is unlocked.",
+            contextBody: "Open the dashboard to see the first tasks and recommendations generated from your ICP Draft.",
+          }),
+        });
+      }
+
+      handoffSteps.push(
+        {
+          name: "refreshSession",
+          run: () => supabase.auth.refreshSession(),
+        },
+        {
+          name: "bootstrap-icp-dashboard",
+          run: async () => {
+            const { error: bootstrapError } = await supabase.functions.invoke("bootstrap-icp-dashboard", {
+              body: { analysisId },
+            });
+
+            if (bootstrapError) {
+              throw bootstrapError;
+            }
+          },
+        },
+      );
+    }
+
+    handoffSteps.push({
+      name: "refreshActivation",
+      run: () => refreshActivation(),
+    });
+
+    await runIcpPostSaveSteps(handoffSteps);
+  }, [refreshActivation, user]);
+
+  const unlockSavedDraft = useCallback(({
+    analysisId,
+    artifact,
+    mode,
+    source,
+  }: {
+    analysisId: string;
+    artifact: StoredIcpArtifact;
+    mode: IcpBuilderMode | null;
+    source: "draft_saved" | "unlock_gate";
+  }) => {
+    setSession((previous) => ({
+      ...previous,
+      draftPreview: artifact,
+      unlockRequired: false,
+      savedAnalysisId: analysisId,
+    }));
+    completedRef.current = true;
+    trackICPBuilderCompleted({
+      page_path: "/icp-builder",
+      mode,
+      confidence: artifact.draftDocument.confidence.level,
+    });
+    trackActivationCompleted({ trigger: 'icp_completed', artifact: 'icp_completed' });
+    trackICPDashboardOpened({
+      page_path: "/icp-builder",
+      mode,
+      source,
+    });
+    captureEvent("icp_analysis_completed", {
+      mode,
+      persona_name: artifact.draftDocument.customer.personaName,
+      confidence: artifact.draftDocument.confidence.level,
+      userId: user?.id,
+    });
+    setPendingNavigatePath(buildIcpUnlockNavigationPath(analysisId));
+    setShowCelebration(true);
+    void runPostSaveHandoff({ analysisId, artifact });
+  }, [runPostSaveHandoff, user?.id]);
+
   const completeDraftGeneration = useCallback(async (persist: boolean) => {
     const mode = session.mode;
     if (!mode) return;
@@ -808,94 +921,17 @@ const ICPBuilder: React.FC = () => {
         return;
       }
 
-      const analysisId = typeof data.analysisId === "string" ? data.analysisId : null;
-      if (!analysisId) {
+      if (!isIcpDraftSaveReady(data)) {
         console.error("ICP draft generation returned no analysis id", data);
         throw new Error(ICP_ANALYZER_ERROR_MESSAGE);
       }
 
-      setSession((previous) => ({
-        ...previous,
-        draftPreview: artifact,
-        unlockRequired: false,
-        savedAnalysisId: analysisId,
-      }));
-
-      if (user) {
-        try {
-          await markFirstArtifactCreated({
-            userId: user.id,
-            artifactType: "icp_analysis",
-            artifactId: analysisId,
-            label: artifact.draftDocument.customer.personaName,
-            resumeUrl: `/icp/draft/${analysisId}`,
-            source: "icp_builder",
-          });
-        } catch (handoffError) {
-          console.warn("ICP handoff: markFirstArtifactCreated failed (non-fatal)", handoffError);
-        }
-
-        if (user.email) {
-          try {
-            await sendRetentionEmail({
-              userId: user.id,
-              email: user.email,
-              fullName: user.user_metadata?.full_name ?? null,
-              sequence: "activation_day0",
-              ctaUrl: "/dashboard",
-              ctaLabel: "Open dashboard",
-              contextHeadline: "Your ICP Draft is unlocked.",
-              contextBody: "Open the dashboard to see the first tasks and recommendations generated from your ICP Draft.",
-            });
-          } catch (handoffError) {
-            console.warn("ICP handoff: sendRetentionEmail failed (non-fatal)", handoffError);
-          }
-        }
-
-        try {
-          await supabase.auth.refreshSession();
-        } catch {
-          // best-effort
-        }
-
-        try {
-          const { error: bootstrapError } = await supabase.functions.invoke("bootstrap-icp-dashboard", {
-            body: { analysisId },
-          });
-
-          if (bootstrapError) {
-            console.warn("ICP handoff: bootstrap-icp-dashboard failed (non-fatal)", bootstrapError);
-          }
-        } catch (handoffError) {
-          console.warn("ICP handoff: bootstrap-icp-dashboard failed (non-fatal)", handoffError);
-        }
-      }
-
-      try {
-        await refreshActivation();
-      } catch (handoffError) {
-        console.warn("ICP handoff: refreshActivation failed (non-fatal)", handoffError);
-      }
-      completedRef.current = true;
-      trackICPBuilderCompleted({
-        page_path: "/icp-builder",
-        mode,
-        confidence: artifact.draftDocument.confidence.level,
-      });
-      trackActivationCompleted({ trigger: 'icp_completed', artifact: 'icp_completed' });
-      trackICPDashboardOpened({
-        page_path: "/icp-builder",
+      unlockSavedDraft({
+        analysisId: data.analysisId,
+        artifact,
         mode,
         source: "draft_saved",
       });
-      captureEvent("icp_analysis_completed", {
-        mode,
-        persona_name: artifact.draftDocument.customer.personaName,
-        confidence: artifact.draftDocument.confidence.level,
-        userId: user?.id,
-      });
-      setPendingNavigatePath(`/icp/draft/${analysisId}?source=icp-unlock`);
-      setShowCelebration(true);
     } catch (error) {
       console.error("ICP draft generation failed", error);
       captureEvent("icp_draft_generation_failed", {
@@ -917,7 +953,7 @@ const ICPBuilder: React.FC = () => {
       setLoadingPhase(null);
       setLoadingStartedAt(null);
     }
-  }, [navigate, refreshActivation, session.mode, session.personaEditedSignificantly, toast, user, validatedFast, validatedGuided]);
+  }, [session.mode, session.personaEditedSignificantly, toast, unlockSavedDraft, user, validatedFast, validatedGuided]);
 
   const persistDraftAndContinue = useCallback(async () => {
     if (isPersisting) return;
@@ -934,94 +970,19 @@ const ICPBuilder: React.FC = () => {
           "ICP unlocked draft save invocation failed",
         );
 
-        if (!data?.success || data.status !== "draft_ready" || !data.analysisId) {
+        if (!isIcpDraftSaveReady(data)) {
           console.error("ICP unlocked draft save returned an error", data?.error || data);
           throw new Error(ICP_ANALYZER_ERROR_MESSAGE);
         }
 
-        const analysisId = data.analysisId as string;
         const artifact = (data.artifact as StoredIcpArtifact) ?? session.draftPreview;
 
-        setSession((previous) => ({
-          ...previous,
-          draftPreview: artifact,
-          unlockRequired: false,
-          savedAnalysisId: analysisId,
-        }));
-
-        try {
-          await markFirstArtifactCreated({
-            userId: user.id,
-            artifactType: "icp_analysis",
-            artifactId: analysisId,
-            label: artifact.draftDocument.customer.personaName,
-            resumeUrl: `/icp/draft/${analysisId}`,
-            source: "icp_builder",
-          });
-        } catch (handoffError) {
-          console.warn("ICP handoff: markFirstArtifactCreated failed (non-fatal)", handoffError);
-        }
-
-        if (user.email) {
-          try {
-            await sendRetentionEmail({
-              userId: user.id,
-              email: user.email,
-              fullName: user.user_metadata?.full_name ?? null,
-              sequence: "activation_day0",
-              ctaUrl: "/dashboard",
-              ctaLabel: "Open dashboard",
-              contextHeadline: "Your ICP Draft is unlocked.",
-              contextBody: "Open the dashboard to see the first tasks and recommendations generated from your ICP Draft.",
-            });
-          } catch (handoffError) {
-            console.warn("ICP handoff: sendRetentionEmail failed (non-fatal)", handoffError);
-          }
-        }
-
-        try {
-          await supabase.auth.refreshSession();
-        } catch {
-          // best-effort
-        }
-
-        try {
-          const { error: bootstrapError } = await supabase.functions.invoke("bootstrap-icp-dashboard", {
-            body: { analysisId },
-          });
-
-          if (bootstrapError) {
-            console.warn("ICP handoff: bootstrap-icp-dashboard failed (non-fatal)", bootstrapError);
-          }
-        } catch (handoffError) {
-          console.warn("ICP handoff: bootstrap-icp-dashboard failed (non-fatal)", handoffError);
-        }
-
-        try {
-          await refreshActivation();
-        } catch (handoffError) {
-          console.warn("ICP handoff: refreshActivation failed (non-fatal)", handoffError);
-        }
-        completedRef.current = true;
-        trackICPBuilderCompleted({
-          page_path: "/icp-builder",
-          mode: session.mode,
-          confidence: artifact.draftDocument.confidence.level,
-        });
-        trackActivationCompleted({ trigger: 'icp_completed', artifact: 'icp_completed' });
-        trackICPDashboardOpened({
-          page_path: "/icp-builder",
+        unlockSavedDraft({
+          analysisId: data.analysisId,
+          artifact,
           mode: session.mode,
           source: "unlock_gate",
         });
-        captureEvent("icp_analysis_completed", {
-          mode: session.mode,
-          persona_name: artifact.draftDocument.customer.personaName,
-          confidence: artifact.draftDocument.confidence.level,
-          userId: user?.id,
-        });
-        setPendingNavigatePath(`/icp/draft/${analysisId}?source=icp-unlock`);
-        setShowCelebration(true);
         return;
       }
 
@@ -1039,7 +1000,7 @@ const ICPBuilder: React.FC = () => {
     } finally {
       setIsPersisting(false);
     }
-  }, [completeDraftGeneration, isPersisting, navigate, refreshActivation, session.draftPreview, session.mode, session.unlockRequired, user]);
+  }, [completeDraftGeneration, isPersisting, session.draftPreview, session.mode, session.unlockRequired, unlockSavedDraft, user]);
 
   useEffect(() => {
     if (!user || !session.draftPreview || !session.unlockRequired || session.savedAnalysisId || isPersisting || persistError) {
