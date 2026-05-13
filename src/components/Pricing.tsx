@@ -8,6 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { normalizePlanId, trackUpgradeClicked } from "@/lib/analytics";
 import { PLAN_HIGHLIGHTS, PLAN_MONTHLY_CREDITS } from "@/config/planPermissions";
+import { appendCheckoutIntentParam, persistCheckoutIntent, redirectToCheckoutIntent } from "@/lib/checkoutRedirect";
 
 type BillingCycle = "monthly" | "yearly";
 type PlanKey = "rookie" | "starter" | "rising" | "pro";
@@ -164,18 +165,33 @@ export default function Pricing() {
           navigate("/dashboard");
         });
       } else {
-        window.location.href = "/auth";
+        startNavigation(() => {
+          navigate("/signup?source=pricing_page&return=/dashboard");
+        });
       }
       return;
     }
 
+    const checkoutIntent = `${plan}-${billingCycle}`;
     const paymentLink = PLAN_PAYMENT_LINKS[plan][billingCycle];
     if (!paymentLink) {
       setPendingPlan(null);
       return;
     }
 
-    window.location.href = paymentLink;
+    if (!user) {
+      persistCheckoutIntent(checkoutIntent);
+      const signupPath = appendCheckoutIntentParam(
+        `/signup?source=pricing_page&return=${encodeURIComponent('/pricing')}`,
+        checkoutIntent,
+      );
+      startNavigation(() => {
+        navigate(signupPath);
+      });
+      return;
+    }
+
+    redirectToCheckoutIntent(checkoutIntent, user);
   };
 
   if (loading) {

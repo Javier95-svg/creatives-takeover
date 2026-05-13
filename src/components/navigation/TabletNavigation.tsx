@@ -8,6 +8,8 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
@@ -41,8 +43,14 @@ interface SubmenuItem {
   icon: React.ComponentType<{ className?: string }>;
 }
 
+type TabletSubmenuItem =
+  | { type: 'label'; label: string }
+  | SubmenuItem;
+
 interface TabletNavigationProps {
   navItems: NavItem[];
+  submenus?: Record<string, TabletSubmenuItem[]>;
+  getItemState?: (href: string) => 'accessible' | 'locked' | 'hidden';
   onItemClick?: (itemName: string) => void;
 }
 
@@ -66,6 +74,8 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
 
 export const TabletNavigation: React.FC<TabletNavigationProps> = ({
   navItems,
+  submenus,
+  getItemState,
   onItemClick,
 }) => {
   const location = useLocation();
@@ -80,7 +90,7 @@ export const TabletNavigation: React.FC<TabletNavigationProps> = ({
           const isActive = location.pathname === item.href || 
             (item.href !== "/" && location.pathname.startsWith(item.href));
           const Icon = item.icon || iconMap[item.name];
-          const hasCommunitySubmenu = item.name === "Community";
+          const submenu = submenus?.[item.name] ?? (item.name === "Community" ? communitySubmenu : undefined);
           
           // Color-code navigation items semantically
           let colorClass = '';
@@ -105,7 +115,7 @@ export const TabletNavigation: React.FC<TabletNavigationProps> = ({
             "active:scale-95 hover:scale-105"
           );
 
-          if (hasCommunitySubmenu) {
+          if (submenu) {
             return (
               <DropdownMenu key={item.name}>
                 <Tooltip>
@@ -125,10 +135,21 @@ export const TabletNavigation: React.FC<TabletNavigationProps> = ({
                   )}
                 </Tooltip>
                 <DropdownMenuContent align="center" className="w-64">
-	                  {communitySubmenu.map((subItem) => {
+                  {submenu.map((subItem, index) => {
+                    if ('type' in subItem && subItem.type === 'label') {
+                      return (
+                        <React.Fragment key={`${subItem.label}-${index}`}>
+                          {index > 0 && <DropdownMenuSeparator />}
+                          <DropdownMenuLabel className="text-[10px] font-semibold uppercase tracking-wider text-primary">
+                            {subItem.label}
+                          </DropdownMenuLabel>
+                        </React.Fragment>
+                      );
+                    }
+
 	                    const SubIcon = subItem.icon;
 	                    const isSubActive = location.pathname === subItem.href || location.pathname.startsWith(`${subItem.href}/`);
-                      const publicTabState = !user ? getPublicTabState(subItem.href) : 'accessible';
+                      const publicTabState = getItemState?.(subItem.href) ?? (!user ? getPublicTabState(subItem.href) : 'accessible');
 
                       if (publicTabState === 'hidden') {
                         return null;

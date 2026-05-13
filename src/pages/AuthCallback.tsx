@@ -7,6 +7,7 @@ import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import type { EmailOtpType } from '@supabase/supabase-js';
 import { appendReturnParam, persistOnboardingReturn, sanitizeReturnPath } from '@/lib/authRedirect';
+import { consumeCheckoutIntent, redirectToCheckoutIntent } from '@/lib/checkoutRedirect';
 import { readAuthMethod, trackSignupCompleted } from '@/lib/analytics';
 import { ICP_SEED_STORAGE_KEY } from '@/lib/icpSeed';
 import { getSafeSessionStorage } from '@/lib/safeStorage';
@@ -217,6 +218,11 @@ const AuthCallback = () => {
           }
 
           const destination = returnUrl;
+          const pendingCheckoutIntent = consumeCheckoutIntent();
+          if (pendingCheckoutIntent) {
+            redirectToCheckoutIntent(pendingCheckoutIntent, session.user);
+            return;
+          }
 
           // Navigate to return URL. First-time dashboard users now see Day 1 Welcome on /dashboard.
           if (destination.includes('dream2plan') || (destination === returnUrl && savedBizMapProgress)) {

@@ -3,6 +3,12 @@ export const ANGELS_PRO_CHECKOUT_INTENT = "angels-pro";
 export const ANGELS_PRO_CHECKOUT_URL = "https://buy.stripe.com/cNifZi0q5f4P7303nt0VO02";
 
 const CHECKOUT_INTENT_URLS = {
+  "starter-monthly": "https://buy.stripe.com/cNibJ22yd4qb2MK8HN0VO0R",
+  "starter-yearly": "https://buy.stripe.com/cNidRadcR5ufafc7DJ0VO0S",
+  "rising-monthly": "https://buy.stripe.com/bJe00k5KpcWH9b81fl0VO0P",
+  "rising-yearly": "https://buy.stripe.com/3cI3cw1u9g8Tfzw0bh0VO0Q",
+  "pro-monthly": "https://buy.stripe.com/8x23cw1u96yjfzw4rx0VO0N",
+  "pro-yearly": "https://buy.stripe.com/6oU4gA4Glf4P5YW8HN0VO0O",
   [ANGELS_PRO_CHECKOUT_INTENT]: ANGELS_PRO_CHECKOUT_URL,
 } as const;
 

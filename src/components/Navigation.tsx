@@ -32,6 +32,8 @@ import {
 import { cn } from "@/lib/utils";
 import { useBizMapProgress } from "@/hooks/useBizMapProgress";
 import { BIZMAP_STAGES } from "@/lib/bizmapStages";
+import { normalizePlan, resolveEntitlement, type FeatureKey } from "@/config/planPermissions";
+import { useSubscription } from "@/hooks/useSubscription";
 import {
   Dialog,
   DialogContent,
@@ -55,8 +57,10 @@ const Navigation = () => {
   const deviceType = useDeviceType();
   const location = useLocation();
   const { isToolRouteUnlocked, getLockReasonForRoute } = useBizMapProgress();
+  const { subscriptionData } = useSubscription();
   const { getTotalUnreadCount } = useMessaging({ autoLoad: true, suppressLoadErrors: true });
   const totalUnreadMessages = user ? getTotalUnreadCount() : 0;
+  const currentPlan = normalizePlan(subscriptionData?.subscription_tier);
 
   // Hover popup for BizMap AI menu item
   const bizMapHover = useHoverPopup({ delay: 1500, trigger: 'bizmap-nav' });
@@ -118,6 +122,45 @@ const Navigation = () => {
     { name: "Email Templates", href: "/email-templates", icon: Mail, description: "Reach out smartly." },
     { name: "Prompt Library", href: "/prompt-library", icon: BookOpen, description: "60 business models from 8 different industries." },
   ];
+
+  const routeFeatureMap: Partial<Record<string, FeatureKey>> = {
+    "/icp-builder": "icp_builder",
+    "/waitlist": "waitlist_maker",
+    "/pmf-lab": "pmf_lab",
+    "/mvp-builder": "mvp_builder",
+    "/tech-stack": "tech_stack",
+    "/go-to-market": "gtm_strategist",
+    "/directories": "directories",
+    "/co-founder": "cofounder_posts",
+    "/investors": "angels_community",
+    "/vc-search": "vc_search_browse",
+    "/accelerator-hunt": "accelerator_browse",
+    "/email-templates": "email_templates",
+    "/pitch-deck-analyzer": "pitch_deck_analyzer",
+    "/insighta-test": "insighta_test",
+    "/newspaper": "newspaper",
+    "/prompt-library": "prompt_library",
+  };
+
+  const getMenuItemState = (href: string) => {
+    if (!user) {
+      return getPublicTabState(href);
+    }
+
+    const featureKey = routeFeatureMap[href];
+    if (!featureKey) {
+      return 'accessible';
+    }
+
+    const entitlement = resolveEntitlement(featureKey, currentPlan);
+    if (!entitlement.isVisible) {
+      return 'hidden';
+    }
+
+    return entitlement.state === 'locked' || entitlement.state === 'hidden'
+      ? 'locked'
+      : 'accessible';
+  };
 
   // Fetch user avatar
   useEffect(() => {
@@ -229,8 +272,6 @@ const Navigation = () => {
     "nav-dropdown-surface max-w-[calc(100vw-2rem)]";
   const navActionButtonClass =
     "nav-action-button relative h-10 w-10 rounded-[14px] text-muted-foreground hover:text-foreground";
-  const getSignedOutTabState = (href: string) => (!user ? getPublicTabState(href) : 'accessible');
-
   if (!loading && !user) {
     return <VisitorNavbar />;
   }
@@ -270,6 +311,13 @@ const Navigation = () => {
               <div className="flex-1 flex items-center justify-center">
                 <TabletNavigation
                   navItems={navItems}
+                  submenus={{
+                    'BizMap AI': bizMapSubmenu,
+                    Insighta: insightaSubmenu,
+                    Community: communitySubmenu,
+                    More: resourcesSubmenu,
+                  }}
+                  getItemState={getMenuItemState}
                   onItemClick={(name) => trackClick(name, 'Navigation')}
                 />
               </div>
@@ -316,7 +364,7 @@ const Navigation = () => {
                             }
 	                            const linkItem = subItem as { name: string; href: string; icon: React.ComponentType<{ className?: string }>; description: string };
 	                            const SubIcon = linkItem.icon;
-                            const publicTabState = getSignedOutTabState(linkItem.href);
+                            const publicTabState = getMenuItemState(linkItem.href);
                             const showSignedOutLock = publicTabState === 'locked';
 
                             if (publicTabState === 'hidden') {
@@ -425,7 +473,7 @@ const Navigation = () => {
                               }
 
 		                            const SubIcon = subItem.icon;
-	                            const publicTabState = getSignedOutTabState(subItem.href);
+	                            const publicTabState = getMenuItemState(subItem.href);
 
                             if (publicTabState === 'hidden') {
                               return null;
@@ -485,7 +533,7 @@ const Navigation = () => {
                           <DropdownMenuSeparator />
 	                          {communitySubmenu.map((subItem) => {
 	                            const SubIcon = subItem.icon;
-                            const publicTabState = getSignedOutTabState(subItem.href);
+                            const publicTabState = getMenuItemState(subItem.href);
 
                             if (publicTabState === 'hidden') {
                               return null;
@@ -545,7 +593,7 @@ const Navigation = () => {
                           <DropdownMenuSeparator />
 	                          {resourcesSubmenu.map((subItem) => {
 	                            const SubIcon = subItem.icon;
-                            const publicTabState = getSignedOutTabState(subItem.href);
+                            const publicTabState = getMenuItemState(subItem.href);
 
                             if (publicTabState === 'hidden') {
                               return null;
@@ -793,7 +841,7 @@ const Navigation = () => {
                               }
 
 		                              const SubIcon = sub.icon;
-		                              const publicTabState = getSignedOutTabState(sub.href);
+		                              const publicTabState = getMenuItemState(sub.href);
 
                               if (publicTabState === 'hidden') {
                                 return null;

@@ -85,6 +85,19 @@ const FindYourAngel = () => {
   const publicTab = getPublicTabConfig('/investors');
   const isPro = isAdmin || currentTier === 'pro';
   const [angels, setAngels] = useState<AngelInvestor[]>([]);
+  const openProfessionalUpgradePrompt = (featureName = 'Angel Investor Profiles') => {
+    trackUpgradeClicked({
+      from_plan: normalizePlanId(currentTier),
+      to_plan: 'PRO',
+      location: 'feature_gate',
+    });
+    openUpgradePrompt({
+      reason: 'feature',
+      featureName,
+      requiredTier: 'pro',
+      description: 'Professional plan gives you unlimited access to all angel investor profiles.',
+    });
+  };
 
   // Initialize state from URL params (fix 4b: persist filters in URL)
   const [searchQuery, setSearchQuery] = useState(searchParams.get("q") || "");
@@ -454,7 +467,19 @@ const FindYourAngel = () => {
               ) : (
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <div className="relative w-full max-w-md mx-auto md:mx-0 opacity-50 cursor-not-allowed">
+                    <div
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => openProfessionalUpgradePrompt('Angel Investor Search')}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                          event.preventDefault();
+                          openProfessionalUpgradePrompt('Angel Investor Search');
+                        }
+                      }}
+                      className="relative w-full max-w-md mx-auto md:mx-0 opacity-50 cursor-pointer"
+                      aria-label="Upgrade to Professional to unlock investor search"
+                    >
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input
                         placeholder="Search by name or keyword"
@@ -534,14 +559,29 @@ const FindYourAngel = () => {
                 ) : (
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className="h-9 opacity-50 cursor-not-allowed"
-                        disabled
+                      <span
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => openProfessionalUpgradePrompt('Angel Investor Filters')}
+                        onKeyDown={(event) => {
+                          if (event.key === 'Enter' || event.key === ' ') {
+                            event.preventDefault();
+                            openProfessionalUpgradePrompt('Angel Investor Filters');
+                          }
+                        }}
+                        className="inline-flex cursor-pointer"
+                        aria-label="Upgrade to Professional to unlock investment stage filters"
                       >
-                        Investment Stage
-                        <ChevronDown className="h-4 w-4 ml-2" />
-                      </Button>
+                        <Button
+                          variant="outline"
+                          className="h-9 opacity-50 cursor-not-allowed pointer-events-none"
+                          disabled
+                          aria-disabled="true"
+                        >
+                          Investment Stage
+                          <ChevronDown className="h-4 w-4 ml-2" />
+                        </Button>
+                      </span>
                     </TooltipTrigger>
                     <TooltipContent>
                       <p>Upgrade to Professional to unlock filters</p>
@@ -609,14 +649,29 @@ const FindYourAngel = () => {
                 ) : (
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className="h-9 opacity-50 cursor-not-allowed"
-                        disabled
+                      <span
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => openProfessionalUpgradePrompt('Angel Investor Filters')}
+                        onKeyDown={(event) => {
+                          if (event.key === 'Enter' || event.key === ' ') {
+                            event.preventDefault();
+                            openProfessionalUpgradePrompt('Angel Investor Filters');
+                          }
+                        }}
+                        className="inline-flex cursor-pointer"
+                        aria-label="Upgrade to Professional to unlock sector filters"
                       >
-                        Sector
-                        <ChevronDown className="h-4 w-4 ml-2" />
-                      </Button>
+                        <Button
+                          variant="outline"
+                          className="h-9 opacity-50 cursor-not-allowed pointer-events-none"
+                          disabled
+                          aria-disabled="true"
+                        >
+                          Sector
+                          <ChevronDown className="h-4 w-4 ml-2" />
+                        </Button>
+                      </span>
                     </TooltipTrigger>
                     <TooltipContent>
                       <p>Upgrade to Professional to unlock filters</p>
@@ -656,7 +711,19 @@ const FindYourAngel = () => {
                 ) : (
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <div className="opacity-50 cursor-not-allowed">
+                      <div
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => openProfessionalUpgradePrompt('Angel Investor Sorting')}
+                        onKeyDown={(event) => {
+                          if (event.key === 'Enter' || event.key === ' ') {
+                            event.preventDefault();
+                            openProfessionalUpgradePrompt('Angel Investor Sorting');
+                          }
+                        }}
+                        className="opacity-50 cursor-pointer"
+                        aria-label="Upgrade to Professional to unlock investor sorting"
+                      >
                         <Select value="alphabetical" disabled>
                           <SelectTrigger className="w-[180px] h-9 pointer-events-none">
                             <SelectValue />

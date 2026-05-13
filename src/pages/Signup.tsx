@@ -346,6 +346,16 @@ const Signup = () => {
         setIsRedirecting(true);
 
         setTimeout(() => {
+          const pendingCheckoutIntent = consumeCheckoutIntent();
+          if (pendingCheckoutIntent) {
+            redirectToCheckoutIntent(pendingCheckoutIntent, session.user);
+            return;
+          }
+
+          if (checkoutIntent) {
+            return;
+          }
+
           const destination = sanitizeReturnPath(conversionSource.returnUrl, '/dashboard');
           navigate(destination, { replace: true });
         }, 300);
