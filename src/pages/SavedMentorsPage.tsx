@@ -10,7 +10,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { SavedMentor, useMentorSaves } from '@/hooks/useMentorSaves';
 import { trackRetentionEvent } from '@/lib/retentionSystem';
 
-const SAVED_MARKETPLACE_URL = '/community?mentorSource=saved';
+const SAVED_MARKETPLACE_URL = '/mentorship?mentorSource=saved';
 
 type VisibleSavedMentor = SavedMentor & {
   mentor: NonNullable<SavedMentor['mentor']>;
@@ -144,7 +144,7 @@ const SavedMentorsPage = () => {
                   </p>
                   <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
                     <Button asChild>
-                      <Link to="/community" onClick={() => trackPageAction('browse_mentors')}>
+                      <Link to="/mentorship" onClick={() => trackPageAction('browse_mentors')}>
                         Browse mentors
                         <ArrowRight className="ml-1 h-4 w-4" />
                       </Link>
@@ -211,7 +211,7 @@ const SavedMentorsPage = () => {
 
                       <div className="mt-5 flex flex-wrap gap-2">
                         <Button asChild size="sm">
-                          <Link to={`/community/mentors/${item.mentor.id}`} onClick={() => trackPageAction('open_profile', item.mentor.id)}>
+                          <Link to={`/mentorship/mentors/${item.mentor.id}`} onClick={() => trackPageAction('open_profile', item.mentor.id)}>
                             View profile
                           </Link>
                         </Button>
@@ -269,7 +269,7 @@ const SavedMentorsPage = () => {
                   </Link>
                 </Button>
                 <Button asChild variant="outline" className="w-full justify-between">
-                  <Link to="/community/my-bookings" onClick={() => trackPageAction('open_bookings')}>
+                  <Link to="/mentorship/my-bookings" onClick={() => trackPageAction('open_bookings')}>
                     View bookings
                     <ArrowRight className="h-4 w-4" />
                   </Link>

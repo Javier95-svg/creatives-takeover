@@ -27,7 +27,7 @@ const PlatformProcess = () => {
       title: "Community Collaboration",
       description: "Connect with fellow entrepreneurs, share insights, and collaborate on projects in real-time.",
       features: ["Entrepreneur network", "Real-time collaboration", "Knowledge sharing"],
-      link: "/community"
+      link: "/mentorship"
     },
     {
       number: "03",

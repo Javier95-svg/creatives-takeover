@@ -92,7 +92,7 @@ const FAQHero = () => {
               </Link>
             </Button>
             <Button variant="outline" size="lg" className="text-lg px-8 py-6" asChild>
-              <Link to="/community">
+              <Link to="/mentorship">
                 Ask Community
               </Link>
             </Button>

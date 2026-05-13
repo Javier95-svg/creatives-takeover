@@ -73,11 +73,11 @@ function getDefaultCta(intent: ActivationIntent | undefined, appUrl: string) {
     case "run_icp":
       return `${appUrl}/icp-builder`;
     case "save_mentor":
-      return `${appUrl}/community?mentorSource=retention-saved`;
+      return `${appUrl}/mentorship?mentorSource=retention-saved`;
     case "send_message":
       return `${appUrl}/messages`;
     case "book_call":
-      return `${appUrl}/community?mentorSource=retention-call`;
+      return `${appUrl}/mentorship?mentorSource=retention-call`;
     default:
       return `${appUrl}/dashboard`;
   }

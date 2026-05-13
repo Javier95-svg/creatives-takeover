@@ -79,7 +79,7 @@ const AdminMentorEditor = () => {
 
     if (!isAdmin) {
       toast.error("Only admins can access this page");
-      navigate("/community", { replace: true });
+      navigate("/mentorship", { replace: true });
       return;
     }
 
@@ -352,7 +352,7 @@ const AdminMentorEditor = () => {
 
       if (result) {
         toast.success(mentor ? "Mentor updated!" : "Mentor created!");
-        navigate(`/community/mentors/${result.id}`);
+        navigate(`/mentorship/mentors/${result.id}`);
       } else {
         toast.error("Failed to save mentor. Please check the console for details.");
       }
@@ -371,7 +371,7 @@ const AdminMentorEditor = () => {
     if (confirm("Are you sure you want to delete this mentor?")) {
       const success = await deleteMentor(mentor.id);
       if (success) {
-        navigate("/community");
+        navigate("/mentorship");
       }
     }
   };
@@ -414,7 +414,7 @@ const AdminMentorEditor = () => {
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-4">
               <Button variant="ghost" size="sm" asChild>
-                <Link to="/community">
+                <Link to="/mentorship">
                   <ArrowLeft className="w-4 h-4 mr-2" />
                   Back
                 </Link>

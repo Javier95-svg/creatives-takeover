@@ -14,7 +14,7 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { name: "Home", href: "/", icon: Home },
-  { name: "Community", href: "/community", icon: Users },
+  { name: "Community", href: "/mentorship", icon: Users },
   { name: "Messages", href: "/messages", icon: MessageCircle, requiresAuth: true },
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard, requiresAuth: true },
   { name: "Account", href: "/account", icon: User, requiresAuth: true },

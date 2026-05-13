@@ -145,7 +145,7 @@ const journeyActions: JourneyAction[] = [
     delay: "0.18s",
   },
   {
-    to: "/community",
+    to: "/mentorship",
     title: "Find a Mentor",
     description: "Community gives you access to our global mentorship network, ideal for founders seeking expert advice to grow faster and avoid common mistakes.",
     icon: GraduationCap,
@@ -187,7 +187,7 @@ const journeyActions: JourneyAction[] = [
     delay: "0.12s",
   },
   {
-    to: "/community/angels",
+    to: "/investors",
     title: "Meet your Investor",
     description: "Angels gives you access to investors across all stages and sectors, helping you find the right backers for your startup and start real conversations.",
     icon: Users,
@@ -229,7 +229,7 @@ const journeyActions: JourneyAction[] = [
     delay: "0.36s",
   },
   {
-    to: "/community/co-founders",
+    to: "/co-founder",
     title: "Find a Co-Founder",
     description: "The Co-Founder tab lets you post when you’re seeking a co-founder, instantly notifying all platform users to spark quick matches.",
     icon: Handshake,

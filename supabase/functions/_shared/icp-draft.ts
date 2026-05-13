@@ -117,7 +117,7 @@ function normalizeRoutes(route: unknown, fallback: string) {
   if (value.includes("waitlist")) return "/waitlist";
   if (value.includes("mvp")) return "/mvp-builder";
   if (value.includes("gtm") || value.includes("go-to-market")) return "/go-to-market";
-  if (value.includes("mentor")) return "/community/mentor-marketplace";
+  if (value.includes("mentor")) return "/mentorship/mentor-marketplace";
   return fallback;
 }
 
@@ -369,7 +369,7 @@ function buildDashboardContext(draftDocument: DraftDocument) {
         title: "Get founder-context help from a mentor",
         description: "Use the draft to ask sharper questions about the segment, pain, competition, and offer.",
         reason: "A first ICP usually improves fastest when someone challenges the assumptions directly.",
-        actionUrl: "/community/mentor-marketplace",
+        actionUrl: "/mentorship/mentor-marketplace",
         priority: 10,
         type: "mentor",
       },

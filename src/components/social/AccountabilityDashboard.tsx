@@ -183,7 +183,7 @@ export const AccountabilityDashboard = () => {
 
           <div className="flex flex-wrap gap-3">
             <Button asChild>
-              <Link to="/community/progress">
+              <Link to="/mentorship/progress">
                 <Megaphone className="h-4 w-4 mr-2" />
                 Share Progress in Community
               </Link>

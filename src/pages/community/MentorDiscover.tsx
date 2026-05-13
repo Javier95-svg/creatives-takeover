@@ -185,14 +185,14 @@ const MentorDiscover = () => {
             <div className="mb-6">
               <div className="flex items-center justify-between mb-4">
                 <Button variant="ghost" size="sm" asChild>
-                  <Link to="/community" className="flex items-center gap-2">
+                  <Link to="/mentorship" className="flex items-center gap-2">
                     <ArrowLeft className="h-4 w-4" />
                     Back to Marketplace
                   </Link>
                 </Button>
                 {isAdmin && (
                   <Button asChild>
-                    <Link to="/community/admin/new">Create Mentor</Link>
+                    <Link to="/mentorship/admin/new">Create Mentor</Link>
                   </Button>
                 )}
               </div>
@@ -267,7 +267,7 @@ const MentorDiscover = () => {
                   </p>
                   {isAdmin && (
                     <Button asChild>
-                      <Link to="/community/admin/new">
+                      <Link to="/mentorship/admin/new">
                         Create First Mentor
                       </Link>
                     </Button>

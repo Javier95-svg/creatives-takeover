@@ -68,22 +68,22 @@ export const NotificationBell = () => {
 
     // Navigate to co-founders page if it's a post_published notification
     if (notification.notification_type === 'post_published') {
-      navigateTo('/community/co-founders');
+      navigateTo('/co-founder');
       return;
     }
 
     if (notification.notification_type === 'mentor_banner_created') {
-      navigateTo('/community');
+      navigateTo('/mentorship');
       return;
     }
 
     if (notification.notification_type === 'angel_banner_created') {
-      navigateTo('/community/angels');
+      navigateTo('/investors');
       return;
     }
 
     if (notification.notification_type === 'cofounder_post_created') {
-      navigateTo('/community/co-founders');
+      navigateTo('/co-founder');
       return;
     }
 
@@ -102,7 +102,7 @@ export const NotificationBell = () => {
           'mentor_notification_clicked',
           {
             slug: notificationSlug,
-            route: metadataRoute || '/community',
+            route: metadataRoute || '/mentorship',
           },
           user?.id,
         );
@@ -119,25 +119,25 @@ export const NotificationBell = () => {
 
     // Navigate to profile for follow requests
     if (notification.notification_type === 'follow_request') {
-      navigateTo(actorProfilePath || '/community');
+      navigateTo(actorProfilePath || '/mentorship');
       return;
     }
 
     // Navigate to profile pictures tab for new picture notifications
     if (notification.notification_type === 'follower_new_picture') {
-      navigateTo(actorProfilePath || '/community');
+      navigateTo(actorProfilePath || '/mentorship');
       return;
     }
 
     // Navigate to profile for new reel notifications
     if (notification.notification_type === 'follower_new_reel') {
-      navigateTo(actorProfilePath || '/community');
+      navigateTo(actorProfilePath || '/mentorship');
       return;
     }
 
     // Navigate to profile startup tab for startup updates
     if (notification.notification_type === 'follower_startup_update') {
-      navigateTo(actorProfilePath || '/community');
+      navigateTo(actorProfilePath || '/mentorship');
       return;
     }
 
@@ -148,7 +148,7 @@ export const NotificationBell = () => {
 
     // Navigate to the post for community notifications
     if (notification.post_id) {
-      navigateTo(`/community?post=${notification.post_id}`);
+      navigateTo(`/mentorship?post=${notification.post_id}`);
       return;
     }
 

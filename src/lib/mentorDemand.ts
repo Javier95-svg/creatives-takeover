@@ -168,7 +168,7 @@ export function buildMentorMarketplaceRoute({ track, source }: MentorMarketplace
     params.set('mentorSource', source);
   }
 
-  return `/community?${params.toString()}`;
+  return `/mentorship?${params.toString()}`;
 }
 
 export function parseMentorTrack(value: string | null): MentorRecommendationTrack | null {

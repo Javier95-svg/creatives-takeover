@@ -102,11 +102,11 @@ function getDefaultCta(intent: ActivationIntent, appBaseUrl: string) {
     case "run_icp":
       return `${appBaseUrl}/icp-builder`;
     case "save_mentor":
-      return `${appBaseUrl}/community?mentorSource=saved`;
+      return `${appBaseUrl}/mentorship?mentorSource=saved`;
     case "send_message":
       return `${appBaseUrl}/messages`;
     case "book_call":
-      return `${appBaseUrl}/community?mentorSource=booked-call`;
+      return `${appBaseUrl}/mentorship?mentorSource=booked-call`;
   }
 }
 
@@ -180,7 +180,7 @@ function buildSequenceDecision(args: {
         assets.unreadMessageCount > 0
           ? `${appBaseUrl}/messages`
           : assets.savedMentorCount > 0
-            ? `${appBaseUrl}/community?mentorSource=saved`
+            ? `${appBaseUrl}/mentorship?mentorSource=saved`
             : `${appBaseUrl}/newspaper`,
       contextHeadline:
         assets.unreadMessageCount > 0
@@ -204,10 +204,10 @@ function buildSequenceDecision(args: {
         assets.unreadMessageCount > 0
           ? `${appBaseUrl}/messages`
           : assets.savedMentorCount > 0
-            ? `${appBaseUrl}/community?mentorSource=saved`
+            ? `${appBaseUrl}/mentorship?mentorSource=saved`
             : assets.hasIcpAnalysis
               ? `${appBaseUrl}/icp-builder`
-            : `${appBaseUrl}/community?mentorSource=booked-call`,
+            : `${appBaseUrl}/mentorship?mentorSource=booked-call`,
       contextHeadline:
         assets.unreadMessageCount > 0
           ? `You still have ${assets.unreadMessageCount} message ${assets.unreadMessageCount === 1 ? "reply" : "replies"} waiting.`
@@ -234,7 +234,7 @@ function buildSequenceDecision(args: {
         assets.unreadMessageCount > 0
           ? `${appBaseUrl}/messages`
           : assets.savedMentorCount > 0
-            ? `${appBaseUrl}/community?mentorSource=saved`
+            ? `${appBaseUrl}/mentorship?mentorSource=saved`
             : getDefaultCta(intent, appBaseUrl),
       contextHeadline:
         assets.unreadMessageCount > 0
@@ -262,7 +262,7 @@ function buildSequenceDecision(args: {
         assets.unreadMessageCount > 0
           ? `${appBaseUrl}/messages`
           : assets.savedMentorCount > 0
-            ? `${appBaseUrl}/community?mentorSource=saved`
+            ? `${appBaseUrl}/mentorship?mentorSource=saved`
             : getDefaultCta(intent, appBaseUrl),
       contextHeadline:
         assets.unreadMessageCount > 0

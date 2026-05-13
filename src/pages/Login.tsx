@@ -90,7 +90,7 @@ const Login = () => {
         return;
       }
 
-      const postLoginTarget = returnUrl.startsWith('/community/book/') ? '/community' : returnUrl;
+      const postLoginTarget = returnUrl.startsWith('/mentorship/book/') ? '/mentorship' : returnUrl;
       navigate(postLoginTarget);
     }
   }, [user, navigate, returnUrl]);

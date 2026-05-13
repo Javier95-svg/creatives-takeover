@@ -20,12 +20,12 @@ export const ROBOTS_DISALLOW = [
   "/weekly-mission",
   "/tasks",
   "/subscription-success",
-  "/community/book/",
-  "/community/my-bookings",
-  "/community/admin/",
-  "/community/co-founders/create",
-  "/community/co-founders/edit/",
-  "/community/angels/admin/",
+  "/mentorship/book/",
+  "/mentorship/my-bookings",
+  "/mentorship/admin/",
+  "/co-founder/create",
+  "/co-founder/edit/",
+  "/investors/admin/",
   "/newspaper/admin/",
   "/stories/admin/",
   "/w/",
@@ -96,7 +96,7 @@ export const INDEXABLE_ROUTES = [
       "Browse practical tutorials, downloads, and startup learning resources designed to help founders move faster with less guesswork.",
   },
   {
-    path: "/community",
+    path: "/mentorship",
     title: "Mentor Marketplace | Creatives Takeover",
     description:
       "Find startup mentors, book working sessions, and connect with experienced founders who can help you move from idea to execution.",
@@ -107,7 +107,7 @@ export const INDEXABLE_ROUTES = [
       "Browse startup mentors, review expertise, and book practical sessions focused on execution, fundraising, product, and growth.",
   },
   {
-    path: "/community/co-founders",
+    path: "/co-founder",
     title: "Find a Co-Founder | Creatives Takeover",
     description:
       "Meet potential startup co-founders, browse founder profiles, and discover collaborators across product, growth, design, and engineering.",
@@ -118,7 +118,7 @@ export const INDEXABLE_ROUTES = [
       "Explore active founder profiles and startup ideas to find a collaborator who complements your skills and ambition.",
   },
   {
-    path: "/community/angels",
+    path: "/investors",
     title: "Find Your Angel | Creatives Takeover",
     description:
       "Browse angel investors, review fit signals, and build a tighter investor shortlist for your startup fundraising process.",

@@ -123,8 +123,8 @@ export const chatbotFAQ: FAQItem[] = [
     category: FAQCategory.COMMUNITY,
     priority: 6,
     quickActions: [
-      { text: 'Join Community', action: 'navigate', type: QuickActionType.NAVIGATE, href: '/community', priority: 1 },
-      { text: 'View Stories', action: 'navigate', type: QuickActionType.NAVIGATE, href: '/community', priority: 2 }
+      { text: 'Join Community', action: 'navigate', type: QuickActionType.NAVIGATE, href: '/mentorship', priority: 1 },
+      { text: 'View Stories', action: 'navigate', type: QuickActionType.NAVIGATE, href: '/mentorship', priority: 2 }
     ],
     metadata: {
       views: 987,
@@ -303,7 +303,7 @@ export const getContextualFAQ = (currentPath: string): FAQItem[] => {
     '/': ['what-is-bizmap', 'how-it-works', 'free-trial'],
     '/pricing': ['pricing', 'free-trial', 'support'],
     '/bizmap-ai': ['how-it-works', 'ai-technology', 'business-plan-sections', 'market-research-tools'],
-    '/community': ['community', 'accountability', 'support'],
+    '/mentorship': ['community', 'accountability', 'support'],
     '/services': ['what-is-bizmap', 'accountability', 'ai-technology', 'integration-options'],
     '/contact': ['support', 'pricing', 'free-trial'],
     '/financial': ['financial-projections', 'pricing', 'support'],

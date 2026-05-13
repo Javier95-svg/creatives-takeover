@@ -20,7 +20,7 @@ const MentorBookingPage = () => {
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
-      navigate("/auth?redirect=/community/book/" + id);
+      navigate("/auth?redirect=/mentorship/book/" + id);
     }
   }, [isAuthenticated, authLoading, navigate, id]);
 
@@ -67,7 +67,7 @@ const MentorBookingPage = () => {
         <div className="container mx-auto px-4 py-20 text-center">
           <p className="text-muted-foreground mb-4">Mentor not found</p>
           <Button asChild>
-            <Link to="/community">Browse Mentors</Link>
+            <Link to="/mentorship">Browse Mentors</Link>
           </Button>
         </div>
       </>
@@ -90,7 +90,7 @@ const MentorBookingPage = () => {
           <div className="pt-16">
             <div className="container mx-auto px-4 py-8 max-w-2xl">
               <Button variant="ghost" size="sm" asChild className="mb-6">
-                <Link to={`/community/mentors/${id}`} className="flex items-center gap-2">
+                <Link to={`/mentorship/mentors/${id}`} className="flex items-center gap-2">
                   <ArrowLeft className="h-4 w-4" />
                   Back to Profile
                 </Link>

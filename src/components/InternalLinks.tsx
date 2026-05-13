@@ -16,7 +16,7 @@ const InternalLinks = () => {
       title: "Join Our Community",
       description: "Connect with like-minded creators, share your journey, and get support from our vibrant community.",
       icon: Users,
-      href: "/community",
+      href: "/mentorship",
       cta: "Join Community"
     },
     {

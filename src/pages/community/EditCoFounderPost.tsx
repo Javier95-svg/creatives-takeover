@@ -57,7 +57,7 @@ const EditCoFounderPost = () => {
         // Check if user owns this post
         if (data.user_id !== user.id) {
           toast.error('You do not have permission to edit this post');
-          navigate('/community/co-founders');
+          navigate('/co-founder');
           return;
         }
 
@@ -74,7 +74,7 @@ const EditCoFounderPost = () => {
       } catch (error: any) {
         console.error('Error fetching post:', error);
         toast.error('Failed to load post');
-        navigate('/community/co-founders');
+        navigate('/co-founder');
       } finally {
         setFetchingPost(false);
       }
@@ -121,7 +121,7 @@ const EditCoFounderPost = () => {
 
       // Redirect to co-founders page
       setTimeout(() => {
-        navigate('/community/co-founders');
+        navigate('/co-founder');
       }, 1500);
     } catch (error: any) {
       console.error('Error updating co-founder post:', error);

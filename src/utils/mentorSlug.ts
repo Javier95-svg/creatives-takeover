@@ -40,5 +40,5 @@ export const MENTOR_SLUG_MAP: Record<string, string> = {
  */
 export function getMentorProfileUrl(mentorId: string, mentorName: string): string {
   const slug = generateMentorSlug(mentorName);
-  return `/community/${slug}`;
+  return `/mentorship/${slug}`;
 }

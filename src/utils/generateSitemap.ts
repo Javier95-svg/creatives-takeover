@@ -35,7 +35,7 @@ const routes: SitemapEntry[] = [
   
   // Community & Content - High Priority
   { path: '/insighta', priority: 0.8, changefreq: 'daily' },
-  { path: '/community', priority: 0.8, changefreq: 'daily' },
+  { path: '/mentorship', priority: 0.8, changefreq: 'daily' },
   { path: '/resources', priority: 0.8, changefreq: 'weekly' },
   
   // Information Pages - Medium-High Priority

@@ -28,7 +28,7 @@ const PAGE_HINTS: Record<string, string> = {
   '/bizmap-ai': 'Working on your business map? Ask me anything about the steps.',
   '/pitch-deck-analyzer': 'Upload your pitch deck and I\'ll analyze it across 6 key dimensions.',
   '/focus-funnel': 'The Focus Funnel helps you prioritize what matters most right now.',
-  '/community': 'The community is full of founders at your stage. Want me to help you find relevant discussions?',
+  '/mentorship': 'The community is full of founders at your stage. Want me to help you find relevant discussions?',
 };
 
 function generateProactiveMessage(context: PulseContext | null, isAuthenticated: boolean): string {

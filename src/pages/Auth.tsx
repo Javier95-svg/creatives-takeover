@@ -72,14 +72,14 @@ const Auth: React.FC = () => {
     void (async () => {
       const resumedDiscoveryCall = await resumePendingDiscoveryCallRedirect();
       if (resumedDiscoveryCall) {
-        navigate('/community');
+        navigate('/mentorship');
         return;
       }
 
       // Only redirect if we're still on the auth page
       if (window.location.pathname === '/auth') {
-        // If redirect is a booking flow, go to /community instead
-        const finalRedirect = redirectUrl.startsWith('/community/book/') ? '/community' : redirectUrl;
+        // If redirect is a booking flow, go to /mentorship instead
+        const finalRedirect = redirectUrl.startsWith('/mentorship/book/') ? '/mentorship' : redirectUrl;
         
         // If redirect is just '/', check onboarding status to avoid double redirect
         if (finalRedirect === '/') {
@@ -209,7 +209,7 @@ const Auth: React.FC = () => {
     intent: SocialAuthIntent,
     provider: SocialAuthProviderId,
   ) => {
-    const finalRedirect = redirectUrl.startsWith('/community/book/') ? '/community' : redirectUrl;
+    const finalRedirect = redirectUrl.startsWith('/mentorship/book/') ? '/mentorship' : redirectUrl;
     const signupMethod = getSocialAuthSignupMethod(provider);
 
     await startSocialOAuth({

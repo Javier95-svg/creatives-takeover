@@ -33,7 +33,7 @@ const MentorProfilePage = () => {
   // Using useMemo ensures this recalculates when location.pathname changes
   const slug = useMemo(() => {
     if (paramSlug) return paramSlug;
-    const pathMatch = location.pathname.match(/^\/community\/([^/]+)$/);
+    const pathMatch = location.pathname.match(/^\/mentorship\/([^/]+)$/);
     return pathMatch ? pathMatch[1] : null;
   }, [paramSlug, location.pathname]);
 
@@ -186,7 +186,7 @@ const MentorProfilePage = () => {
             </p>
           )}
           <Button asChild className="mt-4">
-            <Link to="/community">Browse All Mentors</Link>
+            <Link to="/mentorship">Browse All Mentors</Link>
           </Button>
         </div>
       </>
@@ -207,7 +207,7 @@ const MentorProfilePage = () => {
             <div className="container mx-auto px-4 py-8">
               <div className="flex items-center justify-between mb-6">
                 <Button variant="ghost" size="sm" asChild>
-                  <Link to="/community" className="flex items-center gap-2">
+                  <Link to="/mentorship" className="flex items-center gap-2">
                     <ArrowLeft className="h-4 w-4" />
                     Back to Community
                   </Link>
@@ -216,7 +216,7 @@ const MentorProfilePage = () => {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => navigate(`/community/admin/edit/${mentor.id}`)}
+                    onClick={() => navigate(`/mentorship/admin/edit/${mentor.id}`)}
                   >
                     <Edit className="h-4 w-4 mr-2" />
                     Edit Mentor

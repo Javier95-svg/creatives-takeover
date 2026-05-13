@@ -333,7 +333,7 @@ const SetupQuiz = () => {
                   </CardHeader>
                   <CardContent>
                     <Button asChild className="w-full">
-                      <Link to="/community/co-founders">
+                      <Link to="/co-founder">
                         Explore Co-Founder Marketplace
                         <ArrowRight className="w-4 h-4 ml-2" />
                       </Link>

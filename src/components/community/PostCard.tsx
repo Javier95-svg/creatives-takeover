@@ -293,7 +293,7 @@ const PostCard = React.memo<PostCardProps>(({ post }) => {
 
   const handleShare = async () => {
     try {
-      const url = `${window.location.origin}/community?post=${post.id}`;
+      const url = `${window.location.origin}/mentorship?post=${post.id}`;
       await navigator.clipboard.writeText(url);
       
       // Update share count
@@ -501,12 +501,12 @@ const PostCard = React.memo<PostCardProps>(({ post }) => {
 
   const handleSignIn = () => {
     const source = signInTriggerAction ? `community-${signInTriggerAction}` : 'community';
-    navigate(`/login?source=${source}&return=/community`);
+    navigate(`/login?source=${source}&return=/mentorship`);
   };
 
   const handleSignUp = () => {
     const source = signInTriggerAction ? `community-${signInTriggerAction}` : 'community';
-    navigate(`/signup?source=${source}&return=/community`);
+    navigate(`/signup?source=${source}&return=/mentorship`);
   };
 
   const displayLocation = (location: string | null | undefined) => {

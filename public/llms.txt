@@ -4,7 +4,7 @@ description: All-in-one platform for founders and rookie entrepreneurs to build,
 
 public_pages:
 - /
-- /community
+- /mentorship
 - /newspaper
 - /pricing
 - /resources

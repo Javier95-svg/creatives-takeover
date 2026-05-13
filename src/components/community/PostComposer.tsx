@@ -193,12 +193,12 @@ const PostComposer: React.FC<PostComposerProps> = ({ onPublish, requireAuth = fa
 
   const handleSignIn = () => {
     setShowSignInModal(false);
-    navigate('/login?source=community-post&return=/community');
+    navigate('/login?source=community-post&return=/mentorship');
   };
 
   const handleSignUp = () => {
     setShowSignInModal(false);
-    navigate('/signup?source=community-post&return=/community');
+    navigate('/signup?source=community-post&return=/mentorship');
   };
 
   return (

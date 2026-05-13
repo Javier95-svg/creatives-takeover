@@ -557,7 +557,7 @@ export function buildDraftDashboardContext(artifact: StoredIcpArtifact) {
         title: "Get founder-context help from a mentor",
         description: "Use the draft to ask sharper questions about the segment, pain, and offer.",
         reason: "A first ICP usually improves fastest when someone challenges the assumptions directly.",
-        actionUrl: "/community/mentor-marketplace",
+        actionUrl: "/mentorship/mentor-marketplace",
         priority: 10,
         type: "mentor" as const,
       },

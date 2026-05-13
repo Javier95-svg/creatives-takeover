@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 const STEPS = [
   {
     label: 'Angels prospected',
-    href: '/community/angels',
+    href: '/investors',
     icon: Sparkles,
     cta: 'Open Angels',
   },
@@ -25,7 +25,7 @@ const STEPS = [
   },
   {
     label: 'Term sheets',
-    href: '/community/angels',
+    href: '/investors',
     icon: Users,
     cta: 'Track investors',
   },

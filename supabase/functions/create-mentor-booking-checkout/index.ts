@@ -70,8 +70,8 @@ serve(withErrorBoundary(async (req: Request) => {
           destination: mentor_stripe_account_id,
         },
       },
-      success_url: `${origin}/community/my-bookings?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${origin}/community/mentors/${mentor_id}`,
+      success_url: `${origin}/mentorship/my-bookings?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${origin}/mentorship/mentors/${mentor_id}`,
       metadata: {
         mentor_id,
         founder_id: user.id,

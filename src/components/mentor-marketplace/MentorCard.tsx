@@ -33,7 +33,7 @@ export const MentorCard = ({ mentor, className, priority = false }: MentorCardPr
   const { openUpgradePrompt } = useUpgradePrompt();
   const { saveMentor, buildSaveButtonState } = useMentorSaves();
   const mentorSlug = generateMentorSlug(mentor.name);
-  const profileUrl = `/community/${mentorSlug}`;
+  const profileUrl = `/mentorship/${mentorSlug}`;
   const saveButton = buildSaveButtonState(mentor.id);
   const SaveButtonIcon = saveButton.icon;
   const hasBookableCall = Boolean(mentor.calendly_url?.trim());
@@ -594,7 +594,7 @@ export const MentorCard = ({ mentor, className, priority = false }: MentorCardPr
 
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row items-center gap-3 pt-2">
-              {/* FIX(dead-click): /community — mentor cards now only show primary call/message actions when the mentor actually supports them, and otherwise render explicit unavailable states. */}
+              {/* FIX(dead-click): /mentorship — mentor cards now only show primary call/message actions when the mentor actually supports them, and otherwise render explicit unavailable states. */}
               <Button
                 size="default"
                 variant={hasBookableCall ? "default" : "outline"}

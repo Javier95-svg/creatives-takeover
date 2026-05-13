@@ -200,7 +200,7 @@ export const useRetentionFeed = (): RetentionFeedState => {
           title: 'Follow up on your booked discovery call',
           description: 'The best time to clarify your next decision is right after you book the conversation.',
           actionLabel: 'Open mentors',
-          actionUrl: '/community?mentorSource=booked-call',
+          actionUrl: '/mentorship?mentorSource=booked-call',
         });
       }
 

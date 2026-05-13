@@ -158,7 +158,7 @@ const AuthCallback = () => {
             await resumePendingDiscoveryCallRedirect();
             // Also navigate to community page
             setTimeout(() => {
-              navigate('/community');
+              navigate('/mentorship');
             }, 500);
             return;
           }
@@ -171,9 +171,9 @@ const AuthCallback = () => {
           const oauthSource = localStorage.getItem('oauth_source');
           const oauthSignupMethod = localStorage.getItem('oauth_signup_method');
           
-          // If return URL is a booking flow, redirect to /community instead
-          if (returnUrl.startsWith('/community/book/')) {
-            returnUrl = '/community';
+          // If return URL is a booking flow, redirect to /mentorship instead
+          if (returnUrl.startsWith('/mentorship/book/')) {
+            returnUrl = '/mentorship';
           }
           
           // Restore BizMap progress if it exists

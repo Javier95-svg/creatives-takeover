@@ -24,7 +24,7 @@ const journeyPillars = [
   },
   {
     title: "Community",
-    href: "/community",
+    href: "/mentorship",
     icon: Users,
     summary:
       "The community connects founders, creatives, and coaches at similar or complementary stages. Members use peer support, founder matching, accountability, and collaboration spaces to find cofounders, partners, and feedback loops.",

@@ -10,7 +10,7 @@ const PRIMARY_NAV = [
   { href: "/pricing", label: "Pricing" },
   { href: "/bizmap-ai", label: "BizMap AI" },
   { href: "/insighta", label: "Insighta" },
-  { href: "/community", label: "Community" },
+  { href: "/mentorship", label: "Community" },
   { href: "/newspaper", label: "Newspaper" },
 ];
 
@@ -34,7 +34,7 @@ function buildFallbackHtml(routeConfig) {
   const ctaLinks = [
     { href: "/pricing", label: "See pricing" },
     { href: "/newspaper", label: "Read founder insights" },
-    { href: "/community", label: "Explore community" },
+    { href: "/mentorship", label: "Explore community" },
   ]
     .filter((item) => item.href !== routeConfig.path)
     .map((item) => `<li><a href="${item.href}">${item.label}</a></li>`)

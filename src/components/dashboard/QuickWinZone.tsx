@@ -55,7 +55,7 @@ export const QuickWinZone = () => {
       description: 'Connect with fellow entrepreneurs',
       timeEstimate: '2 min',
       action: 'Explore',
-      actionLink: '/community',
+      actionLink: '/mentorship',
       icon: Zap,
       category: 'connect'
     }

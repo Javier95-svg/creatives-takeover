@@ -1,4 +1,4 @@
-﻿import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { Menu, X, LogIn, LogOut, User, Settings, Gift, UserPlus, MessageCircle, Home, Bot, BookOpen, TrendingUp, Users as UsersIcon, FileText, Info, DollarSign, ChevronDown, Mail, Rocket, FlaskConical, Lightbulb, Target, Boxes, GraduationCap, Handshake, BarChart3, Filter, CheckSquare, LineChart, CalendarCheck, HeartHandshake, Sparkles, Lock } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
@@ -107,9 +107,9 @@ const Navigation = () => {
 
   // Community submenu items
   const communitySubmenu = [
-    { name: "Find a Mentor", href: "/community", icon: GraduationCap, description: "Connect with experienced startup coaches." },
-    { name: "Find a Co-Founder", href: "/community/co-founders", icon: Handshake, description: "Meet your business soulmate." },
-    { name: "Find your Angel", href: "/community/angels", icon: Sparkles, description: "Angel investor network." },
+    { name: "Find a Mentor", href: "/mentorship", icon: GraduationCap, description: "Connect with experienced startup coaches." },
+    { name: "Find a Co-Founder", href: "/co-founder", icon: Handshake, description: "Meet your business soulmate." },
+    { name: "Find your Angel", href: "/investors", icon: Sparkles, description: "Angel investor network." },
   ];
 
   // Resources submenu items
@@ -205,7 +205,7 @@ const Navigation = () => {
   const navItems = [
     { name: "Home", href: "/", tooltip: "Return to homepage", icon: Home },
     { name: "BizMap AI", href: "/bizmap-ai", tooltip: "Validate, build, and launch with guided startup tools", icon: Bot },
-    { name: "Community", href: "/community", tooltip: "Mentors, angel investors, and co-founder matchmaking", icon: UsersIcon },
+    { name: "Community", href: "/mentorship", tooltip: "Mentors, angel investors, and co-founder matchmaking", icon: UsersIcon },
     { name: "Insighta", href: "/insighta", tooltip: "Funding opportunities and investment resources", icon: TrendingUp },
     { name: "More", href: "/newspaper", tooltip: "Stories, prompts, and learning resources", icon: FileText },
     { name: "About Us", href: "/about", tooltip: "Learn about our mission and team", icon: Info },
@@ -304,7 +304,7 @@ const Navigation = () => {
                           </TooltipContent>
                         </Tooltip>
                         <DropdownMenuContent align="start" className={cn("w-80 md:w-72 sm:w-64 max-h-[min(520px,80vh)] overflow-y-auto overscroll-contain", navDropdownClass)}>
-                          <DropdownMenuLabel>Validate ✅ Build 🛠️ Launch 🚀</DropdownMenuLabel>
+                          <DropdownMenuLabel>Validate ? Build ??? Launch ??</DropdownMenuLabel>
                           <DropdownMenuSeparator />
 	                          {bizMapSubmenu.map((subItem, idx) => {
 	                            if ('type' in subItem && subItem.type === 'label') {
@@ -413,7 +413,7 @@ const Navigation = () => {
                           </TooltipContent>
                         </Tooltip>
                         <DropdownMenuContent align="start" className={cn("w-72 md:w-56 sm:w-full", navDropdownClass)}>
-                          <DropdownMenuLabel>Distribute📦 Fundraise💸</DropdownMenuLabel>
+                          <DropdownMenuLabel>Distribute?? Fundraise??</DropdownMenuLabel>
                           <DropdownMenuSeparator />
 	                          {insightaSubmenu.map((subItem, idx) => {
                               if ('type' in subItem && subItem.type === 'label') {
@@ -481,7 +481,7 @@ const Navigation = () => {
                           </TooltipContent>
                         </Tooltip>
                         <DropdownMenuContent align="start" className={cn("w-72 md:w-56 sm:w-full", navDropdownClass)}>
-                          <DropdownMenuLabel>Connect & Collab 🌐🤝</DropdownMenuLabel>
+                          <DropdownMenuLabel>Connect & Collab ????</DropdownMenuLabel>
                           <DropdownMenuSeparator />
 	                          {communitySubmenu.map((subItem) => {
 	                            const SubIcon = subItem.icon;
@@ -541,7 +541,7 @@ const Navigation = () => {
                           </TooltipContent>
                         </Tooltip>
                         <DropdownMenuContent align="start" className="w-72 md:w-56 sm:w-full max-w-[calc(100vw-2rem)]">
-                          <DropdownMenuLabel>Resources for Founders 🗂️</DropdownMenuLabel>
+                          <DropdownMenuLabel>Resources for Founders ???</DropdownMenuLabel>
                           <DropdownMenuSeparator />
 	                          {resourcesSubmenu.map((subItem) => {
 	                            const SubIcon = subItem.icon;

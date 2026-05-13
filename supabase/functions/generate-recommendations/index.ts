@@ -365,7 +365,7 @@ function generateRecommendations(context: any): any[] {
         description: "You're looking for a co-founder! Create your post now to connect with talented entrepreneurs who complement your skills.",
         priority: 10,
         reason: "The right co-founder doubles your chances of success",
-        action_url: "/community/co-founders/create",
+        action_url: "/co-founder/create",
         metadata: { category: "cofounder_matching", quiz_driven: true }
       });
     }

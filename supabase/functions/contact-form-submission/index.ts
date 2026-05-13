@@ -204,7 +204,7 @@ const handler = async (req: Request): Promise<Response> => {
             <h3 style="color: #333; margin-top: 0; font-size: 16px;">🌟 While You Wait:</h3>
             <ul style="color: #555; line-height: 1.8; padding-left: 20px;">
               <li>Explore our <a href="https://creatives-takeover.com/bizmap-ai" style="color: #667eea;">BizMap AI</a> for instant business planning</li>
-              <li>Join our <a href="https://creatives-takeover.com/community" style="color: #667eea;">Community</a> of 1,000+ founders</li>
+              <li>Join our <a href="https://creatives-takeover.com/mentorship" style="color: #667eea;">Community</a> of 1,000+ founders</li>
               <li>Check out <a href="https://creatives-takeover.com/insighta-test" style="color: #667eea;">Insighta</a> for fundraising resources</li>
             </ul>
           </div>

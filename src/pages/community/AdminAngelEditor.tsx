@@ -258,7 +258,7 @@ const AdminAngelEditor = () => {
 
       unauthorizedRedirectHandled.current = true;
       toast.error("Only admins can access this page");
-      navigate("/community/angels", { replace: true });
+      navigate("/investors", { replace: true });
       return;
     }
 
@@ -316,7 +316,7 @@ const AdminAngelEditor = () => {
       if (result) {
         setIsDirty(false); // Clear dirty flag before navigating
         toast.success(angel ? "Angel investor updated!" : "Angel investor created!");
-        navigate("/community/angels");
+        navigate("/investors");
       } else {
         toast.error("Failed to save. Please check the browser console for details.");
       }
@@ -334,7 +334,7 @@ const AdminAngelEditor = () => {
     const success = await deleteAngel(angel.id);
     if (success) {
       setIsDirty(false); // Prevent beforeunload warning after delete
-      navigate("/community/angels");
+      navigate("/investors");
     }
   };
 
@@ -350,7 +350,7 @@ const AdminAngelEditor = () => {
   if (!isAdmin) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center px-6">
-        {/* FIX(dead-click): /community/angels/admin/edit/[id] — unauthorized users now see a non-interactive redirect state instead of briefly rendering the editor shell. */}
+        {/* FIX(dead-click): /investors/admin/edit/[id] — unauthorized users now see a non-interactive redirect state instead of briefly rendering the editor shell. */}
         <div className="max-w-md rounded-2xl border border-border/60 bg-card p-8 text-center shadow-sm">
           <Loader2 className="mx-auto h-8 w-8 animate-spin text-primary" />
           <h1 className="mt-4 text-xl font-semibold">Redirecting to Find your Angel</h1>
@@ -372,7 +372,7 @@ const AdminAngelEditor = () => {
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-4">
               <Button variant="ghost" size="sm" asChild>
-                <Link to="/community/angels">
+                <Link to="/investors">
                   <ArrowLeft className="w-4 h-4 mr-2" />
                   Back
                 </Link>

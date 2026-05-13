@@ -53,7 +53,7 @@ interface CofounderPost {
 const FindCoFounder = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const publicTab = getPublicTabConfig('/community/co-founders');
+  const publicTab = getPublicTabConfig('/co-founder');
   const { startConversation } = useMessaging({ autoLoad: false });
   const [posts, setPosts] = useState<CofounderPost[]>([]);
   const [loading, setLoading] = useState(true);
@@ -127,7 +127,7 @@ const FindCoFounder = () => {
 
   const handleEditPost = (postId: string) => {
     // Navigate to edit page (we'll create this route)
-    navigate(`/community/co-founders/edit/${postId}`);
+    navigate(`/co-founder/edit/${postId}`);
   };
 
   const handleDeletePost = async () => {
@@ -176,7 +176,7 @@ const FindCoFounder = () => {
                 Filters
               </Button>
               <Button asChild className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 md:w-auto">
-                <Link to="/community/co-founders/create">
+                <Link to="/co-founder/create">
                   <Plus className="w-4 h-4 mr-2" />
                   Create Post
                 </Link>
@@ -206,7 +206,7 @@ const FindCoFounder = () => {
                 Be the first to post and find your perfect co-founder!
               </p>
               <Button asChild size="lg" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
-                <Link to="/community/co-founders/create">
+                <Link to="/co-founder/create">
                   <Plus className="w-4 h-4 mr-2" />
                   Create Your Post
                 </Link>
@@ -334,7 +334,7 @@ const FindCoFounder = () => {
                       className="flex-1"
                       onClick={() => {
                         if (!user) {
-                          navigate(`/signup?source=cofounder-connect&return=${encodeURIComponent('/community/co-founders')}`);
+                          navigate(`/signup?source=cofounder-connect&return=${encodeURIComponent('/co-founder')}`);
                           return;
                         }
                         if (post.author?.username) {
@@ -353,7 +353,7 @@ const FindCoFounder = () => {
                       disabled={messagingPostId === post.id}
                       onClick={async () => {
                         if (!user) {
-                          navigate(`/signup?source=cofounder-message&return=${encodeURIComponent('/community/co-founders')}`);
+                          navigate(`/signup?source=cofounder-message&return=${encodeURIComponent('/co-founder')}`);
                           return;
                         }
                         if (!post.user_id) {
@@ -440,7 +440,7 @@ const FindCoFounder = () => {
         title="Find a Co-Founder - Creatives Takeover"
         description="Browse startup co-founder opportunities, discover collaborators across product and growth, and connect with builders working on early-stage ideas."
         keywords="find a cofounder, startup cofounder, founder matching, startup collaborators, cofounder community"
-        url="/community/co-founders"
+        url="/co-founder"
         structuredData={[
           {
             "@context": "https://schema.org",
@@ -448,12 +448,12 @@ const FindCoFounder = () => {
             name: "Find a Co-Founder",
             description:
               "Browse startup co-founder opportunities, discover collaborators across product and growth, and connect with builders working on early-stage ideas.",
-            url: "https://creatives-takeover.com/community/co-founders",
+            url: "https://creatives-takeover.com/co-founder",
           },
           createBreadcrumbSchema([
             { name: "Home", url: "/" },
-            { name: "Community", url: "/community" },
-            { name: "Find a Co-Founder", url: "/community/co-founders" },
+            { name: "Community", url: "/mentorship" },
+            { name: "Find a Co-Founder", url: "/co-founder" },
           ]),
         ]}
       />

@@ -97,7 +97,7 @@ const FinalCTA = () => {
               onClick={() => trackClick('Join 15K+ Creatives', 'Final CTA')}
               asChild
             >
-              <Link to="/community">
+              <Link to="/mentorship">
                 Join 15K+ Creatives
               </Link>
             </Button>

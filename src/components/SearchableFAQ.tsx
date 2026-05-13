@@ -307,7 +307,7 @@ const SearchableFAQ = () => {
                   Try adjusting your search or browse a different category.
                 </p>
                 <Button variant="outline" asChild>
-                  <Link to="/community">
+                  <Link to="/mentorship">
                     Ask Our Community
                   </Link>
                 </Button>
@@ -375,7 +375,7 @@ const SearchableFAQ = () => {
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button size="lg" className="text-lg px-8 py-6" asChild>
-              <Link to="/community">
+              <Link to="/mentorship">
                 Ask Our Community
               </Link>
             </Button>

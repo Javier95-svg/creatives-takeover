@@ -166,7 +166,7 @@ export function ProModeView({
       id: 'pro-angels',
       title: 'Open the Angels Network first',
       description: 'Warm investor proximity is the highest-leverage difference in Pro, so it belongs at the top of the queue.',
-      href: '/community/angels',
+      href: '/investors',
       label: 'Warm intro',
     },
     {
@@ -254,8 +254,8 @@ export function ProModeView({
               title="Founder access and support"
               description="Support stays reachable without competing with the War Room for attention."
               links={[
-                { label: 'Angels Network', description: 'Open the investor layer when you are ready to move a relationship forward.', href: '/community/angels' },
-                { label: 'Founder support', description: 'Use community support for blockers, feedback, and quick operator help.', href: '/community' },
+                { label: 'Angels Network', description: 'Open the investor layer when you are ready to move a relationship forward.', href: '/investors' },
+                { label: 'Founder support', description: 'Use community support for blockers, feedback, and quick operator help.', href: '/mentorship' },
                 { label: 'Saved Mentors', description: 'Keep mentorship follow-up in its own sidebar workspace, not in the War Room.', href: '/saved-mentors' },
               ]}
             />
@@ -378,7 +378,7 @@ function FundraisingActionGrid() {
     {
       title: 'Angels Network',
       description: 'Open the warm investor layer reserved for Pro founders.',
-      href: '/community/angels',
+      href: '/investors',
     },
     {
       title: 'Pitch Deck Analyzer',
@@ -458,7 +458,7 @@ export function RookieModeView({ founderName, recommendations, icpSummary, total
       id: 'rookie-mentor',
       title: 'Use your discovery call intentionally',
       description: 'Treat your included mentorship slot as a checkpoint after you can clearly describe your customer and problem.',
-      href: '/community',
+      href: '/mentorship',
       label: 'Included',
     },
     {

@@ -25,7 +25,7 @@ const FAQNavigation = () => {
       icon: <Users className="w-8 h-8 text-purple-500" />,
       title: "Join Our Community",
       description: "Connect with 50,000+ creatives and get personalized help from our supportive community",
-      link: "/community",
+      link: "/mentorship",
       cta: "Join Community",
       highlight: false
     },
@@ -93,7 +93,7 @@ const FAQNavigation = () => {
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button size="lg" className="text-lg px-8 py-6 shadow-lg hover:shadow-xl transition-all duration-300" asChild>
-                <Link to="/community">
+                <Link to="/mentorship">
                   Ask Question in Community
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
@@ -156,7 +156,7 @@ const FAQNavigation = () => {
             Your feedback helps make our platform better for everyone.
           </p>
           <Button variant="outline" asChild>
-            <Link to="/community">
+            <Link to="/mentorship">
               Submit FAQ Suggestion
             </Link>
           </Button>

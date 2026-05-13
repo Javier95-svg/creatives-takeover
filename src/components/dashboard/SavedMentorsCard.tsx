@@ -114,7 +114,7 @@ export function SavedMentorsCard() {
               When you save a mentor in the community marketplace, they will appear here for quick follow-up from your dashboard.
             </p>
             <Button asChild className="mt-4">
-              <Link to="/community" onClick={() => trackWidgetEvent('browse_empty_state')}>
+              <Link to="/mentorship" onClick={() => trackWidgetEvent('browse_empty_state')}>
                 Browse mentors
                 <ArrowRight className="ml-1 h-4 w-4" />
               </Link>
@@ -179,7 +179,7 @@ export function SavedMentorsCard() {
                   <div className="mt-5 flex flex-wrap gap-2">
                     <Button asChild size="sm">
                       <Link
-                        to={`/community/mentors/${item.mentor.id}`}
+                        to={`/mentorship/mentors/${item.mentor.id}`}
                         onClick={() => trackWidgetEvent('open_profile', item.mentor.id)}
                       >
                         View profile

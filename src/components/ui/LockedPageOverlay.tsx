@@ -2,7 +2,7 @@
  * Pattern A — Locked Page Overlay
  *
  * Use this for whole-page features that are gated by plan:
- * - /community/angels (Pro only)
+ * - /investors (Pro only)
  * - Email Templates (Rising+)
  * - Pitch Deck Analyzer (Rising+)
  *

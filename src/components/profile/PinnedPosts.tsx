@@ -34,7 +34,7 @@ export const PinnedPosts = ({ posts, isOwnProfile }: PinnedPostsProps) => {
           {posts.map((post) => (
             <Link 
               key={post.id} 
-              to={`/community/post/${post.id}`}
+              to={`/mentorship/post/${post.id}`}
               className="block group"
             >
               <Card className="h-full transition-all hover:shadow-md hover:border-primary/50">

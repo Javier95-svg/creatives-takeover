@@ -96,12 +96,12 @@ export interface ValidationDraftArtifact {
 }
 
 const ACTIVATION_ROUTE_BY_INTENT: Record<ActivationIntent, string> = {
-  find_mentor: '/community?mentorSource=onboarding&activationIntent=find_mentor',
+  find_mentor: '/mentorship?mentorSource=onboarding&activationIntent=find_mentor',
   run_icp: '/icp-builder?activation=1',
   start_validation: '/decision-sprint?activation=1',
-  save_mentor: '/community?mentorSource=onboarding&activationIntent=save_mentor',
-  send_message: '/community?mentorSource=onboarding&activationIntent=send_message',
-  book_call: '/community?mentorSource=onboarding&activationIntent=book_call',
+  save_mentor: '/mentorship?mentorSource=onboarding&activationIntent=save_mentor',
+  send_message: '/mentorship?mentorSource=onboarding&activationIntent=send_message',
+  book_call: '/mentorship?mentorSource=onboarding&activationIntent=book_call',
 };
 
 export function getActivationRoute(intent: ActivationIntent) {
@@ -539,7 +539,7 @@ export function buildActivationSummary(intent: ActivationIntent) {
       return {
         title: 'Take one value action',
         description: 'Save a mentor, send a message, or book a discovery call before you explore the rest of the platform.',
-        actionUrl: '/community',
+        actionUrl: '/mentorship',
         priorityLabel: 'First win',
       };
   }

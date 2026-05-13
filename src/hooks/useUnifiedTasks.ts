@@ -184,7 +184,7 @@ export const useUnifiedTasks = () => {
           priority: 'medium',
           isCompleted: challengeCompleted,
           sourceLabel: 'Daily Challenge',
-          actionRoute: '/community',
+          actionRoute: '/mentorship',
           onComplete: async () => {
             await completeChallenge(todaysChallenge.id);
           },
@@ -202,7 +202,7 @@ export const useUnifiedTasks = () => {
     sourceLabel: 'Commitment',
     onComplete: async () => {
       // Commitments are resolved via the verifyCommitment flow; navigate user
-      window.location.href = '/community';
+      window.location.href = '/mentorship';
     },
   }));
 

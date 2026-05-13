@@ -93,7 +93,7 @@ export function CommunityActivityCard() {
         </div>
 
         {/* CTA */}
-        <Link to="/community">
+        <Link to="/mentorship">
           <Button variant="outline" size="sm" className="w-full h-8 text-xs gap-1">
             Open Community <ArrowRight className="h-3.5 w-3.5" />
           </Button>

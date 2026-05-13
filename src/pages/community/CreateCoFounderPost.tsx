@@ -103,7 +103,7 @@ const CreateCoFounderPost = () => {
 
       // Redirect to co-founders page to see the post
       setTimeout(() => {
-        navigate('/community/co-founders');
+        navigate('/co-founder');
       }, 1500);
     } catch (error: any) {
       console.error('Error creating co-founder post:', error);

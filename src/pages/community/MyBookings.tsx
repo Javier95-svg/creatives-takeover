@@ -116,7 +116,7 @@ const MyBookings = () => {
             <div className="container mx-auto px-4 py-8">
               <div className="mb-6">
                 <Button variant="ghost" size="sm" asChild className="mb-4">
-                  <Link to="/community" className="flex items-center gap-2">
+                  <Link to="/mentorship" className="flex items-center gap-2">
                     <ArrowLeft className="h-4 w-4" />
                     Back to Marketplace
                   </Link>
@@ -187,7 +187,7 @@ const MyBookings = () => {
                         You don't have any upcoming sessions yet.
                       </p>
                       <Button asChild>
-                        <Link to="/community">Browse Mentors</Link>
+                        <Link to="/mentorship">Browse Mentors</Link>
                       </Button>
                     </CardContent>
                   </Card>

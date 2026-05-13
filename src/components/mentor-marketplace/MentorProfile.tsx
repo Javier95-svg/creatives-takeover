@@ -547,7 +547,7 @@ export const MentorProfile = ({ mentor, onBookClick }: MentorProfileProps) => {
 	                </div>
             {(!hasBookableCall || !hasMessagingAccount) && (
               <>
-                {/* FIX(dead-click): /community/[user-profile] — unavailable mentor actions now render as explicit secondary states instead of primary-looking buttons that silently fail. */}
+                {/* FIX(dead-click): /mentorship/[user-profile] — unavailable mentor actions now render as explicit secondary states instead of primary-looking buttons that silently fail. */}
                 <p className="text-xs text-muted-foreground">
                   {!hasBookableCall && !hasMessagingAccount
                     ? 'This mentor currently supports profile browsing only. Use the external links above to reach out.'

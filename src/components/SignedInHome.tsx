@@ -32,7 +32,7 @@ const quickActions = [
   {
     title: "Community",
     description: "Connect with mentors and co-founders",
-    href: "/community",
+    href: "/mentorship",
     icon: Users,
     colorClass: "text-action",
     bgClass: "bg-action/10",

@@ -47,9 +47,9 @@ interface TabletNavigationProps {
 }
 
 const communitySubmenu: SubmenuItem[] = [
-  { name: "Find a Mentor", href: "/community", icon: GraduationCap, description: "Connect with experienced startup coaches." },
-  { name: "Find a Co-Founder", href: "/community/co-founders", icon: Handshake, description: "Meet your business soulmate." },
-  { name: "Find your Angel", href: "/community/angels", icon: Sparkles, description: "Angel investor network." },
+  { name: "Find a Mentor", href: "/mentorship", icon: GraduationCap, description: "Connect with experienced startup coaches." },
+  { name: "Find a Co-Founder", href: "/co-founder", icon: Handshake, description: "Meet your business soulmate." },
+  { name: "Find your Angel", href: "/investors", icon: Sparkles, description: "Angel investor network." },
 ];
 
 // Icon mapping for navigation items

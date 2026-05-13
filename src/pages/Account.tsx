@@ -676,7 +676,7 @@ const Account = () => {
       if (cofounderChanged) {
         toast.success("Quiz updated! Let's create your co-founder post...");
         setTimeout(() => {
-          window.location.href = '/community/co-founders/create';
+          window.location.href = '/co-founder/create';
         }, 1500);
       } else {
         toast.success("Quiz responses updated successfully!");

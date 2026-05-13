@@ -82,7 +82,7 @@ const FindYourAngel = () => {
   const { currentTier } = useFeatureGating();
   const { openUpgradePrompt } = useUpgradePrompt();
   const { fetchAngels, loading } = useAngels();
-  const publicTab = getPublicTabConfig('/community/angels');
+  const publicTab = getPublicTabConfig('/investors');
   const isPro = isAdmin || currentTier === 'pro';
   const [angels, setAngels] = useState<AngelInvestor[]>([]);
 
@@ -342,7 +342,7 @@ const FindYourAngel = () => {
 	        <div className="pt-16 relative z-10">
             <div className="container mx-auto px-4 sm:px-6 pt-8">
 	            <Button variant="ghost" size="sm" asChild>
-	              <Link to="/community" className="flex items-center gap-2">
+	              <Link to="/mentorship" className="flex items-center gap-2">
 	                <ArrowLeft className="h-4 w-4" />
 	                Back to Community
 	              </Link>
@@ -431,7 +431,7 @@ const FindYourAngel = () => {
 	            {isAdmin && (
 	              <div className="mb-6 flex justify-end">
                 <Button asChild>
-                  <Link to="/community/angels/admin/new">
+                  <Link to="/investors/admin/new">
                     Create Angel Investor
                   </Link>
                 </Button>
@@ -713,7 +713,7 @@ const FindYourAngel = () => {
                             onClick={(e) => {
                               e.preventDefault();
                               e.stopPropagation();
-                              navigate(`/community/angels/admin/edit/${angel.id}`);
+                              navigate(`/investors/admin/edit/${angel.id}`);
                             }}
                             className="absolute top-2 right-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity bg-background/90 backdrop-blur-sm hover:bg-background z-10"
                             aria-label={`Edit ${angel.name}`}
@@ -851,7 +851,7 @@ const FindYourAngel = () => {
                   </p>
                   {isAdmin && (
                     <Button asChild>
-                      <Link to="/community/angels/admin/new">
+                      <Link to="/investors/admin/new">
                         Create First Angel Investor
                       </Link>
                     </Button>

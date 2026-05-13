@@ -598,7 +598,7 @@ const Profile = () => {
                   The profile you're looking for doesn't exist.
                 </p>
                 <Button asChild>
-                  <Link to="/community">Back to Community</Link>
+                  <Link to="/mentorship">Back to Community</Link>
                 </Button>
               </Card>
             </main>
@@ -908,7 +908,7 @@ const Profile = () => {
                         </p>
                         <div className="pt-1">
                           <Button asChild variant="outline" size="sm">
-                            <Link to="/community/progress">
+                            <Link to="/mentorship/progress">
                               Share or browse progress updates
                               <ExternalLink className="h-4 w-4 ml-2" />
                             </Link>

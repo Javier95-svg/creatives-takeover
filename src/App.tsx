@@ -134,6 +134,18 @@ const queryClient = new QueryClient({
   },
 });
 
+const LegacyCommunityRedirect = () => {
+  const location = useLocation();
+  const pathname = location.pathname;
+  const nextPath = pathname.startsWith("/community/co-founders")
+    ? pathname.replace("/community/co-founders", "/co-founder")
+    : pathname.startsWith("/community/angels")
+      ? pathname.replace("/community/angels", "/investors")
+      : pathname.replace("/community", "/mentorship");
+
+  return <Navigate to={`${nextPath}${location.search}${location.hash}`} replace />;
+};
+
 const PulseWidgetWrapper = () => {
   const location = useLocation();
 
@@ -192,20 +204,22 @@ function App() {
                         <Route path="/resources" element={<Resources />} />
                         <Route path="/services" element={<Services />} />
                         <Route path="/software" element={<Software />} />
-                        <Route path="/community" element={<CommunityPage />} />
-                        <Route path="/community/progress" element={<ProgressCommunityPage />} />
-                        <Route path="/community/mentors/:id" element={<MentorProfilePage />} />
-                        <Route path="/community/book/:id" element={<MentorBookingPage />} />
-                        <Route path="/community/co-founders" element={<FindCoFounder />} />
-                        <Route path="/community/co-founders/create" element={<CreateCoFounderPost />} />
-                        <Route path="/community/co-founders/edit/:postId" element={<EditCoFounderPost />} />
-                        <Route path="/community/angels" element={<FindYourAngel />} />
-                        <Route path="/community/angels/admin/new" element={<AdminAngelEditor />} />
-                        <Route path="/community/angels/admin/edit/:id" element={<AdminAngelEditor />} />
-                        <Route path="/community/my-bookings" element={<MyBookings />} />
-                        <Route path="/community/admin/new" element={<AdminMentorEditor />} />
-                        <Route path="/community/admin/edit/:id" element={<AdminMentorEditor />} />
-                        <Route path="/community/:slug" element={<MentorProfilePage />} />
+                        <Route path="/mentorship" element={<CommunityPage />} />
+                        <Route path="/mentorship/progress" element={<ProgressCommunityPage />} />
+                        <Route path="/mentorship/mentors/:id" element={<MentorProfilePage />} />
+                        <Route path="/mentorship/book/:id" element={<MentorBookingPage />} />
+                        <Route path="/co-founder" element={<FindCoFounder />} />
+                        <Route path="/co-founder/create" element={<CreateCoFounderPost />} />
+                        <Route path="/co-founder/edit/:postId" element={<EditCoFounderPost />} />
+                        <Route path="/investors" element={<FindYourAngel />} />
+                        <Route path="/investors/admin/new" element={<AdminAngelEditor />} />
+                        <Route path="/investors/admin/edit/:id" element={<AdminAngelEditor />} />
+                        <Route path="/mentorship/my-bookings" element={<MyBookings />} />
+                        <Route path="/mentorship/admin/new" element={<AdminMentorEditor />} />
+                        <Route path="/mentorship/admin/edit/:id" element={<AdminMentorEditor />} />
+                        <Route path="/mentorship/:slug" element={<MentorProfilePage />} />
+                        <Route path="/community" element={<LegacyCommunityRedirect />} />
+                        <Route path="/community/*" element={<LegacyCommunityRedirect />} />
                         <Route path="/newspaper" element={<Stories />} />
                         <Route path="/newspaper/rss.xml" element={<StoriesRSS />} />
                         <Route path="/newspaper/tags/:tagSlug" element={<StoryTagPage />} />

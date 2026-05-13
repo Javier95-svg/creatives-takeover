@@ -417,7 +417,7 @@ const MentorMarketplaceHub = () => {
           name="description"
           content="Connect with experienced founders and mentors who can guide you through startup execution. Book 1-on-1 sessions with proven entrepreneurs."
         />
-        <link rel="canonical" href="https://creatives-takeover.com/community" />
+        <link rel="canonical" href="https://creatives-takeover.com/mentorship" />
       </Helmet>
 	      <div className="min-h-screen bg-background relative">
 	        <CommunityMentorsWallpaper />
@@ -441,7 +441,7 @@ const MentorMarketplaceHub = () => {
 
                     {isAdmin && (
                       <Button asChild className="self-start rounded-full">
-                        <Link to="/community/admin/new">
+                        <Link to="/mentorship/admin/new">
                           Create Mentor
                         </Link>
                       </Button>
@@ -626,7 +626,7 @@ const MentorMarketplaceHub = () => {
                   </p>
                   {isAdmin && (
                     <Button asChild>
-                      <Link to="/community/admin/new">
+                      <Link to="/mentorship/admin/new">
                         Create First Mentor
                       </Link>
                     </Button>

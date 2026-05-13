@@ -51,7 +51,7 @@ const CTASection = () => {
               </Link>
             </Button>
             <Button size="lg" variant="outline" className="glass hover:bg-primary/10 px-8 py-4 text-lg btn-magnetic" asChild>
-              <Link to="/community">
+              <Link to="/mentorship">
                 Join Entrepreneur Network
               </Link>
             </Button>

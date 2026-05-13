@@ -67,11 +67,11 @@ export const PUBLIC_TAB_VISIBILITY: Record<string, PublicTabConfig> = {
       'Sign up to access the launch research workflow.',
     ],
   },
-  '/community': {
+  '/mentorship': {
     state: 'accessible',
     featureName: 'Find a Mentor',
   },
-  '/community/co-founders': {
+  '/co-founder': {
     state: 'locked',
     featureName: 'Find a Co-Founder',
     description: 'Browse real founder posts, see how projects are framed, and sign in to unlock outreach, posting, and matching.',
@@ -81,7 +81,7 @@ export const PUBLIC_TAB_VISIBILITY: Record<string, PublicTabConfig> = {
       'Sign up to create posts, message founders, and unlock the full co-founder flow.',
     ],
   },
-  '/community/angels': {
+  '/investors': {
     state: 'locked',
     featureName: 'Find your Angel',
     description: 'Investor discovery stays visible as a premium aspiration surface, but full access is reserved for Pro members.',

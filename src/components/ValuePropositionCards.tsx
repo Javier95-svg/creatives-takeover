@@ -79,7 +79,7 @@ const ValuePropositionCards = () => {
       buttonLabel: "Networking",
       description: "Building a business on your own doesn't mean you have to figure everything out alone. The Mentor Marketplace connects you with experienced founders and industry experts who offer guidance, honest feedback, and the kind of perspective that only comes from having been through it before.\n\nLooking for someone to build with? The Co-Founder Marketplace helps you find partners who complement your skills and share your ambition. Filter by industry, stage, and expertise to connect with people who get what you're working on and want to be part of the journey.",
       cta: "Join Community",
-      link: "/community",
+      link: "/mentorship",
       image: "https://images.unsplash.com/photo-1587614382346-4ec70e388b28?w=800&h=600&fit=crop&q=80&fm=webp",
       imageAlt: "Founders collaborating in a video call"
     },

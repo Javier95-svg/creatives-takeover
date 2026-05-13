@@ -198,7 +198,7 @@ const Messages = () => {
                           <Link to="/messages">Open Inbox</Link>
                         </Button>
                         <Button variant="outline" asChild>
-                          <Link to="/community">Back to Community</Link>
+                          <Link to="/mentorship">Back to Community</Link>
                         </Button>
                       </div>
                     </div>

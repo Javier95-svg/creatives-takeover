@@ -1,7 +1,7 @@
 import type { BizMapStage } from '@/lib/bizmapStages';
 
 export const ACTIVATION_JOURNEY_KEY = 'activationJourney';
-export const ROOKIE_WELCOME_PREVIEW_PATH = '/community/angels?preview=rookie-welcome';
+export const ROOKIE_WELCOME_PREVIEW_PATH = '/investors?preview=rookie-welcome';
 
 export type ActivationEntryStage = 'stage_i' | 'stage_ii' | 'stage_iii';
 export type ActivationStatus = 'not_started' | 'in_progress' | 'completed_first_output';

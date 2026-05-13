@@ -87,7 +87,7 @@ export const STAGES: Record<StageId, StageMeta> = {
       "You're live and need repeatable growth signals. The priority is finding the acquisition channel that works for this product, improving first-month retention, and mapping the path from early users to a scalable traction system.",
     topFocus: [
       { label: "Grow with Insighta", href: "/insighta" },
-      { label: "Build relationships in Community", href: "/community" },
+      { label: "Build relationships in Community", href: "/mentorship" },
     ],
   },
   7: {

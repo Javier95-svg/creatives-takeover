@@ -79,7 +79,7 @@ export function RookieEmptyState({ founderName }: { founderName: string }) {
         ctaLabel="Start with ICP Builder"
         ctaHref="/icp-builder"
         supportText="Rather talk to a human first?"
-        supportHref="/community"
+        supportHref="/mentorship"
         supportLabel="Book your included mentor call"
       />
 
@@ -256,7 +256,7 @@ export function ProInvestorMotionEmpty() {
           Warm investor proximity is the highest-leverage difference in Pro.
         </p>
         <Button asChild size="sm" variant="ghost" className="mt-3 px-0 text-primary hover:bg-transparent">
-          <Link to="/community/angels">
+          <Link to="/investors">
             Open Angels Network
             <ArrowRight className="ml-1 h-3.5 w-3.5" />
           </Link>
