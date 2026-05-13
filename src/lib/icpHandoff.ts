@@ -88,7 +88,7 @@ export const buildIcpDraftSaveFailureMessage = (
   }
 
   if (details.errorCode === "DEDUCTION_FAILED" && details.requiredCredits === 0) {
-    return "We couldn't save your ICP Draft because the free-save check failed unexpectedly. Your answers are still on this page, so please try again in a moment.";
+    return "We couldn't save your ICP Draft just now. Your answers are still on this page, so please try again in a moment.";
   }
 
   if (/authentication required/i.test(details.message)) {

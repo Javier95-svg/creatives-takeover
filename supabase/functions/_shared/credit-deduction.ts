@@ -138,11 +138,22 @@ export async function checkAndDeductCredits(
       ? metadata.entitlementFeature.trim().toUpperCase() as EnforcedFeature
       : undefined;
 
-    if ((!Number.isFinite(amount) || amount <= 0) && entitlementFeature !== 'DISCOVERY_CALL') {
+    if (!Number.isFinite(amount) || amount < 0) {
       return await returnWithIdempotency({
         success: false,
         error: 'Invalid credit amount',
         errorCode: 'DEDUCTION_FAILED'
+      }, false);
+    }
+
+    if (amount === 0 && entitlementFeature !== 'DISCOVERY_CALL') {
+      const currentCredits = await getCurrentCreditSnapshot(userId, supabase);
+      return await returnWithIdempotency({
+        success: true,
+        newBalance: currentCredits.balance,
+        newQuota: currentCredits.monthlyQuota,
+        usedFromQuota: 0,
+        usedFromBalance: 0,
       }, false);
     }
 
@@ -428,6 +439,10 @@ export async function refundCredits(
   reason: string,
   metadata?: Record<string, any>
 ): Promise<boolean> {
+  if (Number.isFinite(amount) && amount === 0) {
+    return true;
+  }
+
   const supabaseUrl = Deno.env.get('SUPABASE_URL');
   const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 

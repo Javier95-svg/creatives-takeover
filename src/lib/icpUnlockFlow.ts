@@ -24,6 +24,24 @@ export function buildIcpUnlockNavigationPath(analysisId: string) {
   return `/icp/draft/${analysisId}?source=icp-unlock`;
 }
 
+export function isZeroCreditDeductionFailureDetails(details: { errorCode?: string | null; requiredCredits?: number | null } | null | undefined) {
+  return details?.errorCode === "DEDUCTION_FAILED" && details.requiredCredits === 0;
+}
+
+export function buildIcpSaveFallbackPreviewRequest<T extends { mode?: unknown }>(request: T) {
+  return {
+    ...request,
+    mode: "preview" as const,
+  };
+}
+
+export function buildIcpSaveExistingArtifactRequest(artifact: unknown) {
+  return {
+    operation: "save_existing_artifact" as const,
+    artifact,
+  };
+}
+
 export async function runIcpPostSaveSteps(
   steps: IcpPostSaveStep[],
   onError: (stepName: string, error: unknown) => void = (stepName, error) => {

@@ -55,8 +55,11 @@ import {
   type FunctionFailureDetails,
 } from "@/lib/icpHandoff";
 import {
+  buildIcpSaveExistingArtifactRequest,
+  buildIcpSaveFallbackPreviewRequest,
   buildIcpUnlockNavigationPath,
   isIcpDraftSaveReady,
+  isZeroCreditDeductionFailureDetails,
   runIcpPostSaveSteps,
   type IcpPostSaveStep,
 } from "@/lib/icpUnlockFlow";
@@ -233,6 +236,14 @@ const invokeIcpAnalyzer = async <T,>(body: unknown, timeoutMs: number, context: 
         : ICP_ANALYZER_ERROR_MESSAGE,
     );
   }
+};
+
+const isZeroCreditDeductionFailure = (error: unknown) => {
+  const details = error instanceof Error && "details" in error
+    ? (error as Error & { details?: FunctionFailureDetails }).details
+    : null;
+
+  return isZeroCreditDeductionFailureDetails(details);
 };
 
 function normaliseText(value: string | null | undefined) {
@@ -933,11 +944,65 @@ const ICPBuilder: React.FC = () => {
         source: "draft_saved",
       });
     } catch (error) {
-      console.error("ICP draft generation failed", error);
+      let saveError = error;
+
+      if (persist && user && isZeroCreditDeductionFailure(error)) {
+        try {
+          captureEvent("icp_zero_credit_save_fallback_started", {
+            mode,
+            userId: user.id,
+          });
+
+          const previewData = await invokeIcpAnalyzer<IcpDraftGenerationResponse>(
+            buildIcpSaveFallbackPreviewRequest(body),
+            PREVIEW_TIMEOUT_MS,
+            "ICP zero-credit save fallback preview invocation failed",
+          );
+
+          if (!previewData?.success || previewData.status !== "draft_ready" || !previewData.artifact) {
+            console.error("ICP zero-credit save fallback preview returned an error", previewData?.error || previewData);
+            throw new Error(ICP_ANALYZER_ERROR_MESSAGE);
+          }
+
+          const fallbackArtifact = previewData.artifact as StoredIcpArtifact;
+          const saveData = await invokeIcpAnalyzer<IcpDraftGenerationResponse>(
+            buildIcpSaveExistingArtifactRequest(fallbackArtifact),
+            SAVE_TIMEOUT_MS,
+            "ICP zero-credit save fallback persist invocation failed",
+          );
+
+          if (!isIcpDraftSaveReady(saveData)) {
+            console.error("ICP zero-credit save fallback persist returned an error", saveData?.error || saveData);
+            throw new Error(ICP_ANALYZER_ERROR_MESSAGE);
+          }
+
+          captureEvent("icp_zero_credit_save_fallback_completed", {
+            mode,
+            userId: user.id,
+          });
+          unlockSavedDraft({
+            analysisId: saveData.analysisId,
+            artifact: (saveData.artifact as StoredIcpArtifact) ?? fallbackArtifact,
+            mode,
+            source: "draft_saved",
+          });
+          return;
+        } catch (fallbackError) {
+          console.error("ICP zero-credit save fallback failed", fallbackError);
+          captureEvent("icp_zero_credit_save_fallback_failed", {
+            mode,
+            error: fallbackError instanceof Error ? fallbackError.message : String(fallbackError),
+            userId: user.id,
+          });
+          saveError = fallbackError;
+        }
+      }
+
+      console.error("ICP draft generation failed", saveError);
       captureEvent("icp_draft_generation_failed", {
         mode,
         persist,
-        error: error instanceof Error ? error.message : String(error),
+        error: saveError instanceof Error ? saveError.message : String(saveError),
         userId: user?.id,
       });
       if (!persist) {
@@ -945,7 +1010,7 @@ const ICPBuilder: React.FC = () => {
       } else {
         toast({
           title: "Could not save your ICP Draft",
-          description: error instanceof Error ? error.message : "Your answers are still on this page, so please try again in a moment.",
+          description: saveError instanceof Error ? saveError.message : "Your answers are still on this page, so please try again in a moment.",
           variant: "destructive",
         });
       }
@@ -962,10 +1027,7 @@ const ICPBuilder: React.FC = () => {
     try {
       if (user && session.draftPreview && session.unlockRequired) {
         const data = await invokeIcpAnalyzer<IcpDraftGenerationResponse>(
-          {
-            operation: "save_existing_artifact",
-            artifact: session.draftPreview,
-          },
+          buildIcpSaveExistingArtifactRequest(session.draftPreview),
           SAVE_TIMEOUT_MS,
           "ICP unlocked draft save invocation failed",
         );

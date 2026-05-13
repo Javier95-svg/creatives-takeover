@@ -92,14 +92,14 @@ test('generic function error details parse credit metadata from the edge payload
   });
 });
 
-test('ICP save failure message explains the zero-credit billing failure without generic copy', () => {
+test('ICP save failure message hides zero-credit billing internals', () => {
   assert.equal(
     buildIcpDraftSaveFailureMessage({
       message: 'Invalid credit amount',
       errorCode: 'DEDUCTION_FAILED',
       requiredCredits: 0,
     }),
-    "We couldn't save your ICP Draft because the free-save check failed unexpectedly. Your answers are still on this page, so please try again in a moment.",
+    "We couldn't save your ICP Draft just now. Your answers are still on this page, so please try again in a moment.",
   );
 });
 

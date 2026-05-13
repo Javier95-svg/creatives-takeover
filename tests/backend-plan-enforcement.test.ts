@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 
 import {
   normalizePlan,
@@ -65,4 +66,23 @@ test('ICP analysis remains free and included for every backend plan', () => {
     assert.equal(enforcement.mode, 'included');
     assert.equal(enforcement.creditCost, 0);
   }
+});
+
+test('shared credit deduction treats zero-credit operations as no-op success', () => {
+  const source = readFileSync(new URL('../supabase/functions/_shared/credit-deduction.ts', import.meta.url), 'utf8');
+
+  assert.match(source, /!Number\.isFinite\(amount\) \|\| amount < 0/);
+  assert.match(source, /if \(amount === 0 && entitlementFeature !== 'DISCOVERY_CALL'\)/);
+  assert.match(source, /usedFromQuota: 0/);
+  assert.match(source, /usedFromBalance: 0/);
+  assert.match(source, /Number\.isFinite\(amount\) && amount === 0[\s\S]*return true/);
+});
+
+test('ICP analyzer skips free saves and preserves ICP entitlement metadata for future charges', () => {
+  const source = readFileSync(new URL('../supabase/functions/icp-analyzer/index.ts', import.meta.url), 'utf8');
+
+  assert.match(source, /if \(shouldChargeIcpCredits\(CREDIT_COSTS\.ICP_ANALYSIS\)\)/);
+  assert.match(source, /entitlementFeature: "ICP_ANALYSIS"/);
+  assert.match(source, /Skipping ICP Analysis credit deduction because the configured credit cost is zero/);
+  assert.match(source, /payload\.mode === "save" && user && creditsCharged/);
 });

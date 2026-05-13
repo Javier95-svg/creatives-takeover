@@ -418,7 +418,15 @@ serve(async (req) => {
     }
 
     let user = null;
-    let creditResult: { success: boolean; newBalance: number; error?: string; errorCode?: string } = { success: true, newBalance: 0 };
+    let creditResult: {
+      success: boolean;
+      newBalance: number;
+      error?: string;
+      errorCode?: string;
+      usedFromQuota?: number;
+      usedFromBalance?: number;
+    } = { success: true, newBalance: 0 };
+    let creditsCharged = false;
 
     if (payload.mode === "save") {
       user = await getUserFromAuth(req);
@@ -438,6 +446,7 @@ serve(async (req) => {
       if (shouldChargeIcpCredits(CREDIT_COSTS.ICP_ANALYSIS)) {
         creditResult = await checkAndDeductCredits(user.id, CREDIT_COSTS.ICP_ANALYSIS, "ICP Analysis", undefined, {
           idempotencyKey,
+          entitlementFeature: "ICP_ANALYSIS",
         });
         if (!creditResult.success) {
           return new Response(JSON.stringify({
@@ -451,6 +460,9 @@ serve(async (req) => {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
           });
         }
+        creditsCharged =
+          (creditResult.usedFromQuota ?? 0) + (creditResult.usedFromBalance ?? 0) > 0
+          || (typeof creditResult.usedFromQuota !== "number" && typeof creditResult.usedFromBalance !== "number");
       } else {
         console.info("Skipping ICP Analysis credit deduction because the configured credit cost is zero.", {
           userId: user.id,
@@ -506,7 +518,7 @@ serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     } catch (error) {
-      if (payload.mode === "save" && user) {
+      if (payload.mode === "save" && user && creditsCharged) {
         await refundCredits(user.id, CREDIT_COSTS.ICP_ANALYSIS, "ICP Analysis", "Refund: ICP draft generation failed", {
           error: error instanceof Error ? error.message : String(error),
         });
