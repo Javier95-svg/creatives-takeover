@@ -858,12 +858,16 @@ const ICPBuilder: React.FC = () => {
           // best-effort
         }
 
-        const { error: bootstrapError } = await supabase.functions.invoke("bootstrap-icp-dashboard", {
-          body: { analysisId },
-        });
+        try {
+          const { error: bootstrapError } = await supabase.functions.invoke("bootstrap-icp-dashboard", {
+            body: { analysisId },
+          });
 
-        if (bootstrapError) {
-          console.warn("ICP handoff: bootstrap-icp-dashboard failed (non-fatal)", bootstrapError);
+          if (bootstrapError) {
+            console.warn("ICP handoff: bootstrap-icp-dashboard failed (non-fatal)", bootstrapError);
+          }
+        } catch (handoffError) {
+          console.warn("ICP handoff: bootstrap-icp-dashboard failed (non-fatal)", handoffError);
         }
       }
 
@@ -981,12 +985,16 @@ const ICPBuilder: React.FC = () => {
           // best-effort
         }
 
-        const { error: bootstrapError } = await supabase.functions.invoke("bootstrap-icp-dashboard", {
-          body: { analysisId },
-        });
+        try {
+          const { error: bootstrapError } = await supabase.functions.invoke("bootstrap-icp-dashboard", {
+            body: { analysisId },
+          });
 
-        if (bootstrapError) {
-          console.warn("ICP handoff: bootstrap-icp-dashboard failed (non-fatal)", bootstrapError);
+          if (bootstrapError) {
+            console.warn("ICP handoff: bootstrap-icp-dashboard failed (non-fatal)", bootstrapError);
+          }
+        } catch (handoffError) {
+          console.warn("ICP handoff: bootstrap-icp-dashboard failed (non-fatal)", handoffError);
         }
 
         try {

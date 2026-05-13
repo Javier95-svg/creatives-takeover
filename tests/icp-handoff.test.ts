@@ -24,11 +24,13 @@ test('handoff message names recommendation setup failures explicitly', () => {
 });
 
 test('function failure details read the structured bootstrap step payload', async () => {
+  const payload = {
+    success: false,
+    error: 'column "origin" does not exist',
+    step: 'upsert_dashboard_file',
+  };
   const issue = await readFunctionFailureDetails({
-    context: new Response(JSON.stringify({
-      error: 'column "origin" does not exist',
-      step: 'upsert_dashboard_file',
-    }), {
+    context: new Response(JSON.stringify(payload), {
       headers: { 'Content-Type': 'application/json' },
       status: 400,
     }),
@@ -37,6 +39,26 @@ test('function failure details read the structured bootstrap step payload', asyn
   assert.deepEqual(issue, {
     step: 'upsert_dashboard_file',
     message: 'column "origin" does not exist',
+  });
+});
+
+test('generic function failure details preserve the bootstrap failure step', async () => {
+  const details = await readFunctionErrorDetails({
+    context: new Response(JSON.stringify({
+      success: false,
+      error: 'permission denied for table dashboard_files',
+      step: 'upsert_dashboard_file',
+    }), {
+      headers: { 'Content-Type': 'application/json' },
+      status: 400,
+    }),
+  }, 'bootstrap_dashboard');
+
+  assert.deepEqual(details, {
+    step: 'upsert_dashboard_file',
+    message: 'permission denied for table dashboard_files',
+    errorCode: null,
+    requiredCredits: null,
   });
 });
 
