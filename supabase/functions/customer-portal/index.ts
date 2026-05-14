@@ -66,7 +66,10 @@ serve(async (req) => {
       logStep("Found Stripe customer by email", { customerId });
     }
 
-    const origin = req.headers.get("origin") || "https://your-domain.com";
+    const origin =
+      req.headers.get("origin") ||
+      Deno.env.get("SITE_URL") ||
+      "https://creatives-takeover.com";
     
     // Create customer portal session
     const portalSession = await stripe.billingPortal.sessions.create({

@@ -8,6 +8,12 @@ import {
   shouldEnqueueProActivation,
   type ProActivationSource,
 } from "../_shared/pro-activation.ts";
+import {
+  buildApplyStripeSubscriptionCheckoutRpcPayload,
+  buildDowngradeStripeSubscriptionToRookieRpcPayload,
+  getStripeSubscriptionBillingCycle,
+  getStripeSubscriptionPriceId,
+} from "../_shared/stripe-subscriptions.ts";
 
 const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
   apiVersion: "2023-10-16",
@@ -743,59 +749,81 @@ async function handleCheckoutCompleted(
     return;
   }
 
-  const metadataTier = getMetadataString(combinedMetadata, ["tier", "subscription_tier"]);
-  const metadataBillingCycle = getMetadataString(combinedMetadata, ["billing_cycle"]);
-
-  let tier = metadataTier ? normalizeSubscriptionTier(metadataTier) : "rookie";
-  let billingCycle: BillingCycle = metadataBillingCycle
-    ? normalizeBillingCycle(metadataBillingCycle)
-    : "monthly";
-  let subscriptionEnd: string | null = null;
-
-  if (typeof session.subscription === "string") {
-    const subscription = await stripe.subscriptions.retrieve(session.subscription);
-    subscriptionEnd = new Date(subscription.current_period_end * 1000).toISOString();
-
-    if (!metadataTier) {
-      tier = resolveSubscriptionTier(subscription);
-    }
-
-    if (!metadataBillingCycle) {
-      billingCycle = resolveSubscriptionBillingCycle(subscription);
-    }
+  if (session.mode !== "subscription") {
+    console.log("[Checkout] Skipping unsupported checkout mode", { mode: session.mode });
+    return;
   }
 
-  if (!resolvedUserId || !customerEmail || tier === "rookie") {
+  if (!resolvedUserId || !customerEmail || typeof session.subscription !== "string") {
     console.error("[Checkout] Missing subscription context", {
       resolvedUserId,
       customerEmail,
-      tier,
+      subscriptionId: session.subscription,
       metadata: combinedMetadata,
       paymentLinkId,
     });
     return;
   }
 
-  await syncSubscriptionState(supabaseAdmin, {
-    userId: resolvedUserId,
-    email: customerEmail,
-    stripeCustomerId: customerId,
-    tier,
-    billingCycle,
-    subscribed: true,
-    subscriptionEnd,
-    grantQuota: true,
-    proActivationEvent: typeof session.subscription === "string"
-      ? {
+  const subscription = await stripe.subscriptions.retrieve(session.subscription);
+  const subscriptionPriceId = getStripeSubscriptionPriceId(subscription);
+  const { data: subscriptionResult, error: subscriptionError } = await supabaseAdmin.rpc(
+    "apply_stripe_subscription_checkout",
+    buildApplyStripeSubscriptionCheckoutRpcPayload({
+      userId: resolvedUserId,
+      email: customerEmail,
+      stripeCustomerId: customerId,
+      subscription,
+      event: eventContext,
+    }),
+  );
+
+  if (subscriptionError) {
+    console.error("[Checkout] Subscription RPC failed", {
+      error: subscriptionError,
+      resolvedUserId,
+      customerEmail,
+      customerId,
+      subscriptionId: session.subscription,
+      subscriptionPriceId,
+    });
+    throw subscriptionError;
+  }
+
+  const syncedTier = normalizeSubscriptionTier(subscriptionResult?.tier);
+  const billingCycle = getStripeSubscriptionBillingCycle(subscription);
+
+  if (syncedTier === "pro") {
+    const { data: profile } = await supabaseAdmin
+      .from("profiles")
+      .select("full_name, startup_name")
+      .eq("id", resolvedUserId)
+      .maybeSingle();
+
+    await enqueueProActivationOutbox(supabaseAdmin, {
+      userId: resolvedUserId,
+      email: customerEmail,
+      fullName: profile?.full_name ?? null,
+      startupName: profile?.startup_name ?? null,
+      stripeCustomerId: customerId,
+      eventContext: {
         source: "checkout",
         stripeEventId: eventContext.stripeEventId,
         stripeEventType: eventContext.stripeEventType,
         subscriptionId: session.subscription,
-      }
-      : null,
-  });
+      },
+      billingCycle,
+    });
+  }
 
-  console.log(`[Checkout] Subscription synced for ${resolvedUserId} (${tier}, ${billingCycle})`);
+  console.log("[Checkout] Subscription synced through RPC", {
+    userId: resolvedUserId,
+    tier: syncedTier,
+    billingCycle,
+    subscriptionId: session.subscription,
+    subscriptionPriceId,
+    rpcStatus: subscriptionResult?.status,
+  });
 }
 
 async function handleCreditPackPurchase({
@@ -1067,7 +1095,11 @@ async function handleSubscriptionChange(
   console.log(`[Subscription] Synced ${resolvedUserId}: ${tier} (${status})`);
 }
 
-async function handleSubscriptionDeleted(subscription: any, supabaseAdmin: any) {
+async function handleSubscriptionDeleted(
+  subscription: any,
+  supabaseAdmin: any,
+  eventContext: { stripeEventId: string; stripeEventType: string }
+) {
   console.log("[Subscription] Processing subscription deletion");
 
   const customerId = typeof subscription.customer === "string" ? subscription.customer : null;
@@ -1083,26 +1115,32 @@ async function handleSubscriptionDeleted(subscription: any, supabaseAdmin: any) 
     customerMetadataUserId: customerContext.metadataUserId,
   });
 
-  if (!resolvedUserId || !customerEmail) {
+  if (!resolvedUserId) {
     console.error("[Subscription] Missing user context for deletion", { customerId, customerEmail });
     return;
   }
 
-  await syncSubscriptionState(supabaseAdmin, {
-    userId: resolvedUserId,
-    email: customerEmail,
-    stripeCustomerId: customerId,
-    tier: "rookie",
-    billingCycle: null,
-    subscribed: false,
-    subscriptionEnd: null,
-    grantQuota: false,
-    billingAnchorAt: new Date().toISOString(),
-    stripeCurrentPeriodStart: null,
-    stripeCurrentPeriodEnd: null,
-  });
+  const { data, error } = await supabaseAdmin.rpc(
+    "downgrade_stripe_subscription_to_rookie",
+    buildDowngradeStripeSubscriptionToRookieRpcPayload({
+      userId: resolvedUserId,
+      stripeCustomerId: customerId,
+      subscription,
+      event: eventContext,
+    }),
+  );
 
-  console.log(`[Subscription] Downgraded ${resolvedUserId} to rookie`);
+  if (error) {
+    console.error("[Subscription] Rookie downgrade RPC failed", {
+      error,
+      customerId,
+      resolvedUserId,
+      subscriptionId: subscription.id,
+    });
+    throw error;
+  }
+
+  console.log("[Subscription] Downgraded to rookie through RPC", { userId: resolvedUserId, result: data });
 }
 
 async function handleInvoicePaid(
@@ -1273,7 +1311,10 @@ serve(async (req) => {
         });
         break;
       case "customer.subscription.deleted":
-        await handleSubscriptionDeleted(object, supabaseAdmin);
+        await handleSubscriptionDeleted(object, supabaseAdmin, {
+          stripeEventId: event.id,
+          stripeEventType: event.type,
+        });
         break;
       case "invoice.paid":
         await handleInvoicePaid(object, supabaseAdmin, {

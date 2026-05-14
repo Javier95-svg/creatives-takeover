@@ -8,25 +8,10 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { normalizePlanId, trackUpgradeClicked } from "@/lib/analytics";
 import { PLAN_HIGHLIGHTS, PLAN_MONTHLY_CREDITS } from "@/config/planPermissions";
-import { appendCheckoutIntentParam, persistCheckoutIntent, redirectToCheckoutIntent } from "@/lib/checkoutRedirect";
+import { appendCheckoutIntentParam, persistCheckoutIntent } from "@/lib/checkoutRedirect";
 
 type BillingCycle = "monthly" | "yearly";
 type PlanKey = "rookie" | "starter" | "rising" | "pro";
-
-const PLAN_PAYMENT_LINKS: Record<Exclude<PlanKey, "rookie">, Record<BillingCycle, string>> = {
-  starter: {
-    monthly: "https://buy.stripe.com/cNibJ22yd4qb2MK8HN0VO0R",
-    yearly: "https://buy.stripe.com/cNidRadcR5ufafc7DJ0VO0S",
-  },
-  rising: {
-    monthly: "https://buy.stripe.com/bJe00k5KpcWH9b81fl0VO0P",
-    yearly: "https://buy.stripe.com/3cI3cw1u9g8Tfzw0bh0VO0Q",
-  },
-  pro: {
-    monthly: "https://buy.stripe.com/8x23cw1u96yjfzw4rx0VO0N",
-    yearly: "https://buy.stripe.com/6oU4gA4Glf4P5YW8HN0VO0O",
-  },
-};
 
 const PLAN_CONFIG: Array<{
   key: PlanKey;
@@ -129,7 +114,7 @@ const formatPrice = (value: number) => {
 };
 
 export default function Pricing() {
-  const { loading, actionLoading, subscriptionData } = useSubscription();
+  const { loading, actionLoading, subscriptionData, createCheckout } = useSubscription();
   const { user } = useAuth();
   const navigate = useNavigate();
   const [billingCycle, setBillingCycle] = useState<BillingCycle>("monthly");
@@ -173,11 +158,6 @@ export default function Pricing() {
     }
 
     const checkoutIntent = `${plan}-${billingCycle}`;
-    const paymentLink = PLAN_PAYMENT_LINKS[plan][billingCycle];
-    if (!paymentLink) {
-      setPendingPlan(null);
-      return;
-    }
 
     if (!user) {
       persistCheckoutIntent(checkoutIntent);
@@ -191,7 +171,10 @@ export default function Pricing() {
       return;
     }
 
-    redirectToCheckoutIntent(checkoutIntent, user);
+    const checkoutUrl = await createCheckout(plan, undefined, billingCycle);
+    if (!checkoutUrl) {
+      setPendingPlan(null);
+    }
   };
 
   if (loading) {

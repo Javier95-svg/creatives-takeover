@@ -6748,6 +6748,9 @@ export type Database = {
           features: Json | null
           monthly_credits: number
           price_cents: number
+          stripe_payment_link: string | null
+          stripe_payment_link_monthly: string | null
+          stripe_payment_link_yearly: string | null
           stripe_price_id: string | null
           tier_name: string
         }
@@ -6756,6 +6759,9 @@ export type Database = {
           features?: Json | null
           monthly_credits?: number
           price_cents?: number
+          stripe_payment_link?: string | null
+          stripe_payment_link_monthly?: string | null
+          stripe_payment_link_yearly?: string | null
           stripe_price_id?: string | null
           tier_name: string
         }
@@ -6764,6 +6770,9 @@ export type Database = {
           features?: Json | null
           monthly_credits?: number
           price_cents?: number
+          stripe_payment_link?: string | null
+          stripe_payment_link_monthly?: string | null
+          stripe_payment_link_yearly?: string | null
           stripe_price_id?: string | null
           tier_name?: string
         }
@@ -8400,6 +8409,23 @@ export type Database = {
     }
     Functions: {
       archive_old_memories: { Args: { days_old?: number }; Returns: number }
+      apply_stripe_subscription_checkout: {
+        Args: {
+          p_billing_anchor_at?: string | null
+          p_billing_cycle?: string
+          p_current_period_end?: string | null
+          p_current_period_start?: string | null
+          p_email: string
+          p_stripe_customer_id: string | null
+          p_stripe_event_id: string
+          p_stripe_event_type: string
+          p_stripe_price_id: string
+          p_stripe_subscription_id: string | null
+          p_subscription_end?: string | null
+          p_user_id: string
+        }
+        Returns: Json
+      }
       are_friends: {
         Args: { user1_id: string; user2_id: string }
         Returns: boolean
@@ -8498,6 +8524,16 @@ export type Database = {
           p_metadata?: Json
           p_session_id?: string
           p_user_id: string
+        }
+        Returns: Json
+      }
+      downgrade_stripe_subscription_to_rookie: {
+        Args: {
+          p_stripe_customer_id?: string | null
+          p_stripe_event_id?: string | null
+          p_stripe_event_type?: string | null
+          p_stripe_subscription_id?: string | null
+          p_user_id?: string | null
         }
         Returns: Json
       }
