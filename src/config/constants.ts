@@ -182,7 +182,7 @@ export const SUBSCRIPTION_TIERS = {
 
 // Monthly credit allocation per tier
 export const TIER_MONTHLY_CREDITS = {
-  rookie: 25,
+  rookie: 50,
   starter: 50,
   rising: 100,
   pro: 300,

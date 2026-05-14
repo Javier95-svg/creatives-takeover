@@ -18,7 +18,7 @@ const PricingPage = () => {
   const structuredData = [
     createProductSchema({
       name: "Creatives Takeover Rookie Plan",
-      description: "Free founder plan with 25 monthly credits, free ICP Builder access, and early-stage startup validation tools.",
+      description: "Free founder plan with 50 monthly credits, free ICP Builder access, and early-stage startup validation tools.",
       price: 0,
       currency: "USD"
     }),

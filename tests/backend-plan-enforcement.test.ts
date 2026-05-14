@@ -20,11 +20,21 @@ test('normalizePlan preserves canonical and legacy aliases', () => {
 
 test('plan monthly credits match pricing contract', () => {
   assert.deepEqual(PLAN_MONTHLY_CREDITS, {
-    rookie: 25,
+    rookie: 50,
     starter: 50,
     rising: 100,
     pro: 300,
   });
+});
+
+test('rookie relief migration safely raises only rookie credits', () => {
+  const source = readFileSync(new URL('../supabase/migrations/20260514_raise_rookie_credits.sql', import.meta.url), 'utf8');
+
+  assert.match(source, /UPDATE public\.subscription_tiers[\s\S]*monthly_credits = 50[\s\S]*WHERE tier_name = 'rookie'/);
+  assert.match(source, /UPDATE public\.user_credits[\s\S]*monthly_quota = 50[\s\S]*WHERE subscription_tier = 'rookie'/);
+  assert.match(source, /SET balance = LEAST\(balance \+ 25, 50\)/);
+  assert.match(source, /WHERE subscription_tier = 'rookie'[\s\S]*AND balance < 50/);
+  assert.match(source, /SET credit_balance = uc\.balance/);
 });
 
 test('waitlist maker is included only on rising and pro', () => {

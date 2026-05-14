@@ -129,7 +129,7 @@ test('dashboard surface access follows canonical navigation availability', () =>
 });
 
 test('plan monthly credits stay aligned with pricing', () => {
-  assert.equal(PLAN_MONTHLY_CREDITS.rookie, 25);
+  assert.equal(PLAN_MONTHLY_CREDITS.rookie, 50);
   assert.equal(PLAN_MONTHLY_CREDITS.starter, 50);
   assert.equal(PLAN_MONTHLY_CREDITS.rising, 100);
   assert.equal(PLAN_MONTHLY_CREDITS.pro, 300);

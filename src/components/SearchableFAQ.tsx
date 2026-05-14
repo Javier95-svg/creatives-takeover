@@ -36,7 +36,7 @@ const SearchableFAQ = () => {
       id: 1,
       category: "Pricing",
       question: "What pricing plans do you offer?",
-      answer: "We offer four plans. Rookie is free with 25 credits/month. Starter is $9/month or $79/year with 50 credits/month. Rising is $29/month or $239/year with 100 credits/month. Pro is $65/month or $589/year with 300 credits/month. Extra credit packs remain available on every plan for heavier execution windows.",
+      answer: "We offer four plans. Rookie is free with 50 credits/month. Starter is $9/month or $79/year with 50 credits/month. Rising is $29/month or $239/year with 100 credits/month. Pro is $65/month or $589/year with 300 credits/month. Extra credit packs remain available on every plan for heavier execution windows.",
       popular: true,
       tags: ["pricing", "plans", "subscription", "rookie", "starter", "rising", "pro"]
     },
@@ -44,7 +44,7 @@ const SearchableFAQ = () => {
       id: 2,
       category: "Pricing",
       question: "Is there a free plan available?",
-      answer: "Yes. Rookie is completely free forever with no credit card required. You get 25 credits per month, free ICP Builder access, Insighta Test, Newspaper, mentor and co-founder browsing, and preview access to later-stage tools. Rookie also includes 1 free discovery call and 1 co-founder post per billing cycle.",
+      answer: "Yes. Rookie is completely free forever with no credit card required. You get 50 credits per month, free ICP Builder access, Insighta Test, Newspaper, mentor and co-founder browsing, and preview access to later-stage tools. Rookie also includes 1 free discovery call and 1 co-founder post per billing cycle.",
       popular: true,
       tags: ["free", "rookie", "no credit card", "credits"]
     },

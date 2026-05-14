@@ -5,6 +5,7 @@ import { useCredits } from '@/hooks/useCredits';
 import { useMonthlyQuotas } from '@/hooks/useMonthlyQuotas';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useUpgradePrompt } from '@/contexts/UpgradePromptContext';
+import { useCreditGate } from '@/contexts/CreditGateContext';
 import { CREDIT_COSTS, CreditFeature, getCreditCost } from '@/config/constants';
 import { getQuotaStatus, normalizePlan, type Plan } from '@/config/planPermissions';
 import { toast } from 'sonner';
@@ -109,10 +110,11 @@ const isCreditError = (error?: any, data?: any) => {
 
 export const useCreditActions = () => {
   const { user } = useAuth();
-  const { hasCredits, refreshBalance, loading: creditsLoading } = useCredits();
+  const { totalAvailable, hasCredits, refreshBalance, loading: creditsLoading } = useCredits();
   const { subscriptionData } = useSubscription();
   const { quotas, refreshQuotas } = useMonthlyQuotas();
   const { openUpgradePrompt } = useUpgradePrompt();
+  const { showHardGate } = useCreditGate();
   const currentTier = normalizePlan(subscriptionData?.subscription_tier);
 
   const getEffectiveRequiredCredits = useCallback(
@@ -151,17 +153,6 @@ export const useCreditActions = () => {
         return null;
       }
 
-      const minimumPlan = FEATURE_MINIMUM_PLAN[feature];
-      if (minimumPlan && !isPlanAtLeast(currentTier, minimumPlan)) {
-        openUpgradePrompt({
-          reason: 'feature',
-          featureName: resolveFeatureLabel(feature, options.featureName),
-          requiredTier: minimumPlan,
-          description: options.description,
-        });
-        return null;
-      }
-
       if (feature === 'DISCOVERY_CALL') {
         const discoveryQuota = getQuotaStatus('discovery_calls', currentTier, quotas.discovery_calls_used ?? 0);
 
@@ -182,6 +173,21 @@ export const useCreditActions = () => {
         return 0;
       }
 
+      if (currentTier === 'rookie' && totalAvailable === 0 && showHardGate()) {
+        return null;
+      }
+
+      const minimumPlan = FEATURE_MINIMUM_PLAN[feature];
+      if (minimumPlan && !isPlanAtLeast(currentTier, minimumPlan)) {
+        openUpgradePrompt({
+          reason: 'feature',
+          featureName: resolveFeatureLabel(feature, options.featureName),
+          requiredTier: minimumPlan,
+          description: options.description,
+        });
+        return null;
+      }
+
       if (!hasCredits(requiredCredits)) {
         openUpgradePrompt({
           reason: 'credits',
@@ -195,7 +201,7 @@ export const useCreditActions = () => {
 
       return requiredCredits;
     },
-    [creditsLoading, currentTier, getEffectiveRequiredCredits, hasCredits, openUpgradePrompt, quotas.discovery_calls_used, user]
+    [creditsLoading, currentTier, getEffectiveRequiredCredits, hasCredits, openUpgradePrompt, quotas.discovery_calls_used, showHardGate, totalAvailable, user]
   );
 
   const handleCreditError = useCallback(

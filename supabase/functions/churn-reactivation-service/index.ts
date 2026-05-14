@@ -16,7 +16,7 @@ const TIER_FEATURES: Record<Plan, { label: string; features: string[] }> = {
   rookie: {
     label: 'Rookie',
     features: [
-      '25 monthly credits with free ICP Builder access',
+      '50 monthly credits with free ICP Builder access',
       'Insighta Test, Newspaper, and preview access across the platform',
       'A simple way to restart your workflow before upgrading again',
     ],

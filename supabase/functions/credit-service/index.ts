@@ -151,7 +151,7 @@ export class CreditService {
     return data || [];
   }
 
-  // Initialize credits for new users (25 free credits)
+  // Initialize credits for new users (50 free monthly credits)
   async initializeUserCredits(userId: string): Promise<{ success: boolean; isNewUser: boolean }> {
     try {
       // Check if user already has a credit record
@@ -165,7 +165,7 @@ export class CreditService {
             .from('user_credits')
             .update({
               balance: 0,
-              monthly_quota: 25,
+              monthly_quota: 50,
               subscription_tier: 'rookie',
               last_reset_at: new Date().toISOString(),
               last_credit_grant: new Date().toISOString(),
@@ -187,7 +187,7 @@ export class CreditService {
       }
 
       // Free plan starts with monthly quota (not spendable balance).
-      const initialMonthlyQuota = 25;
+      const initialMonthlyQuota = 50;
       const subscriptionTier = 'rookie';
       const welcomeReason = 'Monthly free-tier allocation on signup';
 

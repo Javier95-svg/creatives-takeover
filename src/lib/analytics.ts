@@ -13,6 +13,7 @@ export type ActivationCompletedTrigger =
   | 'first_workspace_created';
 export type PlanId = 'ROOKIE' | 'STARTER' | 'RISING' | 'PRO';
 export type UpgradeLocation = 'pricing_page' | 'dashboard_banner' | 'feature_gate' | 'onboarding';
+export type UpgradePromptTrigger = 'soft_gate_banner' | 'hard_gate_modal';
 export type IcpBuilderOpenedSource = 'dashboard' | 'onboarding' | 'direct' | 'seed_redirect';
 export type OnboardingStartedSource = 'signup_redirect' | 'dashboard_prompt' | 'direct';
 
@@ -405,6 +406,23 @@ export const trackUpgradeClicked = ({
   to_plan: PlanId;
   location: UpgradeLocation;
 }) => captureEvent('upgrade_clicked', { from_plan, to_plan, location });
+
+export const trackUpgradePromptShown = ({
+  trigger,
+  credits_remaining,
+  current_plan,
+  target_plan,
+}: {
+  trigger: UpgradePromptTrigger;
+  credits_remaining: number;
+  current_plan: 'rookie' | 'starter' | 'rising' | 'pro';
+  target_plan: 'starter' | 'rising' | 'pro';
+}) => captureEvent('upgrade_prompt_shown', {
+  trigger,
+  credits_remaining,
+  current_plan,
+  target_plan,
+});
 
 export const trackPricingViewed = ({ source }: { source: string }) =>
   captureEvent('pricing_viewed', { source });

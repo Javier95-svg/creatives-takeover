@@ -1,4 +1,4 @@
-import { Suspense, lazy } from "react";
+import { Suspense, lazy, useEffect, type ReactNode } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -8,6 +8,8 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { UserProvider } from "@/contexts/UserContext";
 import { ProgressProvider } from "@/contexts/ProgressContext";
 import { UpgradePromptProvider } from "@/contexts/UpgradePromptContext";
+import { CreditGateProvider } from "@/contexts/CreditGateContext";
+import CreditStatusBanner from "@/components/CreditStatusBanner";
 import MobileOptimization from "@/components/MobileOptimization";
 import VersionUpdateBanner from "@/components/VersionUpdateBanner";
 import { useVersionCheck } from "@/hooks/useVersionCheck";
@@ -17,7 +19,6 @@ import ScrollToTop from "./components/ScrollToTop";
 import ProUpgradeBanner from "@/components/ProUpgradeBanner";
 import { useInteractionTelemetry } from "@/hooks/useInteractionTelemetry";
 import { captureReferralFromUrl } from "@/lib/referral";
-import { useEffect } from "react";
 
 const PulseWidget = lazy(() => import("@/components/pulse/PulseWidget"));
 const MobileBottomNav = lazy(() =>
@@ -170,6 +171,13 @@ const ReferralCaptureBridge = () => {
   return null;
 };
 
+const ToolRouteWithCreditGate = ({ children }: { children: ReactNode }) => (
+  <>
+    <CreditStatusBanner />
+    {children}
+  </>
+);
+
 function App() {
   const { hasUpdate, refreshApp } = useVersionCheck();
 
@@ -190,11 +198,12 @@ function App() {
                     <InteractionTelemetryBridge />
                     <ReferralCaptureBridge />
                     <UpgradePromptProvider>
-                      <ProUpgradeBanner />
-                      <Suspense fallback={null}>
-                        <PulseWidgetWrapper />
-                      </Suspense>
-                      <Routes>
+                      <CreditGateProvider>
+                        <ProUpgradeBanner />
+                        <Suspense fallback={null}>
+                          <PulseWidgetWrapper />
+                        </Suspense>
+                        <Routes>
                         <Route path="/" element={<Index />} />
                         <Route path="/about" element={<About />} />
                         <Route path="/how-it-works" element={<HowItWorksPage />} />
@@ -241,25 +250,25 @@ function App() {
                         <Route path="/terms" element={<Terms />} />
                         <Route path="/ip-policy" element={<IPPolicy />} />
                         <Route path="/bizmap-ai" element={<BizMapJourneyHubPage />} />
-                        <Route path="/bizmap-ai/chat" element={<Dream2Plan />} />
+                        <Route path="/bizmap-ai/chat" element={<ToolRouteWithCreditGate><Dream2Plan /></ToolRouteWithCreditGate>} />
                         <Route path="/pmf-lab" element={<PMFLabPage />} />
                         <Route path="/bizmap-ai/pmf-lab" element={<Navigate to="/pmf-lab" replace />} />
                         <Route path="/tech-stack" element={<TechStackPage />} />
                         <Route path="/bizmap-ai/tech-stack" element={<Navigate to="/tech-stack" replace />} />
-                        <Route path="/icp-builder" element={<ICPBuilderPage />} />
+                        <Route path="/icp-builder" element={<ToolRouteWithCreditGate><ICPBuilderPage /></ToolRouteWithCreditGate>} />
                         <Route path="/icp/draft/:draftId" element={<IcpDraftPage />} />
                         <Route path="/icp/:draftId/public" element={<IcpPublicDraftPage />} />
                         <Route path="/bizmap-ai/icp-builder" element={<Navigate to="/icp-builder" replace />} />
-                        <Route path="/decision-sprint" element={<ValidateJourneyPage />} />
-                        <Route path="/validate" element={<ValidateJourney />} />
-                        <Route path="/waitlist" element={<WaitlistMakerPage />} />
+                        <Route path="/decision-sprint" element={<ToolRouteWithCreditGate><ValidateJourneyPage /></ToolRouteWithCreditGate>} />
+                        <Route path="/validate" element={<ToolRouteWithCreditGate><ValidateJourney /></ToolRouteWithCreditGate>} />
+                        <Route path="/waitlist" element={<ToolRouteWithCreditGate><WaitlistMakerPage /></ToolRouteWithCreditGate>} />
                         <Route path="/waitlist/templates" element={<WaitlistTemplatesPage />} />
                         <Route path="/waitlist-maker" element={<Navigate to="/waitlist" replace />} />
                         <Route path="/w/:slug" element={<WaitlistPublicPage />} />
                         <Route path="/directories" element={<DirectoriesPage />} />
-                        <Route path="/mvp-builder" element={<AppBuilderPage />} />
+                        <Route path="/mvp-builder" element={<ToolRouteWithCreditGate><AppBuilderPage /></ToolRouteWithCreditGate>} />
                         <Route path="/mvp-scope" element={<MVPBuilderBetaPage />} />
-                        <Route path="/go-to-market" element={<GTMStrategistPage />} />
+                        <Route path="/go-to-market" element={<ToolRouteWithCreditGate><GTMStrategistPage /></ToolRouteWithCreditGate>} />
                         <Route path="/client-acquisition" element={<Navigate to="/go-to-market" replace />} />
 
                         <Route path="/auth" element={<Auth />} />
@@ -315,7 +324,7 @@ function App() {
                         />
                         <Route path="/insighta/traction-engine" element={<Navigate to="/traction-engine" replace />} />
                         <Route path="/pitch-deck-analyzer" element={<PitchDeckAnalyzerPage />} />
-                        <Route path="/insighta-test" element={<InsightaTestPage />} />
+                        <Route path="/insighta-test" element={<ToolRouteWithCreditGate><InsightaTestPage /></ToolRouteWithCreditGate>} />
                         <Route path="/insighta/pitch-deck-analyzer" element={<Navigate to="/pitch-deck-analyzer" replace />} />
                         <Route path="/insighta/test" element={<Navigate to="/insighta-test" replace />} />
                         <Route path="/insighta/vc/:slug" element={<VCProfilePage />} />
@@ -331,10 +340,11 @@ function App() {
                         <Route path="/test-phase1" element={<TestPhase1 />} />
                         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                         <Route path="*" element={<NotFound />} />
-                      </Routes>
-                      <Suspense fallback={null}>
-                        <MobileBottomNav />
-                      </Suspense>
+                        </Routes>
+                        <Suspense fallback={null}>
+                          <MobileBottomNav />
+                        </Suspense>
+                      </CreditGateProvider>
                     </UpgradePromptProvider>
                   </Suspense>
                 </BrowserRouter>

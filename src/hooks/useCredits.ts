@@ -13,6 +13,8 @@ import { isAdminEmail } from '@/lib/admin';
 interface CreditBalance {
   balance: number;
   monthly_quota: number;
+  subscription_tier: string | null;
+  current_period_end: string | null;
 }
 
 interface CreditTransaction {
@@ -47,7 +49,7 @@ export function useCredits() {
       }
 
       if (data?.success && data?.isNewUser) {
-        toast.success('Welcome! You received 25 free credits to get started!');
+        toast.success('Welcome! You received 50 free credits to get started!');
       }
 
       return Boolean(data?.success);
@@ -59,13 +61,13 @@ export function useCredits() {
 
   const fetchBalance = async (): Promise<CreditBalance> => {
     if (!user) {
-      return { balance: 0, monthly_quota: 0 };
+      return { balance: 0, monthly_quota: 0, subscription_tier: 'rookie', current_period_end: null };
     }
 
     const { data, error } = await safe.select(async () =>
       await safe.client
         .from('user_credits')
-        .select('balance, monthly_quota')
+        .select('balance, monthly_quota, subscription_tier, current_period_end')
         .eq('user_id', user.id)
         .maybeSingle()
     );
@@ -81,7 +83,7 @@ export function useCredits() {
           const retry = await safe.select(async () =>
             await safe.client
               .from('user_credits')
-              .select('balance, monthly_quota')
+              .select('balance, monthly_quota, subscription_tier, current_period_end')
               .eq('user_id', user.id)
               .maybeSingle()
           );
@@ -91,7 +93,7 @@ export function useCredits() {
           }
         }
 
-        return { balance: 0, monthly_quota: 0 };
+        return { balance: 0, monthly_quota: 0, subscription_tier: 'rookie', current_period_end: null };
       }
 
       throw error;
@@ -105,7 +107,7 @@ export function useCredits() {
         const retry = await safe.select(async () =>
           await safe.client
             .from('user_credits')
-            .select('balance, monthly_quota')
+            .select('balance, monthly_quota, subscription_tier, current_period_end')
             .eq('user_id', user.id)
             .maybeSingle()
         );
@@ -115,7 +117,7 @@ export function useCredits() {
         }
       }
 
-      return { balance: 0, monthly_quota: 0 };
+      return { balance: 0, monthly_quota: 0, subscription_tier: 'rookie', current_period_end: null };
     }
 
     return data;
@@ -136,7 +138,12 @@ export function useCredits() {
     },
   });
 
-  const balanceData = creditsQuery.data ?? { balance: 0, monthly_quota: 0 };
+  const balanceData = creditsQuery.data ?? {
+    balance: 0,
+    monthly_quota: 0,
+    subscription_tier: 'rookie',
+    current_period_end: null,
+  };
   const loading = creditsQuery.isLoading;
   const refreshing = creditsQuery.isFetching;
 
@@ -247,6 +254,9 @@ export function useCredits() {
   return {
     balance: balanceData.balance ?? 0,
     monthlyQuota: balanceData.monthly_quota ?? 0,
+    totalAvailable: (balanceData.balance ?? 0) + (balanceData.monthly_quota ?? 0),
+    subscriptionTier: balanceData.subscription_tier ?? 'rookie',
+    currentPeriodEnd: balanceData.current_period_end ?? null,
     loading,
     refreshing,
     hasCredits,
