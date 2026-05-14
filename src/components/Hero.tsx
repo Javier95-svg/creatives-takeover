@@ -306,7 +306,7 @@ const Hero = () => {
                     Creatives Takeover gives you the structure of a top-tier accelerator without applications, cohorts, rejection, or giving up equity.
                   </p>
                   <p>
-                    Build at your own pace with AI guidance that adapts to your startup, your stage, and your next move.
+                    Grow your startup at your own pace with personalized guidance that adapts to your industry, development stage, and target market.
                   </p>
                 </>
               )}
