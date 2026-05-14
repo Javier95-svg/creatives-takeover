@@ -285,7 +285,7 @@ const Hero = () => {
       <div className="container mx-auto max-w-7xl relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-10 lg:gap-14 xl:gap-20 items-center">
           <div className="homepage-hero__content text-center flex flex-col items-center justify-center max-w-2xl lg:max-w-[34rem] mx-auto lg:pt-6 xl:pt-8">
-            <h1 className="homepage-hero__title font-space-grotesk text-[2.125rem] sm:text-[2.75rem] md:text-[3.5rem] lg:text-[4.1rem] font-semibold mb-5 sm:mb-6 leading-[1.12] tracking-tight text-center">
+            <h1 className="homepage-hero__title font-space-grotesk text-[2rem] sm:text-[2.55rem] md:text-[3.25rem] lg:text-[3.85rem] font-semibold mb-5 sm:mb-6 leading-[1.12] tracking-tight text-center">
               <span className="text-primary block [text-shadow:0_0_22px_rgba(59,130,246,0.28)]">
                 The Founders&rsquo;
               </span>
@@ -303,7 +303,10 @@ const Hero = () => {
               ) : (
                 <>
                   <p>
-                    Creatives Takeover gives you the structure of a top-tier accelerator without applications, cohorts, rejection, or giving up equity. Build at your own pace with AI guidance that adapts to your startup, your stage, and your next move.
+                    Creatives Takeover gives you the structure of a top-tier accelerator without applications, cohorts, rejection, or giving up equity.
+                  </p>
+                  <p>
+                    Build at your own pace with AI guidance that adapts to your startup, your stage, and your next move.
                   </p>
                 </>
               )}
@@ -341,9 +344,6 @@ const Hero = () => {
                       </Link>
                     </Button>
                   </div>
-                  <p className="text-xs sm:text-sm text-muted-foreground">
-                    No application. No credit card. Start in 3 minutes.
-                  </p>
                 </div>
               )}
             </div>
