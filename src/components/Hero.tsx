@@ -303,7 +303,7 @@ const Hero = () => {
               ) : (
                 <>
                   <p>
-                    Build your startup at your own pace. Creatives Takeover is an AI-powered business development platform that gives every founder the structured guidance of a top-tier accelerator, without the application, the equity, or the rejection.
+                    Creatives Takeover gives you the structure of a top-tier accelerator without applications, cohorts, rejection, or giving up equity. Build at your own pace with AI guidance that adapts to your startup, your stage, and your next move.
                   </p>
                 </>
               )}
@@ -331,7 +331,7 @@ const Hero = () => {
                   <div className="flex w-full justify-center px-4 sm:px-0">
                     <Button size="lg" className="w-full sm:w-auto min-h-[44px] touch-manipulation" asChild>
                       <Link to="/icp-builder" onClick={handlePrimaryCTAClick}>
-                        Build My Persona
+                        Build My ICP Free
                         <ArrowRight className="w-4 h-4" />
                       </Link>
                     </Button>
