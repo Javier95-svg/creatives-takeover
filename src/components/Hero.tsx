@@ -329,13 +329,21 @@ const Hero = () => {
               ) : (
                 <div className="flex flex-col gap-3 items-center justify-center px-4 sm:px-0">
                   <div className="flex w-full justify-center px-4 sm:px-0">
-                    <Button size="lg" className="w-full sm:w-auto min-h-[44px] touch-manipulation" asChild>
+                    <Button
+                      size="lg"
+                      className="group w-full sm:w-auto min-h-[48px] touch-manipulation border border-blue-300/40 bg-slate-950 px-6 text-white shadow-[0_0_28px_rgba(59,130,246,0.22)] transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-300/70 hover:bg-slate-900 hover:shadow-[0_0_42px_rgba(99,102,241,0.34)] focus-visible:ring-blue-300/60"
+                      asChild
+                    >
                       <Link to="/icp-builder" onClick={handlePrimaryCTAClick}>
+                        <Compass className="w-4 h-4 text-blue-200 transition-transform duration-300 group-hover:rotate-12" />
                         Build My ICP Free
-                        <ArrowRight className="w-4 h-4" />
+                        <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-0.5" />
                       </Link>
                     </Button>
                   </div>
+                  <p className="text-xs sm:text-sm text-muted-foreground">
+                    No application. No credit card. Start in 3 minutes.
+                  </p>
                 </div>
               )}
             </div>
