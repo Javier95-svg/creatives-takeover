@@ -21,9 +21,9 @@ test('normalizePlan preserves canonical and legacy aliases', () => {
 test('plan monthly credits match pricing contract', () => {
   assert.deepEqual(PLAN_MONTHLY_CREDITS, {
     rookie: 50,
-    starter: 50,
-    rising: 100,
-    pro: 300,
+    starter: 100,
+    rising: 250,
+    pro: 600,
   });
 });
 
@@ -35,6 +35,29 @@ test('rookie relief migration safely raises only rookie credits', () => {
   assert.match(source, /SET balance = LEAST\(balance \+ 25, 50\)/);
   assert.match(source, /WHERE subscription_tier = 'rookie'[\s\S]*AND balance < 50/);
   assert.match(source, /SET credit_balance = uc\.balance/);
+});
+
+test('paid plan credit ladder migration safely raises only paid credits', () => {
+  const source = readFileSync(new URL('../supabase/migrations/20260514120000_raise_paid_plan_credits.sql', import.meta.url), 'utf8');
+
+  assert.match(source, /WHEN 'starter' THEN 100/);
+  assert.match(source, /WHEN 'rising' THEN 250/);
+  assert.match(source, /WHEN 'pro' THEN 600/);
+  assert.match(source, /LEAST\(balance \+ 50, 100\)/);
+  assert.match(source, /LEAST\(balance \+ 150, 250\)/);
+  assert.match(source, /LEAST\(balance \+ 300, 600\)/);
+  assert.match(source, /uc\.subscription_tier IN \('starter', 'rising', 'pro'\)/);
+  assert.doesNotMatch(source, /subscription_tier\s*=\s*'rookie'/);
+  assert.doesNotMatch(source, /tier_name\s*=\s*'rookie'/);
+});
+
+test('subscription checkout copy uses the paid plan credit ladder', () => {
+  const source = readFileSync(new URL('../supabase/functions/create-checkout/index.ts', import.meta.url), 'utf8');
+
+  assert.match(source, /starter: \{[\s\S]*monthly: \{[\s\S]*credits: 100/);
+  assert.match(source, /rising: \{[\s\S]*monthly: \{[\s\S]*credits: 250/);
+  assert.match(source, /pro: \{[\s\S]*monthly: \{[\s\S]*credits: 600/);
+  assert.match(source, /description: `\$\{pricing\.credits\} monthly credits with \$\{billingCycle\} billing`/);
 });
 
 test('waitlist maker is included only on rising and pro', () => {

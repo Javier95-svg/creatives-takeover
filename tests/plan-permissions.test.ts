@@ -130,9 +130,9 @@ test('dashboard surface access follows canonical navigation availability', () =>
 
 test('plan monthly credits stay aligned with pricing', () => {
   assert.equal(PLAN_MONTHLY_CREDITS.rookie, 50);
-  assert.equal(PLAN_MONTHLY_CREDITS.starter, 50);
-  assert.equal(PLAN_MONTHLY_CREDITS.rising, 100);
-  assert.equal(PLAN_MONTHLY_CREDITS.pro, 300);
+  assert.equal(PLAN_MONTHLY_CREDITS.starter, 100);
+  assert.equal(PLAN_MONTHLY_CREDITS.rising, 250);
+  assert.equal(PLAN_MONTHLY_CREDITS.pro, 600);
 });
 
 test('core entitlement rules reflect the pricing contract', () => {

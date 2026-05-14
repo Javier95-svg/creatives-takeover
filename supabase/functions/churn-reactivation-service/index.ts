@@ -26,7 +26,7 @@ const TIER_FEATURES: Record<Plan, { label: string; features: string[] }> = {
     features: [
       'Waitlist Maker and PMF Lab access',
       '2 free discovery calls and 2 co-founder posts per billing cycle',
-      '50 AI credits per month',
+      '100 AI credits per month',
     ],
   },
   rising: {
@@ -34,7 +34,7 @@ const TIER_FEATURES: Record<Plan, { label: string; features: string[] }> = {
     features: [
       'Full BizMap AI access with most tools included',
       'Pitch Deck Analyzer, Prompt Library, and deeper research workflows',
-      '100 AI credits per month',
+      '250 AI credits per month',
     ],
   },
   pro: {
@@ -42,7 +42,7 @@ const TIER_FEATURES: Record<Plan, { label: string; features: string[] }> = {
     features: [
       'Everything in Rising plus Angels and unlimited discovery calls',
       'Unlimited VC and accelerator profile views',
-      '300 AI credits per month',
+      '600 AI credits per month',
     ],
   },
 };

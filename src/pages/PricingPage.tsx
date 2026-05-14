@@ -24,19 +24,19 @@ const PricingPage = () => {
     }),
     createProductSchema({
       name: "Creatives Takeover Starter Plan",
-      description: "Validation-focused founder plan with 50 monthly credits, Waitlist Maker, PMF Lab, and light fundraising access.",
+      description: "Validation-focused founder plan with 100 monthly credits, Waitlist Maker, PMF Lab, and light fundraising access.",
       price: 9,
       currency: "USD"
     }),
     createProductSchema({
       name: "Creatives Takeover Rising Plan",
-      description: "The default build plan with 100 monthly credits, full startup tool access, and fundraising workflows for active founders.",
+      description: "The default build plan with 250 monthly credits, full startup tool access, and fundraising workflows for active founders.",
       price: 29,
       currency: "USD"
     }),
     createProductSchema({
       name: "Creatives Takeover Pro Plan",
-      description: "Scaling and fundraising plan with 300 monthly credits, unlimited investor research views, office hours, and priority support.",
+      description: "Scaling and fundraising plan with 600 monthly credits, unlimited investor research views, office hours, and priority support.",
       price: 65,
       currency: "USD"
     }),

@@ -24,9 +24,9 @@ export const PLAN_SEQUENCE: Plan[] = ['rookie', 'starter', 'rising', 'pro'];
 
 export const PLAN_MONTHLY_CREDITS: Record<Plan, number> = {
   rookie: 50,
-  starter: 50,
-  rising: 100,
-  pro: 300,
+  starter: 100,
+  rising: 250,
+  pro: 600,
 };
 
 const FEATURE_RULES: Partial<Record<EnforcedFeature, Record<Plan, FeatureRule>>> = {

@@ -13,7 +13,7 @@ import { trackActivity } from "@/lib/activity";
 
 export default function SubscriptionSuccess() {
   const [searchParams] = useSearchParams();
-  const tier = searchParams.get('tier') || 'basic';
+  const tier = searchParams.get('tier') || 'starter';
   const [verifying, setVerifying] = useState(true);
   const [verified, setVerified] = useState(false);
   const [verifyError, setVerifyError] = useState(false);
@@ -71,11 +71,14 @@ export default function SubscriptionSuccess() {
 
   const getTierInfo = (tierName: string) => {
     const tiers = {
-      basic: { name: 'Basic', credits: 50, price: 9.99 },
-      premium: { name: 'Premium', credits: 150, price: 19.99 },
-      enterprise: { name: 'Enterprise', credits: 500, price: 49.99 }
+      starter: { name: 'Starter', credits: 100, price: 9 },
+      rising: { name: 'Rising', credits: 250, price: 29 },
+      pro: { name: 'Pro', credits: 600, price: 65 },
+      basic: { name: 'Starter', credits: 100, price: 9 },
+      premium: { name: 'Rising', credits: 250, price: 29 },
+      enterprise: { name: 'Pro', credits: 600, price: 65 }
     };
-    return tiers[tierName as keyof typeof tiers] || tiers.basic;
+    return tiers[tierName as keyof typeof tiers] || tiers.starter;
   };
 
   const tierInfo = getTierInfo(tier);

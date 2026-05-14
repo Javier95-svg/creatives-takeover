@@ -27,16 +27,16 @@ type PurchaseType = "subscription" | "credit_pack";
 
 const SUBSCRIPTION_PRICING: Record<string, Record<BillingCycle, { amount: number; name: string; credits: number }>> = {
   starter: {
-    monthly: { amount: 900, name: "Starter Plan", credits: 50 },
-    yearly: { amount: 7900, name: "Starter Plan", credits: 50 },
+    monthly: { amount: 900, name: "Starter Plan", credits: 100 },
+    yearly: { amount: 7900, name: "Starter Plan", credits: 100 },
   },
   rising: {
-    monthly: { amount: 2900, name: "Rising Plan", credits: 100 },
-    yearly: { amount: 23900, name: "Rising Plan", credits: 100 },
+    monthly: { amount: 2900, name: "Rising Plan", credits: 250 },
+    yearly: { amount: 23900, name: "Rising Plan", credits: 250 },
   },
   pro: {
-    monthly: { amount: 6500, name: "Pro Plan", credits: 300 },
-    yearly: { amount: 58900, name: "Pro Plan", credits: 300 },
+    monthly: { amount: 6500, name: "Pro Plan", credits: 600 },
+    yearly: { amount: 58900, name: "Pro Plan", credits: 600 },
   },
 };
 

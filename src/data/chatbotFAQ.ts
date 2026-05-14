@@ -57,8 +57,8 @@ export const chatbotFAQ: FAQItem[] = [
     keywords: ['price', 'cost', 'pricing', 'how much', 'plans', 'subscription', 'free'],
     synonyms: ['what does it cost', 'subscription price', 'plan costs'],
     question: 'How much does it cost?',
-    answer: 'We offer four plans: Rookie is free with 50 credits/month, Starter is $9/month or $79/year with 50 credits, Rising is $29/month or $239/year with 100 credits, and Pro is $65/month or $589/year with 300 credits. MVP Builder and GTM Strategist still consume credits on every plan.',
-    shortAnswer: 'Rookie, Starter, Rising, and Pro give you 25, 50, 100, and 300 monthly credits respectively.',
+    answer: 'We offer four plans: Rookie is free with 50 credits/month, Starter is $9/month or $79/year with 100 credits, Rising is $29/month or $239/year with 250 credits, and Pro is $65/month or $589/year with 600 credits. MVP Builder and GTM Strategist still consume credits on every plan.',
+    shortAnswer: 'Rookie, Starter, Rising, and Pro give you 50, 100, 250, and 600 monthly credits respectively.',
     category: FAQCategory.PRICING,
     priority: 8,
     quickActions: [

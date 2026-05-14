@@ -24,7 +24,7 @@ const PricingFAQ = () => {
     },
     {
       question: "What are credits and how do they work?",
-      answer: `Credits are the usage currency for the AI-powered parts of the platform. Every plan includes a monthly credit grant: Rookie gets 25, Starter 50, Rising 100, and Pro 300.
+      answer: `Credits are the usage currency for the AI-powered parts of the platform. Every plan includes a monthly credit grant: Rookie gets 50, Starter 100, Rising 250, and Pro 600.
 
     On Rookie, Waitlist Maker uses credits and PMF Lab stays preview-only. Starter includes Waitlist Maker and PMF Lab. Rising and Pro also include MVP Builder, Tech Stack Builder, GTM Strategist, and Directories without extra per-use credit charges.
 

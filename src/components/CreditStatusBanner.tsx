@@ -36,7 +36,7 @@ const CreditStatusBanner = () => {
         <div className="flex items-start gap-2 text-sm font-medium">
           <AlertTriangle className="mt-0.5 h-4 w-4 flex-none text-amber-700" />
           <span>
-            You have {totalAvailable} credits left this month — resets {resetDateShort}. Upgrade to Starter for 50 credits/month.
+            You have {totalAvailable} credits left this month — resets {resetDateShort}. Upgrade to Starter for 100 credits/month.
           </span>
         </div>
         <Button

@@ -36,7 +36,7 @@ const SearchableFAQ = () => {
       id: 1,
       category: "Pricing",
       question: "What pricing plans do you offer?",
-      answer: "We offer four plans. Rookie is free with 50 credits/month. Starter is $9/month or $79/year with 50 credits/month. Rising is $29/month or $239/year with 100 credits/month. Pro is $65/month or $589/year with 300 credits/month. Extra credit packs remain available on every plan for heavier execution windows.",
+      answer: "We offer four plans. Rookie is free with 50 credits/month. Starter is $9/month or $79/year with 100 credits/month. Rising is $29/month or $239/year with 250 credits/month. Pro is $65/month or $589/year with 600 credits/month. Extra credit packs remain available on every plan for heavier execution windows.",
       popular: true,
       tags: ["pricing", "plans", "subscription", "rookie", "starter", "rising", "pro"]
     },
@@ -60,7 +60,7 @@ const SearchableFAQ = () => {
       id: 4,
       category: "Pricing",
       question: "What's the difference between Rising and Pro plans?",
-      answer: "Rising gives you 100 credits, the full BizMap AI toolset, 10 VC profiles and 10 accelerator profiles per billing cycle, 3 discovery calls, full prompt library access, full email templates, and pitch deck analyzer access. Pro gives you 300 credits, unlimited discovery calls, unlimited VC and accelerator profile views, Angels community access, group office hours, and priority support. MVP Builder and GTM Strategist are included on both Rising and Pro.",
+      answer: "Rising gives you 250 credits, the full BizMap AI toolset, 10 VC profiles and 10 accelerator profiles per billing cycle, 3 discovery calls, full prompt library access, full email templates, and pitch deck analyzer access. Pro gives you 600 credits, unlimited discovery calls, unlimited VC and accelerator profile views, Angels community access, group office hours, and priority support. MVP Builder and GTM Strategist are included on both Rising and Pro.",
       popular: true,
       tags: ["rising", "pro", "comparison", "features"]
     },
@@ -186,7 +186,7 @@ const SearchableFAQ = () => {
       id: 19,
       category: "Credits",
       question: "How does the credit system work?",
-      answer: "Credits refresh with your plan every billing cycle: Rookie 25, Starter 50, Rising 100, and Pro 300. Rookie relies on credits for the AI actions it can access, including Waitlist Maker. Starter includes Waitlist Maker and PMF Lab, while Rising and Pro also include MVP Builder, Tech Stack Builder, GTM Strategist, and Directories without extra per-use credit charges. Metered AI actions like chat and premium generations still draw from your credit balance.",
+      answer: "Credits refresh with your plan every billing cycle: Rookie 50, Starter 100, Rising 250, and Pro 600. Rookie relies on credits for the AI actions it can access, including Waitlist Maker. Starter includes Waitlist Maker and PMF Lab, while Rising and Pro also include MVP Builder, Tech Stack Builder, GTM Strategist, and Directories without extra per-use credit charges. Metered AI actions like chat and premium generations still draw from your credit balance.",
       popular: true,
       tags: ["credits", "costs", "ai features", "monthly"]
     },

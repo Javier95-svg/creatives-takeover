@@ -183,9 +183,9 @@ export const SUBSCRIPTION_TIERS = {
 // Monthly credit allocation per tier
 export const TIER_MONTHLY_CREDITS = {
   rookie: 50,
-  starter: 50,
-  rising: 100,
-  pro: 300,
+  starter: 100,
+  rising: 250,
+  pro: 600,
 } as const;
 
 // VC View Limits per tier (monthly)
@@ -266,7 +266,7 @@ export const TIER_DETAILS = {
     name: 'Rookie',
     subtitle: 'Start',
     price: 0,
-    credits: 25,
+    credits: 50,
     vcViewLimit: 0,
     description: 'Explore the platform with free ICP Builder access and list-only investor browsing',
   },
@@ -274,7 +274,7 @@ export const TIER_DETAILS = {
     name: 'Starter',
     subtitle: 'Momentum',
     price: 9,
-    credits: 50,
+    credits: 100,
     vcViewLimit: 2,
     description: 'Unlock PMF Lab, Email Templates, and limited investor profile views',
   },
@@ -282,7 +282,7 @@ export const TIER_DETAILS = {
     name: 'Rising',
     subtitle: 'Build',
     price: 29,
-    credits: 100,
+    credits: 250,
     vcViewLimit: 5,
     description: 'Full BizMap AI access with 5 VC and 5 accelerator profile views per month',
   },
@@ -290,7 +290,7 @@ export const TIER_DETAILS = {
     name: 'Pro',
     subtitle: 'Scale',
     price: 65,
-    credits: 300,
+    credits: 600,
     vcViewLimit: -1, // unlimited
     description: 'Fundraising and scaling tier with unlimited investor views and priority support',
   },
