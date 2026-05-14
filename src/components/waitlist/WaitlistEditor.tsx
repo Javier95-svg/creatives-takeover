@@ -326,7 +326,7 @@ export default function WaitlistEditor({ initialSeed = null, onBackToTemplates }
   const liveUrl = status === 'published' && currentSlug ? `${BASE_URL}/w/${currentSlug}` : null;
   const waitlistPublishDescription = currentPlan === 'rookie'
     ? `Publishing costs ${CREDIT_COSTS.WAITLIST_GENERATION} credits and exposes your public URL.`
-    : 'Publishing is included on your plan and exposes your public URL.';
+    : `Publishing costs ${CREDIT_COSTS.WAITLIST_GENERATION} credits and exposes your public URL.`;
   const currentSnapshot = useMemo(
     () => buildEditorSnapshot(productName, content, slugDraft || currentSlug || '', status),
     [content, currentSlug, productName, slugDraft, status]

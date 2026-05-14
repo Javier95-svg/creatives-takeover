@@ -25,18 +25,18 @@ type PrefillInput = {
 type BillingCycle = "monthly" | "yearly";
 type PurchaseType = "subscription" | "credit_pack";
 
-const SUBSCRIPTION_PRICING: Record<string, Record<BillingCycle, { amount: number; name: string; credits: number }>> = {
+const SUBSCRIPTION_PRICING: Record<string, Record<BillingCycle, { amount: number; name: string; credits: number; description: string }>> = {
   starter: {
-    monthly: { amount: 900, name: "Starter Plan", credits: 100 },
-    yearly: { amount: 7900, name: "Starter Plan", credits: 100 },
+    monthly: { amount: 900, name: "Starter Plan", credits: 100, description: "100 monthly credits, PMF Lab credit-metered access, Email Templates, and 2 VC/Accelerator profile views" },
+    yearly: { amount: 7900, name: "Starter Plan", credits: 100, description: "100 monthly credits, PMF Lab credit-metered access, Email Templates, and 2 VC/Accelerator profile views" },
   },
   rising: {
-    monthly: { amount: 2900, name: "Rising Plan", credits: 250 },
-    yearly: { amount: 23900, name: "Rising Plan", credits: 250 },
+    monthly: { amount: 2900, name: "Rising Plan", credits: 250, description: "250 monthly credits plus credit-metered MVP Builder, Tech Stack Builder, GTM Strategist, Pitch Deck Analyzer, and full Prompt Library" },
+    yearly: { amount: 23900, name: "Rising Plan", credits: 250, description: "250 monthly credits plus credit-metered MVP Builder, Tech Stack Builder, GTM Strategist, Pitch Deck Analyzer, and full Prompt Library" },
   },
   pro: {
-    monthly: { amount: 6500, name: "Pro Plan", credits: 600 },
-    yearly: { amount: 58900, name: "Pro Plan", credits: 600 },
+    monthly: { amount: 6500, name: "Pro Plan", credits: 600, description: "600 monthly credits, Find Your Angel, unlimited research views, unlimited discovery calls, and premium fundraising access" },
+    yearly: { amount: 58900, name: "Pro Plan", credits: 600, description: "600 monthly credits, Find Your Angel, unlimited research views, unlimited discovery calls, and premium fundraising access" },
   },
 };
 
@@ -303,7 +303,7 @@ serve(withErrorBoundary(async (req: Request) => {
             currency: "usd",
             product_data: {
               name: pricing.name,
-              description: `${pricing.credits} monthly credits with ${billingCycle} billing`,
+              description: `${pricing.description} with ${billingCycle} billing`,
             },
             unit_amount: pricing.amount,
             recurring: { interval: billingCycle === "yearly" ? "year" : "month" },

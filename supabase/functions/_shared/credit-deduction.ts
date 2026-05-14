@@ -286,10 +286,22 @@ export async function checkAndDeductCredits(
 
     // Check if quota needs reset (monthly reset logic)
     await checkAndResetMonthlyQuota(userId, supabase);
+    const creditsBeforeDeduction = await getCurrentCreditSnapshot(userId, supabase);
 
     const deductionMetadata = {
       ...(metadata || {}),
       ...(idempotencyKey ? { idempotencyKey } : {}),
+      featureKey: entitlementFeature || metadata?.featureCode || feature,
+      feature_key: entitlementFeature || metadata?.featureCode || feature,
+      toolName: feature,
+      tool_name: feature,
+      plan: userPlan,
+      creditCost: chargeAmount,
+      credit_cost: chargeAmount,
+      balanceBefore: creditsBeforeDeduction.balance,
+      balance_before: creditsBeforeDeduction.balance,
+      monthlyQuotaBefore: creditsBeforeDeduction.monthlyQuota,
+      monthly_quota_before: creditsBeforeDeduction.monthlyQuota,
     };
 
     const { data: deductionData, error: deductionError } = await supabase.rpc('deduct_credits_atomic', {

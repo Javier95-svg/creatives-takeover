@@ -250,7 +250,7 @@ export function useFeatureGating() {
       case 'tech_stack_generation':
         return checkCanonicalFeatureAccess('tech_stack');
 
-      // Product-Market Fit Lab — Rookie gets preview, Starter uses credits, Rising/Pro included
+      // Product-Market Fit Lab: Rookie gets preview, Starter+ unlock credit-metered analysis
       case 'pmf_analysis':
         return checkCanonicalFeatureAccess('pmf_lab');
 
@@ -378,11 +378,11 @@ export function useFeatureGating() {
           requiredTier: 'rising'
         };
 
-      // MVP Builder (Rising+ only, or progressive unlock for Rookie)
+      // MVP Builder: Rising+ unlocks credit-metered generation
       case 'mvp_builder':
         return checkCanonicalFeatureAccess('mvp_builder');
 
-      // GTM Strategist (Rising+ — progressive for Rookie)
+      // GTM Strategist: Rising+ unlocks credit-metered generation
       case 'gtm_strategist':
         return checkCanonicalFeatureAccess('gtm_strategist');
 
@@ -394,7 +394,7 @@ export function useFeatureGating() {
       case 'find_your_angel':
         return checkCanonicalFeatureAccess('angels_community');
 
-      // Discovery Calls — credit cost now 10; quota logic handled by usePlanAccess
+      // Discovery Calls: quota logic is handled by usePlanAccess
       case 'discovery_calls_mentors':
         return { hasAccess: true };
 

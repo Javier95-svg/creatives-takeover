@@ -1,37 +1,32 @@
-import { Coins } from "lucide-react";
 import { CREDIT_COSTS } from "@/config/constants";
 
 export function CreditPriceList() {
     const prices = [
-        { name: "AI Chat Message", cost: CREDIT_COSTS.AI_CHAT_MESSAGE },
-        { name: "Prompt Generation", cost: CREDIT_COSTS.PROMPT_GENERATION },
-        { name: "Sprint Task", cost: CREDIT_COSTS.SPRINT_TASK_GENERATION },
-        { name: "Waitlist Page Publish", cost: CREDIT_COSTS.WAITLIST_GENERATION },
-        { name: "Tech Stack", cost: CREDIT_COSTS.TECH_STACK_GENERATION },
-        { name: "Email Template Generation", cost: CREDIT_COSTS.EMAIL_TEMPLATE_GENERATION },
-        { name: "One-Pager Generation", cost: CREDIT_COSTS.ONEPAGER_GENERATION },
-        { name: "Launch Report", cost: CREDIT_COSTS.LAUNCH_REPORT },
-        { name: "Asset Generation", cost: CREDIT_COSTS.ASSET_GENERATION },
-        { name: "Roadmap Generation", cost: CREDIT_COSTS.ROADMAP_GENERATION },
-        { name: "ICP Analysis", cost: CREDIT_COSTS.ICP_ANALYSIS },
-        { name: "PMF Analysis", cost: CREDIT_COSTS.PMF_ANALYSIS },
-        { name: "Insighta Test", cost: CREDIT_COSTS.FUNDRAISING_READINESS_ANALYSIS },
-        { name: "Pitch Deck Analyzer", cost: CREDIT_COSTS.PITCH_DECK_ANALYZER },
-        { name: "Market Validation", cost: CREDIT_COSTS.MARKET_VALIDATION },
-        { name: "Pitch Deck Generation", cost: CREDIT_COSTS.PITCH_DECK_GENERATION },
-        { name: "Investor Matching", cost: CREDIT_COSTS.INVESTOR_MATCHING },
-        { name: "Report Export", cost: CREDIT_COSTS.PDF_EXPORT },
-        { name: "Discovery Call", cost: CREDIT_COSTS.DISCOVERY_CALL },
+        { name: "ICP Builder", value: "Free on every plan" },
+        { name: "Waitlist Maker", value: `${CREDIT_COSTS.WAITLIST_GENERATION} credits/use on every plan` },
+        { name: "PMF Lab", value: `${CREDIT_COSTS.PMF_ANALYSIS} credits/full analysis; ${CREDIT_COSTS.PMF_SCORING} credits/evidence score on Starter+` },
+        { name: "MVP Builder", value: `${CREDIT_COSTS.APP_BUILDER_GENERATE} credits/generation; ${CREDIT_COSTS.APP_BUILDER_REFINE} credits/refinement on Rising+` },
+        { name: "Tech Stack Builder", value: `${CREDIT_COSTS.TECH_STACK_GENERATION} credits/use on Rising+` },
+        { name: "GTM Strategist", value: `${CREDIT_COSTS.GTM_ANALYSIS} credits/use on Rising+` },
+        { name: "Directories", value: "Included on Rising+" },
+        { name: "VC Search", value: "Profile-view quota" },
+        { name: "Accelerator Hunt", value: "Profile-view quota" },
+        { name: "Email Templates", value: "Included on Starter+" },
+        { name: "Pitch Deck Analyzer", value: `${CREDIT_COSTS.PITCH_DECK_ANALYZER} credits/use on Rising+` },
+        { name: "Insighta Test", value: "Included on every plan" },
+        { name: "Discovery Calls", value: "Monthly quota" },
+        { name: "Find a Co-Founder Posting", value: "Monthly quota" },
+        { name: "Find Your Angel", value: "Pro only" },
+        { name: "Newspaper", value: "Included on every plan" },
+        { name: "Prompt Library", value: `Free models on Rookie/Starter; custom actions ${CREDIT_COSTS.PROMPT_GENERATION} credits on Rising+` },
     ];
 
     return (
         <div className="space-y-1 text-xs text-muted-foreground">
             {prices.map((item) => (
-                <div key={item.name} className="flex items-center justify-between">
-                    <span>- {item.name}:</span>
-                    <span className="font-medium flex items-center gap-0.5">
-                        {item.cost} <Coins className="h-3 w-3 inline" />
-                    </span>
+                <div key={item.name} className="flex items-start justify-between gap-3">
+                    <span className="shrink-0">- {item.name}:</span>
+                    <span className="font-medium text-right leading-snug">{item.value}</span>
                 </div>
             ))}
         </div>

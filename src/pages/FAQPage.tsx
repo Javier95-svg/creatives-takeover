@@ -20,7 +20,7 @@ const FAQPage = () => {
       },
       {
         question: "What is the credit system?",
-        answer: "Credits power metered AI actions across the platform. BizMap AI chat costs 1 credit per message and some premium generations still consume credits, but included workflows now vary by tier: Rookie uses credits for Waitlist Maker, Starter adds included Waitlist Maker and PMF Lab, and Rising plus Pro also include MVP Builder, Tech Stack Builder, GTM Strategist, Directories, and more. Credits refresh each billing cycle, and if you run out mid-cycle you can buy extra credit packs on any plan."
+        answer: "Credits power metered AI actions across the platform. Plan gates decide which tools you can access, and credits meter generative actions inside unlocked tools. Waitlist Maker uses credits on every plan, PMF Lab uses credits on Starter and above, and MVP Builder, Tech Stack Builder, GTM Strategist, and Pitch Deck Analyzer use credits on Rising and Pro. ICP Builder remains free."
       },
       {
         question: "What makes Creatives Takeover different?",

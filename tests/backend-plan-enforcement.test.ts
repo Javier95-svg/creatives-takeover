@@ -51,30 +51,126 @@ test('paid plan credit ladder migration safely raises only paid credits', () => 
   assert.doesNotMatch(source, /tier_name\s*=\s*'rookie'/);
 });
 
+test('hybrid monetization migration updates plan metadata and disables discovery-call overage credits', () => {
+  const source = readFileSync(new URL('../supabase/migrations/20260514150000_hybrid_monetization_metadata.sql', import.meta.url), 'utf8');
+
+  assert.match(source, /Waitlist Maker unlocked; uses 3 credits/);
+  assert.match(source, /PMF Lab unlocked; uses 6 credits/);
+  assert.match(source, /MVP Builder unlocked; uses 5 credits/);
+  assert.match(source, /Tech Stack Builder unlocked; uses 3 credits/);
+  assert.match(source, /GTM Strategist unlocked; uses 5 credits/);
+  assert.match(source, /Pitch Deck Analyzer unlocked; uses 6 credits/);
+  assert.match(source, /0 AS overage_credit_cost/);
+  assert.match(source, /credits_charged = false/);
+  assert.match(source, /'balance_before'/);
+  assert.match(source, /'balance_after'/);
+});
+
 test('subscription checkout copy uses the paid plan credit ladder', () => {
   const source = readFileSync(new URL('../supabase/functions/create-checkout/index.ts', import.meta.url), 'utf8');
 
-  assert.match(source, /starter: \{[\s\S]*monthly: \{[\s\S]*credits: 100/);
-  assert.match(source, /rising: \{[\s\S]*monthly: \{[\s\S]*credits: 250/);
-  assert.match(source, /pro: \{[\s\S]*monthly: \{[\s\S]*credits: 600/);
-  assert.match(source, /description: `\$\{pricing\.credits\} monthly credits with \$\{billingCycle\} billing`/);
+  assert.match(source, /starter: \{[\s\S]*monthly: \{[\s\S]*credits: 100[\s\S]*PMF Lab credit-metered access/);
+  assert.match(source, /rising: \{[\s\S]*monthly: \{[\s\S]*credits: 250[\s\S]*credit-metered MVP Builder/);
+  assert.match(source, /pro: \{[\s\S]*monthly: \{[\s\S]*credits: 600[\s\S]*Find Your Angel/);
+  assert.match(source, /description: `\$\{pricing\.description\} with \$\{billingCycle\} billing`/);
 });
 
-test('waitlist maker is included only on rising and pro', () => {
-  assert.equal(resolveFeatureEnforcement('rookie', 'WAITLIST_GENERATION').mode, 'charge');
-  assert.equal(resolveFeatureEnforcement('starter', 'WAITLIST_GENERATION').mode, 'charge');
-  assert.equal(resolveFeatureEnforcement('rising', 'WAITLIST_GENERATION').mode, 'included');
-  assert.equal(resolveFeatureEnforcement('pro', 'WAITLIST_GENERATION').mode, 'included');
+test('credit audit main inventory follows Compare Our Plans tools only', () => {
+  const source = readFileSync(new URL('../docs/audit/credit-system-deep-audit-2026-05-14.md', import.meta.url), 'utf8');
+
+  for (const section of [
+    'BizMap AI: Startup Development Cycle',
+    'Insighta',
+    'Community',
+    'Resources',
+  ]) {
+    assert.match(source, new RegExp(section));
+  }
+
+  for (const tool of [
+    'ICP Builder',
+    'Waitlist Maker',
+    'PMF Lab',
+    'MVP Builder',
+    'Tech Stack Builder',
+    'GTM Strategist',
+    'Directories',
+    'VC Search',
+    'Accelerator Hunt',
+    'Email Templates',
+    'Pitch Deck Analyzer',
+    'Insighta Test',
+    'Discovery Calls',
+    'Find a Co-Founder Posting',
+    'Find Your Angel',
+    'Newspaper',
+    'Prompt Library',
+  ]) {
+    assert.match(source, new RegExp(tool));
+  }
+
+  for (const offTableTool of [
+    'Sprint Task Generation',
+    'Market Research',
+    'Financial Analysis',
+    'Business Insights',
+    'Roadmap Generation',
+    'Public Commitment',
+    'Asset Generation',
+    'Investor Matching',
+  ]) {
+    assert.doesNotMatch(source, new RegExp(offTableTool));
+  }
 });
 
-test('pmf lab and prompt generation enforce minimum-plan upgrades', () => {
+test('waitlist maker is credit-metered on every plan', () => {
+  for (const plan of ['rookie', 'starter', 'rising', 'pro'] as const) {
+    const enforcement = resolveFeatureEnforcement(plan, 'WAITLIST_GENERATION');
+    assert.equal(enforcement.mode, 'charge');
+    assert.equal(enforcement.creditCost, 3);
+  }
+});
+
+test('pmf lab is blocked on Rookie and credit-metered on Starter and above', () => {
   const rookiePmf = resolveFeatureEnforcement('rookie', 'PMF_ANALYSIS');
   assert.equal(rookiePmf.mode, 'blocked');
   assert.equal(rookiePmf.requiredPlan, 'starter');
 
-  const starterPrompt = resolveFeatureEnforcement('starter', 'PROMPT_GENERATION');
-  assert.equal(starterPrompt.mode, 'blocked');
-  assert.equal(starterPrompt.requiredPlan, 'rising');
+  assert.equal(CREDIT_COSTS.PMF_ANALYSIS, 6);
+  assert.equal(CREDIT_COSTS.PMF_SCORING, 4);
+
+  for (const plan of ['starter', 'rising', 'pro'] as const) {
+    assert.equal(resolveFeatureEnforcement(plan, 'PMF_ANALYSIS').mode, 'charge');
+    assert.equal(resolveFeatureEnforcement(plan, 'PMF_ANALYSIS').creditCost, 6);
+    assert.equal(resolveFeatureEnforcement(plan, 'PMF_SCORING').mode, 'charge');
+    assert.equal(resolveFeatureEnforcement(plan, 'PMF_SCORING').creditCost, 4);
+  }
+});
+
+test('Rising and Pro generative build tools are unlocked and credit-metered', () => {
+  const expectedCosts = {
+    APP_BUILDER_GENERATE: 5,
+    APP_BUILDER_REFINE: 3,
+    GTM_ANALYSIS: 5,
+    TECH_STACK_GENERATION: 3,
+    PITCH_DECK_ANALYZER: 6,
+    PROMPT_GENERATION: 2,
+  } as const;
+
+  for (const feature of Object.keys(expectedCosts) as Array<keyof typeof expectedCosts>) {
+    const rookieAccess = resolveFeatureEnforcement('rookie', feature);
+    assert.equal(rookieAccess.mode, 'blocked');
+    assert.equal(rookieAccess.requiredPlan, 'rising');
+
+    const starterAccess = resolveFeatureEnforcement('starter', feature);
+    assert.equal(starterAccess.mode, 'blocked');
+    assert.equal(starterAccess.requiredPlan, 'rising');
+
+    assert.equal(resolveFeatureEnforcement('rising', feature).mode, 'charge');
+    assert.equal(resolveFeatureEnforcement('rising', feature).creditCost, expectedCosts[feature]);
+    assert.equal(resolveFeatureEnforcement('pro', feature).mode, 'charge');
+    assert.equal(resolveFeatureEnforcement('pro', feature).creditCost, expectedCosts[feature]);
+  }
 });
 
 test('discovery calls stay quota-based across all plans', () => {
@@ -109,6 +205,9 @@ test('shared credit deduction treats zero-credit operations as no-op success', (
   assert.match(source, /usedFromQuota: 0/);
   assert.match(source, /usedFromBalance: 0/);
   assert.match(source, /Number\.isFinite\(amount\) && amount === 0[\s\S]*return true/);
+  assert.match(source, /feature_key: entitlementFeature/);
+  assert.match(source, /credit_cost: chargeAmount/);
+  assert.match(source, /balance_before: creditsBeforeDeduction\.balance/);
 });
 
 test('ICP analyzer skips free saves and preserves ICP entitlement metadata for future charges', () => {

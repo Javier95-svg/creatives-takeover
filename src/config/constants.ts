@@ -11,7 +11,7 @@ export const CREDIT_COSTS = {
   ASSET_GENERATION: 5,
   PREMIUM_FEATURE: 3,
   WAITLIST_GENERATION: 3,
-  PMF_SCORING: 8,
+  PMF_SCORING: 4,
   GTM_ANALYSIS: 5,
   APP_BUILDER_GENERATE: 5,
   APP_BUILDER_REFINE: 3,
@@ -25,7 +25,7 @@ export const CREDIT_COSTS = {
   FINANCIAL_ANALYSIS: 8,
   FUNDRAISING_READINESS_ANALYSIS: 8,
   BUSINESS_INSIGHTS: 5,
-  PMF_ANALYSIS: 8,
+  PMF_ANALYSIS: 6,
   ICP_ANALYSIS: 0,
 
   // Investor Matching & Outreach
@@ -46,7 +46,7 @@ export const CREDIT_COSTS = {
   ADVANCED_ANALYTICS: 5,
 
   // New Features (Phase 3)
-  PITCH_DECK_ANALYZER: 8,
+  PITCH_DECK_ANALYZER: 6,
   EMAIL_TEMPLATE_GENERATION: 3,
   PROMPT_GENERATION: 2,
 
@@ -192,7 +192,7 @@ export const TIER_MONTHLY_CREDITS = {
 export const VC_VIEW_LIMITS = {
   rookie: 0,
   starter: 2,
-  rising: 5,
+  rising: 10,
   pro: -1,
 } as const;
 
@@ -238,8 +238,8 @@ export const TIER_USAGE_LIMITS = {
     market_intelligence_queries: 10,
     basic_reports: 5,
     team_members: 3,
-    vc_profile_views: 5,
-    accelerator_profile_views: 5,
+    vc_profile_views: 10,
+    accelerator_profile_views: 10,
     discovery_calls_free: 3,
     cofounder_posts_free: -1,
   },
@@ -283,8 +283,8 @@ export const TIER_DETAILS = {
     subtitle: 'Build',
     price: 29,
     credits: 250,
-    vcViewLimit: 5,
-    description: 'Full BizMap AI access with 5 VC and 5 accelerator profile views per month',
+    vcViewLimit: 10,
+    description: 'Credit-metered build tools with 10 VC and 10 accelerator profile views per month',
   },
   pro: {
     name: 'Pro',

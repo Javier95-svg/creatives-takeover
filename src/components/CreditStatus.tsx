@@ -80,75 +80,57 @@ export function CreditStatus({ requiredCredits, feature, showPurchaseLink = true
     
     const featureLower = feature.toLowerCase();
     
-    if (featureLower.includes('launch report')) {
-      return ` Launch reports cost ${CREDIT_COSTS.LAUNCH_REPORT} credits each.`;
-    }
-    if (featureLower.includes('asset')) {
-      return ` Asset generation costs ${CREDIT_COSTS.ASSET_GENERATION} credits each.`;
-    }
     if (featureLower.includes('fundraising') || featureLower.includes('readiness')) {
-      return ` Fundraising readiness analysis costs ${CREDIT_COSTS.FUNDRAISING_READINESS_ANALYSIS} credits.`;
-    }
-    if (featureLower.includes('roadmap')) {
-      return ` Roadmap generation costs ${CREDIT_COSTS.ROADMAP_GENERATION} credits.`;
+      return ' Insighta Test is included on every plan.';
     }
     if (featureLower.includes('waitlist')) {
       return normalizedTier === 'rookie'
-        ? ` Publishing a waitlist page costs ${CREDIT_COSTS.WAITLIST_GENERATION} credits on Rookie.`
-        : ' Waitlist publishing is included on your plan.';
-    }
-    if (featureLower.includes('market validation') || featureLower.includes('validation')) {
-      return ` Market validation costs ${CREDIT_COSTS.MARKET_VALIDATION} credits.`;
-    }
-    if (featureLower.includes('business insights') || featureLower.includes('insights')) {
-      return ` Business insights generation costs ${CREDIT_COSTS.BUSINESS_INSIGHTS} credits.`;
+        ? ` Publishing a waitlist page costs ${CREDIT_COSTS.WAITLIST_GENERATION} credits.`
+        : ` Waitlist publishing costs ${CREDIT_COSTS.WAITLIST_GENERATION} credits.`;
     }
     if (featureLower.includes('sprint') || featureLower.includes('task generation')) {
-      return ` Sprint task generation costs ${CREDIT_COSTS.SPRINT_TASK_GENERATION} credits.`;
+      return '';
     }
     if (featureLower.includes('pdf') || featureLower.includes('export')) {
-      return ` Report exports cost ${CREDIT_COSTS.PDF_EXPORT} credits.`;
-    }
-    if (featureLower.includes('chat') || featureLower.includes('message') || featureLower.includes('bizmap')) {
-      return ` BizMap AI messages cost ${CREDIT_COSTS.AI_CHAT_MESSAGE} credit each.`;
+      return '';
     }
     if (featureLower.includes('mvp')) {
       return normalizedTier === 'rising' || normalizedTier === 'pro'
-        ? ' MVP Builder is included on your plan.'
+        ? ` MVP Builder is unlocked on your plan and uses ${CREDIT_COSTS.APP_BUILDER_GENERATE} credits for initial generation or ${CREDIT_COSTS.APP_BUILDER_REFINE} credits for refinements.`
         : ' MVP Builder unlocks on Rising and Pro.';
     }
     if (featureLower.includes('gtm')) {
       return normalizedTier === 'rising' || normalizedTier === 'pro'
-        ? ' GTM Strategist is included on your plan.'
+        ? ` GTM Strategist is unlocked on your plan and costs ${CREDIT_COSTS.GTM_ANALYSIS} credits per strategy.`
         : ' GTM Strategist unlocks on Rising and Pro.';
     }
     if (featureLower.includes('tech stack')) {
       return normalizedTier === 'rising' || normalizedTier === 'pro'
-        ? ' Tech Stack Builder is included on your plan.'
+        ? ` Tech Stack Builder is unlocked on your plan and costs ${CREDIT_COSTS.TECH_STACK_GENERATION} credits per generation.`
         : ' Tech Stack Builder unlocks on Rising and Pro.';
     }
     if (featureLower.includes('pmf') || featureLower.includes('product-market fit')) {
       if (normalizedTier === 'rookie') {
         return ' Product-Market Fit Lab unlocks on Starter and above.';
       }
-      return ' Product-Market Fit Lab is included on your plan.';
+      return ` Product-Market Fit Lab is unlocked on your plan and costs ${CREDIT_COSTS.PMF_ANALYSIS} credits per full analysis.`;
     }
     if (featureLower.includes('insighta') || featureLower.includes('test')) {
-      return ` Insighta Test costs ${CREDIT_COSTS.FUNDRAISING_READINESS_ANALYSIS} credits.`;
+      return ' Insighta Test is included on every plan.';
     }
     if (featureLower.includes('investor') || featureLower.includes('matching')) {
-      return ` Investor matching costs ${CREDIT_COSTS.INVESTOR_MATCHING} credits.`;
+      return ' Find Your Angel unlocks on Pro.';
     }
     if (featureLower.includes('pitch deck')) {
       return normalizedTier === 'rising' || normalizedTier === 'pro'
-        ? ' Pitch Deck Analyzer is included on your plan.'
+        ? ` Pitch Deck Analyzer is unlocked on your plan and costs ${CREDIT_COSTS.PITCH_DECK_ANALYZER} credits per analysis.`
         : ' Pitch Deck Analyzer unlocks on Rising and Pro.';
     }
     if (featureLower.includes('market research')) {
-      return ` Market research costs ${CREDIT_COSTS.MARKET_RESEARCH} credits.`;
+      return '';
     }
     if (featureLower.includes('financial')) {
-      return ` Financial analysis costs ${CREDIT_COSTS.FINANCIAL_ANALYSIS} credits.`;
+      return '';
     }
     return '';
   };

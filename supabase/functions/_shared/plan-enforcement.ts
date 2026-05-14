@@ -33,20 +33,20 @@ const FEATURE_RULES: Partial<Record<EnforcedFeature, Record<Plan, FeatureRule>>>
   WAITLIST_GENERATION: {
     rookie: { mode: 'charge' },
     starter: { mode: 'charge' },
-    rising: { mode: 'included' },
-    pro: { mode: 'included' },
+    rising: { mode: 'charge' },
+    pro: { mode: 'charge' },
   },
   PMF_ANALYSIS: {
     rookie: { mode: 'blocked', requiredPlan: 'starter' },
     starter: { mode: 'charge' },
-    rising: { mode: 'included' },
-    pro: { mode: 'included' },
+    rising: { mode: 'charge' },
+    pro: { mode: 'charge' },
   },
   PMF_SCORING: {
     rookie: { mode: 'blocked', requiredPlan: 'starter' },
     starter: { mode: 'charge' },
-    rising: { mode: 'included' },
-    pro: { mode: 'included' },
+    rising: { mode: 'charge' },
+    pro: { mode: 'charge' },
   },
   APP_BUILDER_GENERATE: {
     rookie: { mode: 'blocked', requiredPlan: 'rising' },
@@ -69,14 +69,14 @@ const FEATURE_RULES: Partial<Record<EnforcedFeature, Record<Plan, FeatureRule>>>
   TECH_STACK_GENERATION: {
     rookie: { mode: 'blocked', requiredPlan: 'rising' },
     starter: { mode: 'blocked', requiredPlan: 'rising' },
-    rising: { mode: 'included' },
-    pro: { mode: 'included' },
+    rising: { mode: 'charge' },
+    pro: { mode: 'charge' },
   },
   PITCH_DECK_ANALYZER: {
     rookie: { mode: 'blocked', requiredPlan: 'rising' },
     starter: { mode: 'blocked', requiredPlan: 'rising' },
-    rising: { mode: 'included' },
-    pro: { mode: 'included' },
+    rising: { mode: 'charge' },
+    pro: { mode: 'charge' },
   },
   EMAIL_TEMPLATE_GENERATION: {
     rookie: { mode: 'blocked', requiredPlan: 'starter' },
@@ -87,8 +87,8 @@ const FEATURE_RULES: Partial<Record<EnforcedFeature, Record<Plan, FeatureRule>>>
   PROMPT_GENERATION: {
     rookie: { mode: 'blocked', requiredPlan: 'rising' },
     starter: { mode: 'blocked', requiredPlan: 'rising' },
-    rising: { mode: 'included' },
-    pro: { mode: 'included' },
+    rising: { mode: 'charge' },
+    pro: { mode: 'charge' },
   },
   FUNDRAISING_READINESS_ANALYSIS: {
     rookie: { mode: 'included' },

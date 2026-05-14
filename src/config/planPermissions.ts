@@ -5,7 +5,9 @@
  * all resolve from this file instead of hardcoded tier checks.
  */
 
-import { getCreditCost, TIER_MONTHLY_CREDITS, type CreditFeature } from './constants.ts';
+import { CREDIT_COSTS, getCreditCost, TIER_MONTHLY_CREDITS, type CreditFeature } from './constants.ts';
+
+export { CREDIT_COSTS };
 
 export type Plan = 'rookie' | 'starter' | 'rising' | 'pro';
 
@@ -27,6 +29,11 @@ export type GateState =
   | 'hidden';
 
 export type AccessRule = GateState;
+export type MonetizationModel =
+  | 'free'
+  | 'credit_metered'
+  | 'quota_limited'
+  | 'plan_gated';
 
 export type RestrictionReason =
   | 'plan_locked'
@@ -138,6 +145,7 @@ export type QuotaFeatureKey =
 
 interface FeatureEntitlementConfig {
   state: GateState;
+  monetizationModel?: MonetizationModel;
   visibility?: 'visible' | 'hidden';
   requiredPlan?: Plan;
   monthlyLimit?: number;
@@ -153,6 +161,7 @@ export interface EntitlementResult {
   upgradeTarget?: Plan;
   creditFeature?: CreditFeature;
   creditCost?: number;
+  monetizationModel: MonetizationModel;
   monthlyLimit?: number;
   usedThisMonth?: number;
   remaining?: number;
@@ -209,7 +218,7 @@ export const PLAN_HIGHLIGHTS: Record<Plan, string[]> = {
     'Dashboard Starter Mode',
     'ICP Builder (free)',
     'Stages 1-3 active',
-    'Waitlist Maker + PMF Lab',
+    'Waitlist Maker + PMF Lab (uses credits)',
     'Stages 4-5 (preview only)',
     '2 free discovery calls/month (mentorship)',
     '2 Find a Co-Founder posts per month',
@@ -221,9 +230,9 @@ export const PLAN_HIGHLIGHTS: Record<Plan, string[]> = {
   ],
   rising: [
     'Dashboard Rising Mode',
-    'Full BizMap AI tools access',
+    'Full BizMap AI tools access (generative tools use credits)',
     'All five stages available in one cockpit',
-    'MVP Builder + GTM Strategist',
+    'MVP Builder + GTM Strategist (uses credits)',
     '3 free discovery calls/month (mentorship)',
     'Unlimited Find a Co-Founder posts',
     'VC Search & Accelerator Hunt (10 profile views per month)',
@@ -237,8 +246,8 @@ export const PLAN_HIGHLIGHTS: Record<Plan, string[]> = {
     'Dashboard Pro Mode',
     'Pro War Room with fundraising layer',
     'Find Your Angel (investors)',
-    'Full BizMap AI tools access',
-    'MVP Builder + GTM Strategist',
+    'Full BizMap AI tools access (generative tools use credits)',
+    'MVP Builder + GTM Strategist (uses credits)',
     'Unlimited discovery calls (mentorship)',
     'Unlimited Find a Co-Founder posts',
     'VC Search & Accelerator Hunt (unlimited profile views)',
@@ -361,59 +370,59 @@ export const FEATURE_ENTITLEMENTS: Record<FeatureKey, Record<Plan, FeatureEntitl
     pro: { state: 'full' },
   },
   waitlist_maker: {
-    rookie: { state: 'preview_only', requiredPlan: 'starter' },
-    starter: { state: 'full' },
-    rising: { state: 'full' },
-    pro: { state: 'full' },
+    rookie: { state: 'full', monetizationModel: 'credit_metered', creditFeature: 'WAITLIST_GENERATION' },
+    starter: { state: 'full', monetizationModel: 'credit_metered', creditFeature: 'WAITLIST_GENERATION' },
+    rising: { state: 'full', monetizationModel: 'credit_metered', creditFeature: 'WAITLIST_GENERATION' },
+    pro: { state: 'full', monetizationModel: 'credit_metered', creditFeature: 'WAITLIST_GENERATION' },
   },
   pmf_lab: {
-    rookie: { state: 'preview_only', requiredPlan: 'starter' },
-    starter: { state: 'full' },
-    rising: { state: 'full' },
-    pro: { state: 'full' },
+    rookie: { state: 'preview_only', monetizationModel: 'plan_gated', requiredPlan: 'starter' },
+    starter: { state: 'full', monetizationModel: 'credit_metered', creditFeature: 'PMF_ANALYSIS' },
+    rising: { state: 'full', monetizationModel: 'credit_metered', creditFeature: 'PMF_ANALYSIS' },
+    pro: { state: 'full', monetizationModel: 'credit_metered', creditFeature: 'PMF_ANALYSIS' },
   },
   mvp_builder: {
-    rookie: { state: 'preview_only', requiredPlan: 'rising' },
-    starter: { state: 'preview_only', requiredPlan: 'rising' },
-    rising: { state: 'full' },
-    pro: { state: 'full' },
+    rookie: { state: 'preview_only', monetizationModel: 'plan_gated', requiredPlan: 'rising' },
+    starter: { state: 'preview_only', monetizationModel: 'plan_gated', requiredPlan: 'rising' },
+    rising: { state: 'full', monetizationModel: 'credit_metered', creditFeature: 'APP_BUILDER_GENERATE' },
+    pro: { state: 'full', monetizationModel: 'credit_metered', creditFeature: 'APP_BUILDER_GENERATE' },
   },
   tech_stack: {
-    rookie: { state: 'preview_only', requiredPlan: 'rising' },
-    starter: { state: 'preview_only', requiredPlan: 'rising' },
-    rising: { state: 'full' },
-    pro: { state: 'full' },
+    rookie: { state: 'preview_only', monetizationModel: 'plan_gated', requiredPlan: 'rising' },
+    starter: { state: 'preview_only', monetizationModel: 'plan_gated', requiredPlan: 'rising' },
+    rising: { state: 'full', monetizationModel: 'credit_metered', creditFeature: 'TECH_STACK_GENERATION' },
+    pro: { state: 'full', monetizationModel: 'credit_metered', creditFeature: 'TECH_STACK_GENERATION' },
   },
   gtm_strategist: {
-    rookie: { state: 'preview_only', requiredPlan: 'rising' },
-    starter: { state: 'preview_only', requiredPlan: 'rising' },
-    rising: { state: 'full' },
-    pro: { state: 'full' },
+    rookie: { state: 'preview_only', monetizationModel: 'plan_gated', requiredPlan: 'rising' },
+    starter: { state: 'preview_only', monetizationModel: 'plan_gated', requiredPlan: 'rising' },
+    rising: { state: 'full', monetizationModel: 'credit_metered', creditFeature: 'GTM_ANALYSIS' },
+    pro: { state: 'full', monetizationModel: 'credit_metered', creditFeature: 'GTM_ANALYSIS' },
   },
   directories: {
-    rookie: { state: 'preview_only', requiredPlan: 'rising' },
-    starter: { state: 'preview_only', requiredPlan: 'rising' },
-    rising: { state: 'full' },
-    pro: { state: 'full' },
+    rookie: { state: 'preview_only', monetizationModel: 'plan_gated', requiredPlan: 'rising' },
+    starter: { state: 'preview_only', monetizationModel: 'plan_gated', requiredPlan: 'rising' },
+    rising: { state: 'full', monetizationModel: 'plan_gated' },
+    pro: { state: 'full', monetizationModel: 'plan_gated' },
   },
 
   discovery_calls: {
-    rookie: { state: 'quota_limited', monthlyLimit: 1, requiredPlan: 'starter' },
-    starter: { state: 'quota_limited', monthlyLimit: 2, requiredPlan: 'rising' },
-    rising: { state: 'quota_limited', monthlyLimit: 3, requiredPlan: 'pro' },
-    pro: { state: 'full' },
+    rookie: { state: 'quota_limited', monetizationModel: 'quota_limited', monthlyLimit: 1, requiredPlan: 'starter' },
+    starter: { state: 'quota_limited', monetizationModel: 'quota_limited', monthlyLimit: 2, requiredPlan: 'rising' },
+    rising: { state: 'quota_limited', monetizationModel: 'quota_limited', monthlyLimit: 3, requiredPlan: 'pro' },
+    pro: { state: 'full', monetizationModel: 'quota_limited' },
   },
   cofounder_posts: {
-    rookie: { state: 'quota_limited', monthlyLimit: 1, requiredPlan: 'starter' },
-    starter: { state: 'quota_limited', monthlyLimit: 2, requiredPlan: 'rising' },
-    rising: { state: 'full' },
-    pro: { state: 'full' },
+    rookie: { state: 'quota_limited', monetizationModel: 'quota_limited', monthlyLimit: 1, requiredPlan: 'starter' },
+    starter: { state: 'quota_limited', monetizationModel: 'quota_limited', monthlyLimit: 2, requiredPlan: 'rising' },
+    rising: { state: 'full', monetizationModel: 'quota_limited' },
+    pro: { state: 'full', monetizationModel: 'quota_limited' },
   },
   angels_community: {
-    rookie: { state: 'locked', visibility: 'hidden', requiredPlan: 'pro' },
-    starter: { state: 'locked', visibility: 'hidden', requiredPlan: 'pro' },
-    rising: { state: 'locked', visibility: 'hidden', requiredPlan: 'pro' },
-    pro: { state: 'full' },
+    rookie: { state: 'locked', monetizationModel: 'plan_gated', visibility: 'hidden', requiredPlan: 'pro' },
+    starter: { state: 'locked', monetizationModel: 'plan_gated', visibility: 'hidden', requiredPlan: 'pro' },
+    rising: { state: 'locked', monetizationModel: 'plan_gated', visibility: 'hidden', requiredPlan: 'pro' },
+    pro: { state: 'full', monetizationModel: 'plan_gated' },
   },
 
   vc_search_browse: {
@@ -448,10 +457,10 @@ export const FEATURE_ENTITLEMENTS: Record<FeatureKey, Record<Plan, FeatureEntitl
     pro: { state: 'full' },
   },
   pitch_deck_analyzer: {
-    rookie: { state: 'locked', visibility: 'hidden', requiredPlan: 'rising' },
-    starter: { state: 'locked', visibility: 'hidden', requiredPlan: 'rising' },
-    rising: { state: 'full' },
-    pro: { state: 'full' },
+    rookie: { state: 'locked', monetizationModel: 'plan_gated', visibility: 'hidden', requiredPlan: 'rising' },
+    starter: { state: 'locked', monetizationModel: 'plan_gated', visibility: 'hidden', requiredPlan: 'rising' },
+    rising: { state: 'full', monetizationModel: 'credit_metered', creditFeature: 'PITCH_DECK_ANALYZER' },
+    pro: { state: 'full', monetizationModel: 'credit_metered', creditFeature: 'PITCH_DECK_ANALYZER' },
   },
   prompt_library: {
     rookie: { state: 'full', freeModelsOnly: true },
@@ -460,10 +469,10 @@ export const FEATURE_ENTITLEMENTS: Record<FeatureKey, Record<Plan, FeatureEntitl
     pro: { state: 'full' },
   },
   prompt_library_export: {
-    rookie: { state: 'locked', requiredPlan: 'rising' },
-    starter: { state: 'locked', requiredPlan: 'rising' },
-    rising: { state: 'full' },
-    pro: { state: 'full' },
+    rookie: { state: 'locked', monetizationModel: 'plan_gated', requiredPlan: 'rising' },
+    starter: { state: 'locked', monetizationModel: 'plan_gated', requiredPlan: 'rising' },
+    rising: { state: 'full', monetizationModel: 'credit_metered', creditFeature: 'PROMPT_GENERATION' },
+    pro: { state: 'full', monetizationModel: 'credit_metered', creditFeature: 'PROMPT_GENERATION' },
   },
   insighta_test: {
     rookie: { state: 'full' },
@@ -524,7 +533,7 @@ export const PLAN_SUMMARIES: Record<Plan, PlanSummary> = {
     monthlyCredits: PLAN_MONTHLY_CREDITS.rising,
     vcViewLimit: MONTHLY_FREE_QUOTAS.vc_profiles.rising,
     acceleratorViewLimit: MONTHLY_FREE_QUOTAS.accelerator_profiles.rising,
-    description: 'Full operating cockpit across all five stages with 10 VC and 10 accelerator profile views per billing cycle.',
+    description: 'Full operating cockpit across all five stages with credit-metered build tools and 10 VC plus 10 accelerator profile views per billing cycle.',
   },
   pro: {
     name: PLAN_LABELS.pro,
@@ -610,6 +619,15 @@ export function resolveEntitlement(feature: FeatureKey, plan: Plan): Entitlement
   const state = config.state;
   const monthlyLimit = config.monthlyLimit;
   const creditCost = config.creditFeature ? getCreditCost(config.creditFeature) ?? undefined : undefined;
+  const monetizationModel: MonetizationModel =
+    config.monetizationModel ??
+    (config.creditFeature
+      ? 'credit_metered'
+      : state === 'quota_limited'
+        ? 'quota_limited'
+        : state === 'locked' || state === 'hidden' || state === 'preview_only'
+          ? 'plan_gated'
+          : 'free');
 
   let reason: RestrictionReason | undefined;
   if (state === 'preview_only') reason = 'preview_only';
@@ -622,6 +640,7 @@ export function resolveEntitlement(feature: FeatureKey, plan: Plan): Entitlement
     upgradeTarget: config.requiredPlan,
     creditFeature: config.creditFeature,
     creditCost,
+    monetizationModel,
     monthlyLimit,
     dashboardMode: config.dashboardMode,
     uiMode:

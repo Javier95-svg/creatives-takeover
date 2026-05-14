@@ -40,7 +40,7 @@ test('plan highlights match the authoritative four-plan contract', () => {
     'Dashboard Starter Mode',
     'ICP Builder (free)',
     'Stages 1-3 active',
-    'Waitlist Maker + PMF Lab',
+    'Waitlist Maker + PMF Lab (uses credits)',
     'Stages 4-5 (preview only)',
     '2 free discovery calls/month (mentorship)',
     '2 Find a Co-Founder posts per month',
@@ -53,9 +53,9 @@ test('plan highlights match the authoritative four-plan contract', () => {
 
   assert.deepEqual(PLAN_HIGHLIGHTS.rising, [
     'Dashboard Rising Mode',
-    'Full BizMap AI tools access',
+    'Full BizMap AI tools access (generative tools use credits)',
     'All five stages available in one cockpit',
-    'MVP Builder + GTM Strategist',
+    'MVP Builder + GTM Strategist (uses credits)',
     '3 free discovery calls/month (mentorship)',
     'Unlimited Find a Co-Founder posts',
     'VC Search & Accelerator Hunt (10 profile views per month)',
@@ -70,8 +70,8 @@ test('plan highlights match the authoritative four-plan contract', () => {
     'Dashboard Pro Mode',
     'Pro War Room with fundraising layer',
     'Find Your Angel (investors)',
-    'Full BizMap AI tools access',
-    'MVP Builder + GTM Strategist',
+    'Full BizMap AI tools access (generative tools use credits)',
+    'MVP Builder + GTM Strategist (uses credits)',
     'Unlimited discovery calls (mentorship)',
     'Unlimited Find a Co-Founder posts',
     'VC Search & Accelerator Hunt (unlimited profile views)',
@@ -141,23 +141,33 @@ test('core entitlement rules reflect the pricing contract', () => {
   const rookieIcp = resolveEntitlement('icp_builder', 'rookie');
   assert.equal(rookieIcp.state, 'full');
   assert.equal(rookieIcp.creditCost, undefined);
+  assert.equal(rookieIcp.monetizationModel, 'free');
+
+  const rookieWaitlist = resolveEntitlement('waitlist_maker', 'rookie');
+  assert.equal(rookieWaitlist.state, 'full');
+  assert.equal(rookieWaitlist.monetizationModel, 'credit_metered');
+  assert.equal(rookieWaitlist.creditCost, 3);
 
   const rookiePmf = resolveEntitlement('pmf_lab', 'rookie');
   assert.equal(rookiePmf.state, 'preview_only');
   assert.equal(rookiePmf.upgradeTarget, 'starter');
   assert.equal(rookiePmf.uiMode, 'preview');
+  assert.equal(rookiePmf.monetizationModel, 'plan_gated');
 
   const starterPmf = resolveEntitlement('pmf_lab', 'starter');
   assert.equal(starterPmf.state, 'full');
-  assert.equal(starterPmf.creditCost, undefined);
+  assert.equal(starterPmf.monetizationModel, 'credit_metered');
+  assert.equal(starterPmf.creditCost, 6);
 
   const risingMvp = resolveEntitlement('mvp_builder', 'rising');
   assert.equal(risingMvp.state, 'full');
-  assert.equal(risingMvp.creditCost, undefined);
+  assert.equal(risingMvp.monetizationModel, 'credit_metered');
+  assert.equal(risingMvp.creditCost, 5);
 
   const proGtm = resolveEntitlement('gtm_strategist', 'pro');
   assert.equal(proGtm.state, 'full');
-  assert.equal(proGtm.creditCost, undefined);
+  assert.equal(proGtm.monetizationModel, 'credit_metered');
+  assert.equal(proGtm.creditCost, 5);
 
   const starterVcProfiles = resolveEntitlement('vc_search_profile', 'starter');
   assert.equal(starterVcProfiles.state, 'quota_limited');

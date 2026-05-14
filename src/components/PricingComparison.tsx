@@ -45,11 +45,11 @@ const features: FeatureCategory[] = [
     category: "BizMap AI: Startup Development Cycle",
     items: [
       { feature: "ICP Builder", rookie: "Free on every plan", starter: "Free on every plan", rising: "Free on every plan", pro: "Free on every plan" },
-      { feature: "Waitlist Maker", rookie: "Uses credits", starter: "Included", rising: "Included", pro: "Included" },
-      { feature: "PMF Lab", rookie: "Preview only", starter: "Included", rising: "Included", pro: "Included" },
-      { feature: "MVP Builder", rookie: "Preview only", starter: "Preview only", rising: "Included", pro: "Included" },
-      { feature: "Tech Stack Builder", rookie: "Preview only", starter: "Preview only", rising: "Included", pro: "Included" },
-      { feature: "GTM Strategist", rookie: "Preview only", starter: "Preview only", rising: "Included", pro: "Included" },
+      { feature: "Waitlist Maker", rookie: "Unlocked; 3 credits/use", starter: "Unlocked; 3 credits/use", rising: "Unlocked; 3 credits/use", pro: "Unlocked; 3 credits/use" },
+      { feature: "PMF Lab", rookie: "Preview only", starter: "Unlocked; uses credits", rising: "Unlocked; uses credits", pro: "Unlocked; uses credits" },
+      { feature: "MVP Builder", rookie: "Preview only", starter: "Preview only", rising: "Unlocked; uses credits", pro: "Unlocked; uses credits" },
+      { feature: "Tech Stack Builder", rookie: "Preview only", starter: "Preview only", rising: "Unlocked; 3 credits/use", pro: "Unlocked; 3 credits/use" },
+      { feature: "GTM Strategist", rookie: "Preview only", starter: "Preview only", rising: "Unlocked; 5 credits/use", pro: "Unlocked; 5 credits/use" },
       { feature: "Directories", rookie: "Preview only", starter: "Preview only", rising: "Included", pro: "Included" },
     ],
   },
@@ -59,7 +59,7 @@ const features: FeatureCategory[] = [
       { feature: "VC Search", rookie: "Browse only", starter: "2 profile views/monthly", rising: "10 profile views/monthly", pro: "Unlimited profile views" },
       { feature: "Accelerator Hunt", rookie: "Browse only", starter: "2 profile views/monthly", rising: "10 profile views/monthly", pro: "Unlimited profile views" },
       { feature: "Email Templates", rookie: "Not included", starter: "Full access", rising: "Full access", pro: "Full access" },
-      { feature: "Pitch Deck Analyzer", rookie: "Not included", starter: "Not included", rising: "Included", pro: "Included" },
+      { feature: "Pitch Deck Analyzer", rookie: "Not included", starter: "Not included", rising: "Unlocked; 6 credits/use", pro: "Unlocked; 6 credits/use" },
       { feature: "Insighta Test", rookie: "Included", starter: "Included", rising: "Included", pro: "Included" },
     ],
   },
@@ -75,7 +75,7 @@ const features: FeatureCategory[] = [
     category: "Resources",
     items: [
       { feature: "Newspaper", rookie: "Included", starter: "Included", rising: "Included", pro: "Included" },
-      { feature: "Prompt Library", rookie: "Free models only", starter: "Free models only", rising: "Full library", pro: "Full library" },
+      { feature: "Prompt Library", rookie: "Free models only", starter: "Free models only", rising: "Full library; custom actions use credits", pro: "Full library; custom actions use credits" },
     ],
   },
 ];
@@ -116,7 +116,7 @@ const PricingComparison = () => {
             Compare Our Plans
           </h2>
           <p className="text-lg sm:text-xl text-muted-foreground max-w-3xl mx-auto">
-            Compare credits, fundraising limits, community access, and which workflows are included on each tier.
+            Compare credits, fundraising limits, community access, and which workflows unlock on each tier.
           </p>
         </div>
 

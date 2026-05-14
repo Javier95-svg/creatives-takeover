@@ -71,23 +71,23 @@ const FEATURE_MINIMUM_PLAN: Partial<Record<CreditFeature, Plan>> = {
 };
 
 const FEATURE_INCLUDED_ON_PLAN: Partial<Record<CreditFeature, Plan>> = {
-  WAITLIST_GENERATION: 'starter',
-  PMF_ANALYSIS: 'starter',
-  PMF_SCORING: 'starter',
-  TECH_STACK_GENERATION: 'rising',
-  PITCH_DECK_ANALYZER: 'rising',
   EMAIL_TEMPLATE_GENERATION: 'starter',
   FUNDRAISING_READINESS_ANALYSIS: 'rookie',
   ICP_ANALYSIS: 'rookie',
-  APP_BUILDER_GENERATE: 'rising',
-  APP_BUILDER_REFINE: 'rising',
-  GTM_ANALYSIS: 'rising',
-  PROMPT_GENERATION: 'rising',
 };
 
 const ALWAYS_PAID_FEATURES = new Set<string>([
   'LAUNCH_REPORT',
   'ROADMAP_GENERATION',
+  'WAITLIST_GENERATION',
+  'PMF_ANALYSIS',
+  'PMF_SCORING',
+  'APP_BUILDER_GENERATE',
+  'APP_BUILDER_REFINE',
+  'GTM_ANALYSIS',
+  'TECH_STACK_GENERATION',
+  'PITCH_DECK_ANALYZER',
+  'PROMPT_GENERATION',
 ]);
 
 const ALWAYS_FREE_FEATURES = new Set<string>([
@@ -173,10 +173,6 @@ export const useCreditActions = () => {
         return 0;
       }
 
-      if (currentTier === 'rookie' && totalAvailable === 0 && showHardGate()) {
-        return null;
-      }
-
       const minimumPlan = FEATURE_MINIMUM_PLAN[feature];
       if (minimumPlan && !isPlanAtLeast(currentTier, minimumPlan)) {
         openUpgradePrompt({
@@ -185,6 +181,10 @@ export const useCreditActions = () => {
           requiredTier: minimumPlan,
           description: options.description,
         });
+        return null;
+      }
+
+      if (currentTier === 'rookie' && totalAvailable === 0 && showHardGate()) {
         return null;
       }
 
