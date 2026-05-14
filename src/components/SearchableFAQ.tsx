@@ -36,7 +36,7 @@ const SearchableFAQ = () => {
       id: 1,
       category: "Pricing",
       question: "What pricing plans do you offer?",
-      answer: "We offer four plans. Rookie is free with 50 credits/month. Starter is $9/month or $79/year with 100 credits/month. Rising is $29/month or $239/year with 250 credits/month. Pro is $65/month or $589/year with 600 credits/month. Extra credit packs remain available on every plan for heavier execution windows.",
+      answer: "We offer four plans built around the founder journey. Rookie helps you clarify with 50 credits/month. Starter helps you validate with PMF Lab, Email Templates, and 100 credits/month. Rising helps you build and launch with MVP Builder, Tech Stack Builder, GTM Strategist, and 250 credits/month. Pro helps you fundraise and scale with Find Your Angel, unlimited research views, unlimited discovery calls, and 600 credits/month.",
       popular: true,
       tags: ["pricing", "plans", "subscription", "rookie", "starter", "rising", "pro"]
     },

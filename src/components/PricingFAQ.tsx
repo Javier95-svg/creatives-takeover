@@ -32,6 +32,13 @@ const PricingFAQ = () => {
       relatedQuestions: [0, 5],
     },
     {
+      question: "How should I choose the right plan?",
+      answer: `Think about your founder stage, not just the credit number.
+
+Rookie helps you clarify your ICP and first traction asset. Starter is for validating demand with PMF Lab, Email Templates, and more research/community access. Rising is for building and launching with MVP Builder, Tech Stack Builder, GTM Strategist, Directories, and Pitch Deck Analyzer. Pro is for fundraising and scaling with Find Your Angel, unlimited research views, unlimited discovery calls, and the largest credit runway.`,
+      relatedQuestions: [1, 6],
+    },
+    {
       question: "Do unused credits roll over to the next month?",
       answer: `No. Included monthly credits reset on your billing-cycle boundary and do not roll over.
 

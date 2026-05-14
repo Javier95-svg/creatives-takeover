@@ -12,7 +12,7 @@ export type ActivationCompletedTrigger =
   | 'icp_seed_prefilled'
   | 'first_workspace_created';
 export type PlanId = 'ROOKIE' | 'STARTER' | 'RISING' | 'PRO';
-export type UpgradeLocation = 'pricing_page' | 'dashboard_banner' | 'feature_gate' | 'onboarding';
+export type UpgradeLocation = 'pricing_page' | 'dashboard_banner' | 'feature_gate' | 'onboarding' | 'upgrade_trigger_banner';
 export type UpgradePromptTrigger = 'soft_gate_banner' | 'hard_gate_modal';
 export type IcpBuilderOpenedSource = 'dashboard' | 'onboarding' | 'direct' | 'seed_redirect';
 export type OnboardingStartedSource = 'signup_redirect' | 'dashboard_prompt' | 'direct';
@@ -423,6 +423,48 @@ export const trackUpgradePromptShown = ({
   current_plan,
   target_plan,
 });
+
+export const trackJourneyUpgradePromptShown = (properties: {
+  trigger: string;
+  current_plan: 'rookie' | 'starter' | 'rising' | 'pro';
+  target_plan: 'starter' | 'rising' | 'pro';
+  source_tool?: string;
+  route?: string;
+}) => captureEvent('journey_upgrade_prompt_shown', properties);
+
+export const trackJourneyUpgradePromptClicked = (properties: {
+  trigger: string;
+  current_plan: PlanId;
+  target_plan: PlanId;
+  source_tool?: string;
+  route?: string;
+}) => captureEvent('journey_upgrade_prompt_clicked', properties);
+
+export const trackJourneyUpgradePromptDismissed = (properties: {
+  trigger: string;
+  source_tool?: string;
+  route?: string;
+}) => captureEvent('journey_upgrade_prompt_dismissed', properties);
+
+export const trackCreditCostDisclosed = (properties: {
+  feature_key: string;
+  credit_cost: number;
+  current_plan: 'rookie' | 'starter' | 'rising' | 'pro';
+  credits_available: number;
+  status: 'free' | 'metered' | 'locked';
+  source_tool?: string;
+}) => captureEvent('credit_cost_disclosed', properties);
+
+export const trackCreditActionCompleted = (properties: {
+  feature_key: string;
+  credit_cost: number;
+  current_plan: 'rookie' | 'starter' | 'rising' | 'pro';
+  balance_after?: number;
+  source_tool?: string;
+}) => captureEvent('credit_action_completed', properties);
+
+export const trackCreditActivityViewed = (properties?: AnalyticsProperties) =>
+  captureEvent('credit_activity_viewed', properties);
 
 export const trackPricingViewed = ({ source }: { source: string }) =>
   captureEvent('pricing_viewed', { source });

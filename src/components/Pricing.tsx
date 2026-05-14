@@ -16,6 +16,7 @@ type PlanKey = "rookie" | "starter" | "rising" | "pro";
 const PLAN_CONFIG: Array<{
   key: PlanKey;
   title: string;
+  outcomeLabel: string;
   subtitle: string;
   audience: string;
   monthlyPrice: number;
@@ -29,6 +30,7 @@ const PLAN_CONFIG: Array<{
   {
     key: "rookie",
     title: "Rookie",
+    outcomeLabel: "Clarify",
     subtitle: "Just getting started",
     audience: "Explore the platform, define the problem, and get your first traction signal.",
     monthlyPrice: 0,
@@ -41,6 +43,7 @@ const PLAN_CONFIG: Array<{
   {
     key: "starter",
     title: "Starter",
+    outcomeLabel: "Validate",
     subtitle: "Building momentum",
     audience: "Bridge the gap between free exploration and full startup-building momentum.",
     monthlyPrice: 9,
@@ -53,6 +56,7 @@ const PLAN_CONFIG: Array<{
   {
     key: "rising",
     title: "Rising",
+    outcomeLabel: "Build & Launch",
     subtitle: "Actively building",
     audience: "The default plan for founders shipping, validating, and iterating every week.",
     monthlyPrice: 29,
@@ -66,6 +70,7 @@ const PLAN_CONFIG: Array<{
   {
     key: "pro",
     title: "Pro",
+    outcomeLabel: "Fundraise & Scale",
     subtitle: "Fundraising and scaling",
     audience: "For founders running faster, fundraising actively, and needing priority support.",
     monthlyPrice: 65,
@@ -255,6 +260,9 @@ export default function Pricing() {
                   <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-3">
                     {plan.subtitle}
                   </p>
+                  <Badge variant="outline" className="mb-4 rounded-full border-primary/30 bg-primary/5 px-3 py-1 text-xs">
+                    {plan.outcomeLabel}
+                  </Badge>
                   <div className="mb-4">
                     <div className="flex items-baseline justify-center gap-1">
                       <span className="text-4xl sm:text-5xl font-semibold tracking-tight font-space-grotesk tabular-nums">

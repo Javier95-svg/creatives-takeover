@@ -16,9 +16,9 @@ import { useCustomPromptChains } from "@/hooks/useCustomPromptChains";
 import { useFeatureGating } from "@/hooks/useFeatureGating";
 import { useCreditActions } from "@/hooks/useCreditActions";
 import { useUpgradePrompt } from "@/contexts/UpgradePromptContext";
-import { CREDIT_COSTS } from "@/config/constants";
 import { normalizePlan, type Plan } from "@/config/planPermissions";
 import { normalizePlanId, trackUpgradeClicked } from "@/lib/analytics";
+import { CreditCostNotice } from "@/components/CreditCostNotice";
 
 const PromptLibrary = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -102,8 +102,6 @@ const PromptLibrary = () => {
 
       const deducted = await deductCredits('PROMPT_GENERATION', { featureName: 'Prompt Generation' });
       if (!deducted) return;
-
-      toast.success(`Premium prompt copied! (Used ${CREDIT_COSTS.PROMPT_GENERATION} credits)`);
     }
     
     navigator.clipboard.writeText(prompt);
@@ -126,8 +124,6 @@ const PromptLibrary = () => {
 
       const deducted = await deductCredits('PROMPT_GENERATION', { featureName: 'Prompt Generation' });
       if (!deducted) return;
-
-      toast.success(`Premium prompt loaded! (Used ${CREDIT_COSTS.PROMPT_GENERATION} credits)`);
     }
 
     localStorage.setItem("bizmap_prompt", prompt);
@@ -361,21 +357,24 @@ const PromptLibrary = () => {
                       </div>
 
                       {!isStepLocked && (
-                        <div className="flex flex-col sm:flex-row gap-3">
-                          <Button
-                            onClick={() => launchInBizMap(step.prompt, isPremiumPrompt)}
-                            className="flex-1"
-                          >
-                            <ExternalLink className="w-4 h-4 mr-2" />
-                            Use in BizMap AI
-                          </Button>
-                          <Button
-                            variant="outline"
-                            onClick={() => copyPrompt(step.prompt, isPremiumPrompt)}
-                          >
-                            <Copy className="w-4 h-4 mr-2" />
-                            Copy
-                          </Button>
+                        <div className="space-y-3">
+                          {isPremiumPrompt ? <CreditCostNotice feature="PROMPT_GENERATION" featureName="Prompt Generation" /> : null}
+                          <div className="flex flex-col sm:flex-row gap-3">
+                            <Button
+                              onClick={() => launchInBizMap(step.prompt, isPremiumPrompt)}
+                              className="flex-1"
+                            >
+                              <ExternalLink className="w-4 h-4 mr-2" />
+                              Use in BizMap AI
+                            </Button>
+                            <Button
+                              variant="outline"
+                              onClick={() => copyPrompt(step.prompt, isPremiumPrompt)}
+                            >
+                              <Copy className="w-4 h-4 mr-2" />
+                              Copy
+                            </Button>
+                          </div>
                         </div>
                       )}
 

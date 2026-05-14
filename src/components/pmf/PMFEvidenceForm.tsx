@@ -17,6 +17,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import type { PMFEvidenceAnswers, PMFInterviewLog } from '@/hooks/usePMFLab';
 import { PMF_REQUIRED_SIGNALS } from '@/lib/bizmapStages';
+import { CreditCostNotice } from '@/components/CreditCostNotice';
 
 const TEST_TYPES = [
   'Landing page',
@@ -949,6 +950,7 @@ const PMFEvidenceForm: React.FC<PMFEvidenceFormProps> = ({ onSubmit, isSubmittin
             )}
 
             <div className="space-y-3 pt-2">
+              <CreditCostNotice feature="PMF_SCORING" featureName="PMF Evidence Score" />
               <div className="flex gap-3">
                 <Button type="button" variant="outline" onClick={goBack} className="gap-2">
                   <ChevronLeft className="w-4 h-4" />

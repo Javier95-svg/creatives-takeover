@@ -54,6 +54,7 @@ import {
 } from '@/data/mvpProjectTypes';
 import type { MVPProjectType } from '@/lib/mvp-builder/project';
 import { cn } from '@/lib/utils';
+import { CreditCostNotice } from '@/components/CreditCostNotice';
 
 // ── Quick-start templates ────────────────────────────────────────────────────
 
@@ -1074,6 +1075,11 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
           <div className="text-[11px] text-slate-500">
             {builderMode === 'chat' ? 'Text-only planning' : 'Generates and renders'}
           </div>
+          <CreditCostNotice
+            feature={isEmpty ? "APP_BUILDER_GENERATE" : "APP_BUILDER_REFINE"}
+            featureName={isEmpty ? "MVP Builder Generation" : "MVP Builder Refinement"}
+            variant="inline"
+          />
         </div>
         <p className="mt-2 text-right text-[10px] text-slate-500">
           Enter to send · Shift+Enter for a new line · Type @ to reference founder context

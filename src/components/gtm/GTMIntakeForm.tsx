@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { CheckCircle2, ChevronLeft, ChevronRight, Loader2, Rocket, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { GTMIntakeAnswers } from '@/hooks/useGTMStrategist';
+import { CreditCostNotice } from '@/components/CreditCostNotice';
 
 interface GTMIntakeFormProps {
   prefillData: Partial<GTMIntakeAnswers>;
@@ -469,6 +470,8 @@ const GTMIntakeForm: React.FC<GTMIntakeFormProps> = ({ prefillData, onSubmit, is
       <StepView stepKey={currentStep}>
         {renderStep()}
       </StepView>
+
+      {isLastStep ? <CreditCostNotice feature="GTM_ANALYSIS" featureName="GTM Strategist" /> : null}
 
       {/* Navigation */}
       <div className="flex gap-3 pt-2">

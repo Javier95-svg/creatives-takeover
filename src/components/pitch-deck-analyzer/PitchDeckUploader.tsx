@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
+import { CreditCostNotice } from '@/components/CreditCostNotice';
 
 interface PitchDeckUploaderProps {
   onFileSelected: (file: File) => void;
@@ -156,6 +157,7 @@ export const PitchDeckUploader: React.FC<PitchDeckUploaderProps> = ({
                   </>
                 )}
               </Button>
+              {isSignedIn ? <CreditCostNotice feature="PITCH_DECK_ANALYZER" featureName="Pitch Deck Analyzer" variant="inline" /> : null}
             </div>
           </CardContent>
         </Card>

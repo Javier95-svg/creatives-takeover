@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Crown, Coins, CreditCard, TrendingUp, Loader2 } from "lucide-react";
 import { CreditPriceList } from "@/components/CreditPriceList";
@@ -10,7 +10,13 @@ import { useSubscription } from "@/hooks/useSubscription";
 import { useFeatureGating } from "@/hooks/useFeatureGating";
 import { useCredits } from "@/hooks/useCredits";
 import { getNextPlan, normalizePlan, PLAN_SUMMARIES, type Plan } from "@/config/planPermissions";
-import { normalizePlanId, trackUpgradeClicked } from "@/lib/analytics";
+import {
+  normalizePlanId,
+  trackJourneyUpgradePromptClicked,
+  trackJourneyUpgradePromptDismissed,
+  trackJourneyUpgradePromptShown,
+  trackUpgradeClicked,
+} from "@/lib/analytics";
 import { toast } from "sonner";
 
 type UpgradeReason = "credits" | "limit" | "feature";
@@ -25,6 +31,8 @@ export interface UpgradePromptDialogProps {
   limit?: number;
   limitLabel?: string;
   description?: string;
+  journeyTrigger?: string;
+  sourceTool?: string;
   onUpgrade?: () => void;
 }
 
@@ -38,6 +46,8 @@ const UpgradePromptDialog = ({
   limit,
   limitLabel,
   description,
+  journeyTrigger,
+  sourceTool,
   onUpgrade,
 }: UpgradePromptDialogProps) => {
   const navigate = useNavigate();
@@ -76,6 +86,7 @@ const UpgradePromptDialog = ({
   }, [featureLabel, limit, limitCopy, reason, tierDetails, requiredCredits]);
 
   const canUpgrade = Boolean(tierDetails) && recommendedTier !== normalizedCurrentTier;
+  const journeyTargetPlan = recommendedTier === "rookie" ? "starter" : recommendedTier;
   const vcViewText = tierDetails?.vcViewLimit === Infinity
     ? "Unlimited VC views"
     : `${tierDetails?.vcViewLimit} VC views/month`;
@@ -93,6 +104,16 @@ const UpgradePromptDialog = ({
       return;
     }
 
+    if (journeyTrigger) {
+      trackJourneyUpgradePromptClicked({
+        trigger: journeyTrigger,
+        current_plan: normalizePlanId(normalizedCurrentTier),
+        target_plan: normalizePlanId(journeyTargetPlan),
+        source_tool: sourceTool,
+        route: typeof window !== "undefined" ? window.location.pathname : undefined,
+      });
+    }
+
     setIsCheckingOut(true);
     try {
       await createCheckout(recommendedTier);
@@ -106,8 +127,35 @@ const UpgradePromptDialog = ({
     }
   };
 
+  useEffect(() => {
+    if (!open || !journeyTrigger || !tierDetails) return;
+    trackJourneyUpgradePromptShown({
+      trigger: journeyTrigger,
+      current_plan: normalizedCurrentTier,
+      target_plan: journeyTargetPlan,
+      source_tool: sourceTool,
+      route: typeof window !== "undefined" ? window.location.pathname : undefined,
+    });
+  }, [journeyTargetPlan, journeyTrigger, normalizedCurrentTier, open, sourceTool, tierDetails]);
+
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (!nextOpen && open && journeyTrigger) {
+      try {
+        window.localStorage.setItem(`ct_journey_upgrade_${journeyTrigger}`, String(Date.now()));
+      } catch {
+        // Ignore localStorage failures.
+      }
+      trackJourneyUpgradePromptDismissed({
+        trigger: journeyTrigger,
+        source_tool: sourceTool,
+        route: typeof window !== "undefined" ? window.location.pathname : undefined,
+      });
+    }
+    onOpenChange(nextOpen);
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -183,6 +231,15 @@ const UpgradePromptDialog = ({
           <Button
             variant="outline"
             onClick={() => {
+              if (journeyTrigger) {
+                trackJourneyUpgradePromptClicked({
+                  trigger: journeyTrigger,
+                  current_plan: normalizePlanId(normalizedCurrentTier),
+                  target_plan: normalizePlanId(journeyTargetPlan),
+                  source_tool: sourceTool,
+                  route: typeof window !== "undefined" ? window.location.pathname : undefined,
+                });
+              }
               trackUpgradeClicked({
                 from_plan: normalizePlanId(normalizedCurrentTier),
                 to_plan: normalizePlanId(recommendedTier),

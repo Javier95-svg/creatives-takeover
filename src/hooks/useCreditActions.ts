@@ -10,6 +10,7 @@ import { CREDIT_COSTS, CreditFeature, getCreditCost } from '@/config/constants';
 import { getQuotaStatus, normalizePlan, type Plan } from '@/config/planPermissions';
 import { toast } from 'sonner';
 import { createIdempotencyKey } from '@/lib/idempotency';
+import { trackCreditActionCompleted } from '@/lib/analytics';
 
 const CREDIT_FEATURE_LABELS: Record<CreditFeature, string> = {
   LAUNCH_REPORT: 'Launch Report Generation',
@@ -22,6 +23,10 @@ const CREDIT_FEATURE_LABELS: Record<CreditFeature, string> = {
   FUNDRAISING_READINESS_ANALYSIS: 'Insighta Test',
   BUSINESS_INSIGHTS: 'Business Insights',
   PMF_ANALYSIS: 'Product-Market Fit Lab',
+  PMF_SCORING: 'PMF Evidence Score',
+  WAITLIST_GENERATION: 'Waitlist Maker',
+  APP_BUILDER_GENERATE: 'MVP Builder Generation',
+  APP_BUILDER_REFINE: 'MVP Builder Refinement',
   INVESTOR_MATCHING: 'Investor Matching',
   PITCH_DECK_GENERATION: 'Pitch Deck Generation',
   COLD_EMAIL_GENERATION: 'Cold Email Generation',
@@ -46,6 +51,19 @@ type CreditActionOptions = {
   metadata?: Record<string, unknown>;
   idempotencyKey?: string;
   operationId?: string;
+};
+
+export type CreditActionQuoteStatus = 'free' | 'metered' | 'locked';
+
+export type CreditActionQuote = {
+  feature: CreditFeature;
+  featureName: string;
+  requiredCredits: number;
+  totalAvailable: number;
+  requiredTier?: Plan;
+  currentTier: Plan;
+  status: CreditActionQuoteStatus;
+  canProceed: boolean;
 };
 
 const resolveFeatureLabel = (feature: CreditFeature, override?: string) =>
@@ -74,6 +92,13 @@ const FEATURE_INCLUDED_ON_PLAN: Partial<Record<CreditFeature, Plan>> = {
   EMAIL_TEMPLATE_GENERATION: 'starter',
   FUNDRAISING_READINESS_ANALYSIS: 'rookie',
   ICP_ANALYSIS: 'rookie',
+};
+
+const FEATURE_JOURNEY_TRIGGER: Partial<Record<CreditFeature, string>> = {
+  APP_BUILDER_GENERATE: 'starter_tool_mvp',
+  APP_BUILDER_REFINE: 'starter_tool_mvp',
+  GTM_ANALYSIS: 'starter_tool_gtm',
+  TECH_STACK_GENERATION: 'starter_tool_tech',
 };
 
 const ALWAYS_PAID_FEATURES = new Set<string>([
@@ -175,11 +200,14 @@ export const useCreditActions = () => {
 
       const minimumPlan = FEATURE_MINIMUM_PLAN[feature];
       if (minimumPlan && !isPlanAtLeast(currentTier, minimumPlan)) {
+        const featureLabel = resolveFeatureLabel(feature, options.featureName);
         openUpgradePrompt({
           reason: 'feature',
-          featureName: resolveFeatureLabel(feature, options.featureName),
+          featureName: featureLabel,
           requiredTier: minimumPlan,
           description: options.description,
+          journeyTrigger: FEATURE_JOURNEY_TRIGGER[feature],
+          sourceTool: featureLabel,
         });
         return null;
       }
@@ -202,6 +230,54 @@ export const useCreditActions = () => {
       return requiredCredits;
     },
     [creditsLoading, currentTier, getEffectiveRequiredCredits, hasCredits, openUpgradePrompt, quotas.discovery_calls_used, showHardGate, totalAvailable, user]
+  );
+
+  const getCreditActionQuote = useCallback(
+    (feature: CreditFeature, options: CreditActionOptions = {}): CreditActionQuote => {
+      const requiredCredits = getEffectiveRequiredCredits(feature, options.requiredCredits) || 0;
+      const minimumPlan = options.requiredTier || FEATURE_MINIMUM_PLAN[feature];
+      const locked = Boolean(minimumPlan && !isPlanAtLeast(currentTier, minimumPlan));
+      const status: CreditActionQuoteStatus = locked
+        ? 'locked'
+        : requiredCredits > 0
+        ? 'metered'
+        : 'free';
+
+      return {
+        feature,
+        featureName: resolveFeatureLabel(feature, options.featureName),
+        requiredCredits,
+        totalAvailable,
+        requiredTier: minimumPlan,
+        currentTier,
+        status,
+        canProceed: !locked && (requiredCredits <= 0 || hasCredits(requiredCredits)),
+      };
+    },
+    [currentTier, getEffectiveRequiredCredits, hasCredits, totalAvailable]
+  );
+
+  const showCreditReceipt = useCallback(
+    (feature: CreditFeature, creditsUsed: number, balanceAfter?: number, options: CreditActionOptions = {}) => {
+      const featureLabel = resolveFeatureLabel(feature, options.featureName);
+      const nextBalance = typeof balanceAfter === 'number' ? balanceAfter : Math.max(0, totalAvailable - creditsUsed);
+
+      trackCreditActionCompleted({
+        feature_key: feature,
+        credit_cost: creditsUsed,
+        current_plan: currentTier,
+        balance_after: nextBalance,
+        source_tool: featureLabel,
+      });
+
+      if (creditsUsed <= 0) {
+        toast.success(`${featureLabel} completed.`);
+        return;
+      }
+
+      toast.success(`${featureLabel} completed · ${creditsUsed} credits used · ${nextBalance} remaining.`);
+    },
+    [currentTier, totalAvailable]
   );
 
   const handleCreditError = useCallback(
@@ -287,14 +363,20 @@ export const useCreditActions = () => {
       }
 
       await refreshBalance();
+      const balanceAfter = typeof data?.newBalance === 'number' || typeof data?.newQuota === 'number'
+        ? Number(data?.newBalance ?? 0) + Number(data?.newQuota ?? 0)
+        : undefined;
+      showCreditReceipt(feature, requiredCredits, balanceAfter, options);
       return true;
     },
-    [ensureCredits, handleCreditError, refreshBalance, refreshQuotas, user]
+    [ensureCredits, handleCreditError, refreshBalance, refreshQuotas, showCreditReceipt, user]
   );
 
   return {
     ensureCredits,
     handleCreditError,
     deductCredits,
+    getCreditActionQuote,
+    showCreditReceipt,
   };
 };

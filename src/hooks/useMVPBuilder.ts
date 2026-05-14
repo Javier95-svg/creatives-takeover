@@ -475,7 +475,7 @@ const STORAGE_KEY = 'ct_app_builder_session';
 
 export function useMVPBuilder() {
   const { user } = useAuth();
-  const { ensureCredits, handleCreditError } = useCreditActions();
+  const { ensureCredits, handleCreditError, showCreditReceipt } = useCreditActions();
 
   const [messages, setMessages] = useState<MVPMessage[]>([]);
   const [projectFiles, setProjectFiles] = useState<MVPProjectFile[]>([]);
@@ -1791,6 +1791,7 @@ export function useMVPBuilder() {
                   : message
               )
             );
+            showCreditReceipt(creditFeature, required, undefined, { featureName: featureLabel });
             return;
           }
 
@@ -1838,7 +1839,7 @@ export function useMVPBuilder() {
               committedAt: assistantMsg.createdAt ?? new Date().toISOString(),
               commitRef: `build-${assistantMsg.id.slice(0, 8)}`,
             });
-            toast.success('Ready — your build is live.');
+            showCreditReceipt(creditFeature, required, undefined, { featureName: featureLabel });
           }
         };
 
@@ -2017,6 +2018,7 @@ export function useMVPBuilder() {
       projectSummary,
       selectedModels,
       selectedProjectType,
+      showCreditReceipt,
       user,
     ]
   );

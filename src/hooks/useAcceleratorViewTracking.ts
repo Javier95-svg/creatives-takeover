@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSubscription } from "./useSubscription";
 import { getMonthlyQuotaLimit, getQuotaStatus, normalizePlan } from "@/config/planPermissions";
+import { useJourneyUpgradePrompt } from "@/hooks/useJourneyUpgradePrompt";
 
 export interface AcceleratorViewTrackingResult {
   success: boolean;
@@ -15,6 +16,7 @@ export const useAcceleratorViewTracking = () => {
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const { subscriptionData } = useSubscription();
+  const { fireJourneyUpgradePrompt } = useJourneyUpgradePrompt();
 
   const currentTier = normalizePlan(subscriptionData?.subscription_tier);
   const quotaStatus = getQuotaStatus("accelerator_profile", currentTier, viewCount);
@@ -88,6 +90,9 @@ export const useAcceleratorViewTracking = () => {
       }
 
       if (!canView && !hasUnlimitedViews) {
+        if (currentTier === "rising") {
+          fireJourneyUpgradePrompt("rising_quota_accelerator");
+        }
         const nextLimit = upgradeTarget ? getMonthlyQuotaLimit("accelerator_profile", upgradeTarget) : Infinity;
         return {
           success: false,

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useSubscription } from './useSubscription';
 import { getMonthlyQuotaLimit, getQuotaStatus, normalizePlan } from '@/config/planPermissions';
+import { useJourneyUpgradePrompt } from '@/hooks/useJourneyUpgradePrompt';
 
 export interface VCViewTrackingResult {
   success: boolean;
@@ -14,6 +15,7 @@ export const useVCViewTracking = () => {
   const [viewCount, setViewCount] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   const { subscriptionData } = useSubscription();
+  const { fireJourneyUpgradePrompt } = useJourneyUpgradePrompt();
 
   const currentTier = normalizePlan(subscriptionData?.subscription_tier);
   const quotaStatus = getQuotaStatus('vc_search_profile', currentTier, viewCount);
@@ -78,6 +80,9 @@ export const useVCViewTracking = () => {
       }
 
       if (!canView && !hasUnlimitedViews) {
+        if (currentTier === 'rising') {
+          fireJourneyUpgradePrompt('rising_quota_vc');
+        }
         const nextLimit = upgradeTarget ? getMonthlyQuotaLimit('vc_search_profile', upgradeTarget) : Infinity;
         return {
           success: false,

@@ -76,7 +76,7 @@ const GTM_TABLE = 'gtm_plans' as any;
 export function useGTMStrategist() {
   const { user } = useAuth();
   const { refreshProgress } = useBizMapProgress();
-  const { ensureCredits, handleCreditError } = useCreditActions();
+  const { ensureCredits, handleCreditError, showCreditReceipt } = useCreditActions();
 
   const [phase, setPhase] = useState<Phase>('intake');
   const [analysis, setAnalysis] = useState<GTMAnalysis | null>(null);
@@ -201,12 +201,13 @@ export function useGTMStrategist() {
       setAnalysis(data.analysis as GTMAnalysis);
       setPlanId(data.planId ?? null);
       setPhase('results');
+      showCreditReceipt('GTM_ANALYSIS', credits, undefined, { featureName: 'GTM Strategist' });
     } catch (err) {
       console.error('GTM analysis error:', err);
       toast.error('Something went wrong. Please try again.');
       setPhase('intake');
     }
-  }, [user, ensureCredits, handleCreditError]);
+  }, [user, ensureCredits, handleCreditError, showCreditReceipt]);
 
   const savePlan = useCallback(async (status: 'draft' | 'saved' | 'exported') => {
     if (!user) {

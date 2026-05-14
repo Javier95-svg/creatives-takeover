@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 
 import {
   CREDIT_COSTS,
@@ -133,6 +134,15 @@ test('plan monthly credits stay aligned with pricing', () => {
   assert.equal(PLAN_MONTHLY_CREDITS.starter, 100);
   assert.equal(PLAN_MONTHLY_CREDITS.rising, 250);
   assert.equal(PLAN_MONTHLY_CREDITS.pro, 600);
+});
+
+test('pricing page presents plan outcome labels', () => {
+  const pricingSource = readFileSync(new URL('../src/components/Pricing.tsx', import.meta.url), 'utf8');
+
+  assert.match(pricingSource, /outcomeLabel: "Clarify"/);
+  assert.match(pricingSource, /outcomeLabel: "Validate"/);
+  assert.match(pricingSource, /outcomeLabel: "Build & Launch"/);
+  assert.match(pricingSource, /outcomeLabel: "Fundraise & Scale"/);
 });
 
 test('core entitlement rules reflect the pricing contract', () => {

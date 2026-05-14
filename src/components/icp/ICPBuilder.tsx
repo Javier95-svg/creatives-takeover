@@ -13,6 +13,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useActivationJourney } from "@/hooks/useActivationJourney";
+import { useJourneyUpgradePrompt } from "@/hooks/useJourneyUpgradePrompt";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -346,6 +347,7 @@ const ICPBuilder: React.FC = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const { refreshActivation } = useActivationJourney("stage_i");
+  const { fireJourneyUpgradePrompt } = useJourneyUpgradePrompt();
 
   const [session, setSession] = useState<IcpBuilderSession>(() => readIcpBuilderSession() ?? createEmptyIcpBuilderSession());
   const [loadingPhase, setLoadingPhase] = useState<LoadingPhase>(null);
@@ -860,10 +862,11 @@ const ICPBuilder: React.FC = () => {
       confidence: artifact.draftDocument.confidence.level,
       userId: user?.id,
     });
+    fireJourneyUpgradePrompt("rookie_icp_complete");
     setPendingNavigatePath(buildIcpUnlockNavigationPath(analysisId));
     setShowCelebration(true);
     void runPostSaveHandoff({ analysisId, artifact });
-  }, [runPostSaveHandoff, user?.id]);
+  }, [fireJourneyUpgradePrompt, runPostSaveHandoff, user?.id]);
 
   const completeDraftGeneration = useCallback(async (persist: boolean) => {
     const mode = session.mode;

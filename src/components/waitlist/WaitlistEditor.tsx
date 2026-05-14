@@ -24,6 +24,8 @@ import { getWaitlistTemplate } from '@/lib/waitlistTemplates';
 import { getToolJourneyGuide } from '@/lib/activationJourney';
 import { ActivationJourneyStrip } from '@/components/activation/ActivationJourneyStrip';
 import { captureEvent } from '@/lib/analytics';
+import { CreditCostNotice } from '@/components/CreditCostNotice';
+import { useJourneyUpgradePrompt } from '@/hooks/useJourneyUpgradePrompt';
 
 type BuilderTab = 'content' | 'style' | 'form' | 'launch' | 'analytics';
 type PreviewDevice = 'desktop' | 'mobile';
@@ -255,7 +257,8 @@ export default function WaitlistEditor({ initialSeed = null, onBackToTemplates }
   const { user, loading: authLoading } = useAuth();
   const { refreshProgress } = useBizMapProgress();
   const { refreshActivation } = useActivationJourney();
-  const { ensureCredits } = useCreditActions();
+  const { ensureCredits, showCreditReceipt } = useCreditActions();
+  const { fireJourneyUpgradePrompt } = useJourneyUpgradePrompt();
   const { subscriptionData } = useSubscription();
   const initialStoredStateRef = useRef<StoredWaitlistEditorState | null>(readStoredWaitlistEditorState());
   const initialGuestDraftRef = useRef(readGuestBrowserDraft());
@@ -798,7 +801,8 @@ export default function WaitlistEditor({ initialSeed = null, onBackToTemplates }
     }
     await fetchAnalytics(pageId);
     await refreshProgress();
-    toast.success(`Waitlist published. Share your public URL. (Used ${requiredCredits} credits)`);
+    showCreditReceipt('WAITLIST_GENERATION', requiredCredits, undefined, { featureName: 'Waitlist Maker' });
+    fireJourneyUpgradePrompt('rookie_waitlist_published');
   };
 
   const handleUnpublish = async () => {
@@ -918,7 +922,7 @@ export default function WaitlistEditor({ initialSeed = null, onBackToTemplates }
       if (result.benefits?.length) setBenefitsDraft(linesToText(result.benefits));
       if (result.howItWorks?.length) setHowItWorksDraft(linesToText(result.howItWorks));
 
-      toast.success(`Copy refined with AI. (Used ${requiredCredits} credits)`);
+      showCreditReceipt('WAITLIST_GENERATION', requiredCredits, undefined, { featureName: 'AI Refine' });
     } catch {
       toast.error('AI refine failed. Please try again.');
     } finally {
@@ -1163,6 +1167,9 @@ export default function WaitlistEditor({ initialSeed = null, onBackToTemplates }
               {isPublishing ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Globe className="w-4 h-4 mr-1" />}
               Publish
             </Button>
+            {!isGuest && status !== 'published' ? (
+              <CreditCostNotice feature="WAITLIST_GENERATION" featureName="Waitlist Maker" variant="inline" />
+            ) : null}
           </div>
         </CardContent>
       </Card>
@@ -1363,6 +1370,7 @@ export default function WaitlistEditor({ initialSeed = null, onBackToTemplates }
                     {isRefiningWithAi ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
                     {isRefiningWithAi ? 'Refining…' : 'Refine with AI'}
                   </Button>
+                  {user ? <CreditCostNotice feature="WAITLIST_GENERATION" featureName="AI Refine" variant="inline" /> : null}
 
                   <div className="space-y-2">
                     <Label>Benefits (one per line)</Label>

@@ -19,6 +19,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useBizMapProgress } from '@/hooks/useBizMapProgress';
+import { CreditCostNotice } from '@/components/CreditCostNotice';
 
 // Icon mapping
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -613,6 +614,7 @@ const TechStack: React.FC = () => {
                     </>
                   )}
                 </Button>
+                {user ? <CreditCostNotice feature="TECH_STACK_GENERATION" featureName="Tech Stack Builder" variant="inline" /> : null}
               </div>
             </div>
           </CardContent>

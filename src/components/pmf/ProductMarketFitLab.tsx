@@ -11,7 +11,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useCredits } from '@/hooks/useCredits';
 import { useCreditActions } from '@/hooks/useCreditActions';
 import { useFeatureGating } from '@/hooks/useFeatureGating';
-import { useUpgradePrompt } from '@/contexts/UpgradePromptContext';
+import { CreditCostNotice } from '@/components/CreditCostNotice';
+import { useJourneyUpgradePrompt } from '@/hooks/useJourneyUpgradePrompt';
 import { supabase } from '@/integrations/supabase/client';
 import PMFScore from './PMFScore';
 import PMFAnalysisResults from './PMFAnalysisResults';
@@ -157,6 +158,11 @@ interface PMFAnalysis {
   };
 }
 
+interface RookiePMFPreview {
+  readinessBand: 'Early signal' | 'Promising signal' | 'Strong signal';
+  insights: string[];
+}
+
 const ProductMarketFitLab: React.FC<ProductMarketFitLabProps> = ({ 
   businessPlanData,
   prefillData,
@@ -165,14 +171,15 @@ const ProductMarketFitLab: React.FC<ProductMarketFitLabProps> = ({
   const { user } = useAuth();
   const { toast } = useToast();
   const { refreshBalance } = useCredits();
-  const { ensureCredits, handleCreditError } = useCreditActions();
+  const { ensureCredits, handleCreditError, showCreditReceipt } = useCreditActions();
   const { checkFeatureAccess } = useFeatureGating();
-  const { openUpgradePrompt } = useUpgradePrompt();
+  const { fireJourneyUpgradePrompt } = useJourneyUpgradePrompt();
   
   const [structuredFormData, setStructuredFormData] = useState<PMFFormPrefillData | null>(prefillData ?? null);
 
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState<PMFAnalysis | null>(null);
+  const [rookiePreview, setRookiePreview] = useState<RookiePMFPreview | null>(null);
   const [analysisId, setAnalysisId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('input');
   const [selectedSegment, setSelectedSegment] = useState<string | null>(null);
@@ -229,12 +236,39 @@ const ProductMarketFitLab: React.FC<ProductMarketFitLabProps> = ({
     // Check feature access (free tier gets preview only)
       const featureAccess = checkFeatureAccess('pmf_analysis');
       if (!featureAccess.hasAccess) {
-        openUpgradePrompt({
-          reason: 'feature',
-          featureName: 'Product-Market Fit Lab',
-          requiredTier: featureAccess.requiredTier as Plan | undefined,
-          description: featureAccess.message || "Upgrade to Starter or higher to run full Product-Market Fit analysis.",
+        setStructuredFormData(formData);
+        const evidenceFields = [
+          formData.problemStatement,
+          formData.solutionDescription,
+          formData.targetMarket,
+          formData.tractionValidation,
+          formData.competitiveLandscape,
+          ...(Array.isArray(formData.keyAssumptions) ? formData.keyAssumptions : []),
+        ].filter((value) => String(value || '').trim().length > 0);
+        const readinessBand = evidenceFields.length >= 5
+          ? 'Strong signal'
+          : evidenceFields.length >= 3
+          ? 'Promising signal'
+          : 'Early signal';
+        setRookiePreview({
+          readinessBand,
+          insights: [
+            formData.targetMarket
+              ? `Your strongest validation path starts with ${formData.targetMarket}.`
+              : 'Name a specific target segment before running paid validation.',
+            formData.tractionValidation
+              ? 'You have some traction evidence. Starter unlocks the full PMF score and next experiments.'
+              : 'Add interviews, waitlist signups, pricing asks, or pre-orders to strengthen the signal.',
+            formData.competitiveLandscape
+              ? 'You named alternatives, so PMF Lab can pressure-test differentiation in the full report.'
+              : 'List the alternatives your buyer uses today to sharpen the full report.',
+          ],
         });
+        fireJourneyUpgradePrompt('rookie_icp_complete', {
+          description: 'You have enough PMF context for a preview. Starter unlocks the full PMF Lab report and evidence score.',
+          sourceTool: 'PMF Lab',
+        });
+        setActiveTab('score');
         return;
       }
 
@@ -315,6 +349,8 @@ const ProductMarketFitLab: React.FC<ProductMarketFitLabProps> = ({
           description: `Your PMF score is ${data.analysis.pmfScore?.overall || 'N/A'}/100 - ${data.analysis.pmfScore?.verdict || 'N/A'}. Review the insights below.`,
         });
         await refreshBalance();
+        showCreditReceipt('PMF_ANALYSIS', requiredCredits, undefined, { featureName: 'Product-Market Fit Lab' });
+        fireJourneyUpgradePrompt('starter_pmf_complete');
       } else {
         throw new Error(data?.error || 'Analysis failed');
       }
@@ -380,6 +416,7 @@ const ProductMarketFitLab: React.FC<ProductMarketFitLabProps> = ({
                   <p>Your business plan information has been pre-filled. You can edit or add more context.</p>
                 </div>
               )}
+              <CreditCostNotice feature="PMF_ANALYSIS" featureName="Product-Market Fit Lab" className="mb-6" />
               <PMFInputForm
                 initialData={structuredFormData ?? prefillData ?? undefined}
                 businessPlanData={businessPlanData}
@@ -465,6 +502,34 @@ const ProductMarketFitLab: React.FC<ProductMarketFitLabProps> = ({
                   analysis={analysis}
                   analysisId={analysisId}
                 />
+              ) : rookiePreview ? (
+                <Card className="border-primary/30 bg-primary/5">
+                  <CardHeader>
+                    <CardTitle>PMF Preview: {rookiePreview.readinessBand}</CardTitle>
+                    <CardDescription>
+                      This Rookie preview does not run the full AI analysis or spend credits.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid gap-3">
+                      {rookiePreview.insights.map((insight) => (
+                        <div key={insight} className="rounded-lg border border-border/60 bg-background/80 p-3 text-sm text-muted-foreground">
+                          {insight}
+                        </div>
+                      ))}
+                    </div>
+                    <Button
+                      onClick={() => fireJourneyUpgradePrompt('rookie_icp_complete', {
+                        force: true,
+                        description: 'Unlock full PMF Lab with Starter to get the complete AI report, score breakdown, and next validation experiments.',
+                        sourceTool: 'PMF Lab',
+                      })}
+                    >
+                      Unlock full PMF Lab with Starter
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </Button>
+                  </CardContent>
+                </Card>
               ) : (
                 <Card>
                   <CardContent className="flex flex-col items-center justify-center py-12 text-center">

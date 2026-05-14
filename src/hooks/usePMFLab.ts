@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useBizMapProgress } from '@/hooks/useBizMapProgress';
 import { useActivationJourney } from '@/hooks/useActivationJourney';
 import { useCreditActions } from '@/hooks/useCreditActions';
+import { useJourneyUpgradePrompt } from '@/hooks/useJourneyUpgradePrompt';
 import { toast } from 'sonner';
 import { PMF_REQUIRED_SIGNALS } from '@/lib/bizmapStages';
 import {
@@ -107,7 +108,8 @@ export function usePMFLab() {
   const { user } = useAuth();
   const { refreshProgress } = useBizMapProgress();
   const { refreshActivation } = useActivationJourney();
-  const { ensureCredits, handleCreditError } = useCreditActions();
+  const { ensureCredits, handleCreditError, showCreditReceipt } = useCreditActions();
+  const { fireJourneyUpgradePrompt } = useJourneyUpgradePrompt();
 
   const [phase, setPhase] = useState<Phase>('intake');
   const [analysis, setAnalysis] = useState<PMFReadinessAnalysis | null>(null);
@@ -184,12 +186,14 @@ export function usePMFLab() {
       setAnalysisId(data.analysisId ?? null);
       setHasSavedReport(false);
       setPhase('results');
+      showCreditReceipt('PMF_SCORING', credits, undefined, { featureName: 'PMF Evidence Score' });
+      fireJourneyUpgradePrompt('starter_pmf_complete');
     } catch (err) {
       console.error('PMF analysis error:', err);
       toast.error('Something went wrong. Please try again.');
       setPhase('intake');
     }
-  }, [user, ensureCredits, handleCreditError]);
+  }, [user, ensureCredits, handleCreditError, showCreditReceipt, fireJourneyUpgradePrompt]);
 
   const saveReport = useCallback(async () => {
     if (!user) {

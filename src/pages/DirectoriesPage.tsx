@@ -8,6 +8,8 @@ import GTMStrategistWallpaper from '@/components/wallpapers/GTMStrategistWallpap
 import { getPublicTabConfig } from '@/config/publicTabVisibility';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePlanAccess } from '@/hooks/usePlanAccess';
+import { useJourneyUpgradePrompt } from '@/hooks/useJourneyUpgradePrompt';
+import { useEffect } from 'react';
 
 const structuredData = [
   {
@@ -28,6 +30,13 @@ export default function DirectoriesPage() {
   const { user } = useAuth();
   const publicTab = getPublicTabConfig('/directories');
   const { hasAccess, upgradeTarget } = usePlanAccess('directories');
+  const { fireJourneyUpgradePrompt } = useJourneyUpgradePrompt();
+
+  useEffect(() => {
+    if (user && !hasAccess) {
+      fireJourneyUpgradePrompt('starter_tool_directories');
+    }
+  }, [fireJourneyUpgradePrompt, hasAccess, user]);
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-background">

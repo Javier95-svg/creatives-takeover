@@ -18,6 +18,7 @@ import { FriendRequestsModal } from "@/components/social/FriendRequestsModal";
 import { useSocial } from "@/hooks/useSocial";
 import { ProfilePictureCropModal } from "@/components/ProfilePictureCropModal";
 import { AccountWallpaper } from "@/components/AccountWallpaper";
+import { CreditActivityCard } from "@/components/CreditActivityCard";
 import { ProfileCompletionTracker } from "@/components/ProfileCompletionTracker";
 import { OnboardingChecklist } from "@/components/OnboardingChecklist";
 import { trackActivity } from "@/lib/activity";
@@ -765,6 +766,10 @@ const Account = () => {
                 }}
               />
             )}
+
+            <div id="credit-activity">
+              <CreditActivityCard />
+            </div>
 
             <form onSubmit={handleUpdateProfile} className="space-y-8">
             {/* Profile Picture Section */}

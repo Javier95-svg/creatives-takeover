@@ -107,6 +107,13 @@ export function CreditDisplay({ variant = "navigation", showPurchaseButton = fal
                 <CreditPriceList />
               </div>
 
+              <DropdownMenuItem
+                className="cursor-pointer"
+                onSelect={() => navigate('/account#credit-activity')}
+              >
+                View credit activity
+              </DropdownMenuItem>
+
               {showPurchaseButton && (
                 <Button size="sm" className="w-full gap-2" variant="outline" onClick={() => navigate('/pricing')}>
                   <Plus className="h-3 w-3" />

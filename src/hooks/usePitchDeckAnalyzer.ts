@@ -5,11 +5,13 @@ import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCreditActions } from '@/hooks/useCreditActions';
 import { useCredits } from '@/hooks/useCredits';
+import { useJourneyUpgradePrompt } from '@/hooks/useJourneyUpgradePrompt';
 
 export const usePitchDeckAnalyzer = () => {
   const { user } = useAuth();
-  const { ensureCredits, handleCreditError } = useCreditActions();
+  const { ensureCredits, handleCreditError, showCreditReceipt } = useCreditActions();
   const { refreshBalance } = useCredits();
+  const { fireJourneyUpgradePrompt } = useJourneyUpgradePrompt();
   const [uploading, setUploading] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState<PitchDeckAnalysis | null>(null);
@@ -162,8 +164,9 @@ export const usePitchDeckAnalyzer = () => {
 
       setAnalysis(analysisResult);
       setAnalyzing(false);
-      toast.success('Analysis complete!');
       refreshBalance();
+      showCreditReceipt('PITCH_DECK_ANALYZER', requiredCredits, undefined, { featureName: 'Pitch Deck Analyzer' });
+      fireJourneyUpgradePrompt('rising_pitch_deck_heavy');
 
       return analysisResult;
     } catch (err: any) {

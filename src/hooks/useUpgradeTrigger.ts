@@ -13,6 +13,7 @@ import type { Plan } from '@/config/planPermissions';
 
 export type UpgradeTriggerKey =
   | 'rookie_icp_complete'
+  | 'rookie_waitlist_published'
   | 'rookie_quota_discovery'
   | 'rookie_quota_cofounder'
   | 'starter_stage3_complete'
@@ -39,9 +40,16 @@ export const UPGRADE_TRIGGER_CONFIGS: Record<UpgradeTriggerKey, UpgradeTriggerCo
   rookie_icp_complete: {
     key: 'rookie_icp_complete',
     targetPlan: 'starter',
-    headline: 'ICP locked. Next: test demand.',
-    body: 'Starter unlocks Waitlist Maker and PMF Lab so you can capture real interest before building anything.',
+    headline: 'ICP clarified. Next: validate demand.',
+    body: 'Starter unlocks PMF Lab, Email Templates, and deeper research access so you can test this ICP before building.',
     ctaLabel: 'See Starter',
+  },
+  rookie_waitlist_published: {
+    key: 'rookie_waitlist_published',
+    targetPlan: 'starter',
+    headline: 'Waitlist live. Turn interest into evidence.',
+    body: 'Starter unlocks PMF Lab so you can score your early traction and decide what to validate next.',
+    ctaLabel: 'Validate with Starter',
   },
   rookie_quota_discovery: {
     key: 'rookie_quota_discovery',
@@ -160,7 +168,7 @@ function dismiss(key: UpgradeTriggerKey): void {
   }
 }
 
-interface UseUpgradeTriggerReturn {
+export interface UseUpgradeTriggerReturn {
   /** The single active trigger to surface, or null if none. */
   activeTrigger: UpgradeTriggerConfig | null;
   /** Fire a trigger by key. Ignored if another surface is already active or this key was dismissed. */

@@ -421,6 +421,7 @@ export function useFeatureGating() {
     getTierFeatures,
     currentTier: currentTierValue,
     isSubscribed: subscriptionData?.subscribed || false,
+    isLoading: subscriptionLoading || creditsLoading,
     hasCredits: (amount: number) => hasCredits(amount)
   };
 }
