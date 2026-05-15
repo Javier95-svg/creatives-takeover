@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft, ArrowRight, Loader2, RotateCcw } from "lucide-react";
+import { ArrowLeft, ArrowRight, Loader2, RotateCcw, TrendingUp } from "lucide-react";
 
 import { IcpGuestResultView } from "@/components/icp/IcpGuestResultView";
 import { IcpProgressBar } from "@/components/icp/IcpProgressBar";
@@ -13,12 +13,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useActivationJourney } from "@/hooks/useActivationJourney";
-import { useJourneyUpgradePrompt } from "@/hooks/useJourneyUpgradePrompt";
 import { useToast } from "@/hooks/use-toast";
+import { useCredits } from "@/hooks/useCredits";
+import { useSubscription } from "@/hooks/useSubscription";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import {
   captureEvent,
+  normalizePlanId,
   trackActivationCompleted,
   trackICPBuilderAbandoned,
   trackICPBuilderCompleted,
@@ -30,7 +32,10 @@ import {
   trackICPResumeLinkRequested,
   trackICPResumeRestored,
   trackICPSeedSubmitted,
+  trackUpgradeClicked,
+  trackUpgradePromptShown,
 } from "@/lib/analytics";
+import { normalizePlan } from "@/config/planPermissions";
 import {
   fastIcpInputSchema,
   guidedIcpInputSchema,
@@ -347,7 +352,8 @@ const ICPBuilder: React.FC = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const { refreshActivation } = useActivationJourney("stage_i");
-  const { fireJourneyUpgradePrompt } = useJourneyUpgradePrompt();
+  const { totalAvailable, subscriptionTier, loading: creditsLoading } = useCredits();
+  const { createCheckout } = useSubscription();
 
   const [session, setSession] = useState<IcpBuilderSession>(() => readIcpBuilderSession() ?? createEmptyIcpBuilderSession());
   const [loadingPhase, setLoadingPhase] = useState<LoadingPhase>(null);
@@ -366,7 +372,11 @@ const ICPBuilder: React.FC = () => {
   const [persistError, setPersistError] = useState<string | null>(null);
   const [showCelebration, setShowCelebration] = useState(false);
   const [pendingNavigatePath, setPendingNavigatePath] = useState<string | null>(null);
+  const [pendingPostIcpNudge, setPendingPostIcpNudge] = useState(false);
+  const [showPostIcpNudge, setShowPostIcpNudge] = useState(false);
+  const [isStarterCheckoutLoading, setIsStarterCheckoutLoading] = useState(false);
   const completedRef = useRef(false);
+  const postIcpPromptTrackedRef = useRef(false);
   const currentStepRef = useRef<IcpFlowScreen>(session.currentScreen);
   const modeRef = useRef<IcpBuilderMode | null>(session.mode);
   const stepsCompletedRef = useRef(0);
@@ -468,9 +478,26 @@ const ICPBuilder: React.FC = () => {
 
   useEffect(() => {
     if (!showCelebration || !pendingNavigatePath) return;
-    const timer = window.setTimeout(() => navigate(pendingNavigatePath, { replace: true }), 2000);
+    const timer = window.setTimeout(() => {
+      if (pendingPostIcpNudge) {
+        setShowCelebration(false);
+        setShowPostIcpNudge(true);
+        if (!postIcpPromptTrackedRef.current) {
+          postIcpPromptTrackedRef.current = true;
+          trackUpgradePromptShown({
+            trigger: "post_icp_nudge",
+            credits_remaining: totalAvailable,
+            current_plan: "rookie",
+            target_plan: "starter",
+          });
+        }
+        return;
+      }
+
+      navigate(pendingNavigatePath, { replace: true });
+    }, 2000);
     return () => window.clearTimeout(timer);
-  }, [showCelebration, pendingNavigatePath, navigate]);
+  }, [showCelebration, pendingNavigatePath, pendingPostIcpNudge, totalAvailable, navigate]);
 
   useEffect(() => {
     const restoredSeed = normalizeIcpSeed(searchParams.get("seed"));
@@ -688,6 +715,10 @@ const ICPBuilder: React.FC = () => {
     setLegacyAnalysis(null);
     setLegacyAvailable(false);
     setShowLegacy(false);
+    setShowCelebration(false);
+    setShowPostIcpNudge(false);
+    setPendingPostIcpNudge(false);
+    setPendingNavigatePath(null);
     navigate("/icp-builder", { replace: true });
   };
 
@@ -830,7 +861,26 @@ const ICPBuilder: React.FC = () => {
     await runIcpPostSaveSteps(handoffSteps);
   }, [refreshActivation, user]);
 
-  const unlockSavedDraft = useCallback(({
+  const shouldShowPostIcpStarterNudge = useCallback(async (analysisId: string) => {
+    if (!user?.id || creditsLoading || normalizePlan(subscriptionTier) !== "rookie") {
+      return false;
+    }
+
+    const { count, error } = await supabase
+      .from(ICP_RESULTS_TABLE)
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", user.id)
+      .neq("id", analysisId);
+
+    if (error) {
+      console.warn("Unable to check prior ICP results before Starter nudge", error);
+      return false;
+    }
+
+    return (count ?? 0) === 0;
+  }, [creditsLoading, subscriptionTier, user?.id]);
+
+  const unlockSavedDraft = useCallback(async ({
     analysisId,
     artifact,
     mode,
@@ -864,11 +914,13 @@ const ICPBuilder: React.FC = () => {
       mode,
       source,
     });
-    fireJourneyUpgradePrompt("rookie_icp_complete");
+    const showStarterNudge = await shouldShowPostIcpStarterNudge(analysisId);
+    postIcpPromptTrackedRef.current = false;
+    setPendingPostIcpNudge(showStarterNudge);
     setPendingNavigatePath(buildIcpUnlockNavigationPath(analysisId));
     setShowCelebration(true);
     void runPostSaveHandoff({ analysisId, artifact });
-  }, [fireJourneyUpgradePrompt, runPostSaveHandoff]);
+  }, [runPostSaveHandoff, shouldShowPostIcpStarterNudge]);
 
   const completeDraftGeneration = useCallback(async (persist: boolean) => {
     const mode = session.mode;
@@ -942,7 +994,7 @@ const ICPBuilder: React.FC = () => {
         throw new Error(ICP_ANALYZER_ERROR_MESSAGE);
       }
 
-      unlockSavedDraft({
+      await unlockSavedDraft({
         analysisId: data.analysisId,
         artifact,
         mode,
@@ -985,7 +1037,7 @@ const ICPBuilder: React.FC = () => {
             mode,
             userId: user.id,
           });
-          unlockSavedDraft({
+          await unlockSavedDraft({
             analysisId: saveData.analysisId,
             artifact: (saveData.artifact as StoredIcpArtifact) ?? fallbackArtifact,
             mode,
@@ -1044,7 +1096,7 @@ const ICPBuilder: React.FC = () => {
 
         const artifact = (data.artifact as StoredIcpArtifact) ?? session.draftPreview;
 
-        unlockSavedDraft({
+        await unlockSavedDraft({
           analysisId: data.analysisId,
           artifact,
           mode: session.mode,
@@ -1680,6 +1732,34 @@ const ICPBuilder: React.FC = () => {
     }
   };
 
+  const continueToDashboard = useCallback(() => {
+    setShowPostIcpNudge(false);
+    setPendingPostIcpNudge(false);
+    navigate(pendingNavigatePath || "/dashboard", { replace: true });
+  }, [navigate, pendingNavigatePath]);
+
+  const handlePostIcpStarterUpgrade = useCallback(async () => {
+    trackUpgradeClicked({
+      from_plan: normalizePlanId(subscriptionTier),
+      to_plan: "STARTER",
+      location: "post_icp_nudge",
+    });
+
+    setIsStarterCheckoutLoading(true);
+    try {
+      await createCheckout("starter", undefined, "monthly");
+    } catch (error) {
+      console.error("Starter checkout failed from post-ICP nudge", error);
+      toast({
+        title: "Unable to open checkout",
+        description: "Please try again in a moment.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsStarterCheckoutLoading(false);
+    }
+  }, [createCheckout, subscriptionTier, toast]);
+
   if (showCelebration) {
     return (
       <div className="fixed inset-0 z-[200] flex items-center justify-center bg-background/95 backdrop-blur">
@@ -1692,6 +1772,41 @@ const ICPBuilder: React.FC = () => {
           <p className="text-sm text-muted-foreground">Taking you to your dashboard...</p>
         </div>
         <style>{`@keyframes fadeInScale { from { opacity: 0; transform: scale(0.88); } to { opacity: 1; transform: scale(1); } }`}</style>
+      </div>
+    );
+  }
+
+  if (showPostIcpNudge) {
+    return (
+      <div className="fixed inset-0 z-[210] flex items-center justify-center bg-slate-950/70 px-4 backdrop-blur-sm">
+        <Card className="w-full max-w-[480px] border-2 border-blue-500/70 bg-background shadow-2xl">
+          <CardContent className="space-y-6 p-6 sm:p-8">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-500/10 text-blue-500">
+              <TrendingUp className="h-6 w-6" />
+            </div>
+            <div className="space-y-3">
+              <h2 className="text-2xl font-semibold tracking-tight text-foreground">
+                Your ICP is live. Now validate the demand behind it.
+              </h2>
+              <p className="text-sm leading-6 text-muted-foreground">
+                Starter gives you 100 credits/month, PMF Lab, Email Templates, and deeper research access so you can turn your ICP into real validation.
+              </p>
+            </div>
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <Button
+                className="flex-1"
+                onClick={() => void handlePostIcpStarterUpgrade()}
+                disabled={isStarterCheckoutLoading}
+              >
+                {isStarterCheckoutLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                Upgrade to Starter - $9/mo
+              </Button>
+              <Button variant="ghost" onClick={continueToDashboard}>
+                Skip for now
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }

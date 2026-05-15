@@ -65,6 +65,7 @@ const UpgradePromptDialog = ({
   const tierDetails = PLAN_SUMMARIES[recommendedTier];
   const featureLabel = featureName || "this feature";
   const limitCopy = limitLabel || featureLabel;
+  const isStarterRecommendation = recommendedTier === "starter";
 
   const title = useMemo(() => {
     if (reason === "credits") return "You're out of credits";
@@ -82,8 +83,11 @@ const UpgradePromptDialog = ({
     if (reason === "credits" && typeof requiredCredits === "number") {
       return `You need ${requiredCredits} credits to use ${featureLabel}. Upgrade to ${tierDetails.name} for ${tierDetails.monthlyCredits} credits/month and keep moving.`;
     }
+    if (isStarterRecommendation) {
+      return `Starter is your validation step: ${tierDetails.monthlyCredits} credits/month, PMF Lab, Email Templates, and deeper research access.`;
+    }
     return `Upgrade to ${tierDetails.name} to unlock ${featureLabel} plus ${tierDetails.monthlyCredits} credits each month.`;
-  }, [featureLabel, limit, limitCopy, reason, tierDetails, requiredCredits]);
+  }, [featureLabel, isStarterRecommendation, limit, limitCopy, reason, tierDetails, requiredCredits]);
 
   const canUpgrade = Boolean(tierDetails) && recommendedTier !== normalizedCurrentTier;
   const journeyTargetPlan = recommendedTier === "rookie" ? "starter" : recommendedTier;
@@ -116,7 +120,7 @@ const UpgradePromptDialog = ({
 
     setIsCheckingOut(true);
     try {
-      await createCheckout(recommendedTier);
+      await createCheckout(recommendedTier, undefined, "monthly");
       onUpgrade?.();
       onOpenChange(false);
     } catch (err) {
@@ -193,14 +197,16 @@ const UpgradePromptDialog = ({
           )}
 
           {tierDetails && (
-            <Card className="border-primary/30 bg-primary/5">
+            <Card className={isStarterRecommendation ? "border-2 border-blue-500/70 bg-blue-500/5" : "border-primary/30 bg-primary/5"}>
               <CardContent className="pt-6 pb-5">
                 <div className="flex items-start justify-between gap-4">
                   <div>
                     <div className="flex items-center gap-2">
                       <Crown className="h-4 w-4 text-primary" />
                       <span className="font-semibold">{tierDetails.name} Plan</span>
-                      <Badge className="text-xs">Recommended</Badge>
+                      <Badge className={isStarterRecommendation ? "bg-amber-500 text-amber-950 text-xs" : "text-xs"}>
+                        {isStarterRecommendation ? "Most popular" : "Recommended"}
+                      </Badge>
                     </div>
                     <p className="text-xs text-muted-foreground mt-1">
                       {tierDetails.description}
@@ -257,7 +263,7 @@ const UpgradePromptDialog = ({
             ) : (
               <CreditCard className="h-4 w-4" />
             )}
-            {subscriptionData.subscribed ? "Upgrade Now" : "Get Started"}
+            {isStarterRecommendation ? "Upgrade to Starter - $9/mo" : subscriptionData.subscribed ? "Upgrade Now" : "Get Started"}
           </Button>
         </DialogFooter>
       </DialogContent>

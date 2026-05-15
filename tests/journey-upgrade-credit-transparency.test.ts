@@ -12,7 +12,8 @@ test('journey upgrade prompts cover the founder journey triggers', () => {
   assert.match(source, /rookie_waitlist_published/);
   assert.match(source, /starter_pmf_complete/);
   assert.match(source, /rising_pitch_deck_heavy/);
-  assert.match(icpSource, /fireJourneyUpgradePrompt\("rookie_icp_complete"\)/);
+  assert.match(icpSource, /trigger: "post_icp_nudge"/);
+  assert.match(icpSource, /shouldShowPostIcpStarterNudge/);
   assert.match(waitlistSource, /fireJourneyUpgradePrompt\('rookie_waitlist_published'\)/);
   assert.match(pmfSource, /fireJourneyUpgradePrompt\('starter_pmf_complete'\)/);
 });

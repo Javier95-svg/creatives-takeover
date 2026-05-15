@@ -13,7 +13,14 @@ export type ActivationCompletedTrigger =
   | 'icp_seed_prefilled'
   | 'first_workspace_created';
 export type PlanId = 'ROOKIE' | 'STARTER' | 'RISING' | 'PRO';
-export type UpgradeLocation = 'pricing_page' | 'dashboard_banner' | 'feature_gate' | 'onboarding' | 'upgrade_trigger_banner';
+export type UpgradeLocation =
+  | 'pricing_page'
+  | 'dashboard_banner'
+  | 'feature_gate'
+  | 'onboarding'
+  | 'upgrade_trigger_banner'
+  | 'post_icp_nudge'
+  | 'dashboard_nudge';
 export type UpgradePromptTrigger = 'soft_gate_banner' | 'hard_gate_modal' | 'post_icp_nudge' | 'dashboard_nudge';
 export type IcpBuilderOpenedSource = 'dashboard' | 'onboarding' | 'direct' | 'seed_redirect';
 export type OnboardingStartedSource = 'signup_redirect' | 'dashboard_prompt' | 'direct';
@@ -527,9 +534,6 @@ export const trackUpgradePromptShown = ({
   current_plan,
   target_plan,
 });
-
-// TODO(dashboard_nudge): when a dedicated dashboard upgrade nudge is added, call
-// trackUpgradePromptShown({ trigger: 'dashboard_nudge', credits_remaining, current_plan, target_plan });
 
 export const trackJourneyUpgradePromptShown = (properties: {
   trigger: string;

@@ -29,8 +29,8 @@ interface FeatureCategory {
 
 const plans: PlanConfig[] = [
   { key: "rookie", name: "Rookie", price: "$0", period: "/month" },
-  { key: "starter", name: "Starter", price: "$9", period: "/month" },
-  { key: "rising", name: "Rising", price: "$29", period: "/month", isPopular: true },
+  { key: "starter", name: "Starter", price: "$9", period: "/month", isPopular: true },
+  { key: "rising", name: "Rising", price: "$29", period: "/month" },
   { key: "pro", name: "Pro", price: "$65", period: "/month" },
 ];
 
@@ -141,8 +141,15 @@ const PricingComparison = () => {
             </button>
           </div>
 
-          <Card className="glass rounded-2xl border-border/60 bg-card/80 backdrop-blur shadow-lg">
+          <Card className={`glass rounded-2xl bg-card/80 backdrop-blur shadow-lg ${plans[currentMobileIndex].isPopular ? "border-2 border-blue-500/80" : "border-border/60"}`}>
             <CardHeader>
+              {plans[currentMobileIndex].isPopular ? (
+                <div className="mb-2 flex justify-center">
+                  <Badge className="rounded-full bg-amber-500 px-3 py-1 text-xs font-semibold text-amber-950">
+                    Most popular
+                  </Badge>
+                </div>
+              ) : null}
               <CardTitle className="text-center text-2xl font-semibold tracking-tight gradient-text font-space-grotesk">
                 {plans[currentMobileIndex].name}
               </CardTitle>
@@ -194,8 +201,13 @@ const PricingComparison = () => {
                     {plans.map((plan) => (
                       <th
                         key={plan.name}
-                        className={`text-center p-5 font-semibold text-base text-foreground min-w-[180px] relative border-r border-border/60 last:border-r-0 font-space-grotesk ${plan.isPopular ? "bg-primary/5" : "bg-muted/40"}`}
+                        className={`text-center p-5 font-semibold text-base text-foreground min-w-[180px] relative border-r border-border/60 last:border-r-0 font-space-grotesk ${plan.isPopular ? "bg-blue-500/10 shadow-[inset_0_0_0_2px_hsl(var(--primary)/0.45)]" : "bg-muted/40"}`}
                       >
+                        {plan.isPopular ? (
+                          <Badge className="mb-2 rounded-full bg-amber-500 px-3 py-1 text-xs font-semibold text-amber-950">
+                            Most popular
+                          </Badge>
+                        ) : null}
                         {plan.name}
                         <div className="text-2xl font-semibold mt-2 text-foreground font-space-grotesk tabular-nums">
                           {plan.price}
@@ -224,8 +236,8 @@ const PricingComparison = () => {
                             {item.feature}
                           </td>
                           <td className="p-4 text-center border-r border-border/40">{renderFeatureValue(item.rookie)}</td>
-                          <td className="p-4 text-center border-r border-border/40">{renderFeatureValue(item.starter)}</td>
-                          <td className="p-4 text-center border-r border-border/40 bg-primary/5">{renderFeatureValue(item.rising)}</td>
+                          <td className="p-4 text-center border-r border-border/40 bg-blue-500/5 shadow-[inset_2px_0_0_hsl(var(--primary)/0.3),inset_-2px_0_0_hsl(var(--primary)/0.3)]">{renderFeatureValue(item.starter)}</td>
+                          <td className="p-4 text-center border-r border-border/40">{renderFeatureValue(item.rising)}</td>
                           <td className="p-4 text-center">{renderFeatureValue(item.pro)}</td>
                         </tr>
                       ))}

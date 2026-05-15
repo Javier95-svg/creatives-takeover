@@ -51,6 +51,7 @@ const PLAN_CONFIG: Array<{
     yearlyEquivalent: "$6.58/mo",
     savings: "Save 27%",
     credits: PLAN_MONTHLY_CREDITS.starter,
+    highlight: "Most Popular",
     features: PLAN_HIGHLIGHTS.starter,
   },
   {
@@ -64,7 +65,6 @@ const PLAN_CONFIG: Array<{
     yearlyEquivalent: "$19.92/mo",
     savings: "Save 31%",
     credits: PLAN_MONTHLY_CREDITS.rising,
-    highlight: "Most Popular",
     features: PLAN_HIGHLIGHTS.rising,
   },
   {
@@ -82,26 +82,30 @@ const PLAN_CONFIG: Array<{
   },
 ];
 
-const PLAN_CARD_STYLES: Record<PlanKey, { border: string; ring: string; button: string }> = {
+const PLAN_CARD_STYLES: Record<PlanKey, { border: string; ring: string; button: string; buttonVariant: "default" | "outline" }> = {
   rookie: {
     border: "border-green-500/60",
     ring: "ring-green-500/30",
     button: "border-green-600 bg-green-600 text-white hover:bg-green-700 hover:border-green-700",
+    buttonVariant: "outline",
   },
   starter: {
-    border: "border-yellow-500/60",
-    ring: "ring-yellow-500/30",
-    button: "border-yellow-500 bg-yellow-500 text-white hover:bg-yellow-600 hover:border-yellow-600",
+    border: "border-2 border-blue-500/80",
+    ring: "ring-blue-500/30",
+    button: "bg-primary text-primary-foreground hover:bg-primary/90",
+    buttonVariant: "default",
   },
   rising: {
     border: "border-blue-500/60",
     ring: "ring-blue-500/30",
-    button: "border-blue-600 bg-blue-600 text-white hover:bg-blue-700 hover:border-blue-700",
+    button: "border-blue-500/70 text-blue-700 hover:bg-blue-500/10 dark:text-blue-300",
+    buttonVariant: "outline",
   },
   pro: {
     border: "border-red-500/50",
     ring: "ring-red-500/20",
-    button: "border-red-600 bg-red-600 text-white hover:bg-red-700 hover:border-red-700",
+    button: "border-red-500/70 text-red-700 hover:bg-red-500/10 dark:text-red-300",
+    buttonVariant: "outline",
   },
 };
 
@@ -224,7 +228,7 @@ export default function Pricing() {
         <div className="grid grid-cols-1 justify-items-center md:grid-cols-2 xl:grid-cols-4 gap-6 xl:gap-9 max-w-[104rem] mx-auto items-start">
           {PLAN_CONFIG.map((plan, index) => {
             const isCurrentPlan = currentTier === plan.key;
-            const isPopular = plan.key === "rising";
+            const isPopular = plan.key === "starter";
             const isPro = plan.key === "pro";
             const isPlanPending = pendingPlan === plan.key;
             const price = billingCycle === "yearly" ? plan.yearlyPrice : plan.monthlyPrice;
@@ -245,7 +249,7 @@ export default function Pricing() {
                       isCurrentPlan
                         ? "bg-green-600 text-white"
                         : isPopular
-                          ? "bg-primary text-primary-foreground"
+                          ? "bg-amber-500 text-amber-950"
                           : "bg-red-600 text-white"
                     }`}>
                       {isCurrentPlan ? <><Crown className="w-3 h-3 mr-1 inline" />Your Plan</> : isPopular ? <><Star className="w-3 h-3 mr-1 inline fill-current" />Most Popular</> : <><Sparkles className="w-3 h-3 mr-1 inline" />Premium</>}
@@ -307,7 +311,7 @@ export default function Pricing() {
                   className={`w-full ${cardStyle.button}`}
                   disabled={actionLoading || Boolean(pendingPlan)}
                   onClick={() => void handleSubscribe(plan.key)}
-                  variant="outline"
+                  variant={cardStyle.buttonVariant}
                 >
                   {isPlanPending
                     ? "Opening..."
