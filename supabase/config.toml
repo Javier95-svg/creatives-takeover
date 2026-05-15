@@ -54,6 +54,9 @@ verify_jwt = false
 [functions.send-welcome-email]
 verify_jwt = false
 
+[functions.reactivation-campaign]
+verify_jwt = false
+
 [functions.send-dm-notification-email]
 verify_jwt = false
 
