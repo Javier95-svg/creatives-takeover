@@ -14,6 +14,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import type { Json } from '@/integrations/supabase/types';
 import { getLocalDateString } from '@/lib/dailyGoalPrompt';
+import { trackOnboardingCompleted } from '@/lib/analytics';
 import { cn } from '@/lib/utils';
 
 type StepKey = 'icp_builder' | 'founder_stage' | 'daily_mission';
@@ -207,6 +208,11 @@ export function Day1Welcome({ profile, onProfilePatch }: Day1WelcomeProps) {
       }
 
       await updateStep('daily_mission', { onboarding_completed: true });
+      trackOnboardingCompleted({
+        quiz_completed: profile.quiz_completed === true,
+        creative_niche: null,
+        business_stage: profile.quiz_current_stage || stage || null,
+      });
       setCelebrating(true);
       window.setTimeout(() => {
         navigate('/dashboard/tasks', { replace: true });
@@ -233,6 +239,11 @@ export function Day1Welcome({ profile, onProfilePatch }: Day1WelcomeProps) {
         throw error;
       }
 
+      trackOnboardingCompleted({
+        quiz_completed: profile.quiz_completed === true,
+        creative_niche: null,
+        business_stage: profile.quiz_current_stage || stage || null,
+      });
       onProfilePatch({ onboarding_completed: true });
       navigate('/dashboard', { replace: true });
     } catch (error) {

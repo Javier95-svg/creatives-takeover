@@ -1,5 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
 import { resolveMonthlyBillingWindow } from './billing-period.ts';
+import { emitBusinessEvent } from './analytics.ts';
 import {
   PLAN_MONTHLY_CREDITS,
   normalizePlan,
@@ -38,6 +39,34 @@ async function getCurrentCreditSnapshot(userId: string, supabase: any) {
   return {
     balance: data?.balance ?? 0,
     monthlyQuota: data?.monthly_quota ?? 0,
+  };
+}
+
+const getDaysSinceSignup = (createdAt?: string | null): number => {
+  if (!createdAt) return 0;
+  const created = new Date(createdAt).getTime();
+  if (Number.isNaN(created)) return 0;
+  return Math.max(0, Math.floor((Date.now() - created) / 86_400_000));
+};
+
+async function getCreditAnalyticsContext(userId: string, supabase: any) {
+  const [{ count }, { data: profile }] = await Promise.all([
+    supabase
+      .from('credit_transactions')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .eq('tx_type', 'deduct'),
+    supabase
+      .from('profiles')
+      .select('created_at, subscription_tier')
+      .eq('id', userId)
+      .maybeSingle(),
+  ]);
+
+  return {
+    priorDeductCount: count ?? 0,
+    daysSinceSignup: getDaysSinceSignup(profile?.created_at),
+    subscriptionTier: normalizePlan(profile?.subscription_tier),
   };
 }
 
@@ -287,6 +316,7 @@ export async function checkAndDeductCredits(
     // Check if quota needs reset (monthly reset logic)
     await checkAndResetMonthlyQuota(userId, supabase);
     const creditsBeforeDeduction = await getCurrentCreditSnapshot(userId, supabase);
+    const analyticsContext = await getCreditAnalyticsContext(userId, supabase);
 
     const deductionMetadata = {
       ...(metadata || {}),
@@ -338,6 +368,39 @@ export async function checkAndDeductCredits(
         error: result.error || 'Credit deduction failed',
         errorCode: result.errorCode || 'DEDUCTION_FAILED'
       }, shouldPersist);
+    }
+
+    const creditsRemaining = (result.newBalance ?? 0) + (result.newQuota ?? 0);
+    const userProperties = {
+      subscription_tier: analyticsContext.subscriptionTier,
+      days_since_signup: analyticsContext.daysSinceSignup,
+    };
+
+    if (analyticsContext.priorDeductCount === 0) {
+      await emitBusinessEvent({
+        eventName: 'first_tool_used',
+        userId,
+        properties: {
+          tool_name: feature,
+          credits_cost: chargeAmount,
+          credits_remaining: creditsRemaining,
+          days_since_signup: analyticsContext.daysSinceSignup,
+        },
+        userProperties,
+      });
+    }
+
+    if (creditsRemaining === 0) {
+      await emitBusinessEvent({
+        eventName: 'credit_exhausted',
+        userId,
+        properties: {
+          plan: analyticsContext.subscriptionTier,
+          days_since_signup: analyticsContext.daysSinceSignup,
+          last_feature_used: feature,
+        },
+        userProperties,
+      });
     }
 
     return await returnWithIdempotency({

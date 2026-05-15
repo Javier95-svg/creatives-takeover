@@ -6,6 +6,7 @@ import { CheckCircle2, Circle, Sparkles, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import confetti from 'canvas-confetti';
+import { trackOnboardingCompleted } from '@/lib/analytics';
 import { trackOnboardingComplete, trackOnboardingDismissed } from '@/lib/onboardingAnalytics';
 
 interface OnboardingChecklistProps {
@@ -98,6 +99,11 @@ export const OnboardingChecklist = ({
             .eq('id', userId);
 
           // Track completion analytics
+          trackOnboardingCompleted({
+            quiz_completed: true,
+            creative_niche: null,
+            business_stage: null,
+          });
           await trackOnboardingComplete(userId);
 
           // Show celebration
@@ -133,6 +139,11 @@ export const OnboardingChecklist = ({
         .update({ onboarding_completed: true })
         .eq('id', userId);
 
+      trackOnboardingCompleted({
+        quiz_completed: false,
+        creative_niche: null,
+        business_stage: null,
+      });
       setIsVisible(false);
       toast.info('You can always complete your profile later from Account settings');
     } catch (error) {

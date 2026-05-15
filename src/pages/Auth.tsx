@@ -20,11 +20,7 @@ import { signUpWithFallback } from '@/lib/authSignup';
 import { mapSignInError, mapSignUpError } from '@/lib/authErrors';
 import { MIN_PASSWORD_LENGTH, PASSWORD_LENGTH_ERROR } from '@/lib/passwordPolicy';
 import { persistOnboardingReturn, sanitizeReturnPath } from '@/lib/authRedirect';
-import {
-  persistAuthMethod,
-  readAuthMethod,
-  trackSignupCompleted,
-} from '@/lib/analytics';
+import { persistAuthMethod } from '@/lib/analytics';
 import {
   clearPendingReferralCode,
   getPendingReferralCode,
@@ -200,7 +196,6 @@ const Auth: React.FC = () => {
       }
 
       toast.success('Account created successfully!');
-      trackSignupCompleted({ method: readAuthMethod() ?? 'email' });
       setLoading(false);
     }
   };

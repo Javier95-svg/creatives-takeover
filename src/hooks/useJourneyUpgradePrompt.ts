@@ -1,6 +1,8 @@
 import { useCallback } from "react";
 import { useFeatureGating } from "@/hooks/useFeatureGating";
+import { useCredits } from "@/hooks/useCredits";
 import { useUpgradePrompt } from "@/contexts/UpgradePromptContext";
+import { trackUpgradePromptShown } from "@/lib/analytics";
 import type { Plan } from "@/config/planPermissions";
 
 export type JourneyUpgradeTrigger =
@@ -119,6 +121,7 @@ export function dismissJourneyUpgradePrompt(trigger: JourneyUpgradeTrigger) {
 
 export function useJourneyUpgradePrompt() {
   const { currentTier, isLoading } = useFeatureGating();
+  const { totalAvailable } = useCredits();
   const { openUpgradePrompt } = useUpgradePrompt();
 
   const fireJourneyUpgradePrompt = useCallback(
@@ -137,9 +140,17 @@ export function useJourneyUpgradePrompt() {
         journeyTrigger: trigger,
         sourceTool: options?.sourceTool || config.sourceTool,
       });
+      if (trigger === "rookie_icp_complete") {
+        trackUpgradePromptShown({
+          trigger: "post_icp_nudge",
+          credits_remaining: totalAvailable,
+          current_plan: currentTier,
+          target_plan: config.targetPlan,
+        });
+      }
       return true;
     },
-    [currentTier, isLoading, openUpgradePrompt]
+    [currentTier, isLoading, openUpgradePrompt, totalAvailable]
   );
 
   return {

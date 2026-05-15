@@ -10,7 +10,7 @@ import {
   withGuidedOnboardingPreference,
 } from '@/lib/guidedOnboarding';
 import { resumePendingDiscoveryCallRedirect } from '@/services/discoveryCallService';
-import { identify } from '@/lib/analytics';
+import { identify, readAuthMethod, trackSignupCompleted } from '@/lib/analytics';
 import { isAdminEmail } from '@/lib/admin';
 
 interface AuthContextType {
@@ -31,6 +31,26 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+const getDaysSinceSignup = (createdAt?: string | null): number => {
+  if (!createdAt) return 0;
+  const created = new Date(createdAt).getTime();
+  if (Number.isNaN(created)) return 0;
+  return Math.max(0, Math.floor((Date.now() - created) / 86_400_000));
+};
+
+const getSignupCompletedMethod = (provider?: string | null, storedMethod?: string | null) => {
+  const rawMethod = (storedMethod || provider || '').toLowerCase();
+  if (rawMethod === 'google') return 'google' as const;
+  if (rawMethod === 'github') return 'github' as const;
+  if (rawMethod === 'email' || rawMethod === 'password') return 'email' as const;
+  return null;
+};
+
+const getSignupReferrer = () => {
+  if (typeof document === 'undefined') return null;
+  return document.referrer || null;
+};
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
@@ -66,7 +86,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       // ── Step 1: Check if profile exists (SINGLE call) ──
       const { data: existingProfileData, error: existingProfileError } = await supabase
         .from('profiles')
-        .select('id, onboarding_completed, user_preferences')
+        .select('id, created_at, onboarding_completed, quiz_completed, creative_niche, business_stage, subscription_tier, user_preferences')
         .eq('id', userId)
         .maybeSingle();
       let existingProfile = existingProfileData;
@@ -92,6 +112,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           ? ({
             ...fallbackProfile,
             onboarding_completed: null,
+            quiz_completed: null,
+            creative_niche: null,
+            business_stage: null,
+            subscription_tier: null,
+            created_at: null,
           } as typeof existingProfileData)
           : null;
       }
@@ -124,7 +149,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       const { data: refreshedProfile, error: refreshedProfileError } = await supabase
         .from('profiles')
-        .select('id, onboarding_completed, user_preferences')
+        .select('id, created_at, onboarding_completed, quiz_completed, creative_niche, business_stage, subscription_tier, user_preferences')
         .eq('id', userId)
         .maybeSingle();
 
@@ -166,13 +191,27 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       if (identifiedUserRef.current !== userId) {
         identifiedUserRef.current = userId;
+        const daysSinceSignup = getDaysSinceSignup(existingProfile?.created_at);
         identify(userId, {
-          email,
-          full_name: signedInUser.user_metadata?.full_name || '',
-          username: signedInUser.user_metadata?.username || '',
+          subscription_tier: existingProfile?.subscription_tier ?? 'rookie',
+          days_since_signup: daysSinceSignup,
           onboarding_completed: existingProfile?.onboarding_completed ?? null,
+          quiz_completed: existingProfile?.quiz_completed ?? null,
           is_admin: isAdmin,
         });
+      }
+
+      if (!profileExistedBeforeSignIn && profileExists) {
+        const method = getSignupCompletedMethod(
+          signedInUser.app_metadata?.provider,
+          readAuthMethod(),
+        );
+        if (method) {
+          trackSignupCompleted({
+            method,
+            referrer: getSignupReferrer(),
+          });
+        }
       }
 
       // ── Step 3: Run first-login updates in PARALLEL ──

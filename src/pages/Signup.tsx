@@ -17,12 +17,7 @@ import MobileFormOptimizer from "@/components/MobileFormOptimizer";
 import { AuthSocialButtons } from "@/components/auth/AuthSocialButtons";
 import { mapSignUpError } from "@/lib/authErrors";
 import { MIN_PASSWORD_LENGTH, PASSWORD_LENGTH_ERROR } from "@/lib/passwordPolicy";
-import {
-  captureEvent,
-  persistAuthMethod,
-  readAuthMethod,
-  trackSignupCompleted as trackAnalyticsSignupCompleted,
-} from "@/lib/analytics";
+import { captureEvent, persistAuthMethod } from "@/lib/analytics";
 import {
   isUsernameAvailable,
   normalizeUsernameInput,
@@ -332,7 +327,6 @@ const Signup = () => {
         }
 
         // Track conversion completion
-        trackAnalyticsSignupCompleted({ method: readAuthMethod() ?? 'email' });
         trackSignupCompleted(triggerType);
 
         try {

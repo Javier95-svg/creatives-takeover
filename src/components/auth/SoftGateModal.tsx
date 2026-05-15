@@ -9,9 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { mapSignUpError } from "@/lib/authErrors";
 import {
   persistAuthMethod,
-  readAuthMethod,
   trackLandingViewed,
-  trackSignupCompleted,
   trackSignupStarted,
   trackSoftGateShown,
 } from "@/lib/analytics";
@@ -207,7 +205,6 @@ const SoftGateModal = ({
         return;
       }
 
-      trackSignupCompleted({ method: readAuthMethod() ?? "email" });
       closeWithoutExitTracking();
       navigate(returnPath, { replace: true });
     } catch (error) {

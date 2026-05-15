@@ -213,11 +213,9 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
       });
       // FIX(retention): onboarding — completion is now emitted explicitly so onboarding_started/onboarding_completed can be trusted again.
       trackOnboardingCompleted({
-        userId: user.id,
-        stage: formData.businessStage,
-        painPoint: formData.primaryPain,
-        activationIntent: selectedIntent,
-        timeMs: Date.now() - startedAt,
+        quiz_completed: true,
+        creative_niche: null,
+        business_stage: formData.businessStage || null,
       });
       void trackActivity('onboarding_completed', {
         stage: formData.businessStage,

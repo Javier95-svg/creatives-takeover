@@ -8,7 +8,6 @@ import { toast } from 'sonner';
 import type { EmailOtpType } from '@supabase/supabase-js';
 import { appendReturnParam, persistOnboardingReturn, sanitizeReturnPath } from '@/lib/authRedirect';
 import { consumeCheckoutIntent, redirectToCheckoutIntent } from '@/lib/checkoutRedirect';
-import { readAuthMethod, trackSignupCompleted } from '@/lib/analytics';
 import { ICP_SEED_STORAGE_KEY } from '@/lib/icpSeed';
 import { getSafeSessionStorage } from '@/lib/safeStorage';
 import { resumePendingDiscoveryCallRedirect } from '@/services/discoveryCallService';
@@ -26,10 +25,6 @@ function isNewlyCreatedUser(createdAt?: string): boolean {
   const createdMs = new Date(createdAt).getTime();
   if (Number.isNaN(createdMs)) return false;
   return Date.now() - createdMs <= NEW_ACCOUNT_MAX_AGE_MS;
-}
-
-function isNewSessionUser(createdAt?: string, updatedAt?: string): boolean {
-  return Boolean(createdAt && updatedAt && createdAt === updatedAt);
 }
 
 const AuthCallback = () => {
@@ -110,12 +105,6 @@ const AuthCallback = () => {
         if (session?.user) {
           console.warn('Auth successful, checking for return URL...');
           setStatus('success');
-
-          const authMethod = readAuthMethod();
-          const isNewUser = isNewSessionUser(session.user.created_at, session.user.updated_at);
-          if (authMethod && isNewUser) {
-            trackSignupCompleted({ method: authMethod });
-          }
 
           const authIntent = getOAuthAuthIntent();
           const referralCode = getPendingReferralCode();

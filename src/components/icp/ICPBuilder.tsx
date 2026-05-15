@@ -372,6 +372,7 @@ const ICPBuilder: React.FC = () => {
   const stepsCompletedRef = useRef(0);
   const totalStepsRef = useRef(0);
   const hasStartedTypingRef = useRef(false);
+  const icpStartedAtRef = useRef<number | null>(null);
   const fastInputRef = useRef<HTMLTextAreaElement>(null);
   const guidedSeedRef = useRef<HTMLTextAreaElement>(null);
 
@@ -647,6 +648,7 @@ const ICPBuilder: React.FC = () => {
   const updateGuided = <K extends keyof IcpBuilderSession["guided"]>(field: K, value: IcpBuilderSession["guided"][K]) => {
     if (!hasStartedTypingRef.current) {
       hasStartedTypingRef.current = true;
+      icpStartedAtRef.current = Date.now();
       trackICPBuilderStarted({ page_path: "/icp-builder", mode: session.mode, userId: user?.id });
     }
     setSession((previous) => ({
@@ -661,6 +663,7 @@ const ICPBuilder: React.FC = () => {
   const updateQuickstartSeed = (value: string) => {
     if (!hasStartedTypingRef.current) {
       hasStartedTypingRef.current = true;
+      icpStartedAtRef.current = Date.now();
       trackICPBuilderStarted({ page_path: "/icp-builder", mode: session.mode, userId: user?.id });
     }
     setSession((previous) => {
@@ -845,10 +848,15 @@ const ICPBuilder: React.FC = () => {
       savedAnalysisId: analysisId,
     }));
     completedRef.current = true;
+    const completionMode = mode || "guided";
+    const timeToCompleteSeconds = Math.max(
+      0,
+      Math.round((Date.now() - (icpStartedAtRef.current ?? Date.now())) / 1000),
+    );
     trackICPBuilderCompleted({
-      page_path: "/icp-builder",
-      mode,
-      confidence: artifact.draftDocument.confidence.level,
+      mode: completionMode,
+      time_to_complete_seconds: timeToCompleteSeconds,
+      credits_used: 0,
     });
     trackActivationCompleted({ trigger: 'icp_completed', artifact: 'icp_completed' });
     trackICPDashboardOpened({
@@ -856,17 +864,11 @@ const ICPBuilder: React.FC = () => {
       mode,
       source,
     });
-    captureEvent("icp_analysis_completed", {
-      mode,
-      persona_name: artifact.draftDocument.customer.personaName,
-      confidence: artifact.draftDocument.confidence.level,
-      userId: user?.id,
-    });
     fireJourneyUpgradePrompt("rookie_icp_complete");
     setPendingNavigatePath(buildIcpUnlockNavigationPath(analysisId));
     setShowCelebration(true);
     void runPostSaveHandoff({ analysisId, artifact });
-  }, [fireJourneyUpgradePrompt, runPostSaveHandoff, user?.id]);
+  }, [fireJourneyUpgradePrompt, runPostSaveHandoff]);
 
   const completeDraftGeneration = useCallback(async (persist: boolean) => {
     const mode = session.mode;
@@ -1481,6 +1483,7 @@ const ICPBuilder: React.FC = () => {
             onChange={(event) => {
               if (!hasStartedTypingRef.current) {
                 hasStartedTypingRef.current = true;
+                icpStartedAtRef.current = Date.now();
                 trackICPBuilderStarted({ page_path: "/icp-builder", mode: session.mode, userId: user?.id });
               }
               setSession((previous) => ({
