@@ -68,7 +68,7 @@ const cycleSteps: CycleStep[] = [
     shortLabel: "Traction",
     title: "Stage 6: Traction",
     description:
-      "Traction is where launch energy has to become a repeatable pattern. The job is no longer to get any users. It is to find which acquisition channel actually works for your specific product, understand what retention looks like in the first 30 days, and separate real channel-product fit from constant manual effort.\n\nUse the GTM Strategist to identify your best channels, then the Traction Engine to test them week by week. Let the score show whether you are building a real growth loop. Once your score holds above the threshold for three consecutive weeks, you have demonstrated what investors actually want to see: a product that retains users, a channel that converts, and a founder who executes consistently.",
+      "Launch got you users. Traction gets you a business. This stage is about finding the acquisition channel that fits your specific product, mapping what retention looks like in the first 30 days, and separating real growth from constant effort. Use the GTM Strategist to narrow the field and the Traction Engine to run the plays week by week.\n\nThree consecutive weeks above the score threshold is your milestone. It means your product retains users, your channel converts them, and you execute without burning out. That combination is what turns early traction into a fundable story.",
     icon: ChartNoAxesCombined,
     color: "from-pink-500/20 to-pink-600/20"
   },
