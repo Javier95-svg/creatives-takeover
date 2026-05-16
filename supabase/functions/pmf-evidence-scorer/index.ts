@@ -2,6 +2,7 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { CREDIT_COSTS } from '../_shared/credit-constants.ts';
 import { checkAndDeductCredits, getUserFromAuth, refundCredits } from '../_shared/credit-deduction.ts';
+import { resolveCreditIdempotencyKey } from '../_shared/request-idempotency.ts';
 
 const MIN_INTERVIEWS_FOR_READY = 25;
 
@@ -79,12 +80,28 @@ serve(async (req) => {
     }
 
     const creditCost = CREDIT_COSTS.PMF_SCORING;
+    const idempotencyKey = await resolveCreditIdempotencyKey(req, {
+      userId: user.id,
+      feature: 'PMF_SCORING',
+      requestFingerprint: {
+        testTypes: body.testTypes,
+        conversationCount: loggedInterviewCount,
+        peopleReached: body.peopleReached,
+        strongInterestCount: body.strongInterestCount,
+        demandSignals: {
+          askedAboutPricing: body.askedAboutPricing,
+          joinedWaitlist: body.joinedWaitlist,
+          sharedWithSomeone: body.sharedWithSomeone,
+          offeredToPay: body.offeredToPay,
+        },
+      },
+    });
     const creditResult = await checkAndDeductCredits(
       user.id,
       creditCost,
       'PMF Evidence Analysis',
       undefined,
-      { testTypes: body.testTypes, entitlementFeature: 'PMF_SCORING' }
+      { testTypes: body.testTypes, idempotencyKey, entitlementFeature: 'PMF_SCORING' }
     );
     const chargedCredits = (creditResult.usedFromQuota ?? 0) + (creditResult.usedFromBalance ?? 0);
 

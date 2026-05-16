@@ -2,10 +2,11 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { checkAndDeductCredits, getUserFromAuth, refundCredits } from "../_shared/credit-deduction.ts";
 import { CREDIT_COSTS } from "../_shared/credit-constants.ts";
+import { resolveCreditIdempotencyKey } from "../_shared/request-idempotency.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, idempotency-key",
 };
 
 interface WaitlistGeneratorRequest {
@@ -38,12 +39,17 @@ serve(async (req) => {
     }
 
     const creditCost = CREDIT_COSTS.WAITLIST_GENERATION;
+    const idempotencyKey = await resolveCreditIdempotencyKey(req, {
+      userId: user.id,
+      feature: "WAITLIST_GENERATION",
+      requestFingerprint: { productName, pitch, audience },
+    });
     const creditResult = await checkAndDeductCredits(
       user.id,
       creditCost,
       "Waitlist Page Generation",
       undefined,
-      { productName: productName.substring(0, 80), entitlementFeature: 'WAITLIST_GENERATION' },
+      { productName: productName.substring(0, 80), idempotencyKey, entitlementFeature: 'WAITLIST_GENERATION' },
     );
     const chargedCredits = (creditResult.usedFromQuota ?? 0) + (creditResult.usedFromBalance ?? 0);
 

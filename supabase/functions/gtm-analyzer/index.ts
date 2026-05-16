@@ -61,6 +61,7 @@ serve(async (req) => {
       undefined,
       { businessType, idempotencyKey, entitlementFeature: 'GTM_ANALYSIS' }
     );
+    const chargedCredits = (creditResult.usedFromQuota ?? 0) + (creditResult.usedFromBalance ?? 0);
 
     if (!creditResult.success) {
       return new Response(JSON.stringify({
@@ -259,7 +260,7 @@ Apply the scoring matrix, enforce all constraint rules, then generate the GTM Br
         success: true,
         analysis,
         planId,
-        creditsUsed: creditCost,
+        creditsUsed: chargedCredits,
         newBalance: creditResult.newBalance,
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -267,7 +268,9 @@ Apply the scoring matrix, enforce all constraint rules, then generate the GTM Br
 
     } catch (aiError) {
       const err = aiError instanceof Error ? aiError : new Error(String(aiError));
-      await refundCredits(user.id, creditCost, 'GTM Analysis', 'Refund: AI processing failed', { error: err.message });
+      if (chargedCredits > 0) {
+        await refundCredits(user.id, chargedCredits, 'GTM Analysis', 'Refund: AI processing failed', { error: err.message });
+      }
       throw aiError;
     }
 

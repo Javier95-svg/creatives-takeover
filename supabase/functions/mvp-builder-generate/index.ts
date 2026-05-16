@@ -411,6 +411,7 @@ serve(async (req: Request) => {
   const creditCost = isFirstGeneration
     ? CREDIT_COSTS.APP_BUILDER_GENERATE
     : CREDIT_COSTS.APP_BUILDER_REFINE;
+  let chargedCredits = 0;
 
   if (userId) {
     const idempotencyKey = req.headers.get("Idempotency-Key") ?? undefined;
@@ -432,6 +433,7 @@ serve(async (req: Request) => {
         creditCheck.errorCode
       );
     }
+    chargedCredits = (creditCheck.usedFromQuota ?? 0) + (creditCheck.usedFromBalance ?? 0);
   }
 
   // ── Build messages for model call ──────────────────────────────────────
@@ -530,10 +532,10 @@ serve(async (req: Request) => {
   }
 
   if (!aiResponse) {
-    if (userId) {
+    if (userId && chargedCredits > 0) {
       await refundCredits(
         userId,
-        creditCost,
+        chargedCredits,
         creditFeature,
         "AI gateway error (all model attempts failed)"
       ).catch(() => {});
@@ -616,10 +618,10 @@ serve(async (req: Request) => {
             })
           );
 
-          if (userId) {
+          if (userId && chargedCredits > 0) {
             await refundCredits(
               userId,
-              creditCost,
+              chargedCredits,
               creditFeature,
               "No project output generated"
             ).catch(() => {});
@@ -638,8 +640,8 @@ serve(async (req: Request) => {
       );
       await writer.write(encDone());
 
-      if (userId) {
-        await refundCredits(userId, creditCost, creditFeature, "Stream error").catch(
+      if (userId && chargedCredits > 0) {
+        await refundCredits(userId, chargedCredits, creditFeature, "Stream error").catch(
           () => {}
         );
       }
