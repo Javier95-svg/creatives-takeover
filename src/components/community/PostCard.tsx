@@ -73,21 +73,9 @@ export interface Post {
 
 interface PostCardProps {
   post: Post;
-  readOnly?: boolean;
 }
 
-const COMMUNITY_ROOM_LABELS: Record<string, string> = {
-  build_in_public: "Build in Public 🚀",
-  mindset: "Mindset 🧠",
-  growth_marketing: "Growth & Marketing 📣",
-  fundraising_revenue: "Fundraising & Revenue 💰",
-  product_validation: "Product & Validation 🛠️",
-};
-
-const formatTagLabel = (tag: string) =>
-  COMMUNITY_ROOM_LABELS[tag] || `#${tag}`;
-
-const PostCard = React.memo<PostCardProps>(({ post, readOnly = false }) => {
+const PostCard = React.memo<PostCardProps>(({ post }) => {
   const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [isLiked, setIsLiked] = useState(false);
@@ -127,7 +115,7 @@ const PostCard = React.memo<PostCardProps>(({ post, readOnly = false }) => {
 
   // Load user's like and repost status
   useEffect(() => {
-    if (readOnly || !isAuthenticated || !user) return;
+    if (!isAuthenticated || !user) return;
     
     const loadUserStatus = async () => {
       try {
@@ -156,7 +144,7 @@ const PostCard = React.memo<PostCardProps>(({ post, readOnly = false }) => {
     };
 
     loadUserStatus();
-  }, [isAuthenticated, post.id, readOnly, user]);
+  }, [isAuthenticated, user, post.id]);
 
   // Load comments
   const loadComments = async () => {
@@ -712,7 +700,7 @@ const PostCard = React.memo<PostCardProps>(({ post, readOnly = false }) => {
               <div className="flex flex-wrap gap-1.5 text-sm">
                 {post.tags.map((tag, index) => (
                   <span key={index} className="text-primary hover:text-primary/80 font-medium">
-                    {formatTagLabel(tag)}
+                    #{tag}
                   </span>
                 ))}
               </div>
@@ -720,75 +708,73 @@ const PostCard = React.memo<PostCardProps>(({ post, readOnly = false }) => {
           </div>
           
           {/* CARD FOOTER */}
-          {!readOnly && (
-            <div className="pt-4 border-t border-border/50 space-y-3">
-              {/* Action Buttons Row */}
-              <div className="flex items-center justify-between gap-1 sm:gap-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleLike}
-                  className={`flex items-center justify-center gap-2 h-11 w-11 sm:h-10 sm:w-auto sm:px-4 rounded-lg min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 ${
-                    isLiked
-                      ? "text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
-                      : "text-muted-foreground hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
-                  }`}
-                  aria-label={`${isLiked ? 'Unlike' : 'Like'} this post`}
-                >
-                  <Heart className={`h-5 w-5 ${isLiked ? "fill-current" : ""}`} />
-                  <span className="hidden sm:inline text-sm font-medium">{localLikes}</span>
-                </Button>
-
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    const newShowComments = !showComments;
-                    setShowComments(newShowComments);
-                    if (newShowComments) {
-                      loadComments();
-                    }
-                  }}
-                  className="flex items-center justify-center gap-2 h-11 w-11 sm:h-10 sm:w-auto sm:px-4 rounded-lg min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 text-muted-foreground hover:text-primary hover:bg-primary/10"
-                  aria-label="Comment on this post"
-                >
-                  <MessageCircle className="h-5 w-5" />
-                  <span className="hidden sm:inline text-sm font-medium">{localComments}</span>
-                </Button>
-
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleShare}
-                  className="flex items-center justify-center gap-2 h-11 w-11 sm:h-10 sm:w-auto sm:px-4 rounded-lg min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 text-muted-foreground hover:text-primary hover:bg-primary/10"
-                  aria-label="Share this post"
-                >
-                  <Share2 className="h-5 w-5" />
-                  <span className="hidden sm:inline text-sm font-medium">Share</span>
-                </Button>
-
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleBookmark}
-                  className={`flex items-center justify-center gap-2 h-11 w-11 sm:h-10 sm:w-auto sm:px-4 rounded-lg min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 ${
-                    isBookmarked
-                      ? "text-primary hover:text-primary/80 hover:bg-primary/10"
-                      : "text-muted-foreground hover:text-primary hover:bg-primary/10"
-                  }`}
-                  aria-label={`${isBookmarked ? 'Remove bookmark' : 'Bookmark'} this post`}
-                >
-                  <Bookmark className={`h-5 w-5 ${isBookmarked ? "fill-current" : ""}`} />
-                  <span className="hidden sm:inline text-sm font-medium">Save</span>
-                </Button>
-              </div>
+          <div className="pt-4 border-t border-border/50 space-y-3">
+            {/* Action Buttons Row */}
+            <div className="flex items-center justify-between gap-1 sm:gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleLike}
+                className={`flex items-center justify-center gap-2 h-11 w-11 sm:h-10 sm:w-auto sm:px-4 rounded-lg min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 ${
+                  isLiked 
+                    ? "text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20" 
+                    : "text-muted-foreground hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
+                }`}
+                aria-label={`${isLiked ? 'Unlike' : 'Like'} this post`}
+              >
+                <Heart className={`h-5 w-5 ${isLiked ? "fill-current" : ""}`} />
+                <span className="hidden sm:inline text-sm font-medium">{localLikes}</span>
+              </Button>
+              
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  const newShowComments = !showComments;
+                  setShowComments(newShowComments);
+                  if (newShowComments) {
+                    loadComments();
+                  }
+                }}
+                className="flex items-center justify-center gap-2 h-11 w-11 sm:h-10 sm:w-auto sm:px-4 rounded-lg min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 text-muted-foreground hover:text-primary hover:bg-primary/10"
+                aria-label="Comment on this post"
+              >
+                <MessageCircle className="h-5 w-5" />
+                <span className="hidden sm:inline text-sm font-medium">{localComments}</span>
+              </Button>
+              
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleShare}
+                className="flex items-center justify-center gap-2 h-11 w-11 sm:h-10 sm:w-auto sm:px-4 rounded-lg min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 text-muted-foreground hover:text-primary hover:bg-primary/10"
+                aria-label="Share this post"
+              >
+                <Share2 className="h-5 w-5" />
+                <span className="hidden sm:inline text-sm font-medium">Share</span>
+              </Button>
+              
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleBookmark}
+                className={`flex items-center justify-center gap-2 h-11 w-11 sm:h-10 sm:w-auto sm:px-4 rounded-lg min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 ${
+                  isBookmarked 
+                    ? "text-primary hover:text-primary/80 hover:bg-primary/10" 
+                    : "text-muted-foreground hover:text-primary hover:bg-primary/10"
+                }`}
+                aria-label={`${isBookmarked ? 'Remove bookmark' : 'Bookmark'} this post`}
+              >
+                <Bookmark className={`h-5 w-5 ${isBookmarked ? "fill-current" : ""}`} />
+                <span className="hidden sm:inline text-sm font-medium">Save</span>
+              </Button>
             </div>
-          )}
+          </div>
           
           {/* Comments Section */}
-          {!readOnly && showComments && (
+          {showComments && (
             <div className="mt-4 pt-4 border-t border-border/50">
               {/* Add Comment - Reddit Style */}
               <div className="space-y-3 mb-4">
@@ -1041,8 +1027,7 @@ const PostCard = React.memo<PostCardProps>(({ post, readOnly = false }) => {
   return prevProps.post.id === nextProps.post.id &&
          prevProps.post.votes === nextProps.post.votes &&
          prevProps.post.commentsCount === nextProps.post.commentsCount &&
-         prevProps.post.repostCount === nextProps.post.repostCount &&
-         prevProps.readOnly === nextProps.readOnly;
+         prevProps.post.repostCount === nextProps.post.repostCount;
 });
 
 export default PostCard;

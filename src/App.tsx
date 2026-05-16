@@ -35,7 +35,6 @@ const Analytics = lazy(() =>
 const Index = lazy(() => import("./pages/Index"));
 const About = lazy(() => import("./pages/About"));
 const PricingPage = lazy(() => import("./pages/PricingPage"));
-const Explore = lazy(() => import("./pages/Explore"));
 const Contact = lazy(() => import("./pages/Contact"));
 const FAQPage = lazy(() => import("./pages/FAQPage"));
 const Resources = lazy(() => import("./pages/Resources"));
@@ -83,7 +82,6 @@ const Profile = lazy(() => import("./pages/Profile"));
 const Account = lazy(() => import("./pages/Account"));
 const SetupQuiz = lazy(() => import("./pages/SetupQuiz"));
 const Messages = lazy(() => import("./pages/Messages"));
-const Search = lazy(() => import("./pages/Search"));
 const CreativesTakeover = lazy(() => import("./pages/CreativesTakeover"));
 const RAGTest = lazy(() => import("./pages/RAGTest"));
 const TestPhase1 = lazy(() => import("./pages/TestPhase1"));
@@ -208,7 +206,6 @@ function App() {
                         <Route path="/" element={<Index />} />
                         <Route path="/about" element={<About />} />
                         <Route path="/pricing" element={<PricingPage />} />
-                        <Route path="/explore" element={<Explore />} />
                         <Route path="/contact" element={<Contact />} />
                         <Route path="/faq" element={<FAQPage />} />
                         <Route path="/resources" element={<Resources />} />
@@ -334,7 +331,6 @@ function App() {
                         <Route path="/demo-calls" element={<DemoCalls />} />
                         <Route path="/messages/:username" element={<Messages />} />
                         <Route path="/messages" element={<Messages />} />
-                        <Route path="/search" element={<Search />} />
                         <Route path="/profile/:username" element={<Profile />} />
                         <Route path="/auth/callback" element={<AuthCallback />} />
                         <Route path="/creatives-takeover" element={<CreativesTakeover />} />
