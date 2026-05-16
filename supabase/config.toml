@@ -57,6 +57,12 @@ verify_jwt = false
 [functions.reactivation-campaign]
 verify_jwt = false
 
+[functions.email-sequences]
+verify_jwt = false
+
+[functions.resend-webhook]
+verify_jwt = false
+
 [functions.send-dm-notification-email]
 verify_jwt = false
 

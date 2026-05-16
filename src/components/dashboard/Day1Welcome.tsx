@@ -15,6 +15,7 @@ import { supabase } from '@/integrations/supabase/client';
 import type { Json } from '@/integrations/supabase/types';
 import { getLocalDateString } from '@/lib/dailyGoalPrompt';
 import { trackOnboardingCompleted } from '@/lib/analytics';
+import { triggerEmailSequenceEvent } from '@/lib/emailSequences';
 import { cn } from '@/lib/utils';
 
 type StepKey = 'icp_builder' | 'founder_stage' | 'daily_mission';
@@ -213,6 +214,7 @@ export function Day1Welcome({ profile, onProfilePatch }: Day1WelcomeProps) {
         creative_niche: null,
         business_stage: profile.quiz_current_stage || stage || null,
       });
+      await triggerEmailSequenceEvent('onboarding_complete', user.id);
       setCelebrating(true);
       window.setTimeout(() => {
         navigate('/dashboard/tasks', { replace: true });
@@ -244,6 +246,7 @@ export function Day1Welcome({ profile, onProfilePatch }: Day1WelcomeProps) {
         creative_niche: null,
         business_stage: profile.quiz_current_stage || stage || null,
       });
+      await triggerEmailSequenceEvent('onboarding_complete', user.id);
       onProfilePatch({ onboarding_completed: true });
       navigate('/dashboard', { replace: true });
     } catch (error) {

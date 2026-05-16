@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import confetti from 'canvas-confetti';
 import { trackOnboardingCompleted } from '@/lib/analytics';
 import { trackOnboardingComplete, trackOnboardingDismissed } from '@/lib/onboardingAnalytics';
+import { triggerEmailSequenceEvent } from '@/lib/emailSequences';
 
 interface OnboardingChecklistProps {
   userId: string;
@@ -105,6 +106,7 @@ export const OnboardingChecklist = ({
             business_stage: null,
           });
           await trackOnboardingComplete(userId);
+          await triggerEmailSequenceEvent('onboarding_complete', userId);
 
           // Show celebration
           confetti({
@@ -144,6 +146,7 @@ export const OnboardingChecklist = ({
         creative_niche: null,
         business_stage: null,
       });
+      await triggerEmailSequenceEvent('onboarding_complete', userId);
       setIsVisible(false);
       toast.info('You can always complete your profile later from Account settings');
     } catch (error) {

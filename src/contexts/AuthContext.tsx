@@ -12,6 +12,7 @@ import {
 import { resumePendingDiscoveryCallRedirect } from '@/services/discoveryCallService';
 import { identify, readAuthMethod, trackSignupCompleted } from '@/lib/analytics';
 import { isAdminEmail } from '@/lib/admin';
+import { triggerEmailSequenceEvent } from '@/lib/emailSequences';
 
 interface AuthContextType {
   user: User | null;
@@ -242,7 +243,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 email,
                 fullName: signedInUser.user_metadata?.full_name || ''
               }
-            })
+            }),
+            triggerEmailSequenceEvent('signup_completed', userId)
           ]).catch(err => logError('Failed to send notification emails', err, { userId }))
         );
       }

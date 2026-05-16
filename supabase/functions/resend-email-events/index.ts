@@ -111,6 +111,14 @@ function isOpenedOrClickedEvent(eventType: string): boolean {
   ].includes(eventType);
 }
 
+function isOpenedEvent(eventType: string): boolean {
+  return ["email.opened", "opened"].includes(eventType);
+}
+
+function isClickedEvent(eventType: string): boolean {
+  return ["email.clicked", "clicked"].includes(eventType);
+}
+
 const supabaseUrl = getEnv("SUPABASE_URL");
 const supabaseServiceKey = getEnv("SUPABASE_SERVICE_ROLE_KEY");
 const webhookSecret = getEnv("RESEND_WEBHOOK_SECRET");
@@ -163,6 +171,30 @@ serve(async (req: Request): Promise<Response> => {
       .select("id, status, delivered_at, metadata")
       .eq("resend_email_id", normalized.resendEmailId);
 
+    let retentionUpdatedCount = 0;
+    const retentionPatch: Record<string, string> = {};
+    const lifecycleEventAt = normalized.eventCreatedAtIso || new Date().toISOString();
+    if (isOpenedEvent(normalized.type)) retentionPatch.opened_at = lifecycleEventAt;
+    if (isClickedEvent(normalized.type)) retentionPatch.clicked_at = lifecycleEventAt;
+
+    if (Object.keys(retentionPatch).length > 0) {
+      const { data: retentionRows, error: retentionError } = await supabase
+        .from("retention_email_log")
+        .update(retentionPatch)
+        .eq("resend_id", normalized.resendEmailId)
+        .select("id");
+
+      if (retentionError) {
+        console.error("[RESEND-EVENTS] Failed to update retention email log", {
+          resendEmailId: normalized.resendEmailId,
+          eventType: normalized.type,
+          error: retentionError.message,
+        });
+      } else {
+        retentionUpdatedCount = retentionRows?.length ?? 0;
+      }
+    }
+
     if (fetchError) {
       return new Response(JSON.stringify({ ok: false, error: fetchError.message }), {
         status: 500,
@@ -175,7 +207,12 @@ serve(async (req: Request): Promise<Response> => {
         resendEmailId: normalized.resendEmailId,
         eventType: normalized.type,
       });
-      return new Response(JSON.stringify({ ok: true, updated: 0, ignored: "unknown_resend_email_id" }), {
+      return new Response(JSON.stringify({
+        ok: true,
+        updated: retentionUpdatedCount,
+        retentionUpdated: retentionUpdatedCount,
+        ignored: retentionUpdatedCount > 0 ? null : "unknown_resend_email_id",
+      }), {
         status: 202,
         headers: { "Content-Type": "application/json", ...corsHeaders },
       });
@@ -225,7 +262,12 @@ serve(async (req: Request): Promise<Response> => {
       updatedCount += 1;
     }
 
-    return new Response(JSON.stringify({ ok: true, updated: updatedCount }), {
+    return new Response(JSON.stringify({
+      ok: true,
+      updated: updatedCount + retentionUpdatedCount,
+      messageNotificationsUpdated: updatedCount,
+      retentionUpdated: retentionUpdatedCount,
+    }), {
       status: 200,
       headers: { "Content-Type": "application/json", ...corsHeaders },
     });

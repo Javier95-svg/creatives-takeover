@@ -1,6 +1,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
 import { resolveMonthlyBillingWindow } from './billing-period.ts';
 import { emitBusinessEvent } from './analytics.ts';
+import { triggerEmailSequenceEvent } from './email-sequence-events.ts';
 import {
   PLAN_MONTHLY_CREDITS,
   normalizePlan,
@@ -401,6 +402,15 @@ export async function checkAndDeductCredits(
         },
         userProperties,
       });
+      if (analyticsContext.subscriptionTier === 'rookie') {
+        await triggerEmailSequenceEvent('credit_exhausted', userId);
+      }
+    } else if (
+      analyticsContext.subscriptionTier === 'rookie' &&
+      creditsBeforeDeduction.monthlyQuota > 0 &&
+      creditsRemaining < creditsBeforeDeduction.monthlyQuota * 0.2
+    ) {
+      await triggerEmailSequenceEvent('credit_warning', userId);
     }
 
     return await returnWithIdempotency({

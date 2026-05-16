@@ -2,6 +2,7 @@ import type { User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { captureEvent } from '@/lib/analytics';
 import { requiresGuidedOnboarding } from '@/lib/guidedOnboarding';
+import { triggerEmailSequenceEvent } from '@/lib/emailSequences';
 
 export type ActivationIntent =
   | 'find_mentor'
@@ -304,6 +305,8 @@ export async function startActivationJourney(params: StartActivationParams) {
     activation_intent: params.activationIntent,
     source: 'onboarding',
   });
+
+  await triggerEmailSequenceEvent('onboarding_complete', params.userId);
 }
 
 export async function completeActivationJourney(params: CompleteActivationParams) {
