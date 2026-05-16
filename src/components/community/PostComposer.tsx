@@ -15,11 +15,20 @@ const DRAFT_STORAGE_KEY = 'community_post_draft';
 export type ComposerPayload = {
   title: string;
   content: string;
+  postType?: string;
   image?: string;
   video?: string;
   audio?: string;
   mediaType?: 'image' | 'video' | 'audio';
 };
+
+const POST_TYPES = [
+  { value: 'build_in_public', label: 'Build in Public 🚀' },
+  { value: 'mindset', label: 'Mindset 🧠' },
+  { value: 'growth_marketing', label: 'Growth & Marketing 📣' },
+  { value: 'fundraising_revenue', label: 'Fundraising & Revenue 💰' },
+  { value: 'product_validation', label: 'Product & Validation 🛠️' },
+];
 
 interface PostComposerProps {
   onPublish: (payload: ComposerPayload) => void | Promise<void>;
@@ -38,6 +47,7 @@ const PostComposer: React.FC<PostComposerProps> = ({ onPublish, requireAuth = fa
   const navigate = useNavigate();
   const [title, setTitle] = useState(reportData?.title || "");
   const [content, setContent] = useState(reportData?.content || "");
+  const [postType, setPostType] = useState('build_in_public');
   const [mediaPreview, setMediaPreview] = useState<string | undefined>();
   const [mediaType, setMediaType] = useState<'image' | 'video' | 'audio' | undefined>();
   const [showSignInModal, setShowSignInModal] = useState(false);
@@ -96,6 +106,7 @@ const PostComposer: React.FC<PostComposerProps> = ({ onPublish, requireAuth = fa
   const reset = () => {
     setTitle("");
     setContent("");
+    setPostType('build_in_public');
     setMediaPreview(undefined);
     setMediaType(undefined);
     if (imageInputRef.current) imageInputRef.current.value = "";
@@ -169,6 +180,7 @@ const PostComposer: React.FC<PostComposerProps> = ({ onPublish, requireAuth = fa
     const payload: ComposerPayload = { 
       title: title.trim(), 
       content: content.trim(),
+      postType,
       mediaType
     };
 
@@ -242,6 +254,24 @@ const PostComposer: React.FC<PostComposerProps> = ({ onPublish, requireAuth = fa
               <div className="mt-1 text-xs text-muted-foreground text-right">
                 {title.length}/140
               </div>
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-medium text-muted-foreground">
+                Choose a room
+              </label>
+              <select
+                value={postType}
+                onChange={(event) => setPostType(event.target.value)}
+                className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm text-foreground shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                disabled={requireAuth && !isAuthenticated}
+              >
+                {POST_TYPES.map((type) => (
+                  <option key={type.value} value={type.value}>
+                    {type.label}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div>

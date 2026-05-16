@@ -16,7 +16,16 @@ import { useBadgeSystem } from "@/hooks/useBadgeSystem";
 import { useFeatureGating } from "@/hooks/useFeatureGating";
 import { useUpgradePrompt } from "@/contexts/UpgradePromptContext";
 import type { Plan } from "@/config/planPermissions";
-import { normalizePlanId, trackUpgradeClicked } from "@/lib/analytics";
+import { captureEvent, normalizePlanId, trackUpgradeClicked } from "@/lib/analytics";
+
+const COMMUNITY_ROOMS = [
+  { value: "all", label: "All rooms" },
+  { value: "build_in_public", label: "Build in Public 🚀" },
+  { value: "mindset", label: "Mindset 🧠" },
+  { value: "growth_marketing", label: "Growth & Marketing 📣" },
+  { value: "fundraising_revenue", label: "Fundraising & Revenue 💰" },
+  { value: "product_validation", label: "Product & Validation 🛠️" },
+];
 
 const CommunityFeed: React.FC = () => {
   const { user, isAuthenticated } = useAuth();
@@ -247,6 +256,8 @@ const CommunityFeed: React.FC = () => {
     return [...usedTags, ...unusedTags].slice(0, 30); // Limit to top 30 tags
   }, [posts]);
 
+  const searchLower = search.toLowerCase();
+
   const filtered = useMemo(() => {
     let list = posts.filter((p) =>
       (p.title + " " + p.content).toLowerCase().includes(searchLower)
@@ -255,22 +266,9 @@ const CommunityFeed: React.FC = () => {
     // Tag filtering
     if (selectedTag) list = list.filter((p) => p.tags.includes(selectedTag));
     
-    // Post type filtering
+    // Room filtering
     if (postType !== "all") {
-      switch (postType) {
-        case "success":
-          list = list.filter(p => p.tags.some(tag => ['success', 'milestone', 'revenue', 'growth'].includes(tag)));
-          break;
-        case "question":
-          list = list.filter(p => p.title.includes('?') || p.content.includes('?'));
-          break;
-        case "update":
-          list = list.filter(p => p.tags.some(tag => ['update', 'progress', 'pivot'].includes(tag)));
-          break;
-        case "ai-enhanced":
-          list = list.filter(p => p.aiSummary || (p.aiInsights && p.aiInsights.length > 0));
-          break;
-      }
+      list = list.filter((p) => p.tags.includes(postType));
     }
     
     // Engagement filtering
@@ -327,7 +325,8 @@ const CommunityFeed: React.FC = () => {
         title: payload.title,
         content: payload.content,
         user_id: user?.id,
-        tags: [],
+        tags: payload.postType ? [payload.postType] : [],
+        content_type: payload.postType || null,
         media_urls: mediaUrls.length > 0 ? mediaUrls : null,
       };
       
@@ -348,6 +347,10 @@ const CommunityFeed: React.FC = () => {
         });
       }, 500);
       
+      captureEvent('post_created', {
+        post_type: payload.postType || 'build_in_public',
+        source: 'community_feed',
+      });
       toast.success("Your story has been posted!");
     } catch (e: any) {
       console.error('Error posting:', e);
@@ -430,6 +433,31 @@ const CommunityFeed: React.FC = () => {
               </CardContent>
             </Card>
           )}
+
+          <Card className="border-primary/10 bg-card/80">
+            <CardContent className="p-4">
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <div>
+                  <h2 className="text-sm font-semibold">Rooms</h2>
+                  <p className="text-xs text-muted-foreground">Choose the founder topic you want to explore.</p>
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {COMMUNITY_ROOMS.map((room) => (
+                  <Button
+                    key={room.value}
+                    type="button"
+                    size="sm"
+                    variant={postType === room.value ? "default" : "outline"}
+                    onClick={() => setPostType(room.value)}
+                    className="rounded-full"
+                  >
+                    {room.label}
+                  </Button>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Results Summary */}
           {search && (

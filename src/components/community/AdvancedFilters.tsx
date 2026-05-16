@@ -45,11 +45,12 @@ const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
   ];
 
   const postTypeOptions = [
-    { value: "all", label: "All Posts", icon: MessageSquare },
-    { value: "success", label: "Success Stories", icon: Star },
-    { value: "question", label: "Questions", icon: MessageSquare },
-    { value: "update", label: "Updates", icon: TrendingUp },
-    { value: "ai-enhanced", label: "AI Enhanced", icon: Sparkles },
+    { value: "all", label: "All Rooms", icon: MessageSquare },
+    { value: "build_in_public", label: "Build in Public 🚀", icon: TrendingUp },
+    { value: "mindset", label: "Mindset 🧠", icon: Sparkles },
+    { value: "growth_marketing", label: "Growth & Marketing 📣", icon: Users },
+    { value: "fundraising_revenue", label: "Fundraising & Revenue 💰", icon: Star },
+    { value: "product_validation", label: "Product & Validation 🛠️", icon: MessageSquare },
   ];
 
   const engagementOptions = [
@@ -105,12 +106,12 @@ const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
 
         <Separator />
 
-        {/* Post Type Filter */}
+        {/* Room Filter */}
         <div>
-          <h4 className="text-sm font-semibold mb-3">Post Type</h4>
+          <h4 className="text-sm font-semibold mb-3">Room</h4>
           <Select value={postType} onValueChange={onPostTypeChange}>
             <SelectTrigger>
-              <SelectValue placeholder="Select post type" />
+              <SelectValue placeholder="Select room" />
             </SelectTrigger>
             <SelectContent>
               {postTypeOptions.map((option) => {

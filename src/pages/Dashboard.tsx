@@ -4,6 +4,7 @@ import { CheckCircle2 } from 'lucide-react';
 
 import StartupHomeCommandCenter from '@/components/dashboard/StartupHomeCommandCenter';
 import StarterDashboardNudge from '@/components/dashboard/StarterDashboardNudge';
+import CommunityFeed from '@/components/community/CommunityFeed';
 import { useExitIntent } from '@/hooks/useExitIntent';
 import { ExitIntentModal } from '@/components/ExitIntentModal';
 
@@ -50,6 +51,7 @@ const Dashboard = () => {
         </div>
       ) : null}
       <StartupHomeCommandCenter />
+      <CommunityFeed />
       <ExitIntentModal isOpen={showExitIntent} onClose={closeExitIntent} />
     </>
   );

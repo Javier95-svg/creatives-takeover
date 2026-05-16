@@ -344,6 +344,20 @@ const Hero = () => {
                       </Link>
                     </Button>
                   </div>
+                  <div className="flex w-full justify-center px-4 sm:px-0">
+                    <Button
+                      size="lg"
+                      variant="outline"
+                      className="group w-full border-white/35 bg-white/5 text-foreground shadow-sm backdrop-blur transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-300/70 hover:bg-white/10 hover:text-foreground sm:w-auto sm:min-w-[215px]"
+                      asChild
+                    >
+                      <Link to="/explore">
+                        <Compass className="h-4 w-4 text-blue-300 transition-transform duration-300 group-hover:rotate-12" />
+                        Explore
+                        <ArrowRight className="h-4 w-4 opacity-70 transition-transform duration-300 group-hover:translate-x-0.5" />
+                      </Link>
+                    </Button>
+                  </div>
                 </div>
               )}
             </div>
