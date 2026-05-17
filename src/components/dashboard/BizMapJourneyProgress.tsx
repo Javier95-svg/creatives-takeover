@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
@@ -22,6 +22,10 @@ import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { useBizMapProgress } from '@/hooks/useBizMapProgress';
+import { useSubscription } from '@/hooks/useSubscription';
+import { normalizePlan, PLAN_LABELS, type Plan } from '@/config/planPermissions';
+import { PLAN_JOURNEY_PROMISES } from '@/lib/journeyUpgradeCatalog';
+import { trackMilestoneUpgradeHintShown } from '@/lib/analytics';
 
 type ProfileRow = Pick<
   Database['public']['Tables']['profiles']['Row'],
@@ -66,6 +70,7 @@ interface JourneyStageView extends JourneyStageDefinition {
   completed: boolean;
   current: boolean;
   deliverable: StageDeliverable | null;
+  requiredPlan: Plan;
 }
 
 const JOURNEY_STAGES: JourneyStageDefinition[] = [
@@ -77,6 +82,33 @@ const JOURNEY_STAGES: JourneyStageDefinition[] = [
   { key: 'stack', title: 'Tech Stack', outcome: 'Build stack selected' },
   { key: 'launch', title: 'Launch', outcome: 'Go-to-market plan saved' },
 ];
+
+const STAGE_REQUIRED_PLAN: Record<JourneyStageKey, Plan> = {
+  foundation: 'rookie',
+  identity: 'rookie',
+  prototype: 'rookie',
+  validation: 'starter',
+  build: 'rising',
+  stack: 'rising',
+  launch: 'rising',
+};
+
+const STAGE_TOOL_LABEL: Record<JourneyStageKey, string> = {
+  foundation: 'Startup Profile',
+  identity: 'ICP Builder',
+  prototype: 'Waitlist Maker',
+  validation: 'PMF Lab',
+  build: 'MVP Builder',
+  stack: 'Tech Stack Builder',
+  launch: 'GTM Strategist',
+};
+
+const PLAN_RANK: Record<Plan, number> = {
+  rookie: 0,
+  starter: 1,
+  rising: 2,
+  pro: 3,
+};
 
 function formatDate(value: string | null | undefined) {
   if (!value) return null;
@@ -267,13 +299,16 @@ function buildLaunchDeliverable(gtm: GtmRow | null): StageDeliverable | null {
 function StepNode({
   stage,
   index,
+  currentPlan,
   onSelect,
 }: {
   stage: JourneyStageView;
   index: number;
+  currentPlan: Plan;
   onSelect: (stage: JourneyStageView) => void;
 }) {
   const isClickable = stage.completed && !!stage.deliverable;
+  const requiresUpgrade = PLAN_RANK[currentPlan] < PLAN_RANK[stage.requiredPlan];
 
   return (
     <button
@@ -306,6 +341,11 @@ function StepNode({
       <span className="mt-1 max-w-[120px] text-xs leading-4 text-muted-foreground">
         {stage.outcome}
       </span>
+      {requiresUpgrade ? (
+        <span className="mt-2 rounded-full border border-primary/25 bg-primary/5 px-2 py-0.5 text-[10px] font-medium text-primary">
+          {PLAN_LABELS[stage.requiredPlan]}
+        </span>
+      ) : null}
     </button>
   );
 }
@@ -313,6 +353,9 @@ function StepNode({
 export function BizMapJourneyProgress() {
   const { user } = useAuth();
   const { progress, loading: progressLoading } = useBizMapProgress();
+  const { subscriptionData } = useSubscription();
+  const currentPlan = normalizePlan(subscriptionData?.subscription_tier);
+  const hintedStageRef = useRef<string | null>(null);
   const [artifacts, setArtifacts] = useState<{
     profile: ProfileRow | null;
     icp: IcpRow | null;
@@ -461,6 +504,7 @@ export function BizMapJourneyProgress() {
 
     return JOURNEY_STAGES.map((stage, index) => ({
       ...stage,
+      requiredPlan: STAGE_REQUIRED_PLAN[stage.key],
       completed: completionMap[stage.key],
       current: currentIndex === index,
       deliverable: deliverableMap[stage.key],
@@ -471,6 +515,23 @@ export function BizMapJourneyProgress() {
   const fillPercent = stages.length > 1 ? (completedCount / (stages.length - 1)) * 100 : 0;
   const currentStage = stages.find((stage) => stage.current) ?? null;
   const loading = progressLoading || artifactsLoading;
+  const currentStageRequiresUpgrade =
+    currentStage ? PLAN_RANK[currentPlan] < PLAN_RANK[currentStage.requiredPlan] : false;
+
+  useEffect(() => {
+    if (!currentStage || !currentStageRequiresUpgrade) return;
+    const hintKey = `${currentPlan}:${currentStage.key}:${currentStage.requiredPlan}`;
+    if (hintedStageRef.current === hintKey) return;
+    hintedStageRef.current = hintKey;
+    const targetPlan = (currentStage.requiredPlan === 'rookie' ? 'starter' : currentStage.requiredPlan) as Exclude<Plan, 'rookie'>;
+    trackMilestoneUpgradeHintShown({
+      stage: currentStage.key,
+      tool_name: STAGE_TOOL_LABEL[currentStage.key],
+      current_plan: currentPlan,
+      target_plan: targetPlan,
+      route: currentStage.deliverable?.route,
+    });
+  }, [currentPlan, currentStage, currentStageRequiresUpgrade, hintedStageRef]);
 
   return (
     <>
@@ -520,7 +581,7 @@ export function BizMapJourneyProgress() {
 
                   <div className="relative grid grid-cols-7 gap-4">
                     {stages.map((stage, index) => (
-                      <StepNode key={stage.key} stage={stage} index={index} onSelect={setSelectedStage} />
+                      <StepNode key={stage.key} stage={stage} index={index} currentPlan={currentPlan} onSelect={setSelectedStage} />
                     ))}
                   </div>
                 </div>
@@ -531,9 +592,16 @@ export function BizMapJourneyProgress() {
                   <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Current focus</p>
                   <p className="mt-1 text-sm font-medium text-foreground">
                     {currentStage
-                      ? `${currentStage.title}: ${currentStage.outcome}`
+                      ? currentStageRequiresUpgrade
+                        ? `You have reached ${currentStage.title}. ${PLAN_LABELS[currentStage.requiredPlan]} unlocks ${STAGE_TOOL_LABEL[currentStage.key]} for this next layer.`
+                        : `${currentStage.title}: ${currentStage.outcome}`
                       : 'All visible stages completed. Review your saved outputs and tighten the weakest one.'}
                   </p>
+                  {currentStageRequiresUpgrade ? (
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {PLAN_LABELS[currentStage.requiredPlan]} is the {PLAN_JOURNEY_PROMISES[currentStage.requiredPlan].toLowerCase()} layer.
+                    </p>
+                  ) : null}
                 </div>
                 <div className="flex items-center gap-2">
                   {currentStage?.deliverable?.route ? (

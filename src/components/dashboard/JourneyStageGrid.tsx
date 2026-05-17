@@ -1,16 +1,19 @@
 /**
- * Journey Stage Grid — shown on the dashboard.
+ * Journey Stage Grid - shown on the dashboard.
  *
  * Displays the core BizMap tools and reflects plan-based preview vs full access.
  */
 
-import type { ComponentType } from 'react';
+import { useEffect, useRef, type ComponentType } from 'react';
 import { Link } from 'react-router-dom';
-import { Lock, ArrowRight, Users, Radio, FlaskConical, Hammer, Boxes, TrendingUp, FolderOpen } from 'lucide-react';
+import { ArrowRight, Boxes, Eye, FlaskConical, FolderOpen, Hammer, Radio, TrendingUp, Users } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { usePlanAccess } from '@/hooks/usePlanAccess';
 import type { Phase } from '@/store/leanStartupStore';
-import type { FeatureKey } from '@/config/planPermissions';
+import { PLAN_LABELS, type FeatureKey } from '@/config/planPermissions';
+import { getJourneyTool } from '@/lib/journeyUpgradeCatalog';
+import { trackSoftPreviewClicked, trackSoftPreviewShown } from '@/lib/analytics';
 
 interface Stage {
   id: number;
@@ -20,7 +23,7 @@ interface Stage {
   icon: ComponentType<{ className?: string }>;
   planFeature: FeatureKey;
   badge?: string;
-  phase: Phase; // which lean-startup phase this stage belongs to
+  phase: Phase;
 }
 
 const STAGES: Stage[] = [
@@ -97,34 +100,90 @@ const STAGES: Stage[] = [
 ];
 
 function StageCard({ stage }: { stage: Stage }) {
-  const { hasAccess, state, upgradeTarget } = usePlanAccess(stage.planFeature);
+  const { state, upgradeTarget, plan } = usePlanAccess(stage.planFeature);
   const Icon = stage.icon;
+  const trackedPreviewRef = useRef(false);
+  const journeyTool = getJourneyTool(stage.planFeature);
 
   const isPreview = state === 'preview_only';
   const isLocked = state === 'locked' || state === 'hidden';
+  const isSoftPreview = isPreview || isLocked;
+  const targetPlan = upgradeTarget && upgradeTarget !== 'rookie' ? upgradeTarget : undefined;
+  const requiredPlanLabel = targetPlan ? PLAN_LABELS[targetPlan] : 'a higher plan';
 
-  if (isLocked) {
-    const requiredPlanLabel = upgradeTarget ? upgradeTarget.charAt(0).toUpperCase() + upgradeTarget.slice(1) : 'higher';
+  useEffect(() => {
+    if (!isSoftPreview || trackedPreviewRef.current) return;
+    trackedPreviewRef.current = true;
+    trackSoftPreviewShown({
+      feature_key: stage.planFeature,
+      tool_name: stage.name,
+      current_plan: plan,
+      target_plan: targetPlan,
+      surface: 'journey_stage_grid',
+      route: stage.href,
+    });
+  }, [isSoftPreview, plan, stage.href, stage.name, stage.planFeature, targetPlan]);
+
+  if (isSoftPreview) {
+    const previewCopy = journeyTool?.previewCopy || `${stage.description} Preview the outcome before this becomes part of your active workflow.`;
+    const proofCopy = journeyTool?.proofCopy || `${requiredPlanLabel} unlocks this stage when it becomes the right next step.`;
 
     return (
-      <div className="relative group rounded-xl border border-border/60 bg-card/60 p-4 opacity-60 grayscale cursor-not-allowed">
-        <div className="flex items-start justify-between mb-3">
-          <div className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center">
-            <Icon className="w-4.5 h-4.5 text-muted-foreground" />
+      <div className="group flex min-h-[190px] flex-col rounded-xl border border-dashed border-primary/25 bg-card/70 p-4 transition-all duration-200 hover:border-primary/40 hover:bg-card">
+        <div className="mb-3 flex items-start justify-between">
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
+            <Icon className="h-4.5 w-4.5 text-primary" />
           </div>
-          <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-background/80 border border-border/60 shadow-sm">
-            <Lock className="w-3 h-3 text-muted-foreground" />
-            <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Locked
-            </span>
-          </div>
+          <Badge variant="outline" className="px-1.5 text-[10px] font-semibold uppercase tracking-wider">
+            Preview
+          </Badge>
         </div>
-        <p className="text-xs font-semibold text-foreground/60 mb-0.5">
-          Stage {stage.id} · {stage.name}
+        <p className="mb-0.5 text-xs font-semibold text-foreground/70">
+          Stage {stage.id} - {stage.name}
         </p>
-        <p className="text-xs text-muted-foreground leading-snug">
-          Upgrade to {requiredPlanLabel} to unlock this tool.
+        <p className="flex-1 text-xs leading-snug text-muted-foreground">
+          {previewCopy}
         </p>
+        <p className="mt-3 rounded-lg border border-border/60 bg-background/60 px-2 py-1.5 text-[11px] leading-4 text-muted-foreground">
+          {proofCopy}
+        </p>
+        <div className="mt-3 flex items-center gap-2">
+          <Button asChild size="sm" variant="outline" className="h-8 px-2 text-[11px]">
+            <Link
+              to={stage.href}
+              onClick={() => trackSoftPreviewClicked({
+                feature_key: stage.planFeature,
+                tool_name: stage.name,
+                current_plan: plan,
+                target_plan: targetPlan,
+                destination: 'tool_preview',
+                surface: 'journey_stage_grid',
+                route: stage.href,
+              })}
+            >
+              <Eye className="mr-1 h-3 w-3" />
+              Preview
+            </Link>
+          </Button>
+          {targetPlan ? (
+            <Button asChild size="sm" variant="ghost" className="h-8 px-2 text-[11px]">
+              <Link
+                to={`/pricing#${targetPlan}`}
+                onClick={() => trackSoftPreviewClicked({
+                  feature_key: stage.planFeature,
+                  tool_name: stage.name,
+                  current_plan: plan,
+                  target_plan: targetPlan,
+                  destination: 'plan',
+                  surface: 'journey_stage_grid',
+                  route: stage.href,
+                })}
+              >
+                See {requiredPlanLabel}
+              </Link>
+            </Button>
+          ) : null}
+        </div>
       </div>
     );
   }
@@ -132,26 +191,26 @@ function StageCard({ stage }: { stage: Stage }) {
   return (
     <Link
       to={stage.href}
-      className="group flex flex-col rounded-xl border border-border/70 bg-card hover:bg-card/80 hover:border-primary/30 hover:shadow-md p-4 transition-all duration-200"
+      className="group flex flex-col rounded-xl border border-border/70 bg-card p-4 transition-all duration-200 hover:border-primary/30 hover:bg-card/80 hover:shadow-md"
     >
-      <div className="flex items-start justify-between mb-3">
-        <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/15 transition-colors">
-          <Icon className="w-4.5 h-4.5 text-primary" />
+      <div className="mb-3 flex items-start justify-between">
+        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 transition-colors group-hover:bg-primary/15">
+          <Icon className="h-4.5 w-4.5 text-primary" />
         </div>
         {stage.badge && (
-          <Badge variant="outline" className="text-[10px] font-semibold uppercase tracking-wider px-1.5">
-            {isPreview ? 'Preview' : stage.badge}
+          <Badge variant="outline" className="px-1.5 text-[10px] font-semibold uppercase tracking-wider">
+            {stage.badge}
           </Badge>
         )}
       </div>
-      <p className="text-xs font-semibold text-foreground mb-0.5">
-        Stage {stage.id} · {stage.name}
+      <p className="mb-0.5 text-xs font-semibold text-foreground">
+        Stage {stage.id} - {stage.name}
       </p>
-      <p className="text-xs text-muted-foreground leading-snug mb-3 flex-1">
-        {isPreview ? `${stage.description} Preview only on your current plan.` : stage.description}
+      <p className="mb-3 flex-1 text-xs leading-snug text-muted-foreground">
+        {stage.description}
       </p>
-      <div className="flex items-center gap-1 text-[11px] font-medium text-primary opacity-0 group-hover:opacity-100 transition-opacity">
-        Open <ArrowRight className="w-3 h-3" />
+      <div className="flex items-center gap-1 text-[11px] font-medium text-primary opacity-0 transition-opacity group-hover:opacity-100">
+        Open <ArrowRight className="h-3 w-3" />
       </div>
     </Link>
   );
@@ -160,11 +219,11 @@ function StageCard({ stage }: { stage: Stage }) {
 export function JourneyStageGrid() {
   return (
     <div>
-      <div className="flex items-center justify-between mb-4">
+      <div className="mb-4 flex items-center justify-between">
         <h2 className="text-sm font-semibold text-foreground">Your Startup Journey</h2>
         <span className="text-xs text-muted-foreground">7 stages</span>
       </div>
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-3">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7">
         {STAGES.map((stage) => (
           <StageCard key={stage.id} stage={stage} />
         ))}

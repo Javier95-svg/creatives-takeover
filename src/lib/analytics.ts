@@ -557,6 +557,54 @@ export const trackJourneyUpgradePromptDismissed = (properties: {
   route?: string;
 }) => captureEvent('journey_upgrade_prompt_dismissed', properties);
 
+export const trackJourneyRecommendationShown = (properties: {
+  recommendation_id: string;
+  current_plan: 'rookie' | 'starter' | 'rising' | 'pro';
+  target_plan?: 'starter' | 'rising' | 'pro';
+  stage: string;
+  tool_name: string;
+  is_locked: boolean;
+  route?: string;
+}) => captureEvent('journey_recommendation_shown', properties);
+
+export const trackJourneyRecommendationClicked = (properties: {
+  recommendation_id: string;
+  current_plan: 'rookie' | 'starter' | 'rising' | 'pro';
+  target_plan?: 'starter' | 'rising' | 'pro';
+  stage: string;
+  tool_name: string;
+  destination: 'tool_preview' | 'plan';
+  is_locked: boolean;
+  route?: string;
+}) => captureEvent('journey_recommendation_clicked', properties);
+
+export const trackSoftPreviewShown = (properties: {
+  feature_key: string;
+  tool_name: string;
+  current_plan: 'rookie' | 'starter' | 'rising' | 'pro';
+  target_plan?: 'starter' | 'rising' | 'pro';
+  surface: string;
+  route?: string;
+}) => captureEvent('soft_preview_shown', properties);
+
+export const trackSoftPreviewClicked = (properties: {
+  feature_key: string;
+  tool_name: string;
+  current_plan: 'rookie' | 'starter' | 'rising' | 'pro';
+  target_plan?: 'starter' | 'rising' | 'pro';
+  destination: 'tool_preview' | 'plan';
+  surface: string;
+  route?: string;
+}) => captureEvent('soft_preview_clicked', properties);
+
+export const trackMilestoneUpgradeHintShown = (properties: {
+  stage: string;
+  tool_name: string;
+  current_plan: 'rookie' | 'starter' | 'rising' | 'pro';
+  target_plan: 'starter' | 'rising' | 'pro';
+  route?: string;
+}) => captureEvent('milestone_upgrade_hint_shown', properties);
+
 export const trackCreditCostDisclosed = (properties: {
   feature_key: string;
   credit_cost: number;

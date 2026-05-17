@@ -70,7 +70,7 @@ const UpgradePromptDialog = ({
   const title = useMemo(() => {
     if (reason === "credits") return "You're out of credits";
     if (reason === "limit") return "Monthly limit reached";
-    return "Upgrade to keep going";
+    return "This is the next journey layer";
   }, [reason]);
 
   const defaultDescription = useMemo(() => {

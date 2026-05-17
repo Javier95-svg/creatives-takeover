@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { CheckCircle2 } from 'lucide-react';
 
 import StartupHomeCommandCenter from '@/components/dashboard/StartupHomeCommandCenter';
+import JourneyNextStepCard from '@/components/dashboard/JourneyNextStepCard';
 import StarterDashboardNudge from '@/components/dashboard/StarterDashboardNudge';
 import { useExitIntent } from '@/hooks/useExitIntent';
 import { ExitIntentModal } from '@/components/ExitIntentModal';
@@ -23,7 +24,6 @@ const Dashboard = () => {
       <Helmet>
         <title>Dashboard — Creatives Takeover</title>
       </Helmet>
-      <StarterDashboardNudge />
       {fromIcpBuilder ? (
         <div className="mb-6 flex items-start justify-between gap-4 rounded-2xl border border-emerald-400/20 bg-emerald-400/10 p-5 shadow-sm">
           <div className="flex items-start gap-3">
@@ -49,7 +49,9 @@ const Dashboard = () => {
           </button>
         </div>
       ) : null}
+      <JourneyNextStepCard />
       <StartupHomeCommandCenter />
+      <StarterDashboardNudge />
       <ExitIntentModal isOpen={showExitIntent} onClose={closeExitIntent} />
     </>
   );

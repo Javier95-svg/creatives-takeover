@@ -28,7 +28,21 @@ export const StarterDashboardNudge = () => {
   const [onboardingCompleted, setOnboardingCompleted] = useState(false);
   const [dismissed, setDismissed] = useState(readDismissedState);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
+  const [primaryJourneyCardVisible, setPrimaryJourneyCardVisible] = useState(false);
   const shownTrackedRef = useRef(false);
+
+  useEffect(() => {
+    const refreshVisibility = () => {
+      setPrimaryJourneyCardVisible(Boolean(document.querySelector("[data-journey-next-step-card='true']")));
+    };
+
+    const frame = window.requestAnimationFrame(refreshVisibility);
+    window.addEventListener("ct:journey-next-step-visibility", refreshVisibility);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.removeEventListener("ct:journey-next-step-visibility", refreshVisibility);
+    };
+  }, []);
 
   useEffect(() => {
     if (!user?.id) {
@@ -64,7 +78,8 @@ export const StarterDashboardNudge = () => {
     !creditsLoading &&
     onboardingCompleted &&
     totalAvailable < 20 &&
-    !dismissed;
+    !dismissed &&
+    !primaryJourneyCardVisible;
 
   useEffect(() => {
     if (!isVisible || shownTrackedRef.current) return;
