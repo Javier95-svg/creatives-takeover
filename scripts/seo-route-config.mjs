@@ -34,6 +34,36 @@ export const ROBOTS_DISALLOW = [
   "/test-phase1",
 ];
 
+const FOUNDER_ANSWER_ROUTES = [
+  "how-to-define-icp-for-startup",
+  "ideal-customer-profile-template",
+  "startup-positioning-examples",
+  "how-to-validate-startup-idea",
+  "waitlist-before-mvp",
+  "product-market-fit-survey-questions",
+  "mvp-builder-for-startups",
+  "tech-stack-for-startup",
+  "go-to-market-strategy-for-startup",
+  "first-users-for-saas",
+  "startup-launch-checklist",
+  "pitch-deck-feedback-for-startups",
+  "vc-search-for-startups",
+  "accelerator-alternatives",
+].map((slug) => ({
+  path: `/answers/${slug}`,
+  title: `${slug
+    .split("-")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ")} | Creatives Takeover`,
+  description:
+    "A practical founder answer guide from Creatives Takeover, mapped to ICP, validation, build, launch, or fundraising workflows.",
+  changefreq: "monthly",
+  priority: 0.65,
+  heroHeading: "Founder answer guide",
+  heroCopy:
+    "A practical startup guide that helps founders move from search intent into a concrete next step.",
+}));
+
 export const INDEXABLE_ROUTES = [
   {
     path: "/",
@@ -95,6 +125,18 @@ export const INDEXABLE_ROUTES = [
     heroCopy:
       "Browse practical tutorials, downloads, and startup learning resources designed to help founders move faster with less guesswork.",
   },
+  {
+    path: "/answers",
+    title: "Founder Answer Library | Creatives Takeover",
+    description:
+      "Searchable startup guides for founders defining an ICP, validating demand, planning an MVP, launching, and preparing for fundraising.",
+    changefreq: "weekly",
+    priority: 0.85,
+    heroHeading: "Answers founders search for before they build",
+    heroCopy:
+      "Browse practical startup guides for ICP clarity, validation, MVP scope, go-to-market strategy, and fundraising preparation.",
+  },
+  ...FOUNDER_ANSWER_ROUTES,
   {
     path: "/mentorship",
     title: "Mentor Marketplace | Creatives Takeover",

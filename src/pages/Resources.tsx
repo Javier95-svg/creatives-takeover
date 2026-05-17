@@ -7,6 +7,7 @@ import GuidesSection from "@/components/GuidesSection";
 import DownloadsSection from "@/components/DownloadsSection";
 import ResourcesNavigation from "@/components/ResourcesNavigation";
 import AnimatedBackground from "@/components/AnimatedBackground";
+import FounderAnswerLibraryTeaser from "@/components/seo/FounderAnswerLibraryTeaser";
 
 const Resources = () => {
   return (
@@ -27,6 +28,7 @@ const Resources = () => {
         <div className="relative z-10">
           <Navigation />
           <ResourcesHero />
+          <FounderAnswerLibraryTeaser />
           <TutorialsSection />
           <GuidesSection />
           <DownloadsSection />

@@ -38,6 +38,8 @@ const PricingPage = lazy(() => import("./pages/PricingPage"));
 const Contact = lazy(() => import("./pages/Contact"));
 const FAQPage = lazy(() => import("./pages/FAQPage"));
 const Resources = lazy(() => import("./pages/Resources"));
+const FounderAnswerLibrary = lazy(() => import("./pages/FounderAnswerLibrary"));
+const FounderAnswerPage = lazy(() => import("./pages/FounderAnswerPage"));
 const Services = lazy(() => import("./pages/Services"));
 const Software = lazy(() => import("./pages/Software"));
 const CommunityPage = lazy(() => import("./pages/CommunityPage"));
@@ -209,6 +211,8 @@ function App() {
                         <Route path="/contact" element={<Contact />} />
                         <Route path="/faq" element={<FAQPage />} />
                         <Route path="/resources" element={<Resources />} />
+                        <Route path="/answers" element={<FounderAnswerLibrary />} />
+                        <Route path="/answers/:slug" element={<FounderAnswerPage />} />
                         <Route path="/services" element={<Services />} />
                         <Route path="/software" element={<Software />} />
                         <Route path="/mentorship" element={<CommunityPage />} />

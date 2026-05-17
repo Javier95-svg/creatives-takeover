@@ -22,6 +22,7 @@ import { trackLandingViewed } from "@/lib/analytics";
 
 // Lazy load below-the-fold components for better performance
 const HomeFAQ = lazy(() => import("@/components/HomeFAQ"));
+const FounderAnswerLibraryTeaser = lazy(() => import("@/components/seo/FounderAnswerLibraryTeaser"));
 
 const Index = () => {
   const isMobile = useIsMobile();
@@ -90,6 +91,9 @@ const Index = () => {
               <AISpecializationTrends />
             </div>
             <ValuePropositionCards />
+            <Suspense fallback={<div className="h-64 animate-pulse bg-muted/20" />}>
+              <FounderAnswerLibraryTeaser compact />
+            </Suspense>
             <div className="homepage-band-muted">
               <Suspense fallback={<div className="h-96 animate-pulse bg-muted/20" />}>
                 <HomeFAQ />
@@ -107,6 +111,9 @@ const Index = () => {
               <AISpecializationTrends />
             </div>
             <ValuePropositionCards />
+            <Suspense fallback={<div className="h-64 animate-pulse bg-muted/20" />}>
+              <FounderAnswerLibraryTeaser compact />
+            </Suspense>
             <div className="homepage-band-muted">
               <Suspense fallback={<div className="h-96 animate-pulse bg-muted/20" />}>
                 <HomeFAQ />

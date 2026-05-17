@@ -3,7 +3,7 @@ import { CheckCircle2, Loader2, Mail, ShieldCheck, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 import Navigation from "@/components/Navigation";
-import SEO from "@/components/SEO";
+import SEO, { createBreadcrumbSchema, createSoftwareApplicationSchema } from "@/components/SEO";
 import { Button } from "@/components/ui/button";
 import { readIcpBuilderSession } from "@/lib/icpBuilderSession";
 import { useExitIntent } from "@/hooks/useExitIntent";
@@ -125,12 +125,34 @@ export default function ICPBuilderPage() {
     setShowLeadBanner(false);
   };
 
+  const structuredData = [
+    createSoftwareApplicationSchema({
+      name: "Creatives Takeover ICP Builder",
+      description:
+        "Free ideal customer profile builder for founders who need customer clarity before validation, waitlist creation, MVP planning, or go-to-market work.",
+      url: "/icp-builder",
+      applicationCategory: "BusinessApplication",
+      featureList: [
+        "Ideal customer profile generation",
+        "Customer pain point synthesis",
+        "Startup positioning guidance",
+        "Founder validation next steps",
+      ],
+      price: "0",
+    }),
+    createBreadcrumbSchema([
+      { name: "Home", url: "/" },
+      { name: "ICP Builder", url: "/icp-builder" },
+    ]),
+  ];
+
   return (
     <div className="relative min-h-screen overflow-x-hidden bg-background">
       <SEO
         title="Build your ICP Draft | Creatives Takeover"
         description="Build a founder-specific ICP Draft in one guided flow and turn it into a usable customer document."
         url="/icp-builder"
+        structuredData={structuredData}
       />
 
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
