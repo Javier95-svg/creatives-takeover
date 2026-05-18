@@ -32,6 +32,8 @@ const StoryCardComponent = ({ article, featured = false }: StoryCardProps) => {
               src={article.banner_image_url}
               alt={article.title}
               className="w-full h-full object-cover"
+              loading="lazy"
+              decoding="async"
               onError={(e) => {
                 // Fallback if image fails to load
                 const target = e.target as HTMLImageElement;

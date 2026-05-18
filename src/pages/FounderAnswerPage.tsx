@@ -1,7 +1,7 @@
 import { Link, Navigate, useParams } from "react-router-dom";
 import { ArrowRight, CheckCircle2 } from "lucide-react";
 
-import SEO, { createBreadcrumbSchema, createFAQSchema } from "@/components/SEO";
+import SEO, { createBreadcrumbSchema, createFAQSchema, createHowToSchema } from "@/components/SEO";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import HomeWallpaper from "@/components/wallpapers/HomeWallpaper";
@@ -33,6 +33,12 @@ export default function FounderAnswerPage() {
       { name: "Founder Answer Library", url: "/answers" },
       { name: page.title, url: `/answers/${page.slug}` },
     ]),
+    createHowToSchema({
+      name: page.title,
+      description: page.summary,
+      steps: page.sections,
+      url: `/answers/${page.slug}`,
+    }),
     createFAQSchema(page.faqs),
     {
       "@context": "https://schema.org",

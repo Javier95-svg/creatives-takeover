@@ -193,6 +193,32 @@ export const createArticleSchema = (article: {
   return schema;
 };
 
+// Helper function to create HowTo schema (unlocks rich step-by-step results in Google)
+export const createHowToSchema = (params: {
+  name: string;
+  description: string;
+  steps: Array<{ title: string; description: string }>;
+  url: string;
+}) => ({
+  "@context": "https://schema.org",
+  "@type": "HowTo",
+  "name": params.name,
+  "description": params.description,
+  "url": `https://creatives-takeover.com${params.url}`,
+  "publisher": {
+    "@type": "Organization",
+    "name": "Creatives Takeover",
+    "url": "https://creatives-takeover.com"
+  },
+  "step": params.steps.map((step, index) => ({
+    "@type": "HowToStep",
+    "position": index + 1,
+    "name": step.title,
+    "text": step.description,
+    "url": `https://creatives-takeover.com${params.url}#step-${index + 1}`
+  }))
+});
+
 // Helper function to create FAQPage schema
 export const createFAQSchema = (faqs: Array<{ question: string; answer: string }>) => ({
   "@context": "https://schema.org",
