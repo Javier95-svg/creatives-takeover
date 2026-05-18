@@ -4,27 +4,79 @@
     <script>
       document.documentElement.classList.add("js");
     </script>
-    <script defer src="https://t.contentsquare.net/uxa/3ef0f84e50f77.js"></script>
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-SBVWSWCNX8"></script>
     <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag() {
-        dataLayer.push(arguments);
-      }
-      gtag("js", new Date());
-      gtag("config", "G-SBVWSWCNX8");
-    </script>
-    <script defer src="https://cloud.umami.is/script.js" data-website-id="b6a9bcb8-c6ac-41c5-b624-75b3f6957742"></script>
-    <script defer src="https://cdn.amplitude.com/libs/analytics-browser-2.11.1-min.js.gz"></script>
-    <script defer src="https://cdn.amplitude.com/libs/plugin-session-replay-browser-1.25.0-min.js.gz"></script>
-    <script defer>
-      window.addEventListener("load", function () {
-        if (window.amplitude && window.sessionReplay) {
-          window.amplitude.add(window.sessionReplay.plugin({ sampleRate: 1 }));
-          window.amplitude.init("8607b59ca891101e4b5f9d9daf8aa481", { autocapture: { elementInteractions: true } });
+      (function () {
+        var productionHosts = ["creatives-takeover.com", "www.creatives-takeover.com"];
+        var isProductionHost = productionHosts.indexOf(window.location.hostname) !== -1;
+
+        if (!isProductionHost) {
+          return;
         }
-      });
+
+        var loadScript = function (src, options) {
+          var script = document.createElement("script");
+          script.src = src;
+          script.async = Boolean(options && options.async);
+
+          if (options && options.async) {
+            script.async = true;
+          }
+
+          if (options && options.defer) {
+            script.defer = true;
+          }
+
+          if (options && options.attributes) {
+            Object.keys(options.attributes).forEach(function (key) {
+              script.setAttribute(key, options.attributes[key]);
+            });
+          }
+
+          if (options && options.onload) {
+            script.onload = options.onload;
+          }
+
+          document.head.appendChild(script);
+          return script;
+        };
+
+        loadScript("https://t.contentsquare.net/uxa/3ef0f84e50f77.js", { defer: true });
+
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = function () {
+          window.dataLayer.push(arguments);
+        };
+        window.gtag("js", new Date());
+        window.gtag("config", "G-SBVWSWCNX8");
+        loadScript("https://www.googletagmanager.com/gtag/js?id=G-SBVWSWCNX8", { async: true });
+
+        loadScript("https://cloud.umami.is/script.js", {
+          defer: true,
+          attributes: { "data-website-id": "b6a9bcb8-c6ac-41c5-b624-75b3f6957742" },
+        });
+
+        var amplitudeInitialized = false;
+        var initializeAmplitude = function () {
+          if (amplitudeInitialized) {
+            return;
+          }
+
+          if (window.amplitude && window.sessionReplay) {
+            window.amplitude.add(window.sessionReplay.plugin({ sampleRate: 1 }));
+            window.amplitude.init("8607b59ca891101e4b5f9d9daf8aa481", { autocapture: { elementInteractions: true } });
+            amplitudeInitialized = true;
+          }
+        };
+
+        loadScript("https://cdn.amplitude.com/libs/analytics-browser-2.11.1-min.js.gz", { defer: true, onload: initializeAmplitude });
+        loadScript("https://cdn.amplitude.com/libs/plugin-session-replay-browser-1.25.0-min.js.gz", { defer: true, onload: initializeAmplitude });
+
+        if (document.readyState === "complete") {
+          initializeAmplitude();
+        } else {
+          window.addEventListener("load", initializeAmplitude, { once: true });
+        }
+      })();
     </script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
