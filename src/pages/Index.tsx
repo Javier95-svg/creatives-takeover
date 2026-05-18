@@ -10,9 +10,6 @@ import AISpecializationTrends from "@/components/AISpecializationTrends";
 import StickyMobileCTA from "@/components/StickyMobileCTA";
 import { PullToRefresh } from "@/components/mobile/PullToRefresh";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useExitIntent } from "@/hooks/useExitIntent";
-import { ExitIntentModal } from "@/components/ExitIntentModal";
-import { useConversionTracking } from "@/hooks/useConversionTracking";
 
 import SEO, { createOrganizationSchema, createWebSiteSchema, createBreadcrumbSchema } from "@/components/SEO";
 import Footer from "@/components/Footer";
@@ -27,20 +24,10 @@ const FounderAnswerLibraryTeaser = lazy(() => import("@/components/seo/FounderAn
 const Index = () => {
   const isMobile = useIsMobile();
   const wedgeEnabled = useFeatureFlagEnabled('homepage-hero-wedge');
-  const { showExitIntent, closeExitIntent } = useExitIntent();
-  const { trackTriggerView, trackDismissal } = useConversionTracking();
   // Always show the previous Hero section design
   const hasTrackedLandingView = useRef(false);
   // Track homepage analytics
   usePageAnalytics('/', 'Home - Creatives Takeover');
-
-  // Track when exit intent modal fires
-  useEffect(() => {
-    if (showExitIntent) {
-      trackTriggerView('exit-intent');
-      trackLandingViewed({ page: '/', exit_intent: true });
-    }
-  }, [showExitIntent, trackTriggerView]);
 
   useEffect(() => {
     if (hasTrackedLandingView.current) return;
@@ -124,10 +111,6 @@ const Index = () => {
       </main>
       <Footer />
       <StickyMobileCTA />
-      <ExitIntentModal
-        isOpen={showExitIntent}
-        onClose={() => { closeExitIntent(); trackDismissal('exit-intent'); }}
-      />
       {/* SoftGateModal intentionally omitted for this hero design */}
     </div>
   );
