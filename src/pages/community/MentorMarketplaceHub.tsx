@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { Helmet } from "react-helmet-async";
+import SEO, { createOrganizationSchema, createBreadcrumbSchema } from "@/components/SEO";
 import { Link, useSearchParams } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
@@ -411,14 +411,30 @@ const MentorMarketplaceHub = () => {
 
   return (
     <>
-      <Helmet>
-        <title>Mentor Marketplace | Find Your Startup Mentor</title>
-        <meta
-          name="description"
-          content="Connect with experienced founders and mentors who can guide you through startup execution. Book 1-on-1 sessions with proven entrepreneurs."
-        />
-        <link rel="canonical" href="https://creatives-takeover.com/mentorship" />
-      </Helmet>
+      <SEO
+        title="Find a Startup Mentor | Mentor Marketplace | Creatives Takeover"
+        description="Browse startup mentors with hands-on experience in fundraising, MVP planning, go-to-market strategy, and customer discovery. Book focused 1-on-1 sessions with proven founders."
+        keywords="find startup mentor, startup mentor marketplace, mentor for founders, fundraising mentor, go-to-market mentor, first-time founder mentor, startup advisor"
+        url="/mentorship"
+        image="/og-image.png"
+        structuredData={[
+          createOrganizationSchema(),
+          createBreadcrumbSchema([
+            { name: "Home", url: "/" },
+            { name: "Find a Startup Mentor", url: "/mentorship" }
+          ]),
+          {
+            "@context": "https://schema.org",
+            "@type": "Service",
+            "name": "Startup Mentor Marketplace",
+            "description": "Connect with experienced startup mentors for 1-on-1 sessions covering fundraising, MVP planning, customer discovery, and go-to-market execution.",
+            "provider": { "@type": "Organization", "name": "Creatives Takeover", "url": "https://creatives-takeover.com" },
+            "serviceType": "Startup Mentorship",
+            "areaServed": "Worldwide",
+            "url": "https://creatives-takeover.com/mentorship"
+          }
+        ]}
+      />
 	      <div className="min-h-screen bg-background relative">
 	        <CommunityMentorsWallpaper />
 	        <Navigation />

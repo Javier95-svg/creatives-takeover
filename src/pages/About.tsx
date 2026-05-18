@@ -27,7 +27,7 @@ const About = () => {
         keywords="about Creatives Takeover, creator platform, no-code community, solopreneur tools, AI co-founder, creative business platform"
         url="/about"
         canonical="https://creatives-takeover.com/about"
-        image="/lovable-uploads/new-favicon.png"
+        image="/og-image.png"
         structuredData={structuredData}
       />
       <div className="relative min-h-screen overflow-hidden">

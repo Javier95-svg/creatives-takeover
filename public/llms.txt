@@ -1,15 +1,66 @@
 site: https://creatives-takeover.com
 name: Creatives Takeover
-description: All-in-one platform for founders and rookie entrepreneurs to build, validate, launch, and grow startups.
+description: AI-powered startup builder for first-time founders. Tools for startup idea validation, MVP planning, customer discovery, fundraising preparation, and go-to-market execution.
+
+purpose: Help early-stage founders, indie hackers, and solo builders go from idea to launch with AI-guided workflows, a startup mentor marketplace, and a founder community.
 
 public_pages:
+# Core
 - /
-- /mentorship
-- /newspaper
 - /pricing
-- /resources
 - /about
 - /faq
+- /resources
+- /careers
+- /prompt-library
+
+# AI Startup Tools (BizMap AI suite)
+- /bizmap-ai
+- /validate
+- /icp-builder
+- /mvp-builder
+- /mvp-scope
+- /go-to-market
+- /tech-stack
+- /pmf-lab
+- /decision-sprint
+- /traction-engine
+- /waitlist
+- /directories
+
+# Fundraising Tools (Insighta suite)
+- /insighta
+- /insighta/vc-search
+- /insighta/pitch-deck-analyzer
+- /insighta/email-templates
+- /insighta/accelerator-hunt
+
+# Community & Mentorship
+- /mentorship
+- /co-founder
+- /investors
+
+# Content & SEO
+- /newspaper
+- /answers
+- /answers/how-to-validate-startup-idea
+- /answers/how-to-define-icp-for-startup
+- /answers/ideal-customer-profile-template
+- /answers/startup-positioning-examples
+- /answers/waitlist-before-mvp
+- /answers/product-market-fit-survey-questions
+- /answers/mvp-builder-for-startups
+- /answers/tech-stack-for-startup
+- /answers/go-to-market-strategy-for-startup
+- /answers/first-users-for-saas
+- /answers/startup-launch-checklist
+- /answers/pitch-deck-feedback-for-startups
+- /answers/vc-search-for-startups
+- /answers/accelerator-alternatives
+
+# Legal
+- /privacy-policy
+- /terms
 
 private_pages:
 - /account
@@ -17,6 +68,18 @@ private_pages:
 - /messages
 - /admin
 - /auth
+- /login
+- /signup
+- /onboarding
+- /profile
+- /setup-quiz
+- /focus-funnel
+- /core-metrics
+- /weekly-mission
+- /tasks
+- /subscription-success
+- /mentorship/my-bookings
+- /mentorship/book/
 
 sitemap: https://creatives-takeover.com/sitemap.xml
 robots: https://creatives-takeover.com/robots.txt

@@ -20,7 +20,7 @@ const Contact = () => {
         keywords="contact Creatives Takeover, support, customer service, partnerships, business inquiries, creative platform support"
         url="/contact"
         canonical="https://creatives-takeover.com/contact"
-        image="/lovable-uploads/new-favicon.png"
+        image="/og-image.png"
         structuredData={structuredData}
       />
       <div className="min-h-screen bg-background">
