@@ -33,11 +33,87 @@ interface NotificationRow {
   metadata: any;
 }
 
+type NotificationDedupeCandidate = Pick<NotificationRow, 'notification_type' | 'created_at' | 'metadata'>;
+
+const getMetadata = (notification: NotificationDedupeCandidate): Record<string, unknown> => (
+  notification.metadata && typeof notification.metadata === 'object'
+    ? notification.metadata as Record<string, unknown>
+    : {}
+);
+
+const getNotificationDay = (createdAt: string) => {
+  const parsed = new Date(createdAt);
+  return Number.isNaN(parsed.getTime())
+    ? createdAt.slice(0, 10)
+    : parsed.toISOString().slice(0, 10);
+};
+
+const getDedupeValue = (value: unknown) => (
+  typeof value === 'string' && value.trim().length > 0 ? value.trim() : null
+);
+
+const getNotificationDedupeKey = (notification: NotificationDedupeCandidate): string | null => {
+  const day = getNotificationDay(notification.created_at);
+  const metadata = getMetadata(notification);
+
+  if (notification.notification_type === 'task_deadline_expired') {
+    return `task_deadline_expired:${day}`;
+  }
+
+  if (notification.notification_type === 'platform_update') {
+    const slug = getDedupeValue(metadata.slug);
+    if (slug) return `platform_update:${slug}:${day}`;
+
+    const title = getDedupeValue(metadata.title);
+    const message = getDedupeValue(metadata.message);
+    const route = getDedupeValue(metadata.route);
+    const fallback = [title, message, route].filter(Boolean).join('|');
+
+    return fallback ? `platform_update:${fallback}:${day}` : null;
+  }
+
+  return null;
+};
+
+const collapseDuplicateNotifications = (items: CommunityNotification[]): CommunityNotification[] => {
+  const seen = new Set<string>();
+  const collapsed: CommunityNotification[] = [];
+
+  for (const item of items) {
+    const key = getNotificationDedupeKey(item);
+
+    if (key) {
+      if (seen.has(key)) continue;
+      seen.add(key);
+    }
+
+    collapsed.push(item);
+  }
+
+  return collapsed;
+};
+
+const shouldShowRealtimeToast = (notification: NotificationRow) => {
+  const key = getNotificationDedupeKey(notification);
+  if (!key) return true;
+
+  const storageKey = `ct-notification-toast:${key}`;
+
+  try {
+    if (window.localStorage.getItem(storageKey)) {
+      return false;
+    }
+
+    window.localStorage.setItem(storageKey, new Date().toISOString());
+  } catch {
+    return true;
+  }
+
+  return true;
+};
+
 const getRealtimeToastMessage = (notification: NotificationRow) => {
-  const metadata =
-    notification.metadata && typeof notification.metadata === 'object'
-      ? (notification.metadata as Record<string, unknown>)
-      : {};
+  const metadata = getMetadata(notification);
 
   if (typeof metadata.message === 'string' && metadata.message.trim()) {
     return metadata.message;
@@ -69,7 +145,7 @@ export const useCommunityNotifications = (userId: string | undefined) => {
         .select('*')
         .eq('user_id', userId)
         .order('created_at', { ascending: false })
-        .limit(20);
+        .limit(50);
 
       if (error) throw error;
 
@@ -100,9 +176,10 @@ export const useCommunityNotifications = (userId: string | undefined) => {
         })
       );
 
-      setNotifications(notificationsWithActors);
+      const visibleNotifications = collapseDuplicateNotifications(notificationsWithActors).slice(0, 20);
+      setNotifications(visibleNotifications);
       // Exclude message notifications from unread count - they're handled separately in the messages icon
-      setUnreadCount(notificationsWithActors.filter(n => !n.read && n.notification_type !== 'message').length);
+      setUnreadCount(visibleNotifications.filter(n => !n.read && n.notification_type !== 'message').length);
     } catch (error) {
       console.error('Error fetching notifications:', error);
     } finally {
@@ -170,7 +247,9 @@ export const useCommunityNotifications = (userId: string | undefined) => {
       }, (payload) => {
         fetchNotifications();
         const nextNotification = payload.new as NotificationRow;
-        toast.info(getRealtimeToastMessage(nextNotification));
+        if (shouldShowRealtimeToast(nextNotification)) {
+          toast.info(getRealtimeToastMessage(nextNotification));
+        }
       })
       .subscribe();
 

@@ -51,7 +51,7 @@ export const TaskModal = ({ open, onOpenChange, selectedDate, onTaskAdded }: Tas
 
       if (error) throw error;
 
-      toast.success('Task added successfully! You\'ll receive reminders every 3 hours.');
+      toast.success('Task added successfully. You\'ll receive at most one dashboard reminder per day.');
       setTaskText('');
       setPriority('medium');
       setDeadlineTime('23:59');
@@ -132,7 +132,7 @@ export const TaskModal = ({ open, onOpenChange, selectedDate, onTaskAdded }: Tas
               />
             </div>
             <p className="text-xs text-muted-foreground">
-              You'll receive reminders every 3 hours until completion
+              You'll receive at most one dashboard reminder per day until completion
             </p>
           </div>
 

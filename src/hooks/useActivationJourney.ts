@@ -228,6 +228,23 @@ export function useActivationJourney(entryStageOverride?: ActivationEntryStage) 
       inFlightNotificationKeysRef.current.add(notificationKey);
 
       try {
+        const { data: existingNotification, error: existingNotificationError } = await supabase
+          .from('community_notifications')
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('notification_type', 'platform_update')
+          .filter('metadata->>slug', 'eq', payload.slug)
+          .limit(1);
+
+        if (existingNotificationError) {
+          console.error('Failed to check activation notification:', existingNotificationError);
+          return false;
+        }
+
+        if (existingNotification && existingNotification.length > 0) {
+          return true;
+        }
+
         const { error } = await supabase
           .from('community_notifications')
           .insert({

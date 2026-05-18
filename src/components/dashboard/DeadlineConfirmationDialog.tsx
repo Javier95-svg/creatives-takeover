@@ -33,7 +33,7 @@ export const DeadlineConfirmationDialog = ({ userId }: DeadlineConfirmationDialo
 
   const checkForOverdueTasks = useCallback(async () => {
     try {
-      // Create one-time system notifications for newly expired tasks.
+      // Create a capped daily bell reminder for newly expired tasks.
       await supabase.rpc('notify_task_deadline_expired' as never, { p_user_id: userId } as never);
 
       // Keep the currently open dialog stable until user acts.
