@@ -309,7 +309,7 @@ const Hero = () => {
                     Creatives Takeover gives every founder a structured 7-stage roadmap, access to experienced mentors and investors, and a personalized dashboard that guides you at every step.
                   </p>
                   <p>
-                    No application. No cohort. No equity. Just the system you always deserved access to.
+                    No application. No cohort. No equity.
                   </p>
                 </>
               )}
