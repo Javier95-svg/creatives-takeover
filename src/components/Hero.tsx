@@ -303,10 +303,13 @@ const Hero = () => {
               ) : (
                 <>
                   <p>
-                    Creatives Takeover gives you the structure of a top-tier accelerator without applications, cohorts, rejection, or giving up equity.
+                    You shouldn&apos;t need the right connections, the right city, or the right background to build a serious startup.
                   </p>
                   <p>
-                    Grow your startup at your own pace with personalized guidance that adapts to your industry, development stage, and target market.
+                    Creatives Takeover gives every founder a structured 7-stage roadmap, access to experienced mentors and investors, and a personalized dashboard that guides you at every step.
+                  </p>
+                  <p>
+                    No application. No cohort. No equity. Just the system you always deserved access to.
                   </p>
                 </>
               )}
