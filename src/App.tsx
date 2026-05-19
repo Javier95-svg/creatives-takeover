@@ -1,4 +1,5 @@
 import { Suspense, lazy, useEffect, type ReactNode } from "react";
+import { MotionConfig } from "framer-motion";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -185,7 +186,8 @@ function App() {
 
   return (
     <ErrorBoundary>
-      <QueryClientProvider client={queryClient}>
+      <MotionConfig reducedMotion="user">
+        <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <UserProvider>
             <ProgressProvider>
@@ -356,7 +358,8 @@ function App() {
             </ProgressProvider>
           </UserProvider>
         </AuthProvider>
-      </QueryClientProvider>
+        </QueryClientProvider>
+      </MotionConfig>
       <Suspense fallback={null}>
         <Analytics />
       </Suspense>

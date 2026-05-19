@@ -8,6 +8,7 @@ import PricingComparison from "@/components/PricingComparison";
 import PricingFAQ from "@/components/PricingFAQ";
 import HomeWallpaper from "@/components/wallpapers/HomeWallpaper";
 import { trackPricingViewed } from "@/lib/analytics";
+import { ScrollReveal } from "@/components/animations/ScrollReveal";
 
 
 const PricingPage = () => {
@@ -60,9 +61,15 @@ const PricingPage = () => {
         <div className="relative z-10">
           <Navigation />
           <Pricing />
-          <PricingComparison />
-          <SubscriptionFeatures />
-          <PricingFAQ />
+          <ScrollReveal>
+            <PricingComparison />
+          </ScrollReveal>
+          <ScrollReveal>
+            <SubscriptionFeatures />
+          </ScrollReveal>
+          <ScrollReveal>
+            <PricingFAQ />
+          </ScrollReveal>
           <Footer />
         </div>
       </div>

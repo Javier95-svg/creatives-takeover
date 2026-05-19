@@ -17,6 +17,7 @@ import {
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { useTypingAnimation } from "@/hooks/useTypingAnimation";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 
 const TypedParagraph = ({
   text,
@@ -45,6 +46,7 @@ const AISpecializationTrends = () => {
   const [chartVisible, setChartVisible] = useState(false);
   const [textSectionVisible, setTextSectionVisible] = useState(false);
   const isMobile = useIsMobile();
+  const prefersReducedMotion = usePrefersReducedMotion();
   const typingSpeed = 24;
   const firstNarrative =
     "It has never been a better time to be a founder. Markets are unbundling, and software is breaking into focused, founder-sized opportunities instead of being dominated by a few general-purpose giants.";
@@ -58,17 +60,25 @@ const AISpecializationTrends = () => {
 
   useEffect(() => {
     if (chartIsVisible && !chartVisible) {
+      if (prefersReducedMotion) {
+        setChartVisible(true);
+        return;
+      }
       const timer = setTimeout(() => setChartVisible(true), 300);
       return () => clearTimeout(timer);
     }
-  }, [chartIsVisible, chartVisible]);
+  }, [chartIsVisible, chartVisible, prefersReducedMotion]);
 
   useEffect(() => {
     if (textSectionIsVisible && !textSectionVisible) {
+      if (prefersReducedMotion) {
+        setTextSectionVisible(true);
+        return;
+      }
       const timer = setTimeout(() => setTextSectionVisible(true), 400);
       return () => clearTimeout(timer);
     }
-  }, [textSectionIsVisible, textSectionVisible]);
+  }, [textSectionIsVisible, textSectionVisible, prefersReducedMotion]);
 
   const founderLeverageData = [
     { stage: 'Manual Ops', traditional: 1, aiEnabled: 1.2 },
@@ -184,7 +194,7 @@ const AISpecializationTrends = () => {
                           border: '1px solid hsl(var(--border))',
                           borderRadius: '8px',
                           boxShadow: '0 8px 16px rgba(0, 0, 0, 0.15)',
-                          transition: 'all 0.3s ease'
+                          transition: prefersReducedMotion ? 'none' : 'all 0.3s ease'
                         }}
                         animationDuration={400}
                         animationEasing="ease-out"
@@ -227,7 +237,7 @@ const AISpecializationTrends = () => {
                         }}
                         name="AI-Enabled Solo Founder"
                         animationBegin={0}
-                        animationDuration={2500}
+                        animationDuration={prefersReducedMotion ? 0 : 2500}
                         animationEasing="ease-out"
                         style={{
                           transition: 'all 0.3s ease'
@@ -258,8 +268,8 @@ const AISpecializationTrends = () => {
                           }
                         }}
                         name="Traditional Solo Founder"
-                        animationBegin={600}
-                        animationDuration={2500}
+                        animationBegin={prefersReducedMotion ? 0 : 600}
+                        animationDuration={prefersReducedMotion ? 0 : 2500}
                         animationEasing="ease-out"
                         style={{
                           transition: 'all 0.3s ease'
@@ -342,7 +352,7 @@ const AISpecializationTrends = () => {
                         name="Small Team Access"
                         className="chart-area"
                         animationBegin={0}
-                        animationDuration={2800}
+                        animationDuration={prefersReducedMotion ? 0 : 2800}
                         animationEasing="ease-out"
                         style={{
                           transition: 'all 0.3s ease'
@@ -357,8 +367,8 @@ const AISpecializationTrends = () => {
                         fillOpacity={0.4}
                         name="Enterprise-Only Access"
                         className="chart-area"
-                        animationBegin={500}
-                        animationDuration={2800}
+                        animationBegin={prefersReducedMotion ? 0 : 500}
+                        animationDuration={prefersReducedMotion ? 0 : 2800}
                         animationEasing="ease-out"
                         style={{
                           transition: 'all 0.3s ease'

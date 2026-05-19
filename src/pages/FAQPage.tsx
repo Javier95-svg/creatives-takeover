@@ -5,6 +5,7 @@ import FAQHero from "@/components/FAQHero";
 import SearchableFAQ from "@/components/SearchableFAQ";
 import FAQNavigation from "@/components/FAQNavigation";
 import HomeWallpaper from "@/components/wallpapers/HomeWallpaper";
+import { ScrollReveal } from "@/components/animations/ScrollReveal";
 
 const FAQPage = () => {
   // Structured data for FAQ page
@@ -56,8 +57,12 @@ const FAQPage = () => {
         <div className="relative z-10">
           <Navigation />
           <FAQHero />
-          <SearchableFAQ />
-          <FAQNavigation />
+          <ScrollReveal>
+            <SearchableFAQ />
+          </ScrollReveal>
+          <ScrollReveal>
+            <FAQNavigation />
+          </ScrollReveal>
         </div>
         <Footer />
       </div>

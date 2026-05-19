@@ -9,6 +9,7 @@ import { useNavigate } from "react-router-dom";
 import { normalizePlanId, trackUpgradeClicked } from "@/lib/analytics";
 import { PLAN_HIGHLIGHTS, PLAN_MONTHLY_CREDITS } from "@/config/planPermissions";
 import { appendCheckoutIntentParam, persistCheckoutIntent } from "@/lib/checkoutRedirect";
+import { RevealGroup } from "@/components/animations/ScrollReveal";
 
 type BillingCycle = "monthly" | "yearly";
 type PlanKey = "rookie" | "starter" | "rising" | "pro";
@@ -225,7 +226,7 @@ export default function Pricing() {
           </Tabs>
         </div>
 
-        <div className="grid grid-cols-1 justify-items-center md:grid-cols-2 xl:grid-cols-4 gap-6 xl:gap-9 max-w-[104rem] mx-auto items-start">
+        <RevealGroup className="grid grid-cols-1 justify-items-center md:grid-cols-2 xl:grid-cols-4 gap-6 xl:gap-9 max-w-[104rem] mx-auto items-start" variant="card">
           {PLAN_CONFIG.map((plan, index) => {
             const isCurrentPlan = currentTier === plan.key;
             const isPopular = plan.key === "starter";
@@ -324,7 +325,7 @@ export default function Pricing() {
               </div>
             );
           })}
-        </div>
+        </RevealGroup>
       </div>
     </section>
   );

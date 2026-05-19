@@ -13,6 +13,7 @@ import {
   CarouselItem,
   type CarouselApi,
 } from "@/components/ui/carousel";
+import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 
 interface ValueCardImage {
   position: number;
@@ -32,6 +33,7 @@ const ValuePropositionCards = () => {
   const fileInputRefs = useRef<Record<number, HTMLInputElement | null>>({});
   const { user } = useAuth();
   const isAdmin = user?.email?.toLowerCase() === 'admin@creatives-takeover.com';
+  const prefersReducedMotion = usePrefersReducedMotion();
 
   // Core value propositions - 6 outcome-driven selling points
   const allCards = [
@@ -291,7 +293,10 @@ const ValuePropositionCards = () => {
       clearInterval(autoScrollRef.current);
     }
 
-    if (isAutoScrollPaused) {
+    if (prefersReducedMotion || isAutoScrollPaused) {
+      if (prefersReducedMotion) {
+        setIsAutoScrollPaused(true);
+      }
       autoScrollRef.current = null;
       return;
     }
@@ -306,7 +311,7 @@ const ValuePropositionCards = () => {
         autoScrollRef.current = null;
       }
     };
-  }, [api, isAutoScrollPaused]);
+  }, [api, isAutoScrollPaused, prefersReducedMotion]);
 
   // Navigate to specific card
   const goToCard = (index: number) => {
@@ -409,6 +414,7 @@ const ValuePropositionCards = () => {
                         size="sm"
                         onClick={handleStopClick}
                         title={isAutoScrollPaused ? "Resume auto-scroll" : "Pause auto-scroll"}
+                        disabled={prefersReducedMotion}
                         className="absolute right-4 top-4 z-10 h-7 px-2 text-xs"
                       >
                         {isAutoScrollPaused ? "Resume" : "Stop"}

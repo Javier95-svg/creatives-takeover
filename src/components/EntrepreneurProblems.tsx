@@ -16,6 +16,7 @@ import {
 import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import FounderJourneyVideo from "./FounderJourneyVideo";
+import { ScrollReveal } from "@/components/animations/ScrollReveal";
 
 type AccentColor = "blue" | "green" | "red" | "amber";
 
@@ -349,7 +350,7 @@ const EntrepreneurProblems = () => {
 
       <div className="container mx-auto px-4 sm:px-6 relative z-10">
         {/* Section Header */}
-        <div className="text-center mb-14 sm:mb-16 max-w-3xl mx-auto">
+        <ScrollReveal className="text-center mb-14 sm:mb-16 max-w-3xl mx-auto">
           <Badge variant="outline" className="homepage-section-badge mb-5">
             Own Your Path 🚀
           </Badge>
@@ -359,7 +360,7 @@ const EntrepreneurProblems = () => {
           <p className="homepage-section-copy founder-journey-section__copy mx-auto text-base sm:text-lg">
             But some challenges are universal. Here, we highlight some of the most common obstacles founders face and how we assist to overcome them.
           </p>
-        </div>
+        </ScrollReveal>
 
         {/* Vertical Timeline */}
         <div className="max-w-5xl mx-auto relative">
@@ -374,9 +375,10 @@ const EntrepreneurProblems = () => {
               const isEven = index % 2 === 0;
 
               return (
-                <div
+                <ScrollReveal
                   key={index}
                   className="relative"
+                  variant={isEven ? "slide-left" : "slide-right"}
                 >
                   {/* Mobile Layout */}
                   <div className="md:hidden space-y-5">
@@ -468,7 +470,7 @@ const EntrepreneurProblems = () => {
                       </>
                     )}
                   </div>
-                </div>
+                </ScrollReveal>
               );
             })}
           </div>

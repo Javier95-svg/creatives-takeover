@@ -4368,6 +4368,21 @@ img {
     transition: none !important;
   }
 
+  .animate-in,
+  .chart-container,
+  .chart-area,
+  .scroll-reveal {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+
+  .chart-line {
+    animation: none !important;
+    stroke-dashoffset: 0 !important;
+  }
+
   .journey-action-card,
   .journey-action-card:hover,
   .journey-action-card:focus-visible,

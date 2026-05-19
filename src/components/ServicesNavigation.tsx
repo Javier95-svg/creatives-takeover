@@ -2,6 +2,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Home, DollarSign, HelpCircle, ArrowRight } from "lucide-react";
+import { RevealGroup, ScrollReveal } from "@/components/animations/ScrollReveal";
 
 const ServicesNavigation = () => {
   const navigationCards = [
@@ -32,16 +33,16 @@ const ServicesNavigation = () => {
   return (
     <section className="py-20 bg-background">
       <div className="container mx-auto px-6">
-        <div className="text-center mb-12">
+        <ScrollReveal className="text-center mb-12">
           <h2 className="text-3xl font-bold mb-4 gradient-text">
             Ready to Get Started?
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             Explore more about our creative subscription service or get the answers you need.
           </p>
-        </div>
+        </ScrollReveal>
 
-        <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+        <RevealGroup className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto" variant="card">
           {navigationCards.map((card, index) => (
             <Card 
               key={index} 
@@ -70,10 +71,10 @@ const ServicesNavigation = () => {
               </CardContent>
             </Card>
           ))}
-        </div>
+        </RevealGroup>
 
         {/* Final CTA */}
-        <div className="text-center mt-16">
+        <ScrollReveal className="text-center mt-16">
           <p className="text-muted-foreground mb-6">
             Still have questions about our creative subscription service?
           </p>
@@ -82,7 +83,7 @@ const ServicesNavigation = () => {
               Get All Your Answers
             </Link>
           </Button>
-        </div>
+        </ScrollReveal>
       </div>
     </section>
   );

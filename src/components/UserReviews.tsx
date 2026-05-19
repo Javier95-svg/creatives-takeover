@@ -14,6 +14,7 @@ import {
   Play,
   Pause
 } from "lucide-react";
+import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 
 type CycleStep = {
   shortLabel: string;
@@ -88,9 +89,15 @@ const UserReviews = () => {
   const [activeStepIndex, setActiveStepIndex] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
   const isMobile = useIsMobile();
+  const prefersReducedMotion = usePrefersReducedMotion();
 
   // Auto-play functionality
   useEffect(() => {
+    if (prefersReducedMotion) {
+      setIsAutoPlaying(false);
+      return;
+    }
+
     if (!isAutoPlaying) return;
 
     const interval = setInterval(() => {
@@ -98,7 +105,7 @@ const UserReviews = () => {
     }, 5000);
 
     return () => clearInterval(interval);
-  }, [isAutoPlaying]);
+  }, [isAutoPlaying, prefersReducedMotion]);
 
   const stepPositions = cycleSteps.map((_, index) => {
     const angleInRadians = ((-90 + STEP_ANGLE * index) * Math.PI) / 180;
@@ -207,7 +214,7 @@ const UserReviews = () => {
                       stroke="url(#mobileRingGradient)"
                       strokeWidth="0.25"
                       className="text-primary"
-                      style={{ animation: 'cycle-ring-pulse-mobile 3s ease-in-out infinite' }}
+                      style={prefersReducedMotion ? undefined : { animation: 'cycle-ring-pulse-mobile 3s ease-in-out infinite' }}
                     />
 
                     <path
@@ -217,7 +224,7 @@ const UserReviews = () => {
                       strokeWidth="0.4"
                       className="text-primary/30"
                       strokeDasharray="2 2"
-                      style={{ animation: 'cycle-dash-spin 8s linear infinite' }}
+                      style={prefersReducedMotion ? undefined : { animation: 'cycle-dash-spin 8s linear infinite' }}
                     />
 
                     {stepPositions.map((_, index) => {
@@ -247,7 +254,7 @@ const UserReviews = () => {
                               ? "text-primary/50 opacity-70"
                               : "text-primary/10 opacity-50"
                           }`}
-                          style={isActiveSegment ? { animation: 'cycle-stroke-pulse 2s ease-in-out infinite' } : undefined}
+                          style={isActiveSegment && !prefersReducedMotion ? { animation: 'cycle-stroke-pulse 2s ease-in-out infinite' } : undefined}
                         />
                       );
                     })}
@@ -365,7 +372,7 @@ const UserReviews = () => {
                     stroke="url(#ringGradient)"
                     strokeWidth="0.25"
                     className="text-primary"
-                    style={{ animation: 'cycle-ring-pulse 3s ease-in-out infinite' }}
+                    style={prefersReducedMotion ? undefined : { animation: 'cycle-ring-pulse 3s ease-in-out infinite' }}
                   />
 
                   {/* Animated connection path */}
@@ -376,7 +383,7 @@ const UserReviews = () => {
                     strokeWidth="0.4"
                     className="text-primary/30"
                     strokeDasharray="2 2"
-                    style={{ animation: 'cycle-dash-spin 8s linear infinite' }}
+                    style={prefersReducedMotion ? undefined : { animation: 'cycle-dash-spin 8s linear infinite' }}
                   />
 
                   {/* Progress indicator - active segment glow */}
@@ -407,7 +414,7 @@ const UserReviews = () => {
                             ? "text-primary/50 opacity-70"
                             : "text-primary/10 opacity-50"
                         }`}
-                        style={isActiveSegment ? { animation: 'cycle-stroke-pulse 2s ease-in-out infinite' } : undefined}
+                        style={isActiveSegment && !prefersReducedMotion ? { animation: 'cycle-stroke-pulse 2s ease-in-out infinite' } : undefined}
                       />
                     );
                   })}

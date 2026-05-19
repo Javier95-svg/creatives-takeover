@@ -1,11 +1,18 @@
 import { useEffect, useRef, useState } from 'react';
+import { usePrefersReducedMotion } from './usePrefersReducedMotion';
 
 export const useScrollAnimation = (delay: number = 0) => {
-  const [isVisible, setIsVisible] = useState(false);
+  const prefersReducedMotion = usePrefersReducedMotion();
+  const [isVisible, setIsVisible] = useState(prefersReducedMotion);
   const ref = useRef<HTMLDivElement>(null);
   const observerRef = useRef<IntersectionObserver | null>(null);
 
   useEffect(() => {
+    if (prefersReducedMotion) {
+      setIsVisible(true);
+      return;
+    }
+
     // Clean up previous observer if it exists
     if (observerRef.current) {
       observerRef.current.disconnect();
@@ -41,7 +48,7 @@ export const useScrollAnimation = (delay: number = 0) => {
         observerRef.current = null;
       }
     };
-  }, [delay]);
+  }, [delay, prefersReducedMotion]);
 
   return { ref, isVisible };
 };

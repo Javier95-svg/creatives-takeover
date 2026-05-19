@@ -6,6 +6,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { CREDIT_COSTS } from "@/config/constants";
+import { RevealGroup, ScrollReveal } from "@/components/animations/ScrollReveal";
 
 type CreditBreakdownItem = {
   name: string;
@@ -148,7 +149,7 @@ const SubscriptionFeatures = () => {
     <section className="relative py-section-mobile lg:py-section-desktop overflow-hidden" id="features">
       <div className="container mx-auto px-4 sm:px-6 relative z-10">
         {/* Section Header */}
-        <div className="text-center mb-16 animate-fade-in">
+        <ScrollReveal className="text-center mb-16 animate-fade-in">
           <div className="mb-6">
             <Badge variant="secondary" className="rounded-full bg-primary/10 text-primary border-primary/20 font-medium">
               Credits Explained
@@ -160,10 +161,10 @@ const SubscriptionFeatures = () => {
           <p className="text-lg sm:text-xl text-muted-foreground max-w-3xl mx-auto">
             Every tool has a transparent access model, so you can see what is included on your plan and what still uses credits before spending anything.
           </p>
-        </div>
+        </ScrollReveal>
 
         {/* Credit Breakdown Grid - wider cards for readability */}
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 items-start">
+        <RevealGroup className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 items-start" variant="card">
           {/* BizMap AI Card */}
           <Card className="rounded-2xl border border-slate-300/60 dark:border-slate-500/40 bg-card/80 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md">
             <CardHeader>
@@ -238,7 +239,7 @@ const SubscriptionFeatures = () => {
               </div>
             </CardContent>
           </Card>
-        </div>
+        </RevealGroup>
       </div>
     </section>
   );

@@ -8,6 +8,7 @@ import DownloadsSection from "@/components/DownloadsSection";
 import ResourcesNavigation from "@/components/ResourcesNavigation";
 import AnimatedBackground from "@/components/AnimatedBackground";
 import FounderAnswerLibraryTeaser from "@/components/seo/FounderAnswerLibraryTeaser";
+import { ScrollReveal } from "@/components/animations/ScrollReveal";
 
 const Resources = () => {
   return (
@@ -28,11 +29,21 @@ const Resources = () => {
         <div className="relative z-10">
           <Navigation />
           <ResourcesHero />
-          <FounderAnswerLibraryTeaser />
-          <TutorialsSection />
-          <GuidesSection />
-          <DownloadsSection />
-          <ResourcesNavigation />
+          <ScrollReveal>
+            <FounderAnswerLibraryTeaser />
+          </ScrollReveal>
+          <ScrollReveal>
+            <TutorialsSection />
+          </ScrollReveal>
+          <ScrollReveal>
+            <GuidesSection />
+          </ScrollReveal>
+          <ScrollReveal>
+            <DownloadsSection />
+          </ScrollReveal>
+          <ScrollReveal>
+            <ResourcesNavigation />
+          </ScrollReveal>
         </div>
         <Footer />
       </div>

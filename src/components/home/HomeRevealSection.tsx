@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 
-import { useScrollAnimation } from "@/hooks/useScrollAnimation";
+import { RevealGroup, ScrollReveal } from "@/components/animations/ScrollReveal";
 import { cn } from "@/lib/utils";
 
 interface HomeRevealSectionProps {
@@ -16,20 +16,21 @@ const HomeRevealSection = ({
   delay = 0,
   staggerChildren = false,
 }: HomeRevealSectionProps) => {
-  const { ref, isVisible } = useScrollAnimation(delay);
+  if (staggerChildren) {
+    return (
+      <RevealGroup
+        className={cn("home-reveal-section", className)}
+        delayChildren={delay / 1000}
+      >
+        {children}
+      </RevealGroup>
+    );
+  }
 
   return (
-    <div
-      ref={ref}
-      className={cn(
-        "home-reveal-section",
-        staggerChildren && "home-reveal-stagger",
-        isVisible && "revealed",
-        className,
-      )}
-    >
+    <ScrollReveal className={cn("home-reveal-section", className)} delay={delay / 1000}>
       {children}
-    </div>
+    </ScrollReveal>
   );
 };
 

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { usePrefersReducedMotion } from './usePrefersReducedMotion';
 
 interface UseTypingAnimationProps {
   text: string;
@@ -13,12 +14,20 @@ export const useTypingAnimation = ({
   startDelay = 0,
   onComplete 
 }: UseTypingAnimationProps) => {
+  const prefersReducedMotion = usePrefersReducedMotion();
   const [displayedText, setDisplayedText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const indexRef = useRef(0);
 
   useEffect(() => {
+    if (prefersReducedMotion) {
+      setDisplayedText(text);
+      setIsTyping(false);
+      onComplete?.();
+      return;
+    }
+
     // Reset state when text changes
     setDisplayedText('');
     setIsTyping(true);
@@ -50,7 +59,7 @@ export const useTypingAnimation = ({
         clearTimeout(timeoutRef.current);
       }
     };
-  }, [text, speed, startDelay, onComplete]);
+  }, [text, speed, startDelay, onComplete, prefersReducedMotion]);
 
   const skipAnimation = () => {
     if (timeoutRef.current) {

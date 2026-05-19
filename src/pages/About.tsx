@@ -8,6 +8,7 @@ import MeetTheTeam from "@/components/MeetTheTeam";
 
 import ContactUs from "@/components/ContactUs";
 import HomeWallpaper from "@/components/wallpapers/HomeWallpaper";
+import { ScrollReveal } from "@/components/animations/ScrollReveal";
 
 const About = () => {
   // Structured data for About page
@@ -35,9 +36,15 @@ const About = () => {
         <div className="relative z-10">
           <Navigation />
           <AboutHero />
-          <MissionVision />
-          <MeetTheTeam />
-          <ContactUs />
+          <ScrollReveal>
+            <MissionVision />
+          </ScrollReveal>
+          <ScrollReveal>
+            <MeetTheTeam />
+          </ScrollReveal>
+          <ScrollReveal>
+            <ContactUs />
+          </ScrollReveal>
         </div>
       </div>
       <Footer />

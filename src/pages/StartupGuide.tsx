@@ -8,6 +8,7 @@ import HomeWallpaper from "@/components/wallpapers/HomeWallpaper";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { RevealGroup, ScrollReveal } from "@/components/animations/ScrollReveal";
 
 const STAGES = [
   {
@@ -240,22 +241,22 @@ export default function StartupGuide() {
 
           {/* Stage overview nav */}
           <nav className="mx-auto mt-16 max-w-4xl" aria-label="Startup guide stages">
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+            <RevealGroup className="grid grid-cols-2 gap-3 sm:grid-cols-5" variant="card">
               {STAGES.map((stage) => (
                 <a
                   key={stage.number}
                   href={`#stage-${stage.number}`}
-                  className={`rounded-xl border ${stage.borderColor} ${stage.bgColor} p-3 text-center transition-colors hover:bg-card`}
+                  className={`block rounded-xl border ${stage.borderColor} ${stage.bgColor} p-3 text-center transition-colors hover:bg-card`}
                 >
                   <span className={`block text-xs font-bold ${stage.color}`}>{stage.number}</span>
                   <span className="mt-1 block text-xs font-medium text-foreground">{stage.cluster}</span>
                 </a>
               ))}
-            </div>
+            </RevealGroup>
           </nav>
 
           {/* Stages */}
-          <div className="mx-auto mt-16 max-w-4xl space-y-20">
+          <RevealGroup className="mx-auto mt-16 max-w-4xl space-y-20" variant="default">
             {STAGES.map((stage) => (
               <section key={stage.number} id={`stage-${stage.number}`} className="scroll-mt-24">
                 {/* Stage header */}
@@ -318,28 +319,32 @@ export default function StartupGuide() {
                 </div>
               </section>
             ))}
-          </div>
+          </RevealGroup>
 
           {/* Mentor CTA */}
-          <section className="mx-auto mt-20 max-w-4xl rounded-[2rem] border border-primary/20 bg-primary/5 p-8 text-center">
-            <h2 className="text-2xl font-semibold tracking-tight">Sometimes you need a human, not a framework</h2>
-            <p className="mx-auto mt-3 max-w-2xl text-base leading-relaxed text-muted-foreground">
-              CT's Mentor Marketplace connects first-time founders with vetted startup mentors who have
-              hands-on experience in fundraising, MVP planning, customer discovery, and go-to-market strategy.
-              Book a focused 1-on-1 session and get unstuck fast.
-            </p>
-            <Button asChild className="mt-6" size="lg">
-              <Link to="/mentorship">
-                Browse Startup Mentors
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-            </Button>
-          </section>
+          <ScrollReveal variant="card">
+            <section className="mx-auto mt-20 max-w-4xl rounded-[2rem] border border-primary/20 bg-primary/5 p-8 text-center">
+              <h2 className="text-2xl font-semibold tracking-tight">Sometimes you need a human, not a framework</h2>
+              <p className="mx-auto mt-3 max-w-2xl text-base leading-relaxed text-muted-foreground">
+                CT's Mentor Marketplace connects first-time founders with vetted startup mentors who have
+                hands-on experience in fundraising, MVP planning, customer discovery, and go-to-market strategy.
+                Book a focused 1-on-1 session and get unstuck fast.
+              </p>
+              <Button asChild className="mt-6" size="lg">
+                <Link to="/mentorship">
+                  Browse Startup Mentors
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </Button>
+            </section>
+          </ScrollReveal>
 
           {/* FAQ */}
           <section className="mx-auto mt-20 max-w-4xl">
-            <h2 className="text-2xl font-semibold tracking-tight mb-8">Founder questions answered</h2>
-            <div className="space-y-5">
+            <ScrollReveal>
+              <h2 className="text-2xl font-semibold tracking-tight mb-8">Founder questions answered</h2>
+            </ScrollReveal>
+            <RevealGroup className="space-y-5" variant="card">
               {FAQS.map((faq) => (
                 <Card key={faq.question} className="border-border/60 bg-card/80">
                   <CardContent className="p-6">
@@ -348,10 +353,11 @@ export default function StartupGuide() {
                   </CardContent>
                 </Card>
               ))}
-            </div>
+            </RevealGroup>
           </section>
 
           {/* Bottom CTA */}
+          <ScrollReveal>
           <section className="mx-auto mt-20 max-w-2xl text-center">
             <h2 className="text-2xl font-semibold tracking-tight">Ready to start building?</h2>
             <p className="mt-3 text-base leading-relaxed text-muted-foreground">
@@ -369,6 +375,7 @@ export default function StartupGuide() {
               </Button>
             </div>
           </section>
+          </ScrollReveal>
 
         </main>
         <Footer />

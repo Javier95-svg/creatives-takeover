@@ -15,6 +15,7 @@ import {
   Shield,
   HelpCircle
 } from "lucide-react";
+import { RevealGroup, ScrollReveal } from "@/components/animations/ScrollReveal";
 
 const SearchableFAQ = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -256,7 +257,7 @@ const SearchableFAQ = () => {
     <section className="py-20 lg:py-32 bg-muted/30" id="search-faq">
       <div className="container mx-auto px-6">
         {/* Search and Filter */}
-        <div className="max-w-4xl mx-auto mb-16">
+        <ScrollReveal className="max-w-4xl mx-auto mb-16">
           {/* Search Bar */}
           <div className="relative mb-8">
             <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
@@ -285,7 +286,7 @@ const SearchableFAQ = () => {
               </Button>
             ))}
           </div>
-        </div>
+        </ScrollReveal>
 
         {/* Results Summary */}
         <div className="text-center mb-12">
@@ -297,7 +298,7 @@ const SearchableFAQ = () => {
         </div>
 
         {/* FAQ Items */}
-        <div className="max-w-4xl mx-auto space-y-4">
+        <RevealGroup className="max-w-4xl mx-auto space-y-4" variant="card">
           {filteredFAQs.length === 0 ? (
             <Card className="glass border-border text-center p-8">
               <CardContent>
@@ -362,10 +363,10 @@ const SearchableFAQ = () => {
               </Card>
             ))
           )}
-        </div>
+        </RevealGroup>
 
         {/* Still Need Help */}
-        <div className="text-center mt-16 bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10 rounded-2xl p-8 lg:p-12 max-w-4xl mx-auto">
+        <ScrollReveal className="text-center mt-16 bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10 rounded-2xl p-8 lg:p-12 max-w-4xl mx-auto" variant="card">
           <h3 className="text-2xl font-bold mb-4 gradient-text">
             Still Need Help?
           </h3>
@@ -390,7 +391,7 @@ const SearchableFAQ = () => {
               </a>
             </Button>
           </div>
-        </div>
+        </ScrollReveal>
       </div>
     </section>
   );

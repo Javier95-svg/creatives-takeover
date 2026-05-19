@@ -10,6 +10,7 @@ import {
   Heart,
   Lightbulb
 } from "lucide-react";
+import { RevealGroup, ScrollReveal } from "@/components/animations/ScrollReveal";
 
 const ResourcesNavigation = () => {
   const navigationCards = [
@@ -61,7 +62,7 @@ const ResourcesNavigation = () => {
     <section className="py-20 bg-background">
       <div className="container mx-auto px-6">
         {/* Resource Summary */}
-        <div className="text-center mb-16">
+        <ScrollReveal className="text-center mb-16">
           <h2 className="text-4xl font-bold mb-6 gradient-text">
             Your Creative Learning Journey Starts Here
           </h2>
@@ -71,7 +72,7 @@ const ResourcesNavigation = () => {
           </p>
 
           {/* Resource Highlights */}
-          <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto mb-12">
+          <RevealGroup className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto mb-12" variant="card">
             {resourceHighlights.map((item, index) => (
               <div key={index} className="flex items-center justify-center space-x-3">
                 {item.icon}
@@ -81,7 +82,7 @@ const ResourcesNavigation = () => {
                 </div>
               </div>
             ))}
-          </div>
+          </RevealGroup>
 
           {/* Primary CTA */}
           <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10 rounded-2xl p-8 lg:p-12 mb-16">
@@ -109,14 +110,14 @@ const ResourcesNavigation = () => {
               ✓ Free newsletter  ✓ Exclusive content  ✓ Early access to new resources
             </p>
           </div>
-        </div>
+        </ScrollReveal>
 
         {/* Navigation Cards */}
         <div className="mb-16">
           <h3 className="text-2xl font-bold mb-8 text-center gradient-text">
             Continue Exploring
           </h3>
-          <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+          <RevealGroup className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto" variant="card">
             {navigationCards.map((card, index) => (
               <Card 
                 key={index} 
@@ -145,11 +146,11 @@ const ResourcesNavigation = () => {
                 </CardContent>
               </Card>
             ))}
-          </div>
+          </RevealGroup>
         </div>
 
         {/* Final Support Message */}
-        <div className="text-center">
+        <ScrollReveal className="text-center">
           <h4 className="text-lg font-semibold mb-4">
             Need Help Finding the Right Resources?
           </h4>
@@ -162,7 +163,7 @@ const ResourcesNavigation = () => {
               Get Community Support
             </Link>
           </Button>
-        </div>
+        </ScrollReveal>
       </div>
     </section>
   );

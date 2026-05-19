@@ -5,6 +5,7 @@ import ServicesHero from "@/components/ServicesHero";
 import SubscriptionFeatures from "@/components/SubscriptionFeatures";
 import ServicesNavigation from "@/components/ServicesNavigation";
 import AnimatedBackground from "@/components/AnimatedBackground";
+import { ScrollReveal } from "@/components/animations/ScrollReveal";
 
 const Services = () => {
   // Structured data for Services page
@@ -32,8 +33,12 @@ const Services = () => {
         <div className="relative z-10">
           <Navigation />
           <ServicesHero />
-          <SubscriptionFeatures />
-          <ServicesNavigation />
+          <ScrollReveal>
+            <SubscriptionFeatures />
+          </ScrollReveal>
+          <ScrollReveal>
+            <ServicesNavigation />
+          </ScrollReveal>
         </div>
         <Footer />
       </div>
