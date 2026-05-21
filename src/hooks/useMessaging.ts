@@ -258,6 +258,44 @@ const saveStoredFailedMessages = (userId: string, messages: StoredFailedMessage[
 const toSafeStorageName = (fileName: string): string =>
   fileName.replace(/[^a-zA-Z0-9._-]/g, '-').replace(/-+/g, '-').slice(0, 120) || 'attachment';
 
+const createAttachmentSignedUrl = async (
+  storagePath: string,
+  options: { showToast?: boolean } = {}
+): Promise<string | null> => {
+  const { data, error } = await supabase.storage
+    .from(MESSAGE_ATTACHMENT_BUCKET)
+    .createSignedUrl(storagePath, 60 * 60);
+
+  if (error) {
+    logError('Error creating attachment signed URL', error);
+    if (options.showToast) {
+      toast.error('Unable to open attachment.');
+    }
+    return null;
+  }
+
+  return data?.signedUrl || null;
+};
+
+const mapAttachmentRow = async (attachment: any): Promise<MessageAttachment> => {
+  const storagePath = attachment.storage_path;
+  const mimeType = attachment.mime_type || 'application/octet-stream';
+  const isImage = mimeType.startsWith('image/');
+
+  return {
+    id: attachment.id,
+    message_id: attachment.message_id,
+    uploader_id: attachment.uploader_id,
+    storage_path: storagePath,
+    file_name: attachment.file_name,
+    mime_type: mimeType,
+    file_size: Number(attachment.file_size || 0),
+    width: attachment.width,
+    height: attachment.height,
+    signed_url: isImage && storagePath ? await createAttachmentSignedUrl(storagePath) : null
+  };
+};
+
 const normalizeIdentity = (value: string): string =>
   value
     .toLowerCase()
@@ -874,19 +912,12 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
     const attachmentsByMessage = new Map<string, MessageAttachment[]>();
     const receiptsByMessage = new Map<string, any[]>();
 
-    (attachmentData || []).forEach((attachment: any) => {
+    const mappedAttachments = await Promise.all((attachmentData || []).map(mapAttachmentRow));
+
+    mappedAttachments.forEach((attachment) => {
+      if (!attachment.message_id) return;
       const current = attachmentsByMessage.get(attachment.message_id) || [];
-      current.push({
-        id: attachment.id,
-        message_id: attachment.message_id,
-        uploader_id: attachment.uploader_id,
-        storage_path: attachment.storage_path,
-        file_name: attachment.file_name,
-        mime_type: attachment.mime_type,
-        file_size: Number(attachment.file_size || 0),
-        width: attachment.width,
-        height: attachment.height
-      });
+      current.push(attachment);
       attachmentsByMessage.set(attachment.message_id, current);
     });
 
@@ -1245,9 +1276,72 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
         }
       });
 
+    const attachmentSubscription = supabase
+      .channel(`message-attachments-${activeConversationId}`)
+      .on('postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'message_attachments'
+        },
+        async (payload) => {
+          const attachmentRow = payload.new as any;
+          const storagePath = attachmentRow?.storage_path as string | undefined;
+
+          if (!storagePath?.startsWith(`${activeConversationId}/`)) {
+            return;
+          }
+
+          const mappedAttachment = await mapAttachmentRow(attachmentRow);
+          const currentMessages = messagesRef.current[activeConversationId] || [];
+          const targetMessageExists = currentMessages.some((message) => message.id === mappedAttachment.message_id);
+
+          if (!targetMessageExists) {
+            void loadMessages(activeConversationId, { mode: 'replace', limit: MESSAGE_PAGE_SIZE });
+            return;
+          }
+
+          setMessages((prev) => {
+            const currentMessages = prev[activeConversationId] || [];
+
+            return {
+              ...prev,
+              [activeConversationId]: currentMessages.map((message) => {
+                if (message.id !== mappedAttachment.message_id) {
+                  return message;
+                }
+
+                const existingAttachments = message.attachment_rows || [];
+                const alreadyAttached = existingAttachments.some((attachment) =>
+                  (mappedAttachment.id && attachment.id === mappedAttachment.id) ||
+                  (mappedAttachment.storage_path && attachment.storage_path === mappedAttachment.storage_path)
+                );
+
+                if (alreadyAttached) {
+                  return message;
+                }
+
+                return {
+                  ...message,
+                  attachment_rows: [...existingAttachments, mappedAttachment],
+                  upload_progress: message.upload_progress !== undefined ? 100 : message.upload_progress
+                };
+              })
+            };
+          });
+        }
+      )
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') return;
+        if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+          void loadMessages(activeConversationId, { mode: 'replace', limit: MESSAGE_PAGE_SIZE });
+        }
+      });
+
     return () => {
       isMounted = false;
       supabase.removeChannel(messageSubscription);
+      supabase.removeChannel(attachmentSubscription);
     };
   }, [activeConversationId, user?.id, loadUnreadCounts, loadMessages, mapMessagesWithRelatedData]);
 
@@ -2342,17 +2436,7 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
   }, [archiveConversation, user]);
 
   const getAttachmentSignedUrl = useCallback(async (storagePath: string): Promise<string | null> => {
-    const { data, error } = await supabase.storage
-      .from(MESSAGE_ATTACHMENT_BUCKET)
-      .createSignedUrl(storagePath, 60 * 60);
-
-    if (error) {
-      logError('Error creating attachment signed URL', error);
-      toast.error('Unable to open attachment.');
-      return null;
-    }
-
-    return data?.signedUrl || null;
+    return createAttachmentSignedUrl(storagePath, { showToast: true });
   }, []);
 
   // Add reaction to a message

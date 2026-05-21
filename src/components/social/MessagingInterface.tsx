@@ -552,14 +552,19 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
     // Store current scroll position to prevent unwanted scrolling
     const scrollY = window.scrollY;
 
+    setNewMessage("");
+    setSelectedFiles([]);
+
     try {
       const sentMessage = await sendMessage(activeConversationId, messageToSend, { files: filesToSend });
-      // Only clear input after successful send
-      if (sentMessage && sentMessage.delivery_status !== 'failed' && !sentMessage.local_failed) {
-        setNewMessage("");
-        setSelectedFiles([]);
+
+      if (!sentMessage) {
+        setNewMessage(messageToSend);
+        setSelectedFiles(filesToSend);
       }
     } catch {
+      setNewMessage(messageToSend);
+      setSelectedFiles(filesToSend);
       toast.error('Failed to send message. Please try again.');
     }
 
@@ -941,6 +946,22 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
     }
   }, [getAttachmentSignedUrl]);
 
+  const isAttachmentFilenameFallback = (message: Message): boolean => {
+    const content = message.content.trim();
+    const attachments = message.attachment_rows || [];
+
+    if (!content || attachments.length === 0) {
+      return false;
+    }
+
+    const fallbackContent = attachments
+      .map((attachment) => attachment.file_name.trim())
+      .filter(Boolean)
+      .join(', ');
+
+    return content === fallbackContent;
+  };
+
   const renderMessageAttachments = (message: Message, isOwnMessage: boolean) => {
     const attachments = message.attachment_rows || [];
     if (attachments.length === 0) return null;
@@ -958,10 +979,39 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
 
         {attachments.map((attachment, index) => {
           const isImage = attachment.mime_type.startsWith('image/');
+          const attachmentKey = `${message.id}-${attachment.storage_path || attachment.file_name}-${index}`;
+
+          if (isImage && attachment.signed_url) {
+            return (
+              <button
+                key={attachmentKey}
+                type="button"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  void handleAttachmentOpen(attachment.storage_path);
+                }}
+                className={`block overflow-hidden rounded-lg border transition-colors ${
+                  isOwnMessage
+                    ? 'border-primary-foreground/20 bg-primary-foreground/10 hover:bg-primary-foreground/15'
+                    : 'border-border/60 bg-background/70 hover:bg-background'
+                }`}
+                aria-label={`Open ${attachment.file_name}`}
+              >
+                <img
+                  src={attachment.signed_url}
+                  alt={attachment.file_name}
+                  className="max-h-80 w-full max-w-sm object-contain"
+                  loading="lazy"
+                  onLoad={() => messageVirtualizer.measure()}
+                  onError={() => messageVirtualizer.measure()}
+                />
+              </button>
+            );
+          }
 
           return (
             <button
-              key={`${message.id}-${attachment.storage_path || attachment.file_name}-${index}`}
+              key={attachmentKey}
               type="button"
               onClick={(event) => {
                 event.stopPropagation();
@@ -1105,7 +1155,7 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
                   )
                 )}
 
-	                {message.content && (
+	                {message.content && !isAttachmentFilenameFallback(message) && (
 	                  <p className="text-sm whitespace-pre-wrap break-words">{renderMessageContent(message.content)}</p>
 	                )}
 
