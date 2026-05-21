@@ -9,6 +9,11 @@ export interface SavedMentor {
   id: string;
   mentor_id: string;
   created_at: string;
+  source?: string | null;
+  recommended_at?: string | null;
+  recommendation_reason?: string | null;
+  matched_support_areas?: string[] | null;
+  matched_sectors?: string[] | null;
   mentor: {
     id: string;
     name: string;
@@ -38,6 +43,11 @@ export const useMentorSaves = () => {
           id,
           mentor_id,
           created_at,
+          source,
+          recommended_at,
+          recommendation_reason,
+          matched_support_areas,
+          matched_sectors,
           mentor:mentors (
             id,
             name,
@@ -97,6 +107,7 @@ export const useMentorSaves = () => {
         .insert({
           user_id: user.id,
           mentor_id: mentor.id,
+          source: 'manual',
         });
 
       if (error) {

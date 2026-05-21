@@ -4845,19 +4845,34 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          matched_sectors: string[]
+          matched_support_areas: string[]
           mentor_id: string
+          recommendation_reason: string | null
+          recommended_at: string | null
+          source: string
           user_id: string
         }
         Insert: {
           created_at?: string
           id?: string
+          matched_sectors?: string[]
+          matched_support_areas?: string[]
           mentor_id: string
+          recommendation_reason?: string | null
+          recommended_at?: string | null
+          source?: string
           user_id: string
         }
         Update: {
           created_at?: string
           id?: string
+          matched_sectors?: string[]
+          matched_support_areas?: string[]
           mentor_id?: string
+          recommendation_reason?: string | null
+          recommended_at?: string | null
+          source?: string
           user_id?: string
         }
         Relationships: [
@@ -5538,6 +5553,7 @@ export type Database = {
           bio_html: string | null
           business_stage: string | null
           cofounder_onboarding_completed: boolean | null
+          country: string | null
           created_at: string
           creative_niche: string | null
           credit_balance: number
@@ -5616,6 +5632,7 @@ export type Database = {
           bio_html?: string | null
           business_stage?: string | null
           cofounder_onboarding_completed?: boolean | null
+          country?: string | null
           created_at?: string
           creative_niche?: string | null
           credit_balance?: number
@@ -5694,6 +5711,7 @@ export type Database = {
           bio_html?: string | null
           business_stage?: string | null
           cofounder_onboarding_completed?: boolean | null
+          country?: string | null
           created_at?: string
           creative_niche?: string | null
           credit_balance?: number
@@ -8372,6 +8390,7 @@ export type Database = {
         Row: {
           avatar_url: string | null
           bio: string | null
+          country: string | null
           creative_niche: string | null
           facebook_url: string | null
           followers_count: number | null

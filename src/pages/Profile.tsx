@@ -671,6 +671,7 @@ const Profile = () => {
                           <SocialButtons
                             userId={profile.id}
                             userName={profile.full_name || undefined}
+                            profileActionsOnly
                             showAccountabilityPartner={false}
                           />
                         </div>

@@ -7,6 +7,8 @@ import {
 export interface StartupManualProfile {
   startupName: string;
   industries: string[];
+  country: string;
+  supportAreasNeeded: string[];
   description: string;
   tagline: string;
   stage: string;
@@ -127,6 +129,8 @@ export function normalizeStartupManualProfile(profile: Record<string, any> | nul
   return {
     startupName: asString(profile?.startup_name),
     industries: asStringArray(profile?.startup_industry),
+    country: asString(profile?.country),
+    supportAreasNeeded: asStringArray(preferences.supportAreasNeeded),
     description: asString(profile?.startup_description),
     tagline: asString(profile?.startup_tagline),
     stage: asString(profile?.startup_stage || profile?.business_stage),
@@ -285,7 +289,7 @@ export function buildStartupCommandCenterModel(rows: StartupCommandCenterRows): 
 
 export function buildStartupProfilePreferences(
   existingPreferences: Record<string, unknown>,
-  updates: { targetMarket?: string; revenueModel?: string },
+  updates: { targetMarket?: string; revenueModel?: string; supportAreasNeeded?: string[] },
 ) {
   const existingStartupProfile = asRecord(existingPreferences[STARTUP_PROFILE_PREF_KEY]);
   return {
@@ -295,5 +299,6 @@ export function buildStartupProfilePreferences(
       target_market: updates.targetMarket ?? asString(existingStartupProfile.target_market),
       revenue_model: updates.revenueModel ?? asString(existingStartupProfile.revenue_model),
     },
+    supportAreasNeeded: updates.supportAreasNeeded ?? asStringArray(existingPreferences.supportAreasNeeded),
   };
 }

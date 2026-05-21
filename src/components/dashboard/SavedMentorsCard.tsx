@@ -32,6 +32,14 @@ function formatSavedDate(createdAt: string) {
   })}`;
 }
 
+function getSavedMentorLabel(item: SavedMentor) {
+  if (item.source === 'onboarding_recommendation') {
+    return 'Recommended for you';
+  }
+
+  return formatSavedDate(item.created_at);
+}
+
 export function SavedMentorsCard() {
   const { user } = useAuth();
   const { savedMentors, loading, pendingMentorId, removeSavedMentor } = useMentorSaves();
@@ -144,7 +152,7 @@ export function SavedMentorsCard() {
 
                       <div className="min-w-0">
                         <p className="truncate text-sm font-semibold text-foreground">{item.mentor.name}</p>
-                        <p className="text-xs text-muted-foreground">{formatSavedDate(item.created_at)}</p>
+                        <p className="text-xs text-muted-foreground">{getSavedMentorLabel(item)}</p>
                       </div>
                     </div>
 
@@ -166,6 +174,9 @@ export function SavedMentorsCard() {
                   </div>
 
                   <div className="mt-4 flex flex-wrap gap-2">
+                    {item.source === 'onboarding_recommendation' ? (
+                      <Badge variant="secondary">Recommended for you</Badge>
+                    ) : null}
                     {expertise.slice(0, 2).map((tag) => (
                       <Badge key={tag} variant="outline" className="max-w-full truncate">
                         {tag}

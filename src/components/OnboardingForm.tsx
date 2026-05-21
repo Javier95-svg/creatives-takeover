@@ -1,30 +1,40 @@
-import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Checkbox } from '@/components/ui/checkbox';
-import { ArrowLeft, ArrowRight, Lightbulb, Target, Hammer, Loader2 } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
-import { toast } from 'sonner';
+import { useEffect, useMemo, useState } from 'react';
+import { ArrowLeft, ArrowRight, Hammer, Lightbulb, Loader2, Search, Target } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { toast } from 'sonner';
+
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { useAuth } from '@/contexts/AuthContext';
+import { ANGEL_SECTOR_OPTIONS } from '@/data/angelSectors';
+import { COUNTRY_OPTIONS } from '@/data/countries';
+import { MENTOR_EXPERTISE_OPTIONS } from '@/data/mentorExpertise';
 import {
   captureEvent,
   trackOnboardingCompleted,
   trackOnboardingStepCompleted,
 } from '@/lib/analytics';
 import { trackActivity } from '@/lib/activity';
+import { refreshOnboardingMentorRecommendations } from '@/lib/onboardingMentorRecommendations';
 import { getActivationRoute, startActivationJourney, type ActivationIntent } from '@/lib/retentionSystem';
 
 interface OnboardingData {
   businessStage: string;
+  startupSectors: string[];
+  supportAreasNeeded: string[];
+  country: string;
   primaryPain: string;
   activationIntent: ActivationIntent | '';
   acceptedTerms: boolean;
 }
 
 const PRIMARY_PAIN_OPTIONS = [
-  { value: 'unclear_direction', label: "Too many ideas — I need focus" },
+  { value: 'unclear_direction', label: 'Too many ideas - I need focus' },
   { value: 'cant_validate', label: "I can't tell if anyone wants this" },
   { value: 'building_isolation', label: 'Building alone with no feedback' },
   { value: 'worried_funding', label: 'Worried about funding and investors' },
@@ -41,7 +51,7 @@ const STAGE_CARDS = [
   {
     value: 'validation',
     icon: Target,
-    headline: 'I know my customer — I need to test demand',
+    headline: 'I know my customer - I need to test demand',
     sub: 'We will push you toward one concrete founder action instead of generic exploration.',
   },
   {
@@ -76,22 +86,44 @@ const ACTIVATION_CARDS: Array<{
 
 const ONBOARDING_STEPS = [
   { id: 'startup_stage' },
+  { id: 'startup_sector' },
+  { id: 'support_areas' },
+  { id: 'country' },
   { id: 'primary_pain' },
   { id: 'activation_intent' },
   { id: 'terms_confirmation' },
 ] as const;
 
+const emptyOnboardingData: OnboardingData = {
+  businessStage: '',
+  startupSectors: [],
+  supportAreasNeeded: [],
+  country: '',
+  primaryPain: '',
+  activationIntent: '',
+  acceptedTerms: false,
+};
+
 interface OnboardingFormProps {
   onComplete?: (startRoute?: string) => void;
 }
 
+function toggleValue(current: string[], value: string) {
+  return current.includes(value)
+    ? current.filter((item) => item !== value)
+    : [...current, value];
+}
+
 export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
   const { user } = useAuth();
+  const [countrySearch, setCountrySearch] = useState('');
   const [currentStep, setCurrentStep] = useState(() => {
     try {
       const draft = sessionStorage.getItem(`onboarding_draft_${user?.id}`);
       return draft ? (JSON.parse(draft).currentStep ?? 0) : 0;
-    } catch { return 0; }
+    } catch {
+      return 0;
+    }
   });
   const [isLoading, setIsLoading] = useState(false);
   const [startedAt] = useState(Date.now());
@@ -103,14 +135,19 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
       if (draft) {
         const parsed = JSON.parse(draft);
         return {
+          ...emptyOnboardingData,
           businessStage: parsed.businessStage ?? '',
+          startupSectors: Array.isArray(parsed.startupSectors) ? parsed.startupSectors : [],
+          supportAreasNeeded: Array.isArray(parsed.supportAreasNeeded) ? parsed.supportAreasNeeded : [],
+          country: parsed.country ?? '',
           primaryPain: parsed.primaryPain ?? '',
           activationIntent: parsed.activationIntent ?? '',
-          acceptedTerms: false,
         };
       }
-    } catch { /* ignore */ }
-    return { businessStage: '', primaryPain: '', activationIntent: '', acceptedTerms: false };
+    } catch {
+      /* ignore */
+    }
+    return emptyOnboardingData;
   });
 
   useEffect(() => {
@@ -119,11 +156,31 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
       sessionStorage.setItem(`onboarding_draft_${user.id}`, JSON.stringify({
         currentStep,
         businessStage: formData.businessStage,
+        startupSectors: formData.startupSectors,
+        supportAreasNeeded: formData.supportAreasNeeded,
+        country: formData.country,
         primaryPain: formData.primaryPain,
         activationIntent: formData.activationIntent,
       }));
-    } catch { /* ignore */ }
-  }, [currentStep, formData.businessStage, formData.primaryPain, formData.activationIntent, user?.id]);
+    } catch {
+      /* ignore */
+    }
+  }, [
+    currentStep,
+    formData.activationIntent,
+    formData.businessStage,
+    formData.country,
+    formData.primaryPain,
+    formData.startupSectors,
+    formData.supportAreasNeeded,
+    user?.id,
+  ]);
+
+  const filteredCountries = useMemo(() => {
+    const query = countrySearch.trim().toLowerCase();
+    if (!query) return COUNTRY_OPTIONS.slice(0, 12);
+    return COUNTRY_OPTIONS.filter((country) => country.toLowerCase().includes(query)).slice(0, 12);
+  }, [countrySearch]);
 
   const totalSteps = ONBOARDING_STEPS.length;
   const progress = ((currentStep + 1) / totalSteps) * 100;
@@ -136,12 +193,21 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
         if (!formData.businessStage) newErrors.businessStage = 'Please select where you are in your journey';
         break;
       case 1:
-        if (!formData.primaryPain) newErrors.primaryPain = 'Please select your biggest challenge';
+        if (formData.startupSectors.length === 0) newErrors.startupSectors = 'Select at least one startup sector';
         break;
       case 2:
-        if (!formData.activationIntent) newErrors.activationIntent = 'Choose the first action that should create your return trigger';
+        if (formData.supportAreasNeeded.length === 0) newErrors.supportAreasNeeded = 'Select at least one support area';
         break;
       case 3:
+        if (!formData.country) newErrors.country = 'Please select your country';
+        break;
+      case 4:
+        if (!formData.primaryPain) newErrors.primaryPain = 'Please select your biggest challenge';
+        break;
+      case 5:
+        if (!formData.activationIntent) newErrors.activationIntent = 'Choose the first action that should create your return trigger';
+        break;
+      case 6:
         if (!formData.acceptedTerms) newErrors.acceptedTerms = 'You must accept the terms to continue';
         break;
     }
@@ -194,13 +260,24 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
         businessStage: formData.businessStage,
         primaryPain: formData.primaryPain,
         activationIntent: selectedIntent,
+        startupSectors: formData.startupSectors,
+        supportAreasNeeded: formData.supportAreasNeeded,
+        country: formData.country,
       });
 
-      // FIX(retention): onboarding — activation intent selection is now captured with the canonical event name used by the retention recovery funnel.
+      await refreshOnboardingMentorRecommendations({
+        userId: user.id,
+        sectors: formData.startupSectors,
+        supportAreas: formData.supportAreasNeeded,
+      });
+
       captureEvent('activation_intent_selected', {
         stage: formData.businessStage,
         painPoint: formData.primaryPain,
         activationIntent: selectedIntent,
+        startupSectors: formData.startupSectors,
+        supportAreasNeeded: formData.supportAreasNeeded,
+        country: formData.country,
         timeMs: Date.now() - startedAt,
         startRoute,
       });
@@ -208,10 +285,12 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
         stage: formData.businessStage,
         painPoint: formData.primaryPain,
         activationIntent: selectedIntent,
+        startupSectors: formData.startupSectors,
+        supportAreasNeeded: formData.supportAreasNeeded,
+        country: formData.country,
         timeMs: Date.now() - startedAt,
         startRoute,
       });
-      // FIX(retention): onboarding — completion is now emitted explicitly so onboarding_started/onboarding_completed can be trusted again.
       trackOnboardingCompleted({
         quiz_completed: true,
         creative_niche: null,
@@ -221,12 +300,19 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
         stage: formData.businessStage,
         painPoint: formData.primaryPain,
         activationIntent: selectedIntent,
+        startupSectors: formData.startupSectors,
+        supportAreasNeeded: formData.supportAreasNeeded,
+        country: formData.country,
         startRoute,
       }, user.id);
 
-      toast.success("One last step: complete your first value action before you explore the rest of the platform.");
+      toast.success('Your startup context is saved. We added mentor recommendations to your saved list.');
 
-      try { sessionStorage.removeItem(`onboarding_draft_${user.id}`); } catch { /* ignore */ }
+      try {
+        sessionStorage.removeItem(`onboarding_draft_${user.id}`);
+      } catch {
+        /* ignore */
+      }
 
       if (onComplete) {
         const separator = startRoute.includes('?') ? '&' : '?';
@@ -240,18 +326,45 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
     }
   };
 
+  const renderOptionGrid = (
+    options: readonly string[],
+    selectedValues: string[],
+    field: 'startupSectors' | 'supportAreasNeeded',
+  ) => (
+    <div className="grid gap-2 sm:grid-cols-2">
+      {options.map((option) => {
+        const selected = selectedValues.includes(option);
+        return (
+          <button
+            key={option}
+            type="button"
+            onClick={() => {
+              setFormData((prev) => ({ ...prev, [field]: toggleValue(prev[field], option) }));
+              setErrors((prev) => ({ ...prev, [field]: undefined }));
+            }}
+            className={`rounded-lg border px-3 py-2 text-left text-sm transition-colors ${
+              selected
+                ? 'border-[#32b8c6] bg-[#32b8c6]/10 text-foreground'
+                : 'border-border/60 bg-background/70 hover:bg-accent/60'
+            }`}
+          >
+            <span className="font-medium">{option}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+
   const renderStep = () => {
     switch (currentStep) {
       case 0:
         return (
           <div className="space-y-6">
             <div>
-              <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight mb-2 font-space-grotesk">
+              <h2 className="mb-2 font-space-grotesk text-2xl font-semibold tracking-tight sm:text-3xl">
                 Where are you in your startup journey?
               </h2>
-              <p className="text-muted-foreground">
-                Pick the option that fits best — we'll route you to your first win.
-              </p>
+              <p className="text-muted-foreground">Pick the option that fits best and we will route you to your first win.</p>
             </div>
 
             <div className="space-y-3">
@@ -263,21 +376,19 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
                     type="button"
                     onClick={() => {
                       setFormData((prev) => ({ ...prev, businessStage: value }));
-                      setErrors((e) => ({ ...e, businessStage: undefined }));
+                      setErrors((prev) => ({ ...prev, businessStage: undefined }));
                     }}
-                    className={`w-full text-left flex items-start gap-4 rounded-xl border p-4 transition-all duration-150 cursor-pointer
-                      ${isSelected
+                    className={`flex w-full cursor-pointer items-start gap-4 rounded-xl border p-4 text-left transition-all duration-150 ${
+                      isSelected
                         ? 'border-[#32b8c6] bg-[#32b8c6]/10 shadow-sm'
-                        : 'border-border/60 bg-background/70 hover:bg-accent/60 hover:border-border'
-                      }`}
+                        : 'border-border/60 bg-background/70 hover:border-border hover:bg-accent/60'
+                    }`}
                   >
                     <div className={`mt-0.5 flex-shrink-0 rounded-lg p-2 ${isSelected ? 'bg-[#32b8c6]/20' : 'bg-muted'}`}>
                       <Icon className={`h-5 w-5 ${isSelected ? 'text-[#32b8c6]' : 'text-muted-foreground'}`} />
                     </div>
                     <div>
-                      <p className={`font-semibold text-sm leading-snug mb-0.5 font-space-grotesk ${isSelected ? 'text-foreground' : 'text-foreground/80'}`}>
-                        {headline}
-                      </p>
+                      <p className="mb-0.5 font-space-grotesk text-sm font-semibold leading-snug">{headline}</p>
                       <p className="text-xs text-muted-foreground">{sub}</p>
                     </div>
                   </button>
@@ -292,34 +403,13 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
         return (
           <div className="space-y-6">
             <div>
-              <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight mb-2 font-space-grotesk">
-                What's your biggest challenge right now?
+              <h2 className="mb-2 font-space-grotesk text-2xl font-semibold tracking-tight sm:text-3xl">
+                What sector does your startup operate in?
               </h2>
-              <p className="text-muted-foreground">
-                This helps us point you at the right tool first.
-              </p>
+              <p className="text-muted-foreground">Choose all that apply. These match the investor sector filters.</p>
             </div>
-
-            <RadioGroup
-              value={formData.primaryPain}
-              onValueChange={(value) => {
-                setFormData((prev) => ({ ...prev, primaryPain: value }));
-                setErrors((e) => ({ ...e, primaryPain: undefined }));
-              }}
-              className="space-y-2"
-            >
-              {PRIMARY_PAIN_OPTIONS.map((pain) => (
-                <Label
-                  key={pain.value}
-                  htmlFor={`pain-${pain.value}`}
-                  className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60 cursor-pointer"
-                >
-                  <RadioGroupItem value={pain.value} id={`pain-${pain.value}`} />
-                  <span className="flex-1 text-sm">{pain.label}</span>
-                </Label>
-              ))}
-            </RadioGroup>
-            {errors.primaryPain && <p className="text-sm text-destructive mt-1">{errors.primaryPain}</p>}
+            {renderOptionGrid(ANGEL_SECTOR_OPTIONS, formData.startupSectors, 'startupSectors')}
+            {errors.startupSectors && <p className="text-sm text-destructive">{errors.startupSectors}</p>}
           </div>
         );
 
@@ -327,11 +417,106 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
         return (
           <div className="space-y-6">
             <div>
-              <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight mb-2 font-space-grotesk">
+              <h2 className="mb-2 font-space-grotesk text-2xl font-semibold tracking-tight sm:text-3xl">
+                Which areas do you need support with?
+              </h2>
+              <p className="text-muted-foreground">We will use this to recommend mentors with matching expertise.</p>
+            </div>
+            {renderOptionGrid(MENTOR_EXPERTISE_OPTIONS, formData.supportAreasNeeded, 'supportAreasNeeded')}
+            {errors.supportAreasNeeded && <p className="text-sm text-destructive">{errors.supportAreasNeeded}</p>}
+          </div>
+        );
+
+      case 3:
+        return (
+          <div className="space-y-6">
+            <div>
+              <h2 className="mb-2 font-space-grotesk text-2xl font-semibold tracking-tight sm:text-3xl">
+                Which country are you based in?
+              </h2>
+              <p className="text-muted-foreground">This helps surface founders building near you or in similar markets.</p>
+            </div>
+            <div className="space-y-3">
+              <div className="relative">
+                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  value={countrySearch}
+                  onChange={(event) => setCountrySearch(event.target.value)}
+                  className="pl-9"
+                  placeholder="Search countries"
+                />
+              </div>
+              {formData.country ? (
+                <Badge variant="secondary" className="rounded-full">{formData.country}</Badge>
+              ) : null}
+              <div className="grid max-h-72 gap-2 overflow-y-auto rounded-lg border border-border/60 bg-background/70 p-2 sm:grid-cols-2">
+                {filteredCountries.map((country) => {
+                  const selected = formData.country === country;
+                  return (
+                    <button
+                      key={country}
+                      type="button"
+                      onClick={() => {
+                        setFormData((prev) => ({ ...prev, country }));
+                        setCountrySearch(country);
+                        setErrors((prev) => ({ ...prev, country: undefined }));
+                      }}
+                      className={`rounded-md px-3 py-2 text-left text-sm transition-colors ${
+                        selected ? 'bg-[#32b8c6]/15 font-semibold text-foreground' : 'hover:bg-accent'
+                      }`}
+                    >
+                      {country}
+                    </button>
+                  );
+                })}
+              </div>
+              {errors.country && <p className="text-sm text-destructive">{errors.country}</p>}
+            </div>
+          </div>
+        );
+
+      case 4:
+        return (
+          <div className="space-y-6">
+            <div>
+              <h2 className="mb-2 font-space-grotesk text-2xl font-semibold tracking-tight sm:text-3xl">
+                What's your biggest challenge right now?
+              </h2>
+              <p className="text-muted-foreground">This helps us point you at the right tool first.</p>
+            </div>
+
+            <RadioGroup
+              value={formData.primaryPain}
+              onValueChange={(value) => {
+                setFormData((prev) => ({ ...prev, primaryPain: value }));
+                setErrors((prev) => ({ ...prev, primaryPain: undefined }));
+              }}
+              className="space-y-2"
+            >
+              {PRIMARY_PAIN_OPTIONS.map((pain) => (
+                <Label
+                  key={pain.value}
+                  htmlFor={`pain-${pain.value}`}
+                  className="flex cursor-pointer items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60"
+                >
+                  <RadioGroupItem value={pain.value} id={`pain-${pain.value}`} />
+                  <span className="flex-1 text-sm">{pain.label}</span>
+                </Label>
+              ))}
+            </RadioGroup>
+            {errors.primaryPain && <p className="mt-1 text-sm text-destructive">{errors.primaryPain}</p>}
+          </div>
+        );
+
+      case 5:
+        return (
+          <div className="space-y-6">
+            <div>
+              <h2 className="mb-2 font-space-grotesk text-2xl font-semibold tracking-tight sm:text-3xl">
                 Pick the action that should pull you back
               </h2>
               <p className="text-muted-foreground">
-                The first session should create one concrete thing worth revisiting. Pick the path that should become your return trigger.
+                The first session should create one concrete thing worth revisiting.
               </p>
             </div>
 
@@ -349,10 +534,10 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
                     className={`w-full rounded-2xl border p-4 text-left transition-all duration-150 ${
                       isSelected
                         ? 'border-[#32b8c6] bg-[#32b8c6]/10 shadow-sm'
-                        : 'border-border/60 bg-background/70 hover:bg-accent/60 hover:border-border'
+                        : 'border-border/60 bg-background/70 hover:border-border hover:bg-accent/60'
                     }`}
                   >
-                    <p className="font-semibold text-sm mb-1 font-space-grotesk">{card.headline}</p>
+                    <p className="mb-1 font-space-grotesk text-sm font-semibold">{card.headline}</p>
                     <p className="text-sm text-muted-foreground">{card.sub}</p>
                   </button>
                 );
@@ -362,31 +547,25 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
           </div>
         );
 
-      case 3:
+      case 6:
         return (
           <div className="space-y-6">
             <div>
-              <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight mb-2 font-space-grotesk">
+              <h2 className="mb-2 font-space-grotesk text-2xl font-semibold tracking-tight sm:text-3xl">
                 Lock the plan and take the first step
               </h2>
               <p className="text-muted-foreground">
-                You will land on a guided path, not a generic dashboard. Activation only completes after the first value-bearing action.
+                We will save your recommendations and land you on a guided path.
               </p>
             </div>
 
-            <div className="p-4 rounded-2xl bg-[#32b8c6]/10 border border-[#32b8c6]/30">
-              <p className="text-sm font-semibold text-foreground mb-1 font-space-grotesk">Your selected return trigger</p>
-              <p className="text-sm text-muted-foreground">
-                {formData.activationIntent === 'find_mentor' && (
-                  <>You will go to mentors and create one relationship worth returning to.</>
-                )}
-                {formData.activationIntent === 'run_icp' && (
-                  <>You will start with one prompt, get a fast ICP recommendation, and only expand the brief after the value shows up.</>
-                )}
-                {formData.activationIntent === 'start_validation' && (
-                  <>You will score one startup idea and leave with a clearer decision instead of more passive exploration.</>
-                )}
-              </p>
+            <div className="rounded-2xl border border-[#32b8c6]/30 bg-[#32b8c6]/10 p-4">
+              <p className="mb-2 font-space-grotesk text-sm font-semibold text-foreground">Your matching profile</p>
+              <div className="flex flex-wrap gap-2">
+                {[...formData.startupSectors, ...formData.supportAreasNeeded, formData.country].filter(Boolean).map((item) => (
+                  <Badge key={item} variant="outline">{item}</Badge>
+                ))}
+              </div>
             </div>
 
             <div className="flex items-start space-x-2 rounded-2xl border border-border/60 bg-background/70 p-4">
@@ -420,11 +599,11 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
   };
 
   return (
-    <div className="w-full max-w-[680px] mx-auto p-4 sm:p-6">
-      <Card className="rounded-2xl border border-border/60 bg-card/90 backdrop-blur-md shadow-2xl hover:shadow-2xl hover:shadow-primary/10 transition-all duration-300">
-        <CardHeader className="space-y-4 pb-6 border-b border-border/60">
+    <div className="mx-auto w-full max-w-[760px] p-4 sm:p-6">
+      <Card className="rounded-2xl border border-border/60 bg-card/90 shadow-2xl backdrop-blur-md transition-all duration-300 hover:shadow-2xl hover:shadow-primary/10">
+        <CardHeader className="space-y-4 border-b border-border/60 pb-6">
           <div>
-            <CardTitle className="text-2xl sm:text-3xl font-semibold tracking-tight font-space-grotesk">
+            <CardTitle className="font-space-grotesk text-2xl font-semibold tracking-tight sm:text-3xl">
               Welcome to Creatives Takeover
             </CardTitle>
             <CardDescription className="mt-2 text-xs uppercase tracking-[0.2em] text-muted-foreground">
@@ -433,17 +612,17 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
           </div>
           <div className="relative h-2 w-full overflow-hidden rounded-full bg-muted/50">
             <div
-              className="h-full bg-[#32b8c6] transition-all rounded-full shadow-sm"
+              className="h-full rounded-full bg-[#32b8c6] shadow-sm transition-all"
               style={{ width: `${progress}%` }}
             />
           </div>
         </CardHeader>
 
-        <CardContent className="min-h-[400px] pt-6">
+        <CardContent className="min-h-[420px] pt-6">
           {renderStep()}
         </CardContent>
 
-        <div className="px-6 pb-6 flex items-center justify-between gap-4">
+        <div className="flex items-center justify-between gap-4 px-6 pb-6">
           <div>
             {currentStep > 0 && (
               <Button
@@ -476,7 +655,7 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
                   Saving...
                 </>
               ) : currentStep === totalSteps - 1 ? (
-                'Start First Value Action →'
+                'Start First Value Action ->'
               ) : (
                 <>
                   Next

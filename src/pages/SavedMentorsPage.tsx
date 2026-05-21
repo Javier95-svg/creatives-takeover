@@ -33,6 +33,12 @@ function formatSavedDate(createdAt: string) {
   })}`;
 }
 
+function getSavedMentorLabel(item: SavedMentor) {
+  return item.source === 'onboarding_recommendation'
+    ? 'Recommended for you'
+    : formatSavedDate(item.created_at);
+}
+
 const SavedMentorsPage = () => {
   const { user } = useAuth();
   const { savedMentors, loading, pendingMentorId, removeSavedMentor } = useMentorSaves();
@@ -178,7 +184,7 @@ const SavedMentorsPage = () => {
                           <div className="min-w-0 flex-1">
                             <div className="flex flex-wrap items-center gap-2">
                               <p className="text-lg font-semibold text-foreground">{item.mentor.name}</p>
-                              <Badge variant="outline">{formatSavedDate(item.created_at)}</Badge>
+                              <Badge variant="outline">{getSavedMentorLabel(item)}</Badge>
                             </div>
                             <p className="mt-2 text-sm text-muted-foreground">
                               Keep this mentor in your side lane until you are ready to message, book, or revisit them inside Community.

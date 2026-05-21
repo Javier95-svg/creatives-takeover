@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Filter, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { MENTOR_EXPERTISE_OPTIONS } from "@/data/mentorExpertise";
 
 export interface MentorFilters {
   expertise: string[];
@@ -21,22 +22,6 @@ interface FilterSidebarProps {
   className?: string;
 }
 
-const EXPERTISE_OPTIONS = [
-  "Product Development",
-  "Growth Marketing",
-  "Sales",
-  "Business Development",
-  "Fundraising",
-  "Operations",
-  "Strategy",
-  "Finance",
-  "Legal",
-  "HR & Team Building",
-  "Technology",
-  "Design",
-  "Content Creation",
-];
-
 const COACHING_FORMAT_OPTIONS = [
   "8 Week Coaching Program",
   "Hourly Rate Basis",
@@ -45,7 +30,7 @@ const COACHING_FORMAT_OPTIONS = [
 export const FilterSidebar = ({
   filters,
   onFiltersChange,
-  availableExpertise = EXPERTISE_OPTIONS,
+  availableExpertise = [...MENTOR_EXPERTISE_OPTIONS],
   availableStages = [],
   priceRangeMax = 500000, // Kept for compatibility but not used
   className,

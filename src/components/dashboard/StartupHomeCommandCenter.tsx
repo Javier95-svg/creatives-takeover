@@ -1,38 +1,38 @@
 import { useEffect, useMemo, useState } from "react";
 import { formatDistanceToNow } from "date-fns";
 import {
-  ArrowUpRight,
   Building2,
   CheckCircle2,
-  CircleDollarSign,
-  ExternalLink,
   FileText,
   FlaskConical,
   Globe2,
   Layers3,
-  Newspaper,
   RefreshCw,
   Save,
   Target,
   TrendingUp,
+  Users,
   Zap,
 } from "lucide-react";
 
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  type IndustryNewsContentType,
-  useIndustryNewsFeed,
-} from "@/hooks/useIndustryNewsFeed";
+import { SocialButtons } from "@/components/social/SocialButtons";
+import { useAuth } from "@/contexts/AuthContext";
+import { COUNTRY_OPTIONS } from "@/data/countries";
+import { MENTOR_EXPERTISE_OPTIONS } from "@/data/mentorExpertise";
 import {
   type StartupProfileFormValues,
   useStartupCommandCenter,
 } from "@/hooks/useStartupCommandCenter";
+import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 
 const STAGE_OPTIONS = [
@@ -44,18 +44,21 @@ const STAGE_OPTIONS = [
   { value: "scale", label: "Scale" },
 ];
 
-const NEWS_FILTERS: Array<{ value: IndustryNewsContentType; label: string }> = [
-  { value: "all", label: "All" },
-  { value: "funding", label: "Funding" },
-  { value: "market_trend", label: "Trends" },
-  { value: "regulation", label: "Regulation" },
-  { value: "competitor", label: "Competitors" },
-];
+type PeerSuggestion = {
+  id: string;
+  full_name: string | null;
+  avatar_url: string | null;
+  startup_name: string | null;
+  startup_industry: string[] | null;
+  country: string | null;
+};
 
 function emptyForm(): StartupProfileFormValues {
   return {
     startupName: "",
     industries: [],
+    country: "",
+    supportAreasNeeded: [],
     description: "",
     tagline: "",
     stage: "",
@@ -71,6 +74,15 @@ function emptyForm(): StartupProfileFormValues {
       website: "",
     },
   };
+}
+
+function normalizeText(value: string | null | undefined) {
+  return value?.trim().toLowerCase() || "";
+}
+
+function getOverlap(left: string[], right: string[] | null | undefined) {
+  const rightSet = new Set((right ?? []).map(normalizeText));
+  return left.filter((item) => rightSet.has(normalizeText(item)));
 }
 
 function formatFreshness(value?: string | null) {
@@ -170,17 +182,20 @@ function HomeSkeleton() {
 }
 
 function StartupProfileSection() {
+  const { user } = useAuth();
   const { model, loading, saving, error, refresh, updateManualProfile } = useStartupCommandCenter();
   const [form, setForm] = useState<StartupProfileFormValues>(emptyForm);
   const [industryInput, setIndustryInput] = useState("");
-  const [newsFilter, setNewsFilter] = useState<IndustryNewsContentType>("all");
-  const industry = model.primaryIndustry;
-  const newsQuery = useIndustryNewsFeed(industry, newsFilter);
+  const [peerSuggestions, setPeerSuggestions] = useState<PeerSuggestion[]>([]);
+  const [peerLoading, setPeerLoading] = useState(false);
+  const [peerError, setPeerError] = useState<string | null>(null);
 
   useEffect(() => {
     setForm({
       startupName: model.manual.startupName,
       industries: model.manual.industries,
+      country: model.manual.country,
+      supportAreasNeeded: model.manual.supportAreasNeeded,
       description: model.manual.description,
       tagline: model.manual.tagline,
       stage: model.manual.stage,
@@ -199,10 +214,69 @@ function StartupProfileSection() {
     setIndustryInput(model.manual.industries.join(", "));
   }, [model.manual]);
 
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const industries = model.manual.industries;
+    const country = model.manual.country;
+
+    if (!industries.length && !country) {
+      setPeerSuggestions([]);
+      return;
+    }
+
+    let cancelled = false;
+    setPeerLoading(true);
+    setPeerError(null);
+
+    supabase
+      .from("public_profiles")
+      .select("id, full_name, avatar_url, startup_name, startup_industry, country")
+      .not("id", "eq", user.id)
+      .limit(80)
+      .then(({ data, error }) => {
+        if (cancelled) return;
+        if (error) {
+          setPeerError("Founder suggestions could not load right now.");
+          setPeerSuggestions([]);
+          return;
+        }
+
+        const ranked = ((data ?? []) as PeerSuggestion[])
+          .map((peer) => {
+            const overlap = getOverlap(industries, peer.startup_industry);
+            const sameCountry = Boolean(country && normalizeText(peer.country) === normalizeText(country));
+            const hasSectorMatch = industries.length > 0 && overlap.length > 0;
+            return {
+              peer,
+              overlap,
+              score:
+                hasSectorMatch || (!industries.length && sameCountry)
+                  ? overlap.length * 20 + (sameCountry ? 30 : 0) + (peer.startup_name ? 4 : 0)
+                  : 0,
+            };
+          })
+          .filter(({ score }) => score > 0)
+          .sort((left, right) => right.score - left.score)
+          .map(({ peer }) => peer)
+          .slice(0, 6);
+
+        setPeerSuggestions(ranked);
+      })
+      .finally(() => {
+        if (!cancelled) setPeerLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [model.manual.country, model.manual.industries, user?.id]);
+
   const completionCount = useMemo(() => {
     const fields = [
       model.manual.startupName,
       model.primaryIndustry,
+      model.manual.country,
       model.manual.positioningLine || model.generated.icp?.productPositioning,
       model.manual.description,
       model.manual.stage,
@@ -227,6 +301,15 @@ function StartupProfileSection() {
     }));
   };
 
+  const toggleSupportArea = (supportArea: string) => {
+    setForm((current) => ({
+      ...current,
+      supportAreasNeeded: current.supportAreasNeeded.includes(supportArea)
+        ? current.supportAreasNeeded.filter((item) => item !== supportArea)
+        : [...current.supportAreasNeeded, supportArea],
+    }));
+  };
+
   const handleSave = async () => {
     await updateManualProfile({
       ...form,
@@ -240,16 +323,16 @@ function StartupProfileSection() {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div className="space-y-2">
-          <p className="text-sm font-medium text-muted-foreground">Home · Startup Profile and Industry Intelligence</p>
+          <p className="text-sm font-medium text-muted-foreground">Home · Startup Profile and Founder Network</p>
           <h1 className="font-space-grotesk text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
             {model.manual.startupName || "Startup command centre"}
           </h1>
           <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
-            One place for what the platform knows about your startup and what is changing in your target market.
+            One place for what the platform knows about your startup and who you should meet next.
           </p>
         </div>
         <div className="flex items-center gap-2 rounded-full border border-border/70 bg-background/80 px-3 py-2 text-xs text-muted-foreground">
-          <span>{completionCount}/8 profile signals captured</span>
+          <span>{completionCount}/9 profile signals captured</span>
           <span className="h-1 w-1 rounded-full bg-muted-foreground/50" />
           <span>Updated {formatFreshness(model.lastUpdatedAt)}</span>
         </div>
@@ -293,6 +376,22 @@ function StartupProfileSection() {
                     {STAGE_OPTIONS.map((stage) => (
                       <SelectItem key={stage.value} value={stage.value}>
                         {stage.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="startup-country">Country</Label>
+                <Select value={form.country || "none"} onValueChange={(value) => handleChange("country", value === "none" ? "" : value)}>
+                  <SelectTrigger id="startup-country">
+                    <SelectValue placeholder="Select country" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Not captured yet</SelectItem>
+                    {COUNTRY_OPTIONS.map((country) => (
+                      <SelectItem key={country} value={country}>
+                        {country}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -343,6 +442,23 @@ function StartupProfileSection() {
                   onChange={(event) => handleChange("revenueModel", event.target.value)}
                   placeholder="Subscription, marketplace fee..."
                 />
+              </div>
+              <div className="space-y-3 md:col-span-2">
+                <Label>Support areas needed</Label>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {MENTOR_EXPERTISE_OPTIONS.map((supportArea) => (
+                    <label
+                      key={supportArea}
+                      className="flex cursor-pointer items-center gap-2 rounded-md border border-border/70 bg-background/70 p-2 text-sm"
+                    >
+                      <Checkbox
+                        checked={form.supportAreasNeeded.includes(supportArea)}
+                        onCheckedChange={() => toggleSupportArea(supportArea)}
+                      />
+                      <span>{supportArea}</span>
+                    </label>
+                  ))}
+                </div>
               </div>
             </div>
 
@@ -515,84 +631,80 @@ function StartupProfileSection() {
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-2">
                   <div className="flex h-9 w-9 items-center justify-center rounded-md border border-border bg-background">
-                    <Newspaper className="h-4 w-4" aria-hidden="true" />
+                    <Users className="h-4 w-4" aria-hidden="true" />
                   </div>
                   <div>
-                    <h2 className="font-space-grotesk text-lg font-semibold">Industry News Feed</h2>
+                    <h2 className="font-space-grotesk text-lg font-semibold">Connect, Share & Grow</h2>
                     <p className="text-xs text-muted-foreground">
-                      {industry ? `Tracking ${industry}` : "Add an industry to activate the feed"}
+                      {model.manual.country ? `Founders near ${model.manual.country}` : "Add your country and sector to improve matches"}
                     </p>
                   </div>
                 </div>
-                {newsQuery.isFetching ? <RefreshCw className="h-4 w-4 animate-spin text-muted-foreground" /> : null}
-              </div>
-
-              <div className="mt-4">
-                <Select value={newsFilter} onValueChange={(value) => setNewsFilter(value as IndustryNewsContentType)}>
-                  <SelectTrigger aria-label="Filter industry news">
-                    <SelectValue placeholder="Filter news" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {NEWS_FILTERS.map((filter) => (
-                      <SelectItem key={filter.value} value={filter.value}>
-                        {filter.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                {peerLoading ? <RefreshCw className="h-4 w-4 animate-spin text-muted-foreground" /> : null}
               </div>
             </div>
 
             <div className="max-h-[calc(100vh-260px)] min-h-[420px] overflow-y-auto p-4">
-              {!industry ? (
+              {!model.manual.industries.length && !model.manual.country ? (
                 <div className="rounded-lg border border-dashed border-border p-6 text-center">
-                  <CircleDollarSign className="mx-auto h-8 w-8 text-muted-foreground" aria-hidden="true" />
-                  <h3 className="mt-3 text-sm font-semibold">Set your target industry</h3>
+                  <Users className="mx-auto h-8 w-8 text-muted-foreground" aria-hidden="true" />
+                  <h3 className="mt-3 text-sm font-semibold">Complete your founder context</h3>
                   <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                    Add an industry or sector in Startup Profile to load relevant funding, market, regulatory, and competitor news.
+                    Add a startup sector and country in Startup Profile to discover founders with relevant overlap.
                   </p>
                 </div>
-              ) : newsQuery.isLoading ? (
+              ) : peerLoading ? (
                 <div className="space-y-3">
                   {[0, 1, 2, 3].map((item) => (
-                    <Skeleton key={item} className="h-36 rounded-lg" />
+                    <Skeleton key={item} className="h-28 rounded-lg" />
                   ))}
                 </div>
-              ) : newsQuery.error ? (
+              ) : peerError ? (
                 <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-4 text-sm text-destructive">
-                  Industry news could not load. The Startup Profile is still available.
+                  {peerError}
                 </div>
-              ) : newsQuery.data?.articles.length ? (
+              ) : peerSuggestions.length ? (
                 <div className="space-y-3">
-                  {newsQuery.data.articles.map((article) => (
-                    <article key={article.id} className="rounded-lg border border-border/70 bg-background/75 p-4">
-                      <div className="mb-2 flex flex-wrap items-center gap-2">
-                        <Badge variant="secondary" className="rounded-full text-[11px]">
-                          {article.contentType.replace("_", " ")}
-                        </Badge>
-                        <span className="text-xs text-muted-foreground">{article.sourceName}</span>
-                        <span className="text-xs text-muted-foreground">{formatFreshness(article.publishedAt)}</span>
-                      </div>
-                      <h3 className="text-sm font-semibold leading-6 text-foreground">{article.headline}</h3>
-                      <p className="mt-2 text-sm leading-6 text-muted-foreground">{article.summary}</p>
-                      <a
-                        href={article.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
-                      >
-                        Read article
-                        <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
-                      </a>
-                    </article>
-                  ))}
+                  {peerSuggestions.map((peer) => {
+                    const name = peer.full_name || "Founder";
+                    const sectors = peer.startup_industry ?? [];
+                    return (
+                      <article key={peer.id} className="rounded-lg border border-border/70 bg-background/75 p-4">
+                        <div className="flex items-start gap-3">
+                          <Avatar className="h-11 w-11 border border-border/60">
+                            <AvatarImage src={peer.avatar_url ?? undefined} alt={name} />
+                            <AvatarFallback>{name.charAt(0).toUpperCase()}</AvatarFallback>
+                          </Avatar>
+                          <div className="min-w-0 flex-1">
+                            <h3 className="truncate text-sm font-semibold leading-6 text-foreground">{name}</h3>
+                            <p className="truncate text-xs text-muted-foreground">{peer.startup_name || "Startup profile"}</p>
+                            {peer.country ? <p className="mt-1 text-xs text-muted-foreground">{peer.country}</p> : null}
+                          </div>
+                        </div>
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          {sectors.slice(0, 3).map((sector) => (
+                            <Badge key={sector} variant="secondary" className="rounded-full text-[11px]">
+                              {sector}
+                            </Badge>
+                          ))}
+                        </div>
+                        <div className="mt-4">
+                          <SocialButtons
+                            userId={peer.id}
+                            userName={name}
+                            profileActionsOnly
+                          />
+                        </div>
+                      </article>
+                    );
+                  })}
                 </div>
               ) : (
                 <div className="rounded-lg border border-dashed border-border p-6 text-center">
-                  <ArrowUpRight className="mx-auto h-8 w-8 text-muted-foreground" aria-hidden="true" />
-                  <h3 className="mt-3 text-sm font-semibold">No recent matches</h3>
+                  <Users className="mx-auto h-8 w-8 text-muted-foreground" aria-hidden="true" />
+                  <h3 className="mt-3 text-sm font-semibold">No founder matches yet</h3>
                   <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                    Try the All filter or broaden the industry label in Startup Profile.
+                    Try adding another sector or checking back as more founders complete their profiles.
                   </p>
                 </div>
               )}

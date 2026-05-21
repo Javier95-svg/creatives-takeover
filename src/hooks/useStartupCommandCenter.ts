@@ -8,6 +8,7 @@ import {
   buildStartupProfilePreferences,
   type StartupCommandCenterModel,
 } from "@/lib/startupCommandCenter";
+import { refreshOnboardingMentorRecommendations } from "@/lib/onboardingMentorRecommendations";
 import {
   getPmfResultsTableName,
   handlePmfResultsTableError,
@@ -24,6 +25,8 @@ const GTM_TABLE = "gtm_plans" as any;
 export interface StartupProfileFormValues {
   startupName: string;
   industries: string[];
+  country: string;
+  supportAreasNeeded: string[];
   description: string;
   tagline: string;
   stage: string;
@@ -75,6 +78,7 @@ export function useStartupCommandCenter() {
             "id",
             "startup_name",
             "startup_industry",
+            "country",
             "startup_description",
             "startup_tagline",
             "startup_stage",
@@ -229,6 +233,7 @@ export function useStartupCommandCenter() {
         const nextPreferences = buildStartupProfilePreferences(model.manual.userPreferences, {
           targetMarket: values.targetMarket.trim(),
           revenueModel: values.revenueModel.trim(),
+          supportAreasNeeded: values.supportAreasNeeded,
         });
 
         const { data, error: updateError } = await supabase
@@ -236,6 +241,7 @@ export function useStartupCommandCenter() {
           .update({
             startup_name: values.startupName.trim() || null,
             startup_industry: values.industries.map((item) => item.trim()).filter(Boolean),
+            country: values.country.trim() || null,
             startup_description: values.description.trim() || null,
             startup_tagline: values.tagline.trim() || null,
             startup_stage: values.stage || null,
@@ -255,6 +261,13 @@ export function useStartupCommandCenter() {
           manual: buildStartupCommandCenterModel({ profile: data as Record<string, any> }).manual,
         }));
         await load();
+        await refreshOnboardingMentorRecommendations({
+          userId: user.id,
+          sectors: values.industries,
+          supportAreas: values.supportAreasNeeded,
+        }).catch((recommendationError) => {
+          console.warn("Startup profile saved, but mentor recommendations did not refresh.", recommendationError);
+        });
         toast.success("Startup Profile updated.");
         return true;
       } catch (err) {

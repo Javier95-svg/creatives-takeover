@@ -50,6 +50,9 @@ interface StartActivationParams {
   businessStage: string;
   primaryPain: string;
   activationIntent: ActivationIntent;
+  startupSectors?: string[];
+  supportAreasNeeded?: string[];
+  country?: string;
 }
 
 interface CompleteActivationParams {
@@ -276,6 +279,8 @@ export async function startActivationJourney(params: StartActivationParams) {
       quiz_current_stage: params.businessStage,
       quiz_biggest_challenge: params.primaryPain,
       onboarding_completed: true,
+      startup_industry: params.startupSectors ?? undefined,
+      country: params.country?.trim() || undefined,
     })
     .eq('id', params.userId);
 
@@ -296,6 +301,9 @@ export async function startActivationJourney(params: StartActivationParams) {
     firstArtifactLabel: null,
     firstArtifactResumeUrl: null,
     primaryPain: params.primaryPain,
+    startupSectors: params.startupSectors ?? [],
+    supportAreasNeeded: params.supportAreasNeeded ?? [],
+    country: params.country?.trim() || null,
   }, false);
 
   await trackRetentionEvent('activation_started', {

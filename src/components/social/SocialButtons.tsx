@@ -22,6 +22,7 @@ interface SocialButtonsProps {
   userId: string;
   userName?: string;
   compact?: boolean;
+  profileActionsOnly?: boolean;
   showAccountabilityPartner?: boolean;
 }
 
@@ -29,6 +30,7 @@ export const SocialButtons = ({
   userId, 
   userName, 
   compact = false, 
+  profileActionsOnly = false,
   showAccountabilityPartner = true 
 }: SocialButtonsProps) => {
   const { user } = useAuth();
@@ -53,6 +55,11 @@ export const SocialButtons = ({
   if (!user || user.id === userId) return null;
 
   const handleSendMessage = async () => {
+    if (friendStatus !== 'friends') {
+      toast.info(`Connect with ${userName || 'this founder'} before sending a message.`);
+      return;
+    }
+
     try {
       const conversationId = await startConversation(userId);
       if (conversationId) {
@@ -79,6 +86,8 @@ export const SocialButtons = ({
       sendFriendRequest();
     } else if (friendStatus === 'pending_sent') {
       cancelFriendRequest();
+    } else if (friendStatus === 'pending_received') {
+      toast.info('You already have a pending connection request from this founder.');
     }
   };
 
@@ -125,13 +134,13 @@ export const SocialButtons = ({
   const getFriendButtonText = () => {
     switch (friendStatus) {
       case 'friends':
-        return compact ? 'Friends' : 'Friends';
+        return compact ? 'Connected' : 'Connected';
       case 'pending_sent':
         return compact ? 'Pending' : 'Request Sent';
       case 'pending_received':
-        return compact ? 'Respond' : 'Respond to Request';
+        return compact ? 'Pending' : 'Request Received';
       default:
-        return compact ? 'Add Friend' : 'Send Friend Request';
+        return compact ? 'Connect' : 'Connect';
     }
   };
 
@@ -150,18 +159,49 @@ export const SocialButtons = ({
   const buttonSize = compact ? "sm" : "default";
   const containerClass = compact ? "flex gap-1" : "flex gap-2 flex-wrap";
 
+  const messageButton = (
+    <Button
+      variant="outline"
+      size={buttonSize}
+      onClick={handleSendMessage}
+      disabled={loading}
+      className="bg-card/50 border-border/50 hover:bg-accent"
+    >
+      <MessageCircle className="h-4 w-4" />
+      {!compact && <span className="ml-2">Message</span>}
+    </Button>
+  );
+
+  const connectButton = (
+    <Button
+      variant={friendStatus === 'friends' ? "default" : "outline"}
+      size={buttonSize}
+      onClick={handleFriendAction}
+      disabled={loading || friendStatus === 'friends'}
+      className={
+        friendStatus === 'friends'
+          ? "bg-secondary hover:bg-secondary/90"
+          : "bg-card/50 border-border/50 hover:bg-accent"
+      }
+    >
+      {getFriendButtonIcon()}
+      {!compact && <span className="ml-2">{getFriendButtonText()}</span>}
+      {compact && <span className="sr-only">{getFriendButtonText()}</span>}
+    </Button>
+  );
+
+  if (profileActionsOnly) {
+    return (
+      <div className={containerClass}>
+        {messageButton}
+        {connectButton}
+      </div>
+    );
+  }
+
   return (
     <div className={containerClass}>
-      <Button
-        variant="outline"
-        size={buttonSize}
-        onClick={handleSendMessage}
-        disabled={loading}
-        className="bg-card/50 border-border/50 hover:bg-accent"
-      >
-        <MessageCircle className="h-4 w-4" />
-        {!compact && <span className="ml-2">Message</span>}
-      </Button>
+      {messageButton}
 
       {/* Follow Button */}
       <Button
@@ -181,20 +221,7 @@ export const SocialButtons = ({
 
       {/* Friend Request Button */}
       {friendStatus !== 'pending_received' && (
-        <Button
-          variant={friendStatus === 'friends' ? "default" : "outline"}
-          size={buttonSize}
-          onClick={handleFriendAction}
-          disabled={loading || friendStatus === 'friends'}
-          className={
-            friendStatus === 'friends'
-              ? "bg-secondary hover:bg-secondary/90"
-              : "bg-card/50 border-border/50 hover:bg-accent"
-          }
-        >
-          {getFriendButtonIcon()}
-          {!compact && <span className="ml-2">{getFriendButtonText()}</span>}
-        </Button>
+        connectButton
       )}
 
       {/* Accountability Partner Button */}

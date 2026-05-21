@@ -49,6 +49,7 @@ import { generateMentorSlug } from "@/utils/mentorSlug";
 import { TypingIndicator } from "./TypingIndicator";
 import { MessageReactions } from "./MessageReactions";
 import { usePresence } from "@/hooks/usePresence";
+import { useSocial } from "@/hooks/useSocial";
 
 interface MessagingInterfaceProps {
   initialConversationId?: string;
@@ -217,6 +218,18 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
   const lastMessage = messageCount > 0 ? activeMessages[messageCount - 1] : null;
   const currentUserId = user?.id ?? null;
   const activePageState = activeConversationId ? messagePageState[activeConversationId] : undefined;
+  const activeConversation = useMemo(
+    () => conversations.find((conversation) => conversation.id === activeConversationId) || null,
+    [activeConversationId, conversations]
+  );
+  const activeOtherParticipantId = useMemo(
+    () => activeConversation && !activeConversation.is_group
+      ? activeConversation.participants.find((participantId) => participantId !== user?.id)
+      : undefined,
+    [activeConversation, user?.id]
+  );
+  const { friendStatus: activeFriendStatus } = useSocial(activeOtherParticipantId);
+  const directMessagingBlocked = Boolean(activeOtherParticipantId && activeFriendStatus !== 'friends');
   const messageIdsKey = useMemo(
     () => activeMessages.map((message) => message.id).join('|'),
     [activeMessages]
@@ -545,6 +558,10 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
 
   const submitCurrentMessage = useCallback(async () => {
     if ((!newMessage.trim() && selectedFiles.length === 0) || !activeConversationId || sending) return;
+    if (directMessagingBlocked) {
+      toast.info('You must be connected before sending a direct message.');
+      return;
+    }
 
     const messageToSend = newMessage;
     const filesToSend = selectedFiles;
@@ -574,7 +591,7 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
         window.scrollTo(0, scrollY);
       }
     }, 0);
-  }, [activeConversationId, newMessage, selectedFiles, sendMessage, sending]);
+  }, [activeConversationId, directMessagingBlocked, newMessage, selectedFiles, sendMessage, sending]);
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
@@ -1671,6 +1688,7 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
 	                  variant="outline"
 	                  className="min-h-[44px] min-w-[44px] px-3 touch-manipulation"
 	                  onClick={() => fileInputRef.current?.click()}
+                    disabled={directMessagingBlocked}
 	                  aria-label="Attach files"
 	                >
 	                  <Paperclip className="h-4 w-4" />
@@ -1688,14 +1706,15 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
                       void submitCurrentMessage();
                     }
                   }}
-                  placeholder="Type a message..."
+                  placeholder={directMessagingBlocked ? "Connect before messaging..." : "Type a message..."}
                   autoFocus={!isMobile}
+                  disabled={directMessagingBlocked}
                   className="min-h-[44px] max-h-[120px] resize-none text-base md:text-sm"
                   rows={1}
                 />
 	                <Button
 	                  type="submit"
-	                  disabled={sending || (!newMessage.trim() && selectedFiles.length === 0)}
+	                  disabled={directMessagingBlocked || sending || (!newMessage.trim() && selectedFiles.length === 0)}
 	                  className="min-h-[44px] min-w-[44px] px-3 touch-manipulation"
 	                >
                   <Send className="h-4 w-4" />
