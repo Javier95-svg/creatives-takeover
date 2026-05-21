@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { logError, logWarn, logInfo } from '@/lib/logger';
 import { handleError, getUserMessage } from '@/lib/errors';
 import { completeActivationJourney, trackRetentionEvent } from '@/lib/retentionSystem';
+import { isAdminEmail } from '@/lib/admin';
 
 export interface Conversation {
   id: string;
@@ -343,6 +344,7 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
 
   const areUsersConnected = useCallback(async (participantId: string): Promise<boolean> => {
     if (!user?.id || !participantId || participantId === user.id) return false;
+    if (isAdminEmail(user.email)) return true;
 
     const { data, error } = await supabase
       .from('friend_requests')
@@ -360,7 +362,7 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
     }
 
     return Boolean(data);
-  }, [user?.id]);
+  }, [user?.id, user?.email]);
 
   // Get user ID by email using database function with fallback
   const getUserIdByEmail = useCallback(async (email: string): Promise<string | null> => {
@@ -1379,12 +1381,6 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
 
     setLoading(true);
     try {
-      const connected = await areUsersConnected(participantId);
-      if (!connected) {
-        toast.error('You must be connected before starting a direct message.');
-        return null;
-      }
-
       logInfo('startConversation: Starting conversation', {
         currentUserId: user.id,
         participantId,
@@ -1478,6 +1474,12 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
         }
       }
 
+      const connected = await areUsersConnected(participantId);
+      if (!connected) {
+        toast.error('You must be connected before starting a direct message.');
+        return null;
+      }
+
       // Legacy fallback: create conversation.
       logInfo('startConversation: Creating new conversation', {
         participants: [user.id, participantId],
@@ -1554,19 +1556,6 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
         fileCount: files.length
       });
       return null;
-    }
-
-    const activeConversation = conversations.find((conversation) => conversation.id === conversationId);
-    const otherParticipantId = activeConversation && !activeConversation.is_group
-      ? activeConversation.participants.find((participantId) => participantId !== user.id)
-      : null;
-
-    if (otherParticipantId) {
-      const connected = await areUsersConnected(otherParticipantId);
-      if (!connected) {
-        toast.error('You must be connected before sending a direct message.');
-        return null;
-      }
     }
 
     const invalidFile = files.find((file) =>
@@ -1897,7 +1886,7 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
     } finally {
       setSending(false);
     }
-  }, [areUsersConnected, conversations, user]);
+  }, [user]);
 
   const retryFailedMessage = useCallback(async (
     conversationId: string,
