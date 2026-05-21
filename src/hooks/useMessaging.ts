@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { safe } from '@/integrations/supabase/safe';
 import { useAuth } from '@/contexts/AuthContext';
@@ -6,7 +6,6 @@ import { toast } from 'sonner';
 import { logError, logWarn, logInfo } from '@/lib/logger';
 import { handleError, getUserMessage } from '@/lib/errors';
 import { completeActivationJourney, trackRetentionEvent } from '@/lib/retentionSystem';
-import { isAdminEmail } from '@/lib/admin';
 
 export interface Conversation {
   id: string;
@@ -24,6 +23,8 @@ export interface ConversationUserSettings {
   archived_at?: string | null;
   muted_until?: string | null;
   pinned_at?: string | null;
+  request_status?: 'accepted' | 'pending' | 'refused' | null;
+  request_updated_at?: string | null;
 }
 
 export interface MessageAttachment {
@@ -341,28 +342,6 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
   }, [conversations]);
 
   const scopedConversationIds = conversations.map((conversation) => conversation.id).join('|');
-
-  const areUsersConnected = useCallback(async (participantId: string): Promise<boolean> => {
-    if (!user?.id || !participantId || participantId === user.id) return false;
-    if (isAdminEmail(user.email)) return true;
-
-    const { data, error } = await supabase
-      .from('friend_requests')
-      .select('id')
-      .eq('status', 'accepted')
-      .or(`and(sender_id.eq.${user.id},receiver_id.eq.${participantId}),and(sender_id.eq.${participantId},receiver_id.eq.${user.id})`)
-      .maybeSingle();
-
-    if (error) {
-      logWarn('areUsersConnected: Failed to check connection status', {
-        participantId,
-        error: error.message
-      });
-      return false;
-    }
-
-    return Boolean(data);
-  }, [user?.id, user?.email]);
 
   // Get user ID by email using database function with fallback
   const getUserIdByEmail = useCallback(async (email: string): Promise<string | null> => {
@@ -1028,7 +1007,7 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
       const failedConversationIds = new Set(failedMessages.map((message) => message.conversation_id));
       const loadedConversations = rawConversations.filter((conversation) => {
         const settings = settingsByConversation[conversation.id];
-        return !settings?.archived_at || failedConversationIds.has(conversation.id);
+        return (!settings?.archived_at && settings?.request_status !== 'refused') || failedConversationIds.has(conversation.id);
       });
 
       const sortedConversations = [...loadedConversations].sort((a, b) => {
@@ -1474,12 +1453,6 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
         }
       }
 
-      const connected = await areUsersConnected(participantId);
-      if (!connected) {
-        toast.error('You must be connected before starting a direct message.');
-        return null;
-      }
-
       // Legacy fallback: create conversation.
       logInfo('startConversation: Creating new conversation', {
         participants: [user.id, participantId],
@@ -1535,7 +1508,7 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
     } finally {
       setLoading(false);
     }
-  }, [user, loading, conversations, setActiveConversationId, areUsersConnected]);
+  }, [user, loading, conversations, setActiveConversationId]);
 
   const sendMessage = useCallback(async (
     conversationId: string,
@@ -1923,7 +1896,7 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
 
   const updateConversationSettings = useCallback(async (
     conversationId: string,
-    patch: Partial<Pick<ConversationUserSettings, 'archived_at' | 'muted_until' | 'pinned_at'>>
+    patch: Partial<Pick<ConversationUserSettings, 'archived_at' | 'muted_until' | 'pinned_at' | 'request_status' | 'request_updated_at'>>
   ): Promise<boolean> => {
     if (!user) return false;
 
@@ -1954,6 +1927,37 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
       return false;
     }
   }, [conversationSettings, loadConversationsFromServer, user]);
+
+  const acceptMessageRequest = useCallback(async (conversationId: string): Promise<boolean> => {
+    const success = await updateConversationSettings(conversationId, {
+      request_status: 'accepted',
+      request_updated_at: new Date().toISOString(),
+      archived_at: null
+    });
+
+    if (success) {
+      toast.success('Message request accepted');
+    }
+
+    return success;
+  }, [updateConversationSettings]);
+
+  const refuseMessageRequest = useCallback(async (conversationId: string): Promise<boolean> => {
+    const success = await updateConversationSettings(conversationId, {
+      request_status: 'refused',
+      request_updated_at: new Date().toISOString(),
+      archived_at: new Date().toISOString()
+    });
+
+    if (success) {
+      if (activeConversationId === conversationId) {
+        setActiveConversationId(null);
+      }
+      toast.success('Message request refused');
+    }
+
+    return success;
+  }, [activeConversationId, setActiveConversationId, updateConversationSettings]);
 
   const pinConversation = useCallback((conversationId: string, shouldPin: boolean) =>
     updateConversationSettings(conversationId, { pinned_at: shouldPin ? new Date().toISOString() : null }),
@@ -2199,6 +2203,20 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
   const getTotalUnreadCount = useCallback((): number => {
     return conversations.reduce((total, conversation) => total + (unreadCounts[conversation.id] || 0), 0);
   }, [conversations, unreadCounts]);
+
+  const requestConversations = useMemo(
+    () => conversations.filter((conversation) =>
+      conversationSettings[conversation.id]?.request_status === 'pending'
+    ),
+    [conversations, conversationSettings]
+  );
+
+  const mainConversations = useMemo(
+    () => conversations.filter((conversation) =>
+      conversationSettings[conversation.id]?.request_status !== 'pending'
+    ),
+    [conversations, conversationSettings]
+  );
 
   // Get user ID by username
   const getUserIdByUsername = useCallback(async (username: string): Promise<string | null> => {
@@ -2527,6 +2545,8 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
 
   return {
     conversations,
+    mainConversations,
+    requestConversations,
     messages,
     messagePageState,
     conversationSettings,
@@ -2546,6 +2566,8 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
     getUnreadCount,
     getTotalUnreadCount,
     deleteConversation,
+    acceptMessageRequest,
+    refuseMessageRequest,
     pinConversation,
     muteConversation,
     archiveConversation,

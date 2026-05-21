@@ -49,7 +49,6 @@ import { generateMentorSlug } from "@/utils/mentorSlug";
 import { TypingIndicator } from "./TypingIndicator";
 import { MessageReactions } from "./MessageReactions";
 import { usePresence } from "@/hooks/usePresence";
-import { useSocial } from "@/hooks/useSocial";
 
 interface MessagingInterfaceProps {
   initialConversationId?: string;
@@ -148,6 +147,8 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
   const isTablet = deviceType === 'tablet';
   const {
     conversations,
+    mainConversations,
+    requestConversations,
     messages,
     messagePageState,
     conversationSettings,
@@ -165,6 +166,8 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
     markAsRead,
     getUnreadCount,
     deleteConversation,
+    acceptMessageRequest,
+    refuseMessageRequest,
     pinConversation,
     muteConversation,
     archiveConversation,
@@ -199,6 +202,7 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
   const [activeReactionMenuMessageId, setActiveReactionMenuMessageId] = useState<string | null>(null);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [messageSearchQuery, setMessageSearchQuery] = useState("");
+  const [conversationSection, setConversationSection] = useState<'main' | 'requests'>('main');
   const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
   const { trigger: triggerHaptic } = useHapticFeedback();
 
@@ -222,14 +226,18 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
     () => conversations.find((conversation) => conversation.id === activeConversationId) || null,
     [activeConversationId, conversations]
   );
-  const activeOtherParticipantId = useMemo(
-    () => activeConversation && !activeConversation.is_group
-      ? activeConversation.participants.find((participantId) => participantId !== user?.id)
-      : undefined,
-    [activeConversation, user?.id]
+  const activeConversationIsRequest = Boolean(
+    activeConversation && conversationSettings[activeConversation.id]?.request_status === 'pending'
   );
-  const { friendStatus: activeFriendStatus } = useSocial(activeOtherParticipantId);
-  const directMessagingBlocked = Boolean(activeOtherParticipantId && activeFriendStatus !== 'friends');
+  const displayedConversations = conversationSection === 'requests' ? requestConversations : mainConversations;
+  const mainUnreadCount = useMemo(
+    () => mainConversations.reduce((total, conversation) => total + getUnreadCount(conversation.id), 0),
+    [getUnreadCount, mainConversations]
+  );
+  const requestUnreadCount = useMemo(
+    () => requestConversations.reduce((total, conversation) => total + getUnreadCount(conversation.id), 0),
+    [getUnreadCount, requestConversations]
+  );
   const messageIdsKey = useMemo(
     () => activeMessages.map((message) => message.id).join('|'),
     [activeMessages]
@@ -405,6 +413,12 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
   }, [activeConversationId, clearLongPressTimer]);
 
   useEffect(() => {
+    if (activeConversationIsRequest) {
+      setConversationSection('requests');
+    }
+  }, [activeConversationIsRequest]);
+
+  useEffect(() => {
     const handleOutsideReactionMenuClick = (event: MouseEvent | TouchEvent) => {
       const target = event.target as HTMLElement | null;
       if (!target) return;
@@ -558,10 +572,6 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
 
   const submitCurrentMessage = useCallback(async () => {
     if ((!newMessage.trim() && selectedFiles.length === 0) || !activeConversationId || sending) return;
-    if (directMessagingBlocked) {
-      toast.info('You must be connected before sending a direct message.');
-      return;
-    }
 
     const messageToSend = newMessage;
     const filesToSend = selectedFiles;
@@ -591,7 +601,7 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
         window.scrollTo(0, scrollY);
       }
     }, 0);
-  }, [activeConversationId, directMessagingBlocked, newMessage, selectedFiles, sendMessage, sending]);
+  }, [activeConversationId, newMessage, selectedFiles, sendMessage, sending]);
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
@@ -820,6 +830,19 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
 
     void blockUser(otherParticipant, activeConversationId);
   }, [activeConversationId, blockUser, conversations, getOtherParticipant]);
+
+  const handleAcceptMessageRequest = useCallback(async () => {
+    if (!activeConversationId) return;
+    const accepted = await acceptMessageRequest(activeConversationId);
+    if (accepted) {
+      setConversationSection('main');
+    }
+  }, [acceptMessageRequest, activeConversationId]);
+
+  const handleRefuseMessageRequest = useCallback(async () => {
+    if (!activeConversationId) return;
+    await refuseMessageRequest(activeConversationId);
+  }, [activeConversationId, refuseMessageRequest]);
 
   const updateMessageReactionState = useCallback((messageId: string, emoji: string, shouldAdd: boolean) => {
     setMessageReactions((prev) => {
@@ -1332,6 +1355,36 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
           <MessageCircle className="h-5 w-5" />
           Messages
         </h3>
+        <div className="grid grid-cols-2 gap-1 rounded-md bg-muted p-1">
+          <Button
+            type="button"
+            variant={conversationSection === 'main' ? 'secondary' : 'ghost'}
+            size="sm"
+            className="h-8 justify-center gap-2 px-2 text-xs"
+            onClick={() => setConversationSection('main')}
+          >
+            Main
+            {mainUnreadCount > 0 && (
+              <Badge variant="secondary" className="h-5 px-1.5 text-[10px]">
+                {mainUnreadCount > 9 ? '9+' : mainUnreadCount}
+              </Badge>
+            )}
+          </Button>
+          <Button
+            type="button"
+            variant={conversationSection === 'requests' ? 'secondary' : 'ghost'}
+            size="sm"
+            className="h-8 justify-center gap-2 px-2 text-xs"
+            onClick={() => setConversationSection('requests')}
+          >
+            Requests
+            {requestConversations.length > 0 && (
+              <Badge variant={requestUnreadCount > 0 ? 'default' : 'secondary'} className="h-5 px-1.5 text-[10px]">
+                {requestConversations.length > 9 ? '9+' : requestConversations.length}
+              </Badge>
+            )}
+          </Button>
+        </div>
         <div className="relative">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -1394,14 +1447,16 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
               <div className="px-3 py-2 text-xs text-muted-foreground">No messages found</div>
             )}
           </div>
-        ) : conversations.length === 0 ? (
+        ) : displayedConversations.length === 0 ? (
           <div className="p-4 text-center text-muted-foreground">
             <MessageCircle className="h-8 w-8 mx-auto mb-2 opacity-50" />
-            <p className="text-sm">No conversations yet</p>
+            <p className="text-sm">
+              {conversationSection === 'requests' ? 'No message requests' : 'No conversations yet'}
+            </p>
           </div>
         ) : (
           <div className="p-2 space-y-1">
-            {conversations.map((conversation) => {
+            {displayedConversations.map((conversation) => {
               const unreadCount = getUnreadCount(conversation.id);
               const settings = conversationSettings[conversation.id];
               
@@ -1439,6 +1494,9 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
 	                          {settings?.pinned_at && <Pin className="h-3 w-3 flex-shrink-0 text-primary" />}
 	                          {settings?.muted_until && new Date(settings.muted_until) > new Date() && (
 	                            <BellOff className="h-3 w-3 flex-shrink-0 text-muted-foreground" />
+	                          )}
+	                          {settings?.request_status === 'pending' && (
+	                            <Badge variant="outline" className="h-5 px-1.5 text-[10px]">Request</Badge>
 	                          )}
 	                        </div>
 	                        {conversation.last_message_at && (
@@ -1522,6 +1580,7 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
 	                const settings = conversationSettings[activeConversation.id];
 	                const isPinned = !!settings?.pinned_at;
 	                const isMuted = !!settings?.muted_until && new Date(settings.muted_until) > new Date();
+	                const isRequest = settings?.request_status === 'pending';
 
 	                const otherParticipantId = getOtherParticipant(activeConversation);
 
@@ -1546,6 +1605,7 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
 	                        <div className="flex items-center gap-1">
 	                          {isPinned && <Badge variant="secondary" className="h-5 px-1.5 text-[10px]">Pinned</Badge>}
 	                          {isMuted && <Badge variant="outline" className="h-5 px-1.5 text-[10px]">Muted</Badge>}
+	                          {isRequest && <Badge variant="default" className="h-5 px-1.5 text-[10px]">Request</Badge>}
 	                        </div>
 	                      </div>
 	                    </div>
@@ -1650,77 +1710,104 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
 	            </div>
 
 	            {/* Message Input - Sticky on mobile */}
-	            <form onSubmit={handleSendMessage} className={`p-3 md:p-4 border-t bg-card/50 ${isMobile ? 'sticky bottom-0' : ''}`}>
-	              {selectedFiles.length > 0 && (
-	                <div className="mb-2 flex flex-wrap gap-2">
-	                  {selectedFiles.map((file, index) => (
-	                    <div
-	                      key={`${file.name}-${file.size}-${index}`}
-	                      className="flex max-w-full items-center gap-2 rounded-md border border-border/60 bg-background px-2 py-1 text-xs"
+	            {activeConversationIsRequest ? (
+	              <div className={`border-t bg-card/50 p-3 md:p-4 ${isMobile ? 'sticky bottom-0' : ''}`}>
+	                <div className="flex flex-col gap-3 rounded-md border border-border/70 bg-background p-3 sm:flex-row sm:items-center sm:justify-between">
+	                  <p className="text-sm text-muted-foreground">
+	                    Accept this message request to reply. Refusing hides it from your inbox.
+	                  </p>
+	                  <div className="flex gap-2">
+	                    <Button
+	                      type="button"
+	                      variant="outline"
+	                      className="min-h-[40px] gap-2"
+	                      onClick={handleRefuseMessageRequest}
 	                    >
-	                      {file.type.startsWith('image/') ? <ImageIcon className="h-3.5 w-3.5" /> : <FileText className="h-3.5 w-3.5" />}
-	                      <span className="max-w-[180px] truncate">{file.name}</span>
-	                      <Button
-	                        type="button"
-	                        variant="ghost"
-	                        size="sm"
-	                        className="h-5 w-5 p-0"
-	                        onClick={() => removeSelectedFile(index)}
-	                        aria-label="Remove attachment"
-	                      >
-	                        <X className="h-3 w-3" />
-	                      </Button>
-	                    </div>
-	                  ))}
+	                      <X className="h-4 w-4" />
+	                      Refuse
+	                    </Button>
+	                    <Button
+	                      type="button"
+	                      className="min-h-[40px] gap-2"
+	                      onClick={handleAcceptMessageRequest}
+	                    >
+	                      <Check className="h-4 w-4" />
+	                      Accept
+	                    </Button>
+	                  </div>
 	                </div>
-	              )}
-	              <div className="flex gap-2">
-	                <input
-	                  ref={fileInputRef}
-	                  type="file"
-	                  multiple
-	                  className="hidden"
-	                  accept="image/jpeg,image/png,image/webp,image/gif,application/pdf,text/plain,application/zip"
-	                  onChange={handleFileSelection}
-	                />
-	                <Button
-	                  type="button"
-	                  variant="outline"
-	                  className="min-h-[44px] min-w-[44px] px-3 touch-manipulation"
-	                  onClick={() => fileInputRef.current?.click()}
-                    disabled={directMessagingBlocked}
-	                  aria-label="Attach files"
-	                >
-	                  <Paperclip className="h-4 w-4" />
-	                </Button>
-	                <Textarea
-	                  ref={inputRef}
-                  value={newMessage}
-                  onChange={(e) => {
-                    setNewMessage(e.target.value);
-                    handleTyping();
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault();
-                      void submitCurrentMessage();
-                    }
-                  }}
-                  placeholder={directMessagingBlocked ? "Connect before messaging..." : "Type a message..."}
-                  autoFocus={!isMobile}
-                  disabled={directMessagingBlocked}
-                  className="min-h-[44px] max-h-[120px] resize-none text-base md:text-sm"
-                  rows={1}
-                />
-	                <Button
-	                  type="submit"
-	                  disabled={directMessagingBlocked || sending || (!newMessage.trim() && selectedFiles.length === 0)}
-	                  className="min-h-[44px] min-w-[44px] px-3 touch-manipulation"
-	                >
-                  <Send className="h-4 w-4" />
-                </Button>
-              </div>
-            </form>
+	              </div>
+	            ) : (
+	              <form onSubmit={handleSendMessage} className={`p-3 md:p-4 border-t bg-card/50 ${isMobile ? 'sticky bottom-0' : ''}`}>
+	                {selectedFiles.length > 0 && (
+	                  <div className="mb-2 flex flex-wrap gap-2">
+	                    {selectedFiles.map((file, index) => (
+	                      <div
+	                        key={`${file.name}-${file.size}-${index}`}
+	                        className="flex max-w-full items-center gap-2 rounded-md border border-border/60 bg-background px-2 py-1 text-xs"
+	                      >
+	                        {file.type.startsWith('image/') ? <ImageIcon className="h-3.5 w-3.5" /> : <FileText className="h-3.5 w-3.5" />}
+	                        <span className="max-w-[180px] truncate">{file.name}</span>
+	                        <Button
+	                          type="button"
+	                          variant="ghost"
+	                          size="sm"
+	                          className="h-5 w-5 p-0"
+	                          onClick={() => removeSelectedFile(index)}
+	                          aria-label="Remove attachment"
+	                        >
+	                          <X className="h-3 w-3" />
+	                        </Button>
+	                      </div>
+	                    ))}
+	                  </div>
+	                )}
+	                <div className="flex gap-2">
+	                  <input
+	                    ref={fileInputRef}
+	                    type="file"
+	                    multiple
+	                    className="hidden"
+	                    accept="image/jpeg,image/png,image/webp,image/gif,application/pdf,text/plain,application/zip"
+	                    onChange={handleFileSelection}
+	                  />
+	                  <Button
+	                    type="button"
+	                    variant="outline"
+	                    className="min-h-[44px] min-w-[44px] px-3 touch-manipulation"
+	                    onClick={() => fileInputRef.current?.click()}
+	                    aria-label="Attach files"
+	                  >
+	                    <Paperclip className="h-4 w-4" />
+	                  </Button>
+	                  <Textarea
+	                    ref={inputRef}
+	                    value={newMessage}
+	                    onChange={(e) => {
+	                      setNewMessage(e.target.value);
+	                      handleTyping();
+	                    }}
+	                    onKeyDown={(e) => {
+	                      if (e.key === 'Enter' && !e.shiftKey) {
+	                        e.preventDefault();
+	                        void submitCurrentMessage();
+	                      }
+	                    }}
+	                    placeholder="Type a message..."
+	                    autoFocus={!isMobile}
+	                    className="min-h-[44px] max-h-[120px] resize-none text-base md:text-sm"
+	                    rows={1}
+	                  />
+	                  <Button
+	                    type="submit"
+	                    disabled={sending || (!newMessage.trim() && selectedFiles.length === 0)}
+	                    className="min-h-[44px] min-w-[44px] px-3 touch-manipulation"
+	                  >
+	                    <Send className="h-4 w-4" />
+	                  </Button>
+	                </div>
+	              </form>
+	            )}
           </>
         ) : (
           <div className="flex-1 flex items-center justify-center text-muted-foreground p-4">
