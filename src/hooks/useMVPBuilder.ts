@@ -17,6 +17,7 @@ import {
   buildPreviewFromProject,
   createProjectFromHtml,
   detectProjectFileLanguage,
+  extractHtmlFromText,
   extractProjectDependenciesFromFiles,
   extractProjectFromText,
   getChangedProjectFiles,
@@ -1885,18 +1886,19 @@ export function useMVPBuilder() {
               }
             } else if (event.type === 'code-delta' && typeof event.content === 'string') {
               streamedCode += event.content;
-              const liveCode = sanitizeStreamedCode(streamedCode);
-              setGeneratedCode(liveCode);
-              setCurrentHtml(liveCode || null);
-              setPreviewState({
-                html: liveCode || null,
-                entryFile: 'index.html',
-                canPreview: Boolean(liveCode),
-                warnings: [],
-                errors: [],
-                runtimeMode: 'none',
-                consoleHints: [],
-              });
+              const completedHtml = extractHtmlFromText(streamedCode);
+
+              if (completedHtml && /<\/html>/i.test(completedHtml)) {
+                const liveProject = createProjectFromHtml(completedHtml, projectName);
+                applyProjectArtifact(liveProject, {
+                  allowFallback: false,
+                  setAsBaseline: false,
+                  preserveProjectName: true,
+                  preserveProjectType: true,
+                });
+              } else {
+                setGeneratedCode(sanitizeStreamedCode(streamedCode));
+              }
             } else if (event.type === 'project' && typeof event.project === 'object' && event.project !== null) {
               const nextProject = event.project as MVPProjectArtifact;
               newProject = {

@@ -11,6 +11,7 @@ import { getQuotaStatus, normalizePlan, type Plan } from '@/config/planPermissio
 import { toast } from 'sonner';
 import { createIdempotencyKey } from '@/lib/idempotency';
 import { trackCreditActionCompleted } from '@/lib/analytics';
+import { isAdminEmail } from '@/lib/admin';
 
 const CREDIT_FEATURE_LABELS: Record<CreditFeature, string> = {
   LAUNCH_REPORT: 'Launch Report Generation',
@@ -191,6 +192,10 @@ export const useCreditActions = () => {
           });
           return null;
         }
+      }
+
+      if (isAdminEmail(user.email)) {
+        return 0;
       }
 
       const requiredCredits = getEffectiveRequiredCredits(feature, options.requiredCredits);

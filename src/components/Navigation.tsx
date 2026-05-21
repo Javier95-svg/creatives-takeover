@@ -49,6 +49,7 @@ const Navigation = () => {
   const [scrolled, setScrolled] = useState(false);
   const [showFriendRequests, setShowFriendRequests] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string>("");
+  const [profileUsername, setProfileUsername] = useState<string>("");
   const [lockedMenuItem, setLockedMenuItem] = useState<{ name: string; reason: string } | null>(null);
   const mobileBarRef = useRef<HTMLDivElement | null>(null);
   const { user, signOut, loading } = useAuth();
@@ -162,24 +163,31 @@ const Navigation = () => {
       : 'accessible';
   };
 
-  // Fetch user avatar
+  // Fetch user avatar and public profile route.
   useEffect(() => {
-    const fetchAvatar = async () => {
-      if (!user) return;
+    const fetchProfileSummary = async () => {
+      if (!user) {
+        setAvatarUrl('');
+        setProfileUsername('');
+        return;
+      }
 
       const { data } = await supabase
         .from('profiles')
-        .select('avatar_url')
+        .select('avatar_url, username')
         .eq('id', user.id)
         .single();
 
       if (data?.avatar_url) {
         setAvatarUrl(data.avatar_url);
       }
+      setProfileUsername(typeof data?.username === 'string' ? data.username : '');
     };
 
-    fetchAvatar();
+    fetchProfileSummary();
   }, [user]);
+
+  const myProfileHref = profileUsername ? `/profile/${profileUsername}` : '/account';
 
   // Add subtle shadow and backdrop blur after scroll for professional feel
   useEffect(() => {
@@ -719,8 +727,14 @@ const Navigation = () => {
                       </DropdownMenuLabel>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem asChild>
-                        <Link to="/dashboard" className="cursor-pointer">
+                        <Link to={myProfileHref} className="cursor-pointer">
                           <User className="mr-2 h-4 w-4" />
+                          <span>My Profile</span>
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to="/dashboard" className="cursor-pointer">
+                          <BarChart3 className="mr-2 h-4 w-4" />
                           <span>Dashboard</span>
                         </Link>
                       </DropdownMenuItem>
@@ -935,8 +949,20 @@ const Navigation = () => {
                         onClick={() => setIsOpen(false)}
                         asChild
                       >
-                        <Link to="/dashboard" className="flex items-center">
+                        <Link to={myProfileHref} className="flex items-center">
                           <User className="w-5 h-5 mr-3" />
+                          My Profile
+                        </Link>
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="w-full justify-start min-h-[48px] touch-manipulation text-base transition-all duration-200 hover:bg-muted/50 hover:scale-[1.02]"
+                        onClick={() => setIsOpen(false)}
+                        asChild
+                      >
+                        <Link to="/dashboard" className="flex items-center">
+                          <BarChart3 className="w-5 h-5 mr-3" />
                           Dashboard
                         </Link>
                       </Button>

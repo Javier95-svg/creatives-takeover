@@ -82,6 +82,7 @@ const TechStack: React.FC = () => {
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewReport, setPreviewReport] = useState<TechStackReport | null>(null);
   const [loginRedirectPending, setLoginRedirectPending] = useState(false);
+  const [generatingBudget, setGeneratingBudget] = useState(false);
   const [, startLoginNavigation] = useTransition();
 
   const currentTier = (subscriptionData.subscription_tier || 'rookie').toLowerCase();
@@ -178,6 +179,8 @@ const TechStack: React.FC = () => {
   const budget = useMemo(() => calculateBudget(), [selectedProducts]);
 
   const handleSeeBudget = async () => {
+    if (generatingBudget) return;
+
     if (!user) {
       setLoginRedirectPending(true);
       startLoginNavigation(() => {
@@ -203,11 +206,14 @@ const TechStack: React.FC = () => {
       return;
     }
 
+    setGeneratingBudget(true);
+
     if (subscriptionLoading || creditsLoading) {
       toast({
         title: "Checking access",
         description: "Please wait a moment for your plan and credit balance to finish loading.",
       });
+      setGeneratingBudget(false);
       return;
     }
 
@@ -217,6 +223,7 @@ const TechStack: React.FC = () => {
         title: "Checking access",
         description: "Please wait a moment for your plan and credit balance to finish loading.",
       });
+      setGeneratingBudget(false);
       return;
     }
 
@@ -227,58 +234,63 @@ const TechStack: React.FC = () => {
           requiredTier: featureAccess.requiredTier as 'starter' | 'rising' | 'pro' | undefined,
           description: featureAccess.message || "Upgrade to Rising for full Tech Stack access.",
         });
+        setGeneratingBudget(false);
         return;
       }
 
-    if (currentTier === 'rookie') {
-      try {
-        const { data: usageData, error: usageError } = await supabase
-          .rpc('get_feature_usage', {
-            p_user_id: user.id,
-            p_feature_name: 'tech_stack_generations'
-          });
-
-        if (!usageError && usageData) {
-          const usage = usageData as { current_usage: number; limit: number; remaining: number };
-          if (usage.remaining <= 0 && usage.limit > 0) {
-            openUpgradePrompt({
-              reason: 'limit',
-              limit: usage.limit,
-              limitLabel: 'Tech Stack generations',
-              featureName: 'Tech Stack Generator',
-              requiredTier: 'rising',
-              description: "You've used your Tech Stack generation allowance for this billing cycle.",
-            });
-            return;
-          }
-        }
-      } catch (error) {
-        console.warn('Failed to check Tech Stack usage', error);
-      }
-    }
-
-    const deducted = await deductCredits('TECH_STACK_GENERATION', {
-      featureName: 'Tech Stack Generation',
-      metadata: { selectedCategories: techStackData.length }
-    });
-    if (!deducted) return;
-
     try {
-      await supabase.rpc('check_and_increment_usage', {
-        p_user_id: user.id,
-        p_feature_name: 'tech_stack_generations',
-        p_increment_by: 1
-      });
-    } catch (error) {
-      console.warn('Failed to update Tech Stack usage', error);
-    }
+      if (currentTier === 'rookie') {
+        try {
+          const { data: usageData, error: usageError } = await supabase
+            .rpc('get_feature_usage', {
+              p_user_id: user.id,
+              p_feature_name: 'tech_stack_generations'
+            });
 
-    setShowBudget(true);
-    toast({
-      title: "Budget Generated!",
-      description: "Scroll down to view your tech stack budget and integration guide.",
-    });
-    await refreshBalance();
+          if (!usageError && usageData) {
+            const usage = usageData as { current_usage: number; limit: number; remaining: number };
+            if (usage.remaining <= 0 && usage.limit > 0) {
+              openUpgradePrompt({
+                reason: 'limit',
+                limit: usage.limit,
+                limitLabel: 'Tech Stack generations',
+                featureName: 'Tech Stack Generator',
+                requiredTier: 'rising',
+                description: "You've used your Tech Stack generation allowance for this billing cycle.",
+              });
+              return;
+            }
+          }
+        } catch (error) {
+          console.warn('Failed to check Tech Stack usage', error);
+        }
+      }
+
+      const deducted = await deductCredits('TECH_STACK_GENERATION', {
+        featureName: 'Tech Stack Generation',
+        metadata: { selectedCategories: techStackData.length }
+      });
+      if (!deducted) return;
+
+      try {
+        await supabase.rpc('check_and_increment_usage', {
+          p_user_id: user.id,
+          p_feature_name: 'tech_stack_generations',
+          p_increment_by: 1
+        });
+      } catch (error) {
+        console.warn('Failed to update Tech Stack usage', error);
+      }
+
+      setShowBudget(true);
+      toast({
+        title: "Budget Generated!",
+        description: "Scroll down to view your tech stack budget and integration guide.",
+      });
+      await refreshBalance();
+    } finally {
+      setGeneratingBudget(false);
+    }
   };
 
   const handleSaveReport = async () => {
@@ -372,6 +384,8 @@ const TechStack: React.FC = () => {
     ? loginRedirectPending
       ? 'Opening sign in...'
       : 'Sign In to View Budget'
+      : generatingBudget
+        ? 'Generating...'
       : subscriptionLoading || creditsLoading
         ? 'Loading access...'
       : firstUnselectedCategory
@@ -599,7 +613,7 @@ const TechStack: React.FC = () => {
                   variant={!allCategoriesSelected && user ? "outline" : "default"}
                   className={`w-full sm:w-auto min-w-[140px] ${loginRedirectPending ? 'pointer-events-none opacity-70' : ''}`}
                   aria-disabled={!canGenerateBudget}
-                  disabled={loginRedirectPending || (Boolean(user) && (subscriptionLoading || creditsLoading))}
+                  disabled={loginRedirectPending || generatingBudget || (Boolean(user) && (subscriptionLoading || creditsLoading))}
                 >
                   {!user ? (
                     <>
