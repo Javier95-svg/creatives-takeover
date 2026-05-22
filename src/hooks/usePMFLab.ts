@@ -186,7 +186,12 @@ export function usePMFLab() {
       setAnalysisId(data.analysisId ?? null);
       setHasSavedReport(false);
       setPhase('results');
-      showCreditReceipt('PMF_SCORING', credits, undefined, { featureName: 'PMF Evidence Score' });
+      showCreditReceipt(
+        'PMF_SCORING',
+        typeof data?.creditsUsed === 'number' ? data.creditsUsed : credits,
+        typeof data?.newBalance === 'number' ? data.newBalance : undefined,
+        { featureName: 'PMF Evidence Score' }
+      );
       fireJourneyUpgradePrompt('starter_pmf_complete');
     } catch (err) {
       console.error('PMF analysis error:', err);

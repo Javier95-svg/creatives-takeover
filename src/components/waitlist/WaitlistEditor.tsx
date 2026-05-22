@@ -257,7 +257,7 @@ export default function WaitlistEditor({ initialSeed = null, onBackToTemplates }
   const { user, loading: authLoading } = useAuth();
   const { refreshProgress } = useBizMapProgress();
   const { refreshActivation } = useActivationJourney();
-  const { ensureCredits, showCreditReceipt } = useCreditActions();
+  const { ensureCredits, deductCredits, showCreditReceipt } = useCreditActions();
   const { fireJourneyUpgradePrompt } = useJourneyUpgradePrompt();
   const { subscriptionData } = useSubscription();
   const initialStoredStateRef = useRef<StoredWaitlistEditorState | null>(readStoredWaitlistEditorState());
@@ -787,11 +787,15 @@ export default function WaitlistEditor({ initialSeed = null, onBackToTemplates }
       return;
     }
 
-    const requiredCredits = ensureCredits('WAITLIST_GENERATION', {
+    const deducted = await deductCredits('WAITLIST_GENERATION', {
       featureName: 'Waitlist Page Generation',
       description: 'Publish your waitlist page and make it live for signups.',
+      metadata: {
+        draftId,
+        currentSlug,
+      },
     });
-    if (requiredCredits === null) {
+    if (!deducted) {
       return;
     }
 
@@ -801,7 +805,6 @@ export default function WaitlistEditor({ initialSeed = null, onBackToTemplates }
     }
     await fetchAnalytics(pageId);
     await refreshProgress();
-    showCreditReceipt('WAITLIST_GENERATION', requiredCredits, undefined, { featureName: 'Waitlist Maker' });
     fireJourneyUpgradePrompt('rookie_waitlist_published');
   };
 
@@ -906,6 +909,8 @@ export default function WaitlistEditor({ initialSeed = null, onBackToTemplates }
         trustItems?: string[];
         ctaText?: string;
         emailPlaceholder?: string;
+        creditsUsed?: number;
+        newBalance?: number;
       };
 
       updateContent({
@@ -922,7 +927,12 @@ export default function WaitlistEditor({ initialSeed = null, onBackToTemplates }
       if (result.benefits?.length) setBenefitsDraft(linesToText(result.benefits));
       if (result.howItWorks?.length) setHowItWorksDraft(linesToText(result.howItWorks));
 
-      showCreditReceipt('WAITLIST_GENERATION', requiredCredits, undefined, { featureName: 'AI Refine' });
+      showCreditReceipt(
+        'WAITLIST_GENERATION',
+        typeof result.creditsUsed === 'number' ? result.creditsUsed : requiredCredits,
+        typeof result.newBalance === 'number' ? result.newBalance : undefined,
+        { featureName: 'AI Refine' }
+      );
     } catch {
       toast.error('AI refine failed. Please try again.');
     } finally {

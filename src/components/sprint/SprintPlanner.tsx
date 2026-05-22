@@ -35,7 +35,7 @@ const SprintPlanner: React.FC<SprintPlannerProps> = ({ onSprintCreated, business
   const { user } = useAuth();
   const { toast } = useToast();
   const { refreshBalance } = useCredits();
-  const { ensureCredits, handleCreditError } = useCreditActions();
+  const { ensureCredits, handleCreditError, showCreditReceipt } = useCreditActions();
   const { createSprint, createSprintTasks, sprints, fetchSprints } = useSprints();
   const { checkFeatureAccess } = useFeatureGating();
   const { 
@@ -123,9 +123,15 @@ const SprintPlanner: React.FC<SprintPlannerProps> = ({ onSprintCreated, business
         
         toast({
           title: "Tasks Generated!",
-          description: `Generated ${data.tasks.length} actionable tasks (Used ${requiredCredits} credits)`,
+          description: `Generated ${data.tasks.length} actionable tasks.`,
         });
         await refreshBalance();
+        showCreditReceipt(
+          'SPRINT_TASK_GENERATION',
+          typeof data?.creditsUsed === 'number' ? data.creditsUsed : requiredCredits,
+          typeof data?.newBalance === 'number' ? data.newBalance : undefined,
+          { featureName: 'Sprint Task Generation' }
+        );
       } else {
         toast({
           title: "No Tasks Generated",

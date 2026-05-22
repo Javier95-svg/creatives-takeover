@@ -297,6 +297,10 @@ BEGIN
       jsonb_build_object(
         'usedFromQuota', v_used_from_quota,
         'usedFromBalance', v_used_from_balance,
+        'monthlyQuotaBefore', v_monthly_quota,
+        'monthly_quota_before', v_monthly_quota,
+        'balanceBefore', v_balance,
+        'balance_before', v_balance,
         'quotaRemaining', v_new_quota,
         'balanceRemaining', v_new_balance,
         'monthlyQuotaAfter', v_new_quota,

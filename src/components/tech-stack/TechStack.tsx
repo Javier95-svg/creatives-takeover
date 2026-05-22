@@ -81,6 +81,7 @@ const TechStack: React.FC = () => {
   const [previewReport, setPreviewReport] = useState<TechStackReport | null>(null);
   const [loginRedirectPending, setLoginRedirectPending] = useState(false);
   const [generatingBudget, setGeneratingBudget] = useState(false);
+  const [generatedBudgetKey, setGeneratedBudgetKey] = useState<string | null>(null);
   const [, startLoginNavigation] = useTransition();
 
   const currentTier = (subscriptionData.subscription_tier || 'rookie').toLowerCase();
@@ -116,6 +117,8 @@ const TechStack: React.FC = () => {
   }, [user?.id, toast]);
 
   const handleProductSelect = (categoryId: string, productId: string) => {
+    setShowBudget(false);
+    setGeneratedBudgetKey(null);
     setSelectedProducts(prev => {
       // If clicking the same product, deselect it
       if (prev[categoryId] === productId) {
@@ -175,6 +178,10 @@ const TechStack: React.FC = () => {
   };
 
   const budget = useMemo(() => calculateBudget(), [selectedProducts]);
+  const selectedProductsKey = useMemo(
+    () => techStackData.map((category) => `${category.id}:${selectedProducts[category.id] || ''}`).join('|'),
+    [selectedProducts]
+  );
 
   const handleSeeBudget = async () => {
     if (generatingBudget) return;
@@ -200,6 +207,14 @@ const TechStack: React.FC = () => {
         title: "Selection Required",
         description: `Please select one product from all ${techStackData.length} categories to generate your budget.`,
         variant: "destructive",
+      });
+      return;
+    }
+
+    if (showBudget && generatedBudgetKey === selectedProductsKey) {
+      toast({
+        title: "Budget Already Generated",
+        description: "Your current tech stack budget is ready below.",
       });
       return;
     }
@@ -266,7 +281,11 @@ const TechStack: React.FC = () => {
 
       const deducted = await deductCredits('TECH_STACK_GENERATION', {
         featureName: 'Tech Stack Generation',
-        metadata: { selectedCategories: techStackData.length }
+        operationId: `tech-stack-${Date.now()}`,
+        metadata: {
+          selectedCategories: techStackData.length,
+          selectedProductsKey,
+        }
       });
       if (!deducted) return;
 
@@ -281,6 +300,7 @@ const TechStack: React.FC = () => {
       }
 
       setShowBudget(true);
+      setGeneratedBudgetKey(selectedProductsKey);
       toast({
         title: "Budget Generated!",
         description: "Scroll down to view your tech stack budget and integration guide.",

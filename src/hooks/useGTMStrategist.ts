@@ -201,7 +201,12 @@ export function useGTMStrategist() {
       setAnalysis(data.analysis as GTMAnalysis);
       setPlanId(data.planId ?? null);
       setPhase('results');
-      showCreditReceipt('GTM_ANALYSIS', credits, undefined, { featureName: 'GTM Strategist' });
+      showCreditReceipt(
+        'GTM_ANALYSIS',
+        typeof data?.creditsUsed === 'number' ? data.creditsUsed : credits,
+        typeof data?.newBalance === 'number' ? data.newBalance : undefined,
+        { featureName: 'GTM Strategist' }
+      );
     } catch (err) {
       console.error('GTM analysis error:', err);
       toast.error('Something went wrong. Please try again.');

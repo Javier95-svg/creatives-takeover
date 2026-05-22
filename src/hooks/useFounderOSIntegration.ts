@@ -4,7 +4,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { useCreditActions } from '@/hooks/useCreditActions';
 import { useCredits } from '@/hooks/useCredits';
-import { CREDIT_COSTS } from '@/config/constants';
 
 interface FounderOSIntegrationData {
   sessionId: string;
@@ -15,7 +14,7 @@ interface FounderOSIntegrationData {
 
 export const useFounderOSIntegration = () => {
   const { user } = useAuth();
-  const { ensureCredits, handleCreditError } = useCreditActions();
+  const { ensureCredits, handleCreditError, showCreditReceipt } = useCreditActions();
   const { refreshBalance } = useCredits();
   const [validating, setValidating] = useState(false);
   const [generatingRoadmap, setGeneratingRoadmap] = useState(false);
@@ -58,8 +57,14 @@ export const useFounderOSIntegration = () => {
 
       if (result?.validation_score) {
         setValidationComplete(true);
-        toast.success(`Market Validation Complete! Score: ${result.validation_score.overall_validation_score}/100 (Used ${CREDIT_COSTS.MARKET_VALIDATION} credits)`);
         await refreshBalance();
+        showCreditReceipt(
+          'MARKET_VALIDATION',
+          typeof result?.creditsUsed === 'number' ? result.creditsUsed : requiredCredits,
+          typeof result?.newBalance === 'number' ? result.newBalance : undefined,
+          { featureName: 'Market Validation' }
+        );
+        toast.success(`Market Validation Complete! Score: ${result.validation_score.overall_validation_score}/100`);
         return true;
       }
 
@@ -111,8 +116,14 @@ export const useFounderOSIntegration = () => {
 
       if (result?.roadmap) {
         setRoadmapComplete(true);
-        toast.success(`30-Day Roadmap Created! ${result.tasks?.length || 0} tasks generated. (Used ${requiredCredits} credits)`);
         await refreshBalance();
+        showCreditReceipt(
+          'ROADMAP_GENERATION',
+          typeof result?.creditsUsed === 'number' ? result.creditsUsed : requiredCredits,
+          typeof result?.newBalance === 'number' ? result.newBalance : undefined,
+          { featureName: 'Roadmap Generation' }
+        );
+        toast.success(`30-Day Roadmap Created! ${result.tasks?.length || 0} tasks generated.`);
         return true;
       }
 

@@ -10,8 +10,6 @@ import {
   type Plan,
 } from './plan-enforcement.ts';
 
-const ADMIN_EMAIL = 'admin@creatives-takeover.com';
-
 /**
  * Shared credit deduction utility for edge functions
  * Provides consistent credit checking and deduction across all features
@@ -184,28 +182,6 @@ export async function checkAndDeductCredits(
         newQuota: currentCredits.monthlyQuota,
         usedFromQuota: 0,
         usedFromBalance: 0,
-      }, false);
-    }
-
-    const { data: adminUserData, error: adminUserError } = await supabase.auth.admin.getUserById(userId);
-    const isAdmin =
-      !adminUserError &&
-      typeof adminUserData?.user?.email === 'string' &&
-      adminUserData.user.email.toLowerCase() === ADMIN_EMAIL;
-
-    if (isAdmin) {
-      const { data: currentCredits } = await supabase
-        .from('user_credits')
-        .select('balance, monthly_quota')
-        .eq('user_id', userId)
-        .maybeSingle();
-
-      return await returnWithIdempotency({
-        success: true,
-        newBalance: currentCredits?.balance ?? 0,
-        newQuota: currentCredits?.monthly_quota ?? 0,
-        usedFromQuota: 0,
-        usedFromBalance: 0
       }, false);
     }
 

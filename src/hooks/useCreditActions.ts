@@ -11,7 +11,7 @@ import { getQuotaStatus, normalizePlan, type Plan } from '@/config/planPermissio
 import { toast } from 'sonner';
 import { createIdempotencyKey } from '@/lib/idempotency';
 import { trackCreditActionCompleted } from '@/lib/analytics';
-import { isAdminEmail } from '@/lib/admin';
+import { trackActivity } from '@/lib/activity';
 
 const CREDIT_FEATURE_LABELS: Record<CreditFeature, string> = {
   LAUNCH_REPORT: 'Launch Report Generation',
@@ -25,6 +25,7 @@ const CREDIT_FEATURE_LABELS: Record<CreditFeature, string> = {
   BUSINESS_INSIGHTS: 'Business Insights',
   PMF_ANALYSIS: 'Product-Market Fit Lab',
   PMF_SCORING: 'PMF Evidence Score',
+  GTM_ANALYSIS: 'GTM Strategist',
   WAITLIST_GENERATION: 'Waitlist Maker',
   APP_BUILDER_GENERATE: 'MVP Builder Generation',
   APP_BUILDER_REFINE: 'MVP Builder Refinement',
@@ -194,10 +195,6 @@ export const useCreditActions = () => {
         }
       }
 
-      if (isAdminEmail(user.email)) {
-        return 0;
-      }
-
       const requiredCredits = getEffectiveRequiredCredits(feature, options.requiredCredits);
       if (!requiredCredits || requiredCredits <= 0) {
         return 0;
@@ -275,6 +272,17 @@ export const useCreditActions = () => {
         source_tool: featureLabel,
       });
 
+      void trackActivity('tool_completed', {
+        feature_key: feature,
+        feature_name: featureLabel,
+        credits_charged: creditsUsed,
+        charge_status: creditsUsed > 0 ? 'charged' : 'free',
+        operation_id: options.operationId || options.idempotencyKey || options.metadata?.operationId,
+        balance_after: nextBalance,
+        plan: currentTier,
+        source_tool: featureLabel,
+      }, user?.id);
+
       if (creditsUsed <= 0) {
         toast.success(`${featureLabel} completed.`);
         return;
@@ -282,7 +290,7 @@ export const useCreditActions = () => {
 
       toast.success(`${featureLabel} completed · ${creditsUsed} credits used · ${nextBalance} remaining.`);
     },
-    [currentTier, totalAvailable]
+    [currentTier, totalAvailable, user?.id]
   );
 
   const handleCreditError = useCallback(
@@ -332,6 +340,16 @@ export const useCreditActions = () => {
       const requiredCredits = ensureCredits(feature, options);
       if (requiredCredits === null) return false;
       if (requiredCredits === 0 && feature !== 'DISCOVERY_CALL') {
+        void trackActivity('tool_completed', {
+          feature_key: feature,
+          feature_name: resolveFeatureLabel(feature, options.featureName),
+          credits_charged: 0,
+          charge_status: 'free',
+          operation_id: options.operationId || options.idempotencyKey || options.metadata?.operationId,
+          balance_after: totalAvailable,
+          plan: currentTier,
+          source_tool: resolveFeatureLabel(feature, options.featureName),
+        }, user.id);
         return true;
       }
 
@@ -374,7 +392,7 @@ export const useCreditActions = () => {
       showCreditReceipt(feature, requiredCredits, balanceAfter, options);
       return true;
     },
-    [ensureCredits, handleCreditError, refreshBalance, refreshQuotas, showCreditReceipt, user]
+    [currentTier, ensureCredits, handleCreditError, refreshBalance, refreshQuotas, showCreditReceipt, totalAvailable, user]
   );
 
   return {

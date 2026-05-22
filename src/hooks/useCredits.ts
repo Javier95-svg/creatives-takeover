@@ -8,7 +8,6 @@ import { logError, logWarn } from '@/lib/logger';
 import { APIError } from '@/lib/errors';
 import { CREDIT_COSTS } from '@/config/constants';
 import { createIdempotencyKey } from '@/lib/idempotency';
-import { isAdminEmail } from '@/lib/admin';
 
 interface CreditBalance {
   balance: number;
@@ -171,10 +170,6 @@ export function useCredits() {
   };
 
   const hasCredits = (requiredAmount: number): boolean => {
-    if (isAdminEmail(user?.email)) {
-      return true;
-    }
-
     const totalAvailable = (balanceData.balance || 0) + (balanceData.monthly_quota || 0);
     return totalAvailable >= requiredAmount;
   };

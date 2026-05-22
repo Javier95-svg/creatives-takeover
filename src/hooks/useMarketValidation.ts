@@ -11,7 +11,7 @@ export const useMarketValidation = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const { refreshBalance } = useCredits();
-  const { ensureCredits, handleCreditError } = useCreditActions();
+  const { ensureCredits, handleCreditError, showCreditReceipt } = useCreditActions();
 
   // Fetch validation scores
   const { data: validationScores = [], isLoading } = useQuery({
@@ -86,10 +86,15 @@ export const useMarketValidation = () => {
 
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['market-validation'] });
-      toast.success(`Market validation completed! (Used ${CREDIT_COSTS.MARKET_VALIDATION} credits)`);
       refreshBalance();
+      showCreditReceipt(
+        'MARKET_VALIDATION',
+        typeof data?.creditsUsed === 'number' ? data.creditsUsed : CREDIT_COSTS.MARKET_VALIDATION,
+        typeof data?.newBalance === 'number' ? data.newBalance : undefined,
+        { featureName: 'Market Validation' }
+      );
     },
     onError: (error) => {
       const errorMessage = error instanceof Error ? error.message : 'Failed to validate market';

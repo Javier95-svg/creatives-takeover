@@ -349,7 +349,12 @@ const ProductMarketFitLab: React.FC<ProductMarketFitLabProps> = ({
           description: `Your PMF score is ${data.analysis.pmfScore?.overall || 'N/A'}/100 - ${data.analysis.pmfScore?.verdict || 'N/A'}. Review the insights below.`,
         });
         await refreshBalance();
-        showCreditReceipt('PMF_ANALYSIS', requiredCredits, undefined, { featureName: 'Product-Market Fit Lab' });
+        showCreditReceipt(
+          'PMF_ANALYSIS',
+          typeof data?.creditsUsed === 'number' ? data.creditsUsed : requiredCredits,
+          typeof data?.newBalance === 'number' ? data.newBalance : undefined,
+          { featureName: 'Product-Market Fit Lab' }
+        );
         fireJourneyUpgradePrompt('starter_pmf_complete');
       } else {
         throw new Error(data?.error || 'Analysis failed');

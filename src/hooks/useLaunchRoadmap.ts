@@ -10,7 +10,7 @@ export const useLaunchRoadmap = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const { refreshBalance } = useCredits();
-  const { ensureCredits, handleCreditError } = useCreditActions();
+  const { ensureCredits, handleCreditError, showCreditReceipt } = useCreditActions();
   const [roadmap, setRoadmap] = useState<LaunchRoadmap | null>(null);
   const [tasks, setTasks] = useState<RoadmapTask[]>([]);
   const [loading, setLoading] = useState(false);
@@ -110,9 +110,15 @@ export const useLaunchRoadmap = () => {
         setTasks(data.tasks || []);
         toast({
           title: "Roadmap Created",
-          description: `Your 30-day launch roadmap is ready! (Used ${requiredCredits} credits)`,
+          description: "Your 30-day launch roadmap is ready!",
         });
         await refreshBalance();
+        showCreditReceipt(
+          'ROADMAP_GENERATION',
+          typeof data?.creditsUsed === 'number' ? data.creditsUsed : requiredCredits,
+          typeof data?.newBalance === 'number' ? data.newBalance : undefined,
+          { featureName: 'Roadmap Generation' }
+        );
         return data.roadmap;
       }
 
