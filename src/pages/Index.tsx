@@ -1,8 +1,6 @@
 import { useEffect, lazy, Suspense, useRef } from "react";
-import { useFeatureFlagEnabled } from "posthog-js/react";
 import Navigation from "@/components/Navigation";
 import Hero from "@/components/Hero";
-import IcpWedgeHero from "@/components/IcpWedgeHero";
 import ValuePropositionCards from "@/components/ValuePropositionCards";
 import UserReviews from "@/components/UserReviews";
 import EntrepreneurProblems from "@/components/EntrepreneurProblems";
@@ -24,8 +22,6 @@ const FounderAnswerLibraryTeaser = lazy(() => import("@/components/seo/FounderAn
 
 const Index = () => {
   const isMobile = useIsMobile();
-  const wedgeEnabled = useFeatureFlagEnabled('homepage-hero-wedge');
-  // Always show the previous Hero section design
   const hasTrackedLandingView = useRef(false);
   // Track homepage analytics
   usePageAnalytics('/', 'Home - Creatives Takeover');
@@ -70,7 +66,7 @@ const Index = () => {
       <main>
         {isMobile ? (
           <PullToRefresh onRefresh={handleRefresh}>
-            {wedgeEnabled ? <IcpWedgeHero /> : <Hero />}
+            <Hero ctaHref="/icp-builder" />
             <ScrollReveal>
               <div className="homepage-band-muted">
                 <EntrepreneurProblems />
@@ -102,7 +98,7 @@ const Index = () => {
           </PullToRefresh>
         ) : (
           <>
-            {wedgeEnabled ? <IcpWedgeHero /> : <Hero />}
+            <Hero ctaHref="/icp-builder" />
             <ScrollReveal>
               <div className="homepage-band-muted">
                 <EntrepreneurProblems />
