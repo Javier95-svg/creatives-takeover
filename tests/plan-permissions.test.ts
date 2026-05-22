@@ -56,7 +56,7 @@ test('plan highlights match the authoritative four-plan contract', () => {
     'Dashboard Rising Mode',
     'Full BizMap AI tools access (generative tools use credits)',
     'All five stages available in one cockpit',
-    'MVP Builder + GTM Strategist (uses credits)',
+    'MVP Builder per-action billing + GTM Strategist (uses credits)',
     '3 free discovery calls/month (mentorship)',
     'Unlimited Find a Co-Founder posts',
     'VC Search & Accelerator Hunt (10 profile views per month)',
@@ -72,7 +72,7 @@ test('plan highlights match the authoritative four-plan contract', () => {
     'Pro War Room with fundraising layer',
     'Find Your Angel (investors)',
     'Full BizMap AI tools access (generative tools use credits)',
-    'MVP Builder + GTM Strategist (uses credits)',
+    'MVP Builder per-action billing + GTM Strategist (uses credits)',
     'Unlimited discovery calls (mentorship)',
     'Unlimited Find a Co-Founder posts',
     'VC Search & Accelerator Hunt (unlimited profile views)',
@@ -96,19 +96,19 @@ test('dashboard mode config resolves from the canonical plan contract', () => {
   assert.deepEqual(rookieMode.previewStages, [4, 5]);
   assert.deepEqual(rookieMode.navItems.map((item) => item.path), [
     '/dashboard',
-    '/dashboard',
-    '/saved-mentors',
-    '/tasks',
+    '/dashboard/files',
+    '/dashboard/tasks',
+    '/dashboard/routine',
     '/dashboard/referral',
+    '/dashboard/focus-funnel',
   ]);
-  assert.equal(rookieMode.navItems[1]?.sectionId, 'my-files');
-  assert.deepEqual(rookieMode.visibleTools, ['icp_builder', 'find_mentor', 'find_cofounder']);
+  assert.deepEqual(rookieMode.visibleTools, ['icp_builder', 'saved_mentors', 'find_mentor', 'find_cofounder']);
 
   const proMode = getDashboardModeConfig('pro');
   assert.equal(proMode.label, 'Pro Mode');
   assert.deepEqual(proMode.activeStages, [1, 2, 3, 4, 5]);
   assert.deepEqual(proMode.previewStages, []);
-  assert.equal(proMode.navItems[0]?.label, 'War Room');
+  assert.equal(proMode.navItems[0]?.label, 'Home');
   assert.ok(proMode.visibleTools.includes('find_angel'));
 });
 
@@ -116,17 +116,15 @@ test('dashboard surface access follows canonical navigation availability', () =>
   assert.equal(resolveDashboardSurfaceAccess('dashboard_access', 'rookie').hasAccess, true);
   assert.equal(resolveDashboardSurfaceAccess('your_tasks', 'rookie').hasAccess, true);
 
-  const rookieWeeklyMission = resolveDashboardSurfaceAccess('weekly_mission', 'rookie');
-  assert.equal(rookieWeeklyMission.hasAccess, false);
-  assert.equal(rookieWeeklyMission.requiredPlan, 'starter');
+  assert.equal(resolveDashboardSurfaceAccess('routine', 'rookie').hasAccess, true);
+  assert.equal(resolveDashboardSurfaceAccess('focus_funnel', 'rising').hasAccess, true);
 
   const starterDecisionSprint = resolveDashboardSurfaceAccess('decision_sprint', 'starter');
   assert.equal(starterDecisionSprint.hasAccess, false);
-  assert.equal(starterDecisionSprint.requiredPlan, 'rising');
+  assert.equal(starterDecisionSprint.requiredPlan, undefined);
 
-  assert.equal(resolveDashboardSurfaceAccess('weekly_mission', 'starter').hasAccess, true);
   assert.equal(resolveDashboardSurfaceAccess('focus_funnel', 'rising').hasAccess, true);
-  assert.equal(resolveDashboardSurfaceAccess('core_metrics', 'pro').hasAccess, true);
+  assert.equal(resolveDashboardSurfaceAccess('core_metrics', 'pro').hasAccess, false);
 });
 
 test('plan monthly credits stay aligned with pricing', () => {
@@ -156,7 +154,7 @@ test('core entitlement rules reflect the pricing contract', () => {
   const rookieWaitlist = resolveEntitlement('waitlist_maker', 'rookie');
   assert.equal(rookieWaitlist.state, 'full');
   assert.equal(rookieWaitlist.monetizationModel, 'credit_metered');
-  assert.equal(rookieWaitlist.creditCost, 3);
+  assert.equal(rookieWaitlist.creditCost, 4);
 
   const rookiePmf = resolveEntitlement('pmf_lab', 'rookie');
   assert.equal(rookiePmf.state, 'preview_only');

@@ -407,10 +407,12 @@ serve(async (req: Request) => {
       Array.isArray(currentProject?.files) &&
       currentProject!.files!.length > 0);
   const isFirstGeneration = !hasExistingProject;
-  const creditFeature = isFirstGeneration ? "APP_BUILDER_GENERATE" : "APP_BUILDER_REFINE";
-  const creditCost = isFirstGeneration
-    ? CREDIT_COSTS.APP_BUILDER_GENERATE
-    : CREDIT_COSTS.APP_BUILDER_REFINE;
+  const creditFeature = responseMode === "chat"
+    ? "APP_BUILDER_CHAT"
+    : isFirstGeneration
+      ? "APP_BUILDER_GENERATE"
+      : "APP_BUILDER_REFINE";
+  const creditCost = CREDIT_COSTS[creditFeature];
   let chargedCredits = 0;
 
   if (userId) {

@@ -434,6 +434,20 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
     () => REFERENCE_OPTIONS.filter((reference) => selectedReferences.includes(reference.id)),
     [selectedReferences]
   );
+  const currentCreditFeature = githubRepoSession
+    ? 'APP_BUILDER_GITHUB_EDIT'
+    : builderMode === 'chat'
+    ? 'APP_BUILDER_CHAT'
+    : isEmpty
+    ? 'APP_BUILDER_GENERATE'
+    : 'APP_BUILDER_REFINE';
+  const currentCreditFeatureName = githubRepoSession
+    ? 'MVP Builder GitHub Edit'
+    : builderMode === 'chat'
+    ? 'MVP Builder Chat'
+    : isEmpty
+    ? 'MVP Builder Generation'
+    : 'MVP Builder Refinement';
 
   const clearTaskTimers = useCallback(() => {
     taskTimerIdsRef.current.forEach((timerId) => window.clearTimeout(timerId));
@@ -1076,8 +1090,8 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
             {builderMode === 'chat' ? 'Text-only planning' : 'Generates and renders'}
           </div>
           <CreditCostNotice
-            feature={isEmpty ? "APP_BUILDER_GENERATE" : "APP_BUILDER_REFINE"}
-            featureName={isEmpty ? "MVP Builder Generation" : "MVP Builder Refinement"}
+            feature={currentCreditFeature}
+            featureName={currentCreditFeatureName}
             variant="inline"
           />
         </div>

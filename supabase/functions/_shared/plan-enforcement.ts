@@ -1,4 +1,4 @@
-import { CREDIT_COSTS, type CreditFeature } from './credit-constants.ts';
+import { CREDIT_COSTS, getCreditCostForPlan, type CreditFeature } from './credit-constants.ts';
 
 export type Plan = 'rookie' | 'starter' | 'rising' | 'pro';
 export type EnforcedFeature = CreditFeature | 'DISCOVERY_CALL';
@@ -55,6 +55,18 @@ const FEATURE_RULES: Partial<Record<EnforcedFeature, Record<Plan, FeatureRule>>>
     pro: { mode: 'charge' },
   },
   APP_BUILDER_REFINE: {
+    rookie: { mode: 'blocked', requiredPlan: 'rising' },
+    starter: { mode: 'blocked', requiredPlan: 'rising' },
+    rising: { mode: 'charge' },
+    pro: { mode: 'charge' },
+  },
+  APP_BUILDER_CHAT: {
+    rookie: { mode: 'blocked', requiredPlan: 'rising' },
+    starter: { mode: 'blocked', requiredPlan: 'rising' },
+    rising: { mode: 'charge' },
+    pro: { mode: 'charge' },
+  },
+  APP_BUILDER_GITHUB_EDIT: {
     rookie: { mode: 'blocked', requiredPlan: 'rising' },
     starter: { mode: 'blocked', requiredPlan: 'rising' },
     rising: { mode: 'charge' },
@@ -133,7 +145,7 @@ export function isPlanAtLeast(plan: Plan, minimumPlan: Plan): boolean {
 }
 
 export function resolveFeatureEnforcement(plan: Plan, feature: EnforcedFeature): FeatureEnforcement {
-  const defaultCreditCost = feature in CREDIT_COSTS ? CREDIT_COSTS[feature as CreditFeature] : 0;
+  const defaultCreditCost = getCreditCostForPlan(feature, plan) ?? 0;
   const rule = FEATURE_RULES[feature]?.[plan];
 
   if (!rule) {

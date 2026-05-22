@@ -26,7 +26,7 @@ const PricingFAQ = () => {
       question: "What are credits and how do they work?",
       answer: `Credits are the usage currency for the AI-powered parts of the platform. Every plan includes a monthly credit grant: Rookie gets 50, Starter 100, Rising 250, and Pro 600.
 
-    Waitlist Maker is unlocked on every plan and uses credits. PMF Lab unlocks on Starter and above and uses credits for analyses. Rising and Pro unlock MVP Builder, Tech Stack Builder, GTM Strategist, and Pitch Deck Analyzer; those generative actions also use credits because they can be run repeatedly.
+    Waitlist Maker is unlocked on every plan and uses credits: 4 credits on Rookie and 3 credits on paid plans. PMF Lab unlocks on Starter and above and uses credits for analyses. Rising and Pro unlock MVP Builder, Tech Stack Builder, GTM Strategist, and Pitch Deck Analyzer; MVP Builder charges per AI action because it behaves like a vibe coding workspace.
 
     ICP Builder stays free across all four plans. Discovery Calls are monthly quotas: Rookie includes 1 per month, Starter 2, Rising 3, and Pro includes unlimited discovery calls.`,
       relatedQuestions: [0, 5],

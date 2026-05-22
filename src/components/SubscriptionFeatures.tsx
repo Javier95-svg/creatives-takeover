@@ -5,7 +5,7 @@ import {
   Users,
   TrendingUp,
 } from "lucide-react";
-import { CREDIT_COSTS } from "@/config/constants";
+import { CREDIT_COSTS, getCreditCostForPlan } from "@/config/constants";
 import { RevealGroup, ScrollReveal } from "@/components/animations/ScrollReveal";
 
 type CreditBreakdownItem = {
@@ -31,8 +31,8 @@ const creditBreakdown: {
     },
     {
       name: "Waitlist Maker",
-      description: `Unlocked on every plan. Publishing or generating a waitlist costs ${CREDIT_COSTS.WAITLIST_GENERATION} credits.`,
-      badge: `${CREDIT_COSTS.WAITLIST_GENERATION} credits`,
+      description: `Unlocked on every plan. Publishing or generating a waitlist costs ${getCreditCostForPlan('WAITLIST_GENERATION', 'rookie')} credits on Rookie and ${CREDIT_COSTS.WAITLIST_GENERATION} credits on paid plans.`,
+      badge: `${getCreditCostForPlan('WAITLIST_GENERATION', 'rookie')} / ${CREDIT_COSTS.WAITLIST_GENERATION} credits`,
       badgeVariant: "outline",
       badgeClassName: "bg-blue-50 dark:bg-blue-950/30",
     },
@@ -45,7 +45,7 @@ const creditBreakdown: {
     },
     {
       name: "MVP Builder",
-      description: `Preview only on Rookie and Starter. Rising and Pro unlock generation at ${CREDIT_COSTS.APP_BUILDER_GENERATE} credits for the first build and ${CREDIT_COSTS.APP_BUILDER_REFINE} credits per refinement.`,
+      description: `Preview only on Rookie and Starter. Rising and Pro unlock per-action billing: ${CREDIT_COSTS.APP_BUILDER_GENERATE} credits for the first build, ${CREDIT_COSTS.APP_BUILDER_REFINE} per AI edit, ${CREDIT_COSTS.APP_BUILDER_CHAT} per chat, and ${CREDIT_COSTS.APP_BUILDER_GITHUB_EDIT} per GitHub AI edit.`,
       badge: "Unlocked on Rising+",
       badgeVariant: "outline",
       badgeClassName: "bg-blue-50 dark:bg-blue-950/30",

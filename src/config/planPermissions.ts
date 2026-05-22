@@ -5,7 +5,7 @@
  * all resolve from this file instead of hardcoded tier checks.
  */
 
-import { CREDIT_COSTS, getCreditCost, TIER_MONTHLY_CREDITS, type CreditFeature } from './constants.ts';
+import { CREDIT_COSTS, getCreditCostForPlan, TIER_MONTHLY_CREDITS, type CreditFeature } from './constants.ts';
 
 export { CREDIT_COSTS };
 
@@ -232,7 +232,7 @@ export const PLAN_HIGHLIGHTS: Record<Plan, string[]> = {
     'Dashboard Rising Mode',
     'Full BizMap AI tools access (generative tools use credits)',
     'All five stages available in one cockpit',
-    'MVP Builder + GTM Strategist (uses credits)',
+    'MVP Builder per-action billing + GTM Strategist (uses credits)',
     '3 free discovery calls/month (mentorship)',
     'Unlimited Find a Co-Founder posts',
     'VC Search & Accelerator Hunt (10 profile views per month)',
@@ -247,7 +247,7 @@ export const PLAN_HIGHLIGHTS: Record<Plan, string[]> = {
     'Pro War Room with fundraising layer',
     'Find Your Angel (investors)',
     'Full BizMap AI tools access (generative tools use credits)',
-    'MVP Builder + GTM Strategist (uses credits)',
+    'MVP Builder per-action billing + GTM Strategist (uses credits)',
     'Unlimited discovery calls (mentorship)',
     'Unlimited Find a Co-Founder posts',
     'VC Search & Accelerator Hunt (unlimited profile views)',
@@ -618,7 +618,7 @@ export function resolveEntitlement(feature: FeatureKey, plan: Plan): Entitlement
   const config = FEATURE_ENTITLEMENTS[feature]?.[plan] ?? { state: 'full' as const };
   const state = config.state;
   const monthlyLimit = config.monthlyLimit;
-  const creditCost = config.creditFeature ? getCreditCost(config.creditFeature) ?? undefined : undefined;
+  const creditCost = config.creditFeature ? getCreditCostForPlan(config.creditFeature, plan) ?? undefined : undefined;
   const monetizationModel: MonetizationModel =
     config.monetizationModel ??
     (config.creditFeature

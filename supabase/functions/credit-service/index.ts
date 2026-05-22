@@ -58,7 +58,7 @@ export class CreditService {
   }
 
   // Deduct credits for API operations
-  async deductCredits(transaction: CreditTransaction): Promise<{ success: boolean; newBalance?: number; newQuota?: number; error?: string; errorCode?: string }> {
+  async deductCredits(transaction: CreditTransaction): Promise<{ success: boolean; newBalance?: number; newQuota?: number; error?: string; errorCode?: string; requiredCredits?: number }> {
     try {
       const amount = Math.abs(transaction.amount);
       const featureLabel = transaction.feature || 'Credit Deduction';
@@ -81,6 +81,7 @@ export class CreditService {
         error: result.error,
         errorCode: result.errorCode,
         requiredTier: result.requiredTier,
+        requiredCredits: result.requiredCredits,
         limit: result.limit,
         remaining: result.remaining,
       };

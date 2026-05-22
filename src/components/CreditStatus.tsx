@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { CREDIT_COSTS } from "@/config/constants";
+import { CREDIT_COSTS, getCreditCostForPlan } from "@/config/constants";
 import { normalizePlan, PLAN_MONTHLY_CREDITS } from "@/config/planPermissions";
 
 interface CreditStatusProps {
@@ -84,9 +84,8 @@ export function CreditStatus({ requiredCredits, feature, showPurchaseLink = true
       return ' Insighta Test is included on every plan.';
     }
     if (featureLower.includes('waitlist')) {
-      return normalizedTier === 'rookie'
-        ? ` Publishing a waitlist page costs ${CREDIT_COSTS.WAITLIST_GENERATION} credits.`
-        : ` Waitlist publishing costs ${CREDIT_COSTS.WAITLIST_GENERATION} credits.`;
+      const waitlistCost = getCreditCostForPlan('WAITLIST_GENERATION', normalizedTier) ?? CREDIT_COSTS.WAITLIST_GENERATION;
+      return ` Waitlist publishing costs ${waitlistCost} credits on your plan.`;
     }
     if (featureLower.includes('sprint') || featureLower.includes('task generation')) {
       return '';
@@ -96,7 +95,7 @@ export function CreditStatus({ requiredCredits, feature, showPurchaseLink = true
     }
     if (featureLower.includes('mvp')) {
       return normalizedTier === 'rising' || normalizedTier === 'pro'
-        ? ` MVP Builder is unlocked on your plan and uses ${CREDIT_COSTS.APP_BUILDER_GENERATE} credits for initial generation or ${CREDIT_COSTS.APP_BUILDER_REFINE} credits for refinements.`
+        ? ` MVP Builder is unlocked on your plan and charges per AI action: ${CREDIT_COSTS.APP_BUILDER_GENERATE} credits for an initial build, ${CREDIT_COSTS.APP_BUILDER_REFINE} for code edits, ${CREDIT_COSTS.APP_BUILDER_CHAT} for chat, and ${CREDIT_COSTS.APP_BUILDER_GITHUB_EDIT} for GitHub AI edits.`
         : ' MVP Builder unlocks on Rising and Pro.';
     }
     if (featureLower.includes('gtm')) {

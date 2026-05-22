@@ -43,7 +43,8 @@ test('metered tools disclose credit costs before action', () => {
   assert.match(costNoticeSource, /Costs \$\{quote\.requiredCredits\} credits/);
   assert.match(waitlistSource, /feature="WAITLIST_GENERATION"/);
   assert.match(gtmSource, /feature="GTM_ANALYSIS"/);
-  assert.match(mvpSource, /feature=\{isEmpty \? "APP_BUILDER_GENERATE" : "APP_BUILDER_REFINE"\}/);
+  assert.match(mvpSource, /APP_BUILDER_CHAT/);
+  assert.match(mvpSource, /APP_BUILDER_GITHUB_EDIT/);
   assert.match(pitchSource, /feature="PITCH_DECK_ANALYZER"/);
   assert.match(promptSource, /feature="PROMPT_GENERATION"/);
 });

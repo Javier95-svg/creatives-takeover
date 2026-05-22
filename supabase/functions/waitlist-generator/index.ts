@@ -59,7 +59,7 @@ serve(async (req) => {
         creditError: true,
         errorCode: creditResult.errorCode,
         requiredTier: creditResult.requiredTier,
-        requiredCredits: creditCost,
+        requiredCredits: creditResult.requiredCredits ?? creditCost,
       }), {
         status: 402,
         headers: { ...corsHeaders, "Content-Type": "application/json" },

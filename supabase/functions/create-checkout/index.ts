@@ -31,8 +31,8 @@ const SUBSCRIPTION_PRICING: Record<string, Record<BillingCycle, { amount: number
     yearly: { amount: 7900, name: "Starter Plan", credits: 100, description: "100 monthly credits, PMF Lab credit-metered access, Email Templates, and 2 VC/Accelerator profile views" },
   },
   rising: {
-    monthly: { amount: 2900, name: "Rising Plan", credits: 250, description: "250 monthly credits plus credit-metered MVP Builder, Tech Stack Builder, GTM Strategist, Pitch Deck Analyzer, and full Prompt Library" },
-    yearly: { amount: 23900, name: "Rising Plan", credits: 250, description: "250 monthly credits plus credit-metered MVP Builder, Tech Stack Builder, GTM Strategist, Pitch Deck Analyzer, and full Prompt Library" },
+    monthly: { amount: 2900, name: "Rising Plan", credits: 250, description: "250 monthly credits plus per-action MVP Builder, Tech Stack Builder, GTM Strategist, Pitch Deck Analyzer, and full Prompt Library" },
+    yearly: { amount: 23900, name: "Rising Plan", credits: 250, description: "250 monthly credits plus per-action MVP Builder, Tech Stack Builder, GTM Strategist, Pitch Deck Analyzer, and full Prompt Library" },
   },
   pro: {
     monthly: { amount: 6500, name: "Pro Plan", credits: 600, description: "600 monthly credits, Find Your Angel, unlimited research views, unlimited discovery calls, and premium fundraising access" },

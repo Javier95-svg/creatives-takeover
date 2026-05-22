@@ -70,7 +70,7 @@ test('subscription checkout copy uses the paid plan credit ladder', () => {
   const source = readFileSync(new URL('../supabase/functions/create-checkout/index.ts', import.meta.url), 'utf8');
 
   assert.match(source, /starter: \{[\s\S]*monthly: \{[\s\S]*credits: 100[\s\S]*PMF Lab credit-metered access/);
-  assert.match(source, /rising: \{[\s\S]*monthly: \{[\s\S]*credits: 250[\s\S]*credit-metered MVP Builder/);
+  assert.match(source, /rising: \{[\s\S]*monthly: \{[\s\S]*credits: 250[\s\S]*per-action MVP Builder/);
   assert.match(source, /pro: \{[\s\S]*monthly: \{[\s\S]*credits: 600[\s\S]*Find Your Angel/);
   assert.match(source, /description: `\$\{pricing\.description\} with \$\{billingCycle\} billing`/);
 });
@@ -124,7 +124,10 @@ test('credit audit main inventory follows Compare Our Plans tools only', () => {
 });
 
 test('waitlist maker is credit-metered on every plan', () => {
-  for (const plan of ['rookie', 'starter', 'rising', 'pro'] as const) {
+  assert.equal(resolveFeatureEnforcement('rookie', 'WAITLIST_GENERATION').mode, 'charge');
+  assert.equal(resolveFeatureEnforcement('rookie', 'WAITLIST_GENERATION').creditCost, 4);
+
+  for (const plan of ['starter', 'rising', 'pro'] as const) {
     const enforcement = resolveFeatureEnforcement(plan, 'WAITLIST_GENERATION');
     assert.equal(enforcement.mode, 'charge');
     assert.equal(enforcement.creditCost, 3);
@@ -151,6 +154,8 @@ test('Rising and Pro generative build tools are unlocked and credit-metered', ()
   const expectedCosts = {
     APP_BUILDER_GENERATE: 5,
     APP_BUILDER_REFINE: 3,
+    APP_BUILDER_CHAT: 1,
+    APP_BUILDER_GITHUB_EDIT: 3,
     GTM_ANALYSIS: 5,
     TECH_STACK_GENERATION: 3,
     PITCH_DECK_ANALYZER: 6,

@@ -24,6 +24,7 @@ export interface CreditDeductionResult {
   error?: string;
   errorCode?: 'INSUFFICIENT_CREDITS' | 'USER_NOT_FOUND' | 'DEDUCTION_FAILED' | 'PLAN_UPGRADE_REQUIRED' | 'QUOTA_LIMIT_REACHED';
   requiredTier?: Plan;
+  requiredCredits?: number;
   limit?: number;
   remaining?: number;
 }
@@ -246,6 +247,7 @@ export async function checkAndDeductCredits(
         error: `This feature is not available on your ${userPlan} plan.`,
         errorCode: 'PLAN_UPGRADE_REQUIRED',
         requiredTier: enforcement.requiredPlan,
+        requiredCredits: enforcement.creditCost,
       }, false);
     }
 
@@ -343,7 +345,8 @@ export async function checkAndDeductCredits(
       return await returnWithIdempotency({
         success: false,
         error: result.error || 'Credit deduction failed',
-        errorCode: result.errorCode || 'DEDUCTION_FAILED'
+        errorCode: result.errorCode || 'DEDUCTION_FAILED',
+        requiredCredits: chargeAmount,
       }, shouldPersist);
     }
 

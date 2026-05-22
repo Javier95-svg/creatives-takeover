@@ -1,11 +1,11 @@
-import { CREDIT_COSTS } from "@/config/constants";
+import { CREDIT_COSTS, getCreditCostForPlan } from "@/config/constants";
 
 export function CreditPriceList() {
     const prices = [
         { name: "ICP Builder", value: "Free on every plan" },
-        { name: "Waitlist Maker", value: `${CREDIT_COSTS.WAITLIST_GENERATION} credits/use on every plan` },
+        { name: "Waitlist Maker", value: `${getCreditCostForPlan('WAITLIST_GENERATION', 'rookie')} credits/use on Rookie; ${CREDIT_COSTS.WAITLIST_GENERATION} on paid plans` },
         { name: "PMF Lab", value: `${CREDIT_COSTS.PMF_ANALYSIS} credits/full analysis; ${CREDIT_COSTS.PMF_SCORING} credits/evidence score on Starter+` },
-        { name: "MVP Builder", value: `${CREDIT_COSTS.APP_BUILDER_GENERATE} credits/generation; ${CREDIT_COSTS.APP_BUILDER_REFINE} credits/refinement on Rising+` },
+        { name: "MVP Builder", value: `Per action on Rising+: ${CREDIT_COSTS.APP_BUILDER_GENERATE} build, ${CREDIT_COSTS.APP_BUILDER_REFINE} edit, ${CREDIT_COSTS.APP_BUILDER_CHAT} chat, ${CREDIT_COSTS.APP_BUILDER_GITHUB_EDIT} GitHub edit` },
         { name: "Tech Stack Builder", value: `${CREDIT_COSTS.TECH_STACK_GENERATION} credits/use on Rising+` },
         { name: "GTM Strategist", value: `${CREDIT_COSTS.GTM_ANALYSIS} credits/use on Rising+` },
         { name: "Directories", value: "Included on Rising+" },

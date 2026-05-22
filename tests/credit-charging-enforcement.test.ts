@@ -3,10 +3,24 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
 import { CREDIT_COSTS as CLIENT_CREDIT_COSTS } from '../src/config/constants.ts';
-import { CREDIT_COSTS as EDGE_CREDIT_COSTS } from '../supabase/functions/_shared/credit-constants.ts';
+import {
+  CREDIT_COSTS as EDGE_CREDIT_COSTS,
+  PLAN_CREDIT_COST_OVERRIDES as EDGE_PLAN_CREDIT_COST_OVERRIDES,
+} from '../supabase/functions/_shared/credit-constants.ts';
+import { PLAN_CREDIT_COST_OVERRIDES as CLIENT_PLAN_CREDIT_COST_OVERRIDES } from '../src/config/constants.ts';
 
 test('client and edge credit costs stay in sync', () => {
   assert.deepEqual(CLIENT_CREDIT_COSTS, EDGE_CREDIT_COSTS);
+  assert.deepEqual(CLIENT_PLAN_CREDIT_COST_OVERRIDES, EDGE_PLAN_CREDIT_COST_OVERRIDES);
+});
+
+test('plan-aware credit pricing tightens Rookie waitlist usage and adds MVP action keys', () => {
+  assert.equal(CLIENT_CREDIT_COSTS.WAITLIST_GENERATION, 3);
+  assert.equal(CLIENT_PLAN_CREDIT_COST_OVERRIDES.rookie?.WAITLIST_GENERATION, 4);
+  assert.equal(CLIENT_CREDIT_COSTS.APP_BUILDER_GENERATE, 5);
+  assert.equal(CLIENT_CREDIT_COSTS.APP_BUILDER_REFINE, 3);
+  assert.equal(CLIENT_CREDIT_COSTS.APP_BUILDER_CHAT, 1);
+  assert.equal(CLIENT_CREDIT_COSTS.APP_BUILDER_GITHUB_EDIT, 3);
 });
 
 test('admin accounts are not exempt from metered tool credit checks', () => {

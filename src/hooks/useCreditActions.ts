@@ -6,7 +6,7 @@ import { useMonthlyQuotas } from '@/hooks/useMonthlyQuotas';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useUpgradePrompt } from '@/contexts/UpgradePromptContext';
 import { useCreditGate } from '@/contexts/CreditGateContext';
-import { CREDIT_COSTS, CreditFeature, getCreditCost } from '@/config/constants';
+import { CREDIT_COSTS, CreditFeature, getCreditCostForPlan } from '@/config/constants';
 import { getQuotaStatus, normalizePlan, type Plan } from '@/config/planPermissions';
 import { toast } from 'sonner';
 import { createIdempotencyKey } from '@/lib/idempotency';
@@ -29,6 +29,8 @@ const CREDIT_FEATURE_LABELS: Record<CreditFeature, string> = {
   WAITLIST_GENERATION: 'Waitlist Maker',
   APP_BUILDER_GENERATE: 'MVP Builder Generation',
   APP_BUILDER_REFINE: 'MVP Builder Refinement',
+  APP_BUILDER_CHAT: 'MVP Builder Chat',
+  APP_BUILDER_GITHUB_EDIT: 'MVP Builder GitHub Edit',
   INVESTOR_MATCHING: 'Investor Matching',
   PITCH_DECK_GENERATION: 'Pitch Deck Generation',
   COLD_EMAIL_GENERATION: 'Cold Email Generation',
@@ -72,9 +74,9 @@ export type CreditActionQuote = {
 const resolveFeatureLabel = (feature: CreditFeature, override?: string) =>
   override || CREDIT_FEATURE_LABELS[feature] || feature;
 
-const resolveCreditCost = (feature: CreditFeature, override?: number) => {
+const resolveCreditCost = (feature: CreditFeature, plan: Plan, override?: number) => {
   if (typeof override === 'number') return override;
-  return getCreditCost(feature) ?? CREDIT_COSTS[feature];
+  return getCreditCostForPlan(feature, plan) ?? CREDIT_COSTS[feature];
 };
 
 const PLAN_SEQUENCE: Plan[] = ['rookie', 'starter', 'rising', 'pro'];
@@ -85,6 +87,8 @@ const FEATURE_MINIMUM_PLAN: Partial<Record<CreditFeature, Plan>> = {
   PMF_SCORING: 'starter',
   APP_BUILDER_GENERATE: 'rising',
   APP_BUILDER_REFINE: 'rising',
+  APP_BUILDER_CHAT: 'rising',
+  APP_BUILDER_GITHUB_EDIT: 'rising',
   GTM_ANALYSIS: 'rising',
   TECH_STACK_GENERATION: 'rising',
   PITCH_DECK_ANALYZER: 'rising',
@@ -100,6 +104,8 @@ const FEATURE_INCLUDED_ON_PLAN: Partial<Record<CreditFeature, Plan>> = {
 const FEATURE_JOURNEY_TRIGGER: Partial<Record<CreditFeature, string>> = {
   APP_BUILDER_GENERATE: 'starter_tool_mvp',
   APP_BUILDER_REFINE: 'starter_tool_mvp',
+  APP_BUILDER_CHAT: 'starter_tool_mvp',
+  APP_BUILDER_GITHUB_EDIT: 'starter_tool_mvp',
   GTM_ANALYSIS: 'starter_tool_gtm',
   TECH_STACK_GENERATION: 'starter_tool_tech',
 };
@@ -112,6 +118,8 @@ const ALWAYS_PAID_FEATURES = new Set<string>([
   'PMF_SCORING',
   'APP_BUILDER_GENERATE',
   'APP_BUILDER_REFINE',
+  'APP_BUILDER_CHAT',
+  'APP_BUILDER_GITHUB_EDIT',
   'GTM_ANALYSIS',
   'TECH_STACK_GENERATION',
   'PITCH_DECK_ANALYZER',
@@ -165,7 +173,7 @@ export const useCreditActions = () => {
         return 0;
       }
 
-      return resolveCreditCost(feature as CreditFeature, override);
+      return resolveCreditCost(feature as CreditFeature, currentTier, override);
     },
     [currentTier]
   );

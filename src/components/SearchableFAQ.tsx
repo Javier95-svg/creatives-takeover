@@ -61,7 +61,7 @@ const SearchableFAQ = () => {
       id: 4,
       category: "Pricing",
       question: "What's the difference between Rising and Pro plans?",
-      answer: "Rising gives you 250 credits, the full BizMap AI toolset, 10 VC profiles and 10 accelerator profiles per billing cycle, 3 discovery calls, full prompt library access, full email templates, and pitch deck analyzer access. Pro gives you 600 credits, unlimited discovery calls, unlimited VC and accelerator profile views, Angels community access, group office hours, and priority support. MVP Builder and GTM Strategist are unlocked on both Rising and Pro and use credits for each generation.",
+      answer: "Rising gives you 250 credits, the full BizMap AI toolset, 10 VC profiles and 10 accelerator profiles per billing cycle, 3 discovery calls, full prompt library access, full email templates, and pitch deck analyzer access. Pro gives you 600 credits, unlimited discovery calls, unlimited VC and accelerator profile views, Angels community access, group office hours, and priority support. MVP Builder and GTM Strategist are unlocked on both Rising and Pro; MVP Builder charges per AI action.",
       popular: true,
       tags: ["rising", "pro", "comparison", "features"]
     },
@@ -187,7 +187,7 @@ const SearchableFAQ = () => {
       id: 19,
       category: "Credits",
       question: "How does the credit system work?",
-      answer: "Credits refresh with your plan every billing cycle: Rookie 50, Starter 100, Rising 250, and Pro 600. Plan gates decide which tools you can access, and credits meter generative actions inside those unlocked tools. Waitlist Maker uses credits on every plan. PMF Lab uses credits on Starter and above. MVP Builder, Tech Stack Builder, GTM Strategist, and Pitch Deck Analyzer unlock on Rising and Pro and use credits per generation or analysis.",
+      answer: "Credits refresh with your plan every billing cycle: Rookie 50, Starter 100, Rising 250, and Pro 600. Plan gates decide which tools you can access, and credits meter generative actions inside those unlocked tools. Waitlist Maker costs 4 credits on Rookie and 3 credits on paid plans. PMF Lab uses credits on Starter and above. MVP Builder unlocks on Rising and Pro and charges per AI action; Tech Stack Builder, GTM Strategist, and Pitch Deck Analyzer use credits per generation or analysis.",
       popular: true,
       tags: ["credits", "costs", "ai features", "monthly"]
     },

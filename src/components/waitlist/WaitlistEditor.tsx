@@ -5,9 +5,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useBizMapProgress } from '@/hooks/useBizMapProgress';
 import { useActivationJourney } from '@/hooks/useActivationJourney';
 import { useCreditActions } from '@/hooks/useCreditActions';
-import { useSubscription } from '@/hooks/useSubscription';
-import { CREDIT_COSTS } from '@/config/constants';
-import { normalizePlan } from '@/config/planPermissions';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -257,9 +254,8 @@ export default function WaitlistEditor({ initialSeed = null, onBackToTemplates }
   const { user, loading: authLoading } = useAuth();
   const { refreshProgress } = useBizMapProgress();
   const { refreshActivation } = useActivationJourney();
-  const { ensureCredits, deductCredits, showCreditReceipt } = useCreditActions();
+  const { ensureCredits, deductCredits, showCreditReceipt, getCreditActionQuote } = useCreditActions();
   const { fireJourneyUpgradePrompt } = useJourneyUpgradePrompt();
-  const { subscriptionData } = useSubscription();
   const initialStoredStateRef = useRef<StoredWaitlistEditorState | null>(readStoredWaitlistEditorState());
   const initialGuestDraftRef = useRef(readGuestBrowserDraft());
   const initialState = initialStoredStateRef.current ?? (initialGuestDraftRef.current ? {
@@ -323,13 +319,11 @@ export default function WaitlistEditor({ initialSeed = null, onBackToTemplates }
   const slugTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const isGuest = !user;
-  const currentPlan = normalizePlan(subscriptionData?.subscription_tier);
   const isCompleted = useMemo(() => Boolean(markReadyAt) || signupCount > 0, [markReadyAt, signupCount]);
   const reservedUrl = currentSlug ? `${BASE_URL}/w/${currentSlug}` : null;
   const liveUrl = status === 'published' && currentSlug ? `${BASE_URL}/w/${currentSlug}` : null;
-  const waitlistPublishDescription = currentPlan === 'rookie'
-    ? `Publishing costs ${CREDIT_COSTS.WAITLIST_GENERATION} credits and exposes your public URL.`
-    : `Publishing costs ${CREDIT_COSTS.WAITLIST_GENERATION} credits and exposes your public URL.`;
+  const waitlistQuote = getCreditActionQuote('WAITLIST_GENERATION', { featureName: 'Waitlist Maker' });
+  const waitlistPublishDescription = `Publishing costs ${waitlistQuote.requiredCredits} credits and exposes your public URL.`;
   const currentSnapshot = useMemo(
     () => buildEditorSnapshot(productName, content, slugDraft || currentSlug || '', status),
     [content, currentSlug, productName, slugDraft, status]

@@ -13,6 +13,7 @@ import {
   MVP_DEFAULT_PROJECT_TYPE,
   sanitizeMVPProjectType,
 } from '@/data/mvpProjectTypes';
+import type { CreditFeature } from '@/config/constants';
 import {
   buildPreviewFromProject,
   createProjectFromHtml,
@@ -474,9 +475,33 @@ const GITHUB_FN_URL =
   'https://rcjlaybjnozqbsoxzboa.supabase.co/functions/v1/github-integration';
 const STORAGE_KEY = 'ct_app_builder_session';
 
+function getMVPActionFeature(options: {
+  hasGithubRepo: boolean;
+  responseMode: MVPBuilderResponseMode;
+  hasMessages: boolean;
+}): CreditFeature {
+  if (options.hasGithubRepo) return 'APP_BUILDER_GITHUB_EDIT';
+  if (options.responseMode === 'chat') return 'APP_BUILDER_CHAT';
+  return options.hasMessages ? 'APP_BUILDER_REFINE' : 'APP_BUILDER_GENERATE';
+}
+
+function getMVPActionLabel(feature: CreditFeature): string {
+  switch (feature) {
+    case 'APP_BUILDER_GENERATE':
+      return 'AI App Builder - Generate';
+    case 'APP_BUILDER_CHAT':
+      return 'AI App Builder - Chat';
+    case 'APP_BUILDER_GITHUB_EDIT':
+      return 'AI App Builder - GitHub Edit';
+    case 'APP_BUILDER_REFINE':
+    default:
+      return 'AI App Builder - Refine';
+  }
+}
+
 export function useMVPBuilder() {
   const { user } = useAuth();
-  const { ensureCredits, handleCreditError, showCreditReceipt } = useCreditActions();
+  const { ensureCredits, deductCredits, handleCreditError, showCreditReceipt } = useCreditActions();
 
   const [messages, setMessages] = useState<MVPMessage[]>([]);
   const [projectFiles, setProjectFiles] = useState<MVPProjectFile[]>([]);
@@ -1552,7 +1577,7 @@ export function useMVPBuilder() {
   );
 
   const handleGitHubPrompt = useCallback(
-    async (prompt: string, creditFeature: string) => {
+    async (prompt: string, creditFeature: CreditFeature) => {
       if (!githubRepoSession) return;
 
       const userMsg = createMessage('user', prompt);
@@ -1578,6 +1603,32 @@ export function useMVPBuilder() {
           files: githubRepoSession.files,
           selectedModels,
         });
+
+        const charged = await deductCredits(creditFeature, {
+          featureName: getMVPActionLabel(creditFeature),
+          operationId: assistantMsg.id,
+          metadata: {
+            action: 'github_ai_edit',
+            repositoryName: githubRepoSession.fullName,
+            promptId: assistantMsg.id,
+          },
+        });
+        if (!charged) {
+          setMessages((prev) =>
+            prev.map((message) =>
+              message.id === assistantMsg.id
+                ? {
+                    ...message,
+                    content: 'Credit deduction failed, so the GitHub edit was not applied.',
+                    isStreaming: false,
+                    type: 'error',
+                    retryPrompt: prompt,
+                  }
+                : message
+            )
+          );
+          return;
+        }
 
         const summary = result.summary || 'Prepared repository changes.';
         const changeCount = (result.changes || []).length;
@@ -1646,7 +1697,7 @@ export function useMVPBuilder() {
         setIsGenerating(false);
       }
     },
-    [applyProjectArtifact, callGitHubFunction, entryFilePath, githubRepoSession, handleCreditError, markProjectDirty, selectedModels]
+    [applyProjectArtifact, callGitHubFunction, deductCredits, entryFilePath, githubRepoSession, handleCreditError, markProjectDirty, selectedModels]
   );
 
   const sendMessage = useCallback(
@@ -1659,16 +1710,12 @@ export function useMVPBuilder() {
       if (!prompt.trim() || isGenerating || isGitHubBusy) return;
       const responseMode = options?.responseMode ?? 'build';
 
-      const creditFeature = githubRepoSession
-        ? 'APP_BUILDER_REFINE'
-        : messages.length === 0
-        ? 'APP_BUILDER_GENERATE'
-        : 'APP_BUILDER_REFINE';
-      const featureLabel = creditFeature === 'APP_BUILDER_GENERATE'
-        ? 'AI App Builder — Generate'
-        : githubRepoSession
-        ? 'AI App Builder — GitHub Edit'
-        : 'AI App Builder — Refine';
+      const creditFeature = getMVPActionFeature({
+        hasGithubRepo: Boolean(githubRepoSession),
+        responseMode,
+        hasMessages: messages.length > 0,
+      });
+      const featureLabel = getMVPActionLabel(creditFeature);
 
       const required = ensureCredits(creditFeature, {
         featureName: featureLabel,
@@ -1792,7 +1839,11 @@ export function useMVPBuilder() {
                   : message
               )
             );
-            showCreditReceipt(creditFeature, required, undefined, { featureName: featureLabel });
+            showCreditReceipt(creditFeature, required, undefined, {
+              featureName: featureLabel,
+              operationId: idempotencyKey,
+              idempotencyKey,
+            });
             return;
           }
 
@@ -1840,7 +1891,11 @@ export function useMVPBuilder() {
               committedAt: assistantMsg.createdAt ?? new Date().toISOString(),
               commitRef: `build-${assistantMsg.id.slice(0, 8)}`,
             });
-            showCreditReceipt(creditFeature, required, undefined, { featureName: featureLabel });
+            showCreditReceipt(creditFeature, required, undefined, {
+              featureName: featureLabel,
+              operationId: idempotencyKey,
+              idempotencyKey,
+            });
           }
         };
 
