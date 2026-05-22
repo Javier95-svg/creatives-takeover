@@ -19,6 +19,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useAuth } from '@/contexts/AuthContext';
+import { useCreditActions } from '@/hooks/useCreditActions';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import TractionEngineWallpaper from '@/components/wallpapers/TractionEngineWallpaper';
@@ -190,6 +191,7 @@ function Field({
 }
 
 function TractionEngineWorkflow({ userId }: { userId?: string }) {
+  const { deductCredits } = useCreditActions();
   const currentWeekStart = useMemo(() => getCurrentWeekStart(), []);
   const [experiments, setExperiments] = useState<ExperimentDraft[]>(() => {
     try {
@@ -287,6 +289,14 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
     setExperiments((items) => (items.length === 1 ? items : items.filter((item) => item.localId !== localId)));
   };
 
+  const getNewTractionChannels = () => {
+    const activeByChannel = new Map(activeSprints.map((sprint) => [sprint.channel.trim().toLowerCase(), sprint]));
+    const channels = Array.from(new Set(experiments.map((exp) => exp.channel.trim()).filter(Boolean)));
+    const newChannels = channels.filter((channel) => !activeByChannel.has(channel.toLowerCase()));
+
+    return { activeByChannel, newChannels };
+  };
+
   const closeSprint = async (sprint: SprintRow) => {
     if (!userId) return;
     const { error } = await supabase
@@ -310,9 +320,7 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
 
   const ensureSprints = async () => {
     if (!userId) throw new Error('Sign in to save Traction Engine logs.');
-    const activeByChannel = new Map(activeSprints.map((sprint) => [sprint.channel.trim().toLowerCase(), sprint]));
-    const channels = Array.from(new Set(experiments.map((exp) => exp.channel.trim()).filter(Boolean)));
-    const newChannels = channels.filter((channel) => !activeByChannel.has(channel.toLowerCase()));
+    const { activeByChannel, newChannels } = getNewTractionChannels();
 
     if (activeSprints.length + newChannels.length > 2) {
       throw new Error('Traction Engine supports two active channels at a time. Close one sprint before adding another channel.');
@@ -361,6 +369,23 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
 
     setSaving(true);
     try {
+      const { newChannels } = getNewTractionChannels();
+      if (activeSprints.length + newChannels.length > 2) {
+        throw new Error('Traction Engine supports two active channels at a time. Close one sprint before adding another channel.');
+      }
+
+      const charged = await deductCredits('TRACTION_ENGINE_SCORECARD', {
+        featureName: 'Traction Engine Scorecard',
+        operationId: `traction-engine-${userId}-${currentWeekStart}`,
+        metadata: {
+          weekStartDate: currentWeekStart,
+          experimentCount: experiments.length,
+          combinedScore: score.combinedScore,
+          phaseSevenReady: score.phaseSevenReady,
+        },
+      });
+      if (!charged) return;
+
       const sprintByChannel = await ensureSprints();
       const logPayload = {
         user_id: userId,

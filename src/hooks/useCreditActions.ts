@@ -35,6 +35,7 @@ const CREDIT_FEATURE_LABELS: Record<CreditFeature, string> = {
   ONEPAGER_GENERATION: 'One-Pager Generation',
   SPRINT_TASK_GENERATION: 'Sprint Task Generation',
   ROADMAP_GENERATION: 'Roadmap Generation',
+  TRACTION_ENGINE_SCORECARD: 'Traction Engine Scorecard',
   TECH_STACK_GENERATION: 'Tech Stack Generation',
   PDF_EXPORT: 'PDF Export',
   ADVANCED_ANALYTICS: 'Advanced Analytics',
@@ -115,6 +116,7 @@ const ALWAYS_PAID_FEATURES = new Set<string>([
   'TECH_STACK_GENERATION',
   'PITCH_DECK_ANALYZER',
   'PROMPT_GENERATION',
+  'TRACTION_ENGINE_SCORECARD',
 ]);
 
 const ALWAYS_FREE_FEATURES = new Set<string>([

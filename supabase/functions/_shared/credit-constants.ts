@@ -36,6 +36,7 @@ export const CREDIT_COSTS = {
   // Sprint & Task Features
   SPRINT_TASK_GENERATION: 2,
   ROADMAP_GENERATION: 5,
+  TRACTION_ENGINE_SCORECARD: 2,
   
   // Tech Stack Generator
   TECH_STACK_GENERATION: 3,
