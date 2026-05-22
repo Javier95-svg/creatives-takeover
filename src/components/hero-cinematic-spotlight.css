@@ -17,7 +17,7 @@
 
   position: relative;
   overflow: hidden;
-  background: var(--ct-bg);
+  background: transparent;
   color: var(--ct-fg);
   font-family: var(--ct-sans);
   -webkit-font-smoothing: antialiased;
@@ -93,36 +93,36 @@
 .ct-hero__eyebrow {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 36px;
-  padding: 6px 14px 6px 6px;
+  gap: 8px;
+  margin-bottom: 26px;
+  padding: 4px 12px 4px 5px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.03);
   color: var(--ct-fg);
-  font-size: 12.5px;
+  font-size: 11px;
   font-weight: 500;
   backdrop-filter: blur(10px);
 }
 
 .ct-hero__eyebrow-pill {
-  padding: 4px 10px;
+  padding: 3px 8px;
   border-radius: 999px;
   background: var(--ct-grad-trinity);
   color: #fff;
   font-family: var(--ct-mono);
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 700;
   letter-spacing: 0.18em;
   text-transform: uppercase;
 }
 
 .ct-hero__title {
-  margin-bottom: 28px;
+  margin-bottom: 22px;
   font-family: var(--ct-display);
-  font-size: clamp(68px, 8.5vw, 128px);
+  font-size: clamp(52px, 6.8vw, 96px);
   font-weight: 600;
-  line-height: 0.9;
+  line-height: 0.94;
   letter-spacing: -0.05em;
   text-wrap: balance;
 }
@@ -177,11 +177,11 @@
 }
 
 .ct-hero__lede {
-  max-width: 620px;
-  margin: 0 auto 40px;
+  max-width: 600px;
+  margin: 0 auto 34px;
   color: var(--ct-muted);
-  font-size: 19px;
-  line-height: 1.55;
+  font-size: 16.5px;
+  line-height: 1.48;
   text-wrap: balance;
 }
 
@@ -498,14 +498,15 @@
     align-items: flex-start;
     max-width: 100%;
     text-align: left;
+    font-size: 10.5px;
   }
 
   .ct-hero__title {
-    font-size: clamp(52px, 16vw, 72px);
+    font-size: clamp(40px, 12.5vw, 58px);
   }
 
   .ct-hero__lede {
-    font-size: 16px;
+    font-size: 14.5px;
   }
 
   .ct-hero__st-body {

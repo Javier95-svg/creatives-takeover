@@ -124,13 +124,6 @@ const Hero = ({
 
   return (
     <section ref={heroRef} id="overview" className="ct-hero" aria-label="Creatives Takeover hero">
-      <div className="ct-hero__ambient" aria-hidden="true">
-        <div className="ct-hero__glow-1" />
-        <div className="ct-hero__glow-2" />
-        <div className="ct-hero__glow-3" />
-        <div className="ct-hero__grain" />
-      </div>
-
       <div className="ct-hero__container">
         <span className="ct-hero__eyebrow">
           <span className="ct-hero__eyebrow-pill">{eyebrowPill}</span>
