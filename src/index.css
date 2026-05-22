@@ -784,6 +784,10 @@ All colors MUST be HSL.
     );
   }
 
+  .founder-journey-section.section-shell {
+    padding-top: 3.25rem;
+  }
+
   .homepage-section-badge {
     display: inline-flex;
     align-items: center;
@@ -3266,6 +3270,10 @@ img {
   .section-shell {
     padding-top: 6rem;
     padding-bottom: 6rem;
+  }
+
+  .founder-journey-section.section-shell {
+    padding-top: 4.25rem;
   }
 }
 
