@@ -211,13 +211,13 @@ export const TopFilterBar = ({
       <Select value={filters.timezone ?? "any"} onValueChange={handleTimezoneChange}>
         <SelectTrigger
           className={cn(
-            "h-9 w-[150px] text-sm font-medium",
+            "h-9 w-full sm:w-[320px] max-w-full text-sm font-medium",
             hasTimezoneFilter && "border-primary bg-primary/5"
           )}
         >
           <SelectValue placeholder="Timezone" />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent className="w-[min(92vw,420px)]">
           <SelectItem value="any">Timezone (Any)</SelectItem>
           {TIMEZONE_OPTIONS.map((timezone) => (
             <SelectItem key={timezone.value} value={timezone.value}>

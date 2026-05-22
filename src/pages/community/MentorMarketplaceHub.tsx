@@ -18,7 +18,7 @@ import { useAdminRole } from "@/hooks/useAdminRole";
 import { useMentorSaves } from "@/hooks/useMentorSaves";
 import { sortMentorsAlphabetically } from "@/utils/mentorSort";
 import { normalizeMentorExpertiseList } from "@/utils/mentorExpertise";
-import { isMentorWithinTimezoneRange, parseTimezoneOffset } from "@/utils/mentorTimezone";
+import { isMentorInExactTimezone, parseTimezoneOffset } from "@/utils/mentorTimezone";
 import { trackActivity } from "@/lib/activity";
 import { getMentorTrackExpertise, parseMentorTrack } from "@/lib/mentorDemand";
 
@@ -315,15 +315,14 @@ const MentorMarketplaceHub = () => {
         if (!hasFormat) return false;
       }
 
-      // Time zone filter (exact or +/- 1 hour)
+      // Time zone filter (exact current GMT offset)
       if (filters.timezone) {
         if (selectedTimezoneOffset === null) return false;
-        const isWithinRange = isMentorWithinTimezoneRange(
+        const isExactTimezone = isMentorInExactTimezone(
           mentor,
-          selectedTimezoneOffset,
-          1
+          selectedTimezoneOffset
         );
-        if (!isWithinRange) return false;
+        if (!isExactTimezone) return false;
       }
 
       return true;

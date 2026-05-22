@@ -10,7 +10,7 @@ import { MENTOR_EXPERTISE_OPTIONS } from "@/data/mentorExpertise";
 export interface MentorFilters {
   expertise: string[];
   coachingFormat: string[]; // "8 Week Coaching Program" or "Hourly Rate Basis"
-  timezone: string | null; // Selected GMT offset value (e.g., "-5", "0", "1")
+  timezone: string | null; // Selected exact current GMT offset (e.g., "-5", "0", "1")
 }
 
 interface FilterSidebarProps {
