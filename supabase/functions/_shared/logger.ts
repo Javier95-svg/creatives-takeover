@@ -26,6 +26,9 @@ export function withErrorBoundary<TArgs extends unknown[], TResult>(
   return async (...args: TArgs): Promise<Response> => {
     try {
       const result = await fn(...args);
+      if (result instanceof Response) {
+        return result;
+      }
       return new Response(JSON.stringify({ ok: true, result }), { status: 200, headers: { 'content-type': 'application/json' } });
     } catch (err: any) {
       logError('edge_function_error', { ...meta, error: err?.message, stack: err?.stack });
