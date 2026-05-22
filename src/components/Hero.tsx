@@ -152,6 +152,10 @@ const Hero = ({
     trackEngagement("hero-dashboard-cta", 90);
   };
 
+  const handleEyebrowClick = () => {
+    trackEngagement("hero-referral-banner", 55);
+  };
+
   return (
     <section
       ref={heroRef}
@@ -160,10 +164,16 @@ const Hero = ({
       aria-label="Creatives Takeover hero"
     >
       <div className="ct-hero__container">
-        <span className="ct-hero__eyebrow">
-          <span className="ct-hero__eyebrow-pill">{eyebrowPill}</span>
-          {eyebrow}
-        </span>
+        {!isAuthenticated ? (
+          <a
+            className="ct-hero__eyebrow"
+            href="https://creatives-takeover.com/signup"
+            onClick={handleEyebrowClick}
+          >
+            <span className="ct-hero__eyebrow-pill">{eyebrowPill}</span>
+            {eyebrow}
+          </a>
+        ) : null}
 
         <h1 className="ct-hero__title">
           <span className="ct-hero__title-row-1">{titleLine1}</span>

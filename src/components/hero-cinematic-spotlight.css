@@ -100,9 +100,17 @@
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.03);
   color: var(--ct-fg);
+  text-decoration: none;
   font-size: 11px;
   font-weight: 500;
   backdrop-filter: blur(10px);
+  transition: border-color 0.2s, background-color 0.2s, transform 0.2s;
+}
+
+.ct-hero__eyebrow:hover {
+  border-color: rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.055);
+  transform: translateY(-1px);
 }
 
 .ct-hero__eyebrow-pill {
