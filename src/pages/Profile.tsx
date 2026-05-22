@@ -13,12 +13,9 @@ import { Calendar, Linkedin, Instagram, Globe, Settings, MapPin, Briefcase, Rock
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { SocialButtons } from "@/components/social/SocialButtons";
-import { ProfileStats } from "@/components/profile/ProfileStats";
 import { EditProfileModal } from "@/components/profile/EditProfileModal";
 import { PinnedPosts } from "@/components/profile/PinnedPosts";
 import { PicturesGallery } from "@/components/profile/PicturesGallery";
-import { MilestonesTimeline } from "@/components/profile/MilestonesTimeline";
-import { useProfileData } from "@/hooks/useProfileData";
 import { useUpgradePrompt } from "@/contexts/UpgradePromptContext";
 import { toast } from "sonner";
 import { logError } from "@/lib/logger";
@@ -228,7 +225,6 @@ const Profile = () => {
   const isOwnProfile = currentUser?.id === profile?.id;
   const profileId = profile?.id;
 
-  const { stats } = useProfileData(profile?.id || '');
   const { openUpgradePrompt } = useUpgradePrompt();
 
   const showPublicStage = profile ? shouldShowPublicStage(profile.user_preferences, isOwnProfile) : false;
@@ -891,88 +887,6 @@ const Profile = () => {
                   </Card>
                 )}
               </div>
-
-              <section className="space-y-4 mb-6">
-                <Card className="p-6 border-primary/20 bg-gradient-to-br from-primary/10 via-card to-card shadow-sm">
-                  <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-                    <div className="max-w-2xl space-y-3">
-                      <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-primary">
-                        <TrendingUp className="h-3.5 w-3.5" />
-                        Public Progress
-                      </div>
-                      <div>
-                        <h2 className="text-2xl font-semibold tracking-tight">This founder is building in public.</h2>
-                        <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                          {showPublicStage
-                            ? 'A real profile should show motion, not just identity. Stage, traction, current focus, and milestones give other founders something concrete to react to.'
-                            : 'A real profile should still show motion. Stage is private here, but milestones, traction, and current focus can still make progress visible.'}
-                        </p>
-                        <div className="pt-1">
-                          <Button asChild variant="outline" size="sm">
-                            <Link to="/mentorship/progress">
-                              Share or browse progress updates
-                              <ExternalLink className="h-4 w-4 ml-2" />
-                            </Link>
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="grid gap-3 sm:grid-cols-3 lg:w-[360px] lg:grid-cols-1">
-                      <div className="rounded-2xl border border-border/60 bg-background/80 p-4">
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Stage</p>
-                        <p className="mt-2 text-lg font-semibold text-foreground">
-                          {showPublicStage
-                            ? (publicStageLabel || 'Not shared yet')
-                            : isOwnProfile
-                            ? (publicStageLabel || 'Not shared yet')
-                            : 'Private'}
-                        </p>
-                      </div>
-                      <div className="rounded-2xl border border-border/60 bg-background/80 p-4">
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Current Focus</p>
-                        <p className="mt-2 text-sm leading-6 text-foreground">
-                          {profile.current_focus || 'No current focus shared yet.'}
-                        </p>
-                      </div>
-                      <div className="rounded-2xl border border-border/60 bg-background/80 p-4">
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Traction</p>
-                        {profile.traction_visible && profile.traction_metrics ? (
-                          <div className="mt-2 space-y-1 text-sm text-foreground">
-                            {typeof profile.traction_metrics.users === 'number' ? (
-                              <p>{profile.traction_metrics.users} users</p>
-                            ) : null}
-                            {typeof profile.traction_metrics.revenue === 'number' ? (
-                              <p>${profile.traction_metrics.revenue} revenue</p>
-                            ) : null}
-                            {typeof profile.traction_metrics.growth_rate === 'number' ? (
-                              <p>{profile.traction_metrics.growth_rate}% growth</p>
-                            ) : null}
-                            {typeof profile.traction_metrics.users !== 'number' &&
-                            typeof profile.traction_metrics.revenue !== 'number' &&
-                            typeof profile.traction_metrics.growth_rate !== 'number' ? (
-                              <p className="text-muted-foreground">Traction enabled, no metrics added yet.</p>
-                            ) : null}
-                          </div>
-                        ) : (
-                          <p className="mt-2 text-sm text-muted-foreground">No public traction shared yet.</p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </Card>
-
-                {profile.created_at && (
-                  <ProfileStats
-                    stats={{
-                      ...stats,
-                      joinDate: profile.created_at,
-                    }}
-                  />
-                )}
-
-                <MilestonesTimeline userId={profile.id} isOwnProfile={isOwnProfile} />
-              </section>
 
               {/* Pinned Posts */}
               <PinnedPosts posts={pinnedPosts} isOwnProfile={isOwnProfile} />

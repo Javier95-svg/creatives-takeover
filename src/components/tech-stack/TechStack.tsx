@@ -1,5 +1,4 @@
 import React, { useState, useMemo, useEffect, useTransition } from 'react';
-import { CreditCostBadge } from "@/components/CreditCostTooltip";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -19,7 +18,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useBizMapProgress } from '@/hooks/useBizMapProgress';
-import { CreditCostNotice } from '@/components/CreditCostNotice';
 
 // Icon mapping
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -624,11 +622,9 @@ const TechStack: React.FC = () => {
                     <>
                       <Calculator className="w-4 h-4 mr-2" />
                       {generateButtonLabel}
-                      <CreditCostBadge feature="TECH_STACK_GENERATION" className="ml-2 bg-background/20 text-primary-foreground" />
                     </>
                   )}
                 </Button>
-                {user ? <CreditCostNotice feature="TECH_STACK_GENERATION" featureName="Tech Stack Builder" variant="inline" /> : null}
               </div>
             </div>
           </CardContent>
