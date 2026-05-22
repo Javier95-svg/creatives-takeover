@@ -1,8 +1,10 @@
-import { ReactNode, useEffect, useRef } from "react";
+import { ReactNode, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
+import { ArrowRight, LayoutDashboard, User } from "lucide-react";
 
 import { useAuth } from "@/contexts/AuthContext";
 import { useConversionTracking } from "@/hooks/useConversionTracking";
+import { supabase } from "@/integrations/supabase/client";
 import "./hero-cinematic-spotlight.css";
 
 type HeroNavItem = {
@@ -68,6 +70,9 @@ const DEFAULT_LEDE = (
   </>
 );
 
+const SIGNED_IN_LEDE =
+  "Set up your profile, then head to your dashboard to see what matters now, plan your next steps, and keep moving forward one task at a time.";
+
 const Hero = ({
   eyebrow = "Referral program available in your dashboard — invite friends and earn a free plan upgrade.",
   eyebrowPill = "New",
@@ -82,10 +87,27 @@ const Hero = ({
   navItems = DEFAULT_NAV,
   stats = DEFAULT_STATS,
 }: HeroProps) => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const { trackTriggerView, trackEngagement } = useConversionTracking();
   const heroRef = useRef<HTMLElement>(null);
   const hasTrackedView = useRef(false);
+  const [userUsername, setUserUsername] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!user) {
+      setUserUsername(null);
+      return;
+    }
+
+    const fetchUsername = async () => {
+      const { data, error } = await supabase.from("profiles").select("username").eq("id", user.id).single();
+      if (!error && data?.username) {
+        setUserUsername(data.username);
+      }
+    };
+
+    void fetchUsername();
+  }, [user]);
 
   useEffect(() => {
     if (hasTrackedView.current) return;
@@ -122,8 +144,21 @@ const Hero = ({
     onCtaClick?.();
   };
 
+  const handleProfileCtaClick = () => {
+    trackEngagement("hero-profile-cta", 80);
+  };
+
+  const handleDashboardCtaClick = () => {
+    trackEngagement("hero-dashboard-cta", 90);
+  };
+
   return (
-    <section ref={heroRef} id="overview" className="ct-hero" aria-label="Creatives Takeover hero">
+    <section
+      ref={heroRef}
+      id="overview"
+      className={`ct-hero${isAuthenticated ? " ct-hero--signed-in" : ""}`}
+      aria-label="Creatives Takeover hero"
+    >
       <div className="ct-hero__container">
         <span className="ct-hero__eyebrow">
           <span className="ct-hero__eyebrow-pill">{eyebrowPill}</span>
@@ -138,18 +173,36 @@ const Hero = ({
           </span>
         </h1>
 
-        <p className="ct-hero__lede">{lede}</p>
+        <p className="ct-hero__lede">{isAuthenticated ? SIGNED_IN_LEDE : lede}</p>
 
         <div className="ct-hero__cta-row">
-          <Link className="ct-hero__cta" to={ctaHref} onClick={handleCtaClick}>
-            {ctaLabel}
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden="true">
-              <polyline points="9 18 15 12 9 6" />
-            </svg>
-          </Link>
+          {isAuthenticated ? (
+            <>
+              <Link
+                className="ct-hero__cta ct-hero__cta--secondary"
+                to={userUsername ? `/profile/${userUsername}` : "/dashboard"}
+                onClick={handleProfileCtaClick}
+              >
+                <User aria-hidden="true" />
+                My Profile
+              </Link>
+              <Link className="ct-hero__cta" to="/dashboard" onClick={handleDashboardCtaClick}>
+                <LayoutDashboard aria-hidden="true" />
+                Dashboard
+                <ArrowRight aria-hidden="true" />
+              </Link>
+            </>
+          ) : (
+            <Link className="ct-hero__cta" to={ctaHref} onClick={handleCtaClick}>
+              {ctaLabel}
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden="true">
+                <polyline points="9 18 15 12 9 6" />
+              </svg>
+            </Link>
+          )}
         </div>
 
-        <div className="ct-hero__spotlight" role="img" aria-label="Preview of the Creatives Takeover dashboard">
+        {!isAuthenticated ? <div className="ct-hero__spotlight" role="img" aria-label="Preview of the Creatives Takeover dashboard">
           <div className="ct-hero__st-chrome">
             <div className="ct-hero__st-dots">
               <span />
@@ -193,7 +246,7 @@ const Hero = ({
               </div>
             </div>
           </div>
-        </div>
+        </div> : null}
 
         <div className="ct-hero__stats" aria-label="Founder stats for 2026">
           <div className="ct-hero__stats-track">
