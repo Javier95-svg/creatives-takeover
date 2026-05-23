@@ -564,7 +564,8 @@
 
 @media (max-width: 720px) {
   .ct-hero {
-    padding: 80px 0 56px;
+    /* 96px = 88px mobile nav height + 8px breathing room */
+    padding: 96px 0 56px;
   }
 
   .ct-hero__container {

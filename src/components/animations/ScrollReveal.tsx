@@ -60,13 +60,24 @@ export const ScrollReveal = ({
     return <div className={className}>{children}</div>;
   }
 
+  // On mobile, horizontal slide animations (x: ±32) interact poorly with
+  // overflow-x: clip on section containers, causing a visible clip flash on
+  // WebKit. Fall back to a simple fade so only opacity animates.
+  const isMobileViewport =
+    typeof window !== "undefined" && window.innerWidth < 768;
+  const effectiveVariant =
+    isMobileViewport &&
+    (variant === "slide-left" || variant === "slide-right")
+      ? "fade"
+      : variant;
+
   return (
     <motion.div
       className={className}
       initial="hidden"
       whileInView="visible"
       viewport={{ once, amount, margin: "0px 0px -8% 0px" }}
-      variants={revealVariants[variant]}
+      variants={revealVariants[effectiveVariant]}
       transition={{ duration, delay, ease: EASE_OUT }}
     >
       {children}

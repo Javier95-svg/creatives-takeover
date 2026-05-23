@@ -388,7 +388,7 @@ const AISpecializationTrends = () => {
 
         {/* Narrative Conclusion */}
         <div ref={textSectionRef} className="mt-12 max-w-4xl mx-auto">
-          <div className="surface-panel trust-outline rounded-[28px] p-8 sm:p-10">
+          <div className="surface-panel trust-outline rounded-[20px] sm:rounded-[28px] p-5 sm:p-10">
             <h3 className="font-space-grotesk text-2xl font-semibold mb-4 text-center text-foreground tracking-tight">
               A Lifetime Opportunity
             </h3>

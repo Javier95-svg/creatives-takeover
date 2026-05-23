@@ -192,8 +192,8 @@ const UserReviews = () => {
 
           <div className="grid gap-4">
             <Card className="surface-panel trust-outline overflow-hidden">
-              <CardContent className="p-4">
-                <div className="relative mx-auto w-full max-w-[330px] aspect-square">
+              <CardContent className="p-2 xs:p-4">
+                <div className="startup-cycle-mobile-wheel relative mx-auto w-full max-w-[min(100%,300px)] xs:max-w-[330px] aspect-square">
                   <svg
                     className="absolute inset-0 h-full w-full pointer-events-none"
                     viewBox="0 0 100 100"
