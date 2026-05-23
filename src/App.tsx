@@ -18,6 +18,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { RouteErrorBoundary } from '@/components/RouteErrorBoundary';
 import ScrollToTop from "./components/ScrollToTop";
 import ProUpgradeBanner from "@/components/ProUpgradeBanner";
+import AdminRoute from "@/components/AdminRoute";
 import { useInteractionTelemetry } from "@/hooks/useInteractionTelemetry";
 import { captureReferralFromUrl } from "@/lib/referral";
 
@@ -341,9 +342,9 @@ function App() {
                         <Route path="/messages" element={<Messages />} />
                         <Route path="/profile/:username" element={<Profile />} />
                         <Route path="/auth/callback" element={<AuthCallback />} />
-                        <Route path="/creatives-takeover" element={<CreativesTakeover />} />
-                        <Route path="/rag-test" element={<RAGTest />} />
-                        <Route path="/test-phase1" element={<TestPhase1 />} />
+                        <Route path="/creatives-takeover" element={<AdminRoute><CreativesTakeover /></AdminRoute>} />
+                        <Route path="/rag-test" element={<AdminRoute><RAGTest /></AdminRoute>} />
+                        <Route path="/test-phase1" element={<AdminRoute><TestPhase1 /></AdminRoute>} />
                         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                         <Route path="*" element={<NotFound />} />
                         </Routes>

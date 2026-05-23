@@ -37,7 +37,12 @@ const Contact = () => {
             </article>
             <article className="p-6 rounded-lg border bg-card">
               <h2 className="text-xl font-semibold">Community</h2>
-              <p className="mt-2 text-muted-foreground">Join us on Discord and LinkedIn to connect with the team and the community.</p>
+              <p className="mt-2 text-muted-foreground">
+                Join us on{" "}
+                <a href="https://www.linkedin.com/company/creatives-takeover" target="_blank" rel="noopener noreferrer"
+                   className="underline underline-offset-4 hover:text-foreground transition-colors">LinkedIn</a>{" "}
+                to connect with the team and the community.
+              </p>
             </article>
           </section>
         </main>

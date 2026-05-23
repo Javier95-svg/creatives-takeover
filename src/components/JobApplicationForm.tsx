@@ -75,26 +75,12 @@ const JobApplicationForm = ({ isOpen, onClose, position }: JobApplicationFormPro
   const onSubmit = async (data: FormData) => {
     if (!position) return;
 
-    console.log('🔍 Form submission started');
-    console.log('📋 Position:', position);
-    console.log('👤 User:', user);
-    console.log('📝 Form data:', {
-      name: data.name,
-      email: data.email,
-      linkedin_url: data.linkedin_url,
-      portfolio_url: data.portfolio_url,
-      cv_file: data.cv_file?.name,
-      cover_message_length: data.cover_message?.length || 0
-    });
-
     setIsSubmitting(true);
     try {
       // Upload CV file
       const fileExt = data.cv_file.name.split(".").pop();
       const fileName = `${user?.id || "guest"}_${Date.now()}.${fileExt}`;
       const filePath = `${user?.id || "guest"}/${fileName}`;
-
-      console.log('📤 Uploading CV:', { fileName, filePath, size: data.cv_file.size });
 
       const { error: uploadError } = await supabase.storage
         .from("cv-uploads")
@@ -104,8 +90,6 @@ const JobApplicationForm = ({ isOpen, onClose, position }: JobApplicationFormPro
         console.error('❌ CV upload error:', uploadError);
         throw uploadError;
       }
-
-      console.log('✅ CV uploaded successfully');
 
       // Create job application
       const insertData = {
@@ -120,8 +104,6 @@ const JobApplicationForm = ({ isOpen, onClose, position }: JobApplicationFormPro
         status: "pending",
       };
 
-      console.log('💾 Inserting application data:', insertData);
-
       const { data: applicationData, error: insertError } = await supabase
         .from("job_applications")
         .insert(insertData)
@@ -133,10 +115,7 @@ const JobApplicationForm = ({ isOpen, onClose, position }: JobApplicationFormPro
         throw insertError;
       }
 
-      console.log('✅ Application inserted successfully:', applicationData);
-
       // Send notification email to admins
-      console.log('📧 Sending admin notification...');
       try {
         const notifyResult = await supabase.functions.invoke('notify-job-application', {
           body: {
@@ -151,9 +130,7 @@ const JobApplicationForm = ({ isOpen, onClose, position }: JobApplicationFormPro
         });
         
         if (notifyResult.error) {
-          console.warn('⚠️ Notification failed:', notifyResult.error);
-        } else {
-          console.log('✅ Notification sent successfully');
+          console.error('Notification failed:', notifyResult.error);
         }
       } catch (notifyError) {
         console.error('❌ Notification error:', notifyError);

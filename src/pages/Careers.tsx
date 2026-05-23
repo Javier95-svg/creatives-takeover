@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Briefcase, Users, Target } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import JobApplicationForm from "@/components/JobApplicationForm";
 
 interface JobPosition {
@@ -43,11 +43,7 @@ const Careers = () => {
       setJobPositions(data || []);
     } catch (error) {
       console.error("Error fetching job positions:", error);
-      toast({
-        title: "Error",
-        description: "Failed to load job positions. Please try again.",
-        variant: "destructive",
-      });
+      toast.error("Failed to load job positions. Please try again.");
     } finally {
       setLoading(false);
     }
