@@ -286,6 +286,7 @@
 
 .ct-hero__spotlight {
   position: relative;
+  display: block;
   max-width: 920px;
   margin: 0 auto;
   overflow: hidden;
@@ -296,6 +297,23 @@
     0 40px 100px -20px rgba(0, 0, 0, 0.8),
     0 0 0 1px rgba(255, 255, 255, 0.04) inset,
     0 0 80px rgba(91, 162, 251, 0.18);
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+
+.ct-hero__spotlight:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 44px 110px -20px rgba(0, 0, 0, 0.82),
+    0 0 0 1px rgba(255, 255, 255, 0.05) inset,
+    0 0 90px rgba(91, 162, 251, 0.22);
+}
+
+.ct-hero__spotlight:focus-visible {
+  outline: 3px solid rgba(90, 162, 251, 0.7);
+  outline-offset: 5px;
 }
 
 .ct-hero__st-chrome {

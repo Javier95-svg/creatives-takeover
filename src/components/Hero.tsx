@@ -156,6 +156,10 @@ const Hero = ({
     trackEngagement("hero-referral-banner", 55);
   };
 
+  const handlePreviewClick = () => {
+    trackEngagement("hero-dashboard-preview", 65);
+  };
+
   return (
     <section
       ref={heroRef}
@@ -212,7 +216,12 @@ const Hero = ({
           )}
         </div>
 
-        {!isAuthenticated ? <div className="ct-hero__spotlight" role="img" aria-label="Preview of the Creatives Takeover dashboard">
+        {!isAuthenticated ? <a
+          className="ct-hero__spotlight"
+          href="https://creatives-takeover.com/signup"
+          onClick={handlePreviewClick}
+          aria-label="Preview of the Creatives Takeover dashboard. Sign up for Creatives Takeover."
+        >
           <div className="ct-hero__st-chrome">
             <div className="ct-hero__st-dots">
               <span />
@@ -256,7 +265,7 @@ const Hero = ({
               </div>
             </div>
           </div>
-        </div> : null}
+        </a> : null}
 
         <div className="ct-hero__stats" aria-label="Founder stats for 2026">
           <div className="ct-hero__stats-track">
