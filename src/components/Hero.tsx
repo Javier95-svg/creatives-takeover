@@ -164,10 +164,10 @@ const Hero = ({
       aria-label="Creatives Takeover hero"
     >
       <div className="ct-hero__container">
-        {!isAuthenticated ? (
+        {isAuthenticated ? (
           <a
             className="ct-hero__eyebrow"
-            href="https://creatives-takeover.com/signup"
+            href="https://creatives-takeover.com/dashboard/referral"
             onClick={handleEyebrowClick}
           >
             <span className="ct-hero__eyebrow-pill">{eyebrowPill}</span>

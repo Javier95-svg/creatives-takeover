@@ -1,13 +1,23 @@
 /* Direction B - Cinematic Spotlight homepage hero. All styles are scoped under .ct-hero. */
 
 .ct-hero {
-  --ct-bg: #080a10;
-  --ct-fg: #eceff4;
-  --ct-muted: #8b9bb4;
-  --ct-muted-2: #5a6678;
-  --ct-line: rgba(255, 255, 255, 0.07);
-  --ct-blue: #5aa2fb;
-  --ct-blue-hi: #4da8ff;
+  --ct-bg: #f8faff;
+  --ct-fg: #111827;
+  --ct-muted: #475569;
+  --ct-muted-2: #64748b;
+  --ct-line: rgba(15, 23, 42, 0.12);
+  --ct-blue: #2563eb;
+  --ct-blue-hi: #1d4ed8;
+  --ct-title-2-start: #0f172a;
+  --ct-title-2-mid: #111827;
+  --ct-title-2-end: rgba(30, 41, 59, 0.76);
+  --ct-strong: #0f172a;
+  --ct-eyebrow-border: rgba(15, 23, 42, 0.14);
+  --ct-eyebrow-bg: rgba(255, 255, 255, 0.62);
+  --ct-eyebrow-hover-border: rgba(15, 23, 42, 0.22);
+  --ct-eyebrow-hover-bg: rgba(255, 255, 255, 0.82);
+  --ct-secondary-cta-border: rgba(15, 23, 42, 0.16);
+  --ct-secondary-cta-bg: rgba(255, 255, 255, 0.58);
   --ct-red: #f37575;
   --ct-green: #25cb7a;
   --ct-grad-trinity: linear-gradient(135deg, #5aa2fb, #f37575, #25cb7a);
@@ -23,6 +33,26 @@
   -webkit-font-smoothing: antialiased;
   padding: 120px 0 80px;
   text-align: center;
+}
+
+.dark .ct-hero {
+  --ct-bg: #080a10;
+  --ct-fg: #eceff4;
+  --ct-muted: #8b9bb4;
+  --ct-muted-2: #5a6678;
+  --ct-line: rgba(255, 255, 255, 0.07);
+  --ct-blue: #5aa2fb;
+  --ct-blue-hi: #4da8ff;
+  --ct-title-2-start: #fff;
+  --ct-title-2-mid: #fff;
+  --ct-title-2-end: rgba(236, 239, 244, 0.7);
+  --ct-strong: #eceff4;
+  --ct-eyebrow-border: rgba(255, 255, 255, 0.1);
+  --ct-eyebrow-bg: rgba(255, 255, 255, 0.03);
+  --ct-eyebrow-hover-border: rgba(255, 255, 255, 0.18);
+  --ct-eyebrow-hover-bg: rgba(255, 255, 255, 0.055);
+  --ct-secondary-cta-border: rgba(255, 255, 255, 0.14);
+  --ct-secondary-cta-bg: rgba(255, 255, 255, 0.04);
 }
 
 .ct-hero *,
@@ -96,9 +126,9 @@
   gap: 8px;
   margin-bottom: 26px;
   padding: 4px 12px 4px 5px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--ct-eyebrow-border);
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--ct-eyebrow-bg);
   color: var(--ct-fg);
   text-decoration: none;
   font-size: 11px;
@@ -108,8 +138,8 @@
 }
 
 .ct-hero__eyebrow:hover {
-  border-color: rgba(255, 255, 255, 0.18);
-  background: rgba(255, 255, 255, 0.055);
+  border-color: var(--ct-eyebrow-hover-border);
+  background: var(--ct-eyebrow-hover-bg);
   transform: translateY(-1px);
 }
 
@@ -143,7 +173,12 @@
 
 .ct-hero__title-row-2 {
   display: block;
-  background: linear-gradient(180deg, #fff 0%, #fff 50%, rgba(236, 239, 244, 0.7) 100%);
+  background: linear-gradient(
+    180deg,
+    var(--ct-title-2-start) 0%,
+    var(--ct-title-2-mid) 50%,
+    var(--ct-title-2-end) 100%
+  );
   background-clip: text;
   color: transparent;
   font-weight: 700;
@@ -194,7 +229,7 @@
 }
 
 .ct-hero__lede strong {
-  color: var(--ct-fg);
+  color: var(--ct-strong);
   font-weight: 500;
 }
 
@@ -229,8 +264,8 @@
 }
 
 .ct-hero__cta--secondary {
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--ct-secondary-cta-border);
+  background: var(--ct-secondary-cta-bg);
   box-shadow: none;
   color: var(--ct-fg);
   backdrop-filter: blur(10px);
