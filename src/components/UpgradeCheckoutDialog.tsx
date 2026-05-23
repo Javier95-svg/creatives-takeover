@@ -90,7 +90,7 @@ export function UpgradeCheckoutDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-xl">
+      <DialogContent className="w-[95vw] max-w-xl max-h-[90vh] overflow-y-auto">
         <DialogHeader className="gap-3">
           <div className="flex items-center justify-between">
             <DialogTitle className="flex items-center gap-2 text-xl">

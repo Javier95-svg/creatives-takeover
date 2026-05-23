@@ -130,7 +130,7 @@ export const ProfilePictureCropModal = ({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="w-[95vw] max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Adjust Your Profile Picture</DialogTitle>
         </DialogHeader>

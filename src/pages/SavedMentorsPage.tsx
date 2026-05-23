@@ -102,7 +102,7 @@ const SavedMentorsPage = () => {
               </div>
             </div>
           </CardHeader>
-          <CardContent className="grid gap-3 md:grid-cols-3">
+          <CardContent className="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
             <div className="rounded-2xl border border-border/60 bg-background/70 p-4">
               <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Queue size</p>
               <p className="mt-2 text-2xl font-semibold text-foreground">{visibleSavedMentors.length}</p>

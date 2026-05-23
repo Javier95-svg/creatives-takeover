@@ -945,7 +945,7 @@ const Navigation = () => {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="w-full justify-start min-h-[48px] touch-manipulation text-base transition-all duration-200 hover:bg-muted/50 hover:scale-[1.02]"
+                        className="w-full justify-start min-h-[48px] touch-manipulation text-base transition-all duration-200 hover:bg-muted/50"
                         onClick={() => setIsOpen(false)}
                         asChild
                       >
@@ -957,7 +957,7 @@ const Navigation = () => {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="w-full justify-start min-h-[48px] touch-manipulation text-base transition-all duration-200 hover:bg-muted/50 hover:scale-[1.02]"
+                        className="w-full justify-start min-h-[48px] touch-manipulation text-base transition-all duration-200 hover:bg-muted/50"
                         onClick={() => setIsOpen(false)}
                         asChild
                       >
@@ -969,7 +969,7 @@ const Navigation = () => {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="w-full justify-start min-h-[48px] touch-manipulation text-base transition-all duration-200 hover:bg-muted/50 hover:scale-[1.02]"
+                        className="w-full justify-start min-h-[48px] touch-manipulation text-base transition-all duration-200 hover:bg-muted/50"
                         onClick={() => setIsOpen(false)}
                         asChild
                       >
@@ -981,7 +981,7 @@ const Navigation = () => {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="w-full justify-start min-h-[48px] touch-manipulation text-base transition-all duration-200 hover:bg-muted/50 hover:scale-[1.02]"
+                        className="w-full justify-start min-h-[48px] touch-manipulation text-base transition-all duration-200 hover:bg-muted/50"
                         onClick={() => setIsOpen(false)}
                         asChild
                       >

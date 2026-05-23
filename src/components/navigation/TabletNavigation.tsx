@@ -134,7 +134,7 @@ export const TabletNavigation: React.FC<TabletNavigationProps> = ({
                     </TooltipContent>
                   )}
                 </Tooltip>
-                <DropdownMenuContent align="center" className="w-64">
+                <DropdownMenuContent align="center" className="w-56 sm:w-64 max-w-[90vw]">
                   {submenu.map((subItem, index) => {
                     if ('type' in subItem && subItem.type === 'label') {
                       return (

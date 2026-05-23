@@ -508,6 +508,18 @@ const ValuePropositionCards = () => {
             </CarouselContent>
           </Carousel>
 
+          {/* Mobile dot indicators */}
+          <div className="flex justify-center gap-2 mt-5 md:hidden" aria-label="Slide navigation">
+            {allCards.map((_, idx) => (
+              <button
+                key={idx}
+                onClick={() => goToCard(idx)}
+                className={`h-1.5 rounded-full transition-all duration-300 ${idx === selectedIndex ? 'w-6 bg-primary' : 'w-1.5 bg-muted-foreground/30'}`}
+                aria-label={`Go to slide ${idx + 1}`}
+              />
+            ))}
+          </div>
+
           {/* Navigation Buttons */}
           <div className="value-prop-nav hidden md:grid grid-cols-3 gap-3 mt-8 max-w-4xl mx-auto">
             {allCards.map((card, index) => (

@@ -433,7 +433,7 @@ const Signup = () => {
         <meta name="description" content="Create your Creatives Takeover account to start transforming creative ideas into actionable plans with AI-powered insights." />
       </Helmet>
 
-      <aside className="signup-premium-left-panel relative flex h-[520px] flex-col overflow-hidden bg-[#080c14] px-6 py-6 text-white md:fixed md:left-0 md:top-0 md:h-screen md:w-1/2 md:px-10 md:py-8 lg:px-14">
+      <aside className="signup-premium-left-panel relative flex h-[44vmax] flex-col overflow-hidden bg-[#080c14] px-6 py-6 text-white md:fixed md:left-0 md:top-0 md:h-screen md:w-1/2 md:px-10 md:py-8 lg:px-14">
         <div
           aria-hidden
           className="signup-premium-left-ambient absolute inset-0"

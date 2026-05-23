@@ -226,7 +226,7 @@ export default function Pricing() {
           </Tabs>
         </div>
 
-        <RevealGroup className="grid grid-cols-1 justify-items-center md:grid-cols-2 xl:grid-cols-4 gap-6 xl:gap-9 max-w-[104rem] mx-auto items-start" variant="card">
+        <RevealGroup className="grid grid-cols-1 justify-items-center sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 xl:gap-9 max-w-[104rem] mx-auto items-start" variant="card">
           {PLAN_CONFIG.map((plan, index) => {
             const isCurrentPlan = currentTier === plan.key;
             const isPopular = plan.key === "starter";

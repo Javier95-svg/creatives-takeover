@@ -44,7 +44,7 @@ const ProUpgradeBanner = () => {
     if (!showBanner) return null;
 
     return (
-        <div className="bg-background/60 backdrop-blur-md text-foreground border-b border-border/40 sticky top-0 z-[100]">
+        <div className="bg-background/60 backdrop-blur-md text-foreground border-b border-border/40 sticky top-0 z-[55]">
             <div className="container mx-auto px-4 h-9 flex items-center justify-center gap-2 text-sm font-medium">
                 <span>Give us your feedback and get a free Pro upgrade</span>
                 <a

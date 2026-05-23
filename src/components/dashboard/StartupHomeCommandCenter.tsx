@@ -25,6 +25,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { SocialButtons } from "@/components/social/SocialButtons";
+import MobileFormOptimizer from "@/components/MobileFormOptimizer";
 import { useAuth } from "@/contexts/AuthContext";
 import { COUNTRY_OPTIONS } from "@/data/countries";
 import { MENTOR_EXPERTISE_OPTIONS } from "@/data/mentorExpertise";
@@ -346,6 +347,7 @@ function StartupProfileSection() {
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(360px,0.9fr)] lg:items-start">
         <div className="space-y-5">
+          <MobileFormOptimizer>
           <SectionPanel title="Startup Profile" icon={Building2}>
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
@@ -505,6 +507,7 @@ function StartupProfileSection() {
               </div>
             </div>
           </SectionPanel>
+          </MobileFormOptimizer>
 
           <div className="grid gap-5 xl:grid-cols-2">
             <SectionPanel title="Ideal Customer" icon={Target} source="From ICP Builder">
@@ -644,7 +647,7 @@ function StartupProfileSection() {
               </div>
             </div>
 
-            <div className="max-h-[calc(100vh-260px)] min-h-[420px] overflow-y-auto p-4">
+            <div className="max-h-[calc(100dvh-340px)] min-h-[220px] sm:min-h-[320px] overflow-y-auto p-4">
               {!model.manual.industries.length && !model.manual.country ? (
                 <div className="rounded-lg border border-dashed border-border p-6 text-center">
                   <Users className="mx-auto h-8 w-8 text-muted-foreground" aria-hidden="true" />
