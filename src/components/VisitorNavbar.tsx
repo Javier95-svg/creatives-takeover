@@ -23,7 +23,7 @@ const visitorLinks = [
   { label: "Home", href: "/", icon: Home },
   { label: "How It Works", href: "/", icon: Map, sectionId: "startup-development-cycle" },
   { label: "Features", href: "/", icon: LayoutGrid, sectionId: "what-you-get" },
-  { label: "Coaches", href: "/mentorship", icon: Users },
+  { label: "Mentors", href: "/mentorship", icon: Users },
   { label: "Newspaper", href: "/newspaper", icon: Newspaper },
   { label: "About Us", href: "/about", icon: Info },
   { label: "Pricing", href: "/pricing", icon: DollarSign },
