@@ -188,35 +188,13 @@
 }
 
 .ct-hero__compass-glyph {
-  position: relative;
   display: inline-block;
   width: 0.78em;
   height: 0.78em;
   margin-left: 0.32em;
-  border-radius: 999px;
-  background: var(--ct-grad-trinity);
-  box-shadow: 0 0 40px rgba(91, 162, 251, 0.4), 0 0 20px rgba(243, 117, 117, 0.3);
+  filter: drop-shadow(0 0 22px rgba(91, 162, 251, 0.36)) drop-shadow(0 0 12px rgba(243, 117, 117, 0.24));
+  object-fit: contain;
   vertical-align: middle;
-}
-
-.ct-hero__compass-glyph::before {
-  content: "";
-  position: absolute;
-  inset: 6px;
-  border-radius: 999px;
-  background: var(--ct-bg);
-}
-
-.ct-hero__compass-glyph::after {
-  content: "";
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 36%;
-  height: 36%;
-  transform: translate(-50%, -50%) rotate(45deg);
-  background: linear-gradient(135deg, #5aa2fb, #f8a66a);
-  clip-path: polygon(50% 0, 65% 50%, 50% 100%, 35% 50%);
 }
 
 .ct-hero__lede {

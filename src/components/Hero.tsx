@@ -5,6 +5,7 @@ import { ArrowRight, LayoutDashboard, User } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useConversionTracking } from "@/hooks/useConversionTracking";
 import { supabase } from "@/integrations/supabase/client";
+import heroCompass from "@/assets/hero-compass.svg";
 import "./hero-cinematic-spotlight.css";
 
 type HeroNavItem = {
@@ -183,7 +184,7 @@ const Hero = ({
           <span className="ct-hero__title-row-1">{titleLine1}</span>
           <span className="ct-hero__title-row-2">
             {titleLine2}
-            <span className="ct-hero__compass-glyph" aria-hidden="true" />
+            <img className="ct-hero__compass-glyph" src={heroCompass} alt="" aria-hidden="true" />
           </span>
         </h1>
 
