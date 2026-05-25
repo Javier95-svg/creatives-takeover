@@ -10,7 +10,7 @@ const CoreMetricsPage = () => {
   return (
     <DashboardLayout
       title="Core Metrics"
-      subtitle="Track your key performance indicators"
+      subtitle="Track your key performance indicators."
     >
       <div className="space-y-6">
         <CoreMetrics />

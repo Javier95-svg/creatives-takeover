@@ -15,7 +15,7 @@ const AiGoalsPage = () => {
       </Helmet>
       <DashboardLayout
         title="AI Goals Planner"
-        subtitle="Break down goals into projects and next actions with an AI partner"
+        subtitle="Break down goals into projects and next actions."
       >
         <AiGoalsPlanner />
       </DashboardLayout>
