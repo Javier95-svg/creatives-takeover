@@ -97,9 +97,9 @@ const PLAN_CARD_STYLES: Record<PlanKey, { border: string; ring: string; button: 
     buttonVariant: "default",
   },
   rising: {
-    border: "border-blue-500/60",
-    ring: "ring-blue-500/30",
-    button: "border-blue-500/70 text-blue-700 hover:bg-blue-500/10 dark:text-blue-300",
+    border: "border-amber-400/70",
+    ring: "ring-amber-400/30",
+    button: "border-amber-500/70 text-amber-700 hover:bg-amber-500/10 dark:text-amber-300",
     buttonVariant: "outline",
   },
   pro: {
