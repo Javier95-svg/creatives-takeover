@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 /**
  * Centralized logging utility for frontend
  * Provides environment-aware logging with structured output

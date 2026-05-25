@@ -12,6 +12,10 @@ export default tseslint.config(
     languageOptions: {
       ecmaVersion: 2020,
       globals: globals.browser,
+      parserOptions: {
+        project: ["./tsconfig.app.json"],
+        tsconfigRootDir: import.meta.dirname,
+      },
     },
     plugins: {
       "react-hooks": reactHooks,
@@ -23,13 +27,14 @@ export default tseslint.config(
         "warn",
         { allowConstantExport: true },
       ],
-      "@typescript-eslint/no-unused-vars": ["warn", { 
+      "@typescript-eslint/no-unused-vars": ["warn", {
         "argsIgnorePattern": "^_",
-        "varsIgnorePattern": "^_" 
+        "varsIgnorePattern": "^_"
       }],
       "@typescript-eslint/no-explicit-any": "warn",
-      "no-console": ["warn", { 
-        "allow": ["warn", "error"] 
+      "@typescript-eslint/no-floating-promises": "error",
+      "no-console": ["warn", {
+        "allow": ["warn", "error"]
       }],
       "prefer-const": "error",
       "no-var": "error",

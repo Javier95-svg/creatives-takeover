@@ -239,7 +239,7 @@ const AuthCallback = () => {
       }
     };
 
-    handleAuthCallback();
+    void handleAuthCallback();
   }, [navigate, searchParams]);
 
   const getStatusMessage = () => {
