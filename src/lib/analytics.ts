@@ -1,6 +1,7 @@
 import posthog from 'posthog-js';
 import * as amplitude from '@amplitude/analytics-browser';
 import { getSafeSessionStorage } from '@/lib/safeStorage';
+import { logWarn } from '@/lib/logger';
 
 type AnalyticsProperties = Record<string, unknown>;
 type PostHogWithLoaded = typeof posthog & { __loaded?: boolean };
@@ -95,7 +96,7 @@ export const initAmplitude = () => {
     amplitude.init(AMPLITUDE_API_KEY);
     amplitudeInitialized = true;
   } catch (error) {
-    console.warn('Amplitude init failed', error);
+    logWarn('Amplitude init failed', error);
   }
 };
 
@@ -106,7 +107,7 @@ const captureAmplitudeEvent = (eventName: string, properties?: AnalyticsProperti
   try {
     amplitude.track(eventName, sanitizeAnalyticsProperties(properties));
   } catch (error) {
-    console.warn('Amplitude capture failed', error);
+    logWarn('Amplitude capture failed', error);
   }
 };
 
@@ -125,7 +126,7 @@ const identifyAmplitudeUser = (id: string, properties?: AnalyticsProperties) => 
       amplitude.identify(identifyEvent);
     }
   } catch (error) {
-    console.warn('Amplitude identify failed', error);
+    logWarn('Amplitude identify failed', error);
   }
 };
 
@@ -157,7 +158,7 @@ const getFirstTouchUtms = (): AnalyticsProperties => {
       return JSON.parse(stored) as AnalyticsProperties;
     }
   } catch (error) {
-    console.warn('Failed to read stored PostHog UTMs', error);
+    logWarn('Failed to read stored PostHog UTMs', error);
   }
 
   const params = new URLSearchParams(window.location.search);
@@ -177,7 +178,7 @@ const getFirstTouchUtms = (): AnalyticsProperties => {
   try {
     window.localStorage.setItem(FIRST_TOUCH_UTM_KEY, JSON.stringify(firstTouchUtms));
   } catch (error) {
-    console.warn('Failed to persist first-touch UTMs', error);
+    logWarn('Failed to persist first-touch UTMs', error);
   }
 
   return firstTouchUtms;
@@ -196,7 +197,7 @@ const registerFirstTouchUtms = () => {
   try {
     posthogClient.register(utmProperties);
   } catch (error) {
-    console.warn('PostHog UTM registration failed', error);
+    logWarn('PostHog UTM registration failed', error);
   }
 };
 
@@ -238,7 +239,7 @@ export const initPosthog = () => {
         }
       });
     } catch (error) {
-      console.warn('PostHog init failed', error);
+      logWarn('PostHog init failed', error);
     }
   })();
 
@@ -269,7 +270,7 @@ export const captureEvent = (eventName: string, properties?: AnalyticsProperties
       posthogClient.capture(eventName, safeProperties);
       return;
     } catch (error) {
-      console.warn('PostHog capture failed', error);
+      logWarn('PostHog capture failed', error);
       return;
     }
   }
@@ -287,7 +288,7 @@ export const identify = (id: string, properties?: AnalyticsProperties) => {
       posthogClient.identify(id, safeProperties);
       return;
     } catch (error) {
-      console.warn('PostHog identify failed', error);
+      logWarn('PostHog identify failed', error);
       return;
     }
   }
@@ -639,6 +640,6 @@ export const captureUtmSuperProperties = () => {
   try {
     posthogClient.register(utms);
   } catch (e) {
-    console.warn('PostHog UTM super-properties failed', e);
+    logWarn('PostHog UTM super-properties failed', e);
   }
 };

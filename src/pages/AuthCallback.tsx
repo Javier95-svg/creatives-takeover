@@ -17,6 +17,7 @@ import {
   getOAuthAuthIntent,
   getPendingReferralCode,
 } from '@/lib/referral';
+import { logInfo, logWarn, logError } from '@/lib/logger';
 
 const NEW_ACCOUNT_MAX_AGE_MS = 10 * 60 * 1000;
 
@@ -46,7 +47,7 @@ const AuthCallback = () => {
         const errorDescription = searchParams.get('error_description');
 
         if (error) {
-          console.error('OAuth error from URL:', { error, errorDescription });
+          logError('OAuth error from URL', undefined, { error, errorDescription });
           setStatus('error');
           toast.error(errorDescription || 'Authentication failed');
           redirectToLogin();
@@ -65,14 +66,14 @@ const AuthCallback = () => {
           const otpType = callbackType as EmailOtpType;
 
           if (allowedTypes.includes(otpType)) {
-            console.warn('PKCE email confirmation detected, verifying token_hash...');
+            logInfo('PKCE email confirmation detected, verifying token_hash...');
             const { error: otpError } = await supabase.auth.verifyOtp({
               token_hash: tokenHash,
               type: otpType,
             });
 
             if (otpError) {
-              console.error('OTP verification error:', otpError);
+              logError('OTP verification error', otpError);
               setStatus('error');
               toast.error('Email confirmation failed. Please request a new confirmation email.');
               redirectToLogin();
@@ -80,7 +81,7 @@ const AuthCallback = () => {
             }
           }
         } else if (legacyToken && callbackType === 'signup') {
-          console.warn('Legacy email confirmation token detected.');
+          logInfo('Legacy email confirmation token detected.');
           toast.success('Email confirmed successfully!');
         }
 
@@ -89,7 +90,7 @@ const AuthCallback = () => {
         if (code) {
           const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
           if (exchangeError) {
-            console.error('Code exchange error:', exchangeError);
+            logError('Code exchange error', exchangeError);
             setStatus('error');
             toast.error('Authentication failed');
             redirectToLogin();
@@ -97,13 +98,13 @@ const AuthCallback = () => {
           }
         }
 
-        console.warn('Waiting for auth session...');
+        logInfo('Waiting for auth session...');
 
         // Wait for session to be established (works for both OAuth and email confirmation)
         const session = await getSessionSafely();
 
         if (session?.user) {
-          console.warn('Auth successful, checking for return URL...');
+          logInfo('Auth successful, checking for return URL...');
           setStatus('success');
 
           const authIntent = getOAuthAuthIntent();
@@ -125,7 +126,7 @@ const AuthCallback = () => {
                 clearPendingReferralCode();
               }
             } catch (referralError) {
-              console.warn('Failed to claim referral after OAuth:', referralError);
+              logWarn('Failed to claim referral after OAuth', { referralError });
             }
           }
           
@@ -192,7 +193,7 @@ const AuthCallback = () => {
               const { trackActivity } = await import('@/lib/activity');
               await trackActivity('user:signup_oauth', { provider: oauthSignupMethod, source: oauthSource });
             } catch (trackingError) {
-              console.warn('Failed to track OAuth signup source:', trackingError);
+              logWarn('Failed to track OAuth signup source', { trackingError });
             }
           }
           
@@ -203,7 +204,7 @@ const AuthCallback = () => {
             .maybeSingle();
 
           if (profileError) {
-            console.error('Error resolving onboarding status after auth callback:', profileError);
+            logError('Error resolving onboarding status after auth callback', profileError);
           }
 
           const destination = returnUrl;
@@ -225,12 +226,12 @@ const AuthCallback = () => {
             }, 500);
           }
         } else {
-          console.warn('No session found, redirecting to login');
+          logWarn('No session found, redirecting to login');
           setStatus('error');
           redirectToLogin(2000);
         }
       } catch (err) {
-        console.error('Auth callback error:', err);
+        logError('Auth callback error', err);
         setStatus('error');
         toast.error('Authentication failed');
         const pendingReturn = sanitizeReturnPath(localStorage.getItem('oauth_return_url'), '/dashboard');

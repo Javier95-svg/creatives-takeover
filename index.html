@@ -62,14 +62,14 @@
           }
 
           if (window.amplitude && window.sessionReplay) {
-            window.amplitude.add(window.sessionReplay.plugin({ sampleRate: 1 }));
-            window.amplitude.init("8607b59ca891101e4b5f9d9daf8aa481", { autocapture: { elementInteractions: true } });
+            window.amplitude.add(window.sessionReplay.plugin({ sampleRate: 0.1 }));
+            window.amplitude.init("%VITE_AMPLITUDE_API_KEY%", { autocapture: { elementInteractions: true } });
             amplitudeInitialized = true;
           }
         };
 
-        loadScript("https://cdn.amplitude.com/libs/analytics-browser-2.11.1-min.js.gz", { defer: true, onload: initializeAmplitude });
-        loadScript("https://cdn.amplitude.com/libs/plugin-session-replay-browser-1.25.0-min.js.gz", { defer: true, onload: initializeAmplitude });
+        loadScript("https://cdn.amplitude.com/libs/analytics-browser-2.11.1-min.js.gz", { defer: true, onload: initializeAmplitude, attributes: { integrity: "sha384-TQgP6oZ+yX8iXNS4m0H7LuWSyrhEfoifZx/7cP3qSQU869coM2r0irxJEPQ82Nl+", crossorigin: "anonymous" } });
+        loadScript("https://cdn.amplitude.com/libs/plugin-session-replay-browser-1.25.0-min.js.gz", { defer: true, onload: initializeAmplitude, attributes: { integrity: "sha384-KoMRtjnkikxJbtyEyY3IXWnq6JKDvqLY0s3Sv0weN1Ixr5vVBNELQ7gKNUEGMqcc", crossorigin: "anonymous" } });
 
         if (document.readyState === "complete") {
           initializeAmplitude();
