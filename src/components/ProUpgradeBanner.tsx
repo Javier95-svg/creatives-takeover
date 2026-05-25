@@ -32,7 +32,7 @@ const ProUpgradeBanner = () => {
                     rel="noopener noreferrer"
                     className="flex items-center gap-1 text-primary hover:text-primary/80 transition-colors font-semibold underline underline-offset-4 group ml-1"
                 >
-                    Take Our Quiz
+                    Take Quiz
                     <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5" />
                 </a>
             </div>
