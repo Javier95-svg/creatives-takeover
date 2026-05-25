@@ -134,6 +134,14 @@ async function writeRoute(template, routeConfig) {
 }
 
 async function main() {
+  try {
+    await fs.access(TEMPLATE_PATH);
+  } catch {
+    console.error(`dist/index.html not found at ${TEMPLATE_PATH} — run \`npm run build\` first.`);
+    process.exitCode = 1;
+    return;
+  }
+
   const template = await fs.readFile(TEMPLATE_PATH, "utf8");
   await Promise.all(INDEXABLE_ROUTES.map((routeConfig) => writeRoute(template, routeConfig)));
   console.log(`Prerendered ${INDEXABLE_ROUTES.length} public route shells with route-specific metadata.`);

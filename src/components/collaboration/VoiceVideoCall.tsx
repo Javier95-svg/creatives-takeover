@@ -47,6 +47,18 @@ export const VoiceVideoCall: React.FC<VoiceVideoCallProps> = ({
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRefs = useRef<Map<string, HTMLVideoElement>>(new Map());
   const peerConnections = useRef<Map<string, RTCPeerConnection>>(new Map());
+  const screenShareTrackRef = useRef<{ track: MediaStreamTrack; handler: () => void } | null>(null);
+
+  // Clean up screen share track listener on unmount
+  useEffect(() => {
+    return () => {
+      if (screenShareTrackRef.current) {
+        const { track, handler } = screenShareTrackRef.current;
+        track.removeEventListener('ended', handler);
+        screenShareTrackRef.current = null;
+      }
+    };
+  }, []);
 
   // Call timer
   useEffect(() => {
@@ -145,11 +157,14 @@ export const VoiceVideoCall: React.FC<VoiceVideoCallProps> = ({
       setIsScreenSharing(true);
       onStartCall('screen_share');
       
-      // Stop screen sharing when user stops it
-      stream.getVideoTracks()[0].addEventListener('ended', () => {
+      // Stop screen sharing when user stops it from the OS/browser
+      const track = stream.getVideoTracks()[0];
+      const handleEnded = () => {
         setIsScreenSharing(false);
         stopScreenShare();
-      });
+      };
+      track.addEventListener('ended', handleEnded);
+      screenShareTrackRef.current = { track, handler: handleEnded };
       
       toast({
         title: "Screen sharing started",
