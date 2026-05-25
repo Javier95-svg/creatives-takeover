@@ -411,15 +411,10 @@ export default function ValidateJourneyPage() {
       />
 	      <DashboardLayout
 	        title="Decision Sprint"
-	        subtitle="Compare up to three ideas, score the signals, and pick the product that deserves your next build cycle."
+	        subtitle="Score ideas and pick your next build."
 	      >
 	        <div className="space-y-8">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">
-                Start anonymously if you want. Save the sprint only when you decide this idea is worth coming back to.
-              </p>
-            </div>
             <Button type="button" variant="outline" onClick={handleSaveDraft} disabled={isSavingDraft || !hasMeaningfulDraft}>
               <Save className="mr-2 h-4 w-4" />
               {isSavingDraft ? 'Saving draft...' : 'Save validation draft'}
