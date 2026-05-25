@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
-import ctLogo from '@/assets/ct-logo.png';
+import ctLogo from '@/assets/ct-logo.webp';
 
 const CreativesTakeoverHeader = () => {
   const [isNavOpen, setIsNavOpen] = useState(false);

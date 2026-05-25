@@ -1,9 +1,9 @@
 import { Card } from "@/components/ui/card";
 import { Linkedin, Mail } from "lucide-react";
 
-import javierPhoto from "@/assets/team-javier-pena.png";
-import domagojPhoto from "@/assets/team-domagoj-markota.png";
-import danielaPhoto from "@/assets/team-daniela-hagg.png";
+import javierPhoto from "@/assets/team-javier-pena.webp";
+import domagojPhoto from "@/assets/team-domagoj-markota.webp";
+import danielaPhoto from "@/assets/team-daniela-hagg.webp";
 
 type TeamMember = {
   name: string;

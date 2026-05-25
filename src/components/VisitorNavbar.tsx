@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ThemeToggle from "@/components/ThemeToggle";
-import ctLogoPolished from "@/assets/ct-logo-polished-borders.png";
+import ctLogoPolished from "@/assets/ct-logo-polished-borders.webp";
 import { cn } from "@/lib/utils";
 import { usePageAnalytics } from "@/hooks/usePageAnalytics";
 

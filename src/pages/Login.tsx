@@ -31,7 +31,7 @@ const loginHeroSlides = [
     alt: "Solo founder working on a laptop in a warm workspace",
   },
   {
-    src: "/auth/solopreneur-female.png",
+    src: "/auth/solopreneur-female.webp",
     alt: "Female solopreneur working on a laptop in a bright studio",
   },
 ];
@@ -261,7 +261,7 @@ const Login = () => {
           className="signup-premium-left-logo relative z-20 inline-flex w-fit items-center gap-3 text-base font-bold tracking-tight text-white transition-opacity hover:opacity-85"
         >
           <img
-            src="/auth/creatives-takeover-polished-borders.png"
+            src="/auth/creatives-takeover-polished-borders.webp"
             alt="Creatives Takeover Logo"
             className="h-12 w-12 object-contain md:h-14 md:w-14"
           />

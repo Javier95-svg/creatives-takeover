@@ -20,7 +20,7 @@ import ThemeToggle from "@/components/ThemeToggle";
 import VisitorNavbar from "@/components/VisitorNavbar";
 import { useDeviceType } from "@/hooks/use-device-type";
 import { TabletNavigation } from "@/components/navigation/TabletNavigation";
-import ctLogoPolished from "@/assets/ct-logo-polished-borders.png";
+import ctLogoPolished from "@/assets/ct-logo-polished-borders.webp";
 import {
   DropdownMenu,
   DropdownMenuContent,
