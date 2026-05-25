@@ -21,17 +21,17 @@ export const DashboardLayout = ({ children, title, subtitle }: DashboardLayoutPr
         <DashboardNavigationProvider>
           <DashboardSidebar />
           <SidebarInset>
-            <div className="min-h-screen relative overflow-hidden bg-background">
-              <div className="pointer-events-none fixed inset-x-0 top-0 z-50">
-                <div className="container mx-auto flex max-w-7xl items-start justify-between px-6 pt-4">
+            <div className="relative min-h-screen overflow-hidden bg-background">
+              <div className="pointer-events-none absolute inset-x-0 top-0 z-50">
+                <div className="container mx-auto grid max-w-7xl grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-4 px-6 pt-4">
                   <div className="pointer-events-auto flex items-start gap-4">
                     <SidebarTrigger className="rounded-full border border-border/70 bg-background/88 shadow-sm backdrop-blur-md" />
-                    <div className="pt-1">
-                      <h1 className="font-space-grotesk text-xl font-semibold">{title}</h1>
-                      {subtitle && (
-                        <p className="text-sm text-muted-foreground">{subtitle}</p>
-                      )}
-                    </div>
+                  </div>
+                  <div className="pointer-events-auto min-w-0 px-2 pt-1 text-center">
+                    <h1 className="font-space-grotesk text-xl font-semibold">{title}</h1>
+                    {subtitle ? (
+                      <p className="mx-auto max-w-2xl text-sm text-muted-foreground">{subtitle}</p>
+                    ) : null}
                   </div>
                   <button
                     onClick={() => navigate('/')}
@@ -46,14 +46,21 @@ export const DashboardLayout = ({ children, title, subtitle }: DashboardLayoutPr
               </div>
 
               {/* Background */}
-              <div className="absolute inset-0 overflow-hidden pointer-events-none">
+              <div className="pointer-events-none absolute inset-0 overflow-hidden">
                 <div className="absolute inset-0 bg-background" />
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/3 via-transparent to-transparent" />
                 <div
-                  className="absolute inset-0 opacity-[0.015]"
+                  className="absolute inset-0"
                   style={{
-                    backgroundImage: `radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0)`,
-                    backgroundSize: '32px 32px',
+                    backgroundImage:
+                      'radial-gradient(circle at 15% 20%, hsl(var(--primary) / 0.08), transparent 40%), radial-gradient(circle at 85% 30%, hsl(var(--accent) / 0.06), transparent 45%)',
+                  }}
+                />
+                <div
+                  className="absolute inset-0 opacity-[0.03] dark:opacity-[0.06]"
+                  style={{
+                    backgroundImage:
+                      'linear-gradient(to right, hsl(var(--foreground)) 1px, transparent 1px), linear-gradient(to bottom, hsl(var(--foreground)) 1px, transparent 1px)',
+                    backgroundSize: '64px 64px',
                   }}
                 />
               </div>
