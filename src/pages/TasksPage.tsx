@@ -4,7 +4,7 @@ import { TaskCalendarCommandCenter } from '@/components/dashboard/TaskCalendarCo
 import { useLeanStartupStore } from '@/store/leanStartupStore';
 
 const TasksPage = () => {
-  const { markToolUsed } = useLeanStartupStore();
+  const markToolUsed = useLeanStartupStore(s => s.markToolUsed);
   useEffect(() => { markToolUsed('tasks'); }, [markToolUsed]);
 
   return (

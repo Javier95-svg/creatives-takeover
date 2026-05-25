@@ -19,7 +19,7 @@ export default function TechStackPage() {
   const { user } = useAuth();
   const publicTab = getPublicTabConfig('/tech-stack');
   const { trackPageVisit } = useReadingAnalytics();
-  const { markToolUsed } = useLeanStartupStore();
+  const markToolUsed = useLeanStartupStore(s => s.markToolUsed);
   const { hasAccess, isProgressiveLock } = usePlanAccess('tech_stack');
 
   useEffect(() => { markToolUsed('tech-stack'); }, [markToolUsed]);

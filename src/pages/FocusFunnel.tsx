@@ -14,7 +14,7 @@ import { normalizePlan } from '@/config/planPermissions';
 import { useLeanStartupStore } from '@/store/leanStartupStore';
 
 const FocusFunnel = () => {
-  const { markToolUsed } = useLeanStartupStore();
+  const markToolUsed = useLeanStartupStore(s => s.markToolUsed);
   const { loading, currentStage, highestUnlockedStage, stageState, error } = useBizMapProgress();
   const { subscriptionData } = useSubscription();
   const currentPlan = normalizePlan(subscriptionData?.subscription_tier);

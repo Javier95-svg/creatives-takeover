@@ -4,7 +4,7 @@ import { CoreMetrics } from '@/components/dashboard/CoreMetrics';
 import { useLeanStartupStore } from '@/store/leanStartupStore';
 
 const CoreMetricsPage = () => {
-  const { markToolUsed } = useLeanStartupStore();
+  const markToolUsed = useLeanStartupStore(s => s.markToolUsed);
   useEffect(() => { markToolUsed('core-metrics'); }, [markToolUsed]);
 
   return (

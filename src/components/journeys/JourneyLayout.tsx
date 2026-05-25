@@ -4,6 +4,7 @@ import Footer from '@/components/Footer';
 import SEO, { createBreadcrumbSchema } from '@/components/SEO';
 import type { JourneyDefinition, DayStatus } from '@/types/journey';
 import { useJourneyStore } from '@/store/journeyStore';
+import { useShallow } from 'zustand/react/shallow';
 import { journeyRoutes } from '@/data/journeys';
 import JourneyHero from './JourneyHero';
 import JourneyTimeline from './JourneyTimeline';
@@ -15,7 +16,9 @@ interface JourneyLayoutProps {
 }
 
 export default function JourneyLayout({ journey }: JourneyLayoutProps) {
-  const { journeys, startJourney, toggleTask, resetJourney } = useJourneyStore();
+  const { journeys, startJourney, toggleTask, resetJourney } = useJourneyStore(
+    useShallow(s => ({ journeys: s.journeys, startJourney: s.startJourney, toggleTask: s.toggleTask, resetJourney: s.resetJourney }))
+  );
   const progress = journeys[journey.slug];
   const started = !!progress;
 

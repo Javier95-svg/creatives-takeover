@@ -165,7 +165,7 @@ export const BizMapChat = ({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { addStepResponse } = useChatBotStore();
+  const addStepResponse = useChatBotStore(s => s.addStepResponse);
   const { preferences } = useCofounderPersonality();
   
   // Listen for examples modal event

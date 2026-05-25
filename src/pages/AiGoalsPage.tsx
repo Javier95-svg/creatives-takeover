@@ -5,7 +5,7 @@ import { AiGoalsPlanner } from '@/components/focus-funnel/AiGoalsPlanner';
 import { useLeanStartupStore } from '@/store/leanStartupStore';
 
 const AiGoalsPage = () => {
-  const { markToolUsed } = useLeanStartupStore();
+  const markToolUsed = useLeanStartupStore(s => s.markToolUsed);
   useEffect(() => { markToolUsed('ai-goals'); }, [markToolUsed]);
 
   return (

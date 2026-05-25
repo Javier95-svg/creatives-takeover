@@ -33,7 +33,7 @@ export default function PMFLabPage() {
   const { user } = useAuth();
   const publicTab = getPublicTabConfig('/pmf-lab');
   const { hasAccess, upgradeTarget } = usePlanAccess('pmf_lab');
-  const { markToolUsed } = useLeanStartupStore();
+  const markToolUsed = useLeanStartupStore(s => s.markToolUsed);
 
   const [icpPersonaName, setIcpPersonaName] = useState<string | null>(null);
   const [waitlistProductName, setWaitlistProductName] = useState<string | null>(null);

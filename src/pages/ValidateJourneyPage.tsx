@@ -179,7 +179,7 @@ export default function ValidateJourneyPage() {
   const restoredFromLocal = useRef(false);
   const remoteDraftLoaded = useRef(false);
 
-  const { markToolUsed } = useLeanStartupStore();
+  const markToolUsed = useLeanStartupStore(s => s.markToolUsed);
   useEffect(() => { markToolUsed('decision-sprint'); }, [markToolUsed]);
 
   useEffect(() => {

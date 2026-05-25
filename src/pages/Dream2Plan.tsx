@@ -78,7 +78,7 @@ const BizMapAI = () => {
   const { user, isAuthenticated } = useAuth();
   const { balance, refreshBalance, CREDIT_COSTS } = useCredits();
   const { ensureCredits, handleCreditError } = useCreditActions();
-  const { generateReport } = useChatBotStore();
+  const generateReport = useChatBotStore(s => s.generateReport);
   const [showExamplesModal, setShowExamplesModal] = useState(false);
   
   // Founder OS Integration

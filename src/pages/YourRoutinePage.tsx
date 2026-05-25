@@ -351,7 +351,7 @@ function RoutineEditor({
 }
 
 export default function YourRoutinePage() {
-  const { markToolUsed } = useLeanStartupStore();
+  const markToolUsed = useLeanStartupStore(s => s.markToolUsed);
   const {
     config,
     selectedGoal,

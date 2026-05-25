@@ -49,7 +49,7 @@ export default function GTMStrategistPage() {
   const { user } = useAuth();
   const publicTab = getPublicTabConfig('/go-to-market');
   const { hasAccess, upgradeTarget } = usePlanAccess('gtm_strategist');
-  const { markToolUsed } = useLeanStartupStore();
+  const markToolUsed = useLeanStartupStore(s => s.markToolUsed);
   const faqs = [
     {
       question: 'What is a go-to-market strategy for an early-stage startup?',
