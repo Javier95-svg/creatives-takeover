@@ -84,7 +84,7 @@ const Hero = ({
   ctaHref = "/icp-builder",
   onCtaClick,
   dashboardUrl = "creatives-takeover.com/dashboard",
-  dashboardBread = "Validation · Stage 3 of 7",
+  dashboardBread = "Building Stage 4 of 7",
   navItems = DEFAULT_NAV,
   stats = DEFAULT_STATS,
 }: HeroProps) => {
