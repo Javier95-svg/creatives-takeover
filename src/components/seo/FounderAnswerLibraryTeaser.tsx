@@ -23,7 +23,7 @@ export default function FounderAnswerLibraryTeaser({ compact = false }: FounderA
                 Startup guides
               </div>
               <h2 className="mt-4 font-space-grotesk text-3xl font-semibold tracking-tight sm:text-4xl">
-                Practical answers for your next founder decision
+                Practical answers for your next decision
               </h2>
               <p className="mt-4 text-sm leading-relaxed text-muted-foreground sm:text-base">
                 Explore clear guides for defining your ICP, validating demand, scoping an MVP, planning go-to-market,
