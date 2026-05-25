@@ -42,19 +42,19 @@ const Footer = () => {
 
           <nav aria-labelledby="footer-legal">
             <h2 id="footer-legal" className="text-sm font-semibold font-space-grotesk tracking-wide text-foreground">Legal</h2>
-            <ul className="mt-3 space-y-2 text-sm">
+            <ul className="mt-3 space-y-0 text-sm">
               <li>
-                <Link className="inline-flex items-center min-h-[44px] py-2 hover:underline underline-offset-4 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-sm transition-colors" to="/privacy-policy">
+                <Link className="inline-flex items-center min-h-[40px] py-1.5 hover:underline underline-offset-4 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-sm transition-colors" to="/privacy-policy">
                   Privacy Policy
                 </Link>
               </li>
               <li>
-                <Link className="inline-flex items-center min-h-[44px] py-2 hover:underline underline-offset-4 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-sm transition-colors" to="/data-privacy">
+                <Link className="inline-flex items-center min-h-[40px] py-1.5 hover:underline underline-offset-4 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-sm transition-colors" to="/data-privacy">
                   Data Privacy
                 </Link>
               </li>
               <li>
-                <Link className="inline-flex items-center min-h-[44px] py-2 hover:underline underline-offset-4 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-sm transition-colors" to="/terms">
+                <Link className="inline-flex items-center min-h-[40px] py-1.5 hover:underline underline-offset-4 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-sm transition-colors" to="/terms">
                   Terms of Service
                 </Link>
               </li>
