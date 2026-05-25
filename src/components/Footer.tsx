@@ -61,9 +61,9 @@ const Footer = () => {
             </ul>
           </nav>
 
-          <nav aria-labelledby="footer-social">
+          <nav aria-labelledby="footer-social" className="text-center">
             <h2 id="footer-social" className="text-sm font-semibold font-space-grotesk tracking-wide text-foreground">Follow Us</h2>
-            <ul className="mt-3 flex flex-wrap items-center gap-1">
+            <ul className="mt-3 flex flex-wrap items-center justify-center gap-1">
               {/* Instagram */}
               <li className="flex items-center">
                 <a
@@ -73,7 +73,7 @@ const Footer = () => {
                   aria-label="Instagram"
                   className="flex items-center justify-center p-2 min-h-[44px] min-w-[44px] rounded-lg hover:bg-muted/50 hover:scale-105 transition-all touch-manipulation"
                 >
-                  <Instagram className="h-5 w-5 text-foreground hover:text-muted-foreground transition-colors" />
+                  <Instagram className="h-5 w-5 text-pink-500 hover:text-pink-400 transition-colors" />
                 </a>
               </li>
               
