@@ -20,14 +20,14 @@ export default function FounderAnswerLibraryTeaser({ compact = false }: FounderA
             <div>
               <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-primary">
                 <Search className="h-3.5 w-3.5" />
-                Founder answers
+                Startup guides
               </div>
               <h2 className="mt-4 font-space-grotesk text-3xl font-semibold tracking-tight sm:text-4xl">
-                Meet founders in the search moment
+                Practical answers for your next founder decision
               </h2>
               <p className="mt-4 text-sm leading-relaxed text-muted-foreground sm:text-base">
-                Browse practical answer pages for the questions founders ask before they build:
-                ICP, validation, MVP scope, go-to-market, and fundraising.
+                Explore clear guides for defining your ICP, validating demand, scoping an MVP, planning go-to-market,
+                and preparing for fundraising.
               </p>
               <div className="mt-6 flex flex-col gap-3 sm:flex-row">
                 <Button asChild>
