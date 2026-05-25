@@ -23,6 +23,7 @@ export default function ComingSoonPage({ title, description, highlights }: Comin
       <SEO
         title={`${title} - Coming Soon | Creatives Takeover`}
         description={description}
+        noindex={true}
       />
       <Navigation />
 

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import SEO, { createBreadcrumbSchema } from '@/components/SEO';
+import SEO, { createBreadcrumbSchema, createFAQSchema } from '@/components/SEO';
+import RelatedToolsSection from '@/components/seo/RelatedToolsSection';
 import { useSearchParams } from 'react-router-dom';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
@@ -935,6 +936,21 @@ export default function TractionEnginePage() {
     featureName: 'Traction Engine',
     description: 'Track weekly distribution experiments, retention signals, and Phase 7 readiness.',
   };
+  const tractionFaqs = [
+    {
+      question: "How does Traction Engine score traction?",
+      answer: "It blends four equally weighted dimensions: consistency streak, channel efficiency, experiment quality, and retention health, benchmarked by product category.",
+    },
+    {
+      question: "What is Phase 7 readiness in traction scoring?",
+      answer: "Three consecutive weeks at 75 or above flag Phase 7 readiness, which gives founders a defensible traction story before walking into investor conversations.",
+    },
+    {
+      question: "Why should founders track distribution experiments weekly?",
+      answer: "Weekly tracking creates a compound record of what channels convert, what messaging resonates, and where retention breaks — the pattern is more valuable than any single data point.",
+    },
+  ];
+
   const structuredData = [
     {
       '@context': 'https://schema.org',
@@ -943,6 +959,7 @@ export default function TractionEnginePage() {
       description: 'Weekly distribution experiment tracker and retention scorecard for founders building repeatable traction.',
       url: 'https://creatives-takeover.com/traction-engine',
     },
+    createFAQSchema(tractionFaqs),
     createBreadcrumbSchema([
       { name: 'Home', url: '/' },
       { name: 'Traction Engine', url: '/traction-engine' },
@@ -975,6 +992,15 @@ export default function TractionEnginePage() {
             )}
           </div>
         </main>
+        <div className="px-4 pb-16 container mx-auto max-w-7xl">
+          <RelatedToolsSection
+            tools={[
+              { name: "Go-to-Market Strategist", description: "Build the launch plan your traction data should inform.", url: "/go-to-market" },
+              { name: "Insighta", description: "Turn traction evidence into investor-ready fundraising prep.", url: "/insighta" },
+              { name: "PMF Lab", description: "Score product-market fit signals alongside your traction data.", url: "/pmf-lab" },
+            ]}
+          />
+        </div>
         <Footer />
       </div>
     </div>

@@ -199,7 +199,7 @@ function App() {
                 <Toaster />
                 <Sonner />
                 <BrowserRouter>
-                  <Suspense fallback={null}>
+                  <Suspense fallback={<div style={{ minHeight: '100vh', background: '#1a1a2e' }} />}>
                     <ScrollToTop />
                     <InteractionTelemetryBridge />
                     <ReferralCaptureBridge />

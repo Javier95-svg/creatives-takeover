@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
-import { Helmet } from "react-helmet-async";
 import { Link, useSearchParams, useNavigate } from "react-router-dom";
+import SEO, { createBreadcrumbSchema, createServiceSchema } from "@/components/SEO";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import CommunityAngelsWallpaper from "@/components/wallpapers/CommunityAngelsWallpaper";
@@ -340,15 +340,28 @@ const FindYourAngel = () => {
 
   const descriptionText = "Find and connect with Angel Investors or Venture Capitalists who believe in bold ideas and back them early. Browse investor profiles, explore their focus areas and investment stages, and take the first step toward building a relationship that could fund your vision.\n\nWhether you are raising your first pre-seed round or looking for a strategic partner at the seed stage, this is where you start.";
 
+  const structuredData = [
+    createServiceSchema([
+      { name: "Angel Investor Search", description: "Browse and filter angel investors by sector, stage, and geography." },
+      { name: "Investor Profile Discovery", description: "Explore investor focus areas and portfolio to find the right fit for your startup." },
+    ]),
+    createBreadcrumbSchema([
+      { name: "Home", url: "/" },
+      { name: "Investors", url: "/investors" },
+    ]),
+  ];
+
   return (
     <>
-      <Helmet>
-        <title>Find your Angel | Connect with Investors</title>
-        <meta
-          name="description"
-          content="Find and connect with Angel Investors or Venture Capitalists. Browse investor profiles, explore focus areas, and build relationships that fund your vision."
-        />
-      </Helmet>
+      <SEO
+        title="Find Angel Investors for Your Startup | Creatives Takeover"
+        description="Find and connect with Angel Investors or Venture Capitalists. Browse investor profiles, explore focus areas, and build relationships that fund your vision."
+        keywords="angel investors, startup funding, venture capital, seed funding, find investors, startup investors, fundraising"
+        url="/investors"
+        canonical="https://creatives-takeover.com/investors"
+        image="https://creatives-takeover.com/og-image.png"
+        structuredData={structuredData}
+      />
 	      <div className="min-h-screen bg-background relative">
           <CommunityAngelsWallpaper />
 	        <Navigation />

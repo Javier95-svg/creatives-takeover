@@ -3,6 +3,7 @@ import SEO, { createBreadcrumbSchema, createFAQSchema } from '@/components/SEO';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import PageFAQSection from '@/components/seo/PageFAQSection';
+import RelatedToolsSection from '@/components/seo/RelatedToolsSection';
 import { PreviewModeWrapper } from '@/components/ui/PreviewModeWrapper';
 import { BlurredToolPreview } from '@/components/ui/BlurredToolPreview';
 import { useLeanStartupStore } from '@/store/leanStartupStore';
@@ -257,6 +258,13 @@ export default function PMFLabPage() {
               <PageFAQSection
                 title="FAQ"
                 faqs={faqs}
+              />
+              <RelatedToolsSection
+                tools={[
+                  { name: "ICP Builder", description: "Define your ideal customer and sharpen product focus.", url: "/icp-builder" },
+                  { name: "Traction Engine", description: "Track distribution experiments and retention signals weekly.", url: "/traction-engine" },
+                  { name: "BizMap AI", description: "Full founder workflow from idea to launch.", url: "/bizmap-ai" },
+                ]}
               />
             </div>
           </div>

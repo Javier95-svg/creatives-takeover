@@ -4,6 +4,7 @@ import SEO, { createBreadcrumbSchema, createFAQSchema, createSoftwareApplication
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import PageFAQSection from '@/components/seo/PageFAQSection';
+import RelatedToolsSection from '@/components/seo/RelatedToolsSection';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -197,6 +198,13 @@ export default function BizMapJourneyHubPage() {
           <PageFAQSection
             title="Frequent Questions"
             faqs={faqs}
+          />
+          <RelatedToolsSection
+            tools={[
+              { name: "ICP Builder", description: "Define your ideal customer before you build.", url: "/icp-builder" },
+              { name: "PMF Lab", description: "Score product-market fit signals across six dimensions.", url: "/pmf-lab" },
+              { name: "Go-to-Market Strategist", description: "Build a launch plan and 30-day action checklist.", url: "/go-to-market" },
+            ]}
           />
         </div>
       </main>

@@ -1,5 +1,5 @@
 import { useParams, Navigate } from "react-router-dom";
-import { Helmet } from "react-helmet-async";
+import SEO, { createArticleSchema, createBreadcrumbSchema } from "@/components/SEO";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import ReadingProgress from "@/components/blog/ReadingProgress";
@@ -92,23 +92,34 @@ const BlogPost = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Helmet>
-        <title>Creatives Takeover</title>
-        <meta name="description" content={post.excerpt} />
-        <meta name="keywords" content={post.tags?.join(', ')} />
-        
-        {/* Open Graph */}
-        <meta property="og:title" content={post.title} />
-        <meta property="og:description" content={post.excerpt} />
-        <meta property="og:image" content={post.image} />
-        <meta property="og:type" content="article" />
-        
-        {/* Twitter Card */}
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={post.title} />
-        <meta name="twitter:description" content={post.excerpt} />
-        <meta name="twitter:image" content={post.image} />
-      </Helmet>
+      <SEO
+        title={`${post.title} | Creatives Takeover`}
+        description={post.excerpt}
+        keywords={post.tags?.join(', ')}
+        image={post.image}
+        url={`/insighta/${post.slug}`}
+        type="article"
+        author={post.author?.name}
+        publishedTime={post.date}
+        modifiedTime={post.date}
+        structuredData={[
+          createArticleSchema({
+            title: post.title,
+            description: post.excerpt,
+            image: post.image,
+            author: post.author?.name || 'Creatives Takeover',
+            publishedTime: post.date,
+            modifiedTime: post.date,
+            url: `/insighta/${post.slug}`,
+            keywords: post.tags,
+          }),
+          createBreadcrumbSchema([
+            { name: 'Home', url: '/' },
+            { name: 'Blog', url: '/insighta' },
+            { name: post.title, url: `/insighta/${post.slug}` },
+          ]),
+        ]}
+      />
       
       <Navigation />
 
