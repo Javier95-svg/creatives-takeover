@@ -50,6 +50,7 @@ const ProgressCommunityPage = lazy(() => import("./pages/ProgressCommunityPage")
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Careers = lazy(() => import("./pages/Careers"));
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
+const DataPrivacy = lazy(() => import("./pages/DataPrivacy"));
 const Terms = lazy(() => import("./pages/Terms"));
 const IPPolicy = lazy(() => import("./pages/IPPolicy"));
 const Signup = lazy(() => import("./pages/Signup"));
@@ -254,6 +255,7 @@ function App() {
                         <Route path="/careers" element={<Careers />} />
                         <Route path="/prompt-library" element={<PromptLibrary />} />
                         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                        <Route path="/data-privacy" element={<DataPrivacy />} />
                         <Route path="/terms" element={<Terms />} />
                         <Route path="/ip-policy" element={<IPPolicy />} />
                         <Route path="/bizmap-ai" element={<BizMapJourneyHubPage />} />

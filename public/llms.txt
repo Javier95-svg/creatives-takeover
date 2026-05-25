@@ -61,6 +61,7 @@ public_pages:
 
 # Legal
 - /privacy-policy
+- /data-privacy
 - /terms
 
 private_pages:

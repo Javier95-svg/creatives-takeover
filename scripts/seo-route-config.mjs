@@ -214,6 +214,17 @@ export const INDEXABLE_ROUTES = [
     heroCopy: "Read how we handle personal data and platform information.",
   },
   {
+    path: "/data-privacy",
+    title: "Data Privacy Policy | Creatives Takeover",
+    description:
+      "Learn how Creatives Takeover collects, uses, protects, and shares founder data across BizMap AI, Insighta, community features, and startup tools.",
+    changefreq: "yearly",
+    priority: 0.3,
+    heroHeading: "Data Privacy Policy",
+    heroCopy:
+      "A plain-language guide to what data we collect, why we use it, how we protect it, and how you stay in control.",
+  },
+  {
     path: "/terms",
     title: "Terms of Service | Creatives Takeover",
     description:

@@ -67,6 +67,7 @@ const routes: SitemapEntry[] = [
   // Legal Pages
   { path: '/terms', priority: 0.4, changefreq: 'yearly' },
   { path: '/privacy-policy', priority: 0.4, changefreq: 'yearly' },
+  { path: '/data-privacy', priority: 0.4, changefreq: 'yearly' },
   { path: '/ip-policy', priority: 0.4, changefreq: 'yearly' },
   
   // Admin Pages - Lower Priority (will be disallowed in robots.txt anyway)
