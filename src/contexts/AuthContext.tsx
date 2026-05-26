@@ -10,7 +10,7 @@ import {
   withGuidedOnboardingPreference,
 } from '@/lib/guidedOnboarding';
 import { resumePendingDiscoveryCallRedirect } from '@/services/discoveryCallService';
-import { identify, readAuthMethod, trackSignupCompleted } from '@/lib/analytics';
+import { identify, initAmplitudeWithUser, readAuthMethod, resetAmplitude, trackSignupCompleted } from '@/lib/analytics';
 import { isAdminEmail } from '@/lib/admin';
 import { triggerEmailSequenceEvent } from '@/lib/emailSequences';
 
@@ -286,6 +286,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
         // Handle sign-in logic asynchronously (won't block state updates)
         if (event === 'SIGNED_IN' && currentSession?.user) {
+          initAmplitudeWithUser(currentSession.user.id);
           // Use setTimeout(0) to avoid blocking the auth state update
           setTimeout(() => {
             handleSignIn(currentSession.user, currentSession);
@@ -294,6 +295,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
         // Clear processed ref on sign out so next sign-in gets processed
         if (event === 'SIGNED_OUT') {
+          resetAmplitude();
           signInProcessedRef.current = null;
           identifiedUserRef.current = null;
         }
@@ -312,6 +314,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         // If there's already a session, run sign-in logic
         // (signInProcessedRef prevents double-execution with onAuthStateChange)
         if (existingSession?.user) {
+          initAmplitudeWithUser(existingSession.user.id);
           handleSignIn(existingSession.user, existingSession);
         }
       })

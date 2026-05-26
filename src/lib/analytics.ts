@@ -1,6 +1,6 @@
 import posthog from 'posthog-js';
 import * as amplitude from '@amplitude/analytics-browser';
-import { getSafeSessionStorage } from '@/lib/safeStorage';
+import { getSafeSessionStorage, getSafeLocalStorage } from '@/lib/safeStorage';
 import { logWarn } from '@/lib/logger';
 
 type AnalyticsProperties = Record<string, unknown>;
@@ -87,21 +87,27 @@ const sanitizeAnalyticsProperties = (properties?: AnalyticsProperties): Analytic
   }, {});
 };
 
-export const initAmplitude = () => {
-  if (typeof window === 'undefined' || !AMPLITUDE_API_KEY || amplitudeInitialized) {
-    return;
-  }
-
+export const initAmplitudeWithUser = (userId: string) => {
+  if (typeof window === 'undefined' || !AMPLITUDE_API_KEY) return;
   try {
-    amplitude.init(AMPLITUDE_API_KEY);
+    amplitude.init(AMPLITUDE_API_KEY, userId, { defaultTracking: { pageViews: false, sessions: true } });
     amplitudeInitialized = true;
   } catch (error) {
     logWarn('Amplitude init failed', error);
   }
 };
 
+export const resetAmplitude = () => {
+  if (!amplitudeInitialized) return;
+  try {
+    amplitude.reset();
+    amplitudeInitialized = false;
+  } catch (error) {
+    logWarn('Amplitude reset failed', error);
+  }
+};
+
 const captureAmplitudeEvent = (eventName: string, properties?: AnalyticsProperties) => {
-  initAmplitude();
   if (!amplitudeInitialized) return;
 
   try {
@@ -112,7 +118,6 @@ const captureAmplitudeEvent = (eventName: string, properties?: AnalyticsProperti
 };
 
 const identifyAmplitudeUser = (id: string, properties?: AnalyticsProperties) => {
-  initAmplitude();
   if (!amplitudeInitialized) return;
 
   try {
@@ -460,7 +465,7 @@ export const trackToolFirstUse = (toolName: string, properties?: AnalyticsProper
   captureEvent('tool_first_use', { tool: toolName, ...properties });
 
 export const trackFirstToolUsed = (properties: FirstToolUsedProps) => {
-  const storage = getSafeSessionStorage();
+  const storage = getSafeLocalStorage();
   const guardKey = 'first_tool_tracked';
   if (storage.getItem(guardKey) === 'true') return;
   storage.setItem(guardKey, 'true');
@@ -532,7 +537,7 @@ export const trackUpgradePromptShown = ({
 }: UpgradePromptShownProps) => captureEvent('upgrade_prompt_shown', {
   trigger,
   credits_remaining,
-  current_plan,
+  current_plan: normalizePlanId(current_plan),
   target_plan,
 });
 
