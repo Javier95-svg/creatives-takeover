@@ -629,6 +629,26 @@ export const trackCreditActivityViewed = (properties?: AnalyticsProperties) =>
 export const trackPricingViewed = ({ source }: { source: string }) =>
   captureEvent('pricing_viewed', { source });
 
+// ─── Conversion funnel attribution ───────────────────────────────────────────
+
+export const trackExitIntentModalShown = (properties: {
+  user_state: 'authenticated' | 'anonymous';
+  page: string;
+}) => captureEvent('exit_intent_modal_shown', properties);
+
+export const trackSignupFormAbandoned = (properties: {
+  last_field: string | null;
+  fields_touched: string[];
+  fields_count: number;
+}) => captureEvent('signup_form_abandoned', properties);
+
+export const trackSignupCompletedAttributed = (properties: {
+  method: string;
+  entry_cta: string;
+  entry_page: string;
+  minutes_from_cta: number | null;
+}) => captureEvent('signup_completed_attributed', properties);
+
 export const isLikelyBot = (): boolean => {
   if (typeof navigator === 'undefined') return false;
   return /bot|crawl|spider|slurp|mediapartners/i.test(navigator.userAgent);
