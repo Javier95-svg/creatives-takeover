@@ -394,6 +394,7 @@ const ICPBuilder: React.FC = () => {
   const icpStartedAtRef = useRef<number | null>(null);
   const fastInputRef = useRef<HTMLTextAreaElement>(null);
   const guidedSeedRef = useRef<HTMLTextAreaElement>(null);
+  const autoModeAppliedRef = useRef(false);
 
   const unlockPath = buildIcpUnlockReturnPath();
   const editDraftId = searchParams.get("edit");
@@ -1361,6 +1362,17 @@ const ICPBuilder: React.FC = () => {
       guided: previous.guided.seed ? previous.guided : buildEmptyGuidedAnswers(previous.fastDescription),
     }));
   }, [user]);
+
+  useEffect(() => {
+    if (autoModeAppliedRef.current) return;
+    if (session.currentScreen !== "mode_select") return;
+    if (searchParams.get("mode") !== "fast") return;
+    autoModeAppliedRef.current = true;
+    handleSelectFastMode();
+    const next = new URLSearchParams(searchParams);
+    next.delete("mode");
+    setSearchParams(next, { replace: true });
+  }, [session.currentScreen, searchParams, handleSelectFastMode, setSearchParams]);
 
   const renderModeSelect = () => (
     <div className="mx-auto flex min-h-screen max-w-5xl flex-col justify-center px-4 pb-20 pt-32 text-foreground sm:px-6 md:pt-36">
