@@ -78,6 +78,9 @@ const PREVIEW_TIMEOUT_MS = 45000;
 const SAVE_TIMEOUT_MS = 55000;
 const SEED_ANALYSIS_MIN_MS = 2200;
 const ICP_ANALYZER_ERROR_MESSAGE = "Something went wrong — please try again.";
+const RETRY_DELAY_MS = 2000;
+const SYNTHESIS_ERROR_USER_MESSAGE =
+  "The AI took longer than usual. Your inputs are saved — click 'Try again' and it usually works on the second attempt.";
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const GUIDED_SCREEN_ORDER: IcpFlowScreen[] = [
@@ -250,6 +253,12 @@ const isZeroCreditDeductionFailure = (error: unknown) => {
     : null;
 
   return isZeroCreditDeductionFailureDetails(details);
+};
+
+const getFailureType = (error: unknown): "timeout" | "api_error" | "invalid_response" => {
+  if (error instanceof Error && /timed out/i.test(error.message)) return "timeout";
+  if (error instanceof Error && "details" in error) return "api_error";
+  return "invalid_response";
 };
 
 function normaliseText(value: string | null | undefined) {
@@ -957,12 +966,26 @@ const ICPBuilder: React.FC = () => {
     setFallbackEmailError(null);
     setFallbackEmailState("idle");
 
+    const invokeWithRetry = async () => {
+      try {
+        return await invokeIcpAnalyzer<IcpDraftGenerationResponse>(
+          body,
+          persist ? SAVE_TIMEOUT_MS : PREVIEW_TIMEOUT_MS,
+          "ICP draft generation invocation failed",
+        );
+      } catch (firstError) {
+        if (isZeroCreditDeductionFailure(firstError)) throw firstError;
+        await new Promise<void>((resolve) => setTimeout(resolve, RETRY_DELAY_MS));
+        return await invokeIcpAnalyzer<IcpDraftGenerationResponse>(
+          body,
+          persist ? SAVE_TIMEOUT_MS : PREVIEW_TIMEOUT_MS,
+          "ICP draft generation retry invocation failed",
+        );
+      }
+    };
+
     try {
-      const data = await invokeIcpAnalyzer<IcpDraftGenerationResponse>(
-        body,
-        persist ? SAVE_TIMEOUT_MS : PREVIEW_TIMEOUT_MS,
-        "ICP draft generation invocation failed",
-      );
+      const data = await invokeWithRetry();
 
       if (!data?.success || data.status !== "draft_ready" || !data.artifact) {
         console.error("ICP draft generation returned an error", data?.error || data);
@@ -1059,15 +1082,16 @@ const ICPBuilder: React.FC = () => {
       captureEvent("icp_draft_generation_failed", {
         mode,
         persist,
+        failure_type: getFailureType(saveError),
         error: saveError instanceof Error ? saveError.message : String(saveError),
         userId: user?.id,
       });
       if (!persist) {
-        setSynthesisError(ICP_ANALYZER_ERROR_MESSAGE);
+        setSynthesisError(SYNTHESIS_ERROR_USER_MESSAGE);
       } else {
         toast({
           title: "Could not save your ICP Draft",
-          description: saveError instanceof Error ? saveError.message : "Your answers are still on this page, so please try again in a moment.",
+          description: SYNTHESIS_ERROR_USER_MESSAGE,
           variant: "destructive",
         });
       }
@@ -1083,11 +1107,24 @@ const ICPBuilder: React.FC = () => {
     setIsPersisting(true);
     try {
       if (user && session.draftPreview && session.unlockRequired) {
-        const data = await invokeIcpAnalyzer<IcpDraftGenerationResponse>(
-          buildIcpSaveExistingArtifactRequest(session.draftPreview),
-          SAVE_TIMEOUT_MS,
-          "ICP unlocked draft save invocation failed",
-        );
+        const saveWithRetry = async () => {
+          try {
+            return await invokeIcpAnalyzer<IcpDraftGenerationResponse>(
+              buildIcpSaveExistingArtifactRequest(session.draftPreview!),
+              SAVE_TIMEOUT_MS,
+              "ICP unlocked draft save invocation failed",
+            );
+          } catch (firstError) {
+            if (isZeroCreditDeductionFailure(firstError)) throw firstError;
+            await new Promise<void>((resolve) => setTimeout(resolve, RETRY_DELAY_MS));
+            return await invokeIcpAnalyzer<IcpDraftGenerationResponse>(
+              buildIcpSaveExistingArtifactRequest(session.draftPreview!),
+              SAVE_TIMEOUT_MS,
+              "ICP unlocked draft save retry invocation failed",
+            );
+          }
+        };
+        const data = await saveWithRetry();
 
         if (!isIcpDraftSaveReady(data)) {
           console.error("ICP unlocked draft save returned an error", data?.error || data);
@@ -1112,10 +1149,11 @@ const ICPBuilder: React.FC = () => {
         mode: session.mode,
         persist: true,
         flow: "persist_and_continue",
+        failure_type: getFailureType(error),
         error: error instanceof Error ? error.message : String(error),
         userId: user?.id,
       });
-      setPersistError(error instanceof Error ? error.message : "Your answers are still on this page, so please try again in a moment.");
+      setPersistError(SYNTHESIS_ERROR_USER_MESSAGE);
     } finally {
       setIsPersisting(false);
     }
