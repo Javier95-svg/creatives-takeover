@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { CheckCircle2 } from 'lucide-react';
 
 import StartupHomeCommandCenter from '@/components/dashboard/StartupHomeCommandCenter';
+import FirstRunCard from '@/components/dashboard/FirstRunCard';
 import JourneyNextStepCard from '@/components/dashboard/JourneyNextStepCard';
 import StarterDashboardNudge from '@/components/dashboard/StarterDashboardNudge';
 import { useExitIntent } from '@/hooks/useExitIntent';
@@ -49,6 +50,7 @@ const Dashboard = () => {
           </button>
         </div>
       ) : null}
+      <FirstRunCard />
       <JourneyNextStepCard />
       <StartupHomeCommandCenter />
       <StarterDashboardNudge />
