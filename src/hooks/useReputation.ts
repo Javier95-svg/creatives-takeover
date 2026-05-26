@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 
 export interface UserReputation {
   user_id: string;
@@ -193,10 +194,23 @@ export const useReputation = (userId?: string) => {
   };
 };
 
-// Hook to get leaderboard
+export interface UserRankInfo {
+  user_id: string;
+  total_points: number;
+  level: number;
+  level_name: string;
+  profiles: { full_name: string | null; avatar_url: string | null; username: string | null } | null;
+}
+
+// Hook to get leaderboard + current user's personal rank
 export const useLeaderboard = (limit: number = 10) => {
-  const [leaderboard, setLeaderboard] = useState<UserReputation[]>([]);
+  const [leaderboard, setLeaderboard] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [userRank, setUserRank] = useState<number | null>(null);
+  const [totalUsers, setTotalUsers] = useState<number>(0);
+  const [pointsToNextRank, setPointsToNextRank] = useState<number>(0);
+  const [userRankInfo, setUserRankInfo] = useState<UserRankInfo | null>(null);
+  const { user } = useAuth();
 
   useEffect(() => {
     const fetchLeaderboard = async () => {
@@ -215,13 +229,13 @@ export const useLeaderboard = (limit: number = 10) => {
           .limit(limit);
 
         if (error) throw error;
-        
+
         const formattedData = (data || []).map(item => ({
           ...item,
           badges: (item.badges as any) || [],
           achievements: (item.achievements as any) || [],
         }));
-        
+
         setLeaderboard(formattedData);
       } catch (error: any) {
         console.error('Error fetching leaderboard:', error);
@@ -230,8 +244,56 @@ export const useLeaderboard = (limit: number = 10) => {
       }
     };
 
-    fetchLeaderboard();
-  }, [limit]);
+    const fetchUserRank = async () => {
+      if (!user?.id) return;
 
-  return { leaderboard, isLoading };
+      try {
+        const { data: myRep } = await supabase
+          .from('user_reputation')
+          .select(`
+            total_points, level, level_name,
+            profiles!user_reputation_user_id_fkey (
+              full_name, avatar_url, username
+            )
+          `)
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        if (!myRep) return;
+
+        setUserRankInfo({ ...myRep, user_id: user.id, profiles: myRep.profiles as any });
+
+        const [{ count: usersAbove }, { count: total }, { data: nextAbove }] = await Promise.all([
+          supabase
+            .from('user_reputation')
+            .select('*', { count: 'exact', head: true })
+            .gt('total_points', myRep.total_points),
+          supabase
+            .from('user_reputation')
+            .select('*', { count: 'exact', head: true }),
+          supabase
+            .from('user_reputation')
+            .select('total_points')
+            .gt('total_points', myRep.total_points)
+            .order('total_points', { ascending: true })
+            .limit(1)
+            .maybeSingle(),
+        ]);
+
+        const rank = (usersAbove ?? 0) + 1;
+        setUserRank(rank);
+        setTotalUsers(total ?? 0);
+        setPointsToNextRank(nextAbove ? (nextAbove as any).total_points - myRep.total_points : 0);
+      } catch (error: any) {
+        console.error('Error fetching user rank:', error);
+      }
+    };
+
+    fetchLeaderboard();
+    fetchUserRank();
+  }, [limit, user?.id]);
+
+  const isInTopN = userRank !== null && userRank <= limit;
+
+  return { leaderboard, isLoading, userRank, totalUsers, pointsToNextRank, userRankInfo, isInTopN };
 };
