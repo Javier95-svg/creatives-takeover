@@ -486,9 +486,6 @@
   animation: ct-hero-strip-scroll 38s linear infinite;
 }
 
-.ct-hero__stats:hover .ct-hero__stats-track {
-  animation-play-state: paused;
-}
 
 @keyframes ct-hero-strip-scroll {
   0% {
@@ -509,6 +506,7 @@
   background: rgba(255, 255, 255, 0.025);
   text-align: left;
   backdrop-filter: blur(6px);
+  pointer-events: none;
 }
 
 .ct-hero__strip-stat .v {
