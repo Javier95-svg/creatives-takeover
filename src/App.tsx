@@ -52,6 +52,7 @@ const Careers = lazy(() => import("./pages/Careers"));
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const DataPrivacy = lazy(() => import("./pages/DataPrivacy"));
 const Terms = lazy(() => import("./pages/Terms"));
+const Unsubscribe = lazy(() => import("./pages/Unsubscribe"));
 const IPPolicy = lazy(() => import("./pages/IPPolicy"));
 const Signup = lazy(() => import("./pages/Signup"));
 const Dream2Plan = lazy(() => import("./pages/Dream2Plan"));
@@ -258,6 +259,7 @@ function App() {
                         <Route path="/data-privacy" element={<DataPrivacy />} />
                         <Route path="/terms" element={<Terms />} />
                         <Route path="/ip-policy" element={<IPPolicy />} />
+                        <Route path="/unsubscribe" element={<Unsubscribe />} />
                         <Route path="/bizmap-ai" element={<BizMapJourneyHubPage />} />
                         <Route path="/bizmap-ai/chat" element={<RouteErrorBoundary routeName="BizMap AI"><ToolRouteWithCreditGate><Dream2Plan /></ToolRouteWithCreditGate></RouteErrorBoundary>} />
                         <Route path="/pmf-lab" element={<RouteErrorBoundary routeName="PMF Lab"><PMFLabPage /></RouteErrorBoundary>} />

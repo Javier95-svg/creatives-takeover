@@ -229,22 +229,19 @@ function buildEmail(ctx: UserContext, sequence: SequenceSlug): BuiltEmail {
   switch (sequence) {
     case "activation_day0":
       return {
-        subject: "You're in - here's your first move",
-        ctaLabel: "Build My ICP Free",
-        ctaUrl: icpUrl,
+        subject: `Your ICP takes 60 seconds, ${ctx.firstName}`,
+        ctaLabel: "Build My ICP Now →",
+        ctaUrl: `${ctx.appUrl}/icp-builder?mode=fast&ref=email_d0`,
         text: `Hey ${ctx.firstName},
 
-Welcome to Creatives Takeover. You just joined a platform for founders who are actually building, not waiting for permission.
+You are in. One move unlocks everything else: build your ICP.
 
-You have 50 Rookie credits this month, and your best first move is free: build your ICP in a few minutes.
+It takes 60 seconds in fast mode, it is free, and it gives you a clear picture of exactly who you are building for.
 
-One tool, one focused session, and you will have a clearer picture of who you are building for.
+Most founders skip this and wonder why nothing sticks. Do not skip it.
 
-See you inside,
-Javier
-Founder, Creatives Takeover
-
-P.S. Hit reply if anything feels confusing. I read every message.`,
+- Javier
+Founder, Creatives Takeover`,
       };
 
     case "activation_day1": {
@@ -472,7 +469,7 @@ async function sendEmail(ctx: UserContext, sequence: SequenceSlug) {
 
   const built = buildEmail(ctx, sequence);
   const token = await signUnsubscribeToken(ctx.userId);
-  const unsubscribeUrl = `${supabaseUrl.replace(/\/$/, "")}/functions/v1/email-sequences?unsubscribe=1&user_id=${encodeURIComponent(ctx.userId)}&token=${encodeURIComponent(token)}`;
+  const unsubscribeUrl = `${ctx.appUrl}/unsubscribe?user_id=${encodeURIComponent(ctx.userId)}&token=${encodeURIComponent(token)}`;
   const fromEmail = getEnv("FROM_EMAIL") || "onboarding@resend.dev";
   const fromName = getEnv("FROM_NAME") || "Creatives Takeover";
 

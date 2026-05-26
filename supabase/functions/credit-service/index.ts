@@ -337,6 +337,24 @@ serve(withErrorBoundary(async function handler(req: Request) {
             metadata,
           });
 
+          if (result.success && effectiveUserId) {
+            const totalRemaining = (result.newBalance ?? 0) + (result.newQuota ?? 0);
+            const emailEvent =
+              totalRemaining <= 0 ? 'credit_exhausted'
+              : totalRemaining <= 5 ? 'credit_warning'
+              : null;
+            if (emailEvent) {
+              fetch(`${supabaseUrl}/functions/v1/email-sequences`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${serviceRoleKey}`,
+                },
+                body: JSON.stringify({ mode: 'event', event: emailEvent, user_id: effectiveUserId }),
+              }).catch((err) => console.error('credit-service: email trigger failed', err));
+            }
+          }
+
           return new Response(JSON.stringify(result), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }
           });
