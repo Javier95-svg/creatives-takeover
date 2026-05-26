@@ -1374,6 +1374,22 @@ const ICPBuilder: React.FC = () => {
     setSearchParams(next, { replace: true });
   }, [session.currentScreen, searchParams, handleSelectFastMode, setSearchParams]);
 
+  const handleSkipPersona = useCallback(() => {
+    captureEvent("icp_guided_step_skipped", { step: 2 });
+    setSession((prev) => ({
+      ...prev,
+      guided: {
+        ...prev.guided,
+        persona: {
+          role: prev.guided.persona?.role || "Not defined yet",
+          industry: prev.guided.persona?.industry || "Not defined yet",
+          experience: prev.guided.persona?.experience || "Not defined yet",
+        },
+      },
+      currentScreen: "guided_pain",
+    }));
+  }, []);
+
   const renderModeSelect = () => (
     <div className="mx-auto flex min-h-screen max-w-5xl flex-col justify-center px-4 pb-20 pt-32 text-foreground sm:px-6 md:pt-36">
       <div className="space-y-5 text-center">
@@ -1433,7 +1449,10 @@ const ICPBuilder: React.FC = () => {
         >
           <div className="pointer-events-none absolute inset-0 rounded-[2rem] border border-[#32b8c6]/15 opacity-60 motion-safe:animate-[pulse-slow_4s_ease-in-out_infinite]" />
           <div className="pointer-events-none relative z-10">
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#32b8c6]">Fast Mode</p>
+            <div className="flex items-center gap-2">
+              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#32b8c6]">Fast Mode</p>
+              <span className="rounded-full border border-[#32b8c6]/30 bg-[#32b8c6]/10 px-2.5 py-0.5 text-[11px] font-semibold text-[#32b8c6]">~60 sec</span>
+            </div>
             <p className="mt-4 text-xl font-semibold text-foreground">I can describe my startup idea clearly</p>
             <p className="mt-4 text-sm leading-6 text-muted-foreground">
               Paste a paragraph about your idea and see your ideal customer and their biggest frustration in under 60 seconds.
@@ -1459,7 +1478,10 @@ const ICPBuilder: React.FC = () => {
             style={{ animationDelay: "0.45s" }}
           />
           <div className="pointer-events-none relative z-10">
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#32b8c6]">Guided Mode</p>
+            <div className="flex items-center gap-2">
+              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#32b8c6]">Guided Mode</p>
+              <span className="rounded-full border border-[#32b8c6]/30 bg-[#32b8c6]/10 px-2.5 py-0.5 text-[11px] font-semibold text-[#32b8c6]">~4 min, 4 steps</span>
+            </div>
             <p className="mt-4 text-xl font-semibold text-foreground">I&apos;m still figuring things out</p>
             <p className="mt-4 text-sm leading-6 text-muted-foreground">
               Answer 4 short questions, one at a time, and we&apos;ll reveal the sharpest part of the draft before signup. Usually 3–4 minutes.
@@ -1727,6 +1749,16 @@ const ICPBuilder: React.FC = () => {
                   Continue if this looks directionally right. You can sharpen the positioning and founder edge after you unlock the full draft.
                 </p>
               )}
+            </div>
+
+            <div className="text-center">
+              <button
+                type="button"
+                className="text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground transition-colors"
+                onClick={handleSkipPersona}
+              >
+                Skip for now →
+              </button>
             </div>
           </div>,
         );
