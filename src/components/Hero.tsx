@@ -1,9 +1,10 @@
 import { ReactNode, useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { ArrowRight, LayoutDashboard, User } from "lucide-react";
 
 import { useAuth } from "@/contexts/AuthContext";
 import { useConversionTracking } from "@/hooks/useConversionTracking";
+import { useCTAAttribution } from "@/hooks/useCTAAttribution";
 import { supabase } from "@/integrations/supabase/client";
 import heroCompass from "@/assets/hero-compass.svg";
 import "./hero-cinematic-spotlight.css";
@@ -81,7 +82,7 @@ const Hero = ({
   titleLine2 = "compass",
   lede = DEFAULT_LEDE,
   ctaLabel = "Start Free — Build Your ICP",
-  ctaHref = "/icp-builder",
+  ctaHref = "/icp-builder?mode=fast",
   onCtaClick,
   dashboardUrl = "creatives-takeover.com/dashboard",
   dashboardBread = "Building · Stage 4 of 7",
@@ -90,6 +91,8 @@ const Hero = ({
 }: HeroProps) => {
   const { isAuthenticated, user } = useAuth();
   const { trackTriggerView, trackEngagement } = useConversionTracking();
+  const location = useLocation();
+  const { set: setAttribution } = useCTAAttribution();
   const heroRef = useRef<HTMLElement>(null);
   const hasTrackedView = useRef(false);
   const [userUsername, setUserUsername] = useState<string | null>(null);
@@ -142,6 +145,7 @@ const Hero = ({
 
   const handleCtaClick = () => {
     trackEngagement("hero-primary-cta", 85);
+    setAttribution('hero_start_free', location.pathname);
     onCtaClick?.();
   };
 
