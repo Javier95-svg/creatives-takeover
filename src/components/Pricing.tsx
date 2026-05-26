@@ -7,6 +7,8 @@ import { useSubscription } from "@/hooks/useSubscription";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { normalizePlanId, trackUpgradeClicked } from "@/lib/analytics";
+import { useCTAAttribution } from "@/hooks/useCTAAttribution";
+import { useLocation } from "react-router-dom";
 import { PLAN_HIGHLIGHTS, PLAN_MONTHLY_CREDITS } from "@/config/planPermissions";
 import { appendCheckoutIntentParam, persistCheckoutIntent } from "@/lib/checkoutRedirect";
 import { RevealGroup } from "@/components/animations/ScrollReveal";
@@ -127,6 +129,8 @@ export default function Pricing() {
   const { loading, actionLoading, subscriptionData, createCheckout } = useSubscription();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const { set: setAttribution } = useCTAAttribution();
   const [billingCycle, setBillingCycle] = useState<BillingCycle>("monthly");
   const [pendingPlan, setPendingPlan] = useState<PlanKey | null>(null);
   const [, startNavigation] = useTransition();
@@ -160,6 +164,7 @@ export default function Pricing() {
           navigate("/dashboard");
         });
       } else {
+        setAttribution('pricing_rookie', location.pathname);
         startNavigation(() => {
           navigate("/signup?source=pricing_page&return=/dashboard");
         });
@@ -170,6 +175,7 @@ export default function Pricing() {
     const checkoutIntent = `${plan}-${billingCycle}`;
 
     if (!user) {
+      setAttribution(`pricing_${plan}`, location.pathname);
       persistCheckoutIntent(checkoutIntent);
       const signupPath = appendCheckoutIntentParam(
         `/signup?source=pricing_page&return=${encodeURIComponent('/pricing')}`,
@@ -239,10 +245,14 @@ export default function Pricing() {
             return (
               <div
                 key={plan.key}
-                className={`relative w-full max-w-[430px] rounded-2xl border bg-card/80 p-6 sm:p-8 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl flex flex-col backdrop-blur ${cardStyle.border} ${
+                role="button"
+                tabIndex={0}
+                className={`relative w-full max-w-[430px] cursor-pointer rounded-2xl border bg-card/80 p-6 sm:p-8 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl flex flex-col backdrop-blur ${cardStyle.border} ${
                   isCurrentPlan || isPopular || isPro ? `ring-1 ${cardStyle.ring} shadow-md` : ""
                 }`}
                 style={{ animationDelay: `${index * 0.08}s` }}
+                onClick={() => void handleSubscribe(plan.key)}
+                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); void handleSubscribe(plan.key); } }}
               >
                 {((isCurrentPlan && user) || isPopular || plan.highlight) && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2">

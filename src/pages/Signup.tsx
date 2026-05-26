@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,7 +17,8 @@ import MobileFormOptimizer from "@/components/MobileFormOptimizer";
 import { AuthSocialButtons } from "@/components/auth/AuthSocialButtons";
 import { mapSignUpError } from "@/lib/authErrors";
 import { MIN_PASSWORD_LENGTH, PASSWORD_LENGTH_ERROR } from "@/lib/passwordPolicy";
-import { captureEvent, persistAuthMethod } from "@/lib/analytics";
+import { captureEvent, persistAuthMethod, trackSignupCompletedAttributed } from "@/lib/analytics";
+import { useCTAAttribution } from "@/hooks/useCTAAttribution";
 import {
   isUsernameAvailable,
   normalizeUsernameInput,
@@ -80,6 +81,10 @@ const Signup = () => {
   const { signUp, user } = useAuth();
   const navigate = useNavigate();
   const { trackSignupStarted, trackSignupCompleted } = useConversionTracking();
+  const { get: getAttribution, clear: clearAttribution } = useCTAAttribution();
+  const formSubmitted = useRef(false);
+  const [lastFocused, setLastFocused] = useState<string | null>(null);
+  const [fieldsInteracted, setFieldsInteracted] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     const timer = window.setInterval(() => {
@@ -88,6 +93,20 @@ const Signup = () => {
 
     return () => window.clearInterval(timer);
   }, [signupHeroTimerReset]);
+
+  // Fire abandonment event when user leaves without submitting
+  useEffect(() => {
+    return () => {
+      if (fieldsInteracted.size > 0 && !formSubmitted.current) {
+        captureEvent('signup_form_abandoned', {
+          last_field: lastFocused,
+          fields_touched: Array.from(fieldsInteracted),
+          fields_count: fieldsInteracted.size,
+        });
+      }
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lastFocused, fieldsInteracted]);
 
   // Get conversion source from URL
   const [conversionSource] = useState(() => {
@@ -328,6 +347,16 @@ const Signup = () => {
 
         // Track conversion completion
         trackSignupCompleted(triggerType);
+        formSubmitted.current = true;
+
+        const attr = getAttribution();
+        trackSignupCompletedAttributed({
+          method: 'email',
+          entry_cta: attr?.ctaId ?? 'direct',
+          entry_page: attr?.page ?? 'unknown',
+          minutes_from_cta: attr ? Math.round((Date.now() - attr.clickedAt) / 60000) : null,
+        });
+        clearAttribution();
 
         try {
           await trackActivity('user:signup', { source: conversionSource.source });
@@ -660,6 +689,7 @@ const Signup = () => {
                       type="email"
                       value={formData.email}
                       onChange={handleInputChange}
+                      onBlur={() => { setLastFocused('email'); setFieldsInteracted(prev => new Set(prev).add('email')); }}
                       placeholder="Enter your email"
                       className={`pl-10 h-12 bg-background/50 backdrop-blur-sm border-2 transition-all duration-200 focus:border-primary focus:ring-2 focus:ring-primary/20 ${errors.email ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : ''
                         }`}
@@ -689,6 +719,7 @@ const Signup = () => {
                       type={showPassword ? "text" : "password"}
                       value={formData.password}
                       onChange={handleInputChange}
+                      onBlur={() => { setLastFocused('password'); setFieldsInteracted(prev => new Set(prev).add('password')); }}
                       placeholder="Create a password"
                       className={`pl-10 pr-12 h-12 bg-background/50 backdrop-blur-sm border-2 transition-all duration-200 focus:border-primary focus:ring-2 focus:ring-primary/20 ${errors.password ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : ''
                         }`}
@@ -768,7 +799,8 @@ const Signup = () => {
                   </p>
                   <p className="text-xs text-muted-foreground flex items-center justify-center gap-2">
                     <span
-                      className="relative w-2 h-2 rounded-full bg-green-500"
+                      aria-hidden="true"
+                      className="pointer-events-none relative w-2 h-2 rounded-full bg-green-500"
                       style={{
                         animation: 'flicker 1.5s ease-in-out infinite',
                         boxShadow: '0 0 6px rgba(34, 197, 94, 0.8), 0 0 12px rgba(34, 197, 94, 0.5)'
