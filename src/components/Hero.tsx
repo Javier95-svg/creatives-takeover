@@ -82,7 +82,7 @@ const Hero = ({
   titleLine2 = "compass",
   lede = DEFAULT_LEDE,
   ctaLabel = "Start Free — Build Your ICP",
-  ctaHref = "/icp-builder?mode=fast",
+  ctaHref = "/icp-builder",
   onCtaClick,
   dashboardUrl = "creatives-takeover.com/dashboard",
   dashboardBread = "Building · Stage 4 of 7",
