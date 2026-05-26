@@ -229,29 +229,29 @@ function App() {
                         <Route path="/co-founder/create" element={<CreateCoFounderPost />} />
                         <Route path="/co-founder/edit/:postId" element={<EditCoFounderPost />} />
                         <Route path="/investors" element={<FindYourAngel />} />
-                        <Route path="/investors/admin/new" element={<AdminAngelEditor />} />
-                        <Route path="/investors/admin/edit/:id" element={<AdminAngelEditor />} />
+                        <Route path="/investors/admin/new" element={<AdminRoute><AdminAngelEditor /></AdminRoute>} />
+                        <Route path="/investors/admin/edit/:id" element={<AdminRoute><AdminAngelEditor /></AdminRoute>} />
                         <Route path="/mentorship/my-bookings" element={<MyBookings />} />
-                        <Route path="/mentorship/admin/new" element={<AdminMentorEditor />} />
-                        <Route path="/mentorship/admin/edit/:id" element={<AdminMentorEditor />} />
+                        <Route path="/mentorship/admin/new" element={<AdminRoute><AdminMentorEditor /></AdminRoute>} />
+                        <Route path="/mentorship/admin/edit/:id" element={<AdminRoute><AdminMentorEditor /></AdminRoute>} />
                         <Route path="/mentorship/:slug" element={<MentorProfilePage />} />
                         <Route path="/community" element={<LegacyCommunityRedirect />} />
                         <Route path="/community/*" element={<LegacyCommunityRedirect />} />
                         <Route path="/newspaper" element={<Stories />} />
                         <Route path="/newspaper/rss.xml" element={<StoriesRSS />} />
                         <Route path="/newspaper/tags/:tagSlug" element={<StoryTagPage />} />
-                        <Route path="/newspaper/admin/new" element={<AdminStoryEditor />} />
-                        <Route path="/newspaper/admin/edit/:id" element={<AdminStoryEditor />} />
+                        <Route path="/newspaper/admin/new" element={<AdminRoute><AdminStoryEditor /></AdminRoute>} />
+                        <Route path="/newspaper/admin/edit/:id" element={<AdminRoute><AdminStoryEditor /></AdminRoute>} />
                         <Route path="/newspaper/:slug" element={<StoryArticle />} />
                         <Route path="/stories" element={<Navigate to="/newspaper" replace />} />
                         <Route path="/stories/rss.xml" element={<Navigate to="/newspaper/rss.xml" replace />} />
                         <Route path="/stories/tags/:tagSlug" element={<StoryTagPage />} />
                         <Route path="/stories/admin/new" element={<Navigate to="/newspaper/admin/new" replace />} />
-                        <Route path="/stories/admin/edit/:id" element={<AdminStoryEditor />} />
+                        <Route path="/stories/admin/edit/:id" element={<AdminRoute><AdminStoryEditor /></AdminRoute>} />
                         <Route path="/stories/:slug" element={<StoryArticle />} />
-                        <Route path="/admin/hero-images" element={<AdminHeroImages />} />
-                        <Route path="/admin/vc-management" element={<AdminVCManagement />} />
-                        <Route path="/admin/accelerator-management" element={<AdminAcceleratorManagement />} />
+                        <Route path="/admin/hero-images" element={<AdminRoute><AdminHeroImages /></AdminRoute>} />
+                        <Route path="/admin/vc-management" element={<AdminRoute><AdminVCManagement /></AdminRoute>} />
+                        <Route path="/admin/accelerator-management" element={<AdminRoute><AdminAcceleratorManagement /></AdminRoute>} />
                         <Route path="/careers" element={<Careers />} />
                         <Route path="/prompt-library" element={<PromptLibrary />} />
                         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
