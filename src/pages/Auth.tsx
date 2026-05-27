@@ -34,6 +34,7 @@ import {
   type SocialAuthProviderId,
 } from '@/lib/socialAuth';
 import {
+  PENDING_DISCOVERY_CALL_BOOKING_KEY,
   PENDING_DISCOVERY_CALL_KEY,
   resumePendingDiscoveryCallRedirect,
 } from '@/services/discoveryCallService';
@@ -212,15 +213,17 @@ const Auth: React.FC = () => {
       intent,
       beforeRedirect: () => {
         if (intent === 'login') {
-          const pendingCalendlyUrl = localStorage.getItem(PENDING_DISCOVERY_CALL_KEY);
+          const pendingBookingUrl = localStorage.getItem(PENDING_DISCOVERY_CALL_BOOKING_KEY)
+            || localStorage.getItem(PENDING_DISCOVERY_CALL_KEY);
 
           localStorage.setItem('oauth_return_url', finalRedirect);
           localStorage.removeItem('oauth_signup_method');
           setOAuthAuthIntent('login');
           persistOnboardingReturn(finalRedirect);
 
-          if (pendingCalendlyUrl) {
-            localStorage.setItem('oauth_calendly_redirect', pendingCalendlyUrl);
+          if (pendingBookingUrl) {
+            localStorage.setItem('oauth_discovery_call_booking_redirect', pendingBookingUrl);
+            localStorage.setItem('oauth_calendly_redirect', pendingBookingUrl);
           }
 
           return;

@@ -10,7 +10,11 @@ import { appendReturnParam, persistOnboardingReturn, sanitizeReturnPath } from '
 import { consumeCheckoutIntent, redirectToCheckoutIntent } from '@/lib/checkoutRedirect';
 import { ICP_SEED_STORAGE_KEY } from '@/lib/icpSeed';
 import { getSafeSessionStorage } from '@/lib/safeStorage';
-import { resumePendingDiscoveryCallRedirect } from '@/services/discoveryCallService';
+import {
+  PENDING_DISCOVERY_CALL_BOOKING_KEY,
+  PENDING_DISCOVERY_CALL_KEY,
+  resumePendingDiscoveryCallRedirect,
+} from '@/services/discoveryCallService';
 import {
   clearOAuthAuthIntent,
   clearPendingReferralCode,
@@ -138,14 +142,19 @@ const AuthCallback = () => {
           }
           
           // Check for pending discovery-call redirect (from OAuth or regular auth)
-          const oauthCalendlyUrl = localStorage.getItem('oauth_calendly_redirect');
-          const pendingCalendlyUrl = localStorage.getItem('pending_calendly_redirect') || oauthCalendlyUrl;
+          const oauthBookingUrl = localStorage.getItem('oauth_discovery_call_booking_redirect')
+            || localStorage.getItem('oauth_calendly_redirect');
+          const pendingBookingUrl = localStorage.getItem(PENDING_DISCOVERY_CALL_BOOKING_KEY)
+            || localStorage.getItem(PENDING_DISCOVERY_CALL_KEY)
+            || oauthBookingUrl;
           
-          if (pendingCalendlyUrl) {
-            localStorage.removeItem('pending_calendly_redirect');
+          if (pendingBookingUrl) {
+            localStorage.removeItem(PENDING_DISCOVERY_CALL_BOOKING_KEY);
+            localStorage.removeItem(PENDING_DISCOVERY_CALL_KEY);
+            localStorage.removeItem('oauth_discovery_call_booking_redirect');
             localStorage.removeItem('oauth_calendly_redirect');
 
-            localStorage.setItem('pending_calendly_redirect', pendingCalendlyUrl);
+            localStorage.setItem(PENDING_DISCOVERY_CALL_BOOKING_KEY, pendingBookingUrl);
             await resumePendingDiscoveryCallRedirect();
             // Also navigate to community page
             setTimeout(() => {

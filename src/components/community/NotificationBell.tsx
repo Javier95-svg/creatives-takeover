@@ -117,6 +117,11 @@ export const NotificationBell = () => {
       return;
     }
 
+    if (notification.notification_type === 'discovery_call_event') {
+      navigateTo(metadataRoute || '/dashboard');
+      return;
+    }
+
     // Navigate to profile for follow requests
     if (notification.notification_type === 'follow_request') {
       navigateTo(actorProfilePath || '/mentorship');
@@ -208,6 +213,8 @@ export const NotificationBell = () => {
         return metadata?.message || (metadata?.creditsAdded
           ? `${metadata.creditsAdded} credits were added to your balance`
           : 'Your purchased credits were added to your balance');
+      case 'discovery_call_event':
+        return metadata?.message || 'There is an update for your discovery call';
       default:
         return `${actor.name} interacted with your post`;
     }

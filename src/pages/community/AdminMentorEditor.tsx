@@ -69,6 +69,7 @@ const AdminMentorEditor = () => {
     twitter_x_url: null,
     website_url: null,
     calendly_url: null,
+    booking_provider: 'calendly',
     nationality: null,
   });
 
@@ -108,6 +109,7 @@ const AdminMentorEditor = () => {
         twitter_x_url: found.twitter_x_url || null,
         website_url: found.website_url || null,
         calendly_url: found.calendly_url || null,
+        booking_provider: found.booking_provider || 'calendly',
         nationality: found.nationality || null,
       });
       if (found.picture) {
@@ -328,6 +330,7 @@ const AdminMentorEditor = () => {
         twitter_x_url: formData.twitter_x_url || null,
         website_url: formData.website_url || null,
         calendly_url: formData.calendly_url || null,
+        booking_provider: formData.booking_provider || 'calendly',
         nationality: formData.nationality || null,
       };
 
@@ -565,7 +568,32 @@ const AdminMentorEditor = () => {
                   </p>
                 </div>
                 <div>
-                  <Label htmlFor="calendly_url">Calendly URL *</Label>
+                  <Label htmlFor="booking_provider">Booking Provider *</Label>
+                  <Select
+                    value={formData.booking_provider || 'calendly'}
+                    onValueChange={(value) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        booking_provider: value as CreateMentorInput['booking_provider'],
+                      }))
+                    }
+                  >
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Select booking provider" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="calendly">Calendly</SelectItem>
+                      <SelectItem value="koalendar">Koalendar</SelectItem>
+                      <SelectItem value="other">Other booking tool</SelectItem>
+                      <SelectItem value="manual">Manual confirmation only</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Used by discovery call confirmation webhooks and admin review.
+                  </p>
+                </div>
+                <div>
+                  <Label htmlFor="calendly_url">Booking URL *</Label>
                   <Input
                     id="calendly_url"
                     type="url"
@@ -573,11 +601,11 @@ const AdminMentorEditor = () => {
                     onChange={(e) =>
                       setFormData((prev) => ({ ...prev, calendly_url: e.target.value || null }))
                     }
-                    placeholder="https://calendly.com/username"
+                    placeholder="https://calendly.com/username or https://koalendar.com/e/..."
                     className="mt-1"
                   />
                   <p className="text-xs text-muted-foreground mt-1">
-                    Required: Calendly link for discovery call bookings
+                    Required: external calendar link for discovery call bookings
                   </p>
                 </div>
                 <div>

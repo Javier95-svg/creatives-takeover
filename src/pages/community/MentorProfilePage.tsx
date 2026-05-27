@@ -77,13 +77,13 @@ const MentorProfilePage = () => {
   const handleBookClick = async () => {
     if (!mentor) return;
 
-    const calendlyUrl = mentor.calendly_url?.trim();
+    const bookingUrl = mentor.calendly_url?.trim();
 
-    if (!calendlyUrl) {
-      toast.error("This mentor does not have a Calendly link configured yet.");
+    if (!bookingUrl) {
+      toast.error("This mentor does not have a booking link configured yet.");
       return;
     }
-    const normalizedCalendlyUrl = /^https?:\/\//i.test(calendlyUrl) ? calendlyUrl : `https://${calendlyUrl}`;
+    const normalizedBookingUrl = /^https?:\/\//i.test(bookingUrl) ? bookingUrl : `https://${bookingUrl}`;
 
     // Check if user is authenticated
     if (!isAuthenticated || !user) {
@@ -91,8 +91,8 @@ const MentorProfilePage = () => {
       return;
     }
 
-    const calendlyTab = openDeferredExternalTab();
-    if (!calendlyTab) {
+    const bookingTab = openDeferredExternalTab();
+    if (!bookingTab) {
       toast.error('Popup blocked. Please allow popups and try again.');
       return;
     }
@@ -107,7 +107,7 @@ const MentorProfilePage = () => {
       });
 
       if (!bookingIntent.success || !bookingIntent.callId) {
-        calendlyTab.close();
+        bookingTab.close();
 
         if (bookingIntent.errorCode === 'PLAN_UPGRADE_REQUIRED' && bookingIntent.requiredTier) {
           openUpgradePrompt({
@@ -133,7 +133,7 @@ const MentorProfilePage = () => {
         return;
       }
 
-      calendlyTab.location.href = buildDiscoveryCallRedirectUrl(normalizedCalendlyUrl, bookingIntent.callId);
+      bookingTab.location.href = buildDiscoveryCallRedirectUrl(normalizedBookingUrl, bookingIntent.callId);
 
       await trackRetentionEvent('discovery_call_booked', {
         user_id: user.id,
@@ -150,7 +150,7 @@ const MentorProfilePage = () => {
         actionUrl: location.pathname,
       });
     } catch (error) {
-      calendlyTab.close();
+      bookingTab.close();
       console.error('Error creating discovery call intent:', error);
       toast.error('Unable to process booking. Please try again.');
     }

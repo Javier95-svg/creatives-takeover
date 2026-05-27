@@ -53,15 +53,15 @@ const MentorBookingPage = () => {
       return;
     }
 
-    const calendlyUrl = mentor.calendly_url?.trim();
-    if (!calendlyUrl) {
+    const bookingUrl = mentor.calendly_url?.trim();
+    if (!bookingUrl) {
       toast.error("This mentor does not have a booking link configured yet.");
       navigate(`/mentorship/mentors/${mentor.id}`);
       return;
     }
 
-    const calendlyTab = openDeferredExternalTab();
-    if (!calendlyTab) {
+    const bookingTab = openDeferredExternalTab();
+    if (!bookingTab) {
       toast.error("Popup blocked. Please allow popups and try again.");
       return;
     }
@@ -77,7 +77,7 @@ const MentorBookingPage = () => {
       });
 
       if (!bookingIntent.success || !bookingIntent.callId) {
-        calendlyTab.close();
+        bookingTab.close();
 
         if (bookingIntent.errorCode === "INSUFFICIENT_CREDITS") {
           openUpgradePrompt({
@@ -99,10 +99,10 @@ const MentorBookingPage = () => {
         return;
       }
 
-      calendlyTab.location.href = buildDiscoveryCallRedirectUrl(calendlyUrl, bookingIntent.callId);
+      bookingTab.location.href = buildDiscoveryCallRedirectUrl(bookingUrl, bookingIntent.callId);
       toast.success("Booking opened in a new tab.");
     } catch (error) {
-      calendlyTab.close();
+      bookingTab.close();
       console.error("Error creating discovery call intent:", error);
       toast.error("Unable to process booking. Please try again.");
     } finally {
@@ -169,7 +169,7 @@ const MentorBookingPage = () => {
                   </div>
 
                   <div className="rounded-lg border border-border/60 bg-muted/30 p-4 text-sm text-muted-foreground">
-                    Discovery calls are available on every plan and cost 10 credits only after Calendly confirms your booking.
+                    Discovery calls are available on every plan and cost 10 credits only after your booking is confirmed.
                   </div>
 
                   <Button

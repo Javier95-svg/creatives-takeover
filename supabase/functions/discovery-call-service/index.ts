@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { logError, logInfo } from "../_shared/logger.ts";
+import { processDiscoveryCallProviderEvent } from "../_shared/discovery-call-provider-events.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -154,7 +155,68 @@ serve(async (req: Request) => {
         throw error;
       }
 
+      if (data?.success) {
+        await supabaseAdmin.functions.invoke("notify-discovery-call-event", {
+          body: {
+            discoveryCallId: body.callId,
+            eventType: "scheduled",
+          },
+        }).catch((notificationError) => {
+          logInfo("discovery-call-service:notification-after-finalize-failed", {
+            callId: body.callId,
+            error: notificationError instanceof Error ? notificationError.message : String(notificationError),
+          });
+        });
+      }
+
       return jsonResponse(data, data?.success ? 200 : 409);
+    }
+
+    if (action === "manualConfirmBooking") {
+      if (!isAdmin) {
+        return jsonResponse({ error: "Admin access required" }, 403);
+      }
+
+      const result = await processDiscoveryCallProviderEvent(supabaseAdmin, {
+        providerName: "manual",
+        eventType: "booking_created",
+        providerEventId: body.providerEventId ?? `manual:${body.callId}:${body.scheduledFor}`,
+        providerInviteeId: body.providerInviteeId ?? null,
+        discoveryCallId: body.callId,
+        inviteeEmail: body.inviteeEmail ?? null,
+        inviteeName: body.inviteeName ?? null,
+        scheduledFor: body.scheduledFor,
+        scheduledUntil: body.scheduledUntil ?? null,
+        meetingUrl: body.meetingUrl ?? null,
+        rawPayload: body,
+        metadata: {
+          confirmedByAdminUserId: user.id,
+          confirmationSource: "discovery-call-service",
+          ...(typeof body.metadata === "object" && body.metadata !== null ? body.metadata : {}),
+        },
+      });
+
+      return jsonResponse(result, result.ok === false ? 409 : 200);
+    }
+
+    if (action === "listProviderEvents") {
+      if (!isAdmin) {
+        return jsonResponse({ error: "Admin access required" }, 403);
+      }
+
+      const status = typeof body.status === "string" ? body.status : "pending_review";
+      const { data, error } = await supabaseAdmin
+        .from("discovery_call_provider_events")
+        .select("*")
+        .eq("match_status", status)
+        .order("created_at", { ascending: false })
+        .limit(50);
+
+      if (error) {
+        throw error;
+      }
+
+      return jsonResponse({ success: true, events: data ?? [] });
     }
 
     if (action === "updateStatus") {
@@ -172,6 +234,21 @@ serve(async (req: Request) => {
 
       if (error) {
         throw error;
+      }
+
+      if (data?.success) {
+        await supabaseAdmin.functions.invoke("notify-discovery-call-event", {
+          body: {
+            discoveryCallId: body.callId,
+            eventType: body.status,
+          },
+        }).catch((notificationError) => {
+          logInfo("discovery-call-service:notification-after-status-failed", {
+            callId: body.callId,
+            status: body.status,
+            error: notificationError instanceof Error ? notificationError.message : String(notificationError),
+          });
+        });
       }
 
       return jsonResponse(data, data?.success ? 200 : 409);

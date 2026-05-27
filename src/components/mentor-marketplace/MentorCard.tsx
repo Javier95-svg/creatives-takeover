@@ -247,13 +247,13 @@ export const MentorCard = ({ mentor, className, priority = false }: MentorCardPr
     e.preventDefault();
     e.stopPropagation();
 
-    const calendlyUrl = mentor.calendly_url?.trim();
+    const bookingUrl = mentor.calendly_url?.trim();
 
-    if (!hasBookableCall || !calendlyUrl) {
-      toast.error("This mentor does not have a Calendly link configured yet.");
+    if (!hasBookableCall || !bookingUrl) {
+      toast.error("This mentor does not have a booking link configured yet.");
       return;
     }
-    const normalizedCalendlyUrl = /^https?:\/\//i.test(calendlyUrl) ? calendlyUrl : `https://${calendlyUrl}`;
+    const normalizedBookingUrl = /^https?:\/\//i.test(bookingUrl) ? bookingUrl : `https://${bookingUrl}`;
 
     // Check if user is authenticated
     if (!isAuthenticated || !user) {
@@ -261,8 +261,8 @@ export const MentorCard = ({ mentor, className, priority = false }: MentorCardPr
       return;
     }
 
-    const calendlyTab = openDeferredExternalTab();
-    if (!calendlyTab) {
+    const bookingTab = openDeferredExternalTab();
+    if (!bookingTab) {
       toast.error('Popup blocked. Please allow popups and try again.');
       return;
     }
@@ -277,7 +277,7 @@ export const MentorCard = ({ mentor, className, priority = false }: MentorCardPr
       });
 
       if (!bookingIntent.success || !bookingIntent.callId) {
-        calendlyTab.close();
+        bookingTab.close();
 
         if (bookingIntent.errorCode === 'PLAN_UPGRADE_REQUIRED' && bookingIntent.requiredTier) {
           openUpgradePrompt({
@@ -303,7 +303,7 @@ export const MentorCard = ({ mentor, className, priority = false }: MentorCardPr
         return;
       }
 
-      calendlyTab.location.href = buildDiscoveryCallRedirectUrl(normalizedCalendlyUrl, bookingIntent.callId);
+      bookingTab.location.href = buildDiscoveryCallRedirectUrl(normalizedBookingUrl, bookingIntent.callId);
 
       await trackRetentionEvent('discovery_call_booked', {
         user_id: user.id,
@@ -320,7 +320,7 @@ export const MentorCard = ({ mentor, className, priority = false }: MentorCardPr
         actionUrl: profileUrl,
       });
     } catch (error) {
-      calendlyTab.close();
+      bookingTab.close();
       console.error('Error creating discovery call intent:', error);
       toast.error('Unable to process booking. Please try again.');
     }
@@ -628,7 +628,7 @@ export const MentorCard = ({ mentor, className, priority = false }: MentorCardPr
             </div>
             {hasBookableCall && (
               <p className="text-xs text-muted-foreground">
-                Unlimited on every plan. 10 credits are charged only after Calendly confirms the booking.
+                Unlimited on every plan. 10 credits are charged only after the booking is confirmed.
               </p>
             )}
             {(!hasBookableCall || !hasMessagingAccount) && (

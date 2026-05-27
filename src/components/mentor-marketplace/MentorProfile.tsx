@@ -547,7 +547,7 @@ export const MentorProfile = ({ mentor, onBookClick }: MentorProfileProps) => {
 	                </div>
             {hasBookableCall && (
               <p className="text-xs text-muted-foreground">
-                Unlimited on every plan. 10 credits are charged only after Calendly confirms the booking.
+                Unlimited on every plan. 10 credits are charged only after the booking is confirmed.
               </p>
             )}
             {(!hasBookableCall || !hasMessagingAccount) && (

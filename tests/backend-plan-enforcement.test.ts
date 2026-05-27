@@ -79,6 +79,53 @@ test('discovery call metering migration removes plan caps and charges 10 credits
   assert.match(source, /'chargedCredits', v_charge_amount/);
 });
 
+test('provider-neutral discovery call migration records external booking confirmations', () => {
+  const source = readFileSync(new URL('../supabase/migrations/20260527143000_provider_neutral_discovery_call_confirmations.sql', import.meta.url), 'utf8');
+
+  assert.match(source, /ADD COLUMN IF NOT EXISTS booking_provider/);
+  assert.match(source, /CREATE TABLE IF NOT EXISTS public\.discovery_call_provider_events/);
+  assert.match(source, /match_status IN \('matched', 'pending_review', 'ignored', 'failed'\)/);
+  assert.match(source, /provider_name IN \('calendly', 'koalendar', 'email', 'manual', 'other'\)/);
+  assert.match(source, /public\.infer_discovery_call_provider/);
+  assert.match(source, /'bookingProvider', v_provider/);
+  assert.match(source, /GRANT SELECT ON TABLE public\.discovery_call_admin_overview TO service_role/);
+});
+
+test('discovery call provider processor uses strict matching before charging', () => {
+  const source = readFileSync(new URL('../supabase/functions/_shared/discovery-call-provider-events.ts', import.meta.url), 'utf8');
+
+  assert.match(source, /processDiscoveryCallProviderEvent/);
+  assert.match(source, /matchedBy: event\.providerName === "manual" \? "manual" : "tracking_id"/);
+  assert.match(source, /matchedBy: "provider_invitee_id"/);
+  assert.match(source, /matchedBy: "provider_event_id"/);
+  assert.match(source, /ambiguous_recent_intent_for_email/);
+  assert.match(source, /matchStatus: "pending_review"/);
+  assert.match(source, /finalize_discovery_call_booking/);
+  assert.match(source, /notify-discovery-call-event/);
+});
+
+test('calendly and koalendar webhooks share the provider-neutral processor', () => {
+  const calendlySource = readFileSync(new URL('../supabase/functions/calendly-webhook/index.ts', import.meta.url), 'utf8');
+  const koalendarSource = readFileSync(new URL('../supabase/functions/koalendar-webhook/index.ts', import.meta.url), 'utf8');
+
+  assert.match(calendlySource, /normalizeCalendlyEvent/);
+  assert.match(calendlySource, /processDiscoveryCallProviderEvent/);
+  assert.match(koalendarSource, /normalizeKoalendarEvent/);
+  assert.match(koalendarSource, /processDiscoveryCallProviderEvent/);
+  assert.match(koalendarSource, /KOALENDAR_WEBHOOK_SECRET/);
+});
+
+test('discovery call notifications fan out beyond admin-only Calendly emails', () => {
+  const source = readFileSync(new URL('../supabase/functions/notify-discovery-call-event/index.ts', import.meta.url), 'utf8');
+
+  assert.match(source, /discovery_call_event/);
+  assert.match(source, /founderEmailResult/);
+  assert.match(source, /mentorEmailResult/);
+  assert.match(source, /adminEmailResult/);
+  assert.match(source, /Discovery Call Needs Review/);
+  assert.match(source, /community_notifications/);
+});
+
 test('subscription checkout copy uses the paid plan credit ladder', () => {
   const source = readFileSync(new URL('../supabase/functions/create-checkout/index.ts', import.meta.url), 'utf8');
 

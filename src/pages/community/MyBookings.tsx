@@ -86,7 +86,7 @@ const MyBookings = () => {
 
   const renderTiming = (booking: DiscoveryCallBookingItem) => {
     if (!booking.scheduledFor) {
-      return <span>Awaiting final scheduling in Calendly</span>;
+      return <span>Awaiting final scheduling confirmation</span>;
     }
 
     return (

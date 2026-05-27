@@ -4767,6 +4767,7 @@ export type Database = {
         Row: {
           availability: Json | null
           bio: string
+          booking_provider: string
           calendly_url: string | null
           created_at: string
           currency: string | null
@@ -4792,6 +4793,7 @@ export type Database = {
         Insert: {
           availability?: Json | null
           bio: string
+          booking_provider?: string
           calendly_url?: string | null
           created_at?: string
           currency?: string | null
@@ -4817,6 +4819,7 @@ export type Database = {
         Update: {
           availability?: Json | null
           bio?: string
+          booking_provider?: string
           calendly_url?: string | null
           created_at?: string
           currency?: string | null

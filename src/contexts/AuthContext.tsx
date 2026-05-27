@@ -9,7 +9,11 @@ import {
   requiresGuidedOnboarding,
   withGuidedOnboardingPreference,
 } from '@/lib/guidedOnboarding';
-import { resumePendingDiscoveryCallRedirect } from '@/services/discoveryCallService';
+import {
+  PENDING_DISCOVERY_CALL_BOOKING_KEY,
+  PENDING_DISCOVERY_CALL_KEY,
+  resumePendingDiscoveryCallRedirect,
+} from '@/services/discoveryCallService';
 import { identify, initAmplitudeWithUser, readAuthMethod, resetAmplitude, trackSignupCompleted } from '@/lib/analytics';
 import { isAdminEmail } from '@/lib/admin';
 import { triggerEmailSequenceEvent } from '@/lib/emailSequences';
@@ -215,7 +219,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
       }
 
-      // ── Step 3: Run first-login updates in PARALLEL ──
+      // ─── Step 3: Run first-login updates in PARALLEL ───
       const parallelTasks: Promise<unknown>[] = [];
 
       // New profile: initialize credits
@@ -260,7 +264,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         sessionStorage.removeItem(`onboarding_redirect_${userId}`);
       }
 
-      const hasPendingDiscoveryCall = localStorage.getItem('pending_calendly_redirect');
+      const hasPendingDiscoveryCall = localStorage.getItem(PENDING_DISCOVERY_CALL_BOOKING_KEY)
+        || localStorage.getItem(PENDING_DISCOVERY_CALL_KEY);
       if (hasPendingDiscoveryCall) {
         setTimeout(() => {
           void resumePendingDiscoveryCallRedirect();

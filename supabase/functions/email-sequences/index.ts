@@ -230,7 +230,7 @@ function buildEmail(ctx: UserContext, sequence: SequenceSlug): BuiltEmail {
     case "activation_day0":
       return {
         subject: `Your ICP takes 60 seconds, ${ctx.firstName}`,
-        ctaLabel: "Build My ICP Now →",
+        ctaLabel: "Build My ICP Free",
         ctaUrl: `${ctx.appUrl}/icp-builder?mode=fast&ref=email_d0`,
         text: `Hey ${ctx.firstName},
 

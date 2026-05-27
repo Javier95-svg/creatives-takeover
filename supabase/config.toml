@@ -123,5 +123,14 @@ verify_jwt = false
 [functions.calendly-webhook]
 verify_jwt = false
 
+[functions.koalendar-webhook]
+verify_jwt = false
+
+[functions.discovery-call-email-ingest]
+verify_jwt = false
+
 [functions.notify-discovery-call-booked]
+verify_jwt = true
+
+[functions.notify-discovery-call-event]
 verify_jwt = true

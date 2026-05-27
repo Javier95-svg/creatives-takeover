@@ -2,6 +2,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { createIdempotencyKey } from '@/lib/idempotency';
 
 export const PENDING_DISCOVERY_CALL_KEY = 'pending_calendly_redirect';
+export const PENDING_DISCOVERY_CALL_BOOKING_KEY = 'pending_discovery_call_booking_redirect';
 
 export interface DiscoveryCallQuotaStatus {
   success: boolean;
@@ -26,6 +27,7 @@ export interface DiscoveryCallIntentResponse {
   callId?: string;
   status?: string;
   providerBookingUrl?: string;
+  bookingProvider?: 'calendly' | 'koalendar' | 'other' | 'manual';
   quotaStatus?: DiscoveryCallQuotaStatus;
   error?: string;
   errorCode?: string;
@@ -62,6 +64,7 @@ export interface PendingDiscoveryCallRedirect {
   url: string;
   mentorId?: string;
   mentorName?: string;
+  bookingProvider?: 'calendly' | 'koalendar' | 'other' | 'manual';
   source?: string;
 }
 
@@ -76,11 +79,13 @@ async function invokeDiscoveryCallService<T>(body: Record<string, unknown>): Pro
 }
 
 export function storePendingDiscoveryCallRedirect(payload: PendingDiscoveryCallRedirect) {
+  localStorage.setItem(PENDING_DISCOVERY_CALL_BOOKING_KEY, JSON.stringify(payload));
   localStorage.setItem(PENDING_DISCOVERY_CALL_KEY, JSON.stringify(payload));
 }
 
 export function readPendingDiscoveryCallRedirect(): PendingDiscoveryCallRedirect | null {
-  const rawValue = localStorage.getItem(PENDING_DISCOVERY_CALL_KEY);
+  const rawValue = localStorage.getItem(PENDING_DISCOVERY_CALL_BOOKING_KEY)
+    || localStorage.getItem(PENDING_DISCOVERY_CALL_KEY);
   if (!rawValue) {
     return null;
   }
@@ -98,6 +103,7 @@ export function readPendingDiscoveryCallRedirect(): PendingDiscoveryCallRedirect
 }
 
 export function clearPendingDiscoveryCallRedirect() {
+  localStorage.removeItem(PENDING_DISCOVERY_CALL_BOOKING_KEY);
   localStorage.removeItem(PENDING_DISCOVERY_CALL_KEY);
 }
 
@@ -131,7 +137,7 @@ export async function listMyDiscoveryCalls() {
   });
 }
 
-export function buildDiscoveryCallRedirectUrl(baseUrl: string, callId: string) {
+export function buildDiscoveryCallProviderRedirectUrl(baseUrl: string, callId: string) {
   const normalizedUrl = /^https?:\/\//i.test(baseUrl) ? baseUrl : `https://${baseUrl}`;
   const url = new URL(normalizedUrl);
   url.searchParams.set('ct_discovery_call_id', callId);
@@ -141,6 +147,8 @@ export function buildDiscoveryCallRedirectUrl(baseUrl: string, callId: string) {
   url.searchParams.set('utm_content', callId);
   return url.toString();
 }
+
+export const buildDiscoveryCallRedirectUrl = buildDiscoveryCallProviderRedirectUrl;
 
 export function openDeferredExternalTab() {
   const tab = window.open('', '_blank');
@@ -182,6 +190,6 @@ export async function resumePendingDiscoveryCallRedirect() {
     return false;
   }
 
-  window.open(buildDiscoveryCallRedirectUrl(pendingRedirect.url, intent.callId), '_blank', 'noopener,noreferrer');
+  window.open(buildDiscoveryCallProviderRedirectUrl(pendingRedirect.url, intent.callId), '_blank', 'noopener,noreferrer');
   return true;
 }

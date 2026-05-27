@@ -55,7 +55,7 @@ export const UPGRADE_TRIGGER_CONFIGS: Record<UpgradeTriggerKey, UpgradeTriggerCo
     key: 'rookie_quota_discovery',
     targetPlan: 'starter',
     headline: 'You need credits for Discovery Calls.',
-    body: 'Discovery Calls are unlimited on every plan and cost 10 credits once Calendly confirms the booking.',
+    body: 'Discovery Calls are unlimited on every plan and cost 10 credits once the booking is confirmed.',
     ctaLabel: 'Get more credits',
   },
   rookie_quota_cofounder: {
@@ -76,7 +76,7 @@ export const UPGRADE_TRIGGER_CONFIGS: Record<UpgradeTriggerKey, UpgradeTriggerCo
     key: 'starter_quota_discovery',
     targetPlan: 'rising',
     headline: 'You need credits for Discovery Calls.',
-    body: 'Discovery Calls are unlimited on every plan and cost 10 credits once Calendly confirms the booking.',
+    body: 'Discovery Calls are unlimited on every plan and cost 10 credits once the booking is confirmed.',
     ctaLabel: 'Get more credits',
   },
   starter_quota_cofounder: {

@@ -28,8 +28,8 @@ import {
   storePendingDiscoveryCallRedirect,
 } from "@/services/discoveryCallService";
 
-// Calendly link for Samuel Starkman
-const SAMUEL_STARKMAN_CALENDLY_URL = 'https://calendly.com/samstarkman/1-on-1-with-sam?month=2025-12';
+// Fallback booking link for Samuel Starkman
+const SAMUEL_STARKMAN_BOOKING_URL = 'https://calendly.com/samstarkman/1-on-1-with-sam?month=2025-12';
 
 const PUBLIC_PROFILE_SELECT = [
   'id',
@@ -272,18 +272,18 @@ const Profile = () => {
   const handleBookDiscoveryCall = async () => {
     try {
       const mentor = await resolveDiscoveryCallMentor();
-      const calendlyUrl = mentor?.calendly_url?.trim() || SAMUEL_STARKMAN_CALENDLY_URL;
+      const bookingUrl = mentor?.calendly_url?.trim() || SAMUEL_STARKMAN_BOOKING_URL;
 
-      if (!mentor?.id || !mentor.is_active || !calendlyUrl) {
+      if (!mentor?.id || !mentor.is_active || !bookingUrl) {
         toast.error('This mentor does not have a discovery call booking link configured yet.');
         return;
       }
 
-      const normalizedCalendlyUrl = /^https?:\/\//i.test(calendlyUrl) ? calendlyUrl : `https://${calendlyUrl}`;
+      const normalizedBookingUrl = /^https?:\/\//i.test(bookingUrl) ? bookingUrl : `https://${bookingUrl}`;
 
       if (!currentUser) {
         storePendingDiscoveryCallRedirect({
-          url: calendlyUrl,
+          url: bookingUrl,
           mentorId: mentor.id,
           mentorName: mentor.name,
           source: 'profile_page',
@@ -292,8 +292,8 @@ const Profile = () => {
         return;
       }
 
-      const calendlyTab = openDeferredExternalTab();
-      if (!calendlyTab) {
+      const bookingTab = openDeferredExternalTab();
+      if (!bookingTab) {
         toast.error('Popup blocked. Please allow popups and try again.');
         return;
       }
@@ -312,7 +312,7 @@ const Profile = () => {
       });
 
       if (!bookingIntent.success || !bookingIntent.callId) {
-        calendlyTab.close();
+        bookingTab.close();
 
         if (bookingIntent.errorCode === 'PLAN_UPGRADE_REQUIRED' && bookingIntent.requiredTier) {
           openUpgradePrompt({
@@ -338,7 +338,7 @@ const Profile = () => {
         return;
       }
 
-      calendlyTab.location.href = buildDiscoveryCallRedirectUrl(normalizedCalendlyUrl, bookingIntent.callId);
+      bookingTab.location.href = buildDiscoveryCallRedirectUrl(normalizedBookingUrl, bookingIntent.callId);
     } catch (error) {
       logError('profile_discovery_call_booking_failed', {
         username,
@@ -763,7 +763,7 @@ const Profile = () => {
                       )}
                       {isSamuelStarkmanProfile(profile) && (
                         <p className="basis-full text-xs text-muted-foreground">
-                          Discovery Calls cost 10 credits only after Calendly confirms the booking.
+                          Discovery Calls cost 10 credits only after the booking is confirmed.
                         </p>
                       )}
                       <SocialButtons

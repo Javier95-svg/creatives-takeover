@@ -112,7 +112,7 @@ const creditBreakdown: {
   community: [
     {
       name: "Discovery Calls (Mentorship)",
-      description: "Available on every plan with no monthly cap. Each confirmed Calendly booking costs 10 credits.",
+      description: "Available on every plan with no monthly cap. Each confirmed booking costs 10 credits.",
       badge: "10 credits",
       badgeVariant: "outline",
       badgeClassName: "bg-blue-50 dark:bg-blue-950/30",

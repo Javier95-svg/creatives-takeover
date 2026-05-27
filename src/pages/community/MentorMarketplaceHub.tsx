@@ -374,9 +374,9 @@ const MentorMarketplaceHub = () => {
 
     if (mentorSource === "onboarding" && activationIntent === "book_call") {
       result = result.sort((a, b) => {
-        const aCalendly = a.calendly_url ? 1 : 0;
-        const bCalendly = b.calendly_url ? 1 : 0;
-        if (aCalendly !== bCalendly) return bCalendly - aCalendly;
+        const aBookable = a.calendly_url ? 1 : 0;
+        const bBookable = b.calendly_url ? 1 : 0;
+        if (aBookable !== bBookable) return bBookable - aBookable;
         return 0;
       });
     }

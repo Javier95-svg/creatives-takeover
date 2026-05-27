@@ -147,6 +147,7 @@ export interface CreateMentorInput {
   twitter_x_url?: string | null;
   website_url?: string | null;
   calendly_url?: string | null;
+  booking_provider?: 'calendly' | 'koalendar' | 'other' | 'manual';
   nationality?: string | null;
 }
 
@@ -198,6 +199,7 @@ const formatErrorMessage = (error: any, defaultMessage: string): string => {
 const convertToMentor = (data: any): Mentor => {
   return {
     ...data,
+    booking_provider: data.booking_provider || inferBookingProvider(data.calendly_url),
     user_id:
       data.user_id ||
       (isMarcBrightMentor(data.name)
@@ -244,6 +246,14 @@ const convertToMentor = (data: any): Mentor => {
     hourly_rate_per_hour: data.hourly_rate_per_hour ?? 0,
     availability: (data.availability || []) as AvailabilitySlot[],
   };
+};
+
+const inferBookingProvider = (bookingUrl?: string | null): 'calendly' | 'koalendar' | 'other' | 'manual' => {
+  const normalizedUrl = (bookingUrl || '').toLowerCase().trim();
+  if (!normalizedUrl) return 'manual';
+  if (normalizedUrl.includes('calendly.com')) return 'calendly';
+  if (normalizedUrl.includes('koalendar.com')) return 'koalendar';
+  return 'other';
 };
 
 /**
@@ -430,6 +440,7 @@ export const useMentors = () => {
         twitter_x_url: input.twitter_x_url || null,
         website_url: input.website_url || null,
         calendly_url: input.calendly_url || null,
+        booking_provider: input.booking_provider || inferBookingProvider(input.calendly_url),
         nationality: input.nationality || null,
       };
       
@@ -524,6 +535,9 @@ export const useMentors = () => {
       if (input.twitter_x_url !== undefined) cleanInput.twitter_x_url = input.twitter_x_url;
       if (input.website_url !== undefined) cleanInput.website_url = input.website_url;
       if (input.calendly_url !== undefined) cleanInput.calendly_url = input.calendly_url;
+      if (input.booking_provider !== undefined || input.calendly_url !== undefined) {
+        cleanInput.booking_provider = input.booking_provider || inferBookingProvider(input.calendly_url);
+      }
       if (input.nationality !== undefined) cleanInput.nationality = input.nationality;
       
       // Debug: Log the clean input
