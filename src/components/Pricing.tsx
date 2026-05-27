@@ -10,7 +10,7 @@ import { normalizePlanId, trackUpgradeClicked } from "@/lib/analytics";
 import { useCTAAttribution } from "@/hooks/useCTAAttribution";
 import { useLocation } from "react-router-dom";
 import { PLAN_HIGHLIGHTS, PLAN_MONTHLY_CREDITS } from "@/config/planPermissions";
-import { appendCheckoutIntentParam, persistCheckoutIntent } from "@/lib/checkoutRedirect";
+import { redirectToCheckoutUrl, resolveCheckoutIntentUrl } from "@/lib/checkoutRedirect";
 import { RevealGroup } from "@/components/animations/ScrollReveal";
 
 type BillingCycle = "monthly" | "yearly";
@@ -126,7 +126,7 @@ const formatPrice = (value: number) => {
 };
 
 export default function Pricing() {
-  const { loading, actionLoading, subscriptionData, createCheckout } = useSubscription();
+  const { loading, subscriptionData } = useSubscription();
   const { user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -173,24 +173,14 @@ export default function Pricing() {
     }
 
     const checkoutIntent = `${plan}-${billingCycle}`;
+    const checkoutUrl = resolveCheckoutIntentUrl(checkoutIntent);
 
-    if (!user) {
-      setAttribution(`pricing_${plan}`, location.pathname);
-      persistCheckoutIntent(checkoutIntent);
-      const signupPath = appendCheckoutIntentParam(
-        `/signup?source=pricing_page&return=${encodeURIComponent('/pricing')}`,
-        checkoutIntent,
-      );
-      startNavigation(() => {
-        navigate(signupPath);
-      });
+    if (checkoutUrl) {
+      redirectToCheckoutUrl(checkoutUrl, user);
       return;
     }
 
-    const checkoutUrl = await createCheckout(plan, undefined, billingCycle);
-    if (!checkoutUrl) {
-      setPendingPlan(null);
-    }
+    setPendingPlan(null);
   };
 
   if (loading) {
@@ -320,8 +310,11 @@ export default function Pricing() {
 
                 <Button
                   className={`w-full ${cardStyle.button}`}
-                  disabled={actionLoading || Boolean(pendingPlan)}
-                  onClick={() => void handleSubscribe(plan.key)}
+                  disabled={Boolean(pendingPlan)}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    void handleSubscribe(plan.key);
+                  }}
                   variant={cardStyle.buttonVariant}
                 >
                   {isPlanPending

@@ -131,14 +131,11 @@ export function redirectToCheckoutIntent(
   void redirectToResolvedCheckoutIntent(intent, user);
 }
 
-async function redirectToResolvedCheckoutIntent(
-  intent: string | null | undefined,
+export function redirectToCheckoutUrl(
+  checkoutUrl: string,
   user?: CheckoutUser | null,
-): Promise<void> {
+): void {
   if (typeof window === "undefined") return;
-
-  const checkoutUrl = await resolveCheckoutIntentUrlFromDb(intent, user);
-  if (!checkoutUrl) return;
 
   try {
     const url = new URL(checkoutUrl);
@@ -159,4 +156,16 @@ async function redirectToResolvedCheckoutIntent(
     console.warn("Unable to enrich checkout URL, redirecting as-is", error);
     window.location.assign(checkoutUrl);
   }
+}
+
+async function redirectToResolvedCheckoutIntent(
+  intent: string | null | undefined,
+  user?: CheckoutUser | null,
+): Promise<void> {
+  if (typeof window === "undefined") return;
+
+  const checkoutUrl = await resolveCheckoutIntentUrlFromDb(intent, user);
+  if (!checkoutUrl) return;
+
+  redirectToCheckoutUrl(checkoutUrl, user);
 }
