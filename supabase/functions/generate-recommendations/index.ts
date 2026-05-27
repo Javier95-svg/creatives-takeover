@@ -51,7 +51,9 @@ serve(async (req) => {
         quiz_current_stage,
         quiz_biggest_challenge,
         quiz_launch_timeline,
-        quiz_looking_for_cofounder
+        quiz_looking_for_cofounder,
+        assigned_stage,
+        quiz_answers_v2
       `)
       .eq("id", user_id)
       .single();
@@ -371,7 +373,7 @@ function generateRecommendations(context: any): any[] {
     }
 
     // Stage-specific recommendations
-    if (currentStage === 'idea') {
+    if (currentStage === 'idea' || context.profile?.assigned_stage === 1) {
       recs.push({
         recommendation_type: "action",
         title: "💡 Validate Your Idea",
@@ -381,7 +383,27 @@ function generateRecommendations(context: any): any[] {
         action_url: "/dream2plan",
         metadata: { category: "validation", quiz_driven: true }
       });
-    } else if (currentStage === 'building_mvp') {
+    } else if (currentStage === 'prototype' || context.profile?.assigned_stage === 2) {
+      recs.push({
+        recommendation_type: "action",
+        title: "Shape Your Prototype",
+        description: "Turn the concept into a simple demo, mockup, or waitlist page you can show to real prospects.",
+        priority: 9,
+        reason: "A testable prototype creates better feedback than another planning session",
+        action_url: "/waitlist",
+        metadata: { category: "prototype", quiz_driven: true }
+      });
+    } else if (currentStage === 'validation' || context.profile?.assigned_stage === 3) {
+      recs.push({
+        recommendation_type: "action",
+        title: "Run Demand Validation",
+        description: "Use customer conversations and willingness-to-pay signals to confirm whether the market wants this.",
+        priority: 9,
+        reason: "Validation prevents building the wrong thing",
+        action_url: "/pmf-lab",
+        metadata: { category: "validation", quiz_driven: true }
+      });
+    } else if (currentStage === 'building_mvp' || currentStage === 'mvp' || context.profile?.assigned_stage === 4) {
       recs.push({
         recommendation_type: "action",
         title: "🛠️ Ship Your MVP This Month",
@@ -391,7 +413,7 @@ function generateRecommendations(context: any): any[] {
         action_url: "/laboratory",
         metadata: { category: "mvp_shipping", quiz_driven: true }
       });
-    } else if (currentStage === 'launched_testing') {
+    } else if (currentStage === 'launched_testing' || currentStage === 'launch' || context.profile?.assigned_stage === 5) {
       recs.push({
         recommendation_type: "action",
         title: "📊 Analyze Your Early Data",
@@ -401,7 +423,7 @@ function generateRecommendations(context: any): any[] {
         action_url: "/dream2plan",
         metadata: { category: "iteration", quiz_driven: true }
       });
-    } else if (currentStage === 'growing') {
+    } else if (currentStage === 'growing' || currentStage === 'traction' || context.profile?.assigned_stage === 6) {
       recs.push({
         recommendation_type: "action",
         title: "📈 Scale What's Working",
@@ -410,6 +432,16 @@ function generateRecommendations(context: any): any[] {
         reason: "Optimization beats experimentation at scale",
         action_url: "/blog",
         metadata: { category: "growth_optimization", quiz_driven: true }
+      });
+    } else if (currentStage === 'fundraising' || context.profile?.assigned_stage === 7) {
+      recs.push({
+        recommendation_type: "action",
+        title: "Prepare Your Investor Process",
+        description: "Tighten your pitch deck, traction story, investor list, and data room before the next conversation.",
+        priority: 9,
+        reason: "Fundraising works better when the narrative and target list are sharp",
+        action_url: "/vc-search",
+        metadata: { category: "fundraising", quiz_driven: true }
       });
     }
   }

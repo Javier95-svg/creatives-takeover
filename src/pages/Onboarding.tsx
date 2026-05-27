@@ -131,7 +131,7 @@ const Onboarding = () => {
   }, [authLoading, isAuthenticated, navigate, searchParams, user]);
 
   const handleComplete = (_startRoute?: string) => {
-    navigate('/setup-quiz');
+    navigate(_startRoute || '/dashboard');
   };
 
   return (

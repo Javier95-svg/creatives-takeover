@@ -12,6 +12,7 @@ import {
   maxStage,
   type BizMapStage,
 } from '@/lib/bizmapStages';
+import { mapFounderStageToBizMapStage, type FounderStageId } from '@/lib/stageDiagnostic';
 import {
   getPmfResultsTableName,
   handlePmfResultsTableError,
@@ -27,6 +28,8 @@ interface UserProgressRow {
   validating_completed_at: string | null;
   building_completed_at: string | null;
   launch_completed_at: string | null;
+  traction_completed_at?: string | null;
+  fundraising_completed_at?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -37,6 +40,8 @@ interface CompletionSignals {
   validatingCompletedAt: string | null;
   buildingCompletedAt: string | null;
   launchCompletedAt: string | null;
+  tractionCompletedAt: string | null;
+  fundraisingCompletedAt: string | null;
 }
 
 const USER_PROGRESS_TABLE = 'user_progress' as any;
@@ -68,11 +73,13 @@ function isCompleted(row: UserProgressRow, stage: BizMapStage): boolean {
   if (stage === 'PROTOTYPE') return !!row.prototype_completed_at;
   if (stage === 'VALIDATING') return !!row.validating_completed_at;
   if (stage === 'BUILDING') return !!row.building_completed_at;
-  return !!row.launch_completed_at;
+  if (stage === 'LAUNCH') return !!row.launch_completed_at;
+  if (stage === 'TRACTION') return !!row.traction_completed_at;
+  return !!row.fundraising_completed_at;
 }
 
 function getCompletionUnlockedStage(progress: UserProgressRow): BizMapStage {
-  let highest = DEFAULT_HIGHEST_UNLOCKED_STAGE;
+  let highest: BizMapStage = 'FUNDRAISING';
 
   if (progress.identity_completed_at && progress.prototype_completed_at) {
     highest = maxStage(highest, 'VALIDATING');
@@ -84,6 +91,14 @@ function getCompletionUnlockedStage(progress: UserProgressRow): BizMapStage {
 
   if (progress.building_completed_at) {
     highest = maxStage(highest, 'LAUNCH');
+  }
+
+  if (progress.launch_completed_at) {
+    highest = maxStage(highest, 'TRACTION');
+  }
+
+  if (progress.traction_completed_at) {
+    highest = maxStage(highest, 'FUNDRAISING');
   }
 
   return highest;
@@ -227,6 +242,8 @@ export const useBizMapProgress = () => {
           : null,
       launchCompletedAt:
         gtmData?.exported_at ?? gtmData?.saved_at ?? (gtmData ? gtmData.created_at : null),
+      tractionCompletedAt: null,
+      fundraisingCompletedAt: null,
     };
   }, []);
 
@@ -242,6 +259,8 @@ export const useBizMapProgress = () => {
       validating_completed_at: maxDate(baseRow.validating_completed_at, signals.validatingCompletedAt),
       building_completed_at: maxDate(baseRow.building_completed_at, signals.buildingCompletedAt),
       launch_completed_at: maxDate(baseRow.launch_completed_at, signals.launchCompletedAt),
+      traction_completed_at: maxDate(baseRow.traction_completed_at ?? null, signals.tractionCompletedAt),
+      fundraising_completed_at: maxDate(baseRow.fundraising_completed_at ?? null, signals.fundraisingCompletedAt),
     };
 
     const completionUnlocked = getCompletionUnlockedStage(nextRow);
@@ -266,7 +285,9 @@ export const useBizMapProgress = () => {
       nextRow.prototype_completed_at !== baseRow.prototype_completed_at ||
       nextRow.validating_completed_at !== baseRow.validating_completed_at ||
       nextRow.building_completed_at !== baseRow.building_completed_at ||
-      nextRow.launch_completed_at !== baseRow.launch_completed_at;
+      nextRow.launch_completed_at !== baseRow.launch_completed_at ||
+      nextRow.traction_completed_at !== baseRow.traction_completed_at ||
+      nextRow.fundraising_completed_at !== baseRow.fundraising_completed_at;
 
     if (hasChanges) {
       const { data } = await supabase
@@ -279,6 +300,8 @@ export const useBizMapProgress = () => {
           validating_completed_at: nextRow.validating_completed_at,
           building_completed_at: nextRow.building_completed_at,
           launch_completed_at: nextRow.launch_completed_at,
+          traction_completed_at: nextRow.traction_completed_at,
+          fundraising_completed_at: nextRow.fundraising_completed_at,
         })
         .eq('user_id', nextRow.user_id)
         .select('*')
@@ -308,6 +331,11 @@ export const useBizMapProgress = () => {
         .select('*')
         .eq('user_id', user.id)
         .maybeSingle();
+      const profileRes = await supabase
+        .from('profiles')
+        .select('assigned_stage')
+        .eq('id', user.id)
+        .maybeSingle();
 
       const { data: existingData, error: selectError } = progressRes;
 
@@ -316,14 +344,18 @@ export const useBizMapProgress = () => {
       }
 
       let row = existingData as UserProgressRow | null;
+      const assignedStage = (profileRes.data as { assigned_stage?: number | null } | null)?.assigned_stage;
+      const assignedBizMapStage = assignedStage && assignedStage >= 1 && assignedStage <= 7
+        ? mapFounderStageToBizMapStage(assignedStage as FounderStageId) as BizMapStage
+        : null;
 
       if (!row) {
         const { data: insertedData, error: insertError } = await supabase
           .from(USER_PROGRESS_TABLE)
           .insert({
             user_id: user.id,
-            current_stage: DEFAULT_CURRENT_STAGE,
-            highest_unlocked_stage: DEFAULT_HIGHEST_UNLOCKED_STAGE,
+            current_stage: assignedBizMapStage ?? DEFAULT_CURRENT_STAGE,
+            highest_unlocked_stage: 'FUNDRAISING' as BizMapStage,
           })
           .select('*')
           .single();
@@ -333,6 +365,20 @@ export const useBizMapProgress = () => {
         }
 
         row = insertedData as UserProgressRow;
+      } else if (
+        assignedBizMapStage &&
+        row.current_stage === DEFAULT_CURRENT_STAGE &&
+        !row.identity_completed_at &&
+        !row.prototype_completed_at &&
+        !row.validating_completed_at &&
+        !row.building_completed_at &&
+        !row.launch_completed_at
+      ) {
+        row = {
+          ...row,
+          current_stage: assignedBizMapStage,
+          highest_unlocked_stage: 'FUNDRAISING' as BizMapStage,
+        };
       }
 
       const synced = await syncProgress(row);
@@ -378,7 +424,7 @@ export const useBizMapProgress = () => {
 
   const stageState = useMemo(() => {
     const row = progress;
-    const effectiveHighestUnlocked: BizMapStage = 'LAUNCH';
+    const effectiveHighestUnlocked: BizMapStage = 'FUNDRAISING';
     return {
       IDENTITY: {
         unlocked: effectiveHighestUnlocked ? isStageUnlocked('IDENTITY', effectiveHighestUnlocked) : true,
@@ -405,6 +451,16 @@ export const useBizMapProgress = () => {
         completed: !!row?.launch_completed_at,
         completedAt: row?.launch_completed_at ?? null,
       },
+      TRACTION: {
+        unlocked: effectiveHighestUnlocked ? isStageUnlocked('TRACTION', effectiveHighestUnlocked) : false,
+        completed: !!row?.traction_completed_at,
+        completedAt: row?.traction_completed_at ?? null,
+      },
+      FUNDRAISING: {
+        unlocked: effectiveHighestUnlocked ? isStageUnlocked('FUNDRAISING', effectiveHighestUnlocked) : false,
+        completed: !!row?.fundraising_completed_at,
+        completedAt: row?.fundraising_completed_at ?? null,
+      },
     } as Record<BizMapStage, { unlocked: boolean; completed: boolean; completedAt: string | null }>;
   }, [progress]);
 
@@ -424,7 +480,7 @@ export const useBizMapProgress = () => {
     progress,
     stageState,
     currentStage: progress?.current_stage ?? DEFAULT_CURRENT_STAGE,
-    highestUnlockedStage: 'LAUNCH' as BizMapStage,
+    highestUnlockedStage: 'FUNDRAISING' as BizMapStage,
     hasFullBizMapAccess: true,
     refreshProgress,
     setCurrentStage,

@@ -1,6 +1,10 @@
 import { supabase } from "@/integrations/supabase/client";
+import { STAGES, type FounderStageId, type FounderStageQuizAnswersV3 } from "@/lib/stageDiagnostic";
+import { scoreMentorForFounderStage } from "@/lib/mentorStageScoring";
 
-type MentorRow = {
+export { scoreMentorForFounderStage } from "@/lib/mentorStageScoring";
+
+export type MentorRow = {
   id: string;
   name: string;
   bio?: string | null;
@@ -17,6 +21,8 @@ type RecommendationInput = {
   userId: string;
   sectors: string[];
   supportAreas: string[];
+  assignedStage?: FounderStageId | null;
+  stageAnswers?: FounderStageQuizAnswersV3 | null;
 };
 
 function normalize(value: string) {
@@ -30,10 +36,16 @@ function tokenize(values: string[]) {
     .filter((value) => value.length >= 3);
 }
 
-function scoreMentor(mentor: MentorRow, sectors: string[], supportAreas: string[]) {
+function scoreMentor(
+  mentor: MentorRow,
+  sectors: string[],
+  supportAreas: string[],
+  assignedStage?: FounderStageId | null,
+) {
   const expertise = mentor.expertise ?? [];
   const normalizedExpertise = new Set(expertise.map(normalize));
   const matchedSupportAreas = supportAreas.filter((area) => normalizedExpertise.has(normalize(area)));
+  const { stageScore, matchedStageExpertise } = scoreMentorForFounderStage(mentor, assignedStage);
 
   const searchableText = [
     mentor.name,
@@ -53,6 +65,7 @@ function scoreMentor(mentor: MentorRow, sectors: string[], supportAreas: string[
 
   let score = 0;
   score += matchedSupportAreas.length * 40;
+  score += stageScore;
   score += matchedSectors.length * 14;
   score += sectorTokenHits * 4;
   score += mentor.is_featured ? 10 : 0;
@@ -65,6 +78,7 @@ function scoreMentor(mentor: MentorRow, sectors: string[], supportAreas: string[
     score,
     matchedSupportAreas,
     matchedSectors,
+    matchedStageExpertise,
   };
 }
 
@@ -72,6 +86,7 @@ export async function refreshOnboardingMentorRecommendations({
   userId,
   sectors,
   supportAreas,
+  assignedStage,
 }: RecommendationInput) {
   const cleanSectors = sectors.map((sector) => sector.trim()).filter(Boolean);
   const cleanSupportAreas = supportAreas.map((area) => area.trim()).filter(Boolean);
@@ -90,7 +105,7 @@ export async function refreshOnboardingMentorRecommendations({
   }
 
   const ranked = ((mentors ?? []) as MentorRow[])
-    .map((mentor) => scoreMentor(mentor, cleanSectors, cleanSupportAreas))
+    .map((mentor) => scoreMentor(mentor, cleanSectors, cleanSupportAreas, assignedStage))
     .filter((item) => item.score > 0)
     .sort((left, right) => right.score - left.score)
     .slice(0, 3);
@@ -100,17 +115,24 @@ export async function refreshOnboardingMentorRecommendations({
   }
 
   const now = new Date().toISOString();
-  const rows = ranked.map(({ mentor, matchedSupportAreas, matchedSectors }) => ({
+  const rows = ranked.map(({ mentor, matchedSupportAreas, matchedSectors, matchedStageExpertise }) => {
+    const stageReason = assignedStage && matchedStageExpertise.length
+      ? `${matchedStageExpertise.slice(0, 2).join(", ")} for Stage ${assignedStage} ${STAGES[assignedStage].label}`
+      : null;
+    const contextReason = matchedSupportAreas.length
+      ? `Matched on ${matchedSupportAreas.slice(0, 2).join(", ")}`
+      : `Matched on ${matchedSectors.slice(0, 2).join(", ") || "your startup context"}`;
+
+    return {
     user_id: userId,
     mentor_id: mentor.id,
     source: "onboarding_recommendation",
     recommended_at: now,
-    recommendation_reason: matchedSupportAreas.length
-      ? `Matched on ${matchedSupportAreas.slice(0, 2).join(", ")}`
-      : `Matched on ${matchedSectors.slice(0, 2).join(", ") || "your startup context"}`,
+    recommendation_reason: stageReason ? `${contextReason}. ${stageReason}.` : contextReason,
     matched_support_areas: matchedSupportAreas,
     matched_sectors: matchedSectors,
-  }));
+  };
+  });
 
   const mentorIds = rows.map((row) => row.mentor_id);
   const { data: existingRows, error: existingError } = await (supabase as any)

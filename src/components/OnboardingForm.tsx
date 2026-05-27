@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ArrowLeft, ArrowRight, Hammer, Lightbulb, Loader2, Search, Target } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Loader2, Search } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 
@@ -22,45 +22,23 @@ import {
 import { trackActivity } from '@/lib/activity';
 import { refreshOnboardingMentorRecommendations } from '@/lib/onboardingMentorRecommendations';
 import { getActivationRoute, startActivationJourney, type ActivationIntent } from '@/lib/retentionSystem';
+import {
+  assignFounderStageV3,
+  createQuizAnswersV3Payload,
+  FOUNDER_STAGE_QUESTIONS,
+  mapFounderStageToBusinessStage,
+  STAGES,
+  type FounderStageQuizAnswersV3,
+} from '@/lib/stageDiagnostic';
 
 interface OnboardingData {
-  businessStage: string;
+  stageAnswers: Partial<FounderStageQuizAnswersV3>;
   startupSectors: string[];
   supportAreasNeeded: string[];
   country: string;
-  primaryPain: string;
   activationIntent: ActivationIntent | '';
   acceptedTerms: boolean;
 }
-
-const PRIMARY_PAIN_OPTIONS = [
-  { value: 'unclear_direction', label: 'Too many ideas - I need focus' },
-  { value: 'cant_validate', label: "I can't tell if anyone wants this" },
-  { value: 'building_isolation', label: 'Building alone with no feedback' },
-  { value: 'worried_funding', label: 'Worried about funding and investors' },
-  { value: 'overwhelmed_execution', label: "Don't know what to build first" },
-];
-
-const STAGE_CARDS = [
-  {
-    value: 'idea',
-    icon: Lightbulb,
-    headline: "I have an idea but don't know who it's for",
-    sub: 'We will route you into a first action that creates a real return trigger.',
-  },
-  {
-    value: 'validation',
-    icon: Target,
-    headline: 'I know my customer - I need to test demand',
-    sub: 'We will push you toward one concrete founder action instead of generic exploration.',
-  },
-  {
-    value: 'mvp',
-    icon: Hammer,
-    headline: "I'm building the product now",
-    sub: 'Your first move should create follow-up, not just another page view.',
-  },
-];
 
 const ACTIVATION_CARDS: Array<{
   value: ActivationIntent;
@@ -70,7 +48,7 @@ const ACTIVATION_CARDS: Array<{
   {
     value: 'find_mentor',
     headline: 'Find a mentor',
-    sub: 'Start with one mentor worth saving, messaging, or booking so the first session creates a real return trigger.',
+    sub: 'Start with one mentor worth saving, messaging, or booking.',
   },
   {
     value: 'run_icp',
@@ -80,26 +58,24 @@ const ACTIVATION_CARDS: Array<{
   {
     value: 'start_validation',
     headline: 'Start validation',
-    sub: 'Use Decision Sprint to score one idea before you disappear into passive browsing.',
+    sub: 'Use Decision Sprint to score one idea and choose your next move.',
   },
 ];
 
 const ONBOARDING_STEPS = [
-  { id: 'startup_stage' },
+  ...FOUNDER_STAGE_QUESTIONS.map((question) => ({ id: question.id })),
   { id: 'startup_sector' },
   { id: 'support_areas' },
   { id: 'country' },
-  { id: 'primary_pain' },
   { id: 'activation_intent' },
   { id: 'terms_confirmation' },
 ] as const;
 
 const emptyOnboardingData: OnboardingData = {
-  businessStage: '',
+  stageAnswers: {},
   startupSectors: [],
   supportAreasNeeded: [],
   country: '',
-  primaryPain: '',
   activationIntent: '',
   acceptedTerms: false,
 };
@@ -127,7 +103,7 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [startedAt] = useState(Date.now());
-  const [errors, setErrors] = useState<Partial<Record<keyof OnboardingData, string>>>({});
+  const [errors, setErrors] = useState<Record<string, string | undefined>>({});
 
   const [formData, setFormData] = useState<OnboardingData>(() => {
     try {
@@ -136,11 +112,10 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
         const parsed = JSON.parse(draft);
         return {
           ...emptyOnboardingData,
-          businessStage: parsed.businessStage ?? '',
+          stageAnswers: parsed.stageAnswers ?? {},
           startupSectors: Array.isArray(parsed.startupSectors) ? parsed.startupSectors : [],
           supportAreasNeeded: Array.isArray(parsed.supportAreasNeeded) ? parsed.supportAreasNeeded : [],
           country: parsed.country ?? '',
-          primaryPain: parsed.primaryPain ?? '',
           activationIntent: parsed.activationIntent ?? '',
         };
       }
@@ -155,11 +130,10 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
     try {
       sessionStorage.setItem(`onboarding_draft_${user.id}`, JSON.stringify({
         currentStep,
-        businessStage: formData.businessStage,
+        stageAnswers: formData.stageAnswers,
         startupSectors: formData.startupSectors,
         supportAreasNeeded: formData.supportAreasNeeded,
         country: formData.country,
-        primaryPain: formData.primaryPain,
         activationIntent: formData.activationIntent,
       }));
     } catch {
@@ -168,9 +142,8 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
   }, [
     currentStep,
     formData.activationIntent,
-    formData.businessStage,
     formData.country,
-    formData.primaryPain,
+    formData.stageAnswers,
     formData.startupSectors,
     formData.supportAreasNeeded,
     user?.id,
@@ -184,30 +157,38 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
 
   const totalSteps = ONBOARDING_STEPS.length;
   const progress = ((currentStep + 1) / totalSteps) * 100;
+  const diagnosticQuestion = currentStep < FOUNDER_STAGE_QUESTIONS.length
+    ? FOUNDER_STAGE_QUESTIONS[currentStep]
+    : null;
 
   const validateStep = (step: number): boolean => {
-    const newErrors: Partial<Record<keyof OnboardingData, string>> = {};
+    const newErrors: Record<string, string> = {};
 
-    switch (step) {
+    if (step < FOUNDER_STAGE_QUESTIONS.length) {
+      const question = FOUNDER_STAGE_QUESTIONS[step];
+      if (!formData.stageAnswers[question.id]) {
+        newErrors[question.id] = 'Please select the option that best describes you today';
+      }
+      setErrors(newErrors);
+      return Object.keys(newErrors).length === 0;
+    }
+
+    const enrichmentStep = step - FOUNDER_STAGE_QUESTIONS.length;
+
+    switch (enrichmentStep) {
       case 0:
-        if (!formData.businessStage) newErrors.businessStage = 'Please select where you are in your journey';
-        break;
-      case 1:
         if (formData.startupSectors.length === 0) newErrors.startupSectors = 'Select at least one startup sector';
         break;
-      case 2:
+      case 1:
         if (formData.supportAreasNeeded.length === 0) newErrors.supportAreasNeeded = 'Select at least one support area';
         break;
-      case 3:
+      case 2:
         if (!formData.country) newErrors.country = 'Please select your country';
         break;
+      case 3:
+        if (!formData.activationIntent) newErrors.activationIntent = 'Choose the first action that would help you make progress this week';
+        break;
       case 4:
-        if (!formData.primaryPain) newErrors.primaryPain = 'Please select your biggest challenge';
-        break;
-      case 5:
-        if (!formData.activationIntent) newErrors.activationIntent = 'Choose the first action that should create your return trigger';
-        break;
-      case 6:
         if (!formData.acceptedTerms) newErrors.acceptedTerms = 'You must accept the terms to continue';
         break;
     }
@@ -224,8 +205,8 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
         step: currentStep + 1,
         step_name: ONBOARDING_STEPS[currentStep].id,
         total_steps: ONBOARDING_STEPS.length,
-        stage: formData.businessStage,
-        painPoint: formData.primaryPain,
+        stage: formData.stageAnswers.mainFocus,
+        painPoint: formData.stageAnswers.blocker,
       });
       setCurrentStep((prev) => prev + 1);
       return;
@@ -254,39 +235,56 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
     try {
       const selectedIntent = formData.activationIntent as ActivationIntent;
       const startRoute = getActivationRoute(selectedIntent);
+      const stageAnswers = formData.stageAnswers as FounderStageQuizAnswersV3;
+      const diagnostic = assignFounderStageV3(stageAnswers);
+      const assignedStage = diagnostic.assignedStage;
+      const businessStage = mapFounderStageToBusinessStage(assignedStage);
+      const primaryPain = stageAnswers.blocker;
+      const supportAreas = stageAnswers.blocker === 'fundraising' && !formData.supportAreasNeeded.includes('Fundraising')
+        ? [...formData.supportAreasNeeded, 'Fundraising']
+        : formData.supportAreasNeeded;
 
       await startActivationJourney({
         userId: user.id,
-        businessStage: formData.businessStage,
-        primaryPain: formData.primaryPain,
+        businessStage,
+        primaryPain,
         activationIntent: selectedIntent,
         startupSectors: formData.startupSectors,
-        supportAreasNeeded: formData.supportAreasNeeded,
+        supportAreasNeeded: supportAreas,
         country: formData.country,
+        assignedStage,
+        quizAnswersV3: createQuizAnswersV3Payload(stageAnswers, diagnostic),
       });
 
       await refreshOnboardingMentorRecommendations({
         userId: user.id,
         sectors: formData.startupSectors,
-        supportAreas: formData.supportAreasNeeded,
+        supportAreas,
+        assignedStage,
+        stageAnswers,
       });
 
       captureEvent('activation_intent_selected', {
-        stage: formData.businessStage,
-        painPoint: formData.primaryPain,
+        stage: businessStage,
+        assignedStage,
+        stageLabel: STAGES[assignedStage].name,
+        stageConfidence: diagnostic.confidence,
+        painPoint: primaryPain,
         activationIntent: selectedIntent,
         startupSectors: formData.startupSectors,
-        supportAreasNeeded: formData.supportAreasNeeded,
+        supportAreasNeeded: supportAreas,
         country: formData.country,
         timeMs: Date.now() - startedAt,
         startRoute,
       });
       captureEvent('activation_path_selected', {
-        stage: formData.businessStage,
-        painPoint: formData.primaryPain,
+        stage: businessStage,
+        assignedStage,
+        stageLabel: STAGES[assignedStage].name,
+        painPoint: primaryPain,
         activationIntent: selectedIntent,
         startupSectors: formData.startupSectors,
-        supportAreasNeeded: formData.supportAreasNeeded,
+        supportAreasNeeded: supportAreas,
         country: formData.country,
         timeMs: Date.now() - startedAt,
         startRoute,
@@ -294,14 +292,17 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
       trackOnboardingCompleted({
         quiz_completed: true,
         creative_niche: null,
-        business_stage: formData.businessStage || null,
+        business_stage: businessStage || null,
       });
       void trackActivity('onboarding_completed', {
-        stage: formData.businessStage,
-        painPoint: formData.primaryPain,
+        stage: businessStage,
+        assignedStage,
+        stageLabel: STAGES[assignedStage].name,
+        stageConfidence: diagnostic.confidence,
+        painPoint: primaryPain,
         activationIntent: selectedIntent,
         startupSectors: formData.startupSectors,
-        supportAreasNeeded: formData.supportAreasNeeded,
+        supportAreasNeeded: supportAreas,
         country: formData.country,
         startRoute,
       }, user.id);
@@ -356,50 +357,51 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
   );
 
   const renderStep = () => {
-    switch (currentStep) {
-      case 0:
-        return (
-          <div className="space-y-6">
-            <div>
-              <h2 className="mb-2 font-space-grotesk text-2xl font-semibold tracking-tight sm:text-3xl">
-                Where are you in your startup journey?
-              </h2>
-              <p className="text-muted-foreground">Pick the option that fits best and we will route you to your first win.</p>
-            </div>
-
-            <div className="space-y-3">
-              {STAGE_CARDS.map(({ value, icon: Icon, headline, sub }) => {
-                const isSelected = formData.businessStage === value;
-                return (
-                  <button
-                    key={value}
-                    type="button"
-                    onClick={() => {
-                      setFormData((prev) => ({ ...prev, businessStage: value }));
-                      setErrors((prev) => ({ ...prev, businessStage: undefined }));
-                    }}
-                    className={`flex w-full cursor-pointer items-start gap-4 rounded-xl border p-4 text-left transition-all duration-150 ${
-                      isSelected
-                        ? 'border-[#32b8c6] bg-[#32b8c6]/10 shadow-sm'
-                        : 'border-border/60 bg-background/70 hover:border-border hover:bg-accent/60'
-                    }`}
-                  >
-                    <div className={`mt-0.5 flex-shrink-0 rounded-lg p-2 ${isSelected ? 'bg-[#32b8c6]/20' : 'bg-muted'}`}>
-                      <Icon className={`h-5 w-5 ${isSelected ? 'text-[#32b8c6]' : 'text-muted-foreground'}`} />
-                    </div>
-                    <div>
-                      <p className="mb-0.5 font-space-grotesk text-sm font-semibold leading-snug">{headline}</p>
-                      <p className="text-xs text-muted-foreground">{sub}</p>
-                    </div>
-                  </button>
-                );
-              })}
-              {errors.businessStage && <p className="text-sm text-destructive">{errors.businessStage}</p>}
-            </div>
+    if (diagnosticQuestion) {
+      const selectedValue = formData.stageAnswers[diagnosticQuestion.id] ?? '';
+      return (
+        <div className="space-y-6">
+          <div>
+            <h2 className="mb-2 font-space-grotesk text-2xl font-semibold tracking-tight sm:text-3xl">
+              {diagnosticQuestion.question}
+            </h2>
+            <p className="text-muted-foreground">Pick the option that best describes your startup today.</p>
           </div>
-        );
 
-      case 1:
+          <RadioGroup
+            value={selectedValue}
+            onValueChange={(value) => {
+              setFormData((prev) => ({
+                ...prev,
+                stageAnswers: {
+                  ...prev.stageAnswers,
+                  [diagnosticQuestion.id]: value as FounderStageQuizAnswersV3[typeof diagnosticQuestion.id],
+                },
+              }));
+              setErrors((prev) => ({ ...prev, [diagnosticQuestion.id]: undefined }));
+            }}
+            className="space-y-2"
+          >
+            {diagnosticQuestion.options.map((option) => (
+              <Label
+                key={option.value}
+                htmlFor={`diagnostic-${diagnosticQuestion.id}-${option.value}`}
+                className="flex cursor-pointer items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60"
+              >
+                <RadioGroupItem value={option.value} id={`diagnostic-${diagnosticQuestion.id}-${option.value}`} />
+                <span className="flex-1 text-sm">{option.label}</span>
+              </Label>
+            ))}
+          </RadioGroup>
+          {errors[diagnosticQuestion.id] && <p className="text-sm text-destructive">{errors[diagnosticQuestion.id]}</p>}
+        </div>
+      );
+    }
+
+    const enrichmentStep = currentStep - FOUNDER_STAGE_QUESTIONS.length;
+
+    switch (enrichmentStep) {
+      case 0:
         return (
           <div className="space-y-6">
             <div>
@@ -413,7 +415,7 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
           </div>
         );
 
-      case 2:
+      case 1:
         return (
           <div className="space-y-6">
             <div>
@@ -427,7 +429,7 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
           </div>
         );
 
-      case 3:
+      case 2:
         return (
           <div className="space-y-6">
             <div>
@@ -475,40 +477,7 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
           </div>
         );
 
-      case 4:
-        return (
-          <div className="space-y-6">
-            <div>
-              <h2 className="mb-2 font-space-grotesk text-2xl font-semibold tracking-tight sm:text-3xl">
-                What's your biggest challenge right now?
-              </h2>
-              <p className="text-muted-foreground">This helps us point you at the right tool first.</p>
-            </div>
-
-            <RadioGroup
-              value={formData.primaryPain}
-              onValueChange={(value) => {
-                setFormData((prev) => ({ ...prev, primaryPain: value }));
-                setErrors((prev) => ({ ...prev, primaryPain: undefined }));
-              }}
-              className="space-y-2"
-            >
-              {PRIMARY_PAIN_OPTIONS.map((pain) => (
-                <Label
-                  key={pain.value}
-                  htmlFor={`pain-${pain.value}`}
-                  className="flex cursor-pointer items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60"
-                >
-                  <RadioGroupItem value={pain.value} id={`pain-${pain.value}`} />
-                  <span className="flex-1 text-sm">{pain.label}</span>
-                </Label>
-              ))}
-            </RadioGroup>
-            {errors.primaryPain && <p className="mt-1 text-sm text-destructive">{errors.primaryPain}</p>}
-          </div>
-        );
-
-      case 5:
+      case 3:
         return (
           <div className="space-y-6">
             <div>
@@ -516,7 +485,7 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
                 Pick the action that should pull you back
               </h2>
               <p className="text-muted-foreground">
-                The first session should create one concrete thing worth revisiting.
+                Pick the first action that would help you make progress this week.
               </p>
             </div>
 
@@ -547,7 +516,7 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
           </div>
         );
 
-      case 6:
+      case 4:
         return (
           <div className="space-y-6">
             <div>
@@ -655,7 +624,7 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
                   Saving...
                 </>
               ) : currentStep === totalSteps - 1 ? (
-                'Start First Value Action ->'
+                'Start first action'
               ) : (
                 <>
                   Next

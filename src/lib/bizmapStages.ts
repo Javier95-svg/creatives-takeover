@@ -7,6 +7,8 @@ export const BIZMAP_STAGE_ORDER = [
   'VALIDATING',
   'BUILDING',
   'LAUNCH',
+  'TRACTION',
+  'FUNDRAISING',
 ] as const;
 
 export type BizMapStage = (typeof BIZMAP_STAGE_ORDER)[number];
@@ -92,6 +94,30 @@ export const BIZMAP_TOOLS: BizMapToolDefinition[] = [
     icon: Globe,
   },
   {
+    id: 'traction-growth',
+    name: 'Growth Engine',
+    route: '/insighta',
+    stage: 'TRACTION',
+    description: 'Find repeatable acquisition channels and improve growth signals.',
+    icon: Globe,
+  },
+  {
+    id: 'vc-search',
+    name: 'VC Search',
+    route: '/vc-search',
+    stage: 'FUNDRAISING',
+    description: 'Build an investor list that matches your stage, sector, and raise narrative.',
+    icon: Target,
+  },
+  {
+    id: 'pitch-deck-analyzer',
+    name: 'Pitch Deck Analyzer',
+    route: '/pitch-deck-analyzer',
+    stage: 'FUNDRAISING',
+    description: 'Pressure-test the pitch deck before investor conversations.',
+    icon: Layers,
+  },
+  {
     id: 'launch-directories',
     name: 'Directories',
     route: '/directories',
@@ -142,6 +168,22 @@ export const BIZMAP_STAGES: BizMapStageDefinition[] = [
     description: 'Build the GTM system and move from product to traction.',
     tools: BIZMAP_TOOLS.filter((tool) => tool.stage === 'LAUNCH'),
   },
+  {
+    id: 'TRACTION',
+    order: 6,
+    numeral: 'VI',
+    title: 'TRACTION',
+    description: 'Turn launch activity into repeatable acquisition, retention, and revenue signals.',
+    tools: BIZMAP_TOOLS.filter((tool) => tool.stage === 'TRACTION'),
+  },
+  {
+    id: 'FUNDRAISING',
+    order: 7,
+    numeral: 'VII',
+    title: 'FUNDRAISING',
+    description: 'Prepare the investor narrative, target list, and data room for the raise.',
+    tools: BIZMAP_TOOLS.filter((tool) => tool.stage === 'FUNDRAISING'),
+  },
 ];
 
 export const STAGE_TASKS: Record<BizMapStage, StageTaskTemplate[]> = {
@@ -169,6 +211,18 @@ export const STAGE_TASKS: Record<BizMapStage, StageTaskTemplate[]> = {
     { id: 'launch-channels', stage: 'LAUNCH', title: 'Define first distribution channels', priority: 'high', route: '/go-to-market' },
     { id: 'launch-checklist', stage: 'LAUNCH', title: 'Save launch checklist and KPIs', priority: 'medium', route: '/go-to-market' },
     { id: 'launch-plan-export', stage: 'LAUNCH', title: 'Save/export GTM plan', priority: 'high', route: '/go-to-market' },
+  ],
+  TRACTION: [
+    { id: 'traction-channel-test', stage: 'TRACTION', title: 'Choose one acquisition channel to test this week', priority: 'high', route: '/insighta' },
+    { id: 'traction-retention-review', stage: 'TRACTION', title: 'Review first-month retention and activation drop-off', priority: 'high', route: '/dashboard/core-metrics' },
+    { id: 'traction-revenue-funnel', stage: 'TRACTION', title: 'Map the revenue funnel from visitor to paid customer', priority: 'medium', route: '/go-to-market' },
+    { id: 'traction-growth-experiment', stage: 'TRACTION', title: 'Launch one measurable growth experiment', priority: 'high', route: '/insighta' },
+  ],
+  FUNDRAISING: [
+    { id: 'fundraising-pitch-deck', stage: 'FUNDRAISING', title: 'Review your pitch deck narrative', priority: 'high', route: '/pitch-deck-analyzer' },
+    { id: 'fundraising-investor-list', stage: 'FUNDRAISING', title: 'Build a target investor list', priority: 'high', route: '/vc-search' },
+    { id: 'fundraising-traction-story', stage: 'FUNDRAISING', title: 'Write the traction story investors should remember', priority: 'high', route: '/go-to-market' },
+    { id: 'fundraising-data-room', stage: 'FUNDRAISING', title: 'Prepare a lightweight data room checklist', priority: 'medium', route: '/vc-search' },
   ],
 };
 

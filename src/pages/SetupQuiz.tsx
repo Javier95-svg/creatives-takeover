@@ -12,10 +12,14 @@ import { ArrowRight, ChevronLeft, ChevronRight, Loader2, Save, Sparkles, Users }
 import Navigation from '@/components/Navigation';
 import { AccountWallpaper } from '@/components/AccountWallpaper';
 import {
-  assignStage,
+  assignFounderStageV3,
+  createQuizAnswersV3Payload,
+  FOUNDER_STAGE_QUESTIONS,
+  mapFounderStageToBusinessStage,
   shouldRecommendCofounder,
   STAGES,
-  type QuizAnswers,
+  type FounderStageDiagnosticResult,
+  type FounderStageQuizAnswersV3,
   type StageId,
 } from '@/lib/stageDiagnostic';
 import {
@@ -23,70 +27,9 @@ import {
   shouldRedirectToGuidedOnboarding,
 } from '@/lib/guidedOnboarding';
 
-type PartialAnswers = Partial<QuizAnswers>;
+type PartialAnswers = Partial<FounderStageQuizAnswersV3>;
 
-type QuestionDef = {
-  id: keyof QuizAnswers;
-  question: string;
-  description?: string;
-  options: { value: string; label: string }[];
-};
-
-const QUESTIONS: QuestionDef[] = [
-  {
-    id: 'q1',
-    question: 'Where are you right now with your startup?',
-    options: [
-      { value: 'have_idea', label: 'I have an idea but haven\'t really started' },
-      { value: 'actively_building', label: 'I\'m actively building something' },
-      { value: 'launched', label: 'I\'ve launched and have users or revenue' },
-      { value: 'ready_to_raise', label: 'I\'m ready (or close) to raising money' },
-    ],
-  },
-  {
-    id: 'q2',
-    question: 'What\'s the biggest thing slowing you down?',
-    options: [
-      { value: 'dont_know_customer', label: 'I don\'t know who my real customer is' },
-      { value: 'not_sure_anyone_pays', label: 'I\'m not sure anyone would actually pay for this' },
-      { value: 'need_build_help', label: 'I need help actually building the product' },
-      { value: 'feeling_alone', label: 'I\'m doing this alone and it\'s a lot' },
-    ],
-  },
-  {
-    id: 'q3',
-    question: 'Have you talked to real potential customers about your idea?',
-    options: [
-      { value: 'no', label: 'No, not really' },
-      { value: 'yes_friends', label: 'Yes, but mostly friends and family' },
-      { value: 'yes_strangers', label: 'Yes, including strangers in my target market' },
-    ],
-  },
-  {
-    id: 'q4',
-    question: 'How long have you been working on this?',
-    options: [
-      { value: 'less_than_three', label: 'Less than 3 months' },
-      { value: 'three_to_six', label: '3 to 6 months' },
-      { value: 'six_to_twelve', label: '6 to 12 months' },
-      { value: 'more_than_year', label: 'More than a year' },
-      { value: 'already_launched', label: 'I\'ve already launched' },
-    ],
-  },
-  {
-    id: 'q5',
-    question: 'Which of these feels most true today?',
-    options: [
-      { value: 'just_starting', label: 'I\'m just starting and trying to figure out the direction' },
-      { value: 'have_clarity', label: 'I have clarity on the idea and I\'m shaping it' },
-      { value: 'validating', label: 'I\'m validating demand with real people' },
-      { value: 'building', label: 'I\'m heads-down building the product' },
-      { value: 'post_launch', label: 'I\'m live and focused on growth' },
-    ],
-  },
-];
-
-const TOTAL_QUESTIONS = QUESTIONS.length;
+const TOTAL_QUESTIONS = FOUNDER_STAGE_QUESTIONS.length;
 
 const SetupQuiz = () => {
   const { user } = useAuth();
@@ -105,6 +48,7 @@ const SetupQuiz = () => {
     } catch { return {}; }
   });
   const [resultStage, setResultStage] = useState<StageId | null>(null);
+  const [diagnosticResult, setDiagnosticResult] = useState<FounderStageDiagnosticResult | null>(null);
   const [showCofounderCard, setShowCofounderCard] = useState(false);
   const [redirectCountdown, setRedirectCountdown] = useState<number | null>(null);
 
@@ -177,12 +121,12 @@ const SetupQuiz = () => {
   }, [resultStage, navigate]);
 
   const progress = (currentStep / TOTAL_QUESTIONS) * 100;
-  const currentQuestion = QUESTIONS[currentStep - 1];
+  const currentQuestion = FOUNDER_STAGE_QUESTIONS[currentStep - 1];
   const currentAnswer = currentQuestion ? answers[currentQuestion.id] : undefined;
 
   const handleAnswerChange = (value: string) => {
     if (!currentQuestion) return;
-    setAnswers((prev) => ({ ...prev, [currentQuestion.id]: value as QuizAnswers[typeof currentQuestion.id] }));
+    setAnswers((prev) => ({ ...prev, [currentQuestion.id]: value as FounderStageQuizAnswersV3[typeof currentQuestion.id] }));
   };
 
   const handleNext = () => {
@@ -209,9 +153,11 @@ const SetupQuiz = () => {
       return;
     }
 
-    const completeAnswers = answers as QuizAnswers;
-    const stage = assignStage(completeAnswers);
+    const completeAnswers = answers as FounderStageQuizAnswersV3;
+    const result = assignFounderStageV3(completeAnswers);
+    const stage = result.assignedStage;
     const cofounderRecommended = shouldRecommendCofounder(completeAnswers);
+    const businessStage = mapFounderStageToBusinessStage(stage);
 
     setLoading(true);
     try {
@@ -219,8 +165,10 @@ const SetupQuiz = () => {
       const profilesTable = supabase.from('profiles') as any;
       const { error } = await profilesTable
         .update({
-          quiz_answers_v2: completeAnswers,
+          quiz_answers_v2: createQuizAnswersV3Payload(completeAnswers, result),
           assigned_stage: stage,
+          business_stage: businessStage,
+          quiz_current_stage: businessStage,
           quiz_completed: true,
           quiz_completed_at: new Date().toISOString(),
         })
@@ -234,6 +182,7 @@ const SetupQuiz = () => {
       } catch { /* ignore */ }
 
       setResultStage(stage);
+      setDiagnosticResult(result);
       setShowCofounderCard(cofounderRecommended);
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : String(error);
@@ -288,7 +237,7 @@ const SetupQuiz = () => {
                   {meta.description}
                 </p>
                 <p className="text-sm text-slate-400 max-w-xl mx-auto">
-                  Your dashboard and recommended tools are now personalized for this stage. You can retake this diagnostic from Account settings at any time.
+                  Your dashboard, tasks, and mentor recommendations are now personalized for this stage. Confidence: {diagnosticResult?.confidence ?? 0}%.
                 </p>
               </div>
 
@@ -296,7 +245,7 @@ const SetupQuiz = () => {
                 <CardHeader>
                   <CardTitle className="text-2xl">Your top focus right now</CardTitle>
                   <CardDescription>
-                    These are the two tools that will move you forward the fastest at this stage.
+                    These are the two first moves that will move you forward the fastest at this stage.
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-3">
@@ -380,7 +329,7 @@ const SetupQuiz = () => {
             </p>
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight">
               <span className="text-primary [text-shadow:0_0_22px_rgba(59,130,246,0.28)]">
-                Find your stage
+                Build your founder roadmap
               </span>
             </h1>
             <p className="text-base md:text-lg text-slate-300 max-w-2xl mx-auto">

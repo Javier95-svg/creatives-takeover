@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { captureEvent } from '@/lib/analytics';
 import { requiresGuidedOnboarding } from '@/lib/guidedOnboarding';
 import { triggerEmailSequenceEvent } from '@/lib/emailSequences';
+import { mapFounderStageToBizMapStage, STAGES, type FounderStageId } from '@/lib/stageDiagnostic';
 
 export type ActivationIntent =
   | 'find_mentor'
@@ -53,6 +54,8 @@ interface StartActivationParams {
   startupSectors?: string[];
   supportAreasNeeded?: string[];
   country?: string;
+  assignedStage?: FounderStageId;
+  quizAnswersV3?: Record<string, unknown>;
 }
 
 interface CompleteActivationParams {
@@ -271,17 +274,30 @@ export async function getActivationGateState(userId: string) {
 export async function startActivationJourney(params: StartActivationParams) {
   const startedAt = new Date().toISOString();
   const activationGateVariant = await ensureActivationGateVariant(params.userId);
+  const bizMapStage = params.assignedStage ? mapFounderStageToBizMapStage(params.assignedStage) : null;
+
+  const profileUpdates: Record<string, unknown> = {
+    business_stage: params.businessStage,
+    quiz_current_stage: params.businessStage,
+    quiz_biggest_challenge: params.primaryPain,
+    onboarding_completed: true,
+    startup_industry: params.startupSectors ?? undefined,
+    country: params.country?.trim() || undefined,
+  };
+
+  if (params.assignedStage) {
+    profileUpdates.assigned_stage = params.assignedStage;
+    profileUpdates.quiz_completed = true;
+    profileUpdates.quiz_completed_at = startedAt;
+  }
+
+  if (params.quizAnswersV3) {
+    profileUpdates.quiz_answers_v2 = params.quizAnswersV3;
+  }
 
   const { error } = await supabase
     .from('profiles')
-    .update({
-      business_stage: params.businessStage,
-      quiz_current_stage: params.businessStage,
-      quiz_biggest_challenge: params.primaryPain,
-      onboarding_completed: true,
-      startup_industry: params.startupSectors ?? undefined,
-      country: params.country?.trim() || undefined,
-    })
+    .update(profileUpdates)
     .eq('id', params.userId);
 
   if (error) {
@@ -300,6 +316,9 @@ export async function startActivationJourney(params: StartActivationParams) {
     firstArtifactId: null,
     firstArtifactLabel: null,
     firstArtifactResumeUrl: null,
+    founderStage: params.assignedStage ?? null,
+    founderStageLabel: params.assignedStage ? STAGES[params.assignedStage].name : null,
+    bizMapStage,
     primaryPain: params.primaryPain,
     startupSectors: params.startupSectors ?? [],
     supportAreasNeeded: params.supportAreasNeeded ?? [],

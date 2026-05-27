@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
 // Types
-export type BusinessStage = 'idea' | 'mvp' | 'traction' | 'growth';
+export type BusinessStage = 'idea' | 'prototype' | 'validation' | 'mvp' | 'launch' | 'traction' | 'fundraising' | 'growth';
 
 export interface StageConfig {
   stage: BusinessStage;
@@ -71,6 +71,71 @@ const STAGE_CONFIGS: Record<BusinessStage, StageConfig> = {
       history: 0.3
     }
   },
+  prototype: {
+    stage: 'prototype',
+    heroMetric: 'prototype_progress',
+    primaryGoal: 'Shape a testable version',
+    criticalTaskTypes: ['prototype', 'demo', 'waitlist', 'idea_scoring'],
+    hiddenWidgets: ['revenue_tracking', 'investor_readiness'],
+    shownWidgets: ['validation_hub', 'task_overview', 'quick_wins'],
+    recommendations: [
+      'Create the simplest demo you can show to a real prospect',
+      'Write one value proposition and test it',
+      'Publish a waitlist page',
+    ],
+    priorityWeights: {
+      impact: 1.0,
+      urgency: 0.6,
+      effort: -0.35,
+      stage: 1.3,
+      energy: 0.3,
+      history: 0.2
+    }
+  },
+
+  validation: {
+    stage: 'validation',
+    heroMetric: 'validation_score',
+    primaryGoal: 'Prove demand',
+    criticalTaskTypes: ['customer_interviews', 'demand_validation', 'pmf', 'waitlist'],
+    hiddenWidgets: ['investor_readiness'],
+    shownWidgets: ['validation_hub', 'competitor_analysis', 'customer_needs'],
+    recommendations: [
+      'Talk to 10 target customers',
+      'Capture willingness-to-pay evidence',
+      'Turn waitlist interest into interviews',
+    ],
+    priorityWeights: {
+      impact: 1.1,
+      urgency: 0.7,
+      effort: -0.35,
+      stage: 1.4,
+      energy: 0.3,
+      history: 0.2
+    }
+  },
+
+  launch: {
+    stage: 'launch',
+    heroMetric: 'launch_readiness',
+    primaryGoal: 'Go to market',
+    criticalTaskTypes: ['launch', 'gtm', 'channels', 'first_customers'],
+    hiddenWidgets: [],
+    shownWidgets: ['core_metrics', 'task_overview', 'quick_wins'],
+    recommendations: [
+      'Choose your first launch channel',
+      'Define launch KPIs',
+      'Create a first-customer outreach list',
+    ],
+    priorityWeights: {
+      impact: 1.15,
+      urgency: 0.85,
+      effort: -0.3,
+      stage: 1.3,
+      energy: 0.4,
+      history: 0.3
+    }
+  },
 
   traction: {
     stage: 'traction',
@@ -119,6 +184,29 @@ const STAGE_CONFIGS: Record<BusinessStage, StageConfig> = {
       history: 0.5
     }
   }
+  ,
+
+  fundraising: {
+    stage: 'fundraising',
+    heroMetric: 'investor_readiness',
+    primaryGoal: 'Prepare the raise',
+    criticalTaskTypes: ['fundraising', 'pitch_deck', 'investor_list', 'data_room'],
+    hiddenWidgets: [],
+    shownWidgets: ['investor_readiness', 'core_metrics', 'active_projects'],
+    recommendations: [
+      'Review your pitch deck narrative',
+      'Build a target investor list',
+      'Prepare traction and data room materials',
+    ],
+    priorityWeights: {
+      impact: 1.4,
+      urgency: 0.8,
+      effort: -0.2,
+      stage: 1.1,
+      energy: 0.5,
+      history: 0.4
+    }
+  }
 };
 
 export interface UseStageConfigReturn {
@@ -160,7 +248,7 @@ export function useStageConfig(): UseStageConfigReturn {
 
         // Validate and set stage
         const userStage = data?.business_stage as BusinessStage;
-        if (userStage && ['idea', 'mvp', 'traction', 'growth'].includes(userStage)) {
+        if (userStage && ['idea', 'prototype', 'validation', 'mvp', 'launch', 'traction', 'fundraising', 'growth'].includes(userStage)) {
           setStage(userStage);
         } else {
           // Default to MVP if not set or invalid
