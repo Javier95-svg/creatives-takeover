@@ -141,23 +141,6 @@ export default function Pricing() {
     if (pendingPlan) return;
     setPendingPlan(plan);
 
-    const shouldTrackUpgrade = plan !== "rookie" && (!user || currentTier !== plan);
-
-    if (shouldTrackUpgrade) {
-      trackUpgradeClicked({
-        from_plan: normalizePlanId(currentTier),
-        to_plan: normalizePlanId(plan),
-        location: "pricing_page",
-      });
-    }
-
-    if (user && currentTier === plan) {
-      startNavigation(() => {
-        navigate("/account");
-      });
-      return;
-    }
-
     if (plan === "rookie") {
       if (user) {
         startNavigation(() => {
@@ -171,6 +154,12 @@ export default function Pricing() {
       }
       return;
     }
+
+    trackUpgradeClicked({
+      from_plan: normalizePlanId(currentTier),
+      to_plan: normalizePlanId(plan),
+      location: "pricing_page",
+    });
 
     const checkoutIntent = `${plan}-${billingCycle}`;
     const checkoutUrl = resolveCheckoutIntentUrl(checkoutIntent);
@@ -319,8 +308,6 @@ export default function Pricing() {
                 >
                   {isPlanPending
                     ? "Opening..."
-                    : isCurrentPlan && user
-                    ? "Manage Plan"
                     : plan.key === "rookie"
                       ? "Start Free"
                       : `Go ${plan.title}`}
