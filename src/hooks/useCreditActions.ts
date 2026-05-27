@@ -7,7 +7,7 @@ import { useSubscription } from '@/hooks/useSubscription';
 import { useUpgradePrompt } from '@/contexts/UpgradePromptContext';
 import { useCreditGate } from '@/contexts/CreditGateContext';
 import { CREDIT_COSTS, CreditFeature, getCreditCostForPlan } from '@/config/constants';
-import { getQuotaStatus, normalizePlan, type Plan } from '@/config/planPermissions';
+import { normalizePlan, type Plan } from '@/config/planPermissions';
 import { toast } from 'sonner';
 import { createIdempotencyKey } from '@/lib/idempotency';
 import { trackCreditActionCompleted } from '@/lib/analytics';
@@ -149,7 +149,7 @@ export const useCreditActions = () => {
   const { user } = useAuth();
   const { totalAvailable, hasCredits, refreshBalance, loading: creditsLoading } = useCredits();
   const { subscriptionData } = useSubscription();
-  const { quotas, refreshQuotas } = useMonthlyQuotas();
+  const { refreshQuotas } = useMonthlyQuotas();
   const { openUpgradePrompt } = useUpgradePrompt();
   const { showHardGate } = useCreditGate();
   const currentTier = normalizePlan(subscriptionData?.subscription_tier);
@@ -158,10 +158,6 @@ export const useCreditActions = () => {
     (feature: string, override?: number) => {
       if (typeof override === 'number') {
         return override;
-      }
-
-      if (feature === 'DISCOVERY_CALL') {
-        return 0;
       }
 
       if (ALWAYS_FREE_FEATURES.has(feature)) {
@@ -188,21 +184,6 @@ export const useCreditActions = () => {
       if (creditsLoading) {
         toast('Loading credit balance...');
         return null;
-      }
-
-      if (feature === 'DISCOVERY_CALL') {
-        const discoveryQuota = getQuotaStatus('discovery_calls', currentTier, quotas.discovery_calls_used ?? 0);
-
-        if (!discoveryQuota.canUse) {
-
-          openUpgradePrompt({
-            reason: 'feature',
-            featureName: 'Discovery Calls',
-            requiredTier: discoveryQuota.upgradeTarget,
-            description: `You have used all ${discoveryQuota.limit} discovery call${discoveryQuota.limit === 1 ? '' : 's'} for this month.`,
-          });
-          return null;
-        }
       }
 
       const requiredCredits = getEffectiveRequiredCredits(feature, options.requiredCredits);
@@ -241,7 +222,7 @@ export const useCreditActions = () => {
 
       return requiredCredits;
     },
-    [creditsLoading, currentTier, getEffectiveRequiredCredits, hasCredits, openUpgradePrompt, quotas.discovery_calls_used, showHardGate, totalAvailable, user]
+    [creditsLoading, currentTier, getEffectiveRequiredCredits, hasCredits, openUpgradePrompt, showHardGate, totalAvailable, user]
   );
 
   const getCreditActionQuote = useCallback(

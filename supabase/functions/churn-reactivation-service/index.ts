@@ -25,7 +25,7 @@ const TIER_FEATURES: Record<Plan, { label: string; features: string[] }> = {
     label: 'Starter',
     features: [
       'Waitlist Maker and PMF Lab access',
-      '2 free discovery calls and 2 co-founder posts per billing cycle',
+      'Unlimited Discovery Calls at 10 credits per confirmed booking',
       '100 AI credits per month',
     ],
   },
@@ -40,7 +40,7 @@ const TIER_FEATURES: Record<Plan, { label: string; features: string[] }> = {
   pro: {
     label: 'Pro',
     features: [
-      'Everything in Rising plus Angels and unlimited discovery calls',
+      'Everything in Rising plus Angels and unlimited research views',
       'Unlimited VC and accelerator profile views',
       '600 AI credits per month',
     ],

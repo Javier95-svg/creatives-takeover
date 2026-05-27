@@ -14,7 +14,7 @@ export function CreditPriceList() {
         { name: "Email Templates", value: "Included on Starter+" },
         { name: "Pitch Deck Analyzer", value: `${CREDIT_COSTS.PITCH_DECK_ANALYZER} credits/use on Rising+` },
         { name: "Insighta Test", value: "Included on every plan" },
-        { name: "Discovery Calls", value: "Monthly quota" },
+        { name: "Discovery Calls", value: "10 credits per confirmed booking" },
         { name: "Find a Co-Founder Posting", value: "Monthly quota" },
         { name: "Find Your Angel", value: "Pro only" },
         { name: "Newspaper", value: "Included on every plan" },

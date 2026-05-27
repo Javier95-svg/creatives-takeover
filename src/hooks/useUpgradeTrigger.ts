@@ -54,9 +54,9 @@ export const UPGRADE_TRIGGER_CONFIGS: Record<UpgradeTriggerKey, UpgradeTriggerCo
   rookie_quota_discovery: {
     key: 'rookie_quota_discovery',
     targetPlan: 'starter',
-    headline: 'Discovery call used for this month.',
-    body: 'Starter includes 2 discovery calls per month — double the mentorship access.',
-    ctaLabel: 'Upgrade to Starter',
+    headline: 'You need credits for Discovery Calls.',
+    body: 'Discovery Calls are unlimited on every plan and cost 10 credits once Calendly confirms the booking.',
+    ctaLabel: 'Get more credits',
   },
   rookie_quota_cofounder: {
     key: 'rookie_quota_cofounder',
@@ -75,9 +75,9 @@ export const UPGRADE_TRIGGER_CONFIGS: Record<UpgradeTriggerKey, UpgradeTriggerCo
   starter_quota_discovery: {
     key: 'starter_quota_discovery',
     targetPlan: 'rising',
-    headline: 'Monthly discovery calls used up.',
-    body: 'Rising includes 3 calls per month plus broader investor research tools.',
-    ctaLabel: 'Upgrade to Rising',
+    headline: 'You need credits for Discovery Calls.',
+    body: 'Discovery Calls are unlimited on every plan and cost 10 credits once Calendly confirms the booking.',
+    ctaLabel: 'Get more credits',
   },
   starter_quota_cofounder: {
     key: 'starter_quota_cofounder',

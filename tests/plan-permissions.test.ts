@@ -29,7 +29,7 @@ test('plan highlights match the authoritative four-plan contract', () => {
     'ICP Builder (free)',
     'Stage 1 guided dashboard',
     'Stages 4-5 preview cards',
-    '1 free discovery call/month (mentorship)',
+    'Unlimited Discovery Calls (10 credits per confirmed booking)',
     '1 Find a Co-Founder post per month',
     'VC Search & Accelerator Hunt (browse only)',
     'Prompt Library (free models only)',
@@ -43,7 +43,7 @@ test('plan highlights match the authoritative four-plan contract', () => {
     'Stages 1-3 active',
     'Waitlist Maker + PMF Lab (uses credits)',
     'Stages 4-5 (preview only)',
-    '2 free discovery calls/month (mentorship)',
+    'Unlimited Discovery Calls (10 credits per confirmed booking)',
     '2 Find a Co-Founder posts per month',
     'VC Search & Accelerator Hunt (2 profiles view per month)',
     'Email Templates (full access)',
@@ -57,7 +57,7 @@ test('plan highlights match the authoritative four-plan contract', () => {
     'Full BizMap AI tools access (generative tools use credits)',
     'All five stages available in one cockpit',
     'MVP Builder per-action billing + GTM Strategist (uses credits)',
-    '3 free discovery calls/month (mentorship)',
+    'Unlimited Discovery Calls (10 credits per confirmed booking)',
     'Unlimited Find a Co-Founder posts',
     'VC Search & Accelerator Hunt (10 profile views per month)',
     'Email Templates (full access)',
@@ -73,7 +73,7 @@ test('plan highlights match the authoritative four-plan contract', () => {
     'Find Your Angel (investors)',
     'Full BizMap AI tools access (generative tools use credits)',
     'MVP Builder per-action billing + GTM Strategist (uses credits)',
-    'Unlimited discovery calls (mentorship)',
+    'Unlimited Discovery Calls (10 credits per confirmed booking)',
     'Unlimited Find a Co-Founder posts',
     'VC Search & Accelerator Hunt (unlimited profile views)',
     'Email Templates (full access)',
@@ -181,6 +181,11 @@ test('core entitlement rules reflect the pricing contract', () => {
   assert.equal(starterVcProfiles.state, 'quota_limited');
   assert.equal(starterVcProfiles.monthlyLimit, 2);
 
+  const rookieDiscoveryCalls = resolveEntitlement('discovery_calls', 'rookie');
+  assert.equal(rookieDiscoveryCalls.state, 'full');
+  assert.equal(rookieDiscoveryCalls.monetizationModel, 'credit_metered');
+  assert.equal(rookieDiscoveryCalls.creditCost, 10);
+
   const risingAngelAccess = resolveEntitlement('angels_community', 'rising');
   assert.equal(risingAngelAccess.state, 'locked');
   assert.equal(risingAngelAccess.upgradeTarget, 'pro');
@@ -206,10 +211,12 @@ test('quota status stays aligned with the entitlement matrix', () => {
   assert.equal(exhaustedStarterVcQuota.canUse, false);
   assert.equal(exhaustedStarterVcQuota.remaining, 0);
 
-  const risingDiscoveryQuota = getQuotaStatus('discovery_calls', 'rising', 2);
-  assert.equal(risingDiscoveryQuota.limit, 3);
-  assert.equal(risingDiscoveryQuota.remaining, 1);
-  assert.equal(risingDiscoveryQuota.upgradeTarget, 'pro');
+  const risingDiscoveryQuota = getQuotaStatus('discovery_calls', 'rising', 99);
+  assert.equal(risingDiscoveryQuota.limit, Infinity);
+  assert.equal(risingDiscoveryQuota.remaining, Infinity);
+  assert.equal(risingDiscoveryQuota.hasUnlimited, true);
+  assert.equal(risingDiscoveryQuota.canUse, true);
+  assert.equal(risingDiscoveryQuota.upgradeTarget, undefined);
 
   const proAcceleratorQuota = getQuotaStatus('accelerator_profile', 'pro', 99);
   assert.equal(proAcceleratorQuota.hasUnlimited, true);

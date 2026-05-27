@@ -761,6 +761,11 @@ const Profile = () => {
                           Book Discovery Call
                         </Button>
                       )}
+                      {isSamuelStarkmanProfile(profile) && (
+                        <p className="basis-full text-xs text-muted-foreground">
+                          Discovery Calls cost 10 credits only after Calendly confirms the booking.
+                        </p>
+                      )}
                       <SocialButtons
                         userId={profile.id}
                         userName={profile.full_name || undefined}

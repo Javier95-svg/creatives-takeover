@@ -115,10 +115,10 @@ const FEATURE_RULES: Partial<Record<EnforcedFeature, Record<Plan, FeatureRule>>>
     pro: { mode: 'included' },
   },
   DISCOVERY_CALL: {
-    rookie: { mode: 'quota', requiredPlan: 'starter', monthlyLimit: 1 },
-    starter: { mode: 'quota', requiredPlan: 'rising', monthlyLimit: 2 },
-    rising: { mode: 'quota', requiredPlan: 'pro', monthlyLimit: 3 },
-    pro: { mode: 'quota', monthlyLimit: Infinity },
+    rookie: { mode: 'charge' },
+    starter: { mode: 'charge' },
+    rising: { mode: 'charge' },
+    pro: { mode: 'charge' },
   },
 };
 

@@ -207,7 +207,7 @@ export const PLAN_HIGHLIGHTS: Record<Plan, string[]> = {
     'ICP Builder (free)',
     'Stage 1 guided dashboard',
     'Stages 4-5 preview cards',
-    '1 free discovery call/month (mentorship)',
+    'Unlimited Discovery Calls (10 credits per confirmed booking)',
     '1 Find a Co-Founder post per month',
     'VC Search & Accelerator Hunt (browse only)',
     'Prompt Library (free models only)',
@@ -220,7 +220,7 @@ export const PLAN_HIGHLIGHTS: Record<Plan, string[]> = {
     'Stages 1-3 active',
     'Waitlist Maker + PMF Lab (uses credits)',
     'Stages 4-5 (preview only)',
-    '2 free discovery calls/month (mentorship)',
+    'Unlimited Discovery Calls (10 credits per confirmed booking)',
     '2 Find a Co-Founder posts per month',
     'VC Search & Accelerator Hunt (2 profiles view per month)',
     'Email Templates (full access)',
@@ -233,7 +233,7 @@ export const PLAN_HIGHLIGHTS: Record<Plan, string[]> = {
     'Full BizMap AI tools access (generative tools use credits)',
     'All five stages available in one cockpit',
     'MVP Builder per-action billing + GTM Strategist (uses credits)',
-    '3 free discovery calls/month (mentorship)',
+    'Unlimited Discovery Calls (10 credits per confirmed booking)',
     'Unlimited Find a Co-Founder posts',
     'VC Search & Accelerator Hunt (10 profile views per month)',
     'Email Templates (full access)',
@@ -248,7 +248,7 @@ export const PLAN_HIGHLIGHTS: Record<Plan, string[]> = {
     'Find Your Angel (investors)',
     'Full BizMap AI tools access (generative tools use credits)',
     'MVP Builder per-action billing + GTM Strategist (uses credits)',
-    'Unlimited discovery calls (mentorship)',
+    'Unlimited Discovery Calls (10 credits per confirmed booking)',
     'Unlimited Find a Co-Founder posts',
     'VC Search & Accelerator Hunt (unlimited profile views)',
     'Email Templates (full access)',
@@ -407,10 +407,10 @@ export const FEATURE_ENTITLEMENTS: Record<FeatureKey, Record<Plan, FeatureEntitl
   },
 
   discovery_calls: {
-    rookie: { state: 'quota_limited', monetizationModel: 'quota_limited', monthlyLimit: 1, requiredPlan: 'starter' },
-    starter: { state: 'quota_limited', monetizationModel: 'quota_limited', monthlyLimit: 2, requiredPlan: 'rising' },
-    rising: { state: 'quota_limited', monetizationModel: 'quota_limited', monthlyLimit: 3, requiredPlan: 'pro' },
-    pro: { state: 'full', monetizationModel: 'quota_limited' },
+    rookie: { state: 'full', monetizationModel: 'credit_metered', creditFeature: 'DISCOVERY_CALL' },
+    starter: { state: 'full', monetizationModel: 'credit_metered', creditFeature: 'DISCOVERY_CALL' },
+    rising: { state: 'full', monetizationModel: 'credit_metered', creditFeature: 'DISCOVERY_CALL' },
+    pro: { state: 'full', monetizationModel: 'credit_metered', creditFeature: 'DISCOVERY_CALL' },
   },
   cofounder_posts: {
     rookie: { state: 'quota_limited', monetizationModel: 'quota_limited', monthlyLimit: 1, requiredPlan: 'starter' },
@@ -504,7 +504,7 @@ export const PLAN_PERMISSIONS: Record<FeatureKey, Record<Plan, AccessRule>> = Ob
 ) as Record<FeatureKey, Record<Plan, AccessRule>>;
 
 export const MONTHLY_FREE_QUOTAS: Record<string, Record<Plan, number>> = {
-  discovery_calls: { rookie: 1, starter: 2, rising: 3, pro: Infinity },
+  discovery_calls: { rookie: Infinity, starter: Infinity, rising: Infinity, pro: Infinity },
   cofounder_posts: { rookie: 1, starter: 2, rising: Infinity, pro: Infinity },
   vc_profiles: { rookie: 0, starter: 2, rising: 10, pro: Infinity },
   accelerator_profiles: { rookie: 0, starter: 2, rising: 10, pro: Infinity },

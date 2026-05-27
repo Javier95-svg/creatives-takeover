@@ -6,6 +6,7 @@ import Footer from "@/components/Footer";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
+import { useUpgradePrompt } from "@/contexts/UpgradePromptContext";
 import { useMentors } from "@/hooks/useMentors";
 import { Loader2, ArrowLeft } from "lucide-react";
 import { Mentor } from "@/types/mentor";
@@ -21,6 +22,7 @@ const MentorBookingPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user, isAuthenticated, loading: authLoading } = useAuth();
+  const { openUpgradePrompt } = useUpgradePrompt();
   const { fetchMentorById, loading: mentorLoading } = useMentors();
   const [mentor, setMentor] = useState<Mentor | null>(null);
   const [loading, setLoading] = useState(false);
@@ -77,8 +79,18 @@ const MentorBookingPage = () => {
       if (!bookingIntent.success || !bookingIntent.callId) {
         calendlyTab.close();
 
-        if (bookingIntent.errorCode === "PLAN_UPGRADE_REQUIRED" || bookingIntent.errorCode === "INSUFFICIENT_CREDITS") {
-          toast.error(bookingIntent.error || "Upgrade required to book another discovery call.");
+        if (bookingIntent.errorCode === "INSUFFICIENT_CREDITS") {
+          openUpgradePrompt({
+            reason: "credits",
+            featureName: "Discovery Calls",
+            requiredCredits: bookingIntent.requiredCredits ?? 10,
+            description: bookingIntent.error || "You need 10 credits to book a discovery call.",
+          });
+          return;
+        }
+
+        if (bookingIntent.errorCode === "PLAN_UPGRADE_REQUIRED") {
+          toast.error(bookingIntent.error || "Unable to book this discovery call on your current plan.");
           navigate("/pricing");
           return;
         }
@@ -157,7 +169,7 @@ const MentorBookingPage = () => {
                   </div>
 
                   <div className="rounded-lg border border-border/60 bg-muted/30 p-4 text-sm text-muted-foreground">
-                    Discovery calls use your plan's included monthly quota first. If you are out of quota, we will show the correct upgrade path before opening the calendar.
+                    Discovery calls are available on every plan and cost 10 credits only after Calendly confirms your booking.
                   </div>
 
                   <Button

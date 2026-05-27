@@ -51,7 +51,7 @@ export const QuotaCounterWidgets = () => {
       label: 'Discovery Calls',
       used: quotas.discovery_calls_used,
       max: dcLimit,
-      suffix: currentPlan === 'pro' ? 'unlimited' : 'included',
+      suffix: '10 credits each',
     },
     {
       icon: Handshake,
@@ -109,7 +109,9 @@ export const QuotaCounterWidgets = () => {
               )}
             </div>
             <p className="mt-1 text-xs text-muted-foreground">
-              {isUnlimitedQuotaLimit(max)
+              {label === 'Discovery Calls'
+                ? 'No monthly cap. Credits are charged when Calendly confirms a booking.'
+                : isUnlimitedQuotaLimit(max)
                 ? 'No monthly cap on this workflow for your plan.'
                 : `${Math.max(max - used, 0)} remaining this billing cycle.`}
             </p>

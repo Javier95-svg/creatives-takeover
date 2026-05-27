@@ -457,9 +457,9 @@ export function RookieModeView({ founderName, recommendations, icpSummary, total
     {
       id: 'rookie-mentor',
       title: 'Use your discovery call intentionally',
-      description: 'Treat your included mentorship slot as a checkpoint after you can clearly describe your customer and problem.',
+      description: 'Use a mentor checkpoint after you can clearly describe your customer and problem. Confirmed bookings cost 10 credits.',
       href: '/mentorship',
-      label: 'Included',
+      label: '10 credits',
     },
     {
       id: 'rookie-upgrade',
@@ -541,7 +541,7 @@ export function RookieModeView({ founderName, recommendations, icpSummary, total
           bullets={[
             'Waitlist Maker for first demand capture',
             'PMF Lab for early feedback loops',
-            '2 discovery calls and 2 co-founder posts each cycle',
+            'Unlimited Discovery Calls at 10 credits per confirmed booking',
           ]}
           ctaLabel="Compare Starter"
           ctaHref="/pricing"

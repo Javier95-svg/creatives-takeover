@@ -28,14 +28,14 @@ const PricingFAQ = () => {
 
     Waitlist Maker is unlocked on every plan and uses credits: 4 credits on Rookie and 3 credits on paid plans. PMF Lab unlocks on Starter and above and uses credits for analyses. Rising and Pro unlock MVP Builder, Tech Stack Builder, GTM Strategist, and Pitch Deck Analyzer; MVP Builder charges per AI action because it behaves like a vibe coding workspace.
 
-    ICP Builder stays free across all four plans. Discovery Calls are monthly quotas: Rookie includes 1 per month, Starter 2, Rising 3, and Pro includes unlimited discovery calls.`,
+    ICP Builder stays free across all four plans. Discovery Calls are available on every plan with no monthly cap and cost 10 credits per confirmed booking.`,
       relatedQuestions: [0, 5],
     },
     {
       question: "How should I choose the right plan?",
       answer: `Think about your founder stage, not just the credit number.
 
-Rookie helps you clarify your ICP and first traction asset. Starter is for validating demand with PMF Lab, Email Templates, and more research/community access. Rising is for building and launching with MVP Builder, Tech Stack Builder, GTM Strategist, Directories, and Pitch Deck Analyzer. Pro is for fundraising and scaling with Find Your Angel, unlimited research views, unlimited discovery calls, and the largest credit runway.`,
+Rookie helps you clarify your ICP and first traction asset. Starter is for validating demand with PMF Lab, Email Templates, and more research/community access. Rising is for building and launching with MVP Builder, Tech Stack Builder, GTM Strategist, Directories, and Pitch Deck Analyzer. Pro is for fundraising and scaling with Find Your Angel, unlimited research views, and the largest credit runway. Discovery Calls are unlimited on every plan at 10 credits per confirmed booking.`,
       relatedQuestions: [1, 6],
     },
     {
@@ -68,7 +68,7 @@ That means billing, renewals, and checkout security all run on Stripe's infrastr
     },
     {
       question: "What's included in the Rookie plan?",
-      answer: `Rookie is free forever and includes 50 credits per month. You get Dashboard Rookie Mode, ICP Builder for free, Waitlist Maker with credit usage, Prompt Library access for free models only, Insighta Test, Newspaper, 1 discovery call per month, and 1 Find a Co-Founder post per month.
+      answer: `Rookie is free forever and includes 50 credits per month. You get Dashboard Rookie Mode, ICP Builder for free, Waitlist Maker with credit usage, Prompt Library access for free models only, Insighta Test, Newspaper, unlimited Discovery Calls at 10 credits per confirmed booking, and 1 Find a Co-Founder post per month.
 
     VC Search and Accelerator Hunt are browse only on Rookie. PMF Lab, MVP Builder, Tech Stack Builder, GTM Strategist, and Directories stay in preview only, and Find Your Angel is not included. Email Templates and Pitch Deck Analyzer are also not included on Rookie.`,
       relatedQuestions: [0, 1],

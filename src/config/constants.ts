@@ -232,7 +232,7 @@ export const TIER_USAGE_LIMITS = {
     team_members: 0,
     vc_profile_views: 0,       // List-only, no profile views
     accelerator_profile_views: 0,
-    discovery_calls_free: 1,
+    discovery_calls_free: -1,
     cofounder_posts_free: 1,
   },
   starter: {
@@ -247,7 +247,7 @@ export const TIER_USAGE_LIMITS = {
     team_members: 0,
     vc_profile_views: 2,
     accelerator_profile_views: 2,
-    discovery_calls_free: 2,
+    discovery_calls_free: -1,
     cofounder_posts_free: 2,
   },
   rising: {
@@ -262,7 +262,7 @@ export const TIER_USAGE_LIMITS = {
     team_members: 3,
     vc_profile_views: 10,
     accelerator_profile_views: 10,
-    discovery_calls_free: 3,
+    discovery_calls_free: -1,
     cofounder_posts_free: -1,
   },
   pro: {

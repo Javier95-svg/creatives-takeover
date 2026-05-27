@@ -51,7 +51,7 @@ test('paid plan credit ladder migration safely raises only paid credits', () => 
   assert.doesNotMatch(source, /tier_name\s*=\s*'rookie'/);
 });
 
-test('hybrid monetization migration updates plan metadata and disables discovery-call overage credits', () => {
+test('hybrid monetization migration updates plan metadata and disables legacy discovery-call overage credits', () => {
   const source = readFileSync(new URL('../supabase/migrations/20260514150000_hybrid_monetization_metadata.sql', import.meta.url), 'utf8');
 
   assert.match(source, /Waitlist Maker unlocked; uses 3 credits/);
@@ -66,12 +66,25 @@ test('hybrid monetization migration updates plan metadata and disables discovery
   assert.match(source, /'balance_after'/);
 });
 
+test('discovery call metering migration removes plan caps and charges 10 credits on confirmed bookings', () => {
+  const source = readFileSync(new URL('../supabase/migrations/20260527120000_meter_discovery_calls.sql', import.meta.url), 'utf8');
+
+  assert.match(source, /NULL::INTEGER AS included_limit/);
+  assert.match(source, /10 AS overage_credit_cost/);
+  assert.match(source, /'requiresCredits', true/);
+  assert.match(source, /'canBookNow'[\s\S]*>= COALESCE\(v_policy\.overage_credit_cost, 10\)/);
+  assert.match(source, /'errorCode', 'INSUFFICIENT_CREDITS'/);
+  assert.match(source, /v_deduction := public\.deduct_credits_atomic/);
+  assert.match(source, /'Discovery Call'/);
+  assert.match(source, /'chargedCredits', v_charge_amount/);
+});
+
 test('subscription checkout copy uses the paid plan credit ladder', () => {
   const source = readFileSync(new URL('../supabase/functions/create-checkout/index.ts', import.meta.url), 'utf8');
 
   assert.match(source, /starter: \{[\s\S]*monthly: \{[\s\S]*credits: 100[\s\S]*PMF Lab credit-metered access/);
   assert.match(source, /rising: \{[\s\S]*monthly: \{[\s\S]*credits: 250[\s\S]*per-action MVP Builder/);
-  assert.match(source, /pro: \{[\s\S]*monthly: \{[\s\S]*credits: 600[\s\S]*Find Your Angel/);
+  assert.match(source, /pro: \{[\s\S]*monthly: \{[\s\S]*credits: 600[\s\S]*Find Your Angel[\s\S]*unlimited research views/);
   assert.match(source, /description: `\$\{pricing\.description\} with \$\{billingCycle\} billing`/);
 });
 
@@ -178,16 +191,23 @@ test('Rising and Pro generative build tools are unlocked and credit-metered', ()
   }
 });
 
-test('discovery calls stay quota-based across all plans', () => {
+test('discovery calls are credit-metered across all plans', () => {
   assert.deepEqual(resolveFeatureEnforcement('rookie', 'DISCOVERY_CALL'), {
     feature: 'DISCOVERY_CALL',
     plan: 'rookie',
-    mode: 'quota',
-    requiredPlan: 'starter',
-    monthlyLimit: 1,
-    creditCost: 0,
+    mode: 'charge',
+    requiredPlan: undefined,
+    monthlyLimit: undefined,
+    creditCost: 10,
   });
-  assert.equal(resolveFeatureEnforcement('pro', 'DISCOVERY_CALL').monthlyLimit, Infinity);
+
+  for (const plan of ['starter', 'rising', 'pro'] as const) {
+    const enforcement = resolveFeatureEnforcement(plan, 'DISCOVERY_CALL');
+    assert.equal(enforcement.mode, 'charge');
+    assert.equal(enforcement.creditCost, 10);
+    assert.equal(enforcement.requiredPlan, undefined);
+    assert.equal(enforcement.monthlyLimit, undefined);
+  }
 });
 
 test('ICP analysis remains free and included for every backend plan', () => {

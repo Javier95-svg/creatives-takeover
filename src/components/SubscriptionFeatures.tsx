@@ -112,8 +112,8 @@ const creditBreakdown: {
   community: [
     {
       name: "Discovery Calls (Mentorship)",
-      description: "Rookie gets 1 call/monthly, Starter 2, Rising 3, and Pro unlimited. Upgrade when you need a higher monthly limit.",
-      badge: "Monthly quotas",
+      description: "Available on every plan with no monthly cap. Each confirmed Calendly booking costs 10 credits.",
+      badge: "10 credits",
       badgeVariant: "outline",
       badgeClassName: "bg-blue-50 dark:bg-blue-950/30",
     },

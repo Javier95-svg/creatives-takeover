@@ -545,6 +545,11 @@ export const MentorProfile = ({ mentor, onBookClick }: MentorProfileProps) => {
 	                    {saveButton.saving ? 'Saving...' : saveButton.label}
 	                  </Button>
 	                </div>
+            {hasBookableCall && (
+              <p className="text-xs text-muted-foreground">
+                Unlimited on every plan. 10 credits are charged only after Calendly confirms the booking.
+              </p>
+            )}
             {(!hasBookableCall || !hasMessagingAccount) && (
               <>
                 {/* FIX(dead-click): /mentorship/[user-profile] — unavailable mentor actions now render as explicit secondary states instead of primary-looking buttons that silently fail. */}
