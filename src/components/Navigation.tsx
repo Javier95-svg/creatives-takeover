@@ -89,7 +89,7 @@ const Navigation = () => {
     | { type: 'label'; label: string }
     | SubmenuLinkItem;
 
-  const bizMapSubmenu: BizMapMenuItem[] = BIZMAP_STAGES.flatMap((stage) => [
+  const bizMapSubmenu: BizMapMenuItem[] = BIZMAP_STAGES.filter((stage) => stage.order <= 5).flatMap((stage) => [
     { type: 'label' as const, label: `Stage ${stage.numeral}: ${stage.title}` },
     ...stage.tools.map((tool) => ({
       name: tool.beta ? `${tool.name} (Beta)` : tool.name,
