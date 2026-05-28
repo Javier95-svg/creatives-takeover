@@ -5,7 +5,7 @@ import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import PageFAQSection from '@/components/seo/PageFAQSection';
 import { PreviewModeWrapper } from '@/components/ui/PreviewModeWrapper';
-import WaitlistEditor, { type WaitlistEditorInitialSeed } from '@/components/waitlist/WaitlistEditor';
+import WaitlistEditor, { type BuilderTab, type WaitlistEditorInitialSeed } from '@/components/waitlist/WaitlistEditor';
 import WaitlistMakerWallpaper from '@/components/wallpapers/WaitlistMakerWallpaper';
 import WaitlistModeSelect from '@/components/waitlist/WaitlistModeSelect';
 import WaitlistSmartHydrate from '@/components/waitlist/WaitlistSmartHydrate';
@@ -53,6 +53,7 @@ export default function WaitlistMakerPage() {
 
   const [screen, setScreen] = useState<Screen>(templateParam ? 'editor' : 'mode_select');
   const [seed, setSeed] = useState<WaitlistEditorInitialSeed | null>(null);
+  const [initialEditorTab, setInitialEditorTab] = useState<BuilderTab>('content');
   const [hasEditorSession, setHasEditorSession] = useState(false);
   const [latestIcp, setLatestIcp] = useState<LatestIcpSummary | null>(null);
   const [latestIcpLoading, setLatestIcpLoading] = useState(false);
@@ -127,9 +128,17 @@ export default function WaitlistMakerPage() {
   const hasCompletedIcp = Boolean(icpParam) || Boolean(latestIcp?.draftId);
   const activeIcpDraftId = icpParam || latestIcp?.draftId || null;
 
+  const handleChooseLaunchKit = () => {
+    setSeed({ productName: '', content: {}, source: 'manual' });
+    setInitialEditorTab('launchKit');
+    setHasEditorSession(true);
+    setScreen('editor');
+  };
+
   const handleChooseManual = () => {
     setSeed(null);
     setHasEditorSession(false);
+    setInitialEditorTab('content');
     navigate('/waitlist/templates');
     if (searchParams.has('icp')) {
       const next = new URLSearchParams(searchParams);
@@ -198,8 +207,12 @@ export default function WaitlistMakerPage() {
     [faqs],
   );
 
+  const backToTemplates = seed?.source === 'manual' && initialEditorTab !== 'launchKit'
+    ? () => navigate('/waitlist/templates')
+    : undefined;
+
   const editorNode = user ? (
-    <WaitlistEditor initialSeed={seed} onBackToTemplates={seed?.source === 'manual' ? () => navigate('/waitlist/templates') : undefined} />
+    <WaitlistEditor initialSeed={seed} onBackToTemplates={backToTemplates} initialTab={initialEditorTab} />
   ) : (
     publicTab && (
       <PreviewModeWrapper
@@ -207,7 +220,7 @@ export default function WaitlistMakerPage() {
         description={publicTab.description || ''}
         showPricingCta={publicTab.showPricingCta}
       >
-        <WaitlistEditor initialSeed={seed} onBackToTemplates={seed?.source === 'manual' ? () => navigate('/waitlist/templates') : undefined} />
+        <WaitlistEditor initialSeed={seed} onBackToTemplates={backToTemplates} initialTab={initialEditorTab} />
       </PreviewModeWrapper>
     )
   );
@@ -243,6 +256,7 @@ export default function WaitlistMakerPage() {
                 icpCtaLoading={latestIcpLoading}
                 onChooseIcpPowered={handleChooseIcpPowered}
                 onChooseManual={handleChooseManual}
+                onChooseLaunchKit={handleChooseLaunchKit}
                 isGuest={!user}
               />
             )}
@@ -270,6 +284,7 @@ export default function WaitlistMakerPage() {
                 hasCompletedIcp={false}
                 onChooseIcpPowered={() => setScreen('mode_select')}
                 onChooseManual={handleChooseManual}
+                onChooseLaunchKit={handleChooseLaunchKit}
               />
             )}
 

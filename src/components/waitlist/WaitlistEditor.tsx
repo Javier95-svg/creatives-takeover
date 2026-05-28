@@ -37,7 +37,7 @@ import { captureEvent } from '@/lib/analytics';
 import { CreditCostNotice } from '@/components/CreditCostNotice';
 import { useJourneyUpgradePrompt } from '@/hooks/useJourneyUpgradePrompt';
 
-type BuilderTab = 'content' | 'launchKit' | 'style' | 'form' | 'launch' | 'analytics';
+export type BuilderTab = 'content' | 'launchKit' | 'style' | 'form' | 'launch' | 'analytics';
 type PreviewDevice = 'desktop' | 'mobile';
 
 const WAITLIST_TABLE = 'waitlist_pages' as any;
@@ -278,9 +278,10 @@ export interface WaitlistEditorInitialSeed {
 export interface WaitlistEditorProps {
   initialSeed?: WaitlistEditorInitialSeed | null;
   onBackToTemplates?: () => void;
+  initialTab?: BuilderTab;
 }
 
-export default function WaitlistEditor({ initialSeed = null, onBackToTemplates }: WaitlistEditorProps = {}) {
+export default function WaitlistEditor({ initialSeed = null, onBackToTemplates, initialTab }: WaitlistEditorProps = {}) {
   const { user, loading: authLoading } = useAuth();
   const { refreshProgress } = useBizMapProgress();
   const { refreshActivation } = useActivationJourney();
@@ -299,7 +300,7 @@ export default function WaitlistEditor({ initialSeed = null, onBackToTemplates }
   } : null);
   const initialContent = initialState?.content ?? getDefaultWaitlistContent('Your Product');
 
-  const [activeTab, setActiveTab] = useState<BuilderTab>('content');
+  const [activeTab, setActiveTab] = useState<BuilderTab>(initialTab ?? 'content');
   const [previewDevice, setPreviewDevice] = useState<PreviewDevice>('desktop');
   const [allPages, setAllPages] = useState<WaitlistPageRow[]>([]);
 
