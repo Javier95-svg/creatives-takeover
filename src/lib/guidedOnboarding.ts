@@ -55,12 +55,8 @@ export function shouldRedirectToGuidedOnboarding(
   return profile.onboarding_completed !== true;
 }
 
-export function shouldRedirectToSetupQuiz(profile: GuidedOnboardingProfile | null | undefined): boolean {
-  if (!profile || !requiresGuidedOnboarding(profile.user_preferences)) {
-    return false;
-  }
-
-  return profile.onboarding_completed === true && profile.quiz_completed !== true;
+export function shouldRedirectToSetupQuiz(_profile: GuidedOnboardingProfile | null | undefined): boolean {
+  return false;
 }
 
 export function shouldEnforceActivationGate(params: {

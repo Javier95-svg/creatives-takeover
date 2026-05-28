@@ -1,6 +1,12 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { readFileSync } from 'node:fs';
 
+import {
+  assignFounderStageV3,
+  createQuizAnswersV3Payload,
+  type FounderStageQuizAnswersV3,
+} from '../src/lib/stageDiagnostic.ts';
 import {
   isLegacyOnboardingExempt,
   requiresGuidedOnboarding,
@@ -23,7 +29,7 @@ test('legacy profiles remain exempt when guided onboarding flag is missing', () 
   assert.equal(shouldRedirectToSetupQuiz(legacyProfile), false);
 });
 
-test('new-account flag opts a profile into guided onboarding and setup quiz flow', () => {
+test('new-account flag opts a profile into the unified guided onboarding flow', () => {
   const guidedPreferences = withGuidedOnboardingPreference(null, true);
 
   assert.equal(requiresGuidedOnboarding(guidedPreferences), true);
@@ -41,7 +47,7 @@ test('new-account flag opts a profile into guided onboarding and setup quiz flow
       quiz_completed: false,
       user_preferences: guidedPreferences,
     }),
-    true,
+    false,
   );
 });
 
@@ -56,6 +62,41 @@ test('guided onboarding redirects are skipped for icp unlock bootstrap', () => {
     }),
     false,
   );
+});
+
+test('unified onboarding step shape excludes duplicate terms confirmation', () => {
+  const source = readFileSync(new URL('../src/components/OnboardingForm.tsx', import.meta.url), 'utf8');
+
+  assert.match(source, /const ONBOARDING_STEPS/);
+  assert.match(source, /activation_intent/);
+  assert.doesNotMatch(source, /terms_confirmation/);
+  assert.doesNotMatch(source, /acceptedTerms/);
+});
+
+test('stage answers still produce the v3 diagnostic payload', () => {
+  const answers: FounderStageQuizAnswersV3 = {
+    productStatus: 'mvp_beta',
+    customerTesting: 'target_customers',
+    mainFocus: 'validate_demand',
+    tractionSignal: 'waitlist_interest',
+    blocker: 'demand_validation',
+    fundraisingStatus: 'not_now',
+  };
+
+  const diagnostic = assignFounderStageV3(answers);
+  const payload = createQuizAnswersV3Payload(answers, diagnostic);
+
+  assert.equal(payload.version, 3);
+  assert.equal(payload.assignedStage, diagnostic.assignedStage);
+  assert.equal(payload.answers, answers);
+});
+
+test('activation intent still resolves to first-action routes', () => {
+  const source = readFileSync(new URL('../src/lib/retentionSystem.ts', import.meta.url), 'utf8');
+
+  assert.match(source, /find_mentor: '\/mentorship\?mentorSource=onboarding&activationIntent=find_mentor'/);
+  assert.match(source, /run_icp: '\/icp-builder\?activation=1'/);
+  assert.match(source, /start_validation: '\/decision-sprint\?activation=1'/);
 });
 
 test('activation gate is suppressed for legacy users even with stale forced-gate state', () => {

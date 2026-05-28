@@ -1,15 +1,25 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ArrowLeft, ArrowRight, Loader2, Search } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { AnimatePresence, motion } from 'framer-motion';
+import {
+  ArrowLeft,
+  ArrowRight,
+  Check,
+  Compass,
+  Loader2,
+  MapPin,
+  Search,
+  Sparkles,
+  Target,
+  Users,
+  Zap,
+  type LucideIcon,
+} from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
+import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useAuth } from '@/contexts/AuthContext';
 import { ANGEL_SECTOR_OPTIONS } from '@/data/angelSectors';
 import { COUNTRY_OPTIONS } from '@/data/countries';
@@ -20,6 +30,7 @@ import {
   trackOnboardingStepCompleted,
 } from '@/lib/analytics';
 import { trackActivity } from '@/lib/activity';
+import { cn } from '@/lib/utils';
 import { refreshOnboardingMentorRecommendations } from '@/lib/onboardingMentorRecommendations';
 import { getActivationRoute, startActivationJourney, type ActivationIntent } from '@/lib/retentionSystem';
 import {
@@ -28,6 +39,7 @@ import {
   FOUNDER_STAGE_QUESTIONS,
   mapFounderStageToBusinessStage,
   STAGES,
+  type FounderStageDiagnosticResult,
   type FounderStageQuizAnswersV3,
 } from '@/lib/stageDiagnostic';
 
@@ -37,39 +49,64 @@ interface OnboardingData {
   supportAreasNeeded: string[];
   country: string;
   activationIntent: ActivationIntent | '';
-  acceptedTerms: boolean;
 }
 
-const ACTIVATION_CARDS: Array<{
+type OnboardingStepId =
+  | keyof FounderStageQuizAnswersV3
+  | 'startup_sector'
+  | 'support_areas'
+  | 'country'
+  | 'activation_intent';
+
+interface OnboardingStep {
+  id: OnboardingStepId;
+  chapter: string;
+  label: string;
+}
+
+interface ActivationCard {
   value: ActivationIntent;
   headline: string;
   sub: string;
-}> = [
+  cta: string;
+  icon: LucideIcon;
+}
+
+const ACTIVATION_CARDS: ActivationCard[] = [
   {
     value: 'find_mentor',
     headline: 'Find a mentor',
     sub: 'Start with one mentor worth saving, messaging, or booking.',
+    cta: 'Open mentor matches',
+    icon: Users,
   },
   {
     value: 'run_icp',
     headline: 'Run ICP analysis',
-    sub: 'Get to a fast first ICP recommendation with one prompt, then expand only after you see value.',
+    sub: 'Turn your context into a sharper ideal customer profile.',
+    cta: 'Start ICP Builder',
+    icon: Target,
   },
   {
     value: 'start_validation',
     headline: 'Start validation',
-    sub: 'Use Decision Sprint to score one idea and choose your next move.',
+    sub: 'Score one idea and choose the next concrete move.',
+    cta: 'Start Decision Sprint',
+    icon: Zap,
   },
 ];
 
-const ONBOARDING_STEPS = [
-  ...FOUNDER_STAGE_QUESTIONS.map((question) => ({ id: question.id })),
-  { id: 'startup_sector' },
-  { id: 'support_areas' },
-  { id: 'country' },
-  { id: 'activation_intent' },
-  { id: 'terms_confirmation' },
-] as const;
+const ONBOARDING_STEPS: OnboardingStep[] = [
+  ...FOUNDER_STAGE_QUESTIONS.map((question) => ({
+    id: question.id,
+    chapter: 'Stage',
+    label: 'Founder stage',
+  })),
+  { id: 'startup_sector', chapter: 'Context', label: 'Market' },
+  { id: 'support_areas', chapter: 'Context', label: 'Support' },
+  { id: 'country', chapter: 'Context', label: 'Location' },
+  { id: 'activation_intent', chapter: 'First action', label: 'Launchpad' },
+];
 
 const emptyOnboardingData: OnboardingData = {
   stageAnswers: {},
@@ -77,7 +114,6 @@ const emptyOnboardingData: OnboardingData = {
   supportAreasNeeded: [],
   country: '',
   activationIntent: '',
-  acceptedTerms: false,
 };
 
 interface OnboardingFormProps {
@@ -88,6 +124,23 @@ function toggleValue(current: string[], value: string) {
   return current.includes(value)
     ? current.filter((item) => item !== value)
     : [...current, value];
+}
+
+function hasCompleteStageAnswers(stageAnswers: Partial<FounderStageQuizAnswersV3>) {
+  return FOUNDER_STAGE_QUESTIONS.every((question) => Boolean(stageAnswers[question.id]));
+}
+
+function getStageDiagnostic(stageAnswers: Partial<FounderStageQuizAnswersV3>): FounderStageDiagnosticResult | null {
+  if (!hasCompleteStageAnswers(stageAnswers)) return null;
+  return assignFounderStageV3(stageAnswers as FounderStageQuizAnswersV3);
+}
+
+function appendActivationParams(route: string, intent: ActivationIntent) {
+  const separator = route.includes('?') ? '&' : '?';
+  if (route.includes('activation=')) {
+    return `${route}${separator}intent=${intent}`;
+  }
+  return `${route}${separator}activation=1&intent=${intent}`;
 }
 
 export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
@@ -156,24 +209,35 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
   }, [countrySearch]);
 
   const totalSteps = ONBOARDING_STEPS.length;
+  const step = ONBOARDING_STEPS[currentStep];
   const progress = ((currentStep + 1) / totalSteps) * 100;
   const diagnosticQuestion = currentStep < FOUNDER_STAGE_QUESTIONS.length
     ? FOUNDER_STAGE_QUESTIONS[currentStep]
     : null;
+  const diagnostic = useMemo(() => getStageDiagnostic(formData.stageAnswers), [formData.stageAnswers]);
+  const assignedStage = diagnostic?.assignedStage ?? null;
+  const stageMeta = assignedStage ? STAGES[assignedStage] : null;
+  const selectedActivationCard = ACTIVATION_CARDS.find((card) => card.value === formData.activationIntent) ?? null;
+  const selectedRoute = formData.activationIntent ? getActivationRoute(formData.activationIntent) : null;
+  const profileTags = [
+    ...formData.startupSectors,
+    ...formData.supportAreasNeeded,
+    formData.country,
+  ].filter(Boolean);
 
-  const validateStep = (step: number): boolean => {
+  const validateStep = (stepIndex: number): boolean => {
     const newErrors: Record<string, string> = {};
 
-    if (step < FOUNDER_STAGE_QUESTIONS.length) {
-      const question = FOUNDER_STAGE_QUESTIONS[step];
+    if (stepIndex < FOUNDER_STAGE_QUESTIONS.length) {
+      const question = FOUNDER_STAGE_QUESTIONS[stepIndex];
       if (!formData.stageAnswers[question.id]) {
-        newErrors[question.id] = 'Please select the option that best describes you today';
+        newErrors[question.id] = 'Choose the option that best describes you today';
       }
       setErrors(newErrors);
       return Object.keys(newErrors).length === 0;
     }
 
-    const enrichmentStep = step - FOUNDER_STAGE_QUESTIONS.length;
+    const enrichmentStep = stepIndex - FOUNDER_STAGE_QUESTIONS.length;
 
     switch (enrichmentStep) {
       case 0:
@@ -183,13 +247,10 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
         if (formData.supportAreasNeeded.length === 0) newErrors.supportAreasNeeded = 'Select at least one support area';
         break;
       case 2:
-        if (!formData.country) newErrors.country = 'Please select your country';
+        if (!formData.country) newErrors.country = 'Select your country';
         break;
       case 3:
-        if (!formData.activationIntent) newErrors.activationIntent = 'Choose the first action that would help you make progress this week';
-        break;
-      case 4:
-        if (!formData.acceptedTerms) newErrors.acceptedTerms = 'You must accept the terms to continue';
+        if (!formData.activationIntent) newErrors.activationIntent = 'Choose the first action that would help this week';
         break;
     }
 
@@ -236,9 +297,9 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
       const selectedIntent = formData.activationIntent as ActivationIntent;
       const startRoute = getActivationRoute(selectedIntent);
       const stageAnswers = formData.stageAnswers as FounderStageQuizAnswersV3;
-      const diagnostic = assignFounderStageV3(stageAnswers);
-      const assignedStage = diagnostic.assignedStage;
-      const businessStage = mapFounderStageToBusinessStage(assignedStage);
+      const finalDiagnostic = assignFounderStageV3(stageAnswers);
+      const finalAssignedStage = finalDiagnostic.assignedStage;
+      const businessStage = mapFounderStageToBusinessStage(finalAssignedStage);
       const primaryPain = stageAnswers.blocker;
       const supportAreas = stageAnswers.blocker === 'fundraising' && !formData.supportAreasNeeded.includes('Fundraising')
         ? [...formData.supportAreasNeeded, 'Fundraising']
@@ -252,23 +313,23 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
         startupSectors: formData.startupSectors,
         supportAreasNeeded: supportAreas,
         country: formData.country,
-        assignedStage,
-        quizAnswersV3: createQuizAnswersV3Payload(stageAnswers, diagnostic),
+        assignedStage: finalAssignedStage,
+        quizAnswersV3: createQuizAnswersV3Payload(stageAnswers, finalDiagnostic),
       });
 
       await refreshOnboardingMentorRecommendations({
         userId: user.id,
         sectors: formData.startupSectors,
         supportAreas,
-        assignedStage,
+        assignedStage: finalAssignedStage,
         stageAnswers,
       });
 
       captureEvent('activation_intent_selected', {
         stage: businessStage,
-        assignedStage,
-        stageLabel: STAGES[assignedStage].name,
-        stageConfidence: diagnostic.confidence,
+        assignedStage: finalAssignedStage,
+        stageLabel: STAGES[finalAssignedStage].name,
+        stageConfidence: finalDiagnostic.confidence,
         painPoint: primaryPain,
         activationIntent: selectedIntent,
         startupSectors: formData.startupSectors,
@@ -279,8 +340,8 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
       });
       captureEvent('activation_path_selected', {
         stage: businessStage,
-        assignedStage,
-        stageLabel: STAGES[assignedStage].name,
+        assignedStage: finalAssignedStage,
+        stageLabel: STAGES[finalAssignedStage].name,
         painPoint: primaryPain,
         activationIntent: selectedIntent,
         startupSectors: formData.startupSectors,
@@ -296,9 +357,9 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
       });
       void trackActivity('onboarding_completed', {
         stage: businessStage,
-        assignedStage,
-        stageLabel: STAGES[assignedStage].name,
-        stageConfidence: diagnostic.confidence,
+        assignedStage: finalAssignedStage,
+        stageLabel: STAGES[finalAssignedStage].name,
+        stageConfidence: finalDiagnostic.confidence,
         painPoint: primaryPain,
         activationIntent: selectedIntent,
         startupSectors: formData.startupSectors,
@@ -307,7 +368,7 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
         startRoute,
       }, user.id);
 
-      toast.success('Your startup context is saved. We added mentor recommendations to your saved list.');
+      toast.success('Your launchpad is ready. Opening your first action now.');
 
       try {
         sessionStorage.removeItem(`onboarding_draft_${user.id}`);
@@ -315,10 +376,7 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
         /* ignore */
       }
 
-      if (onComplete) {
-        const separator = startRoute.includes('?') ? '&' : '?';
-        onComplete(`${startRoute}${separator}activation=1&intent=${selectedIntent}`);
-      }
+      onComplete?.(appendActivationParams(startRoute, selectedIntent));
     } catch (error) {
       console.error('Failed to save onboarding data:', error);
       toast.error('Failed to save onboarding data. Please try again.');
@@ -343,60 +401,92 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
               setFormData((prev) => ({ ...prev, [field]: toggleValue(prev[field], option) }));
               setErrors((prev) => ({ ...prev, [field]: undefined }));
             }}
-            className={`rounded-lg border px-3 py-2 text-left text-sm transition-colors ${
+            aria-pressed={selected}
+            className={cn(
+              'group min-h-12 rounded-lg border px-3 py-3 text-left text-sm transition-all',
               selected
-                ? 'border-[#32b8c6] bg-[#32b8c6]/10 text-foreground'
-                : 'border-border/60 bg-background/70 hover:bg-accent/60'
-            }`}
+                ? 'border-[#32b8c6] bg-[#32b8c6]/10 text-foreground shadow-sm shadow-[#32b8c6]/10'
+                : 'border-border/60 bg-background/70 hover:border-[#32b8c6]/50 hover:bg-accent/60',
+            )}
           >
-            <span className="font-medium">{option}</span>
+            <span className="flex items-center justify-between gap-3 font-medium">
+              <span>{option}</span>
+              {selected ? <Check className="h-4 w-4 shrink-0 text-[#32b8c6]" /> : null}
+            </span>
           </button>
         );
       })}
     </div>
   );
 
-  const renderStep = () => {
-    if (diagnosticQuestion) {
-      const selectedValue = formData.stageAnswers[diagnosticQuestion.id] ?? '';
-      return (
-        <div className="space-y-6">
-          <div>
-            <h2 className="mb-2 font-space-grotesk text-2xl font-semibold tracking-tight sm:text-3xl">
-              {diagnosticQuestion.question}
-            </h2>
-            <p className="text-muted-foreground">Pick the option that best describes your startup today.</p>
-          </div>
+  const renderStageQuestion = () => {
+    if (!diagnosticQuestion) return null;
 
-          <RadioGroup
-            value={selectedValue}
-            onValueChange={(value) => {
-              setFormData((prev) => ({
-                ...prev,
-                stageAnswers: {
-                  ...prev.stageAnswers,
-                  [diagnosticQuestion.id]: value as FounderStageQuizAnswersV3[typeof diagnosticQuestion.id],
-                },
-              }));
-              setErrors((prev) => ({ ...prev, [diagnosticQuestion.id]: undefined }));
-            }}
-            className="space-y-2"
-          >
-            {diagnosticQuestion.options.map((option) => (
-              <Label
-                key={option.value}
-                htmlFor={`diagnostic-${diagnosticQuestion.id}-${option.value}`}
-                className="flex cursor-pointer items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60"
-              >
-                <RadioGroupItem value={option.value} id={`diagnostic-${diagnosticQuestion.id}-${option.value}`} />
-                <span className="flex-1 text-sm">{option.label}</span>
-              </Label>
-            ))}
-          </RadioGroup>
-          {errors[diagnosticQuestion.id] && <p className="text-sm text-destructive">{errors[diagnosticQuestion.id]}</p>}
+    const selectedValue = formData.stageAnswers[diagnosticQuestion.id] ?? '';
+
+    return (
+      <div className="space-y-6">
+        <div>
+          <p className="mb-2 text-xs font-semibold uppercase text-[#32b8c6]">{step.chapter}</p>
+          <h2 className="font-space-grotesk text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
+            {diagnosticQuestion.question}
+          </h2>
+          <p className="mt-2 text-sm leading-6 text-muted-foreground">
+            Pick the closest match. We will use this to place you on the right founder path.
+          </p>
         </div>
-      );
-    }
+
+        <div className="grid gap-2">
+          {diagnosticQuestion.options.map((option, index) => {
+            const selected = selectedValue === option.value;
+            return (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() => {
+                  setFormData((prev) => ({
+                    ...prev,
+                    stageAnswers: {
+                      ...prev.stageAnswers,
+                      [diagnosticQuestion.id]: option.value as FounderStageQuizAnswersV3[typeof diagnosticQuestion.id],
+                    },
+                  }));
+                  setErrors((prev) => ({ ...prev, [diagnosticQuestion.id]: undefined }));
+                }}
+                aria-pressed={selected}
+                className={cn(
+                  'flex min-h-14 items-start gap-3 rounded-lg border p-3 text-left transition-all',
+                  selected
+                    ? 'border-[#32b8c6] bg-[#32b8c6]/10 shadow-sm shadow-[#32b8c6]/10'
+                    : 'border-border/60 bg-background/70 hover:border-[#32b8c6]/50 hover:bg-accent/60',
+                )}
+              >
+                <span
+                  className={cn(
+                    'mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-xs font-semibold',
+                    selected
+                      ? 'border-[#32b8c6] bg-[#32b8c6] text-white'
+                      : 'border-border text-muted-foreground',
+                  )}
+                >
+                  {selected ? <Check className="h-3.5 w-3.5" /> : index + 1}
+                </span>
+                <span className="min-w-0 flex-1 text-sm font-medium leading-6 text-foreground">
+                  {option.label}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+        {errors[diagnosticQuestion.id] ? (
+          <p className="text-sm text-destructive">{errors[diagnosticQuestion.id]}</p>
+        ) : null}
+      </div>
+    );
+  };
+
+  const renderStep = () => {
+    if (diagnosticQuestion) return renderStageQuestion();
 
     const enrichmentStep = currentStep - FOUNDER_STAGE_QUESTIONS.length;
 
@@ -405,13 +495,16 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
         return (
           <div className="space-y-6">
             <div>
-              <h2 className="mb-2 font-space-grotesk text-2xl font-semibold tracking-tight sm:text-3xl">
-                What sector does your startup operate in?
+              <p className="mb-2 text-xs font-semibold uppercase text-[#32b8c6]">Context</p>
+              <h2 className="font-space-grotesk text-2xl font-semibold tracking-tight sm:text-3xl">
+                Where does your startup play?
               </h2>
-              <p className="text-muted-foreground">Choose all that apply. These match the investor sector filters.</p>
+              <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                Choose the sectors that best match your market. This tunes investor and mentor matching.
+              </p>
             </div>
             {renderOptionGrid(ANGEL_SECTOR_OPTIONS, formData.startupSectors, 'startupSectors')}
-            {errors.startupSectors && <p className="text-sm text-destructive">{errors.startupSectors}</p>}
+            {errors.startupSectors ? <p className="text-sm text-destructive">{errors.startupSectors}</p> : null}
           </div>
         );
 
@@ -419,13 +512,16 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
         return (
           <div className="space-y-6">
             <div>
-              <h2 className="mb-2 font-space-grotesk text-2xl font-semibold tracking-tight sm:text-3xl">
-                Which areas do you need support with?
+              <p className="mb-2 text-xs font-semibold uppercase text-[#32b8c6]">Context</p>
+              <h2 className="font-space-grotesk text-2xl font-semibold tracking-tight sm:text-3xl">
+                What support would make this easier?
               </h2>
-              <p className="text-muted-foreground">We will use this to recommend mentors with matching expertise.</p>
+              <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                Pick the areas where outside guidance would save you the most time.
+              </p>
             </div>
             {renderOptionGrid(MENTOR_EXPERTISE_OPTIONS, formData.supportAreasNeeded, 'supportAreasNeeded')}
-            {errors.supportAreasNeeded && <p className="text-sm text-destructive">{errors.supportAreasNeeded}</p>}
+            {errors.supportAreasNeeded ? <p className="text-sm text-destructive">{errors.supportAreasNeeded}</p> : null}
           </div>
         );
 
@@ -433,10 +529,13 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
         return (
           <div className="space-y-6">
             <div>
-              <h2 className="mb-2 font-space-grotesk text-2xl font-semibold tracking-tight sm:text-3xl">
-                Which country are you based in?
+              <p className="mb-2 text-xs font-semibold uppercase text-[#32b8c6]">Context</p>
+              <h2 className="font-space-grotesk text-2xl font-semibold tracking-tight sm:text-3xl">
+                Where are you building from?
               </h2>
-              <p className="text-muted-foreground">This helps surface founders building near you or in similar markets.</p>
+              <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                Location helps surface nearby founders, market context, and better recommendations.
+              </p>
             </div>
             <div className="space-y-3">
               <div className="relative">
@@ -444,12 +543,15 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
                 <Input
                   value={countrySearch}
                   onChange={(event) => setCountrySearch(event.target.value)}
-                  className="pl-9"
+                  className="h-11 rounded-full border-border/70 bg-background/80 pl-9"
                   placeholder="Search countries"
                 />
               </div>
               {formData.country ? (
-                <Badge variant="secondary" className="rounded-full">{formData.country}</Badge>
+                <Badge variant="secondary" className="w-fit gap-1 rounded-full">
+                  <MapPin className="h-3.5 w-3.5" />
+                  {formData.country}
+                </Badge>
               ) : null}
               <div className="grid max-h-72 gap-2 overflow-y-auto rounded-lg border border-border/60 bg-background/70 p-2 sm:grid-cols-2">
                 {filteredCountries.map((country) => {
@@ -463,16 +565,18 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
                         setCountrySearch(country);
                         setErrors((prev) => ({ ...prev, country: undefined }));
                       }}
-                      className={`rounded-md px-3 py-2 text-left text-sm transition-colors ${
-                        selected ? 'bg-[#32b8c6]/15 font-semibold text-foreground' : 'hover:bg-accent'
-                      }`}
+                      aria-pressed={selected}
+                      className={cn(
+                        'min-h-10 rounded-md px-3 py-2 text-left text-sm transition-colors',
+                        selected ? 'bg-[#32b8c6]/15 font-semibold text-foreground' : 'hover:bg-accent',
+                      )}
                     >
                       {country}
                     </button>
                   );
                 })}
               </div>
-              {errors.country && <p className="text-sm text-destructive">{errors.country}</p>}
+              {errors.country ? <p className="text-sm text-destructive">{errors.country}</p> : null}
             </div>
           </div>
         );
@@ -481,16 +585,42 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
         return (
           <div className="space-y-6">
             <div>
-              <h2 className="mb-2 font-space-grotesk text-2xl font-semibold tracking-tight sm:text-3xl">
-                Pick the action that should pull you back
+              <p className="mb-2 text-xs font-semibold uppercase text-[#32b8c6]">First action</p>
+              <h2 className="font-space-grotesk text-2xl font-semibold tracking-tight sm:text-3xl">
+                Choose your first win
               </h2>
-              <p className="text-muted-foreground">
-                Pick the first action that would help you make progress this week.
+              <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                We will save your profile, add recommendations, and send you straight into this action.
               </p>
             </div>
 
-            <div className="space-y-3">
+            {stageMeta && diagnostic ? (
+              <div className="rounded-lg border border-[#32b8c6]/30 bg-[#32b8c6]/10 p-4">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                  <div>
+                    <p className="text-xs font-semibold uppercase text-[#32b8c6]">Your founder stage</p>
+                    <p className="mt-1 font-space-grotesk text-xl font-semibold">
+                      Stage {stageMeta.id}: {stageMeta.name}
+                    </p>
+                    <p className="mt-1 text-sm leading-6 text-muted-foreground">{stageMeta.description}</p>
+                  </div>
+                  <div className="shrink-0 rounded-full border border-[#32b8c6]/30 bg-background/70 px-3 py-1 text-sm font-semibold">
+                    {diagnostic.confidence}% match
+                  </div>
+                </div>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {profileTags.slice(0, 8).map((item) => (
+                    <Badge key={item} variant="outline" className="bg-background/50">
+                      {item}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+
+            <div className="grid gap-3">
               {ACTIVATION_CARDS.map((card) => {
+                const Icon = card.icon;
                 const isSelected = formData.activationIntent === card.value;
                 return (
                   <button
@@ -500,65 +630,37 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
                       setFormData((prev) => ({ ...prev, activationIntent: card.value }));
                       setErrors((prev) => ({ ...prev, activationIntent: undefined }));
                     }}
-                    className={`w-full rounded-2xl border p-4 text-left transition-all duration-150 ${
+                    aria-pressed={isSelected}
+                    className={cn(
+                      'flex min-h-24 w-full items-start gap-4 rounded-lg border p-4 text-left transition-all',
                       isSelected
-                        ? 'border-[#32b8c6] bg-[#32b8c6]/10 shadow-sm'
-                        : 'border-border/60 bg-background/70 hover:border-border hover:bg-accent/60'
-                    }`}
+                        ? 'border-[#32b8c6] bg-[#32b8c6]/10 shadow-sm shadow-[#32b8c6]/10'
+                        : 'border-border/60 bg-background/70 hover:border-[#32b8c6]/50 hover:bg-accent/60',
+                    )}
                   >
-                    <p className="mb-1 font-space-grotesk text-sm font-semibold">{card.headline}</p>
-                    <p className="text-sm text-muted-foreground">{card.sub}</p>
+                    <span
+                      className={cn(
+                        'flex h-10 w-10 shrink-0 items-center justify-center rounded-lg',
+                        isSelected ? 'bg-[#32b8c6] text-white' : 'bg-muted text-muted-foreground',
+                      )}
+                    >
+                      <Icon className="h-5 w-5" />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block font-space-grotesk text-base font-semibold">{card.headline}</span>
+                      <span className="mt-1 block text-sm leading-6 text-muted-foreground">{card.sub}</span>
+                      {isSelected && selectedRoute ? (
+                        <span className="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-[#32b8c6]">
+                          {card.cta}
+                          <ArrowRight className="h-3.5 w-3.5" />
+                        </span>
+                      ) : null}
+                    </span>
                   </button>
                 );
               })}
-              {errors.activationIntent && <p className="text-sm text-destructive">{errors.activationIntent}</p>}
+              {errors.activationIntent ? <p className="text-sm text-destructive">{errors.activationIntent}</p> : null}
             </div>
-          </div>
-        );
-
-      case 4:
-        return (
-          <div className="space-y-6">
-            <div>
-              <h2 className="mb-2 font-space-grotesk text-2xl font-semibold tracking-tight sm:text-3xl">
-                Lock the plan and take the first step
-              </h2>
-              <p className="text-muted-foreground">
-                We will save your recommendations and land you on a guided path.
-              </p>
-            </div>
-
-            <div className="rounded-2xl border border-[#32b8c6]/30 bg-[#32b8c6]/10 p-4">
-              <p className="mb-2 font-space-grotesk text-sm font-semibold text-foreground">Your matching profile</p>
-              <div className="flex flex-wrap gap-2">
-                {[...formData.startupSectors, ...formData.supportAreasNeeded, formData.country].filter(Boolean).map((item) => (
-                  <Badge key={item} variant="outline">{item}</Badge>
-                ))}
-              </div>
-            </div>
-
-            <div className="flex items-start space-x-2 rounded-2xl border border-border/60 bg-background/70 p-4">
-              <Checkbox
-                id="terms"
-                checked={formData.acceptedTerms}
-                onCheckedChange={(checked) =>
-                  setFormData((prev) => ({ ...prev, acceptedTerms: checked === true }))
-                }
-                className="mt-1"
-              />
-              <Label htmlFor="terms" className="cursor-pointer text-sm leading-relaxed">
-                I agree to the{' '}
-                <Link to="/terms" className="text-[#32b8c6] hover:underline" target="_blank">
-                  Terms of Service
-                </Link>
-                {' '}and{' '}
-                <Link to="/privacy-policy" className="text-[#32b8c6] hover:underline" target="_blank">
-                  Privacy Policy
-                </Link>
-                . *
-              </Label>
-            </div>
-            {errors.acceptedTerms && <p className="text-sm text-destructive">{errors.acceptedTerms}</p>}
           </div>
         );
 
@@ -568,72 +670,138 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
   };
 
   return (
-    <div className="mx-auto w-full max-w-[760px] p-4 sm:p-6">
-      <Card className="rounded-2xl border border-border/60 bg-card/90 shadow-2xl backdrop-blur-md transition-all duration-300 hover:shadow-2xl hover:shadow-primary/10">
-        <CardHeader className="space-y-4 border-b border-border/60 pb-6">
-          <div>
-            <CardTitle className="font-space-grotesk text-2xl font-semibold tracking-tight sm:text-3xl">
-              Welcome to Creatives Takeover
-            </CardTitle>
-            <CardDescription className="mt-2 text-xs uppercase tracking-[0.2em] text-muted-foreground">
-              Step {currentStep + 1} of {totalSteps}
-            </CardDescription>
-          </div>
-          <div className="relative h-2 w-full overflow-hidden rounded-full bg-muted/50">
-            <div
-              className="h-full rounded-full bg-[#32b8c6] shadow-sm transition-all"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
-        </CardHeader>
+    <div className="mx-auto w-full max-w-5xl px-3 py-4 sm:px-6">
+      <Card className="overflow-hidden rounded-lg border border-border/60 bg-card/95 shadow-2xl backdrop-blur-md">
+        <CardContent className="p-0">
+          <div className="grid min-h-[640px] lg:grid-cols-[280px_minmax(0,1fr)]">
+            <aside className="border-b border-border/60 bg-background/60 p-5 lg:border-b-0 lg:border-r">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#32b8c6]/15 text-[#32b8c6]">
+                  <Compass className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="font-space-grotesk text-base font-semibold">Founder launchpad</p>
+                  <p className="text-xs text-muted-foreground">{currentStep + 1} of {totalSteps}</p>
+                </div>
+              </div>
 
-        <CardContent className="min-h-[420px] pt-6">
-          {renderStep()}
+              <div className="mt-6 space-y-2">
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span>{step.chapter}</span>
+                  <span>{Math.round(progress)}%</span>
+                </div>
+                <div className="h-2 overflow-hidden rounded-full bg-muted">
+                  <motion.div
+                    className="h-full rounded-full bg-[#32b8c6]"
+                    animate={{ width: `${progress}%` }}
+                    transition={{ duration: 0.28, ease: 'easeOut' }}
+                  />
+                </div>
+              </div>
+
+              <div className="mt-7 hidden space-y-2 lg:block">
+                {ONBOARDING_STEPS.map((item, index) => {
+                  const isActive = index === currentStep;
+                  const isComplete = index < currentStep;
+                  return (
+                    <div
+                      key={`${item.id}-${index}`}
+                      className={cn(
+                        'flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors',
+                        isActive ? 'bg-[#32b8c6]/10 text-foreground' : 'text-muted-foreground',
+                      )}
+                    >
+                      <span
+                        className={cn(
+                          'flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-xs font-semibold',
+                          isComplete
+                            ? 'border-[#32b8c6] bg-[#32b8c6] text-white'
+                            : isActive
+                              ? 'border-[#32b8c6] text-[#32b8c6]'
+                              : 'border-border',
+                        )}
+                      >
+                        {isComplete ? <Check className="h-3.5 w-3.5" /> : index + 1}
+                      </span>
+                      <span className="truncate">{item.label}</span>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {stageMeta ? (
+                <div className="mt-7 rounded-lg border border-border/60 bg-background/70 p-4">
+                  <div className="flex items-start gap-3">
+                    <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-[#32b8c6]" />
+                    <div>
+                      <p className="text-sm font-semibold">{stageMeta.label}</p>
+                      <p className="mt-1 text-xs leading-5 text-muted-foreground">{stageMeta.topFocus[0]?.label}</p>
+                    </div>
+                  </div>
+                </div>
+              ) : null}
+            </aside>
+
+            <section className="flex min-h-0 flex-col">
+              <div className="flex-1 p-5 sm:p-8">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={currentStep}
+                    initial={{ opacity: 0, x: 18 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -18 }}
+                    transition={{ duration: 0.22, ease: 'easeOut' }}
+                    className="mx-auto max-w-2xl"
+                  >
+                    {renderStep()}
+                  </motion.div>
+                </AnimatePresence>
+              </div>
+
+              <div className="flex flex-col gap-3 border-t border-border/60 bg-background/50 p-4 sm:flex-row sm:items-center sm:justify-between sm:px-8">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={handleBack}
+                  disabled={currentStep === 0 || isLoading}
+                  className="order-2 gap-2 rounded-full border border-border/60 bg-background/80 sm:order-1"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  Back
+                </Button>
+
+                <div className="order-1 flex items-center justify-between gap-3 sm:order-2">
+                  <span className="text-sm text-muted-foreground">
+                    {currentStep + 1} / {totalSteps}
+                  </span>
+                  <Button
+                    type="button"
+                    onClick={handleNext}
+                    disabled={isLoading}
+                    className="gap-2 rounded-full px-5 font-semibold shadow-sm"
+                  >
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Saving...
+                      </>
+                    ) : currentStep === totalSteps - 1 ? (
+                      <>
+                        {selectedActivationCard?.cta ?? 'Start first action'}
+                        <ArrowRight className="h-4 w-4" />
+                      </>
+                    ) : (
+                      <>
+                        Continue
+                        <ArrowRight className="h-4 w-4" />
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </section>
+          </div>
         </CardContent>
-
-        <div className="flex items-center justify-between gap-4 px-6 pb-6">
-          <div>
-            {currentStep > 0 && (
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={handleBack}
-                disabled={isLoading}
-                className="gap-2 rounded-full border border-border/60 bg-background/80"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                Back
-              </Button>
-            )}
-          </div>
-
-          <div className="flex items-center gap-3">
-            <span className="text-sm text-muted-foreground">
-              {currentStep + 1} / {totalSteps}
-            </span>
-            <Button
-              type="button"
-              onClick={handleNext}
-              disabled={isLoading}
-              className="gap-2 rounded-full px-6 font-semibold shadow-sm hover:shadow-md"
-              style={{ backgroundColor: currentStep === totalSteps - 1 ? '#32b8c6' : undefined }}
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Saving...
-                </>
-              ) : currentStep === totalSteps - 1 ? (
-                'Start first action'
-              ) : (
-                <>
-                  Next
-                  <ArrowRight className="h-4 w-4" />
-                </>
-              )}
-            </Button>
-          </div>
-        </div>
       </Card>
     </div>
   );

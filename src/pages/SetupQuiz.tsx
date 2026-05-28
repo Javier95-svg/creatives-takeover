@@ -1,63 +1,32 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
+import { Loader2 } from 'lucide-react';
+
 import { useAuth } from '@/contexts/AuthContext';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Label } from '@/components/ui/label';
-import { Progress } from '@/components/ui/progress';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
-import { ArrowRight, ChevronLeft, ChevronRight, Loader2, Save, Sparkles, Users } from 'lucide-react';
-import Navigation from '@/components/Navigation';
-import { AccountWallpaper } from '@/components/AccountWallpaper';
-import {
-  assignFounderStageV3,
-  createQuizAnswersV3Payload,
-  FOUNDER_STAGE_QUESTIONS,
-  mapFounderStageToBusinessStage,
-  shouldRecommendCofounder,
-  STAGES,
-  type FounderStageDiagnosticResult,
-  type FounderStageQuizAnswersV3,
-  type StageId,
-} from '@/lib/stageDiagnostic';
 import {
   isLegacyOnboardingExempt,
   shouldRedirectToGuidedOnboarding,
 } from '@/lib/guidedOnboarding';
 
-type PartialAnswers = Partial<FounderStageQuizAnswersV3>;
-
-const TOTAL_QUESTIONS = FOUNDER_STAGE_QUESTIONS.length;
+type CompatibilityDestination = '/dashboard' | '/onboarding';
 
 const SetupQuiz = () => {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
-  const [currentStep, setCurrentStep] = useState(() => {
-    try {
-      const saved = sessionStorage.getItem(`quiz_step_draft_${user?.id}`);
-      return saved ? Number(saved) : 1;
-    } catch { return 1; }
-  });
-  const [loading, setLoading] = useState(false);
-  const [answers, setAnswers] = useState<PartialAnswers>(() => {
-    try {
-      const saved = sessionStorage.getItem(`quiz_answers_draft_${user?.id}`);
-      return saved ? JSON.parse(saved) : {};
-    } catch { return {}; }
-  });
-  const [resultStage, setResultStage] = useState<StageId | null>(null);
-  const [diagnosticResult, setDiagnosticResult] = useState<FounderStageDiagnosticResult | null>(null);
-  const [showCofounderCard, setShowCofounderCard] = useState(false);
-  const [redirectCountdown, setRedirectCountdown] = useState<number | null>(null);
+  const [destination, setDestination] = useState<CompatibilityDestination | null>(null);
 
   useEffect(() => {
-    if (!user) return;
+    if (authLoading) return;
+
+    if (!user) {
+      navigate('/login?return=/onboarding', { replace: true });
+      return;
+    }
 
     let cancelled = false;
 
-    const verifyQuizAccess = async () => {
+    const resolveDestination = async () => {
       try {
         const { data: profile, error } = await supabase
           .from('profiles')
@@ -65,355 +34,34 @@ const SetupQuiz = () => {
           .eq('id', user.id)
           .maybeSingle();
 
-        if (cancelled || error || !profile) {
+        if (cancelled) return;
+
+        if (error || !profile || isLegacyOnboardingExempt(profile)) {
+          setDestination('/dashboard');
           return;
         }
 
-        if (isLegacyOnboardingExempt(profile)) {
-          navigate('/dashboard', { replace: true });
-          return;
-        }
-
-        if (shouldRedirectToGuidedOnboarding(profile)) {
-          navigate('/onboarding', { replace: true });
-          return;
-        }
-
-        if (profile.quiz_completed === true) {
-          navigate('/dashboard', { replace: true });
-        }
+        setDestination(shouldRedirectToGuidedOnboarding(profile) ? '/onboarding' : '/dashboard');
       } catch (error) {
-        console.error('Error checking setup quiz access:', error);
+        console.error('Error resolving setup quiz compatibility route:', error);
+        if (!cancelled) setDestination('/dashboard');
       }
     };
 
-    void verifyQuizAccess();
+    void resolveDestination();
 
     return () => {
       cancelled = true;
     };
-  }, [navigate, user]);
+  }, [authLoading, navigate, user]);
 
-  // Persist quiz draft to sessionStorage
-  useEffect(() => {
-    if (!user?.id) return;
-    try {
-      sessionStorage.setItem(`quiz_answers_draft_${user.id}`, JSON.stringify(answers));
-      sessionStorage.setItem(`quiz_step_draft_${user.id}`, String(currentStep));
-    } catch { /* ignore */ }
-  }, [answers, currentStep, user?.id]);
-
-  // Auto-redirect countdown after result is shown
-  useEffect(() => {
-    if (resultStage === null) return;
-    setRedirectCountdown(8);
-    const interval = setInterval(() => {
-      setRedirectCountdown((prev) => {
-        if (prev === null || prev <= 1) {
-          clearInterval(interval);
-          navigate('/dashboard');
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [resultStage, navigate]);
-
-  const progress = (currentStep / TOTAL_QUESTIONS) * 100;
-  const currentQuestion = FOUNDER_STAGE_QUESTIONS[currentStep - 1];
-  const currentAnswer = currentQuestion ? answers[currentQuestion.id] : undefined;
-
-  const handleAnswerChange = (value: string) => {
-    if (!currentQuestion) return;
-    setAnswers((prev) => ({ ...prev, [currentQuestion.id]: value as FounderStageQuizAnswersV3[typeof currentQuestion.id] }));
-  };
-
-  const handleNext = () => {
-    if (!currentAnswer) {
-      toast.error('Please select an answer to continue');
-      return;
-    }
-    if (currentStep < TOTAL_QUESTIONS) {
-      setCurrentStep(currentStep + 1);
-    }
-  };
-
-  const handleBack = () => {
-    if (currentStep > 1) setCurrentStep(currentStep - 1);
-  };
-
-  const handleSubmit = async () => {
-    if (!currentAnswer) {
-      toast.error('Please select an answer to continue');
-      return;
-    }
-    if (!user) {
-      toast.error('You must be logged in to save your answers');
-      return;
-    }
-
-    const completeAnswers = answers as FounderStageQuizAnswersV3;
-    const result = assignFounderStageV3(completeAnswers);
-    const stage = result.assignedStage;
-    const cofounderRecommended = shouldRecommendCofounder(completeAnswers);
-    const businessStage = mapFounderStageToBusinessStage(stage);
-
-    setLoading(true);
-    try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const profilesTable = supabase.from('profiles') as any;
-      const { error } = await profilesTable
-        .update({
-          quiz_answers_v2: createQuizAnswersV3Payload(completeAnswers, result),
-          assigned_stage: stage,
-          business_stage: businessStage,
-          quiz_current_stage: businessStage,
-          quiz_completed: true,
-          quiz_completed_at: new Date().toISOString(),
-        })
-        .eq('id', user.id);
-
-      if (error) throw error;
-
-      try {
-        sessionStorage.removeItem(`quiz_answers_draft_${user.id}`);
-        sessionStorage.removeItem(`quiz_step_draft_${user.id}`);
-      } catch { /* ignore */ }
-
-      setResultStage(stage);
-      setDiagnosticResult(result);
-      setShowCofounderCard(cofounderRecommended);
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : String(error);
-      console.error('Error saving quiz answers:', error);
-      toast.error('Failed to save your answers: ' + message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  if (!user) {
-    return (
-      <div className="relative min-h-screen overflow-hidden">
-        <AccountWallpaper />
-        <div className="relative z-10">
-          <Navigation />
-          <div className="container mx-auto px-6 pt-24">
-            <Card className="max-w-md mx-auto backdrop-blur-sm bg-card/80 border-border/50">
-              <CardHeader>
-                <CardTitle>Access Denied</CardTitle>
-                <CardDescription>
-                  Please log in to complete the setup quiz.
-                </CardDescription>
-              </CardHeader>
-            </Card>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (resultStage !== null) {
-    const meta = STAGES[resultStage];
-    return (
-      <div className="relative min-h-screen overflow-hidden">
-        <AccountWallpaper />
-        <div className="relative z-10">
-          <Navigation />
-          <div className="container mx-auto px-6 pt-24 pb-12">
-            <div className="max-w-3xl mx-auto space-y-8">
-              <div className="text-center space-y-4">
-                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/30 text-sm font-medium text-primary">
-                  <Sparkles className="w-4 h-4" />
-                  Your diagnostic is ready
-                </div>
-                <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight">
-                  <span className="bg-gradient-to-r from-white via-blue-100 to-purple-200 bg-clip-text text-transparent">
-                    Stage {meta.id} — {meta.name}
-                  </span>
-                </h1>
-                <p className="text-base md:text-lg text-slate-300 max-w-2xl mx-auto">
-                  {meta.description}
-                </p>
-                <p className="text-sm text-slate-400 max-w-xl mx-auto">
-                  Your dashboard, tasks, and mentor recommendations are now personalized for this stage. Confidence: {diagnosticResult?.confidence ?? 0}%.
-                </p>
-              </div>
-
-              <Card className="backdrop-blur-sm bg-card/80 border-border/50">
-                <CardHeader>
-                  <CardTitle className="text-2xl">Your top focus right now</CardTitle>
-                  <CardDescription>
-                    These are the two first moves that will move you forward the fastest at this stage.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {meta.topFocus.map((focus) => (
-                    <Button
-                      key={focus.href}
-                      asChild
-                      variant="outline"
-                      className="w-full justify-between h-auto py-4 text-base"
-                    >
-                      <Link to={focus.href}>
-                        <span>{focus.label}</span>
-                        <ArrowRight className="w-4 h-4 ml-2" />
-                      </Link>
-                    </Button>
-                  ))}
-                </CardContent>
-              </Card>
-
-              {showCofounderCard && (
-                <Card className="backdrop-blur-sm bg-card/80 border-primary/40">
-                  <CardHeader>
-                    <div className="flex items-start gap-3">
-                      <div className="p-2 rounded-lg bg-primary/10">
-                        <Users className="w-5 h-5 text-primary" />
-                      </div>
-                      <div>
-                        <CardTitle className="text-xl">You don't have to build alone</CardTitle>
-                        <CardDescription>
-                          Many founders at this stage find momentum by pairing up with a co-founder. Our Co-Founder Marketplace can help.
-                        </CardDescription>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <Button asChild className="w-full">
-                      <Link to="/co-founder">
-                        Explore Co-Founder Marketplace
-                        <ArrowRight className="w-4 h-4 ml-2" />
-                      </Link>
-                    </Button>
-                  </CardContent>
-                </Card>
-              )}
-
-              {resultStage === 7 && (
-                <Card className="backdrop-blur-sm bg-card/60 border-border/50">
-                  <CardContent className="pt-6">
-                    <p className="text-sm text-slate-300">
-                      Most founders started where you did. Stage 1 through Stage 6 are all available inside Creatives Takeover whenever you need to revisit an earlier part of the journey.
-                    </p>
-                  </CardContent>
-                </Card>
-              )}
-
-              <div className="flex flex-col items-center gap-2">
-                <Button size="lg" onClick={() => { setRedirectCountdown(null); navigate('/dashboard'); }}>
-                  Go to my dashboard
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
-                {redirectCountdown !== null && redirectCountdown > 0 && (
-                  <p className="text-xs text-slate-400">Redirecting in {redirectCountdown}s…</p>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
+  if (destination) {
+    return <Navigate to={destination} replace />;
   }
 
   return (
-    <div className="relative min-h-screen overflow-hidden">
-      <AccountWallpaper />
-      <div className="relative z-10">
-        <Navigation />
-        <div className="container mx-auto px-6 pt-24 pb-12">
-          <div className="text-center py-8 space-y-4">
-            <p className="text-sm text-muted-foreground">
-              Getting started — Step 2 of 2: Your startup diagnostic
-            </p>
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight">
-              <span className="text-primary [text-shadow:0_0_22px_rgba(59,130,246,0.28)]">
-                Build your founder roadmap
-              </span>
-            </h1>
-            <p className="text-base md:text-lg text-slate-300 max-w-2xl mx-auto">
-              We'll tell you exactly where you are and the next move to make.
-            </p>
-          </div>
-
-          <div className="max-w-2xl mx-auto mb-8">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-slate-400">
-                Question {currentStep} of {TOTAL_QUESTIONS}
-              </span>
-              <span className="text-sm text-slate-400">{Math.round(progress)}%</span>
-            </div>
-            <Progress value={progress} className="h-2" />
-          </div>
-
-          <div className="max-w-2xl mx-auto">
-            <Card className="backdrop-blur-sm bg-card/80 border-border/50">
-              <CardHeader>
-                <CardTitle className="text-2xl">{currentQuestion.question}</CardTitle>
-                <CardDescription>Pick the option that best describes you today</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <RadioGroup value={currentAnswer ?? ''} onValueChange={handleAnswerChange}>
-                  <div className="space-y-3">
-                    {currentQuestion.options.map((option) => (
-                      <div
-                        key={option.value}
-                        className={`flex items-center space-x-3 p-4 rounded-lg border-2 transition-all cursor-pointer ${
-                          currentAnswer === option.value
-                            ? 'border-primary bg-primary/10'
-                            : 'border-border hover:border-primary/50 hover:bg-primary/5'
-                        }`}
-                        onClick={() => handleAnswerChange(option.value)}
-                      >
-                        <RadioGroupItem value={option.value} id={`${currentQuestion.id}-${option.value}`} />
-                        <Label
-                          htmlFor={`${currentQuestion.id}-${option.value}`}
-                          className="flex-1 cursor-pointer text-base font-medium"
-                        >
-                          {option.label}
-                        </Label>
-                      </div>
-                    ))}
-                  </div>
-                </RadioGroup>
-
-                <div className="flex items-center justify-between pt-6 border-t">
-                  <Button
-                    variant="outline"
-                    onClick={handleBack}
-                    disabled={currentStep === 1}
-                  >
-                    <ChevronLeft className="w-4 h-4 mr-2" />
-                    Back
-                  </Button>
-
-                  {currentStep < TOTAL_QUESTIONS ? (
-                    <Button onClick={handleNext} disabled={!currentAnswer}>
-                      Next
-                      <ChevronRight className="w-4 h-4 ml-2" />
-                    </Button>
-                  ) : (
-                    <Button onClick={handleSubmit} disabled={loading || !currentAnswer}>
-                      {loading ? (
-                        <>
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          Saving...
-                        </>
-                      ) : (
-                        <>
-                          <Save className="w-4 h-4 mr-2" />
-                          See my stage
-                        </>
-                      )}
-                    </Button>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </div>
+    <div className="flex min-h-screen items-center justify-center bg-background">
+      <Loader2 className="h-8 w-8 animate-spin text-primary" aria-label="Loading onboarding" />
     </div>
   );
 };

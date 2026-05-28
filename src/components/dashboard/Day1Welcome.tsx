@@ -21,11 +21,13 @@ import { cn } from '@/lib/utils';
 type StepKey = 'icp_builder' | 'founder_stage' | 'daily_mission';
 
 export interface Day1Profile {
+  dashboard_bootstrap_source?: string | null;
   onboarding_completed: boolean | null;
   onboarding_steps_completed: Json | null;
   quiz_biggest_challenge: string | null;
   quiz_completed: boolean | null;
   quiz_current_stage: string | null;
+  user_preferences?: Json | null;
 }
 
 interface Day1WelcomeProps {

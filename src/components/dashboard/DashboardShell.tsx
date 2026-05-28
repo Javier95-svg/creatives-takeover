@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
 import { toast } from 'sonner';
@@ -17,6 +17,7 @@ import { useFeatureGating } from '@/hooks/useFeatureGating';
 import { useDashboardMetrics } from '@/hooks/useDashboardMetrics';
 import { useSubscription } from '@/hooks/useSubscription';
 import { normalizePlan, resolveDashboardMode } from '@/config/planPermissions';
+import { shouldRedirectToGuidedOnboarding } from '@/lib/guidedOnboarding';
 import { cn } from '@/lib/utils';
 import { DashboardSidebar } from './DashboardSidebar';
 import { DashboardTabsHost } from './DashboardTabsHost';
@@ -167,7 +168,7 @@ export function DashboardShell() {
 
       const { data: profile, error } = await supabase
         .from('profiles')
-        .select('onboarding_completed, onboarding_steps_completed, quiz_completed, quiz_current_stage, quiz_biggest_challenge')
+        .select('dashboard_bootstrap_source, onboarding_completed, onboarding_steps_completed, quiz_completed, quiz_current_stage, quiz_biggest_challenge, user_preferences')
         .eq('id', userId)
         .single();
 
@@ -243,6 +244,10 @@ export function DashboardShell() {
         <DashboardPreview />
       </>
     );
+  }
+
+  if (day1Profile && shouldRedirectToGuidedOnboarding(day1Profile)) {
+    return <Navigate to="/onboarding?source=dashboard_prompt" replace />;
   }
 
   if (day1Profile && day1Profile.onboarding_completed !== true) {

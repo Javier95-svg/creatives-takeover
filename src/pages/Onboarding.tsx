@@ -14,7 +14,6 @@ import { trackActivity } from '@/lib/activity';
 import { getOnboardingReturn, sanitizeReturnPath } from '@/lib/authRedirect';
 import {
   isLegacyOnboardingExempt,
-  shouldRedirectToSetupQuiz,
 } from '@/lib/guidedOnboarding';
 
 const ONBOARDING_STARTED_SOURCES: OnboardingStartedSource[] = [
@@ -92,12 +91,6 @@ const Onboarding = () => {
           return;
         }
 
-        if (shouldRedirectToSetupQuiz(profile)) {
-          navigate('/setup-quiz', { replace: true });
-          setIsChecking(false);
-          return;
-        }
-
         if (profile?.onboarding_completed === true) {
           navigate('/dashboard', { replace: true });
           setIsChecking(false);
@@ -127,7 +120,7 @@ const Onboarding = () => {
       }
     };
 
-    checkOnboardingStatus();
+    void checkOnboardingStatus();
   }, [authLoading, isAuthenticated, navigate, searchParams, user]);
 
   const handleComplete = (_startRoute?: string) => {
@@ -163,11 +156,9 @@ const Onboarding = () => {
       ) : (
         <div className="relative min-h-screen flex items-center justify-center py-8 px-4 sm:py-12">
           <div className="w-full max-w-4xl mx-auto">
-            {/* Macro progress context */}
             <p className="text-center text-sm text-muted-foreground mb-4">
-              Getting started — Step 1 of 2: Tell us about your startup
+              Getting started: build your personalized launchpad
             </p>
-            {/* Fade-in animation for smooth appearance */}
             <div className="animate-fade-in-up">
               <OnboardingForm onComplete={handleComplete} />
             </div>
