@@ -94,6 +94,7 @@ const FORBIDDEN_COPY_TERMS = [
   'ecosystem',
   'holistic',
   'empower',
+  'leverage',
   'synergy',
 ];
 
@@ -232,6 +233,7 @@ export function validateWaitlistLaunchKitOutput(raw: unknown): WaitlistLaunchKit
   walkStrings(kit, (text, path) => {
     if (hasPlaceholder(text)) errors.push(`${path} contains a placeholder`);
     if (hasForbiddenTerm(text)) errors.push(`${path} contains a forbidden term`);
+    if (/[“”‘’]/u.test(text)) errors.push(`${path} contains smart quotes`);
   });
 
   return { ok: errors.length === 0, value: kit, errors };

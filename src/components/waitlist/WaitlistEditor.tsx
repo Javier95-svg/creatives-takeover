@@ -1748,7 +1748,26 @@ export default function WaitlistEditor({ initialSeed = null, onBackToTemplates }
                       <div className="flex flex-wrap items-center gap-2">
                         <Button size="sm" variant="outline" className={actionButtonClass} onClick={() => copyToClipboard(formatWaitlistLaunchKitPlainText(launchKitOutput))}><Copy className="mr-1 h-4 w-4" />Copy All</Button>
                         <Button size="sm" variant="outline" className={actionButtonClass} onClick={handleDownloadLaunchKitPdf}><Download className="mr-1 h-4 w-4" />Download PDF</Button>
-                        {launchKitHistory.length > 0 ? <Badge variant="outline">{launchKitHistory.length} previous kit{launchKitHistory.length === 1 ? '' : 's'} archived</Badge> : null}
+                        {launchKitHistory.length > 0 ? (
+                          <details>
+                            <summary className="cursor-pointer list-none">
+                              <Badge variant="outline" className="cursor-pointer select-none">
+                                {launchKitHistory.length} previous kit{launchKitHistory.length === 1 ? '' : 's'} — view
+                              </Badge>
+                            </summary>
+                            <div className="mt-2 space-y-1">
+                              {launchKitHistory.map((historicalKit) => (
+                                <div key={historicalKit.inputHash} className="flex items-center justify-between gap-3 rounded-md border border-border/60 bg-slate-50/50 px-3 py-2 dark:border-white/10 dark:bg-white/5">
+                                  <div className="min-w-0">
+                                    <span className="text-sm font-medium text-slate-700 dark:text-slate-200">{historicalKit.inputs.product_name}</span>
+                                    <span className="ml-2 text-xs text-slate-400">{new Date(historicalKit.generatedAt).toLocaleDateString()}</span>
+                                  </div>
+                                  <Button size="sm" variant="outline" className={actionButtonClass} onClick={() => setLaunchKit(historicalKit)}>Restore</Button>
+                                </div>
+                              ))}
+                            </div>
+                          </details>
+                        ) : null}
                       </div>
 
                       <section className="space-y-3">

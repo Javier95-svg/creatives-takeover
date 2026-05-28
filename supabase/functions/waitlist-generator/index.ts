@@ -64,6 +64,7 @@ const forbiddenCopyTerms = [
   "ecosystem",
   "holistic",
   "empower",
+  "leverage",
   "synergy",
 ];
 
@@ -174,6 +175,44 @@ function validateLaunchKitOutput(kit: any): string[] {
   return errors;
 }
 
+const LAUNCH_KIT_SYSTEM_PROMPT = `You are a world-class startup copywriter and launch strategist specializing in pre-launch marketing for early-stage founders. Your work has helped hundreds of startups build their waitlists from zero to thousands.
+
+Your job is to generate a complete Waitlist Launch Kit — a set of copy assets that a founder can use immediately to launch their waitlist page and email sequence. The output must be:
+
+1. SPECIFIC — every line should feel written for this exact product and audience. Never use generic phrases that could apply to any startup.
+2. CONVERSION-FOCUSED — headlines, bullets, and CTAs are written to drive signups, not to impress. Clarity beats cleverness.
+3. VOICE-CONSISTENT — all six components must read as if written by the same person with the same voice.
+4. IMMEDIATELY USABLE — every piece of copy is complete. No placeholders like [YOUR COMPANY NAME] or [INSERT BENEFIT HERE]. The output is ready to deploy.
+5. HONEST — do not make claims the product cannot back up. Do not use superlatives like "the best" or "the only" unless the founder explicitly stated a unique differentiator.
+
+Output format: You must return a single valid JSON object. No markdown. No prose outside the JSON. No commentary. The JSON must match the schema defined in the user prompt exactly.
+
+Tone calibration:
+- "professional": polished, clear, confident. Suits B2B, fintech, legal tech. Avoids slang and emoji.
+- "friendly": warm, approachable, encouraging. Suits consumer apps and community products. Light use of contractions.
+- "bold": punchy, direct, energetic. Short sentences. Strong verbs. Suits productivity tools and disruptive products.
+- "conversational": sounds like a smart friend talking to you. Casual, real, no corporate-speak. Suits lifestyle apps and solo-founder projects.
+- "inspirational": vision-forward, motivating, future-focused. Suits mission-driven products and communities.
+
+Apply the specified tone to all six components without exception.`;
+
+const CATEGORY_PROMPT_AUGMENTATIONS: Record<string, string> = {
+  "B2B SaaS": `This is a B2B product. All copy should speak to business outcomes: revenue, efficiency, risk reduction, team productivity. Avoid consumer-facing language like "life-changing" or "finally." Decision-makers read this copy — they care about ROI, not feelings. Use precise language. Quantify outcomes wherever possible (e.g., "save 6 hours per week," not "save time").`,
+  "Consumer App": `This is a consumer product. Copy should feel personal, not corporate. Speak to the user's daily life and emotions — not abstract business value. Use "you" heavily. It's okay to be playful. Benefits should feel real and tangible (e.g., "stop dreading Sunday meal prep," not "improve dietary outcomes").`,
+  "Marketplace": `This is a two-sided marketplace. The waitlist likely targets one side (buyers or sellers — infer from the product description). Write all copy from that side's perspective. If ambiguous, write for the side that benefits most from network effects being in place at launch (usually buyers). Mention the other side only to establish credibility ("thousands of [sellers] are already waiting").`,
+  "Community": `This is a community product. The primary benefit is belonging, not a feature. Copy should emphasize who else is in the community, what kind of person belongs here, and what being a member unlocks. Use identity language ("you're the kind of person who...", "join [X] founders who..."). Urgency comes from exclusivity, not scarcity of a feature.`,
+  "Developer Tool": `This is a developer tool. Developers are allergic to marketing language. Copy should be technical, specific, and honest. Don't oversell. Use concrete examples instead of vague outcomes. It's fine to use technical terms if they're accurate. Avoid phrases like "powerful," "robust," and "seamless" — show, don't tell. Headlines can reference specific use cases or integrations.`,
+  "Physical Product": `This is a physical product. Copy should anchor to sensory and tactile outcomes — how it feels, looks, or changes the user's environment. Lead with the real-world outcome ("your desk stays clean all week"), not the product specification. Urgency is about limited production runs or availability, not software feature access.`,
+  "Other": `The product category is unspecified. Infer the most appropriate voice and vocabulary from the product description and target audience. Default to a direct, benefit-led tone that avoids both corporate jargon and consumer hyperbole.`,
+};
+
+function buildLaunchKitSystemPrompt(category: string): string {
+  const augmentation = CATEGORY_PROMPT_AUGMENTATIONS[category];
+  return augmentation
+    ? `${LAUNCH_KIT_SYSTEM_PROMPT}\n\nCategory-specific guidance:\n${augmentation}`
+    : LAUNCH_KIT_SYSTEM_PROMPT;
+}
+
 function buildLaunchKitUserPrompt(inputs: WaitlistLaunchKitInputs): string {
   const secondary = inputs.secondary_benefits?.length
     ? `Secondary benefits:\n${inputs.secondary_benefits.map((item) => `- ${item}`).join("\n")}\n`
@@ -241,8 +280,7 @@ async function generateLaunchKit(openaiApiKey: string, inputs: WaitlistLaunchKit
       messages: [
         {
           role: "system",
-          content:
-            "You are a senior startup copywriter and launch strategist. Return only valid JSON. Every line must be specific, conversion-focused, voice-consistent, immediately usable, and honest.",
+          content: buildLaunchKitSystemPrompt(inputs.product_category),
         },
         { role: "user", content: buildLaunchKitUserPrompt(inputs) },
       ],
