@@ -105,7 +105,6 @@ const Navigation = () => {
     { name: "Traction Engine", href: "/traction-engine", icon: LineChart, description: "Track weekly distribution and retention signals." },
     { type: 'label', label: "STAGE VII: FUNDRAISE" },
     { name: "VC Search", href: "/vc-search", icon: UsersIcon, description: "Browse venture capital firms." },
-    { name: "Accelerator Hunt", href: "/accelerator-hunt", icon: Rocket, description: "Find top accelerator programs." },
     { name: "Pitch Deck Analyzer", href: "/pitch-deck-analyzer", icon: BarChart3, description: "Analyze your pitch deck." },
     { name: "Insighta Test", href: "/insighta-test", icon: FlaskConical, description: "Measure your fundraising readiness." },
   ];
