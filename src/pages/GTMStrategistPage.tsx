@@ -83,6 +83,7 @@ export default function GTMStrategistPage() {
     isSaving,
     isExporting,
     prefillData,
+    prefillSource,
     runAnalysis,
     savePlan,
     exportPlan,
@@ -188,6 +189,7 @@ export default function GTMStrategistPage() {
 	              {phase === 'intake' && (
 	                <GTMIntakeForm
 	                  prefillData={prefillData}
+	                  prefillSource={prefillSource}
 	                  onSubmit={runAnalysis}
 	                  isSubmitting={false}
 	                />

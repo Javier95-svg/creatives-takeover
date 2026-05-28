@@ -10,9 +10,274 @@ const corsHeaders = {
 };
 
 interface WaitlistGeneratorRequest {
+  mode?: "page_copy" | "launch_kit";
   productName: string;
   pitch: string;
   audience: string;
+  inputs?: WaitlistLaunchKitInputs;
+}
+
+interface WaitlistLaunchKitInputs {
+  product_name: string;
+  one_line_description: string;
+  target_audience: string;
+  primary_benefit: string;
+  secondary_benefits?: string[];
+  product_category: string;
+  tone_preference: string;
+  launch_date?: string;
+  referral_incentive?: string;
+  existing_tagline?: string;
+}
+
+const launchKitCategories = new Set([
+  "B2B SaaS",
+  "Consumer App",
+  "Marketplace",
+  "Community",
+  "Developer Tool",
+  "Physical Product",
+  "Other",
+]);
+
+const launchKitTones = new Set([
+  "professional",
+  "friendly",
+  "bold",
+  "conversational",
+  "inspirational",
+]);
+
+const forbiddenCopyTerms = [
+  "revolutionary",
+  "game-changing",
+  "innovative",
+  "powerful",
+  "seamless",
+  "effortless",
+  "cutting-edge",
+  "next-level",
+  "disruptive",
+  "world-class",
+  "best-in-class",
+  "journey",
+  "ecosystem",
+  "holistic",
+  "empower",
+  "synergy",
+];
+
+function cleanString(value: unknown, max?: number): string {
+  const text = typeof value === "string" ? value.trim() : "";
+  return max ? text.slice(0, max) : text;
+}
+
+function wordCount(value: string): number {
+  return value.trim().split(/\s+/).filter(Boolean).length;
+}
+
+function validateLaunchKitInputs(raw: unknown): { inputs?: WaitlistLaunchKitInputs; errors: string[] } {
+  const input = (raw ?? {}) as Record<string, unknown>;
+  const secondaryBenefits = Array.isArray(input.secondary_benefits)
+    ? input.secondary_benefits.map((item) => cleanString(item, 150)).filter(Boolean).slice(0, 2)
+    : [];
+
+  const inputs: WaitlistLaunchKitInputs = {
+    product_name: cleanString(input.product_name, 60),
+    one_line_description: cleanString(input.one_line_description, 200),
+    target_audience: cleanString(input.target_audience, 150),
+    primary_benefit: cleanString(input.primary_benefit, 150),
+    product_category: cleanString(input.product_category),
+    tone_preference: cleanString(input.tone_preference),
+  };
+  if (secondaryBenefits.length) inputs.secondary_benefits = secondaryBenefits;
+  const launchDate = cleanString(input.launch_date);
+  const referralIncentive = cleanString(input.referral_incentive, 150);
+  const existingTagline = cleanString(input.existing_tagline, 100);
+  if (launchDate) inputs.launch_date = launchDate;
+  if (referralIncentive) inputs.referral_incentive = referralIncentive;
+  if (existingTagline) inputs.existing_tagline = existingTagline;
+
+  const errors: string[] = [];
+  if (!inputs.product_name) errors.push("product_name is required");
+  if (!inputs.one_line_description) errors.push("one_line_description is required");
+  if (!inputs.target_audience) errors.push("target_audience is required");
+  if (!inputs.primary_benefit) errors.push("primary_benefit is required");
+  if (!launchKitCategories.has(inputs.product_category)) errors.push("product_category is invalid");
+  if (!launchKitTones.has(inputs.tone_preference)) errors.push("tone_preference is invalid");
+  if (inputs.one_line_description && inputs.one_line_description.length <= 20 && !/[.!?]$/.test(inputs.one_line_description)) {
+    errors.push("one_line_description must be a complete sentence");
+  }
+
+  return { inputs, errors };
+}
+
+function walkStrings(value: unknown, visitor: (text: string, path: string) => void, path = "kit") {
+  if (typeof value === "string") {
+    visitor(value, path);
+    return;
+  }
+  if (Array.isArray(value)) {
+    value.forEach((item, index) => walkStrings(item, visitor, `${path}.${index}`));
+    return;
+  }
+  if (value && typeof value === "object") {
+    Object.entries(value).forEach(([key, item]) => walkStrings(item, visitor, `${path}.${key}`));
+  }
+}
+
+function validateLaunchKitOutput(kit: any): string[] {
+  const errors: string[] = [];
+  if (!kit || typeof kit !== "object") return ["output must be an object"];
+  if (!Array.isArray(kit.headlines) || kit.headlines.length !== 3) errors.push("headlines must have 3 items");
+  if (!Array.isArray(kit.value_props) || kit.value_props.length !== 3) errors.push("value_props must have 3 items");
+  if (!kit.cta || typeof kit.cta !== "object") errors.push("cta is required");
+  if (!Array.isArray(kit.email_sequence) || kit.email_sequence.length !== 3) errors.push("email_sequence must have 3 items");
+  if (!kit.referral_hook || typeof kit.referral_hook !== "object") errors.push("referral_hook is required");
+  if (!cleanString(kit.positioning_statement)) errors.push("positioning_statement is required");
+
+  kit.headlines?.forEach((item: any, index: number) => {
+    if (!["A", "B", "C"].includes(item?.variant)) errors.push(`headlines.${index}.variant is invalid`);
+    if (!cleanString(item?.headline)) errors.push(`headlines.${index}.headline is required`);
+    if (wordCount(item?.headline ?? "") > 10) errors.push(`headlines.${index}.headline too long`);
+    if (!cleanString(item?.subheadline)) errors.push(`headlines.${index}.subheadline is required`);
+    if (!cleanString(item?.rationale)) errors.push(`headlines.${index}.rationale is required`);
+  });
+  kit.value_props?.forEach((item: any, index: number) => {
+    if (!cleanString(item?.bullet)) errors.push(`value_props.${index}.bullet is required`);
+    if (wordCount(item?.bullet ?? "") > 20) errors.push(`value_props.${index}.bullet too long`);
+  });
+  ["primary", "alternative_soft", "alternative_urgency"].forEach((key) => {
+    if (!cleanString(kit.cta?.[key])) errors.push(`cta.${key} is required`);
+    if (wordCount(kit.cta?.[key] ?? "") > 5) errors.push(`cta.${key} too long`);
+  });
+  kit.email_sequence?.forEach((item: any, index: number) => {
+    if (item?.email_number !== index + 1) errors.push(`email_sequence.${index}.email_number is invalid`);
+    if (!cleanString(item?.trigger)) errors.push(`email_sequence.${index}.trigger is required`);
+    if (!cleanString(item?.subject_line) || item.subject_line.length > 50) errors.push(`email_sequence.${index}.subject_line invalid`);
+    if (!cleanString(item?.preview_text) || item.preview_text.length > 90) errors.push(`email_sequence.${index}.preview_text invalid`);
+    if (!cleanString(item?.body)) errors.push(`email_sequence.${index}.body is required`);
+    if (!cleanString(item?.in_email_cta) || wordCount(item.in_email_cta) > 5) errors.push(`email_sequence.${index}.in_email_cta invalid`);
+  });
+  if (kit.referral_hook) {
+    if (!cleanString(kit.referral_hook.headline) || wordCount(kit.referral_hook.headline) > 10) errors.push("referral_hook.headline invalid");
+    if (!cleanString(kit.referral_hook.copy)) errors.push("referral_hook.copy is required");
+    if (!cleanString(kit.referral_hook.cta) || wordCount(kit.referral_hook.cta) > 5) errors.push("referral_hook.cta invalid");
+  }
+  walkStrings(kit, (text, path) => {
+    if (/\{\{|\[YOUR|\[INSERT|\[.*?\]/i.test(text)) errors.push(`${path} contains placeholder copy`);
+    if (/[“”]/.test(text)) errors.push(`${path} contains smart quotes`);
+    const lower = text.toLowerCase();
+    if (forbiddenCopyTerms.some((term) => lower.includes(term))) errors.push(`${path} contains forbidden term`);
+  });
+
+  return errors;
+}
+
+function buildLaunchKitUserPrompt(inputs: WaitlistLaunchKitInputs): string {
+  const secondary = inputs.secondary_benefits?.length
+    ? `Secondary benefits:\n${inputs.secondary_benefits.map((item) => `- ${item}`).join("\n")}\n`
+    : "";
+  return `Generate a complete Waitlist Launch Kit for the following product. Return a single valid JSON object matching the schema at the end of this prompt. Do not include any text outside the JSON.
+
+PRODUCT INFORMATION
+
+Product name: ${inputs.product_name}
+One-line description: ${inputs.one_line_description}
+Target audience: ${inputs.target_audience}
+Primary benefit: ${inputs.primary_benefit}
+${secondary}Product category: ${inputs.product_category}
+Tone: ${inputs.tone_preference}
+${inputs.launch_date ? `Launch date: ${inputs.launch_date}\n` : ""}${inputs.referral_incentive ? `Referral incentive: ${inputs.referral_incentive}\n` : ""}${inputs.existing_tagline ? `Existing tagline (do not contradict this): ${inputs.existing_tagline}\n` : ""}
+
+COMPONENT INSTRUCTIONS
+
+Generate these six components in one JSON response:
+1. Three headline + subheadline pairs for A/B/C testing. A leads with transformation, B leads with pain solved, C leads with audience identity. Headlines are under 10 words, do not start with product name, use different first words, avoid hyphens/colons, and avoid forbidden marketing terms. Subheadlines are 1-2 sentences, max 25 words, and explicitly name the target audience. Include a 1-sentence rationale for each.
+2. Three value proposition bullets. Each is one sentence under 20 words, outcome-focused, no bullet formatting. Bullets 1 and 2 are rational benefits; bullet 3 is emotional.
+3. CTA button copy: primary, softer lower-commitment alternative, and urgency-focused alternative. Each is 2-5 words in title case. Do not use Sign Up, Submit, Click Here, Get Started, or Learn More.
+4. A three-email sequence: confirmation, anticipation, launch. Each email needs subject_line, preview_text, body with \\n\\n paragraph breaks, and in_email_cta. Subject lines under 50 characters, preview text under 90 characters. Write as the founder, never in third person about the product, and never use "I hope this email finds you well".
+5. A referral hook with headline under 10 words, copy of 2-3 sentences, and CTA of 2-5 words. If no referral incentive is provided, use "move to the top of the list".
+6. A positioning statement using this exact pattern: "For [target audience], [product name] is the [category] that [primary benefit], unlike [alternative/status quo] which [key limitation]."
+
+Hard rules: no markdown inside JSON values; no placeholders; no unsubscribe copy, legal footer, or merge tags; no pricing or legal claims; avoid these words everywhere: revolutionary, game-changing, innovative, powerful, seamless, effortless, cutting-edge, next-level, disruptive, world-class, best-in-class, journey, ecosystem, holistic, empower, leverage as a verb, synergy.
+
+OUTPUT SCHEMA
+{
+  "headlines": [
+    { "variant": "A", "headline": "string", "subheadline": "string", "rationale": "string" },
+    { "variant": "B", "headline": "string", "subheadline": "string", "rationale": "string" },
+    { "variant": "C", "headline": "string", "subheadline": "string", "rationale": "string" }
+  ],
+  "value_props": [
+    { "bullet": "string" },
+    { "bullet": "string" },
+    { "bullet": "string" }
+  ],
+  "cta": {
+    "primary": "string",
+    "alternative_soft": "string",
+    "alternative_urgency": "string"
+  },
+  "email_sequence": [
+    { "email_number": 1, "trigger": "Immediately on signup", "subject_line": "string", "preview_text": "string", "body": "string", "in_email_cta": "string" },
+    { "email_number": 2, "trigger": "3-5 days before launch (or when manually triggered)", "subject_line": "string", "preview_text": "string", "body": "string", "in_email_cta": "string" },
+    { "email_number": 3, "trigger": "Launch day", "subject_line": "string", "preview_text": "string", "body": "string", "in_email_cta": "string" }
+  ],
+  "referral_hook": { "headline": "string", "copy": "string", "cta": "string" },
+  "positioning_statement": "string"
+}`;
+}
+
+async function generateLaunchKit(openaiApiKey: string, inputs: WaitlistLaunchKitInputs, maxTokens: number) {
+  const response = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${openaiApiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "gpt-4o",
+      messages: [
+        {
+          role: "system",
+          content:
+            "You are a senior startup copywriter and launch strategist. Return only valid JSON. Every line must be specific, conversion-focused, voice-consistent, immediately usable, and honest.",
+        },
+        { role: "user", content: buildLaunchKitUserPrompt(inputs) },
+      ],
+      response_format: { type: "json_object" },
+      temperature: 0.7,
+      max_tokens: maxTokens,
+    }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error("OpenAI launch kit error:", errorText);
+    const status = response.status === 429 ? 429 : 502;
+    throw Object.assign(new Error(`OpenAI API error: ${response.status}`), { status });
+  }
+
+  const aiData = await response.json();
+  const content = aiData?.choices?.[0]?.message?.content;
+  if (!content) throw Object.assign(new Error("No content returned from model"), { status: 502 });
+  const parsed = JSON.parse(content);
+  const validationErrors = validateLaunchKitOutput(parsed);
+  if (validationErrors.length) {
+    throw Object.assign(new Error(`Launch kit validation failed: ${validationErrors.join("; ")}`), { status: 422 });
+  }
+  return parsed;
+}
+
+function buildInputHash(inputs: WaitlistLaunchKitInputs): string {
+  const stable = JSON.stringify(inputs, Object.keys(inputs).sort());
+  let hash = 0;
+  for (let index = 0; index < stable.length; index += 1) {
+    hash = (hash << 5) - hash + stable.charCodeAt(index);
+    hash |= 0;
+  }
+  return `wlk_${Math.abs(hash).toString(36)}`;
 }
 
 serve(async (req) => {
@@ -29,7 +294,94 @@ serve(async (req) => {
       });
     }
 
-    const { productName, pitch, audience }: WaitlistGeneratorRequest = await req.json();
+    const requestBody: WaitlistGeneratorRequest = await req.json();
+
+    if (requestBody.mode === "launch_kit") {
+      const validation = validateLaunchKitInputs(requestBody.inputs);
+      if (validation.errors.length || !validation.inputs) {
+        return new Response(JSON.stringify({ success: false, error: "Invalid launch kit inputs", errorCode: "VALIDATION_FAILED", details: validation.errors }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const creditCost = CREDIT_COSTS.WAITLIST_GENERATION;
+      const idempotencyKey = await resolveCreditIdempotencyKey(req, {
+        userId: user.id,
+        feature: "WAITLIST_GENERATION",
+        requestFingerprint: { mode: "launch_kit", inputs: validation.inputs },
+      });
+      const creditResult = await checkAndDeductCredits(
+        user.id,
+        creditCost,
+        "Waitlist Launch Kit Generation",
+        undefined,
+        { productName: validation.inputs.product_name.substring(0, 80), idempotencyKey, entitlementFeature: "WAITLIST_GENERATION" },
+      );
+      const chargedCredits = (creditResult.usedFromQuota ?? 0) + (creditResult.usedFromBalance ?? 0);
+
+      if (!creditResult.success) {
+        return new Response(JSON.stringify({
+          success: false,
+          error: creditResult.error || "Insufficient credits",
+          creditError: true,
+          errorCode: creditResult.errorCode,
+          requiredTier: creditResult.requiredTier,
+          requiredCredits: creditResult.requiredCredits ?? creditCost,
+        }), {
+          status: 402,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const openaiApiKey = Deno.env.get("OPENAI_API_KEY");
+      if (!openaiApiKey) throw new Error("OpenAI API key not configured");
+
+      try {
+        let kit: unknown;
+        try {
+          kit = await generateLaunchKit(openaiApiKey, validation.inputs, 4000);
+        } catch (firstError) {
+          console.warn("Retrying launch kit generation with larger token budget", firstError);
+          kit = await generateLaunchKit(openaiApiKey, validation.inputs, 6000);
+        }
+
+        return new Response(JSON.stringify({
+          success: true,
+          mode: "launch_kit",
+          kit,
+          inputs: validation.inputs,
+          inputHash: buildInputHash(validation.inputs),
+          creditsUsed: chargedCredits,
+          newBalance: creditResult.newBalance,
+        }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      } catch (aiError) {
+        const err = aiError instanceof Error ? aiError : new Error(String(aiError));
+        if (chargedCredits > 0) {
+          await refundCredits(
+            user.id,
+            chargedCredits,
+            "Waitlist Launch Kit Generation",
+            "Refund: launch kit AI processing failed",
+            { error: err.message },
+          );
+        }
+        const status = (aiError as { status?: number })?.status === 429 ? 429 : 500;
+        const errorCode = status === 429 ? "RATE_LIMIT" : (aiError as { status?: number })?.status === 422 ? "VALIDATION_FAILED" : "GENERATION_FAILED";
+        return new Response(JSON.stringify({
+          success: false,
+          error: "We couldn't generate your kit. Try again in a moment.",
+          errorCode,
+        }), {
+          status,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
+    const { productName, pitch, audience } = requestBody;
 
     if (!productName?.trim() || !pitch?.trim()) {
       return new Response(JSON.stringify({ error: "productName and pitch are required" }), {

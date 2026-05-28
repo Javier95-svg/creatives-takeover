@@ -14,9 +14,22 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { SortableList } from '@/components/ui/sortable-list';
-import { AlertTriangle, Check, Copy, Download, Eye, Globe, Loader2, Lock, Monitor, MonitorSmartphone, Plus, Save, ShieldCheck, Sparkles, Trash2, Unlock, Users } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { AlertTriangle, Check, Copy, Download, Eye, FileText, Globe, Info, Loader2, Lock, Mail, Monitor, MonitorSmartphone, Plus, Save, ShieldCheck, Sparkles, Trash2, Unlock, Users } from 'lucide-react';
 import WaitlistPageTemplate, { WaitlistContent } from './WaitlistPageTemplate';
 import { WAITLIST_ACCENT_PRESETS, WAITLIST_FONT_PRESETS, WAITLIST_SECTION_ORDER, createWaitlistFieldId, getDefaultWaitlistContent, getWaitlistThemePalette, normalizeWaitlistContent, type WaitlistSectionId } from '@/lib/waitlist';
+import {
+  WAITLIST_LAUNCH_KIT_CATEGORIES,
+  WAITLIST_LAUNCH_KIT_TONES,
+  buildWaitlistLaunchKitInputHash,
+  formatWaitlistEmailPlainText,
+  formatWaitlistLaunchKitPlainText,
+  validateWaitlistLaunchKitInputs,
+  validateWaitlistLaunchKitOutput,
+  type StoredWaitlistLaunchKit,
+  type WaitlistLaunchKitInputs,
+  type WaitlistLaunchKitOutput,
+} from '@/lib/waitlistLaunchKit';
 import { getWaitlistTemplate } from '@/lib/waitlistTemplates';
 import { getToolJourneyGuide } from '@/lib/activationJourney';
 import { ActivationJourneyStrip } from '@/components/activation/ActivationJourneyStrip';
@@ -24,7 +37,7 @@ import { captureEvent } from '@/lib/analytics';
 import { CreditCostNotice } from '@/components/CreditCostNotice';
 import { useJourneyUpgradePrompt } from '@/hooks/useJourneyUpgradePrompt';
 
-type BuilderTab = 'content' | 'style' | 'form' | 'launch' | 'analytics';
+type BuilderTab = 'content' | 'launchKit' | 'style' | 'form' | 'launch' | 'analytics';
 type PreviewDevice = 'desktop' | 'mobile';
 
 const WAITLIST_TABLE = 'waitlist_pages' as any;
@@ -67,6 +80,7 @@ interface WaitlistPageRow {
   ab_test_enabled?: boolean | null;
   headline_variant_b?: string | null;
   referral_message?: string | null;
+  metadata?: Record<string, unknown> | null;
 }
 
 interface SignupRow {
@@ -188,6 +202,22 @@ function textToLines(raw: string, min: number, max: number, fallback: string[]):
   return cleaned;
 }
 
+function asRecord(value: unknown): Record<string, unknown> {
+  return value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : {};
+}
+
+function getStoredLaunchKit(metadata: Record<string, unknown>): StoredWaitlistLaunchKit | null {
+  const envelope = asRecord(metadata.waitlistLaunchKit);
+  const current = envelope.current;
+  if (!current || typeof current !== 'object') return null;
+  return current as StoredWaitlistLaunchKit;
+}
+
+function getStoredLaunchKitHistory(metadata: Record<string, unknown>): StoredWaitlistLaunchKit[] {
+  const envelope = asRecord(metadata.waitlistLaunchKit);
+  return Array.isArray(envelope.history) ? envelope.history as StoredWaitlistLaunchKit[] : [];
+}
+
 function readStoredWaitlistEditorState(): StoredWaitlistEditorState | null {
   if (typeof window === 'undefined') return null;
 
@@ -277,6 +307,15 @@ export default function WaitlistEditor({ initialSeed = null, onBackToTemplates }
   const [content, setContent] = useState<WaitlistContent>(initialContent);
   const [benefitsDraft, setBenefitsDraft] = useState(linesToText(initialContent.benefits));
   const [howItWorksDraft, setHowItWorksDraft] = useState(linesToText(initialContent.howItWorks));
+  const [waitlistMetadata, setWaitlistMetadata] = useState<Record<string, unknown>>({});
+  const [launchKitInputDraft, setLaunchKitInputDraft] = useState<Partial<WaitlistLaunchKitInputs>>({
+    product_category: 'B2B SaaS',
+    tone_preference: 'friendly',
+  });
+  const [launchKit, setLaunchKit] = useState<StoredWaitlistLaunchKit | null>(null);
+  const [launchKitHistory, setLaunchKitHistory] = useState<StoredWaitlistLaunchKit[]>([]);
+  const [isGeneratingLaunchKit, setIsGeneratingLaunchKit] = useState(false);
+  const [launchKitLoadingMessage, setLaunchKitLoadingMessage] = useState('Analyzing your product...');
 
   const [draftId, setDraftId] = useState<string | null>(initialState?.draftId || null);
   const [currentSlug, setCurrentSlug] = useState<string | null>(initialState?.currentSlug || null);
@@ -363,10 +402,12 @@ export default function WaitlistEditor({ initialSeed = null, onBackToTemplates }
     markReadyAt?: string | null;
     viewCount?: number;
     savedAt?: string | null;
+    metadata?: Record<string, unknown> | null;
   }) => {
     const normalized = normalizeWaitlistContent(next.content, next.productName || 'Your Product');
     const nextSlugDraft = next.currentSlug || '';
     const snapshot = buildEditorSnapshot(next.productName, normalized, nextSlugDraft, next.status);
+    const metadata = asRecord(next.metadata);
 
     setProductName(next.productName);
     setContent(normalized);
@@ -381,6 +422,9 @@ export default function WaitlistEditor({ initialSeed = null, onBackToTemplates }
     setLastSavedSnapshot(snapshot);
     setLastSavedAt(next.savedAt ?? new Date().toISOString());
     setSlugAvailable(null);
+    setWaitlistMetadata(metadata);
+    setLaunchKit(getStoredLaunchKit(metadata));
+    setLaunchKitHistory(getStoredLaunchKitHistory(metadata));
   }, []);
 
   const loadPageIntoEditor = useCallback((row: WaitlistPageRow) => {
@@ -392,6 +436,7 @@ export default function WaitlistEditor({ initialSeed = null, onBackToTemplates }
       status: row.status === 'published' ? 'published' : 'draft',
       markReadyAt: row.mark_ready_at ?? null,
       viewCount: row.view_count ?? 0,
+      metadata: row.metadata,
     });
   }, [applyDraftState]);
 
@@ -403,7 +448,7 @@ export default function WaitlistEditor({ initialSeed = null, onBackToTemplates }
 
     const { data } = await (supabase as any)
       .from(WAITLIST_TABLE)
-      .select('id, slug, product_name, ai_content, status, title, view_count, mark_ready_at, theme, accent_color, layout, logo_url, image_url, social_links, launch_date, webhook_url, integration_provider, integration_list_id, confirmation_email_enabled, ab_test_enabled, headline_variant_b, referral_message')
+        .select('id, slug, product_name, ai_content, status, title, view_count, mark_ready_at, theme, accent_color, layout, logo_url, image_url, social_links, launch_date, webhook_url, integration_provider, integration_list_id, confirmation_email_enabled, ab_test_enabled, headline_variant_b, referral_message, metadata')
       .eq('user_id', user.id)
       .order('updated_at', { ascending: false });
 
@@ -507,7 +552,7 @@ export default function WaitlistEditor({ initialSeed = null, onBackToTemplates }
         loadAllPages(),
         (supabase as any)
           .from(WAITLIST_TABLE)
-          .select('id, slug, product_name, ai_content, status, title, view_count, mark_ready_at, theme, accent_color, layout, logo_url, image_url, social_links, launch_date, webhook_url, integration_provider, integration_list_id, confirmation_email_enabled, ab_test_enabled, headline_variant_b, referral_message')
+          .select('id, slug, product_name, ai_content, status, title, view_count, mark_ready_at, theme, accent_color, layout, logo_url, image_url, social_links, launch_date, webhook_url, integration_provider, integration_list_id, confirmation_email_enabled, ab_test_enabled, headline_variant_b, referral_message, metadata')
           .eq('user_id', user.id)
           .order('updated_at', { ascending: false })
           .limit(1)
@@ -611,6 +656,31 @@ export default function WaitlistEditor({ initialSeed = null, onBackToTemplates }
   useEffect(() => {
     setHowItWorksDraft(linesToText(content.howItWorks));
   }, [content.howItWorks]);
+
+  useEffect(() => {
+    if (!isGeneratingLaunchKit) return;
+
+    const messages = [
+      'Analyzing your product...',
+      'Crafting your headlines...',
+      'Writing your email sequence...',
+      'Packaging your launch kit...',
+    ];
+    setLaunchKitLoadingMessage(messages[0]);
+    let index = 0;
+    const interval = window.setInterval(() => {
+      index = Math.min(index + 1, messages.length - 1);
+      setLaunchKitLoadingMessage(messages[index]);
+    }, 1500);
+    const timeout = window.setTimeout(() => {
+      setLaunchKitLoadingMessage("Almost there - this one's worth the wait.");
+    }, 20000);
+
+    return () => {
+      window.clearInterval(interval);
+      window.clearTimeout(timeout);
+    };
+  }, [isGeneratingLaunchKit]);
 
   const resetToNew = () => {
     if (hasUnsavedChanges && !window.confirm('Discard your unsaved waitlist changes and start a new draft?')) {
@@ -862,7 +932,7 @@ export default function WaitlistEditor({ initialSeed = null, onBackToTemplates }
       toast.info('Publish your page first to copy the public URL.');
       return;
     }
-    navigator.clipboard.writeText(liveUrl).then(() => toast.success('Public link copied.'));
+    void navigator.clipboard.writeText(liveUrl).then(() => toast.success('Public link copied.'));
   };
 
   const handleRefineWithAi = async () => {
@@ -931,6 +1001,197 @@ export default function WaitlistEditor({ initialSeed = null, onBackToTemplates }
       toast.error('AI refine failed. Please try again.');
     } finally {
       setIsRefiningWithAi(false);
+    }
+  };
+
+  const buildLaunchKitInputCandidate = (): WaitlistLaunchKitInputs => ({
+    product_name: launchKitInputDraft.product_name ?? productName,
+    one_line_description:
+      launchKitInputDraft.one_line_description ??
+      (content.solutionSummary || content.subheadline || content.problemStatement),
+    target_audience: launchKitInputDraft.target_audience ?? content.subheadline,
+    primary_benefit: launchKitInputDraft.primary_benefit ?? content.headline,
+    secondary_benefits: launchKitInputDraft.secondary_benefits ?? content.benefits.slice(0, 2),
+    product_category: launchKitInputDraft.product_category ?? 'B2B SaaS',
+    tone_preference: launchKitInputDraft.tone_preference ?? 'friendly',
+    launch_date: launchKitInputDraft.launch_date ?? content.launchDate ?? undefined,
+    referral_incentive: launchKitInputDraft.referral_incentive ?? content.referralMessage ?? undefined,
+    existing_tagline: launchKitInputDraft.existing_tagline ?? undefined,
+  });
+
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success('Copied to clipboard ✓');
+    } catch {
+      toast.error('Could not copy to clipboard.');
+    }
+  };
+
+  const persistLaunchKitMetadata = async (
+    pageId: string,
+    storedKit: StoredWaitlistLaunchKit,
+  ): Promise<boolean> => {
+    const previous = launchKit ?? getStoredLaunchKit(waitlistMetadata);
+    const existingHistory = launchKitHistory.length ? launchKitHistory : getStoredLaunchKitHistory(waitlistMetadata);
+    const history = previous
+      ? [previous, ...existingHistory.filter((item) => item.inputHash !== previous.inputHash)].slice(0, 10)
+      : existingHistory.slice(0, 10);
+    const projectContext = {
+      ...asRecord(waitlistMetadata.projectContext),
+      positioningStatement: storedKit.output.positioning_statement,
+      waitlistLaunchKitInputHash: storedKit.inputHash,
+      updatedAt: storedKit.generatedAt,
+    };
+    const nextMetadata = {
+      ...waitlistMetadata,
+      waitlistLaunchKit: {
+        current: storedKit,
+        history,
+      },
+      projectContext,
+    };
+
+    const { error } = await (supabase as any)
+      .from(WAITLIST_TABLE)
+      .update({ metadata: nextMetadata })
+      .eq('id', pageId);
+
+    if (error) {
+      toast.error('Generated, but could not save the kit to this waitlist.');
+      return false;
+    }
+
+    setWaitlistMetadata(nextMetadata);
+    setLaunchKit(storedKit);
+    setLaunchKitHistory(history);
+    return true;
+  };
+
+  const handleGenerateLaunchKit = async () => {
+    if (!user) {
+      promptSignIn('generate your launch kit');
+      return;
+    }
+
+    const inputValidation = validateWaitlistLaunchKitInputs(buildLaunchKitInputCandidate());
+    if (!inputValidation.ok || !inputValidation.value) {
+      toast.error(inputValidation.errors[0] || 'Complete the launch kit inputs first.');
+      return;
+    }
+
+    setIsGeneratingLaunchKit(true);
+    try {
+      const pageId = draftId || await persistWaitlist('draft', 'autosave');
+      if (!pageId) return;
+
+      const { data, error } = await supabase.functions.invoke('waitlist-generator', {
+        body: {
+          mode: 'launch_kit',
+          inputs: inputValidation.value,
+        },
+      });
+
+      if (error || !data?.success || !data?.kit) {
+        const status = (error as { status?: number } | null)?.status;
+        if (status === 429 || data?.errorCode === 'RATE_LIMIT') {
+          toast.error("You've generated a few kits recently. Wait a minute and try again.");
+        } else if (data?.errorCode === 'VALIDATION_FAILED') {
+          toast.error("Something went wrong on our end. We've been notified. Try again in a moment.");
+        } else {
+          toast.error("We couldn't generate your kit. Check your connection and try again.");
+        }
+        return;
+      }
+
+      const outputValidation = validateWaitlistLaunchKitOutput(data.kit);
+      if (!outputValidation.ok || !outputValidation.value) {
+        toast.error("Something went wrong on our end. We've been notified. Try again in a moment.");
+        return;
+      }
+
+      const storedKit: StoredWaitlistLaunchKit = {
+        inputs: inputValidation.value,
+        inputHash: data.inputHash || buildWaitlistLaunchKitInputHash(inputValidation.value),
+        output: outputValidation.value,
+        generatedAt: new Date().toISOString(),
+      };
+
+      await persistLaunchKitMetadata(pageId, storedKit);
+      showCreditReceipt(
+        'WAITLIST_GENERATION',
+        typeof data.creditsUsed === 'number' ? data.creditsUsed : waitlistQuote.requiredCredits,
+        typeof data.newBalance === 'number' ? data.newBalance : undefined,
+        { featureName: 'Waitlist Launch Kit' }
+      );
+      toast.success('Waitlist Launch Kit generated.');
+    } catch (error) {
+      console.error('Launch kit generation failed:', error);
+      toast.error("We couldn't generate your kit. Check your connection and try again.");
+    } finally {
+      setIsGeneratingLaunchKit(false);
+    }
+  };
+
+  const handleDownloadLaunchKitPdf = async () => {
+    if (!launchKit) return;
+    try {
+      const { jsPDF } = await import('jspdf');
+      const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+      const margin = 18;
+      const lineWidth = 210 - margin * 2;
+      let y = margin;
+      const addLine = (text: string, size = 10, bold = false) => {
+        doc.setFont('helvetica', bold ? 'bold' : 'normal');
+        doc.setFontSize(size);
+        const lines = doc.splitTextToSize(text, lineWidth);
+        lines.forEach((line: string) => {
+          if (y > 276) {
+            doc.addPage();
+            y = margin;
+          }
+          doc.text(line, margin, y);
+          y += size * 0.45;
+        });
+        y += 2;
+      };
+      const addSection = (title: string) => {
+        doc.addPage();
+        y = margin;
+        addLine(title, 16, true);
+      };
+
+      addLine('Waitlist Launch Kit', 18, true);
+      addLine(launchKit.inputs.product_name, 12);
+      addSection('Headlines');
+      launchKit.output.headlines.forEach((item) => {
+        addLine(`Variant ${item.variant}: ${item.headline}`, 12, true);
+        addLine(item.subheadline, 10);
+      });
+      addSection('Value Propositions');
+      launchKit.output.value_props.forEach((item) => addLine(`• ${item.bullet}`, 10));
+      addSection('CTA Button Copy');
+      addLine(`Primary: ${launchKit.output.cta.primary}`);
+      addLine(`Soft: ${launchKit.output.cta.alternative_soft}`);
+      addLine(`Urgency: ${launchKit.output.cta.alternative_urgency}`);
+      addSection('Email Sequence');
+      launchKit.output.email_sequence.forEach((email) => {
+        addLine(`Email ${email.email_number}: ${email.trigger}`, 12, true);
+        addLine(`Subject: ${email.subject_line}`);
+        addLine(`Preview: ${email.preview_text}`);
+        addLine(email.body);
+        addLine(`CTA: ${email.in_email_cta}`);
+      });
+      addSection('Referral Hook');
+      addLine(launchKit.output.referral_hook.headline, 12, true);
+      addLine(launchKit.output.referral_hook.copy);
+      addLine(`CTA: ${launchKit.output.referral_hook.cta}`);
+
+      doc.save(`${launchKit.inputs.product_name.replace(/\s+/g, '-').toLowerCase()}-waitlist-launch-kit.pdf`);
+      toast.success('PDF downloaded.');
+    } catch (error) {
+      console.error('Launch kit PDF failed:', error);
+      toast.error('PDF export failed.');
     }
   };
 
@@ -1122,7 +1383,7 @@ export default function WaitlistEditor({ initialSeed = null, onBackToTemplates }
   const studioShellClass = 'overflow-hidden rounded-[32px] border border-border/60 bg-white/75 shadow-[0_30px_90px_rgba(15,23,42,0.12)] backdrop-blur-xl dark:border-white/10 dark:bg-[linear-gradient(135deg,rgba(2,6,23,0.96),rgba(15,23,42,0.96)_40%,rgba(30,41,59,0.94))] dark:shadow-[0_30px_90px_rgba(2,6,23,0.42)]';
   const studioAsideClass = 'border-r border-border/60 bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(248,250,252,0.94))] backdrop-blur dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(2,6,23,0.98),rgba(15,23,42,0.96)_50%,rgba(30,41,59,0.94))]';
   const studioHeaderClass = 'border-b border-border/60 bg-white/90 p-4 text-slate-950 backdrop-blur dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(15,23,42,0.96),rgba(30,41,59,0.96))] dark:text-white';
-  const studioTabsListClass = 'grid h-auto w-full grid-cols-5 gap-1 rounded-[20px] bg-slate-100 p-1.5 shadow-inner dark:bg-white/8 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]';
+  const studioTabsListClass = 'grid h-auto w-full grid-cols-6 gap-1 rounded-[20px] bg-slate-100 p-1.5 shadow-inner dark:bg-white/8 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]';
   const studioTabsTriggerClass = 'rounded-2xl px-2 py-2 text-[11px] font-semibold text-slate-600 data-[state=active]:bg-white data-[state=active]:text-slate-950 data-[state=active]:shadow-sm dark:text-white/75 dark:data-[state=active]:bg-sky-300 dark:data-[state=active]:text-slate-950';
   const contentTabClass = 'mt-0 space-y-4 [&>div]:rounded-[24px] [&>div]:border [&>div]:border-border/60 [&>div]:bg-white/80 [&>div]:p-4 [&>div]:shadow-sm [&_input]:border-border/60 [&_input]:bg-white [&_input]:text-slate-950 [&_input]:placeholder:text-slate-400 [&_label]:text-slate-950 [&_textarea]:border-border/60 [&_textarea]:bg-white [&_textarea]:text-slate-950 [&_textarea]:placeholder:text-slate-400 dark:text-white dark:[&>div]:border-white/10 dark:[&>div]:bg-[linear-gradient(180deg,rgba(15,23,42,0.94),rgba(30,41,59,0.9))] dark:[&>div]:shadow-[0_18px_40px_rgba(2,6,23,0.35)] dark:[&_input]:border-white/15 dark:[&_input]:bg-white/5 dark:[&_input]:text-white dark:[&_input]:placeholder:text-slate-400 dark:[&_label]:text-white dark:[&_textarea]:border-white/15 dark:[&_textarea]:bg-white/5 dark:[&_textarea]:text-white dark:[&_textarea]:placeholder:text-slate-400';
   const styleTabClass = 'mt-0 space-y-4 [&>div]:rounded-[24px] [&>div]:border [&>div]:border-border/60 [&>div]:bg-white/80 [&>div]:p-4 [&>div]:shadow-sm [&_button]:text-slate-700 [&_input]:border-border/60 [&_input]:bg-white [&_input]:text-slate-950 [&_label]:text-slate-950 [&_select]:border-border/60 [&_select]:bg-white [&_select]:text-slate-950 dark:text-white dark:[&>div]:border-white/10 dark:[&>div]:bg-[linear-gradient(180deg,rgba(15,23,42,0.94),rgba(30,41,59,0.9))] dark:[&>div]:shadow-[0_18px_40px_rgba(2,6,23,0.35)] dark:[&_button]:text-white dark:[&_input]:border-white/15 dark:[&_input]:bg-white/5 dark:[&_input]:text-white dark:[&_label]:text-white dark:[&_select]:border-white/15 dark:[&_select]:bg-slate-950 dark:[&_select]:text-white';
@@ -1131,6 +1392,8 @@ export default function WaitlistEditor({ initialSeed = null, onBackToTemplates }
   const analyticsTabClass = 'mt-0 space-y-4 [&>div]:rounded-[24px] [&>div]:border [&>div]:border-border/60 [&>div]:bg-white/80 [&>div]:p-4 [&>div]:shadow-sm [&_label]:text-slate-950 dark:text-white dark:[&>div]:border-white/10 dark:[&>div]:bg-[linear-gradient(180deg,rgba(15,23,42,0.94),rgba(30,41,59,0.9))] dark:[&>div]:shadow-[0_18px_40px_rgba(2,6,23,0.35)] dark:[&_label]:text-white';
   const activationGuide = getToolJourneyGuide('/waitlist');
   const hasTangibleOutput = Boolean(draftId || lastSavedAt);
+  const launchKitCandidate = buildLaunchKitInputCandidate();
+  const launchKitOutput: WaitlistLaunchKitOutput | null = launchKit?.output ?? null;
 
   return (
     <div className="space-y-6">
@@ -1335,6 +1598,7 @@ export default function WaitlistEditor({ initialSeed = null, onBackToTemplates }
                 </div>
                 <TabsList className={studioTabsListClass}>
                   <TabsTrigger value="content" className={studioTabsTriggerClass}>Content</TabsTrigger>
+                  <TabsTrigger value="launchKit" className={studioTabsTriggerClass}>Kit</TabsTrigger>
                   <TabsTrigger value="style" className={studioTabsTriggerClass}>Style</TabsTrigger>
                   <TabsTrigger value="form" className={studioTabsTriggerClass}>Form</TabsTrigger>
                   <TabsTrigger value="launch" className={studioTabsTriggerClass}>Launch</TabsTrigger>
@@ -1402,6 +1666,182 @@ export default function WaitlistEditor({ initialSeed = null, onBackToTemplates }
                   <div className="space-y-2"><Label>Hero image URL</Label><Input value={content.imageUrl || ''} onChange={(event) => updateContent({ imageUrl: event.target.value })} /></div>
                   <div className="space-y-2"><Label>Launch date (optional)</Label><Input type="date" value={content.launchDate || ''} onChange={(event) => updateContent({ launchDate: event.target.value })} /></div>
                   <div className="space-y-2"><Label>Referral message</Label><Textarea value={content.referralMessage || ''} onChange={(event) => updateContent({ referralMessage: event.target.value })} rows={2} /></div>
+                </TabsContent>
+
+                <TabsContent value="launchKit" className={contentTabClass}>
+                  <div className="space-y-2">
+                    <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-600 dark:text-sky-200">Launch Kit</p>
+                    <h4 className="text-lg font-semibold text-slate-950 dark:text-white">Generate the copy package</h4>
+                    <p className="text-sm text-slate-500 dark:text-slate-300">Turn this waitlist into headlines, CTA copy, emails, and referral copy you can use immediately.</p>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div className="grid gap-3 md:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label>Product name</Label>
+                        <Input value={launchKitCandidate.product_name} onChange={(event) => setLaunchKitInputDraft((current) => ({ ...current, product_name: event.target.value }))} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Target audience</Label>
+                        <Input value={launchKitCandidate.target_audience} onChange={(event) => setLaunchKitInputDraft((current) => ({ ...current, target_audience: event.target.value }))} />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>One-line description</Label>
+                      <Textarea value={launchKitCandidate.one_line_description} onChange={(event) => setLaunchKitInputDraft((current) => ({ ...current, one_line_description: event.target.value }))} rows={2} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Primary benefit</Label>
+                      <Textarea value={launchKitCandidate.primary_benefit} onChange={(event) => setLaunchKitInputDraft((current) => ({ ...current, primary_benefit: event.target.value }))} rows={2} />
+                    </div>
+                    <div className="grid gap-3 md:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label>Product category</Label>
+                        <select className="w-full rounded-md border border-border/60 bg-white px-3 py-2 text-sm text-slate-950 dark:border-white/15 dark:bg-slate-950 dark:text-white" value={launchKitCandidate.product_category} onChange={(event) => setLaunchKitInputDraft((current) => ({ ...current, product_category: event.target.value as WaitlistLaunchKitInputs['product_category'] }))}>
+                          {WAITLIST_LAUNCH_KIT_CATEGORIES.map((category) => <option key={category} value={category}>{category}</option>)}
+                        </select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Tone</Label>
+                        <select className="w-full rounded-md border border-border/60 bg-white px-3 py-2 text-sm text-slate-950 dark:border-white/15 dark:bg-slate-950 dark:text-white" value={launchKitCandidate.tone_preference} onChange={(event) => setLaunchKitInputDraft((current) => ({ ...current, tone_preference: event.target.value as WaitlistLaunchKitInputs['tone_preference'] }))}>
+                          {WAITLIST_LAUNCH_KIT_TONES.map((tone) => <option key={tone} value={tone}>{tone}</option>)}
+                        </select>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Secondary benefits (optional, one per line)</Label>
+                      <Textarea
+                        value={(launchKitCandidate.secondary_benefits ?? []).join('\n')}
+                        onChange={(event) => setLaunchKitInputDraft((current) => ({
+                          ...current,
+                          secondary_benefits: event.target.value.split('\n').map((item) => item.trim()).filter(Boolean).slice(0, 2),
+                        }))}
+                        rows={3}
+                      />
+                    </div>
+                    <div className="grid gap-3 md:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label>Referral incentive (optional)</Label>
+                        <Input value={launchKitCandidate.referral_incentive || ''} onChange={(event) => setLaunchKitInputDraft((current) => ({ ...current, referral_incentive: event.target.value }))} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Existing tagline (optional)</Label>
+                        <Input value={launchKitCandidate.existing_tagline || ''} onChange={(event) => setLaunchKitInputDraft((current) => ({ ...current, existing_tagline: event.target.value }))} />
+                      </div>
+                    </div>
+                    <Button className={`w-full gap-2 ${primaryButtonClass}`} onClick={handleGenerateLaunchKit} disabled={isGeneratingLaunchKit || !user}>
+                      {isGeneratingLaunchKit ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                      {launchKit ? 'Regenerate Launch Kit' : 'Generate Launch Kit'}
+                    </Button>
+                    {user ? <CreditCostNotice feature="WAITLIST_GENERATION" featureName="Waitlist Launch Kit" variant="inline" /> : null}
+                  </div>
+
+                  {isGeneratingLaunchKit ? (
+                    <div className="flex items-center gap-3">
+                      <Sparkles className="h-5 w-5 text-sky-600 dark:text-sky-200" />
+                      <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{launchKitLoadingMessage}</p>
+                    </div>
+                  ) : null}
+
+                  {launchKitOutput ? (
+                    <div className="space-y-4">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Button size="sm" variant="outline" className={actionButtonClass} onClick={() => copyToClipboard(formatWaitlistLaunchKitPlainText(launchKitOutput))}><Copy className="mr-1 h-4 w-4" />Copy All</Button>
+                        <Button size="sm" variant="outline" className={actionButtonClass} onClick={handleDownloadLaunchKitPdf}><Download className="mr-1 h-4 w-4" />Download PDF</Button>
+                        {launchKitHistory.length > 0 ? <Badge variant="outline">{launchKitHistory.length} previous kit{launchKitHistory.length === 1 ? '' : 's'} archived</Badge> : null}
+                      </div>
+
+                      <section className="space-y-3">
+                        <div className="flex items-center gap-2">
+                          <FileText className="h-4 w-4 text-sky-600 dark:text-sky-200" />
+                          <h5 className="font-semibold">Headlines</h5>
+                        </div>
+                        <div className="grid gap-3 xl:grid-cols-3">
+                          {launchKitOutput.headlines.map((item) => (
+                            <div key={item.variant} className="rounded-md border border-border/60 bg-slate-50/80 p-3 dark:border-white/10 dark:bg-white/5">
+                              <div className="mb-2 flex items-center justify-between gap-2">
+                                <Badge>Variant {item.variant}</Badge>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <button type="button" className="rounded-full p-1 text-slate-500 hover:bg-slate-200 dark:text-slate-300 dark:hover:bg-white/10" aria-label="Why this angle?">
+                                      <Info className="h-4 w-4" />
+                                    </button>
+                                  </TooltipTrigger>
+                                  <TooltipContent className="max-w-xs">{item.rationale}</TooltipContent>
+                                </Tooltip>
+                              </div>
+                              <p className="text-lg font-bold leading-tight text-slate-950 dark:text-white">{item.headline}</p>
+                              <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">{item.subheadline}</p>
+                              <Button size="sm" variant="outline" className={`mt-3 ${actionButtonClass}`} onClick={() => copyToClipboard(`${item.headline}\n${item.subheadline}`)}><Copy className="mr-1 h-4 w-4" />Copy</Button>
+                            </div>
+                          ))}
+                        </div>
+                      </section>
+
+                      <section className="space-y-2">
+                        <h5 className="font-semibold">Value Propositions</h5>
+                        {launchKitOutput.value_props.map((item, index) => (
+                          <div key={item.bullet} className="flex items-start justify-between gap-3 rounded-md border border-border/60 bg-slate-50/80 p-3 dark:border-white/10 dark:bg-white/5">
+                            <p className="text-sm text-slate-700 dark:text-slate-200"><Check className="mr-2 inline h-4 w-4 text-emerald-600" />{item.bullet}</p>
+                            <Button size="sm" variant="outline" className={actionButtonClass} onClick={() => copyToClipboard(item.bullet)}><Copy className="h-4 w-4" /><span className="sr-only">Copy value prop {index + 1}</span></Button>
+                          </div>
+                        ))}
+                      </section>
+
+                      <section className="space-y-2">
+                        <h5 className="font-semibold">CTA Button Copy</h5>
+                        {[
+                          ['Primary', launchKitOutput.cta.primary],
+                          ['Soft (lower-commitment)', launchKitOutput.cta.alternative_soft],
+                          ['Urgency (FOMO)', launchKitOutput.cta.alternative_urgency],
+                        ].map(([label, value]) => (
+                          <div key={label} className="flex items-center justify-between gap-3 rounded-md border border-border/60 bg-slate-50/80 p-3 dark:border-white/10 dark:bg-white/5">
+                            <div className="min-w-0">
+                              <p className="text-xs text-slate-500 dark:text-slate-300">{label}</p>
+                              <span className="mt-1 inline-flex rounded-md bg-slate-950 px-3 py-2 text-sm font-semibold text-white dark:bg-sky-300 dark:text-slate-950">{value}</span>
+                            </div>
+                            <Button size="sm" variant="outline" className={actionButtonClass} onClick={() => copyToClipboard(value)}><Copy className="mr-1 h-4 w-4" />Copy</Button>
+                          </div>
+                        ))}
+                        <p className="text-xs text-slate-500 dark:text-slate-300">Use one of these as your waitlist page button. We recommend starting with Primary.</p>
+                      </section>
+
+                      <section className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <Mail className="h-4 w-4 text-sky-600 dark:text-sky-200" />
+                          <h5 className="font-semibold">Email Sequence</h5>
+                        </div>
+                        {launchKitOutput.email_sequence.map((email) => (
+                          <details key={email.email_number} className="rounded-md border border-border/60 bg-slate-50/80 p-3 dark:border-white/10 dark:bg-white/5">
+                            <summary className="cursor-pointer list-none">
+                              <div className="flex flex-wrap items-center justify-between gap-3">
+                                <div>
+                                  <Badge>{email.email_number === 1 ? 'Confirmation' : email.email_number === 2 ? 'Anticipation' : 'Launch'}</Badge>
+                                  <p className="mt-2 text-sm font-semibold text-slate-950 dark:text-white">{email.subject_line}</p>
+                                  <p className="text-xs text-slate-500 dark:text-slate-300">{email.trigger}</p>
+                                </div>
+                                <Button size="sm" variant="outline" className={actionButtonClass} onClick={(event) => { event.preventDefault(); void copyToClipboard(formatWaitlistEmailPlainText(email)); }}><Copy className="mr-1 h-4 w-4" />Copy Email</Button>
+                              </div>
+                            </summary>
+                            <div className="mt-4 space-y-3 text-sm text-slate-700 dark:text-slate-200">
+                              <p><strong>Preview:</strong> {email.preview_text}</p>
+                              <div className="space-y-2">{email.body.split('\n\n').map((paragraph) => <p key={paragraph}>{paragraph}</p>)}</div>
+                              <p><strong>CTA:</strong> {email.in_email_cta}</p>
+                            </div>
+                          </details>
+                        ))}
+                      </section>
+
+                      <section className="space-y-2 rounded-md border border-border/60 bg-slate-50/80 p-3 dark:border-white/10 dark:bg-white/5">
+                        <h5 className="text-lg font-semibold text-slate-950 dark:text-white">{launchKitOutput.referral_hook.headline}</h5>
+                        <p className="text-sm text-slate-600 dark:text-slate-300">{launchKitOutput.referral_hook.copy}</p>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="inline-flex rounded-md bg-slate-950 px-3 py-2 text-sm font-semibold text-white dark:bg-sky-300 dark:text-slate-950">{launchKitOutput.referral_hook.cta}</span>
+                          <Button size="sm" variant="outline" className={actionButtonClass} onClick={() => copyToClipboard(`${launchKitOutput.referral_hook.headline}\n${launchKitOutput.referral_hook.copy}\nCTA: ${launchKitOutput.referral_hook.cta}`)}><Copy className="mr-1 h-4 w-4" />Copy Block</Button>
+                        </div>
+                      </section>
+                    </div>
+                  ) : null}
                 </TabsContent>
 
                 <TabsContent value="style" className={styleTabClass}>

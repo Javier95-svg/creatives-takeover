@@ -84,12 +84,13 @@ export function useGTMStrategist() {
   const [isSaving, setIsSaving] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [prefillData, setPrefillData] = useState<Partial<GTMIntakeAnswers>>({});
+  const [prefillSource, setPrefillSource] = useState<'waitlist_launch_kit' | 'icp_builder' | null>(null);
 
   // On mount: load existing plan or prefill data
   useEffect(() => {
     if (!user) return;
-    loadExistingPlan();
-    loadPrefillData();
+    void loadExistingPlan();
+    void loadPrefillData();
   }, [user]);
 
   const loadExistingPlan = useCallback(async () => {
@@ -121,6 +122,26 @@ export function useGTMStrategist() {
   const loadPrefillData = useCallback(async () => {
     if (!user) return;
     try {
+      const { data: waitlistData } = await (supabase as any)
+        .from('waitlist_pages')
+        .select('metadata, ai_content')
+        .eq('user_id', user.id)
+        .order('updated_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      const waitlistMetadata = (waitlistData as any)?.metadata;
+      const waitlistPositioning = waitlistMetadata?.projectContext?.positioningStatement;
+      if (typeof waitlistPositioning === 'string' && waitlistPositioning.trim()) {
+        const waitlistContent = (waitlistData as any)?.ai_content;
+        setPrefillData({
+          targetAudience: typeof waitlistContent?.subheadline === 'string' ? waitlistContent.subheadline : undefined,
+          problemAndSolution: waitlistPositioning.trim(),
+        });
+        setPrefillSource('waitlist_launch_kit');
+        return;
+      }
+
       const { data } = await supabase
         .from('icp_analysis_results' as any)
         .select('analysis_data, target_audience')
@@ -143,6 +164,7 @@ export function useGTMStrategist() {
 
       if (Object.keys(prefill).length > 0) {
         setPrefillData(prefill);
+        setPrefillSource('icp_builder');
       }
     } catch (err) {
       console.warn('Failed to load ICP prefill data:', err);
@@ -385,6 +407,7 @@ export function useGTMStrategist() {
     isSaving,
     isExporting,
     prefillData,
+    prefillSource,
     runAnalysis,
     savePlan,
     exportPlan,

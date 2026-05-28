@@ -10,6 +10,7 @@ import { CreditCostNotice } from '@/components/CreditCostNotice';
 
 interface GTMIntakeFormProps {
   prefillData: Partial<GTMIntakeAnswers>;
+  prefillSource?: 'waitlist_launch_kit' | 'icp_builder' | null;
   onSubmit: (answers: GTMIntakeAnswers) => void;
   isSubmitting?: boolean;
 }
@@ -85,7 +86,7 @@ const StepView: React.FC<{ children: React.ReactNode; stepKey: number }> = ({ ch
 
 const TOTAL_STEPS = 8;
 
-const GTMIntakeForm: React.FC<GTMIntakeFormProps> = ({ prefillData, onSubmit, isSubmitting = false }) => {
+const GTMIntakeForm: React.FC<GTMIntakeFormProps> = ({ prefillData, prefillSource = null, onSubmit, isSubmitting = false }) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [answers, setAnswers] = useState<GTMIntakeAnswers>({
     businessType: '',
@@ -162,6 +163,9 @@ const GTMIntakeForm: React.FC<GTMIntakeFormProps> = ({ prefillData, onSubmit, is
     if (field === 'problemAndSolution' && prefillData.problemAndSolution) return true;
     return false;
   };
+  const prefillLabel = prefillSource === 'waitlist_launch_kit'
+    ? 'Pre-filled from your Waitlist Launch Kit'
+    : 'Pre-filled from ICP Builder';
 
   // Step indicator
   const StepIndicator = () => (
@@ -241,7 +245,7 @@ const GTMIntakeForm: React.FC<GTMIntakeFormProps> = ({ prefillData, onSubmit, is
             {isPrefilled('targetAudience') && (
               <Badge variant="outline" className="text-xs gap-1 border-primary/30 text-primary/80">
                 <Sparkles className="w-3 h-3" />
-                Pre-filled from ICP Builder
+                {prefillLabel}
               </Badge>
             )}
             <Textarea
@@ -320,7 +324,7 @@ const GTMIntakeForm: React.FC<GTMIntakeFormProps> = ({ prefillData, onSubmit, is
             {isPrefilled('problemAndSolution') && (
               <Badge variant="outline" className="text-xs gap-1 border-primary/30 text-primary/80">
                 <Sparkles className="w-3 h-3" />
-                Pre-filled from ICP Builder
+                {prefillLabel}
               </Badge>
             )}
             <Textarea
