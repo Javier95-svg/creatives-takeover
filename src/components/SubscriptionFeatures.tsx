@@ -5,7 +5,7 @@ import {
   Users,
   TrendingUp,
 } from "lucide-react";
-import { CREDIT_COSTS, MVP_CREDIT_COSTS, getCreditCostForPlan } from "@/config/constants";
+import { CREDIT_COSTS, getCreditCostForPlan } from "@/config/constants";
 import { RevealGroup, ScrollReveal } from "@/components/animations/ScrollReveal";
 
 type CreditBreakdownItem = {
@@ -45,7 +45,7 @@ const creditBreakdown: {
     },
     {
       name: "MVP Builder",
-      description: `Available on every plan with a separate MVP wallet: ${MVP_CREDIT_COSTS.APP_BUILDER_GENERATE} MVP credits for a React app, ${MVP_CREDIT_COSTS.APP_BUILDER_REFINE} for targeted edits, ${MVP_CREDIT_COSTS.APP_BUILDER_DEBUG} for bug fixes, and ${MVP_CREDIT_COSTS.APP_BUILDER_DEPLOY} to deploy.`,
+      description: `Available on every plan using the user's regular account credit balance: ${CREDIT_COSTS.APP_BUILDER_GENERATE} credits for a React app, ${CREDIT_COSTS.APP_BUILDER_REFINE} for targeted edits, ${CREDIT_COSTS.APP_BUILDER_DEBUG} for bug fixes, and ${CREDIT_COSTS.APP_BUILDER_DEPLOY} to deploy.`,
       badge: "All plans",
       badgeVariant: "outline",
       badgeClassName: "bg-blue-50 dark:bg-blue-950/30",

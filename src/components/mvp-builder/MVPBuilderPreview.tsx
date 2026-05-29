@@ -371,7 +371,7 @@ export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({
                       Deploy
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent>Deploy this MVP for 3 MVP credits</TooltipContent>
+                  <TooltipContent>Deploy this MVP for 3 credits</TooltipContent>
                 </Tooltip>
               </div>
             </div>

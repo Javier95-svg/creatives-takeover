@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { checkAndDeductMVPCredits, refundMVPCredits } from "../_shared/mvp-credit-deduction.ts";
-import { MVP_CREDIT_COSTS, type MVPCreditFeature } from "../_shared/mvp-credit-constants.ts";
+import { checkAndDeductCredits, refundCredits } from "../_shared/credit-deduction.ts";
+import { CREDIT_COSTS, type CreditFeature } from "../_shared/credit-constants.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -42,7 +42,7 @@ type MVPBuilderActionType = "generation" | "targeted_edit" | "debug" | "add_page
 type MVPBuilderTemplateId = "waitlist_landing" | "saas_landing" | "community_landing" | "blank";
 type MVPBuilderPaletteId = "minimal" | "bold" | "warm";
 
-const ACTION_CONFIG: Record<MVPBuilderActionType, { feature: MVPCreditFeature; temperature: number; maxTokens: number }> = {
+const ACTION_CONFIG: Record<MVPBuilderActionType, { feature: CreditFeature; temperature: number; maxTokens: number }> = {
   generation: { feature: "APP_BUILDER_GENERATE", temperature: 0.45, maxTokens: 22000 },
   targeted_edit: { feature: "APP_BUILDER_REFINE", temperature: 0.25, maxTokens: 14000 },
   debug: { feature: "APP_BUILDER_DEBUG", temperature: 0.15, maxTokens: 10000 },
@@ -50,6 +50,25 @@ const ACTION_CONFIG: Record<MVPBuilderActionType, { feature: MVPCreditFeature; t
   add_feature: { feature: "APP_BUILDER_ADD_FEATURE", temperature: 0.35, maxTokens: 18000 },
   design_overhaul: { feature: "APP_BUILDER_DESIGN_OVERHAUL", temperature: 0.45, maxTokens: 18000 },
 };
+
+function getActionFeatureName(feature: CreditFeature): string {
+  switch (feature) {
+    case "APP_BUILDER_GENERATE":
+      return "MVP Builder Generation";
+    case "APP_BUILDER_REFINE":
+      return "MVP Builder Refinement";
+    case "APP_BUILDER_DEBUG":
+      return "MVP Builder Bug Fix";
+    case "APP_BUILDER_ADD_PAGE":
+      return "MVP Builder Add Page";
+    case "APP_BUILDER_ADD_FEATURE":
+      return "MVP Builder Add Feature";
+    case "APP_BUILDER_DESIGN_OVERHAUL":
+      return "MVP Builder Design Overhaul";
+    default:
+      return "MVP Builder";
+  }
+}
 
 const BASE_SYSTEM_PROMPT = `You are a senior full-stack developer specializing in building MVPs for early-stage startups. Your output is always complete, working, deployable code.
 
@@ -487,8 +506,8 @@ serve(async (req: Request) => {
     return jsonResponse({
       actionType: classifiedAction,
       creditFeature: feature,
-      creditCost: feature ? MVP_CREDIT_COSTS[feature] : 0,
-      wallet: "mvp_builder",
+      creditCost: feature ? CREDIT_COSTS[feature] : 0,
+      wallet: "platform",
     });
   }
 
@@ -504,17 +523,20 @@ serve(async (req: Request) => {
   const palette = normalizePalette(body.palettePreference ?? (body.setupInput as Record<string, unknown> | undefined)?.palettePreference);
   const userId = typeof body.userId === "string" ? body.userId : null;
   const creditFeature = ACTION_CONFIG[classifiedAction].feature;
-  const creditCost = MVP_CREDIT_COSTS[creditFeature];
+  const creditCost = CREDIT_COSTS[creditFeature];
   let chargedCredits = 0;
 
   if (userId) {
     const idempotencyKey = req.headers.get("Idempotency-Key") ?? undefined;
-    const creditCheck = await checkAndDeductMVPCredits(
+    const creditCheck = await checkAndDeductCredits(
       userId,
       creditCost,
-      creditFeature,
+      getActionFeatureName(creditFeature),
+      undefined,
       {
         idempotencyKey,
+        entitlementFeature: creditFeature,
+        featureCode: creditFeature,
         mvpBuilderActionType: classifiedAction,
         projectId: typeof body.projectId === "string" ? body.projectId : undefined,
         currentVersion: typeof body.currentVersion === "number" ? body.currentVersion : undefined,
@@ -523,13 +545,13 @@ serve(async (req: Request) => {
 
     if (!creditCheck.success) {
       return errorStream(
-        creditCheck.errorCode === "INSUFFICIENT_MVP_CREDITS"
-          ? `You need ${creditCost} MVP Builder credits for this action. Upgrade your plan or buy MVP credits.`
-          : "Unable to process MVP credits. Please try again.",
+        creditCheck.errorCode === "INSUFFICIENT_CREDITS"
+          ? `You need ${creditCost} credits for this MVP Builder action. Upgrade your plan or buy a credit pack.`
+          : "Unable to process credits. Please try again.",
         creditCheck.errorCode
       );
     }
-    chargedCredits = creditCheck.usedFromBalance ?? 0;
+    chargedCredits = (creditCheck.usedFromQuota ?? 0) + (creditCheck.usedFromBalance ?? 0);
   }
 
   const selectedModels = normalizeSelectedModels(body.selectedModels);
@@ -586,7 +608,7 @@ serve(async (req: Request) => {
 
   if (!aiResponse) {
     if (userId && chargedCredits > 0) {
-      await refundMVPCredits(userId, chargedCredits, creditFeature, "AI gateway error", { lastGatewayError }).catch(() => {});
+      await refundCredits(userId, chargedCredits, getActionFeatureName(creditFeature), "AI gateway error", { lastGatewayError }).catch(() => {});
     }
     return errorStream("AI service temporarily unavailable. Credits have been refunded. Please try again.", "AI_ERROR");
   }
@@ -652,10 +674,10 @@ serve(async (req: Request) => {
           validated = validateOutput(parseModelJson(repaired));
         } catch (repairError) {
           if (userId && chargedCredits > 0) {
-            await refundMVPCredits(
+            await refundCredits(
               userId,
               chargedCredits,
-              creditFeature,
+              getActionFeatureName(creditFeature),
               "Invalid MVP Builder JSON output",
               {
                 validationError: validationError instanceof Error ? validationError.message : String(validationError),
@@ -665,7 +687,7 @@ serve(async (req: Request) => {
           }
           await writer.write(enc({
             type: "error",
-            error: "The AI returned invalid project JSON after repair. MVP credits have been refunded. Please try again.",
+            error: "The AI returned invalid project JSON after repair. Credits have been refunded. Please try again.",
             errorCode: "VALIDATION_FAILED",
           }));
           await writer.write(encDone());
@@ -680,16 +702,16 @@ serve(async (req: Request) => {
         actionType: classifiedAction,
         creditFeature,
         creditCost,
-        wallet: "mvp_builder",
+        wallet: "platform",
       }));
       await writer.write(enc({ type: "complete", model: selectedModel, requestedModels: selectedModels }));
       await writer.write(encDone());
     } catch (err) {
       console.error("Stream processing error:", err);
       if (userId && chargedCredits > 0) {
-        await refundMVPCredits(userId, chargedCredits, creditFeature, "Stream error").catch(() => {});
+        await refundCredits(userId, chargedCredits, getActionFeatureName(creditFeature), "Stream error").catch(() => {});
       }
-      await writer.write(enc({ type: "error", error: "Stream interrupted. MVP credits have been refunded. Please try again.", errorCode: "STREAM_ERROR" }));
+      await writer.write(enc({ type: "error", error: "Stream interrupted. Credits have been refunded. Please try again.", errorCode: "STREAM_ERROR" }));
       await writer.write(encDone());
     } finally {
       await writer.close().catch(() => {});

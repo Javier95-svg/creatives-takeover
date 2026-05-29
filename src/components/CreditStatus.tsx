@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { CREDIT_COSTS, MVP_CREDIT_COSTS, getCreditCostForPlan } from "@/config/constants";
+import { CREDIT_COSTS, getCreditCostForPlan } from "@/config/constants";
 import { normalizePlan, PLAN_MONTHLY_CREDITS } from "@/config/planPermissions";
 
 interface CreditStatusProps {
@@ -95,8 +95,8 @@ export function CreditStatus({ requiredCredits, feature, showPurchaseLink = true
     }
     if (featureLower.includes('mvp')) {
       return normalizedTier === 'rising' || normalizedTier === 'pro'
-        ? ` MVP Builder is unlocked on every plan and uses a separate MVP wallet: ${MVP_CREDIT_COSTS.APP_BUILDER_GENERATE} MVP credits for a React app, ${MVP_CREDIT_COSTS.APP_BUILDER_REFINE} for targeted edits, ${MVP_CREDIT_COSTS.APP_BUILDER_DEBUG} for bug fixes, and ${MVP_CREDIT_COSTS.APP_BUILDER_DEPLOY} to deploy.`
-        : ' MVP Builder is available on every plan and uses separate MVP credits per action.';
+        ? ` MVP Builder is unlocked on every plan and uses your account credit balance: ${CREDIT_COSTS.APP_BUILDER_GENERATE} credits for a React app, ${CREDIT_COSTS.APP_BUILDER_REFINE} for targeted edits, ${CREDIT_COSTS.APP_BUILDER_DEBUG} for bug fixes, and ${CREDIT_COSTS.APP_BUILDER_DEPLOY} to deploy.`
+        : ' MVP Builder is available on every plan and uses account credits per action.';
     }
     if (featureLower.includes('gtm')) {
       return normalizedTier === 'rising' || normalizedTier === 'pro'

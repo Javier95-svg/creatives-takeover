@@ -39,11 +39,11 @@ test('MVP Builder and GTM refunds use actual charged credits', () => {
   const mvpSource = readFileSync(new URL('../supabase/functions/mvp-builder-generate/index.ts', import.meta.url), 'utf8');
   const gtmSource = readFileSync(new URL('../supabase/functions/gtm-analyzer/index.ts', import.meta.url), 'utf8');
 
-  assert.match(mvpSource, /checkAndDeductMVPCredits/);
+  assert.match(mvpSource, /checkAndDeductCredits/);
   assert.match(mvpSource, /let chargedCredits = 0/);
-  assert.match(mvpSource, /chargedCredits = creditCheck\.usedFromBalance \?\? 0/);
+  assert.match(mvpSource, /chargedCredits = \(creditCheck\.usedFromQuota \?\? 0\) \+ \(creditCheck\.usedFromBalance \?\? 0\)/);
   assert.doesNotMatch(mvpSource, /refundCredits\(\s*userId,\s*creditCost/);
-  assert.match(mvpSource, /refundMVPCredits\(userId, chargedCredits/);
+  assert.match(mvpSource, /refundCredits\(userId, chargedCredits/);
 
   assert.match(gtmSource, /const chargedCredits = \(creditResult\.usedFromQuota \?\? 0\) \+ \(creditResult\.usedFromBalance \?\? 0\)/);
   assert.match(gtmSource, /creditsUsed: chargedCredits/);

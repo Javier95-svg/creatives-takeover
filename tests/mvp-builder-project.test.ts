@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 
 import {
   buildPreviewFromProject,
@@ -14,7 +15,7 @@ import {
   mvpBuilderOutputToArtifact,
   validateMVPBuilderOutput,
 } from '../src/lib/mvp-builder/phase1.ts';
-import { MVP_CREDIT_COSTS } from '../src/config/constants.ts';
+import { CREDIT_COSTS } from '../src/config/constants.ts';
 
 test('extractProjectFromText parses structured project output', () => {
   const raw = `MVP Snapshot: Demo\nCore Features: inbox, tasks\nPrimary Workflow: collect and sort\nNext Iteration: add auth\n<project-output>
@@ -207,15 +208,28 @@ test('phase 1 action classifier maps supported and unsupported actions', () => {
   assert.equal(classifyMVPBuilderAction('add auth and database tables', true), 'unsupported');
 });
 
-test('phase 2 MVP action credit costs use the separate wallet pricing', () => {
+test('phase 2 MVP action credit costs use the regular account credit balance pricing', () => {
   assert.equal(MVP_BUILDER_ACTION_CREDIT_FEATURE.add_page, 'APP_BUILDER_ADD_PAGE');
   assert.equal(MVP_BUILDER_ACTION_CREDIT_FEATURE.add_feature, 'APP_BUILDER_ADD_FEATURE');
   assert.equal(MVP_BUILDER_ACTION_CREDIT_FEATURE.design_overhaul, 'APP_BUILDER_DESIGN_OVERHAUL');
-  assert.equal(MVP_CREDIT_COSTS.APP_BUILDER_GENERATE, 15);
-  assert.equal(MVP_CREDIT_COSTS.APP_BUILDER_ADD_PAGE, 6);
-  assert.equal(MVP_CREDIT_COSTS.APP_BUILDER_ADD_FEATURE, 8);
-  assert.equal(MVP_CREDIT_COSTS.APP_BUILDER_DESIGN_OVERHAUL, 8);
-  assert.equal(MVP_CREDIT_COSTS.APP_BUILDER_DEPLOY, 3);
+  assert.equal(CREDIT_COSTS.APP_BUILDER_GENERATE, 15);
+  assert.equal(CREDIT_COSTS.APP_BUILDER_ADD_PAGE, 6);
+  assert.equal(CREDIT_COSTS.APP_BUILDER_ADD_FEATURE, 8);
+  assert.equal(CREDIT_COSTS.APP_BUILDER_DESIGN_OVERHAUL, 8);
+  assert.equal(CREDIT_COSTS.APP_BUILDER_DEPLOY, 3);
+});
+
+test('project setup prefill uses onboarding quiz and dashboard home context', () => {
+  const source = readFileSync(new URL('../src/hooks/useMVPBuilder.ts', import.meta.url), 'utf8');
+
+  assert.match(source, /buildStartupCommandCenterModel/);
+  assert.match(source, /quiz_answers_v2/);
+  assert.match(source, /quiz_biggest_challenge/);
+  assert.match(source, /dashboardHome/);
+  assert.match(source, /onboardingQuiz/);
+  assert.match(source, /startupContext/);
+  assert.match(source, /prefillSource: 'dashboard_home'|return 'dashboard_home'/);
+  assert.match(source, /prefillSource: 'onboarding_quiz'|return 'onboarding_quiz'/);
 });
 
 test('zip export creates an archive blob without deployment substitutions', async () => {

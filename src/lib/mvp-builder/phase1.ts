@@ -42,7 +42,7 @@ export interface MVPBuilderSetupInput {
   template: MVPBuilderTemplateId;
   palettePreference: MVPBuilderPaletteId;
   customPrompt?: string;
-  prefillSource?: 'pmf' | 'icp' | 'waitlist_launch_kit' | null;
+  prefillSource?: 'pmf' | 'icp' | 'waitlist_launch_kit' | 'dashboard_home' | 'onboarding_quiz' | null;
 }
 
 export interface MVPBuilderOutputFile {

@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import { checkAndDeductMVPCredits, refundMVPCredits, getUserFromAuth } from "../_shared/mvp-credit-deduction.ts";
-import { MVP_CREDIT_COSTS } from "../_shared/mvp-credit-constants.ts";
+import { checkAndDeductCredits, refundCredits, getUserFromAuth } from "../_shared/credit-deduction.ts";
+import { CREDIT_COSTS } from "../_shared/credit-constants.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -111,10 +111,12 @@ serve(async (req) => {
   }
 
   const creditFeature = "APP_BUILDER_DEPLOY";
-  const creditCost = MVP_CREDIT_COSTS[creditFeature];
+  const creditCost = CREDIT_COSTS[creditFeature];
   const idempotencyKey = req.headers.get("Idempotency-Key") ?? undefined;
-  const creditCheck = await checkAndDeductMVPCredits(user.id, creditCost, creditFeature, {
+  const creditCheck = await checkAndDeductCredits(user.id, creditCost, "MVP Builder Deploy", undefined, {
     idempotencyKey,
+    entitlementFeature: creditFeature,
+    featureCode: creditFeature,
     mvpBuilderActionType: "deploy",
     projectId,
   });
@@ -125,10 +127,10 @@ serve(async (req) => {
       error: creditCheck.error || "Unable to process credits",
       errorCode: creditCheck.errorCode || "CREDIT_FAILURE",
       requiredCredits: creditCost,
-    }, creditCheck.errorCode === "INSUFFICIENT_MVP_CREDITS" ? 402 : 400);
+    }, creditCheck.errorCode === "INSUFFICIENT_CREDITS" ? 402 : 400);
   }
 
-  const chargedCredits = creditCheck.usedFromBalance ?? 0;
+  const chargedCredits = (creditCheck.usedFromQuota ?? 0) + (creditCheck.usedFromBalance ?? 0);
   const baseSlug = slugify(typeof project.title === "string" ? project.title : projectId);
   const deploymentSlug = `${baseSlug}-${projectId.slice(0, 8)}`;
   const desiredUrl = `https://${deploymentSlug}.${baseDomain}`;
@@ -215,7 +217,7 @@ serve(async (req) => {
       .eq("id", projectId)
       .eq("user_id", user.id);
     if (chargedCredits > 0) {
-      await refundMVPCredits(user.id, chargedCredits, creditFeature, "MVP Builder deploy failed", {
+      await refundCredits(user.id, chargedCredits, "MVP Builder Deploy", "MVP Builder deploy failed", {
         projectId,
         error: error instanceof Error ? error.message : String(error),
       }).catch(() => {});

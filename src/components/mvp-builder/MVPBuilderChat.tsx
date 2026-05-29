@@ -82,6 +82,23 @@ const REFERENCE_OPTIONS = [
 
 type BuilderReferenceId = (typeof REFERENCE_OPTIONS)[number]['id'];
 
+function getSetupPrefillLabel(source: MVPBuilderSetupInput['prefillSource']) {
+  switch (source) {
+    case 'waitlist_launch_kit':
+      return 'Waitlist Launch Kit';
+    case 'dashboard_home':
+      return 'dashboard Home tab';
+    case 'onboarding_quiz':
+      return 'onboarding quiz';
+    case 'pmf':
+      return 'PMF Lab';
+    case 'icp':
+      return 'founder context';
+    default:
+      return 'founder context';
+  }
+}
+
 type QueuedSubmission = {
   id: string;
   prompt: string;
@@ -735,7 +752,7 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
                   <h2 className="text-lg font-semibold text-white">Project setup</h2>
                   {setupInput.prefillSource && (
                     <Badge variant="outline" className="border-sky-400/30 bg-sky-400/10 text-[11px] text-sky-100">
-                      Pre-filled from your {setupInput.prefillSource === 'waitlist_launch_kit' ? 'Waitlist Launch Kit' : 'founder context'}.
+                      Pre-filled from your {getSetupPrefillLabel(setupInput.prefillSource)}.
                     </Badge>
                   )}
                 </div>
@@ -1130,14 +1147,14 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
                 ? 'Phase 2 supports frontend app generation, edits, bug fixes, add-page, add-feature, and redesign.'
                 : lastActionQuote.actionType === 'unclear'
                 ? 'Keep typing to preview the action cost.'
-                : `${MVP_BUILDER_ACTION_LABELS[lastActionQuote.actionType]} - ${lastActionQuote.creditCost} MVP credits`}
+                : `${MVP_BUILDER_ACTION_LABELS[lastActionQuote.actionType]} - ${lastActionQuote.creditCost} credits`}
             </div>
           )}
           <Link
-            to="/pricing#mvp-credit-packs"
+            to="/pricing#credit-packs"
             className="text-[11px] font-medium text-sky-300 hover:text-sky-200"
           >
-            Buy MVP credits
+            Buy credits
           </Link>
         </div>
         <p className="mt-2 text-right text-[10px] text-slate-500">

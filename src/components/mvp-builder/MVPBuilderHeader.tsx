@@ -9,7 +9,7 @@ interface MVPBuilderHeaderProps {
   projectName: string;
   setProjectName: (name: string) => void;
   selectedModels: string[];
-  mvpCreditsAvailable: number;
+  creditsAvailable: number;
   onNewProject: () => void;
 }
 
@@ -17,7 +17,7 @@ export const MVPBuilderHeader: React.FC<MVPBuilderHeaderProps> = ({
   projectName,
   setProjectName,
   selectedModels,
-  mvpCreditsAvailable,
+  creditsAvailable,
   onNewProject,
 }) => {
   const [isEditing, setIsEditing] = useState(false);
@@ -101,14 +101,14 @@ export const MVPBuilderHeader: React.FC<MVPBuilderHeaderProps> = ({
           </span>
           <span className="hidden sm:flex items-center gap-1.5 rounded-full border border-sky-400/20 bg-sky-400/10 px-2.5 py-0.5 text-xs font-medium text-sky-200 backdrop-blur-sm">
             <span className="h-1.5 w-1.5 rounded-full bg-sky-300 shrink-0" />
-            {mvpCreditsAvailable} MVP credits
+            {creditsAvailable} credits
           </span>
-          {mvpCreditsAvailable <= 8 && (
+          {creditsAvailable <= 8 && (
             <Link
-              to="/pricing#mvp-credit-packs"
+              to="/pricing#credit-packs"
               className="hidden lg:inline-flex h-7 items-center rounded-md border border-amber-300/25 bg-amber-300/10 px-2 text-xs font-medium text-amber-100 hover:bg-amber-300/15"
             >
-              Buy MVP Credits
+              Buy Credits
             </Link>
           )}
           <Button

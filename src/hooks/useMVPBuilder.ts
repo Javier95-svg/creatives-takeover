@@ -3,6 +3,7 @@ import { getAccessTokenSafely, getSessionSafely } from '@/integrations/supabase/
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCreditActions } from '@/hooks/useCreditActions';
+import { useCredits } from '@/hooks/useCredits';
 import { createIdempotencyKey } from '@/lib/idempotency';
 import { toast } from 'sonner';
 import {
@@ -14,8 +15,7 @@ import {
   sanitizeMVPProjectType,
 } from '@/data/mvpProjectTypes';
 import type { CreditFeature } from '@/config/constants';
-import { MVP_CREDIT_COSTS, type MVPCreditFeature } from '@/config/constants';
-import { useMVPCredits } from '@/hooks/useMVPCredits';
+import { CREDIT_COSTS } from '@/config/constants';
 import {
   buildPreviewFromProject,
   createProjectFromHtml,
@@ -50,6 +50,10 @@ import {
   type MVPBuilderValidatedOutput,
   type MVPBuilderVersion,
 } from '@/lib/mvp-builder/phase1';
+import {
+  buildStartupCommandCenterModel,
+  type StartupCommandCenterModel,
+} from '@/lib/startupCommandCenter';
 
 export interface MVPMessage {
   id: string;
@@ -143,7 +147,24 @@ type WaitlistPrefillRow = {
   } | null;
 };
 
-type ICPPrefillRow = {
+type ProfilePrefillRow = Record<string, unknown> & {
+  startup_name?: string | null;
+  startup_description?: string | null;
+  startup_tagline?: string | null;
+  startup_stage?: string | null;
+  business_stage?: string | null;
+  startup_industry?: string[] | null;
+  country?: string | null;
+  positioning_line?: string | null;
+  user_preferences?: Record<string, unknown> | null;
+  quiz_current_stage?: string | null;
+  quiz_biggest_challenge?: string | null;
+  quiz_answers_v2?: Record<string, unknown> | null;
+  current_focus?: string | null;
+  updated_at?: string | null;
+};
+
+type ICPPrefillRow = Record<string, unknown> & {
   product_name?: string | null;
   business_name?: string | null;
   one_line_description?: string | null;
@@ -152,6 +173,8 @@ type ICPPrefillRow = {
   target_audience?: string | null;
   pain_points?: string[] | string | null;
 };
+
+type MVPBuilderContextPrefillSource = NonNullable<MVPBuilderSetupInput['prefillSource']>;
 
 export interface GitHubCommitRecord {
   sha: string;
@@ -589,15 +612,227 @@ function createDefaultSetupInput(): MVPBuilderSetupInput {
   };
 }
 
+function asRecordValue(value: unknown): Record<string, unknown> {
+  return value && typeof value === 'object' && !Array.isArray(value) ? (value as Record<string, unknown>) : {};
+}
+
+function asText(value: unknown): string {
+  return typeof value === 'string' ? value.trim() : '';
+}
+
+function asTextArray(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value.filter((item): item is string => typeof item === 'string' && item.trim().length > 0).map((item) => item.trim());
+}
+
+function firstText(...values: unknown[]): string {
+  for (const value of values) {
+    const text = asText(value);
+    if (text) return text;
+  }
+  return '';
+}
+
+function joinContextLines(values: unknown[], limit = 5): string {
+  return values
+    .flatMap((value) => (Array.isArray(value) ? value : [value]))
+    .map((value) => asText(value))
+    .filter(Boolean)
+    .slice(0, limit)
+    .join(' ');
+}
+
+function sourceLabel(source: MVPBuilderContextPrefillSource | null): MVPBuilderContextPrefillSource | null {
+  return source;
+}
+
+function inferPrefillSource(params: {
+  hasWaitlistKit: boolean;
+  dashboardModel: StartupCommandCenterModel;
+  profile: ProfilePrefillRow | null;
+  icp: ICPPrefillRow | null;
+}): MVPBuilderContextPrefillSource | null {
+  if (params.hasWaitlistKit) return 'waitlist_launch_kit';
+  const manual = params.dashboardModel.manual;
+  if (
+    manual.startupName ||
+    manual.description ||
+    manual.positioningLine ||
+    manual.targetMarket ||
+    params.dashboardModel.generated.pmf ||
+    params.dashboardModel.generated.techStack ||
+    params.dashboardModel.generated.cycle.waitlist ||
+    params.dashboardModel.generated.cycle.gtm
+  ) {
+    return 'dashboard_home';
+  }
+  const preferences = asRecordValue(params.profile?.user_preferences);
+  if (
+    params.profile?.quiz_current_stage ||
+    params.profile?.quiz_biggest_challenge ||
+    params.profile?.business_stage ||
+    preferences.primaryPain ||
+    preferences.founderStageLabel
+  ) {
+    return 'onboarding_quiz';
+  }
+  if (params.icp || params.dashboardModel.generated.icp) return 'icp';
+  return null;
+}
+
+function buildMVPSetupPrefill(params: {
+  profile: ProfilePrefillRow | null;
+  waitlist: WaitlistPrefillRow | null;
+  icp: ICPPrefillRow | null;
+  dashboardModel: StartupCommandCenterModel;
+}): Partial<MVPBuilderSetupInput> {
+  const { profile, waitlist, icp, dashboardModel } = params;
+  const manual = dashboardModel.manual;
+  const generatedIcp = dashboardModel.generated.icp;
+  const preferences = asRecordValue(profile?.user_preferences);
+  const startupProfilePrefs = asRecordValue(preferences.startup_profile);
+  const launchKit = waitlist?.metadata?.waitlistLaunchKit?.current;
+  const waitlistContext = waitlist?.metadata?.projectContext;
+  const hasWaitlistKit = Boolean(waitlistContext?.positioningStatement || launchKit?.output);
+  const source = inferPrefillSource({ hasWaitlistKit, dashboardModel, profile, icp });
+  const painPoints = Array.isArray(icp?.pain_points) ? icp.pain_points : [icp?.pain_points];
+  const supportAreas = asTextArray(preferences.supportAreasNeeded);
+  const primaryPain = firstText(preferences.primaryPain, profile?.quiz_biggest_challenge);
+  const targetMarket = firstText(
+    manual.targetMarket,
+    startupProfilePrefs.target_market,
+    generatedIcp?.snapshot.roleLine,
+    generatedIcp?.snapshot.personaName,
+    launchKit?.inputs?.audience,
+    waitlist?.target_audience,
+    icp?.target_audience,
+    icp?.target_segment,
+    icp?.ideal_customer_profile
+  );
+
+  return {
+    productName: firstText(manual.startupName, waitlist?.title, icp?.product_name, icp?.business_name),
+    oneLineDescription: firstText(
+      manual.positioningLine,
+      waitlistContext?.positioningStatement,
+      generatedIcp?.productPositioning,
+      generatedIcp?.snapshot.valueProposition,
+      manual.description,
+      waitlist?.value_proposition,
+      icp?.one_line_description,
+      icp?.summary
+    ),
+    validatedProblemStatement: firstText(
+      primaryPain,
+      generatedIcp?.snapshot.corePainPoint,
+      joinContextLines(generatedIcp?.painPoints ?? []),
+      launchKit?.inputs?.description,
+      icp?.problem_statement,
+      icp?.primary_pain_point,
+      manual.description,
+      waitlist?.value_proposition
+    ),
+    validatedTargetSegment: targetMarket,
+    keyPainLanguage: firstText(
+      launchKit?.inputs?.primaryBenefit,
+      generatedIcp?.snapshot.corePainPoint,
+      joinContextLines(painPoints),
+      icp?.customer_language,
+      icp?.pain_language,
+      primaryPain,
+      supportAreas.length ? `Needs help with ${supportAreas.join(', ')}` : ''
+    ),
+    existingTagline: firstText(manual.tagline, launchKit?.inputs?.tagline, profile?.startup_tagline),
+    prefillSource: sourceLabel(source),
+  };
+}
+
+function buildMVPStartupContext(params: {
+  profile: ProfilePrefillRow | null;
+  waitlist: WaitlistPrefillRow | null;
+  icp: ICPPrefillRow | null;
+  dashboardModel: StartupCommandCenterModel;
+  source: MVPBuilderContextPrefillSource | null;
+}): Record<string, unknown> {
+  const { profile, waitlist, icp, dashboardModel, source } = params;
+  const preferences = asRecordValue(profile?.user_preferences);
+  const startupProfilePrefs = asRecordValue(preferences.startup_profile);
+  const launchKit = waitlist?.metadata?.waitlistLaunchKit?.current;
+
+  return {
+    source,
+    onboardingQuiz: {
+      businessStage: profile?.business_stage ?? null,
+      quizCurrentStage: profile?.quiz_current_stage ?? null,
+      quizBiggestChallenge: profile?.quiz_biggest_challenge ?? null,
+      assignedStage: profile?.assigned_stage ?? null,
+      founderStageLabel: preferences.founderStageLabel ?? null,
+      activationIntent: preferences.activationIntent ?? null,
+      primaryPain: preferences.primaryPain ?? null,
+      startupSectors: preferences.startupSectors ?? profile?.startup_industry ?? [],
+      supportAreasNeeded: preferences.supportAreasNeeded ?? [],
+      country: preferences.country ?? profile?.country ?? null,
+      quizAnswers: profile?.quiz_answers_v2 ?? null,
+    },
+    dashboardHome: {
+      manualProfile: dashboardModel.manual,
+      primaryIndustry: dashboardModel.primaryIndustry,
+      generated: dashboardModel.generated,
+      currentFocus: profile?.current_focus ?? null,
+      targetMarket: startupProfilePrefs.target_market ?? dashboardModel.manual.targetMarket,
+      revenueModel: startupProfilePrefs.revenue_model ?? dashboardModel.manual.revenueModel,
+      lastUpdatedAt: dashboardModel.lastUpdatedAt,
+    },
+    waitlistLaunchKit: launchKit
+      ? {
+          inputs: launchKit.inputs ?? null,
+          hasOutput: Boolean(launchKit.output),
+          positioningStatement: waitlist?.metadata?.projectContext?.positioningStatement ?? null,
+        }
+      : null,
+    icpFallback: icp,
+  };
+}
+
+async function fetchLatestContextRow(
+  table: string,
+  userId: string,
+  select: string,
+  orderColumn = 'updated_at'
+): Promise<Record<string, unknown> | null> {
+  const { data, error } = await supabase
+    .from(table as never)
+    .select(select)
+    .eq('user_id', userId)
+    .order(orderColumn, { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data as Record<string, unknown> | null;
+}
+
+async function fetchContextRowById(
+  table: string,
+  userId: string,
+  id: string,
+  select: string
+): Promise<Record<string, unknown> | null> {
+  const { data, error } = await supabase
+    .from(table as never)
+    .select(select)
+    .eq('id', id)
+    .eq('user_id', userId)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data as Record<string, unknown> | null;
+}
+
 export function useMVPBuilder() {
   const { user } = useAuth();
   const { ensureCredits, deductCredits, handleCreditError } = useCreditActions();
-  const {
-    totalAvailable: mvpCreditsAvailable,
-    hasMVPCredits,
-    deductMVPCredits,
-    refreshBalance: refreshMVPCredits,
-  } = useMVPCredits();
+  const { totalAvailable: creditsAvailable, refreshBalance: refreshCredits } = useCredits();
 
   const [messages, setMessages] = useState<MVPMessage[]>([]);
   const [projectFiles, setProjectFiles] = useState<MVPProjectFile[]>([]);
@@ -636,6 +871,7 @@ export function useMVPBuilder() {
   const [promptHistory, setPromptHistory] = useState<MVPPromptHistoryItem[]>([]);
   const [selectedModels, setSelectedModelsState] = useState<string[]>([MVP_DEFAULT_MODEL]);
   const [setupInput, setSetupInputState] = useState<MVPBuilderSetupInput>(() => createDefaultSetupInput());
+  const [startupContext, setStartupContext] = useState<Record<string, unknown> | null>(null);
   const [projectVersions, setProjectVersions] = useState<MVPBuilderVersion[]>([]);
   const [lastActionQuote, setLastActionQuote] = useState<MVPActionQuote | null>(null);
   const [deploymentUrl, setDeploymentUrl] = useState<string | null>(null);
@@ -1154,78 +1390,129 @@ export function useMVPBuilder() {
       }
 
       try {
-        const { data: waitlistRow } = await supabase
-          .from('waitlist_pages' as never)
-          .select('title, value_proposition, target_audience, metadata, updated_at')
-          .eq('user_id', user.id)
-          .order('updated_at', { ascending: false })
-          .limit(1)
-          .maybeSingle();
-        const waitlist = waitlistRow as WaitlistPrefillRow | null;
+        const [
+          profileResult,
+          waitlistRow,
+          latestIcp,
+          pmfRow,
+          techStackRow,
+          legacyMvpRow,
+          gtmRow,
+        ] = await Promise.all([
+          supabase
+            .from('profiles' as never)
+            .select(
+              [
+                'id',
+                'startup_name',
+                'startup_industry',
+                'country',
+                'startup_description',
+                'startup_tagline',
+                'startup_stage',
+                'business_stage',
+                'website_url',
+                'positioning_line',
+                'startup_links',
+                'user_preferences',
+                'primary_icp_analysis_id',
+                'quiz_current_stage',
+                'quiz_biggest_challenge',
+                'quiz_answers_v2',
+                'assigned_stage',
+                'current_focus',
+                'updated_at',
+              ].join(', ')
+            )
+            .eq('id', user.id)
+            .maybeSingle(),
+          fetchLatestContextRow(
+            'waitlist_pages',
+            user.id,
+            'id, title, value_proposition, target_audience, metadata, status, published_at, exported_at, created_at, updated_at'
+          ),
+          fetchLatestContextRow(
+            'icp_analysis_results',
+            user.id,
+            'id, analysis_data, target_audience, business_description, verdict, industry, niche_score, created_at, updated_at',
+            'updated_at'
+          ),
+          fetchLatestContextRow(
+            'pmf_analysis_results',
+            user.id,
+            'id, analysis_data, pmf_score, verdict, target_market, industry, created_at, updated_at, saved_at',
+            'created_at'
+          ).catch(() => null),
+          fetchLatestContextRow(
+            'tech_stack_reports',
+            user.id,
+            'id, name, selected_products, budget_total, budget_breakdown, has_variable, created_at, updated_at',
+            'updated_at'
+          ),
+          fetchLatestContextRow(
+            'mvp_builder_artifacts',
+            user.id,
+            'id, scope_title, scope_summary, status, saved_at, created_at, updated_at',
+            'updated_at'
+          ),
+          fetchLatestContextRow(
+            'gtm_plans',
+            user.id,
+            'id, plan_title, plan_content, status, saved_at, exported_at, created_at, updated_at',
+            'updated_at'
+          ),
+        ]);
 
+        if (profileResult.error) throw profileResult.error;
         if (cancelled) return;
-        const waitlistContext = waitlist?.metadata?.projectContext;
-        const launchKit = waitlist?.metadata?.waitlistLaunchKit?.current;
-        if (waitlistContext?.positioningStatement || launchKit?.output) {
-          setSetupInputState((prev) => ({
-            ...prev,
-            productName: prev.productName || waitlist?.title || '',
-            oneLineDescription:
-              prev.oneLineDescription ||
-              waitlistContext.positioningStatement ||
-              waitlist?.value_proposition ||
-              '',
-            validatedProblemStatement:
-              prev.validatedProblemStatement ||
-              launchKit?.inputs?.description ||
-              waitlist?.value_proposition ||
-              '',
-            validatedTargetSegment:
-              prev.validatedTargetSegment ||
-              launchKit?.inputs?.audience ||
-              waitlist?.target_audience ||
-              '',
-            keyPainLanguage:
-              prev.keyPainLanguage ||
-              launchKit?.inputs?.primaryBenefit ||
-              waitlistContext.positioningStatement ||
-              '',
-            existingTagline: prev.existingTagline || launchKit?.inputs?.tagline || '',
-            prefillSource: 'waitlist_launch_kit',
-          }));
-          return;
-        }
 
-        const { data: icpRow } = await supabase
-          .from('icp_analysis_results' as never)
-          .select('*')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .maybeSingle();
-        const icp = icpRow as ICPPrefillRow | null;
+        const profile = profileResult.data as ProfilePrefillRow | null;
+        const waitlist = waitlistRow as WaitlistPrefillRow | null;
+        const primaryIcpId = asText(profile?.primary_icp_analysis_id);
+        const primaryIcp = primaryIcpId
+          ? await fetchContextRowById(
+              'icp_analysis_results',
+              user.id,
+              primaryIcpId,
+              'id, analysis_data, target_audience, business_description, verdict, industry, niche_score, created_at, updated_at',
+            ).catch(() => latestIcp)
+          : latestIcp;
+        const dashboardModel = buildStartupCommandCenterModel({
+          profile: profile as Record<string, unknown> | null,
+          icpRow: primaryIcp ?? latestIcp,
+          pmfRow,
+          techStackRow,
+          waitlistRow,
+          mvpRow: legacyMvpRow,
+          gtmRow,
+        });
+        const icp = primaryIcp as ICPPrefillRow | null;
+        const prefill = buildMVPSetupPrefill({
+          profile,
+          waitlist,
+          icp,
+          dashboardModel,
+        });
+        const nextStartupContext = buildMVPStartupContext({
+          profile,
+          waitlist,
+          icp,
+          dashboardModel,
+          source: prefill.prefillSource ?? null,
+        });
 
-        if (cancelled || !icp) return;
+        setStartupContext(nextStartupContext);
+        if (!prefill.prefillSource) return;
+
         setSetupInputState((prev) => ({
           ...prev,
-          productName: prev.productName || icp.product_name || icp.business_name || '',
-          oneLineDescription: prev.oneLineDescription || icp.one_line_description || icp.summary || '',
-          validatedProblemStatement:
-            prev.validatedProblemStatement ||
-            icp.problem_statement ||
-            icp.primary_pain_point ||
-            '',
-          validatedTargetSegment:
-            prev.validatedTargetSegment ||
-            icp.target_segment ||
-            icp.ideal_customer_profile ||
-            '',
-          keyPainLanguage:
-            prev.keyPainLanguage ||
-            icp.customer_language ||
-            icp.pain_language ||
-            '',
-          prefillSource: 'icp',
+          productName: prev.productName || prefill.productName || '',
+          oneLineDescription: prev.oneLineDescription || prefill.oneLineDescription || '',
+          validatedProblemStatement: prev.validatedProblemStatement || prefill.validatedProblemStatement || '',
+          validatedTargetSegment: prev.validatedTargetSegment || prefill.validatedTargetSegment || '',
+          keyPainLanguage: prev.keyPainLanguage || prefill.keyPainLanguage || '',
+          existingTagline: prev.existingTagline || prefill.existingTagline || '',
+          prefillSource: prev.prefillSource || prefill.prefillSource || null,
         }));
       } catch {
         // Context prefill is opportunistic; the builder still works without it.
@@ -2015,7 +2302,7 @@ export function useMVPBuilder() {
     const fallbackQuote: MVPActionQuote = {
       actionType: localActionType,
       creditFeature: localFeature,
-      creditCost: MVP_CREDIT_COSTS[localFeature as MVPCreditFeature] ?? 0,
+      creditCost: CREDIT_COSTS[localFeature] ?? 0,
     };
     setLastActionQuote(fallbackQuote);
 
@@ -2087,11 +2374,12 @@ export function useMVPBuilder() {
         return;
       }
 
-      const required = MVP_CREDIT_COSTS[creditFeature as MVPCreditFeature] ?? 0;
-      if (!hasMVPCredits(required)) {
-        toast.error(`You need ${required} MVP Builder credits. Upgrade your plan or buy MVP credits.`);
-        return;
-      }
+      const required = ensureCredits(creditFeature, {
+        featureName: featureLabel,
+        requiredCredits: CREDIT_COSTS[creditFeature] ?? 0,
+        description: 'MVP Builder uses your regular account credit balance. If you run out, you can upgrade your plan or buy a credit pack.',
+      });
+      if (required === null) return;
 
       abortRef.current?.abort();
       const controller = new AbortController();
@@ -2158,11 +2446,13 @@ export function useMVPBuilder() {
             palettePreference: activeSetupInput.palettePreference,
             setupInput: activeSetupInput,
             projectContext: {
+              ...(startupContext ?? {}),
               source: activeSetupInput.prefillSource,
               productName: activeSetupInput.productName,
               audience: activeSetupInput.validatedTargetSegment,
               problem: activeSetupInput.validatedProblemStatement,
               painLanguage: activeSetupInput.keyPainLanguage,
+              tagline: activeSetupInput.existingTagline,
             },
             projectId,
             currentVersion: projectVersions[0]?.version_number ?? 0,
@@ -2231,8 +2521,8 @@ export function useMVPBuilder() {
                   : message
               )
             );
-            void refreshMVPCredits();
-            toast.success(`${featureLabel} used ${required} MVP credit${required === 1 ? '' : 's'}.`);
+            void refreshCredits();
+            toast.success(`${featureLabel} used ${required} credit${required === 1 ? '' : 's'}.`);
             return;
           }
 
@@ -2315,8 +2605,8 @@ export function useMVPBuilder() {
               committedAt: assistantMsg.createdAt ?? new Date().toISOString(),
               commitRef: `build-${assistantMsg.id.slice(0, 8)}`,
             });
-            void refreshMVPCredits();
-            toast.success(`${featureLabel} used ${required} MVP credit${required === 1 ? '' : 's'}.`);
+            void refreshCredits();
+            toast.success(`${featureLabel} used ${required} credit${required === 1 ? '' : 's'}.`);
           }
         };
 
@@ -2420,16 +2710,12 @@ export function useMVPBuilder() {
             } else if (event.type === 'error') {
               const errMsg = (event.error as string) ?? 'Something went wrong.';
               const errCode = event.errorCode as string | undefined;
-              if (errCode === 'INSUFFICIENT_MVP_CREDITS') {
-                toast.error(errMsg);
-              } else {
-                handleCreditError(
-                  { message: errMsg, status: errCode === 'INSUFFICIENT_CREDITS' ? 402 : 500 },
-                  { error: errMsg, errorCode: errCode },
-                  creditFeature
-                );
-              }
-              void refreshMVPCredits();
+              handleCreditError(
+                { message: errMsg, status: errCode === 'INSUFFICIENT_CREDITS' ? 402 : 500 },
+                { error: errMsg, errorCode: errCode },
+                creditFeature
+              );
+              void refreshCredits();
               setMessages((prev) =>
                 prev.map((message) =>
                   message.id === assistantMsg.id
@@ -2507,7 +2793,6 @@ export function useMVPBuilder() {
       ensureCredits,
       generatedCode,
       githubRepoSession,
-      hasMVPCredits,
       handleCreditError,
       handleGitHubPrompt,
       isGenerating,
@@ -2522,10 +2807,11 @@ export function useMVPBuilder() {
       projectName,
       projectSummary,
       projectVersions,
-      refreshMVPCredits,
+      refreshCredits,
       selectedModels,
       selectedProjectType,
       setupInput,
+      startupContext,
       user,
     ]
   );
@@ -2716,7 +3002,7 @@ export function useMVPBuilder() {
     async (snapshotId: string) => {
       const snapshot = projectSnapshots.find((item) => item.id === snapshotId);
       if (!snapshot) return;
-      const charged = await deductMVPCredits('APP_BUILDER_RESTORE', {
+      const charged = await deductCredits('APP_BUILDER_RESTORE', {
         featureName: getMVPActionLabel('APP_BUILDER_RESTORE'),
         idempotencyKey: `restore-${snapshot.id}`,
         metadata: {
@@ -2737,7 +3023,7 @@ export function useMVPBuilder() {
       toast.success(`Restored snapshot: ${snapshot.label}`);
       markProjectDirty();
     },
-    [addProjectSnapshot, applyProjectArtifact, deductMVPCredits, markProjectDirty, projectId, projectSnapshots]
+    [addProjectSnapshot, applyProjectArtifact, deductCredits, markProjectDirty, projectId, projectSnapshots]
   );
 
   const exportProjectZip = useCallback(() => {
@@ -2777,25 +3063,21 @@ export function useMVPBuilder() {
       });
 
       if (error || !data?.ok) {
-        if (data?.errorCode === 'INSUFFICIENT_MVP_CREDITS') {
-          toast.error(data?.error || 'Not enough MVP Builder credits.');
-        } else {
-          handleCreditError(error, data, 'APP_BUILDER_DEPLOY');
-        }
+        handleCreditError(error, data, 'APP_BUILDER_DEPLOY');
         toast.error(data?.error || 'Deployment failed.');
-        void refreshMVPCredits();
+        void refreshCredits();
         return;
       }
 
       setDeploymentUrl(data.deploymentUrl);
-      void refreshMVPCredits();
-      toast.success(`MVP deployed for ${Number(data.creditsUsed ?? MVP_CREDIT_COSTS.APP_BUILDER_DEPLOY)} MVP credits.`);
+      void refreshCredits();
+      toast.success(`MVP deployed for ${Number(data.creditsUsed ?? CREDIT_COSTS.APP_BUILDER_DEPLOY)} credits.`);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Deployment failed.');
     } finally {
       setIsDeploying(false);
     }
-  }, [handleCreditError, isDeploying, projectFiles.length, projectId, refreshMVPCredits, saveProject, user]);
+  }, [handleCreditError, isDeploying, projectFiles.length, projectId, refreshCredits, saveProject, user]);
 
   const setSelectedModels = useCallback((models: string[]) => {
     setSelectedModelsState(sanitizeMVPModelSelection(models));
@@ -2894,7 +3176,7 @@ export function useMVPBuilder() {
     lastActionQuote,
     deploymentUrl,
     isDeploying,
-    mvpCreditsAvailable,
+    creditsAvailable,
     githubConnection,
     githubRepositories,
     githubBranches,
