@@ -32,13 +32,16 @@ const LANDING_TEMPLATES = new Set<MVPBuilderTemplateId>([
   "waitlist_landing", "saas_landing", "community_landing", "portfolio", "blank",
 ]);
 
-const ACTION_CONFIG: Record<MVPBuilderActionType, { feature: CreditFeature; temperature: number; maxTokens: number }> = {
-  generation:      { feature: "APP_BUILDER_GENERATE",       temperature: 0.45, maxTokens: 8192 },
-  targeted_edit:   { feature: "APP_BUILDER_REFINE",         temperature: 0.25, maxTokens: 8192 },
-  debug:           { feature: "APP_BUILDER_DEBUG",          temperature: 0.15, maxTokens: 6000 },
-  add_page:        { feature: "APP_BUILDER_ADD_PAGE",       temperature: 0.3,  maxTokens: 8192 },
-  add_feature:     { feature: "APP_BUILDER_ADD_FEATURE",    temperature: 0.35, maxTokens: 8192 },
-  design_overhaul: { feature: "APP_BUILDER_DESIGN_OVERHAUL", temperature: 0.45, maxTokens: 8192 },
+// model: which Claude to use by default for each action.
+// Sonnet for quality-critical operations; Haiku for constrained, deterministic tasks.
+// If the user explicitly selects a non-default model in the UI, their choice takes precedence.
+const ACTION_CONFIG: Record<MVPBuilderActionType, { feature: CreditFeature; temperature: number; maxTokens: number; model: string }> = {
+  generation:      { feature: "APP_BUILDER_GENERATE",        temperature: 0.45, maxTokens: 8192, model: "claude-sonnet-4-6" },
+  targeted_edit:   { feature: "APP_BUILDER_REFINE",          temperature: 0.25, maxTokens: 6000, model: "claude-haiku-4-5-20251001" },
+  debug:           { feature: "APP_BUILDER_DEBUG",           temperature: 0.15, maxTokens: 4000, model: "claude-haiku-4-5-20251001" },
+  add_page:        { feature: "APP_BUILDER_ADD_PAGE",        temperature: 0.3,  maxTokens: 8192, model: "claude-sonnet-4-6" },
+  add_feature:     { feature: "APP_BUILDER_ADD_FEATURE",     temperature: 0.35, maxTokens: 8192, model: "claude-sonnet-4-6" },
+  design_overhaul: { feature: "APP_BUILDER_DESIGN_OVERHAUL", temperature: 0.45, maxTokens: 8192, model: "claude-sonnet-4-6" },
 };
 
 function getActionFeatureName(feature: CreditFeature): string {
@@ -779,8 +782,12 @@ serve(async (req: Request) => {
 
   const selectedModels = normalizeSelectedModels(body.selectedModels);
   const textCapableModels = selectedModels.filter((m) => HTML_CAPABLE_MODEL_SET.has(m));
-  const requestedPrimaryModel = textCapableModels[0] ?? DEFAULT_MODEL;
-  const modelCandidates = getFallbackCandidates(requestedPrimaryModel);
+  const userExplicitModel = textCapableModels[0];
+  // Use action-specific default unless the user explicitly picked a non-default model
+  const primaryModel = (userExplicitModel && userExplicitModel !== DEFAULT_MODEL)
+    ? userExplicitModel
+    : ACTION_CONFIG[classifiedAction].model;
+  const modelCandidates = getFallbackCandidates(primaryModel);
   const setupInput = body.setupInput && typeof body.setupInput === "object" ? body.setupInput as Record<string, unknown> : {};
   const productName = typeof setupInput.productName === "string" ? setupInput.productName : "Generated MVP";
   const posthogKey = Deno.env.get("POSTHOG_API_KEY") ?? "";
