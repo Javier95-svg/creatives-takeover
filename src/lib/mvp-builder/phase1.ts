@@ -13,6 +13,10 @@ export type MVPBuilderTemplateId =
   | 'waitlist_landing'
   | 'saas_landing'
   | 'community_landing'
+  | 'portfolio'
+  | 'simple_dashboard'
+  | 'marketplace_mvp'
+  | 'admin_panel'
   | 'blank';
 
 export type MVPBuilderPaletteId = 'minimal' | 'bold' | 'warm';
@@ -93,22 +97,42 @@ export const MVP_BUILDER_TEMPLATES: Array<{
   {
     id: 'waitlist_landing',
     label: 'Waitlist Landing Page',
-    description: 'A conversion-focused waitlist page with email capture and founder-ready copy.',
+    description: 'Conversion-focused waitlist page with email capture, pain-language copy, and social proof.',
   },
   {
     id: 'saas_landing',
     label: 'SaaS Landing Page',
-    description: 'A simple product site with homepage, feature, pricing, and FAQ sections.',
+    description: 'One-page product site with hero, features, pricing tiers, FAQ, and sticky navigation.',
   },
   {
     id: 'community_landing',
     label: 'Community Landing',
-    description: 'A launch page for a founder community, cohort, or membership concept.',
+    description: 'Launch page for a founder community, cohort, or membership with application form.',
+  },
+  {
+    id: 'portfolio',
+    label: 'Portfolio / Showcase',
+    description: 'Founder or creator portfolio with projects grid, skills, and contact form.',
+  },
+  {
+    id: 'simple_dashboard',
+    label: 'Simple Dashboard',
+    description: 'Login + dashboard with sidebar nav, KPI cards, and data table. Auth mocked for rapid prototyping.',
+  },
+  {
+    id: 'marketplace_mvp',
+    label: 'Marketplace MVP',
+    description: 'Two-sided platform with landing page, browse listings, post a listing, and login.',
+  },
+  {
+    id: 'admin_panel',
+    label: 'Admin Panel',
+    description: 'Internal ops tool with data table, record detail, and settings. Clean, functional aesthetic.',
   },
   {
     id: 'blank',
     label: 'Blank',
-    description: 'A free-form build from your own prompt and context.',
+    description: 'Free-form build from your own prompt. Full context from your dashboard auto-applied.',
   },
 ];
 
@@ -175,7 +199,7 @@ const REQUIRED_PHASE_1_EVENTS = ['page_view', 'cta_clicked', 'form_submitted'];
 const REQUIRED_REACT_FILES = ['package.json', 'index.html'];
 
 export function sanitizeMVPBuilderTemplate(value: unknown): MVPBuilderTemplateId {
-  return MVP_BUILDER_TEMPLATES.some((template) => template.id === value)
+  return MVP_BUILDER_TEMPLATES.some((t) => t.id === value)
     ? (value as MVPBuilderTemplateId)
     : 'waitlist_landing';
 }
