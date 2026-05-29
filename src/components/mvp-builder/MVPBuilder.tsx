@@ -3,7 +3,7 @@ import { useMVPBuilder } from '@/hooks/useMVPBuilder';
 import { MVPBuilderHeader } from './MVPBuilderHeader';
 import { MVPBuilderChat } from './MVPBuilderChat';
 import { MVPBuilderPreview } from './MVPBuilderPreview';
-import { MVPBuilderIntegrationGate } from './MVPBuilderIntegrationGate';
+
 import { MessageSquare, Monitor } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -167,28 +167,8 @@ export const MVPBuilder: React.FC = () => {
         onNewProject={resetProject}
       />
 
-      {!integrationReady && (
-        <MVPBuilderIntegrationGate
-          integrations={integrations}
-          githubConnection={githubConnection}
-          githubRepositories={githubRepositories}
-          githubRepoSession={githubRepoSession}
-          isGitHubBusy={isGitHubBusy}
-          supabaseConnection={supabaseConnection}
-          supabaseProjects={supabaseProjects}
-          isSupabaseBusy={isSupabaseBusy}
-          onConnectGitHub={connectGitHub}
-          onLoadGitHubRepositories={loadGitHubRepositories}
-          onImportGitHubRepository={importGitHubRepository}
-          onConnectSupabase={connectSupabaseProject}
-          onLoadSupabaseProjects={loadSupabaseProjects}
-          onSelectSupabaseProject={selectSupabaseProject}
-          onRefreshGitHub={refreshGitHubConnection}
-          onRefreshSupabase={refreshSupabaseConnection}
-        />
-      )}
 
-      <div className="flex-1 min-h-0 flex flex-col">
+<div className="flex-1 min-h-0 flex flex-col">
         <div className="flex md:hidden items-center justify-center border-b border-border/40 bg-[#0b1020] shrink-0 py-2">
           <div className="flex items-center rounded-full border border-white/10 bg-white/5 p-0.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
             <button

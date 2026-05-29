@@ -611,7 +611,7 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
 
   const handleSend = useCallback(() => {
     const trimmed = input.trim();
-    if (!trimmed || isGitHubBusy || !integrationReady) return;
+    if (!trimmed || isGitHubBusy) return;
 
     const promptWithReferences = selectedReferenceItems.length
       ? `${trimmed}\n\nReference context to incorporate:\n${selectedReferenceItems
@@ -633,7 +633,7 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
 
     enqueueOrSubmit(submission);
     setInput('');
-  }, [builderMode, enqueueOrSubmit, input, integrationReady, isGenerating, isGitHubBusy, selectedReferenceItems]);
+  }, [builderMode, enqueueOrSubmit, input, isGenerating, isGitHubBusy, selectedReferenceItems]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -982,8 +982,6 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
                 placeholder={
                   builderMode === 'chat'
                     ? 'Ask for product direction, UX decisions, or implementation advice...'
-                    : !integrationReady
-                    ? 'Connect GitHub main and Supabase to start building...'
                     : isEmpty
                     ? 'Describe your MVP idea, core flow, and visual style...'
                     : githubRepoSession
@@ -994,7 +992,7 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
                   'min-h-[52px] resize-none border-0 bg-transparent px-0 py-0 text-sm leading-relaxed text-white placeholder:text-slate-500 focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none',
                   isGenerating && 'text-slate-50'
                 )}
-                disabled={isGitHubBusy || !integrationReady}
+                disabled={isGitHubBusy}
               />
               {availableReferences.length > 0 && (
                 <div className="absolute bottom-[calc(100%+12px)] left-0 z-20 w-[280px] rounded-2xl border border-white/10 bg-[#0b1020] p-2 shadow-[0_30px_60px_rgba(0,0,0,0.45)]">
@@ -1028,7 +1026,7 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
             ) : (
               <Button
                 onClick={handleSend}
-                disabled={!input.trim() || isGitHubBusy || !integrationReady}
+                disabled={!input.trim() || isGitHubBusy}
                 className="h-11 shrink-0 rounded-2xl bg-white px-4 text-slate-950 shadow-sm transition-transform hover:scale-[1.03] hover:bg-slate-100 disabled:bg-white/10 disabled:text-slate-500"
               >
                 <Send className="mr-2 h-4 w-4" />
