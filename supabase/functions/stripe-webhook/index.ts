@@ -14,6 +14,7 @@ import {
   getStripeSubscriptionBillingCycle,
   getStripeSubscriptionPriceId,
 } from "../_shared/stripe-subscriptions.ts";
+import { MVP_CREDIT_PACKS, MVP_MONTHLY_CREDITS_BY_TIER } from "../_shared/mvp-credit-constants.ts";
 
 const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
   apiVersion: "2023-10-16",
@@ -27,6 +28,10 @@ const CREDIT_PACK_CREDITS: Record<string, number> = {
   pack_growth: 220,
   pack_scale: 500,
 };
+
+const MVP_CREDIT_PACK_CREDITS: Record<string, number> = Object.fromEntries(
+  Object.entries(MVP_CREDIT_PACKS).map(([id, pack]) => [id, pack.credits])
+);
 
 type BillingCycle = "monthly" | "yearly";
 
@@ -66,6 +71,43 @@ const getTierCredits = async (supabaseAdmin: any, tier: string): Promise<number>
     .maybeSingle();
 
   return Number(data?.monthly_credits ?? PLAN_MONTHLY_CREDITS[normalizedTier]);
+};
+
+const grantMonthlyMVPCredits = async (
+  supabaseAdmin: any,
+  {
+    userId,
+    tier,
+    idempotencyKey,
+    reason,
+    metadata,
+  }: {
+    userId: string;
+    tier: string;
+    idempotencyKey: string;
+    reason: string;
+    metadata?: Record<string, unknown>;
+  }
+) => {
+  const normalizedTier = normalizeSubscriptionTier(tier);
+  const amount = MVP_MONTHLY_CREDITS_BY_TIER[normalizedTier as keyof typeof MVP_MONTHLY_CREDITS_BY_TIER] ?? 0;
+  if (amount <= 0) return;
+
+  const { error } = await supabaseAdmin.rpc("grant_monthly_mvp_credits", {
+    p_user_id: userId,
+    p_subscription_tier: normalizedTier,
+    p_idempotency_key: idempotencyKey,
+    p_reason: reason,
+    p_metadata: {
+      ...(metadata ?? {}),
+      wallet: "mvp_builder",
+    },
+  });
+
+  if (error) {
+    console.error("[MVP Credits] Monthly grant failed:", error);
+    throw error;
+  }
 };
 
 const enqueueProActivationOutbox = async (
@@ -273,15 +315,19 @@ const getCreditPackByLookup = async (
     packId,
     credits,
     amountCents,
+    wallet,
   }: {
     packId?: string | null;
     credits?: number | null;
     amountCents?: number | null;
+    wallet?: string | null;
   }
 ) => {
+  const table = wallet === "mvp_builder" ? "mvp_credit_packs" : "credit_packs";
+
   if (packId) {
     const { data } = await supabaseAdmin
-      .from("credit_packs")
+      .from(table)
       .select("id, credits, price_cents, label")
       .eq("id", packId)
       .eq("active", true)
@@ -292,7 +338,7 @@ const getCreditPackByLookup = async (
 
   if (credits) {
     const { data } = await supabaseAdmin
-      .from("credit_packs")
+      .from(table)
       .select("id, credits, price_cents, label")
       .eq("credits", credits)
       .eq("active", true)
@@ -303,7 +349,7 @@ const getCreditPackByLookup = async (
 
   if (amountCents) {
     const { data } = await supabaseAdmin
-      .from("credit_packs")
+      .from(table)
       .select("id, credits, price_cents, label")
       .eq("price_cents", amountCents)
       .eq("active", true)
@@ -329,6 +375,7 @@ const resolveCreditPackPurchase = async (
     packId,
     credits: metadataCredits,
     amountCents,
+    wallet: getMetadataString(metadata, ["wallet"]),
   });
 
   if (pack) {
@@ -340,10 +387,13 @@ const resolveCreditPackPurchase = async (
     };
   }
 
-  if (packId && CREDIT_PACK_CREDITS[packId]) {
+  if (packId && (CREDIT_PACK_CREDITS[packId] || MVP_CREDIT_PACK_CREDITS[packId])) {
+    const wallet = getMetadataString(metadata, ["wallet"]);
+    const fallbackCredits = wallet === "mvp_builder" ? MVP_CREDIT_PACK_CREDITS[packId] : CREDIT_PACK_CREDITS[packId];
+    if (!fallbackCredits) return null;
     return {
       id: packId,
-      credits: CREDIT_PACK_CREDITS[packId],
+      credits: fallbackCredits,
       price_cents: amountCents ?? 0,
       label: null,
     };
@@ -364,14 +414,15 @@ const resolveCreditPackPurchase = async (
 const getExistingCreditPurchase = async (
   supabaseAdmin: any,
   userId: string,
-  idempotencyKey: string
+  idempotencyKey: string,
+  wallet = "platform"
 ) => {
   const { data } = await supabaseAdmin
-    .from("credit_transactions")
+    .from(wallet === "mvp_builder" ? "mvp_credit_transactions" : "credit_transactions")
     .select("id")
     .eq("user_id", userId)
     .eq("tx_type", "purchase")
-    .eq("feature", "Credit Pack")
+    .eq("feature", wallet === "mvp_builder" ? "MVP Builder Credit Pack" : "Credit Pack")
     .contains("metadata", { idempotencyKey })
     .maybeSingle();
 
@@ -501,6 +552,20 @@ const resetSubscriptionQuotaForInvoice = async (
         grantType: "billing_cycle_reset",
         previousQuota,
         newQuota: tierCredits,
+        invoiceId,
+        subscriptionId,
+        billingCycle,
+        amountPaid,
+      },
+    });
+
+    await grantMonthlyMVPCredits(supabaseAdmin, {
+      userId,
+      tier: normalizedTier,
+      idempotencyKey: `stripe:mvp_subscription_quota:${invoiceId}`,
+      reason: `Stripe ${normalizedTier} MVP Builder credits refreshed after payment confirmation`,
+      metadata: {
+        grantType: "billing_cycle_reset",
         invoiceId,
         subscriptionId,
         billingCycle,
@@ -681,6 +746,21 @@ const syncSubscriptionState = async (
     });
   }
 
+  if (subscribed && (grantQuota || currentTier !== normalizedTier || !wasSubscribed)) {
+    await grantMonthlyMVPCredits(supabaseAdmin, {
+      userId,
+      tier: normalizedTier,
+      idempotencyKey: `stripe:mvp_subscription_grant:${userId}:${normalizedTier}:${stripeCurrentPeriodStart ?? nowIso}`,
+      reason: `Stripe ${normalizedTier} MVP Builder credit allocation`,
+      metadata: {
+        grantType: "monthly_mvp_quota",
+        previousTier,
+        nextTier: normalizedTier,
+        billingCycle: nextBillingCycle,
+      },
+    });
+  }
+
   if (
     proActivationEvent &&
     shouldEnqueueProActivation({
@@ -853,6 +933,7 @@ async function handleCreditPackPurchase({
   console.log("[CreditPack] Processing credit pack purchase");
 
   const purchaseType = getMetadataString(metadata, ["purchase_type"]);
+  const wallet = getMetadataString(metadata, ["wallet"]) === "mvp_builder" ? "mvp_builder" : "platform";
   const explicitPackId = getMetadataString(metadata, ["pack_id", "packId"]);
   const explicitCredits = parsePositiveInteger(
     getMetadataString(metadata, ["credits", "credit_amount", "creditAmount", "top_up_credits"])
@@ -887,13 +968,13 @@ async function handleCreditPackPurchase({
   }
 
   const purchaseReference = paymentIntentId ?? checkoutSessionId ?? `${purchase.id}:${resolvedUserId}`;
-  const idempotencyKey = `stripe:credit_purchase:${purchaseReference}`;
+  const idempotencyKey = `stripe:${wallet}:credit_purchase:${purchaseReference}`;
   const idempotencyStatus = await supabaseAdmin.rpc("idempotency_try_begin", {
     p_id: idempotencyKey,
   });
 
   if (idempotencyStatus !== "started") {
-    const existingPurchase = await getExistingCreditPurchase(supabaseAdmin, resolvedUserId, idempotencyKey);
+    const existingPurchase = await getExistingCreditPurchase(supabaseAdmin, resolvedUserId, idempotencyKey, wallet);
     if (existingPurchase && idempotencyStatus !== "completed") {
       await supabaseAdmin.rpc("idempotency_mark_completed", {
         p_id: idempotencyKey,
@@ -912,56 +993,82 @@ async function handleCreditPackPurchase({
   }
 
   try {
-    const { error: rpcError } = await supabaseAdmin.rpc("increment_credit_balance", {
-      p_user_id: resolvedUserId,
-      p_amount: purchase.credits,
-    });
+    if (wallet === "mvp_builder") {
+      const { data: purchaseResult, error: mvpRpcError } = await supabaseAdmin.rpc("purchase_mvp_credits", {
+        p_user_id: resolvedUserId,
+        p_amount: purchase.credits,
+        p_pack_id: purchase.id,
+        p_idempotency_key: idempotencyKey,
+        p_metadata: {
+          packLabel: purchase.label,
+          creditsAdded: purchase.credits,
+          priceCents: purchase.price_cents,
+          stripeSessionId: checkoutSessionId,
+          stripePaymentIntentId: paymentIntentId,
+          stripePaymentLinkId: paymentLinkId,
+          customerEmail,
+          customerId,
+          sourceEventType,
+          wallet,
+        },
+      });
 
-    if (rpcError) {
-      console.warn("[CreditPack] RPC increment failed, using fallback:", rpcError.message);
-      const { data: currentCredits } = await supabaseAdmin
-        .from("user_credits")
-        .select("balance, monthly_quota, subscription_tier, last_reset_at")
-        .eq("user_id", resolvedUserId)
-        .maybeSingle();
-
-      const nextBalance = Number(currentCredits?.balance ?? 0) + purchase.credits;
-      const { error: fallbackError } = await supabaseAdmin
-        .from("user_credits")
-        .upsert({
-          user_id: resolvedUserId,
-          balance: nextBalance,
-          monthly_quota: Number(currentCredits?.monthly_quota ?? 25),
-          subscription_tier: normalizeSubscriptionTier(currentCredits?.subscription_tier ?? "rookie"),
-          last_reset_at: currentCredits?.last_reset_at ?? new Date().toISOString(),
-        }, { onConflict: "user_id" });
-
-      if (fallbackError) {
-        console.error("[CreditPack] Fallback credit update failed:", fallbackError);
-        throw fallbackError;
+      if (mvpRpcError || purchaseResult?.success === false) {
+        throw mvpRpcError ?? new Error("MVP credit purchase RPC failed");
       }
-    }
+    } else {
+      const { error: rpcError } = await supabaseAdmin.rpc("increment_credit_balance", {
+        p_user_id: resolvedUserId,
+        p_amount: purchase.credits,
+      });
 
-    await supabaseAdmin.from("credit_transactions").insert({
-      user_id: resolvedUserId,
-      amount: purchase.credits,
-      tx_type: "purchase",
-      reason: `Credit pack purchase: ${purchase.id} (${purchase.credits} credits)`,
-      feature: "Credit Pack",
-      metadata: {
-        idempotencyKey,
-        packId: purchase.id,
-        packLabel: purchase.label,
-        creditsAdded: purchase.credits,
-        priceCents: purchase.price_cents,
-        stripeSessionId: checkoutSessionId,
-        stripePaymentIntentId: paymentIntentId,
-        stripePaymentLinkId: paymentLinkId,
-        customerEmail,
-        customerId,
-        sourceEventType,
-      },
-    });
+      if (rpcError) {
+        console.warn("[CreditPack] RPC increment failed, using fallback:", rpcError.message);
+        const { data: currentCredits } = await supabaseAdmin
+          .from("user_credits")
+          .select("balance, monthly_quota, subscription_tier, last_reset_at")
+          .eq("user_id", resolvedUserId)
+          .maybeSingle();
+
+        const nextBalance = Number(currentCredits?.balance ?? 0) + purchase.credits;
+        const { error: fallbackError } = await supabaseAdmin
+          .from("user_credits")
+          .upsert({
+            user_id: resolvedUserId,
+            balance: nextBalance,
+            monthly_quota: Number(currentCredits?.monthly_quota ?? 25),
+            subscription_tier: normalizeSubscriptionTier(currentCredits?.subscription_tier ?? "rookie"),
+            last_reset_at: currentCredits?.last_reset_at ?? new Date().toISOString(),
+          }, { onConflict: "user_id" });
+
+        if (fallbackError) {
+          console.error("[CreditPack] Fallback credit update failed:", fallbackError);
+          throw fallbackError;
+        }
+      }
+
+      await supabaseAdmin.from("credit_transactions").insert({
+        user_id: resolvedUserId,
+        amount: purchase.credits,
+        tx_type: "purchase",
+        reason: `Credit pack purchase: ${purchase.id} (${purchase.credits} credits)`,
+        feature: "Credit Pack",
+        metadata: {
+          idempotencyKey,
+          packId: purchase.id,
+          packLabel: purchase.label,
+          creditsAdded: purchase.credits,
+          priceCents: purchase.price_cents,
+          stripeSessionId: checkoutSessionId,
+          stripePaymentIntentId: paymentIntentId,
+          stripePaymentLinkId: paymentLinkId,
+          customerEmail,
+          customerId,
+          sourceEventType,
+          wallet,
+        },
+      });
+    }
 
     await createCreditPurchaseNotification(supabaseAdmin, {
       userId: resolvedUserId,
@@ -976,12 +1083,13 @@ async function handleCreditPackPurchase({
         userId: resolvedUserId,
         creditsAdded: purchase.credits,
         packId: purchase.id,
+        wallet,
         stripeSessionId: checkoutSessionId,
         stripePaymentIntentId: paymentIntentId,
       },
     });
 
-    console.log(`[CreditPack] Added ${purchase.credits} credits to user ${resolvedUserId} (${purchase.id})`);
+    console.log(`[CreditPack] Added ${purchase.credits} ${wallet} credits to user ${resolvedUserId} (${purchase.id})`);
   } catch (error) {
     await supabaseAdmin.rpc("idempotency_clear", {
       p_id: idempotencyKey,

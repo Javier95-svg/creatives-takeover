@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import {
   Send,
   Loader2,
@@ -50,7 +51,6 @@ import {
 } from '@/data/mvpModels';
 import type { MVPProjectType } from '@/lib/mvp-builder/project';
 import { cn } from '@/lib/utils';
-import { CreditCostNotice } from '@/components/CreditCostNotice';
 
 // ── Quick-start templates ────────────────────────────────────────────────────
 
@@ -309,7 +309,7 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
   messages,
   promptHistory,
   selectedModels,
-  selectedProjectType,
+  selectedProjectType: _selectedProjectType,
   githubConnection,
   githubRepositories,
   githubBranches,
@@ -324,7 +324,7 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
   lastActionQuote,
   onSelectedModelsChange,
   onSetupInputChange,
-  onProjectTypeChange,
+  onProjectTypeChange: _onProjectTypeChange,
   onSend,
   onClassifyAction,
   onCancelGeneration,
@@ -401,21 +401,6 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
     () => REFERENCE_OPTIONS.filter((reference) => selectedReferences.includes(reference.id)),
     [selectedReferences]
   );
-  const currentCreditFeature = githubRepoSession
-    ? 'APP_BUILDER_GITHUB_EDIT'
-    : builderMode === 'chat'
-    ? 'APP_BUILDER_CHAT'
-    : lastActionQuote?.creditFeature || (isEmpty ? 'APP_BUILDER_GENERATE' : 'APP_BUILDER_REFINE');
-  const currentCreditFeatureName = githubRepoSession
-    ? 'MVP Builder GitHub Edit'
-    : builderMode === 'chat'
-    ? 'MVP Builder Chat'
-    : lastActionQuote?.actionType && lastActionQuote.actionType !== 'unclear' && lastActionQuote.actionType !== 'unsupported'
-    ? MVP_BUILDER_ACTION_LABELS[lastActionQuote.actionType]
-    : isEmpty
-    ? 'MVP Builder Generation'
-    : 'MVP Builder Refinement';
-
   const clearTaskTimers = useCallback(() => {
     taskTimerIdsRef.current.forEach((timerId) => window.clearTimeout(timerId));
     taskTimerIdsRef.current = [];
@@ -525,6 +510,12 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
     },
     [isGenerating, submitPrompt]
   );
+
+  const applyActionPrompt = useCallback((prompt: string) => {
+    setBuilderMode('build');
+    setInput(prompt);
+    requestAnimationFrame(() => textareaRef.current?.focus());
+  }, []);
 
   useEffect(() => {
     if (githubOpen && githubConnection.connected && githubRepositories.length === 0) {
@@ -1029,6 +1020,26 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
             </div>
           )}
 
+          {projectVersions.length > 0 && builderMode === 'build' && (
+            <div className="mb-3 flex flex-wrap gap-2">
+              {[
+                ['Add Page', 'Add a new page/screen that fits the current app and wire it into the navigation.'],
+                ['Add Feature', 'Add a useful frontend feature with realistic state, empty states, and polished interactions.'],
+                ['Fix Bug', 'Find and fix the current runtime or UX bug while preserving the app design.'],
+                ['Redesign', 'Apply a cohesive design overhaul without changing the app functionality.'],
+              ].map(([label, prompt]) => (
+                <button
+                  key={label}
+                  type="button"
+                  onClick={() => applyActionPrompt(prompt)}
+                  className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-[11px] font-medium text-slate-300 hover:border-sky-300/30 hover:bg-sky-300/10 hover:text-white"
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          )}
+
           <div className="flex items-end gap-3">
             <div className="relative flex-1">
               <Textarea
@@ -1113,23 +1124,24 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
           <div className="text-[11px] text-slate-500">
             {builderMode === 'chat' ? 'Text-only planning' : 'Generates and renders'}
           </div>
-          <CreditCostNotice
-            feature={currentCreditFeature as any}
-            featureName={currentCreditFeatureName}
-            variant="inline"
-          />
           {builderMode === 'build' && lastActionQuote && (
             <div className="mt-2 rounded-md border border-white/10 bg-white/[0.03] px-3 py-2 text-[11px] text-slate-300">
               {lastActionQuote.actionType === 'unsupported'
-                ? 'Phase 1 supports generation, targeted edits, and bug fixes.'
+                ? 'Phase 2 supports frontend app generation, edits, bug fixes, add-page, add-feature, and redesign.'
                 : lastActionQuote.actionType === 'unclear'
                 ? 'Keep typing to preview the action cost.'
-                : `${MVP_BUILDER_ACTION_LABELS[lastActionQuote.actionType]} · ${lastActionQuote.creditCost} credits`}
+                : `${MVP_BUILDER_ACTION_LABELS[lastActionQuote.actionType]} - ${lastActionQuote.creditCost} MVP credits`}
             </div>
           )}
+          <Link
+            to="/pricing#mvp-credit-packs"
+            className="text-[11px] font-medium text-sky-300 hover:text-sky-200"
+          >
+            Buy MVP credits
+          </Link>
         </div>
         <p className="mt-2 text-right text-[10px] text-slate-500">
-          Enter to send · Shift+Enter for a new line · Type @ to reference founder context
+          Enter to send - Shift+Enter for a new line - Type @ to reference founder context
         </p>
       </div>
 

@@ -36,6 +36,7 @@ export const MVPBuilder: React.FC = () => {
     lastActionQuote,
     deploymentUrl,
     isDeploying,
+    mvpCreditsAvailable,
     githubConnection,
     githubRepositories,
     githubBranches,
@@ -149,6 +150,7 @@ export const MVPBuilder: React.FC = () => {
         projectName={projectName}
         setProjectName={setProjectName}
         selectedModels={selectedModels}
+        mvpCreditsAvailable={mvpCreditsAvailable}
         onNewProject={resetProject}
       />
 

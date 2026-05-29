@@ -172,7 +172,7 @@ test('core entitlement rules reflect the pricing contract', () => {
   const rookieMvp = resolveEntitlement('mvp_builder', 'rookie');
   assert.equal(rookieMvp.state, 'full');
   assert.equal(rookieMvp.monetizationModel, 'credit_metered');
-  assert.equal(rookieMvp.creditCost, 10);
+  assert.equal(rookieMvp.creditCost, 15);
 
   const proGtm = resolveEntitlement('gtm_strategist', 'pro');
   assert.equal(proGtm.state, 'full');

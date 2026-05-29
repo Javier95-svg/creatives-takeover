@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { checkAndDeductCredits, refundCredits } from "../_shared/credit-deduction.ts";
-import { CREDIT_COSTS } from "../_shared/credit-constants.ts";
+import { checkAndDeductMVPCredits, refundMVPCredits } from "../_shared/mvp-credit-deduction.ts";
+import { MVP_CREDIT_COSTS, type MVPCreditFeature } from "../_shared/mvp-credit-constants.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -38,14 +38,17 @@ const HTML_CAPABLE_MODEL_SET = new Set<string>([
   "openai/gpt-5-nano-2025-08-07",
 ]);
 
-type MVPBuilderActionType = "generation" | "targeted_edit" | "debug";
+type MVPBuilderActionType = "generation" | "targeted_edit" | "debug" | "add_page" | "add_feature" | "design_overhaul";
 type MVPBuilderTemplateId = "waitlist_landing" | "saas_landing" | "community_landing" | "blank";
 type MVPBuilderPaletteId = "minimal" | "bold" | "warm";
 
-const ACTION_CONFIG: Record<MVPBuilderActionType, { feature: keyof typeof CREDIT_COSTS; temperature: number; maxTokens: number }> = {
-  generation: { feature: "APP_BUILDER_GENERATE", temperature: 0.4, maxTokens: 16000 },
-  targeted_edit: { feature: "APP_BUILDER_REFINE", temperature: 0.2, maxTokens: 8000 },
-  debug: { feature: "APP_BUILDER_DEBUG", temperature: 0.1, maxTokens: 6000 },
+const ACTION_CONFIG: Record<MVPBuilderActionType, { feature: MVPCreditFeature; temperature: number; maxTokens: number }> = {
+  generation: { feature: "APP_BUILDER_GENERATE", temperature: 0.45, maxTokens: 22000 },
+  targeted_edit: { feature: "APP_BUILDER_REFINE", temperature: 0.25, maxTokens: 14000 },
+  debug: { feature: "APP_BUILDER_DEBUG", temperature: 0.15, maxTokens: 10000 },
+  add_page: { feature: "APP_BUILDER_ADD_PAGE", temperature: 0.3, maxTokens: 16000 },
+  add_feature: { feature: "APP_BUILDER_ADD_FEATURE", temperature: 0.35, maxTokens: 18000 },
+  design_overhaul: { feature: "APP_BUILDER_DESIGN_OVERHAUL", temperature: 0.45, maxTokens: 18000 },
 };
 
 const BASE_SYSTEM_PROMPT = `You are a senior full-stack developer specializing in building MVPs for early-stage startups. Your output is always complete, working, deployable code.
@@ -58,19 +61,24 @@ Core principles:
 3. Clean, readable code with semantic HTML and accessible labels.
 4. Real content only. Use the founder's product name, target audience, and pain language. Never use Lorem ipsum or bracket placeholders.
 5. Production-ready defaults: title, meta description, OG tags, keyboard-friendly controls, and PostHog analytics initialization with the literal placeholder POSTHOG_KEY.
-6. Phase 1 supports html_single only. Use a single index.html file with inline CSS and inline JavaScript. No build step, backend, React, Supabase auth, or Stripe implementation.
-7. Every generated app must track page_view on load, cta_clicked on primary CTAs, and form_submitted on forms.
+6. Phase 2 default is react_vite. Use a complete Vite + React project with package.json, index.html, src/main.tsx, src/App.tsx, and src/styles.css unless the user explicitly asks for a simple static HTML file.
+7. Do not implement real backend/database/auth/payment code in this phase. If requested, create a polished mocked frontend UX and explain the mocked boundary in generation_notes.
+8. Every generated app must track page_view on load, cta_clicked on primary CTAs, and form_submitted on forms through a small PostHog wrapper using the literal placeholder POSTHOG_KEY.
 
 Output schema:
 {
-  "project_type": "html_single",
+  "project_type": "react_vite",
   "files": [
     {
-      "filename": "index.html",
+      "path": "package.json",
       "content": "complete file contents",
       "description": "one sentence describing the file"
     }
   ],
+  "package_json": { "scripts": { "dev": "vite", "build": "vite build" }, "dependencies": {}, "devDependencies": {} },
+  "dev_command": "npm run dev",
+  "build_command": "npm run build",
+  "preview_port": 5173,
   "setup_instructions": "plain-language steps for the founder to run the project locally",
   "posthog_events": [
     { "event_name": "page_view", "trigger": "when the page loads", "properties": "project metadata" }
@@ -94,7 +102,7 @@ const TEMPLATE_REQUIREMENTS: Record<MVPBuilderTemplateId, string> = {
 - About/mission section, what members get, application form, FAQ, and three realistic testimonials.
 - Form submit shows inline thank-you state and logs form_submitted.`,
   blank: `Template-specific requirements:
-- Follow the founder's custom prompt while staying within html_single Phase 1 limits.`,
+- Follow the founder's custom prompt while staying within React/Vite frontend-only Phase 2 limits.`,
 };
 
 const PALETTE_GUIDANCE: Record<MVPBuilderPaletteId, string> = {
@@ -171,12 +179,22 @@ function classifyAction(input: string, hasProject: boolean): MVPBuilderActionTyp
   if (!normalized) return "unclear";
   if (!hasProject) return "generation";
   if (/\b(error|bug|broken|fix|doesn'?t work|not working|console|crash)\b/.test(normalized)) return "debug";
-  if (/\b(add (a )?(page|route|screen)|new page|auth|database|supabase|stripe|payment|marketplace|dashboard)\b/.test(normalized)) return "unsupported";
+  if (/\b(auth|database|supabase|stripe|payment|marketplace|backend|server action)\b/.test(normalized)) return "unsupported";
+  if (/\b(add|create|build)\b.{0,40}\b(page|route|screen)\b|\b(new page|new route|another screen)\b/.test(normalized)) return "add_page";
+  if (/\b(add|build|create|implement)\b.*\b(feature|flow|component|wizard|form|dashboard|table|chart|modal|settings)\b/.test(normalized)) return "add_feature";
+  if (/\b(redesign|design overhaul|make it beautiful|modernize|visual refresh|new look|polish the design)\b/.test(normalized)) return "design_overhaul";
   return "targeted_edit";
 }
 
 function normalizeAction(value: unknown, userMessage: string, hasProject: boolean): MVPBuilderActionType | "unclear" | "unsupported" {
-  if (value === "generation" || value === "targeted_edit" || value === "debug") return value;
+  if (
+    value === "generation" ||
+    value === "targeted_edit" ||
+    value === "debug" ||
+    value === "add_page" ||
+    value === "add_feature" ||
+    value === "design_overhaul"
+  ) return value;
   return classifyAction(userMessage, hasProject);
 }
 
@@ -210,12 +228,15 @@ function parseModelJson(fullText: string): unknown {
 function validateOutput(raw: unknown) {
   if (!raw || typeof raw !== "object") throw new Error("Output must be a JSON object");
   const candidate = raw as Record<string, unknown>;
-  if (candidate.project_type !== "html_single") throw new Error("Phase 1 output must use project_type html_single");
+  if (candidate.project_type !== "html_single" && candidate.project_type !== "react_vite") {
+    throw new Error("Output must use project_type html_single or react_vite");
+  }
   if (!Array.isArray(candidate.files) || candidate.files.length === 0) throw new Error("Output must include files");
 
   const files = candidate.files.map((file, index) => {
     const item = file as Record<string, unknown>;
-    const filename = typeof item.filename === "string" ? normalizeProjectPath(item.filename) : "";
+    const rawPath = typeof item.path === "string" ? item.path : item.filename;
+    const filename = typeof rawPath === "string" ? normalizeProjectPath(rawPath) : "";
     const content = typeof item.content === "string" ? item.content : "";
     const description = typeof item.description === "string" ? item.description.trim() : "";
     if (!filename || !content.trim() || !description) {
@@ -227,17 +248,50 @@ function validateOutput(raw: unknown) {
     return { filename, content, description };
   });
 
-  const htmlFile = files.find((file) => file.filename.toLowerCase() === "index.html") ?? files.find((file) => file.filename.endsWith(".html"));
-  if (!htmlFile) throw new Error("html_single output must include index.html or another HTML file");
-  if (!/<title>[^<]+<\/title>/i.test(htmlFile.content)) throw new Error("HTML must include a title tag");
-  if (!/<meta\s+name=["']description["']\s+content=["'][^"']+["']/i.test(htmlFile.content)) throw new Error("HTML must include a meta description");
-  for (const eventName of ["page_view", "cta_clicked", "form_submitted"]) {
-    if (!htmlFile.content.includes(eventName)) throw new Error(`HTML must track ${eventName}`);
+  if (candidate.project_type === "html_single") {
+    const htmlFile = files.find((file) => file.filename.toLowerCase() === "index.html") ?? files.find((file) => file.filename.endsWith(".html"));
+    if (!htmlFile) throw new Error("html_single output must include index.html or another HTML file");
+    if (!/<title>[^<]+<\/title>/i.test(htmlFile.content)) throw new Error("HTML must include a title tag");
+    if (!/<meta\s+name=["']description["']\s+content=["'][^"']+["']/i.test(htmlFile.content)) throw new Error("HTML must include a meta description");
+    for (const eventName of ["page_view", "cta_clicked", "form_submitted"]) {
+      if (!htmlFile.content.includes(eventName)) throw new Error(`HTML must track ${eventName}`);
+    }
+  } else {
+    const required = ["package.json", "index.html"];
+    for (const path of required) {
+      if (!files.some((file) => file.filename === path)) throw new Error(`react_vite output must include ${path}`);
+    }
+    const packageFile = files.find((file) => file.filename === "package.json");
+    let packageJson: Record<string, unknown>;
+    try {
+      packageJson = JSON.parse(packageFile?.content ?? "");
+    } catch {
+      throw new Error("react_vite package.json must be valid JSON");
+    }
+    const deps = {
+      ...((packageJson.dependencies as Record<string, unknown> | undefined) ?? {}),
+      ...((packageJson.devDependencies as Record<string, unknown> | undefined) ?? {}),
+    };
+    if (!deps.react || !deps["react-dom"] || !deps.vite) {
+      throw new Error("react_vite package.json must include react, react-dom, and vite");
+    }
+    if (!files.some((file) => /^(src\/)?main\.(tsx|jsx)$/.test(file.filename) && /createRoot|ReactDOM/.test(file.content))) {
+      throw new Error("react_vite output must include a React main entry that mounts the app");
+    }
+    if (!files.some((file) => /^src\/App\.(tsx|jsx)$/.test(file.filename))) {
+      throw new Error("react_vite output must include src/App.tsx or src/App.jsx");
+    }
   }
 
   return {
-    project_type: "html_single",
+    project_type: candidate.project_type,
     files,
+    package_json: candidate.project_type === "react_vite"
+      ? JSON.parse(files.find((file) => file.filename === "package.json")?.content ?? "{}")
+      : undefined,
+    dev_command: typeof candidate.dev_command === "string" && candidate.dev_command.trim() ? candidate.dev_command.trim() : "npm run dev",
+    build_command: typeof candidate.build_command === "string" && candidate.build_command.trim() ? candidate.build_command.trim() : "npm run build",
+    preview_port: typeof candidate.preview_port === "number" ? candidate.preview_port : 5173,
     setup_instructions:
       typeof candidate.setup_instructions === "string" && candidate.setup_instructions.trim()
         ? candidate.setup_instructions.trim()
@@ -251,11 +305,16 @@ function validateOutput(raw: unknown) {
 }
 
 function outputToProject(output: ReturnType<typeof validateOutput>, productName: string) {
+  const reactEntry =
+    output.files.find((file) => /^(src\/)?main\.(tsx|jsx)$/.test(file.filename))?.filename ??
+    output.files.find((file) => /^(src\/)?main\.(ts|js)$/.test(file.filename))?.filename ??
+    output.files.find((file) => file.filename === "index.html")?.filename ??
+    output.files[0].filename;
   return {
     projectName: productName || "Generated MVP",
-    framework: "static-html",
-    projectType: "landing-page",
-    entryFile: output.files.find((file) => file.filename === "index.html")?.filename ?? output.files[0].filename,
+    framework: output.project_type === "react_vite" ? "react-vite" : "static-html",
+    projectType: output.project_type === "react_vite" ? "web-app" : "landing-page",
+    entryFile: reactEntry,
     summary: output.generation_notes,
     dependencies: [],
     files: output.files.map((file) => ({
@@ -311,11 +370,21 @@ CROSS-TOOL CONTEXT
 ${JSON.stringify(params.projectContext ?? {}, null, 2)}`;
   }
 
-  return `${params.actionType === "debug" ? "Fix the reported bug" : "Apply a targeted edit"} to the existing html_single project.
+  const actionInstruction: Record<MVPBuilderActionType, string> = {
+    generation: "Generate a new React/Vite MVP",
+    targeted_edit: "Apply a targeted edit",
+    debug: "Fix the reported bug",
+    add_page: "Add a new frontend page/screen",
+    add_feature: "Add a new frontend feature",
+    design_overhaul: "Apply a cohesive design overhaul",
+  };
+
+  return `${actionInstruction[params.actionType]} to the existing project.
 
 Rules:
 - Return the complete updated JSON output, not only changed snippets.
-- Do not add pages, auth, database, payments, or React.
+- Preserve or upgrade the project as React/Vite unless the current project is explicitly html_single.
+- Do not implement real auth, database, payments, or backend calls in this release; mock those experiences in frontend state when requested.
 - Preserve working structure and existing copy unless the request requires changing it.
 - Keep PostHog initialization and page_view, cta_clicked, form_submitted events.
 
@@ -357,6 +426,39 @@ async function requestModelStream(
   }
 }
 
+async function requestModelJson(
+  apiKey: string,
+  model: string,
+  systemPrompt: string,
+  messages: Array<{ role: "user" | "assistant"; content: string }>,
+  config: { temperature: number; maxTokens: number }
+): Promise<string> {
+  const response = await fetch(AI_GATEWAY_URL, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model,
+      messages: [{ role: "system", content: systemPrompt }, ...messages],
+      temperature: config.temperature,
+      max_tokens: config.maxTokens,
+      stream: false,
+      response_format: { type: "json_object" },
+    }),
+  });
+  if (!response.ok) {
+    throw new Error(await response.text());
+  }
+  const json = await response.json();
+  const content = json?.choices?.[0]?.message?.content;
+  if (typeof content !== "string" || !content.trim()) {
+    throw new Error("Repair response did not include content");
+  }
+  return content;
+}
+
 serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -385,7 +487,8 @@ serve(async (req: Request) => {
     return jsonResponse({
       actionType: classifiedAction,
       creditFeature: feature,
-      creditCost: feature ? CREDIT_COSTS[feature] : 0,
+      creditCost: feature ? MVP_CREDIT_COSTS[feature] : 0,
+      wallet: "mvp_builder",
     });
   }
 
@@ -394,26 +497,24 @@ serve(async (req: Request) => {
   if (!userMessage.trim()) return errorStream("userMessage is required", "BAD_REQUEST");
   if (classifiedAction === "unclear") return errorStream("Please clarify what you want MVP Builder to change.", "UNCLEAR_ACTION");
   if (classifiedAction === "unsupported") {
-    return errorStream("That request is outside Phase 1. This builder currently supports initial generation, targeted edits, and bug fixes.", "UNSUPPORTED_ACTION");
+    return errorStream("That request needs backend/auth/payment support planned for a later phase. Phase 2 supports frontend app generation, targeted edits, bug fixes, add-page, add-feature, and design overhaul.", "UNSUPPORTED_ACTION");
   }
 
   const template = normalizeTemplate(body.template ?? (body.setupInput as Record<string, unknown> | undefined)?.template);
   const palette = normalizePalette(body.palettePreference ?? (body.setupInput as Record<string, unknown> | undefined)?.palettePreference);
   const userId = typeof body.userId === "string" ? body.userId : null;
   const creditFeature = ACTION_CONFIG[classifiedAction].feature;
-  const creditCost = CREDIT_COSTS[creditFeature];
+  const creditCost = MVP_CREDIT_COSTS[creditFeature];
   let chargedCredits = 0;
 
   if (userId) {
     const idempotencyKey = req.headers.get("Idempotency-Key") ?? undefined;
-    const creditCheck = await checkAndDeductCredits(
+    const creditCheck = await checkAndDeductMVPCredits(
       userId,
       creditCost,
       creditFeature,
-      undefined,
       {
         idempotencyKey,
-        entitlementFeature: creditFeature,
         mvpBuilderActionType: classifiedAction,
         projectId: typeof body.projectId === "string" ? body.projectId : undefined,
         currentVersion: typeof body.currentVersion === "number" ? body.currentVersion : undefined,
@@ -422,13 +523,13 @@ serve(async (req: Request) => {
 
     if (!creditCheck.success) {
       return errorStream(
-        creditCheck.errorCode === "INSUFFICIENT_CREDITS"
-          ? `You need ${creditCost} credits for this MVP Builder action. Please upgrade your plan or purchase more credits.`
-          : "Unable to process credits. Please try again.",
+        creditCheck.errorCode === "INSUFFICIENT_MVP_CREDITS"
+          ? `You need ${creditCost} MVP Builder credits for this action. Upgrade your plan or buy MVP credits.`
+          : "Unable to process MVP credits. Please try again.",
         creditCheck.errorCode
       );
     }
-    chargedCredits = (creditCheck.usedFromQuota ?? 0) + (creditCheck.usedFromBalance ?? 0);
+    chargedCredits = creditCheck.usedFromBalance ?? 0;
   }
 
   const selectedModels = normalizeSelectedModels(body.selectedModels);
@@ -485,7 +586,7 @@ serve(async (req: Request) => {
 
   if (!aiResponse) {
     if (userId && chargedCredits > 0) {
-      await refundCredits(userId, chargedCredits, creditFeature, "AI gateway error", { lastGatewayError }).catch(() => {});
+      await refundMVPCredits(userId, chargedCredits, creditFeature, "AI gateway error", { lastGatewayError }).catch(() => {});
     }
     return errorStream("AI service temporarily unavailable. Credits have been refunded. Please try again.", "AI_ERROR");
   }
@@ -534,22 +635,42 @@ serve(async (req: Request) => {
       try {
         validated = validateOutput(parseModelJson(fullText));
       } catch (validationError) {
-        if (userId && chargedCredits > 0) {
-          await refundCredits(
-            userId,
-            chargedCredits,
-            creditFeature,
-            "Invalid MVP Builder JSON output",
-            { validationError: validationError instanceof Error ? validationError.message : String(validationError) }
-          ).catch(() => {});
+        try {
+          const repaired = await requestModelJson(
+            lovableApiKey,
+            selectedModel,
+            BASE_SYSTEM_PROMPT,
+            [
+              ...messages,
+              {
+                role: "user",
+                content: `Repair the previous response into valid complete project JSON only. Validation error: ${validationError instanceof Error ? validationError.message : String(validationError)}\n\nPrevious response:\n${fullText}`,
+              },
+            ],
+            { temperature: 0.1, maxTokens: ACTION_CONFIG[classifiedAction].maxTokens + 4000 }
+          );
+          validated = validateOutput(parseModelJson(repaired));
+        } catch (repairError) {
+          if (userId && chargedCredits > 0) {
+            await refundMVPCredits(
+              userId,
+              chargedCredits,
+              creditFeature,
+              "Invalid MVP Builder JSON output",
+              {
+                validationError: validationError instanceof Error ? validationError.message : String(validationError),
+                repairError: repairError instanceof Error ? repairError.message : String(repairError),
+              }
+            ).catch(() => {});
+          }
+          await writer.write(enc({
+            type: "error",
+            error: "The AI returned invalid project JSON after repair. MVP credits have been refunded. Please try again.",
+            errorCode: "VALIDATION_FAILED",
+          }));
+          await writer.write(encDone());
+          return;
         }
-        await writer.write(enc({
-          type: "error",
-          error: "The AI returned invalid project JSON. Credits have been refunded. Please try again.",
-          errorCode: "VALIDATION_FAILED",
-        }));
-        await writer.write(encDone());
-        return;
       }
 
       await writer.write(enc({
@@ -559,15 +680,16 @@ serve(async (req: Request) => {
         actionType: classifiedAction,
         creditFeature,
         creditCost,
+        wallet: "mvp_builder",
       }));
       await writer.write(enc({ type: "complete", model: selectedModel, requestedModels: selectedModels }));
       await writer.write(encDone());
     } catch (err) {
       console.error("Stream processing error:", err);
       if (userId && chargedCredits > 0) {
-        await refundCredits(userId, chargedCredits, creditFeature, "Stream error").catch(() => {});
+        await refundMVPCredits(userId, chargedCredits, creditFeature, "Stream error").catch(() => {});
       }
-      await writer.write(enc({ type: "error", error: "Stream interrupted. Credits have been refunded. Please try again.", errorCode: "STREAM_ERROR" }));
+      await writer.write(enc({ type: "error", error: "Stream interrupted. MVP credits have been refunded. Please try again.", errorCode: "STREAM_ERROR" }));
       await writer.write(encDone());
     } finally {
       await writer.close().catch(() => {});

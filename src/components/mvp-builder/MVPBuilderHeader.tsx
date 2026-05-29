@@ -3,13 +3,13 @@ import { Link } from 'react-router-dom';
 import { ArrowLeft, Plus, Pencil, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useCredits } from '@/hooks/useCredits';
 import { getMVPModelLabel } from '@/data/mvpModels';
 
 interface MVPBuilderHeaderProps {
   projectName: string;
   setProjectName: (name: string) => void;
   selectedModels: string[];
+  mvpCreditsAvailable: number;
   onNewProject: () => void;
 }
 
@@ -17,14 +17,12 @@ export const MVPBuilderHeader: React.FC<MVPBuilderHeaderProps> = ({
   projectName,
   setProjectName,
   selectedModels,
+  mvpCreditsAvailable,
   onNewProject,
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [draft, setDraft] = useState(projectName);
   const inputRef = useRef<HTMLInputElement>(null);
-  const { balance, monthlyQuota } = useCredits();
-
-  const totalCredits = (balance ?? 0) + (monthlyQuota ?? 0);
   const primaryModelLabel = getMVPModelLabel(selectedModels[0]) ?? 'AI model';
   const additionalModels = Math.max(selectedModels.length - 1, 0);
 
@@ -103,14 +101,14 @@ export const MVPBuilderHeader: React.FC<MVPBuilderHeaderProps> = ({
           </span>
           <span className="hidden sm:flex items-center gap-1.5 rounded-full border border-sky-400/20 bg-sky-400/10 px-2.5 py-0.5 text-xs font-medium text-sky-200 backdrop-blur-sm">
             <span className="h-1.5 w-1.5 rounded-full bg-sky-300 shrink-0" />
-            {totalCredits} credits
+            {mvpCreditsAvailable} MVP credits
           </span>
-          {totalCredits <= 5 && (
+          {mvpCreditsAvailable <= 8 && (
             <Link
-              to="/pricing#credit-packs"
+              to="/pricing#mvp-credit-packs"
               className="hidden lg:inline-flex h-7 items-center rounded-md border border-amber-300/25 bg-amber-300/10 px-2 text-xs font-medium text-amber-100 hover:bg-amber-300/15"
             >
-              Buy Credits
+              Buy MVP Credits
             </Link>
           )}
           <Button

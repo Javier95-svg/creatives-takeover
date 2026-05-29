@@ -66,6 +66,24 @@ const FEATURE_RULES: Partial<Record<EnforcedFeature, Record<Plan, FeatureRule>>>
     rising: { mode: 'charge' },
     pro: { mode: 'charge' },
   },
+  APP_BUILDER_ADD_PAGE: {
+    rookie: { mode: 'charge' },
+    starter: { mode: 'charge' },
+    rising: { mode: 'charge' },
+    pro: { mode: 'charge' },
+  },
+  APP_BUILDER_ADD_FEATURE: {
+    rookie: { mode: 'charge' },
+    starter: { mode: 'charge' },
+    rising: { mode: 'charge' },
+    pro: { mode: 'charge' },
+  },
+  APP_BUILDER_DESIGN_OVERHAUL: {
+    rookie: { mode: 'charge' },
+    starter: { mode: 'charge' },
+    rising: { mode: 'charge' },
+    pro: { mode: 'charge' },
+  },
   APP_BUILDER_DEPLOY: {
     rookie: { mode: 'charge' },
     starter: { mode: 'charge' },

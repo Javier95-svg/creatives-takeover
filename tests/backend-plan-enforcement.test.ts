@@ -225,12 +225,15 @@ test('pmf lab is blocked on Rookie and credit-metered on Starter and above', () 
   }
 });
 
-test('MVP Builder is universal and Phase 1 build actions are credit-metered', () => {
+test('MVP Builder is universal and Phase 2 app builder actions are credit-metered', () => {
   const expectedCosts = {
-    APP_BUILDER_GENERATE: 10,
-    APP_BUILDER_REFINE: 3,
-    APP_BUILDER_DEBUG: 2,
-    APP_BUILDER_DEPLOY: 2,
+    APP_BUILDER_GENERATE: 15,
+    APP_BUILDER_REFINE: 4,
+    APP_BUILDER_DEBUG: 3,
+    APP_BUILDER_ADD_PAGE: 6,
+    APP_BUILDER_ADD_FEATURE: 8,
+    APP_BUILDER_DESIGN_OVERHAUL: 8,
+    APP_BUILDER_DEPLOY: 3,
     APP_BUILDER_RESTORE: 1,
     APP_BUILDER_EXPORT: 0,
     APP_BUILDER_CHAT: 1,

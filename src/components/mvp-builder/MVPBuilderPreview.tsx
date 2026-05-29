@@ -11,6 +11,7 @@ import {
   Globe,
   Code2,
   TriangleAlert,
+  TerminalSquare,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -31,6 +32,7 @@ import type {
   MVPProjectSnapshot,
   MVPProjectType,
 } from '@/lib/mvp-builder/project';
+import { mvpWebContainerRuntime, type MVPWebContainerState } from '@/lib/mvp-builder/webcontainerRuntime';
 
 const LOADING_STEPS = [
   'Understanding prompt...',
@@ -38,6 +40,13 @@ const LOADING_STEPS = [
   'Writing the build...',
   'Almost ready...',
 ];
+
+const INITIAL_WEB_CONTAINER_STATE: MVPWebContainerState = {
+  status: 'idle',
+  previewUrl: null,
+  error: null,
+  logs: [],
+};
 
 type PreviewTab = 'preview' | 'code' | 'domain';
 
@@ -104,6 +113,7 @@ export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({
   const [loadingStep, setLoadingStep] = useState(0);
   const [activeTab, setActiveTab] = useState<PreviewTab>('preview');
   const [runtimeError, setRuntimeError] = useState<string | null>(null);
+  const [webContainerState, setWebContainerState] = useState<MVPWebContainerState>(INITIAL_WEB_CONTAINER_STATE);
 
   useEffect(() => {
     if (!isGenerating) {
@@ -119,6 +129,18 @@ export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({
   useEffect(() => {
     setRuntimeError(null);
   }, [html, previewKey, projectId]);
+
+  useEffect(() => {
+    return mvpWebContainerRuntime.subscribe(setWebContainerState);
+  }, []);
+
+  useEffect(() => {
+    if (projectFramework !== 'react-vite' || isGenerating || projectFiles.length === 0) return;
+    const timer = window.setTimeout(() => {
+      void mvpWebContainerRuntime.start(projectFiles, { devCommand: 'npm run dev', port: 5173 });
+    }, 500);
+    return () => window.clearTimeout(timer);
+  }, [isGenerating, projectFiles, projectFramework, previewKey]);
 
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
@@ -177,6 +199,16 @@ export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({
     <span className="flex items-center gap-1.5 text-xs font-medium text-amber-500">
       <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse shrink-0" />
       Building...
+    </span>
+  ) : projectFramework === 'react-vite' && webContainerState.status === 'ready' ? (
+    <span className="flex items-center gap-1.5 text-xs font-medium text-emerald-500">
+      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 shrink-0" />
+      WebContainer ready
+    </span>
+  ) : projectFramework === 'react-vite' && ['booting', 'mounting', 'installing', 'starting'].includes(webContainerState.status) ? (
+    <span className="flex items-center gap-1.5 text-xs font-medium text-amber-500">
+      <Loader2 className="h-3 w-3 animate-spin" />
+      {webContainerState.status}
     </span>
   ) : previewState.canPreview && html ? (
     <span className="flex items-center gap-1.5 text-xs font-medium text-emerald-500">
@@ -286,7 +318,7 @@ export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({
                       size="icon"
                       className="h-7 w-7"
                       onClick={handleRefresh}
-                      disabled={!html}
+                      disabled={!html && projectFramework !== 'react-vite'}
                     >
                       <RefreshCw className="h-3.5 w-3.5" />
                     </Button>
@@ -300,7 +332,7 @@ export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({
                       size="icon"
                       className="h-7 w-7"
                       onClick={handleCopy}
-                      disabled={!html}
+                      disabled={!html && projectFramework !== 'react-vite'}
                     >
                       {copied ? (
                         <Check className="h-3.5 w-3.5 text-emerald-500" />
@@ -318,7 +350,7 @@ export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({
                       size="sm"
                       className="h-7 gap-1.5 px-2 text-xs"
                       onClick={onExportZip}
-                      disabled={!html}
+                      disabled={!html && projectFramework !== 'react-vite'}
                     >
                       <Download className="h-3.5 w-3.5" />
                       Export ZIP
@@ -333,13 +365,13 @@ export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({
                       size="sm"
                       className="h-7 gap-1.5 px-2 text-xs"
                       onClick={onDeploy}
-                      disabled={!html || isDeploying}
+                      disabled={(!html && projectFramework !== 'react-vite') || isDeploying}
                     >
                       {isDeploying ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Globe className="h-3.5 w-3.5" />}
                       Deploy
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent>Deploy this static MVP for 2 credits</TooltipContent>
+                  <TooltipContent>Deploy this MVP for 3 MVP credits</TooltipContent>
                 </Tooltip>
               </div>
             </div>
@@ -421,7 +453,7 @@ export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({
               </div>
             )}
 
-            {!html && !isGenerating && projectFiles.length > 0 && (
+            {!html && projectFramework !== 'react-vite' && !isGenerating && projectFiles.length > 0 && (
               <div className="mx-6 max-w-xl rounded-3xl border border-border/60 bg-background/95 p-6 text-left shadow-sm">
                 <div className="flex items-start gap-3">
                   <div className="mt-0.5 rounded-2xl bg-amber-500/10 p-2 text-amber-600">
@@ -432,7 +464,7 @@ export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({
                       Preview needs a runtime entry
                     </h3>
                     <p className="mt-2 text-sm text-muted-foreground">
-                      This project&apos;s code is available in the Code tab, but the builder could not find a previewable HTML or framework entry point yet.
+                      This project&apos;s code is available in the Code tab, but the builder could not find a previewable HTML or running framework entry point yet.
                     </p>
                     <div className="mt-4">
                       <Button size="sm" className="gap-1.5" onClick={() => setActiveTab('code')}>
@@ -464,7 +496,63 @@ export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({
               </div>
             )}
 
-            {html && (
+            {(html || projectFramework === 'react-vite') && (
+              projectFramework === 'react-vite' ? (
+                <div className="flex h-full w-full flex-col bg-slate-950 text-slate-100">
+                  {webContainerState.previewUrl ? (
+                    <iframe
+                      key={`${previewKey}-${webContainerState.previewUrl}`}
+                      title="MVP Builder WebContainer Preview"
+                      src={webContainerState.previewUrl}
+                      className="h-full w-full border-0 bg-white"
+                      sandbox="allow-scripts allow-forms allow-modals allow-popups allow-same-origin"
+                    />
+                  ) : (
+                    <div className="flex flex-1 items-center justify-center px-6 text-center">
+                      <div className="max-w-md">
+                        {webContainerState.status === 'unsupported' ? (
+                          <TriangleAlert className="mx-auto h-10 w-10 text-amber-400" />
+                        ) : webContainerState.status === 'error' ? (
+                          <TriangleAlert className="mx-auto h-10 w-10 text-red-400" />
+                        ) : (
+                          <Loader2 className="mx-auto h-10 w-10 animate-spin text-primary" />
+                        )}
+                        <p className="mt-4 text-sm font-medium">
+                          {webContainerState.error || 'Starting React/Vite preview...'}
+                        </p>
+                        <p className="mt-2 text-xs text-slate-400">
+                          WebContainer installs dependencies and runs the Vite dev server in your browser.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                  <div className="max-h-40 overflow-y-auto border-t border-white/10 bg-black/70 px-3 py-2 font-mono text-[11px]">
+                    <div className="mb-1 flex items-center gap-1.5 text-slate-400">
+                      <TerminalSquare className="h-3.5 w-3.5" />
+                      Runtime logs
+                    </div>
+                    {webContainerState.logs.length === 0 ? (
+                      <div className="text-slate-500">No runtime logs yet.</div>
+                    ) : (
+                      webContainerState.logs.slice(-8).map((log) => (
+                        <div
+                          key={log.id}
+                          className={cn(
+                            'truncate',
+                            log.level === 'error'
+                              ? 'text-red-300'
+                              : log.level === 'warn'
+                              ? 'text-amber-300'
+                              : 'text-slate-300'
+                          )}
+                        >
+                          {log.message}
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              ) : (
               <div
                 className={cn(
                   'relative h-full transition-all duration-300',
@@ -519,6 +607,7 @@ export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({
                   title="App Preview"
                 />
               </div>
+              )
             )}
             </div>
           </div>

@@ -21,13 +21,16 @@ export type MVPBuilderActionType =
   | 'generation'
   | 'targeted_edit'
   | 'debug'
+  | 'add_page'
+  | 'add_feature'
+  | 'design_overhaul'
   | 'deploy'
   | 'restore'
   | 'export'
   | 'chat'
   | 'github_edit';
 
-export type MVPBuilderOutputProjectType = 'html_single' | 'react_multi';
+export type MVPBuilderOutputProjectType = 'html_single' | 'react_vite';
 
 export interface MVPBuilderSetupInput {
   productName: string;
@@ -51,6 +54,10 @@ export interface MVPBuilderOutputFile {
 export interface MVPBuilderValidatedOutput {
   project_type: MVPBuilderOutputProjectType;
   files: MVPBuilderOutputFile[];
+  package_json?: Record<string, unknown>;
+  dev_command: string;
+  build_command: string;
+  preview_port: number;
   setup_instructions: string;
   posthog_events: Array<{
     event_name: string;
@@ -67,6 +74,13 @@ export interface MVPBuilderVersion {
   action_type: MVPBuilderActionType;
   user_instruction: string;
   credits_used: number;
+  mvp_credits_used?: number;
+  project_type?: MVPBuilderOutputProjectType;
+  framework?: string;
+  model?: string | null;
+  build_command?: string;
+  dev_command?: string;
+  validation_status?: 'validated';
   files: MVPBuilderOutputFile[];
   generation_notes?: string;
 }
@@ -124,6 +138,9 @@ export const MVP_BUILDER_ACTION_CREDIT_FEATURE: Record<MVPBuilderActionType, str
   generation: 'APP_BUILDER_GENERATE',
   targeted_edit: 'APP_BUILDER_REFINE',
   debug: 'APP_BUILDER_DEBUG',
+  add_page: 'APP_BUILDER_ADD_PAGE',
+  add_feature: 'APP_BUILDER_ADD_FEATURE',
+  design_overhaul: 'APP_BUILDER_DESIGN_OVERHAUL',
   deploy: 'APP_BUILDER_DEPLOY',
   restore: 'APP_BUILDER_RESTORE',
   export: 'APP_BUILDER_EXPORT',
@@ -135,6 +152,9 @@ export const MVP_BUILDER_ACTION_LABELS: Record<MVPBuilderActionType, string> = {
   generation: 'New project generation',
   targeted_edit: 'Targeted edit',
   debug: 'Bug fix',
+  add_page: 'Add page',
+  add_feature: 'Add feature',
+  design_overhaul: 'Design overhaul',
   deploy: 'Deploy to URL',
   restore: 'Restore previous version',
   export: 'Export code',
@@ -152,6 +172,7 @@ const FORBIDDEN_COPY_PATTERNS = [
 ];
 
 const REQUIRED_PHASE_1_EVENTS = ['page_view', 'cta_clicked', 'form_submitted'];
+const REQUIRED_REACT_FILES = ['package.json', 'index.html'];
 
 export function sanitizeMVPBuilderTemplate(value: unknown): MVPBuilderTemplateId {
   return MVP_BUILDER_TEMPLATES.some((template) => template.id === value)
@@ -172,8 +193,17 @@ export function classifyMVPBuilderAction(input: string, hasProject: boolean): MV
   if (/\b(error|bug|broken|fix|doesn'?t work|not working|console|crash)\b/.test(normalized)) {
     return 'debug';
   }
-  if (/\b(add (a )?(page|route|screen)|new page|dashboard|auth|database|supabase|stripe|payment|marketplace)\b/.test(normalized)) {
+  if (/\b(auth|database|supabase|stripe|payment|marketplace|backend|server action)\b/.test(normalized)) {
     return 'unsupported';
+  }
+  if (/\b(add|create|build)\b.{0,40}\b(page|route|screen)\b|\b(new page|new route|another screen)\b/.test(normalized)) {
+    return 'add_page';
+  }
+  if (/\b(add|build|create|implement)\b.*\b(feature|flow|component|wizard|form|dashboard|table|chart|modal|settings)\b/.test(normalized)) {
+    return 'add_feature';
+  }
+  if (/\b(redesign|design overhaul|make it beautiful|modernize|visual refresh|new look|polish the design)\b/.test(normalized)) {
+    return 'design_overhaul';
   }
   if (/\b(change|make|replace|remove|update|edit|rewrite|rename|color|headline|button|copy|spacing)\b/.test(normalized)) {
     return 'targeted_edit';
@@ -195,8 +225,8 @@ export function validateMVPBuilderOutput(raw: unknown, options: { phase1Only?: b
 
   const candidate = raw as Record<string, unknown>;
   const projectType = candidate.project_type;
-  if (projectType !== 'html_single' && projectType !== 'react_multi') {
-    throw new Error('project_type must be html_single or react_multi.');
+  if (projectType !== 'html_single' && projectType !== 'react_vite') {
+    throw new Error('project_type must be html_single or react_vite.');
   }
   if (options.phase1Only !== false && projectType !== 'html_single') {
     throw new Error('Phase 1 only supports html_single projects.');
@@ -211,7 +241,8 @@ export function validateMVPBuilderOutput(raw: unknown, options: { phase1Only?: b
       throw new Error(`files[${index}] must be an object.`);
     }
     const item = file as Record<string, unknown>;
-    const filename = typeof item.filename === 'string' ? normalizeProjectPath(item.filename) : '';
+    const rawPath = typeof item.path === 'string' ? item.path : item.filename;
+    const filename = typeof rawPath === 'string' ? normalizeProjectPath(rawPath) : '';
     const content = typeof item.content === 'string' ? item.content : '';
     const description = typeof item.description === 'string' ? item.description.trim() : '';
 
@@ -230,24 +261,76 @@ export function validateMVPBuilderOutput(raw: unknown, options: { phase1Only?: b
   });
 
   const indexFile = files.find((file) => file.filename.toLowerCase() === 'index.html') ?? files.find((file) => file.filename.endsWith('.html'));
-  if (!indexFile) {
-    throw new Error('html_single output must include an HTML file.');
-  }
-  if (!/<title>[^<]+<\/title>/i.test(indexFile.content)) {
-    throw new Error('HTML output must include a title tag.');
-  }
-  if (!/<meta\s+name=["']description["']\s+content=["'][^"']+["']/i.test(indexFile.content)) {
-    throw new Error('HTML output must include a meta description.');
-  }
-  for (const eventName of REQUIRED_PHASE_1_EVENTS) {
-    if (!indexFile.content.includes(eventName)) {
-      throw new Error(`HTML output must track ${eventName}.`);
+  if (projectType === 'html_single') {
+    if (!indexFile) {
+      throw new Error('html_single output must include an HTML file.');
+    }
+    if (!/<title>[^<]+<\/title>/i.test(indexFile.content)) {
+      throw new Error('HTML output must include a title tag.');
+    }
+    if (!/<meta\s+name=["']description["']\s+content=["'][^"']+["']/i.test(indexFile.content)) {
+      throw new Error('HTML output must include a meta description.');
+    }
+    for (const eventName of REQUIRED_PHASE_1_EVENTS) {
+      if (!indexFile.content.includes(eventName)) {
+        throw new Error(`HTML output must track ${eventName}.`);
+      }
     }
   }
+
+  if (projectType === 'react_vite') {
+    for (const requiredFile of REQUIRED_REACT_FILES) {
+      if (!files.some((file) => file.filename === requiredFile)) {
+        throw new Error(`react_vite output must include ${requiredFile}.`);
+      }
+    }
+    const packageFile = files.find((file) => file.filename === 'package.json');
+    const packageJson = parsePackageJson(packageFile?.content);
+    const dependencies = {
+      ...(packageJson.dependencies as Record<string, unknown> | undefined),
+      ...(packageJson.devDependencies as Record<string, unknown> | undefined),
+    };
+    if (!dependencies.react || !dependencies['react-dom'] || !dependencies.vite) {
+      throw new Error('react_vite package.json must include react, react-dom, and vite.');
+    }
+    const hasReactEntry = files.some((file) =>
+      /^(src\/)?main\.(tsx|jsx)$/.test(file.filename) && /createRoot|ReactDOM/.test(file.content)
+    );
+    if (!hasReactEntry) {
+      throw new Error('react_vite output must include a React main entry that mounts the app.');
+    }
+    const hasAppComponent = files.some((file) =>
+      /^src\/App\.(tsx|jsx)$/.test(file.filename) && /export\s+default|function\s+App|const\s+App/.test(file.content)
+    );
+    if (!hasAppComponent) {
+      throw new Error('react_vite output must include src/App.tsx or src/App.jsx.');
+    }
+  }
+
+  const packageJson = projectType === 'react_vite'
+    ? parsePackageJson(files.find((file) => file.filename === 'package.json')?.content)
+    : undefined;
 
   return {
     project_type: projectType,
     files,
+    package_json: packageJson,
+    dev_command:
+      typeof candidate.dev_command === 'string' && candidate.dev_command.trim()
+        ? candidate.dev_command.trim()
+        : projectType === 'react_vite'
+        ? 'npm run dev'
+        : '',
+    build_command:
+      typeof candidate.build_command === 'string' && candidate.build_command.trim()
+        ? candidate.build_command.trim()
+        : projectType === 'react_vite'
+        ? 'npm run build'
+        : '',
+    preview_port:
+      typeof candidate.preview_port === 'number' && Number.isFinite(candidate.preview_port)
+        ? Math.floor(candidate.preview_port)
+        : 5173,
     setup_instructions:
       typeof candidate.setup_instructions === 'string' && candidate.setup_instructions.trim()
         ? candidate.setup_instructions.trim()
@@ -268,8 +351,26 @@ export function validateMVPBuilderOutput(raw: unknown, options: { phase1Only?: b
     generation_notes:
       typeof candidate.generation_notes === 'string' && candidate.generation_notes.trim()
         ? candidate.generation_notes.trim()
+        : projectType === 'react_vite'
+        ? 'Generated a React/Vite MVP with a live app runtime.'
         : 'Generated a portable single-file MVP for fast validation.',
   };
+}
+
+function parsePackageJson(content: string | undefined): Record<string, unknown> {
+  if (!content) {
+    throw new Error('react_vite output must include package.json contents.');
+  }
+  try {
+    const parsed = JSON.parse(content) as Record<string, unknown>;
+    if (!parsed || typeof parsed !== 'object') throw new Error('Invalid package.json');
+    if (typeof parsed.scripts !== 'object' || !parsed.scripts) {
+      throw new Error('package.json must include scripts.');
+    }
+    return parsed;
+  } catch (error) {
+    throw new Error(error instanceof Error ? error.message : 'package.json must be valid JSON.');
+  }
 }
 
 export function mvpBuilderOutputToArtifact(
@@ -285,12 +386,16 @@ export function mvpBuilderOutputToArtifact(
     }))
   );
   const entry = files.find((file) => file.path === 'index.html')?.path ?? files.find((file) => file.path.endsWith('.html'))?.path ?? files[0]?.path ?? 'index.html';
+  const reactEntry =
+    files.find((file) => /^(src\/)?main\.(tsx|jsx)$/.test(file.path))?.path ??
+    files.find((file) => /^(src\/)?main\.(ts|js)$/.test(file.path))?.path ??
+    entry;
 
   return {
     projectName: projectName.trim() || 'Generated MVP',
-    framework: 'static-html',
+    framework: output.project_type === 'react_vite' ? 'react-vite' : 'static-html',
     projectType,
-    entryFile: entry,
+    entryFile: output.project_type === 'react_vite' ? reactEntry : entry,
     summary: output.generation_notes,
     dependencies: [],
     files,
@@ -303,6 +408,7 @@ export function createMVPBuilderVersion(input: {
   userInstruction: string;
   creditsUsed: number;
   output: MVPBuilderValidatedOutput;
+  model?: string | null;
 }): MVPBuilderVersion {
   const highest = input.previousVersions.reduce((max, version) => Math.max(max, version.version_number || 0), 0);
   return {
@@ -312,6 +418,13 @@ export function createMVPBuilderVersion(input: {
     action_type: input.actionType,
     user_instruction: input.userInstruction,
     credits_used: input.creditsUsed,
+    mvp_credits_used: input.creditsUsed,
+    project_type: input.output.project_type,
+    framework: input.output.project_type === 'react_vite' ? 'react-vite' : 'static-html',
+    model: input.model ?? null,
+    build_command: input.output.build_command,
+    dev_command: input.output.dev_command,
+    validation_status: 'validated',
     files: input.output.files,
     generation_notes: input.output.generation_notes,
   };

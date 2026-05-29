@@ -13,10 +13,13 @@ export const CREDIT_COSTS = {
   WAITLIST_GENERATION: 3,
   PMF_SCORING: 4,
   GTM_ANALYSIS: 5,
-  APP_BUILDER_GENERATE: 10,
-  APP_BUILDER_REFINE: 3,
-  APP_BUILDER_DEBUG: 2,
-  APP_BUILDER_DEPLOY: 2,
+  APP_BUILDER_GENERATE: 15,
+  APP_BUILDER_REFINE: 4,
+  APP_BUILDER_DEBUG: 3,
+  APP_BUILDER_ADD_PAGE: 6,
+  APP_BUILDER_ADD_FEATURE: 8,
+  APP_BUILDER_DESIGN_OVERHAUL: 8,
+  APP_BUILDER_DEPLOY: 3,
   APP_BUILDER_RESTORE: 1,
   APP_BUILDER_EXPORT: 0,
   APP_BUILDER_CHAT: 1,
@@ -64,6 +67,36 @@ export const CREDIT_COSTS = {
 // Type for credit cost feature names
 export type CreditFeature = keyof typeof CREDIT_COSTS;
 export type CreditPlan = 'rookie' | 'starter' | 'rising' | 'pro';
+
+export const MVP_CREDIT_COSTS = {
+  APP_BUILDER_GENERATE: 15,
+  APP_BUILDER_REFINE: 4,
+  APP_BUILDER_DEBUG: 3,
+  APP_BUILDER_ADD_PAGE: 6,
+  APP_BUILDER_ADD_FEATURE: 8,
+  APP_BUILDER_DESIGN_OVERHAUL: 8,
+  APP_BUILDER_DEPLOY: 3,
+  APP_BUILDER_RESTORE: 1,
+  APP_BUILDER_EXPORT: 0,
+  APP_BUILDER_CHAT: 1,
+  APP_BUILDER_GITHUB_EDIT: 3,
+} as const;
+
+export type MVPCreditFeature = keyof typeof MVP_CREDIT_COSTS;
+
+export const TIER_MONTHLY_MVP_CREDITS = {
+  rookie: 0,
+  starter: 30,
+  rising: 75,
+  pro: 150,
+} as const;
+
+export const MVP_CREDIT_PACKS = {
+  mvp_pack_micro: { credits: 30, priceCents: 900, label: 'Micro MVP Pack', featured: false },
+  mvp_pack_builder: { credits: 100, priceCents: 2500, label: 'Builder MVP Pack', featured: true },
+  mvp_pack_growth: { credits: 220, priceCents: 4900, label: 'Growth MVP Pack', featured: false },
+  mvp_pack_scale: { credits: 500, priceCents: 9900, label: 'Scale MVP Pack', featured: false },
+} as const;
 
 export const PLAN_CREDIT_COST_OVERRIDES: Partial<Record<CreditPlan, Partial<Record<CreditFeature, number>>>> = {
   rookie: {

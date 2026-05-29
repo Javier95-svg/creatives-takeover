@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import { checkAndDeductCredits, refundCredits, getUserFromAuth } from "../_shared/credit-deduction.ts";
-import { CREDIT_COSTS } from "../_shared/credit-constants.ts";
+import { checkAndDeductMVPCredits, refundMVPCredits, getUserFromAuth } from "../_shared/mvp-credit-deduction.ts";
+import { MVP_CREDIT_COSTS } from "../_shared/mvp-credit-constants.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -49,6 +49,14 @@ function getLatestFiles(project: Record<string, any>): Array<{ file: string; dat
       data: typeof file.content === "string" ? file.content : "",
     }))
     .filter((file) => file.file && file.data.trim());
+}
+
+function inferProjectType(project: Record<string, any>, files: Array<{ file: string; data: string }>) {
+  if (project.project_type === "react_vite" || project.project_type === "react_multi") return "react_vite";
+  if (files.some((file) => file.file === "package.json") && files.some((file) => /^src\/main\.(tsx|jsx|ts|js)$/.test(file.file))) {
+    return "react_vite";
+  }
+  return "html_single";
 }
 
 serve(async (req) => {
@@ -103,11 +111,10 @@ serve(async (req) => {
   }
 
   const creditFeature = "APP_BUILDER_DEPLOY";
-  const creditCost = CREDIT_COSTS[creditFeature];
+  const creditCost = MVP_CREDIT_COSTS[creditFeature];
   const idempotencyKey = req.headers.get("Idempotency-Key") ?? undefined;
-  const creditCheck = await checkAndDeductCredits(user.id, creditCost, creditFeature, undefined, {
+  const creditCheck = await checkAndDeductMVPCredits(user.id, creditCost, creditFeature, {
     idempotencyKey,
-    entitlementFeature: creditFeature,
     mvpBuilderActionType: "deploy",
     projectId,
   });
@@ -118,13 +125,14 @@ serve(async (req) => {
       error: creditCheck.error || "Unable to process credits",
       errorCode: creditCheck.errorCode || "CREDIT_FAILURE",
       requiredCredits: creditCost,
-    }, creditCheck.errorCode === "INSUFFICIENT_CREDITS" ? 402 : 400);
+    }, creditCheck.errorCode === "INSUFFICIENT_MVP_CREDITS" ? 402 : 400);
   }
 
-  const chargedCredits = (creditCheck.usedFromQuota ?? 0) + (creditCheck.usedFromBalance ?? 0);
+  const chargedCredits = creditCheck.usedFromBalance ?? 0;
   const baseSlug = slugify(typeof project.title === "string" ? project.title : projectId);
   const deploymentSlug = `${baseSlug}-${projectId.slice(0, 8)}`;
   const desiredUrl = `https://${deploymentSlug}.${baseDomain}`;
+  const projectType = inferProjectType(project, files);
   const deployedFiles = files.map((file) => ({
     file: file.file,
     data: file.data.replaceAll("POSTHOG_KEY", posthogKey),
@@ -149,10 +157,19 @@ serve(async (req) => {
         project: deploymentSlug,
         target: "production",
         files: deployedFiles,
-        projectSettings: {
-          framework: null,
-          outputDirectory: ".",
-        },
+        buildCommand: projectType === "react_vite" ? "npm run build" : null,
+        outputDirectory: projectType === "react_vite" ? "dist" : ".",
+        projectSettings: projectType === "react_vite"
+          ? {
+              framework: "vite",
+              buildCommand: "npm run build",
+              outputDirectory: "dist",
+              installCommand: "npm install",
+            }
+          : {
+              framework: null,
+              outputDirectory: ".",
+            },
       }),
     });
 
@@ -174,6 +191,7 @@ serve(async (req) => {
           ...(project.metadata || {}),
           deployment: {
             provider: "vercel",
+            projectType,
             vercelDeploymentId: deployment?.id ?? null,
             desiredUrl,
             deployedAt: new Date().toISOString(),
@@ -197,7 +215,7 @@ serve(async (req) => {
       .eq("id", projectId)
       .eq("user_id", user.id);
     if (chargedCredits > 0) {
-      await refundCredits(user.id, chargedCredits, creditFeature, "MVP Builder deploy failed", {
+      await refundMVPCredits(user.id, chargedCredits, creditFeature, "MVP Builder deploy failed", {
         projectId,
         error: error instanceof Error ? error.message : String(error),
       }).catch(() => {});

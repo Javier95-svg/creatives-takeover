@@ -14,7 +14,8 @@ import {
   sanitizeMVPProjectType,
 } from '@/data/mvpProjectTypes';
 import type { CreditFeature } from '@/config/constants';
-import { CREDIT_COSTS } from '@/config/constants';
+import { MVP_CREDIT_COSTS, type MVPCreditFeature } from '@/config/constants';
+import { useMVPCredits } from '@/hooks/useMVPCredits';
 import {
   buildPreviewFromProject,
   createProjectFromHtml,
@@ -120,6 +121,38 @@ export interface GitHubRepoSession {
   importedAt: string;
 }
 
+type WaitlistPrefillRow = {
+  title?: string | null;
+  value_proposition?: string | null;
+  target_audience?: string | null;
+  metadata?: {
+    projectContext?: {
+      positioningStatement?: string | null;
+    };
+    waitlistLaunchKit?: {
+      current?: {
+        output?: unknown;
+        inputs?: {
+          description?: string | null;
+          audience?: string | null;
+          primaryBenefit?: string | null;
+          tagline?: string | null;
+        };
+      };
+    };
+  } | null;
+};
+
+type ICPPrefillRow = {
+  product_name?: string | null;
+  business_name?: string | null;
+  one_line_description?: string | null;
+  summary?: string | null;
+  problem_statement?: string | null;
+  target_audience?: string | null;
+  pain_points?: string[] | string | null;
+};
+
 export interface GitHubCommitRecord {
   sha: string;
   shortSha: string;
@@ -134,7 +167,7 @@ export interface MVPProjectRecord {
   title: string;
   prompt_history: MVPMessage[];
   generated_code: string | null;
-  project_type?: 'html_single' | 'react_multi';
+  project_type?: 'html_single' | 'react_multi' | 'react_vite';
   template?: MVPBuilderTemplateId;
   project_files?: Array<{ filename?: string; path?: string; content: string; description?: string }>;
   versions?: MVPBuilderVersion[];
@@ -558,7 +591,13 @@ function createDefaultSetupInput(): MVPBuilderSetupInput {
 
 export function useMVPBuilder() {
   const { user } = useAuth();
-  const { ensureCredits, deductCredits, handleCreditError, showCreditReceipt } = useCreditActions();
+  const { ensureCredits, deductCredits, handleCreditError } = useCreditActions();
+  const {
+    totalAvailable: mvpCreditsAvailable,
+    hasMVPCredits,
+    deductMVPCredits,
+    refreshBalance: refreshMVPCredits,
+  } = useMVPCredits();
 
   const [messages, setMessages] = useState<MVPMessage[]>([]);
   const [projectFiles, setProjectFiles] = useState<MVPProjectFile[]>([]);
@@ -1115,13 +1154,14 @@ export function useMVPBuilder() {
       }
 
       try {
-        const { data: waitlist } = await (supabase as any)
-          .from('waitlist_pages')
+        const { data: waitlistRow } = await supabase
+          .from('waitlist_pages' as never)
           .select('title, value_proposition, target_audience, metadata, updated_at')
           .eq('user_id', user.id)
           .order('updated_at', { ascending: false })
           .limit(1)
           .maybeSingle();
+        const waitlist = waitlistRow as WaitlistPrefillRow | null;
 
         if (cancelled) return;
         const waitlistContext = waitlist?.metadata?.projectContext;
@@ -1156,13 +1196,14 @@ export function useMVPBuilder() {
           return;
         }
 
-        const { data: icp } = await (supabase as any)
-          .from('icp_analysis_results')
+        const { data: icpRow } = await supabase
+          .from('icp_analysis_results' as never)
           .select('*')
           .eq('user_id', user.id)
           .order('created_at', { ascending: false })
           .limit(1)
           .maybeSingle();
+        const icp = icpRow as ICPPrefillRow | null;
 
         if (cancelled || !icp) return;
         setSetupInputState((prev) => ({
@@ -1222,7 +1263,7 @@ export function useMVPBuilder() {
           isStreaming: false,
         })),
         generated_code: codeToSave,
-        project_type: 'html_single',
+        project_type: projectFramework === 'react-vite' ? 'react_vite' : 'html_single',
         template: setupInput.template,
         project_files: projectFiles.map((file) => ({
           filename: file.path,
@@ -1234,7 +1275,10 @@ export function useMVPBuilder() {
         deployment_status: deploymentUrl ? 'deployed' : 'not_deployed',
         metadata: {
           setupInput,
-          phase: 'mvp_builder_phase1',
+          phase: 'mvp_builder_phase2',
+          framework: projectFramework,
+          buildCommand: projectFramework === 'react-vite' ? 'npm run build' : '',
+          devCommand: projectFramework === 'react-vite' ? 'npm run dev' : '',
         },
         updated_at: timestamp,
       };
@@ -1289,7 +1333,7 @@ export function useMVPBuilder() {
         setIsSavingProject(false);
       }
     },
-    [currentHtml, deploymentUrl, entryFilePath, generatedCode, messages, projectFiles, projectId, projectName, projectVersions, setupInput, user]
+    [currentHtml, deploymentUrl, entryFilePath, generatedCode, messages, projectFiles, projectFramework, projectId, projectName, projectVersions, setupInput, user]
   );
 
   const loadProject = useCallback(
@@ -1971,7 +2015,7 @@ export function useMVPBuilder() {
     const fallbackQuote: MVPActionQuote = {
       actionType: localActionType,
       creditFeature: localFeature,
-      creditCost: CREDIT_COSTS[localFeature] ?? 0,
+      creditCost: MVP_CREDIT_COSTS[localFeature as MVPCreditFeature] ?? 0,
     };
     setLastActionQuote(fallbackQuote);
 
@@ -2020,7 +2064,7 @@ export function useMVPBuilder() {
         return;
       }
       if (localActionType === 'unsupported') {
-        toast.info('That request is planned for a later MVP Builder phase. Phase 1 supports generation, targeted edits, and bug fixes.');
+        toast.info('That request needs backend/auth/payment support planned for a later phase. Phase 2 supports frontend app generation, edits, bug fixes, add-page, add-feature, and redesign.');
         return;
       }
 
@@ -2034,13 +2078,18 @@ export function useMVPBuilder() {
           });
       const featureLabel = getMVPActionLabel(creditFeature);
 
-      const required = ensureCredits(creditFeature, {
-        featureName: featureLabel,
-      });
-      if (required === null) return;
-
       if (githubRepoSession) {
+        const required = ensureCredits(creditFeature, {
+          featureName: featureLabel,
+        });
+        if (required === null) return;
         await handleGitHubPrompt(prompt, creditFeature);
+        return;
+      }
+
+      const required = MVP_CREDIT_COSTS[creditFeature as MVPCreditFeature] ?? 0;
+      if (!hasMVPCredits(required)) {
+        toast.error(`You need ${required} MVP Builder credits. Upgrade your plan or buy MVP credits.`);
         return;
       }
 
@@ -2182,26 +2231,27 @@ export function useMVPBuilder() {
                   : message
               )
             );
-            showCreditReceipt(creditFeature, required, undefined, {
-              featureName: featureLabel,
-              operationId: idempotencyKey,
-              idempotencyKey,
-            });
+            void refreshMVPCredits();
+            toast.success(`${featureLabel} used ${required} MVP credit${required === 1 ? '' : 's'}.`);
             return;
           }
 
           let fallbackProject: MVPProjectArtifact | null = null;
           if (streamedCode) {
             try {
-              const parsed = validateMVPBuilderOutput(parseMVPBuilderOutput(streamedCode), { phase1Only: true });
+              const parsed = validateMVPBuilderOutput(parseMVPBuilderOutput(streamedCode), { phase1Only: false });
               validatedOutput = parsed;
               fallbackProject = {
                 projectName: activeSetupInput.productName || projectName,
-                framework: 'static-html',
-                projectType: 'landing-page',
+                framework: parsed.project_type === 'react_vite' ? 'react-vite' : 'static-html',
+                projectType: parsed.project_type === 'react_vite' ? 'web-app' : 'landing-page',
                 entryFile: parsed.files.find((file) => file.filename === 'index.html')?.filename ?? parsed.files[0]?.filename ?? 'index.html',
                 summary: parsed.generation_notes,
-                dependencies: [],
+                dependencies: extractProjectDependenciesFromFiles(normalizeProjectFiles(parsed.files.map((file) => ({
+                  path: file.filename,
+                  content: file.content,
+                  language: detectProjectFileLanguage(file.filename),
+                })))),
                 files: normalizeProjectFiles(parsed.files.map((file) => ({
                   path: file.filename,
                   content: file.content,
@@ -2265,11 +2315,8 @@ export function useMVPBuilder() {
               committedAt: assistantMsg.createdAt ?? new Date().toISOString(),
               commitRef: `build-${assistantMsg.id.slice(0, 8)}`,
             });
-            showCreditReceipt(creditFeature, required, undefined, {
-              featureName: featureLabel,
-              operationId: idempotencyKey,
-              idempotencyKey,
-            });
+            void refreshMVPCredits();
+            toast.success(`${featureLabel} used ${required} MVP credit${required === 1 ? '' : 's'}.`);
           }
         };
 
@@ -2332,12 +2379,19 @@ export function useMVPBuilder() {
               const nextProject = event.project as MVPProjectArtifact;
               if (event.output && typeof event.output === 'object') {
                 try {
-                  validatedOutput = validateMVPBuilderOutput(event.output, { phase1Only: true });
+                  validatedOutput = validateMVPBuilderOutput(event.output, { phase1Only: false });
                 } catch {
                   validatedOutput = null;
                 }
               }
-              if (event.actionType === 'generation' || event.actionType === 'targeted_edit' || event.actionType === 'debug') {
+              if (
+                event.actionType === 'generation' ||
+                event.actionType === 'targeted_edit' ||
+                event.actionType === 'debug' ||
+                event.actionType === 'add_page' ||
+                event.actionType === 'add_feature' ||
+                event.actionType === 'design_overhaul'
+              ) {
                 completedActionType = event.actionType;
               }
               if (typeof event.creditCost === 'number') {
@@ -2366,11 +2420,16 @@ export function useMVPBuilder() {
             } else if (event.type === 'error') {
               const errMsg = (event.error as string) ?? 'Something went wrong.';
               const errCode = event.errorCode as string | undefined;
-              handleCreditError(
-                { message: errMsg, status: errCode === 'INSUFFICIENT_CREDITS' ? 402 : 500 },
-                { error: errMsg, errorCode: errCode },
-                creditFeature
-              );
+              if (errCode === 'INSUFFICIENT_MVP_CREDITS') {
+                toast.error(errMsg);
+              } else {
+                handleCreditError(
+                  { message: errMsg, status: errCode === 'INSUFFICIENT_CREDITS' ? 402 : 500 },
+                  { error: errMsg, errorCode: errCode },
+                  creditFeature
+                );
+              }
+              void refreshMVPCredits();
               setMessages((prev) =>
                 prev.map((message) =>
                   message.id === assistantMsg.id
@@ -2448,6 +2507,7 @@ export function useMVPBuilder() {
       ensureCredits,
       generatedCode,
       githubRepoSession,
+      hasMVPCredits,
       handleCreditError,
       handleGitHubPrompt,
       isGenerating,
@@ -2462,9 +2522,9 @@ export function useMVPBuilder() {
       projectName,
       projectSummary,
       projectVersions,
+      refreshMVPCredits,
       selectedModels,
       selectedProjectType,
-      showCreditReceipt,
       setupInput,
       user,
     ]
@@ -2656,9 +2716,9 @@ export function useMVPBuilder() {
     async (snapshotId: string) => {
       const snapshot = projectSnapshots.find((item) => item.id === snapshotId);
       if (!snapshot) return;
-      const charged = await deductCredits('APP_BUILDER_RESTORE', {
+      const charged = await deductMVPCredits('APP_BUILDER_RESTORE', {
         featureName: getMVPActionLabel('APP_BUILDER_RESTORE'),
-        operationId: `restore-${snapshot.id}`,
+        idempotencyKey: `restore-${snapshot.id}`,
         metadata: {
           mvpBuilderActionType: 'restore',
           projectId,
@@ -2677,7 +2737,7 @@ export function useMVPBuilder() {
       toast.success(`Restored snapshot: ${snapshot.label}`);
       markProjectDirty();
     },
-    [addProjectSnapshot, applyProjectArtifact, deductCredits, markProjectDirty, projectId, projectSnapshots]
+    [addProjectSnapshot, applyProjectArtifact, deductMVPCredits, markProjectDirty, projectId, projectSnapshots]
   );
 
   const exportProjectZip = useCallback(() => {
@@ -2692,12 +2752,8 @@ export function useMVPBuilder() {
     link.download = `${(projectName || 'mvp').toLowerCase().replace(/[^a-z0-9]+/g, '-') || 'mvp'}.zip`;
     link.click();
     URL.revokeObjectURL(url);
-    showCreditReceipt('APP_BUILDER_EXPORT', 0, undefined, {
-      featureName: getMVPActionLabel('APP_BUILDER_EXPORT'),
-      operationId: `export-${projectId}-${Date.now()}`,
-      metadata: { mvpBuilderActionType: 'export', projectId },
-    });
-  }, [projectFiles, projectId, projectName, showCreditReceipt]);
+    toast.success('Exported MVP source ZIP.');
+  }, [projectFiles, projectName]);
 
   const deployProject = useCallback(async () => {
     if (!user || projectFiles.length === 0 || isDeploying) {
@@ -2721,25 +2777,25 @@ export function useMVPBuilder() {
       });
 
       if (error || !data?.ok) {
-        handleCreditError(error, data, 'APP_BUILDER_DEPLOY');
+        if (data?.errorCode === 'INSUFFICIENT_MVP_CREDITS') {
+          toast.error(data?.error || 'Not enough MVP Builder credits.');
+        } else {
+          handleCreditError(error, data, 'APP_BUILDER_DEPLOY');
+        }
         toast.error(data?.error || 'Deployment failed.');
+        void refreshMVPCredits();
         return;
       }
 
       setDeploymentUrl(data.deploymentUrl);
-      showCreditReceipt('APP_BUILDER_DEPLOY', Number(data.creditsUsed ?? CREDIT_COSTS.APP_BUILDER_DEPLOY), undefined, {
-        featureName: getMVPActionLabel('APP_BUILDER_DEPLOY'),
-        operationId: idempotencyKey,
-        idempotencyKey,
-        metadata: { mvpBuilderActionType: 'deploy', projectId },
-      });
-      toast.success('MVP deployed.');
+      void refreshMVPCredits();
+      toast.success(`MVP deployed for ${Number(data.creditsUsed ?? MVP_CREDIT_COSTS.APP_BUILDER_DEPLOY)} MVP credits.`);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Deployment failed.');
     } finally {
       setIsDeploying(false);
     }
-  }, [handleCreditError, isDeploying, projectFiles.length, projectId, saveProject, showCreditReceipt, user]);
+  }, [handleCreditError, isDeploying, projectFiles.length, projectId, refreshMVPCredits, saveProject, user]);
 
   const setSelectedModels = useCallback((models: string[]) => {
     setSelectedModelsState(sanitizeMVPModelSelection(models));
@@ -2838,6 +2894,7 @@ export function useMVPBuilder() {
     lastActionQuote,
     deploymentUrl,
     isDeploying,
+    mvpCreditsAvailable,
     githubConnection,
     githubRepositories,
     githubBranches,
