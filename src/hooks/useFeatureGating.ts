@@ -378,7 +378,7 @@ export function useFeatureGating() {
           requiredTier: 'rising'
         };
 
-      // MVP Builder: Rising+ unlocks credit-metered generation
+      // MVP Builder: all plans unlock credit-metered generation
       case 'mvp_builder':
         return checkCanonicalFeatureAccess('mvp_builder');
 

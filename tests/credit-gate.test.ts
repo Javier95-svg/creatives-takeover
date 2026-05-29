@@ -26,6 +26,6 @@ test('soft and hard gates emit upgrade prompt analytics', () => {
 
   assert.match(analyticsSource, /export const trackUpgradePromptShown/);
   assert.match(bannerSource, /trigger: "soft_gate_banner"/);
-  assert.match(bannerSource, /Upgrade to Starter for 100 credits\/month/);
+  assert.match(bannerSource, /Upgrade to Starter for 30 credits\/month/);
   assert.match(contextSource, /trigger: "hard_gate_modal"/);
 });

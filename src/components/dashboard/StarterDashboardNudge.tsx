@@ -130,7 +130,7 @@ export const StarterDashboardNudge = () => {
           <div>
             <h2 className="text-base font-semibold text-foreground">Unlock your full toolkit</h2>
             <p className="mt-1 text-sm leading-6 text-muted-foreground">
-              You have {totalAvailable} credits left. Starter gives you 100 credits every month and unlocks validation tools for your next step.
+              You have {totalAvailable} credits left. Starter gives you 30 credits every month and unlocks validation tools for your next step.
             </p>
             <Button
               className="mt-4"

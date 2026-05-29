@@ -7,6 +7,12 @@ import {
   extractProjectFromText,
   getChangedProjectFiles,
 } from '../src/lib/mvp-builder/project.ts';
+import {
+  buildMVPProjectZip,
+  classifyMVPBuilderAction,
+  mvpBuilderOutputToArtifact,
+  validateMVPBuilderOutput,
+} from '../src/lib/mvp-builder/phase1.ts';
 
 test('extractProjectFromText parses structured project output', () => {
   const raw = `MVP Snapshot: Demo\nCore Features: inbox, tasks\nPrimary Workflow: collect and sort\nNext Iteration: add auth\n<project-output>
@@ -106,4 +112,69 @@ test('getChangedProjectFiles reports added and modified files', () => {
     { path: 'app.js', status: 'added' },
     { path: 'index.html', status: 'modified' },
   ]);
+});
+
+test('phase 1 output validation accepts complete html_single JSON', () => {
+  const output = validateMVPBuilderOutput({
+    project_type: 'html_single',
+    files: [
+      {
+        filename: 'index.html',
+        description: 'Main static MVP page.',
+        content:
+          '<!DOCTYPE html><html><head><title>Launch OS</title><meta name="description" content="A waitlist MVP for launch teams."></head><body><button>Join</button><script>posthog.init("POSTHOG_KEY",{api_host:"https://app.posthog.com"});posthog.capture("page_view");posthog.capture("cta_clicked");posthog.capture("form_submitted");</script></body></html>',
+      },
+    ],
+    setup_instructions: 'Open index.html.',
+    posthog_events: [],
+    generation_notes: 'Built as a portable waitlist MVP.',
+  });
+
+  const artifact = mvpBuilderOutputToArtifact(output, 'Launch OS');
+  assert.equal(output.project_type, 'html_single');
+  assert.equal(artifact.framework, 'static-html');
+  assert.equal(artifact.entryFile, 'index.html');
+});
+
+test('phase 1 output validation rejects placeholders and react projects', () => {
+  assert.throws(() =>
+    validateMVPBuilderOutput({
+      project_type: 'react_multi',
+      files: [{ filename: 'index.html', content: 'x', description: 'x' }],
+    })
+  );
+
+  assert.throws(() =>
+    validateMVPBuilderOutput({
+      project_type: 'html_single',
+      files: [
+        {
+          filename: 'index.html',
+          description: 'Main page.',
+          content:
+            '<!DOCTYPE html><html><head><title>X</title><meta name="description" content="X"></head><body>[INSERT BENEFIT HERE]<script>page_view;cta_clicked;form_submitted;</script></body></html>',
+        },
+      ],
+    })
+  );
+});
+
+test('phase 1 action classifier maps supported and unsupported actions', () => {
+  assert.equal(classifyMVPBuilderAction('build my waitlist page', false), 'generation');
+  assert.equal(classifyMVPBuilderAction('make the headline sharper', true), 'targeted_edit');
+  assert.equal(classifyMVPBuilderAction('fix the broken submit button', true), 'debug');
+  assert.equal(classifyMVPBuilderAction('add auth and database tables', true), 'unsupported');
+});
+
+test('zip export creates an archive blob without deployment substitutions', async () => {
+  const blob = buildMVPProjectZip([
+    {
+      path: 'index.html',
+      content: '<script>posthog.init("POSTHOG_KEY")</script>',
+      language: 'html',
+    },
+  ]);
+
+  assert.equal(blob.type, 'application/zip');
+  assert.ok(blob.size > 0);
 });

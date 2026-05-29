@@ -17,8 +17,12 @@ test('client and edge credit costs stay in sync', () => {
 test('plan-aware credit pricing tightens Rookie waitlist usage and adds MVP action keys', () => {
   assert.equal(CLIENT_CREDIT_COSTS.WAITLIST_GENERATION, 3);
   assert.equal(CLIENT_PLAN_CREDIT_COST_OVERRIDES.rookie?.WAITLIST_GENERATION, 4);
-  assert.equal(CLIENT_CREDIT_COSTS.APP_BUILDER_GENERATE, 5);
+  assert.equal(CLIENT_CREDIT_COSTS.APP_BUILDER_GENERATE, 10);
   assert.equal(CLIENT_CREDIT_COSTS.APP_BUILDER_REFINE, 3);
+  assert.equal(CLIENT_CREDIT_COSTS.APP_BUILDER_DEBUG, 2);
+  assert.equal(CLIENT_CREDIT_COSTS.APP_BUILDER_DEPLOY, 2);
+  assert.equal(CLIENT_CREDIT_COSTS.APP_BUILDER_RESTORE, 1);
+  assert.equal(CLIENT_CREDIT_COSTS.APP_BUILDER_EXPORT, 0);
   assert.equal(CLIENT_CREDIT_COSTS.APP_BUILDER_CHAT, 1);
   assert.equal(CLIENT_CREDIT_COSTS.APP_BUILDER_GITHUB_EDIT, 3);
 });

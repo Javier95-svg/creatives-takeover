@@ -45,7 +45,7 @@ const creditBreakdown: {
     },
     {
       name: "MVP Builder",
-      description: `Preview only on Rookie and Starter. Rising and Pro unlock per-action billing: ${CREDIT_COSTS.APP_BUILDER_GENERATE} credits for the first build, ${CREDIT_COSTS.APP_BUILDER_REFINE} per AI edit, ${CREDIT_COSTS.APP_BUILDER_CHAT} per chat, and ${CREDIT_COSTS.APP_BUILDER_GITHUB_EDIT} per GitHub AI edit.`,
+      description: `Available on every plan with per-action billing: ${CREDIT_COSTS.APP_BUILDER_GENERATE} credits for a new build, ${CREDIT_COSTS.APP_BUILDER_REFINE} for targeted edits, ${CREDIT_COSTS.APP_BUILDER_DEBUG} for bug fixes, and ${CREDIT_COSTS.APP_BUILDER_DEPLOY} to deploy.`,
       badge: "Unlocked on Rising+",
       badgeVariant: "outline",
       badgeClassName: "bg-blue-50 dark:bg-blue-950/30",

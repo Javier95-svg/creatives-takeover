@@ -38,247 +38,78 @@ const HTML_CAPABLE_MODEL_SET = new Set<string>([
   "openai/gpt-5-nano-2025-08-07",
 ]);
 
-// ── System prompts ──────────────────────────────────────────────────────────
+type MVPBuilderActionType = "generation" | "targeted_edit" | "debug";
+type MVPBuilderTemplateId = "waitlist_landing" | "saas_landing" | "community_landing" | "blank";
+type MVPBuilderPaletteId = "minimal" | "bold" | "warm";
 
-const GENERATE_SYSTEM_PROMPT = `You are a senior product engineer building a polished MVP preview.
+const ACTION_CONFIG: Record<MVPBuilderActionType, { feature: keyof typeof CREDIT_COSTS; temperature: number; maxTokens: number }> = {
+  generation: { feature: "APP_BUILDER_GENERATE", temperature: 0.4, maxTokens: 16000 },
+  targeted_edit: { feature: "APP_BUILDER_REFINE", temperature: 0.2, maxTokens: 8000 },
+  debug: { feature: "APP_BUILDER_DEBUG", temperature: 0.1, maxTokens: 6000 },
+};
 
-Return only a single self-contained HTML document with inline CSS and inline JavaScript.
+const BASE_SYSTEM_PROMPT = `You are a senior full-stack developer specializing in building MVPs for early-stage startups. Your output is always complete, working, deployable code.
 
-Strict rules:
-1. Output code only. No markdown fences, no commentary, no explanations, no labels.
-2. The response must be a complete HTML document starting with <!DOCTYPE html>.
-3. Inline all CSS inside <style> and all JavaScript inside <script>.
-4. Make the experience feel premium, fast, and production-minded.
-5. Every interactive control must do something real.
-6. Use accessible labels, responsive layout, and sensible empty/loading/success states.
-7. Persist useful user-facing state with localStorage when appropriate.
-8. Do not rely on a backend or build step. Everything must run in the browser as-is.
-9. Prefer small, readable vanilla JavaScript over framework code.
-10. If the prompt is ambiguous, make strong product decisions and ship a coherent first version.`;
+Return only valid JSON. No markdown fences, commentary, labels, XML tags, or trailing prose.
 
-const REFINE_SYSTEM_PROMPT = `You are a senior product engineer refining an existing MVP preview.
+Core principles:
+1. Complete output only. Every file must be complete and runnable. Never output partial files, placeholders, TODOs, or continuation markers.
+2. Mobile-first, responsive UI. Desktop is an enhancement.
+3. Clean, readable code with semantic HTML and accessible labels.
+4. Real content only. Use the founder's product name, target audience, and pain language. Never use Lorem ipsum or bracket placeholders.
+5. Production-ready defaults: title, meta description, OG tags, keyboard-friendly controls, and PostHog analytics initialization with the literal placeholder POSTHOG_KEY.
+6. Phase 1 supports html_single only. Use a single index.html file with inline CSS and inline JavaScript. No build step, backend, React, Supabase auth, or Stripe implementation.
+7. Every generated app must track page_view on load, cta_clicked on primary CTAs, and form_submitted on forms.
 
-You will receive the current HTML document and a follow-up request.
-
-Strict rules:
-1. Return only the full updated HTML document. No markdown fences, no commentary, no explanations.
-2. Preserve the existing working structure unless the user explicitly requests a different direction.
-3. Make only the requested changes plus any minimal fixes required to keep the product coherent.
-4. Keep the output as a single self-contained HTML document with inline CSS and inline JavaScript.
-5. Preserve user-facing functionality and localStorage keys whenever reasonable.
-6. The response must be a complete HTML document starting with <!DOCTYPE html>.`;
-
-const CHAT_SYSTEM_PROMPT = `You are a senior product engineer collaborating on an MVP with a founder.
-
-Respond in plain text only.
-
-Strict rules:
-1. Do not output HTML, JSON, markdown fences, or code unless the user explicitly asks for a tiny inline example.
-2. Be direct, product-minded, and specific.
-3. Help the founder clarify scope, UX decisions, flows, tradeoffs, and implementation direction.
-4. If project context is provided, use it to reference the current build and suggest the best next move.
-5. Keep the tone like a strong product engineer working alongside the founder.`;
-
-// ── HTML extraction ─────────────────────────────────────────────────────────
-
-function extractHtml(fullText: string): string | null {
-  const start = fullText.indexOf("<html-output>");
-  const end = fullText.indexOf("</html-output>");
-  if (start !== -1 && end !== -1) {
-    return fullText.slice(start + "<html-output>".length, end).trim();
-  }
-
-  const cleaned = fullText
-    .replace(/^```(?:html)?\s*/i, "")
-    .replace(/\s*```$/i, "")
-    .trim();
-  const doctypeIndex = cleaned.search(/<!doctype html>/i);
-  if (doctypeIndex >= 0) {
-    return cleaned.slice(doctypeIndex).trim();
-  }
-  const htmlIndex = cleaned.search(/<html[\s>]/i);
-  if (htmlIndex >= 0) {
-    return cleaned.slice(htmlIndex).trim();
-  }
-  return cleaned.startsWith("<") ? cleaned : null;
-}
-
-function normalizeProjectPath(path: string): string {
-  return path
-    .replace(/\\/g, "/")
-    .replace(/^\.\/+/, "")
-    .split("/")
-    .reduce<string[]>((parts, segment) => {
-      if (!segment || segment === ".") return parts;
-      if (segment === "..") {
-        parts.pop();
-        return parts;
-      }
-      parts.push(segment);
-      return parts;
-    }, [])
-    .join("/");
-}
-
-function extractProjectJson(fullText: string): string | null {
-  const start = fullText.indexOf("<project-output>");
-  const end = fullText.indexOf("</project-output>");
-  if (start === -1 || end === -1) return null;
-  return fullText.slice(start + "<project-output>".length, end).trim();
-}
-
-function buildLegacyProjectFromHtml(html: string) {
-  return {
-    projectName: "Generated App",
-    framework: "static-html",
-    projectType: "web-app",
-    entryFile: "index.html",
-    summary: "Generated with MVP Builder.",
-    dependencies: [],
-    files: [
-      {
-        path: "index.html",
-        content: html,
-      },
-    ],
-  };
-}
-
-function extractProject(fullText: string) {
-  const rawProject = extractProjectJson(fullText);
-
-  if (rawProject) {
-    try {
-      const parsed = JSON.parse(rawProject) as {
-        projectName?: unknown;
-        framework?: unknown;
-        projectType?: unknown;
-        entryFile?: unknown;
-        summary?: unknown;
-        dependencies?: Array<{
-          name?: unknown;
-          source?: unknown;
-          version?: unknown;
-          url?: unknown;
-          purpose?: unknown;
-        }>;
-        files?: Array<{ path?: unknown; content?: unknown }>;
-      };
-
-      const files = Array.isArray(parsed.files)
-        ? parsed.files
-            .map((file) => {
-              if (typeof file?.path !== "string" || typeof file?.content !== "string") {
-                return null;
-              }
-              return {
-                path: normalizeProjectPath(file.path),
-                content: file.content,
-              };
-            })
-            .filter((file): file is { path: string; content: string } => Boolean(file && file.path))
-        : [];
-
-      if (files.length > 0) {
-        return {
-          projectName:
-            typeof parsed.projectName === "string" && parsed.projectName.trim()
-              ? parsed.projectName.trim()
-              : "Generated App",
-          framework:
-            parsed.framework === "react-vite" ||
-            parsed.framework === "next-like" ||
-            parsed.framework === "code-only"
-              ? parsed.framework
-              : "static-html",
-          projectType:
-            parsed.projectType === "landing-page" ||
-            parsed.projectType === "dashboard" ||
-            parsed.projectType === "marketplace" ||
-            parsed.projectType === "directory" ||
-            parsed.projectType === "internal-tool"
-              ? parsed.projectType
-              : "web-app",
-          entryFile:
-            typeof parsed.entryFile === "string" && parsed.entryFile.trim()
-              ? normalizeProjectPath(parsed.entryFile)
-              : files[0].path,
-          summary:
-            typeof parsed.summary === "string" && parsed.summary.trim()
-              ? parsed.summary.trim()
-              : "Generated with MVP Builder.",
-          dependencies: Array.isArray(parsed.dependencies)
-            ? parsed.dependencies
-                .map((dependency) => {
-                  if (typeof dependency?.name !== "string" || !dependency.name.trim()) {
-                    return null;
-                  }
-                  return {
-                    name: dependency.name.trim(),
-                    source:
-                      dependency.source === "cdn"
-                        ? "cdn"
-                        : dependency.source === "npm"
-                        ? "npm"
-                        : "browser",
-                    version:
-                      typeof dependency.version === "string" && dependency.version.trim()
-                        ? dependency.version.trim()
-                        : undefined,
-                    url:
-                      typeof dependency.url === "string" && dependency.url.trim()
-                        ? dependency.url.trim()
-                        : undefined,
-                    purpose:
-                      typeof dependency.purpose === "string" && dependency.purpose.trim()
-                        ? dependency.purpose.trim()
-                        : undefined,
-                  };
-                })
-                .filter(Boolean)
-            : [],
-          files,
-        };
-      }
-    } catch {
-      // fall back to legacy html extraction below
+Output schema:
+{
+  "project_type": "html_single",
+  "files": [
+    {
+      "filename": "index.html",
+      "content": "complete file contents",
+      "description": "one sentence describing the file"
     }
-  }
+  ],
+  "setup_instructions": "plain-language steps for the founder to run the project locally",
+  "posthog_events": [
+    { "event_name": "page_view", "trigger": "when the page loads", "properties": "project metadata" }
+  ],
+  "generation_notes": "brief founder-friendly explanation of architectural decisions"
+}`;
 
-  const html = extractHtml(fullText);
-  return html ? buildLegacyProjectFromHtml(html) : null;
-}
+const TEMPLATE_REQUIREMENTS: Record<MVPBuilderTemplateId, string> = {
+  waitlist_landing: `Template-specific requirements:
+- Hero section: headline, subheadline, email capture form, primary CTA.
+- Features section: 3 benefit cards derived from product context.
+- Social proof section with a realistic waitlist number.
+- Footer with product name, current year, and privacy policy link to #.
+- Form submit shows inline thank-you state and logs form_submitted with source: hero_form.`,
+  saas_landing: `Template-specific requirements:
+- One-page SaaS landing page with sticky nav sections for Home, Features, Pricing, and FAQ.
+- Hero, three feature cards, social proof, pricing CTA, 2-3 pricing cards, and FAQ.
+- Navigation anchors must work in-page.`,
+  community_landing: `Template-specific requirements:
+- Hero with identity statement for the community.
+- About/mission section, what members get, application form, FAQ, and three realistic testimonials.
+- Form submit shows inline thank-you state and logs form_submitted.`,
+  blank: `Template-specific requirements:
+- Follow the founder's custom prompt while staying within html_single Phase 1 limits.`,
+};
 
-function extractExplanation(fullText: string): string {
-  const projectStart = fullText.indexOf("<project-output>");
-  const htmlStart = fullText.indexOf("<html-output>");
-  const doctypeStart = fullText.search(/<!doctype html>/i);
-  const htmlDocumentStart = fullText.search(/<html[\s>]/i);
-  const candidates = [projectStart, htmlStart].filter((value) => value >= 0);
-  if (doctypeStart >= 0) candidates.push(doctypeStart);
-  if (htmlDocumentStart >= 0) candidates.push(htmlDocumentStart);
-  const start = candidates.length > 0 ? Math.min(...candidates) : -1;
-  const raw = start > 0 ? fullText.slice(0, start).trim() : fullText.trim();
-  // Remove any stray markdown fences
-  return raw.replace(/```[\s\S]*?```/g, "").trim();
-}
+const PALETTE_GUIDANCE: Record<MVPBuilderPaletteId, string> = {
+  minimal: "Minimal palette: white/gray background, dark text, one calm accent such as slate blue or sage green.",
+  bold: "Bold palette: high contrast, confident dark/light composition, strong accent such as electric blue or vibrant orange.",
+  warm: "Warm palette: soft neutral background, warm accents such as terracotta or golden yellow, readable contrast.",
+};
 
-function normalizeSelectedModels(raw: unknown): string[] {
-  if (!Array.isArray(raw)) return [DEFAULT_MODEL];
-  const unique = Array.from(
-    new Set(raw.filter((item): item is string => typeof item === "string"))
-  )
-    .filter((model) => SUPPORTED_MODEL_SET.has(model))
-    .slice(0, MAX_COMBO_MODELS);
-  return unique.length > 0 ? unique : [DEFAULT_MODEL];
-}
-
-function getFallbackCandidates(primaryModel: string): string[] {
-  const candidates = [primaryModel, DEFAULT_MODEL, FALLBACK_MODEL, "openai/gpt-5-mini-2025-08-07"];
-  return Array.from(new Set(candidates));
-}
-
-// ── SSE helpers ─────────────────────────────────────────────────────────────
+const FORBIDDEN_PATTERNS = [
+  /lorem ipsum/i,
+  /\[(?:insert|your|company|placeholder)[^\]]*\]/i,
+  /todo:/i,
+  /add your logic here/i,
+  /rest of code here/i,
+];
 
 function enc(obj: unknown): Uint8Array {
   return new TextEncoder().encode(`data: ${JSON.stringify(obj)}\n\n`);
@@ -286,6 +117,13 @@ function enc(obj: unknown): Uint8Array {
 
 function encDone(): Uint8Array {
   return new TextEncoder().encode("data: [DONE]\n\n");
+}
+
+function jsonResponse(body: unknown, status = 200): Response {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
 }
 
 function errorStream(message: string, errorCode?: string): Response {
@@ -306,14 +144,197 @@ function errorStream(message: string, errorCode?: string): Response {
   });
 }
 
+function normalizeSelectedModels(raw: unknown): string[] {
+  if (!Array.isArray(raw)) return [DEFAULT_MODEL];
+  const unique = Array.from(new Set(raw.filter((item): item is string => typeof item === "string")))
+    .filter((model) => SUPPORTED_MODEL_SET.has(model))
+    .slice(0, MAX_COMBO_MODELS);
+  return unique.length > 0 ? unique : [DEFAULT_MODEL];
+}
+
+function getFallbackCandidates(primaryModel: string): string[] {
+  return Array.from(new Set([primaryModel, DEFAULT_MODEL, FALLBACK_MODEL, "openai/gpt-5-mini-2025-08-07"]));
+}
+
+function normalizeTemplate(value: unknown): MVPBuilderTemplateId {
+  return value === "saas_landing" || value === "community_landing" || value === "blank"
+    ? value
+    : "waitlist_landing";
+}
+
+function normalizePalette(value: unknown): MVPBuilderPaletteId {
+  return value === "bold" || value === "warm" ? value : "minimal";
+}
+
+function classifyAction(input: string, hasProject: boolean): MVPBuilderActionType | "unclear" | "unsupported" {
+  const normalized = input.trim().toLowerCase();
+  if (!normalized) return "unclear";
+  if (!hasProject) return "generation";
+  if (/\b(error|bug|broken|fix|doesn'?t work|not working|console|crash)\b/.test(normalized)) return "debug";
+  if (/\b(add (a )?(page|route|screen)|new page|auth|database|supabase|stripe|payment|marketplace|dashboard)\b/.test(normalized)) return "unsupported";
+  return "targeted_edit";
+}
+
+function normalizeAction(value: unknown, userMessage: string, hasProject: boolean): MVPBuilderActionType | "unclear" | "unsupported" {
+  if (value === "generation" || value === "targeted_edit" || value === "debug") return value;
+  return classifyAction(userMessage, hasProject);
+}
+
+function normalizeProjectPath(path: string): string {
+  return path
+    .replace(/\\/g, "/")
+    .replace(/^\.\/+/, "")
+    .split("/")
+    .reduce<string[]>((parts, segment) => {
+      if (!segment || segment === ".") return parts;
+      if (segment === "..") {
+        parts.pop();
+        return parts;
+      }
+      parts.push(segment);
+      return parts;
+    }, [])
+    .join("/");
+}
+
+function parseModelJson(fullText: string): unknown {
+  const tagged = fullText.match(/<project-output>\s*([\s\S]*?)\s*<\/project-output>/i)?.[1];
+  const cleaned = (tagged ?? fullText)
+    .replace(/^```json\s*/i, "")
+    .replace(/^```\s*/i, "")
+    .replace(/\s*```$/i, "")
+    .trim();
+  return JSON.parse(cleaned);
+}
+
+function validateOutput(raw: unknown) {
+  if (!raw || typeof raw !== "object") throw new Error("Output must be a JSON object");
+  const candidate = raw as Record<string, unknown>;
+  if (candidate.project_type !== "html_single") throw new Error("Phase 1 output must use project_type html_single");
+  if (!Array.isArray(candidate.files) || candidate.files.length === 0) throw new Error("Output must include files");
+
+  const files = candidate.files.map((file, index) => {
+    const item = file as Record<string, unknown>;
+    const filename = typeof item.filename === "string" ? normalizeProjectPath(item.filename) : "";
+    const content = typeof item.content === "string" ? item.content : "";
+    const description = typeof item.description === "string" ? item.description.trim() : "";
+    if (!filename || !content.trim() || !description) {
+      throw new Error(`File ${index + 1} is missing filename, content, or description`);
+    }
+    for (const pattern of FORBIDDEN_PATTERNS) {
+      if (pattern.test(content)) throw new Error(`File ${filename} contains placeholder or incomplete copy`);
+    }
+    return { filename, content, description };
+  });
+
+  const htmlFile = files.find((file) => file.filename.toLowerCase() === "index.html") ?? files.find((file) => file.filename.endsWith(".html"));
+  if (!htmlFile) throw new Error("html_single output must include index.html or another HTML file");
+  if (!/<title>[^<]+<\/title>/i.test(htmlFile.content)) throw new Error("HTML must include a title tag");
+  if (!/<meta\s+name=["']description["']\s+content=["'][^"']+["']/i.test(htmlFile.content)) throw new Error("HTML must include a meta description");
+  for (const eventName of ["page_view", "cta_clicked", "form_submitted"]) {
+    if (!htmlFile.content.includes(eventName)) throw new Error(`HTML must track ${eventName}`);
+  }
+
+  return {
+    project_type: "html_single",
+    files,
+    setup_instructions:
+      typeof candidate.setup_instructions === "string" && candidate.setup_instructions.trim()
+        ? candidate.setup_instructions.trim()
+        : "Open index.html in a browser or deploy it as a static site.",
+    posthog_events: Array.isArray(candidate.posthog_events) ? candidate.posthog_events : [],
+    generation_notes:
+      typeof candidate.generation_notes === "string" && candidate.generation_notes.trim()
+        ? candidate.generation_notes.trim()
+        : "Generated a portable single-file MVP for fast validation.",
+  };
+}
+
+function outputToProject(output: ReturnType<typeof validateOutput>, productName: string) {
+  return {
+    projectName: productName || "Generated MVP",
+    framework: "static-html",
+    projectType: "landing-page",
+    entryFile: output.files.find((file) => file.filename === "index.html")?.filename ?? output.files[0].filename,
+    summary: output.generation_notes,
+    dependencies: [],
+    files: output.files.map((file) => ({
+      path: file.filename,
+      content: file.content,
+    })),
+    phase1Output: output,
+  };
+}
+
+function buildPrompt(params: {
+  actionType: MVPBuilderActionType;
+  userMessage: string;
+  template: MVPBuilderTemplateId;
+  palette: MVPBuilderPaletteId;
+  setupInput: Record<string, unknown>;
+  projectContext: Record<string, unknown> | null;
+  currentProject: unknown;
+}) {
+  const setup = params.setupInput || {};
+  const productName = typeof setup.productName === "string" ? setup.productName : "Untitled MVP";
+  const oneLineDescription = typeof setup.oneLineDescription === "string" ? setup.oneLineDescription : params.userMessage;
+  const problem = typeof setup.validatedProblemStatement === "string" ? setup.validatedProblemStatement : "";
+  const audience = typeof setup.validatedTargetSegment === "string" ? setup.validatedTargetSegment : "";
+  const painLanguage = typeof setup.keyPainLanguage === "string" ? setup.keyPainLanguage : "";
+  const tagline = typeof setup.existingTagline === "string" ? setup.existingTagline : "";
+  const customPrompt = typeof setup.customPrompt === "string" ? setup.customPrompt : params.userMessage;
+
+  if (params.actionType === "generation") {
+    return `Generate a complete ${params.template} application for the following product.
+
+PRODUCT CONTEXT
+Product name: ${productName}
+Problem being solved: ${problem || "Infer from the founder request."}
+Target audience: ${audience || "Early-stage startup customers"}
+How the product solves it: ${oneLineDescription}
+Key language from real users: ${painLanguage || "Use concrete, founder-ready language inferred from the context."}
+${tagline ? `Tagline: ${tagline}` : ""}
+
+GENERATION REQUIREMENTS
+- Template: ${params.template}
+- Color palette: ${params.palette}. ${PALETTE_GUIDANCE[params.palette]}
+- Use the founder's actual product name, audience, and pain language throughout.
+- Include PostHog tracking with posthog.init('POSTHOG_KEY', {api_host: 'https://app.posthog.com'}).
+- Track page_view, cta_clicked, and form_submitted.
+- Every page state must have complete real copy.
+
+${TEMPLATE_REQUIREMENTS[params.template]}
+
+${params.template === "blank" ? `CUSTOM PROMPT\n${customPrompt}` : ""}
+
+CROSS-TOOL CONTEXT
+${JSON.stringify(params.projectContext ?? {}, null, 2)}`;
+  }
+
+  return `${params.actionType === "debug" ? "Fix the reported bug" : "Apply a targeted edit"} to the existing html_single project.
+
+Rules:
+- Return the complete updated JSON output, not only changed snippets.
+- Do not add pages, auth, database, payments, or React.
+- Preserve working structure and existing copy unless the request requires changing it.
+- Keep PostHog initialization and page_view, cta_clicked, form_submitted events.
+
+FOUNDER REQUEST
+${params.userMessage}
+
+CURRENT PROJECT
+${JSON.stringify(params.currentProject, null, 2)}`;
+}
+
 async function requestModelStream(
   apiKey: string,
   model: string,
   systemPrompt: string,
-  messages: Array<{ role: "user" | "assistant"; content: string }>
+  messages: Array<{ role: "user" | "assistant"; content: string }>,
+  config: { temperature: number; maxTokens: number }
 ): Promise<Response> {
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 90000);
+  const timeoutId = setTimeout(() => controller.abort(), 120000);
   try {
     return await fetch(AI_GATEWAY_URL, {
       method: "POST",
@@ -325,9 +346,10 @@ async function requestModelStream(
       body: JSON.stringify({
         model,
         messages: [{ role: "system", content: systemPrompt }, ...messages],
-        temperature: 0.2,
-        max_tokens: 7000,
+        temperature: config.temperature,
+        max_tokens: config.maxTokens,
         stream: true,
+        response_format: { type: "json_object" },
       }),
     });
   } finally {
@@ -335,83 +357,50 @@ async function requestModelStream(
   }
 }
 
-// ── Main handler ────────────────────────────────────────────────────────────
-
 serve(async (req: Request) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
-  const lovableApiKey = Deno.env.get("LOVABLE_API_KEY");
-
-  if (!lovableApiKey) {
-    return errorStream("LOVABLE_API_KEY not configured", "CONFIGURATION_ERROR");
-  }
-
-  // ── Parse request ──────────────────────────────────────────────────────
-
-  let userMessage: string;
-  let currentProject:
-    | {
-        projectName?: string;
-        framework?: string;
-        projectType?: string;
-        entryFile?: string;
-        summary?: string;
-        dependencies?: Array<{
-          name?: string;
-          source?: string;
-          version?: string;
-          url?: string;
-          purpose?: string;
-        }>;
-        files?: Array<{ path?: string; content?: string }>;
-      }
-    | null;
-  let conversationHistory: Array<{ role: string; content: string }>;
-  let userId: string | null;
-  let selectedModelsRaw: unknown;
-  let preferredProjectType: string | null;
-  let preferredFramework: string | null;
-  let currentCode: string | null;
-  let responseMode: "chat" | "build";
-
+  let body: Record<string, unknown>;
   try {
-    const body = await req.json();
-    userMessage = body.userMessage ?? "";
-    currentProject = body.currentProject ?? null;
-    conversationHistory = Array.isArray(body.conversationHistory)
-      ? body.conversationHistory
-      : [];
-    userId = body.userId ?? null;
-    selectedModelsRaw = body.selectedModels;
-    preferredProjectType = typeof body.preferredProjectType === "string" ? body.preferredProjectType : null;
-    preferredFramework = typeof body.preferredFramework === "string" ? body.preferredFramework : null;
-    currentCode = typeof body.currentCode === "string" ? body.currentCode : null;
-    responseMode = body.responseMode === "chat" ? "chat" : "build";
+    body = await req.json();
   } catch {
     return errorStream("Invalid request body", "BAD_REQUEST");
   }
 
-  const selectedModels = normalizeSelectedModels(selectedModelsRaw);
+  const userMessage = typeof body.userMessage === "string" ? body.userMessage : "";
+  const currentProject = body.currentProject ?? null;
+  const hasExistingProject = Boolean(
+    currentProject &&
+      typeof currentProject === "object" &&
+      Array.isArray((currentProject as Record<string, unknown>).files) &&
+      ((currentProject as Record<string, unknown>).files as unknown[]).length > 0
+  );
+  const mode = body.mode === "classify" ? "classify" : "generate";
+  const classifiedAction = normalizeAction(body.actionType, userMessage, hasExistingProject);
 
-  if (!userMessage.trim()) {
-    return errorStream("userMessage is required", "BAD_REQUEST");
+  if (mode === "classify") {
+    const feature = classifiedAction === "unsupported" || classifiedAction === "unclear"
+      ? null
+      : ACTION_CONFIG[classifiedAction].feature;
+    return jsonResponse({
+      actionType: classifiedAction,
+      creditFeature: feature,
+      creditCost: feature ? CREDIT_COSTS[feature] : 0,
+    });
   }
 
-  // ── Credit deduction ───────────────────────────────────────────────────
+  const lovableApiKey = Deno.env.get("LOVABLE_API_KEY");
+  if (!lovableApiKey) return errorStream("LOVABLE_API_KEY not configured", "CONFIGURATION_ERROR");
+  if (!userMessage.trim()) return errorStream("userMessage is required", "BAD_REQUEST");
+  if (classifiedAction === "unclear") return errorStream("Please clarify what you want MVP Builder to change.", "UNCLEAR_ACTION");
+  if (classifiedAction === "unsupported") {
+    return errorStream("That request is outside Phase 1. This builder currently supports initial generation, targeted edits, and bug fixes.", "UNSUPPORTED_ACTION");
+  }
 
-  const hasExistingProject =
-    Boolean(currentCode?.trim()) ||
-    (Boolean(currentProject) &&
-      Array.isArray(currentProject?.files) &&
-      currentProject!.files!.length > 0);
-  const isFirstGeneration = !hasExistingProject;
-  const creditFeature = responseMode === "chat"
-    ? "APP_BUILDER_CHAT"
-    : isFirstGeneration
-      ? "APP_BUILDER_GENERATE"
-      : "APP_BUILDER_REFINE";
+  const template = normalizeTemplate(body.template ?? (body.setupInput as Record<string, unknown> | undefined)?.template);
+  const palette = normalizePalette(body.palettePreference ?? (body.setupInput as Record<string, unknown> | undefined)?.palettePreference);
+  const userId = typeof body.userId === "string" ? body.userId : null;
+  const creditFeature = ACTION_CONFIG[classifiedAction].feature;
   const creditCost = CREDIT_COSTS[creditFeature];
   let chargedCredits = 0;
 
@@ -422,95 +411,55 @@ serve(async (req: Request) => {
       creditCost,
       creditFeature,
       undefined,
-      { idempotencyKey, entitlementFeature: creditFeature }
+      {
+        idempotencyKey,
+        entitlementFeature: creditFeature,
+        mvpBuilderActionType: classifiedAction,
+        projectId: typeof body.projectId === "string" ? body.projectId : undefined,
+        currentVersion: typeof body.currentVersion === "number" ? body.currentVersion : undefined,
+      }
     );
 
     if (!creditCheck.success) {
       return errorStream(
         creditCheck.errorCode === "INSUFFICIENT_CREDITS"
-          ? `You need ${creditCost} credits to use the AI App Builder. Please upgrade your plan or purchase more credits.`
-          : creditCheck.errorCode === "PLAN_UPGRADE_REQUIRED"
-            ? "AI App Builder is available on Rising and Pro. Upgrade your plan to continue."
-            : "Unable to process credits. Please try again.",
+          ? `You need ${creditCost} credits for this MVP Builder action. Please upgrade your plan or purchase more credits.`
+          : "Unable to process credits. Please try again.",
         creditCheck.errorCode
       );
     }
     chargedCredits = (creditCheck.usedFromQuota ?? 0) + (creditCheck.usedFromBalance ?? 0);
   }
 
-  // ── Build messages for model call ──────────────────────────────────────
-
-  const systemPrompt =
-    responseMode === "chat"
-      ? CHAT_SYSTEM_PROMPT
-      : isFirstGeneration
-      ? GENERATE_SYSTEM_PROMPT
-      : REFINE_SYSTEM_PROMPT;
-
-  // Keep last 4 turns for speed-focused context (2 user + 2 assistant)
-  const recentHistory = conversationHistory.slice(-4).map((m) => ({
-    role: m.role === "user" ? "user" : ("assistant" as "user" | "assistant"),
-    content: m.content,
-  }));
-
-  // For refinements, inject the current HTML as context
-  let userContent = userMessage;
-  const projectTypeInstruction = preferredProjectType
-    ? `Preferred project type: ${preferredProjectType}. Honor this unless the request strongly contradicts it.`
-    : "";
-  const frameworkInstruction = preferredFramework
-    ? preferredFramework === "static-html"
-      ? "Preferred framework: static-html. Keep the project directly previewable with plain HTML, inline CSS, and inline browser JavaScript."
-      : `Preferred framework request: ${preferredFramework}. Even so, still return a single self-contained HTML document that captures the requested look and behavior.`
-    : "";
-  if (responseMode === "chat" && currentCode) {
-    userContent =
-      `Current HTML snapshot:\n<html-source>\n${currentCode}\n</html-source>\n\nFounder request:\n${userMessage}`;
-  } else if (responseMode === "chat" && currentProject) {
-    userContent =
-      `Current project snapshot:\n<project-source>\n${JSON.stringify(
-        currentProject,
-        null,
-        2
-      )}\n</project-source>\n\nFounder request:\n${userMessage}`;
-  } else if (!isFirstGeneration && currentCode) {
-    userContent =
-      `${projectTypeInstruction}\n${frameworkInstruction}\n\nCurrent HTML (edit this exact build):\n<html-source>\n${currentCode}\n</html-source>\n\nUser request:\n${userMessage}`;
-  } else if (!isFirstGeneration && currentProject) {
-    userContent =
-      `${projectTypeInstruction}\n${frameworkInstruction}\n\nCurrent project files:\n<project-source>\n${JSON.stringify(
-        currentProject,
-        null,
-        2
-      )}\n</project-source>\n\nUser request:\n${userMessage}`;
-  } else if (projectTypeInstruction || frameworkInstruction) {
-    userContent = `${projectTypeInstruction}\n${frameworkInstruction}\n\nUser request:\n${userMessage}`;
-  }
-
-  // Resolve selected model set
-  const textCapableModels = selectedModels.filter((model) =>
-    HTML_CAPABLE_MODEL_SET.has(model)
-  );
-  const skippedImageModels = selectedModels.filter(
-    (model) => !HTML_CAPABLE_MODEL_SET.has(model)
-  );
+  const selectedModels = normalizeSelectedModels(body.selectedModels);
+  const textCapableModels = selectedModels.filter((model) => HTML_CAPABLE_MODEL_SET.has(model));
   const requestedPrimaryModel = textCapableModels[0] ?? DEFAULT_MODEL;
-
-  if (skippedImageModels.length > 0) {
-    userContent +=
-      `\n\nImage-focused models selected: ${skippedImageModels.join(", ")}.` +
-      ` Prioritize stronger visual polish and image-friendly layout decisions while still returning a single HTML document.`;
-  }
-
-  const messages = [
-    ...recentHistory,
-    { role: "user" as const, content: userContent },
-  ];
-
-  // ── Stream from AI gateway using requested primary, then fallback chain ─
   const modelCandidates = getFallbackCandidates(requestedPrimaryModel);
+  const setupInput = body.setupInput && typeof body.setupInput === "object" ? body.setupInput as Record<string, unknown> : {};
+  const productName = typeof setupInput.productName === "string" ? setupInput.productName : "Generated MVP";
+  const recentHistory = Array.isArray(body.conversationHistory)
+    ? body.conversationHistory.slice(-4).map((m) => {
+        const message = m as Record<string, unknown>;
+        return {
+          role: message.role === "user" ? "user" as const : "assistant" as const,
+          content: typeof message.content === "string" ? message.content : "",
+        };
+      })
+    : [];
+  const prompt = buildPrompt({
+    actionType: classifiedAction,
+    userMessage,
+    template,
+    palette,
+    setupInput,
+    projectContext: body.projectContext && typeof body.projectContext === "object" ? body.projectContext as Record<string, unknown> : null,
+    currentProject,
+  });
+  const messages = [...recentHistory, { role: "user" as const, content: prompt }];
+
   let selectedModel = modelCandidates[0];
   let aiResponse: Response | null = null;
+  let lastGatewayError = "";
 
   for (const candidate of modelCandidates) {
     selectedModel = candidate;
@@ -518,44 +467,34 @@ serve(async (req: Request) => {
       const attempt = await requestModelStream(
         lovableApiKey,
         candidate,
-        systemPrompt,
-        messages
+        BASE_SYSTEM_PROMPT,
+        messages,
+        ACTION_CONFIG[classifiedAction]
       );
       if (attempt.ok) {
         aiResponse = attempt;
         break;
       }
-
-      const errText = await attempt.text();
-      console.error("AI gateway model attempt failed:", candidate, attempt.status, errText);
+      lastGatewayError = await attempt.text();
+      console.error("AI gateway model attempt failed:", candidate, attempt.status, lastGatewayError);
     } catch (err) {
+      lastGatewayError = err instanceof Error ? err.message : String(err);
       console.error("AI gateway request failed:", candidate, err);
     }
   }
 
   if (!aiResponse) {
     if (userId && chargedCredits > 0) {
-      await refundCredits(
-        userId,
-        chargedCredits,
-        creditFeature,
-        "AI gateway error (all model attempts failed)"
-      ).catch(() => {});
+      await refundCredits(userId, chargedCredits, creditFeature, "AI gateway error", { lastGatewayError }).catch(() => {});
     }
-
-    return errorStream(
-      "AI service temporarily unavailable. Credits have been refunded. Please try again.",
-      "AI_ERROR"
-    );
+    return errorStream("AI service temporarily unavailable. Credits have been refunded. Please try again.", "AI_ERROR");
   }
-
-  // ── Proxy gateway SSE → our SSE format ────────────────────────────────
 
   const { readable, writable } = new TransformStream<Uint8Array, Uint8Array>();
   const writer = writable.getWriter();
 
   (async () => {
-    const reader = aiResponse.body!.getReader();
+    const reader = aiResponse!.body!.getReader();
     const decoder = new TextDecoder();
     let buffer = "";
     let fullText = "";
@@ -565,7 +504,6 @@ serve(async (req: Request) => {
       while (!sawDone) {
         const { done, value } = await reader.read();
         if (done) break;
-
         buffer += decoder.decode(value, { stream: true });
         const lines = buffer.split("\n");
         buffer = lines.pop() ?? "";
@@ -577,76 +515,60 @@ serve(async (req: Request) => {
             sawDone = true;
             break;
           }
-
           let event: Record<string, unknown>;
           try {
             event = JSON.parse(raw);
           } catch {
             continue;
           }
-
-          const chunk = (event.choices as Array<Record<string, unknown>> | undefined)?.[0]
-            ?.delta as Record<string, unknown> | undefined;
+          const chunk = (event.choices as Array<Record<string, unknown>> | undefined)?.[0]?.delta as Record<string, unknown> | undefined;
           const content = chunk?.content;
-
           if (typeof content === "string" && content) {
             fullText += content;
-            await writer.write(
-              enc({ type: responseMode === "chat" ? "delta" : "code-delta", content })
-            );
-          } else if (
-            typeof event.error === "object" &&
-            event.error !== null &&
-            typeof (event.error as Record<string, unknown>).message === "string"
-          ) {
-            throw new Error((event.error as Record<string, unknown>).message as string);
-          } else if (typeof event.error === "string") {
-            throw new Error(event.error);
+            await writer.write(enc({ type: "code-delta", content }));
           }
         }
       }
 
-      if (responseMode === "build") {
-        const project = extractProject(fullText);
-
-        if (project) {
-          await writer.write(enc({ type: "project", project }));
-        } else {
-          console.warn("No HTML document found in AI response");
-          await writer.write(
-            enc({
-              type: "error",
-              error: "The AI did not return a valid HTML document. Please try rephrasing your prompt.",
-            })
-          );
-
-          if (userId && chargedCredits > 0) {
-            await refundCredits(
-              userId,
-              chargedCredits,
-              creditFeature,
-              "No project output generated"
-            ).catch(() => {});
-          }
+      let validated: ReturnType<typeof validateOutput>;
+      try {
+        validated = validateOutput(parseModelJson(fullText));
+      } catch (validationError) {
+        if (userId && chargedCredits > 0) {
+          await refundCredits(
+            userId,
+            chargedCredits,
+            creditFeature,
+            "Invalid MVP Builder JSON output",
+            { validationError: validationError instanceof Error ? validationError.message : String(validationError) }
+          ).catch(() => {});
         }
+        await writer.write(enc({
+          type: "error",
+          error: "The AI returned invalid project JSON. Credits have been refunded. Please try again.",
+          errorCode: "VALIDATION_FAILED",
+        }));
+        await writer.write(encDone());
+        return;
       }
 
-      await writer.write(
-        enc({ type: "complete", model: selectedModel, requestedModels: selectedModels })
-      );
+      await writer.write(enc({
+        type: "project",
+        project: outputToProject(validated, productName),
+        output: validated,
+        actionType: classifiedAction,
+        creditFeature,
+        creditCost,
+      }));
+      await writer.write(enc({ type: "complete", model: selectedModel, requestedModels: selectedModels }));
       await writer.write(encDone());
     } catch (err) {
       console.error("Stream processing error:", err);
-      await writer.write(
-        enc({ type: "error", error: "Stream interrupted. Please try again." })
-      );
-      await writer.write(encDone());
-
       if (userId && chargedCredits > 0) {
-        await refundCredits(userId, chargedCredits, creditFeature, "Stream error").catch(
-          () => {}
-        );
+        await refundCredits(userId, chargedCredits, creditFeature, "Stream error").catch(() => {});
       }
+      await writer.write(enc({ type: "error", error: "Stream interrupted. Credits have been refunded. Please try again.", errorCode: "STREAM_ERROR" }));
+      await writer.write(encDone());
     } finally {
       await writer.close().catch(() => {});
     }

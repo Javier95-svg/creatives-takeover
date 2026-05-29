@@ -344,7 +344,7 @@ One tool, one session. See if it changes anything.
 
 You have been using Creatives Takeover for three weeks, which means you are one of the rare people who actually shows up.
 
-Rookie is enough to get started. Starter is the next step when you want validation tools, 100 credits/month, PMF Lab, Email Templates, and deeper research access.
+Rookie is enough to get started. Starter is the next step when you want validation tools, 30 credits/month, PMF Lab, Email Templates, and deeper research access.
 
 Upgrade to Starter for $9/month and keep the validation work moving without waiting for reset.
 
@@ -398,7 +398,7 @@ At this rate, you may hit zero before your reset date. When that happens, credit
 
 Two options:
 1. Use your remaining credits on something high-leverage today: ${icpUrl}
-2. Upgrade to Starter for 100 credits/month and unlock the validation layer: ${ctx.starterLink}
+2. Upgrade to Starter for 30 credits/month and unlock the validation layer: ${ctx.starterLink}
 
 Your call. I just did not want you to get cut off mid-session without warning.
 
@@ -416,7 +416,7 @@ You have used all your Rookie credits for this month. That is actually a good si
 
 The bad news: credit-metered tools pause until your credits reset on ${resetDate}.
 
-The easy fix is Starter: 100 credits/month, PMF Lab, Email Templates, and deeper research access for $9/month.
+The easy fix is Starter: 30 credits/month, PMF Lab, Email Templates, and deeper research access for $9/month.
 
 If you want to keep the momentum going without waiting, this is how.
 

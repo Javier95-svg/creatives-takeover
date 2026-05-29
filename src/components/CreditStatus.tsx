@@ -95,8 +95,8 @@ export function CreditStatus({ requiredCredits, feature, showPurchaseLink = true
     }
     if (featureLower.includes('mvp')) {
       return normalizedTier === 'rising' || normalizedTier === 'pro'
-        ? ` MVP Builder is unlocked on your plan and charges per AI action: ${CREDIT_COSTS.APP_BUILDER_GENERATE} credits for an initial build, ${CREDIT_COSTS.APP_BUILDER_REFINE} for code edits, ${CREDIT_COSTS.APP_BUILDER_CHAT} for chat, and ${CREDIT_COSTS.APP_BUILDER_GITHUB_EDIT} for GitHub AI edits.`
-        : ' MVP Builder unlocks on Rising and Pro.';
+        ? ` MVP Builder is unlocked on every plan and charges per AI action: ${CREDIT_COSTS.APP_BUILDER_GENERATE} credits for a new build, ${CREDIT_COSTS.APP_BUILDER_REFINE} for targeted edits, ${CREDIT_COSTS.APP_BUILDER_DEBUG} for bug fixes, and ${CREDIT_COSTS.APP_BUILDER_DEPLOY} to deploy.`
+        : ' MVP Builder is available on every plan and uses credits per action.';
     }
     if (featureLower.includes('gtm')) {
       return normalizedTier === 'rising' || normalizedTier === 'pro'

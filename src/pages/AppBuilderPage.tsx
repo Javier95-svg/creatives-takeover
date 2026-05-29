@@ -39,7 +39,7 @@ export default function AppBuilderPage() {
       ) : !hasAccess ? (
         <BlurredToolPreview
           featureName="MVP Builder"
-          unlockCondition="MVP Builder is available on the Rising plan and above."
+          unlockCondition="MVP Builder is available on every plan and uses credits per build action."
           requiredPlan={upgradeTarget}
           locked
         >

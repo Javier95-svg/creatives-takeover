@@ -105,6 +105,14 @@ export const MVPBuilderHeader: React.FC<MVPBuilderHeaderProps> = ({
             <span className="h-1.5 w-1.5 rounded-full bg-sky-300 shrink-0" />
             {totalCredits} credits
           </span>
+          {totalCredits <= 5 && (
+            <Link
+              to="/pricing#credit-packs"
+              className="hidden lg:inline-flex h-7 items-center rounded-md border border-amber-300/25 bg-amber-300/10 px-2 text-xs font-medium text-amber-100 hover:bg-amber-300/15"
+            >
+              Buy Credits
+            </Link>
+          )}
           <Button
             variant="outline"
             size="sm"

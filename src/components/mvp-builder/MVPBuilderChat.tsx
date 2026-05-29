@@ -2,14 +2,7 @@ import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import {
   Send,
   Loader2,
-  CheckSquare,
-  Layout,
-  Hash,
-  User,
-  BarChart3,
-  DollarSign,
   Wand2,
-  History,
   RotateCcw,
   Clock3,
   Bot,
@@ -42,60 +35,24 @@ import type {
   GitHubCommitRecord,
   MVPBuildChangeSummary,
   MVPBuilderResponseMode,
+  MVPActionQuote,
 } from '@/hooks/useMVPBuilder';
+import type { MVPBuilderSetupInput, MVPBuilderVersion } from '@/lib/mvp-builder/phase1';
+import {
+  MVP_BUILDER_ACTION_LABELS,
+  MVP_BUILDER_PALETTES,
+  MVP_BUILDER_TEMPLATES,
+} from '@/lib/mvp-builder/phase1';
 import {
   MVP_DEFAULT_MODEL,
   MVP_MODEL_OPTIONS,
   getMVPModelLabel,
 } from '@/data/mvpModels';
-import {
-  MVP_PROJECT_TYPE_OPTIONS,
-  getMVPProjectTypeLabel,
-} from '@/data/mvpProjectTypes';
 import type { MVPProjectType } from '@/lib/mvp-builder/project';
 import { cn } from '@/lib/utils';
 import { CreditCostNotice } from '@/components/CreditCostNotice';
 
 // ── Quick-start templates ────────────────────────────────────────────────────
-
-const TEMPLATES = [
-  {
-    label: 'Todo App',
-    icon: CheckSquare,
-    prompt:
-      'Build a beautiful todo app with add, complete, and delete tasks. Support categories (Work, Personal, Urgent) and persist everything in localStorage.',
-  },
-  {
-    label: 'Landing Page',
-    icon: Layout,
-    prompt:
-      'Build a modern SaaS landing page with a hero section, features grid, pricing table (3 tiers), FAQ accordion, and a sticky CTA nav bar.',
-  },
-  {
-    label: 'Calculator',
-    icon: Hash,
-    prompt:
-      'Build a sleek calculator with standard and scientific modes. Dark/light theme toggle. Show calculation history.',
-  },
-  {
-    label: 'Portfolio',
-    icon: User,
-    prompt:
-      'Build a minimal personal portfolio with an about section, projects grid with modal previews, skills list, and a contact form.',
-  },
-  {
-    label: 'Dashboard',
-    icon: BarChart3,
-    prompt:
-      'Build an analytics dashboard with a sidebar nav, stats cards (revenue, users, orders, churn), a line chart (Chart.js CDN), and a recent activity feed.',
-  },
-  {
-    label: 'Budget Tracker',
-    icon: DollarSign,
-    prompt:
-      'Build a personal budget tracker. Add income and expense entries with categories, show a running balance, a category breakdown chart, and monthly summary.',
-  },
-] as const;
 
 const DIFF_PREVIEW_LINE_LIMIT = 140;
 const DIFF_CONTEXT_LINES = 3;
@@ -318,12 +275,17 @@ interface MVPBuilderChatProps {
   isGitHubBusy: boolean;
   suggestedGitHubCommitMessage: string | null;
   lastBuildChangeSummary: MVPBuildChangeSummary | null;
+  setupInput: MVPBuilderSetupInput;
+  projectVersions: MVPBuilderVersion[];
+  lastActionQuote: MVPActionQuote | null;
   onSelectedModelsChange: (models: string[]) => void;
+  onSetupInputChange: (next: Partial<MVPBuilderSetupInput>) => void;
   onProjectTypeChange: (projectType: MVPProjectType) => void;
   onSend: (
     prompt: string,
     options?: { responseMode?: MVPBuilderResponseMode }
   ) => void | Promise<unknown>;
+  onClassifyAction: (prompt: string) => Promise<MVPActionQuote | null>;
   onCancelGeneration: () => void;
   onConnectGitHub: () => void | Promise<void>;
   onDisconnectGitHub: () => void | Promise<void>;
@@ -357,9 +319,14 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
   isGitHubBusy,
   suggestedGitHubCommitMessage,
   lastBuildChangeSummary,
+  setupInput,
+  projectVersions,
+  lastActionQuote,
   onSelectedModelsChange,
+  onSetupInputChange,
   onProjectTypeChange,
   onSend,
+  onClassifyAction,
   onCancelGeneration,
   onConnectGitHub,
   onDisconnectGitHub,
@@ -438,13 +405,13 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
     ? 'APP_BUILDER_GITHUB_EDIT'
     : builderMode === 'chat'
     ? 'APP_BUILDER_CHAT'
-    : isEmpty
-    ? 'APP_BUILDER_GENERATE'
-    : 'APP_BUILDER_REFINE';
+    : lastActionQuote?.creditFeature || (isEmpty ? 'APP_BUILDER_GENERATE' : 'APP_BUILDER_REFINE');
   const currentCreditFeatureName = githubRepoSession
     ? 'MVP Builder GitHub Edit'
     : builderMode === 'chat'
     ? 'MVP Builder Chat'
+    : lastActionQuote?.actionType && lastActionQuote.actionType !== 'unclear' && lastActionQuote.actionType !== 'unsupported'
+    ? MVP_BUILDER_ACTION_LABELS[lastActionQuote.actionType]
     : isEmpty
     ? 'MVP Builder Generation'
     : 'MVP Builder Refinement';
@@ -561,13 +528,13 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
 
   useEffect(() => {
     if (githubOpen && githubConnection.connected && githubRepositories.length === 0) {
-      onLoadGitHubRepositories();
+      void onLoadGitHubRepositories();
     }
   }, [githubConnection.connected, githubOpen, githubRepositories.length, onLoadGitHubRepositories]);
 
   useEffect(() => {
     if (githubOpen && githubRepoSession) {
-      onRefreshGitHubCommitHistory(githubRepoSession.fullName, githubRepoSession.branch);
+      void onRefreshGitHubCommitHistory(githubRepoSession.fullName, githubRepoSession.branch);
     }
   }, [githubOpen, githubRepoSession, onRefreshGitHubCommitHistory]);
 
@@ -587,7 +554,7 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
 
   useEffect(() => {
     if (!selectedRepo) return;
-    onLoadGitHubBranches(selectedRepo);
+    void onLoadGitHubBranches(selectedRepo);
   }, [onLoadGitHubBranches, selectedRepo]);
 
   useEffect(() => {
@@ -607,6 +574,14 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
     const nextHeight = Math.min(node.scrollHeight, 140);
     node.style.height = `${Math.max(nextHeight, 52)}px`;
   }, [input]);
+
+  useEffect(() => {
+    if (!input.trim() || builderMode === 'chat') return;
+    const id = window.setTimeout(() => {
+      void onClassifyAction(input);
+    }, 800);
+    return () => window.clearTimeout(id);
+  }, [builderMode, input, onClassifyAction]);
 
   useEffect(() => {
     if (!lastBuildChangeSummary) return;
@@ -760,46 +735,95 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
       <ScrollArea className="flex-1 min-h-0">
         <div className="p-4">
           {isEmpty ? (
-            <div className="flex h-full flex-col justify-center gap-6 py-10">
+            <div className="flex h-full flex-col gap-5 py-6">
               <div className="space-y-3">
-                <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-sky-400/20 bg-[radial-gradient(circle_at_top,rgba(56,189,248,0.24),rgba(14,23,42,0.4))] shadow-[0_20px_45px_rgba(14,165,233,0.12)]">
+                <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-sky-400/20 bg-white/[0.04]">
                   <Wand2 className="h-5 w-5 text-sky-200" />
                 </div>
                 <div className="space-y-1.5">
-                  <h2 className="text-xl font-semibold text-white">What are we building?</h2>
-                  <p className="max-w-sm text-sm leading-relaxed text-slate-400">
-                    Start with the product idea, the primary user flow, and any visual direction. The more specific the outcome, the stronger the first pass.
-                  </p>
+                  <h2 className="text-lg font-semibold text-white">Project setup</h2>
+                  {setupInput.prefillSource && (
+                    <Badge variant="outline" className="border-sky-400/30 bg-sky-400/10 text-[11px] text-sky-100">
+                      Pre-filled from your {setupInput.prefillSource === 'waitlist_launch_kit' ? 'Waitlist Launch Kit' : 'founder context'}.
+                    </Badge>
+                  )}
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-2">
-                {TEMPLATES.map((t) => {
-                  const Icon = t.icon;
-                  return (
-                    <button
-                      key={t.label}
-                      onClick={() =>
-                        enqueueOrSubmit({
-                          id: crypto.randomUUID(),
-                          prompt: t.prompt,
-                          mode: 'build',
-                        })
-                      }
-                      disabled={isGitHubBusy}
-                      className="group flex items-center gap-2 rounded-2xl border border-white/8 bg-white/[0.03] px-3 py-3 text-left text-xs font-medium text-slate-200 transition-all duration-150 hover:border-sky-400/25 hover:bg-white/[0.06] hover:text-white disabled:opacity-50"
-                    >
-                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-white/8 bg-white/[0.05] text-sky-200">
-                        <Icon className="h-3.5 w-3.5" />
-                      </span>
-                      <span>{t.label}</span>
-                    </button>
-                  );
-                })}
+              <div className="space-y-3">
+                <input
+                  value={setupInput.productName}
+                  onChange={(event) => onSetupInputChange({ productName: event.target.value })}
+                  placeholder="Product name"
+                  className="h-9 w-full rounded-md border border-white/10 bg-white/[0.04] px-3 text-sm text-white outline-none focus-visible:ring-2 focus-visible:ring-sky-400/30"
+                />
+                <Textarea
+                  value={setupInput.oneLineDescription}
+                  onChange={(event) => onSetupInputChange({ oneLineDescription: event.target.value })}
+                  placeholder="One-line product description"
+                  className="min-h-[70px] border-white/10 bg-white/[0.04] text-sm text-white placeholder:text-slate-500"
+                />
+                <Textarea
+                  value={setupInput.validatedProblemStatement}
+                  onChange={(event) => onSetupInputChange({ validatedProblemStatement: event.target.value })}
+                  placeholder="Problem being solved"
+                  className="min-h-[70px] border-white/10 bg-white/[0.04] text-sm text-white placeholder:text-slate-500"
+                />
+                <input
+                  value={setupInput.validatedTargetSegment}
+                  onChange={(event) => onSetupInputChange({ validatedTargetSegment: event.target.value })}
+                  placeholder="Target audience"
+                  className="h-9 w-full rounded-md border border-white/10 bg-white/[0.04] px-3 text-sm text-white outline-none focus-visible:ring-2 focus-visible:ring-sky-400/30"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 gap-2">
+                {MVP_BUILDER_TEMPLATES.map((template) => (
+                  <button
+                    key={template.id}
+                    type="button"
+                    onClick={() => onSetupInputChange({ template: template.id })}
+                    className={cn(
+                      'rounded-md border px-3 py-2 text-left transition-colors',
+                      setupInput.template === template.id
+                        ? 'border-sky-400/50 bg-sky-400/10'
+                        : 'border-white/10 bg-white/[0.03] hover:bg-white/[0.06]'
+                    )}
+                  >
+                    <span className="block text-xs font-semibold text-white">{template.label}</span>
+                    <span className="mt-0.5 block text-[11px] leading-snug text-slate-400">{template.description}</span>
+                  </button>
+                ))}
+              </div>
+
+              <div className="grid grid-cols-3 gap-2">
+                {MVP_BUILDER_PALETTES.map((palette) => (
+                  <button
+                    key={palette.id}
+                    type="button"
+                    onClick={() => onSetupInputChange({ palettePreference: palette.id })}
+                    className={cn(
+                      'h-9 rounded-md border px-2 text-xs font-medium transition-colors',
+                      setupInput.palettePreference === palette.id
+                        ? 'border-emerald-400/50 bg-emerald-400/10 text-white'
+                        : 'border-white/10 bg-white/[0.03] text-slate-300 hover:bg-white/[0.06]'
+                    )}
+                  >
+                    {palette.label}
+                  </button>
+                ))}
               </div>
             </div>
           ) : (
             <div className="space-y-4">
+              {projectVersions.length > 0 && (
+                <div className="flex items-center justify-between rounded-md border border-white/10 bg-white/[0.03] px-3 py-2 text-[11px] text-slate-300">
+                  <span>Version history</span>
+                  <Badge variant="outline" className="border-white/10 text-slate-300">
+                    v{projectVersions[0]?.version_number ?? projectVersions.length}
+                  </Badge>
+                </div>
+              )}
               {messages.map((msg) => (
                 <MVPMessageItem key={msg.id} message={msg} />
               ))}
@@ -1090,10 +1114,19 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
             {builderMode === 'chat' ? 'Text-only planning' : 'Generates and renders'}
           </div>
           <CreditCostNotice
-            feature={currentCreditFeature}
+            feature={currentCreditFeature as any}
             featureName={currentCreditFeatureName}
             variant="inline"
           />
+          {builderMode === 'build' && lastActionQuote && (
+            <div className="mt-2 rounded-md border border-white/10 bg-white/[0.03] px-3 py-2 text-[11px] text-slate-300">
+              {lastActionQuote.actionType === 'unsupported'
+                ? 'Phase 1 supports generation, targeted edits, and bug fixes.'
+                : lastActionQuote.actionType === 'unclear'
+                ? 'Keep typing to preview the action cost.'
+                : `${MVP_BUILDER_ACTION_LABELS[lastActionQuote.actionType]} · ${lastActionQuote.creditCost} credits`}
+            </div>
+          )}
         </div>
         <p className="mt-2 text-right text-[10px] text-slate-500">
           Enter to send · Shift+Enter for a new line · Type @ to reference founder context

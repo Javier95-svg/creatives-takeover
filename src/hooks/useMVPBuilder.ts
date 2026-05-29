@@ -14,6 +14,7 @@ import {
   sanitizeMVPProjectType,
 } from '@/data/mvpProjectTypes';
 import type { CreditFeature } from '@/config/constants';
+import { CREDIT_COSTS } from '@/config/constants';
 import {
   buildPreviewFromProject,
   createProjectFromHtml,
@@ -33,6 +34,21 @@ import {
   type MVPProjectFramework,
   type MVPProjectType,
 } from '@/lib/mvp-builder/project';
+import {
+  buildMVPProjectZip,
+  classifyMVPBuilderAction,
+  createMVPBuilderVersion,
+  MVP_BUILDER_ACTION_CREDIT_FEATURE,
+  parseMVPBuilderOutput,
+  sanitizeMVPBuilderPalette,
+  sanitizeMVPBuilderTemplate,
+  validateMVPBuilderOutput,
+  type MVPBuilderActionType,
+  type MVPBuilderSetupInput,
+  type MVPBuilderTemplateId,
+  type MVPBuilderValidatedOutput,
+  type MVPBuilderVersion,
+} from '@/lib/mvp-builder/phase1';
 
 export interface MVPMessage {
   id: string;
@@ -118,6 +134,14 @@ export interface MVPProjectRecord {
   title: string;
   prompt_history: MVPMessage[];
   generated_code: string | null;
+  project_type?: 'html_single' | 'react_multi';
+  template?: MVPBuilderTemplateId;
+  project_files?: Array<{ filename?: string; path?: string; content: string; description?: string }>;
+  versions?: MVPBuilderVersion[];
+  deployment_url?: string | null;
+  deployment_slug?: string | null;
+  deployment_status?: 'not_deployed' | 'deploying' | 'deployed' | 'failed';
+  metadata?: Record<string, unknown>;
   created_at: string;
   updated_at: string;
 }
@@ -158,6 +182,16 @@ interface PersistedSession {
   suggestedGitHubCommitMessage?: string | null;
   selectedCodeFilePath?: string | null;
   lastGeneratedProject?: MVPProjectArtifact | null;
+  setupInput?: MVPBuilderSetupInput;
+  projectVersions?: MVPBuilderVersion[];
+  lastActionQuote?: MVPActionQuote | null;
+  deploymentUrl?: string | null;
+}
+
+export interface MVPActionQuote {
+  actionType: MVPBuilderActionType | 'unclear' | 'unsupported';
+  creditFeature: CreditFeature | null;
+  creditCost: number;
 }
 
 type FunctionError = Error & { status?: number };
@@ -488,15 +522,38 @@ function getMVPActionFeature(options: {
 function getMVPActionLabel(feature: CreditFeature): string {
   switch (feature) {
     case 'APP_BUILDER_GENERATE':
-      return 'AI App Builder - Generate';
+      return 'MVP Builder - Generate';
+    case 'APP_BUILDER_DEBUG':
+      return 'MVP Builder - Bug Fix';
+    case 'APP_BUILDER_DEPLOY':
+      return 'MVP Builder - Deploy';
+    case 'APP_BUILDER_RESTORE':
+      return 'MVP Builder - Restore';
+    case 'APP_BUILDER_EXPORT':
+      return 'MVP Builder - Export';
     case 'APP_BUILDER_CHAT':
-      return 'AI App Builder - Chat';
+      return 'MVP Builder - Chat';
     case 'APP_BUILDER_GITHUB_EDIT':
-      return 'AI App Builder - GitHub Edit';
+      return 'MVP Builder - GitHub Edit';
     case 'APP_BUILDER_REFINE':
     default:
-      return 'AI App Builder - Refine';
+      return 'MVP Builder - Refine';
   }
+}
+
+function createDefaultSetupInput(): MVPBuilderSetupInput {
+  return {
+    productName: '',
+    oneLineDescription: '',
+    validatedProblemStatement: '',
+    validatedTargetSegment: '',
+    keyPainLanguage: '',
+    existingTagline: '',
+    template: 'waitlist_landing',
+    palettePreference: 'minimal',
+    customPrompt: '',
+    prefillSource: null,
+  };
 }
 
 export function useMVPBuilder() {
@@ -539,6 +596,11 @@ export function useMVPBuilder() {
   const [isProjectsLoading, setIsProjectsLoading] = useState(false);
   const [promptHistory, setPromptHistory] = useState<MVPPromptHistoryItem[]>([]);
   const [selectedModels, setSelectedModelsState] = useState<string[]>([MVP_DEFAULT_MODEL]);
+  const [setupInput, setSetupInputState] = useState<MVPBuilderSetupInput>(() => createDefaultSetupInput());
+  const [projectVersions, setProjectVersions] = useState<MVPBuilderVersion[]>([]);
+  const [lastActionQuote, setLastActionQuote] = useState<MVPActionQuote | null>(null);
+  const [deploymentUrl, setDeploymentUrl] = useState<string | null>(null);
+  const [isDeploying, setIsDeploying] = useState(false);
 
   const [githubConnection, setGitHubConnection] = useState<GitHubConnectionState>({
     connected: false,
@@ -679,7 +741,11 @@ export function useMVPBuilder() {
       prompt: string | null,
       commitMessage: string | null,
       codeFilePath: string | null,
-      generatedProject: MVPProjectArtifact | null
+      generatedProject: MVPProjectArtifact | null,
+      setup: MVPBuilderSetupInput,
+      versions: MVPBuilderVersion[],
+      actionQuote: MVPActionQuote | null,
+      deployUrl: string | null
     ) => {
       try {
         const session: PersistedSession = {
@@ -702,6 +768,10 @@ export function useMVPBuilder() {
           suggestedGitHubCommitMessage: commitMessage,
           selectedCodeFilePath: codeFilePath,
           lastGeneratedProject: generatedProject,
+          setupInput: setup,
+          projectVersions: versions,
+          lastActionQuote: actionQuote,
+          deploymentUrl: deployUrl,
         };
         localStorage.setItem(STORAGE_KEY, JSON.stringify(session));
       } catch {
@@ -744,6 +814,15 @@ export function useMVPBuilder() {
       );
       setSelectedModelsState(sanitizeMVPModelSelection(session.selectedModels));
       setSelectedProjectTypeState(sanitizeMVPProjectType(session.selectedProjectType));
+      setSetupInputState({
+        ...createDefaultSetupInput(),
+        ...(session.setupInput || {}),
+        template: sanitizeMVPBuilderTemplate(session.setupInput?.template),
+        palettePreference: sanitizeMVPBuilderPalette(session.setupInput?.palettePreference),
+      });
+      setProjectVersions(Array.isArray(session.projectVersions) ? session.projectVersions : []);
+      setLastActionQuote(session.lastActionQuote ?? null);
+      setDeploymentUrl(session.deploymentUrl ?? null);
       setGitHubRepoSession(session.githubRepoSession ?? null);
       setGitHubPendingChanges(Array.isArray(session.githubPendingChanges) ? session.githubPendingChanges : []);
       setGitHubCommitHistory(Array.isArray(session.githubCommitHistory) ? session.githubCommitHistory : []);
@@ -842,7 +921,11 @@ export function useMVPBuilder() {
       lastGitHubPrompt,
       suggestedGitHubCommitMessage,
       selectedCodeFilePath,
-      lastGeneratedProject
+      lastGeneratedProject,
+      setupInput,
+      projectVersions,
+      lastActionQuote,
+      deploymentUrl
     );
   }, [
     messages,
@@ -868,6 +951,10 @@ export function useMVPBuilder() {
     suggestedGitHubCommitMessage,
     selectedCodeFilePath,
     lastGeneratedProject,
+    setupInput,
+    projectVersions,
+    lastActionQuote,
+    deploymentUrl,
     persist,
   ]);
 
@@ -900,6 +987,8 @@ export function useMVPBuilder() {
       setLastSavedAt(record.updated_at ?? record.created_at);
       setHasUnsavedChanges(false);
       setGeneratedCode(record.generated_code ?? '');
+      setProjectVersions(Array.isArray(record.versions) ? record.versions : []);
+      setDeploymentUrl(record.deployment_url ?? null);
       setProjectSnapshots([]);
       setSelectedModelsState([MVP_DEFAULT_MODEL]);
       setGitHubRepoSession(null);
@@ -909,8 +998,28 @@ export function useMVPBuilder() {
       setSuggestedGitHubCommitMessage(null);
       setGitHubBranches([]);
 
-      if (record.generated_code) {
-        const artifact = createProjectFromHtml(record.generated_code, record.title || DEFAULT_PROJECT_NAME);
+      const recordFiles = Array.isArray(record.project_files)
+        ? normalizeProjectFiles(
+            record.project_files.map((file) => ({
+              path: normalizeProjectPath(file.filename || file.path || 'index.html'),
+              content: file.content,
+              language: detectProjectFileLanguage(file.filename || file.path || 'index.html'),
+            }))
+          )
+        : [];
+
+      if (recordFiles.length > 0 || record.generated_code) {
+        const artifact = recordFiles.length > 0
+          ? {
+              projectName: record.title || DEFAULT_PROJECT_NAME,
+              framework: 'static-html' as const,
+              projectType: 'landing-page' as const,
+              entryFile: pickProjectEntryFile(recordFiles) ?? recordFiles[0]?.path ?? 'index.html',
+              summary: 'Loaded from MVP Builder project storage.',
+              dependencies: [],
+              files: recordFiles,
+            }
+          : createProjectFromHtml(record.generated_code || '', record.title || DEFAULT_PROJECT_NAME);
         applyProjectArtifact(artifact, {
           allowFallback: false,
           setAsBaseline: true,
@@ -949,7 +1058,7 @@ export function useMVPBuilder() {
     try {
       const { data, error } = await supabase
         .from(MVP_PROJECTS_TABLE as never)
-        .select('id, title, prompt_history, generated_code, created_at, updated_at')
+        .select('id, title, prompt_history, generated_code, project_type, template, project_files, versions, deployment_url, deployment_slug, deployment_status, metadata, created_at, updated_at')
         .eq('user_id', user.id)
         .order('updated_at', { ascending: false });
 
@@ -962,6 +1071,14 @@ export function useMVPBuilder() {
               title: typeof record.title === 'string' && record.title.trim() ? record.title.trim() : DEFAULT_PROJECT_NAME,
               prompt_history: Array.isArray(record.prompt_history) ? (record.prompt_history as MVPMessage[]) : [],
               generated_code: typeof record.generated_code === 'string' ? record.generated_code : null,
+              project_type: record.project_type === 'react_multi' ? 'react_multi' : 'html_single',
+              template: sanitizeMVPBuilderTemplate(record.template),
+              project_files: Array.isArray(record.project_files) ? record.project_files as MVPProjectRecord['project_files'] : [],
+              versions: Array.isArray(record.versions) ? record.versions as MVPBuilderVersion[] : [],
+              deployment_url: typeof record.deployment_url === 'string' ? record.deployment_url : null,
+              deployment_slug: typeof record.deployment_slug === 'string' ? record.deployment_slug : null,
+              deployment_status: record.deployment_status as MVPProjectRecord['deployment_status'],
+              metadata: record.metadata && typeof record.metadata === 'object' ? record.metadata as Record<string, unknown> : {},
               created_at: typeof record.created_at === 'string' ? record.created_at : new Date().toISOString(),
               updated_at:
                 typeof record.updated_at === 'string'
@@ -983,6 +1100,109 @@ export function useMVPBuilder() {
     void loadProjects();
   }, [loadProjects]);
 
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+
+    const fillFromContext = async () => {
+      if (
+        setupInput.productName ||
+        setupInput.oneLineDescription ||
+        setupInput.validatedProblemStatement ||
+        setupInput.prefillSource
+      ) {
+        return;
+      }
+
+      try {
+        const { data: waitlist } = await (supabase as any)
+          .from('waitlist_pages')
+          .select('title, value_proposition, target_audience, metadata, updated_at')
+          .eq('user_id', user.id)
+          .order('updated_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (cancelled) return;
+        const waitlistContext = waitlist?.metadata?.projectContext;
+        const launchKit = waitlist?.metadata?.waitlistLaunchKit?.current;
+        if (waitlistContext?.positioningStatement || launchKit?.output) {
+          setSetupInputState((prev) => ({
+            ...prev,
+            productName: prev.productName || waitlist?.title || '',
+            oneLineDescription:
+              prev.oneLineDescription ||
+              waitlistContext.positioningStatement ||
+              waitlist?.value_proposition ||
+              '',
+            validatedProblemStatement:
+              prev.validatedProblemStatement ||
+              launchKit?.inputs?.description ||
+              waitlist?.value_proposition ||
+              '',
+            validatedTargetSegment:
+              prev.validatedTargetSegment ||
+              launchKit?.inputs?.audience ||
+              waitlist?.target_audience ||
+              '',
+            keyPainLanguage:
+              prev.keyPainLanguage ||
+              launchKit?.inputs?.primaryBenefit ||
+              waitlistContext.positioningStatement ||
+              '',
+            existingTagline: prev.existingTagline || launchKit?.inputs?.tagline || '',
+            prefillSource: 'waitlist_launch_kit',
+          }));
+          return;
+        }
+
+        const { data: icp } = await (supabase as any)
+          .from('icp_analysis_results')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (cancelled || !icp) return;
+        setSetupInputState((prev) => ({
+          ...prev,
+          productName: prev.productName || icp.product_name || icp.business_name || '',
+          oneLineDescription: prev.oneLineDescription || icp.one_line_description || icp.summary || '',
+          validatedProblemStatement:
+            prev.validatedProblemStatement ||
+            icp.problem_statement ||
+            icp.primary_pain_point ||
+            '',
+          validatedTargetSegment:
+            prev.validatedTargetSegment ||
+            icp.target_segment ||
+            icp.ideal_customer_profile ||
+            '',
+          keyPainLanguage:
+            prev.keyPainLanguage ||
+            icp.customer_language ||
+            icp.pain_language ||
+            '',
+          prefillSource: 'icp',
+        }));
+      } catch {
+        // Context prefill is opportunistic; the builder still works without it.
+      }
+    };
+
+    void fillFromContext();
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    setupInput.oneLineDescription,
+    setupInput.prefillSource,
+    setupInput.productName,
+    setupInput.validatedProblemStatement,
+    user,
+  ]);
+
   const saveProject = useCallback(
     async (options?: { silent?: boolean }) => {
       if (!user) return false;
@@ -1002,6 +1222,20 @@ export function useMVPBuilder() {
           isStreaming: false,
         })),
         generated_code: codeToSave,
+        project_type: 'html_single',
+        template: setupInput.template,
+        project_files: projectFiles.map((file) => ({
+          filename: file.path,
+          content: file.content,
+          description: file.path === entryFilePath ? 'Primary preview file.' : `Project file ${file.path}.`,
+        })),
+        versions: projectVersions,
+        deployment_url: deploymentUrl,
+        deployment_status: deploymentUrl ? 'deployed' : 'not_deployed',
+        metadata: {
+          setupInput,
+          phase: 'mvp_builder_phase1',
+        },
         updated_at: timestamp,
       };
 
@@ -1010,7 +1244,7 @@ export function useMVPBuilder() {
         const { data, error } = await supabase
           .from(MVP_PROJECTS_TABLE as never)
           .upsert(payload)
-          .select('id, title, prompt_history, generated_code, created_at, updated_at')
+          .select('id, title, prompt_history, generated_code, project_type, template, project_files, versions, deployment_url, deployment_slug, deployment_status, metadata, created_at, updated_at')
           .single();
 
         if (error) throw error;
@@ -1020,6 +1254,14 @@ export function useMVPBuilder() {
           title: typeof data.title === 'string' && data.title.trim() ? data.title.trim() : DEFAULT_PROJECT_NAME,
           prompt_history: Array.isArray(data.prompt_history) ? (data.prompt_history as MVPMessage[]) : payload.prompt_history,
           generated_code: typeof data.generated_code === 'string' ? data.generated_code : codeToSave,
+          project_type: data.project_type === 'react_multi' ? 'react_multi' : 'html_single',
+          template: sanitizeMVPBuilderTemplate(data.template),
+          project_files: Array.isArray(data.project_files) ? data.project_files as MVPProjectRecord['project_files'] : payload.project_files,
+          versions: Array.isArray(data.versions) ? data.versions as MVPBuilderVersion[] : projectVersions,
+          deployment_url: typeof data.deployment_url === 'string' ? data.deployment_url : deploymentUrl,
+          deployment_slug: typeof data.deployment_slug === 'string' ? data.deployment_slug : null,
+          deployment_status: data.deployment_status as MVPProjectRecord['deployment_status'],
+          metadata: data.metadata && typeof data.metadata === 'object' ? data.metadata as Record<string, unknown> : payload.metadata,
           created_at: typeof data.created_at === 'string' ? data.created_at : timestamp,
           updated_at: typeof data.updated_at === 'string' ? data.updated_at : timestamp,
         };
@@ -1047,7 +1289,7 @@ export function useMVPBuilder() {
         setIsSavingProject(false);
       }
     },
-    [currentHtml, entryFilePath, generatedCode, messages, projectFiles, projectId, projectName, user]
+    [currentHtml, deploymentUrl, entryFilePath, generatedCode, messages, projectFiles, projectId, projectName, projectVersions, setupInput, user]
   );
 
   const loadProject = useCallback(
@@ -1059,7 +1301,7 @@ export function useMVPBuilder() {
         if (!project) {
           const { data, error } = await supabase
             .from(MVP_PROJECTS_TABLE as never)
-            .select('id, title, prompt_history, generated_code, created_at, updated_at')
+            .select('id, title, prompt_history, generated_code, project_type, template, project_files, versions, deployment_url, deployment_slug, deployment_status, metadata, created_at, updated_at')
             .eq('id', id)
             .eq('user_id', user.id)
             .maybeSingle();
@@ -1072,6 +1314,14 @@ export function useMVPBuilder() {
             title: typeof data.title === 'string' && data.title.trim() ? data.title.trim() : DEFAULT_PROJECT_NAME,
             prompt_history: Array.isArray(data.prompt_history) ? (data.prompt_history as MVPMessage[]) : [],
             generated_code: typeof data.generated_code === 'string' ? data.generated_code : null,
+            project_type: data.project_type === 'react_multi' ? 'react_multi' : 'html_single',
+            template: sanitizeMVPBuilderTemplate(data.template),
+            project_files: Array.isArray(data.project_files) ? data.project_files as MVPProjectRecord['project_files'] : [],
+            versions: Array.isArray(data.versions) ? data.versions as MVPBuilderVersion[] : [],
+            deployment_url: typeof data.deployment_url === 'string' ? data.deployment_url : null,
+            deployment_slug: typeof data.deployment_slug === 'string' ? data.deployment_slug : null,
+            deployment_status: data.deployment_status as MVPProjectRecord['deployment_status'],
+            metadata: data.metadata && typeof data.metadata === 'object' ? data.metadata as Record<string, unknown> : {},
             created_at: typeof data.created_at === 'string' ? data.created_at : new Date().toISOString(),
             updated_at:
               typeof data.updated_at === 'string'
@@ -1205,7 +1455,7 @@ export function useMVPBuilder() {
   }, [callGitHubFunction, user]);
 
   useEffect(() => {
-    refreshGitHubConnection();
+    void refreshGitHubConnection();
   }, [refreshGitHubConnection]);
 
   const connectGitHub = useCallback(async () => {
@@ -1700,6 +1950,58 @@ export function useMVPBuilder() {
     [applyProjectArtifact, callGitHubFunction, deductCredits, entryFilePath, githubRepoSession, handleCreditError, markProjectDirty, selectedModels]
   );
 
+  const classifyActionQuote = useCallback(async (prompt: string) => {
+    if (!prompt.trim()) {
+      setLastActionQuote(null);
+      return null;
+    }
+
+    const localActionType = classifyMVPBuilderAction(prompt, projectFiles.length > 0);
+    if (localActionType === 'unclear' || localActionType === 'unsupported') {
+      const quote: MVPActionQuote = {
+        actionType: localActionType,
+        creditFeature: null,
+        creditCost: 0,
+      };
+      setLastActionQuote(quote);
+      return quote;
+    }
+
+    const localFeature = MVP_BUILDER_ACTION_CREDIT_FEATURE[localActionType] as CreditFeature;
+    const fallbackQuote: MVPActionQuote = {
+      actionType: localActionType,
+      creditFeature: localFeature,
+      creditCost: CREDIT_COSTS[localFeature] ?? 0,
+    };
+    setLastActionQuote(fallbackQuote);
+
+    try {
+      const response = await fetch(STREAM_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          mode: 'classify',
+          userMessage: prompt,
+          currentProject:
+            projectFiles.length > 0
+              ? { files: projectFiles.map((file) => ({ path: file.path, content: file.content })) }
+              : null,
+        }),
+      });
+      if (!response.ok) return fallbackQuote;
+      const data = await response.json();
+      const quote: MVPActionQuote = {
+        actionType: data.actionType || localActionType,
+        creditFeature: data.creditFeature || localFeature,
+        creditCost: typeof data.creditCost === 'number' ? data.creditCost : fallbackQuote.creditCost,
+      };
+      setLastActionQuote(quote);
+      return quote;
+    } catch {
+      return fallbackQuote;
+    }
+  }, [projectFiles]);
+
   const sendMessage = useCallback(
     async (
       prompt: string,
@@ -1709,12 +2011,27 @@ export function useMVPBuilder() {
     ) => {
       if (!prompt.trim() || isGenerating || isGitHubBusy) return;
       const responseMode = options?.responseMode ?? 'build';
+      const localActionType =
+        responseMode === 'chat'
+          ? 'chat'
+          : classifyMVPBuilderAction(prompt, projectFiles.length > 0);
+      if (localActionType === 'unclear') {
+        toast.info('Tell MVP Builder what you want to generate or change first.');
+        return;
+      }
+      if (localActionType === 'unsupported') {
+        toast.info('That request is planned for a later MVP Builder phase. Phase 1 supports generation, targeted edits, and bug fixes.');
+        return;
+      }
 
-      const creditFeature = getMVPActionFeature({
-        hasGithubRepo: Boolean(githubRepoSession),
-        responseMode,
-        hasMessages: messages.length > 0,
-      });
+      const creditFeature = githubRepoSession
+        ? 'APP_BUILDER_GITHUB_EDIT'
+        : (MVP_BUILDER_ACTION_CREDIT_FEATURE[localActionType] as CreditFeature) ||
+          getMVPActionFeature({
+            hasGithubRepo: Boolean(githubRepoSession),
+            responseMode,
+            hasMessages: messages.length > 0,
+          });
       const featureLabel = getMVPActionLabel(creditFeature);
 
       const required = ensureCredits(creditFeature, {
@@ -1759,6 +2076,14 @@ export function useMVPBuilder() {
         selectedProjectType,
         projectFiles.length > 0 ? projectFramework : null
       );
+      const activeSetupInput: MVPBuilderSetupInput = {
+        ...setupInput,
+        productName: setupInput.productName || projectName,
+        oneLineDescription: setupInput.oneLineDescription || prompt,
+        customPrompt: setupInput.customPrompt || prompt,
+        template: sanitizeMVPBuilderTemplate(setupInput.template),
+        palettePreference: sanitizeMVPBuilderPalette(setupInput.palettePreference),
+      };
 
       try {
         const session = await getSessionSafely();
@@ -1778,6 +2103,20 @@ export function useMVPBuilder() {
           },
           body: JSON.stringify({
             userMessage: prompt,
+            mode: 'generate',
+            actionType: localActionType,
+            template: activeSetupInput.template,
+            palettePreference: activeSetupInput.palettePreference,
+            setupInput: activeSetupInput,
+            projectContext: {
+              source: activeSetupInput.prefillSource,
+              productName: activeSetupInput.productName,
+              audience: activeSetupInput.validatedTargetSegment,
+              problem: activeSetupInput.validatedProblemStatement,
+              painLanguage: activeSetupInput.keyPainLanguage,
+            },
+            projectId,
+            currentVersion: projectVersions[0]?.version_number ?? 0,
             responseMode,
             currentProject:
               projectFiles.length > 0
@@ -1813,6 +2152,10 @@ export function useMVPBuilder() {
         let streamedContent = '';
         let streamedCode = '';
         let newProject: MVPProjectArtifact | null = null;
+        let validatedOutput: MVPBuilderValidatedOutput | null = null;
+        let completedActionType: MVPBuilderActionType | null =
+          localActionType === 'chat' ? null : localActionType;
+        let completedCreditCost = required;
         let completedModel: string | null = null;
         let finalized = false;
 
@@ -1847,9 +2190,30 @@ export function useMVPBuilder() {
             return;
           }
 
-          const fallbackProject = streamedCode
-            ? createProjectFromHtml(sanitizeStreamedCode(streamedCode), projectName)
-            : extractProjectFromText(streamedContent, projectName);
+          let fallbackProject: MVPProjectArtifact | null = null;
+          if (streamedCode) {
+            try {
+              const parsed = validateMVPBuilderOutput(parseMVPBuilderOutput(streamedCode), { phase1Only: true });
+              validatedOutput = parsed;
+              fallbackProject = {
+                projectName: activeSetupInput.productName || projectName,
+                framework: 'static-html',
+                projectType: 'landing-page',
+                entryFile: parsed.files.find((file) => file.filename === 'index.html')?.filename ?? parsed.files[0]?.filename ?? 'index.html',
+                summary: parsed.generation_notes,
+                dependencies: [],
+                files: normalizeProjectFiles(parsed.files.map((file) => ({
+                  path: file.filename,
+                  content: file.content,
+                  language: detectProjectFileLanguage(file.filename),
+                }))),
+              };
+            } catch {
+              fallbackProject = extractProjectFromText(streamedContent, projectName);
+            }
+          } else {
+            fallbackProject = extractProjectFromText(streamedContent, projectName);
+          }
           const committedProject = newProject ?? fallbackProject;
           const assistantCopy =
             committedProject?.summary ||
@@ -1874,6 +2238,16 @@ export function useMVPBuilder() {
 
           if (committedProject) {
             setLastBuildChangeSummary(buildChangeSummary(prompt, projectFiles, committedProject));
+            if (validatedOutput && completedActionType) {
+              const version = createMVPBuilderVersion({
+                previousVersions: projectVersions,
+                actionType: completedActionType,
+                userInstruction: prompt,
+                creditsUsed: completedCreditCost,
+                output: validatedOutput,
+              });
+              setProjectVersions((prev) => [version, ...prev]);
+            }
             applyProjectArtifact(committedProject, {
               allowFallback: false,
               setAsBaseline: true,
@@ -1956,6 +2330,19 @@ export function useMVPBuilder() {
               }
             } else if (event.type === 'project' && typeof event.project === 'object' && event.project !== null) {
               const nextProject = event.project as MVPProjectArtifact;
+              if (event.output && typeof event.output === 'object') {
+                try {
+                  validatedOutput = validateMVPBuilderOutput(event.output, { phase1Only: true });
+                } catch {
+                  validatedOutput = null;
+                }
+              }
+              if (event.actionType === 'generation' || event.actionType === 'targeted_edit' || event.actionType === 'debug') {
+                completedActionType = event.actionType;
+              }
+              if (typeof event.creditCost === 'number') {
+                completedCreditCost = event.creditCost;
+              }
               newProject = {
                 projectName:
                   typeof nextProject.projectName === 'string' && nextProject.projectName.trim()
@@ -2069,13 +2456,16 @@ export function useMVPBuilder() {
       messages,
       currentHtml,
       projectFiles,
+      projectId,
       projectDependencies,
       projectFramework,
       projectName,
       projectSummary,
+      projectVersions,
       selectedModels,
       selectedProjectType,
       showCreditReceipt,
+      setupInput,
       user,
     ]
   );
@@ -2100,6 +2490,20 @@ export function useMVPBuilder() {
 
   const setProjectName = useCallback((name: string) => {
     setProjectNameState(name || DEFAULT_PROJECT_NAME);
+    setSetupInputState((prev) => ({
+      ...prev,
+      productName: prev.productName || name,
+    }));
+    markProjectDirty();
+  }, [markProjectDirty]);
+
+  const setSetupInput = useCallback((next: Partial<MVPBuilderSetupInput>) => {
+    setSetupInputState((prev) => ({
+      ...prev,
+      ...next,
+      template: sanitizeMVPBuilderTemplate(next.template ?? prev.template),
+      palettePreference: sanitizeMVPBuilderPalette(next.palettePreference ?? prev.palettePreference),
+    }));
     markProjectDirty();
   }, [markProjectDirty]);
 
@@ -2249,9 +2653,19 @@ export function useMVPBuilder() {
   ]);
 
   const restoreProjectSnapshot = useCallback(
-    (snapshotId: string) => {
+    async (snapshotId: string) => {
       const snapshot = projectSnapshots.find((item) => item.id === snapshotId);
       if (!snapshot) return;
+      const charged = await deductCredits('APP_BUILDER_RESTORE', {
+        featureName: getMVPActionLabel('APP_BUILDER_RESTORE'),
+        operationId: `restore-${snapshot.id}`,
+        metadata: {
+          mvpBuilderActionType: 'restore',
+          projectId,
+          snapshotId,
+        },
+      });
+      if (!charged) return;
 
       applyProjectArtifact(snapshot.artifact, {
         allowFallback: false,
@@ -2263,8 +2677,69 @@ export function useMVPBuilder() {
       toast.success(`Restored snapshot: ${snapshot.label}`);
       markProjectDirty();
     },
-    [addProjectSnapshot, applyProjectArtifact, markProjectDirty, projectSnapshots]
+    [addProjectSnapshot, applyProjectArtifact, deductCredits, markProjectDirty, projectId, projectSnapshots]
   );
+
+  const exportProjectZip = useCallback(() => {
+    if (projectFiles.length === 0) {
+      toast.error('Generate a project before exporting code.');
+      return;
+    }
+    const blob = buildMVPProjectZip(projectFiles);
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${(projectName || 'mvp').toLowerCase().replace(/[^a-z0-9]+/g, '-') || 'mvp'}.zip`;
+    link.click();
+    URL.revokeObjectURL(url);
+    showCreditReceipt('APP_BUILDER_EXPORT', 0, undefined, {
+      featureName: getMVPActionLabel('APP_BUILDER_EXPORT'),
+      operationId: `export-${projectId}-${Date.now()}`,
+      metadata: { mvpBuilderActionType: 'export', projectId },
+    });
+  }, [projectFiles, projectId, projectName, showCreditReceipt]);
+
+  const deployProject = useCallback(async () => {
+    if (!user || projectFiles.length === 0 || isDeploying) {
+      if (!user) toast.error('Please sign in to deploy this MVP.');
+      if (projectFiles.length === 0) toast.error('Generate a project before deploying.');
+      return;
+    }
+
+    await saveProject({ silent: true });
+    setIsDeploying(true);
+    try {
+      const session = await getSessionSafely();
+      const accessToken = session?.access_token;
+      const idempotencyKey = createIdempotencyKey('mvp-builder-deploy', `${projectId}-${Date.now()}`);
+      const { data, error } = await supabase.functions.invoke('mvp-builder-deploy', {
+        headers: {
+          'Idempotency-Key': idempotencyKey,
+          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+        },
+        body: { projectId },
+      });
+
+      if (error || !data?.ok) {
+        handleCreditError(error, data, 'APP_BUILDER_DEPLOY');
+        toast.error(data?.error || 'Deployment failed.');
+        return;
+      }
+
+      setDeploymentUrl(data.deploymentUrl);
+      showCreditReceipt('APP_BUILDER_DEPLOY', Number(data.creditsUsed ?? CREDIT_COSTS.APP_BUILDER_DEPLOY), undefined, {
+        featureName: getMVPActionLabel('APP_BUILDER_DEPLOY'),
+        operationId: idempotencyKey,
+        idempotencyKey,
+        metadata: { mvpBuilderActionType: 'deploy', projectId },
+      });
+      toast.success('MVP deployed.');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Deployment failed.');
+    } finally {
+      setIsDeploying(false);
+    }
+  }, [handleCreditError, isDeploying, projectFiles.length, projectId, saveProject, showCreditReceipt, user]);
 
   const setSelectedModels = useCallback((models: string[]) => {
     setSelectedModelsState(sanitizeMVPModelSelection(models));
@@ -2299,6 +2774,11 @@ export function useMVPBuilder() {
     setSelectedCodeFilePath(null);
     setLastGeneratedProject(null);
     setProjectSnapshots([]);
+    setProjectVersions([]);
+    setSetupInputState(createDefaultSetupInput());
+    setLastActionQuote(null);
+    setDeploymentUrl(null);
+    setIsDeploying(false);
     setLastBuildChangeSummary(null);
     setIsShowingPreviewFallback(false);
     lastStablePreviewHtmlRef.current = null;
@@ -2353,6 +2833,11 @@ export function useMVPBuilder() {
     isProjectsLoading,
     promptHistory,
     selectedModels,
+    setupInput,
+    projectVersions,
+    lastActionQuote,
+    deploymentUrl,
+    isDeploying,
     githubConnection,
     githubRepositories,
     githubBranches,
@@ -2362,6 +2847,7 @@ export function useMVPBuilder() {
     isGitHubBusy,
     suggestedGitHubCommitMessage,
     setProjectName,
+    setSetupInput,
     setSelectedProjectType,
     setSelectedCodeFilePath,
     setEntryFilePath,
@@ -2370,8 +2856,11 @@ export function useMVPBuilder() {
     resetProjectCode,
     createManualSnapshot,
     restoreProjectSnapshot,
+    exportProjectZip,
+    deployProject,
     setSelectedModels,
     sendMessage,
+    classifyActionQuote,
     cancelGeneration,
     saveProject,
     loadProject,

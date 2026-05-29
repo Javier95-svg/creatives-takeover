@@ -205,6 +205,7 @@ export const PLAN_HIGHLIGHTS: Record<Plan, string[]> = {
   rookie: [
     'Dashboard Rookie Mode',
     'ICP Builder (free)',
+    'MVP Builder per-action billing (uses credits)',
     'Stage 1 guided dashboard',
     'Stages 4-5 preview cards',
     'Unlimited Discovery Calls (10 credits per confirmed booking)',
@@ -219,6 +220,7 @@ export const PLAN_HIGHLIGHTS: Record<Plan, string[]> = {
     'ICP Builder (free)',
     'Stages 1-3 active',
     'Waitlist Maker + PMF Lab (uses credits)',
+    'MVP Builder per-action billing (uses credits)',
     'Stages 4-5 (preview only)',
     'Unlimited Discovery Calls (10 credits per confirmed booking)',
     '2 Find a Co-Founder posts per month',
@@ -278,7 +280,7 @@ export const DASHBOARD_MODE_CONFIG: Record<DashboardModeVariant, DashboardModeCo
     previewStages: [4, 5],
     showUpgradeBanner: true,
     navItems: SHARED_DASHBOARD_NAV_ITEMS,
-    visibleTools: ['icp_builder', 'saved_mentors', 'find_mentor', 'find_cofounder'],
+    visibleTools: ['icp_builder', 'mvp_builder', 'saved_mentors', 'find_mentor', 'find_cofounder'],
   },
   starter: {
     label: 'Starter Mode',
@@ -289,7 +291,7 @@ export const DASHBOARD_MODE_CONFIG: Record<DashboardModeVariant, DashboardModeCo
     previewStages: [4, 5],
     showUpgradeBanner: true,
     navItems: SHARED_DASHBOARD_NAV_ITEMS,
-    visibleTools: ['icp_builder', 'waitlist_maker', 'pmf_lab', 'saved_mentors', 'find_mentor', 'find_cofounder', 'vc_search', 'accelerator_hunt', 'email_templates', 'prompt_library', 'ai_goals'],
+    visibleTools: ['icp_builder', 'waitlist_maker', 'pmf_lab', 'mvp_builder', 'saved_mentors', 'find_mentor', 'find_cofounder', 'vc_search', 'accelerator_hunt', 'email_templates', 'prompt_library', 'ai_goals'],
   },
   rising: {
     label: 'Rising Mode',
@@ -382,8 +384,8 @@ export const FEATURE_ENTITLEMENTS: Record<FeatureKey, Record<Plan, FeatureEntitl
     pro: { state: 'full', monetizationModel: 'credit_metered', creditFeature: 'PMF_ANALYSIS' },
   },
   mvp_builder: {
-    rookie: { state: 'preview_only', monetizationModel: 'plan_gated', requiredPlan: 'rising' },
-    starter: { state: 'preview_only', monetizationModel: 'plan_gated', requiredPlan: 'rising' },
+    rookie: { state: 'full', monetizationModel: 'credit_metered', creditFeature: 'APP_BUILDER_GENERATE' },
+    starter: { state: 'full', monetizationModel: 'credit_metered', creditFeature: 'APP_BUILDER_GENERATE' },
     rising: { state: 'full', monetizationModel: 'credit_metered', creditFeature: 'APP_BUILDER_GENERATE' },
     pro: { state: 'full', monetizationModel: 'credit_metered', creditFeature: 'APP_BUILDER_GENERATE' },
   },

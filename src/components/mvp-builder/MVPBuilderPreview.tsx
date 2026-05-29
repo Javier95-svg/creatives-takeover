@@ -52,6 +52,8 @@ interface MVPBuilderPreviewProps {
   projectSummary: string;
   projectDependencies: MVPProjectDependency[];
   projectSnapshots: MVPProjectSnapshot[];
+  deploymentUrl: string | null;
+  isDeploying: boolean;
   previewState: MVPPreviewResult;
   entryFilePath: string;
   selectedCodeFilePath: string | null;
@@ -64,6 +66,8 @@ interface MVPBuilderPreviewProps {
   onCreateSnapshot: () => void;
   onRestoreSnapshot: (snapshotId: string) => void;
   onSelectEntryFile: (path: string) => void;
+  onExportZip: () => void;
+  onDeploy: () => void;
 }
 
 export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({
@@ -77,6 +81,8 @@ export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({
   projectSummary,
   projectDependencies,
   projectSnapshots,
+  deploymentUrl,
+  isDeploying,
   previewState,
   entryFilePath,
   selectedCodeFilePath,
@@ -89,6 +95,8 @@ export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({
   onCreateSnapshot,
   onRestoreSnapshot,
   onSelectEntryFile,
+  onExportZip,
+  onDeploy,
 }) => {
   const [previewKey, setPreviewKey] = useState(0);
   const [viewMode, setViewMode] = useState<'desktop' | 'mobile'>('desktop');
@@ -152,18 +160,6 @@ export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({
   );
 
   const handleRefresh = () => setPreviewKey((key) => key + 1);
-
-  const handleExport = useCallback(() => {
-    if (!html) return;
-    const blob = new Blob([html], { type: 'text/html' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = entryFilePath || 'preview.html';
-    link.click();
-    URL.revokeObjectURL(url);
-    toast.success('Preview HTML downloaded');
-  }, [entryFilePath, html]);
 
   const handleCopy = useCallback(async () => {
     if (!html) return;
@@ -321,14 +317,29 @@ export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({
                       variant="ghost"
                       size="sm"
                       className="h-7 gap-1.5 px-2 text-xs"
-                      onClick={handleExport}
+                      onClick={onExportZip}
                       disabled={!html}
                     >
                       <Download className="h-3.5 w-3.5" />
-                      Export HTML
+                      Export ZIP
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent>Download the rendered preview HTML</TooltipContent>
+                  <TooltipContent>Download the full project as a ZIP</TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 gap-1.5 px-2 text-xs"
+                      onClick={onDeploy}
+                      disabled={!html || isDeploying}
+                    >
+                      {isDeploying ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Globe className="h-3.5 w-3.5" />}
+                      Deploy
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Deploy this static MVP for 2 credits</TooltipContent>
                 </Tooltip>
               </div>
             </div>
@@ -343,6 +354,14 @@ export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({
 
         {activeTab === 'domain' && (
           <div className="min-h-0 flex-1 overflow-y-auto">
+            {deploymentUrl && (
+              <div className="border-b border-border/50 px-4 py-3 text-xs">
+                <a href={deploymentUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-primary hover:underline">
+                  Open deployed MVP
+                  <ExternalLink className="h-3.5 w-3.5" />
+                </a>
+              </div>
+            )}
             <MVPBuilderDomainPanel projectId={projectId} />
           </div>
         )}

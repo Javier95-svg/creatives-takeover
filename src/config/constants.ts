@@ -13,8 +13,12 @@ export const CREDIT_COSTS = {
   WAITLIST_GENERATION: 3,
   PMF_SCORING: 4,
   GTM_ANALYSIS: 5,
-  APP_BUILDER_GENERATE: 5,
+  APP_BUILDER_GENERATE: 10,
   APP_BUILDER_REFINE: 3,
+  APP_BUILDER_DEBUG: 2,
+  APP_BUILDER_DEPLOY: 2,
+  APP_BUILDER_RESTORE: 1,
+  APP_BUILDER_EXPORT: 0,
   APP_BUILDER_CHAT: 1,
   APP_BUILDER_GITHUB_EDIT: 3,
 
@@ -204,10 +208,10 @@ export const SUBSCRIPTION_TIERS = {
 
 // Monthly credit allocation per tier
 export const TIER_MONTHLY_CREDITS = {
-  rookie: 50,
-  starter: 100,
-  rising: 250,
-  pro: 600,
+  rookie: 10,
+  starter: 30,
+  rising: 75,
+  pro: 150,
 } as const;
 
 // VC View Limits per tier (monthly)
@@ -288,7 +292,7 @@ export const TIER_DETAILS = {
     name: 'Rookie',
     subtitle: 'Start',
     price: 0,
-    credits: 50,
+    credits: 10,
     vcViewLimit: 0,
     description: 'Explore the platform with free ICP Builder access and list-only investor browsing',
   },
@@ -296,7 +300,7 @@ export const TIER_DETAILS = {
     name: 'Starter',
     subtitle: 'Momentum',
     price: 9,
-    credits: 100,
+    credits: 30,
     vcViewLimit: 2,
     description: 'Unlock PMF Lab, Email Templates, and limited investor profile views',
   },
@@ -304,7 +308,7 @@ export const TIER_DETAILS = {
     name: 'Rising',
     subtitle: 'Build',
     price: 29,
-    credits: 250,
+    credits: 75,
     vcViewLimit: 10,
     description: 'Credit-metered build tools with 10 VC and 10 accelerator profile views per month',
   },
@@ -312,7 +316,7 @@ export const TIER_DETAILS = {
     name: 'Pro',
     subtitle: 'Scale',
     price: 65,
-    credits: 600,
+    credits: 150,
     vcViewLimit: -1, // unlimited
     description: 'Fundraising and scaling tier with unlimited investor views and priority support',
   },

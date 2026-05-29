@@ -5,7 +5,7 @@ export function CreditPriceList() {
         { name: "ICP Builder", value: "Free on every plan" },
         { name: "Waitlist Maker", value: `${getCreditCostForPlan('WAITLIST_GENERATION', 'rookie')} credits/use on Rookie; ${CREDIT_COSTS.WAITLIST_GENERATION} on paid plans` },
         { name: "PMF Lab", value: `${CREDIT_COSTS.PMF_ANALYSIS} credits/full analysis; ${CREDIT_COSTS.PMF_SCORING} credits/evidence score on Starter+` },
-        { name: "MVP Builder", value: `Per action on Rising+: ${CREDIT_COSTS.APP_BUILDER_GENERATE} build, ${CREDIT_COSTS.APP_BUILDER_REFINE} edit, ${CREDIT_COSTS.APP_BUILDER_CHAT} chat, ${CREDIT_COSTS.APP_BUILDER_GITHUB_EDIT} GitHub edit` },
+        { name: "MVP Builder", value: `All plans: ${CREDIT_COSTS.APP_BUILDER_GENERATE} new build, ${CREDIT_COSTS.APP_BUILDER_REFINE} edit, ${CREDIT_COSTS.APP_BUILDER_DEBUG} bug fix, ${CREDIT_COSTS.APP_BUILDER_DEPLOY} deploy, ${CREDIT_COSTS.APP_BUILDER_RESTORE} restore` },
         { name: "Tech Stack Builder", value: `${CREDIT_COSTS.TECH_STACK_GENERATION} credits/use on Rising+` },
         { name: "GTM Strategist", value: `${CREDIT_COSTS.GTM_ANALYSIS} credits/use on Rising+` },
         { name: "Directories", value: "Included on Rising+" },

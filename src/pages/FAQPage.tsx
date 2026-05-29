@@ -17,7 +17,7 @@ const FAQPage = () => {
       },
       {
         question: "How much does it cost?",
-        answer: "We offer four plans: Rookie is free with 50 credits/month, Starter is $9/month or $79/year with 100 credits, Rising is $29/month or $239/year with 250 credits, and Pro is $65/month or $589/year with 600 credits. Extra credit packs remain available on every plan."
+        answer: "We offer four plans: Rookie is free with 10 credits/month, Starter is $9/month or $79/year with 30 credits, Rising is $29/month or $239/year with 75 credits, and Pro is $65/month or $589/year with 150 credits. Extra credit packs remain available on every plan."
       },
       {
         question: "What is the credit system?",
@@ -29,7 +29,7 @@ const FAQPage = () => {
       },
       {
         question: "Can I try it for free?",
-        answer: "Yes. Rookie is free forever with 50 credits per month and no credit card required. You get free ICP Builder access, Insighta Test, Newspaper, early-stage browsing or preview access, and community browsing features."
+        answer: "Yes. Rookie is free forever with 10 credits per month and no credit card required. You get free ICP Builder access, Insighta Test, Newspaper, early-stage browsing or preview access, and community browsing features."
       },
       {
         question: "Is my business idea safe?",

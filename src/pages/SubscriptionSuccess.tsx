@@ -67,12 +67,12 @@ export default function SubscriptionSuccess() {
 
   const getTierInfo = (tierName: string) => {
     const tiers = {
-      starter: { name: "Starter", credits: 100, price: 9 },
-      rising: { name: "Rising", credits: 250, price: 29 },
-      pro: { name: "Pro", credits: 600, price: 65 },
-      basic: { name: "Starter", credits: 100, price: 9 },
-      premium: { name: "Rising", credits: 250, price: 29 },
-      enterprise: { name: "Pro", credits: 600, price: 65 },
+      starter: { name: "Starter", credits: 30, price: 9 },
+      rising: { name: "Rising", credits: 75, price: 29 },
+      pro: { name: "Pro", credits: 150, price: 65 },
+      basic: { name: "Starter", credits: 30, price: 9 },
+      premium: { name: "Rising", credits: 75, price: 29 },
+      enterprise: { name: "Pro", credits: 150, price: 65 },
     };
     return tiers[tierName as keyof typeof tiers] || tiers.starter;
   };

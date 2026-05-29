@@ -20,10 +20,10 @@ test('normalizePlan preserves canonical and legacy aliases', () => {
 
 test('plan monthly credits match pricing contract', () => {
   assert.deepEqual(PLAN_MONTHLY_CREDITS, {
-    rookie: 50,
-    starter: 100,
-    rising: 250,
-    pro: 600,
+    rookie: 10,
+    starter: 30,
+    rising: 75,
+    pro: 150,
   });
 });
 
@@ -129,10 +129,25 @@ test('discovery call notifications fan out beyond admin-only Calendly emails', (
 test('subscription checkout copy uses the paid plan credit ladder', () => {
   const source = readFileSync(new URL('../supabase/functions/create-checkout/index.ts', import.meta.url), 'utf8');
 
-  assert.match(source, /starter: \{[\s\S]*monthly: \{[\s\S]*credits: 100[\s\S]*PMF Lab credit-metered access/);
-  assert.match(source, /rising: \{[\s\S]*monthly: \{[\s\S]*credits: 250[\s\S]*per-action MVP Builder/);
-  assert.match(source, /pro: \{[\s\S]*monthly: \{[\s\S]*credits: 600[\s\S]*Find Your Angel[\s\S]*unlimited research views/);
+  assert.match(source, /starter: \{[\s\S]*monthly: \{[\s\S]*credits: 30[\s\S]*PMF Lab credit-metered access/);
+  assert.match(source, /rising: \{[\s\S]*monthly: \{[\s\S]*credits: 75[\s\S]*per-action MVP Builder/);
+  assert.match(source, /pro: \{[\s\S]*monthly: \{[\s\S]*credits: 150[\s\S]*Find Your Angel[\s\S]*unlimited research views/);
   assert.match(source, /description: `\$\{pricing\.description\} with \$\{billingCycle\} billing`/);
+});
+
+test('MVP Builder Phase 1 credit packs are available through checkout', () => {
+  const checkoutSource = readFileSync(new URL('../supabase/functions/create-checkout/index.ts', import.meta.url), 'utf8');
+  const webhookSource = readFileSync(new URL('../supabase/functions/stripe-webhook/index.ts', import.meta.url), 'utf8');
+
+  for (const [packId, credits] of [
+    ['pack_micro', 30],
+    ['pack_builder', 100],
+    ['pack_growth', 220],
+    ['pack_scale', 500],
+  ] as const) {
+    assert.match(checkoutSource, new RegExp(`${packId}: \\{[\\s\\S]*credits: ${credits}`));
+    assert.match(webhookSource, new RegExp(`${packId}: ${credits}`));
+  }
 });
 
 test('credit audit main inventory follows Compare Our Plans tools only', () => {
@@ -210,12 +225,29 @@ test('pmf lab is blocked on Rookie and credit-metered on Starter and above', () 
   }
 });
 
-test('Rising and Pro generative build tools are unlocked and credit-metered', () => {
+test('MVP Builder is universal and Phase 1 build actions are credit-metered', () => {
   const expectedCosts = {
-    APP_BUILDER_GENERATE: 5,
+    APP_BUILDER_GENERATE: 10,
     APP_BUILDER_REFINE: 3,
+    APP_BUILDER_DEBUG: 2,
+    APP_BUILDER_DEPLOY: 2,
+    APP_BUILDER_RESTORE: 1,
+    APP_BUILDER_EXPORT: 0,
     APP_BUILDER_CHAT: 1,
     APP_BUILDER_GITHUB_EDIT: 3,
+  } as const;
+
+  for (const feature of Object.keys(expectedCosts) as Array<keyof typeof expectedCosts>) {
+    for (const plan of ['rookie', 'starter', 'rising', 'pro'] as const) {
+      const access = resolveFeatureEnforcement(plan, feature);
+      assert.equal(access.mode, 'charge');
+      assert.equal(access.creditCost, expectedCosts[feature]);
+    }
+  }
+});
+
+test('Rising and Pro non-MVP generative build tools remain unlocked and credit-metered', () => {
+  const expectedCosts = {
     GTM_ANALYSIS: 5,
     TECH_STACK_GENERATION: 3,
     PITCH_DECK_ANALYZER: 6,

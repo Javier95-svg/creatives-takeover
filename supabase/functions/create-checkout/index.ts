@@ -27,23 +27,24 @@ type PurchaseType = "subscription" | "credit_pack";
 
 const SUBSCRIPTION_PRICING: Record<string, Record<BillingCycle, { amount: number; name: string; credits: number; description: string }>> = {
   starter: {
-    monthly: { amount: 900, name: "Starter Plan", credits: 100, description: "100 monthly credits, PMF Lab credit-metered access, Email Templates, and 2 VC/Accelerator profile views" },
-    yearly: { amount: 7900, name: "Starter Plan", credits: 100, description: "100 monthly credits, PMF Lab credit-metered access, Email Templates, and 2 VC/Accelerator profile views" },
+    monthly: { amount: 900, name: "Starter Plan", credits: 30, description: "30 monthly credits, PMF Lab credit-metered access, Email Templates, and 2 VC/Accelerator profile views" },
+    yearly: { amount: 7900, name: "Starter Plan", credits: 30, description: "30 monthly credits, PMF Lab credit-metered access, Email Templates, and 2 VC/Accelerator profile views" },
   },
   rising: {
-    monthly: { amount: 2900, name: "Rising Plan", credits: 250, description: "250 monthly credits plus per-action MVP Builder, Tech Stack Builder, GTM Strategist, Pitch Deck Analyzer, and full Prompt Library" },
-    yearly: { amount: 23900, name: "Rising Plan", credits: 250, description: "250 monthly credits plus per-action MVP Builder, Tech Stack Builder, GTM Strategist, Pitch Deck Analyzer, and full Prompt Library" },
+    monthly: { amount: 2900, name: "Rising Plan", credits: 75, description: "75 monthly credits plus per-action MVP Builder, Tech Stack Builder, GTM Strategist, Pitch Deck Analyzer, and full Prompt Library" },
+    yearly: { amount: 23900, name: "Rising Plan", credits: 75, description: "75 monthly credits plus per-action MVP Builder, Tech Stack Builder, GTM Strategist, Pitch Deck Analyzer, and full Prompt Library" },
   },
   pro: {
-    monthly: { amount: 6500, name: "Pro Plan", credits: 600, description: "600 monthly credits, Find Your Angel, unlimited research views, and premium fundraising access" },
-    yearly: { amount: 58900, name: "Pro Plan", credits: 600, description: "600 monthly credits, Find Your Angel, unlimited research views, and premium fundraising access" },
+    monthly: { amount: 6500, name: "Pro Plan", credits: 150, description: "150 monthly credits, Find Your Angel, unlimited research views, and premium fundraising access" },
+    yearly: { amount: 58900, name: "Pro Plan", credits: 150, description: "150 monthly credits, Find Your Angel, unlimited research views, and premium fundraising access" },
   },
 };
 
 const CREDIT_PACKS: Record<string, { amount: number; credits: number; name: string }> = {
-  pack_20: { amount: 800, credits: 20, name: "Starter Pack" },
-  pack_40: { amount: 1600, credits: 40, name: "Boost Pack" },
-  pack_60: { amount: 2400, credits: 60, name: "Power Pack" },
+  pack_micro: { amount: 900, credits: 30, name: "Micro Pack" },
+  pack_builder: { amount: 2500, credits: 100, name: "Builder Pack" },
+  pack_growth: { amount: 4900, credits: 220, name: "Growth Pack" },
+  pack_scale: { amount: 9900, credits: 500, name: "Scale Pack" },
 };
 
 const sanitizeString = (value: unknown): string | undefined => {

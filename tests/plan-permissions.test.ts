@@ -27,6 +27,7 @@ test('plan highlights match the authoritative four-plan contract', () => {
   assert.deepEqual(PLAN_HIGHLIGHTS.rookie, [
     'Dashboard Rookie Mode',
     'ICP Builder (free)',
+    'MVP Builder per-action billing (uses credits)',
     'Stage 1 guided dashboard',
     'Stages 4-5 preview cards',
     'Unlimited Discovery Calls (10 credits per confirmed booking)',
@@ -42,6 +43,7 @@ test('plan highlights match the authoritative four-plan contract', () => {
     'ICP Builder (free)',
     'Stages 1-3 active',
     'Waitlist Maker + PMF Lab (uses credits)',
+    'MVP Builder per-action billing (uses credits)',
     'Stages 4-5 (preview only)',
     'Unlimited Discovery Calls (10 credits per confirmed booking)',
     '2 Find a Co-Founder posts per month',
@@ -102,7 +104,7 @@ test('dashboard mode config resolves from the canonical plan contract', () => {
     '/dashboard/referral',
     '/dashboard/focus-funnel',
   ]);
-  assert.deepEqual(rookieMode.visibleTools, ['icp_builder', 'saved_mentors', 'find_mentor', 'find_cofounder']);
+  assert.deepEqual(rookieMode.visibleTools, ['icp_builder', 'mvp_builder', 'saved_mentors', 'find_mentor', 'find_cofounder']);
 
   const proMode = getDashboardModeConfig('pro');
   assert.equal(proMode.label, 'Pro Mode');
@@ -128,10 +130,10 @@ test('dashboard surface access follows canonical navigation availability', () =>
 });
 
 test('plan monthly credits stay aligned with pricing', () => {
-  assert.equal(PLAN_MONTHLY_CREDITS.rookie, 50);
-  assert.equal(PLAN_MONTHLY_CREDITS.starter, 100);
-  assert.equal(PLAN_MONTHLY_CREDITS.rising, 250);
-  assert.equal(PLAN_MONTHLY_CREDITS.pro, 600);
+  assert.equal(PLAN_MONTHLY_CREDITS.rookie, 10);
+  assert.equal(PLAN_MONTHLY_CREDITS.starter, 30);
+  assert.equal(PLAN_MONTHLY_CREDITS.rising, 75);
+  assert.equal(PLAN_MONTHLY_CREDITS.pro, 150);
 });
 
 test('pricing page presents plan outcome labels', () => {
@@ -167,10 +169,10 @@ test('core entitlement rules reflect the pricing contract', () => {
   assert.equal(starterPmf.monetizationModel, 'credit_metered');
   assert.equal(starterPmf.creditCost, 6);
 
-  const risingMvp = resolveEntitlement('mvp_builder', 'rising');
-  assert.equal(risingMvp.state, 'full');
-  assert.equal(risingMvp.monetizationModel, 'credit_metered');
-  assert.equal(risingMvp.creditCost, 5);
+  const rookieMvp = resolveEntitlement('mvp_builder', 'rookie');
+  assert.equal(rookieMvp.state, 'full');
+  assert.equal(rookieMvp.monetizationModel, 'credit_metered');
+  assert.equal(rookieMvp.creditCost, 10);
 
   const proGtm = resolveEntitlement('gtm_strategist', 'pro');
   assert.equal(proGtm.state, 'full');

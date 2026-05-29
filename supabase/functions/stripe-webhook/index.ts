@@ -22,9 +22,10 @@ const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
 const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET") || "";
 
 const CREDIT_PACK_CREDITS: Record<string, number> = {
-  pack_20: 20,
-  pack_40: 40,
-  pack_60: 60,
+  pack_micro: 30,
+  pack_builder: 100,
+  pack_growth: 220,
+  pack_scale: 500,
 };
 
 type BillingCycle = "monthly" | "yearly";

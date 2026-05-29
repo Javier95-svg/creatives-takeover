@@ -23,10 +23,10 @@ export interface FeatureEnforcement {
 export const PLAN_SEQUENCE: Plan[] = ['rookie', 'starter', 'rising', 'pro'];
 
 export const PLAN_MONTHLY_CREDITS: Record<Plan, number> = {
-  rookie: 50,
-  starter: 100,
-  rising: 250,
-  pro: 600,
+  rookie: 10,
+  starter: 30,
+  rising: 75,
+  pro: 150,
 };
 
 const FEATURE_RULES: Partial<Record<EnforcedFeature, Record<Plan, FeatureRule>>> = {
@@ -49,26 +49,50 @@ const FEATURE_RULES: Partial<Record<EnforcedFeature, Record<Plan, FeatureRule>>>
     pro: { mode: 'charge' },
   },
   APP_BUILDER_GENERATE: {
-    rookie: { mode: 'blocked', requiredPlan: 'rising' },
-    starter: { mode: 'blocked', requiredPlan: 'rising' },
+    rookie: { mode: 'charge' },
+    starter: { mode: 'charge' },
     rising: { mode: 'charge' },
     pro: { mode: 'charge' },
   },
   APP_BUILDER_REFINE: {
-    rookie: { mode: 'blocked', requiredPlan: 'rising' },
-    starter: { mode: 'blocked', requiredPlan: 'rising' },
+    rookie: { mode: 'charge' },
+    starter: { mode: 'charge' },
+    rising: { mode: 'charge' },
+    pro: { mode: 'charge' },
+  },
+  APP_BUILDER_DEBUG: {
+    rookie: { mode: 'charge' },
+    starter: { mode: 'charge' },
+    rising: { mode: 'charge' },
+    pro: { mode: 'charge' },
+  },
+  APP_BUILDER_DEPLOY: {
+    rookie: { mode: 'charge' },
+    starter: { mode: 'charge' },
+    rising: { mode: 'charge' },
+    pro: { mode: 'charge' },
+  },
+  APP_BUILDER_RESTORE: {
+    rookie: { mode: 'charge' },
+    starter: { mode: 'charge' },
+    rising: { mode: 'charge' },
+    pro: { mode: 'charge' },
+  },
+  APP_BUILDER_EXPORT: {
+    rookie: { mode: 'charge' },
+    starter: { mode: 'charge' },
     rising: { mode: 'charge' },
     pro: { mode: 'charge' },
   },
   APP_BUILDER_CHAT: {
-    rookie: { mode: 'blocked', requiredPlan: 'rising' },
-    starter: { mode: 'blocked', requiredPlan: 'rising' },
+    rookie: { mode: 'charge' },
+    starter: { mode: 'charge' },
     rising: { mode: 'charge' },
     pro: { mode: 'charge' },
   },
   APP_BUILDER_GITHUB_EDIT: {
-    rookie: { mode: 'blocked', requiredPlan: 'rising' },
-    starter: { mode: 'blocked', requiredPlan: 'rising' },
+    rookie: { mode: 'charge' },
+    starter: { mode: 'charge' },
     rising: { mode: 'charge' },
     pro: { mode: 'charge' },
   },

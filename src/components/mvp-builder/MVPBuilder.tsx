@@ -31,6 +31,11 @@ export const MVPBuilder: React.FC = () => {
     projectId,
     promptHistory,
     selectedModels,
+    setupInput,
+    projectVersions,
+    lastActionQuote,
+    deploymentUrl,
+    isDeploying,
     githubConnection,
     githubRepositories,
     githubBranches,
@@ -40,6 +45,7 @@ export const MVPBuilder: React.FC = () => {
     isGitHubBusy,
     suggestedGitHubCommitMessage,
     setProjectName,
+    setSetupInput,
     setSelectedProjectType,
     setSelectedCodeFilePath,
     setEntryFilePath,
@@ -48,8 +54,11 @@ export const MVPBuilder: React.FC = () => {
     resetProjectCode,
     createManualSnapshot,
     restoreProjectSnapshot,
+    exportProjectZip,
+    deployProject,
     setSelectedModels,
     sendMessage,
+    classifyActionQuote,
     cancelGeneration,
     resetProject,
     connectGitHub,
@@ -81,9 +90,14 @@ export const MVPBuilder: React.FC = () => {
       isGitHubBusy={isGitHubBusy}
       suggestedGitHubCommitMessage={suggestedGitHubCommitMessage}
       lastBuildChangeSummary={lastBuildChangeSummary}
+      setupInput={setupInput}
+      projectVersions={projectVersions}
+      lastActionQuote={lastActionQuote}
       onSelectedModelsChange={setSelectedModels}
+      onSetupInputChange={setSetupInput}
       onProjectTypeChange={setSelectedProjectType}
       onSend={sendMessage}
+      onClassifyAction={classifyActionQuote}
       onCancelGeneration={cancelGeneration}
       onConnectGitHub={connectGitHub}
       onDisconnectGitHub={disconnectGitHub}
@@ -110,6 +124,8 @@ export const MVPBuilder: React.FC = () => {
       projectSummary={projectSummary}
       projectDependencies={projectDependencies}
       projectSnapshots={projectSnapshots}
+      deploymentUrl={deploymentUrl}
+      isDeploying={isDeploying}
       previewState={previewState}
       entryFilePath={entryFilePath}
       selectedCodeFilePath={selectedCodeFilePath}
@@ -122,6 +138,8 @@ export const MVPBuilder: React.FC = () => {
       onCreateSnapshot={createManualSnapshot}
       onRestoreSnapshot={restoreProjectSnapshot}
       onSelectEntryFile={setEntryFilePath}
+      onExportZip={exportProjectZip}
+      onDeploy={deployProject}
     />
   );
 
