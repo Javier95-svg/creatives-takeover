@@ -1,15 +1,18 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Plus, Pencil, Check } from 'lucide-react';
+import { ArrowLeft, Plus, Pencil, Check, Database, Github } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { getMVPModelLabel } from '@/data/mvpModels';
+import { cn } from '@/lib/utils';
+import type { MVPBuilderIntegrationsHealth, MVPIntegrationStatus } from '@/lib/mvp-builder/integrations';
 
 interface MVPBuilderHeaderProps {
   projectName: string;
   setProjectName: (name: string) => void;
   selectedModels: string[];
   creditsAvailable: number;
+  integrations: MVPBuilderIntegrationsHealth;
   onNewProject: () => void;
 }
 
@@ -18,6 +21,7 @@ export const MVPBuilderHeader: React.FC<MVPBuilderHeaderProps> = ({
   setProjectName,
   selectedModels,
   creditsAvailable,
+  integrations,
   onNewProject,
 }) => {
   const [isEditing, setIsEditing] = useState(false);
@@ -46,6 +50,28 @@ export const MVPBuilderHeader: React.FC<MVPBuilderHeaderProps> = ({
       setDraft(projectName);
       setIsEditing(false);
     }
+  };
+
+  const renderStatusChip = (
+    label: string,
+    status: MVPIntegrationStatus,
+    Icon: React.ComponentType<{ className?: string }>
+  ) => {
+    const healthy = status === 'connected';
+    const needsAuth = status === 'expired' || status === 'error';
+    return (
+      <span
+        className={cn(
+          'hidden lg:flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[11px] font-medium',
+          healthy && 'border-emerald-500/20 bg-emerald-500/10 text-emerald-300',
+          needsAuth && 'border-amber-300/25 bg-amber-300/10 text-amber-100',
+          !healthy && !needsAuth && 'border-white/10 bg-white/5 text-slate-300'
+        )}
+      >
+        <Icon className="h-3 w-3" />
+        {label}: {healthy ? 'live' : needsAuth ? 'reauth' : 'setup'}
+      </span>
+    );
   };
 
   return (
@@ -95,6 +121,8 @@ export const MVPBuilderHeader: React.FC<MVPBuilderHeaderProps> = ({
         </div>
 
         <div className="relative flex items-center gap-2">
+          {renderStatusChip('GitHub', integrations.github.status, Github)}
+          {renderStatusChip('Supabase', integrations.supabase.status, Database)}
           <span className="hidden md:flex items-center gap-1.5 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[11px] font-medium text-emerald-300">
             {primaryModelLabel}
             {additionalModels > 0 ? ` +${additionalModels}` : ''}
@@ -103,7 +131,7 @@ export const MVPBuilderHeader: React.FC<MVPBuilderHeaderProps> = ({
             <span className="h-1.5 w-1.5 rounded-full bg-sky-300 shrink-0" />
             {creditsAvailable} credits
           </span>
-          {creditsAvailable <= 8 && (
+          {creditsAvailable === 0 && (
             <Link
               to="/pricing#credit-packs"
               className="hidden lg:inline-flex h-7 items-center rounded-md border border-amber-300/25 bg-amber-300/10 px-2 text-xs font-medium text-amber-100 hover:bg-amber-300/15"

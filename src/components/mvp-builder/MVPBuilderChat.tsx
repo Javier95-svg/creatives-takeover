@@ -41,8 +41,6 @@ import type {
 import type { MVPBuilderSetupInput, MVPBuilderVersion } from '@/lib/mvp-builder/phase1';
 import {
   MVP_BUILDER_ACTION_LABELS,
-  MVP_BUILDER_PALETTES,
-  MVP_BUILDER_TEMPLATES,
 } from '@/lib/mvp-builder/phase1';
 import {
   MVP_DEFAULT_MODEL,
@@ -82,22 +80,6 @@ const REFERENCE_OPTIONS = [
 
 type BuilderReferenceId = (typeof REFERENCE_OPTIONS)[number]['id'];
 
-function getSetupPrefillLabel(source: MVPBuilderSetupInput['prefillSource']) {
-  switch (source) {
-    case 'waitlist_launch_kit':
-      return 'Waitlist Launch Kit';
-    case 'dashboard_home':
-      return 'dashboard Home tab';
-    case 'onboarding_quiz':
-      return 'onboarding quiz';
-    case 'pmf':
-      return 'PMF Lab';
-    case 'icp':
-      return 'founder context';
-    default:
-      return 'founder context';
-  }
-}
 
 type QueuedSubmission = {
   id: string;
@@ -291,6 +273,7 @@ interface MVPBuilderChatProps {
   githubCommitHistory: GitHubCommitRecord[];
   isGitHubBusy: boolean;
   suggestedGitHubCommitMessage: string | null;
+  integrationReady: boolean;
   lastBuildChangeSummary: MVPBuildChangeSummary | null;
   setupInput: MVPBuilderSetupInput;
   projectVersions: MVPBuilderVersion[];
@@ -335,12 +318,13 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
   githubCommitHistory,
   isGitHubBusy,
   suggestedGitHubCommitMessage,
+  integrationReady,
   lastBuildChangeSummary,
-  setupInput,
+  setupInput: _setupInput,
   projectVersions,
   lastActionQuote,
   onSelectedModelsChange,
-  onSetupInputChange,
+  onSetupInputChange: _onSetupInputChange,
   onProjectTypeChange: _onProjectTypeChange,
   onSend,
   onClassifyAction,
@@ -627,7 +611,7 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
 
   const handleSend = useCallback(() => {
     const trimmed = input.trim();
-    if (!trimmed || isGitHubBusy) return;
+    if (!trimmed || isGitHubBusy || !integrationReady) return;
 
     const promptWithReferences = selectedReferenceItems.length
       ? `${trimmed}\n\nReference context to incorporate:\n${selectedReferenceItems
@@ -649,7 +633,7 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
 
     enqueueOrSubmit(submission);
     setInput('');
-  }, [builderMode, enqueueOrSubmit, input, isGenerating, isGitHubBusy, selectedReferenceItems]);
+  }, [builderMode, enqueueOrSubmit, input, integrationReady, isGenerating, isGitHubBusy, selectedReferenceItems]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -701,33 +685,25 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
 
   const handleRepoChange = (fullName: string) => {
     setSelectedRepo(fullName);
-    const repo = githubRepositories.find((item) => item.fullName === fullName);
-    setSelectedBranch(repo?.defaultBranch || 'main');
+    setSelectedBranch('main');
   };
 
   const handleImportRepository = async () => {
     if (!selectedRepo) return;
-    await onImportGitHubRepository(selectedRepo, selectedBranch || undefined);
+    await onImportGitHubRepository(selectedRepo, 'main');
   };
 
   const handleCommitToBranch = async () => {
     if (!githubRepoSession) return;
     await onCommitGitHubChanges({
       createPullRequest: false,
-      targetBranch: githubRepoSession.branch,
+      targetBranch: 'main',
       commitMessage: commitMessage || undefined,
     });
   };
 
   const handleCreatePullRequest = async () => {
-    if (!githubRepoSession || !prBranchName.trim()) return;
-    await onCommitGitHubChanges({
-      createPullRequest: true,
-      targetBranch: prBranchName.trim(),
-      prTitle: `MVP Builder update: ${githubRepoSession.name}`,
-      prBody: 'Automated changes from /mvp-builder prompt workflow.',
-      commitMessage: commitMessage || undefined,
-    });
+    await handleCommitToBranch();
   };
 
   const handleRollback = async (sha: string) => {
@@ -743,83 +719,22 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
       <ScrollArea className="flex-1 min-h-0">
         <div className="p-4">
           {isEmpty ? (
-            <div className="flex h-full flex-col gap-5 py-6">
-              <div className="space-y-3">
-                <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-sky-400/20 bg-white/[0.04]">
-                  <Wand2 className="h-5 w-5 text-sky-200" />
-                </div>
-                <div className="space-y-1.5">
-                  <h2 className="text-lg font-semibold text-white">Project setup</h2>
-                  {setupInput.prefillSource && (
-                    <Badge variant="outline" className="border-sky-400/30 bg-sky-400/10 text-[11px] text-sky-100">
-                      Pre-filled from your {getSetupPrefillLabel(setupInput.prefillSource)}.
-                    </Badge>
-                  )}
-                </div>
+            <div className="flex flex-col gap-5 py-6">
+              <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-sky-400/20 bg-white/[0.04]">
+                <Wand2 className="h-5 w-5 text-sky-200" />
               </div>
-
-              <div className="space-y-3">
-                <input
-                  value={setupInput.productName}
-                  onChange={(event) => onSetupInputChange({ productName: event.target.value })}
-                  placeholder="Product name"
-                  className="h-9 w-full rounded-md border border-white/10 bg-white/[0.04] px-3 text-sm text-white outline-none focus-visible:ring-2 focus-visible:ring-sky-400/30"
-                />
-                <Textarea
-                  value={setupInput.oneLineDescription}
-                  onChange={(event) => onSetupInputChange({ oneLineDescription: event.target.value })}
-                  placeholder="One-line product description"
-                  className="min-h-[70px] border-white/10 bg-white/[0.04] text-sm text-white placeholder:text-slate-500"
-                />
-                <Textarea
-                  value={setupInput.validatedProblemStatement}
-                  onChange={(event) => onSetupInputChange({ validatedProblemStatement: event.target.value })}
-                  placeholder="Problem being solved"
-                  className="min-h-[70px] border-white/10 bg-white/[0.04] text-sm text-white placeholder:text-slate-500"
-                />
-                <input
-                  value={setupInput.validatedTargetSegment}
-                  onChange={(event) => onSetupInputChange({ validatedTargetSegment: event.target.value })}
-                  placeholder="Target audience"
-                  className="h-9 w-full rounded-md border border-white/10 bg-white/[0.04] px-3 text-sm text-white outline-none focus-visible:ring-2 focus-visible:ring-sky-400/30"
-                />
+              <div className="space-y-2">
+                <h2 className="text-base font-semibold text-white">Ready to build</h2>
+                <p className="text-sm leading-relaxed text-slate-400">
+                  Your context is already loaded — target market, pain points, and positioning pulled from your dashboard and onboarding quiz. Just describe what you want to build.
+                </p>
               </div>
-
-              <div className="grid grid-cols-1 gap-2">
-                {MVP_BUILDER_TEMPLATES.map((template) => (
-                  <button
-                    key={template.id}
-                    type="button"
-                    onClick={() => onSetupInputChange({ template: template.id })}
-                    className={cn(
-                      'rounded-md border px-3 py-2 text-left transition-colors',
-                      setupInput.template === template.id
-                        ? 'border-sky-400/50 bg-sky-400/10'
-                        : 'border-white/10 bg-white/[0.03] hover:bg-white/[0.06]'
-                    )}
-                  >
-                    <span className="block text-xs font-semibold text-white">{template.label}</span>
-                    <span className="mt-0.5 block text-[11px] leading-snug text-slate-400">{template.description}</span>
-                  </button>
-                ))}
-              </div>
-
-              <div className="grid grid-cols-3 gap-2">
-                {MVP_BUILDER_PALETTES.map((palette) => (
-                  <button
-                    key={palette.id}
-                    type="button"
-                    onClick={() => onSetupInputChange({ palettePreference: palette.id })}
-                    className={cn(
-                      'h-9 rounded-md border px-2 text-xs font-medium transition-colors',
-                      setupInput.palettePreference === palette.id
-                        ? 'border-emerald-400/50 bg-emerald-400/10 text-white'
-                        : 'border-white/10 bg-white/[0.03] text-slate-300 hover:bg-white/[0.06]'
-                    )}
-                  >
-                    {palette.label}
-                  </button>
-                ))}
+              <div className="rounded-lg border border-sky-400/10 bg-sky-400/5 px-3 py-2.5 text-xs leading-relaxed text-slate-500">
+                Tip: type{' '}
+                <span className="font-medium text-sky-300">@icp-profile</span>,{' '}
+                <span className="font-medium text-sky-300">@pmf-score</span>, or{' '}
+                <span className="font-medium text-sky-300">@brand-kit</span>{' '}
+                in your prompt to anchor the build to specific context.
               </div>
             </div>
           ) : (
@@ -1067,6 +982,8 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
                 placeholder={
                   builderMode === 'chat'
                     ? 'Ask for product direction, UX decisions, or implementation advice...'
+                    : !integrationReady
+                    ? 'Connect GitHub main and Supabase to start building...'
                     : isEmpty
                     ? 'Describe your MVP idea, core flow, and visual style...'
                     : githubRepoSession
@@ -1077,7 +994,7 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
                   'min-h-[52px] resize-none border-0 bg-transparent px-0 py-0 text-sm leading-relaxed text-white placeholder:text-slate-500 focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none',
                   isGenerating && 'text-slate-50'
                 )}
-                disabled={isGitHubBusy}
+                disabled={isGitHubBusy || !integrationReady}
               />
               {availableReferences.length > 0 && (
                 <div className="absolute bottom-[calc(100%+12px)] left-0 z-20 w-[280px] rounded-2xl border border-white/10 bg-[#0b1020] p-2 shadow-[0_30px_60px_rgba(0,0,0,0.45)]">
@@ -1111,7 +1028,7 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
             ) : (
               <Button
                 onClick={handleSend}
-                disabled={!input.trim() || isGitHubBusy}
+                disabled={!input.trim() || isGitHubBusy || !integrationReady}
                 className="h-11 shrink-0 rounded-2xl bg-white px-4 text-slate-950 shadow-sm transition-transform hover:scale-[1.03] hover:bg-slate-100 disabled:bg-white/10 disabled:text-slate-500"
               >
                 <Send className="mr-2 h-4 w-4" />
@@ -1374,13 +1291,13 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
 
                         <label className="space-y-1.5">
                           <span className="text-[11px] uppercase tracking-wide text-muted-foreground">
-                            Branch
+                            Branch (locked)
                           </span>
                           <select
                             value={selectedBranch}
                             onChange={(event) => setSelectedBranch(event.target.value)}
                             className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                            disabled={isGitHubBusy || !selectedRepo}
+                            disabled
                           >
                             {availableBranches.map((branch) => (
                               <option key={branch} value={branch}>
@@ -1510,7 +1427,7 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
                     </div>
 
                     <div className="rounded-xl border border-border/60 bg-card/70 p-3 space-y-3">
-                      <p className="text-sm font-medium">Commit / Push / Pull Request</p>
+                      <p className="text-sm font-medium">Commit / Push to main</p>
 
                       <label className="space-y-1.5 block">
                         <span className="text-[11px] uppercase tracking-wide text-muted-foreground">
@@ -1557,9 +1474,9 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
                         <input
                           value={prBranchName}
                           onChange={(event) => setPrBranchName(event.target.value)}
-                          placeholder="new branch name (e.g. mvp/feature-update)"
+                          placeholder="main branch push; PR mode is disabled in v1"
                           className="h-8 rounded-md border border-input bg-background px-3 text-xs outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                          disabled={isGitHubBusy}
+                          disabled
                         />
                         <Button
                           type="button"
@@ -1569,12 +1486,11 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
                           onClick={handleCreatePullRequest}
                           disabled={
                             !githubRepoSession ||
-                            !prBranchName.trim() ||
                             githubPendingChanges.length === 0 ||
                             isGitHubBusy
                           }
                         >
-                          Create Branch + PR
+                          Push to main
                         </Button>
                       </div>
                     </div>

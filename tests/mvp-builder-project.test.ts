@@ -15,6 +15,11 @@ import {
   mvpBuilderOutputToArtifact,
   validateMVPBuilderOutput,
 } from '../src/lib/mvp-builder/phase1.ts';
+import {
+  classifyIntegrationStatus,
+  getMVPIntegrationReady,
+  isTokenExpired,
+} from '../src/lib/mvp-builder/integrations.ts';
 import { CREDIT_COSTS } from '../src/config/constants.ts';
 
 test('extractProjectFromText parses structured project output', () => {
@@ -217,6 +222,48 @@ test('phase 2 MVP action credit costs use the regular account credit balance pri
   assert.equal(CREDIT_COSTS.APP_BUILDER_ADD_FEATURE, 8);
   assert.equal(CREDIT_COSTS.APP_BUILDER_DESIGN_OVERHAUL, 8);
   assert.equal(CREDIT_COSTS.APP_BUILDER_DEPLOY, 3);
+});
+
+test('MVP Builder integration readiness requires healthy GitHub and Supabase connections', () => {
+  assert.equal(
+    getMVPIntegrationReady({
+      github: { connected: true, status: 'connected' },
+      supabase: { connected: true, status: 'connected' },
+    }),
+    true
+  );
+
+  assert.equal(
+    getMVPIntegrationReady({
+      github: { connected: true, status: 'connected' },
+      supabase: { connected: true, status: 'expired' },
+    }),
+    false
+  );
+
+  assert.equal(
+    classifyIntegrationStatus({
+      connected: true,
+      lastError: 'Bad credentials',
+    }),
+    'expired'
+  );
+});
+
+test('MVP Builder integration token expiration is classified before build access', () => {
+  const now = new Date('2026-05-29T12:00:00.000Z').getTime();
+
+  assert.equal(isTokenExpired('2026-05-29T12:00:30.000Z', now), true);
+  assert.equal(isTokenExpired('2026-05-29T12:05:00.000Z', now), false);
+  assert.equal(
+    classifyIntegrationStatus({
+      connected: true,
+      status: 'connected',
+      expiresAt: '2026-05-29T12:00:30.000Z',
+      now,
+    }),
+    'expired'
+  );
 });
 
 test('project setup prefill uses onboarding quiz and dashboard home context', () => {

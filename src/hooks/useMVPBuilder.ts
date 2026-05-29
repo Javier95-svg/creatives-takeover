@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { getAccessTokenSafely, getSessionSafely } from '@/integrations/supabase/auth';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -54,6 +54,12 @@ import {
   buildStartupCommandCenterModel,
   type StartupCommandCenterModel,
 } from '@/lib/startupCommandCenter';
+import {
+  classifyIntegrationStatus,
+  getMVPIntegrationReady,
+  type MVPBuilderIntegrationsHealth,
+  type MVPIntegrationStatus,
+} from '@/lib/mvp-builder/integrations';
 
 export interface MVPMessage {
   id: string;
@@ -79,12 +85,50 @@ export interface MVPPromptHistoryItem {
 
 export interface GitHubConnectionState {
   connected: boolean;
+  status?: MVPIntegrationStatus;
+  lastError?: string | null;
+  expiresAt?: string | null;
+  connectionId?: string;
   profile: {
     login?: string;
     name?: string | null;
     avatar_url?: string | null;
     scope?: string;
   } | null;
+  repository?: {
+    fullName: string;
+    htmlUrl?: string | null;
+    branch: string;
+    defaultBranch: string;
+    baseCommitSha?: string | null;
+  } | null;
+}
+
+export interface SupabaseConnectionState {
+  connected: boolean;
+  status: MVPIntegrationStatus;
+  lastError?: string | null;
+  expiresAt?: string | null;
+  connectionId?: string;
+  scopes?: string[];
+  project: {
+    ref: string;
+    name: string;
+    region?: string | null;
+    status?: string | null;
+    organizationId?: string | null;
+    organizationName?: string | null;
+  } | null;
+}
+
+export interface SupabaseProjectSummary {
+  id?: string;
+  ref: string;
+  name: string;
+  region?: string | null;
+  status?: string | null;
+  organizationId?: string | null;
+  organizationName?: string | null;
 }
 
 export interface GitHubRepositorySummary {
@@ -197,6 +241,8 @@ export interface MVPProjectRecord {
   deployment_url?: string | null;
   deployment_slug?: string | null;
   deployment_status?: 'not_deployed' | 'deploying' | 'deployed' | 'failed';
+  github_connection_id?: string | null;
+  supabase_connection_id?: string | null;
   metadata?: Record<string, unknown>;
   created_at: string;
   updated_at: string;
@@ -563,6 +609,9 @@ const STREAM_URL =
   'https://rcjlaybjnozqbsoxzboa.supabase.co/functions/v1/mvp-builder-generate';
 const GITHUB_FN_URL =
   'https://rcjlaybjnozqbsoxzboa.supabase.co/functions/v1/github-integration';
+const SUPABASE_INTEGRATION_FN_URL = `${
+  (import.meta.env.VITE_SUPABASE_URL as string | undefined) || 'https://rcjlaybjnozqbsoxzboa.supabase.co'
+}/functions/v1/supabase-integration`;
 const STORAGE_KEY = 'ct_app_builder_session';
 
 function getMVPActionFeature(options: {
@@ -879,7 +928,9 @@ export function useMVPBuilder() {
 
   const [githubConnection, setGitHubConnection] = useState<GitHubConnectionState>({
     connected: false,
+    status: 'disconnected',
     profile: null,
+    repository: null,
   });
   const [githubRepositories, setGitHubRepositories] = useState<GitHubRepositorySummary[]>([]);
   const [githubBranches, setGitHubBranches] = useState<string[]>([]);
@@ -889,6 +940,58 @@ export function useMVPBuilder() {
   const [lastGitHubPrompt, setLastGitHubPrompt] = useState<string | null>(null);
   const [suggestedGitHubCommitMessage, setSuggestedGitHubCommitMessage] = useState<string | null>(null);
   const [isGitHubBusy, setIsGitHubBusy] = useState(false);
+  const [supabaseConnection, setSupabaseConnection] = useState<SupabaseConnectionState>({
+    connected: false,
+    status: 'disconnected',
+    project: null,
+  });
+  const [supabaseProjects, setSupabaseProjects] = useState<SupabaseProjectSummary[]>([]);
+  const [supabaseBackendSnapshot, setSupabaseBackendSnapshot] = useState<Record<string, unknown> | null>(null);
+  const [isSupabaseBusy, setIsSupabaseBusy] = useState(false);
+
+  const integrations = useMemo<MVPBuilderIntegrationsHealth>(
+    () => ({
+      github: {
+        connected: Boolean(githubConnection.connected && githubRepoSession?.fullName),
+        status: githubConnection.connected && githubRepoSession?.fullName
+          ? classifyIntegrationStatus({
+              connected: true,
+              status: githubConnection.status,
+              lastError: githubConnection.lastError,
+              expiresAt: githubConnection.expiresAt,
+            })
+          : 'disconnected',
+        lastError: githubConnection.lastError ?? null,
+        expiresAt: githubConnection.expiresAt ?? null,
+      },
+      supabase: {
+        connected: Boolean(supabaseConnection.connected && supabaseConnection.project?.ref),
+        status: supabaseConnection.connected && supabaseConnection.project?.ref
+          ? classifyIntegrationStatus({
+              connected: true,
+              status: supabaseConnection.status,
+              lastError: supabaseConnection.lastError,
+              expiresAt: supabaseConnection.expiresAt,
+            })
+          : 'disconnected',
+        lastError: supabaseConnection.lastError ?? null,
+        expiresAt: supabaseConnection.expiresAt ?? null,
+      },
+    }),
+    [
+      githubConnection.connected,
+      githubConnection.expiresAt,
+      githubConnection.lastError,
+      githubConnection.status,
+      githubRepoSession?.fullName,
+      supabaseConnection.connected,
+      supabaseConnection.expiresAt,
+      supabaseConnection.lastError,
+      supabaseConnection.project?.ref,
+      supabaseConnection.status,
+    ]
+  );
+  const integrationReady = useMemo(() => getMVPIntegrationReady(integrations), [integrations]);
 
   const abortRef = useRef<AbortController | null>(null);
   const lastStablePreviewHtmlRef = useRef<string | null>(null);
@@ -1333,7 +1436,7 @@ export function useMVPBuilder() {
     try {
       const { data, error } = await supabase
         .from(MVP_PROJECTS_TABLE as never)
-        .select('id, title, prompt_history, generated_code, project_type, template, project_files, versions, deployment_url, deployment_slug, deployment_status, metadata, created_at, updated_at')
+        .select('id, title, prompt_history, generated_code, project_type, template, project_files, versions, deployment_url, deployment_slug, deployment_status, github_connection_id, supabase_connection_id, metadata, created_at, updated_at')
         .eq('user_id', user.id)
         .order('updated_at', { ascending: false });
 
@@ -1353,6 +1456,8 @@ export function useMVPBuilder() {
               deployment_url: typeof record.deployment_url === 'string' ? record.deployment_url : null,
               deployment_slug: typeof record.deployment_slug === 'string' ? record.deployment_slug : null,
               deployment_status: record.deployment_status as MVPProjectRecord['deployment_status'],
+              github_connection_id: typeof record.github_connection_id === 'string' ? record.github_connection_id : null,
+              supabase_connection_id: typeof record.supabase_connection_id === 'string' ? record.supabase_connection_id : null,
               metadata: record.metadata && typeof record.metadata === 'object' ? record.metadata as Record<string, unknown> : {},
               created_at: typeof record.created_at === 'string' ? record.created_at : new Date().toISOString(),
               updated_at:
@@ -1560,12 +1665,33 @@ export function useMVPBuilder() {
         versions: projectVersions,
         deployment_url: deploymentUrl,
         deployment_status: deploymentUrl ? 'deployed' : 'not_deployed',
+        github_connection_id: githubConnection.connectionId ?? null,
+        supabase_connection_id: supabaseConnection.connectionId ?? null,
         metadata: {
           setupInput,
           phase: 'mvp_builder_phase2',
           framework: projectFramework,
           buildCommand: projectFramework === 'react-vite' ? 'npm run build' : '',
           devCommand: projectFramework === 'react-vite' ? 'npm run dev' : '',
+          integrations: {
+            github: {
+              connectionId: githubConnection.connectionId ?? null,
+              repository: githubRepoSession
+                ? {
+                    fullName: githubRepoSession.fullName,
+                    branch: 'main',
+                    htmlUrl: githubRepoSession.htmlUrl ?? null,
+                    baseCommitSha: githubRepoSession.baseCommitSha,
+                  }
+                : githubConnection.repository ?? null,
+              status: githubConnection.status ?? 'disconnected',
+            },
+            supabase: {
+              connectionId: supabaseConnection.connectionId ?? null,
+              project: supabaseConnection.project,
+              status: supabaseConnection.status,
+            },
+          },
         },
         updated_at: timestamp,
       };
@@ -1575,7 +1701,7 @@ export function useMVPBuilder() {
         const { data, error } = await supabase
           .from(MVP_PROJECTS_TABLE as never)
           .upsert(payload)
-          .select('id, title, prompt_history, generated_code, project_type, template, project_files, versions, deployment_url, deployment_slug, deployment_status, metadata, created_at, updated_at')
+          .select('id, title, prompt_history, generated_code, project_type, template, project_files, versions, deployment_url, deployment_slug, deployment_status, github_connection_id, supabase_connection_id, metadata, created_at, updated_at')
           .single();
 
         if (error) throw error;
@@ -1592,6 +1718,8 @@ export function useMVPBuilder() {
           deployment_url: typeof data.deployment_url === 'string' ? data.deployment_url : deploymentUrl,
           deployment_slug: typeof data.deployment_slug === 'string' ? data.deployment_slug : null,
           deployment_status: data.deployment_status as MVPProjectRecord['deployment_status'],
+          github_connection_id: typeof data.github_connection_id === 'string' ? data.github_connection_id : null,
+          supabase_connection_id: typeof data.supabase_connection_id === 'string' ? data.supabase_connection_id : null,
           metadata: data.metadata && typeof data.metadata === 'object' ? data.metadata as Record<string, unknown> : payload.metadata,
           created_at: typeof data.created_at === 'string' ? data.created_at : timestamp,
           updated_at: typeof data.updated_at === 'string' ? data.updated_at : timestamp,
@@ -1620,7 +1748,7 @@ export function useMVPBuilder() {
         setIsSavingProject(false);
       }
     },
-    [currentHtml, deploymentUrl, entryFilePath, generatedCode, messages, projectFiles, projectFramework, projectId, projectName, projectVersions, setupInput, user]
+    [currentHtml, deploymentUrl, entryFilePath, generatedCode, githubConnection, githubRepoSession, messages, projectFiles, projectFramework, projectId, projectName, projectVersions, setupInput, supabaseConnection, user]
   );
 
   const loadProject = useCallback(
@@ -1632,7 +1760,7 @@ export function useMVPBuilder() {
         if (!project) {
           const { data, error } = await supabase
             .from(MVP_PROJECTS_TABLE as never)
-            .select('id, title, prompt_history, generated_code, project_type, template, project_files, versions, deployment_url, deployment_slug, deployment_status, metadata, created_at, updated_at')
+            .select('id, title, prompt_history, generated_code, project_type, template, project_files, versions, deployment_url, deployment_slug, deployment_status, github_connection_id, supabase_connection_id, metadata, created_at, updated_at')
             .eq('id', id)
             .eq('user_id', user.id)
             .maybeSingle();
@@ -1652,6 +1780,8 @@ export function useMVPBuilder() {
             deployment_url: typeof data.deployment_url === 'string' ? data.deployment_url : null,
             deployment_slug: typeof data.deployment_slug === 'string' ? data.deployment_slug : null,
             deployment_status: data.deployment_status as MVPProjectRecord['deployment_status'],
+            github_connection_id: typeof data.github_connection_id === 'string' ? data.github_connection_id : null,
+            supabase_connection_id: typeof data.supabase_connection_id === 'string' ? data.supabase_connection_id : null,
             metadata: data.metadata && typeof data.metadata === 'object' ? data.metadata as Record<string, unknown> : {},
             created_at: typeof data.created_at === 'string' ? data.created_at : new Date().toISOString(),
             updated_at:
@@ -1724,6 +1854,15 @@ export function useMVPBuilder() {
         '',
         `${window.location.pathname}${query ? `?${query}` : ''}${window.location.hash}`
       );
+    } else if (params.get('supabase_connected') === '1') {
+      toast.success('Supabase connected successfully.');
+      params.delete('supabase_connected');
+      const query = params.toString();
+      window.history.replaceState(
+        {},
+        '',
+        `${window.location.pathname}${query ? `?${query}` : ''}${window.location.hash}`
+      );
     } else if (params.get('github_error')) {
       toast.error(params.get('github_error') || 'Failed to connect GitHub.');
       params.delete('github_error');
@@ -1768,20 +1907,36 @@ export function useMVPBuilder() {
 
   const refreshGitHubConnection = useCallback(async () => {
     if (!user) {
-      setGitHubConnection({ connected: false, profile: null });
+      setGitHubConnection({ connected: false, status: 'disconnected', profile: null, repository: null });
       return;
     }
     try {
       const result = await callGitHubFunction<{
         connected: boolean;
+        status?: MVPIntegrationStatus;
+        lastError?: string | null;
+        expiresAt?: string | null;
+        connectionId?: string;
         profile: GitHubConnectionState['profile'];
+        repository?: GitHubConnectionState['repository'];
       }>('get_connection');
-      setGitHubConnection({
+      const status = classifyIntegrationStatus({
         connected: Boolean(result.connected),
+        status: result.status,
+        lastError: result.lastError,
+        expiresAt: result.expiresAt,
+      });
+      setGitHubConnection({
+        connected: Boolean(result.connected) && status === 'connected',
+        status,
+        lastError: result.lastError ?? null,
+        expiresAt: result.expiresAt ?? null,
+        connectionId: result.connectionId,
         profile: result.profile ?? null,
+        repository: result.repository ?? null,
       });
     } catch {
-      setGitHubConnection({ connected: false, profile: null });
+      setGitHubConnection({ connected: false, status: 'error', profile: null, repository: null, lastError: 'Unable to verify GitHub connection.' });
     }
   }, [callGitHubFunction, user]);
 
@@ -1798,6 +1953,7 @@ export function useMVPBuilder() {
     try {
       const result = await callGitHubFunction<{ authorizeUrl: string }>('oauth_init', {
         redirectTo: `${window.location.origin}/mvp-builder`,
+        projectId,
       });
       if (!result.authorizeUrl) {
         throw new Error('Failed to initialize GitHub OAuth.');
@@ -1810,13 +1966,13 @@ export function useMVPBuilder() {
     } finally {
       setIsGitHubBusy(false);
     }
-  }, [callGitHubFunction, user]);
+  }, [callGitHubFunction, projectId, user]);
 
   const disconnectGitHub = useCallback(async () => {
     setIsGitHubBusy(true);
     try {
       await callGitHubFunction('disconnect');
-      setGitHubConnection({ connected: false, profile: null });
+      setGitHubConnection({ connected: false, status: 'disconnected', profile: null, repository: null });
       setGitHubRepositories([]);
       setGitHubBranches([]);
       setGitHubRepoSession(null);
@@ -1831,6 +1987,196 @@ export function useMVPBuilder() {
       setIsGitHubBusy(false);
     }
   }, [callGitHubFunction]);
+
+  const callSupabaseIntegrationFunction = useCallback(
+    async <T>(action: string, payload: Record<string, unknown> = {}): Promise<T> => {
+      const accessToken = await getAccessTokenSafely();
+      if (!accessToken) {
+        throw new Error('Please sign in first.');
+      }
+
+      const response = await fetch(SUPABASE_INTEGRATION_FN_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({ action, ...payload }),
+      });
+
+      const json = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        const err = new Error(
+          typeof json?.error === 'string' ? json.error : `HTTP ${response.status}`
+        ) as FunctionError;
+        err.status = response.status;
+        throw err;
+      }
+
+      return json as T;
+    },
+    []
+  );
+
+  const refreshSupabaseConnection = useCallback(async () => {
+    if (!user) {
+      setSupabaseConnection({ connected: false, status: 'disconnected', project: null });
+      return;
+    }
+    try {
+      const result = await callSupabaseIntegrationFunction<SupabaseConnectionState>('get_connection');
+      const status = classifyIntegrationStatus({
+        connected: Boolean(result.connected),
+        status: result.status,
+        lastError: result.lastError,
+        expiresAt: result.expiresAt,
+      });
+      setSupabaseConnection({
+        ...result,
+        connected: Boolean(result.connected) && status === 'connected',
+        status,
+        project: result.project ?? null,
+      });
+    } catch {
+      setSupabaseConnection({
+        connected: false,
+        status: 'error',
+        project: null,
+        lastError: 'Unable to verify Supabase connection.',
+      });
+    }
+  }, [callSupabaseIntegrationFunction, user]);
+
+  useEffect(() => {
+    void refreshSupabaseConnection();
+  }, [refreshSupabaseConnection]);
+
+  const connectSupabaseProject = useCallback(async () => {
+    if (!user) {
+      toast.error('Please sign in to connect Supabase.');
+      return;
+    }
+    setIsSupabaseBusy(true);
+    try {
+      const result = await callSupabaseIntegrationFunction<{ authorizeUrl: string }>('oauth_init', {
+        redirectTo: `${window.location.origin}/mvp-builder`,
+        projectId,
+      });
+      if (!result.authorizeUrl) {
+        throw new Error('Failed to initialize Supabase OAuth.');
+      }
+      window.location.href = result.authorizeUrl;
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to connect Supabase.'
+      );
+    } finally {
+      setIsSupabaseBusy(false);
+    }
+  }, [callSupabaseIntegrationFunction, projectId, user]);
+
+  const disconnectSupabaseProject = useCallback(async () => {
+    setIsSupabaseBusy(true);
+    try {
+      await callSupabaseIntegrationFunction('disconnect');
+      setSupabaseConnection({ connected: false, status: 'disconnected', project: null });
+      setSupabaseProjects([]);
+      setSupabaseBackendSnapshot(null);
+      toast.success('Supabase disconnected.');
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to disconnect Supabase.'
+      );
+    } finally {
+      setIsSupabaseBusy(false);
+    }
+  }, [callSupabaseIntegrationFunction]);
+
+  const loadSupabaseProjects = useCallback(async () => {
+    setIsSupabaseBusy(true);
+    try {
+      const result = await callSupabaseIntegrationFunction<{
+        projects: Array<Record<string, unknown>>;
+      }>('list_projects');
+      setSupabaseProjects(
+        (result.projects || []).map((project) => ({
+          id: typeof project.id === 'string' ? project.id : undefined,
+          ref: String(project.ref || project.id || ''),
+          name: String(project.name || project.ref || project.id || 'Untitled project'),
+          region: typeof project.region === 'string' ? project.region : null,
+          status: typeof project.status === 'string' ? project.status : null,
+          organizationId:
+            typeof project.organization_id === 'string'
+              ? project.organization_id
+              : typeof (project.organization as { id?: unknown } | undefined)?.id === 'string'
+              ? String((project.organization as { id?: unknown }).id)
+              : null,
+          organizationName:
+            typeof project.organization_name === 'string'
+              ? project.organization_name
+              : typeof (project.organization as { name?: unknown } | undefined)?.name === 'string'
+              ? String((project.organization as { name?: unknown }).name)
+              : null,
+        })).filter((project) => project.ref)
+      );
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to load Supabase projects.'
+      );
+    } finally {
+      setIsSupabaseBusy(false);
+    }
+  }, [callSupabaseIntegrationFunction]);
+
+  const selectSupabaseProject = useCallback(async (projectRef: string) => {
+    if (!projectRef) return;
+    setIsSupabaseBusy(true);
+    try {
+      const result = await callSupabaseIntegrationFunction<{ project: Record<string, unknown> }>('select_project', {
+        projectRef,
+      });
+      const project = result.project || {};
+      setSupabaseConnection((prev) => ({
+        ...prev,
+        connected: true,
+        status: 'connected',
+        lastError: null,
+        project: {
+          ref: projectRef,
+          name: String(project.name || projectRef),
+          region: typeof project.region === 'string' ? project.region : null,
+          status: typeof project.status === 'string' ? project.status : null,
+          organizationId: typeof project.organization_id === 'string' ? project.organization_id : null,
+          organizationName: typeof project.organization_name === 'string' ? project.organization_name : null,
+        },
+      }));
+      toast.success('Supabase project linked.');
+      void refreshSupabaseConnection();
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to link Supabase project.'
+      );
+    } finally {
+      setIsSupabaseBusy(false);
+    }
+  }, [callSupabaseIntegrationFunction, refreshSupabaseConnection]);
+
+  const loadSupabaseBackendSnapshot = useCallback(async () => {
+    if (!supabaseConnection.project?.ref) return;
+    setIsSupabaseBusy(true);
+    try {
+      const result = await callSupabaseIntegrationFunction<Record<string, unknown>>('backend_snapshot', {
+        projectRef: supabaseConnection.project.ref,
+      });
+      setSupabaseBackendSnapshot(result);
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to load Supabase backend status.'
+      );
+    } finally {
+      setIsSupabaseBusy(false);
+    }
+  }, [callSupabaseIntegrationFunction, supabaseConnection.project?.ref]);
 
   const loadGitHubRepositories = useCallback(async () => {
     setIsGitHubBusy(true);
@@ -1936,7 +2282,7 @@ export function useMVPBuilder() {
           files: GitHubRepoFile[];
         }>('import_repo', {
           fullName,
-          branch,
+          branch: 'main',
         });
 
         const session: GitHubRepoSession = {
@@ -1952,6 +2298,19 @@ export function useMVPBuilder() {
         };
 
         setGitHubRepoSession(session);
+        setGitHubConnection((prev) => ({
+          ...prev,
+          connected: true,
+          status: 'connected',
+          lastError: null,
+          repository: {
+            fullName: session.fullName,
+            htmlUrl: session.htmlUrl ?? null,
+            branch: 'main',
+            defaultBranch: session.defaultBranch,
+            baseCommitSha: session.baseCommitSha,
+          },
+        }));
         setGitHubPendingChanges([]);
         setSuggestedGitHubCommitMessage(null);
         setLastGitHubPrompt(null);
@@ -1970,7 +2329,7 @@ export function useMVPBuilder() {
         );
 
         await loadGitHubCommitHistory(session.fullName, session.branch);
-        toast.success(`Imported ${session.fullName} (${session.branch})`);
+        toast.success(`Imported ${session.fullName} (main)`);
       } catch (error) {
         toast.error(
           error instanceof Error ? error.message : 'Failed to import repository.'
@@ -2028,9 +2387,9 @@ export function useMVPBuilder() {
           pullRequest?: { number: number; html_url: string; title: string } | null;
         }>('commit_changes', {
           fullName: githubRepoSession.fullName,
-          baseBranch: githubRepoSession.branch,
-          targetBranch: options?.targetBranch || githubRepoSession.branch,
-          createPullRequest: Boolean(options?.createPullRequest),
+          baseBranch: 'main',
+          targetBranch: 'main',
+          createPullRequest: false,
           prTitle: options?.prTitle,
           prBody: options?.prBody,
           prompt: lastGitHubPrompt,
@@ -2341,6 +2700,10 @@ export function useMVPBuilder() {
       }
     ) => {
       if (!prompt.trim() || isGenerating || isGitHubBusy) return;
+      if (!integrationReady) {
+        toast.error('Connect GitHub main branch and Supabase before building in MVP Builder.');
+        return;
+      }
       const responseMode = options?.responseMode ?? 'build';
       const localActionType =
         responseMode === 'chat'
@@ -2795,6 +3158,7 @@ export function useMVPBuilder() {
       githubRepoSession,
       handleCreditError,
       handleGitHubPrompt,
+      integrationReady,
       isGenerating,
       isGitHubBusy,
       markProjectDirty,
@@ -3185,6 +3549,12 @@ export function useMVPBuilder() {
     githubCommitHistory,
     isGitHubBusy,
     suggestedGitHubCommitMessage,
+    supabaseConnection,
+    supabaseProjects,
+    supabaseBackendSnapshot,
+    isSupabaseBusy,
+    integrations,
+    integrationReady,
     setProjectName,
     setSetupInput,
     setSelectedProjectType,
@@ -3216,5 +3586,11 @@ export function useMVPBuilder() {
     discardGitHubChanges,
     commitGitHubChanges,
     rollbackGitHubCommit,
+    connectSupabaseProject,
+    disconnectSupabaseProject,
+    refreshSupabaseConnection,
+    loadSupabaseProjects,
+    selectSupabaseProject,
+    loadSupabaseBackendSnapshot,
   };
 }

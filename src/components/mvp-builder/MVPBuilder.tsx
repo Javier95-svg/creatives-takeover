@@ -3,6 +3,7 @@ import { useMVPBuilder } from '@/hooks/useMVPBuilder';
 import { MVPBuilderHeader } from './MVPBuilderHeader';
 import { MVPBuilderChat } from './MVPBuilderChat';
 import { MVPBuilderPreview } from './MVPBuilderPreview';
+import { MVPBuilderIntegrationGate } from './MVPBuilderIntegrationGate';
 import { MessageSquare, Monitor } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -45,6 +46,11 @@ export const MVPBuilder: React.FC = () => {
     githubCommitHistory,
     isGitHubBusy,
     suggestedGitHubCommitMessage,
+    supabaseConnection,
+    supabaseProjects,
+    isSupabaseBusy,
+    integrations,
+    integrationReady,
     setProjectName,
     setSetupInput,
     setSelectedProjectType,
@@ -71,6 +77,11 @@ export const MVPBuilder: React.FC = () => {
     commitGitHubChanges,
     rollbackGitHubCommit,
     loadGitHubCommitHistory,
+    refreshGitHubConnection,
+    connectSupabaseProject,
+    refreshSupabaseConnection,
+    loadSupabaseProjects,
+    selectSupabaseProject,
   } = useMVPBuilder();
 
   const [mobileTab, setMobileTab] = useState<MobileTab>('chat');
@@ -90,6 +101,7 @@ export const MVPBuilder: React.FC = () => {
       githubCommitHistory={githubCommitHistory}
       isGitHubBusy={isGitHubBusy}
       suggestedGitHubCommitMessage={suggestedGitHubCommitMessage}
+      integrationReady={integrationReady}
       lastBuildChangeSummary={lastBuildChangeSummary}
       setupInput={setupInput}
       projectVersions={projectVersions}
@@ -151,8 +163,30 @@ export const MVPBuilder: React.FC = () => {
         setProjectName={setProjectName}
         selectedModels={selectedModels}
         creditsAvailable={creditsAvailable}
+        integrations={integrations}
         onNewProject={resetProject}
       />
+
+      {!integrationReady && (
+        <MVPBuilderIntegrationGate
+          integrations={integrations}
+          githubConnection={githubConnection}
+          githubRepositories={githubRepositories}
+          githubRepoSession={githubRepoSession}
+          isGitHubBusy={isGitHubBusy}
+          supabaseConnection={supabaseConnection}
+          supabaseProjects={supabaseProjects}
+          isSupabaseBusy={isSupabaseBusy}
+          onConnectGitHub={connectGitHub}
+          onLoadGitHubRepositories={loadGitHubRepositories}
+          onImportGitHubRepository={importGitHubRepository}
+          onConnectSupabase={connectSupabaseProject}
+          onLoadSupabaseProjects={loadSupabaseProjects}
+          onSelectSupabaseProject={selectSupabaseProject}
+          onRefreshGitHub={refreshGitHubConnection}
+          onRefreshSupabase={refreshSupabaseConnection}
+        />
+      )}
 
       <div className="flex-1 min-h-0 flex flex-col">
         <div className="flex md:hidden items-center justify-center border-b border-border/40 bg-[#0b1020] shrink-0 py-2">

@@ -2,11 +2,14 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
+import { captureEvent } from "@/lib/analytics";
+import { useCTAAttribution } from "@/hooks/useCTAAttribution";
 
 const StickyMobileCTA = () => {
   const [isVisible, setIsVisible] = useState(false);
   const location = useLocation();
   const isHomepage = location.pathname === "/";
+  const { set: setAttribution } = useCTAAttribution();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -32,7 +35,13 @@ const StickyMobileCTA = () => {
             asChild
           >
             {/* FIX(retention): homepage — the sticky mobile CTA now routes directly into ICP quickstart instead of a generic signup step. */}
-            <Link to="/icp-builder">
+            <Link
+              to="/icp-builder"
+              onClick={() => {
+                captureEvent('cta_clicked', { cta_name: 'sticky_mobile_cta', page: location.pathname });
+                setAttribution('sticky_mobile_icp', location.pathname);
+              }}
+            >
               <span>Run ICP Analysis</span>
               <ArrowRight className="ml-2 w-5 h-5" />
             </Link>

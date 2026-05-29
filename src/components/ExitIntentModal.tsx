@@ -3,10 +3,12 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { X, ArrowRight, Target, Zap, BarChart2, Loader2, CheckCircle } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { sendRetentionEmail } from "@/lib/retentionSystem";
+import { trackExitIntentModalShown, captureEvent } from "@/lib/analytics";
+import { useCTAAttribution } from "@/hooks/useCTAAttribution";
 
 interface ExitIntentModalProps {
   isOpen: boolean;
@@ -21,6 +23,8 @@ const benefits = [
 
 export const ExitIntentModal = ({ isOpen, onClose }: ExitIntentModalProps) => {
   const { isAuthenticated, user } = useAuth();
+  const location = useLocation();
+  const { set: setAttribution } = useCTAAttribution();
   const [onboardingCompleted, setOnboardingCompleted] = useState<boolean | null>(null);
   const [email, setEmail] = useState(user?.email ?? "");
   const [sent, setSent] = useState(false);
@@ -50,6 +54,15 @@ export const ExitIntentModal = ({ isOpen, onClose }: ExitIntentModalProps) => {
       setOnboardingCompleted(null);
     }
   }, [isOpen]);
+
+  // Track modal open
+  useEffect(() => {
+    if (!isOpen) return;
+    trackExitIntentModalShown({
+      user_state: isAuthenticated ? 'authenticated' : 'anonymous',
+      page: location.pathname,
+    });
+  }, [isOpen, isAuthenticated, location.pathname]);
 
   // Authenticated + still querying: don't flash the wrong modal
   if (isAuthenticated && onboardingCompleted === null) return null;
@@ -126,7 +139,10 @@ export const ExitIntentModal = ({ isOpen, onClose }: ExitIntentModalProps) => {
                     <Button
                       size="lg"
                       className="w-full font-semibold"
-                      onClick={handleSendReminder}
+                      onClick={() => {
+                        captureEvent('cta_clicked', { cta_name: 'exit_intent_send_reminder', page: location.pathname });
+                        void handleSendReminder();
+                      }}
                       disabled={sending || !email}
                     >
                       {sending ? (
@@ -208,7 +224,14 @@ export const ExitIntentModal = ({ isOpen, onClose }: ExitIntentModalProps) => {
               className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold mb-3"
               asChild
             >
-              <Link to="/icp-builder" onClick={onClose}>
+              <Link
+                to="/icp-builder"
+                onClick={() => {
+                  captureEvent('cta_clicked', { cta_name: 'exit_intent_start_icp', page: location.pathname });
+                  setAttribution('exit_intent_icp', location.pathname);
+                  onClose();
+                }}
+              >
                 Start ICP Builder — It's Free
                 <ArrowRight className="ml-2 w-4 h-4" />
               </Link>

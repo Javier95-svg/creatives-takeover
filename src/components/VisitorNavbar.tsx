@@ -18,6 +18,7 @@ import ThemeToggle from "@/components/ThemeToggle";
 import ctLogoPolished from "@/assets/ct-logo-polished-borders.webp";
 import { cn } from "@/lib/utils";
 import { usePageAnalytics } from "@/hooks/usePageAnalytics";
+import { useCTAAttribution } from "@/hooks/useCTAAttribution";
 
 const visitorLinks = [
   { label: "Home", href: "/", icon: Home },
@@ -35,6 +36,7 @@ const VisitorNavbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { trackClick } = usePageAnalytics();
+  const { set: setAttribution } = useCTAAttribution();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -148,7 +150,7 @@ const VisitorNavbar = () => {
                 </Link>
               </Button>
               <Button asChild size="sm" className="gap-2">
-                <Link to="/signup" onClick={() => trackNavClick("Join Today")}>
+                <Link to="/signup" onClick={() => { trackNavClick("Join Today"); setAttribution('navbar_join_today', location.pathname); }}>
                   <Rocket className="h-4 w-4" aria-hidden="true" />
                   Join Today
                 </Link>
@@ -206,7 +208,7 @@ const VisitorNavbar = () => {
                     </Link>
                   </Button>
                   <Button asChild className="w-full">
-                    <Link to="/signup" onClick={() => trackNavClick("Mobile Join Today")}>
+                    <Link to="/signup" onClick={() => { trackNavClick("Mobile Join Today"); setAttribution('navbar_join_today', location.pathname); }}>
                       <Rocket className="mr-2 h-4 w-4" aria-hidden="true" />
                       Join Today
                     </Link>

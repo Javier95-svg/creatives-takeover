@@ -120,6 +120,9 @@ verify_jwt = true
 [functions.github-integration]
 verify_jwt = false
 
+[functions.supabase-integration]
+verify_jwt = false
+
 [functions.calendly-webhook]
 verify_jwt = false
 
