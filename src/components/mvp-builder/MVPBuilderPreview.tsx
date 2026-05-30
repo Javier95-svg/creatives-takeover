@@ -12,6 +12,7 @@ import {
   Code2,
   TriangleAlert,
   TerminalSquare,
+  Link2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -24,6 +25,15 @@ import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { MVPBuilderDomainPanel } from './MVPBuilderDomainPanel';
 import { MVPBuilderCodePanel } from './MVPBuilderCodePanel';
+import { MVPBuilderIntegrationPanel } from './MVPBuilderIntegrationPanel';
+import type {
+  GitHubConnectionState,
+  GitHubRepositorySummary,
+  GitHubRepoSession,
+  SupabaseConnectionState,
+  SupabaseProjectSummary,
+} from '@/hooks/useMVPBuilder';
+import type { MVPBuilderIntegrationsHealth } from '@/lib/mvp-builder/integrations';
 import type {
   MVPPreviewResult,
   MVPProjectDependency,
@@ -48,7 +58,7 @@ const INITIAL_WEB_CONTAINER_STATE: MVPWebContainerState = {
   logs: [],
 };
 
-type PreviewTab = 'preview' | 'code' | 'domain';
+type PreviewTab = 'preview' | 'code' | 'domain' | 'integrations';
 
 interface MVPBuilderPreviewProps {
   html: string | null;
@@ -77,6 +87,23 @@ interface MVPBuilderPreviewProps {
   onSelectEntryFile: (path: string) => void;
   onExportZip: () => void;
   onDeploy: () => void;
+  // Integrations (optional)
+  integrations: MVPBuilderIntegrationsHealth;
+  githubConnection: GitHubConnectionState;
+  githubRepositories: GitHubRepositorySummary[];
+  githubRepoSession: GitHubRepoSession | null;
+  isGitHubBusy: boolean;
+  supabaseConnection: SupabaseConnectionState;
+  supabaseProjects: SupabaseProjectSummary[];
+  isSupabaseBusy: boolean;
+  onConnectGitHub: () => void | Promise<void>;
+  onLoadGitHubRepositories: () => void | Promise<void>;
+  onImportGitHubRepository: (fullName: string, branch?: string) => void | Promise<void>;
+  onConnectSupabase: () => void | Promise<void>;
+  onLoadSupabaseProjects: () => void | Promise<void>;
+  onSelectSupabaseProject: (projectRef: string) => void | Promise<void>;
+  onRefreshGitHub: () => void | Promise<void>;
+  onRefreshSupabase: () => void | Promise<void>;
 }
 
 export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({
@@ -106,6 +133,22 @@ export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({
   onSelectEntryFile,
   onExportZip,
   onDeploy,
+  integrations,
+  githubConnection,
+  githubRepositories,
+  githubRepoSession,
+  isGitHubBusy,
+  supabaseConnection,
+  supabaseProjects,
+  isSupabaseBusy,
+  onConnectGitHub,
+  onLoadGitHubRepositories,
+  onImportGitHubRepository,
+  onConnectSupabase,
+  onLoadSupabaseProjects,
+  onSelectSupabaseProject,
+  onRefreshGitHub,
+  onRefreshSupabase,
 }) => {
   const [previewKey, setPreviewKey] = useState(0);
   const [viewMode, setViewMode] = useState<'desktop' | 'mobile'>('desktop');
@@ -265,6 +308,18 @@ export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({
               <Globe className="h-3 w-3" />
               Domain
             </button>
+            <button
+              onClick={() => setActiveTab('integrations')}
+              className={cn(
+                'h-6 rounded-full px-3 text-xs font-medium transition-all duration-200 flex items-center gap-1.5',
+                activeTab === 'integrations'
+                  ? 'bg-background shadow-sm text-foreground'
+                  : 'text-muted-foreground hover:text-foreground'
+              )}
+            >
+              <Link2 className="h-3 w-3" />
+              Integrations
+            </button>
           </div>
 
           {statusBadge}
@@ -419,6 +474,29 @@ export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({
               onCreateSnapshot={onCreateSnapshot}
               onRestoreSnapshot={onRestoreSnapshot}
               onSelectEntryFile={onSelectEntryFile}
+            />
+          </div>
+        )}
+
+        {activeTab === 'integrations' && (
+          <div className="min-h-0 flex-1 overflow-y-auto bg-[#0a0f1d]">
+            <MVPBuilderIntegrationPanel
+              integrations={integrations}
+              githubConnection={githubConnection}
+              githubRepositories={githubRepositories}
+              githubRepoSession={githubRepoSession}
+              isGitHubBusy={isGitHubBusy}
+              supabaseConnection={supabaseConnection}
+              supabaseProjects={supabaseProjects}
+              isSupabaseBusy={isSupabaseBusy}
+              onConnectGitHub={onConnectGitHub}
+              onLoadGitHubRepositories={onLoadGitHubRepositories}
+              onImportGitHubRepository={onImportGitHubRepository}
+              onConnectSupabase={onConnectSupabase}
+              onLoadSupabaseProjects={onLoadSupabaseProjects}
+              onSelectSupabaseProject={onSelectSupabaseProject}
+              onRefreshGitHub={onRefreshGitHub}
+              onRefreshSupabase={onRefreshSupabase}
             />
           </div>
         )}

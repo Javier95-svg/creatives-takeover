@@ -153,6 +153,22 @@ export const MVPBuilder: React.FC = () => {
       onSelectEntryFile={setEntryFilePath}
       onExportZip={exportProjectZip}
       onDeploy={deployProject}
+      integrations={integrations}
+      githubConnection={githubConnection}
+      githubRepositories={githubRepositories}
+      githubRepoSession={githubRepoSession}
+      isGitHubBusy={isGitHubBusy}
+      supabaseConnection={supabaseConnection}
+      supabaseProjects={supabaseProjects}
+      isSupabaseBusy={isSupabaseBusy}
+      onConnectGitHub={connectGitHub}
+      onLoadGitHubRepositories={loadGitHubRepositories}
+      onImportGitHubRepository={importGitHubRepository}
+      onConnectSupabase={connectSupabaseProject}
+      onLoadSupabaseProjects={loadSupabaseProjects}
+      onSelectSupabaseProject={selectSupabaseProject}
+      onRefreshGitHub={refreshGitHubConnection}
+      onRefreshSupabase={refreshSupabaseConnection}
     />
   );
 

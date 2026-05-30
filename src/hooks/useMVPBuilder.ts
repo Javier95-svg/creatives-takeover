@@ -2700,10 +2700,6 @@ export function useMVPBuilder() {
       }
     ) => {
       if (!prompt.trim() || isGenerating || isGitHubBusy) return;
-      if (!integrationReady) {
-        toast.error('Connect GitHub main branch and Supabase before building in MVP Builder.');
-        return;
-      }
       const responseMode = options?.responseMode ?? 'build';
       const localActionType =
         responseMode === 'chat'
