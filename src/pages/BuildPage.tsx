@@ -28,6 +28,8 @@ import { cn } from '@/lib/utils';
 import { usePageAnalytics } from '@/hooks/usePageAnalytics';
 import SEO from '@/components/SEO';
 import ctLogoMark from '@/assets/ct-logo-polished-borders.webp';
+import { startSocialOAuth } from '@/lib/socialAuth';
+import { supabase } from '@/integrations/supabase/client';
 
 // ─── Copy & data ──────────────────────────────────────────────────────────────
 
@@ -90,6 +92,19 @@ const TESTIMONIALS = [
   { quote: 'Every time I finished a step, it told me the next one. That\'s the part a generic chatbot never gave me.', em: 'next one', name: 'Tomas Vega', role: 'First-time founder', initials: 'TV', from: '#EF4444', to: '#DC2626' },
   { quote: 'I stopped paying an agency £2k a month to move slowly. Now I ship the change myself in an afternoon.', em: '£2k a month', name: 'Aisha Bello', role: 'Bootstrapped SaaS', initials: 'AB', from: '#8B5CF6', to: '#7C3AED' },
 ];
+
+// ─── Floating particles (deterministic so they're stable across renders) ─────
+
+const PARTICLE_COLORS = ['#3B82F6', '#EF4444', '#10B981'];
+const PARTICLES = Array.from({ length: 20 }, (_, i) => ({
+  left: `${6 + ((i * 17 + 11) % 88)}%`,
+  top: `${4 + ((i * 13 + 7) % 88)}%`,
+  size: 4 + (i % 4) * 1.75,
+  color: PARTICLE_COLORS[i % 3],
+  opacity: 0.28 + (i % 5) * 0.055,
+  duration: `${5 + (i % 6)}s`,
+  delay: `-${(i * 0.7) % 4}s`,
+}));
 
 // ─── Typing animation hook ────────────────────────────────────────────────────
 
@@ -154,83 +169,118 @@ const GoogleIcon = () => (
 
 interface SignupModalProps { open: boolean; intent: string; onClose: () => void; }
 
-const SignupModal = ({ open, intent, onClose }: SignupModalProps) => (
-  <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-    <DialogContent className="max-w-[440px] gap-0 rounded-[20px] p-0 [&>button]:hidden">
-      <div className="relative rounded-[20px] border border-border bg-card p-8 pb-6 shadow-[0_50px_110px_-30px_rgba(0,0,0,0.5)] ring-1 ring-inset ring-white/5">
-        <button
-          type="button"
-          onClick={onClose}
-          className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-[9px] bg-muted/60 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-          aria-label="Close"
-        >
-          <X className="h-4 w-4" />
-        </button>
+const SignupModal = ({ open, intent, onClose }: SignupModalProps) => {
+  const [loading, setLoading] = useState<'google' | 'github' | null>(null);
 
-        <div className="flex flex-col items-center text-center">
-          <img src={ctLogoMark} alt="Creatives Takeover" className="mb-4 h-14 w-14 rounded-[14px] object-cover shadow-lg" />
+  const handleGoogle = async () => {
+    setLoading('google');
+    await startSocialOAuth({ provider: 'google', intent: 'signup' });
+    setLoading(null);
+  };
 
-          <DialogTitle className="font-space-grotesk text-2xl font-bold tracking-tight">
-            Ready to build?{' '}
-            <span className="bg-gradient-rgb bg-clip-text text-transparent">Let&rsquo;s go.</span>
-          </DialogTitle>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Create your free account to start building. It takes about ten seconds.
-          </p>
+  const handleGitHub = async () => {
+    setLoading('github');
+    await supabase.auth.signInWithOAuth({
+      provider: 'github',
+      options: { redirectTo: `${window.location.origin}/auth/callback` },
+    });
+    setLoading(null);
+  };
 
-          <div className="mt-4 flex w-full items-start gap-3 rounded-xl border bg-muted/40 px-3.5 py-3 text-left">
-            <Zap className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
-            <div>
-              <p className="font-mono text-[9.5px] uppercase tracking-[0.16em] text-muted-foreground">
-                You&rsquo;re about to build
-              </p>
-              <p className="mt-0.5 text-[13px] font-semibold text-foreground">
-                {intent || 'A brand-new product'}
-              </p>
+  return (
+    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
+      <DialogContent className="max-w-[420px] gap-0 rounded-[20px] p-0 [&>button]:hidden">
+        <div className="relative rounded-[20px] border border-border bg-card p-7 shadow-[0_50px_110px_-30px_rgba(0,0,0,0.5)] ring-1 ring-inset ring-white/5">
+          <button
+            type="button"
+            onClick={onClose}
+            className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-[9px] bg-muted/60 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            aria-label="Close"
+          >
+            <X className="h-4 w-4" />
+          </button>
+
+          <div className="flex flex-col items-center text-center">
+            <img src={ctLogoMark} alt="Creatives Takeover" className="mb-4 h-14 w-14 rounded-[14px] object-cover shadow-lg" />
+
+            <DialogTitle className="font-space-grotesk text-2xl font-bold tracking-tight">
+              Ready to build?{' '}
+              <span className="bg-gradient-rgb bg-clip-text text-transparent">Let&rsquo;s go.</span>
+            </DialogTitle>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Create your free account. It takes about ten seconds.
+            </p>
+
+            {/* intent echo */}
+            <div className="mt-4 flex w-full items-start gap-3 rounded-xl border bg-muted/40 px-3.5 py-3 text-left">
+              <Zap className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+              <div>
+                <p className="font-mono text-[9.5px] uppercase tracking-[0.16em] text-muted-foreground">
+                  You&rsquo;re about to build
+                </p>
+                <p className="mt-0.5 text-[13px] font-semibold text-foreground">
+                  {intent || 'A brand-new product'}
+                </p>
+              </div>
             </div>
-          </div>
 
-          <div className="mt-5 flex w-full gap-2.5">
-            <Button asChild size="lg" className="h-12 flex-1 text-sm font-bold">
-              <Link to="/signup">Sign up free</Link>
-            </Button>
-            <Button asChild size="lg" variant="outline" className="h-12 flex-1 text-sm font-semibold">
-              <Link to="/login">Sign in</Link>
-            </Button>
-          </div>
-
-          <div className="my-4 flex w-full items-center gap-3">
-            <div className="h-px flex-1 bg-border" />
-            <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
-              or continue with
-            </span>
-            <div className="h-px flex-1 bg-border" />
-          </div>
-
-          <div className="flex w-full flex-col gap-2">
-            {[
-              { Icon: <Github className="h-[17px] w-[17px]" />, label: 'Continue with GitHub', to: '/signup?provider=github' },
-              { Icon: <GoogleIcon />, label: 'Continue with Google', to: '/signup?provider=google' },
-              { Icon: <Mail className="h-[17px] w-[17px]" />, label: 'Continue with email', to: '/signup' },
-            ].map(({ Icon, label, to }) => (
-              <Button key={label} asChild variant="outline" className="h-12 w-full justify-center gap-2.5 text-sm font-semibold">
-                <Link to={to}>{Icon}{label}</Link>
+            {/* 3 CTAs */}
+            <div className="mt-5 flex w-full flex-col gap-3">
+              {/* 1. Email */}
+              <Button asChild size="lg" className="h-12 w-full gap-2.5 text-sm font-bold">
+                <Link to="/signup">
+                  <Mail className="h-[17px] w-[17px]" aria-hidden="true" />
+                  Sign up with email
+                </Link>
               </Button>
-            ))}
-          </div>
 
-          <p className="mt-4 text-[11.5px] leading-relaxed text-muted-foreground/70">
-            By continuing, you agree to the{' '}
-            <Link to="/terms" className="underline underline-offset-2 hover:text-muted-foreground">Terms</Link>
-            {' '}and{' '}
-            <Link to="/privacy-policy" className="underline underline-offset-2 hover:text-muted-foreground">Privacy Policy</Link>.
-            {' '}No spam. Only for mavericks.
-          </p>
+              {/* 2. Google */}
+              <Button
+                variant="outline"
+                size="lg"
+                className="h-12 w-full gap-2.5 text-sm font-semibold"
+                onClick={handleGoogle}
+                disabled={loading !== null}
+              >
+                {loading === 'google' ? (
+                  <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                  </svg>
+                ) : <GoogleIcon />}
+                Continue with Google
+              </Button>
+
+              {/* 3. GitHub */}
+              <Button
+                variant="outline"
+                size="lg"
+                className="h-12 w-full gap-2.5 text-sm font-semibold"
+                onClick={handleGitHub}
+                disabled={loading !== null}
+              >
+                {loading === 'github' ? (
+                  <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                  </svg>
+                ) : <Github className="h-[17px] w-[17px]" aria-hidden="true" />}
+                Continue with GitHub
+              </Button>
+            </div>
+
+            <p className="mt-5 text-[11.5px] leading-relaxed text-muted-foreground/70">
+              By continuing, you agree to the{' '}
+              <Link to="/terms" className="underline underline-offset-2 hover:text-muted-foreground">Terms</Link>
+              {' '}and{' '}
+              <Link to="/privacy-policy" className="underline underline-offset-2 hover:text-muted-foreground">Privacy Policy</Link>.
+            </p>
+          </div>
         </div>
-      </div>
-    </DialogContent>
-  </Dialog>
-);
+      </DialogContent>
+    </Dialog>
+  );
+};
 
 // ─── Hero ─────────────────────────────────────────────────────────────────────
 
@@ -249,18 +299,35 @@ const BuildHero = ({ onOpen }: HeroProps) => {
 
   return (
     <>
-      {/* keyframes for blinking caret */}
+      {/* keyframes */}
       <style>{`
         @keyframes ct-blink { 0%,49%{opacity:1}50%,100%{opacity:0} }
         .ct-caret { display:inline-block;width:2px;height:1.1em;vertical-align:-2px;border-radius:2px;margin-left:1px;animation:ct-blink 1.1s steps(1) infinite; }
+        @keyframes ct-floaty { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-16px)} }
       `}</style>
 
       <section className="relative overflow-hidden pb-20 pt-32 text-center lg:pb-28 lg:pt-40">
-        {/* ambient glows */}
+        {/* ambient glows + floating particles */}
         <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
           <div className="absolute left-1/2 top-0 h-[560px] w-[900px] -translate-x-1/2 rounded-full bg-[radial-gradient(ellipse_at_center,rgba(59,130,246,0.22),transparent_62%)] blur-3xl" />
           <div className="absolute left-[4%] top-[120px] h-[500px] w-[500px] rounded-full bg-[radial-gradient(circle,rgba(239,68,68,0.13),transparent_64%)] blur-3xl" />
           <div className="absolute right-[4%] top-[160px] h-[500px] w-[500px] rounded-full bg-[radial-gradient(circle,rgba(16,185,129,0.13),transparent_64%)] blur-3xl" />
+          {PARTICLES.map((p, i) => (
+            <span
+              key={i}
+              className="absolute rounded-full"
+              style={{
+                left: p.left,
+                top: p.top,
+                width: p.size,
+                height: p.size,
+                background: p.color,
+                opacity: p.opacity,
+                boxShadow: `0 0 ${p.size * 2}px ${p.color}`,
+                animation: `ct-floaty ${p.duration} ease-in-out ${p.delay} infinite`,
+              }}
+            />
+          ))}
         </div>
 
         <div className="relative mx-auto max-w-[920px] px-4 sm:px-6">
