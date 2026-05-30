@@ -47,7 +47,6 @@ export const MVPBuilder: React.FC = () => {
     isGitHubBusy,
     suggestedGitHubCommitMessage,
     supabaseConnection,
-    supabaseProjects,
     isSupabaseBusy,
     integrations,
     integrationReady,
@@ -78,10 +77,8 @@ export const MVPBuilder: React.FC = () => {
     rollbackGitHubCommit,
     loadGitHubCommitHistory,
     refreshGitHubConnection,
-    connectSupabaseProject,
+    saveSupabaseCredentials,
     refreshSupabaseConnection,
-    loadSupabaseProjects,
-    selectSupabaseProject,
   } = useMVPBuilder();
 
   const [mobileTab, setMobileTab] = useState<MobileTab>('chat');
@@ -159,14 +156,12 @@ export const MVPBuilder: React.FC = () => {
       githubRepoSession={githubRepoSession}
       isGitHubBusy={isGitHubBusy}
       supabaseConnection={supabaseConnection}
-      supabaseProjects={supabaseProjects}
+      supabaseProjects={[]}
       isSupabaseBusy={isSupabaseBusy}
       onConnectGitHub={connectGitHub}
       onLoadGitHubRepositories={loadGitHubRepositories}
       onImportGitHubRepository={importGitHubRepository}
-      onConnectSupabase={connectSupabaseProject}
-      onLoadSupabaseProjects={loadSupabaseProjects}
-      onSelectSupabaseProject={selectSupabaseProject}
+      onSaveSupabaseCredentials={saveSupabaseCredentials}
       onRefreshGitHub={refreshGitHubConnection}
       onRefreshSupabase={refreshSupabaseConnection}
     />

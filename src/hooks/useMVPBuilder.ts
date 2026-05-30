@@ -2051,29 +2051,36 @@ export function useMVPBuilder() {
     void refreshSupabaseConnection();
   }, [refreshSupabaseConnection]);
 
-  const connectSupabaseProject = useCallback(async () => {
+  const saveSupabaseCredentials = useCallback(async (projectUrl: string, serviceRoleKey: string) => {
     if (!user) {
       toast.error('Please sign in to connect Supabase.');
       return;
     }
     setIsSupabaseBusy(true);
     try {
-      const result = await callSupabaseIntegrationFunction<{ authorizeUrl: string }>('oauth_init', {
-        redirectTo: `${window.location.origin}/mvp-builder`,
-        projectId,
+      const result = await callSupabaseIntegrationFunction<SupabaseConnectionState>('save_credentials', {
+        projectUrl,
+        serviceRoleKey,
       });
-      if (!result.authorizeUrl) {
-        throw new Error('Failed to initialize Supabase OAuth.');
-      }
-      window.location.href = result.authorizeUrl;
+      const status = classifyIntegrationStatus({
+        connected: Boolean(result.connected),
+        status: result.status,
+        lastError: result.lastError,
+        expiresAt: null,
+      });
+      setSupabaseConnection({
+        ...result,
+        connected: Boolean(result.connected) && status === 'connected',
+        status,
+        project: result.project ?? null,
+      });
+      toast.success('Supabase project connected.');
     } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : 'Failed to connect Supabase.'
-      );
+      toast.error(error instanceof Error ? error.message : 'Failed to connect Supabase.');
     } finally {
       setIsSupabaseBusy(false);
     }
-  }, [callSupabaseIntegrationFunction, projectId, user]);
+  }, [callSupabaseIntegrationFunction, user]);
 
   const disconnectSupabaseProject = useCallback(async () => {
     setIsSupabaseBusy(true);
@@ -3582,11 +3589,9 @@ export function useMVPBuilder() {
     discardGitHubChanges,
     commitGitHubChanges,
     rollbackGitHubCommit,
-    connectSupabaseProject,
+    saveSupabaseCredentials,
     disconnectSupabaseProject,
     refreshSupabaseConnection,
-    loadSupabaseProjects,
-    selectSupabaseProject,
     loadSupabaseBackendSnapshot,
   };
 }

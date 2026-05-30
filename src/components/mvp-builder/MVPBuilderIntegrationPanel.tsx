@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Check, Database, Github, Loader2, RefreshCw, ShieldAlert, Unplug } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -24,9 +24,7 @@ interface MVPBuilderIntegrationPanelProps {
   onConnectGitHub: () => void | Promise<void>;
   onLoadGitHubRepositories: () => void | Promise<void>;
   onImportGitHubRepository: (fullName: string, branch?: string) => void | Promise<void>;
-  onConnectSupabase: () => void | Promise<void>;
-  onLoadSupabaseProjects: () => void | Promise<void>;
-  onSelectSupabaseProject: (projectRef: string) => void | Promise<void>;
+  onSaveSupabaseCredentials: (projectUrl: string, serviceRoleKey: string) => void | Promise<void>;
   onRefreshGitHub: () => void | Promise<void>;
   onRefreshSupabase: () => void | Promise<void>;
 }
@@ -70,14 +68,15 @@ export const MVPBuilderIntegrationPanel: React.FC<MVPBuilderIntegrationPanelProp
   onConnectGitHub,
   onLoadGitHubRepositories,
   onImportGitHubRepository,
-  onConnectSupabase,
-  onLoadSupabaseProjects,
-  onSelectSupabaseProject,
+  onSaveSupabaseCredentials,
   onRefreshGitHub,
   onRefreshSupabase,
 }) => {
   const [selectedRepo, setSelectedRepo] = useState('');
-  const [selectedProjectRef, setSelectedProjectRef] = useState('');
+  const [supabaseUrl, setSupabaseUrl] = useState('');
+  const [supabaseKey, setSupabaseKey] = useState('');
+  const [showKey, setShowKey] = useState(false);
+  const keyInputRef = useRef<HTMLInputElement>(null);
 
   const githubStatus = integrations.github.status;
   const supabaseStatus = integrations.supabase.status;
@@ -94,23 +93,11 @@ export const MVPBuilderIntegrationPanel: React.FC<MVPBuilderIntegrationPanelProp
   }, [githubConnection.connected, githubRepositories.length, onLoadGitHubRepositories]);
 
   useEffect(() => {
-    if (supabaseConnection.connected && supabaseProjects.length === 0) {
-      void onLoadSupabaseProjects();
-    }
-  }, [onLoadSupabaseProjects, supabaseConnection.connected, supabaseProjects.length]);
-
-  useEffect(() => {
     if (!selectedRepo && githubRepositories.length > 0) {
       const main = githubRepositories.find((r) => r.defaultBranch === 'main') ?? githubRepositories[0];
       setSelectedRepo(main.fullName);
     }
   }, [githubRepositories, selectedRepo]);
-
-  useEffect(() => {
-    if (!selectedProjectRef && supabaseProjects.length > 0) {
-      setSelectedProjectRef(supabaseProjects[0].ref);
-    }
-  }, [selectedProjectRef, supabaseProjects]);
 
   return (
     <div className="flex flex-col gap-4 overflow-y-auto p-4">
@@ -233,11 +220,9 @@ export const MVPBuilderIntegrationPanel: React.FC<MVPBuilderIntegrationPanelProp
             <div>
               <p className="text-sm font-semibold text-white">Supabase</p>
               <p className="text-[11px] text-slate-400">
-                {supabaseConnection.project?.name
-                  ? `${supabaseConnection.project.name} · ${supabaseConnection.project.region ?? 'connected'}`
-                  : supabaseConnection.connected
-                  ? 'Select a project to link'
-                  : 'Link a Supabase backend project'}
+                {supabaseConnection.project?.ref
+                  ? `${supabaseConnection.project.ref}.supabase.co`
+                  : 'Paste your project URL and service role key'}
               </p>
             </div>
           </div>
@@ -255,7 +240,7 @@ export const MVPBuilderIntegrationPanel: React.FC<MVPBuilderIntegrationPanelProp
           <div className="space-y-2">
             <div className="flex items-center gap-2 rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-200">
               <Check className="h-3.5 w-3.5 shrink-0" />
-              <span>Connected to <strong>{supabaseConnection.project.name}</strong></span>
+              <span>Connected to <strong>{supabaseConnection.project.ref}.supabase.co</strong></span>
             </div>
             <Button
               type="button"
@@ -269,54 +254,57 @@ export const MVPBuilderIntegrationPanel: React.FC<MVPBuilderIntegrationPanelProp
               Disconnect
             </Button>
           </div>
-        ) : supabaseConnection.connected ? (
+        ) : (
           <div className="space-y-3">
-            <div className="flex items-end gap-2">
-              <label className="flex-1 space-y-1.5">
-                <span className="text-[11px] font-medium uppercase tracking-wider text-slate-500">Project</span>
-                <select
-                  value={selectedProjectRef}
-                  onChange={(e) => setSelectedProjectRef(e.target.value)}
-                  disabled={isSupabaseBusy}
-                  className="h-8 w-full rounded-lg border border-white/10 bg-[#0b1020] px-3 text-sm text-white outline-none focus:ring-2 focus:ring-sky-400/30"
-                >
-                  <option value="">Select project</option>
-                  {supabaseProjects.map((p) => (
-                    <option key={p.ref} value={p.ref}>{p.name} ({p.ref})</option>
-                  ))}
-                </select>
+            <div className="space-y-1.5">
+              <label className="text-[11px] font-medium uppercase tracking-wider text-slate-500">
+                Project URL
               </label>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={onLoadSupabaseProjects}
+              <input
+                type="url"
+                value={supabaseUrl}
+                onChange={(e) => setSupabaseUrl(e.target.value)}
+                placeholder="https://xxxxxxxxxxxx.supabase.co"
                 disabled={isSupabaseBusy}
-                className="h-8 border-white/10 bg-white/5 text-white hover:bg-white/10"
-              >
-                <RefreshCw className="h-3.5 w-3.5" />
-              </Button>
+                className="h-8 w-full rounded-lg border border-white/10 bg-[#0b1020] px-3 text-sm text-white placeholder:text-slate-600 outline-none focus:ring-2 focus:ring-sky-400/30"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-[11px] font-medium uppercase tracking-wider text-slate-500">
+                Service Role Key
+              </label>
+              <div className="relative">
+                <input
+                  ref={keyInputRef}
+                  type={showKey ? 'text' : 'password'}
+                  value={supabaseKey}
+                  onChange={(e) => setSupabaseKey(e.target.value)}
+                  placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6Ikp..."
+                  disabled={isSupabaseBusy}
+                  className="h-8 w-full rounded-lg border border-white/10 bg-[#0b1020] px-3 pr-14 text-sm text-white placeholder:text-slate-600 outline-none focus:ring-2 focus:ring-sky-400/30"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowKey((v) => !v)}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-slate-500 hover:text-white"
+                >
+                  {showKey ? 'hide' : 'show'}
+                </button>
+              </div>
+              <p className="text-[10px] text-slate-600">
+                Found in Supabase Dashboard → Project Settings → API → service_role key
+              </p>
             </div>
             <Button
               type="button"
-              onClick={() => onSelectSupabaseProject(selectedProjectRef)}
-              disabled={!selectedProjectRef || isSupabaseBusy}
+              onClick={() => onSaveSupabaseCredentials(supabaseUrl, supabaseKey)}
+              disabled={!supabaseUrl.trim() || !supabaseKey.trim() || isSupabaseBusy}
               className="h-8 w-full gap-2 text-sm"
             >
               {isSupabaseBusy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Database className="h-3.5 w-3.5" />}
-              Link project
+              Connect Supabase
             </Button>
           </div>
-        ) : (
-          <Button
-            type="button"
-            onClick={onConnectSupabase}
-            disabled={isSupabaseBusy}
-            className="h-8 w-full gap-2 text-sm"
-          >
-            {isSupabaseBusy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Database className="h-3.5 w-3.5" />}
-            Connect Supabase
-          </Button>
         )}
       </section>
     </div>

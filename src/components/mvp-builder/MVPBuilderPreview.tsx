@@ -99,9 +99,7 @@ interface MVPBuilderPreviewProps {
   onConnectGitHub: () => void | Promise<void>;
   onLoadGitHubRepositories: () => void | Promise<void>;
   onImportGitHubRepository: (fullName: string, branch?: string) => void | Promise<void>;
-  onConnectSupabase: () => void | Promise<void>;
-  onLoadSupabaseProjects: () => void | Promise<void>;
-  onSelectSupabaseProject: (projectRef: string) => void | Promise<void>;
+  onSaveSupabaseCredentials: (projectUrl: string, serviceRoleKey: string) => void | Promise<void>;
   onRefreshGitHub: () => void | Promise<void>;
   onRefreshSupabase: () => void | Promise<void>;
 }
@@ -144,9 +142,7 @@ export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({
   onConnectGitHub,
   onLoadGitHubRepositories,
   onImportGitHubRepository,
-  onConnectSupabase,
-  onLoadSupabaseProjects,
-  onSelectSupabaseProject,
+  onSaveSupabaseCredentials,
   onRefreshGitHub,
   onRefreshSupabase,
 }) => {
@@ -492,9 +488,7 @@ export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({
               onConnectGitHub={onConnectGitHub}
               onLoadGitHubRepositories={onLoadGitHubRepositories}
               onImportGitHubRepository={onImportGitHubRepository}
-              onConnectSupabase={onConnectSupabase}
-              onLoadSupabaseProjects={onLoadSupabaseProjects}
-              onSelectSupabaseProject={onSelectSupabaseProject}
+              onSaveSupabaseCredentials={onSaveSupabaseCredentials}
               onRefreshGitHub={onRefreshGitHub}
               onRefreshSupabase={onRefreshSupabase}
             />
