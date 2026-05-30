@@ -172,13 +172,19 @@ interface SignupModalProps { open: boolean; intent: string; onClose: () => void;
 const SignupModal = ({ open, intent, onClose }: SignupModalProps) => {
   const [loading, setLoading] = useState<'google' | 'github' | null>(null);
 
+  // After auth, new users go through the onboarding quiz then land on the MVP Builder.
+  // The 'oauth_return_url' key is read by the auth callback to set the post-onboarding destination.
+  const POST_AUTH_DEST = '/mvp-builder';
+
   const handleGoogle = async () => {
+    localStorage.setItem('oauth_return_url', POST_AUTH_DEST);
     setLoading('google');
     await startSocialOAuth({ provider: 'google', intent: 'signup' });
     setLoading(null);
   };
 
   const handleGitHub = async () => {
+    localStorage.setItem('oauth_return_url', POST_AUTH_DEST);
     setLoading('github');
     await supabase.auth.signInWithOAuth({
       provider: 'github',
@@ -228,7 +234,7 @@ const SignupModal = ({ open, intent, onClose }: SignupModalProps) => {
             <div className="mt-5 flex w-full flex-col gap-3">
               {/* 1. Email */}
               <Button asChild size="lg" className="h-12 w-full gap-2.5 text-sm font-bold">
-                <Link to="/signup">
+                <Link to={`/signup?return=${encodeURIComponent(POST_AUTH_DEST)}`}>
                   <Mail className="h-[17px] w-[17px]" aria-hidden="true" />
                   Sign up with email
                 </Link>
@@ -625,24 +631,15 @@ const BuildStageSelector = () => {
             </div>
 
             {/* description footer */}
-            <div className="mt-6 flex flex-wrap items-start justify-between gap-4 border-t border-border/50 pt-6">
-              <div className="max-w-[680px] flex-1 basis-[460px]">
-                <div className="mb-2.5 flex items-center gap-2">
-                  <span className="h-2.5 w-2.5 rounded-full" style={{ background: activeStage.dot }} />
-                  <span className="font-space-grotesk text-[15px] font-bold">{activeStage.name}</span>
-                  <span className="font-mono text-[9.5px] uppercase tracking-[0.14em] text-muted-foreground/60">
-                    {activeStage.tool}
-                  </span>
-                </div>
-                <p className="text-[14.5px] leading-[1.65] text-muted-foreground">{activeStage.description}</p>
+            <div className="mt-6 border-t border-border/50 pt-6">
+              <div className="mb-2.5 flex items-center gap-2">
+                <span className="h-2.5 w-2.5 rounded-full" style={{ background: activeStage.dot }} />
+                <span className="font-space-grotesk text-[15px] font-bold">{activeStage.name}</span>
+                <span className="font-mono text-[9.5px] uppercase tracking-[0.14em] text-muted-foreground/60">
+                  {activeStage.tool}
+                </span>
               </div>
-              <a
-                href="#startup-cycle"
-                className="flex shrink-0 items-center gap-2 self-center text-sm font-semibold text-primary transition-all hover:gap-3"
-              >
-                See the full roadmap
-                <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
-              </a>
+              <p className="text-[14.5px] leading-[1.65] text-muted-foreground">{activeStage.description}</p>
             </div>
           </div>
         </ScrollReveal>
