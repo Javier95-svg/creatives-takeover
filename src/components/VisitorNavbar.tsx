@@ -24,7 +24,7 @@ const visitorLinks = [
   { label: "Home", href: "/", icon: Home },
   { label: "How It Works", href: "/", icon: Map, sectionId: "startup-development-cycle" },
   { label: "Build", href: "/build", icon: Zap },
-  { label: "Mentors", href: "/mentorship", icon: Users },
+  { label: "Connect", href: "/mentorship", icon: Users },
   { label: "Newspaper", href: "/newspaper", icon: Newspaper },
   { label: "About Us", href: "/about", icon: Info },
   { label: "Pricing", href: "/pricing", icon: DollarSign },
