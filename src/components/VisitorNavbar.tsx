@@ -5,13 +5,13 @@ import {
   DollarSign,
   Home,
   Info,
-  LayoutGrid,
   Map,
   Menu,
   Newspaper,
   Rocket,
   Users,
   X,
+  Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -23,7 +23,7 @@ import { useCTAAttribution } from "@/hooks/useCTAAttribution";
 const visitorLinks = [
   { label: "Home", href: "/", icon: Home },
   { label: "How It Works", href: "/", icon: Map, sectionId: "startup-development-cycle" },
-  { label: "Features", href: "/", icon: LayoutGrid, sectionId: "what-you-get" },
+  { label: "Build", href: "/build", icon: Zap },
   { label: "Mentors", href: "/mentorship", icon: Users },
   { label: "Newspaper", href: "/newspaper", icon: Newspaper },
   { label: "About Us", href: "/about", icon: Info },

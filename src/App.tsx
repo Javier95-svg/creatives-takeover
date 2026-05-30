@@ -126,6 +126,7 @@ const ReferralProgram = lazy(() => import("./pages/ReferralProgram"));
 const ReferralDashboardPage = lazy(() => import("./pages/ReferralDashboardPage"));
 const DemoCalls = lazy(() => import("./pages/DemoCalls"));
 const MVPBuilderBetaPage = lazy(() => import("./pages/MVPBuilderBetaPage"));
+const BuildPage = lazy(() => import("./pages/BuildPage"));
 const TractionEnginePage = lazy(() => import("./pages/TractionEnginePage"));
 const ProjectsDashboard = lazy(() => import("./components/dashboard/ProjectsDashboard"));
 
@@ -214,6 +215,7 @@ function App() {
                         <Route path="/" element={<Index />} />
                         <Route path="/about" element={<About />} />
                         <Route path="/pricing" element={<PricingPage />} />
+                        <Route path="/build" element={<BuildPage />} />
                         <Route path="/contact" element={<Contact />} />
                         <Route path="/faq" element={<FAQPage />} />
                         <Route path="/resources" element={<Resources />} />

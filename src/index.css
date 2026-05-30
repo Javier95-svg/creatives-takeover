@@ -209,6 +209,9 @@ All colors MUST be HSL.
     --glass-border-color: rgba(148, 163, 184, 0.16);
     --glass-shadow: 0 24px 48px -32px rgba(15, 23, 42, 0.22);
 
+    /* RGB trinity glow shadow */
+    --shadow-rgb: 0 0 20px rgb(59 130 246 / 0.30), 0 0 40px rgb(239 68 68 / 0.20), 0 0 60px rgb(16 185 129 / 0.10);
+
     /* Animations */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-spring: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -375,6 +378,9 @@ All colors MUST be HSL.
     --glass-bg: rgba(18, 20, 26, 0.75);
     --glass-border-color: rgba(96, 165, 250, 0.2);
     --glass-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+
+    /* RGB trinity glow shadow (brighter in dark mode) */
+    --shadow-rgb: 0 0 30px rgb(90 162 251 / 0.40), 0 0 50px rgb(243 117 117 / 0.30), 0 0 70px rgb(37 203 122 / 0.20);
     --gradient-glass-rgb: linear-gradient(135deg, 
       rgba(96, 165, 250, 0.12), 
       rgba(248, 113, 113, 0.10), 
