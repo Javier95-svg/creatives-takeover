@@ -3,6 +3,7 @@ import { useMVPBuilder } from '@/hooks/useMVPBuilder';
 import { MVPBuilderHeader } from './MVPBuilderHeader';
 import { MVPBuilderChat } from './MVPBuilderChat';
 import { MVPBuilderPreview } from './MVPBuilderPreview';
+import { MVPBuilderCreditExhaustedDialog } from './MVPBuilderCreditExhaustedDialog';
 
 import { MessageSquare, Monitor } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -38,6 +39,7 @@ export const MVPBuilder: React.FC = () => {
     deploymentUrl,
     isDeploying,
     creditsAvailable,
+    isCreditExhaustedModalOpen,
     githubConnection,
     githubRepositories,
     githubBranches,
@@ -79,6 +81,7 @@ export const MVPBuilder: React.FC = () => {
     refreshGitHubConnection,
     saveSupabaseCredentials,
     refreshSupabaseConnection,
+    closeCreditExhaustedModal,
   } = useMVPBuilder();
 
   const [mobileTab, setMobileTab] = useState<MobileTab>('chat');
@@ -176,6 +179,12 @@ export const MVPBuilder: React.FC = () => {
         creditsAvailable={creditsAvailable}
         integrations={integrations}
         onNewProject={resetProject}
+      />
+      <MVPBuilderCreditExhaustedDialog
+        open={isCreditExhaustedModalOpen}
+        onOpenChange={(open) => {
+          if (!open) closeCreditExhaustedModal();
+        }}
       />
 
 

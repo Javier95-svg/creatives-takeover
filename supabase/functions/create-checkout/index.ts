@@ -43,10 +43,9 @@ const SUBSCRIPTION_PRICING: Record<string, Record<BillingCycle, { amount: number
 };
 
 const CREDIT_PACKS: Record<string, { amount: number; credits: number; name: string }> = {
-  pack_micro: { amount: 900, credits: 30, name: "Micro Pack" },
-  pack_builder: { amount: 2500, credits: 100, name: "Builder Pack" },
-  pack_growth: { amount: 4900, credits: 220, name: "Growth Pack" },
-  pack_scale: { amount: 9900, credits: 500, name: "Scale Pack" },
+  pack_20: { amount: 800, credits: 20, name: "Starter Pack" },
+  pack_40: { amount: 1600, credits: 40, name: "Boost Pack" },
+  pack_60: { amount: 2400, credits: 60, name: "Power Pack" },
 };
 
 const MVP_BUILDER_CREDIT_PACKS: Record<string, { amount: number; credits: number; name: string }> =

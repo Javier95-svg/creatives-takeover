@@ -117,6 +117,7 @@ serve(async (req) => {
     idempotencyKey,
     entitlementFeature: creditFeature,
     featureCode: creditFeature,
+    allowPartialMvpSpend: true,
     mvpBuilderActionType: "deploy",
     projectId,
   });

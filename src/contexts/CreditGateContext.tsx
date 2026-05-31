@@ -11,7 +11,6 @@ import { normalizePlan } from "@/config/planPermissions";
 
 const TOOL_CREDIT_GATE_PATHS = [
   "/icp-builder",
-  "/mvp-builder",
   "/go-to-market",
   "/validate",
   "/decision-sprint",

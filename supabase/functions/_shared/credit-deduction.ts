@@ -290,12 +290,21 @@ export async function checkAndDeductCredits(
       });
     }
 
-    const chargeAmount = enforcement?.mode === 'charge' ? enforcement.creditCost : amount;
+    const listedChargeAmount = enforcement?.mode === 'charge' ? enforcement.creditCost : amount;
 
     // Check if quota needs reset (monthly reset logic)
     await checkAndResetMonthlyQuota(userId, supabase);
     const creditsBeforeDeduction = await getCurrentCreditSnapshot(userId, supabase);
     const analyticsContext = await getCreditAnalyticsContext(userId, supabase);
+    const totalAvailableBeforeDeduction =
+      creditsBeforeDeduction.balance + creditsBeforeDeduction.monthlyQuota;
+    const allowPartialMvpSpend =
+      metadata?.allowPartialMvpSpend === true &&
+      entitlementFeature?.startsWith('APP_BUILDER_');
+    const chargeAmount =
+      allowPartialMvpSpend && totalAvailableBeforeDeduction > 0
+        ? Math.min(listedChargeAmount, totalAvailableBeforeDeduction)
+        : listedChargeAmount;
 
     const deductionMetadata = {
       ...(metadata || {}),
@@ -307,6 +316,8 @@ export async function checkAndDeductCredits(
       plan: userPlan,
       creditCost: chargeAmount,
       credit_cost: chargeAmount,
+      listedCreditCost: listedChargeAmount,
+      listed_credit_cost: listedChargeAmount,
       balanceBefore: creditsBeforeDeduction.balance,
       balance_before: creditsBeforeDeduction.balance,
       monthlyQuotaBefore: creditsBeforeDeduction.monthlyQuota,

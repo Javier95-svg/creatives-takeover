@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { checkAndDeductCredits, refundCredits } from "../_shared/credit-deduction.ts";
+import { checkAndDeductCredits, refundCredits, getUserFromAuth } from "../_shared/credit-deduction.ts";
 import { CREDIT_COSTS, type CreditFeature } from "../_shared/credit-constants.ts";
 
 const corsHeaders = {
@@ -745,9 +745,12 @@ serve(async (req: Request) => {
     );
   }
 
+  const user = await getUserFromAuth(req);
+  if (!user) return errorStream("Authentication required", "UNAUTHORIZED");
+
   const template  = normalizeTemplate(body.template ?? (body.setupInput as Record<string, unknown> | undefined)?.template);
   const palette   = normalizePalette(body.palettePreference ?? (body.setupInput as Record<string, unknown> | undefined)?.palettePreference);
-  const userId    = typeof body.userId === "string" ? body.userId : null;
+  const userId    = user.id;
   const creditFeature = ACTION_CONFIG[classifiedAction].feature;
   const creditCost    = CREDIT_COSTS[creditFeature];
   let   chargedCredits = 0;
@@ -763,6 +766,7 @@ serve(async (req: Request) => {
         idempotencyKey,
         entitlementFeature: creditFeature,
         featureCode: creditFeature,
+        allowPartialMvpSpend: true,
         mvpBuilderActionType: classifiedAction,
         projectId: typeof body.projectId === "string" ? body.projectId : undefined,
         currentVersion: typeof body.currentVersion === "number" ? body.currentVersion : undefined,
@@ -969,7 +973,8 @@ serve(async (req: Request) => {
         output: validated,
         actionType: classifiedAction,
         creditFeature,
-        creditCost,
+        creditCost: chargedCredits,
+        listedCreditCost: creditCost,
         wallet: "platform",
       }));
       await writer.write(enc({ type: "complete", model: selectedModel, requestedModels: selectedModels }));

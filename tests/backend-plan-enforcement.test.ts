@@ -135,15 +135,14 @@ test('subscription checkout copy uses the paid plan credit ladder', () => {
   assert.match(source, /description: `\$\{pricing\.description\} with \$\{billingCycle\} billing`/);
 });
 
-test('MVP Builder Phase 1 credit packs are available through checkout', () => {
+test('platform top-up packs are available through checkout', () => {
   const checkoutSource = readFileSync(new URL('../supabase/functions/create-checkout/index.ts', import.meta.url), 'utf8');
   const webhookSource = readFileSync(new URL('../supabase/functions/stripe-webhook/index.ts', import.meta.url), 'utf8');
 
   for (const [packId, credits] of [
-    ['pack_micro', 30],
-    ['pack_builder', 100],
-    ['pack_growth', 220],
-    ['pack_scale', 500],
+    ['pack_20', 20],
+    ['pack_40', 40],
+    ['pack_60', 60],
   ] as const) {
     assert.match(checkoutSource, new RegExp(`${packId}: \\{[\\s\\S]*credits: ${credits}`));
     assert.match(webhookSource, new RegExp(`${packId}: ${credits}`));

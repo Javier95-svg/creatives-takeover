@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import { createIdempotencyKey } from '@/lib/idempotency';
 import { trackCreditActionCompleted } from '@/lib/analytics';
 import { trackActivity } from '@/lib/activity';
+import { isMVPBuilderCreditFeature, resolveMVPBuilderChargeAmount } from '@/lib/mvpBuilderCredits';
 
 const CREDIT_FEATURE_LABELS: Record<CreditFeature, string> = {
   LAUNCH_REPORT: 'Launch Report Generation',
@@ -63,6 +64,8 @@ type CreditActionOptions = {
   metadata?: Record<string, unknown>;
   idempotencyKey?: string;
   operationId?: string;
+  allowPartialSpend?: boolean;
+  suppressCreditPrompt?: boolean;
 };
 
 export type CreditActionQuoteStatus = 'free' | 'metered' | 'locked';
@@ -222,6 +225,13 @@ export const useCreditActions = () => {
         return null;
       }
 
+      if (options.allowPartialSpend && isMVPBuilderCreditFeature(feature)) {
+        if (totalAvailable === 0) {
+          return null;
+        }
+        return resolveMVPBuilderChargeAmount(feature, requiredCredits, totalAvailable, true);
+      }
+
       if (currentTier === 'rookie' && totalAvailable === 0 && showHardGate()) {
         return null;
       }
@@ -304,6 +314,9 @@ export const useCreditActions = () => {
   const handleCreditError = useCallback(
     (error: any, data: any, feature: CreditFeature, options: CreditActionOptions = {}) => {
       if (!isCreditError(error, data)) return false;
+      if (options.suppressCreditPrompt && data?.errorCode === 'INSUFFICIENT_CREDITS') {
+        return true;
+      }
       if (data?.errorCode === 'PLAN_UPGRADE_REQUIRED' || data?.requiredTier) {
         openUpgradePrompt({
           reason: 'feature',
@@ -369,6 +382,7 @@ export const useCreditActions = () => {
       const metadata = {
         ...(options.metadata || {}),
         operationId: options.operationId || requestIdempotencyKey,
+        ...(options.allowPartialSpend ? { allowPartialMvpSpend: true } : {}),
       };
 
       const { data, error } = await supabase.functions.invoke('credit-service', {
@@ -397,7 +411,11 @@ export const useCreditActions = () => {
       const balanceAfter = typeof data?.newBalance === 'number' || typeof data?.newQuota === 'number'
         ? Number(data?.newBalance ?? 0) + Number(data?.newQuota ?? 0)
         : undefined;
-      showCreditReceipt(feature, requiredCredits, balanceAfter, options);
+      const actualCreditsUsed =
+        typeof data?.usedFromQuota === 'number' || typeof data?.usedFromBalance === 'number'
+          ? Number(data?.usedFromQuota ?? 0) + Number(data?.usedFromBalance ?? 0)
+          : requiredCredits;
+      showCreditReceipt(feature, actualCreditsUsed, balanceAfter, options);
       return true;
     },
     [currentTier, ensureCredits, handleCreditError, refreshBalance, refreshQuotas, showCreditReceipt, totalAvailable, user]

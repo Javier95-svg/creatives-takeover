@@ -881,7 +881,11 @@ async function fetchContextRowById(
 export function useMVPBuilder() {
   const { user } = useAuth();
   const { ensureCredits, deductCredits, handleCreditError } = useCreditActions();
-  const { totalAvailable: creditsAvailable, refreshBalance: refreshCredits } = useCredits();
+  const {
+    totalAvailable: creditsAvailable,
+    refreshBalance: refreshCredits,
+    loading: creditsLoading,
+  } = useCredits();
 
   const [messages, setMessages] = useState<MVPMessage[]>([]);
   const [projectFiles, setProjectFiles] = useState<MVPProjectFile[]>([]);
@@ -910,6 +914,7 @@ export function useMVPBuilder() {
   const [lastBuildChangeSummary, setLastBuildChangeSummary] = useState<MVPBuildChangeSummary | null>(null);
   const [isShowingPreviewFallback, setIsShowingPreviewFallback] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isCreditExhaustedModalOpen, setIsCreditExhaustedModalOpen] = useState(false);
   const [projectName, setProjectNameState] = useState(DEFAULT_PROJECT_NAME);
   const [projectId, setProjectId] = useState<string>(() => crypto.randomUUID());
   const [lastSavedAt, setLastSavedAt] = useState<string | null>(null);
@@ -2554,6 +2559,8 @@ export function useMVPBuilder() {
         const charged = await deductCredits(creditFeature, {
           featureName: getMVPActionLabel(creditFeature),
           operationId: assistantMsg.id,
+          allowPartialSpend: true,
+          suppressCreditPrompt: true,
           metadata: {
             action: 'github_ai_edit',
             repositoryName: githubRepoSession.fullName,
@@ -2561,6 +2568,9 @@ export function useMVPBuilder() {
           },
         });
         if (!charged) {
+          if (!creditsLoading && creditsAvailable === 0) {
+            setIsCreditExhaustedModalOpen(true);
+          }
           setMessages((prev) =>
             prev.map((message) =>
               message.id === assistantMsg.id
@@ -2644,7 +2654,7 @@ export function useMVPBuilder() {
         setIsGenerating(false);
       }
     },
-    [applyProjectArtifact, callGitHubFunction, deductCredits, entryFilePath, githubRepoSession, handleCreditError, markProjectDirty, selectedModels]
+    [applyProjectArtifact, callGitHubFunction, creditsAvailable, creditsLoading, deductCredits, entryFilePath, githubRepoSession, handleCreditError, markProjectDirty, selectedModels]
   );
 
   const classifyActionQuote = useCallback(async (prompt: string) => {
@@ -2731,9 +2741,16 @@ export function useMVPBuilder() {
           });
       const featureLabel = getMVPActionLabel(creditFeature);
 
+      if (!creditsLoading && creditsAvailable === 0) {
+        setIsCreditExhaustedModalOpen(true);
+        return;
+      }
+
       if (githubRepoSession) {
         const required = ensureCredits(creditFeature, {
           featureName: featureLabel,
+          allowPartialSpend: true,
+          suppressCreditPrompt: true,
         });
         if (required === null) return;
         await handleGitHubPrompt(prompt, creditFeature);
@@ -2744,6 +2761,8 @@ export function useMVPBuilder() {
         featureName: featureLabel,
         requiredCredits: CREDIT_COSTS[creditFeature] ?? 0,
         description: 'MVP Builder uses your regular account credit balance. If you run out, you can upgrade your plan or buy a credit pack.',
+        allowPartialSpend: true,
+        suppressCreditPrompt: true,
       });
       if (required === null) return;
 
@@ -2840,7 +2859,6 @@ export function useMVPBuilder() {
                 : null,
             conversationHistory,
             currentCode,
-            userId: user?.id ?? null,
             selectedModels,
             preferredProjectType: selectedProjectType,
             preferredFramework,
@@ -2888,7 +2906,7 @@ export function useMVPBuilder() {
               )
             );
             void refreshCredits();
-            toast.success(`${featureLabel} used ${required} credit${required === 1 ? '' : 's'}.`);
+            toast.success(`${featureLabel} used ${completedCreditCost} credit${completedCreditCost === 1 ? '' : 's'}.`);
             return;
           }
 
@@ -2972,7 +2990,7 @@ export function useMVPBuilder() {
               commitRef: `build-${assistantMsg.id.slice(0, 8)}`,
             });
             void refreshCredits();
-            toast.success(`${featureLabel} used ${required} credit${required === 1 ? '' : 's'}.`);
+            toast.success(`${featureLabel} used ${completedCreditCost} credit${completedCreditCost === 1 ? '' : 's'}.`);
           }
         };
 
@@ -3076,11 +3094,15 @@ export function useMVPBuilder() {
             } else if (event.type === 'error') {
               const errMsg = (event.error as string) ?? 'Something went wrong.';
               const errCode = event.errorCode as string | undefined;
-              handleCreditError(
-                { message: errMsg, status: errCode === 'INSUFFICIENT_CREDITS' ? 402 : 500 },
-                { error: errMsg, errorCode: errCode },
-                creditFeature
-              );
+              if (errCode === 'INSUFFICIENT_CREDITS') {
+                setIsCreditExhaustedModalOpen(true);
+              } else {
+                handleCreditError(
+                  { message: errMsg, status: 500 },
+                  { error: errMsg, errorCode: errCode },
+                  creditFeature
+                );
+              }
               void refreshCredits();
               setMessages((prev) =>
                 prev.map((message) =>
@@ -3167,6 +3189,8 @@ export function useMVPBuilder() {
       markProjectDirty,
       messages,
       currentHtml,
+      creditsAvailable,
+      creditsLoading,
       projectFiles,
       projectId,
       projectDependencies,
@@ -3369,9 +3393,19 @@ export function useMVPBuilder() {
     async (snapshotId: string) => {
       const snapshot = projectSnapshots.find((item) => item.id === snapshotId);
       if (!snapshot) return;
+      if (creditsLoading) {
+        toast('Loading credit balance...');
+        return;
+      }
+      if (creditsAvailable === 0) {
+        setIsCreditExhaustedModalOpen(true);
+        return;
+      }
       const charged = await deductCredits('APP_BUILDER_RESTORE', {
         featureName: getMVPActionLabel('APP_BUILDER_RESTORE'),
         idempotencyKey: `restore-${snapshot.id}`,
+        allowPartialSpend: true,
+        suppressCreditPrompt: true,
         metadata: {
           mvpBuilderActionType: 'restore',
           projectId,
@@ -3390,7 +3424,7 @@ export function useMVPBuilder() {
       toast.success(`Restored snapshot: ${snapshot.label}`);
       markProjectDirty();
     },
-    [addProjectSnapshot, applyProjectArtifact, deductCredits, markProjectDirty, projectId, projectSnapshots]
+    [addProjectSnapshot, applyProjectArtifact, creditsAvailable, creditsLoading, deductCredits, markProjectDirty, projectId, projectSnapshots]
   );
 
   const exportProjectZip = useCallback(() => {
@@ -3414,6 +3448,14 @@ export function useMVPBuilder() {
       if (projectFiles.length === 0) toast.error('Generate a project before deploying.');
       return;
     }
+    if (creditsLoading) {
+      toast('Loading credit balance...');
+      return;
+    }
+    if (creditsAvailable === 0) {
+      setIsCreditExhaustedModalOpen(true);
+      return;
+    }
 
     await saveProject({ silent: true });
     setIsDeploying(true);
@@ -3430,7 +3472,11 @@ export function useMVPBuilder() {
       });
 
       if (error || !data?.ok) {
-        handleCreditError(error, data, 'APP_BUILDER_DEPLOY');
+        if (data?.errorCode === 'INSUFFICIENT_CREDITS') {
+          setIsCreditExhaustedModalOpen(true);
+        } else {
+          handleCreditError(error, data, 'APP_BUILDER_DEPLOY');
+        }
         toast.error(data?.error || 'Deployment failed.');
         void refreshCredits();
         return;
@@ -3444,7 +3490,11 @@ export function useMVPBuilder() {
     } finally {
       setIsDeploying(false);
     }
-  }, [handleCreditError, isDeploying, projectFiles.length, projectId, refreshCredits, saveProject, user]);
+  }, [creditsAvailable, creditsLoading, handleCreditError, isDeploying, projectFiles.length, projectId, refreshCredits, saveProject, user]);
+
+  const closeCreditExhaustedModal = useCallback(() => {
+    setIsCreditExhaustedModalOpen(false);
+  }, []);
 
   const setSelectedModels = useCallback((models: string[]) => {
     setSelectedModelsState(sanitizeMVPModelSelection(models));
@@ -3544,6 +3594,7 @@ export function useMVPBuilder() {
     deploymentUrl,
     isDeploying,
     creditsAvailable,
+    isCreditExhaustedModalOpen,
     githubConnection,
     githubRepositories,
     githubBranches,
@@ -3593,5 +3644,6 @@ export function useMVPBuilder() {
     disconnectSupabaseProject,
     refreshSupabaseConnection,
     loadSupabaseBackendSnapshot,
+    closeCreditExhaustedModal,
   };
 }
