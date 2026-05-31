@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Get-Content \"C:\\\\Users\\\\javie\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-javie-Pictures-CREATIVES-TAKEOVER-1-creatives-takeover\\\\05baea35-6e7d-4c01-bd6c-3ccef7c5a211\\\\tasks\\\\a77d57086f88f2fbc.output\" -ErrorAction SilentlyContinue)"
+    ]
+  }
+}
