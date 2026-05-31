@@ -587,7 +587,7 @@ const BuildStageSelector = () => {
             </h2>
             <p className="mt-4 text-[17px] leading-relaxed text-muted-foreground text-balance">
               You don&rsquo;t have to start from Stage 1. However, we highly recommend not skipping Validation.
-              You don&rsquo;t want to ship the wrong idea.
+              It exists to make sure you are building the right thing.
             </p>
           </div>
         </ScrollReveal>
