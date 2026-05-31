@@ -61,7 +61,7 @@ const HOW_STEPS = [
   },
   {
     num: '03', color: 'green' as const, Icon: Rocket, title: 'Launch',
-    body: 'Our GTM Strategist and Directories get your app in front of the right people.',
+    body: 'Our GTM Strategist and Directories get your app in front of the right people. Make an impact since the beginning.',
   },
 ];
 
