@@ -68,6 +68,19 @@ type CreditActionOptions = {
   suppressCreditPrompt?: boolean;
 };
 
+type MVPBuilderReservationResult = {
+  success: boolean;
+  reservationId?: string;
+  reservationStatus?: 'pending' | 'finalized' | 'released' | 'expired';
+  listedCreditCost?: number;
+  heldCredits?: number;
+  creditsUsed?: number;
+  balanceAfter?: number;
+  releaseReason?: string;
+  error?: string;
+  errorCode?: string;
+};
+
 export type CreditActionQuoteStatus = 'free' | 'metered' | 'locked';
 
 export type CreditActionQuote = {
@@ -421,10 +434,77 @@ export const useCreditActions = () => {
     [currentTier, ensureCredits, handleCreditError, refreshBalance, refreshQuotas, showCreditReceipt, totalAvailable, user]
   );
 
+  const reserveMVPBuilderCredits = useCallback(
+    async (feature: CreditFeature, options: CreditActionOptions = {}) => {
+      if (!user || !isMVPBuilderCreditFeature(feature)) return null;
+      const requiredCredits = ensureCredits(feature, { ...options, allowPartialSpend: true });
+      if (requiredCredits === null || requiredCredits <= 0) return null;
+      const requestIdempotencyKey = options.idempotencyKey || createIdempotencyKey(
+        `mvp-builder-reserve-${feature.toLowerCase()}`,
+        options.operationId
+      );
+      const { data, error } = await supabase.functions.invoke('credit-service', {
+        headers: { 'Idempotency-Key': requestIdempotencyKey },
+        body: {
+          action: 'reserveMVPBuilderCredits',
+          amount: CREDIT_COSTS[feature] ?? requiredCredits,
+          featureCode: feature,
+          metadata: {
+            ...(options.metadata || {}),
+            operationId: options.operationId || requestIdempotencyKey,
+          },
+        },
+      });
+      if (error || !data?.success) {
+        handleCreditError(error, data, feature, { ...options, suppressCreditPrompt: true });
+        return null;
+      }
+      await refreshBalance();
+      return data as MVPBuilderReservationResult;
+    },
+    [ensureCredits, handleCreditError, refreshBalance, user]
+  );
+
+  const finalizeMVPBuilderCredits = useCallback(
+    async (feature: CreditFeature, reservationId: string, options: CreditActionOptions = {}) => {
+      const { data, error } = await supabase.functions.invoke('credit-service', {
+        body: {
+          action: 'finalizeMVPBuilderCredits',
+          reservationId,
+          metadata: options.metadata || {},
+        },
+      });
+      if (error || !data?.success) return null;
+      await refreshBalance();
+      showCreditReceipt(feature, Number(data.creditsUsed ?? 0), Number(data.balanceAfter ?? 0), options);
+      return data as MVPBuilderReservationResult;
+    },
+    [refreshBalance, showCreditReceipt]
+  );
+
+  const releaseMVPBuilderCredits = useCallback(
+    async (reservationId: string, releaseReason: string, metadata: Record<string, unknown> = {}) => {
+      const { data } = await supabase.functions.invoke('credit-service', {
+        body: {
+          action: 'releaseMVPBuilderCredits',
+          reservationId,
+          releaseReason,
+          metadata,
+        },
+      });
+      await refreshBalance();
+      return data as MVPBuilderReservationResult | null;
+    },
+    [refreshBalance]
+  );
+
   return {
     ensureCredits,
     handleCreditError,
     deductCredits,
+    reserveMVPBuilderCredits,
+    finalizeMVPBuilderCredits,
+    releaseMVPBuilderCredits,
     getCreditActionQuote,
     showCreditReceipt,
   };

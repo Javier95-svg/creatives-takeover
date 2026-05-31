@@ -1,6 +1,11 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { checkAndDeductCredits, refundCredits, getUserFromAuth } from "../_shared/credit-deduction.ts";
+import { getUserFromAuth } from "../_shared/credit-deduction.ts";
 import { CREDIT_COSTS, type CreditFeature } from "../_shared/credit-constants.ts";
+import {
+  finalizeMVPBuilderCredits,
+  releaseMVPBuilderCredits,
+  reserveMVPBuilderCredits,
+} from "../_shared/mvp-builder-credit-reservations.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -13,6 +18,7 @@ const ANTHROPIC_VERSION = "2023-06-01";
 const DEFAULT_MODEL = "claude-sonnet-4-6";
 const FALLBACK_MODEL = "claude-haiku-4-5-20251001";
 const MAX_COMBO_MODELS = 3;
+const MODEL_TIMEOUT_MS = 120000;
 
 const SUPPORTED_MODELS = [
   "claude-sonnet-4-6",
@@ -23,7 +29,7 @@ const SUPPORTED_MODELS = [
 const SUPPORTED_MODEL_SET = new Set<string>(SUPPORTED_MODELS);
 const HTML_CAPABLE_MODEL_SET = new Set<string>(SUPPORTED_MODELS);
 
-type MVPBuilderActionType = "generation" | "targeted_edit" | "debug" | "add_page" | "add_feature" | "design_overhaul";
+type MVPBuilderActionType = "generation" | "targeted_edit" | "debug" | "add_page" | "add_feature" | "design_overhaul" | "chat";
 type MVPBuilderTemplateId = "waitlist_landing" | "saas_landing" | "community_landing" | "portfolio" | "simple_dashboard" | "marketplace_mvp" | "admin_panel" | "blank";
 type MVPBuilderPaletteId = "minimal" | "bold" | "warm";
 
@@ -42,6 +48,7 @@ const ACTION_CONFIG: Record<MVPBuilderActionType, { feature: CreditFeature; temp
   add_page:        { feature: "APP_BUILDER_ADD_PAGE",        temperature: 0.3,  maxTokens: 8192, model: "claude-sonnet-4-6" },
   add_feature:     { feature: "APP_BUILDER_ADD_FEATURE",     temperature: 0.35, maxTokens: 8192, model: "claude-sonnet-4-6" },
   design_overhaul: { feature: "APP_BUILDER_DESIGN_OVERHAUL", temperature: 0.45, maxTokens: 8192, model: "claude-sonnet-4-6" },
+  chat:            { feature: "APP_BUILDER_CHAT",            temperature: 0.35, maxTokens: 1200, model: "claude-haiku-4-5-20251001" },
 };
 
 function getActionFeatureName(feature: CreditFeature): string {
@@ -52,6 +59,7 @@ function getActionFeatureName(feature: CreditFeature): string {
     case "APP_BUILDER_ADD_PAGE":       return "MVP Builder Add Page";
     case "APP_BUILDER_ADD_FEATURE":    return "MVP Builder Add Feature";
     case "APP_BUILDER_DESIGN_OVERHAUL": return "MVP Builder Design Overhaul";
+    case "APP_BUILDER_CHAT":           return "MVP Builder Chat";
     default:                           return "MVP Builder";
   }
 }
@@ -165,6 +173,10 @@ You are redesigning the visual style of an existing project. Rules:
 3. All interactive behavior must remain exactly the same.
 4. The result must be visually cohesive — one design language applied consistently across all files.
 5. Return all files that contain visual styling changes, in their entirety.`,
+
+  chat: `
+You are advising a founder about their MVP Builder project. Reply with concise plain text only.
+Do not return JSON and do not make code changes. Answer the founder's question directly.`,
 };
 
 // ─── Template requirements ────────────────────────────────────────────────────
@@ -396,7 +408,8 @@ function classifyAction(input: string, hasProject: boolean): MVPBuilderActionTyp
 function normalizeAction(value: unknown, userMessage: string, hasProject: boolean): MVPBuilderActionType | "unclear" | "unsupported" {
   if (
     value === "generation" || value === "targeted_edit" || value === "debug" ||
-    value === "add_page" || value === "add_feature" || value === "design_overhaul"
+    value === "add_page" || value === "add_feature" || value === "design_overhaul" ||
+    value === "chat"
   ) return value;
   return classifyAction(userMessage, hasProject);
 }
@@ -519,6 +532,25 @@ function outputToProject(output: ReturnType<typeof validateOutput>, productName:
   };
 }
 
+function hasMaterialProjectChange(currentProject: unknown, output: ReturnType<typeof validateOutput>) {
+  if (!currentProject || typeof currentProject !== "object") return true;
+  const rawFiles = (currentProject as Record<string, unknown>).files;
+  if (!Array.isArray(rawFiles) || rawFiles.length === 0) return true;
+
+  const currentFiles = new Map(
+    rawFiles
+      .filter((file): file is Record<string, unknown> => Boolean(file && typeof file === "object"))
+      .map((file) => [
+        normalizeProjectPath(String(file.path ?? file.filename ?? "")),
+        typeof file.content === "string" ? file.content : "",
+      ])
+  );
+
+  return output.files.some((file) =>
+    currentFiles.get(normalizeProjectPath(file.filename)) !== file.content
+  );
+}
+
 // ─── Context formatting ───────────────────────────────────────────────────────
 
 function formatFounderContext(context: Record<string, unknown> | null): string {
@@ -584,6 +616,18 @@ function buildPrompt(params: {
   const customPrompt   = typeof setup.customPrompt === "string" ? setup.customPrompt : params.userMessage;
   const founderContext = formatFounderContext(params.projectContext);
 
+  if (params.actionType === "chat") {
+    return `Answer the founder's MVP Builder question.
+
+FOUNDER QUESTION
+${params.userMessage}
+
+CURRENT PROJECT
+${JSON.stringify(params.currentProject, null, 2)}
+
+${founderContext}`;
+  }
+
   if (params.actionType === "generation") {
     return `Generate a complete ${params.template} application for the following product.
 
@@ -616,6 +660,7 @@ ${founderContext}`;
     add_page:        "Add a new page/screen",
     add_feature:     "Add a new frontend feature",
     design_overhaul: "Apply a cohesive design overhaul",
+    chat:            "Answer a founder question",
   };
 
   return `${actionInstruction[params.actionType]} to the existing project.
@@ -639,7 +684,7 @@ async function requestModelStream(
   config: { temperature: number; maxTokens: number }
 ): Promise<Response> {
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 120000);
+  const timeoutId = setTimeout(() => controller.abort(), MODEL_TIMEOUT_MS);
   try {
     return await fetch(ANTHROPIC_API_URL, {
       method: "POST",
@@ -670,8 +715,11 @@ async function requestModelJson(
   messages: Array<{ role: "user" | "assistant"; content: string }>,
   config: { temperature: number; maxTokens: number }
 ): Promise<string> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), MODEL_TIMEOUT_MS);
   const response = await fetch(ANTHROPIC_API_URL, {
     method: "POST",
+    signal: controller.signal,
     headers: {
       "x-api-key": apiKey,
       "anthropic-version": ANTHROPIC_VERSION,
@@ -685,7 +733,7 @@ async function requestModelJson(
       max_tokens: config.maxTokens,
       stream: false,
     }),
-  });
+  }).finally(() => clearTimeout(timeoutId));
   if (!response.ok) {
     throw new Error(await response.text());
   }
@@ -697,6 +745,20 @@ async function requestModelJson(
     throw new Error("Repair response did not include content");
   }
   return content;
+}
+
+async function readModelStreamChunk(reader: ReadableStreamDefaultReader<Uint8Array>) {
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      reader.read(),
+      new Promise<never>((_, reject) => {
+        timeoutId = setTimeout(() => reject(new Error("MVP Builder model stream timed out")), MODEL_TIMEOUT_MS);
+      }),
+    ]);
+  } finally {
+    if (timeoutId) clearTimeout(timeoutId);
+  }
 }
 
 // ─── Main handler ─────────────────────────────────────────────────────────────
@@ -753,36 +815,31 @@ serve(async (req: Request) => {
   const userId    = user.id;
   const creditFeature = ACTION_CONFIG[classifiedAction].feature;
   const creditCost    = CREDIT_COSTS[creditFeature];
-  let   chargedCredits = 0;
-
-  if (userId) {
-    const idempotencyKey = req.headers.get("Idempotency-Key") ?? undefined;
-    const creditCheck = await checkAndDeductCredits(
-      userId,
-      creditCost,
-      getActionFeatureName(creditFeature),
-      undefined,
-      {
-        idempotencyKey,
-        entitlementFeature: creditFeature,
-        featureCode: creditFeature,
-        allowPartialMvpSpend: true,
-        mvpBuilderActionType: classifiedAction,
-        projectId: typeof body.projectId === "string" ? body.projectId : undefined,
-        currentVersion: typeof body.currentVersion === "number" ? body.currentVersion : undefined,
-      }
-    );
-
-    if (!creditCheck.success) {
-      return errorStream(
-        creditCheck.errorCode === "INSUFFICIENT_CREDITS"
-          ? `You need ${creditCost} credits for this MVP Builder action. Upgrade your plan or buy a credit pack.`
-          : "Unable to process credits. Please try again.",
-        creditCheck.errorCode
-      );
+  const idempotencyKey = req.headers.get("Idempotency-Key") ?? crypto.randomUUID();
+  const reservation = await reserveMVPBuilderCredits(
+    userId,
+    creditFeature,
+    creditCost,
+    idempotencyKey,
+    {
+      entitlementFeature: creditFeature,
+      featureCode: creditFeature,
+      mvpBuilderActionType: classifiedAction,
+      projectId: typeof body.projectId === "string" ? body.projectId : undefined,
+      currentVersion: typeof body.currentVersion === "number" ? body.currentVersion : undefined,
     }
-    chargedCredits = (creditCheck.usedFromQuota ?? 0) + (creditCheck.usedFromBalance ?? 0);
+  );
+
+  if (!reservation.success || !reservation.reservationId) {
+    return errorStream(
+      reservation.errorCode === "INSUFFICIENT_CREDITS"
+        ? `You need ${creditCost} credits for this MVP Builder action. Upgrade your plan or buy a credit pack.`
+        : "Unable to reserve credits. Please try again.",
+      reservation.errorCode
+    );
   }
+  const reservationId = reservation.reservationId;
+  const heldCredits = Number(reservation.heldCredits ?? 0);
 
   const selectedModels = normalizeSelectedModels(body.selectedModels);
   const textCapableModels = selectedModels.filter((m) => HTML_CAPABLE_MODEL_SET.has(m));
@@ -862,10 +919,8 @@ serve(async (req: Request) => {
   }
 
   if (!aiResponse) {
-    if (userId && chargedCredits > 0) {
-      await refundCredits(userId, chargedCredits, getActionFeatureName(creditFeature), "AI API error", { lastApiError }).catch(() => {});
-    }
-    return errorStream("AI service temporarily unavailable. Credits have been refunded. Please try again.", "AI_ERROR");
+    await releaseMVPBuilderCredits(reservationId, "AI API error", { lastApiError }).catch(() => {});
+    return errorStream("AI service temporarily unavailable. Held credits have been released. Please try again.", "AI_ERROR");
   }
 
   const { readable, writable } = new TransformStream<Uint8Array, Uint8Array>();
@@ -879,8 +934,18 @@ serve(async (req: Request) => {
     let sawStop = false;
 
     try {
+      await writer.write(enc({
+        type: "credit-reserved",
+        reservationId,
+        reservationStatus: "pending",
+        listedCreditCost: creditCost,
+        heldCredits,
+        creditsUsed: 0,
+        balanceAfter: reservation.balanceAfter,
+      }));
+
       while (!sawStop) {
-        const { done, value } = await reader.read();
+        const { done, value } = await readModelStreamChunk(reader);
         if (done) break;
         buffer += decoder.decode(value, { stream: true });
         const lines = buffer.split("\n");
@@ -911,10 +976,34 @@ serve(async (req: Request) => {
             const content = typeof delta?.text === "string" ? delta.text : "";
             if (content) {
               fullText += content;
-              await writer.write(enc({ type: "code-delta", content }));
+              await writer.write(enc({ type: classifiedAction === "chat" ? "delta" : "code-delta", content }));
             }
           }
         }
+      }
+
+      if (classifiedAction === "chat") {
+        if (!fullText.trim()) {
+          const released = await releaseMVPBuilderCredits(reservationId, "Empty MVP Builder chat response");
+          await writer.write(enc({
+            type: "credit-released",
+            ...released,
+            releaseReason: "empty_output",
+          }));
+          await writer.write(enc({ type: "error", error: "The assistant returned an empty reply. Held credits were released.", errorCode: "EMPTY_OUTPUT" }));
+          await writer.write(encDone());
+          return;
+        }
+
+        const finalized = await finalizeMVPBuilderCredits(reservationId, {
+          mvpBuilderActionType: classifiedAction,
+          completionBoundary: "successful_chat_reply",
+        });
+        if (!finalized.success) throw new Error("Unable to finalize MVP Builder chat credits");
+        await writer.write(enc({ type: "credit-finalized", ...finalized }));
+        await writer.write(enc({ type: "complete", model: selectedModel, requestedModels: selectedModels }));
+        await writer.write(encDone());
+        return;
       }
 
       // Validate and emit the structured project event
@@ -939,19 +1028,18 @@ serve(async (req: Request) => {
           );
           validated = validateOutput(parseModelJson(repaired));
         } catch (repairError) {
-          if (userId && chargedCredits > 0) {
-            await refundCredits(
-              userId, chargedCredits, getActionFeatureName(creditFeature),
-              "Invalid MVP Builder JSON output",
-              {
-                validationError: validationError instanceof Error ? validationError.message : String(validationError),
-                repairError: repairError instanceof Error ? repairError.message : String(repairError),
-              }
-            ).catch(() => {});
-          }
+          const released = await releaseMVPBuilderCredits(
+            reservationId,
+            "Invalid MVP Builder JSON output",
+            {
+              validationError: validationError instanceof Error ? validationError.message : String(validationError),
+              repairError: repairError instanceof Error ? repairError.message : String(repairError),
+            }
+          );
+          await writer.write(enc({ type: "credit-released", ...released, releaseReason: "validation_failed" }));
           await writer.write(enc({
             type: "error",
-            error: "The AI returned an invalid project after repair. Credits have been refunded. Please try again.",
+            error: "The AI returned an invalid project after repair. Held credits have been released. Please try again.",
             errorCode: "VALIDATION_FAILED",
           }));
           await writer.write(encDone());
@@ -967,13 +1055,34 @@ serve(async (req: Request) => {
         }));
       }
 
+      if (!hasMaterialProjectChange(currentProject, validated)) {
+        const released = await releaseMVPBuilderCredits(reservationId, "MVP Builder produced no material project change");
+        await writer.write(enc({ type: "credit-released", ...released, releaseReason: "no_material_change" }));
+        await writer.write(enc({
+          type: "error",
+          error: "No project changes were needed. Held credits have been released.",
+          errorCode: "NO_MATERIAL_CHANGE",
+        }));
+        await writer.write(encDone());
+        return;
+      }
+
+      const finalized = await finalizeMVPBuilderCredits(reservationId, {
+        mvpBuilderActionType: classifiedAction,
+        completionBoundary: "valid_artifact_accepted",
+      });
+      if (!finalized.success) throw new Error("Unable to finalize MVP Builder credits");
+      await writer.write(enc({ type: "credit-finalized", ...finalized }));
       await writer.write(enc({
         type: "project",
         project: outputToProject(validated, productName),
         output: validated,
         actionType: classifiedAction,
         creditFeature,
-        creditCost: chargedCredits,
+        reservationId,
+        reservationStatus: finalized.reservationStatus,
+        heldCredits,
+        creditCost: finalized.creditsUsed,
         listedCreditCost: creditCost,
         wallet: "platform",
       }));
@@ -981,10 +1090,12 @@ serve(async (req: Request) => {
       await writer.write(encDone());
     } catch (err) {
       console.error("Stream processing error:", err);
-      if (userId && chargedCredits > 0) {
-        await refundCredits(userId, chargedCredits, getActionFeatureName(creditFeature), "Stream error").catch(() => {});
-      }
-      await writer.write(enc({ type: "error", error: "Stream interrupted. Credits have been refunded. Please try again.", errorCode: "STREAM_ERROR" }));
+      await reader.cancel().catch(() => {});
+      const released = await releaseMVPBuilderCredits(reservationId, "Stream error", {
+        error: err instanceof Error ? err.message : String(err),
+      }).catch(() => ({ success: false }));
+      await writer.write(enc({ type: "credit-released", ...released, releaseReason: "stream_error" }));
+      await writer.write(enc({ type: "error", error: "Stream interrupted. Held credits have been released. Please try again.", errorCode: "STREAM_ERROR" }));
       await writer.write(encDone());
     } finally {
       await writer.close().catch(() => {});

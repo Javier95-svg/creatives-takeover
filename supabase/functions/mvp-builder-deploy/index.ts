@@ -1,7 +1,12 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import { checkAndDeductCredits, refundCredits, getUserFromAuth } from "../_shared/credit-deduction.ts";
+import { getUserFromAuth } from "../_shared/credit-deduction.ts";
 import { CREDIT_COSTS } from "../_shared/credit-constants.ts";
+import {
+  finalizeMVPBuilderCredits,
+  releaseMVPBuilderCredits,
+  reserveMVPBuilderCredits,
+} from "../_shared/mvp-builder-credit-reservations.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -113,14 +118,18 @@ serve(async (req) => {
   const creditFeature = "APP_BUILDER_DEPLOY";
   const creditCost = CREDIT_COSTS[creditFeature];
   const idempotencyKey = req.headers.get("Idempotency-Key") ?? undefined;
-  const creditCheck = await checkAndDeductCredits(user.id, creditCost, "MVP Builder Deploy", undefined, {
-    idempotencyKey,
-    entitlementFeature: creditFeature,
-    featureCode: creditFeature,
-    allowPartialMvpSpend: true,
-    mvpBuilderActionType: "deploy",
-    projectId,
-  });
+  const creditCheck = await reserveMVPBuilderCredits(
+    user.id,
+    creditFeature,
+    creditCost,
+    idempotencyKey ?? crypto.randomUUID(),
+    {
+      entitlementFeature: creditFeature,
+      featureCode: creditFeature,
+      mvpBuilderActionType: "deploy",
+      projectId,
+    }
+  );
 
   if (!creditCheck.success) {
     return jsonResponse({
@@ -131,7 +140,8 @@ serve(async (req) => {
     }, creditCheck.errorCode === "INSUFFICIENT_CREDITS" ? 402 : 400);
   }
 
-  const chargedCredits = (creditCheck.usedFromQuota ?? 0) + (creditCheck.usedFromBalance ?? 0);
+  const reservationId = creditCheck.reservationId!;
+  const heldCredits = Number(creditCheck.heldCredits ?? 0);
   const baseSlug = slugify(typeof project.title === "string" ? project.title : projectId);
   const deploymentSlug = `${baseSlug}-${projectId.slice(0, 8)}`;
   const desiredUrl = `https://${deploymentSlug}.${baseDomain}`;
@@ -204,12 +214,27 @@ serve(async (req) => {
       .eq("id", projectId)
       .eq("user_id", user.id);
 
+    const finalized = await finalizeMVPBuilderCredits(reservationId, {
+      mvpBuilderActionType: "deploy",
+      projectId,
+      deploymentUrl: vercelUrl,
+      completionBoundary: "deployment_saved",
+    });
+    if (!finalized.success) {
+      throw new Error("Unable to finalize MVP Builder deploy credits");
+    }
+
     return jsonResponse({
       ok: true,
       deploymentUrl: vercelUrl,
       desiredUrl,
       deploymentSlug,
-      creditsUsed: chargedCredits,
+      reservationId,
+      reservationStatus: finalized.reservationStatus,
+      listedCreditCost: creditCost,
+      heldCredits,
+      creditsUsed: finalized.creditsUsed,
+      balanceAfter: finalized.balanceAfter,
     });
   } catch (error) {
     await supabase
@@ -217,15 +242,13 @@ serve(async (req) => {
       .update({ deployment_status: "failed" })
       .eq("id", projectId)
       .eq("user_id", user.id);
-    if (chargedCredits > 0) {
-      await refundCredits(user.id, chargedCredits, "MVP Builder Deploy", "MVP Builder deploy failed", {
-        projectId,
-        error: error instanceof Error ? error.message : String(error),
-      }).catch(() => {});
-    }
+    await releaseMVPBuilderCredits(reservationId, "MVP Builder deploy failed", {
+      projectId,
+      error: error instanceof Error ? error.message : String(error),
+    }).catch(() => {});
     return jsonResponse({
       ok: false,
-      error: "Deployment failed. Credits have been refunded.",
+      error: "Deployment failed. Held credits have been released.",
       errorCode: "DEPLOY_FAILED",
     }, 500);
   }

@@ -39,6 +39,7 @@ export const MVPBuilder: React.FC = () => {
     deploymentUrl,
     isDeploying,
     creditsAvailable,
+    heldCredits,
     isCreditExhaustedModalOpen,
     githubConnection,
     githubRepositories,
@@ -187,6 +188,11 @@ export const MVPBuilder: React.FC = () => {
         }}
       />
 
+      {isGenerating && heldCredits > 0 && (
+        <div className="border-b border-sky-300/20 bg-sky-300/10 px-4 py-2 text-center text-xs font-medium text-sky-100">
+          {creditsAvailable} credits available - {heldCredits} credits held while MVP Builder works
+        </div>
+      )}
 
 <div className="flex-1 min-h-0 flex flex-col">
         <div className="flex md:hidden items-center justify-center border-b border-border/40 bg-[#0b1020] shrink-0 py-2">

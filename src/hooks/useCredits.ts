@@ -12,6 +12,7 @@ import { createIdempotencyKey } from '@/lib/idempotency';
 interface CreditBalance {
   balance: number;
   monthly_quota: number;
+  held_credits: number;
   subscription_tier: string | null;
   current_period_end: string | null;
 }
@@ -60,8 +61,16 @@ export function useCredits() {
 
   const fetchBalance = async (): Promise<CreditBalance> => {
     if (!user) {
-      return { balance: 0, monthly_quota: 0, subscription_tier: 'rookie', current_period_end: null };
+      return { balance: 0, monthly_quota: 0, held_credits: 0, subscription_tier: 'rookie', current_period_end: null };
     }
+
+    const fetchHeldCredits = async () => {
+      const { data } = await supabase.rpc(
+        'get_mvp_builder_held_credits' as never,
+        { p_user_id: user.id } as never
+      );
+      return Number(data ?? 0);
+    };
 
     const { data, error } = await safe.select(async () =>
       await safe.client
@@ -88,11 +97,11 @@ export function useCredits() {
           );
 
           if (retry.data) {
-            return retry.data;
+            return { ...retry.data, held_credits: await fetchHeldCredits() };
           }
         }
 
-        return { balance: 0, monthly_quota: 0, subscription_tier: 'rookie', current_period_end: null };
+        return { balance: 0, monthly_quota: 0, held_credits: 0, subscription_tier: 'rookie', current_period_end: null };
       }
 
       throw error;
@@ -111,15 +120,15 @@ export function useCredits() {
             .maybeSingle()
         );
 
-        if (retry.data) {
-          return retry.data;
+          if (retry.data) {
+            return { ...retry.data, held_credits: await fetchHeldCredits() };
         }
       }
 
-      return { balance: 0, monthly_quota: 0, subscription_tier: 'rookie', current_period_end: null };
+      return { balance: 0, monthly_quota: 0, held_credits: 0, subscription_tier: 'rookie', current_period_end: null };
     }
 
-    return data;
+    return { ...data, held_credits: await fetchHeldCredits() };
   };
 
   const creditsQuery = useQuery({
@@ -140,6 +149,7 @@ export function useCredits() {
   const balanceData = creditsQuery.data ?? {
     balance: 0,
     monthly_quota: 0,
+    held_credits: 0,
     subscription_tier: 'rookie',
     current_period_end: null,
   };
@@ -164,7 +174,7 @@ export function useCredits() {
   const updateBalanceCache = (updater: (prev: CreditBalance) => CreditBalance) => {
     if (!user?.id) return;
     queryClient.setQueryData<CreditBalance>(['credits', user.id], (prev) => {
-      const current = prev ?? { balance: 0, monthly_quota: 0 };
+      const current = prev ?? { balance: 0, monthly_quota: 0, held_credits: 0, subscription_tier: 'rookie', current_period_end: null };
       return updater(current);
     });
   };
@@ -249,6 +259,7 @@ export function useCredits() {
   return {
     balance: balanceData.balance ?? 0,
     monthlyQuota: balanceData.monthly_quota ?? 0,
+    heldCredits: balanceData.held_credits ?? 0,
     totalAvailable: (balanceData.balance ?? 0) + (balanceData.monthly_quota ?? 0),
     subscriptionTier: balanceData.subscription_tier ?? 'rookie',
     currentPeriodEnd: balanceData.current_period_end ?? null,

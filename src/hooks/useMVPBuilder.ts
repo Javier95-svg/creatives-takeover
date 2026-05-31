@@ -880,9 +880,16 @@ async function fetchContextRowById(
 
 export function useMVPBuilder() {
   const { user } = useAuth();
-  const { ensureCredits, deductCredits, handleCreditError } = useCreditActions();
+  const {
+    ensureCredits,
+    handleCreditError,
+    reserveMVPBuilderCredits,
+    finalizeMVPBuilderCredits,
+    releaseMVPBuilderCredits,
+  } = useCreditActions();
   const {
     totalAvailable: creditsAvailable,
+    heldCredits,
     refreshBalance: refreshCredits,
     loading: creditsLoading,
   } = useCredits();
@@ -2549,43 +2556,13 @@ export function useMVPBuilder() {
           commitMessage?: string;
           model?: string;
           changes: GitHubFileChange[];
+          creditsUsed?: number;
         }>('ai_edit', {
           prompt,
           repositoryName: githubRepoSession.fullName,
           files: githubRepoSession.files,
           selectedModels,
         });
-
-        const charged = await deductCredits(creditFeature, {
-          featureName: getMVPActionLabel(creditFeature),
-          operationId: assistantMsg.id,
-          allowPartialSpend: true,
-          suppressCreditPrompt: true,
-          metadata: {
-            action: 'github_ai_edit',
-            repositoryName: githubRepoSession.fullName,
-            promptId: assistantMsg.id,
-          },
-        });
-        if (!charged) {
-          if (!creditsLoading && creditsAvailable === 0) {
-            setIsCreditExhaustedModalOpen(true);
-          }
-          setMessages((prev) =>
-            prev.map((message) =>
-              message.id === assistantMsg.id
-                ? {
-                    ...message,
-                    content: 'Credit deduction failed, so the GitHub edit was not applied.',
-                    isStreaming: false,
-                    type: 'error',
-                    retryPrompt: prompt,
-                  }
-                : message
-            )
-          );
-          return;
-        }
 
         const summary = result.summary || 'Prepared repository changes.';
         const changeCount = (result.changes || []).length;
@@ -2600,6 +2577,7 @@ export function useMVPBuilder() {
 
         setGitHubPendingChanges(result.changes || []);
         setSuggestedGitHubCommitMessage(result.commitMessage ?? null);
+        void refreshCredits();
         const stagedFiles = applyChangesToFiles(
           githubRepoSession.files,
           result.changes || []
@@ -2654,7 +2632,7 @@ export function useMVPBuilder() {
         setIsGenerating(false);
       }
     },
-    [applyProjectArtifact, callGitHubFunction, creditsAvailable, creditsLoading, deductCredits, entryFilePath, githubRepoSession, handleCreditError, markProjectDirty, selectedModels]
+    [applyProjectArtifact, callGitHubFunction, entryFilePath, githubRepoSession, handleCreditError, markProjectDirty, refreshCredits, selectedModels]
   );
 
   const classifyActionQuote = useCallback(async (prompt: string) => {
@@ -3049,6 +3027,15 @@ export function useMVPBuilder() {
               } else {
                 setGeneratedCode(sanitizeStreamedCode(streamedCode));
               }
+            } else if (event.type === 'credit-reserved') {
+              void refreshCredits();
+            } else if (event.type === 'credit-finalized') {
+              if (typeof event.creditsUsed === 'number') {
+                completedCreditCost = event.creditsUsed;
+              }
+              void refreshCredits();
+            } else if (event.type === 'credit-released') {
+              void refreshCredits();
             } else if (event.type === 'project' && typeof event.project === 'object' && event.project !== null) {
               const nextProject = event.project as MVPProjectArtifact;
               if (event.output && typeof event.output === 'object') {
@@ -3401,7 +3388,7 @@ export function useMVPBuilder() {
         setIsCreditExhaustedModalOpen(true);
         return;
       }
-      const charged = await deductCredits('APP_BUILDER_RESTORE', {
+      const reservation = await reserveMVPBuilderCredits('APP_BUILDER_RESTORE', {
         featureName: getMVPActionLabel('APP_BUILDER_RESTORE'),
         idempotencyKey: `restore-${snapshot.id}`,
         allowPartialSpend: true,
@@ -3412,19 +3399,38 @@ export function useMVPBuilder() {
           snapshotId,
         },
       });
-      if (!charged) return;
+      if (!reservation?.reservationId) return;
 
-      applyProjectArtifact(snapshot.artifact, {
-        allowFallback: false,
-        setAsBaseline: false,
-        preserveProjectName: false,
-        preserveProjectType: false,
-      });
-      addProjectSnapshot(snapshot.artifact, `Restored ${snapshot.label}`, 'restore');
-      toast.success(`Restored snapshot: ${snapshot.label}`);
-      markProjectDirty();
+      try {
+        applyProjectArtifact(snapshot.artifact, {
+          allowFallback: false,
+          setAsBaseline: false,
+          preserveProjectName: false,
+          preserveProjectType: false,
+        });
+        addProjectSnapshot(snapshot.artifact, `Restored ${snapshot.label}`, 'restore');
+        const finalized = await finalizeMVPBuilderCredits('APP_BUILDER_RESTORE', reservation.reservationId, {
+          featureName: getMVPActionLabel('APP_BUILDER_RESTORE'),
+          metadata: {
+            mvpBuilderActionType: 'restore',
+            projectId,
+            snapshotId,
+            completionBoundary: 'snapshot_applied',
+          },
+        });
+        if (!finalized) throw new Error('Unable to finalize restore credits');
+        toast.success(`Restored snapshot: ${snapshot.label}`);
+        markProjectDirty();
+      } catch (error) {
+        await releaseMVPBuilderCredits(reservation.reservationId, 'MVP Builder restore failed', {
+          projectId,
+          snapshotId,
+          error: error instanceof Error ? error.message : String(error),
+        });
+        toast.error('Restore failed. Held credits were released.');
+      }
     },
-    [addProjectSnapshot, applyProjectArtifact, creditsAvailable, creditsLoading, deductCredits, markProjectDirty, projectId, projectSnapshots]
+    [addProjectSnapshot, applyProjectArtifact, creditsAvailable, creditsLoading, finalizeMVPBuilderCredits, markProjectDirty, projectId, projectSnapshots, releaseMVPBuilderCredits, reserveMVPBuilderCredits]
   );
 
   const exportProjectZip = useCallback(() => {
@@ -3594,6 +3600,7 @@ export function useMVPBuilder() {
     deploymentUrl,
     isDeploying,
     creditsAvailable,
+    heldCredits,
     isCreditExhaustedModalOpen,
     githubConnection,
     githubRepositories,

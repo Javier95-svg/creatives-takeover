@@ -531,37 +531,18 @@ export async function refundCredits(
   });
 
   try {
-    // Add credits back to the balance pool
-    const { data: current, error: fetchError } = await supabase
-      .from('user_credits')
-      .select('balance')
-      .eq('user_id', userId)
-      .single();
-
-    if (fetchError || !current) {
-      console.error('[refundCredits] User not found:', fetchError);
-      return false;
-    }
-
-    const { error: updateError } = await supabase
-      .from('user_credits')
-      .update({ balance: (current.balance || 0) + amount })
-      .eq('user_id', userId);
-
-    if (updateError) {
-      console.error('[refundCredits] Failed to update balance:', updateError);
-      return false;
-    }
-
-    // Log the refund transaction
-    await supabase.from('credit_transactions').insert({
-      user_id: userId,
-      amount: amount,
-      tx_type: 'refund',
-      reason,
-      feature,
-      metadata: metadata || {},
+    const { data, error } = await supabase.rpc('refund_platform_credits_atomic', {
+      p_user_id: userId,
+      p_amount: amount,
+      p_feature: feature,
+      p_reason: reason,
+      p_metadata: metadata || {},
     });
+
+    if (error || !data?.success) {
+      console.error('[refundCredits] Atomic refund failed:', error || data);
+      return false;
+    }
 
     console.log(`[refundCredits] Refunded ${amount} credits to user ${userId} for ${feature}`);
     return true;

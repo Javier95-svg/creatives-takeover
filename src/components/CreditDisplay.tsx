@@ -26,7 +26,7 @@ interface CreditDisplayProps {
 }
 
 export function CreditDisplay({ variant = "navigation", showPurchaseButton = false }: CreditDisplayProps) {
-  const { balance, monthlyQuota, loading, refreshBalance, CREDIT_COSTS } = useCredits();
+  const { balance, monthlyQuota, heldCredits, loading, refreshBalance, CREDIT_COSTS } = useCredits();
   const navigate = useNavigate();
   const { user } = useAuth();
 
@@ -107,6 +107,15 @@ export function CreditDisplay({ variant = "navigation", showPurchaseButton = fal
                 <CreditPriceList />
               </div>
 
+              {heldCredits > 0 && (
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-muted-foreground">Temporarily Held:</span>
+                  <Badge variant="secondary" className="text-xs">
+                    {heldCredits} credits
+                  </Badge>
+                </div>
+              )}
+
               <DropdownMenuItem
                 className="cursor-pointer"
                 onSelect={() => navigate('/account#credit-activity')}
@@ -177,6 +186,15 @@ export function CreditDisplay({ variant = "navigation", showPurchaseButton = fal
               {getBalanceText()}
             </Badge>
           </div>
+
+          {heldCredits > 0 && (
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-muted-foreground">Temporarily Held:</span>
+              <Badge variant="secondary" className="text-sm px-3 py-1">
+                {heldCredits} credits
+              </Badge>
+            </div>
+          )}
 
           <div className="space-y-2">
             <h4 className="font-medium text-foreground text-sm">Credit Costs:</h4>

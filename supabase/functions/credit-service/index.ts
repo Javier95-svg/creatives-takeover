@@ -5,6 +5,11 @@ import { withIdempotency } from "../_shared/idempotency.ts";
 import { CREDIT_COSTS } from '../_shared/credit-constants.ts';
 import { checkAndDeductCredits, getUserFromAuth } from '../_shared/credit-deduction.ts';
 import { type EnforcedFeature } from '../_shared/plan-enforcement.ts';
+import {
+  finalizeMVPBuilderCredits,
+  releaseMVPBuilderCredits,
+  reserveMVPBuilderCredits,
+} from '../_shared/mvp-builder-credit-reservations.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -358,6 +363,49 @@ serve(withErrorBoundary(async function handler(req: Request) {
           }
 
           return new Response(JSON.stringify(result), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+
+        case 'reserveMVPBuilderCredits': {
+          if (!idempotencyKey) {
+            return new Response(JSON.stringify({ error: 'Idempotency-Key header is required for reserveMVPBuilderCredits' }), {
+              status: 400,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            });
+          }
+          const result = await reserveMVPBuilderCredits(
+            effectiveUserId!,
+            String(params.featureCode || ''),
+            Number(params.amount || 0),
+            idempotencyKey,
+            (params.metadata as Record<string, unknown> | undefined) ?? {}
+          );
+          return new Response(JSON.stringify(result), {
+            status: result.success ? 200 : result.errorCode === 'INSUFFICIENT_CREDITS' ? 402 : 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+
+        case 'finalizeMVPBuilderCredits': {
+          const result = await finalizeMVPBuilderCredits(
+            String(params.reservationId || ''),
+            (params.metadata as Record<string, unknown> | undefined) ?? {}
+          );
+          return new Response(JSON.stringify(result), {
+            status: result.success ? 200 : 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+
+        case 'releaseMVPBuilderCredits': {
+          const result = await releaseMVPBuilderCredits(
+            String(params.reservationId || ''),
+            String(params.releaseReason || 'MVP Builder action released'),
+            (params.metadata as Record<string, unknown> | undefined) ?? {}
+          );
+          return new Response(JSON.stringify(result), {
+            status: result.success ? 200 : 400,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }
           });
         }
