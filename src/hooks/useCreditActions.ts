@@ -13,6 +13,7 @@ import { createIdempotencyKey } from '@/lib/idempotency';
 import { trackCreditActionCompleted } from '@/lib/analytics';
 import { trackActivity } from '@/lib/activity';
 import { isMVPBuilderCreditFeature, resolveMVPBuilderChargeAmount } from '@/lib/mvpBuilderCredits';
+import { isAdminEmail } from '@/lib/admin';
 
 const CREDIT_FEATURE_LABELS: Record<CreditFeature, string> = {
   LAUNCH_REPORT: 'Launch Report Generation',
@@ -212,6 +213,11 @@ export const useCreditActions = () => {
       if (!user) {
         toast.error('Please sign in to use this feature.');
         return null;
+      }
+
+      // Admin bypasses all credit and plan checks
+      if (isAdminEmail(user.email)) {
+        return 0;
       }
 
       if (creditsLoading) {

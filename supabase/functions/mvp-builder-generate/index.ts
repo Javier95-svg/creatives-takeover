@@ -807,8 +807,14 @@ serve(async (req: Request) => {
     );
   }
 
+  const ADMIN_EMAIL = "admin@creatives-takeover.com";
+
   const user = await getUserFromAuth(req);
   if (!user) return errorStream("Authentication required", "UNAUTHORIZED");
+
+  const isAdminUser =
+    typeof user.email === "string" &&
+    user.email.toLowerCase() === ADMIN_EMAIL;
 
   const template  = normalizeTemplate(body.template ?? (body.setupInput as Record<string, unknown> | undefined)?.template);
   const palette   = normalizePalette(body.palettePreference ?? (body.setupInput as Record<string, unknown> | undefined)?.palettePreference);
@@ -816,30 +822,40 @@ serve(async (req: Request) => {
   const creditFeature = ACTION_CONFIG[classifiedAction].feature;
   const creditCost    = CREDIT_COSTS[creditFeature];
   const idempotencyKey = req.headers.get("Idempotency-Key") ?? crypto.randomUUID();
-  const reservation = await reserveMVPBuilderCredits(
-    userId,
-    creditFeature,
-    creditCost,
-    idempotencyKey,
-    {
-      entitlementFeature: creditFeature,
-      featureCode: creditFeature,
-      mvpBuilderActionType: classifiedAction,
-      projectId: typeof body.projectId === "string" ? body.projectId : undefined,
-      currentVersion: typeof body.currentVersion === "number" ? body.currentVersion : undefined,
-    }
-  );
 
-  if (!reservation.success || !reservation.reservationId) {
-    return errorStream(
-      reservation.errorCode === "INSUFFICIENT_CREDITS"
-        ? `You need ${creditCost} credits for this MVP Builder action. Upgrade your plan or buy a credit pack.`
-        : "Unable to reserve credits. Please try again.",
-      reservation.errorCode
+  let reservationId: string;
+  let heldCredits: number;
+
+  if (isAdminUser) {
+    // Admin account: bypass all credit reservation — generate freely
+    reservationId = "admin-bypass";
+    heldCredits = 0;
+  } else {
+    const reservation = await reserveMVPBuilderCredits(
+      userId,
+      creditFeature,
+      creditCost,
+      idempotencyKey,
+      {
+        entitlementFeature: creditFeature,
+        featureCode: creditFeature,
+        mvpBuilderActionType: classifiedAction,
+        projectId: typeof body.projectId === "string" ? body.projectId : undefined,
+        currentVersion: typeof body.currentVersion === "number" ? body.currentVersion : undefined,
+      }
     );
+
+    if (!reservation.success || !reservation.reservationId) {
+      return errorStream(
+        reservation.errorCode === "INSUFFICIENT_CREDITS"
+          ? `You need ${creditCost} credits for this MVP Builder action. Top up or upgrade your plan to continue.`
+          : "Unable to reserve credits. Please try again.",
+        reservation.errorCode
+      );
+    }
+    reservationId = reservation.reservationId;
+    heldCredits = Number(reservation.heldCredits ?? 0);
   }
-  const reservationId = reservation.reservationId;
-  const heldCredits = Number(reservation.heldCredits ?? 0);
 
   const selectedModels = normalizeSelectedModels(body.selectedModels);
   const textCapableModels = selectedModels.filter((m) => HTML_CAPABLE_MODEL_SET.has(m));
@@ -938,10 +954,10 @@ serve(async (req: Request) => {
         type: "credit-reserved",
         reservationId,
         reservationStatus: "pending",
-        listedCreditCost: creditCost,
+        listedCreditCost: isAdminUser ? 0 : creditCost,
         heldCredits,
         creditsUsed: 0,
-        balanceAfter: reservation.balanceAfter,
+        balanceAfter: undefined,
       }));
 
       while (!sawStop) {
@@ -984,23 +1000,23 @@ serve(async (req: Request) => {
 
       if (classifiedAction === "chat") {
         if (!fullText.trim()) {
-          const released = await releaseMVPBuilderCredits(reservationId, "Empty MVP Builder chat response");
-          await writer.write(enc({
-            type: "credit-released",
-            ...released,
-            releaseReason: "empty_output",
-          }));
+          if (!isAdminUser) {
+            const released = await releaseMVPBuilderCredits(reservationId, "Empty MVP Builder chat response");
+            await writer.write(enc({ type: "credit-released", ...released, releaseReason: "empty_output" }));
+          }
           await writer.write(enc({ type: "error", error: "The assistant returned an empty reply. Held credits were released.", errorCode: "EMPTY_OUTPUT" }));
           await writer.write(encDone());
           return;
         }
 
-        const finalized = await finalizeMVPBuilderCredits(reservationId, {
-          mvpBuilderActionType: classifiedAction,
-          completionBoundary: "successful_chat_reply",
-        });
-        if (!finalized.success) throw new Error("Unable to finalize MVP Builder chat credits");
-        await writer.write(enc({ type: "credit-finalized", ...finalized }));
+        if (!isAdminUser) {
+          const finalized = await finalizeMVPBuilderCredits(reservationId, {
+            mvpBuilderActionType: classifiedAction,
+            completionBoundary: "successful_chat_reply",
+          });
+          if (!finalized.success) throw new Error("Unable to finalize MVP Builder chat credits");
+          await writer.write(enc({ type: "credit-finalized", ...finalized }));
+        }
         await writer.write(enc({ type: "complete", model: selectedModel, requestedModels: selectedModels }));
         await writer.write(encDone());
         return;
@@ -1028,15 +1044,17 @@ serve(async (req: Request) => {
           );
           validated = validateOutput(parseModelJson(repaired));
         } catch (repairError) {
-          const released = await releaseMVPBuilderCredits(
-            reservationId,
-            "Invalid MVP Builder JSON output",
-            {
-              validationError: validationError instanceof Error ? validationError.message : String(validationError),
-              repairError: repairError instanceof Error ? repairError.message : String(repairError),
+          if (!isAdminUser) {
+              const released = await releaseMVPBuilderCredits(
+                reservationId,
+                "Invalid MVP Builder JSON output",
+                {
+                  validationError: validationError instanceof Error ? validationError.message : String(validationError),
+                  repairError: repairError instanceof Error ? repairError.message : String(repairError),
+                }
+              );
+              await writer.write(enc({ type: "credit-released", ...released, releaseReason: "validation_failed" }));
             }
-          );
-          await writer.write(enc({ type: "credit-released", ...released, releaseReason: "validation_failed" }));
           await writer.write(enc({
             type: "error",
             error: "The AI returned an invalid project after repair. Held credits have been released. Please try again.",
@@ -1056,8 +1074,10 @@ serve(async (req: Request) => {
       }
 
       if (!hasMaterialProjectChange(currentProject, validated)) {
-        const released = await releaseMVPBuilderCredits(reservationId, "MVP Builder produced no material project change");
-        await writer.write(enc({ type: "credit-released", ...released, releaseReason: "no_material_change" }));
+        if (!isAdminUser) {
+          const released = await releaseMVPBuilderCredits(reservationId, "MVP Builder produced no material project change");
+          await writer.write(enc({ type: "credit-released", ...released, releaseReason: "no_material_change" }));
+        }
         await writer.write(enc({
           type: "error",
           error: "No project changes were needed. Held credits have been released.",
@@ -1067,12 +1087,14 @@ serve(async (req: Request) => {
         return;
       }
 
-      const finalized = await finalizeMVPBuilderCredits(reservationId, {
-        mvpBuilderActionType: classifiedAction,
-        completionBoundary: "valid_artifact_accepted",
-      });
-      if (!finalized.success) throw new Error("Unable to finalize MVP Builder credits");
-      await writer.write(enc({ type: "credit-finalized", ...finalized }));
+      if (!isAdminUser) {
+        const finalized = await finalizeMVPBuilderCredits(reservationId, {
+          mvpBuilderActionType: classifiedAction,
+          completionBoundary: "valid_artifact_accepted",
+        });
+        if (!finalized.success) throw new Error("Unable to finalize MVP Builder credits");
+        await writer.write(enc({ type: "credit-finalized", ...finalized }));
+      }
       await writer.write(enc({
         type: "project",
         project: outputToProject(validated, productName),
@@ -1091,10 +1113,12 @@ serve(async (req: Request) => {
     } catch (err) {
       console.error("Stream processing error:", err);
       await reader.cancel().catch(() => {});
-      const released = await releaseMVPBuilderCredits(reservationId, "Stream error", {
-        error: err instanceof Error ? err.message : String(err),
-      }).catch(() => ({ success: false }));
-      await writer.write(enc({ type: "credit-released", ...released, releaseReason: "stream_error" }));
+      if (!isAdminUser) {
+        const released = await releaseMVPBuilderCredits(reservationId, "Stream error", {
+          error: err instanceof Error ? err.message : String(err),
+        }).catch(() => ({ success: false }));
+        await writer.write(enc({ type: "credit-released", ...released, releaseReason: "stream_error" }));
+      }
       await writer.write(enc({ type: "error", error: "Stream interrupted. Held credits have been released. Please try again.", errorCode: "STREAM_ERROR" }));
       await writer.write(encDone());
     } finally {
