@@ -23,7 +23,8 @@ test('MVP Builder uses its own dismissible exhaustion dialog', () => {
 
   assert.doesNotMatch(legacyGate, /"\/mvp-builder"/);
   assert.match(builder, /isCreditExhaustedModalOpen/);
-  assert.match(builder, /!creditsLoading && creditsAvailable === 0/);
+  assert.doesNotMatch(builder, /!creditsLoading && creditsAvailable === 0/);
+  assert.match(builder, /errCode === 'INSUFFICIENT_CREDITS'/);
   assert.match(dialog, /Upgrade your plan/);
   assert.match(dialog, /navigate\('\/pricing'\)/);
   assert.match(dialog, /pack_20/);

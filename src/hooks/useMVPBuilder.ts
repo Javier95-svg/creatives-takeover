@@ -2719,11 +2719,6 @@ export function useMVPBuilder() {
           });
       const featureLabel = getMVPActionLabel(creditFeature);
 
-      if (!creditsLoading && creditsAvailable === 0) {
-        setIsCreditExhaustedModalOpen(true);
-        return;
-      }
-
       if (githubRepoSession) {
         const required = ensureCredits(creditFeature, {
           featureName: featureLabel,
@@ -3384,10 +3379,6 @@ export function useMVPBuilder() {
         toast('Loading credit balance...');
         return;
       }
-      if (creditsAvailable === 0) {
-        setIsCreditExhaustedModalOpen(true);
-        return;
-      }
       const reservation = await reserveMVPBuilderCredits('APP_BUILDER_RESTORE', {
         featureName: getMVPActionLabel('APP_BUILDER_RESTORE'),
         idempotencyKey: `restore-${snapshot.id}`,
@@ -3458,11 +3449,6 @@ export function useMVPBuilder() {
       toast('Loading credit balance...');
       return;
     }
-    if (creditsAvailable === 0) {
-      setIsCreditExhaustedModalOpen(true);
-      return;
-    }
-
     await saveProject({ silent: true });
     setIsDeploying(true);
     try {

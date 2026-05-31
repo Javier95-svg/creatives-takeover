@@ -240,7 +240,9 @@ export const useCreditActions = () => {
 
       if (options.allowPartialSpend && isMVPBuilderCreditFeature(feature)) {
         if (totalAvailable === 0) {
-          return null;
+          // The browser cache can briefly be stale or unavailable. MVP Builder
+          // actions ask the authenticated backend wallet to make the final call.
+          return requiredCredits;
         }
         return resolveMVPBuilderChargeAmount(feature, requiredCredits, totalAvailable, true);
       }
