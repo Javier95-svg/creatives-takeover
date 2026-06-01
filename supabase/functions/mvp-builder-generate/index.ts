@@ -59,7 +59,7 @@ const ACTION_CONFIG: Record<MVPBuilderActionType, { feature: CreditFeature; temp
   add_page:        { feature: "APP_BUILDER_ADD_PAGE",        temperature: 0.3,  maxTokens: 16000, model: "claude-sonnet-4-6" },
   add_feature:     { feature: "APP_BUILDER_ADD_FEATURE",     temperature: 0.35, maxTokens: 16000, model: "claude-sonnet-4-6" },
   design_overhaul: { feature: "APP_BUILDER_DESIGN_OVERHAUL", temperature: 0.45, maxTokens: 16000, model: "claude-sonnet-4-6" },
-  chat:            { feature: "APP_BUILDER_CHAT",            temperature: 0.35, maxTokens: 1200,  model: "claude-haiku-4-5-20251001" },
+  chat:            { feature: "APP_BUILDER_CHAT",            temperature: 0.4,  maxTokens: 2000,  model: "claude-haiku-4-5-20251001" },
 };
 
 function getActionFeatureName(feature: CreditFeature): string {
@@ -197,8 +197,25 @@ You are redesigning the visual style of an existing project. Rules:
 5. Return all files that contain visual styling changes, in their entirety.`,
 
   chat: `
-You are a senior engineer and product person talking with a founder about their project. Reply conversationally: short paragraphs, direct, no fluff. Sound like a smart colleague, not a customer support bot. Never use dashes (no em dash, en dash, or hyphen as a pause); use commas or periods instead. No bullet points unless they genuinely help (e.g. a short numbered list of options). No markdown headers. No meta-commentary like "Great question!". Just answer and move the conversation forward.`,
+You are in chat mode. Reply conversationally in plain English.`,
 };
+
+// Chat mode uses its own standalone system prompt. It must NOT inherit the
+// code-generation BASE prompt (that forces JSON output and breaks conversation).
+const CHAT_SYSTEM_PROMPT = `You are a senior full-stack engineer and product advisor pairing with a founder inside an MVP builder tool. You are in CHAT mode: you talk with the founder, you do NOT write code or generate files.
+
+How to respond:
+- Reply in plain, natural English, like a sharp colleague messaging back. Short paragraphs. Get to the point.
+- Read the conversation so far and the current project context, and give specific answers that reference what they actually built or asked. Never give generic boilerplate when you have real context to use.
+- If they ask what something does, how to improve it, what to build next, a tradeoff, or how something works, answer directly and concretely.
+- If they ask you to change or build something, say in a sentence what you would do, then tell them to switch to Build mode to make it happen. Do not output the code yourself.
+- If a question is genuinely ambiguous, ask one short clarifying question instead of guessing.
+
+Hard rules:
+- Never use dashes. No em dash, no en dash, no hyphen as a pause. Use commas or periods.
+- No JSON, no markdown headers, no bullet lists unless they explicitly ask for a list of options.
+- Do not dump code. A tiny inline snippet is fine only if they directly ask for one.
+- No filler like "Great question". Just answer and keep the conversation moving.`;
 
 // ─── Template requirements ────────────────────────────────────────────────────
 
@@ -638,15 +655,21 @@ function buildPrompt(params: {
   const founderContext = formatFounderContext(params.projectContext);
 
   if (params.actionType === "chat") {
-    return `Answer the founder's MVP Builder question.
+    const hasProject = params.currentProject && typeof params.currentProject === "object"
+      && Array.isArray((params.currentProject as Record<string, unknown>).files)
+      && ((params.currentProject as Record<string, unknown>).files as unknown[]).length > 0;
+    const projectBlock = hasProject
+      ? `Their current project (for reference, so your answer is specific to what they actually built):\n${JSON.stringify(params.currentProject, null, 2)}`
+      : `They have not generated a project yet.`;
+    const contextBlock = founderContext ? `\n\n${founderContext}` : "";
+    return `Use the conversation so far plus the context below to answer the founder accurately.
 
-FOUNDER QUESTION
+The founder just said:
 ${params.userMessage}
 
-CURRENT PROJECT
-${JSON.stringify(params.currentProject, null, 2)}
+${projectBlock}${contextBlock}
 
-${founderContext}`;
+Reply directly and conversationally.`;
   }
 
   if (params.actionType === "generation") {
@@ -957,9 +980,12 @@ serve(async (req: Request) => {
     }
   }
 
-  // Build the per-action system prompt
+  // Build the per-action system prompt. Chat mode uses a standalone
+  // conversational prompt; all build actions extend the code-generation BASE.
   const actionAddition = ACTION_SYSTEM_ADDITIONS[classifiedAction];
-  const systemPrompt = actionAddition
+  const systemPrompt = classifiedAction === "chat"
+    ? CHAT_SYSTEM_PROMPT
+    : actionAddition
     ? `${BASE_SYSTEM_PROMPT}\n\n---\n${actionAddition}`
     : BASE_SYSTEM_PROMPT;
 
