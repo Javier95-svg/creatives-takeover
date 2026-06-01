@@ -8,10 +8,10 @@ import { ChevronDown } from "lucide-react";
 const AboutHero = () => {
   return <section className="relative pt-32 pb-20 overflow-hidden">
       <div className="container mx-auto px-4 sm:px-6 relative z-10">
-        <div className="max-w-6xl mx-auto">
+        <div className="max-w-7xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-8 sm:gap-12 lg:gap-12 items-stretch">
             {/* Text Content */}
-          <div className="space-y-6 sm:space-y-8 order-2 lg:order-1 lg:flex lg:flex-col lg:justify-center lg:-translate-y-4">
+          <div className="space-y-6 sm:space-y-8 order-2 lg:order-1 lg:flex lg:flex-col lg:justify-center lg:-translate-y-6">
             <div>
               <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-[4rem] xl:text-[4.25rem] font-space-grotesk font-bold tracking-[-0.065em] mb-4 sm:mb-6 gradient-text leading-[1.02] animate-text-shimmer text-foreground">
                 <span className="block lg:whitespace-nowrap">The Future Belongs</span>
