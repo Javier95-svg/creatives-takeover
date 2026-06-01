@@ -9,11 +9,11 @@ const AboutHero = () => {
   return <section className="relative pt-32 pb-20 overflow-hidden">
       <div className="container mx-auto px-4 sm:px-6 relative z-10">
         <div className="max-w-6xl mx-auto">
-          <div className="grid lg:grid-cols-2 gap-8 sm:gap-12 lg:gap-10 items-center">
+          <div className="grid lg:grid-cols-2 gap-8 sm:gap-12 lg:gap-12 items-stretch">
             {/* Text Content */}
-          <div className="space-y-6 sm:space-y-8 order-2 lg:order-1 lg:self-center">
+          <div className="space-y-6 sm:space-y-8 order-2 lg:order-1 lg:flex lg:flex-col lg:justify-center">
             <div>
-              <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-[4.5rem] xl:text-[4.75rem] font-space-grotesk font-bold tracking-[-0.065em] mb-4 sm:mb-6 gradient-text leading-[1.02] animate-text-shimmer text-foreground">
+              <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-[4rem] xl:text-[4.25rem] font-space-grotesk font-bold tracking-[-0.065em] mb-4 sm:mb-6 gradient-text leading-[1.02] animate-text-shimmer text-foreground">
                 <span className="block lg:whitespace-nowrap">The Future Belongs</span>
                 <span className="block lg:whitespace-nowrap">to Founders</span>
               </h1>
@@ -28,7 +28,7 @@ const AboutHero = () => {
             </div>
 
           {/* Hero Image */}
-          <div className="relative animate-slide-in-right order-1 lg:order-2 lg:self-center" style={{
+          <div className="relative animate-slide-in-right order-1 lg:order-2 lg:flex lg:flex-col lg:justify-center" style={{
             animationDelay: '0.3s'
           }}>
             <div className="grid grid-cols-2 gap-2 sm:gap-4">
