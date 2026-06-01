@@ -148,17 +148,22 @@ async function fetchMarketSignals(serviceClient: ReturnType<typeof createClient>
         ? request.guidedInput?.specificity || request.guidedInput?.persona.role
         : "";
 
-    const validationResponse = await serviceClient.functions.invoke("market-validation-engine", {
-      body: {
-        business_idea: businessIdea,
-        target_market: targetMarket,
-      },
-      headers: {
-        Authorization: authHeader,
-      },
-    });
+    // Enrichment is optional. Cap it so a slow market-validation call can never
+    // eat the draft-generation budget and push the client into a timeout.
+    const validationResponse = await Promise.race([
+      serviceClient.functions.invoke("market-validation-engine", {
+        body: {
+          business_idea: businessIdea,
+          target_market: targetMarket,
+        },
+        headers: {
+          Authorization: authHeader,
+        },
+      }),
+      new Promise<{ data: null }>((resolve) => setTimeout(() => resolve({ data: null }), 10000)),
+    ]);
 
-    const score = validationResponse.data?.validation_score;
+    const score = (validationResponse as { data?: { validation_score?: any } })?.data?.validation_score;
     const competitors = (score?.top_competitors || [])
       .slice(0, 3)
       .map((item: any) => ({
@@ -364,11 +369,23 @@ serve(async (req) => {
       });
 
       if (!completion.ok) {
-        throw new Error(`OpenAI API Error: ${completion.status}`);
+        const errBody = await completion.text().catch(() => "");
+        throw new Error(`OpenAI API Error: ${completion.status} ${errBody.slice(0, 200)}`.trim());
       }
 
       const aiData = await completion.json();
-      const parsed = JSON.parse(aiData.choices[0].message.content);
+      const seedContent = aiData?.choices?.[0]?.message?.content;
+      if (typeof seedContent !== "string" || !seedContent.trim()) {
+        throw new Error("OpenAI returned an empty persona suggestion");
+      }
+      let parsed: ReturnType<typeof JSON.parse>;
+      try {
+        parsed = JSON.parse(seedContent);
+      } catch (parseError) {
+        throw new Error(
+          `Failed to parse persona suggestion JSON: ${parseError instanceof Error ? parseError.message : String(parseError)}`,
+        );
+      }
 
       return new Response(JSON.stringify({
         success: true,

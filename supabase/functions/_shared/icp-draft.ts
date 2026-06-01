@@ -514,30 +514,58 @@ export async function generateIcpDraftArtifact({
     competitorLinks: enrichment?.competitorLinks ?? [],
   };
 
-  const completion = await fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${openaiApiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: "gpt-4o",
-      response_format: { type: "json_object" },
-      temperature: 0.35,
-      max_tokens: 3200,
-      messages: [
-        { role: "system", content: "Return valid JSON only." },
-        { role: "user", content: buildDraftPrompt(request, resolvedEnrichment) },
-      ],
-    }),
-  });
+  // Hard timeout so a hung OpenAI request fails fast and clean instead of
+  // letting the client hit its own timeout with no diagnostic.
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 38000);
+  let completion: Response;
+  try {
+    completion = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      signal: controller.signal,
+      headers: {
+        Authorization: `Bearer ${openaiApiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "gpt-4o",
+        response_format: { type: "json_object" },
+        temperature: 0.35,
+        // A full 4-section ICP draft overruns a low ceiling -> the JSON gets
+        // truncated and JSON.parse throws. Give it enough room to complete.
+        max_tokens: 6000,
+        messages: [
+          { role: "system", content: "Return valid JSON only." },
+          { role: "user", content: buildDraftPrompt(request, resolvedEnrichment) },
+        ],
+      }),
+    });
+  } finally {
+    clearTimeout(timeoutId);
+  }
 
   if (!completion.ok) {
-    throw new Error(`OpenAI API Error: ${completion.status}`);
+    const errBody = await completion.text().catch(() => "");
+    throw new Error(`OpenAI API Error: ${completion.status} ${errBody.slice(0, 200)}`.trim());
   }
 
   const aiData = await completion.json();
-  const parsed = JSON.parse(aiData.choices[0].message.content);
+  const choice = aiData?.choices?.[0];
+  const content = choice?.message?.content;
+  if (typeof content !== "string" || !content.trim()) {
+    throw new Error("OpenAI returned an empty ICP draft response");
+  }
+  if (choice?.finish_reason === "length") {
+    throw new Error("ICP draft response was truncated before completion");
+  }
+  let parsed: ReturnType<typeof JSON.parse>;
+  try {
+    parsed = JSON.parse(content);
+  } catch (parseError) {
+    throw new Error(
+      `Failed to parse ICP draft JSON: ${parseError instanceof Error ? parseError.message : String(parseError)}`,
+    );
+  }
   const draftDocument = normalizeDraftDocument(parsed?.draftDocument ?? {}, resolvedEnrichment);
 
   return {

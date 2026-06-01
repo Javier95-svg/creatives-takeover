@@ -73,9 +73,12 @@ import { consumeStoredIcpSeed, normalizeIcpSeed } from "@/lib/icpSeed";
 import { markFirstArtifactCreated, sendRetentionEmail } from "@/lib/retentionSystem";
 
 const ICP_RESULTS_TABLE = "icp_analysis_results";
-const SEED_TIMEOUT_MS = 20000;
-const PREVIEW_TIMEOUT_MS = 45000;
-const SAVE_TIMEOUT_MS = 55000;
+const SEED_TIMEOUT_MS = 25000;
+// Backend worst case is bounded at ~50s (enrichment <=10s + OpenAI <=38s), so
+// the client must wait past that or it aborts a generation that would have
+// succeeded. Generous ceilings; the loader streams progress meanwhile.
+const PREVIEW_TIMEOUT_MS = 65000;
+const SAVE_TIMEOUT_MS = 75000;
 const SEED_ANALYSIS_MIN_MS = 2200;
 const ICP_ANALYZER_ERROR_MESSAGE = "Something went wrong — please try again.";
 const RETRY_DELAY_MS = 2000;
@@ -1443,12 +1446,12 @@ const ICPBuilder: React.FC = () => {
           type="button"
           role="button"
           tabIndex={0}
-          className="group relative overflow-hidden rounded-[2rem] border border-border/60 bg-white/80 p-6 text-left shadow-[0_28px_90px_-52px_rgba(15,23,42,0.3)] backdrop-blur transition-transform duration-300 hover:-translate-y-1 hover:border-[#32b8c6]/40 hover:shadow-[0_32px_100px_-54px_rgba(50,184,198,0.4)] motion-safe:animate-[glow_4.8s_ease-in-out_infinite_alternate] dark:bg-slate-950/70 [&_*]:pointer-events-none"
+          className="group relative overflow-hidden rounded-[2rem] border border-border/60 bg-white/80 p-6 text-left shadow-[0_28px_90px_-52px_rgba(15,23,42,0.3)] backdrop-blur transition-transform duration-300 hover:-translate-y-1 hover:border-[#32b8c6]/40 hover:shadow-[0_32px_100px_-54px_rgba(50,184,198,0.4)] motion-safe:animate-[glow_4.8s_ease-in-out_infinite_alternate] dark:bg-slate-950/70"
           onClick={handleSelectFastMode}
           onKeyDown={(event) => handleModeCardKeyDown(event, handleSelectFastMode)}
         >
           <div className="pointer-events-none absolute inset-0 rounded-[2rem] border border-[#32b8c6]/15 opacity-60 motion-safe:animate-[pulse-slow_4s_ease-in-out_infinite]" />
-          <div className="pointer-events-none relative z-10">
+          <div className="relative z-10">
             <div className="flex items-center gap-2">
               <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#32b8c6]">Fast Mode</p>
               <span className="rounded-full border border-[#32b8c6]/30 bg-[#32b8c6]/10 px-2.5 py-0.5 text-[11px] font-semibold text-[#32b8c6]">~60 sec</span>
@@ -1468,7 +1471,7 @@ const ICPBuilder: React.FC = () => {
           type="button"
           role="button"
           tabIndex={0}
-          className="group relative overflow-hidden rounded-[2rem] border border-border/60 bg-white/80 p-6 text-left shadow-[0_28px_90px_-52px_rgba(15,23,42,0.3)] backdrop-blur transition-transform duration-300 hover:-translate-y-1 hover:border-[#32b8c6]/40 hover:shadow-[0_32px_100px_-54px_rgba(50,184,198,0.4)] motion-safe:animate-[glow_4.8s_ease-in-out_infinite_alternate] dark:bg-slate-950/70 [&_*]:pointer-events-none"
+          className="group relative overflow-hidden rounded-[2rem] border border-border/60 bg-white/80 p-6 text-left shadow-[0_28px_90px_-52px_rgba(15,23,42,0.3)] backdrop-blur transition-transform duration-300 hover:-translate-y-1 hover:border-[#32b8c6]/40 hover:shadow-[0_32px_100px_-54px_rgba(50,184,198,0.4)] motion-safe:animate-[glow_4.8s_ease-in-out_infinite_alternate] dark:bg-slate-950/70"
           style={{ animationDelay: "0.45s" }}
           onClick={handleSelectGuidedMode}
           onKeyDown={(event) => handleModeCardKeyDown(event, handleSelectGuidedMode)}
@@ -1477,7 +1480,7 @@ const ICPBuilder: React.FC = () => {
             className="pointer-events-none absolute inset-0 rounded-[2rem] border border-[#32b8c6]/15 opacity-60 motion-safe:animate-[pulse-slow_4s_ease-in-out_infinite]"
             style={{ animationDelay: "0.45s" }}
           />
-          <div className="pointer-events-none relative z-10">
+          <div className="relative z-10">
             <div className="flex items-center gap-2">
               <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#32b8c6]">Guided Mode</p>
               <span className="rounded-full border border-[#32b8c6]/30 bg-[#32b8c6]/10 px-2.5 py-0.5 text-[11px] font-semibold text-[#32b8c6]">~4 min, 4 steps</span>
