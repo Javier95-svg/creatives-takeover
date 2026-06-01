@@ -9,13 +9,13 @@ const AboutHero = () => {
   return <section className="relative pt-32 pb-20 overflow-hidden">
       <div className="container mx-auto px-4 sm:px-6 relative z-10">
         <div className="max-w-6xl mx-auto">
-          <div className="grid lg:grid-cols-2 gap-8 sm:gap-12 items-center">
+          <div className="grid lg:grid-cols-2 gap-8 sm:gap-12 lg:gap-10 items-center">
             {/* Text Content */}
-          <div className="space-y-6 sm:space-y-8 order-2 lg:order-1">
+          <div className="space-y-6 sm:space-y-8 order-2 lg:order-1 lg:self-center">
             <div>
-              <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-6xl font-space-grotesk font-bold tracking-tight mb-4 sm:mb-6 gradient-text leading-tight animate-text-shimmer text-foreground">
-                <span className="block">The Future Belongs</span>
-                <span className="block">to Founders</span>
+              <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-[4.5rem] xl:text-[4.75rem] font-space-grotesk font-bold tracking-[-0.065em] mb-4 sm:mb-6 gradient-text leading-[1.02] animate-text-shimmer text-foreground">
+                <span className="block lg:whitespace-nowrap">The Future Belongs</span>
+                <span className="block lg:whitespace-nowrap">to Founders</span>
               </h1>
               <p className="text-[15px] sm:text-base text-foreground/90 leading-relaxed">We're entering a world where AI and automation will eliminate most traditional jobs but also unlock unprecedented entrepreneurial opportunities. Everyone will need to think and act like a founder, and we're here to make that transition possible.</p>
             </div>
@@ -28,7 +28,7 @@ const AboutHero = () => {
             </div>
 
           {/* Hero Image */}
-          <div className="relative animate-slide-in-right order-1 lg:order-2" style={{
+          <div className="relative animate-slide-in-right order-1 lg:order-2 lg:self-center" style={{
             animationDelay: '0.3s'
           }}>
             <div className="grid grid-cols-2 gap-2 sm:gap-4">
