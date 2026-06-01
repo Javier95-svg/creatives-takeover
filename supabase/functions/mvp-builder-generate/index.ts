@@ -50,14 +50,16 @@ const LANDING_TEMPLATES = new Set<MVPBuilderTemplateId>([
 // model: which Claude to use by default for each action.
 // Sonnet for quality-critical operations; Haiku for constrained, deterministic tasks.
 // If the user explicitly selects a non-default model in the UI, their choice takes precedence.
+// maxTokens must comfortably exceed a full ~700-line page embedded (escaped) in
+// JSON, or the output gets truncated mid-string -> "Unterminated string in JSON".
 const ACTION_CONFIG: Record<MVPBuilderActionType, { feature: CreditFeature; temperature: number; maxTokens: number; model: string }> = {
-  generation:      { feature: "APP_BUILDER_GENERATE",        temperature: 0.45, maxTokens: 8192, model: "claude-sonnet-4-6" },
-  targeted_edit:   { feature: "APP_BUILDER_REFINE",          temperature: 0.25, maxTokens: 6000, model: "claude-haiku-4-5-20251001" },
-  debug:           { feature: "APP_BUILDER_DEBUG",           temperature: 0.15, maxTokens: 4000, model: "claude-haiku-4-5-20251001" },
-  add_page:        { feature: "APP_BUILDER_ADD_PAGE",        temperature: 0.3,  maxTokens: 8192, model: "claude-sonnet-4-6" },
-  add_feature:     { feature: "APP_BUILDER_ADD_FEATURE",     temperature: 0.35, maxTokens: 8192, model: "claude-sonnet-4-6" },
-  design_overhaul: { feature: "APP_BUILDER_DESIGN_OVERHAUL", temperature: 0.45, maxTokens: 8192, model: "claude-sonnet-4-6" },
-  chat:            { feature: "APP_BUILDER_CHAT",            temperature: 0.35, maxTokens: 1200, model: "claude-haiku-4-5-20251001" },
+  generation:      { feature: "APP_BUILDER_GENERATE",        temperature: 0.45, maxTokens: 16000, model: "claude-sonnet-4-6" },
+  targeted_edit:   { feature: "APP_BUILDER_REFINE",          temperature: 0.25, maxTokens: 12000, model: "claude-haiku-4-5-20251001" },
+  debug:           { feature: "APP_BUILDER_DEBUG",           temperature: 0.15, maxTokens: 10000, model: "claude-haiku-4-5-20251001" },
+  add_page:        { feature: "APP_BUILDER_ADD_PAGE",        temperature: 0.3,  maxTokens: 16000, model: "claude-sonnet-4-6" },
+  add_feature:     { feature: "APP_BUILDER_ADD_FEATURE",     temperature: 0.35, maxTokens: 16000, model: "claude-sonnet-4-6" },
+  design_overhaul: { feature: "APP_BUILDER_DESIGN_OVERHAUL", temperature: 0.45, maxTokens: 16000, model: "claude-sonnet-4-6" },
+  chat:            { feature: "APP_BUILDER_CHAT",            temperature: 0.35, maxTokens: 1200,  model: "claude-haiku-4-5-20251001" },
 };
 
 function getActionFeatureName(feature: CreditFeature): string {
