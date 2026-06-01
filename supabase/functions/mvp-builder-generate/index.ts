@@ -78,7 +78,7 @@ Core principles:
 
 3. CLEAN, READABLE CODE. Well-named variables and functions. Semantic HTML. Proper ARIA labels. Code that a junior developer can understand without comments.
 
-4. REAL CONTENT ONLY. Use the founder's actual product name, target audience, and pain language throughout. Never use Lorem ipsum, bracket placeholders like [Your Company], or the word "placeholder". Every sentence must read as if it belongs in a live product.
+4. REAL CONTENT ONLY, TRUE TO THE REQUEST. Build exactly what the user asked for — the product, audience, and industry named in their request define the content. Invent a fitting brand name and specific, believable copy for THAT product. Only use the founder's own product/audience details when the user's request is about their own product or leaves the subject unspecified; never override the user's stated subject with the founder's. Never use Lorem ipsum, bracket placeholders like [Your Company], or the word "placeholder". Every sentence must read as if it belongs in a live product.
 
 5. PRODUCTION-READY DEFAULTS. Every generated app must include: a unique <title> tag, a <meta name="description"> tag, Open Graph tags (og:title, og:description, og:type), and PostHog analytics initialized with the literal string POSTHOG_KEY (the platform substitutes the real key at deploy time). Track: page_view on load, cta_clicked on every primary CTA button, form_submitted on every form.
 
@@ -629,28 +629,39 @@ ${founderContext}`;
   }
 
   if (params.actionType === "generation") {
-    return `Generate a complete ${params.template} application for the following product.
+    // The user's typed request is authoritative. Founder/setup data is optional
+    // background only — it must never override the subject the user asked for.
+    const backgroundLines: string[] = [];
+    if (productName && productName !== "Untitled MVP") {
+      backgroundLines.push(`- The founder's own product (tone/quality reference only — NOT the subject unless the request asks for it): ${productName}`);
+    }
+    if (problem) backgroundLines.push(`- A problem the founder has described before: ${problem}`);
+    if (audience) backgroundLines.push(`- The founder's usual audience: ${audience}`);
+    if (painLanguage) backgroundLines.push(`- Pain language the founder tends to use: ${painLanguage}`);
+    if (tagline) backgroundLines.push(`- An existing tagline: ${tagline}`);
+    const background = [backgroundLines.join("\n"), founderContext].filter(Boolean).join("\n");
 
-PRODUCT CONTEXT
-Product name: ${productName}
-Problem being solved: ${problem || "Infer from the founder request and context below."}
-Target audience: ${audience || "Early-stage startup customers"}
-How the product solves it: ${description}
-Key language from real users: ${painLanguage || "Use concrete, specific language inferred from the context."}${tagline ? `\nTagline: ${tagline}` : ""}
+    return `Build a complete ${params.template} based on the user's request.
+
+THE USER'S REQUEST (authoritative — this defines exactly what to build):
+${params.userMessage || description}
+
+HOW TO INTERPRET THE REQUEST
+- The request above is the single source of truth for WHAT to build: the product/idea, its audience, its industry, and its purpose. Build precisely that.
+- If the request names a subject (e.g. "a landing page for trading learners"), that subject IS the product. Invent a fitting brand name, realistic copy, audience, and value props for THAT subject.
+- Do NOT substitute the founder's own product or a different topic. The background section below is reference only — use it solely to fill details the request leaves unspecified (e.g. visual taste), and ignore anything in it that conflicts with the request.
 
 GENERATION REQUIREMENTS
 - Template: ${params.template}
 - Color palette: ${params.palette}. ${PALETTE_GUIDANCE[params.palette]}
-- Use the founder's actual product name, audience, and pain language throughout. Zero placeholder text.
+- Write complete, specific copy tailored to the REQUESTED product. Zero placeholder text, zero Lorem ipsum.
 - Include PostHog: posthog.init('POSTHOG_KEY', {api_host: 'https://app.posthog.com'})
 - Track: page_view on load, cta_clicked on all primary CTAs, form_submitted on all form submissions.
 - Every page state and section must have complete, real copy.
 
 ${TEMPLATE_REQUIREMENTS[params.template]}
 
-${params.template === "blank" ? `CUSTOM PROMPT\n${customPrompt}` : ""}
-
-${founderContext}`;
+${params.template === "blank" ? `ADDITIONAL DETAIL FROM THE USER\n${customPrompt}\n` : ""}${background ? `OPTIONAL FOUNDER BACKGROUND (reference only — never override the request above):\n${background}` : ""}`;
   }
 
   const actionInstruction: Record<MVPBuilderActionType, string> = {
