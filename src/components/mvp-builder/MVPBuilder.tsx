@@ -83,6 +83,12 @@ export const MVPBuilder: React.FC = () => {
     saveSupabaseCredentials,
     refreshSupabaseConnection,
     closeCreditExhaustedModal,
+    savedProjects,
+    loadProject,
+    saveProject,
+    hasUnsavedChanges,
+    isSavingProject,
+    lastSavedAt,
   } = useMVPBuilder();
 
   const [mobileTab, setMobileTab] = useState<MobileTab>('chat');
@@ -180,6 +186,13 @@ export const MVPBuilder: React.FC = () => {
         creditsAvailable={creditsAvailable}
         integrations={integrations}
         onNewProject={resetProject}
+        savedProjects={savedProjects}
+        onLoadProject={loadProject}
+        onSaveProject={() => saveProject({ silent: false })}
+        hasUnsavedChanges={hasUnsavedChanges}
+        isSavingProject={isSavingProject}
+        lastSavedAt={lastSavedAt}
+        hasActiveProject={projectFiles.length > 0 || messages.length > 0}
       />
       <MVPBuilderCreditExhaustedDialog
         open={isCreditExhaustedModalOpen}
