@@ -13,15 +13,15 @@ const AboutHero = () => {
             {/* Text Content */}
           <div className="space-y-6 sm:space-y-8 order-2 lg:order-1">
             <div>
-              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-4 sm:mb-6 gradient-text leading-tight animate-text-shimmer text-foreground">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 sm:mb-6 gradient-text leading-tight animate-text-shimmer text-foreground">
                 The Future Belongs to Founders
               </h1>
               <p className="text-base sm:text-lg text-foreground/90 leading-relaxed">We're entering a world where AI and automation will eliminate most traditional jobs but also unlock unprecedented entrepreneurial opportunities. Everyone will need to think and act like a founder, and we're here to make that transition possible.</p>
             </div>
               
             <div className="space-y-3 sm:space-y-4">
-              <p className="text-base text-foreground/85 leading-relaxed">The biggest challenge isn't coming up with ideas but moving them from scattered brainstorming into real execution. Creatives Takeover transforms raw thoughts into clear, actionable roadmaps and creates an ecosystem where founders, entrepreneurs, creators, and freelancers collaborate to bring ideas to life.</p>
-              <p className="text-base text-foreground/85 leading-relaxed">This isn't just a tool. It's an ecosystem designed for the next wave of builders who will define their own future instead of waiting for one to be handed to them.</p>
+              <p className="text-base sm:text-lg text-foreground/85 leading-relaxed">The biggest challenge isn't coming up with ideas but moving them from scattered brainstorming into real execution. Creatives Takeover transforms raw thoughts into clear, actionable roadmaps and creates an ecosystem where founders, entrepreneurs, creators, and freelancers collaborate to bring ideas to life.</p>
+              <p className="text-base sm:text-lg text-foreground/85 leading-relaxed">This isn't just a tool. It's an ecosystem designed for the next wave of builders who will define their own future instead of waiting for one to be handed to them.</p>
             </div>
 
             </div>
