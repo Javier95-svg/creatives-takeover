@@ -104,6 +104,35 @@ interface MVPBuilderPreviewProps {
   onRefreshSupabase: () => void | Promise<void>;
 }
 
+// Make any generated HTML render reliably in the sandboxed preview:
+// 1) guard `tailwind.config = ...` so it never throws "tailwind is not defined"
+//    when the CDN hasn't initialized yet (the page would otherwise look unstyled),
+// 2) guarantee the Tailwind Play CDN is present and loads first.
+function hardenPreviewHtml(rawHtml: string | null | undefined): string {
+  if (!rawHtml || typeof rawHtml !== 'string') return rawHtml ?? '';
+  let out = rawHtml;
+
+  // Guard the `tailwind` global so a premature config assignment can't crash the page.
+  out = out.replace(
+    /\btailwind\.config\s*=/g,
+    'window.tailwind=window.tailwind||{};window.tailwind.config='
+  );
+
+  // Ensure the Tailwind CDN is loaded (inject as the first <head> child if missing).
+  if (!/cdn\.tailwindcss\.com/.test(out)) {
+    const cdnTag = '<script src="https://cdn.tailwindcss.com"></script>';
+    if (/<head[^>]*>/i.test(out)) {
+      out = out.replace(/<head[^>]*>/i, (m) => `${m}\n    ${cdnTag}`);
+    } else if (/<html[^>]*>/i.test(out)) {
+      out = out.replace(/<html[^>]*>/i, (m) => `${m}\n  <head>${cdnTag}</head>`);
+    } else {
+      out = `${cdnTag}\n${out}`;
+    }
+  }
+
+  return out;
+}
+
 export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({
   html,
   isGenerating,
@@ -219,6 +248,8 @@ export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({
     () => projectFiles.filter((file) => file.path.toLowerCase().endsWith('.html')),
     [projectFiles]
   );
+
+  const previewHtml = useMemo(() => hardenPreviewHtml(html), [html]);
 
   const handleRefresh = () => setPreviewKey((key) => key + 1);
 
@@ -670,7 +701,7 @@ export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({
 
                 <iframe
                   key={previewKey}
-                  srcDoc={html}
+                  srcDoc={previewHtml}
                   sandbox="allow-scripts allow-forms allow-modals allow-popups"
                   className={cn(
                     'h-full w-full border-0',
