@@ -13,7 +13,7 @@ const AboutHero = () => {
             {/* Text Content */}
           <div className="space-y-6 sm:space-y-8 order-2 lg:order-1">
             <div>
-              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-5xl font-space-grotesk font-bold tracking-tight mb-4 sm:mb-6 gradient-text leading-tight animate-text-shimmer text-foreground">
+              <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-6xl font-space-grotesk font-bold tracking-tight mb-4 sm:mb-6 gradient-text leading-tight animate-text-shimmer text-foreground">
                 <span className="block">The Future Belongs</span>
                 <span className="block">to Founders</span>
               </h1>
