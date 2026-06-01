@@ -63,8 +63,45 @@ export default function ICPBuilderPage() {
       return;
     }
 
-    const timer = setTimeout(() => setShowLeadBanner(true), 20000);
-    return () => clearTimeout(timer);
+    const mountedAt = Date.now();
+    const MIN_DELAY_MS = 6000;   // don't pop instantly / over a resumed session
+    const FALLBACK_MS = 12000;   // backstop for users who linger without engaging
+
+    let shown = false;
+    const hasProgress = () => {
+      const session = readIcpBuilderSession();
+      return Boolean(
+        session &&
+          (session.currentScreen !== 'mode_select' ||
+            session.fastDescription?.trim() ||
+            session.guided?.seed?.trim() ||
+            session.draftPreview),
+      );
+    };
+
+    const reveal = () => {
+      if (shown) return;
+      shown = true;
+      window.clearInterval(pollId);
+      window.clearTimeout(fallbackId);
+      setShowLeadBanner(true);
+    };
+
+    // Show the banner the moment the user has something worth saving — that is
+    // the high-intent moment, and it happens well before the old 20s timer.
+    const pollId = window.setInterval(() => {
+      if (Date.now() - mountedAt >= MIN_DELAY_MS && hasProgress()) {
+        reveal();
+      }
+    }, 2000);
+
+    // Still catch passive browsers, just earlier than before.
+    const fallbackId = window.setTimeout(reveal, FALLBACK_MS);
+
+    return () => {
+      window.clearInterval(pollId);
+      window.clearTimeout(fallbackId);
+    };
   }, []);
 
   useEffect(() => {
