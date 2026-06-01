@@ -6,12 +6,15 @@ interface StreamingMessageProps {
   content: string;
   isComplete: boolean;
   isBot: boolean;
+  /** Wider gaps between paragraphs for multi-paragraph replies (e.g. MVP Builder). */
+  spacious?: boolean;
 }
 
-export const StreamingMessage: React.FC<StreamingMessageProps> = ({ 
-  content, 
+export const StreamingMessage: React.FC<StreamingMessageProps> = ({
+  content,
   isComplete,
-  isBot 
+  isBot,
+  spacious = false,
 }) => {
   const [displayContent, setDisplayContent] = useState('');
   const [showCursor, setShowCursor] = useState(!isComplete);
@@ -42,7 +45,13 @@ export const StreamingMessage: React.FC<StreamingMessageProps> = ({
 
   return (
     <div className="space-y-2 animate-in fade-in duration-200">
-      <div className="prose prose-sm max-w-none dark:prose-invert prose-p:my-2 prose-headings:my-3">
+      <div
+        className={`prose prose-sm max-w-none dark:prose-invert prose-headings:my-3 ${
+          spacious
+            ? 'leading-relaxed prose-p:my-4 prose-p:leading-relaxed'
+            : 'prose-p:my-2'
+        }`}
+      >
         <ReactMarkdown remarkPlugins={[remarkGfm]}>
           {displayContent}
         </ReactMarkdown>

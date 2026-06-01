@@ -57,6 +57,7 @@ export const MVPMessageItem: React.FC<MVPMessageItemProps> = ({ message }) => {
               content={message.content}
               isComplete={!message.isStreaming}
               isBot={true}
+              spacious={true}
             />
             {modelLabel && !message.isStreaming && (
               <p className="mt-3 border-t border-white/8 pt-2 text-[10px] text-slate-500">
