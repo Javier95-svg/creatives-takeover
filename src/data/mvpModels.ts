@@ -38,6 +38,24 @@ export const MVP_MODEL_OPTIONS: MVPModelOption[] = [
       'Rapid iterations, simple targeted edits, bug fixes, and quick copy tweaks when you want instant results.',
     supportsHtml: true,
   },
+  {
+    id: 'google/gemini-3-flash',
+    label: 'Gemini 3 Flash',
+    description:
+      'Google\'s latest fast model via the Lovable gateway. Quick, low-cost, and produces clean, visually convincing layouts.',
+    bestFor:
+      'Fast, good-looking landing pages and previews when you want a different design style and snappy turnaround.',
+    supportsHtml: true,
+  },
+  {
+    id: 'google/gemini-2.5-flash',
+    label: 'Gemini 2.5 Flash',
+    description:
+      'Google\'s proven fast model via the Lovable gateway. Reliable speed and solid UI output at very low cost.',
+    bestFor:
+      'Budget-friendly rapid generations and an alternative visual aesthetic to the Claude models.',
+    supportsHtml: true,
+  },
 ];
 
 const MODEL_LOOKUP = new Map(MVP_MODEL_OPTIONS.map((m) => [m.id, m]));

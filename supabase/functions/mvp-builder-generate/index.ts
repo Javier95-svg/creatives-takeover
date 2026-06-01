@@ -15,6 +15,8 @@ const corsHeaders = {
 
 const ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages";
 const ANTHROPIC_VERSION = "2023-06-01";
+// Google Gemini models run through the Lovable AI gateway (OpenAI-compatible).
+const AI_GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
 const DEFAULT_MODEL = "claude-sonnet-4-6";
 const FALLBACK_MODEL = "claude-haiku-4-5-20251001";
 const MAX_COMBO_MODELS = 3;
@@ -24,10 +26,17 @@ const SUPPORTED_MODELS = [
   "claude-sonnet-4-6",
   "claude-opus-4-8",
   "claude-haiku-4-5-20251001",
+  "google/gemini-3-flash",
+  "google/gemini-2.5-flash",
 ] as const;
 
 const SUPPORTED_MODEL_SET = new Set<string>(SUPPORTED_MODELS);
 const HTML_CAPABLE_MODEL_SET = new Set<string>(SUPPORTED_MODELS);
+
+// Provider routing: Claude → Anthropic Messages API; Gemini → Lovable gateway.
+function isGeminiModel(model: string): boolean {
+  return model.startsWith("google/") || model.startsWith("gemini");
+}
 
 type MVPBuilderActionType = "generation" | "targeted_edit" | "debug" | "add_page" | "add_feature" | "design_overhaul" | "chat";
 type MVPBuilderTemplateId = "waitlist_landing" | "saas_landing" | "community_landing" | "portfolio" | "simple_dashboard" | "marketplace_mvp" | "admin_panel" | "blank";
@@ -697,6 +706,25 @@ async function requestModelStream(
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), MODEL_TIMEOUT_MS);
   try {
+    if (isGeminiModel(model)) {
+      const lovableKey = Deno.env.get("LOVABLE_API_KEY");
+      if (!lovableKey) throw new Error("LOVABLE_API_KEY not configured for Gemini models");
+      return await fetch(AI_GATEWAY_URL, {
+        method: "POST",
+        signal: controller.signal,
+        headers: {
+          Authorization: `Bearer ${lovableKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model,
+          messages: [{ role: "system", content: systemPrompt }, ...messages],
+          temperature: config.temperature,
+          max_tokens: config.maxTokens,
+          stream: true,
+        }),
+      });
+    }
     return await fetch(ANTHROPIC_API_URL, {
       method: "POST",
       signal: controller.signal,
@@ -728,34 +756,66 @@ async function requestModelJson(
 ): Promise<string> {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), MODEL_TIMEOUT_MS);
-  const response = await fetch(ANTHROPIC_API_URL, {
-    method: "POST",
-    signal: controller.signal,
-    headers: {
-      "x-api-key": apiKey,
-      "anthropic-version": ANTHROPIC_VERSION,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model,
-      system: systemPrompt,
-      messages,
-      temperature: config.temperature,
-      max_tokens: config.maxTokens,
-      stream: false,
-    }),
-  }).finally(() => clearTimeout(timeoutId));
-  if (!response.ok) {
-    throw new Error(await response.text());
+  try {
+    if (isGeminiModel(model)) {
+      const lovableKey = Deno.env.get("LOVABLE_API_KEY");
+      if (!lovableKey) throw new Error("LOVABLE_API_KEY not configured for Gemini models");
+      const response = await fetch(AI_GATEWAY_URL, {
+        method: "POST",
+        signal: controller.signal,
+        headers: {
+          Authorization: `Bearer ${lovableKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model,
+          messages: [{ role: "system", content: systemPrompt }, ...messages],
+          temperature: config.temperature,
+          max_tokens: config.maxTokens,
+          stream: false,
+        }),
+      });
+      if (!response.ok) throw new Error(await response.text());
+      const json = await response.json();
+      // OpenAI-compatible response: { choices: [{ message: { content } }] }
+      const content = json?.choices?.[0]?.message?.content;
+      if (typeof content !== "string" || !content.trim()) {
+        throw new Error("Repair response did not include content");
+      }
+      return content;
+    }
+
+    const response = await fetch(ANTHROPIC_API_URL, {
+      method: "POST",
+      signal: controller.signal,
+      headers: {
+        "x-api-key": apiKey,
+        "anthropic-version": ANTHROPIC_VERSION,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model,
+        system: systemPrompt,
+        messages,
+        temperature: config.temperature,
+        max_tokens: config.maxTokens,
+        stream: false,
+      }),
+    });
+    if (!response.ok) {
+      throw new Error(await response.text());
+    }
+    const json = await response.json();
+    // Anthropic response: { content: [{ type: "text", text: "..." }] }
+    const content = (json?.content as Array<{ type: string; text: string }> | undefined)
+      ?.find((block) => block.type === "text")?.text;
+    if (typeof content !== "string" || !content.trim()) {
+      throw new Error("Repair response did not include content");
+    }
+    return content;
+  } finally {
+    clearTimeout(timeoutId);
   }
-  const json = await response.json();
-  // Anthropic response: { content: [{ type: "text", text: "..." }] }
-  const content = (json?.content as Array<{ type: string; text: string }> | undefined)
-    ?.find((block) => block.type === "text")?.text;
-  if (typeof content !== "string" || !content.trim()) {
-    throw new Error("Repair response did not include content");
-  }
-  return content;
 }
 
 async function readModelStreamChunk(reader: ReadableStreamDefaultReader<Uint8Array>) {
@@ -922,10 +982,10 @@ serve(async (req: Request) => {
         break;
       }
       lastApiError = await attempt.text();
-      console.error("Anthropic API model attempt failed:", candidate, attempt.status, lastApiError);
+      console.error("AI model attempt failed:", candidate, attempt.status, lastApiError);
     } catch (err) {
       lastApiError = err instanceof Error ? err.message : String(err);
-      console.error("Anthropic API request failed:", candidate, err);
+      console.error("AI model request failed:", candidate, err);
     }
   }
 
@@ -940,6 +1000,7 @@ serve(async (req: Request) => {
   (async () => {
     const reader = aiResponse!.body!.getReader();
     const decoder = new TextDecoder();
+    const usingGemini = isGeminiModel(selectedModel);
     let buffer = "";
     let fullText = "";
     let sawStop = false;
@@ -963,10 +1024,15 @@ serve(async (req: Request) => {
         buffer = lines.pop() ?? "";
 
         for (const line of lines) {
-          // Anthropic SSE: lines may be "event: ..." or "data: ..."
+          // SSE: lines may be "event: ..." or "data: ..."
           if (!line.startsWith("data: ")) continue;
           const raw = line.slice(6).trim();
           if (!raw) continue;
+          // OpenAI/Lovable-gateway terminator (Gemini)
+          if (raw === "[DONE]") {
+            sawStop = true;
+            break;
+          }
 
           let event: Record<string, unknown>;
           try {
@@ -975,13 +1041,29 @@ serve(async (req: Request) => {
             continue;
           }
 
-          // Termination signal
+          if (usingGemini) {
+            // OpenAI-compatible stream: choices[0].delta.content
+            const choice = (event.choices as Array<Record<string, unknown>> | undefined)?.[0];
+            const delta = choice?.delta as Record<string, unknown> | undefined;
+            const content = typeof delta?.content === "string" ? delta.content : "";
+            if (content) {
+              fullText += content;
+              await writer.write(enc({ type: classifiedAction === "chat" ? "delta" : "code-delta", content }));
+            }
+            if (typeof choice?.finish_reason === "string" && choice.finish_reason) {
+              sawStop = true;
+              break;
+            }
+            continue;
+          }
+
+          // Anthropic Messages SSE termination signal
           if (event.type === "message_stop") {
             sawStop = true;
             break;
           }
 
-          // Text content delta
+          // Anthropic text content delta
           if (event.type === "content_block_delta") {
             const delta = event.delta as Record<string, unknown> | undefined;
             const content = typeof delta?.text === "string" ? delta.text : "";
