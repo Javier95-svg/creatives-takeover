@@ -55,11 +55,6 @@ import { cn } from '@/lib/utils';
 const DIFF_PREVIEW_LINE_LIMIT = 140;
 const DIFF_CONTEXT_LINES = 3;
 
-const BUILDER_MODE_STEPS: Record<MVPBuilderResponseMode, string[]> = {
-  chat: ['Reading your prompt', 'Reviewing founder context', 'Drafting response'],
-  build: ['Reading your prompt', 'Generating layout', 'Writing components', 'Rendering preview'],
-};
-
 const REFERENCE_OPTIONS = [
   {
     id: 'icp-profile',
@@ -85,19 +80,6 @@ type QueuedSubmission = {
   id: string;
   prompt: string;
   mode: MVPBuilderResponseMode;
-};
-
-type TaskStepState = {
-  label: string;
-  status: 'pending' | 'running' | 'complete';
-};
-
-type TaskRun = {
-  id: string;
-  mode: MVPBuilderResponseMode;
-  summary: string;
-  collapsed: boolean;
-  steps: TaskStepState[];
 };
 
 type DiffPreviewLine = {
@@ -344,7 +326,6 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
   const [builderMode, setBuilderMode] = useState<MVPBuilderResponseMode>('build');
   const [selectedReferences, setSelectedReferences] = useState<BuilderReferenceId[]>([]);
   const [queuedSubmissions, setQueuedSubmissions] = useState<QueuedSubmission[]>([]);
-  const [taskRuns, setTaskRuns] = useState<TaskRun[]>([]);
   const [changeCards, setChangeCards] = useState<MVPBuildChangeSummary[]>([]);
   const [expandedChangeCards, setExpandedChangeCards] = useState<Record<string, boolean>>({});
   const [historyOpen, setHistoryOpen] = useState(false);
@@ -356,8 +337,6 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
   const [commitMessage, setCommitMessage] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const taskTimerIdsRef = useRef<number[]>([]);
-  const activeTaskRunIdRef = useRef<string | null>(null);
   const previousGeneratingRef = useRef(isGenerating);
   const isEmpty = messages.length === 0;
   const sortedHistory = useMemo(
@@ -402,103 +381,12 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
     () => REFERENCE_OPTIONS.filter((reference) => selectedReferences.includes(reference.id)),
     [selectedReferences]
   );
-  const clearTaskTimers = useCallback(() => {
-    taskTimerIdsRef.current.forEach((timerId) => window.clearTimeout(timerId));
-    taskTimerIdsRef.current = [];
-  }, []);
-
-  const beginTaskRun = useCallback(
-    (mode: MVPBuilderResponseMode) => {
-      clearTaskTimers();
-      const runId = crypto.randomUUID();
-      activeTaskRunIdRef.current = runId;
-      const steps = BUILDER_MODE_STEPS[mode].map((label, index) => ({
-        label,
-        status: index === 0 ? ('running' as const) : ('pending' as const),
-      }));
-
-      setTaskRuns((prev) => [
-        ...prev,
-        {
-          id: runId,
-          mode,
-          summary:
-            mode === 'build' ? 'Working through build steps...' : 'Thinking through the response...',
-          collapsed: false,
-          steps,
-        },
-      ]);
-
-      BUILDER_MODE_STEPS[mode].slice(1).forEach((_step, index) => {
-        const timerId = window.setTimeout(() => {
-          if (activeTaskRunIdRef.current !== runId) return;
-          setTaskRuns((prev) =>
-            prev.map((run) =>
-              run.id === runId
-                ? {
-                    ...run,
-                    steps: run.steps.map((step, stepIndex) => ({
-                      ...step,
-                      status:
-                        stepIndex < index + 1
-                          ? 'complete'
-                          : stepIndex === index + 1
-                          ? 'running'
-                          : 'pending',
-                    })),
-                  }
-                : run
-            )
-          );
-        }, 900 * (index + 1));
-
-        taskTimerIdsRef.current.push(timerId);
-      });
-    },
-    [clearTaskTimers]
-  );
-
-  const finishTaskRun = useCallback(
-    (mode: MVPBuilderResponseMode, outcome: 'complete' | 'stopped') => {
-      const runId = activeTaskRunIdRef.current;
-      if (!runId) return;
-      clearTaskTimers();
-      activeTaskRunIdRef.current = null;
-
-      const summary =
-        outcome === 'stopped'
-          ? mode === 'build'
-            ? 'Build stopped before completion'
-            : 'Reply stopped before completion'
-          : mode === 'build'
-          ? `${BUILDER_MODE_STEPS[mode].length} build steps completed`
-          : `${BUILDER_MODE_STEPS[mode].length} response steps completed`;
-
-      setTaskRuns((prev) =>
-        prev.map((run) =>
-          run.id === runId
-            ? {
-                ...run,
-                summary,
-                collapsed: outcome === 'complete',
-                steps: run.steps.map((step) => ({
-                  ...step,
-                  status: outcome === 'complete' ? 'complete' : step.status === 'running' ? 'pending' : step.status,
-                })),
-              }
-            : run
-        )
-      );
-    },
-    [clearTaskTimers]
-  );
 
   const submitPrompt = useCallback(
     (submission: QueuedSubmission) => {
-      beginTaskRun(submission.mode);
       void onSend(submission.prompt, { responseMode: submission.mode });
     },
-    [beginTaskRun, onSend]
+    [onSend]
   );
 
   const enqueueOrSubmit = useCallback(
@@ -588,15 +476,6 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
     const wasGenerating = previousGeneratingRef.current;
 
     if (wasGenerating && !isGenerating) {
-      const lastAssistant = [...messages].reverse().find((message) => message.role === 'assistant');
-      const outcome =
-        lastAssistant?.content === 'Generation stopped.' ? 'stopped' : 'complete';
-      const activeRun =
-        activeTaskRunIdRef.current === null
-          ? null
-          : taskRuns.find((run) => run.id === activeTaskRunIdRef.current) ?? null;
-      finishTaskRun(activeRun?.mode ?? builderMode, outcome);
-
       if (queuedSubmissions.length > 0) {
         const [nextSubmission, ...rest] = queuedSubmissions;
         setQueuedSubmissions(rest);
@@ -605,9 +484,7 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
     }
 
     previousGeneratingRef.current = isGenerating;
-  }, [builderMode, finishTaskRun, isGenerating, messages, queuedSubmissions, submitPrompt, taskRuns]);
-
-  useEffect(() => () => clearTaskTimers(), [clearTaskTimers]);
+  }, [isGenerating, queuedSubmissions, submitPrompt]);
 
   const handleSend = useCallback(() => {
     const trimmed = input.trim();
@@ -750,70 +627,6 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
               {messages.map((msg) => (
                 <MVPMessageItem key={msg.id} message={msg} />
               ))}
-              {taskRuns.map((run) => {
-                const isCollapsed = run.collapsed;
-                const headerLabel = run.mode === 'build' ? 'Build pipeline' : 'Chat pipeline';
-                return (
-                  <div
-                    key={run.id}
-                    className="rounded-[24px] border border-white/10 bg-white/[0.035] p-4 shadow-[0_18px_40px_rgba(0,0,0,0.22)]"
-                  >
-                    <button
-                      type="button"
-                      className="flex w-full items-center justify-between gap-3 text-left"
-                      onClick={() =>
-                        setTaskRuns((prev) =>
-                          prev.map((item) =>
-                            item.id === run.id ? { ...item, collapsed: !item.collapsed } : item
-                          )
-                        )
-                      }
-                    >
-                      <div>
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
-                          {headerLabel}
-                        </p>
-                        <p className="mt-1 text-sm font-medium text-white">{run.summary}</p>
-                      </div>
-                      {isCollapsed ? (
-                        <ChevronRight className="h-4 w-4 text-slate-500" />
-                      ) : (
-                        <ChevronDown className="h-4 w-4 text-slate-500" />
-                      )}
-                    </button>
-                    {!isCollapsed && (
-                      <div className="mt-3 space-y-2">
-                        {run.steps.map((step) => (
-                          <div
-                            key={`${run.id}-${step.label}`}
-                            className="flex items-center gap-3 rounded-2xl border border-white/6 bg-[#0b1020] px-3 py-2.5"
-                          >
-                            <span
-                              className={cn(
-                                'flex h-6 w-6 items-center justify-center rounded-full border text-[10px]',
-                                step.status === 'complete'
-                                  ? 'border-emerald-400/25 bg-emerald-400/10 text-emerald-200'
-                                  : step.status === 'running'
-                                  ? 'border-sky-400/25 bg-sky-400/10 text-sky-200'
-                                  : 'border-white/10 bg-white/[0.03] text-slate-500'
-                              )}
-                            >
-                              {step.status === 'complete' ? (
-                                <Check className="h-3.5 w-3.5" />
-                              ) : step.status === 'running' ? (
-                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                              ) : (
-                                <span className="h-1.5 w-1.5 rounded-full bg-current" />
-                              )}
-                            </span>
-                            <span className="text-sm text-slate-200">{step.label}</span>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
               {changeCards.map((card) => {
                 const isExpanded = Boolean(expandedChangeCards[card.id]);
                 return (
