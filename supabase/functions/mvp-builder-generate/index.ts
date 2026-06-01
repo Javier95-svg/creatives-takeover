@@ -42,7 +42,7 @@ const LANDING_TEMPLATES = new Set<MVPBuilderTemplateId>([
 // Sonnet for quality-critical operations; Haiku for constrained, deterministic tasks.
 // If the user explicitly selects a non-default model in the UI, their choice takes precedence.
 const ACTION_CONFIG: Record<MVPBuilderActionType, { feature: CreditFeature; temperature: number; maxTokens: number; model: string }> = {
-  generation:      { feature: "APP_BUILDER_GENERATE",        temperature: 0.45, maxTokens: 8192, model: "claude-sonnet-4-6" },
+  generation:      { feature: "APP_BUILDER_GENERATE",        temperature: 0.45, maxTokens: 8192, model: "claude-haiku-4-5-20251001" },
   targeted_edit:   { feature: "APP_BUILDER_REFINE",          temperature: 0.25, maxTokens: 6000, model: "claude-haiku-4-5-20251001" },
   debug:           { feature: "APP_BUILDER_DEBUG",           temperature: 0.15, maxTokens: 4000, model: "claude-haiku-4-5-20251001" },
   add_page:        { feature: "APP_BUILDER_ADD_PAGE",        temperature: 0.3,  maxTokens: 8192, model: "claude-sonnet-4-6" },
@@ -1011,11 +1011,14 @@ serve(async (req: Request) => {
       try {
         validated = validateOutput(parseModelJson(fullText));
       } catch (validationError) {
-        // Attempt repair with a non-streaming call
+        // Attempt repair with a non-streaming call. Escalate to the stronger
+        // model (Sonnet) for the repair so a fast Haiku generation that fails
+        // validation gets a quality second pass instead of repeating the miss.
+        const repairModel = selectedModel === DEFAULT_MODEL ? DEFAULT_MODEL : "claude-sonnet-4-6";
         try {
           const repaired = await requestModelJson(
             anthropicApiKey,
-            selectedModel,
+            repairModel,
             systemPrompt,
             [
               ...messages,
