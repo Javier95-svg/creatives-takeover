@@ -738,7 +738,9 @@ async function requestModelStream(
       },
       body: JSON.stringify({
         model,
-        system: systemPrompt,
+        // Cache the large static system prompt so repeated iterations start
+        // faster and cost less (cache hit on calls within ~5 min).
+        system: [{ type: "text", text: systemPrompt, cache_control: { type: "ephemeral" } }],
         messages,
         temperature: config.temperature,
         max_tokens: config.maxTokens,
@@ -798,7 +800,7 @@ async function requestModelJson(
       },
       body: JSON.stringify({
         model,
-        system: systemPrompt,
+        system: [{ type: "text", text: systemPrompt, cache_control: { type: "ephemeral" } }],
         messages,
         temperature: config.temperature,
         max_tokens: config.maxTokens,
@@ -1107,10 +1109,11 @@ serve(async (req: Request) => {
       try {
         validated = validateOutput(parseModelJson(fullText));
       } catch (validationError) {
-        // Attempt repair with a non-streaming call. Escalate to the stronger
-        // model (Sonnet) for the repair so a fast Haiku generation that fails
-        // validation gets a quality second pass instead of repeating the miss.
-        const repairModel = selectedModel === DEFAULT_MODEL ? DEFAULT_MODEL : "claude-sonnet-4-6";
+        // Attempt repair with a non-streaming call. If a strong model (Sonnet)
+        // generated the page, the failure is usually a small structural miss —
+        // repair with fast Haiku to keep latency down. If a weaker model
+        // generated it, escalate to Sonnet for a quality second pass.
+        const repairModel = selectedModel === DEFAULT_MODEL ? FALLBACK_MODEL : DEFAULT_MODEL;
         try {
           const repaired = await requestModelJson(
             anthropicApiKey,
