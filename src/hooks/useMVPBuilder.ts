@@ -2743,10 +2743,14 @@ export function useMVPBuilder() {
       const controller = new AbortController();
       abortRef.current = controller;
       let didTimeout = false;
+      // Generation can legitimately take 3-4 min server-side (model stream +
+      // validation/repair). Keep the client patient enough to actually receive
+      // the artifact the user is being charged for, rather than aborting at 2 min
+      // after the credits were already finalized.
       const timeoutId = window.setTimeout(() => {
         didTimeout = true;
         controller.abort();
-      }, 120000);
+      }, 300000);
 
       const userMsg = createMessage('user', prompt);
       const assistantMsg = createMessage('assistant', '', {
