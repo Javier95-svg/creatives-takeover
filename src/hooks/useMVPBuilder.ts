@@ -3076,14 +3076,20 @@ export function useMVPBuilder() {
             } else if (event.type === 'error') {
               const errMsg = (event.error as string) ?? 'Something went wrong.';
               const errCode = event.errorCode as string | undefined;
+              const CREDIT_ERROR_CODES = ['INSUFFICIENT_CREDITS', 'PLAN_UPGRADE_REQUIRED', 'QUOTA_LIMIT_REACHED'];
               if (errCode === 'INSUFFICIENT_CREDITS') {
                 setIsCreditExhaustedModalOpen(true);
-              } else {
+              } else if (errCode && CREDIT_ERROR_CODES.includes(errCode)) {
                 handleCreditError(
                   { message: errMsg, status: 500 },
                   { error: errMsg, errorCode: errCode },
                   creditFeature
                 );
+              } else {
+                // AI gateway / configuration / validation failures are NOT credit
+                // problems. Credits were already released by the backend — show the
+                // real reason instead of a misleading "out of credits" upgrade prompt.
+                toast.error(errMsg);
               }
               void refreshCredits();
               setMessages((prev) =>
