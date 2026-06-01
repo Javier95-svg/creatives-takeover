@@ -667,7 +667,7 @@ const ICPBuilder: React.FC = () => {
   const canContinue = useMemo(() => {
     switch (session.currentScreen) {
       case "fast_input":
-        return fastWordCount >= 50;
+        return fastWordCount >= 30;
       case "guided_seed":
         return (session.guided.seed || "").trim().length >= 8;
       case "guided_persona":
@@ -1623,8 +1623,8 @@ const ICPBuilder: React.FC = () => {
             className="min-h-[280px] rounded-[2rem] border-border/60 bg-white/85 px-5 py-5 text-base leading-7 shadow-sm dark:bg-slate-950/70"
           />
           {session.fastDescription.length > 0 ? (
-            <p className={`px-1 text-xs transition-colors ${fastWordCount >= 50 ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground"}`}>
-              {fastWordCount >= 50 ? "✓ Ready to generate" : `${fastWordCount} / 50 words minimum`}
+            <p className={`px-1 text-xs transition-colors ${fastWordCount >= 30 ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground"}`}>
+              {fastWordCount >= 30 ? "✓ Ready to generate" : `${fastWordCount} / 30 words minimum`}
             </p>
           ) : null}
         </div>

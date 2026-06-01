@@ -1,4 +1,4 @@
-import { Compass, Shield, Sparkles } from "lucide-react";
+import { Compass, Shield, Sparkles, Zap } from "lucide-react";
 
 import type { StoredIcpArtifact } from "@/lib/icpBuilderSession";
 
@@ -17,11 +17,15 @@ function firstSentence(value: string | undefined | null): string | null {
 }
 
 export function IcpGuestUnlockTeaser({ artifact, className = "" }: IcpGuestUnlockTeaserProps) {
+  const painQuote = firstSentence(artifact.draftDocument.pain.quote);
   const buildOutcome = firstSentence(artifact.draftDocument.build.outcome);
   const buildValue = firstSentence(artifact.draftDocument.build.valueProposition);
   const moatEdge = firstSentence(artifact.draftDocument.moat.edge);
   const moatType = artifact.draftDocument.moat.moatType?.trim();
 
+  const painLine = painQuote
+    ? `"${painQuote}"`
+    : "The exact pain driving your customer to act — and the trigger moment that makes them buy.";
   const buildLine = buildOutcome || buildValue || "The exact value proposition and core features tailored to this customer.";
   const moatLine = moatEdge
     || (moatType ? `Why ${moatType.toLowerCase()} is the durable edge for this idea.` : null)
@@ -35,18 +39,27 @@ export function IcpGuestUnlockTeaser({ artifact, className = "" }: IcpGuestUnloc
       <div className="flex items-center gap-2">
         <Sparkles className="h-4 w-4 text-[#32b8c6]" aria-hidden="true" />
         <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#0f5b64] dark:text-[#8fe6ef]">
-          Next after signup
+          Unlocks after signup
         </p>
       </div>
 
       <h3 className="mt-3 text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
-        What to build + how to defend it
+        The pain, the build plan, and your competitive edge
       </h3>
       <p className="mt-2 text-sm leading-6 text-muted-foreground">
-        You&apos;ve seen who this is for and why they care. Sign up free to reveal the build plan and moat, tailored to your idea.
+        You&apos;ve seen who this customer is. Sign up free to unlock everything else — tailored to your specific idea.
       </p>
 
       <ul className="mt-5 space-y-3">
+        <li className="flex items-start gap-3 rounded-2xl border border-border/50 bg-white/80 px-4 py-3 dark:bg-slate-950/60">
+          <span className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#32b8c6]/15 text-[#0f5b64] dark:text-[#8fe6ef]">
+            <Zap className="h-4 w-4" aria-hidden="true" />
+          </span>
+          <div>
+            <p className="text-sm font-semibold text-foreground">Core pain point</p>
+            <p className="mt-1 text-sm leading-6 text-muted-foreground">{painLine}</p>
+          </div>
+        </li>
         <li className="flex items-start gap-3 rounded-2xl border border-border/50 bg-white/80 px-4 py-3 dark:bg-slate-950/60">
           <span className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#32b8c6]/15 text-[#0f5b64] dark:text-[#8fe6ef]">
             <Compass className="h-4 w-4" aria-hidden="true" />

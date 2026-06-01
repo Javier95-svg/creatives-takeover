@@ -12,7 +12,10 @@ interface IcpGuestResultViewProps {
   onEmailLinkRequest?: (email: string) => Promise<void>;
 }
 
-const GUEST_LOCKED_SECTIONS = [] as const;
+// Pain is visible but blurred — the user can see it exists for their idea but
+// can't read it, creating urgency to sign up. Build and Moat stay off-screen
+// entirely and are teased below the gate.
+const GUEST_LOCKED_SECTIONS = ["pain"] as const;
 
 export function IcpGuestResultView({
   artifact,

@@ -1,10 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Loader2, Mail, Users, X } from "lucide-react";
-import { toast } from "sonner";
-
+import { Loader2, Star, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { getSafeLocalStorage } from "@/lib/safeStorage";
 import { persistOnboardingReturn } from "@/lib/authRedirect";
@@ -44,9 +41,6 @@ export function IcpUnlockGate({
   const navigate = useNavigate();
   const normalizedSeed = useMemo(() => normalizeIcpSeed(seed), [seed]);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
-  const [resumeEmail, setResumeEmail] = useState("");
-  const [resumeEmailError, setResumeEmailError] = useState<string | null>(null);
-  const [resumeEmailState, setResumeEmailState] = useState<"idle" | "submitting" | "submitted">("idle");
 
   const gatePreview = artifact.draftDocument.gatePreview;
   const personaName = gatePreview?.personaName || artifact.draftDocument.customer.personaName;
@@ -130,25 +124,6 @@ export function IcpUnlockGate({
     navigate(`/login?source=icp-draft-unlock&return=${encodeURIComponent(returnPath)}`);
   };
 
-  const handleResumeEmailSubmit = async () => {
-    if (!onEmailLinkRequest || resumeEmailState === "submitting" || resumeEmailState === "submitted") {
-      return;
-    }
-
-    setResumeEmailError(null);
-    setResumeEmailState("submitting");
-
-    try {
-      await onEmailLinkRequest(resumeEmail);
-      setResumeEmailState("submitted");
-    } catch (error) {
-      setResumeEmailState("idle");
-      const message = error instanceof Error ? error.message : "We could not send the resume link.";
-      setResumeEmailError(message);
-      toast.error(message);
-    }
-  };
-
   return (
     <div className={`relative z-20 w-full ${className}`}>
       <div className="w-full rounded-[2rem] border border-border/60 bg-white/95 shadow-[0_30px_90px_-60px_rgba(15,23,42,0.45)] backdrop-blur dark:bg-slate-950/90 sm:overflow-hidden">
@@ -189,10 +164,10 @@ export function IcpUnlockGate({
         <div className="px-6 py-6 sm:px-8">
           <div className="space-y-2 text-center">
             <h2 className="text-xl font-semibold tracking-tight">
-              Unlock the rest of your ICP Draft
+              You know who. Now see exactly what to build for them.
             </h2>
             <p className="text-sm text-muted-foreground">
-              You already saw who this is for and why they care. Create a free account to reveal what to build next, your competitive edge, and the full draft.
+              Sign up free to unlock the core pain, the build plan, and your competitive edge — all tailored to your idea.
             </p>
           </div>
 
@@ -206,10 +181,10 @@ export function IcpUnlockGate({
               {isGoogleLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Unlocking with Google...
+                  Signing up...
                 </>
               ) : (
-                "Unlock full draft with Google"
+                "Continue with Google — it's free"
               )}
             </Button>
 
@@ -220,12 +195,12 @@ export function IcpUnlockGate({
               disabled={isGoogleLoading}
               onClick={handleSignUpRedirect}
             >
-              Unlock full draft with email
+              Sign up with email — it's free
             </Button>
           </div>
 
           <p className="mt-3 text-center text-xs text-muted-foreground">
-            Free forever. No credit card. Your draft will be saved to your account.
+            No credit card. Your draft saves to your account automatically.
           </p>
 
           <div className="mt-4 text-center">
@@ -239,60 +214,20 @@ export function IcpUnlockGate({
             </button>
           </div>
 
-          <p className="mt-4 text-center text-xs text-muted-foreground">
-            Not ready? Your draft is saved in this browser — come back anytime.
-          </p>
-
-          <div className="mt-4 rounded-[1.5rem] border border-border/60 bg-background/70 p-4">
-            <p className="text-sm font-medium text-foreground">Need to come back on another device?</p>
-            <p className="mt-1 text-sm leading-6 text-muted-foreground">
-              Send yourself a resume link and pick this exact draft back up later.
-            </p>
-            {resumeEmailState === "submitted" ? (
-              <div className="mt-3 rounded-xl border border-emerald-500/25 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-800 dark:text-emerald-300">
-                We&apos;ll email you a link to resume and unlock this draft.
+          <div className="mt-5 rounded-[1.5rem] border border-border/50 bg-background/60 px-4 py-4">
+            <div className="flex items-start gap-3">
+              <div className="flex shrink-0 text-amber-400">
+                {[0, 1, 2, 3, 4].map((i) => (
+                  <Star key={i} className="h-3.5 w-3.5 fill-current" />
+                ))}
               </div>
-            ) : (
-              <div className="mt-3 flex flex-col gap-3 sm:flex-row">
-                <Input
-                  type="email"
-                  value={resumeEmail}
-                  onChange={(event) => {
-                    setResumeEmail(event.target.value);
-                    if (resumeEmailError) {
-                      setResumeEmailError(null);
-                    }
-                  }}
-                  placeholder="you@company.com"
-                  className="h-11 rounded-xl border-border/60 bg-white/85 dark:bg-slate-950/70"
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="h-11 shrink-0 gap-2"
-                  disabled={!onEmailLinkRequest || resumeEmailState === "submitting"}
-                  onClick={() => void handleResumeEmailSubmit()}
-                >
-                  {resumeEmailState === "submitting" ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      Sending...
-                    </>
-                  ) : (
-                    <>
-                      <Mail className="h-4 w-4" />
-                      Email me the draft
-                    </>
-                  )}
-                </Button>
+              <div>
+                <p className="text-sm leading-6 text-foreground">
+                  "I typed two sentences about my idea and it gave me the exact customer profile I'd been struggling to write for weeks."
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground">— James K., B2B SaaS founder</p>
               </div>
-            )}
-            {resumeEmailError ? <p className="mt-2 text-sm text-destructive">{resumeEmailError}</p> : null}
-          </div>
-
-          <div className="mt-5 flex items-center justify-center gap-2 text-xs text-muted-foreground">
-            <Users className="h-3.5 w-3.5 shrink-0" />
-            <span>Joined by 3,200+ founders building from sharper customer insight.</span>
+            </div>
           </div>
         </div>
       </div>

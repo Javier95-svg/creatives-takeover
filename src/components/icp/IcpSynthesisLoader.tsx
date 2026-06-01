@@ -12,10 +12,16 @@ interface IcpSynthesisLoaderProps {
   onFallbackEmailSubmit: () => void | Promise<void>;
 }
 
-const STATUS_STEPS = [
-  "Identifying your ideal customer",
-  "Mapping their core frustration",
-  "Defining your product direction",
+// Steps are revealed progressively across the full generation window (~65s).
+// Timing is intentionally generous so users always see forward motion.
+const STATUS_STEPS: Array<{ label: string; revealAt: number }> = [
+  { label: "Reading your startup idea",                revealAt: 0 },
+  { label: "Identifying your ideal customer profile",  revealAt: 5000 },
+  { label: "Mapping the core pain and trigger moment", revealAt: 13000 },
+  { label: "Drafting your build plan",                 revealAt: 23000 },
+  { label: "Analysing your competitive edge",          revealAt: 35000 },
+  { label: "Writing your moat and market position",    revealAt: 46000 },
+  { label: "Finalising your ICP Draft",                revealAt: 56000 },
 ];
 
 export function IcpSynthesisLoader({
@@ -26,10 +32,10 @@ export function IcpSynthesisLoader({
   onFallbackEmailChange,
   onFallbackEmailSubmit,
 }: IcpSynthesisLoaderProps) {
-  const visibleSteps = STATUS_STEPS.filter((_, index) => elapsedMs >= index * 800);
-  const finalStepVisible = elapsedMs >= 2400;
-  const showSlowHint = elapsedMs >= 8000;
-  const showLongHint = elapsedMs >= 15000;
+  const completedSteps = STATUS_STEPS.filter((step) => elapsedMs >= step.revealAt + 3000);
+  const activeStep = STATUS_STEPS.slice().reverse().find((step) => elapsedMs >= step.revealAt && elapsedMs < step.revealAt + 3000) ?? null;
+  const showSlowHint = elapsedMs >= 30000;
+  const showLongHint = elapsedMs >= 50000;
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-transparent px-6 pt-28 text-foreground md:pt-32">
@@ -39,23 +45,23 @@ export function IcpSynthesisLoader({
           <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">Building your ICP Draft...</h1>
         </div>
 
-        <div className="space-y-4 rounded-[2rem] border border-border/60 bg-white/80 p-6 shadow-[0_28px_80px_-48px_rgba(15,23,42,0.35)] backdrop-blur dark:bg-slate-950/70">
-          {visibleSteps.map((label) => (
-            <div key={label} className="flex items-center gap-3 text-sm sm:text-base">
-              <CheckCircle2 className="h-5 w-5 text-[#32b8c6]" />
-              <span>{label}</span>
+        <div className="space-y-3 rounded-[2rem] border border-border/60 bg-white/80 p-6 shadow-[0_28px_80px_-48px_rgba(15,23,42,0.35)] backdrop-blur dark:bg-slate-950/70">
+          {completedSteps.map((step) => (
+            <div key={step.label} className="flex items-center gap-3 text-sm sm:text-base">
+              <CheckCircle2 className="h-5 w-5 shrink-0 text-[#32b8c6]" />
+              <span className="text-foreground/70">{step.label}</span>
             </div>
           ))}
 
-          {finalStepVisible ? (
-            <div className="flex items-center gap-3 text-sm sm:text-base">
-              <Loader2 className="h-5 w-5 animate-spin text-[#32b8c6]" />
-              <span>Analysing your startup moat...</span>
+          {activeStep ? (
+            <div className="flex items-center gap-3 text-sm font-medium sm:text-base">
+              <Loader2 className="h-5 w-5 shrink-0 animate-spin text-[#32b8c6]" />
+              <span>{activeStep.label}...</span>
             </div>
           ) : null}
 
-          {showSlowHint ? (
-            <p className="pt-2 text-sm text-muted-foreground">Almost there — we're being thorough.</p>
+          {showSlowHint && !showLongHint ? (
+            <p className="pt-1 text-sm text-muted-foreground">Almost there — we're being thorough.</p>
           ) : null}
 
           {showLongHint ? (
