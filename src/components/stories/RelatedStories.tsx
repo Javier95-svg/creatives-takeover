@@ -70,7 +70,7 @@ export const RelatedStories = ({ currentStory, limit = 4 }: RelatedStoriesProps)
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {relatedStories.map((story) => (
-          <StoryCard key={story.id} article={story} />
+          <StoryCard key={story.id} article={story} showHashtags={false} />
         ))}
       </div>
     </section>

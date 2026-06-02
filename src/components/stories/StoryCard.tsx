@@ -9,9 +9,10 @@ import { slugifyTag } from "@/utils/hashtagUtils";
 interface StoryCardProps {
   article: StoryArticle;
   featured?: boolean;
+  showHashtags?: boolean;
 }
 
-const StoryCardComponent = ({ article, featured = false }: StoryCardProps) => {
+const StoryCardComponent = ({ article, featured = false, showHashtags = true }: StoryCardProps) => {
   const navigate = useNavigate();
   // Always open the article in-platform (same tab) so reading and SEO stay on CT.
   const linkUrl = `/newspaper/${article.slug}`;
@@ -63,7 +64,7 @@ const StoryCardComponent = ({ article, featured = false }: StoryCardProps) => {
           )}
           
           {/* Hashtags */}
-          {article.hashtags && article.hashtags.length > 0 && (
+          {showHashtags && article.hashtags && article.hashtags.length > 0 && (
             <div className="flex flex-wrap gap-2">
               {article.hashtags.slice(0, featured ? 4 : 3).map((tag, index) => (
                 <Badge
