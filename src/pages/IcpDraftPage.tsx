@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { ArrowLeft, ArrowRight, CheckCircle2, Copy, Download, Loader2, PencilLine, Share2, Sparkles } from "lucide-react";
+import { IcpShareModal } from "@/components/icp/IcpShareModal";
 import { toast } from "sonner";
 
 import { IcpFolioDocument } from "@/components/icp/IcpFolioDocument";
@@ -67,6 +68,11 @@ export default function IcpDraftPage() {
   const [loading, setLoading] = useState(true);
   const [isDownloading, setIsDownloading] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
+  const [shareModalData, setShareModalData] = useState<{
+    url: string;
+    personaName: string;
+    roleLine: string;
+  } | null>(null);
   const isUnlockSource = searchParams.get("source") === "icp-unlock";
 
   useEffect(() => {
@@ -152,8 +158,11 @@ export default function IcpDraftPage() {
         artifact,
       });
       const shareUrl = getIcpDraftPublicUrl(record.slug);
-      await navigator.clipboard.writeText(shareUrl);
-      toast.success("Share link copied.");
+      setShareModalData({
+        url: shareUrl,
+        personaName: artifact.draftDocument.customer.personaName,
+        roleLine: artifact.draftDocument.customer.roleLine,
+      });
     } catch (error) {
       console.error("Failed to create ICP share link", error);
       toast.error("Could not create a share link right now.");
@@ -326,6 +335,16 @@ export default function IcpDraftPage() {
           </div>
         }
       />
+
+      {shareModalData ? (
+        <IcpShareModal
+          isOpen={Boolean(shareModalData)}
+          onClose={() => setShareModalData(null)}
+          shareUrl={shareModalData.url}
+          personaName={shareModalData.personaName}
+          roleLine={shareModalData.roleLine}
+        />
+      ) : null}
 
       {legacyAvailable ? (
         <div className="mx-auto max-w-6xl px-4 pb-12 sm:px-6 lg:px-8">

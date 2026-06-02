@@ -1,0 +1,163 @@
+import { useState } from "react";
+import { Check, Copy, ExternalLink, Linkedin, X as XIcon } from "lucide-react";
+import { toast } from "sonner";
+
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+
+const SHARE_COPY =
+  "Just mapped my ICP using @CreativesTakeover — this is exactly who I'm building for. If you're an early-stage founder still guessing at your customer, run this. It takes 60 seconds.";
+
+function linkedinShareUrl(cardUrl: string) {
+  return `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(cardUrl)}`;
+}
+
+function xShareUrl(cardUrl: string) {
+  return `https://x.com/intent/tweet?text=${encodeURIComponent(SHARE_COPY)}&url=${encodeURIComponent(cardUrl)}`;
+}
+
+interface IcpShareModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  shareUrl: string;
+  personaName: string;
+  roleLine: string;
+}
+
+function CopyButton({ text, label }: { text: string; label: string }) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      toast.success(`${label} copied`);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast.error("Could not copy to clipboard");
+    }
+  };
+
+  return (
+    <button
+      type="button"
+      onClick={() => void handleCopy()}
+      className="flex h-8 shrink-0 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 text-xs font-medium text-slate-600 transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-950"
+    >
+      {copied ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
+      {copied ? "Copied" : "Copy"}
+    </button>
+  );
+}
+
+export function IcpShareModal({
+  isOpen,
+  onClose,
+  shareUrl,
+  personaName,
+  roleLine,
+}: IcpShareModalProps) {
+  return (
+    <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
+      <DialogContent className="w-[calc(100%-2rem)] max-w-md overflow-hidden rounded-[1.75rem] border-slate-200 p-0 shadow-[0_28px_80px_-32px_rgba(15,23,42,0.45)]">
+        {/* Dark header */}
+        <div className="relative overflow-hidden bg-gradient-to-br from-[#0f172a] via-[#111827] to-[#1e1b4b] px-6 py-7">
+          <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-[#32b8c6]/20 blur-3xl" />
+          <DialogHeader className="relative space-y-2">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#7dd3fc]">
+              Your ICP card is live
+            </p>
+            <DialogTitle className="text-2xl font-semibold leading-tight tracking-tight text-white">
+              {personaName}
+            </DialogTitle>
+            {roleLine && (
+              <p className="text-sm leading-6 text-slate-400">{roleLine}</p>
+            )}
+          </DialogHeader>
+        </div>
+
+        {/* Content */}
+        <div className="space-y-5 bg-white px-6 py-6">
+          {/* Share URL */}
+          <div>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+              Card link
+            </p>
+            <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5">
+              <p className="flex-1 truncate text-sm text-slate-700">{shareUrl}</p>
+              <CopyButton text={shareUrl} label="Link" />
+            </div>
+          </div>
+
+          {/* Divider */}
+          <div className="flex items-center gap-3">
+            <div className="h-px flex-1 bg-slate-100" />
+            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">
+              Share on social
+            </p>
+            <div className="h-px flex-1 bg-slate-100" />
+          </div>
+
+          {/* Post copy */}
+          <div>
+            <div className="mb-2 flex items-center justify-between">
+              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+                Pre-written post
+              </p>
+              <CopyButton text={SHARE_COPY} label="Post copy" />
+            </div>
+            <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm leading-7 text-slate-700">
+              {SHARE_COPY}
+            </div>
+          </div>
+
+          {/* LinkedIn tip */}
+          <p className="rounded-xl border border-amber-100 bg-amber-50 px-4 py-2.5 text-xs leading-5 text-amber-700">
+            <span className="font-semibold">LinkedIn tip:</span> Copy the post above, then click Share — paste it when the dialog opens so your followers see the context.
+          </p>
+
+          {/* Share buttons */}
+          <div className="flex gap-3">
+            <Button
+              asChild
+              className="h-11 flex-1 gap-2 bg-[#0a66c2] text-white hover:bg-[#004182]"
+            >
+              <a
+                href={linkedinShareUrl(shareUrl)}
+                target="_blank"
+                rel="noreferrer"
+                onClick={() => toast.info("LinkedIn share opened")}
+              >
+                <Linkedin className="h-4 w-4 fill-current" />
+                LinkedIn
+                <ExternalLink className="h-3.5 w-3.5 opacity-60" />
+              </a>
+            </Button>
+
+            <Button
+              asChild
+              variant="outline"
+              className="h-11 flex-1 gap-2 border-slate-200 text-slate-950 hover:bg-slate-50"
+            >
+              <a
+                href={xShareUrl(shareUrl)}
+                target="_blank"
+                rel="noreferrer"
+                onClick={() => toast.info("X share opened")}
+              >
+                <XIcon className="h-4 w-4" />
+                X / Twitter
+                <ExternalLink className="h-3.5 w-3.5 opacity-60" />
+              </a>
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}

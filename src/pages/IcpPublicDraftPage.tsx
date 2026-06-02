@@ -4,6 +4,7 @@ import { ArrowRight, Loader2 } from "lucide-react";
 
 import { IcpFolioDocument } from "@/components/icp/IcpFolioDocument";
 import { IcpProgressBar } from "@/components/icp/IcpProgressBar";
+import SEO from "@/components/SEO";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { getIcpDraftShareBySlug, isIcpDraftSharedSnapshot } from "@/lib/icpDraftSharing";
@@ -75,21 +76,41 @@ export default function IcpPublicDraftPage() {
     );
   }
 
+  const pageTitle = `${draft.customer.personaName} — ICP Draft`;
+  const pageDescription = `${draft.customer.roleLine}. ${draft.build.valueProposition}`.slice(0, 155);
+  const ogImageUrl = `https://creatives-takeover.com/api/og-icp?slug=${draftId ?? ""}`;
+
   return (
     <div className="min-h-screen bg-[#f6f7fb]">
+      <SEO
+        title={`${pageTitle} | Creatives Takeover`}
+        description={pageDescription}
+        image={ogImageUrl}
+        url={`/icp/${draftId ?? ""}/public`}
+        type="article"
+      />
       <IcpProgressBar progress={100} />
       <IcpFolioDocument
         draft={draft}
         footer={
           <div className="pb-10 text-center">
             <p className="mb-4 text-sm text-slate-500">
-              Built with Creatives Takeover — the platform for first-time founders.
+              Built with{" "}
+              <a
+                href="https://creatives-takeover.com"
+                className="font-medium text-[#0f5b64] hover:underline"
+                target="_blank"
+                rel="noreferrer"
+              >
+                Creatives Takeover
+              </a>
+              {" "}— the platform for first-time founders.
             </p>
             <Link
-              to="/icp-builder"
+              to="/icp-builder?mode=fast"
               className="inline-flex items-center gap-2 rounded-full bg-[#0f5b64] px-6 py-3 text-sm font-semibold text-white shadow-[0_8px_24px_-12px_rgba(15,91,100,0.55)] transition-opacity hover:opacity-90"
             >
-              Build your own ICP Draft — it's free
+              Build your ICP free — 60 seconds
               <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
