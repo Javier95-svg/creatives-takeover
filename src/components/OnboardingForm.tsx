@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   ArrowLeft,
@@ -25,6 +25,7 @@ import { ANGEL_SECTOR_OPTIONS } from '@/data/angelSectors';
 import { COUNTRY_OPTIONS } from '@/data/countries';
 import {
   captureEvent,
+  trackOnboardingAbandoned,
   trackOnboardingCompleted,
   trackOnboardingStepCompleted,
 } from '@/lib/analytics';
@@ -117,6 +118,9 @@ const emptyOnboardingData: OnboardingData = {
   activationIntent: '',
 };
 
+// Increment this whenever the question set changes so PostHog cohorts stay clean.
+const QUIZ_VERSION = 4;
+
 interface OnboardingFormProps {
   onComplete?: (startRoute?: string) => void;
 }
@@ -157,6 +161,7 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [startedAt] = useState(Date.now());
+  const stepEnteredAt = useRef(Date.now());
   const [errors, setErrors] = useState<Record<string, string | undefined>>({});
 
   const [formData, setFormData] = useState<OnboardingData>(() => {
@@ -209,6 +214,31 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
       setCurrentStep(totalSteps - 1);
     }
   }, [currentStep, totalSteps]);
+
+  // Fire abandonment event when the user navigates away mid-quiz.
+  // Uses a ref snapshot so the closure captures the latest values without
+  // needing them in the dependency array (which would re-register on every step).
+  const abandonRef = useRef({ currentStep, totalSteps, step, startedAt });
+  useEffect(() => {
+    abandonRef.current = { currentStep, totalSteps, step, startedAt };
+  }, [currentStep, totalSteps, step, startedAt]);
+
+  useEffect(() => {
+    return () => {
+      const { currentStep: s, totalSteps: t, step: st, startedAt: sa } = abandonRef.current;
+      // Only fire if the user left before the final step (completion is tracked separately).
+      if (s < t - 1) {
+        trackOnboardingAbandoned({
+          last_step: s + 1,
+          last_step_name: st.id,
+          total_steps: t,
+          elapsed_ms: Date.now() - sa,
+          quiz_version: QUIZ_VERSION,
+        });
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Drop a stale fundraising answer if the blocker is no longer fundraising,
   // so it can't inflate the Fundraising stage.
@@ -296,14 +326,20 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
   const handleNext = async () => {
     if (!validateStep(currentStep)) return;
 
+    const now = Date.now();
+
     if (currentStep < totalSteps - 1) {
       trackOnboardingStepCompleted({
         step: currentStep + 1,
         step_name: step.id,
         total_steps: totalSteps,
+        elapsed_ms: now - startedAt,
+        step_time_ms: now - stepEnteredAt.current,
+        quiz_version: QUIZ_VERSION,
         stage: formData.stageAnswers.productStatus,
         painPoint: formData.stageAnswers.blocker,
       });
+      stepEnteredAt.current = now;
       setCurrentStep((prev) => prev + 1);
       return;
     }
@@ -387,6 +423,13 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
         quiz_completed: true,
         creative_niche: null,
         business_stage: businessStage || null,
+        quiz_version: QUIZ_VERSION,
+        total_steps: totalSteps,
+        total_time_ms: Date.now() - startedAt,
+        assigned_stage: finalAssignedStage,
+        stage_confidence: finalDiagnostic.confidence,
+        pain_point: primaryPain,
+        activation_intent: selectedIntent,
       });
       void trackActivity('onboarding_completed', {
         stage: businessStage,

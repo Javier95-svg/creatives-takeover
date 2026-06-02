@@ -27,7 +27,19 @@ export type IcpBuilderOpenedSource = 'dashboard' | 'onboarding' | 'direct' | 'se
 export type OnboardingStartedSource = 'signup_redirect' | 'dashboard_prompt' | 'direct';
 
 export interface SignupCompletedProps { method: 'email' | 'google' | 'github'; referrer: string | null; }
-export interface OnboardingCompletedProps { quiz_completed: boolean; creative_niche: string | null; business_stage: string | null; }
+export interface OnboardingCompletedProps {
+  quiz_completed: boolean;
+  creative_niche: string | null;
+  business_stage: string | null;
+  // Comparison plan fields — present from quiz_version v4 onward.
+  quiz_version?: number;
+  total_steps?: number;
+  total_time_ms?: number;
+  assigned_stage?: number;
+  stage_confidence?: number;
+  pain_point?: string;
+  activation_intent?: string;
+}
 export interface FirstToolUsedProps { tool_name: string; credits_cost: number; credits_remaining: number; days_since_signup: number; }
 export interface ICPBuilderCompletedProps { mode: 'fast' | 'guided'; time_to_complete_seconds: number; credits_used: number; }
 export interface CreditExhaustedProps { plan: string; days_since_signup: number; last_feature_used: string; }
@@ -361,6 +373,7 @@ export const trackOnboardingStarted = (properties: {
   source: OnboardingStartedSource;
   userId?: string;
   page_path?: string;
+  quiz_version?: number;
 }) => captureAuthenticatedEvent('onboarding_started', properties.userId, properties);
 
 export const trackOnboardingCompleted = (properties: OnboardingCompletedProps) =>
@@ -370,7 +383,21 @@ export const trackOnboardingStepCompleted = (properties: {
   step: number;
   step_name: string;
   total_steps: number;
+  /** Milliseconds since the quiz started — enables per-step timing in PostHog. */
+  elapsed_ms?: number;
+  /** Milliseconds spent on this specific step (since the previous one). */
+  step_time_ms?: number;
+  quiz_version?: number;
 } & AnalyticsProperties) => captureEvent('onboarding_step_completed', properties);
+
+/** Fired when an authenticated user leaves /onboarding without completing it. */
+export const trackOnboardingAbandoned = (properties: {
+  last_step: number;
+  last_step_name: string;
+  total_steps: number;
+  elapsed_ms: number;
+  quiz_version?: number;
+} & AnalyticsProperties) => captureEvent('onboarding_abandoned', properties);
 
 // ─── Retention: BizMap AI events ─────────────────────────────────────────────
 

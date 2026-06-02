@@ -105,6 +105,7 @@ const Onboarding = () => {
             source,
             userId: user.id,
             page_path: '/onboarding',
+            quiz_version: 4,
           });
           void trackActivity('onboarding_started', {
             page_path: '/onboarding',
