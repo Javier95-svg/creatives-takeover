@@ -704,8 +704,13 @@ const Navigation = () => {
                   <ThemeToggle />
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <button className={cn("cursor-pointer self-center outline-none focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 nav-action-button h-[42px] w-[42px] rounded-[15px]")}>
-                        <Avatar className="h-[42px] w-[42px]">
+                      <button
+                        className={cn("cursor-pointer self-center outline-none focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 nav-action-button h-[42px] w-[42px] rounded-[15px]")}
+                        style={{ height: 42, width: 42, flexShrink: 0 }}
+                      >
+                        {/* Inline sizing guards against the avatar ballooning if the
+                            CSS bundle briefly fails to load during a deploy. */}
+                        <Avatar className="h-[42px] w-[42px]" style={{ height: 42, width: 42, overflow: "hidden" }}>
                           <AvatarImage src={avatarUrl} alt={user.user_metadata?.full_name || 'User'} />
                           <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
                             {(user.user_metadata?.full_name || user.email || 'U')[0].toUpperCase()}
@@ -928,7 +933,7 @@ const Navigation = () => {
                     <div className="space-y-2">
                       <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-primary/5 to-secondary/5 rounded-lg mb-3 border border-primary/10">
                         <div className="flex items-center space-x-3">
-                          <Avatar className="h-10 w-10 ring-2 ring-primary/20">
+                          <Avatar className="h-10 w-10 ring-2 ring-primary/20" style={{ height: 40, width: 40, overflow: "hidden" }}>
                             <AvatarImage src={avatarUrl} alt={user.user_metadata?.full_name || 'User'} />
                             <AvatarFallback className="bg-primary/10 text-primary font-semibold">
                               {(user.user_metadata?.full_name || user.email || 'U')[0].toUpperCase()}
