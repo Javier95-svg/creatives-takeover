@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, type ClipboardEvent } from "react";
 import {
   Bold,
   Italic,
@@ -59,6 +59,84 @@ function countWords(text: string): number {
   return trimmed.split(/\s+/).length;
 }
 
+/**
+ * Convert pasted rich text (HTML from Docs, Word, LinkedIn, etc.) into Markdown
+ * so bold, headings, lists, links and quotes survive the paste instead of being
+ * flattened to plain text. Falls back to plain text when no HTML is available.
+ */
+function htmlToMarkdown(html: string): string {
+  const doc = new DOMParser().parseFromString(html, "text/html");
+
+  const inlineWrap = (node: Node, marker: string): string => {
+    const inner = serializeChildren(node).trim();
+    return inner ? `${marker}${inner}${marker}` : "";
+  };
+
+  const serializeChildren = (node: Node): string =>
+    Array.from(node.childNodes).map(serialize).join("");
+
+  const serialize = (node: Node): string => {
+    if (node.nodeType === Node.TEXT_NODE) {
+      return (node.textContent ?? "").replace(/\s+/g, " ");
+    }
+    if (node.nodeType !== Node.ELEMENT_NODE) return "";
+
+    const el = node as HTMLElement;
+    const tag = el.tagName.toLowerCase();
+
+    switch (tag) {
+      case "strong":
+      case "b":
+        return inlineWrap(el, "**");
+      case "em":
+      case "i":
+        return inlineWrap(el, "_");
+      case "s":
+      case "del":
+      case "strike":
+        return inlineWrap(el, "~~");
+      case "code":
+        return inlineWrap(el, "`");
+      case "br":
+        return "\n";
+      case "a": {
+        const text = serializeChildren(el).trim();
+        const href = el.getAttribute("href") ?? "";
+        return href ? `[${text || href}](${href})` : text;
+      }
+      case "h1":
+        return `\n\n# ${serializeChildren(el).trim()}\n\n`;
+      case "h2":
+        return `\n\n## ${serializeChildren(el).trim()}\n\n`;
+      case "h3":
+      case "h4":
+      case "h5":
+      case "h6":
+        return `\n\n### ${serializeChildren(el).trim()}\n\n`;
+      case "blockquote":
+        return `\n\n> ${serializeChildren(el).trim().replace(/\n+/g, "\n> ")}\n\n`;
+      case "li": {
+        const ordered = el.parentElement?.tagName.toLowerCase() === "ol";
+        const marker = ordered ? "1. " : "- ";
+        return `${marker}${serializeChildren(el).trim()}\n`;
+      }
+      case "ul":
+      case "ol":
+        return `\n${serializeChildren(el)}\n`;
+      case "p":
+      case "div":
+        return `\n\n${serializeChildren(el).trim()}\n\n`;
+      default:
+        return serializeChildren(el);
+    }
+  };
+
+  return serialize(doc.body)
+    .replace(/\n{3,}/g, "\n\n") // collapse excess blank lines
+    .replace(/[ \t]+\n/g, "\n") // trim trailing spaces on lines
+    .trim();
+}
+
 export function ArticleBodyEditor({ value, onChange, placeholder, className }: ArticleBodyEditorProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -103,6 +181,27 @@ export function ArticleBodyEditor({ value, onChange, placeholder, className }: A
     });
   };
 
+  const handlePaste = (event: ClipboardEvent<HTMLTextAreaElement>) => {
+    const html = event.clipboardData.getData("text/html");
+    if (!html) return; // plain-text paste: let the browser handle it normally
+
+    const markdown = htmlToMarkdown(html);
+    if (!markdown) return;
+
+    event.preventDefault();
+    const textarea = event.currentTarget;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const nextValue = value.slice(0, start) + markdown + value.slice(end);
+    const nextCursor = start + markdown.length;
+
+    onChange(nextValue);
+    requestAnimationFrame(() => {
+      textarea.focus();
+      textarea.setSelectionRange(nextCursor, nextCursor);
+    });
+  };
+
   const words = countWords(value);
 
   return (
@@ -138,6 +237,7 @@ export function ArticleBodyEditor({ value, onChange, placeholder, className }: A
         ref={textareaRef}
         value={value}
         onChange={(event) => onChange(event.target.value)}
+        onPaste={handlePaste}
         placeholder={placeholder ?? "Start writing your article. Paste your text here — use the toolbar to format headings, quotes, and lists."}
         spellCheck
         className="min-h-[480px] w-full resize-y border-0 bg-transparent px-5 py-4 text-base leading-8 text-foreground outline-none placeholder:text-muted-foreground/70 focus-visible:ring-0"
@@ -145,7 +245,7 @@ export function ArticleBodyEditor({ value, onChange, placeholder, className }: A
 
       {/* Footer hint */}
       <div className="border-t border-border bg-muted/30 px-4 py-2 text-xs text-muted-foreground">
-        Formatting uses Markdown — paste plain text freely, or wrap selections with the toolbar above.
+        Paste from Docs, Word or LinkedIn and bold, headings, lists and links are kept automatically. Formatting uses Markdown — or wrap selections with the toolbar above.
       </div>
     </div>
   );
