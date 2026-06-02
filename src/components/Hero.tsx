@@ -81,7 +81,7 @@ const Hero = ({
   titleLine1 = "The founders'",
   titleLine2 = "compass",
   lede = DEFAULT_LEDE,
-  ctaLabel = "Start Free — Build Your ICP",
+  ctaLabel = "Get Your ICP Draft for Free",
   ctaHref = "/icp-builder",
   onCtaClick,
   dashboardUrl = "creatives-takeover.com/dashboard",
@@ -214,7 +214,7 @@ const Hero = ({
           ) : (
             <Link className="ct-hero__cta" to={ctaHref} onClick={handleCtaClick}>
               {ctaLabel}
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
                 <polyline points="9 18 15 12 9 6" />
               </svg>
             </Link>
