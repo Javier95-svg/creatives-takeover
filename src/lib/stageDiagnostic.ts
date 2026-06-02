@@ -48,11 +48,14 @@ export type FundraisingStatus =
 
 export type FounderStageQuizAnswersV3 = {
   productStatus: ProductStatus;
-  customerTesting: CustomerTesting;
-  mainFocus: MainFocus;
   tractionSignal: TractionSignal;
   blocker: FounderBlocker;
-  fundraisingStatus: FundraisingStatus;
+  // Asked conditionally (only when blocker === "fundraising").
+  fundraisingStatus?: FundraisingStatus;
+  // Retained for backward compatibility with legacy quiz payloads; no longer
+  // collected in the streamlined onboarding quiz.
+  customerTesting?: CustomerTesting;
+  mainFocus?: MainFocus;
 };
 
 export type FounderStageDiagnosticResult = {
@@ -100,6 +103,9 @@ export type StageMeta = {
   topFocus: { label: string; href: string }[];
 };
 
+// Streamlined to 3 linear stage questions. Product status + traction + primary
+// blocker triangulate the founder stage; the blocker doubles as the primary
+// pain (mentor matching + dashboard). Fundraising status is asked conditionally.
 export const FOUNDER_STAGE_QUESTIONS: FounderStageQuestionDef[] = [
   {
     id: "productStatus",
@@ -113,32 +119,8 @@ export const FOUNDER_STAGE_QUESTIONS: FounderStageQuestionDef[] = [
     ],
   },
   {
-    id: "customerTesting",
-    question: "Who have you tested this with?",
-    options: [
-      { value: "no_one", label: "No real users yet" },
-      { value: "friends_family", label: "Mostly friends, family, or close network" },
-      { value: "target_customers", label: "Real target customers" },
-      { value: "paying_customers", label: "Paying customers or committed buyers" },
-      { value: "repeat_customers", label: "Repeat users/customers or retained usage" },
-    ],
-  },
-  {
-    id: "mainFocus",
-    question: "What is your main focus right now?",
-    options: [
-      { value: "shape_idea", label: "Clarify the idea and customer" },
-      { value: "prototype", label: "Create a demo/prototype" },
-      { value: "validate_demand", label: "Validate demand and willingness to pay" },
-      { value: "build_product", label: "Build the product" },
-      { value: "launch_market", label: "Launch and get first customers" },
-      { value: "grow_channels", label: "Grow repeatable acquisition channels" },
-      { value: "raise_capital", label: "Raise investment" },
-    ],
-  },
-  {
     id: "tractionSignal",
-    question: "What traction signal do you have today?",
+    question: "What traction do you have today?",
     options: [
       { value: "none", label: "No traction yet" },
       { value: "waitlist_interest", label: "Waitlist, signups, or early interest" },
@@ -149,28 +131,30 @@ export const FOUNDER_STAGE_QUESTIONS: FounderStageQuestionDef[] = [
   },
   {
     id: "blocker",
-    question: "What is blocking you most?",
+    question: "Where do you need the most help?",
     options: [
-      { value: "customer_clarity", label: "I do not know exactly who the customer is" },
-      { value: "demand_validation", label: "I am not sure people want/pay for it" },
-      { value: "product_build", label: "I need help building/shipping" },
-      { value: "go_to_market", label: "I need help launching or finding channels" },
-      { value: "traction_growth", label: "I need help growing users/revenue" },
-      { value: "fundraising", label: "I need help with investors/fundraising" },
-      { value: "solo", label: "I am building alone and need guidance/accountability" },
-    ],
-  },
-  {
-    id: "fundraisingStatus",
-    question: "Are you actively fundraising right now?",
-    options: [
-      { value: "not_now", label: "No" },
-      { value: "preparing", label: "Preparing deck/materials" },
-      { value: "talking_investors", label: "Talking to investors" },
-      { value: "raising_now", label: "Actively raising a round" },
+      { value: "customer_clarity", label: "Knowing exactly who the customer is" },
+      { value: "demand_validation", label: "Proving people want it / will pay" },
+      { value: "product_build", label: "Building and shipping the product" },
+      { value: "go_to_market", label: "Launching and finding channels" },
+      { value: "traction_growth", label: "Growing users and revenue" },
+      { value: "fundraising", label: "Investors and fundraising" },
+      { value: "solo", label: "Guidance and accountability (building alone)" },
     ],
   },
 ];
+
+// Shown only when blocker === "fundraising", to separate Traction from Fundraising.
+export const FUNDRAISING_STATUS_QUESTION: FounderStageQuestionDef = {
+  id: "fundraisingStatus",
+  question: "Are you actively fundraising right now?",
+  options: [
+    { value: "not_now", label: "Not yet — just planning ahead" },
+    { value: "preparing", label: "Preparing deck/materials" },
+    { value: "talking_investors", label: "Talking to investors" },
+    { value: "raising_now", label: "Actively raising a round" },
+  ],
+};
 
 export const STAGES: Record<FounderStageId, StageMeta> = {
   1: {
@@ -292,16 +276,19 @@ function getMaturityLevel(a: FounderStageQuizAnswersV3) {
     revenue: 5,
     repeatable_growth: 6,
   };
-  return Math.max(productLevel[a.productStatus], customerLevel[a.customerTesting], tractionLevel[a.tractionSignal]);
+  const levels = [productLevel[a.productStatus], tractionLevel[a.tractionSignal]];
+  if (a.customerTesting) levels.push(customerLevel[a.customerTesting]);
+  return Math.max(...levels);
 }
 
 function hasFundraisingEvidence(a: FounderStageQuizAnswersV3) {
   return (
     a.productStatus === "scaling_product" ||
-    a.customerTesting === "paying_customers" ||
-    a.customerTesting === "repeat_customers" ||
+    a.productStatus === "live_product" ||
     a.tractionSignal === "revenue" ||
-    a.tractionSignal === "repeatable_growth"
+    a.tractionSignal === "repeatable_growth" ||
+    a.customerTesting === "paying_customers" ||
+    a.customerTesting === "repeat_customers"
   );
 }
 
@@ -473,13 +460,26 @@ export function assignFounderStageV3(a: FounderStageQuizAnswersV3): FounderStage
       break;
   }
 
-  if (
-    (a.mainFocus === "raise_capital" || a.fundraisingStatus !== "not_now" || a.blocker === "fundraising") &&
-    !hasFundraisingEvidence(a) &&
-    a.fundraisingStatus !== "raising_now"
-  ) {
+  const hasFundraisingIntent =
+    a.mainFocus === "raise_capital" ||
+    a.blocker === "fundraising" ||
+    Boolean(a.fundraisingStatus && a.fundraisingStatus !== "not_now");
+
+  if (hasFundraisingIntent && !hasFundraisingEvidence(a) && a.fundraisingStatus !== "raising_now") {
     scores[7] = Math.min(scores[7], scores[3] + 4, scores[5] + 4);
     conflictFlags.push("fundraising_intent_without_market_evidence");
+  }
+
+  // Decisive Traction -> Fundraising promotion. A founder who explicitly names
+  // fundraising as their top need, is actively in a raise, and has real market
+  // evidence is in the Fundraising phase even if traction signals are strong.
+  if (
+    a.blocker === "fundraising" &&
+    a.fundraisingStatus &&
+    a.fundraisingStatus !== "not_now" &&
+    hasFundraisingEvidence(a)
+  ) {
+    add(scores, 7, 60);
   }
 
   if (

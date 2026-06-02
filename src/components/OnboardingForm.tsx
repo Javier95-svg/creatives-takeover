@@ -23,7 +23,6 @@ import { Input } from '@/components/ui/input';
 import { useAuth } from '@/contexts/AuthContext';
 import { ANGEL_SECTOR_OPTIONS } from '@/data/angelSectors';
 import { COUNTRY_OPTIONS } from '@/data/countries';
-import { MENTOR_EXPERTISE_OPTIONS } from '@/data/mentorExpertise';
 import {
   captureEvent,
   trackOnboardingCompleted,
@@ -37,29 +36,27 @@ import {
   assignFounderStageV3,
   createQuizAnswersV3Payload,
   FOUNDER_STAGE_QUESTIONS,
+  FUNDRAISING_STATUS_QUESTION,
   mapFounderStageToBusinessStage,
   STAGES,
+  type FounderBlocker,
   type FounderStageDiagnosticResult,
+  type FounderStageQuestionDef,
   type FounderStageQuizAnswersV3,
 } from '@/lib/stageDiagnostic';
 
 interface OnboardingData {
   stageAnswers: Partial<FounderStageQuizAnswersV3>;
   startupSectors: string[];
-  supportAreasNeeded: string[];
   country: string;
   activationIntent: ActivationIntent | '';
 }
 
-type OnboardingStepId =
-  | keyof FounderStageQuizAnswersV3
-  | 'startup_sector'
-  | 'support_areas'
-  | 'country'
-  | 'activation_intent';
+type StepKind = 'stage' | 'fundraising' | 'sector' | 'country' | 'activation';
 
 interface OnboardingStep {
-  id: OnboardingStepId;
+  id: string;
+  kind: StepKind;
   chapter: string;
   label: string;
 }
@@ -70,6 +67,23 @@ interface ActivationCard {
   sub: string;
   cta: string;
   icon: LucideIcon;
+}
+
+// Each primary blocker seeds the mentor-expertise areas used for matching, so we
+// no longer need a separate support-areas question.
+const BLOCKER_TO_SUPPORT_AREAS: Record<FounderBlocker, string[]> = {
+  customer_clarity: ['Strategy'],
+  demand_validation: ['Sales', 'Growth Marketing'],
+  product_build: ['Product Development', 'Technology'],
+  go_to_market: ['Growth Marketing', 'Sales'],
+  traction_growth: ['Growth Marketing'],
+  fundraising: ['Fundraising'],
+  solo: ['Strategy', 'HR & Team Building'],
+};
+
+function deriveSupportAreas(blocker?: FounderBlocker): string[] {
+  if (!blocker) return [];
+  return Array.from(new Set(BLOCKER_TO_SUPPORT_AREAS[blocker] ?? []));
 }
 
 const ACTIVATION_CARDS: ActivationCard[] = [
@@ -96,22 +110,9 @@ const ACTIVATION_CARDS: ActivationCard[] = [
   },
 ];
 
-const ONBOARDING_STEPS: OnboardingStep[] = [
-  ...FOUNDER_STAGE_QUESTIONS.map((question) => ({
-    id: question.id,
-    chapter: 'Stage',
-    label: 'Founder stage',
-  })),
-  { id: 'startup_sector', chapter: 'Context', label: 'Market' },
-  { id: 'support_areas', chapter: 'Context', label: 'Support' },
-  { id: 'country', chapter: 'Context', label: 'Location' },
-  { id: 'activation_intent', chapter: 'First action', label: 'Launchpad' },
-];
-
 const emptyOnboardingData: OnboardingData = {
   stageAnswers: {},
   startupSectors: [],
-  supportAreasNeeded: [],
   country: '',
   activationIntent: '',
 };
@@ -167,7 +168,6 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
           ...emptyOnboardingData,
           stageAnswers: parsed.stageAnswers ?? {},
           startupSectors: Array.isArray(parsed.startupSectors) ? parsed.startupSectors : [],
-          supportAreasNeeded: Array.isArray(parsed.supportAreasNeeded) ? parsed.supportAreasNeeded : [],
           country: parsed.country ?? '',
           activationIntent: parsed.activationIntent ?? '',
         };
@@ -178,6 +178,49 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
     return emptyOnboardingData;
   });
 
+  // Steps are dynamic: the fundraising follow-up only appears when the primary
+  // blocker is fundraising, so it never taxes the other ~85% of founders.
+  const steps = useMemo<OnboardingStep[]>(() => {
+    const list: OnboardingStep[] = FOUNDER_STAGE_QUESTIONS.map((question) => ({
+      id: question.id,
+      kind: 'stage' as const,
+      chapter: 'Stage',
+      label: 'Founder stage',
+    }));
+
+    if (formData.stageAnswers.blocker === 'fundraising') {
+      list.push({ id: 'fundraisingStatus', kind: 'fundraising', chapter: 'Stage', label: 'Fundraising' });
+    }
+
+    list.push(
+      { id: 'startup_sector', kind: 'sector', chapter: 'Context', label: 'Market' },
+      { id: 'country', kind: 'country', chapter: 'Context', label: 'Location' },
+      { id: 'activation_intent', kind: 'activation', chapter: 'First action', label: 'Launchpad' },
+    );
+
+    return list;
+  }, [formData.stageAnswers.blocker]);
+
+  const totalSteps = steps.length;
+
+  // Keep currentStep valid if the conditional fundraising step disappears.
+  useEffect(() => {
+    if (currentStep > totalSteps - 1) {
+      setCurrentStep(totalSteps - 1);
+    }
+  }, [currentStep, totalSteps]);
+
+  // Drop a stale fundraising answer if the blocker is no longer fundraising,
+  // so it can't inflate the Fundraising stage.
+  useEffect(() => {
+    if (formData.stageAnswers.blocker !== 'fundraising' && formData.stageAnswers.fundraisingStatus) {
+      setFormData((prev) => {
+        const { fundraisingStatus, ...restStageAnswers } = prev.stageAnswers;
+        return { ...prev, stageAnswers: restStageAnswers };
+      });
+    }
+  }, [formData.stageAnswers.blocker, formData.stageAnswers.fundraisingStatus]);
+
   useEffect(() => {
     if (!user?.id) return;
     try {
@@ -185,7 +228,6 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
         currentStep,
         stageAnswers: formData.stageAnswers,
         startupSectors: formData.startupSectors,
-        supportAreasNeeded: formData.supportAreasNeeded,
         country: formData.country,
         activationIntent: formData.activationIntent,
       }));
@@ -198,7 +240,6 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
     formData.country,
     formData.stageAnswers,
     formData.startupSectors,
-    formData.supportAreasNeeded,
     user?.id,
   ]);
 
@@ -208,12 +249,8 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
     return COUNTRY_OPTIONS.filter((country) => country.toLowerCase().includes(query)).slice(0, 12);
   }, [countrySearch]);
 
-  const totalSteps = ONBOARDING_STEPS.length;
-  const step = ONBOARDING_STEPS[currentStep];
+  const step = steps[Math.min(currentStep, totalSteps - 1)];
   const progress = ((currentStep + 1) / totalSteps) * 100;
-  const diagnosticQuestion = currentStep < FOUNDER_STAGE_QUESTIONS.length
-    ? FOUNDER_STAGE_QUESTIONS[currentStep]
-    : null;
   const diagnostic = useMemo(() => getStageDiagnostic(formData.stageAnswers), [formData.stageAnswers]);
   const assignedStage = diagnostic?.assignedStage ?? null;
   const stageMeta = assignedStage ? STAGES[assignedStage] : null;
@@ -221,35 +258,33 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
   const selectedRoute = formData.activationIntent ? getActivationRoute(formData.activationIntent) : null;
   const profileTags = [
     ...formData.startupSectors,
-    ...formData.supportAreasNeeded,
+    ...deriveSupportAreas(formData.stageAnswers.blocker),
     formData.country,
   ].filter(Boolean);
 
   const validateStep = (stepIndex: number): boolean => {
+    const target = steps[stepIndex];
+    if (!target) return false;
     const newErrors: Record<string, string> = {};
 
-    if (stepIndex < FOUNDER_STAGE_QUESTIONS.length) {
-      const question = FOUNDER_STAGE_QUESTIONS[stepIndex];
-      if (!formData.stageAnswers[question.id]) {
-        newErrors[question.id] = 'Choose the option that best describes you today';
-      }
-      setErrors(newErrors);
-      return Object.keys(newErrors).length === 0;
-    }
-
-    const enrichmentStep = stepIndex - FOUNDER_STAGE_QUESTIONS.length;
-
-    switch (enrichmentStep) {
-      case 0:
+    switch (target.kind) {
+      case 'stage':
+        if (!formData.stageAnswers[target.id as keyof FounderStageQuizAnswersV3]) {
+          newErrors[target.id] = 'Choose the option that best describes you today';
+        }
+        break;
+      case 'fundraising':
+        if (!formData.stageAnswers.fundraisingStatus) {
+          newErrors.fundraisingStatus = 'Pick where your raise is today';
+        }
+        break;
+      case 'sector':
         if (formData.startupSectors.length === 0) newErrors.startupSectors = 'Select at least one startup sector';
         break;
-      case 1:
-        if (formData.supportAreasNeeded.length === 0) newErrors.supportAreasNeeded = 'Select at least one support area';
-        break;
-      case 2:
+      case 'country':
         if (!formData.country) newErrors.country = 'Select your country';
         break;
-      case 3:
+      case 'activation':
         if (!formData.activationIntent) newErrors.activationIntent = 'Choose the first action that would help this week';
         break;
     }
@@ -264,9 +299,9 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
     if (currentStep < totalSteps - 1) {
       trackOnboardingStepCompleted({
         step: currentStep + 1,
-        step_name: ONBOARDING_STEPS[currentStep].id,
-        total_steps: ONBOARDING_STEPS.length,
-        stage: formData.stageAnswers.mainFocus,
+        step_name: step.id,
+        total_steps: totalSteps,
+        stage: formData.stageAnswers.productStatus,
         painPoint: formData.stageAnswers.blocker,
       });
       setCurrentStep((prev) => prev + 1);
@@ -301,9 +336,7 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
       const finalAssignedStage = finalDiagnostic.assignedStage;
       const businessStage = mapFounderStageToBusinessStage(finalAssignedStage);
       const primaryPain = stageAnswers.blocker;
-      const supportAreas = stageAnswers.blocker === 'fundraising' && !formData.supportAreasNeeded.includes('Fundraising')
-        ? [...formData.supportAreasNeeded, 'Fundraising']
-        : formData.supportAreasNeeded;
+      const supportAreas = deriveSupportAreas(stageAnswers.blocker);
 
       await startActivationJourney({
         userId: user.id,
@@ -385,73 +418,38 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
     }
   };
 
-  const renderOptionGrid = (
-    options: readonly string[],
-    selectedValues: string[],
-    field: 'startupSectors' | 'supportAreasNeeded',
-  ) => (
-    <div className="grid gap-2 sm:grid-cols-2">
-      {options.map((option) => {
-        const selected = selectedValues.includes(option);
-        return (
-          <button
-            key={option}
-            type="button"
-            onClick={() => {
-              setFormData((prev) => ({ ...prev, [field]: toggleValue(prev[field], option) }));
-              setErrors((prev) => ({ ...prev, [field]: undefined }));
-            }}
-            aria-pressed={selected}
-            className={cn(
-              'group min-h-12 rounded-lg border px-3 py-3 text-left text-sm transition-all',
-              selected
-                ? 'border-[#32b8c6] bg-[#32b8c6]/10 text-foreground shadow-sm shadow-[#32b8c6]/10'
-                : 'border-border/60 bg-background/70 hover:border-[#32b8c6]/50 hover:bg-accent/60',
-            )}
-          >
-            <span className="flex items-center justify-between gap-3 font-medium">
-              <span>{option}</span>
-              {selected ? <Check className="h-4 w-4 shrink-0 text-[#32b8c6]" /> : null}
-            </span>
-          </button>
-        );
-      })}
-    </div>
-  );
-
-  const renderStageQuestion = () => {
-    if (!diagnosticQuestion) return null;
-
-    const selectedValue = formData.stageAnswers[diagnosticQuestion.id] ?? '';
+  const renderSingleSelectQuestion = (
+    question: FounderStageQuestionDef,
+    helperText: string,
+  ) => {
+    const selectedValue = (formData.stageAnswers[question.id] ?? '') as string;
 
     return (
       <div className="space-y-6">
         <div>
           <p className="mb-2 text-xs font-semibold uppercase text-[#32b8c6]">{step.chapter}</p>
           <h2 className="font-space-grotesk text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
-            {diagnosticQuestion.question}
+            {question.question}
           </h2>
-          <p className="mt-2 text-sm leading-6 text-muted-foreground">
-            Pick the closest match. We will use this to place you on the right founder path.
-          </p>
+          <p className="mt-2 text-sm leading-6 text-muted-foreground">{helperText}</p>
         </div>
 
         <div className="grid gap-2">
-          {diagnosticQuestion.options.map((option, index) => {
+          {question.options.map((option, index) => {
             const selected = selectedValue === option.value;
             return (
               <button
-                key={option.value}
+                key={String(option.value)}
                 type="button"
                 onClick={() => {
                   setFormData((prev) => ({
                     ...prev,
                     stageAnswers: {
                       ...prev.stageAnswers,
-                      [diagnosticQuestion.id]: option.value as FounderStageQuizAnswersV3[typeof diagnosticQuestion.id],
+                      [question.id]: option.value as FounderStageQuizAnswersV3[typeof question.id],
                     },
                   }));
-                  setErrors((prev) => ({ ...prev, [diagnosticQuestion.id]: undefined }));
+                  setErrors((prev) => ({ ...prev, [question.id]: undefined }));
                 }}
                 aria-pressed={selected}
                 className={cn(
@@ -478,192 +476,211 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
             );
           })}
         </div>
-        {errors[diagnosticQuestion.id] ? (
-          <p className="text-sm text-destructive">{errors[diagnosticQuestion.id]}</p>
-        ) : null}
+        {errors[question.id] ? <p className="text-sm text-destructive">{errors[question.id]}</p> : null}
       </div>
     );
   };
 
+  const renderSectorStep = () => (
+    <div className="space-y-6">
+      <div>
+        <p className="mb-2 text-xs font-semibold uppercase text-[#32b8c6]">Context</p>
+        <h2 className="font-space-grotesk text-2xl font-semibold tracking-tight sm:text-3xl">
+          What sector are you in?
+        </h2>
+        <p className="mt-2 text-sm leading-6 text-muted-foreground">
+          Choose the sectors that best match your market. This tunes investor and mentor matching.
+        </p>
+      </div>
+      <div className="grid gap-2 sm:grid-cols-2">
+        {ANGEL_SECTOR_OPTIONS.map((option) => {
+          const selected = formData.startupSectors.includes(option);
+          return (
+            <button
+              key={option}
+              type="button"
+              onClick={() => {
+                setFormData((prev) => ({ ...prev, startupSectors: toggleValue(prev.startupSectors, option) }));
+                setErrors((prev) => ({ ...prev, startupSectors: undefined }));
+              }}
+              aria-pressed={selected}
+              className={cn(
+                'group min-h-12 rounded-lg border px-3 py-3 text-left text-sm transition-all',
+                selected
+                  ? 'border-[#32b8c6] bg-[#32b8c6]/10 text-foreground shadow-sm shadow-[#32b8c6]/10'
+                  : 'border-border/60 bg-background/70 hover:border-[#32b8c6]/50 hover:bg-accent/60',
+              )}
+            >
+              <span className="flex items-center justify-between gap-3 font-medium">
+                <span>{option}</span>
+                {selected ? <Check className="h-4 w-4 shrink-0 text-[#32b8c6]" /> : null}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+      {errors.startupSectors ? <p className="text-sm text-destructive">{errors.startupSectors}</p> : null}
+    </div>
+  );
+
+  const renderCountryStep = () => (
+    <div className="space-y-6">
+      <div>
+        <p className="mb-2 text-xs font-semibold uppercase text-[#32b8c6]">Context</p>
+        <h2 className="font-space-grotesk text-2xl font-semibold tracking-tight sm:text-3xl">
+          Where are you building from?
+        </h2>
+        <p className="mt-2 text-sm leading-6 text-muted-foreground">
+          Location helps surface nearby founders, market context, and better recommendations.
+        </p>
+      </div>
+      <div className="space-y-3">
+        <div className="relative">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={countrySearch}
+            onChange={(event) => setCountrySearch(event.target.value)}
+            className="h-11 rounded-full border-border/70 bg-background/80 pl-9"
+            placeholder="Search countries"
+          />
+        </div>
+        {formData.country ? (
+          <Badge variant="secondary" className="w-fit gap-1 rounded-full">
+            <MapPin className="h-3.5 w-3.5" />
+            {formData.country}
+          </Badge>
+        ) : null}
+        <div className="grid max-h-72 gap-2 overflow-y-auto rounded-lg border border-border/60 bg-background/70 p-2 sm:grid-cols-2">
+          {filteredCountries.map((country) => {
+            const selected = formData.country === country;
+            return (
+              <button
+                key={country}
+                type="button"
+                onClick={() => {
+                  setFormData((prev) => ({ ...prev, country }));
+                  setCountrySearch(country);
+                  setErrors((prev) => ({ ...prev, country: undefined }));
+                }}
+                aria-pressed={selected}
+                className={cn(
+                  'min-h-10 rounded-md px-3 py-2 text-left text-sm transition-colors',
+                  selected ? 'bg-[#32b8c6]/15 font-semibold text-foreground' : 'hover:bg-accent',
+                )}
+              >
+                {country}
+              </button>
+            );
+          })}
+        </div>
+        {errors.country ? <p className="text-sm text-destructive">{errors.country}</p> : null}
+      </div>
+    </div>
+  );
+
+  const renderActivationStep = () => (
+    <div className="space-y-6">
+      <div>
+        <p className="mb-2 text-xs font-semibold uppercase text-[#32b8c6]">First action</p>
+        <h2 className="font-space-grotesk text-2xl font-semibold tracking-tight sm:text-3xl">
+          Choose your first win
+        </h2>
+        <p className="mt-2 text-sm leading-6 text-muted-foreground">
+          We will save your profile, add recommendations, and send you straight into this action.
+        </p>
+      </div>
+
+      {stageMeta && diagnostic ? (
+        <div className="rounded-lg border border-[#32b8c6]/30 bg-[#32b8c6]/10 p-4">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase text-[#32b8c6]">Your founder stage</p>
+              <p className="mt-1 font-space-grotesk text-xl font-semibold">
+                Stage {stageMeta.id}: {stageMeta.name}
+              </p>
+              <p className="mt-1 text-sm leading-6 text-muted-foreground">{stageMeta.description}</p>
+            </div>
+            <div className="shrink-0 rounded-full border border-[#32b8c6]/30 bg-background/70 px-3 py-1 text-sm font-semibold">
+              {diagnostic.confidence}% match
+            </div>
+          </div>
+          <div className="mt-4 flex flex-wrap gap-2">
+            {profileTags.slice(0, 8).map((item) => (
+              <Badge key={item} variant="outline" className="bg-background/50">
+                {item}
+              </Badge>
+            ))}
+          </div>
+        </div>
+      ) : null}
+
+      <div className="grid gap-3">
+        {ACTIVATION_CARDS.map((card) => {
+          const Icon = card.icon;
+          const isSelected = formData.activationIntent === card.value;
+          return (
+            <button
+              key={card.value}
+              type="button"
+              onClick={() => {
+                setFormData((prev) => ({ ...prev, activationIntent: card.value }));
+                setErrors((prev) => ({ ...prev, activationIntent: undefined }));
+              }}
+              aria-pressed={isSelected}
+              className={cn(
+                'flex min-h-24 w-full items-start gap-4 rounded-lg border p-4 text-left transition-all',
+                isSelected
+                  ? 'border-[#32b8c6] bg-[#32b8c6]/10 shadow-sm shadow-[#32b8c6]/10'
+                  : 'border-border/60 bg-background/70 hover:border-[#32b8c6]/50 hover:bg-accent/60',
+              )}
+            >
+              <span
+                className={cn(
+                  'flex h-10 w-10 shrink-0 items-center justify-center rounded-lg',
+                  isSelected ? 'bg-[#32b8c6] text-white' : 'bg-muted text-muted-foreground',
+                )}
+              >
+                <Icon className="h-5 w-5" />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block font-space-grotesk text-base font-semibold">{card.headline}</span>
+                <span className="mt-1 block text-sm leading-6 text-muted-foreground">{card.sub}</span>
+                {isSelected && selectedRoute ? (
+                  <span className="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-[#32b8c6]">
+                    {card.cta}
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </span>
+                ) : null}
+              </span>
+            </button>
+          );
+        })}
+        {errors.activationIntent ? <p className="text-sm text-destructive">{errors.activationIntent}</p> : null}
+      </div>
+    </div>
+  );
+
   const renderStep = () => {
-    if (diagnosticQuestion) return renderStageQuestion();
-
-    const enrichmentStep = currentStep - FOUNDER_STAGE_QUESTIONS.length;
-
-    switch (enrichmentStep) {
-      case 0:
-        return (
-          <div className="space-y-6">
-            <div>
-              <p className="mb-2 text-xs font-semibold uppercase text-[#32b8c6]">Context</p>
-              <h2 className="font-space-grotesk text-2xl font-semibold tracking-tight sm:text-3xl">
-                Where does your startup play?
-              </h2>
-              <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                Choose the sectors that best match your market. This tunes investor and mentor matching.
-              </p>
-            </div>
-            {renderOptionGrid(ANGEL_SECTOR_OPTIONS, formData.startupSectors, 'startupSectors')}
-            {errors.startupSectors ? <p className="text-sm text-destructive">{errors.startupSectors}</p> : null}
-          </div>
+    switch (step.kind) {
+      case 'stage': {
+        const question = FOUNDER_STAGE_QUESTIONS.find((item) => item.id === step.id);
+        if (!question) return null;
+        return renderSingleSelectQuestion(
+          question,
+          'Pick the closest match. We will use this to place you on the right founder path.',
         );
-
-      case 1:
-        return (
-          <div className="space-y-6">
-            <div>
-              <p className="mb-2 text-xs font-semibold uppercase text-[#32b8c6]">Context</p>
-              <h2 className="font-space-grotesk text-2xl font-semibold tracking-tight sm:text-3xl">
-                What support would make this easier?
-              </h2>
-              <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                Pick the areas where outside guidance would save you the most time.
-              </p>
-            </div>
-            {renderOptionGrid(MENTOR_EXPERTISE_OPTIONS, formData.supportAreasNeeded, 'supportAreasNeeded')}
-            {errors.supportAreasNeeded ? <p className="text-sm text-destructive">{errors.supportAreasNeeded}</p> : null}
-          </div>
+      }
+      case 'fundraising':
+        return renderSingleSelectQuestion(
+          FUNDRAISING_STATUS_QUESTION,
+          'This tells us whether you are in the Fundraising phase or still building traction.',
         );
-
-      case 2:
-        return (
-          <div className="space-y-6">
-            <div>
-              <p className="mb-2 text-xs font-semibold uppercase text-[#32b8c6]">Context</p>
-              <h2 className="font-space-grotesk text-2xl font-semibold tracking-tight sm:text-3xl">
-                Where are you building from?
-              </h2>
-              <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                Location helps surface nearby founders, market context, and better recommendations.
-              </p>
-            </div>
-            <div className="space-y-3">
-              <div className="relative">
-                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  value={countrySearch}
-                  onChange={(event) => setCountrySearch(event.target.value)}
-                  className="h-11 rounded-full border-border/70 bg-background/80 pl-9"
-                  placeholder="Search countries"
-                />
-              </div>
-              {formData.country ? (
-                <Badge variant="secondary" className="w-fit gap-1 rounded-full">
-                  <MapPin className="h-3.5 w-3.5" />
-                  {formData.country}
-                </Badge>
-              ) : null}
-              <div className="grid max-h-72 gap-2 overflow-y-auto rounded-lg border border-border/60 bg-background/70 p-2 sm:grid-cols-2">
-                {filteredCountries.map((country) => {
-                  const selected = formData.country === country;
-                  return (
-                    <button
-                      key={country}
-                      type="button"
-                      onClick={() => {
-                        setFormData((prev) => ({ ...prev, country }));
-                        setCountrySearch(country);
-                        setErrors((prev) => ({ ...prev, country: undefined }));
-                      }}
-                      aria-pressed={selected}
-                      className={cn(
-                        'min-h-10 rounded-md px-3 py-2 text-left text-sm transition-colors',
-                        selected ? 'bg-[#32b8c6]/15 font-semibold text-foreground' : 'hover:bg-accent',
-                      )}
-                    >
-                      {country}
-                    </button>
-                  );
-                })}
-              </div>
-              {errors.country ? <p className="text-sm text-destructive">{errors.country}</p> : null}
-            </div>
-          </div>
-        );
-
-      case 3:
-        return (
-          <div className="space-y-6">
-            <div>
-              <p className="mb-2 text-xs font-semibold uppercase text-[#32b8c6]">First action</p>
-              <h2 className="font-space-grotesk text-2xl font-semibold tracking-tight sm:text-3xl">
-                Choose your first win
-              </h2>
-              <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                We will save your profile, add recommendations, and send you straight into this action.
-              </p>
-            </div>
-
-            {stageMeta && diagnostic ? (
-              <div className="rounded-lg border border-[#32b8c6]/30 bg-[#32b8c6]/10 p-4">
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                  <div>
-                    <p className="text-xs font-semibold uppercase text-[#32b8c6]">Your founder stage</p>
-                    <p className="mt-1 font-space-grotesk text-xl font-semibold">
-                      Stage {stageMeta.id}: {stageMeta.name}
-                    </p>
-                    <p className="mt-1 text-sm leading-6 text-muted-foreground">{stageMeta.description}</p>
-                  </div>
-                  <div className="shrink-0 rounded-full border border-[#32b8c6]/30 bg-background/70 px-3 py-1 text-sm font-semibold">
-                    {diagnostic.confidence}% match
-                  </div>
-                </div>
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {profileTags.slice(0, 8).map((item) => (
-                    <Badge key={item} variant="outline" className="bg-background/50">
-                      {item}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-            ) : null}
-
-            <div className="grid gap-3">
-              {ACTIVATION_CARDS.map((card) => {
-                const Icon = card.icon;
-                const isSelected = formData.activationIntent === card.value;
-                return (
-                  <button
-                    key={card.value}
-                    type="button"
-                    onClick={() => {
-                      setFormData((prev) => ({ ...prev, activationIntent: card.value }));
-                      setErrors((prev) => ({ ...prev, activationIntent: undefined }));
-                    }}
-                    aria-pressed={isSelected}
-                    className={cn(
-                      'flex min-h-24 w-full items-start gap-4 rounded-lg border p-4 text-left transition-all',
-                      isSelected
-                        ? 'border-[#32b8c6] bg-[#32b8c6]/10 shadow-sm shadow-[#32b8c6]/10'
-                        : 'border-border/60 bg-background/70 hover:border-[#32b8c6]/50 hover:bg-accent/60',
-                    )}
-                  >
-                    <span
-                      className={cn(
-                        'flex h-10 w-10 shrink-0 items-center justify-center rounded-lg',
-                        isSelected ? 'bg-[#32b8c6] text-white' : 'bg-muted text-muted-foreground',
-                      )}
-                    >
-                      <Icon className="h-5 w-5" />
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="block font-space-grotesk text-base font-semibold">{card.headline}</span>
-                      <span className="mt-1 block text-sm leading-6 text-muted-foreground">{card.sub}</span>
-                      {isSelected && selectedRoute ? (
-                        <span className="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-[#32b8c6]">
-                          {card.cta}
-                          <ArrowRight className="h-3.5 w-3.5" />
-                        </span>
-                      ) : null}
-                    </span>
-                  </button>
-                );
-              })}
-              {errors.activationIntent ? <p className="text-sm text-destructive">{errors.activationIntent}</p> : null}
-            </div>
-          </div>
-        );
-
+      case 'sector':
+        return renderSectorStep();
+      case 'country':
+        return renderCountryStep();
+      case 'activation':
+        return renderActivationStep();
       default:
         return null;
     }
@@ -700,7 +717,7 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
               </div>
 
               <div className="mt-7 hidden space-y-2 lg:block">
-                {ONBOARDING_STEPS.map((item, index) => {
+                {steps.map((item, index) => {
                   const isActive = index === currentStep;
                   const isComplete = index < currentStep;
                   return (
