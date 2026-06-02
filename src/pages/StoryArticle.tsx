@@ -18,6 +18,7 @@ import { createArticleSchema, createBreadcrumbSchema } from "@/components/SEO";
 import { slugifyTag } from "@/utils/hashtagUtils";
 import RelatedStories from "@/components/stories/RelatedStories";
 import { LinkedInPostEmbed } from "@/components/stories/LinkedInPostEmbed";
+import { normalizeArticleMarkdown } from "@/lib/articleContent";
 
 const StoryArticle = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -427,7 +428,7 @@ const StoryArticle = () => {
                     ),
                   }}
                 >
-                  {article.body_content}
+                  {normalizeArticleMarkdown(article.body_content)}
                 </ReactMarkdown>
               </section>
             ) : article.linkedin_post_url ? (

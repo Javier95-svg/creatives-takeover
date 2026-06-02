@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Layout, FileText, Search } from "lucide-react";
 import { StoryCardPreview } from "./StoryCardPreview";
 import { LinkedInPostEmbed } from "./LinkedInPostEmbed";
+import { normalizeArticleMarkdown } from "@/lib/articleContent";
 
 interface EditorPreviewTabsProps {
   previewTab: string;
@@ -99,7 +100,7 @@ export const EditorPreviewTabs = ({
           {formData.body_content?.trim() ? (
             <section className="prose prose-lg max-w-none dark:prose-invert prose-headings:font-bold prose-h2:text-2xl prose-h3:text-xl prose-p:leading-relaxed prose-blockquote:border-l-4 prose-blockquote:border-primary prose-blockquote:pl-4 prose-blockquote:italic">
               <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]}>
-                {formData.body_content}
+                {normalizeArticleMarkdown(formData.body_content)}
               </ReactMarkdown>
             </section>
           ) : formData.linkedin_post_url ? (
