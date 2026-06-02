@@ -165,7 +165,6 @@ const Stories = () => {
   };
 
   // Calculate pagination for published stories
-  // Note: stories already filtered for linkedin_post_url in fetchStories
   const filteredStories = stories;
   const totalPages = Math.ceil(filteredStories.length / ARTICLES_PER_PAGE);
   const startIndex = (currentPage - 1) * ARTICLES_PER_PAGE;
@@ -481,8 +480,8 @@ const Stories = () => {
                     {searchQuery
                       ? `No articles found for "${searchQuery}"`
                       : selectedTag
-                      ? `No LinkedIn posts found with tag "${selectedTag}"`
-                      : "No LinkedIn posts published yet"}
+                      ? `No articles found with tag "${selectedTag}"`
+                      : "No articles published yet"}
                   </p>
                   {searchQuery && (
                     <Button

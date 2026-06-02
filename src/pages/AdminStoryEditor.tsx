@@ -18,6 +18,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Save, X, Loader2, ArrowLeft, Maximize2, Minimize2, Layout, Linkedin, Image, Upload, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { EditorPreviewTabs } from "@/components/stories/EditorPreviewTabs";
+import { ArticleBodyEditor } from "@/components/stories/ArticleBodyEditor";
 import { supabase } from "@/integrations/supabase/client";
 
 const AdminStoryEditor = () => {
@@ -97,27 +98,8 @@ const AdminStoryEditor = () => {
     return parseHashtagsUtil(tagsString);
   };
 
-  // Auto-generate title from LinkedIn URL if title is empty
   const handleLinkedInUrlChange = (url: string) => {
-    const trimmedUrl = url.trim();
-    setFormData((prev) => {
-      const newData = { ...prev, linkedin_post_url: trimmedUrl };
-      
-      // Auto-generate title if empty and URL is valid
-      if (!prev.title && trimmedUrl && validateLinkedInUrl(trimmedUrl)) {
-        // Try to extract meaningful title from URL or use default
-        const urlParts = trimmedUrl.split('/');
-        const lastPart = urlParts[urlParts.length - 1];
-        // Use a default title based on LinkedIn post
-        newData.title = "LinkedIn Post";
-        // Auto-generate slug if not set
-        if (!prev.slug) {
-          newData.slug = generateSlug("LinkedIn Post");
-        }
-      }
-      
-      return newData;
-    });
+    setFormData((prev) => ({ ...prev, linkedin_post_url: url.trim() }));
   };
 
   // Validate LinkedIn URL
@@ -193,22 +175,28 @@ const AdminStoryEditor = () => {
       return;
     }
 
-    // Require LinkedIn URL
-    if (!formData.linkedin_post_url || !validateLinkedInUrl(formData.linkedin_post_url)) {
-      toast.error("Please enter a valid LinkedIn post URL");
+    // The article body is the primary content now. A LinkedIn URL is optional.
+    if (!formData.body_content.trim() && !formData.linkedin_post_url.trim()) {
+      toast.error("Please add the article body before saving");
       return;
     }
 
-      const hashtags = parseHashtags(formData.hashtags);
-      const storyData = {
-        slug: formData.slug,
-        title: formData.title,
-        body_content: null, // Not used for LinkedIn posts
-        linkedin_post_url: formData.linkedin_post_url,
-        excerpt: formData.excerpt || null,
-        hashtags,
-        banner_image_url: formData.banner_image_url || null,
-        meta_title: formData.meta_title || null,
+    // If a LinkedIn URL is provided, it must be valid.
+    if (formData.linkedin_post_url.trim() && !validateLinkedInUrl(formData.linkedin_post_url)) {
+      toast.error("The LinkedIn URL is not valid. Clear it or paste a correct post URL.");
+      return;
+    }
+
+    const hashtags = parseHashtags(formData.hashtags);
+    const storyData = {
+      slug: formData.slug,
+      title: formData.title,
+      body_content: formData.body_content.trim() || null,
+      linkedin_post_url: formData.linkedin_post_url.trim() || null,
+      excerpt: formData.excerpt || null,
+      hashtags,
+      banner_image_url: formData.banner_image_url || null,
+      meta_title: formData.meta_title || null,
       meta_description: formData.meta_description || null,
       status: publish ? "published" : formData.status,
     };
@@ -222,12 +210,6 @@ const AdminStoryEditor = () => {
 
     if (result) {
       toast.success(publish ? "Story published!" : "Story saved as draft");
-      if (publish && formData.linkedin_post_url) {
-        toast.info(
-          "Remember to refresh LinkedIn's cache using Post Inspector: https://www.linkedin.com/post-inspector/",
-          { duration: 8000 }
-        );
-      }
       navigate(`/newspaper/${result.slug}`);
     }
   };
@@ -413,45 +395,51 @@ const AdminStoryEditor = () => {
                       </AccordionContent>
                     </AccordionItem>
 
-                    {/* Content */}
+                    {/* Article Body — primary content */}
                     <AccordionItem value="content">
-                      <AccordionTrigger>LinkedIn Post</AccordionTrigger>
+                      <AccordionTrigger>Article Body *</AccordionTrigger>
                       <AccordionContent className="pt-4">
-                        <div className="space-y-4">
-                          <div className="space-y-2">
-                            <Label htmlFor="linkedin_post_url" className="flex items-center gap-2">
-                              <Linkedin className="w-4 h-4" />
-                              LinkedIn Post URL *
-                            </Label>
-                            <Input
-                              id="linkedin_post_url"
-                              type="url"
-                              value={formData.linkedin_post_url}
-                              onChange={(e) => handleLinkedInUrlChange(e.target.value)}
-                              placeholder="https://www.linkedin.com/posts/username_activity-1234567890-abcdef"
-                              className="font-mono text-sm"
-                            />
-                            <p className="text-xs text-muted-foreground">
-                              Paste the URL of the LinkedIn post you want to embed. The post will be displayed as an embedded post on your Stories page.
+                        <div className="space-y-2">
+                          <Label>Body</Label>
+                          <ArticleBodyEditor
+                            value={formData.body_content}
+                            onChange={(value) =>
+                              setFormData((prev) => ({ ...prev, body_content: value }))
+                            }
+                            placeholder="Paste or write the full article here. Use the toolbar to format headings, quotes, and lists."
+                          />
+                          <p className="text-xs text-muted-foreground">
+                            This is what readers see on the article page. Paste your text and format it with the toolbar.
+                          </p>
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+
+                    {/* LinkedIn — optional */}
+                    <AccordionItem value="linkedin">
+                      <AccordionTrigger>LinkedIn Post (optional)</AccordionTrigger>
+                      <AccordionContent className="pt-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="linkedin_post_url" className="flex items-center gap-2">
+                            <Linkedin className="w-4 h-4" />
+                            LinkedIn Post URL
+                          </Label>
+                          <Input
+                            id="linkedin_post_url"
+                            type="url"
+                            value={formData.linkedin_post_url}
+                            onChange={(e) => handleLinkedInUrlChange(e.target.value)}
+                            placeholder="https://www.linkedin.com/posts/username_activity-1234567890-abcdef"
+                            className="font-mono text-sm"
+                          />
+                          <p className="text-xs text-muted-foreground">
+                            Optional. If the article has no body yet, the LinkedIn post is shown as a fallback. Once you add a body, the body takes over and the article is read in-platform.
+                          </p>
+                          {formData.linkedin_post_url && !validateLinkedInUrl(formData.linkedin_post_url) && (
+                            <p className="text-xs text-destructive">
+                              Please enter a valid LinkedIn post URL (e.g., https://www.linkedin.com/posts/...)
                             </p>
-                            <p className="text-xs text-muted-foreground mt-2">
-                              <strong>Tip:</strong> After publishing, use{" "}
-                              <a
-                                href="https://www.linkedin.com/post-inspector/"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-primary hover:underline"
-                              >
-                                LinkedIn's Post Inspector
-                              </a>
-                              {" "}to refresh the cache and ensure the preview image displays correctly.
-                            </p>
-                            {formData.linkedin_post_url && !validateLinkedInUrl(formData.linkedin_post_url) && (
-                              <p className="text-xs text-destructive">
-                                Please enter a valid LinkedIn post URL (e.g., https://www.linkedin.com/posts/...)
-                              </p>
-                            )}
-                          </div>
+                          )}
                         </div>
                       </AccordionContent>
                     </AccordionItem>
@@ -569,7 +557,7 @@ const AdminStoryEditor = () => {
                     formData={{
                       title: formData.title,
                       excerpt: formData.excerpt,
-                      body_content: "",
+                      body_content: formData.body_content,
                       linkedin_post_url: formData.linkedin_post_url,
                       hashtags: hashtagsArray,
                       banner_image_url: formData.banner_image_url || undefined,

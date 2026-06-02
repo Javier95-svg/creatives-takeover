@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Hash } from "lucide-react";
 import { StoryArticle } from "@/hooks/useStories";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { slugifyTag } from "@/utils/hashtagUtils";
 
 interface StoryCardProps {
@@ -13,15 +13,12 @@ interface StoryCardProps {
 
 const StoryCardComponent = ({ article, featured = false }: StoryCardProps) => {
   const navigate = useNavigate();
-  // Use LinkedIn URL if available, otherwise fallback to article detail page
-  const linkUrl = article.linkedin_post_url || `/newspaper/${article.slug}`;
-  const isExternalLink = !!article.linkedin_post_url;
+  // Always open the article in-platform (same tab) so reading and SEO stay on CT.
+  const linkUrl = `/newspaper/${article.slug}`;
 
   return (
-    <a
-      href={linkUrl}
-      target={isExternalLink ? "_blank" : undefined}
-      rel={isExternalLink ? "noopener noreferrer" : undefined}
+    <Link
+      to={linkUrl}
       className={`block group ${featured ? 'md:col-span-2 lg:col-span-2' : ''}`}
     >
       <Card className="overflow-hidden h-full hover:shadow-md transition-all duration-300 hover:scale-[1.02] border-border bg-card rounded-lg">
@@ -93,7 +90,7 @@ const StoryCardComponent = ({ article, featured = false }: StoryCardProps) => {
           )}
         </CardContent>
       </Card>
-    </a>
+    </Link>
   );
 };
 

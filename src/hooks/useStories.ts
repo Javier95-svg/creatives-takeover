@@ -59,7 +59,6 @@ export const useStories = () => {
         .from('stories_articles')
         .select('*')
         .eq('status', 'published')
-        .not('linkedin_post_url', 'is', null) // Only fetch stories with LinkedIn URLs
         .order('published_at', { ascending: false });
 
       const { data, error } = await query;
@@ -108,8 +107,7 @@ export const useStories = () => {
         supabase
           .from('stories_articles')
           .select('*')
-          .eq('status', 'published')
-          .not('linkedin_post_url', 'is', null);
+          .eq('status', 'published');
 
       const [titleRes, excerptRes, slugRes, hashtagRes] = await Promise.all([
         baseSelect().ilike('title', likePattern).order('published_at', { ascending: false }),
@@ -318,12 +316,6 @@ export const useStories = () => {
       return null;
     }
 
-    // Validate LinkedIn URL is required
-    if (!input.linkedin_post_url) {
-      toast.error('LinkedIn post URL is required');
-      return null;
-    }
-
     try {
       setLoading(true);
 
@@ -333,9 +325,9 @@ export const useStories = () => {
         status: input.status || 'draft',
         published_at: input.status === 'published' ? new Date().toISOString() : null,
         hashtags: input.hashtags || [],
-        linkedin_post_url: input.linkedin_post_url, // Required
+        linkedin_post_url: input.linkedin_post_url || null, // Optional now
         banner_image_url: input.banner_image_url || null,
-        body_content: null, // Not used for LinkedIn posts
+        body_content: input.body_content || null,
       };
 
       const { data, error } = await supabase
@@ -427,8 +419,7 @@ export const useStories = () => {
       const { data, error } = await supabase
         .from('stories_articles')
         .select('hashtags')
-        .eq('status', 'published')
-        .not('linkedin_post_url', 'is', null);
+        .eq('status', 'published');
 
       if (error) throw error;
 

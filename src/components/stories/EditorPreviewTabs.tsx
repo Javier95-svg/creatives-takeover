@@ -1,3 +1,6 @@
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import remarkBreaks from "remark-breaks";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
@@ -91,9 +94,15 @@ export const EditorPreviewTabs = ({
             )}
           </div>
           
-          {/* Content */}
+          {/* Content — body is primary; LinkedIn embed is the fallback */}
           <Separator />
-          {formData.linkedin_post_url ? (
+          {formData.body_content?.trim() ? (
+            <section className="prose prose-lg max-w-none dark:prose-invert prose-headings:font-bold prose-h2:text-2xl prose-h3:text-xl prose-p:leading-relaxed prose-blockquote:border-l-4 prose-blockquote:border-primary prose-blockquote:pl-4 prose-blockquote:italic">
+              <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]}>
+                {formData.body_content}
+              </ReactMarkdown>
+            </section>
+          ) : formData.linkedin_post_url ? (
             <div className="my-8">
               <LinkedInPostEmbed
                 url={formData.linkedin_post_url}
@@ -105,7 +114,7 @@ export const EditorPreviewTabs = ({
           ) : (
             <div className="prose prose-lg max-w-none dark:prose-invert">
               <p className="text-muted-foreground italic">
-                *Add a LinkedIn post URL to see the preview...*
+                Add the article body to see the reading preview…
               </p>
             </div>
           )}

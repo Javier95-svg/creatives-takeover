@@ -62,18 +62,28 @@ const StoryArticle = () => {
     loadArticle();
   }, [slug, fetchStoryBySlug, navigate]);
 
+  // Sharing is reserved for signed-in users. Guests see the buttons but are
+  // routed to sign in / create an account first (returning here afterwards).
+  const requireAuthToShare = (): boolean => {
+    if (user) return true;
+    toast.info("Create a free account to share this article.");
+    navigate(`/login?redirect=${encodeURIComponent(`/newspaper/${slug ?? ""}`)}`);
+    return false;
+  };
+
   const sharePost = () => {
+    if (!requireAuthToShare()) return;
     const url = window.location.href;
-    navigator.clipboard.writeText(url);
+    void navigator.clipboard.writeText(url);
     toast.success("Link copied to clipboard!");
   };
 
   const shareOnSocial = (platform: "twitter" | "linkedin" | "facebook") => {
     if (!article) return;
-    
+    if (!requireAuthToShare()) return;
+
     const url = encodeURIComponent(window.location.href);
     const title = encodeURIComponent(article.title);
-    const description = encodeURIComponent(article.excerpt || article.title);
 
     const shareUrls = {
       twitter: `https://twitter.com/intent/tweet?text=${title}&url=${url}`,
@@ -264,15 +274,17 @@ const StoryArticle = () => {
       <div className="min-h-screen bg-background">
         <Navigation />
 
-        <main className="pt-16">
+        {/* pt clears the fixed navbar (h-16 mobile / 70px desktop) so it sits
+            above the page but never covers the banner thumbnail. */}
+        <main className="pt-16 md:pt-[70px]">
           {/* Banner Image - Full Width Above Title */}
           {article.banner_image_url && (
-            <div className="w-full h-[400px] md:h-[500px] overflow-hidden bg-muted relative">
+            <div className="w-full h-[340px] sm:h-[420px] md:h-[500px] overflow-hidden bg-muted relative">
               <img
                 src={article.banner_image_url}
                 alt={article.excerpt || article.title}
                 className="w-full h-full object-cover"
-                loading="lazy"
+                loading="eager"
                 onError={(e) => {
                   // Fallback if image fails to load
                   const target = e.target as HTMLImageElement;
@@ -390,17 +402,9 @@ const StoryArticle = () => {
               </div>
             </header>
 
-            {/* Article Body - LinkedIn Embed or Markdown */}
-            {article.linkedin_post_url ? (
-              <div className="my-8">
-                <LinkedInPostEmbed
-                  url={article.linkedin_post_url}
-                  title={article.title}
-                  excerpt={article.excerpt ?? undefined}
-                  hashtags={article.hashtags}
-                />
-              </div>
-            ) : article.body_content ? (
+            {/* Article Body — in-platform Markdown is primary; the LinkedIn
+                embed is only a fallback for articles without a body yet. */}
+            {article.body_content ? (
               <section className="prose prose-lg max-w-none dark:prose-invert prose-headings:font-bold prose-headings:mt-8 prose-headings:mb-4 prose-h1:text-3xl prose-h2:text-2xl prose-h3:text-xl prose-p:leading-relaxed prose-a:text-primary prose-a:no-underline hover:prose-a:underline prose-strong:font-bold prose-ul:list-disc prose-ol:list-decimal prose-blockquote:border-l-4 prose-blockquote:border-primary prose-blockquote:pl-4 prose-blockquote:italic prose-code:bg-muted prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-sm prose-pre:bg-muted prose-pre:p-4 prose-pre:rounded-lg">
                 <ReactMarkdown
                   remarkPlugins={[remarkGfm, remarkBreaks]}
@@ -426,6 +430,15 @@ const StoryArticle = () => {
                   {article.body_content}
                 </ReactMarkdown>
               </section>
+            ) : article.linkedin_post_url ? (
+              <div className="my-8">
+                <LinkedInPostEmbed
+                  url={article.linkedin_post_url}
+                  title={article.title}
+                  excerpt={article.excerpt ?? undefined}
+                  hashtags={article.hashtags}
+                />
+              </div>
             ) : (
               <div className="my-8 p-8 border border-dashed rounded-lg text-center text-muted-foreground">
                 <p>No content available for this article.</p>
