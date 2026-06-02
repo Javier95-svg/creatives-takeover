@@ -317,9 +317,12 @@ const StoryArticle = () => {
 
             {/* Article Header */}
             <header className="mb-8">
+              {/* Title */}
+              <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">{article.title}</h1>
+
               {/* Hashtags */}
               {article.hashtags && article.hashtags.length > 0 && (
-                <div className="flex flex-wrap gap-2 mb-4">
+                <div className="flex flex-wrap gap-2 mb-6">
                   {article.hashtags.map((tag, index) => (
                     <Badge
                       key={index}
@@ -336,9 +339,6 @@ const StoryArticle = () => {
                   ))}
                 </div>
               )}
-
-              {/* Title */}
-              <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">{article.title}</h1>
 
               {/* Excerpt */}
               {article.excerpt && (
