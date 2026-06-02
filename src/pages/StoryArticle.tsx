@@ -5,7 +5,8 @@ import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Calendar, Hash, Share2, Twitter, Linkedin, Facebook, Copy, Edit } from "lucide-react";
+import { ArrowLeft, Calendar, Hash, Share2, Linkedin, Facebook, Copy, Edit } from "lucide-react";
+import { XIcon } from "@/components/icons/XIcon";
 import { useStories, StoryArticle as StoryArticleType } from "@/hooks/useStories";
 import { useAuth } from "@/contexts/AuthContext";
 import { formatDistanceToNow } from "date-fns";
@@ -76,7 +77,7 @@ const StoryArticle = () => {
     toast.success("Link copied to clipboard!");
   };
 
-  const shareOnSocial = (platform: "twitter" | "linkedin" | "facebook") => {
+  const shareOnSocial = (platform: "x" | "linkedin" | "facebook") => {
     if (!article) return;
     if (!requireAuthToShare()) return;
 
@@ -84,7 +85,7 @@ const StoryArticle = () => {
     const title = encodeURIComponent(article.title);
 
     const shareUrls = {
-      twitter: `https://twitter.com/intent/tweet?text=${title}&url=${url}`,
+      x: `https://x.com/intent/tweet?text=${title}&url=${url}`,
       linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${url}`,
       facebook: `https://www.facebook.com/sharer/sharer.php?u=${url}`,
     };
@@ -373,11 +374,11 @@ const StoryArticle = () => {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => shareOnSocial("twitter")}
-                  className="flex items-center gap-2 text-blue-400 hover:text-blue-300"
+                  onClick={() => shareOnSocial("x")}
+                  className="flex items-center gap-2 text-foreground hover:text-foreground/80"
                 >
-                  <Twitter className="w-4 h-4" />
-                  Twitter
+                  <XIcon className="w-4 h-4" />
+                  X
                 </Button>
                 <Button
                   variant="ghost"
@@ -422,7 +423,7 @@ const StoryArticle = () => {
             )}
 
             {/* Related Stories Section */}
-            <RelatedStories currentStory={article} limit={3} />
+            <RelatedStories currentStory={article} limit={4} />
 
             {/* More from this topic - Link to tag pages */}
             {article.hashtags && article.hashtags.length > 0 && (
