@@ -1,13 +1,10 @@
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
-import remarkBreaks from "remark-breaks";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Layout, FileText, Search } from "lucide-react";
 import { StoryCardPreview } from "./StoryCardPreview";
 import { LinkedInPostEmbed } from "./LinkedInPostEmbed";
-import { normalizeArticleMarkdown } from "@/lib/articleContent";
+import { ArticleBody } from "./ArticleBody";
 
 interface EditorPreviewTabsProps {
   previewTab: string;
@@ -98,11 +95,7 @@ export const EditorPreviewTabs = ({
           {/* Content — body is primary; LinkedIn embed is the fallback */}
           <Separator />
           {formData.body_content?.trim() ? (
-            <section className="prose prose-lg max-w-none dark:prose-invert prose-headings:font-bold prose-h2:text-2xl prose-h3:text-xl prose-p:leading-relaxed prose-blockquote:border-l-4 prose-blockquote:border-primary prose-blockquote:pl-4 prose-blockquote:italic">
-              <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]}>
-                {normalizeArticleMarkdown(formData.body_content)}
-              </ReactMarkdown>
-            </section>
+            <ArticleBody content={formData.body_content} title={formData.title} />
           ) : formData.linkedin_post_url ? (
             <div className="my-8">
               <LinkedInPostEmbed

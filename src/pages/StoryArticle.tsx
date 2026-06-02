@@ -1,9 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
-import remarkBreaks from "remark-breaks";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -18,7 +15,7 @@ import { createArticleSchema, createBreadcrumbSchema } from "@/components/SEO";
 import { slugifyTag } from "@/utils/hashtagUtils";
 import RelatedStories from "@/components/stories/RelatedStories";
 import { LinkedInPostEmbed } from "@/components/stories/LinkedInPostEmbed";
-import { normalizeArticleMarkdown } from "@/lib/articleContent";
+import { ArticleBody } from "@/components/stories/ArticleBody";
 
 const StoryArticle = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -340,7 +337,7 @@ const StoryArticle = () => {
               )}
 
               {/* Title */}
-              <h1 className="text-4xl md:text-5xl font-bold mb-4">{article.title}</h1>
+              <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">{article.title}</h1>
 
               {/* Excerpt */}
               {article.excerpt && (
@@ -406,30 +403,8 @@ const StoryArticle = () => {
             {/* Article Body — in-platform Markdown is primary; the LinkedIn
                 embed is only a fallback for articles without a body yet. */}
             {article.body_content ? (
-              <section className="prose prose-lg max-w-none dark:prose-invert prose-headings:font-bold prose-headings:mt-8 prose-headings:mb-4 prose-h1:text-3xl prose-h2:text-2xl prose-h3:text-xl prose-p:leading-relaxed prose-a:text-primary prose-a:no-underline hover:prose-a:underline prose-strong:font-bold prose-ul:list-disc prose-ol:list-decimal prose-blockquote:border-l-4 prose-blockquote:border-primary prose-blockquote:pl-4 prose-blockquote:italic prose-code:bg-muted prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-sm prose-pre:bg-muted prose-pre:p-4 prose-pre:rounded-lg">
-                <ReactMarkdown
-                  remarkPlugins={[remarkGfm, remarkBreaks]}
-                  components={{
-                    img: ({ node, ...props }) => (
-                      <img
-                        {...props}
-                        className="rounded-lg my-4 max-w-full h-auto"
-                        alt={props.alt || article.title}
-                        loading="lazy"
-                      />
-                    ),
-                    a: ({ node, ...props }) => (
-                      <a
-                        {...props}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-primary hover:underline"
-                      />
-                    ),
-                  }}
-                >
-                  {normalizeArticleMarkdown(article.body_content)}
-                </ReactMarkdown>
+              <section className="mt-2">
+                <ArticleBody content={article.body_content} title={article.title} />
               </section>
             ) : article.linkedin_post_url ? (
               <div className="my-8">
