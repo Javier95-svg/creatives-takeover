@@ -31,7 +31,6 @@ import {
 const ARTICLES_PER_PAGE = 15;
 
 const TOP_TOPICS = [
-  { tag: "#startups",              label: "Startups" },
   { tag: "#startuplessons",        label: "Startup Lessons" },
   { tag: "#entrepreneurship",      label: "Entrepreneurship" },
   { tag: "#artificialintelligence", label: "AI" },
@@ -294,43 +293,12 @@ const Stories = () => {
             <StoriesHero />
           </section>
 
-          {/* Topic Filter — visible to all visitors on the published tab */}
-          {activeTab === "published" && (
-            <section className="relative z-10 -mt-4 mb-6">
-              <div className="container mx-auto px-6 max-w-7xl">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-widest text-muted-foreground mr-1 shrink-0">
-                    <SlidersHorizontal className="w-3.5 h-3.5" />
-                    Topics
-                  </span>
-                  {TOP_TOPICS.map(({ tag, label }) => {
-                    const isActive = selectedTopic === tag;
-                    return (
-                      <button
-                        key={tag}
-                        type="button"
-                        onClick={() => setSelectedTopic(isActive ? null : tag)}
-                        className={`inline-flex items-center gap-1.5 rounded-full border px-4 py-1.5 text-sm font-medium transition-all ${
-                          isActive
-                            ? "border-primary bg-primary text-primary-foreground shadow-sm"
-                            : "border-border bg-background/80 text-foreground/70 hover:border-primary/60 hover:text-foreground backdrop-blur-sm"
-                        }`}
-                      >
-                        {isActive && <X className="w-3 h-3" />}
-                        {label}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            </section>
-          )}
-
-          {/* Search Section - Right after hero */}
+          {/* Search + Topic Filter — stacked, visible to all on the published tab */}
           {!selectedTag && activeTab === "published" && (
             <section className="relative z-10 -mt-8 mb-8">
               <div className="container mx-auto px-6 max-w-7xl">
-                <div className="mx-auto max-w-3xl">
+                {/* Search bar */}
+                <div className="mx-auto max-w-3xl mb-4">
                   <div className="relative">
                     <div className="pointer-events-none absolute -inset-1 rounded-2xl bg-gradient-to-r from-primary/30 via-secondary/25 to-accent/30 blur-sm" />
                     <div className="relative rounded-2xl border border-border/70 bg-background/90 backdrop-blur-md shadow-[0_12px_30px_-12px_rgba(0,0,0,0.35)]">
@@ -342,6 +310,34 @@ const Stories = () => {
                         className="h-14 border-0 bg-transparent pl-12 pr-4 text-base placeholder:text-muted-foreground/80 focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-0"
                       />
                     </div>
+                  </div>
+                </div>
+
+                {/* Topic chips — single horizontal scrollable line */}
+                <div className="mx-auto max-w-3xl">
+                  <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide pb-1">
+                    <span className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-widest text-muted-foreground shrink-0">
+                      <SlidersHorizontal className="w-3.5 h-3.5" />
+                      Topics
+                    </span>
+                    {TOP_TOPICS.map(({ tag, label }) => {
+                      const isActive = selectedTopic === tag;
+                      return (
+                        <button
+                          key={tag}
+                          type="button"
+                          onClick={() => setSelectedTopic(isActive ? null : tag)}
+                          className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-4 py-1.5 text-sm font-medium transition-all ${
+                            isActive
+                              ? "border-primary bg-primary text-primary-foreground shadow-sm"
+                              : "border-border bg-background/80 text-foreground/70 hover:border-primary/60 hover:text-foreground backdrop-blur-sm"
+                          }`}
+                        >
+                          {isActive && <X className="w-3 h-3" />}
+                          {label}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               </div>
