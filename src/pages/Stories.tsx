@@ -9,7 +9,7 @@ import NewspaperWallpaper from "@/components/wallpapers/NewspaperWallpaper";
 import { useStories } from "@/hooks/useStories";
 import { StoryArticle } from "@/hooks/useStories";
 import { Badge } from "@/components/ui/badge";
-import { Hash, X, FileText, Edit, Calendar, Search } from "lucide-react";
+import { Hash, X, FileText, Edit, Calendar, Search, SlidersHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Link } from "react-router-dom";
@@ -17,7 +17,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatDistanceToNow } from "date-fns";
-import { slugifyTag } from "@/utils/hashtagUtils";
+import { slugifyTag, normalizeHashtag } from "@/utils/hashtagUtils";
 import {
   Pagination,
   PaginationContent,
@@ -29,6 +29,19 @@ import {
 } from "@/components/ui/pagination";
 
 const ARTICLES_PER_PAGE = 15;
+
+const TOP_TOPICS = [
+  { tag: "#startups",              label: "Startups" },
+  { tag: "#startuplessons",        label: "Startup Lessons" },
+  { tag: "#entrepreneurship",      label: "Entrepreneurship" },
+  { tag: "#artificialintelligence", label: "AI" },
+  { tag: "#startupgrowth",         label: "Growth" },
+  { tag: "#innovation",            label: "Innovation" },
+  { tag: "#startuplife",           label: "Startup Life" },
+  { tag: "#resilience",            label: "Resilience" },
+  { tag: "#growthhacking",         label: "Growth Hacking" },
+  { tag: "#bootstrapping",         label: "Bootstrapping" },
+];
 
 const Stories = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -42,6 +55,7 @@ const Stories = () => {
   const [stories, setStories] = useState<StoryArticle[]>([]);
   const [drafts, setDrafts] = useState<StoryArticle[]>([]);
   const [searchInput, setSearchInput] = useState(searchQuery);
+  const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const isMountedRef = useRef(true);
 
@@ -164,8 +178,22 @@ const Stories = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  // Calculate pagination for published stories
-  const filteredStories = stories;
+  // Reset to page 1 whenever the topic filter changes
+  useEffect(() => {
+    const params = new URLSearchParams(searchParams);
+    params.set("page", "1");
+    setSearchParams(params, { replace: true });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedTopic]);
+
+  // Apply topic filter client-side (stories already loaded)
+  const filteredStories = selectedTopic
+    ? stories.filter((story) =>
+        story.hashtags?.some(
+          (tag) => normalizeHashtag(tag) === normalizeHashtag(selectedTopic)
+        )
+      )
+    : stories;
   const totalPages = Math.ceil(filteredStories.length / ARTICLES_PER_PAGE);
   const startIndex = (currentPage - 1) * ARTICLES_PER_PAGE;
   const endIndex = startIndex + ARTICLES_PER_PAGE;
@@ -265,6 +293,38 @@ const Stories = () => {
           <section className="relative min-h-[85vh] sm:min-h-[90vh] flex items-center justify-center overflow-hidden z-10">
             <StoriesHero />
           </section>
+
+          {/* Topic Filter — visible to all visitors on the published tab */}
+          {activeTab === "published" && (
+            <section className="relative z-10 -mt-4 mb-6">
+              <div className="container mx-auto px-6 max-w-7xl">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-widest text-muted-foreground mr-1 shrink-0">
+                    <SlidersHorizontal className="w-3.5 h-3.5" />
+                    Topics
+                  </span>
+                  {TOP_TOPICS.map(({ tag, label }) => {
+                    const isActive = selectedTopic === tag;
+                    return (
+                      <button
+                        key={tag}
+                        type="button"
+                        onClick={() => setSelectedTopic(isActive ? null : tag)}
+                        className={`inline-flex items-center gap-1.5 rounded-full border px-4 py-1.5 text-sm font-medium transition-all ${
+                          isActive
+                            ? "border-primary bg-primary text-primary-foreground shadow-sm"
+                            : "border-border bg-background/80 text-foreground/70 hover:border-primary/60 hover:text-foreground backdrop-blur-sm"
+                        }`}
+                      >
+                        {isActive && <X className="w-3 h-3" />}
+                        {label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </section>
+          )}
 
           {/* Search Section - Right after hero */}
           {!selectedTag && activeTab === "published" && (
