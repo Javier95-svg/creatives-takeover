@@ -29,7 +29,7 @@ const StoriesHero = () => {
             {paragraphs.map((para, index) => (
               <p
                 key={index}
-                className="text-base sm:text-lg md:text-xl text-foreground/90 leading-relaxed"
+                className="text-sm sm:text-base md:text-lg text-foreground/70 leading-7 font-normal tracking-wide"
                 style={{ fontFamily: "'Space Grotesk', 'Poppins', sans-serif" }}
               >
                 {para}
