@@ -168,10 +168,6 @@ const MentorBookingPage = () => {
                     <p className="text-sm text-muted-foreground">Discovery Call</p>
                   </div>
 
-                  <div className="rounded-lg border border-border/60 bg-muted/30 p-4 text-sm text-muted-foreground">
-                    Discovery calls are available on every plan and cost 10 credits only after your booking is confirmed.
-                  </div>
-
                   <Button
                     onClick={handleProceedToPayment}
                     disabled={loading}
