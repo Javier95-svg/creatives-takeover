@@ -626,11 +626,6 @@ export const MentorCard = ({ mentor, className, priority = false }: MentorCardPr
                 {saveButton.saving ? 'Saving...' : saveButton.label}
               </Button>
             </div>
-            {hasBookableCall && (
-              <p className="text-xs text-muted-foreground">
-                Unlimited on every plan. 10 credits are charged only after the booking is confirmed.
-              </p>
-            )}
             {(!hasBookableCall || !hasMessagingAccount) && (
               <p className="text-xs text-muted-foreground">
                 {!hasBookableCall && !hasMessagingAccount
