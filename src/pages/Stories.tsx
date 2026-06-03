@@ -298,7 +298,7 @@ const Stories = () => {
             <section className="relative z-10 -mt-8 mb-8">
               <div className="container mx-auto px-6 max-w-7xl">
                 {/* Search bar */}
-                <div className="mx-auto max-w-3xl mb-4">
+                <div className="mx-auto max-w-3xl mb-6">
                   <div className="relative">
                     <div className="pointer-events-none absolute -inset-1 rounded-2xl bg-gradient-to-r from-primary/30 via-secondary/25 to-accent/30 blur-sm" />
                     <div className="relative rounded-2xl border border-border/70 bg-background/90 backdrop-blur-md shadow-[0_12px_30px_-12px_rgba(0,0,0,0.35)]">
