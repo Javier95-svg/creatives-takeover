@@ -8,6 +8,8 @@
     { "source": "/community/", "destination": "/community/index.html" },
     { "source": "/resources", "destination": "/resources/index.html" },
     { "source": "/resources/", "destination": "/resources/index.html" },
+    { "source": "/newspaper/:slug", "destination": "/api/newspaper-og?slug=:slug" },
+    { "source": "/stories/:slug", "destination": "/api/newspaper-og?slug=:slug" },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "headers": [
