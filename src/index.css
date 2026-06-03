@@ -4477,3 +4477,10 @@ img {
   0%, 100% { stroke-width: 0.8px; }
   50%       { stroke-width: 1px;   }
 }
+
+/* Slim scrollbar for the newspaper topic filter row */
+.topics-scrollbar { scrollbar-width: thin; scrollbar-color: hsl(var(--border)) transparent; }
+.topics-scrollbar::-webkit-scrollbar { height: 3px; }
+.topics-scrollbar::-webkit-scrollbar-track { background: transparent; }
+.topics-scrollbar::-webkit-scrollbar-thumb { background: hsl(var(--border)); border-radius: 99px; }
+.topics-scrollbar::-webkit-scrollbar-thumb:hover { background: hsl(var(--primary) / 0.5); }

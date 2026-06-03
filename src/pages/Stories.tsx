@@ -315,7 +315,7 @@ const Stories = () => {
 
                 {/* Topic chips — single horizontal scrollable line */}
                 <div className="mx-auto max-w-3xl">
-                  <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide pb-1">
+                  <div className="flex items-center gap-2 overflow-x-auto topics-scrollbar pb-2">
                     <span className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-widest text-muted-foreground shrink-0">
                       <SlidersHorizontal className="w-3.5 h-3.5" />
                       Topics
