@@ -1,7 +1,7 @@
 import { useTypingAnimation } from "@/hooks/useTypingAnimation";
 
 const DESCRIPTION =
-  "Creatives Takeover Newspaper is your front-row seat to the stories that matter in the world of building. We cover founder journeys, startup case studies, and the emerging technologies reshaping industries, told by people who are living it.\n\nFrom hard-won pivots to breakthrough moments, every piece is designed to sharpen how you think and accelerate how you build. Stay ahead of the curve, spot what is working before it goes mainstream, and walk away with insights you can actually use.";
+  "Creatives Takeover Newspaper is your front-row seat to the stories that matter in the world of building. We cover founder journeys, startup case studies, and the emerging technologies reshaping industries, told by the people who lived it.\n\nFrom hard-won pivots to breakthrough moments, every piece is designed to sharpen how you think and accelerate how you build. Stay ahead of the curve, spot what is working before it goes mainstream, and walk away with insights you can actually use.";
 
 const StoriesHero = () => {
   const { displayedText, isTyping } = useTypingAnimation({
