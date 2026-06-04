@@ -78,7 +78,50 @@ serve(async (req: Request) => {
         throw error;
       }
 
+      // Notify admin + mentor the moment a booking is made. This is the reliable
+      // signal we control (mentors book on their own external calendars, so
+      // provider confirmation webhooks never arrive). Deduped per call by the
+      // notifier, so repeat invocations for the same call won't double-send.
+      if (data?.success && data?.callId) {
+        await supabaseAdmin.functions.invoke("notify-discovery-call-event", {
+          body: { discoveryCallId: data.callId, eventType: "booked" },
+        }).catch((notificationError) => {
+          logInfo("discovery-call-service:notification-after-intent-failed", {
+            callId: data.callId,
+            error: notificationError instanceof Error ? notificationError.message : String(notificationError),
+          });
+        });
+      }
+
       const status = data?.success ? 200 : data?.errorCode === "MENTOR_UNAVAILABLE" ? 404 : 409;
+      return jsonResponse(data, status);
+    }
+
+    if (action === "confirmBooking") {
+      const callId = typeof body.callId === "string" ? body.callId : "";
+      if (!callId) {
+        return jsonResponse({ success: false, error: "callId is required" }, 400);
+      }
+
+      const { data, error } = await supabaseAdmin.rpc("confirm_discovery_call_by_founder", {
+        p_call_id: callId,
+        p_founder_id: user.id,
+        p_metadata: typeof body.metadata === "object" && body.metadata !== null ? body.metadata : {},
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      const status = data?.success
+        ? 200
+        : data?.errorCode === "INSUFFICIENT_CREDITS"
+          ? 402
+          : data?.errorCode === "FORBIDDEN"
+            ? 403
+            : data?.errorCode === "NOT_FOUND"
+              ? 404
+              : 409;
       return jsonResponse(data, status);
     }
 

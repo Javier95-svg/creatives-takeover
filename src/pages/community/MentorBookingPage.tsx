@@ -13,6 +13,7 @@ import { Mentor } from "@/types/mentor";
 import { toast } from "sonner";
 import {
   buildDiscoveryCallRedirectUrl,
+  confirmDiscoveryCallBooking,
   createDiscoveryCallIntent,
   openDeferredExternalTab,
 } from "@/services/discoveryCallService";
@@ -26,6 +27,11 @@ const MentorBookingPage = () => {
   const { fetchMentorById, loading: mentorLoading } = useMentors();
   const [mentor, setMentor] = useState<Mentor | null>(null);
   const [loading, setLoading] = useState(false);
+  // After the calendar opens we keep the booking's id so the founder can confirm
+  // they completed it (that's what charges the 10 credits and marks it scheduled).
+  const [pendingCallId, setPendingCallId] = useState<string | null>(null);
+  const [confirming, setConfirming] = useState(false);
+  const [confirmed, setConfirmed] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -35,7 +41,7 @@ const MentorBookingPage = () => {
 
   useEffect(() => {
     if (id && isAuthenticated) {
-      loadMentor();
+      void loadMentor();
     }
   }, [id, isAuthenticated]);
 
@@ -100,13 +106,44 @@ const MentorBookingPage = () => {
       }
 
       bookingTab.location.href = buildDiscoveryCallRedirectUrl(bookingUrl, bookingIntent.callId);
-      toast.success("Booking opened in a new tab.");
+      setPendingCallId(bookingIntent.callId);
+      toast.success("Booking calendar opened in a new tab.");
     } catch (error) {
       bookingTab.close();
       console.error("Error creating discovery call intent:", error);
       toast.error("Unable to process booking. Please try again.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleConfirmBooking = async () => {
+    if (!pendingCallId) return;
+    setConfirming(true);
+    try {
+      const result = await confirmDiscoveryCallBooking(pendingCallId, { source: "mentor_booking_page" });
+      if (result.success) {
+        setConfirmed(true);
+        toast.success(
+          result.alreadyConfirmed
+            ? "This booking was already confirmed."
+            : `Booking confirmed${result.chargedCredits ? ` — ${result.chargedCredits} credits used` : ""}.`,
+        );
+      } else if (result.errorCode === "INSUFFICIENT_CREDITS") {
+        openUpgradePrompt({
+          reason: "credits",
+          featureName: "Discovery Calls",
+          requiredCredits: result.requiredCredits ?? 10,
+          description: result.error || "You need 10 credits to confirm this discovery call.",
+        });
+      } else {
+        toast.error(result.error || "Unable to confirm your booking. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error confirming discovery call:", error);
+      toast.error("Unable to confirm your booking. Please try again.");
+    } finally {
+      setConfirming(false);
     }
   };
 
@@ -168,25 +205,72 @@ const MentorBookingPage = () => {
                     <p className="text-sm text-muted-foreground">Discovery Call</p>
                   </div>
 
-                  <Button
-                    onClick={handleProceedToPayment}
-                    disabled={loading}
-                    size="lg"
-                    className="w-full"
-                  >
-                    {loading ? (
-                      <>
-                        <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                        Processing...
-                      </>
-                    ) : (
-                      "Continue to Booking Calendar"
-                    )}
-                  </Button>
+                  {confirmed ? (
+                    <div className="rounded-lg border border-green-500/40 bg-green-500/5 p-4 text-center">
+                      <p className="font-semibold text-green-700 dark:text-green-400">Booking confirmed 🎉</p>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Your discovery call with {mentor.name} is confirmed. You can manage it from your dashboard.
+                      </p>
+                      <Button asChild variant="outline" className="mt-4">
+                        <Link to="/dashboard">Go to Dashboard</Link>
+                      </Button>
+                    </div>
+                  ) : !pendingCallId ? (
+                    <>
+                      <Button
+                        onClick={handleProceedToPayment}
+                        disabled={loading}
+                        size="lg"
+                        className="w-full"
+                      >
+                        {loading ? (
+                          <>
+                            <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                            Processing...
+                          </>
+                        ) : (
+                          "Continue to Booking Calendar"
+                        )}
+                      </Button>
 
-                  <p className="text-xs text-center text-muted-foreground">
-                    The calendar opens in a new tab so your place in Creatives Takeover is preserved.
-                  </p>
+                      <p className="text-xs text-center text-muted-foreground">
+                        The calendar opens in a new tab so your place in Creatives Takeover is preserved.
+                      </p>
+                    </>
+                  ) : (
+                    <div className="rounded-lg border p-4 space-y-3">
+                      <p className="text-sm font-medium">
+                        Pick your time with {mentor.name} in the calendar tab, then confirm here.
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Confirming uses 10 credits and notifies your mentor that the call is booked.
+                      </p>
+                      <Button
+                        onClick={handleConfirmBooking}
+                        disabled={confirming}
+                        size="lg"
+                        className="w-full"
+                      >
+                        {confirming ? (
+                          <>
+                            <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                            Confirming...
+                          </>
+                        ) : (
+                          "I've completed my booking"
+                        )}
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="w-full"
+                        onClick={handleProceedToPayment}
+                        disabled={loading}
+                      >
+                        Reopen booking calendar
+                      </Button>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </div>

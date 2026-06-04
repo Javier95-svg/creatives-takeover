@@ -43,8 +43,10 @@ function getAppUrl() {
 
 function getEventLabel(eventType: string) {
   switch (eventType) {
+    case "booked":
+      return "New Discovery Call Booking";
     case "scheduled":
-      return "Discovery Call Booked";
+      return "Discovery Call Confirmed";
     case "rescheduled":
       return "Discovery Call Rescheduled";
     case "cancelled_early":
@@ -64,6 +66,8 @@ function getEventLabel(eventType: string) {
 
 function getUserMessage(eventType: string, mentorName: string, scheduledLabel: string) {
   switch (eventType) {
+    case "booked":
+      return `Your discovery call with ${mentorName} is booked. Pick your time on the mentor's calendar, then confirm it in Creatives Takeover.`;
     case "scheduled":
       return `Your discovery call with ${mentorName} is confirmed for ${scheduledLabel}.`;
     case "rescheduled":
@@ -81,10 +85,22 @@ function getUserMessage(eventType: string, mentorName: string, scheduledLabel: s
   }
 }
 
-function getMentorMessage(eventType: string, founderName: string, scheduledLabel: string) {
+function getProviderLabel(provider: string | null | undefined) {
+  const normalized = (provider || "").trim().toLowerCase();
+  if (normalized === "calendly") return "Calendly";
+  if (normalized === "koalendar") return "Koalendar";
+  if (normalized && normalized !== "manual" && normalized !== "self_confirmed") {
+    return normalized.charAt(0).toUpperCase() + normalized.slice(1);
+  }
+  return "booking calendar";
+}
+
+function getMentorMessage(eventType: string, founderName: string, scheduledLabel: string, providerLabel = "booking calendar") {
   switch (eventType) {
+    case "booked":
+      return `${founderName} from Creatives Takeover booked a Discovery Call via your ${providerLabel}. They will choose a time on your calendar.`;
     case "scheduled":
-      return `${founderName} booked a discovery call for ${scheduledLabel}.`;
+      return `${founderName} confirmed a discovery call for ${scheduledLabel}.`;
     case "rescheduled":
       return `${founderName}'s discovery call was rescheduled to ${scheduledLabel}.`;
     case "cancelled_early":
@@ -315,7 +331,7 @@ serve(async (req: Request) => {
 
       const { data: booking, error: bookingError } = await supabaseAdmin
         .from("discovery_call_admin_overview")
-        .select("id, status, scheduled_for, founder_name, founder_email, founder_id, mentor_name, mentor_user_id, meeting_url, provider_name")
+        .select("id, status, scheduled_for, founder_name, founder_email, founder_id, mentor_name, mentor_user_id, mentor_contact_email, mentor_booking_provider, meeting_url, provider_name")
         .eq("id", body.discoveryCallId)
         .maybeSingle();
 
@@ -332,11 +348,16 @@ serve(async (req: Request) => {
         : "time unavailable";
       const founderName = booking.founder_name?.trim() || "Founder";
       const founderEmail = booking.founder_email?.trim() || null;
+      const founderId = booking.founder_id || null;
       const mentorName = booking.mentor_name?.trim() || "your mentor";
-      const mentorEmail = await getSubscriberEmail(supabaseAdmin, booking.mentor_user_id);
+      // Prefer the mentor's stored contact email so we can reach mentors even
+      // without a linked account; fall back to the linked account's email.
+      const mentorEmail = booking.mentor_contact_email?.trim()
+        || (await getSubscriberEmail(supabaseAdmin, booking.mentor_user_id));
+      const providerLabel = getProviderLabel(booking.mentor_booking_provider || booking.provider_name);
       const title = getEventLabel(eventType);
       const founderMessage = getUserMessage(eventType, mentorName, scheduledLabel);
-      const mentorMessage = getMentorMessage(eventType, founderName, scheduledLabel);
+      const mentorMessage = getMentorMessage(eventType, founderName, scheduledLabel, providerLabel);
       const actionUrl = `${appUrl}/dashboard`;
 
       await insertInAppNotification(supabaseAdmin, {
@@ -388,12 +409,16 @@ serve(async (req: Request) => {
         }),
       });
 
+      const adminMessage = eventType === "booked"
+        ? `User ${founderName} (${founderEmail || "email unavailable"} • UID ${founderId || "unknown"}) successfully booked a discovery call with ${mentorName}.`
+        : `${founderName} (${founderEmail || "email unavailable"} • UID ${founderId || "unknown"}) has a "${title}" update with ${mentorName}.`;
+
       const adminEmailResult = await sendEmail({
         to: adminRecipient,
-        subject: `${title}: ${founderName} with ${mentorName}`,
+        subject: `${title}: ${founderName} → ${mentorName}`,
         html: buildEmailHtml({
           title,
-          message: `${founderName} has a discovery call update with ${mentorName}.`,
+          message: adminMessage,
           founderName,
           founderEmail,
           mentorName,

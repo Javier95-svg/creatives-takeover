@@ -131,6 +131,25 @@ export async function createDiscoveryCallIntent(input: {
   });
 }
 
+export interface DiscoveryCallConfirmResponse {
+  success: boolean;
+  callId?: string;
+  status?: string;
+  alreadyConfirmed?: boolean;
+  chargedCredits?: number;
+  error?: string;
+  errorCode?: string;
+  requiredCredits?: number;
+}
+
+export async function confirmDiscoveryCallBooking(callId: string, metadata?: Record<string, unknown>) {
+  return invokeDiscoveryCallService<DiscoveryCallConfirmResponse>({
+    action: 'confirmBooking',
+    callId,
+    metadata: metadata ?? {},
+  });
+}
+
 export async function listMyDiscoveryCalls() {
   return invokeDiscoveryCallService<{ success: boolean; bookings: DiscoveryCallBookingItem[] }>({
     action: 'listMine',
