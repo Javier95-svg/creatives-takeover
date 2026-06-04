@@ -23,10 +23,10 @@ export interface FeatureEnforcement {
 export const PLAN_SEQUENCE: Plan[] = ['rookie', 'starter', 'rising', 'pro'];
 
 export const PLAN_MONTHLY_CREDITS: Record<Plan, number> = {
-  rookie: 10,
-  starter: 30,
-  rising: 75,
-  pro: 150,
+  rookie: 50,
+  starter: 100,
+  rising: 250,
+  pro: 600,
 };
 
 const FEATURE_RULES: Partial<Record<EnforcedFeature, Record<Plan, FeatureRule>>> = {

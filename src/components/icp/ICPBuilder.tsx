@@ -1874,7 +1874,7 @@ const ICPBuilder: React.FC = () => {
                 Your ICP is live. Now validate the demand behind it.
               </h2>
               <p className="text-sm leading-6 text-muted-foreground">
-                Starter gives you 30 credits/month, PMF Lab, Email Templates, and deeper research access so you can turn your ICP into real validation.
+                Starter gives you 100 credits/month, PMF Lab, Email Templates, and deeper research access so you can turn your ICP into real validation.
               </p>
             </div>
             <div className="flex flex-col gap-3 sm:flex-row">

@@ -38,7 +38,7 @@ const features: FeatureCategory[] = [
   {
     category: "Credits",
     items: [
-      { feature: "Monthly Credits", rookie: "10 credits", starter: "30 credits", rising: "75 credits", pro: "150 credits" },
+      { feature: "Monthly Credits", rookie: "50 credits", starter: "100 credits", rising: "250 credits", pro: "600 credits" },
     ],
   },
   {

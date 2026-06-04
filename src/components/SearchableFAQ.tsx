@@ -37,7 +37,7 @@ const SearchableFAQ = () => {
       id: 1,
       category: "Pricing",
       question: "What pricing plans do you offer?",
-      answer: "We offer four plans built around the founder journey. Rookie helps you clarify with 10 credits/month. Starter helps you validate with PMF Lab, Email Templates, and 30 credits/month. Rising helps you build and launch with MVP Builder, Tech Stack Builder, GTM Strategist, and 75 credits/month. Pro helps you fundraise and scale with Find Your Angel, unlimited research views, and 150 credits/month. Discovery Calls are unlimited on every plan and cost 10 credits per confirmed booking.",
+      answer: "We offer four plans built around the founder journey. Rookie helps you clarify with 50 credits/month. Starter helps you validate with PMF Lab, Email Templates, and 100 credits/month. Rising helps you build and launch with MVP Builder, Tech Stack Builder, GTM Strategist, and 250 credits/month. Pro helps you fundraise and scale with Find Your Angel, unlimited research views, and 600 credits/month. Discovery Calls are unlimited on every plan and cost 10 credits per confirmed booking.",
       popular: true,
       tags: ["pricing", "plans", "subscription", "rookie", "starter", "rising", "pro"]
     },
@@ -45,7 +45,7 @@ const SearchableFAQ = () => {
       id: 2,
       category: "Pricing",
       question: "Is there a free plan available?",
-      answer: "Yes. Rookie is completely free forever with no credit card required. You get 10 credits per month, free ICP Builder access, Insighta Test, Newspaper, mentor and co-founder browsing, preview access to later-stage tools, unlimited Discovery Calls at 10 credits per confirmed booking, and 1 co-founder post per billing cycle.",
+      answer: "Yes. Rookie is completely free forever with no credit card required. You get 50 credits per month, free ICP Builder access, Insighta Test, Newspaper, mentor and co-founder browsing, preview access to later-stage tools, unlimited Discovery Calls at 10 credits per confirmed booking, and 1 co-founder post per billing cycle.",
       popular: true,
       tags: ["free", "rookie", "no credit card", "credits"]
     },
@@ -61,7 +61,7 @@ const SearchableFAQ = () => {
       id: 4,
       category: "Pricing",
       question: "What's the difference between Rising and Pro plans?",
-      answer: "Rising gives you 75 credits, the full BizMap AI toolset, 10 VC profiles and 10 accelerator profiles per billing cycle, full prompt library access, full email templates, and pitch deck analyzer access. Pro gives you 150 credits, unlimited VC and accelerator profile views, Angels community access, group office hours, and priority support. Discovery Calls are unlimited on both plans and cost 10 credits per confirmed booking. MVP Builder is available on every plan and charges per AI action.",
+      answer: "Rising gives you 250 credits, the full BizMap AI toolset, 10 VC profiles and 10 accelerator profiles per billing cycle, full prompt library access, full email templates, and pitch deck analyzer access. Pro gives you 600 credits, unlimited VC and accelerator profile views, Angels community access, group office hours, and priority support. Discovery Calls are unlimited on both plans and cost 10 credits per confirmed booking. MVP Builder is available on every plan and charges per AI action.",
       popular: true,
       tags: ["rising", "pro", "comparison", "features"]
     },
