@@ -34,7 +34,7 @@ test('post-ICP nudge appears only after first Rookie ICP and uses Starter checko
   assert.match(source, /\.select\("id", \{ count: "exact", head: true \}\)/);
   assert.match(source, /\.neq\("id", analysisId\)/);
   assert.match(source, /Your ICP is live\. Now validate the demand behind it\./);
-  assert.match(source, /Starter gives you 30 credits\/month/);
+  assert.match(source, /Starter gives you 100 credits\/month/);
   assert.match(source, /trigger: "post_icp_nudge"/);
   assert.match(source, /createCheckout\("starter", undefined, "monthly"\)/);
   assert.match(source, /location: "post_icp_nudge"/);

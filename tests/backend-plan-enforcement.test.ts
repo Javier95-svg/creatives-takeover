@@ -20,10 +20,10 @@ test('normalizePlan preserves canonical and legacy aliases', () => {
 
 test('plan monthly credits match pricing contract', () => {
   assert.deepEqual(PLAN_MONTHLY_CREDITS, {
-    rookie: 10,
-    starter: 30,
-    rising: 75,
-    pro: 150,
+    rookie: 50,
+    starter: 100,
+    rising: 250,
+    pro: 600,
   });
 });
 
@@ -129,9 +129,9 @@ test('discovery call notifications fan out beyond admin-only Calendly emails', (
 test('subscription checkout copy uses the paid plan credit ladder', () => {
   const source = readFileSync(new URL('../supabase/functions/create-checkout/index.ts', import.meta.url), 'utf8');
 
-  assert.match(source, /starter: \{[\s\S]*monthly: \{[\s\S]*credits: 30[\s\S]*PMF Lab credit-metered access/);
-  assert.match(source, /rising: \{[\s\S]*monthly: \{[\s\S]*credits: 75[\s\S]*per-action MVP Builder/);
-  assert.match(source, /pro: \{[\s\S]*monthly: \{[\s\S]*credits: 150[\s\S]*Find Your Angel[\s\S]*unlimited research views/);
+  assert.match(source, /starter: \{[\s\S]*monthly: \{[\s\S]*credits: 100[\s\S]*PMF Lab credit-metered access/);
+  assert.match(source, /rising: \{[\s\S]*monthly: \{[\s\S]*credits: 250[\s\S]*per-action MVP Builder/);
+  assert.match(source, /pro: \{[\s\S]*monthly: \{[\s\S]*credits: 600[\s\S]*Find Your Angel[\s\S]*unlimited research views/);
   assert.match(source, /description: `\$\{pricing\.description\} with \$\{billingCycle\} billing`/);
 });
 
