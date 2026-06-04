@@ -1,5 +1,13 @@
 project_id = "rcjlaybjnozqbsoxzboa"
 
+# Declared explicitly so `supabase functions deploy` is deterministic and matches
+# the live gateway config (both currently run with JWT verification enabled).
+[functions.stripe-webhook]
+verify_jwt = true
+
+[functions.check-subscription]
+verify_jwt = true
+
 [functions.embed-text]
 verify_jwt = false
 
