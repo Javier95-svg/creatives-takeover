@@ -15,7 +15,7 @@ import {
   sanitizeMVPProjectType,
 } from '@/data/mvpProjectTypes';
 import type { CreditFeature } from '@/config/constants';
-import { CREDIT_COSTS } from '@/config/constants';
+import { CREDIT_COSTS, MVP_ACTION_DEFAULT_MODEL, resolveModelAdjustedCreditCost } from '@/config/constants';
 import {
   buildPreviewFromProject,
   createProjectFromHtml,
@@ -2653,10 +2653,13 @@ export function useMVPBuilder() {
     }
 
     const localFeature = MVP_BUILDER_ACTION_CREDIT_FEATURE[localActionType] as CreditFeature;
+    const actionDefaultModel = MVP_ACTION_DEFAULT_MODEL[localFeature] ?? MVP_DEFAULT_MODEL;
+    const firstModel = selectedModels[0];
+    const quoteModel = firstModel && firstModel !== MVP_DEFAULT_MODEL ? firstModel : actionDefaultModel;
     const fallbackQuote: MVPActionQuote = {
       actionType: localActionType,
       creditFeature: localFeature,
-      creditCost: CREDIT_COSTS[localFeature] ?? 0,
+      creditCost: resolveModelAdjustedCreditCost(CREDIT_COSTS[localFeature] ?? 0, quoteModel, actionDefaultModel),
     };
     setLastActionQuote(fallbackQuote);
 
@@ -2667,6 +2670,7 @@ export function useMVPBuilder() {
         body: JSON.stringify({
           mode: 'classify',
           userMessage: prompt,
+          selectedModels,
           currentProject:
             projectFiles.length > 0
               ? { files: projectFiles.map((file) => ({ path: file.path, content: file.content })) }
@@ -2685,7 +2689,7 @@ export function useMVPBuilder() {
     } catch {
       return fallbackQuote;
     }
-  }, [projectFiles]);
+  }, [projectFiles, selectedModels]);
 
   const sendMessage = useCallback(
     async (

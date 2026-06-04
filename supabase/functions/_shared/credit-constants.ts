@@ -97,3 +97,61 @@ export function getCreditCostForPlan(
   return PLAN_CREDIT_COST_OVERRIDES[plan]?.[typedFeature] ?? CREDIT_COSTS[typedFeature];
 }
 
+/**
+ * MVP Builder model cost weights (proportional to Anthropic output pricing, the
+ * dominant cost driver). Used to keep cost-per-credit invariant to model choice:
+ * upgrading above an action's default model is surcharged proportionally so margin
+ * is guaranteed regardless of which model the user picks.
+ *   Haiku 4.5  $5/M out  -> 1
+ *   Sonnet 4.6 $15/M out -> 3
+ *   Opus 4.8   $75/M out -> 15
+ *   Gemini Flash (cheap) -> 1
+ * IMPORTANT: keep in sync with src/config/constants.ts
+ */
+export const MVP_MODEL_COST_WEIGHTS: Record<string, number> = {
+  'claude-haiku-4-5-20251001': 1,
+  'claude-sonnet-4-6': 3,
+  'claude-opus-4-8': 15,
+  'google/gemini-3-flash': 1,
+  'google/gemini-2.5-flash': 1,
+};
+
+// Unknown/unlisted models are treated as Sonnet-class so we never under-charge a
+// premium model that slips through.
+export const MVP_DEFAULT_MODEL_WEIGHT = 3;
+
+// Each MVP action's default model (mirrors ACTION_CONFIG in mvp-builder-generate).
+// The base CREDIT_COSTS are calibrated to these defaults, so default usage is 1x.
+export const MVP_ACTION_DEFAULT_MODEL: Partial<Record<CreditFeature, string>> = {
+  APP_BUILDER_GENERATE: 'claude-sonnet-4-6',
+  APP_BUILDER_REFINE: 'claude-haiku-4-5-20251001',
+  APP_BUILDER_DEBUG: 'claude-haiku-4-5-20251001',
+  APP_BUILDER_ADD_PAGE: 'claude-sonnet-4-6',
+  APP_BUILDER_ADD_FEATURE: 'claude-sonnet-4-6',
+  APP_BUILDER_DESIGN_OVERHAUL: 'claude-sonnet-4-6',
+  APP_BUILDER_CHAT: 'claude-haiku-4-5-20251001',
+};
+
+export function getMvpModelCostWeight(model?: string | null): number {
+  if (!model) return MVP_DEFAULT_MODEL_WEIGHT;
+  return MVP_MODEL_COST_WEIGHTS[model] ?? MVP_DEFAULT_MODEL_WEIGHT;
+}
+
+/**
+ * Credit cost for an MVP action adjusted for the chosen model. Charges the base
+ * cost at the action's default model and surcharges proportionally when the user
+ * upgrades to a more expensive model (never discounts below base). Zero-cost
+ * actions (e.g. export) stay free.
+ */
+export function resolveModelAdjustedCreditCost(
+  baseCost: number,
+  chosenModel?: string | null,
+  defaultModel?: string | null,
+): number {
+  if (!Number.isFinite(baseCost) || baseCost <= 0) return baseCost;
+  const chosenWeight = getMvpModelCostWeight(chosenModel);
+  const defaultWeight = getMvpModelCostWeight(defaultModel ?? null);
+  const multiplier = Math.max(1, chosenWeight / defaultWeight);
+  return Math.ceil(baseCost * multiplier);
+}
+

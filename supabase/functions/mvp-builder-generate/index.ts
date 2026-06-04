@@ -1,11 +1,26 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { getUserFromAuth } from "../_shared/credit-deduction.ts";
-import { CREDIT_COSTS, type CreditFeature } from "../_shared/credit-constants.ts";
+import { CREDIT_COSTS, resolveModelAdjustedCreditCost, type CreditFeature } from "../_shared/credit-constants.ts";
 import {
   finalizeMVPBuilderCredits,
   releaseMVPBuilderCredits,
   reserveMVPBuilderCredits,
 } from "../_shared/mvp-builder-credit-reservations.ts";
+import { emitBusinessEvent } from "../_shared/analytics.ts";
+
+// Per-model Anthropic/Gemini pricing (USD per million tokens) for live margin
+// measurement. Used only for telemetry, not for charging.
+const MODEL_PRICING_PER_MTOK: Record<string, { input: number; output: number }> = {
+  "claude-haiku-4-5-20251001": { input: 1, output: 5 },
+  "claude-sonnet-4-6": { input: 3, output: 15 },
+  "claude-opus-4-8": { input: 15, output: 75 },
+  "google/gemini-3-flash": { input: 0.3, output: 2.5 },
+  "google/gemini-2.5-flash": { input: 0.3, output: 2.5 },
+};
+// Lowest revenue-per-credit we sell (Starter annual: $79/12/100). Margin is
+// measured against this floor so the alert reflects the worst-case plan.
+const CREDIT_REVENUE_FLOOR_USD = 0.0658;
+const MARGIN_FLOOR_RATIO = 0.4;
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -893,13 +908,21 @@ serve(async (req: Request) => {
   const classifiedAction = normalizeAction(body.actionType, userMessage, hasExistingProject);
 
   if (mode === "classify") {
-    const feature = classifiedAction === "unsupported" || classifiedAction === "unclear"
-      ? null
-      : ACTION_CONFIG[classifiedAction].feature;
+    const isActionable = classifiedAction !== "unsupported" && classifiedAction !== "unclear";
+    const feature = isActionable ? ACTION_CONFIG[classifiedAction].feature : null;
+    let classifyCost = 0;
+    if (isActionable && feature) {
+      const actionDefaultModel = ACTION_CONFIG[classifiedAction].model;
+      const classifyModels = normalizeSelectedModels(body.selectedModels).filter((m) => HTML_CAPABLE_MODEL_SET.has(m));
+      const classifyModel = (classifyModels[0] && classifyModels[0] !== DEFAULT_MODEL)
+        ? classifyModels[0]
+        : actionDefaultModel;
+      classifyCost = resolveModelAdjustedCreditCost(CREDIT_COSTS[feature], classifyModel, actionDefaultModel);
+    }
     return jsonResponse({
       actionType: classifiedAction,
       creditFeature: feature,
-      creditCost: feature ? CREDIT_COSTS[feature] : 0,
+      creditCost: classifyCost,
       wallet: "platform",
     });
   }
@@ -922,7 +945,24 @@ serve(async (req: Request) => {
   const palette   = normalizePalette(body.palettePreference ?? (body.setupInput as Record<string, unknown> | undefined)?.palettePreference);
   const userId    = user.id;
   const creditFeature = ACTION_CONFIG[classifiedAction].feature;
-  const creditCost    = CREDIT_COSTS[creditFeature];
+  const defaultModel  = ACTION_CONFIG[classifiedAction].model;
+
+  // Resolve the model BEFORE reserving so the charge reflects the model choice.
+  const selectedModels = normalizeSelectedModels(body.selectedModels);
+  const textCapableModels = selectedModels.filter((m) => HTML_CAPABLE_MODEL_SET.has(m));
+  const userExplicitModel = textCapableModels[0];
+  // Use action-specific default unless the user explicitly picked a non-default model
+  const primaryModel = (userExplicitModel && userExplicitModel !== DEFAULT_MODEL)
+    ? userExplicitModel
+    : defaultModel;
+  const modelCandidates = getFallbackCandidates(primaryModel);
+
+  // Charge the base cost at the action's default model; surcharge proportionally
+  // when the user upgrades to a pricier model so cost-per-credit stays bounded
+  // and margin is guaranteed regardless of model. (A premium model also costs
+  // enough credits to be unaffordable on the free tier, self-gating it there.)
+  const baseCreditCost = CREDIT_COSTS[creditFeature];
+  const creditCost     = resolveModelAdjustedCreditCost(baseCreditCost, primaryModel, defaultModel);
   const idempotencyKey = req.headers.get("Idempotency-Key") ?? crypto.randomUUID();
   const reservation = await reserveMVPBuilderCredits(
     userId,
@@ -933,6 +973,8 @@ serve(async (req: Request) => {
       entitlementFeature: creditFeature,
       featureCode: creditFeature,
       mvpBuilderActionType: classifiedAction,
+      model: primaryModel,
+      baseCreditCost,
       projectId: typeof body.projectId === "string" ? body.projectId : undefined,
       currentVersion: typeof body.currentVersion === "number" ? body.currentVersion : undefined,
     }
@@ -941,22 +983,13 @@ serve(async (req: Request) => {
   if (!reservation.success || !reservation.reservationId) {
     return errorStream(
       reservation.errorCode === "INSUFFICIENT_CREDITS"
-        ? `You need ${creditCost} credits for this MVP Builder action. Upgrade your plan or buy a credit pack.`
+        ? `You need ${creditCost} credits for this MVP Builder action${primaryModel !== defaultModel ? ` with the selected model` : ""}. Upgrade your plan, switch to a lighter model, or buy a credit pack.`
         : "Unable to reserve credits. Please try again.",
       reservation.errorCode
     );
   }
   const reservationId = reservation.reservationId;
   const heldCredits = Number(reservation.heldCredits ?? 0);
-
-  const selectedModels = normalizeSelectedModels(body.selectedModels);
-  const textCapableModels = selectedModels.filter((m) => HTML_CAPABLE_MODEL_SET.has(m));
-  const userExplicitModel = textCapableModels[0];
-  // Use action-specific default unless the user explicitly picked a non-default model
-  const primaryModel = (userExplicitModel && userExplicitModel !== DEFAULT_MODEL)
-    ? userExplicitModel
-    : ACTION_CONFIG[classifiedAction].model;
-  const modelCandidates = getFallbackCandidates(primaryModel);
   const setupInput = body.setupInput && typeof body.setupInput === "object" ? body.setupInput as Record<string, unknown> : {};
   const productName = typeof setupInput.productName === "string" ? setupInput.productName : "Generated MVP";
   const posthogKey = Deno.env.get("POSTHOG_API_KEY") ?? "";
@@ -1044,6 +1077,51 @@ serve(async (req: Request) => {
     let buffer = "";
     let fullText = "";
     let sawStop = false;
+    // Live margin measurement: captured from Anthropic stream usage events.
+    let inputTokens = 0;
+    let outputTokens = 0;
+
+    // Emit per-action cost + margin telemetry once credits are finalized.
+    const emitCostTelemetry = async (creditsCharged: number) => {
+      try {
+        const pricing = MODEL_PRICING_PER_MTOK[selectedModel] ?? MODEL_PRICING_PER_MTOK[DEFAULT_MODEL];
+        const usdCost = (inputTokens / 1_000_000) * pricing.input + (outputTokens / 1_000_000) * pricing.output;
+        const revenueFloor = creditsCharged * CREDIT_REVENUE_FLOOR_USD;
+        const marginRatio = revenueFloor > 0 ? (revenueFloor - usdCost) / revenueFloor : 1;
+        await emitBusinessEvent({
+          eventName: "mvp_builder_action_cost",
+          userId,
+          properties: {
+            action_type: classifiedAction,
+            model: selectedModel,
+            requested_models: selectedModels,
+            input_tokens: inputTokens,
+            output_tokens: outputTokens,
+            usd_cost: Number(usdCost.toFixed(6)),
+            credits_charged: creditsCharged,
+            credit_revenue_floor_usd: Number(revenueFloor.toFixed(6)),
+            margin_ratio: Number(marginRatio.toFixed(4)),
+          },
+        });
+        if (marginRatio < MARGIN_FLOOR_RATIO) {
+          console.warn(JSON.stringify({
+            level: "warn", message: "mvp_builder_margin_below_floor",
+            model: selectedModel, action: classifiedAction, usdCost, creditsCharged, marginRatio,
+          }));
+          await emitBusinessEvent({
+            eventName: "mvp_builder_margin_alert",
+            userId,
+            properties: {
+              action_type: classifiedAction, model: selectedModel,
+              usd_cost: Number(usdCost.toFixed(6)), credits_charged: creditsCharged,
+              margin_ratio: Number(marginRatio.toFixed(4)),
+            },
+          });
+        }
+      } catch (telemetryError) {
+        console.error("emitCostTelemetry failed", telemetryError);
+      }
+    };
 
     try {
       await writer.write(enc({
@@ -1097,6 +1175,20 @@ serve(async (req: Request) => {
             continue;
           }
 
+          // Anthropic usage accounting (for live margin measurement).
+          if (event.type === "message_start") {
+            const usage = (event.message as Record<string, unknown> | undefined)?.usage as Record<string, unknown> | undefined;
+            if (usage) {
+              inputTokens = Number(usage.input_tokens ?? 0)
+                + Number(usage.cache_creation_input_tokens ?? 0)
+                + Number(usage.cache_read_input_tokens ?? 0);
+            }
+          }
+          if (event.type === "message_delta") {
+            const usage = event.usage as Record<string, unknown> | undefined;
+            if (usage && typeof usage.output_tokens === "number") outputTokens = usage.output_tokens;
+          }
+
           // Anthropic Messages SSE termination signal
           if (event.type === "message_stop") {
             sawStop = true;
@@ -1134,6 +1226,7 @@ serve(async (req: Request) => {
         });
         if (!finalized.success) throw new Error("Unable to finalize MVP Builder chat credits");
         await writer.write(enc({ type: "credit-finalized", ...finalized }));
+        await emitCostTelemetry(Number(finalized.creditsUsed ?? heldCredits));
         await writer.write(enc({ type: "complete", model: selectedModel, requestedModels: selectedModels }));
         await writer.write(encDone());
         return;
@@ -1210,6 +1303,7 @@ serve(async (req: Request) => {
       });
       if (!finalized.success) throw new Error("Unable to finalize MVP Builder credits");
       await writer.write(enc({ type: "credit-finalized", ...finalized }));
+      await emitCostTelemetry(Number(finalized.creditsUsed ?? heldCredits));
       await writer.write(enc({
         type: "project",
         project: outputToProject(validated, productName),

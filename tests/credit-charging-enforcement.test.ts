@@ -2,10 +2,16 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
-import { CREDIT_COSTS as CLIENT_CREDIT_COSTS } from '../src/config/constants.ts';
+import {
+  CREDIT_COSTS as CLIENT_CREDIT_COSTS,
+  MVP_MODEL_COST_WEIGHTS as CLIENT_MVP_MODEL_COST_WEIGHTS,
+  resolveModelAdjustedCreditCost as clientResolveModelAdjustedCreditCost,
+} from '../src/config/constants.ts';
 import {
   CREDIT_COSTS as EDGE_CREDIT_COSTS,
   PLAN_CREDIT_COST_OVERRIDES as EDGE_PLAN_CREDIT_COST_OVERRIDES,
+  MVP_MODEL_COST_WEIGHTS as EDGE_MVP_MODEL_COST_WEIGHTS,
+  resolveModelAdjustedCreditCost as edgeResolveModelAdjustedCreditCost,
 } from '../supabase/functions/_shared/credit-constants.ts';
 import {
   MVP_CREDIT_COSTS as CLIENT_MVP_CREDIT_COSTS,
@@ -17,6 +23,32 @@ test('client and edge credit costs stay in sync', () => {
   assert.deepEqual(CLIENT_CREDIT_COSTS, EDGE_CREDIT_COSTS);
   assert.deepEqual(CLIENT_PLAN_CREDIT_COST_OVERRIDES, EDGE_PLAN_CREDIT_COST_OVERRIDES);
   assert.deepEqual(CLIENT_MVP_CREDIT_COSTS, EDGE_MVP_CREDIT_COSTS);
+  assert.deepEqual(CLIENT_MVP_MODEL_COST_WEIGHTS, EDGE_MVP_MODEL_COST_WEIGHTS);
+});
+
+test('model multiplier keeps default-model usage at base cost', () => {
+  const SONNET = 'claude-sonnet-4-6';
+  const HAIKU = 'claude-haiku-4-5-20251001';
+  // generate default = Sonnet → unchanged at base 15
+  assert.equal(edgeResolveModelAdjustedCreditCost(15, SONNET, SONNET), 15);
+  // refine default = Haiku → unchanged at base 4
+  assert.equal(edgeResolveModelAdjustedCreditCost(4, HAIKU, HAIKU), 4);
+  // client + edge agree
+  assert.equal(clientResolveModelAdjustedCreditCost(15, SONNET, SONNET), 15);
+});
+
+test('model multiplier surcharges upgrades above the default model and never discounts', () => {
+  const SONNET = 'claude-sonnet-4-6';
+  const HAIKU = 'claude-haiku-4-5-20251001';
+  const OPUS = 'claude-opus-4-8';
+  // Opus on a Sonnet-default action: weight 15/3 = 5x → 15 → 75
+  assert.equal(edgeResolveModelAdjustedCreditCost(15, OPUS, SONNET), 75);
+  // Opus on a Haiku-default action: weight 15/1 = 15x → 4 → 60 (exceeds a Rookie's 50 → self-gated)
+  assert.equal(edgeResolveModelAdjustedCreditCost(4, OPUS, HAIKU), 60);
+  // Downgrading (Haiku on a Sonnet-default action) never goes below base
+  assert.equal(edgeResolveModelAdjustedCreditCost(15, HAIKU, SONNET), 15);
+  // Zero-cost actions stay free regardless of model
+  assert.equal(edgeResolveModelAdjustedCreditCost(0, OPUS, SONNET), 0);
 });
 
 test('plan-aware credit pricing tightens Rookie waitlist usage and keeps MVP action keys', () => {
