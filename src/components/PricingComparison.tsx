@@ -143,13 +143,6 @@ const PricingComparison = () => {
 
           <Card className={`glass rounded-2xl bg-card/80 backdrop-blur shadow-lg ${plans[currentMobileIndex].isPopular ? "border-2 border-blue-500/80" : "border-border/60"}`}>
             <CardHeader>
-              {plans[currentMobileIndex].isPopular ? (
-                <div className="mb-2 flex justify-center">
-                  <Badge className="rounded-full bg-amber-500 px-3 py-1 text-xs font-semibold text-amber-950">
-                    Most popular
-                  </Badge>
-                </div>
-              ) : null}
               <CardTitle className="text-center text-2xl font-semibold tracking-tight gradient-text font-space-grotesk">
                 {plans[currentMobileIndex].name}
               </CardTitle>
@@ -203,11 +196,6 @@ const PricingComparison = () => {
                         key={plan.name}
                         className={`text-center p-5 font-semibold text-base text-foreground min-w-[180px] relative border-r border-border/60 last:border-r-0 font-space-grotesk ${plan.isPopular ? "bg-blue-500/10 shadow-[inset_0_0_0_2px_hsl(var(--primary)/0.45)]" : "bg-muted/40"}`}
                       >
-                        {plan.isPopular ? (
-                          <Badge className="mb-2 rounded-full bg-amber-500 px-3 py-1 text-xs font-semibold text-amber-950">
-                            Most popular
-                          </Badge>
-                        ) : null}
                         {plan.name}
                         <div className="text-2xl font-semibold mt-2 text-foreground font-space-grotesk tabular-nums">
                           {plan.price}
