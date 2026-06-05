@@ -632,7 +632,7 @@ export function IcpFolioDocument({
           {/* Document header — branded masthead */}
           <div className="mb-8 flex items-center gap-3 rounded-xl border border-primary/10 bg-gradient-to-r from-primary/5 to-transparent px-4 py-3">
             <img
-              src="/lovable-uploads/new-favicon.png"
+              src="/lovable-uploads/04a4b9d0-4213-4186-ba00-c7acd22bad98.png"
               alt="Creatives Takeover"
               className="h-7 w-7 flex-shrink-0 rounded-md object-cover"
               draggable={false}
@@ -1028,7 +1028,7 @@ export function IcpFolioDocument({
                 aria-hidden
               >
                 <img
-                  src="/lovable-uploads/new-favicon.png"
+                  src="/lovable-uploads/04a4b9d0-4213-4186-ba00-c7acd22bad98.png"
                   alt=""
                   className="h-9 w-9 rounded-lg object-cover"
                   draggable={false}
