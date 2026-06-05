@@ -14,44 +14,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { captureEvent, trackICPUnlockedDraftOpened } from "@/lib/analytics";
 import { normalizeStoredArtifact } from "@/lib/icpDraftArtifacts";
 import { getIcpDraftPublicUrl, upsertIcpDraftShare } from "@/lib/icpDraftSharing";
+import { downloadIcpDraftDocx, downloadIcpDraftPdf } from "@/lib/icpDraftExport";
 import type { StoredIcpArtifact } from "@/lib/icpBuilderSession";
 
-async function downloadDraftPdf(target: HTMLElement, fileName: string) {
-  const [{ default: jsPDF }, { default: html2canvas }] = await Promise.all([
-    import("jspdf"),
-    import("html2canvas"),
-  ]);
-
-  const canvas = await html2canvas(target, {
-    scale: 2,
-    useCORS: true,
-    backgroundColor: "#f6f7fb",
-  });
-
-  const imgData = canvas.toDataURL("image/png");
-  const pdf = new jsPDF({
-    orientation: "portrait",
-    unit: "mm",
-    format: "a4",
-  });
-
-  const pageWidth = 210;
-  const pageHeight = 297;
-  const imgHeight = (canvas.height * pageWidth) / canvas.width;
-  let heightLeft = imgHeight;
-  let position = 0;
-
-  pdf.addImage(imgData, "PNG", 0, position, pageWidth, imgHeight);
-  heightLeft -= pageHeight;
-
-  while (heightLeft > 0) {
-    position = heightLeft - imgHeight;
-    pdf.addPage();
-    pdf.addImage(imgData, "PNG", 0, position, pageWidth, imgHeight);
-    heightLeft -= pageHeight;
-  }
-
-  pdf.save(fileName);
+function slugifyFileName(value: string) {
+  return value.trim().replace(/[^a-z0-9]+/gi, "-").replace(/^-+|-+$/g, "").toLowerCase() || "icp-draft";
 }
 
 export default function IcpDraftPage() {
@@ -140,7 +107,8 @@ export default function IcpDraftPage() {
     if (!artifact || !documentRef.current) return;
     setIsDownloading(true);
     try {
-      await downloadDraftPdf(documentRef.current, `${artifact.draftDocument.customer.personaName}-icp-draft.pdf`);
+      const base = slugifyFileName(artifact.draftDocument.customer.personaName);
+      await downloadIcpDraftPdf(documentRef.current, `${base}-icp-draft.pdf`);
     } catch (error) {
       console.error("Failed to download ICP Draft PDF", error);
       toast.error("Could not download the PDF right now.");
@@ -191,8 +159,20 @@ export default function IcpDraftPage() {
     }
   };
 
+  const [isDownloadingDocx, setIsDownloadingDocx] = useState(false);
   const handleSaveDocx = async () => {
-    toast.info("DOCX export coming soon.");
+    if (!artifact) return;
+    setIsDownloadingDocx(true);
+    try {
+      const base = slugifyFileName(artifact.draftDocument.customer.personaName);
+      await downloadIcpDraftDocx(artifact.draftDocument, `${base}-icp-draft.docx`);
+      toast.success("DOCX downloaded.");
+    } catch (error) {
+      console.error("Failed to download ICP Draft DOCX", error);
+      toast.error("Could not download the DOCX right now.");
+    } finally {
+      setIsDownloadingDocx(false);
+    }
   };
 
   if (loading) {
@@ -349,7 +329,7 @@ export default function IcpDraftPage() {
               onShare={handleShareForBar}
               onSavePdf={handleDownload}
               onSaveDocx={handleSaveDocx}
-              isSaving={isDownloading}
+              isSaving={isDownloading || isDownloadingDocx}
               isSharing={isSharing}
             />
             <div className="flex justify-center">

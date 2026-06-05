@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { ArrowRight, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 import { IcpDraftShareBar } from "@/components/icp/IcpDraftShareBar";
 import { IcpFolioDocument } from "@/components/icp/IcpFolioDocument";
@@ -10,12 +11,19 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { getIcpDraftShareBySlug, isIcpDraftSharedSnapshot } from "@/lib/icpDraftSharing";
 import { normalizeIcpDraftDocument } from "@/lib/icpDraftArtifacts";
+import { downloadIcpDraftDocx, downloadIcpDraftPdf } from "@/lib/icpDraftExport";
 import type { IcpDraftDocument } from "@/lib/icpBuilderSession";
+
+function slugifyFileName(value: string) {
+  return value.trim().replace(/[^a-z0-9]+/gi, "-").replace(/^-+|-+$/g, "").toLowerCase() || "icp-draft";
+}
 
 export default function IcpPublicDraftPage() {
   const { draftId } = useParams<{ draftId: string }>();
   const [draft, setDraft] = useState<IcpDraftDocument | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const documentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const load = async () => {
@@ -93,11 +101,35 @@ export default function IcpPublicDraftPage() {
       <IcpProgressBar progress={100} />
       <IcpFolioDocument
         draft={draft}
+        documentRef={documentRef}
         footer={
           <div className="space-y-6 pb-4">
             <IcpDraftShareBar
               shareUrl={typeof window !== "undefined" ? window.location.href : ""}
               returnPath={`/icp/${draftId ?? ""}/public`}
+              isSaving={isSaving}
+              onSavePdf={async () => {
+                if (!documentRef.current) return;
+                setIsSaving(true);
+                try {
+                  await downloadIcpDraftPdf(documentRef.current, `${slugifyFileName(draft.customer.personaName)}-icp-draft.pdf`);
+                } catch {
+                  toast.error("Could not download the PDF right now.");
+                } finally {
+                  setIsSaving(false);
+                }
+              }}
+              onSaveDocx={async () => {
+                setIsSaving(true);
+                try {
+                  await downloadIcpDraftDocx(draft, `${slugifyFileName(draft.customer.personaName)}-icp-draft.docx`);
+                  toast.success("DOCX downloaded.");
+                } catch {
+                  toast.error("Could not download the DOCX right now.");
+                } finally {
+                  setIsSaving(false);
+                }
+              }}
             />
             <div className="pb-6 text-center">
               <p className="mb-4 text-sm text-slate-500">

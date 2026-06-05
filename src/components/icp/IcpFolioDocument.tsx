@@ -1022,8 +1022,11 @@ export function IcpFolioDocument({
               ref={articleRef}
               className="relative w-full overflow-hidden rounded-2xl border border-border/40 bg-background px-6 py-8 text-foreground shadow-[0_2px_24px_-8px_hsl(var(--foreground)/0.07)] transition-colors sm:px-10 sm:py-10"
             >
-              {/* Watermark — elegantly branded, visible but unobtrusive */}
+              {/* Watermark — elegantly branded, visible but unobtrusive.
+                  Hidden during PDF capture (the export stamps the brand on every
+                  page instead via data-icp-watermark). */}
               <div
+                data-icp-watermark
                 className="pointer-events-none absolute bottom-6 right-6 z-10 flex select-none flex-col items-center gap-1 opacity-30"
                 aria-hidden
               >
