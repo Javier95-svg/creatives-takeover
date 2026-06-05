@@ -1,4 +1,6 @@
-export const ICP_GUEST_VISIBLE_SECTIONS = ["customer", "pain"] as const;
+// Full draft shown as a lead magnet — guests see all 4 sections with no blur.
+// The sign-up CTA (share / save) drives account creation downstream.
+export const ICP_GUEST_VISIBLE_SECTIONS = ["customer", "pain", "build", "moat"] as const;
 
 export type IcpDraftSaveResult = {
   success?: boolean;

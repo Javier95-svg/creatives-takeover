@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Check, Copy, ExternalLink, Linkedin, X as XIcon } from "lucide-react";
+import { Check, Copy, ExternalLink, Facebook, Linkedin, X as XIcon } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -19,6 +19,10 @@ function linkedinShareUrl(cardUrl: string) {
 
 function xShareUrl(cardUrl: string) {
   return `https://x.com/intent/tweet?text=${encodeURIComponent(SHARE_COPY)}&url=${encodeURIComponent(cardUrl)}`;
+}
+
+function facebookShareUrl(cardUrl: string) {
+  return `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(cardUrl)}`;
 }
 
 interface IcpShareModalProps {
@@ -122,37 +126,35 @@ export function IcpShareModal({
           </p>
 
           {/* Share buttons */}
-          <div className="flex gap-3">
+          <div className="grid grid-cols-3 gap-2">
             <Button
               asChild
-              className="h-11 flex-1 gap-2 bg-[#0a66c2] text-white hover:bg-[#004182]"
+              className="h-10 gap-1.5 bg-[#0a66c2] text-white hover:bg-[#004182]"
             >
-              <a
-                href={linkedinShareUrl(shareUrl)}
-                target="_blank"
-                rel="noreferrer"
-                onClick={() => toast.info("LinkedIn share opened")}
-              >
-                <Linkedin className="h-4 w-4 fill-current" />
+              <a href={linkedinShareUrl(shareUrl)} target="_blank" rel="noreferrer" onClick={() => toast.info("LinkedIn share opened")}>
+                <Linkedin className="h-3.5 w-3.5 fill-current" />
                 LinkedIn
-                <ExternalLink className="h-3.5 w-3.5 opacity-60" />
               </a>
             </Button>
 
             <Button
               asChild
               variant="outline"
-              className="h-11 flex-1 gap-2 border-slate-200 text-slate-950 hover:bg-slate-50"
+              className="h-10 gap-1.5 border-slate-200 text-slate-950 hover:bg-slate-50"
             >
-              <a
-                href={xShareUrl(shareUrl)}
-                target="_blank"
-                rel="noreferrer"
-                onClick={() => toast.info("X share opened")}
-              >
-                <XIcon className="h-4 w-4" />
-                X / Twitter
-                <ExternalLink className="h-3.5 w-3.5 opacity-60" />
+              <a href={xShareUrl(shareUrl)} target="_blank" rel="noreferrer" onClick={() => toast.info("X share opened")}>
+                <XIcon className="h-3.5 w-3.5" />
+                X
+              </a>
+            </Button>
+
+            <Button
+              asChild
+              className="h-10 gap-1.5 bg-[#1877f2] text-white hover:bg-[#0c63d4]"
+            >
+              <a href={facebookShareUrl(shareUrl)} target="_blank" rel="noreferrer" onClick={() => toast.info("Facebook share opened")}>
+                <Facebook className="h-3.5 w-3.5 fill-current" />
+                Facebook
               </a>
             </Button>
           </div>

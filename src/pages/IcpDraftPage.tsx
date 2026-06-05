@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { ArrowLeft, ArrowRight, CheckCircle2, Copy, Download, Loader2, PencilLine, Share2, Sparkles } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle2, Download, Loader2, PencilLine, Share2, Sparkles } from "lucide-react";
+import { IcpDraftShareBar } from "@/components/icp/IcpDraftShareBar";
 import { IcpShareModal } from "@/components/icp/IcpShareModal";
 import { toast } from "sonner";
 
@@ -171,6 +172,29 @@ export default function IcpDraftPage() {
     }
   };
 
+  // Returns the public URL for the share bar (creates the share if needed).
+  const handleShareForBar = async (): Promise<string | null> => {
+    if (!artifact || !user || !draftId) return null;
+    setIsSharing(true);
+    try {
+      const record = await upsertIcpDraftShare({
+        userId: user.id,
+        sourceId: draftId,
+        artifact,
+      });
+      return getIcpDraftPublicUrl(record.slug);
+    } catch {
+      toast.error("Could not create a share link right now.");
+      return null;
+    } finally {
+      setIsSharing(false);
+    }
+  };
+
+  const handleSaveDocx = async () => {
+    toast.info("DOCX export coming soon.");
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-[#f6f7fb]">
@@ -318,17 +342,18 @@ export default function IcpDraftPage() {
           </div>
         }
         bottomBar={
-          <div className="rounded-[1.75rem] border border-slate-200 bg-white p-4 shadow-[0_24px_60px_-44px_rgba(15,23,42,0.3)]">
-            <div className="flex flex-col gap-3 sm:flex-row">
-              <Button type="button" variant="outline" className="sm:flex-1 gap-2" onClick={() => void handleDownload()} disabled={isDownloading}>
-                {isDownloading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
-                Download PDF
-              </Button>
-              <Button type="button" variant="outline" className="sm:flex-1 gap-2" onClick={() => void handleShare()} disabled={isSharing}>
-                {isSharing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Copy className="h-4 w-4" />}
-                Share link
-              </Button>
-              <Button type="button" className="sm:flex-1" onClick={() => navigate("/dashboard")}>
+          <div className="space-y-3">
+            <IcpDraftShareBar
+              shareUrl={shareModalData?.url ?? null}
+              returnPath={`/icp/draft/${draftId ?? ""}`}
+              onShare={handleShareForBar}
+              onSavePdf={handleDownload}
+              onSaveDocx={handleSaveDocx}
+              isSaving={isDownloading}
+              isSharing={isSharing}
+            />
+            <div className="flex justify-center">
+              <Button type="button" className="gap-2" onClick={() => navigate("/dashboard")}>
                 Start Stage 2 →
               </Button>
             </div>

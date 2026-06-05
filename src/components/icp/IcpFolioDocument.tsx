@@ -629,10 +629,19 @@ export function IcpFolioDocument({
         onFocusOpen={handleFocusOpen}
       >
         <div id="icp-section-customer">
-          <p className="text-sm font-medium text-foreground/60">
-            {documentLabel}
-          </p>
-          <h1 className="mt-3 text-3xl font-semibold tracking-tight text-foreground sm:text-[2rem]">
+          {/* Document header — branded masthead */}
+          <div className="mb-8 flex items-center gap-3 rounded-xl border border-primary/10 bg-gradient-to-r from-primary/5 to-transparent px-4 py-3">
+            <img
+              src="/lovable-uploads/new-favicon.png"
+              alt="Creatives Takeover"
+              className="h-7 w-7 flex-shrink-0 rounded-md object-cover"
+              draggable={false}
+            />
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary/80">
+              {documentLabel}
+            </p>
+          </div>
+          <h1 className="text-3xl font-semibold tracking-tight text-foreground sm:text-[2rem]">
             {draft.customer.personaName}
           </h1>
           <p className="mt-3 text-lg leading-8 text-foreground">{draft.customer.roleLine}</p>
@@ -1011,8 +1020,23 @@ export function IcpFolioDocument({
 
             <article
               ref={articleRef}
-              className="relative w-full bg-background px-6 py-8 text-foreground transition-colors sm:px-10 sm:py-10"
+              className="relative w-full overflow-hidden rounded-2xl border border-border/40 bg-background px-6 py-8 text-foreground shadow-[0_2px_24px_-8px_hsl(var(--foreground)/0.07)] transition-colors sm:px-10 sm:py-10"
             >
+              {/* Watermark — elegantly branded, visible but unobtrusive */}
+              <div
+                className="pointer-events-none absolute bottom-6 right-6 z-10 flex select-none flex-col items-center gap-1 opacity-30"
+                aria-hidden
+              >
+                <img
+                  src="/lovable-uploads/new-favicon.png"
+                  alt=""
+                  className="h-9 w-9 rounded-lg object-cover"
+                  draggable={false}
+                />
+                <span className="text-[9px] font-semibold uppercase tracking-[0.18em] text-foreground">
+                  Creatives Takeover
+                </span>
+              </div>
               {unlockedVisibleSectionKeys.map((sectionKey) => (
                 <div key={sectionKey}>{renderedSections[sectionKey]}</div>
               ))}
