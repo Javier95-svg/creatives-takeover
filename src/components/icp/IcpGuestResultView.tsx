@@ -29,13 +29,13 @@ export function IcpGuestResultView({
       tone="platformPreview"
       visibleSections={ICP_GUEST_VISIBLE_SECTIONS}
       lockedSections={GUEST_LOCKED_SECTIONS}
+      topBar={
+        // Share/save bar sits above the draft so visitors see it without
+        // scrolling to the bottom. Buttons are visible but all require sign up.
+        <IcpDraftShareBar shareUrl={null} returnPath={returnPath} />
+      }
       footer={
-        <div className="space-y-6 border-t border-border/80 pt-8">
-          {/* Share/save bar — buttons visible but all require sign up */}
-          <IcpDraftShareBar
-            shareUrl={null}
-            returnPath={returnPath}
-          />
+        <div className="border-t border-border/80 pt-8">
           <IcpUnlockGate
             artifact={artifact}
             seed={seed}
