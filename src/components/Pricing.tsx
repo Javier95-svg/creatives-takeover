@@ -211,7 +211,7 @@ export default function Pricing() {
           </Tabs>
         </div>
 
-        <RevealGroup className="grid grid-cols-1 justify-items-center sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 xl:gap-9 max-w-[114rem] mx-auto items-start" variant="card">
+        <RevealGroup className="grid grid-cols-1 justify-items-center sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 xl:gap-9 max-w-[124rem] mx-auto items-start" variant="card">
           {PLAN_CONFIG.map((plan, index) => {
             const isCurrentPlan = currentTier === plan.key;
             const isPopular = plan.key === "starter";
@@ -226,7 +226,7 @@ export default function Pricing() {
                 key={plan.key}
                 role="button"
                 tabIndex={0}
-                className={`relative w-full max-w-[430px] cursor-pointer rounded-2xl border bg-card/80 p-6 sm:p-8 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl flex flex-col backdrop-blur ${cardStyle.border} ${
+                className={`relative w-full max-w-[480px] cursor-pointer rounded-2xl border bg-card/80 p-6 sm:p-8 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl flex flex-col backdrop-blur ${cardStyle.border} ${
                   isCurrentPlan || isPopular || isPro ? `ring-1 ${cardStyle.ring} shadow-md` : ""
                 }`}
                 style={{ animationDelay: `${index * 0.08}s` }}
