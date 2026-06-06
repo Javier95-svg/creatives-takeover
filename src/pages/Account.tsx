@@ -19,6 +19,7 @@ import { useSocial } from "@/hooks/useSocial";
 import { ProfilePictureCropModal } from "@/components/ProfilePictureCropModal";
 import { AccountWallpaper } from "@/components/AccountWallpaper";
 import { CreditActivityCard } from "@/components/CreditActivityCard";
+import { NotificationPreferencesCard } from "@/components/NotificationPreferencesCard";
 import { ProfileCompletionTracker } from "@/components/ProfileCompletionTracker";
 import { OnboardingChecklist } from "@/components/OnboardingChecklist";
 import { trackActivity } from "@/lib/activity";
@@ -769,6 +770,10 @@ const Account = () => {
 
             <div id="credit-activity">
               <CreditActivityCard />
+            </div>
+
+            <div id="notification-preferences">
+              <NotificationPreferencesCard />
             </div>
 
             <form onSubmit={handleUpdateProfile} className="space-y-8">
