@@ -3,23 +3,37 @@
 -- from 20260606120000 only reaches users who are already in the app).
 --
 -- Routed through the existing retention email stack (send-retention-email +
--- retention_email_log + Resend) rather than a new system, mirroring the
--- trigger_send_weekly_scorecards() net.http_post pattern.
+-- retention_email_log + Resend) via net.http_post.
+--
+-- SERVICE CONFIG: the previous net.http_post jobs in this project tried to read
+-- the project URL + service key from current_setting('app.settings.*'), but that
+-- GUC can only be set with privileges Supabase does not grant us — so those jobs
+-- (send-weekly-scorecards, etc.) have been failing every run. Instead we read
+-- them from a locked-down private.service_config table. The SECRET VALUES are
+-- inserted out-of-band (not in this migration / not in git); this file only
+-- creates the empty table and the readers.
 --
 -- ADOPTION NUDGE (not streak protection): usage data shows ~308 founders have a
--- routine configured but almost none ever log a daily check-in (0 active
--- streaks). So the email targets the real gap — getting dormant founders to
--- START using the routine — rather than protecting streaks that do not exist.
+-- routine configured but almost none ever log a daily check-in. So the email
+-- targets the real gap — getting dormant founders to START — not protecting
+-- streaks that do not exist.
 --
--- Anti-fatigue by design:
---   * Opt-in only — routine_reminder_preferences.enabled = true.
---   * Dormant only — no daily routine check-in in the last 3 days (or ever).
---   * Past the founder's preferred hour (best-effort UTC).
---   * At most one routine email every 3 days (retention_email_log dedup).
---   * Global frequency cap — skip if the user already received 3+ retention
---     emails in the last 7 days, so routine nudges never stack on top of weekly
---     scorecards, task-overdue, churn, and lifecycle emails.
+-- Anti-fatigue: opt-in only; dormant only (no daily check-in in 3+ days);
+-- past the founder's preferred hour; at most one routine email every 3 days;
+-- global cap of 3 retention emails per 7 days.
 
+-- 1. Locked-down config store for server-side secrets (values set out-of-band).
+CREATE SCHEMA IF NOT EXISTS private;
+
+CREATE TABLE IF NOT EXISTS private.service_config (
+  key   text PRIMARY KEY,
+  value text NOT NULL
+);
+
+REVOKE ALL ON SCHEMA private FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON TABLE private.service_config FROM PUBLIC, anon, authenticated;
+
+-- 2. Routine adoption-nudge email.
 CREATE OR REPLACE FUNCTION public.process_routine_reminder_emails()
 RETURNS integer
 LANGUAGE plpgsql
@@ -27,14 +41,14 @@ SECURITY DEFINER
 SET search_path = public
 AS $$
 DECLARE
-  v_supabase_url text := current_setting('app.settings.supabase_url', true);
-  v_supabase_key text := current_setting('app.settings.supabase_service_key', true);
+  v_supabase_url text := (SELECT value FROM private.service_config WHERE key = 'supabase_url');
+  v_supabase_key text := (SELECT value FROM private.service_config WHERE key = 'supabase_service_key');
   v_sent integer := 0;
   v_headline text;
   r record;
 BEGIN
   IF v_supabase_url IS NULL OR v_supabase_key IS NULL THEN
-    RAISE EXCEPTION 'Missing app.settings.supabase_url or app.settings.supabase_service_key';
+    RAISE EXCEPTION 'private.service_config missing supabase_url or supabase_service_key';
   END IF;
 
   FOR r IN
@@ -57,16 +71,13 @@ BEGIN
       AND au.email IS NOT NULL
       AND EXTRACT(HOUR FROM now())::int >=
           COALESCE(NULLIF(split_part((p.routine_reminder_preferences)::jsonb ->> 'time', ':', 1), '')::int, 9)
-      -- dormant: never checked in, or not in the last 3 days
       AND (lc.last_checkin IS NULL OR lc.last_checkin <= current_date - 3)
-      -- at most one routine email per 3 days
       AND NOT EXISTS (
         SELECT 1 FROM public.retention_email_log l
         WHERE l.user_id = p.id
           AND l.sequence = 'routine_reminder'
           AND l.sent_at >= now() - interval '3 days'
       )
-      -- global cap: <3 retention emails of any kind in the last 7 days
       AND (
         SELECT count(*) FROM public.retention_email_log l
         WHERE l.user_id = p.id
@@ -107,7 +118,6 @@ $$;
 REVOKE ALL ON FUNCTION public.process_routine_reminder_emails() FROM PUBLIC, anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.process_routine_reminder_emails() TO service_role;
 
--- Hourly; the per-user time, dormancy, dedup and cap guards live in the function.
 DO $$
 BEGIN
   IF EXISTS (SELECT 1 FROM cron.job WHERE jobname = 'routine-reminder-emails-hourly') THEN
@@ -121,3 +131,8 @@ SELECT cron.schedule(
   '0 * * * *',
   $$SELECT public.process_routine_reminder_emails();$$
 );
+
+-- NOTE: the pre-existing send-weekly-scorecards / process-icp-sprint-emails jobs
+-- have the same broken app.settings.* GUC dependency and have been failing every
+-- run. Repairing them is tracked separately (they edit shared functions and turn
+-- dormant email back on, so they need their own explicit sign-off).
