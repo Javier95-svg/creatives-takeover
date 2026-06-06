@@ -4,6 +4,7 @@ import { CheckCircle2 } from 'lucide-react';
 
 import StartupHomeCommandCenter from '@/components/dashboard/StartupHomeCommandCenter';
 import DashboardTodayCockpit from '@/components/dashboard/DashboardTodayCockpit';
+import EnablePushCard from '@/components/dashboard/EnablePushCard';
 import FirstRunCard from '@/components/dashboard/FirstRunCard';
 import JourneyNextStepCard from '@/components/dashboard/JourneyNextStepCard';
 import StarterDashboardNudge from '@/components/dashboard/StarterDashboardNudge';
@@ -52,6 +53,7 @@ const Dashboard = () => {
         </div>
       ) : null}
       {/* Accountability first: today's tasks, deadlines, streak, progress. */}
+      <EnablePushCard />
       <DashboardTodayCockpit />
       <FirstRunCard />
       {/* Profile, network, and growth prompts come after the accountability loop. */}
