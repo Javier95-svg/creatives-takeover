@@ -4,6 +4,7 @@ import { ArrowRight } from 'lucide-react';
 import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 import { DashboardNavigationProvider } from '@/contexts/DashboardNavigationContext';
 import { DashboardSidebar } from './DashboardSidebar';
+import { DashboardStreakChip } from './DashboardStreakChip';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 interface DashboardLayoutProps {
@@ -24,8 +25,9 @@ export const DashboardLayout = ({ children, title, subtitle }: DashboardLayoutPr
             <div className="relative min-h-screen overflow-hidden bg-background">
               <div className="pointer-events-none absolute inset-x-0 top-0 z-50">
                 <div className="container mx-auto grid max-w-7xl grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-4 px-6 pt-4">
-                  <div className="pointer-events-auto flex items-start gap-4">
+                  <div className="pointer-events-auto flex items-start gap-2">
                     <SidebarTrigger className="rounded-full border border-border/70 bg-background/88 shadow-sm backdrop-blur-md" />
+                    <DashboardStreakChip />
                   </div>
                   <div className="pointer-events-auto min-w-0 px-2 pt-1 text-center">
                     <h1 className="font-space-grotesk text-xl font-semibold">{title}</h1>

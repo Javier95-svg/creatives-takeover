@@ -187,6 +187,7 @@ function StartupProfileSection() {
   const { model, loading, saving, error, refresh, updateManualProfile } = useStartupCommandCenter();
   const [form, setForm] = useState<StartupProfileFormValues>(emptyForm);
   const [industryInput, setIndustryInput] = useState("");
+  const [isEditing, setIsEditing] = useState(false);
   const [peerSuggestions, setPeerSuggestions] = useState<PeerSuggestion[]>([]);
   const [peerLoading, setPeerLoading] = useState(false);
   const [peerError, setPeerError] = useState<string | null>(null);
@@ -316,6 +317,7 @@ function StartupProfileSection() {
       ...form,
       industries: splitIndustryInput(industryInput),
     });
+    setIsEditing(false);
   };
 
   if (loading) return <HomeSkeleton />;
@@ -347,6 +349,28 @@ function StartupProfileSection() {
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(360px,0.9fr)] lg:items-start">
         <div className="space-y-5">
+          {!isEditing ? (
+            <SectionPanel title="Startup Profile" icon={Building2}>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <FieldValue label="Startup" value={model.manual.startupName} />
+                <FieldValue label="Stage" value={STAGE_OPTIONS.find((s) => s.value === model.manual.stage)?.label || model.manual.stage} />
+                <FieldValue label="Industry" value={model.primaryIndustry || joinList(model.manual.industries)} />
+                <FieldValue label="Country" value={model.manual.country} />
+                <div className="sm:col-span-2">
+                  <FieldValue
+                    label="Positioning"
+                    value={model.manual.positioningLine || model.generated.icp?.productPositioning}
+                  />
+                </div>
+              </div>
+              <div className="mt-4 flex items-center justify-between border-t border-border/70 pt-4">
+                <p className="text-xs text-muted-foreground">{completionCount}/9 profile signals captured</p>
+                <Button type="button" variant="outline" size="sm" onClick={() => setIsEditing(true)}>
+                  Edit profile
+                </Button>
+              </div>
+            </SectionPanel>
+          ) : (
           <MobileFormOptimizer>
           <SectionPanel title="Startup Profile" icon={Building2}>
             <div className="grid gap-4 md:grid-cols-2">
@@ -496,6 +520,9 @@ function StartupProfileSection() {
                 Manual fields are optional and can be refined as the startup changes.
               </p>
               <div className="flex gap-2">
+                <Button type="button" variant="ghost" onClick={() => setIsEditing(false)} disabled={saving}>
+                  Cancel
+                </Button>
                 <Button type="button" variant="outline" onClick={() => void refresh()} disabled={saving}>
                   <RefreshCw className="mr-2 h-4 w-4" aria-hidden="true" />
                   Refresh
@@ -508,6 +535,7 @@ function StartupProfileSection() {
             </div>
           </SectionPanel>
           </MobileFormOptimizer>
+          )}
 
           <div className="grid gap-5 xl:grid-cols-2">
             <SectionPanel title="Ideal Customer" icon={Target} source="From ICP Builder">
