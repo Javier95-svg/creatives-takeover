@@ -102,6 +102,14 @@ export interface IcpDraftDocument {
     description: string;
     route: string;
   }>;
+  sources?: IcpDraftSource[];
+}
+
+export interface IcpDraftSource {
+  type: "community" | "competitor" | "market";
+  title: string;
+  url: string | null;
+  detail: string | null;
 }
 
 export interface IcpDashboardTask {

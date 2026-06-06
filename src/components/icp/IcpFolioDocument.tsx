@@ -9,6 +9,8 @@ import {
   useState,
 } from "react";
 
+import { ExternalLink } from "lucide-react";
+
 import type { IcpDraftDocument } from "@/lib/icpBuilderSession";
 
 type IcpFolioTone = "folio" | "platformPreview" | "landingPreview";
@@ -1061,6 +1063,56 @@ export function IcpFolioDocument({
                     ))}
                   </div>
                 </>
+              ) : null}
+
+              {draft.sources && draft.sources.length > 0 ? (
+                <div className="mt-12 border-t border-border/80 pt-8">
+                  <h2 className="text-sm font-semibold uppercase tracking-[0.16em] text-foreground/60">
+                    Evidence &amp; sources
+                  </h2>
+                  <p className="mt-1 text-sm leading-6 text-foreground/65">
+                    Grounded in real customer discussions and competitor research — not generic AI guesses.
+                  </p>
+                  <ul className="mt-4 space-y-2.5">
+                    {draft.sources.map((source, index) => {
+                      const label = source.type === "competitor" ? "Competitor" : source.type === "market" ? "Market" : "Community";
+                      const content = (
+                        <>
+                          <span className="mt-0.5 inline-flex shrink-0 rounded-md bg-primary/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary">
+                            {label}
+                          </span>
+                          <span className="min-w-0 flex-1">
+                            <span className="block truncate text-sm font-medium text-foreground">{source.title}</span>
+                            {source.detail ? (
+                              <span className="block text-xs text-foreground/55">{source.detail}</span>
+                            ) : null}
+                          </span>
+                          {source.url ? (
+                            <ExternalLink className="mt-0.5 h-3.5 w-3.5 shrink-0 text-foreground/40" aria-hidden />
+                          ) : null}
+                        </>
+                      );
+                      return (
+                        <li key={`${source.title}-${index}`}>
+                          {source.url ? (
+                            <a
+                              href={source.url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="flex items-start gap-3 rounded-xl border border-border/60 bg-background/60 px-3.5 py-2.5 transition-colors hover:border-primary/40 hover:bg-primary/[0.03]"
+                            >
+                              {content}
+                            </a>
+                          ) : (
+                            <div className="flex items-start gap-3 rounded-xl border border-border/60 bg-background/60 px-3.5 py-2.5">
+                              {content}
+                            </div>
+                          )}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
               ) : null}
 
             {activeSection && sectionExplainers?.[activeSection] && explainerPosition ? (

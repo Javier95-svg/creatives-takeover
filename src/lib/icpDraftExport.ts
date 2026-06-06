@@ -274,6 +274,22 @@ export async function downloadIcpDraftDocx(draft: IcpDraftDocument, fileName: st
     );
   }
 
+  // 7. Evidence & sources (citations)
+  if (draft.sources?.length) {
+    children.push(heading("Evidence & Sources"));
+    children.push(body("Grounded in real customer discussions and competitor research."));
+    draft.sources.forEach((source) => {
+      const label = source.type === "competitor" ? "Competitor" : source.type === "market" ? "Market" : "Community";
+      const runs = [
+        new TextRun({ text: `[${label}] `, bold: true }),
+        new TextRun(source.title),
+      ];
+      if (source.detail) runs.push(new TextRun({ text: ` — ${source.detail}`, color: "777777" }));
+      if (source.url) runs.push(new TextRun({ text: ` (${source.url})`, color: "0F5B64" }));
+      children.push(new Paragraph({ children: runs, bullet: { level: 0 }, spacing: { after: 80 } }));
+    });
+  }
+
   const headerLogoRun = logoBuffer
     ? [new ImageRun({ type: "png", data: logoBuffer, transformation: { width: 22, height: 22 } })]
     : [];

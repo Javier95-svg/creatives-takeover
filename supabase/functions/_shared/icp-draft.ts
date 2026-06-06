@@ -26,9 +26,17 @@ export interface DraftRequestShape {
   personaEditedSignificantly?: boolean;
 }
 
+export interface DraftSource {
+  type: "community" | "competitor" | "market";
+  title: string;
+  url: string | null;
+  detail: string | null;
+}
+
 export interface DraftEnrichment {
   marketSignals: string[];
   competitorLinks: Array<{ name: string; url: string | null }>;
+  sources: DraftSource[];
 }
 
 type SectionConfidence = "high" | "medium" | "low";
@@ -93,6 +101,7 @@ type DraftDocument = {
     missingSignals: string[];
   };
   nextActions: Array<{ title: string; description: string; route: string }>;
+  sources: DraftSource[];
 };
 
 function cleanText(value: unknown, fallback: string) {
@@ -222,6 +231,11 @@ function buildDraftPrompt(request: DraftRequestShape, enrichment: DraftEnrichmen
   const marketSignalBlock = enrichment.marketSignals.length > 0
     ? enrichment.marketSignals.map((signal) => `- ${signal}`).join("\n")
     : "- No external market signals were available for this run.";
+  const sourceBlock = enrichment.sources.length > 0
+    ? enrichment.sources
+        .map((source) => `- [${source.type}] ${source.title}${source.detail ? ` (${source.detail})` : ""}${source.url ? ` — ${source.url}` : ""}`)
+        .join("\n")
+    : "- No real evidence sources were retrieved for this run.";
 
   return `You are generating a founder-ready ICP Draft strong enough to replace a paid strategy session.
 Return valid JSON only.
@@ -322,7 +336,12 @@ Competitor links:
 ${competitorBlock}
 
 Market signals:
-${marketSignalBlock}`;
+${marketSignalBlock}
+
+Real evidence sources (verbatim community discussions and competitor pages retrieved for this run):
+${sourceBlock}
+
+When real evidence sources are present, ground the pain quote, behaviors, "where to find them", and competitor claims in them, and prefer the customers' actual wording. Never invent a source or a URL that is not listed above.`;
 }
 
 function buildDashboardContext(draftDocument: DraftDocument) {
@@ -497,6 +516,9 @@ function normalizeDraftDocument(parsed: Record<string, any>, enrichment: DraftEn
             route: normalizeRoutes(item?.route, overallConfidence === "low" ? "/pmf-lab" : "/waitlist"),
           }))
       : [],
+    // Citations are attached deterministically from real retrieved evidence so
+    // they always render, regardless of what the model echoes back.
+    sources: enrichment.sources.slice(0, 8),
   };
 }
 
@@ -512,6 +534,7 @@ export async function generateIcpDraftArtifact({
   const resolvedEnrichment: DraftEnrichment = {
     marketSignals: enrichment?.marketSignals ?? [],
     competitorLinks: enrichment?.competitorLinks ?? [],
+    sources: enrichment?.sources ?? [],
   };
 
   // Hard timeout so a hung OpenAI request fails fast and clean instead of

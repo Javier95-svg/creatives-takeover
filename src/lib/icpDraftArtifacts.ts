@@ -258,6 +258,16 @@ export function normalizeIcpDraftDocument(
             Boolean(action?.title) && Boolean(action?.description) && Boolean(action?.route),
         )
       : [],
+    sources: Array.isArray(draft.sources)
+      ? draft.sources
+          .filter((source): source is NonNullable<typeof source> => Boolean(source?.title))
+          .map((source) => ({
+            type: source.type === "competitor" || source.type === "market" ? source.type : "community",
+            title: String(source.title),
+            url: typeof source.url === "string" && source.url.trim() ? source.url : null,
+            detail: typeof source.detail === "string" && source.detail.trim() ? source.detail : null,
+          }))
+      : [],
   };
 }
 

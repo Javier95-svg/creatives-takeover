@@ -7,6 +7,7 @@ import { resolveCreditIdempotencyKey } from "../_shared/request-idempotency.ts";
 import {
   generateIcpDraftArtifact,
   type DraftRequestShape,
+  type DraftSource,
   type FastInput,
   type GuidedInput,
 } from "../_shared/icp-draft.ts";
@@ -135,7 +136,7 @@ ${seed}`;
 async function fetchMarketSignals(serviceClient: ReturnType<typeof createClient>, req: Request, request: DraftRequestShape) {
   const authHeader = req.headers.get("Authorization") || "";
   if (!authHeader) {
-    return { marketSignals: [] as string[], competitors: [] as Array<{ name: string; url: string | null }> };
+    return { marketSignals: [] as string[], competitors: [] as Array<{ name: string; url: string | null }>, sources: [] as DraftSource[] };
   }
 
   try {
@@ -184,10 +185,44 @@ async function fetchMarketSignals(serviceClient: ReturnType<typeof createClient>
         .filter(Boolean),
     ];
 
-    return { marketSignals, competitors };
+    // Real, citable evidence: verbatim community discussions + competitor pages,
+    // each kept with its source URL so the draft can cite where claims come from.
+    const sources: DraftSource[] = [
+      ...(score?.reddit_discussions || [])
+        .slice(0, 5)
+        .map((item: any): DraftSource | null => {
+          const title = typeof item?.title === "string" ? item.title.trim() : "";
+          if (!title) return null;
+          const sub = item?.subreddit ? `r/${item.subreddit}` : null;
+          const upvotes = typeof item?.upvotes === "number" ? `${item.upvotes} upvotes` : null;
+          const detail = [sub, upvotes].filter(Boolean).join(" · ") || null;
+          return {
+            type: "community",
+            title,
+            url: typeof item?.url === "string" && item.url.trim() ? item.url : null,
+            detail,
+          };
+        })
+        .filter((item: DraftSource | null): item is DraftSource => Boolean(item)),
+      ...(score?.top_competitors || [])
+        .slice(0, 4)
+        .map((item: any): DraftSource | null => {
+          const name = typeof item?.name === "string" ? item.name.trim() : "";
+          if (!name) return null;
+          return {
+            type: "competitor",
+            title: name,
+            url: typeof item?.website === "string" && item.website.trim() ? item.website : null,
+            detail: "Competitor",
+          };
+        })
+        .filter((item: DraftSource | null): item is DraftSource => Boolean(item)),
+    ];
+
+    return { marketSignals, competitors, sources };
   } catch (error) {
     console.warn("ICP analyzer enrichment failed, continuing without market signals", error);
-    return { marketSignals: [] as string[], competitors: [] as Array<{ name: string; url: string | null }> };
+    return { marketSignals: [] as string[], competitors: [] as Array<{ name: string; url: string | null }>, sources: [] as DraftSource[] };
   }
 }
 
@@ -496,6 +531,7 @@ serve(async (req) => {
         enrichment: {
           marketSignals: enrichment.marketSignals,
           competitorLinks: enrichment.competitors,
+          sources: enrichment.sources,
         },
       });
 
