@@ -98,9 +98,20 @@ function replaceMetaByProperty(html, property, content) {
   return html.replace("</head>", `    ${replacement}\n  </head>`);
 }
 
+// Per-route dynamic OG image so each page gets a distinct, on-brand social card.
+function buildOgImage(routeConfig) {
+  if (routeConfig.path === "/") return OG_IMAGE; // homepage keeps the brand hero image
+  const title = (routeConfig.heroHeading || routeConfig.title || "").replace(/\s*\|\s*Creatives Takeover.*$/i, "").trim();
+  const subtitle = (routeConfig.heroCopy || routeConfig.description || "").trim();
+  const params = new URLSearchParams({ title, subtitle, eyebrow: "Creatives Takeover" });
+  // Escape & for safe injection into HTML attribute values.
+  return `${BASE_URL}/api/og?${params.toString()}`.replace(/&/g, "&amp;");
+}
+
 function renderRoute(template, routeConfig) {
   const canonical = `${BASE_URL}${routeConfig.path}`;
   const robots = "index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1";
+  const ogImage = buildOgImage(routeConfig);
   let html = template;
   html = replaceTag(html, /<title>[\s\S]*?<\/title>/i, `<title>${routeConfig.title}</title>`);
   html = replaceMetaByName(html, "description", routeConfig.description);
@@ -109,10 +120,10 @@ function renderRoute(template, routeConfig) {
   html = replaceMetaByProperty(html, "og:title", routeConfig.title);
   html = replaceMetaByProperty(html, "og:description", routeConfig.description);
   html = replaceMetaByProperty(html, "og:url", canonical);
-  html = replaceMetaByProperty(html, "og:image", OG_IMAGE);
+  html = replaceMetaByProperty(html, "og:image", ogImage);
   html = replaceMetaByName(html, "twitter:title", routeConfig.title);
   html = replaceMetaByName(html, "twitter:description", routeConfig.description);
-  html = replaceMetaByName(html, "twitter:image", OG_IMAGE);
+  html = replaceMetaByName(html, "twitter:image", ogImage);
   html = replaceTag(
     html,
     /<link\s+rel="canonical"\s+href="[^"]*"\s*\/?>/i,

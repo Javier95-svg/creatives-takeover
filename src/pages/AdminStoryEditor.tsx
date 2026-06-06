@@ -62,7 +62,7 @@ const AdminStoryEditor = () => {
     }
 
     if (id && id !== "new") {
-      loadArticle(id);
+      void loadArticle(id);
     }
   }, [id, isAdmin, navigate]);
 

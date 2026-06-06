@@ -17,6 +17,20 @@ import {
   getRelatedFounderAnswerPages,
 } from "@/data/founderAnswerPages";
 
+// Convert a human "Month YYYY" label into an ISO date for schema freshness signals.
+const MONTHS: Record<string, string> = {
+  january: "01", february: "02", march: "03", april: "04", may: "05", june: "06",
+  july: "07", august: "08", september: "09", october: "10", november: "11", december: "12",
+};
+function updatedLabelToIso(label: string): string {
+  const match = /([a-zA-Z]+)\s+(\d{4})/.exec(label || "");
+  if (match) {
+    const month = MONTHS[match[1].toLowerCase()];
+    if (month) return `${match[2]}-${month}-01`;
+  }
+  return new Date().toISOString().split("T")[0];
+}
+
 export default function FounderAnswerPage() {
   const { slug } = useParams<{ slug: string }>();
   const page = slug ? getFounderAnswerPage(slug) : null;
@@ -27,6 +41,7 @@ export default function FounderAnswerPage() {
 
   const cluster = FOUNDER_ANSWER_CLUSTERS[page.cluster];
   const relatedPages = getRelatedFounderAnswerPages(page);
+  const updatedIso = updatedLabelToIso(page.updatedLabel);
   const structuredData = [
     createBreadcrumbSchema([
       { name: "Home", url: "/" },
@@ -45,10 +60,12 @@ export default function FounderAnswerPage() {
       "@type": "Article",
       headline: page.title,
       description: page.metaDescription,
-      dateModified: "2026-05-16",
+      datePublished: updatedIso,
+      dateModified: updatedIso,
       author: {
-        "@type": "Organization",
-        name: "Creatives Takeover",
+        "@type": "Person",
+        name: "Javier Alonso",
+        url: "https://creatives-takeover.com/about",
       },
       publisher: {
         "@type": "Organization",
@@ -75,8 +92,9 @@ export default function FounderAnswerPage() {
         keywords={`${page.keyword}, ${cluster.label}, startup guide, founder guide, Creatives Takeover`}
         url={`/answers/${page.slug}`}
         type="article"
-        author="Creatives Takeover"
-        modifiedTime="2026-05-16"
+        author="Javier Alonso"
+        publishedTime={updatedIso}
+        modifiedTime={updatedIso}
         structuredData={structuredData}
       />
       <div className="relative z-10">
