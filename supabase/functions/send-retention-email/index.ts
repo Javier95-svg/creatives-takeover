@@ -23,6 +23,7 @@ type SequenceType =
   | "reengagement_60d"
   | "milestone_celebration"
   | "profile_incomplete_nudge"
+  | "routine_reminder"
   | "celebration";
 
 interface RetentionEmailRequest {
@@ -418,6 +419,24 @@ function buildSequenceEmail(args: {
         }),
       };
 
+    case "routine_reminder":
+      // Adoption nudge: the founder set up a routine but isn't checking in.
+      // The goal is to get them to START logging, not to protect a streak.
+      return {
+        subject: `Your founder routine is set up — time to use it, ${args.name}`,
+        html: buildEmailShell({
+          title: "Turn your routine into momentum",
+          intro: args.headline || "You set up a founder routine but haven't been checking in. Consistency only compounds once you actually start logging it.",
+          bulletPoints: [
+            "Open your routine and check off one habit today.",
+            "It takes under a minute — and it's how the streak begins.",
+          ],
+          body: args.body || "One check-in today is the difference between a routine that exists and a routine that works.",
+          ctaLabel: args.ctaLabel,
+          ctaUrl: args.ctaUrl,
+        }),
+      };
+
     case "celebration":
       return {
         subject: `You created a real return trigger`,
@@ -504,20 +523,25 @@ serve(async (req: Request): Promise<Response> => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const sixDaysAgo = new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString();
-    const { data: existingSend } = await supabase
-      .from("retention_email_log")
-      .select("id")
-      .eq("user_id", userId)
-      .eq("sequence", sequence)
-      .gte("sent_at", sixDaysAgo)
-      .maybeSingle();
+    // routine_reminder cadence is governed upstream (per-day dedup + global weekly
+    // cap in process_routine_reminder_emails), so it is exempt from the 6-day
+    // per-sequence guard that protects the slower lifecycle sequences.
+    if (sequence !== "routine_reminder") {
+      const sixDaysAgo = new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString();
+      const { data: existingSend } = await supabase
+        .from("retention_email_log")
+        .select("id")
+        .eq("user_id", userId)
+        .eq("sequence", sequence)
+        .gte("sent_at", sixDaysAgo)
+        .maybeSingle();
 
-    if (existingSend) {
-      return new Response(JSON.stringify({ ok: true, skipped: true, reason: "already_sent_recently" }), {
-        status: 200,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
-      });
+      if (existingSend) {
+        return new Response(JSON.stringify({ ok: true, skipped: true, reason: "already_sent_recently" }), {
+          status: 200,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        });
+      }
     }
 
     const sendResult = await resend.emails.send({
