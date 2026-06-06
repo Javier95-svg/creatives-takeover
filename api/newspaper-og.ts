@@ -27,6 +27,9 @@ interface StoryRecord {
   meta_description: string | null;
   hashtags: string[] | null;
   published_at: string | null;
+  updated_at: string | null;
+  body_content: string | null;
+  author_name: string | null;
 }
 
 function escapeAttr(value: string): string {
@@ -70,6 +73,76 @@ function setCanonical(html: string, url: string): string {
     return html.replace(re, `$1${escapeAttr(url)}$2`);
   }
   return html.replace('</head>', `    <link rel="canonical" href="${escapeAttr(url)}" />\n  </head>`);
+}
+
+// Inject a JSON-LD <script> before </head>.
+function injectJsonLd(html: string, data: unknown): string {
+  const script = `    <script type="application/ld+json">${JSON.stringify(data).replace(/</g, '\\u003c')}</script>\n  </head>`;
+  return html.replace('</head>', script);
+}
+
+// Minimal, safe Markdown -> HTML for crawler-visible article body. Handles
+// headings, lists, bold/italic, links, and paragraphs. All text is escaped first.
+function markdownToHtml(markdown: string): string {
+  const escaped = escapeAttr(markdown);
+  const lines = escaped.split(/\r?\n/);
+  const out: string[] = [];
+  let paragraph: string[] = [];
+  let listType: 'ul' | 'ol' | null = null;
+
+  const inline = (text: string) =>
+    text
+      .replace(/\[([^\]]+)\]\((https?:[^)\s]+)\)/g, '<a href="$2" rel="noopener">$1</a>')
+      .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*([^*]+)\*/g, '<em>$1</em>')
+      .replace(/`([^`]+)`/g, '<code>$1</code>');
+
+  const flushParagraph = () => {
+    if (paragraph.length) {
+      out.push(`<p>${inline(paragraph.join(' '))}</p>`);
+      paragraph = [];
+    }
+  };
+  const closeList = () => {
+    if (listType) {
+      out.push(`</${listType}>`);
+      listType = null;
+    }
+  };
+
+  for (const raw of lines) {
+    const line = raw.trim();
+    if (!line) {
+      flushParagraph();
+      closeList();
+      continue;
+    }
+    const heading = /^(#{1,6})\s+(.*)$/.exec(line);
+    if (heading) {
+      flushParagraph();
+      closeList();
+      const level = Math.min(heading[1].length + 1, 6); // h1 reserved for the title
+      out.push(`<h${level}>${inline(heading[2])}</h${level}>`);
+      continue;
+    }
+    const ul = /^[-*]\s+(.*)$/.exec(line);
+    const ol = /^\d+\.\s+(.*)$/.exec(line);
+    if (ul || ol) {
+      flushParagraph();
+      const wanted = ul ? 'ul' : 'ol';
+      if (listType !== wanted) {
+        closeList();
+        listType = wanted;
+        out.push(`<${wanted}>`);
+      }
+      out.push(`<li>${inline((ul ? ul[1] : ol![1]))}</li>`);
+      continue;
+    }
+    paragraph.push(line);
+  }
+  flushParagraph();
+  closeList();
+  return out.join('\n');
 }
 
 // Mirrors the meta-title/description logic in src/pages/StoryArticle.tsx so the
@@ -133,7 +206,7 @@ export default async function handler(request: Request): Promise<Response> {
       `${SUPABASE_URL}/rest/v1/stories_articles` +
         `?slug=eq.${encodeURIComponent(slug)}` +
         `&status=eq.published` +
-        `&select=slug,title,banner_image_url,excerpt,meta_title,meta_description,hashtags,published_at` +
+        `&select=slug,title,banner_image_url,excerpt,meta_title,meta_description,hashtags,published_at,updated_at,body_content,author_name` +
         `&limit=1`,
       { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } },
     );
@@ -167,6 +240,54 @@ export default async function handler(request: Request): Promise<Response> {
   html = setMeta(html, 'name', 'twitter:title', optimizedMetaTitle);
   html = setMeta(html, 'name', 'twitter:description', metaDescription);
   html = setMeta(html, 'name', 'twitter:image', ogImageUrl);
+
+  // Article structured data (E-E-A-T: author, dates, publisher, image).
+  const authorName = (article.author_name || 'Creatives Takeover').trim();
+  const publishedIso = article.published_at || article.updated_at || new Date().toISOString();
+  const modifiedIso = article.updated_at || publishedIso;
+  html = injectJsonLd(html, {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: optimizedMetaTitle,
+    description: metaDescription,
+    image: ogImageUrl,
+    author: { '@type': 'Person', name: authorName },
+    publisher: {
+      '@type': 'Organization',
+      name: 'Creatives Takeover',
+      logo: { '@type': 'ImageObject', url: `${SITE_ORIGIN}/og-image.png` },
+    },
+    datePublished: publishedIso,
+    dateModified: modifiedIso,
+    mainEntityOfPage: { '@type': 'WebPage', '@id': articleUrl },
+    ...(article.hashtags && article.hashtags.length
+      ? { keywords: article.hashtags.map((t) => t.replace(/^#/, '')).join(', ') }
+      : {}),
+  });
+
+  // Server-render the article body into the crawler-visible fallback so the
+  // ranking content (not just meta) is in the initial HTML. Humans still get the
+  // full React app; the fallback is hidden once JS boots.
+  if (article.body_content && article.body_content.trim()) {
+    const publishedLabel = new Date(publishedIso).toLocaleDateString('en-US', {
+      year: 'numeric', month: 'long', day: 'numeric',
+    });
+    const articleHtml = `
+      <header>
+        <p>Creatives Takeover — Newspaper</p>
+      </header>
+      <article>
+        <h1>${escapeAttr(article.title)}</h1>
+        <p>By ${escapeAttr(authorName)} · ${escapeAttr(publishedLabel)}</p>
+        ${article.excerpt ? `<p>${escapeAttr(article.excerpt)}</p>` : ''}
+        ${markdownToHtml(article.body_content)}
+        <p><a href="/newspaper">Read more founder insights on Creatives Takeover</a></p>
+      </article>`;
+    html = html.replace(
+      /<main id="seo-fallback">[\s\S]*?<\/main>/i,
+      `<main id="seo-fallback">${articleHtml}</main>`,
+    );
+  }
 
   return new Response(html, {
     status: 200,

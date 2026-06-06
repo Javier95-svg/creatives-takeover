@@ -3,56 +3,17 @@ import path from "node:path";
 import { BASE_URL, INDEXABLE_ROUTES, ROBOTS_DISALLOW } from "./seo-route-config.mjs";
 
 const PUBLIC_DIR = path.resolve(process.cwd(), "public");
-const SITEMAP_PATH = path.join(PUBLIC_DIR, "sitemap.xml");
+const SITEMAP_INDEX_PATH = path.join(PUBLIC_DIR, "sitemap.xml");
+const SITEMAP_PAGES_PATH = path.join(PUBLIC_DIR, "sitemap-pages.xml");
 const ROBOTS_PATH = path.join(PUBLIC_DIR, "robots.txt");
 
-async function fetchPublishedStoryRoutes() {
-  const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
-  const supabaseKey =
-    process.env.SUPABASE_SERVICE_ROLE_KEY ||
-    process.env.SUPABASE_ANON_KEY ||
-    process.env.VITE_SUPABASE_ANON_KEY;
-
-  if (!supabaseUrl || !supabaseKey || typeof fetch !== "function") {
-    return [];
-  }
-
-  try {
-    const response = await fetch(
-      `${supabaseUrl}/rest/v1/stories_articles?select=slug,updated_at,published_at&status=eq.published&order=published_at.desc`,
-      {
-        headers: {
-          apikey: supabaseKey,
-          Authorization: `Bearer ${supabaseKey}`,
-        },
-      },
-    );
-
-    if (!response.ok) {
-      console.warn(`Skipping story sitemap routes: Supabase returned ${response.status}.`);
-      return [];
-    }
-
-    const stories = await response.json();
-    return (Array.isArray(stories) ? stories : [])
-      .filter((story) => typeof story.slug === "string" && story.slug.trim().length > 0)
-      .map((story) => ({
-        path: `/newspaper/${story.slug}`,
-        changefreq: "monthly",
-        priority: 0.6,
-        lastmod: (story.updated_at || story.published_at || new Date().toISOString()).split("T")[0],
-      }));
-  } catch (error) {
-    console.warn("Skipping story sitemap routes: failed to fetch published stories.", error);
-    return [];
-  }
-}
-
-async function generateSitemapXml() {
+// Static pages + programmatic answer routes are stable per deploy, so they ship
+// as a built sitemap. Newspaper articles change between deploys, so they live in
+// a runtime sitemap (/sitemap-articles.xml -> /api/sitemap-articles) that always
+// reflects the latest published stories without waiting for a rebuild.
+function generatePagesSitemapXml() {
   const now = new Date().toISOString().split("T")[0];
-  const dynamicStoryRoutes = await fetchPublishedStoryRoutes();
-  const routes = [...INDEXABLE_ROUTES, ...dynamicStoryRoutes];
-  const urls = routes.map(
+  const urls = INDEXABLE_ROUTES.map(
     (route) => `  <url>
     <loc>${BASE_URL}${route.path}</loc>
     <lastmod>${route.lastmod || now}</lastmod>
@@ -65,6 +26,22 @@ async function generateSitemapXml() {
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${urls}
 </urlset>
+`;
+}
+
+function generateSitemapIndexXml() {
+  const now = new Date().toISOString();
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <sitemap>
+    <loc>${BASE_URL}/sitemap-pages.xml</loc>
+    <lastmod>${now}</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>${BASE_URL}/sitemap-articles.xml</loc>
+    <lastmod>${now}</lastmod>
+  </sitemap>
+</sitemapindex>
 `;
 }
 
@@ -100,9 +77,10 @@ Sitemap: ${BASE_URL}/sitemap.xml
 
 async function main() {
   await fs.mkdir(PUBLIC_DIR, { recursive: true });
-  await fs.writeFile(SITEMAP_PATH, await generateSitemapXml(), "utf8");
+  await fs.writeFile(SITEMAP_PAGES_PATH, generatePagesSitemapXml(), "utf8");
+  await fs.writeFile(SITEMAP_INDEX_PATH, generateSitemapIndexXml(), "utf8");
   await fs.writeFile(ROBOTS_PATH, generateRobotsTxt(), "utf8");
-  console.log(`Generated SEO assets for ${INDEXABLE_ROUTES.length} indexable routes.`);
+  console.log(`Generated SEO assets: sitemap index + ${INDEXABLE_ROUTES.length} page routes (articles served live at /sitemap-articles.xml).`);
 }
 
 main().catch((error) => {

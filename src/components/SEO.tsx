@@ -267,12 +267,10 @@ export const createSoftwareSchema = () => ({
     "price": "0",
     "priceCurrency": "USD",
     "availability": "https://schema.org/InStock"
-  },
-  "aggregateRating": {
-    "@type": "AggregateRating",
-    "ratingValue": "4.8",
-    "ratingCount": "15000"
   }
+  // NOTE: aggregateRating intentionally omitted. Fabricated review ratings in
+  // structured data violate Google's guidelines and risk a manual action.
+  // Re-add only when backed by real, on-page user reviews.
 });
 
 // Helper function to create SoftwareApplication schema for specific tools

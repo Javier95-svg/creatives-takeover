@@ -210,6 +210,17 @@ const AdminStoryEditor = () => {
 
     if (result) {
       toast.success(publish ? "Story published!" : "Story saved as draft");
+      // Ping IndexNow on publish so the article is discovered in minutes, not on
+      // the next crawl. Fire-and-forget — never block the editor on it.
+      if (publish && result.status === "published") {
+        void fetch("/api/indexnow", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            urls: [`/newspaper/${result.slug}`, "/newspaper", "/sitemap-articles.xml"],
+          }),
+        }).catch(() => {});
+      }
       navigate(`/newspaper/${result.slug}`);
     }
   };
