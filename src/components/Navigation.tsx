@@ -152,11 +152,11 @@ const Navigation = () => {
       return 'accessible';
     }
 
+    // Signed-in users see the same set of tool tabs regardless of plan. Tools
+    // their plan can't access render as locked (the destination page shows the
+    // upgrade-to-Pro prompt) instead of being hidden, so every account has an
+    // identical navbar.
     const entitlement = resolveEntitlement(featureKey, currentPlan);
-    if (!entitlement.isVisible) {
-      return 'hidden';
-    }
-
     return entitlement.state === 'locked' || entitlement.state === 'hidden'
       ? 'locked'
       : 'accessible';
