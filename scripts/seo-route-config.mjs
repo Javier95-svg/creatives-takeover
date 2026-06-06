@@ -49,6 +49,18 @@ const FOUNDER_ANSWER_ROUTES = [
   "pitch-deck-feedback-for-startups",
   "vc-search-for-startups",
   "accelerator-alternatives",
+  // Expansion batch (long-tail founder intent)
+  "how-to-find-your-target-audience",
+  "customer-interview-questions",
+  "signs-your-startup-idea-is-good",
+  "no-code-vs-code-for-mvp",
+  "mvp-feature-prioritization",
+  "how-to-get-first-100-users",
+  "product-hunt-launch-guide",
+  "cold-email-for-startups",
+  "how-to-find-investors-for-startup",
+  "pre-seed-vs-seed-funding",
+  "startup-pitch-deck-outline",
 ].map((slug) => ({
   path: `/answers/${slug}`,
   title: `${slug

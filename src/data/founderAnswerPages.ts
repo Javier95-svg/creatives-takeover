@@ -1154,6 +1154,457 @@ export const founderAnswerPages: FounderAnswerPage[] = [
     ],
     relatedSlugs: ["how-to-define-icp-for-startup", "how-to-validate-startup-idea", "pitch-deck-feedback-for-startups"],
   },
+  {
+    slug: "how-to-find-your-target-audience",
+    cluster: "icp",
+    title: "How to Find Your Target Audience as a Startup",
+    metaTitle: "How to Find Your Target Audience for a Startup | Creatives Takeover",
+    metaDescription:
+      "Find your startup's target audience by ranking pain, locating where they gather, and testing one segment before you build for everyone.",
+    keyword: "how to find your target audience",
+    searchIntent: "A founder knows the problem but is unsure who actually buys first.",
+    updatedLabel: "June 2026",
+    summary:
+      "Your target audience is not a demographic — it is the smallest group with the sharpest pain you can reach today. Find it by following urgency and existing behavior, not by guessing a persona.",
+    quickAnswerItems: [
+      { label: "Follow pain", title: "Rank by urgency", description: "The audience worth targeting first is already losing time, money, or trust to the problem." },
+      { label: "Follow behavior", title: "Find where they gather", description: "Look for the subreddits, Slack groups, and tools your audience already uses daily." },
+      { label: "Test one", title: "Pick a single beachhead", description: "Win one narrow segment before expanding — broad targeting kills early messaging." },
+    ],
+    sections: [
+      { title: "Start from the pain, not the persona", description: "List who feels the problem most acutely right now. Demographics describe people; urgency describes buyers." },
+      { title: "Map where they already are", description: "Identify the exact communities, search terms, and tools your audience uses so you can reach them without paid ads." },
+      { title: "Pick one beachhead segment", description: "Choose the single segment you can reach, message, and learn from fastest, then expand once it works." },
+    ],
+    checklist: [
+      "One segment with urgent pain",
+      "Three places they already gather",
+      "One message that stops them",
+      "One reason to act this month",
+      "One channel you can reach for free",
+    ],
+    cta: {
+      label: "Build My ICP Free",
+      href: "/icp-builder?utm_source=seo&utm_medium=answer_page&utm_campaign=target_audience",
+      description: "Turn your target audience into a saved ICP with evidence and next steps.",
+    },
+    faqs: [
+      { question: "How do I find my target audience with no customers yet?", answer: "Start from the pain. Find the group already complaining about or paying to solve the problem in communities, reviews, and forums, then talk to them." },
+      { question: "Should my target audience be broad or narrow?", answer: "Narrow. A broad audience makes messaging vague. A narrow beachhead makes your offer obvious and easier to validate." },
+      { question: "How is a target audience different from an ICP?", answer: "A target audience is the broad group; an ICP is the precise segment most likely to need your product first and adopt early." },
+    ],
+    relatedSlugs: ["how-to-define-icp-for-startup", "ideal-customer-profile-template", "how-to-validate-startup-idea"],
+  },
+  {
+    slug: "customer-interview-questions",
+    cluster: "validation",
+    title: "Customer Interview Questions That Reveal Real Demand",
+    metaTitle: "Customer Interview Questions for Startups | Creatives Takeover",
+    metaDescription:
+      "Use these customer interview questions to uncover real pain, past behavior, and willingness to pay — without leading the witness.",
+    keyword: "customer interview questions",
+    searchIntent: "A founder wants to run validation interviews but does not know what to ask.",
+    updatedLabel: "June 2026",
+    summary:
+      "Great customer interviews dig into the past, not the future. Ask what people already do and have paid for — never whether they 'would' buy your idea.",
+    quickAnswerItems: [
+      { label: "Ask the past", title: "Behavior over opinions", description: "What someone did last month predicts demand far better than what they say they'd do." },
+      { label: "Find the cost", title: "Quantify the pain", description: "Probe how much time, money, or stress the problem currently causes." },
+      { label: "Stay neutral", title: "Don't pitch", description: "Pitching turns interviews into compliments. Keep your idea out of the first questions." },
+    ],
+    sections: [
+      { title: "Open with the last time it happened", description: "\"Tell me about the last time you dealt with [problem]\" surfaces real workflows and emotion, not hypotheticals." },
+      { title: "Dig into the workaround and its cost", description: "Ask what they use today and what it costs them. A painful workaround is your strongest demand signal." },
+      { title: "Probe willingness to pay indirectly", description: "Ask what they've already paid to solve this and what would make them switch — never \"would you pay for X?\"" },
+    ],
+    checklist: [
+      "5+ interviews with the same segment",
+      "Past-behavior questions, not hypotheticals",
+      "Quantified cost of the problem",
+      "Current workaround identified",
+      "No pitching in the first half",
+    ],
+    cta: {
+      label: "Run Validation Free",
+      href: "/validate?utm_source=seo&utm_medium=answer_page&utm_campaign=interview_questions",
+      description: "Turn interview insights into a structured validation plan.",
+    },
+    faqs: [
+      { question: "What are the best customer interview questions?", answer: "The best questions ask about past behavior: the last time the problem occurred, what they use today, and what it costs them — not whether they'd buy your idea." },
+      { question: "How many customer interviews do I need?", answer: "Patterns usually emerge after 5–10 interviews with the same segment. Stop when answers start repeating." },
+      { question: "Why shouldn't I pitch during interviews?", answer: "Pitching makes people polite, not honest. You want to learn the truth about their problem before introducing a solution." },
+    ],
+    relatedSlugs: ["how-to-validate-startup-idea", "signs-your-startup-idea-is-good", "how-to-define-icp-for-startup"],
+  },
+  {
+    slug: "signs-your-startup-idea-is-good",
+    cluster: "validation",
+    title: "Signs Your Startup Idea Is Actually Good",
+    metaTitle: "Signs Your Startup Idea Is Good (and When to Drop It) | Creatives Takeover",
+    metaDescription:
+      "Learn the real signals that a startup idea is worth building — urgency, existing spend, and pull — and the red flags that mean you should stop.",
+    keyword: "signs your startup idea is good",
+    searchIntent: "A founder is unsure whether to commit to an idea or move on.",
+    updatedLabel: "June 2026",
+    summary:
+      "A good idea shows pull, not just interest. People already pay to solve the problem, ask you for it, or change behavior to get early access. Politeness is not a signal.",
+    quickAnswerItems: [
+      { label: "Pull", title: "People chase you", description: "Strangers asking when they can use it beats friends saying 'nice idea.'" },
+      { label: "Spend", title: "Money already moves", description: "If people pay for inferior workarounds, budget exists." },
+      { label: "Urgency", title: "The problem is now", description: "Strong ideas solve a problem people are trying to fix this month." },
+    ],
+    sections: [
+      { title: "Look for pull, not approval", description: "Demand looks like people requesting access, sharing it unprompted, or trying to pay before it's ready." },
+      { title: "Check whether money already moves", description: "Existing spend on alternatives — even bad ones — proves the problem is worth paying to solve." },
+      { title: "Watch for the red flags", description: "Polite enthusiasm with no behavior change, 'I'd use it if it were free,' and no urgency are signs to iterate or stop." },
+    ],
+    checklist: [
+      "Unprompted requests for access",
+      "Existing spend on a workaround",
+      "Clear urgency this month",
+      "A specific segment, not 'everyone'",
+      "Behavior change, not just praise",
+    ],
+    cta: {
+      label: "Score My Idea Free",
+      href: "/decision-sprint?utm_source=seo&utm_medium=answer_page&utm_campaign=idea_signals",
+      description: "Compare ideas against consistent criteria in a Decision Sprint.",
+    },
+    faqs: [
+      { question: "How do I know if my startup idea is good?", answer: "Look for pull and existing spend: people requesting access, paying for workarounds, and showing urgency. Approval without behavior change is weak." },
+      { question: "What are red flags for a startup idea?", answer: "Vague enthusiasm, 'I'd use it if free,' no urgency, and an audience of 'everyone' are signs the idea needs sharpening or replacing." },
+      { question: "Should I drop an idea with no traction?", answer: "Not immediately — first test a narrower segment and sharper pain. If urgency still doesn't appear, redirect your energy." },
+    ],
+    relatedSlugs: ["how-to-validate-startup-idea", "customer-interview-questions", "waitlist-before-mvp"],
+  },
+  {
+    slug: "no-code-vs-code-for-mvp",
+    cluster: "build",
+    title: "No-Code vs Code for Your MVP",
+    metaTitle: "No-Code vs Code for an MVP: Which Should You Use? | Creatives Takeover",
+    metaDescription:
+      "Decide between no-code and custom code for your MVP based on speed, your riskiest assumption, and what you actually need to prove first.",
+    keyword: "no-code vs code for mvp",
+    searchIntent: "A founder is choosing how to build their first version.",
+    updatedLabel: "June 2026",
+    summary:
+      "Choose the approach that proves your riskiest assumption fastest. No-code wins for speed and validation; custom code wins when the product itself is the hard part.",
+    quickAnswerItems: [
+      { label: "Default", title: "Start no-code", description: "If the risk is demand, no-code lets you test in days, not months." },
+      { label: "Exception", title: "Code the hard part", description: "If your edge is technical, build the core in code and fake the rest." },
+      { label: "Rule", title: "Prove one thing", description: "The MVP exists to answer one question, not to be the final product." },
+    ],
+    sections: [
+      { title: "Name your riskiest assumption", description: "If the risk is 'will anyone want this,' speed matters most. If the risk is 'can this even be built,' technical proof matters most." },
+      { title: "Default to no-code for demand risk", description: "Landing pages, forms, and no-code tools validate demand without burning months of engineering." },
+      { title: "Use code only where it's the moat", description: "Build custom only for the part that is genuinely hard or differentiated; stub or manual everything else." },
+    ],
+    checklist: [
+      "Riskiest assumption named",
+      "Fastest test identified",
+      "One question the MVP must answer",
+      "Manual/stubbed non-core parts",
+      "A clear 'kill or continue' threshold",
+    ],
+    cta: {
+      label: "Scope My MVP Free",
+      href: "/mvp-scope?utm_source=seo&utm_medium=answer_page&utm_campaign=nocode_vs_code",
+      description: "Define the smallest build that proves your riskiest assumption.",
+    },
+    faqs: [
+      { question: "Is no-code good enough for an MVP?", answer: "Often yes. If your risk is demand rather than feasibility, no-code validates faster and cheaper than custom code." },
+      { question: "When should I build my MVP with code?", answer: "When the hard, differentiated part of the product can't be faked with no-code — build that core and stub the rest." },
+      { question: "Will no-code slow me down later?", answer: "Possibly, but an MVP's job is learning, not scaling. Rebuild in code once demand is proven." },
+    ],
+    relatedSlugs: ["mvp-builder-for-startups", "tech-stack-for-startup", "waitlist-before-mvp"],
+  },
+  {
+    slug: "mvp-feature-prioritization",
+    cluster: "build",
+    title: "How to Prioritize MVP Features",
+    metaTitle: "How to Prioritize MVP Features (Cut the Rest) | Creatives Takeover",
+    metaDescription:
+      "Prioritize MVP features by mapping each one to your riskiest assumption and the single core job — then cut everything that doesn't earn its place.",
+    keyword: "mvp feature prioritization",
+    searchIntent: "A founder's MVP scope is bloated and they need to cut.",
+    updatedLabel: "June 2026",
+    summary:
+      "An MVP is defined by what you remove. Keep only the features required to deliver the one core outcome and test the one assumption that could kill the product.",
+    quickAnswerItems: [
+      { label: "One job", title: "Protect the core outcome", description: "Keep features that directly deliver the single promise; defer the rest." },
+      { label: "One risk", title: "Test the killer assumption", description: "Prioritize whatever proves or disproves the thing most likely to sink you." },
+      { label: "Cut hard", title: "Default to 'no'", description: "Every extra feature delays learning. The bar to include should be high." },
+    ],
+    sections: [
+      { title: "Anchor on one outcome", description: "Write the single sentence of value the MVP must deliver. Features that don't serve it are out." },
+      { title: "Map features to risk", description: "Rank features by how much they reduce your biggest uncertainty, not by how impressive they look." },
+      { title: "Defer with a parking lot", description: "Capture cut ideas in a backlog so saying 'not now' feels safe and decisions stay fast." },
+    ],
+    checklist: [
+      "One-sentence core outcome",
+      "Riskiest assumption identified",
+      "Each feature mapped to risk or outcome",
+      "A visible 'later' backlog",
+      "A buildable scope in weeks, not months",
+    ],
+    cta: {
+      label: "Scope My MVP Free",
+      href: "/mvp-scope?utm_source=seo&utm_medium=answer_page&utm_campaign=feature_prioritization",
+      description: "Turn a bloated idea into a tight, buildable MVP scope.",
+    },
+    faqs: [
+      { question: "How do I decide which MVP features to build?", answer: "Keep only features that deliver the one core outcome or test your riskiest assumption. Defer everything else to a backlog." },
+      { question: "How many features should an MVP have?", answer: "As few as possible — enough to deliver one clear value and produce a real learning signal." },
+      { question: "What if stakeholders want more features?", answer: "Use a visible backlog and a 'now vs later' frame so cutting feels like sequencing, not rejection." },
+    ],
+    relatedSlugs: ["mvp-builder-for-startups", "no-code-vs-code-for-mvp", "how-to-validate-startup-idea"],
+  },
+  {
+    slug: "how-to-get-first-100-users",
+    cluster: "launch",
+    title: "How to Get Your First 100 Users",
+    metaTitle: "How to Get Your First 100 Users for a Startup | Creatives Takeover",
+    metaDescription:
+      "Get your first 100 users with manual, unscalable outreach in the communities your ICP already lives in — before you touch paid ads.",
+    keyword: "how to get first 100 users",
+    searchIntent: "A founder has a product but no distribution yet.",
+    updatedLabel: "June 2026",
+    summary:
+      "Your first 100 users come from doing things that don't scale: direct outreach, niche communities, and personal conversations — not ads. Go where your ICP already gathers.",
+    quickAnswerItems: [
+      { label: "Go manual", title: "Do unscalable things", description: "DMs, emails, and one-to-one conversations beat ads at this stage." },
+      { label: "Go narrow", title: "One community at a time", description: "Win a single niche community before spreading thin across channels." },
+      { label: "Give first", title: "Be useful before selling", description: "Help in the community first; the product invitation lands far better after." },
+    ],
+    sections: [
+      { title: "List the 5 places your ICP gathers", description: "Subreddits, Slack/Discord groups, niche forums, and creators your audience follows are your first channels." },
+      { title: "Do unscalable outreach", description: "Reach out personally, offer to solve the problem yourself, and onboard early users by hand." },
+      { title: "Turn users into a loop", description: "Ask every early user for one referral or one piece of feedback so growth compounds." },
+    ],
+    checklist: [
+      "Five communities where the ICP gathers",
+      "A personal outreach message",
+      "Hands-on onboarding for early users",
+      "A referral or feedback ask",
+      "One channel doubled-down on",
+    ],
+    cta: {
+      label: "Plan My Launch Free",
+      href: "/go-to-market?utm_source=seo&utm_medium=answer_page&utm_campaign=first_100_users",
+      description: "Build a channel and messaging plan for your first users.",
+    },
+    faqs: [
+      { question: "How do startups get their first 100 users?", answer: "Through unscalable, manual outreach in the niche communities their ICP already uses — direct messages, personal onboarding, and referrals, not paid ads." },
+      { question: "Should I run ads to get early users?", answer: "Usually not first. Ads hide whether your message resonates. Manual channels teach you what actually works." },
+      { question: "Where do I find my first users?", answer: "Wherever your ICP already gathers: niche subreddits, Slack/Discord groups, forums, and creator audiences." },
+    ],
+    relatedSlugs: ["go-to-market-strategy-for-startup", "first-users-for-saas", "startup-launch-checklist"],
+  },
+  {
+    slug: "product-hunt-launch-guide",
+    cluster: "launch",
+    title: "Product Hunt Launch Guide for Founders",
+    metaTitle: "Product Hunt Launch Guide for Startups | Creatives Takeover",
+    metaDescription:
+      "Plan a Product Hunt launch that actually converts: build an audience first, prepare assets, and turn launch-day traffic into retained users.",
+    keyword: "product hunt launch guide",
+    searchIntent: "A founder is planning a Product Hunt launch and wants it to count.",
+    updatedLabel: "June 2026",
+    summary:
+      "Product Hunt rewards preparation, not luck. The launch is the visible day; the work is the audience, assets, and follow-up you build around it.",
+    quickAnswerItems: [
+      { label: "Before", title: "Warm an audience", description: "Build a list and relationships weeks ahead so day one has momentum." },
+      { label: "During", title: "Make assets effortless", description: "A crisp tagline, gallery, and first comment do most of the conversion work." },
+      { label: "After", title: "Capture and retain", description: "Launch traffic is worthless if it doesn't convert into signups you keep." },
+    ],
+    sections: [
+      { title: "Build the audience before launch day", description: "Grow a waitlist and engage with the Product Hunt community for weeks so you don't launch to silence." },
+      { title: "Prepare conversion-ready assets", description: "Nail the tagline, gallery images, demo, and a strong founder first comment that frames the problem." },
+      { title: "Plan the follow-through", description: "Have onboarding and an email sequence ready so launch traffic becomes retained users, not a spike." },
+    ],
+    checklist: [
+      "Pre-launch waitlist built",
+      "Tagline and gallery prepared",
+      "Founder first comment drafted",
+      "Onboarding ready for traffic",
+      "Post-launch email sequence",
+    ],
+    cta: {
+      label: "Build My Waitlist Free",
+      href: "/waitlist?utm_source=seo&utm_medium=answer_page&utm_campaign=product_hunt",
+      description: "Build the pre-launch audience that makes launch day convert.",
+    },
+    faqs: [
+      { question: "How do I prepare for a Product Hunt launch?", answer: "Build an audience weeks ahead, prepare a sharp tagline, gallery, and founder comment, and set up onboarding so launch traffic converts and stays." },
+      { question: "Does Product Hunt still drive users?", answer: "Yes, when paired with preparation. The ranking matters less than the qualified traffic and credibility a good launch creates." },
+      { question: "What's the biggest Product Hunt mistake?", answer: "Launching cold with no audience and no follow-up, so the spike of traffic never converts into retained users." },
+    ],
+    relatedSlugs: ["how-to-get-first-100-users", "startup-launch-checklist", "waitlist-before-mvp"],
+  },
+  {
+    slug: "cold-email-for-startups",
+    cluster: "launch",
+    title: "Cold Email for Startups That Gets Replies",
+    metaTitle: "Cold Email for Startups: Templates & Tactics | Creatives Takeover",
+    metaDescription:
+      "Write cold emails that get replies: research the recipient, lead with their problem, keep it short, and make one specific ask.",
+    keyword: "cold email for startups",
+    searchIntent: "A founder needs to reach customers or partners via cold outreach.",
+    updatedLabel: "June 2026",
+    summary:
+      "Cold email works when it's about the recipient, not you. Research, lead with their problem, stay under five sentences, and make a single low-friction ask.",
+    quickAnswerItems: [
+      { label: "Relevance", title: "Earn the open", description: "A specific, researched first line beats any clever template." },
+      { label: "Brevity", title: "Five sentences max", description: "Long cold emails get deleted. Respect the reader's time." },
+      { label: "One ask", title: "Make saying yes easy", description: "Ask for one small, specific next step, not a 30-minute call." },
+    ],
+    sections: [
+      { title: "Research before you send", description: "One genuine, specific detail about the recipient or their company proves you're not blasting a list." },
+      { title: "Lead with their problem", description: "Open with the pain they have, not your product. The product is the bridge, not the headline." },
+      { title: "Close with one small ask", description: "A single, low-friction request — a reply, a quick question, a short look — converts better than a calendar invite." },
+    ],
+    checklist: [
+      "Researched first line",
+      "Problem-first framing",
+      "Under five sentences",
+      "One specific, low-friction ask",
+      "A clear, human signature",
+    ],
+    cta: {
+      label: "Get Outreach Templates",
+      href: "/insighta/email-templates?utm_source=seo&utm_medium=answer_page&utm_campaign=cold_email",
+      description: "Use proven outreach templates for customers and investors.",
+    },
+    faqs: [
+      { question: "How do I write a cold email that gets replies?", answer: "Research the recipient, open with their problem, keep it under five sentences, and make one small, specific ask." },
+      { question: "How long should a cold email be?", answer: "Short — ideally under five sentences. Long cold emails are skimmed or deleted." },
+      { question: "What's the best cold email ask?", answer: "A single low-friction step, like a quick reply or a short look, not an immediate 30-minute meeting." },
+    ],
+    relatedSlugs: ["how-to-get-first-100-users", "vc-search-for-startups", "go-to-market-strategy-for-startup"],
+  },
+  {
+    slug: "how-to-find-investors-for-startup",
+    cluster: "fundraising",
+    title: "How to Find Investors for Your Startup",
+    metaTitle: "How to Find Investors for a Startup | Creatives Takeover",
+    metaDescription:
+      "Find the right investors by filtering for stage, sector, and check size, then prioritizing warm paths over cold blasts.",
+    keyword: "how to find investors for startup",
+    searchIntent: "A founder is ready to raise and needs a targeted investor list.",
+    updatedLabel: "June 2026",
+    summary:
+      "Finding investors is a targeting problem, not a volume problem. Build a focused list that matches your stage, sector, and geography, then prioritize warm introductions.",
+    quickAnswerItems: [
+      { label: "Filter", title: "Match stage and sector", description: "Only pursue investors who fund your stage, space, and check size." },
+      { label: "Warm first", title: "Prioritize introductions", description: "A warm intro converts far better than a cold pitch." },
+      { label: "Track it", title: "Run it like a pipeline", description: "Treat fundraising like sales: a list, stages, and follow-ups." },
+    ],
+    sections: [
+      { title: "Define your investor fit", description: "Stage, sector, geography, and check size narrow thousands of firms to a relevant shortlist." },
+      { title: "Map warm paths", description: "Find the shortest real connection to each target — founders they back, mutual contacts, communities." },
+      { title: "Run a fundraising pipeline", description: "Track every investor's stage and next step so momentum and follow-up don't slip." },
+    ],
+    checklist: [
+      "Stage and sector defined",
+      "A filtered investor shortlist",
+      "Warm paths mapped",
+      "A pipeline tracker",
+      "A tight, ready pitch",
+    ],
+    cta: {
+      label: "Search Investors Free",
+      href: "/insighta/vc-search?utm_source=seo&utm_medium=answer_page&utm_campaign=find_investors",
+      description: "Filter a VC database by stage, sector, and check size.",
+    },
+    faqs: [
+      { question: "How do startups find investors?", answer: "By building a targeted list filtered for stage, sector, geography, and check size, then prioritizing warm introductions over cold outreach." },
+      { question: "Is it better to cold email or get intros?", answer: "Warm introductions convert far better, but a well-researched cold email to a well-matched investor can still work." },
+      { question: "How many investors should I contact?", answer: "Enough well-matched targets to run a real pipeline — quality of fit matters more than raw volume." },
+    ],
+    relatedSlugs: ["vc-search-for-startups", "pitch-deck-feedback-for-startups", "pre-seed-vs-seed-funding"],
+  },
+  {
+    slug: "pre-seed-vs-seed-funding",
+    cluster: "fundraising",
+    title: "Pre-Seed vs Seed Funding: What's the Difference?",
+    metaTitle: "Pre-Seed vs Seed Funding Explained | Creatives Takeover",
+    metaDescription:
+      "Understand pre-seed vs seed funding: what each stage expects, how much founders raise, and which one fits your traction today.",
+    keyword: "pre-seed vs seed funding",
+    searchIntent: "A founder is unsure which stage they are raising at.",
+    updatedLabel: "June 2026",
+    summary:
+      "Pre-seed funds belief and early signal; seed funds early traction and a repeatable wedge. The stage you're at is defined by your evidence, not your ambition.",
+    quickAnswerItems: [
+      { label: "Pre-seed", title: "Fund the bet", description: "Raised on team, insight, and early signal — often before real revenue." },
+      { label: "Seed", title: "Fund the traction", description: "Raised on evidence of demand and an emerging repeatable channel." },
+      { label: "Honest check", title: "Match evidence to stage", description: "Pitching seed with pre-seed proof is the fastest path to no." },
+    ],
+    sections: [
+      { title: "What pre-seed investors expect", description: "A credible team, a sharp insight, an early prototype, and the first signs that the problem is real." },
+      { title: "What seed investors expect", description: "Evidence of demand — users, revenue, retention — and a wedge that looks like it can repeat and scale." },
+      { title: "Diagnose your real stage", description: "Let your traction decide. Raising at the wrong stage wastes momentum and burns investor goodwill." },
+    ],
+    checklist: [
+      "Honest traction assessment",
+      "Stage-appropriate narrative",
+      "Round size matched to milestones",
+      "Evidence for the next 18 months",
+      "A target investor list for that stage",
+    ],
+    cta: {
+      label: "Check Fundraising Readiness",
+      href: "/insighta/test?utm_source=seo&utm_medium=answer_page&utm_campaign=preseed_vs_seed",
+      description: "Assess whether your evidence matches the stage you want to raise at.",
+    },
+    faqs: [
+      { question: "What's the difference between pre-seed and seed?", answer: "Pre-seed funds the bet — team, insight, and early signal. Seed funds early traction and an emerging repeatable channel." },
+      { question: "How much do startups raise at pre-seed vs seed?", answer: "It varies widely by market and region; the key is sizing the round to reach clear milestones, not to a vanity number." },
+      { question: "Which stage am I at?", answer: "Your evidence decides. If you have real demand and retention, you're closer to seed; if you have signal and a prototype, pre-seed." },
+    ],
+    relatedSlugs: ["how-to-find-investors-for-startup", "pitch-deck-feedback-for-startups", "vc-search-for-startups"],
+  },
+  {
+    slug: "startup-pitch-deck-outline",
+    cluster: "fundraising",
+    title: "Startup Pitch Deck Outline (Slide by Slide)",
+    metaTitle: "Startup Pitch Deck Outline, Slide by Slide | Creatives Takeover",
+    metaDescription:
+      "Use this pitch deck outline to tell a tight investor story: problem, solution, market, traction, business model, team, and the ask.",
+    keyword: "startup pitch deck outline",
+    searchIntent: "A founder needs a clear structure for their fundraising deck.",
+    updatedLabel: "June 2026",
+    summary:
+      "A strong pitch deck is a story, not a feature list. Each slide should make the next one feel inevitable: problem, solution, why now, market, traction, model, team, ask.",
+    quickAnswerItems: [
+      { label: "Story", title: "One narrative", description: "Every slide should set up the next so the opportunity feels inevitable." },
+      { label: "Proof", title: "Lead with traction", description: "Evidence of demand earns more attention than vision alone." },
+      { label: "Clarity", title: "One idea per slide", description: "If a slide needs a paragraph to explain, it's two slides." },
+    ],
+    sections: [
+      { title: "The core slides", description: "Problem, solution, why now, market size, traction, business model, competition, team, and a specific ask — in that narrative order." },
+      { title: "Make traction the spine", description: "Put your strongest evidence early and reference it throughout so the story stays grounded in reality." },
+      { title: "End with a concrete ask", description: "State how much you're raising, the milestones it funds, and what you'll prove with it." },
+    ],
+    checklist: [
+      "Problem and why-now are sharp",
+      "Traction shown early",
+      "Market sized credibly",
+      "Business model is clear",
+      "A specific, milestone-based ask",
+    ],
+    cta: {
+      label: "Analyze My Pitch Deck",
+      href: "/insighta/pitch-deck-analyzer?utm_source=seo&utm_medium=answer_page&utm_campaign=deck_outline",
+      description: "Score your deck on narrative, clarity, traction, and readiness.",
+    },
+    faqs: [
+      { question: "What slides should a pitch deck have?", answer: "Problem, solution, why now, market, traction, business model, competition, team, and a specific ask — ordered as one narrative." },
+      { question: "How long should a pitch deck be?", answer: "Around 10–12 focused slides. Each should carry one idea; extra slides usually dilute the story." },
+      { question: "What matters most in a pitch deck?", answer: "A clear narrative grounded in real traction, with a specific ask tied to the milestones the round will fund." },
+    ],
+    relatedSlugs: ["pitch-deck-feedback-for-startups", "how-to-find-investors-for-startup", "pre-seed-vs-seed-funding"],
+  },
 ];
 
 export const getFounderAnswerPage = (slug: string) =>
