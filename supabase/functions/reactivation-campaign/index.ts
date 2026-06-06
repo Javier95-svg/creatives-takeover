@@ -166,8 +166,19 @@ async function fetchEligibleUsers(options: { includeEmail: boolean }): Promise<E
     ((campaignRows ?? []) as Array<{ user_id: string }>).map((row) => row.user_id),
   );
 
+  // Mentors are service providers, not active users — exclude from reactivation.
+  const { data: mentorRows } = await supabase
+    .from("mentors")
+    .select("user_id")
+    .in("user_id", inactiveIds);
+  const mentorIds = new Set(
+    ((mentorRows ?? []) as Array<{ user_id: string | null }>)
+      .map((row) => row.user_id)
+      .filter((id): id is string => Boolean(id)),
+  );
+
   const eligible: EligibleUser[] = inactiveCredits
-    .filter((credit) => !alreadyGrantedIds.has(credit.user_id))
+    .filter((credit) => !alreadyGrantedIds.has(credit.user_id) && !mentorIds.has(credit.user_id))
     .map((credit) => {
       const profile = profilesById.get(credit.user_id)!;
       return {

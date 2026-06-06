@@ -523,6 +523,23 @@ serve(async (req: Request): Promise<Response> => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+    // Mentors are service providers offering their time on the platform, not
+    // active founders. Exclude them from every retention sequence routed through
+    // this sender (weekly scorecards, dormant/inactive nudges, ICP sprint,
+    // routine reminders, lifecycle).
+    const { data: mentorRow } = await supabase
+      .from("mentors")
+      .select("id")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    if (mentorRow) {
+      return new Response(JSON.stringify({ ok: true, skipped: true, reason: "mentor_excluded" }), {
+        status: 200,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    }
+
     // routine_reminder cadence is governed upstream (per-day dedup + global weekly
     // cap in process_routine_reminder_emails), so it is exempt from the 6-day
     // per-sequence guard that protects the slower lifecycle sequences.

@@ -175,7 +175,7 @@ async function alreadySent(userId: string, sequence: SequenceSlug, since?: strin
 }
 
 async function getUserContext(userId: string): Promise<UserContext | null> {
-  const [{ data: profile }, { data: credits }, { data: starterTier }, authResult] =
+  const [{ data: profile }, { data: credits }, { data: starterTier }, authResult, { data: mentorRow }] =
     await Promise.all([
       supabase
         .from("profiles")
@@ -193,10 +193,17 @@ async function getUserContext(userId: string): Promise<UserContext | null> {
         .eq("tier_name", "starter")
         .maybeSingle(),
       supabase.auth.admin.getUserById(userId),
+      supabase
+        .from("mentors")
+        .select("id")
+        .eq("user_id", userId)
+        .maybeSingle(),
     ]);
 
   const email = authResult.data?.user?.email?.trim();
   if (!profile || !email) return null;
+  // Mentors are service providers, not active users — never send them lifecycle email.
+  if (mentorRow) return null;
 
   const metadata = authResult.data?.user?.user_metadata as Record<string, unknown> | null;
   const metadataName = typeof metadata?.full_name === "string" ? metadata.full_name : null;

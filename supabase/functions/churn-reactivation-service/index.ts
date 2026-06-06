@@ -182,6 +182,13 @@ serve(async (req: Request): Promise<Response> => {
 
     console.log(`Found ${churnedUsers.length} churned users`);
 
+    // Mentors are service providers, not active users — exclude from outreach.
+    const { data: mentorRows } = await supabase
+      .from('mentors')
+      .select('user_id')
+      .not('user_id', 'is', null);
+    const mentorIds = new Set((mentorRows ?? []).map((m: any) => m.user_id as string));
+
     let emailed = 0;
     let skipped = 0;
 
@@ -190,6 +197,11 @@ serve(async (req: Request): Promise<Response> => {
       const previousTier = normalizePlan(user.subscription_tier);
       const fullName: string = user.profiles?.full_name ?? '';
       const firstName = fullName.split(' ')[0] || 'there';
+
+      if (user.user_id && mentorIds.has(user.user_id)) {
+        skipped++;
+        continue;
+      }
 
       // Dedup: skip if we emailed this person within the last 30 days
       const { data: recentOutreach } = await supabase
