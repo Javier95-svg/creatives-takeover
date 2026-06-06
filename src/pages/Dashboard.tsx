@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { CheckCircle2 } from 'lucide-react';
 
 import StartupHomeCommandCenter from '@/components/dashboard/StartupHomeCommandCenter';
+import DashboardTodayCockpit from '@/components/dashboard/DashboardTodayCockpit';
 import FirstRunCard from '@/components/dashboard/FirstRunCard';
 import JourneyNextStepCard from '@/components/dashboard/JourneyNextStepCard';
 import StarterDashboardNudge from '@/components/dashboard/StarterDashboardNudge';
@@ -50,9 +51,12 @@ const Dashboard = () => {
           </button>
         </div>
       ) : null}
+      {/* Accountability first: today's tasks, deadlines, streak, progress. */}
+      <DashboardTodayCockpit />
       <FirstRunCard />
-      <JourneyNextStepCard />
+      {/* Profile, network, and growth prompts come after the accountability loop. */}
       <StartupHomeCommandCenter />
+      <JourneyNextStepCard />
       <StarterDashboardNudge />
       <ExitIntentModal isOpen={showExitIntent} onClose={closeExitIntent} />
     </>
