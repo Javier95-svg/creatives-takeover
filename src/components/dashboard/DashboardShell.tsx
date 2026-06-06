@@ -20,6 +20,7 @@ import { normalizePlan, resolveDashboardMode } from '@/config/planPermissions';
 import { shouldRedirectToGuidedOnboarding } from '@/lib/guidedOnboarding';
 import { cn } from '@/lib/utils';
 import { DashboardSidebar } from './DashboardSidebar';
+import { DashboardStreakChip } from './DashboardStreakChip';
 import { DashboardTabsHost } from './DashboardTabsHost';
 import { TaskCountContext } from './TaskCountContext';
 import { ModeToggle, type DashboardMode } from './modes/ModeToggle';
@@ -75,8 +76,9 @@ function DashboardFrame() {
             <div className="relative min-h-screen overflow-hidden bg-background">
               <div className="pointer-events-none absolute inset-x-0 top-0 z-50">
                 <div className={cn('container mx-auto grid grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-4 px-6 pt-4', DASHBOARD_MAX_WIDTH)}>
-                  <div className="pointer-events-auto flex items-start gap-4">
+                  <div className="pointer-events-auto flex items-start gap-2">
                     <SidebarTrigger className="rounded-full border border-border/70 bg-background/88 shadow-sm backdrop-blur-md" />
+                    <DashboardStreakChip />
                     {isHome ? (
                       <ModeToggle currentMode={dashboardMode} />
                     ) : null}

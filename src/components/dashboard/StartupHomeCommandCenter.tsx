@@ -324,14 +324,13 @@ function StartupProfileSection() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-        <div className="space-y-2">
-          <p className="text-sm font-medium text-muted-foreground">Home · Startup Profile and Founder Network</p>
-          <h1 className="font-space-grotesk text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
-            {model.manual.startupName || "Startup command centre"}
-          </h1>
+      <div className="flex flex-col gap-3 border-t border-border/60 pt-6 lg:flex-row lg:items-center lg:justify-between">
+        <div className="space-y-1">
+          <h2 className="font-space-grotesk text-xl font-semibold tracking-tight text-foreground">
+            {model.manual.startupName || "Your startup"}
+          </h2>
           <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
-            One place for what the platform knows about your startup and who you should meet next.
+            What the platform knows about your startup and who you should meet next.
           </p>
         </div>
         <div className="flex items-center gap-2 rounded-full border border-border/70 bg-background/80 px-3 py-2 text-xs text-muted-foreground">
