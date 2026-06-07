@@ -207,6 +207,9 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
   }, [formData.stageAnswers.blocker]);
 
   const totalSteps = steps.length;
+  // Declared here (before the abandonment ref/effect below use it) to avoid a
+  // temporal-dead-zone crash on render.
+  const step = steps[Math.min(currentStep, totalSteps - 1)];
 
   // Keep currentStep valid if the conditional fundraising step disappears.
   useEffect(() => {
@@ -279,7 +282,6 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
     return COUNTRY_OPTIONS.filter((country) => country.toLowerCase().includes(query)).slice(0, 12);
   }, [countrySearch]);
 
-  const step = steps[Math.min(currentStep, totalSteps - 1)];
   const progress = ((currentStep + 1) / totalSteps) * 100;
   const diagnostic = useMemo(() => getStageDiagnostic(formData.stageAnswers), [formData.stageAnswers]);
   const assignedStage = diagnostic?.assignedStage ?? null;
