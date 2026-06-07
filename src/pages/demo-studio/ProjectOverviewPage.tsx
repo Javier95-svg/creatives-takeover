@@ -134,7 +134,10 @@ export default function ProjectOverviewPage() {
         </Link>
 
         <div className="mb-6">
-          <h1 className="text-3xl font-bold">{project?.name}</h1>
+          <span className="inline-flex items-center rounded-full border border-border bg-muted/50 px-2.5 py-0.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+            Demo Studio project
+          </span>
+          <h1 className="creatives-font mt-2 text-3xl font-bold md:text-4xl">{project?.name}</h1>
           {project?.tagline && <p className="mt-1 text-muted-foreground">{project.tagline}</p>}
         </div>
 
@@ -147,11 +150,16 @@ export default function ProjectOverviewPage() {
 
         {/* Demos */}
         <section className="mb-10">
-          <div className="mb-3 flex items-center justify-between">
-            <h2 className="flex items-center gap-2 text-lg font-semibold">
-              <MonitorPlay className="h-5 w-5 text-primary" /> Demos
-            </h2>
-            <Button size="sm" className="gap-1.5" onClick={handleCreateDemo} disabled={creating}>
+          <div className="mb-3 flex items-end justify-between gap-3">
+            <div>
+              <h2 className="flex items-center gap-2 text-lg font-semibold">
+                <MonitorPlay className="h-5 w-5 text-primary" /> Demos
+              </h2>
+              <p className="mt-0.5 text-sm text-muted-foreground">
+                An interactive, click-through walkthrough of your product — screenshots + clickable hotspots.
+              </p>
+            </div>
+            <Button size="sm" className="shrink-0 gap-1.5" onClick={handleCreateDemo} disabled={creating}>
               {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />} New demo
             </Button>
           </div>
@@ -171,13 +179,18 @@ export default function ProjectOverviewPage() {
               {demos.map((demo) => (
                 <div
                   key={demo.id}
-                  className="flex items-center justify-between gap-3 rounded-xl border border-border bg-card p-4"
+                  className="flex items-center justify-between gap-3 rounded-xl border border-border bg-card p-4 transition hover:border-primary/40"
                 >
-                  <div className="min-w-0">
-                    <p className="truncate font-medium">{demo.title}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {demo.status === 'published' ? 'Published' : 'Draft'}
-                    </p>
+                  <div className="flex min-w-0 items-center gap-3">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 text-primary">
+                      <MonitorPlay className="h-4 w-4" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="truncate font-medium">{demo.title}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {demo.status === 'published' ? 'Published' : 'Draft'}
+                      </p>
+                    </div>
                   </div>
                   <div className="flex shrink-0 items-center gap-1.5">
                     {demo.status === 'published' && demo.public_id && (
