@@ -17,6 +17,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { createDemo, deleteDemo, getProject, listDemos } from '@/lib/demoStudio/api';
 import type { DemoStudioDemo, DemoStudioProject } from '@/lib/demoStudio/types';
 import GettingStartedChecklist, { type ChecklistStep } from '@/components/demo-studio/GettingStartedChecklist';
+import WhatIsADemoPopover from '@/components/demo-studio/WhatIsADemoPopover';
 
 export default function ProjectOverviewPage() {
   const { id: projectId } = useParams<{ id: string }>();
@@ -152,9 +153,12 @@ export default function ProjectOverviewPage() {
         <section className="mb-10">
           <div className="mb-3 flex items-end justify-between gap-3">
             <div>
-              <h2 className="flex items-center gap-2 text-lg font-semibold">
-                <MonitorPlay className="h-5 w-5 text-primary" /> Demos
-              </h2>
+              <div className="flex items-center gap-3">
+                <h2 className="flex items-center gap-2 text-lg font-semibold">
+                  <MonitorPlay className="h-5 w-5 text-primary" /> Demos
+                </h2>
+                <WhatIsADemoPopover />
+              </div>
               <p className="mt-0.5 text-sm text-muted-foreground">
                 An interactive, click-through walkthrough of your product — screenshots + clickable hotspots.
               </p>

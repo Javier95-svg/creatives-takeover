@@ -28,6 +28,7 @@ import StepThumbnailList from '@/components/demo-studio/editor/StepThumbnailList
 import HotspotCanvas from '@/components/demo-studio/editor/HotspotCanvas';
 import HotspotInspector from '@/components/demo-studio/editor/HotspotInspector';
 import DemoPlayer from '@/components/demo-studio/player/DemoPlayer';
+import WhatIsADemoPopover from '@/components/demo-studio/WhatIsADemoPopover';
 import { canRemoveWatermark, shouldShowWatermark } from '@/lib/demoStudio/plan';
 import {
   createHotspot,
@@ -329,6 +330,7 @@ export default function DemoEditorPage() {
               Draft
             </span>
           )}
+          <WhatIsADemoPopover className="hidden md:inline-flex" />
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setPreviewOpen(true)}>

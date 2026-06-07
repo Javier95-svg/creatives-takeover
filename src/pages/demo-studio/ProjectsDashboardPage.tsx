@@ -32,6 +32,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { createProject, getOwnerDemoCounts, listProjects } from '@/lib/demoStudio/api';
 import type { DemoStudioProject } from '@/lib/demoStudio/types';
 import GettingStartedChecklist, { type ChecklistStep } from '@/components/demo-studio/GettingStartedChecklist';
+import WhatIsADemoPopover from '@/components/demo-studio/WhatIsADemoPopover';
 
 const HOW_IT_WORKS = [
   { icon: ImagePlus, step: '1', title: 'Upload screenshots', desc: 'Each image becomes a step in the walkthrough.' },
@@ -188,7 +189,10 @@ export default function ProjectsDashboardPage() {
 
         {/* Projects */}
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-xl font-semibold">Your projects</h2>
+          <div className="flex items-center gap-3">
+            <h2 className="text-xl font-semibold">Your projects</h2>
+            <WhatIsADemoPopover />
+          </div>
           {projects.length > 0 && (
             <Button size="sm" variant="outline" className="gap-1.5" onClick={() => setDialogOpen(true)}>
               <Plus className="h-4 w-4" /> New
