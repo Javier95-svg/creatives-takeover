@@ -281,16 +281,20 @@ function App() {
                         <Route path="/bizmap-ai/icp-builder" element={<Navigate to="/icp-builder" replace />} />
                         <Route path="/decision-sprint" element={<ToolRouteWithCreditGate><ValidateJourneyPage /></ToolRouteWithCreditGate>} />
                         <Route path="/validate" element={<ToolRouteWithCreditGate><ValidateJourney /></ToolRouteWithCreditGate>} />
-                        <Route path="/demo-studio" element={<ToolRouteWithCreditGate><WaitlistMakerPage /></ToolRouteWithCreditGate>} />
-                        <Route path="/demo-studio/templates" element={<WaitlistTemplatesPage />} />
+                        {/* Demo Studio = the new interactive demo builder (front door) */}
+                        <Route path="/demo-studio" element={<RouteErrorBoundary routeName="Demo Studio"><DemoStudioProjectsPage /></RouteErrorBoundary>} />
                         <Route path="/demo-studio/projects" element={<RouteErrorBoundary routeName="Demo Studio"><DemoStudioProjectsPage /></RouteErrorBoundary>} />
+                        {/* Legacy waitlist builder, preserved until the Launch Page replaces it */}
+                        <Route path="/demo-studio/classic" element={<ToolRouteWithCreditGate><WaitlistMakerPage /></ToolRouteWithCreditGate>} />
+                        <Route path="/demo-studio/classic/templates" element={<WaitlistTemplatesPage />} />
+                        <Route path="/demo-studio/templates" element={<Navigate to="/demo-studio/classic/templates" replace />} />
                         <Route path="/demo-studio/projects/:id" element={<RouteErrorBoundary routeName="Demo Studio Project"><DemoStudioProjectOverviewPage /></RouteErrorBoundary>} />
                         <Route path="/demo-studio/projects/:projectId/demos/:demoId/edit" element={<RouteErrorBoundary routeName="Demo Editor"><DemoStudioEditorPage /></RouteErrorBoundary>} />
                         <Route path="/demo/:publicId" element={<PublicDemoPage />} />
                         <Route path="/embed/demo/:publicId" element={<EmbedDemoPage />} />
-                        <Route path="/waitlist" element={<Navigate to="/demo-studio" replace />} />
-                        <Route path="/waitlist/templates" element={<Navigate to="/demo-studio/templates" replace />} />
-                        <Route path="/waitlist-maker" element={<Navigate to="/demo-studio" replace />} />
+                        <Route path="/waitlist" element={<Navigate to="/demo-studio/classic" replace />} />
+                        <Route path="/waitlist/templates" element={<Navigate to="/demo-studio/classic/templates" replace />} />
+                        <Route path="/waitlist-maker" element={<Navigate to="/demo-studio/classic" replace />} />
                         <Route path="/w/:slug" element={<WaitlistPublicPage />} />
                         <Route path="/directories" element={<DirectoriesPage />} />
                         <Route path="/mvp-builder" element={<ToolRouteWithCreditGate><AppBuilderPage /></ToolRouteWithCreditGate>} />

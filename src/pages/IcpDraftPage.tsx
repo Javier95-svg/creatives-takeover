@@ -287,7 +287,7 @@ export default function IcpDraftPage() {
               type="button"
               size="lg"
               className="shrink-0 gap-2 bg-white text-slate-950 hover:bg-white/90"
-              onClick={() => navigate(`/demo-studio?icp=${draftId}`)}
+              onClick={() => navigate(`/demo-studio/classic?icp=${draftId}`)}
             >
               <span>Build your waitlist</span>
               <ArrowRight className="h-4 w-4" />
