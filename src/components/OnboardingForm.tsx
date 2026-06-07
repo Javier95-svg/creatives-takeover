@@ -586,7 +586,7 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
             value={countrySearch}
             onChange={(event) => setCountrySearch(event.target.value)}
             className="h-11 rounded-full border-border/70 bg-background/80 pl-9"
-            placeholder="Search countries"
+            placeholder="Type your country here"
           />
         </div>
         {formData.country ? (

@@ -5,6 +5,7 @@ import { CheckCircle2 } from 'lucide-react';
 import StartupHomeCommandCenter from '@/components/dashboard/StartupHomeCommandCenter';
 import DashboardTodayCockpit from '@/components/dashboard/DashboardTodayCockpit';
 import EnablePushCard from '@/components/dashboard/EnablePushCard';
+import DashboardTour from '@/components/dashboard/DashboardTour';
 import FirstRunCard from '@/components/dashboard/FirstRunCard';
 import JourneyNextStepCard from '@/components/dashboard/JourneyNextStepCard';
 import StarterDashboardNudge from '@/components/dashboard/StarterDashboardNudge';
@@ -27,6 +28,7 @@ const Dashboard = () => {
       <Helmet>
         <title>Dashboard — Creatives Takeover</title>
       </Helmet>
+      <DashboardTour />
       {fromIcpBuilder ? (
         <div className="mb-6 flex items-start justify-between gap-4 rounded-2xl border border-emerald-400/20 bg-emerald-400/10 p-5 shadow-sm">
           <div className="flex items-start gap-3">

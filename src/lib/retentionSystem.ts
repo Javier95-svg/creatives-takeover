@@ -323,7 +323,7 @@ export async function startActivationJourney(params: StartActivationParams) {
     startupSectors: params.startupSectors ?? [],
     supportAreasNeeded: params.supportAreasNeeded ?? [],
     country: params.country?.trim() || null,
-  }, false);
+  }, true);
 
   await trackRetentionEvent('activation_started', {
     user_id: params.userId,
