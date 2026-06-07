@@ -7,6 +7,7 @@ import {
   Copy,
   Eye,
   Globe,
+  ImagePlus,
   Loader2,
   Rocket,
 } from 'lucide-react';
@@ -368,15 +369,35 @@ export default function DemoEditorPage() {
 
         {/* Center: canvas */}
         <main className="min-w-0">
-          <HotspotCanvas
-            step={selectedStep}
-            selectedHotspotId={selectedHotspotId}
-            primaryColor={primaryColor}
-            onSelectHotspot={setSelectedHotspotId}
-            onCreateHotspot={handleCreateHotspot}
-            onCommitGeometry={handleGeometryCommit}
-            onPreviewGeometry={(id, rect) => patchHotspotLocal(id, rect)}
-          />
+          {steps.length === 0 ? (
+            <div className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-muted-foreground/30 bg-muted/20 px-6 py-20 text-center">
+              <ImagePlus className="h-10 w-10 text-muted-foreground" />
+              <h3 className="mt-4 text-lg font-semibold">Start with a screenshot</h3>
+              <p className="mt-1 max-w-sm text-sm text-muted-foreground">
+                Upload images of your product — each one becomes a step. Next you'll drag clickable hotspots on
+                top to make it interactive.
+              </p>
+              <Button
+                className="mt-5 gap-1.5"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading}
+              >
+                {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImagePlus className="h-4 w-4" />}
+                Upload screenshots
+              </Button>
+              <p className="mt-3 text-xs text-muted-foreground">PNG or JPG, up to 5MB each. Add as many as you like.</p>
+            </div>
+          ) : (
+            <HotspotCanvas
+              step={selectedStep}
+              selectedHotspotId={selectedHotspotId}
+              primaryColor={primaryColor}
+              onSelectHotspot={setSelectedHotspotId}
+              onCreateHotspot={handleCreateHotspot}
+              onCommitGeometry={handleGeometryCommit}
+              onPreviewGeometry={(id, rect) => patchHotspotLocal(id, rect)}
+            />
+          )}
           {demo?.public_id && (
             <div className="mt-4 space-y-3 rounded-xl border border-border bg-card p-4">
               <h4 className="flex items-center gap-1.5 text-sm font-semibold">

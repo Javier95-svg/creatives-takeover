@@ -149,6 +149,20 @@ export async function deleteDemo(id: string): Promise<void> {
   if (error) throw new Error(error.message);
 }
 
+/** Owner-wide counts for the "getting started" checklist on the dashboard. */
+export async function getOwnerDemoCounts(ownerId: string): Promise<{ total: number; published: number }> {
+  const totalQuery = await supabase
+    .from(DEMOS)
+    .select('id', { count: 'exact', head: true })
+    .eq('owner_id', ownerId);
+  const publishedQuery = await supabase
+    .from(DEMOS)
+    .select('id', { count: 'exact', head: true })
+    .eq('owner_id', ownerId)
+    .eq('status', 'published');
+  return { total: totalQuery.count ?? 0, published: publishedQuery.count ?? 0 };
+}
+
 /* -------------------------------------------------------------------------- */
 /* Steps                                                                       */
 /* -------------------------------------------------------------------------- */

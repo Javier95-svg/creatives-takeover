@@ -19,8 +19,9 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { useAuth } from '@/contexts/AuthContext';
-import { createProject, listProjects } from '@/lib/demoStudio/api';
+import { createProject, getOwnerDemoCounts, listProjects } from '@/lib/demoStudio/api';
 import type { DemoStudioProject } from '@/lib/demoStudio/types';
+import GettingStartedChecklist, { type ChecklistStep } from '@/components/demo-studio/GettingStartedChecklist';
 
 export default function ProjectsDashboardPage() {
   const { user, loading: authLoading } = useAuth();
@@ -31,6 +32,7 @@ export default function ProjectsDashboardPage() {
   const [name, setName] = useState('');
   const [tagline, setTagline] = useState('');
   const [creating, setCreating] = useState(false);
+  const [counts, setCounts] = useState({ total: 0, published: 0 });
 
   useEffect(() => {
     if (authLoading) return;
@@ -41,8 +43,13 @@ export default function ProjectsDashboardPage() {
     let active = true;
     (async () => {
       try {
-        const rows = await listProjects(user.id);
-        if (active) setProjects(rows);
+        const [rows, demoCounts] = await Promise.all([
+          listProjects(user.id),
+          getOwnerDemoCounts(user.id),
+        ]);
+        if (!active) return;
+        setProjects(rows);
+        setCounts(demoCounts);
       } catch (e) {
         toast.error(e instanceof Error ? e.message : 'Failed to load projects.');
       } finally {
@@ -53,6 +60,33 @@ export default function ProjectsDashboardPage() {
       active = false;
     };
   }, [authLoading, user, navigate]);
+
+  const recentProjectId = projects[0]?.id;
+  const checklistSteps: ChecklistStep[] = [
+    {
+      label: 'Create a project',
+      description: 'Name your product — it holds your demos and launch page.',
+      done: projects.length > 0,
+      action: { label: 'New project', onClick: () => setDialogOpen(true) },
+    },
+    {
+      label: 'Build a demo',
+      description: 'Upload screenshots, then add clickable hotspots.',
+      done: counts.total > 0,
+      action: recentProjectId
+        ? { label: 'Open project', to: `/demo-studio/projects/${recentProjectId}` }
+        : { label: 'New project', onClick: () => setDialogOpen(true) },
+    },
+    {
+      label: 'Publish & share',
+      description: 'Get a public link and an embed snippet you can send anywhere.',
+      done: counts.published > 0,
+      action: recentProjectId
+        ? { label: 'Open project', to: `/demo-studio/projects/${recentProjectId}` }
+        : undefined,
+    },
+  ];
+  const allChecklistDone = checklistSteps.every((s) => s.done);
 
   const handleCreate = async () => {
     if (!user || !name.trim()) return;
@@ -135,6 +169,15 @@ export default function ProjectsDashboardPage() {
             </DialogContent>
           </Dialog>
         </div>
+
+        {!loading && !allChecklistDone && (
+          <GettingStartedChecklist
+            title="Get your first demo live"
+            subtitle="Three quick steps — we'll keep this here until your first demo is published."
+            steps={checklistSteps}
+            className="mb-8"
+          />
+        )}
 
         {loading ? (
           <div className="flex justify-center py-20">

@@ -4,13 +4,10 @@ import { toast } from 'sonner';
 import {
   ArrowLeft,
   ExternalLink,
-  Film,
-  Globe,
   Loader2,
   MonitorPlay,
   Pencil,
   Plus,
-  Rocket,
   Trash2,
 } from 'lucide-react';
 import SEO from '@/components/SEO';
@@ -19,6 +16,7 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { createDemo, deleteDemo, getProject, listDemos } from '@/lib/demoStudio/api';
 import type { DemoStudioDemo, DemoStudioProject } from '@/lib/demoStudio/types';
+import GettingStartedChecklist, { type ChecklistStep } from '@/components/demo-studio/GettingStartedChecklist';
 
 export default function ProjectOverviewPage() {
   const { id: projectId } = useParams<{ id: string }>();
@@ -84,6 +82,35 @@ export default function ProjectOverviewPage() {
   };
 
   const hasPublishedDemo = demos.some((d) => d.status === 'published');
+  const firstDemoId = demos[0]?.id;
+  const roadmapSteps: ChecklistStep[] = [
+    {
+      label: 'Build a demo',
+      description: 'Upload screenshots, then add clickable hotspots.',
+      done: demos.length > 0,
+      action: { label: 'New demo', onClick: handleCreateDemo },
+    },
+    {
+      label: 'Publish & share',
+      description: 'Publish to get a public link and an embed snippet.',
+      done: hasPublishedDemo,
+      action: firstDemoId
+        ? { label: 'Open editor', to: `/demo-studio/projects/${projectId}/demos/${firstDemoId}/edit` }
+        : undefined,
+    },
+    {
+      label: 'Record a pitch video',
+      description: 'Up to 3 Loom variations to A/B test on your launch page.',
+      done: false,
+      soon: true,
+    },
+    {
+      label: 'Publish your launch page',
+      description: 'Your demo + pitch + waitlist signup on one public page.',
+      done: false,
+      soon: true,
+    },
+  ];
 
   if (loading) {
     return (
@@ -106,10 +133,17 @@ export default function ProjectOverviewPage() {
           <ArrowLeft className="h-4 w-4" /> All projects
         </Link>
 
-        <div className="mb-8">
+        <div className="mb-6">
           <h1 className="text-3xl font-bold">{project?.name}</h1>
           {project?.tagline && <p className="mt-1 text-muted-foreground">{project.tagline}</p>}
         </div>
+
+        <GettingStartedChecklist
+          title="Your launch roadmap"
+          subtitle="Build a demo first — the pitch video and launch page come next."
+          steps={roadmapSteps}
+          className="mb-8"
+        />
 
         {/* Demos */}
         <section className="mb-10">
@@ -172,40 +206,6 @@ export default function ProjectOverviewPage() {
               ))}
             </div>
           )}
-        </section>
-
-        {/* Next steps: VSL + Launch (upcoming milestones) */}
-        <section className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div className="rounded-xl border border-border bg-muted/30 p-5">
-            <div className="flex items-center gap-2">
-              <Film className="h-5 w-5 text-muted-foreground" />
-              <h3 className="font-semibold">Pitch video (VSL)</h3>
-              <span className="ml-auto rounded-full bg-muted px-2 py-0.5 text-[11px] text-muted-foreground">
-                Coming next
-              </span>
-            </div>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Record up to 3 in-app pitch variations with Loom and A/B test them on your launch page.
-            </p>
-          </div>
-
-          <div className="rounded-xl border border-border bg-muted/30 p-5">
-            <div className="flex items-center gap-2">
-              <Rocket className="h-5 w-5 text-muted-foreground" />
-              <h3 className="font-semibold">Launch page</h3>
-              <span className="ml-auto rounded-full bg-muted px-2 py-0.5 text-[11px] text-muted-foreground">
-                Coming next
-              </span>
-            </div>
-            <p className="mt-2 flex items-start gap-1.5 text-sm text-muted-foreground">
-              <Globe className="mt-0.5 h-4 w-4 shrink-0" />
-              <span>
-                Compose a public page with your demo + pitch + waitlist form. Requires{' '}
-                <strong className={hasPublishedDemo ? 'text-emerald-600' : undefined}>1 published demo</strong> and 1
-                saved pitch video.
-              </span>
-            </p>
-          </div>
         </section>
       </main>
     </div>

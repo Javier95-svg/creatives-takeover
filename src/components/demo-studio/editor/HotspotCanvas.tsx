@@ -199,9 +199,17 @@ export default function HotspotCanvas({
         />
       )}
 
-      <p className="pointer-events-none absolute left-2 top-2 rounded bg-black/60 px-2 py-1 text-[11px] text-white/80">
-        Drag on the image to create a hotspot
-      </p>
+      {step.hotspots.length === 0 ? (
+        <div className="pointer-events-none absolute inset-x-0 top-3 flex justify-center px-3">
+          <span className="rounded-full bg-black/75 px-3 py-1.5 text-xs font-medium text-white shadow-lg">
+            Drag anywhere on the image to add a clickable hotspot
+          </span>
+        </div>
+      ) : (
+        <p className="pointer-events-none absolute left-2 top-2 rounded bg-black/50 px-2 py-1 text-[10px] text-white/70">
+          Drag to add another hotspot
+        </p>
+      )}
     </div>
   );
 }
