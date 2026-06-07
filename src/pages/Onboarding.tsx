@@ -158,7 +158,7 @@ const Onboarding = () => {
         <div className="relative min-h-screen flex items-center justify-center py-8 px-4 sm:py-12">
           <div className="w-full max-w-4xl mx-auto">
             <p className="text-center text-sm text-muted-foreground mb-4">
-              Getting started: build your personalized launchpad
+              Welcome to Creatives Takeover: complete this quiz to personalize your experience
             </p>
             <div className="animate-fade-in-up">
               <OnboardingForm onComplete={handleComplete} />

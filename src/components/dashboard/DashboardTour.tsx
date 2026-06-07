@@ -26,11 +26,11 @@ const STEPS: TourStep[] = [
   {
     icon: Sparkles,
     title: "Welcome to your founder cockpit",
-    body: "A quick 30-second tour of where everything lives, so you know exactly how to use your dashboard.",
+    body: "A quick tour of where everything lives, so you know exactly how to use your dashboard.",
   },
   {
     icon: Home,
-    title: "Home — your daily command center",
+    title: "Home, your daily command center",
     body: "Start here every day. The top of Home shows today's habits, what's due, anything overdue, and your streak. Knock those out first.",
   },
   {
@@ -41,7 +41,7 @@ const STEPS: TourStep[] = [
   {
     icon: CheckSquare,
     title: "Your Tasks",
-    body: "Every task across BizMap, daily goals, and commitments — with deadlines — in one place so nothing slips.",
+    body: "Every task across BizMap, daily goals, and commitments, all with deadlines, in one place so nothing slips.",
   },
   {
     icon: FolderOpen,
@@ -51,17 +51,17 @@ const STEPS: TourStep[] = [
   {
     icon: Bot,
     title: "BizMap AI tools",
-    body: "Validate, build, and launch with guided tools — ICP Builder, MVP Builder, GTM Strategist and more. Locked tools show how to unlock them.",
+    body: "Validate, build, and launch with guided tools like ICP Builder, MVP Builder, and GTM Strategist. Locked tools show how to unlock them.",
   },
   {
     icon: Users,
     title: "Community & mentors",
-    body: "Find a mentor and book a discovery call, meet a co-founder, or connect with angels. Mentor calls are the fastest way to unblock yourself.",
+    body: "Find a mentor and book a discovery call, meet a cofounder, or connect with angels. Mentor calls are the fastest way to unblock yourself.",
   },
   {
     icon: Bell,
     title: "Stay on track",
-    body: "Turn on reminders so we nudge you when your routine is waiting or a task is due — that's how you keep your streak and your momentum.",
+    body: "Turn on reminders so we nudge you when your routine is waiting or a task is due. That is how you keep your streak and your momentum.",
   },
 ];
 
