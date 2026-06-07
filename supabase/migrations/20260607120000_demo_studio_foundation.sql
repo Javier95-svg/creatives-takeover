@@ -3,6 +3,7 @@
 -- `projects` / `waitlist_signups` tables. All tables are owner-scoped via RLS;
 -- published demos / launch pages are publicly readable; signups + events are
 -- publicly insertable. See CT-Demo-Studio-Build-Spec.md section 7.
+-- Idempotent: safe to run multiple times in the Supabase SQL editor.
 
 -- ---------------------------------------------------------------------------
 -- Helper: touch updated_at
@@ -33,12 +34,14 @@ CREATE TABLE IF NOT EXISTS public.demo_studio_projects (
 
 ALTER TABLE public.demo_studio_projects ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "demo_studio_projects_owner_all" ON public.demo_studio_projects;
 CREATE POLICY "demo_studio_projects_owner_all"
   ON public.demo_studio_projects FOR ALL
   USING (owner_id = auth.uid())
   WITH CHECK (owner_id = auth.uid());
 
 -- Public read of the project shell only for published launch pages (needed by /p/:slug)
+DROP POLICY IF EXISTS "demo_studio_projects_public_read_published" ON public.demo_studio_projects;
 CREATE POLICY "demo_studio_projects_public_read_published"
   ON public.demo_studio_projects FOR SELECT
   USING (launch_published = true);
@@ -46,6 +49,7 @@ CREATE POLICY "demo_studio_projects_public_read_published"
 CREATE INDEX IF NOT EXISTS demo_studio_projects_owner_idx ON public.demo_studio_projects (owner_id);
 CREATE INDEX IF NOT EXISTS demo_studio_projects_slug_idx ON public.demo_studio_projects (slug);
 
+DROP TRIGGER IF EXISTS demo_studio_projects_touch ON public.demo_studio_projects;
 CREATE TRIGGER demo_studio_projects_touch
   BEFORE UPDATE ON public.demo_studio_projects
   FOR EACH ROW EXECUTE FUNCTION public.demo_studio_touch_updated_at();
@@ -68,11 +72,13 @@ CREATE TABLE IF NOT EXISTS public.demo_studio_demos (
 
 ALTER TABLE public.demo_studio_demos ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "demo_studio_demos_owner_all" ON public.demo_studio_demos;
 CREATE POLICY "demo_studio_demos_owner_all"
   ON public.demo_studio_demos FOR ALL
   USING (owner_id = auth.uid())
   WITH CHECK (owner_id = auth.uid());
 
+DROP POLICY IF EXISTS "demo_studio_demos_public_read_published" ON public.demo_studio_demos;
 CREATE POLICY "demo_studio_demos_public_read_published"
   ON public.demo_studio_demos FOR SELECT
   USING (status = 'published');
@@ -81,6 +87,7 @@ CREATE INDEX IF NOT EXISTS demo_studio_demos_project_idx ON public.demo_studio_d
 CREATE INDEX IF NOT EXISTS demo_studio_demos_owner_idx ON public.demo_studio_demos (owner_id);
 CREATE INDEX IF NOT EXISTS demo_studio_demos_public_id_idx ON public.demo_studio_demos (public_id);
 
+DROP TRIGGER IF EXISTS demo_studio_demos_touch ON public.demo_studio_demos;
 CREATE TRIGGER demo_studio_demos_touch
   BEFORE UPDATE ON public.demo_studio_demos
   FOR EACH ROW EXECUTE FUNCTION public.demo_studio_touch_updated_at();
@@ -100,6 +107,7 @@ CREATE TABLE IF NOT EXISTS public.demo_studio_demo_steps (
 
 ALTER TABLE public.demo_studio_demo_steps ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "demo_studio_steps_owner_all" ON public.demo_studio_demo_steps;
 CREATE POLICY "demo_studio_steps_owner_all"
   ON public.demo_studio_demo_steps FOR ALL
   USING (EXISTS (
@@ -111,6 +119,7 @@ CREATE POLICY "demo_studio_steps_owner_all"
     WHERE d.id = demo_id AND d.owner_id = auth.uid()
   ));
 
+DROP POLICY IF EXISTS "demo_studio_steps_public_read_published" ON public.demo_studio_demo_steps;
 CREATE POLICY "demo_studio_steps_public_read_published"
   ON public.demo_studio_demo_steps FOR SELECT
   USING (EXISTS (
@@ -139,6 +148,7 @@ CREATE TABLE IF NOT EXISTS public.demo_studio_demo_hotspots (
 
 ALTER TABLE public.demo_studio_demo_hotspots ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "demo_studio_hotspots_owner_all" ON public.demo_studio_demo_hotspots;
 CREATE POLICY "demo_studio_hotspots_owner_all"
   ON public.demo_studio_demo_hotspots FOR ALL
   USING (EXISTS (
@@ -152,6 +162,7 @@ CREATE POLICY "demo_studio_hotspots_owner_all"
     WHERE s.id = step_id AND d.owner_id = auth.uid()
   ));
 
+DROP POLICY IF EXISTS "demo_studio_hotspots_public_read_published" ON public.demo_studio_demo_hotspots;
 CREATE POLICY "demo_studio_hotspots_public_read_published"
   ON public.demo_studio_demo_hotspots FOR SELECT
   USING (EXISTS (
@@ -182,12 +193,14 @@ CREATE TABLE IF NOT EXISTS public.demo_studio_vsls (
 
 ALTER TABLE public.demo_studio_vsls ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "demo_studio_vsls_owner_all" ON public.demo_studio_vsls;
 CREATE POLICY "demo_studio_vsls_owner_all"
   ON public.demo_studio_vsls FOR ALL
   USING (owner_id = auth.uid())
   WITH CHECK (owner_id = auth.uid());
 
 -- Public can read the VSL embedded on a published launch page
+DROP POLICY IF EXISTS "demo_studio_vsls_public_read_published" ON public.demo_studio_vsls;
 CREATE POLICY "demo_studio_vsls_public_read_published"
   ON public.demo_studio_vsls FOR SELECT
   USING (EXISTS (
@@ -208,6 +221,7 @@ BEGIN
 END;
 $$;
 
+DROP TRIGGER IF EXISTS demo_studio_vsls_max_3 ON public.demo_studio_vsls;
 CREATE TRIGGER demo_studio_vsls_max_3
   BEFORE INSERT ON public.demo_studio_vsls
   FOR EACH ROW EXECUTE FUNCTION public.demo_studio_enforce_max_vsls();
@@ -227,6 +241,7 @@ BEGIN
 END;
 $$;
 
+DROP TRIGGER IF EXISTS demo_studio_vsls_single_primary ON public.demo_studio_vsls;
 CREATE TRIGGER demo_studio_vsls_single_primary
   BEFORE INSERT OR UPDATE OF is_primary ON public.demo_studio_vsls
   FOR EACH ROW EXECUTE FUNCTION public.demo_studio_enforce_single_primary_vsl();
@@ -250,11 +265,13 @@ CREATE TABLE IF NOT EXISTS public.demo_studio_launch_pages (
 
 ALTER TABLE public.demo_studio_launch_pages ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "demo_studio_launch_pages_owner_all" ON public.demo_studio_launch_pages;
 CREATE POLICY "demo_studio_launch_pages_owner_all"
   ON public.demo_studio_launch_pages FOR ALL
   USING (owner_id = auth.uid())
   WITH CHECK (owner_id = auth.uid());
 
+DROP POLICY IF EXISTS "demo_studio_launch_pages_public_read_published" ON public.demo_studio_launch_pages;
 CREATE POLICY "demo_studio_launch_pages_public_read_published"
   ON public.demo_studio_launch_pages FOR SELECT
   USING (EXISTS (
@@ -262,6 +279,7 @@ CREATE POLICY "demo_studio_launch_pages_public_read_published"
     WHERE p.id = project_id AND p.launch_published = true
   ));
 
+DROP TRIGGER IF EXISTS demo_studio_launch_pages_touch ON public.demo_studio_launch_pages;
 CREATE TRIGGER demo_studio_launch_pages_touch
   BEFORE UPDATE ON public.demo_studio_launch_pages
   FOR EACH ROW EXECUTE FUNCTION public.demo_studio_touch_updated_at();
@@ -280,6 +298,7 @@ CREATE TABLE IF NOT EXISTS public.demo_studio_signups (
 
 ALTER TABLE public.demo_studio_signups ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "demo_studio_signups_public_insert" ON public.demo_studio_signups;
 CREATE POLICY "demo_studio_signups_public_insert"
   ON public.demo_studio_signups FOR INSERT
   WITH CHECK (EXISTS (
@@ -287,6 +306,7 @@ CREATE POLICY "demo_studio_signups_public_insert"
     WHERE p.id = project_id AND p.launch_published = true
   ));
 
+DROP POLICY IF EXISTS "demo_studio_signups_owner_read" ON public.demo_studio_signups;
 CREATE POLICY "demo_studio_signups_owner_read"
   ON public.demo_studio_signups FOR SELECT
   USING (EXISTS (
@@ -311,10 +331,12 @@ CREATE TABLE IF NOT EXISTS public.demo_studio_events (
 
 ALTER TABLE public.demo_studio_events ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "demo_studio_events_public_insert" ON public.demo_studio_events;
 CREATE POLICY "demo_studio_events_public_insert"
   ON public.demo_studio_events FOR INSERT
   WITH CHECK (true);
 
+DROP POLICY IF EXISTS "demo_studio_events_owner_read" ON public.demo_studio_events;
 CREATE POLICY "demo_studio_events_owner_read"
   ON public.demo_studio_events FOR SELECT
   USING (EXISTS (

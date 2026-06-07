@@ -4,11 +4,11 @@ import { ArrowLeft } from 'lucide-react';
 import SEO, { createBreadcrumbSchema } from '@/components/SEO';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
-import WaitlistTemplateLibrary from '@/components/demo-studio/WaitlistTemplateLibrary';
+import WaitlistTemplateLibrary from '@/components/waitlist/WaitlistTemplateLibrary';
 import WaitlistMakerWallpaper from '@/components/wallpapers/WaitlistMakerWallpaper';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
-import type { WaitlistTemplateDefinition } from '@/lib/demo-studioTemplates';
+import type { WaitlistTemplateDefinition } from '@/lib/waitlistTemplates';
 
 const LAST_EDITOR_STORAGE_KEY = 'waitlist_builder_last_editor_v1';
 

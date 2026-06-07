@@ -17,7 +17,7 @@ import { SortableList } from '@/components/ui/sortable-list';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { AlertTriangle, Check, Copy, Download, Eye, FileText, Globe, Info, Loader2, Lock, Mail, Monitor, MonitorSmartphone, Plus, Save, ShieldCheck, Sparkles, Trash2, Unlock, Users } from 'lucide-react';
 import WaitlistPageTemplate, { WaitlistContent } from './WaitlistPageTemplate';
-import { WAITLIST_ACCENT_PRESETS, WAITLIST_FONT_PRESETS, WAITLIST_SECTION_ORDER, createWaitlistFieldId, getDefaultWaitlistContent, getWaitlistThemePalette, normalizeWaitlistContent, type WaitlistSectionId } from '@/lib/demo-studio';
+import { WAITLIST_ACCENT_PRESETS, WAITLIST_FONT_PRESETS, WAITLIST_SECTION_ORDER, createWaitlistFieldId, getDefaultWaitlistContent, getWaitlistThemePalette, normalizeWaitlistContent, type WaitlistSectionId } from '@/lib/waitlist';
 import {
   WAITLIST_LAUNCH_KIT_CATEGORIES,
   WAITLIST_LAUNCH_KIT_TONES,
@@ -29,8 +29,8 @@ import {
   type StoredWaitlistLaunchKit,
   type WaitlistLaunchKitInputs,
   type WaitlistLaunchKitOutput,
-} from '@/lib/demo-studioLaunchKit';
-import { getWaitlistTemplate } from '@/lib/demo-studioTemplates';
+} from '@/lib/waitlistLaunchKit';
+import { getWaitlistTemplate } from '@/lib/waitlistTemplates';
 import { getToolJourneyGuide } from '@/lib/activationJourney';
 import { ActivationJourneyStrip } from '@/components/activation/ActivationJourneyStrip';
 import { captureEvent } from '@/lib/analytics';
