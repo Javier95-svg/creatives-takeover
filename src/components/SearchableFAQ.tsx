@@ -187,7 +187,7 @@ const SearchableFAQ = () => {
       id: 19,
       category: "Credits",
       question: "How does the credit system work?",
-      answer: "Credits refresh with your plan every billing cycle: Rookie 10, Starter 30, Rising 75, and Pro 150. Plan gates decide which tools you can access, and credits meter generative actions inside those unlocked tools. Waitlist Maker costs 4 credits on Rookie and 3 credits on paid plans. PMF Lab uses credits on Starter and above. MVP Builder is available on every plan and charges per AI action; Tech Stack Builder, GTM Strategist, and Pitch Deck Analyzer use credits per generation or analysis.",
+      answer: "Credits refresh with your plan every billing cycle: Rookie 10, Starter 30, Rising 75, and Pro 150. Plan gates decide which tools you can access, and credits meter generative actions inside those unlocked tools. Demo Studio costs 4 credits on Rookie and 3 credits on paid plans. PMF Lab uses credits on Starter and above. MVP Builder is available on every plan and charges per AI action; Tech Stack Builder, GTM Strategist, and Pitch Deck Analyzer use credits per generation or analysis.",
       popular: true,
       tags: ["credits", "costs", "ai features", "monthly"]
     },
@@ -203,7 +203,7 @@ const SearchableFAQ = () => {
       id: 21,
       category: "Credits",
       question: "Which features use the most credits?",
-      answer: "The biggest credit consumers are the metered AI actions: Waitlist Maker, PMF Lab, MVP Builder, Tech Stack Builder, GTM Strategist, Pitch Deck Analyzer, and premium prompt actions. Access is controlled by plan, but each generation or analysis still draws from your monthly credits.",
+      answer: "The biggest credit consumers are the metered AI actions: Demo Studio, PMF Lab, MVP Builder, Tech Stack Builder, GTM Strategist, Pitch Deck Analyzer, and premium prompt actions. Access is controlled by plan, but each generation or analysis still draws from your monthly credits.",
       popular: false,
       tags: ["credit costs", "features", "expensive", "affordable"]
     },

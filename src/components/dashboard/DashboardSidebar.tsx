@@ -232,7 +232,7 @@ export const DashboardSidebar = () => {
 
   const toolsItems: ToolItem[] = [
     { toolKey: 'icp_builder', path: '/icp-builder', label: 'ICP Builder', icon: Target, prefKey: 'showICPBuilder', featureKey: 'icp_builder' },
-    { toolKey: 'waitlist_maker', path: '/waitlist', label: 'Waitlist Maker', icon: ClipboardList, prefKey: 'showWaitlistMaker', featureKey: 'waitlist_maker' },
+    { toolKey: 'waitlist_maker', path: '/demo-studio', label: 'Demo Studio', icon: ClipboardList, prefKey: 'showWaitlistMaker', featureKey: 'waitlist_maker' },
     { toolKey: 'pmf_lab', path: '/pmf-lab', label: 'PMF Lab', icon: FlaskConical, prefKey: 'showPMFLab', featureKey: 'pmf_lab' },
     { toolKey: 'mvp_builder', path: '/mvp-builder', label: 'MVP Builder', icon: Rocket, prefKey: 'showMVPBuilder', featureKey: 'mvp_builder' },
     { toolKey: 'tech_stack', path: '/tech-stack', label: 'Tech Stack', icon: Zap, prefKey: 'showTechStack', featureKey: 'tech_stack' },

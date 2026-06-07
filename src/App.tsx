@@ -130,6 +130,13 @@ const BuildPage = lazy(() => import("./pages/BuildPage"));
 const TractionEnginePage = lazy(() => import("./pages/TractionEnginePage"));
 const ProjectsDashboard = lazy(() => import("./components/dashboard/ProjectsDashboard"));
 
+// Demo Studio (interactive demo builder + public demo viewer)
+const DemoStudioProjectsPage = lazy(() => import("./pages/demo-studio/ProjectsDashboardPage"));
+const DemoStudioProjectOverviewPage = lazy(() => import("./pages/demo-studio/ProjectOverviewPage"));
+const DemoStudioEditorPage = lazy(() => import("./pages/demo-studio/DemoEditorPage"));
+const PublicDemoPage = lazy(() => import("./pages/demo-studio/PublicDemoPage"));
+const EmbedDemoPage = lazy(() => import("./pages/demo-studio/EmbedDemoPage"));
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -274,9 +281,16 @@ function App() {
                         <Route path="/bizmap-ai/icp-builder" element={<Navigate to="/icp-builder" replace />} />
                         <Route path="/decision-sprint" element={<ToolRouteWithCreditGate><ValidateJourneyPage /></ToolRouteWithCreditGate>} />
                         <Route path="/validate" element={<ToolRouteWithCreditGate><ValidateJourney /></ToolRouteWithCreditGate>} />
-                        <Route path="/waitlist" element={<ToolRouteWithCreditGate><WaitlistMakerPage /></ToolRouteWithCreditGate>} />
-                        <Route path="/waitlist/templates" element={<WaitlistTemplatesPage />} />
-                        <Route path="/waitlist-maker" element={<Navigate to="/waitlist" replace />} />
+                        <Route path="/demo-studio" element={<ToolRouteWithCreditGate><WaitlistMakerPage /></ToolRouteWithCreditGate>} />
+                        <Route path="/demo-studio/templates" element={<WaitlistTemplatesPage />} />
+                        <Route path="/demo-studio/projects" element={<RouteErrorBoundary routeName="Demo Studio"><DemoStudioProjectsPage /></RouteErrorBoundary>} />
+                        <Route path="/demo-studio/projects/:id" element={<RouteErrorBoundary routeName="Demo Studio Project"><DemoStudioProjectOverviewPage /></RouteErrorBoundary>} />
+                        <Route path="/demo-studio/projects/:projectId/demos/:demoId/edit" element={<RouteErrorBoundary routeName="Demo Editor"><DemoStudioEditorPage /></RouteErrorBoundary>} />
+                        <Route path="/demo/:publicId" element={<PublicDemoPage />} />
+                        <Route path="/embed/demo/:publicId" element={<EmbedDemoPage />} />
+                        <Route path="/waitlist" element={<Navigate to="/demo-studio" replace />} />
+                        <Route path="/waitlist/templates" element={<Navigate to="/demo-studio/templates" replace />} />
+                        <Route path="/waitlist-maker" element={<Navigate to="/demo-studio" replace />} />
                         <Route path="/w/:slug" element={<WaitlistPublicPage />} />
                         <Route path="/directories" element={<DirectoriesPage />} />
                         <Route path="/mvp-builder" element={<ToolRouteWithCreditGate><AppBuilderPage /></ToolRouteWithCreditGate>} />

@@ -193,7 +193,7 @@ const aiPoweredPersonalFinanceCoachDraft: IcpDraftDocument = {
     {
       title: "Write the coaching-led narrative",
       description: "Turn the pain into sharper messaging around guidance, confidence, and consistency.",
-      route: "/waitlist",
+      route: "/demo-studio",
     },
     {
       title: "Scope a weekly coaching MVP",
@@ -376,7 +376,7 @@ const creatorAnalyticsGrowthPlatformDraft: IcpDraftDocument = {
     {
       title: "Write the creator growth narrative",
       description: "Turn the pain into sharper messaging around clarity, leverage, and calmer decision-making.",
-      route: "/waitlist",
+      route: "/demo-studio",
     },
     {
       title: "Scope a creator planning MVP",
@@ -559,7 +559,7 @@ const sustainabilityComplianceConsultingDraft: IcpDraftDocument = {
     {
       title: "Write the readiness narrative",
       description: "Turn the pain into positioning around customer pressure, credibility, and response speed.",
-      route: "/waitlist",
+      route: "/demo-studio",
     },
     {
       title: "Scope the consulting wedge",
@@ -742,7 +742,7 @@ const aiVoiceAssistantForSeniorsDraft: IcpDraftDocument = {
     {
       title: "Write the reassurance-led narrative",
       description: "Translate the pain into positioning around peace of mind, independence, and usability.",
-      route: "/waitlist",
+      route: "/demo-studio",
     },
     {
       title: "Scope a voice-support MVP",

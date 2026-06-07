@@ -71,13 +71,13 @@ export const JOURNEY_TOOL_UPGRADES: Record<string, JourneyToolUpgrade> = {
   },
   waitlist_maker: {
     featureKey: "waitlist_maker",
-    toolName: "Waitlist Maker",
-    route: "/waitlist",
+    toolName: "Demo Studio",
+    route: "/demo-studio",
     stage: "prototype",
     outcome: "Turn your ICP into a first demand-capture page.",
     previewCopy: "Create a simple offer page to see whether the market responds before you build.",
-    proofCopy: "Use Waitlist Maker to turn positioning into a real traction signal.",
-    ctaCopy: "Open Waitlist Maker",
+    proofCopy: "Use Demo Studio to turn positioning into a real traction signal.",
+    ctaCopy: "Open Demo Studio",
   },
   pmf_lab: {
     featureKey: "pmf_lab",

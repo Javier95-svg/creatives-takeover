@@ -17,7 +17,7 @@ import { SortableList } from '@/components/ui/sortable-list';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { AlertTriangle, Check, Copy, Download, Eye, FileText, Globe, Info, Loader2, Lock, Mail, Monitor, MonitorSmartphone, Plus, Save, ShieldCheck, Sparkles, Trash2, Unlock, Users } from 'lucide-react';
 import WaitlistPageTemplate, { WaitlistContent } from './WaitlistPageTemplate';
-import { WAITLIST_ACCENT_PRESETS, WAITLIST_FONT_PRESETS, WAITLIST_SECTION_ORDER, createWaitlistFieldId, getDefaultWaitlistContent, getWaitlistThemePalette, normalizeWaitlistContent, type WaitlistSectionId } from '@/lib/waitlist';
+import { WAITLIST_ACCENT_PRESETS, WAITLIST_FONT_PRESETS, WAITLIST_SECTION_ORDER, createWaitlistFieldId, getDefaultWaitlistContent, getWaitlistThemePalette, normalizeWaitlistContent, type WaitlistSectionId } from '@/lib/demo-studio';
 import {
   WAITLIST_LAUNCH_KIT_CATEGORIES,
   WAITLIST_LAUNCH_KIT_TONES,
@@ -29,8 +29,8 @@ import {
   type StoredWaitlistLaunchKit,
   type WaitlistLaunchKitInputs,
   type WaitlistLaunchKitOutput,
-} from '@/lib/waitlistLaunchKit';
-import { getWaitlistTemplate } from '@/lib/waitlistTemplates';
+} from '@/lib/demo-studioLaunchKit';
+import { getWaitlistTemplate } from '@/lib/demo-studioTemplates';
 import { getToolJourneyGuide } from '@/lib/activationJourney';
 import { ActivationJourneyStrip } from '@/components/activation/ActivationJourneyStrip';
 import { captureEvent } from '@/lib/analytics';
@@ -362,7 +362,7 @@ export default function WaitlistEditor({ initialSeed = null, onBackToTemplates, 
   const isCompleted = useMemo(() => Boolean(markReadyAt) || signupCount > 0, [markReadyAt, signupCount]);
   const reservedUrl = currentSlug ? `${BASE_URL}/w/${currentSlug}` : null;
   const liveUrl = status === 'published' && currentSlug ? `${BASE_URL}/w/${currentSlug}` : null;
-  const waitlistQuote = getCreditActionQuote('WAITLIST_GENERATION', { featureName: 'Waitlist Maker' });
+  const waitlistQuote = getCreditActionQuote('WAITLIST_GENERATION', { featureName: 'Demo Studio' });
   const waitlistPublishDescription = `Publishing costs ${waitlistQuote.requiredCredits} credits and exposes your public URL.`;
   const currentSnapshot = useMemo(
     () => buildEditorSnapshot(productName, content, slugDraft || currentSlug || '', status),
@@ -1391,7 +1391,7 @@ export default function WaitlistEditor({ initialSeed = null, onBackToTemplates, 
   const formTabClass = 'mt-0 space-y-4 [&>div]:rounded-[24px] [&>div]:border [&>div]:border-border/60 [&>div]:bg-white/80 [&>div]:p-4 [&>div]:shadow-sm [&_input]:border-border/60 [&_input]:bg-white [&_input]:text-slate-950 [&_input]:placeholder:text-slate-400 [&_label]:text-slate-950 [&_textarea]:border-border/60 [&_textarea]:bg-white [&_textarea]:text-slate-950 [&_textarea]:placeholder:text-slate-400 [&_select]:border-border/60 [&_select]:bg-white [&_select]:text-slate-950 dark:text-white dark:[&>div]:border-white/10 dark:[&>div]:bg-[linear-gradient(180deg,rgba(15,23,42,0.94),rgba(30,41,59,0.9))] dark:[&>div]:shadow-[0_18px_40px_rgba(2,6,23,0.35)] dark:[&_input]:border-white/15 dark:[&_input]:bg-white/5 dark:[&_input]:text-white dark:[&_input]:placeholder:text-slate-400 dark:[&_label]:text-white dark:[&_textarea]:border-white/15 dark:[&_textarea]:bg-white/5 dark:[&_textarea]:text-white dark:[&_textarea]:placeholder:text-slate-400 dark:[&_select]:border-white/15 dark:[&_select]:bg-slate-950 dark:[&_select]:text-white';
   const launchTabClass = 'mt-0 space-y-4 [&>div]:rounded-[24px] [&>div]:border [&>div]:border-border/60 [&>div]:bg-white/80 [&>div]:p-4 [&>div]:shadow-sm [&>label]:rounded-[24px] [&>label]:border [&>label]:border-border/60 [&>label]:bg-white/80 [&>label]:px-4 [&>label]:py-3 [&>label]:shadow-sm [&_input]:border-border/60 [&_input]:bg-white [&_input]:text-slate-950 [&_input]:placeholder:text-slate-400 [&_label]:text-slate-950 [&_select]:border-border/60 [&_select]:bg-white [&_select]:text-slate-950 dark:text-white dark:[&>div]:border-white/10 dark:[&>div]:bg-[linear-gradient(180deg,rgba(15,23,42,0.94),rgba(30,41,59,0.9))] dark:[&>div]:shadow-[0_18px_40px_rgba(2,6,23,0.35)] dark:[&>label]:border-white/10 dark:[&>label]:bg-[linear-gradient(180deg,rgba(15,23,42,0.94),rgba(30,41,59,0.9))] dark:[&>label]:shadow-[0_18px_40px_rgba(2,6,23,0.35)] dark:[&_input]:border-white/15 dark:[&_input]:bg-white/5 dark:[&_input]:text-white dark:[&_input]:placeholder:text-slate-400 dark:[&_label]:text-white dark:[&_select]:border-white/15 dark:[&_select]:bg-slate-950 dark:[&_select]:text-white';
   const analyticsTabClass = 'mt-0 space-y-4 [&>div]:rounded-[24px] [&>div]:border [&>div]:border-border/60 [&>div]:bg-white/80 [&>div]:p-4 [&>div]:shadow-sm [&_label]:text-slate-950 dark:text-white dark:[&>div]:border-white/10 dark:[&>div]:bg-[linear-gradient(180deg,rgba(15,23,42,0.94),rgba(30,41,59,0.9))] dark:[&>div]:shadow-[0_18px_40px_rgba(2,6,23,0.35)] dark:[&_label]:text-white';
-  const activationGuide = getToolJourneyGuide('/waitlist');
+  const activationGuide = getToolJourneyGuide('/demo-studio');
   const hasTangibleOutput = Boolean(draftId || lastSavedAt);
   const launchKitCandidate = buildLaunchKitInputCandidate();
   const launchKitOutput: WaitlistLaunchKitOutput | null = launchKit?.output ?? null;
@@ -1436,7 +1436,7 @@ export default function WaitlistEditor({ initialSeed = null, onBackToTemplates, 
               Publish
             </Button>
             {!isGuest && status !== 'published' ? (
-              <CreditCostNotice feature="WAITLIST_GENERATION" featureName="Waitlist Maker" variant="inline" />
+              <CreditCostNotice feature="WAITLIST_GENERATION" featureName="Demo Studio" variant="inline" />
             ) : null}
           </div>
         </CardContent>
@@ -1485,7 +1485,7 @@ export default function WaitlistEditor({ initialSeed = null, onBackToTemplates, 
                     className={actionButtonClass}
                     onClick={() => {
                       if (!hasUnsavedChanges || window.confirm('Your draft is saved in this browser. Continue to log in?')) {
-                        window.location.href = '/login?return=/waitlist';
+                        window.location.href = '/login?return=/demo-studio';
                       }
                     }}
                   >
@@ -1496,7 +1496,7 @@ export default function WaitlistEditor({ initialSeed = null, onBackToTemplates, 
                     className={primaryButtonClass}
                     onClick={() => {
                       if (!hasUnsavedChanges || window.confirm('Your draft is saved in this browser. Continue to create an account?')) {
-                        window.location.href = '/signup?source=waitlist_guest_draft&return=' + encodeURIComponent('/waitlist?skipModeSelect=1');
+                        window.location.href = '/signup?source=waitlist_guest_draft&return=' + encodeURIComponent('/demo-studio?skipModeSelect=1');
                       }
                     }}
                   >

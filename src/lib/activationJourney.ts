@@ -31,7 +31,7 @@ export function getActivationEntryStageStartRoute(entryStage: ActivationEntrySta
     case 'stage_i':
       return '/icp-builder';
     case 'stage_ii':
-      return '/waitlist';
+      return '/demo-studio';
     case 'stage_iii':
       return '/pmf-lab';
     default:
@@ -42,13 +42,13 @@ export function getActivationEntryStageStartRoute(entryStage: ActivationEntrySta
 export function getActivationEntryStageNextRoute(entryStage: ActivationEntryStage): string {
   switch (entryStage) {
     case 'stage_i':
-      return '/waitlist';
+      return '/demo-studio';
     case 'stage_ii':
       return '/pmf-lab';
     case 'stage_iii':
       return '/mvp-builder';
     default:
-      return '/waitlist';
+      return '/demo-studio';
   }
 }
 
@@ -84,11 +84,11 @@ export function getToolJourneyGuide(route: string): ToolJourneyGuide | null {
         title: 'Reach the aha moment with a saved ICP',
         description: 'Use this tool to land on one clear customer segment instead of leaving with broad ideas.',
         doneLabel: 'Done means running the analysis and saving a recommended first ICP you can act on.',
-        nextRoute: '/waitlist',
+        nextRoute: '/demo-studio',
         nextLabel: 'Next: Draft your waitlist page',
         completedLabel: 'ICP saved. Your next move is turning that segment into a demand test.',
       };
-    case '/waitlist':
+    case '/demo-studio':
       return {
         stageLabel: 'Stage II · Prototype',
         title: 'Turn your ICP into a real demand test',

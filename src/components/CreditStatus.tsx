@@ -83,9 +83,9 @@ export function CreditStatus({ requiredCredits, feature, showPurchaseLink = true
     if (featureLower.includes('fundraising') || featureLower.includes('readiness')) {
       return ' Insighta Test is included on every plan.';
     }
-    if (featureLower.includes('waitlist')) {
+    if (featureLower.includes('waitlist') || featureLower.includes('demo studio')) {
       const waitlistCost = getCreditCostForPlan('WAITLIST_GENERATION', normalizedTier) ?? CREDIT_COSTS.WAITLIST_GENERATION;
-      return ` Waitlist publishing costs ${waitlistCost} credits on your plan.`;
+      return ` Demo Studio publishing costs ${waitlistCost} credits on your plan.`;
     }
     if (featureLower.includes('sprint') || featureLower.includes('task generation')) {
       return '';

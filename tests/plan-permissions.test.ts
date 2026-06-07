@@ -42,7 +42,7 @@ test('plan highlights match the authoritative four-plan contract', () => {
     'Dashboard Starter Mode',
     'ICP Builder (free)',
     'Stages 1-3 active',
-    'Waitlist Maker + PMF Lab (uses credits)',
+    'Demo Studio + PMF Lab (uses credits)',
     'MVP Builder per-action billing (uses credits)',
     'Stages 4-5 (preview only)',
     'Unlimited Discovery Calls (10 credits per confirmed booking)',

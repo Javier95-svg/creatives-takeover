@@ -4,11 +4,11 @@ import { ArrowLeft } from 'lucide-react';
 import SEO, { createBreadcrumbSchema } from '@/components/SEO';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
-import WaitlistTemplateLibrary from '@/components/waitlist/WaitlistTemplateLibrary';
+import WaitlistTemplateLibrary from '@/components/demo-studio/WaitlistTemplateLibrary';
 import WaitlistMakerWallpaper from '@/components/wallpapers/WaitlistMakerWallpaper';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
-import type { WaitlistTemplateDefinition } from '@/lib/waitlistTemplates';
+import type { WaitlistTemplateDefinition } from '@/lib/demo-studioTemplates';
 
 const LAST_EDITOR_STORAGE_KEY = 'waitlist_builder_last_editor_v1';
 
@@ -24,14 +24,14 @@ export default function WaitlistTemplatesPage() {
       {
         '@context': 'https://schema.org',
         '@type': 'WebPage',
-        name: 'Waitlist Maker Templates',
+        name: 'Demo Studio Templates',
         description: 'Choose a waitlist landing page template for your startup idea.',
-        url: 'https://creatives-takeover.com/waitlist/templates',
+        url: 'https://creatives-takeover.com/demo-studio/templates',
       },
       createBreadcrumbSchema([
         { name: 'Home', url: '/' },
-        { name: 'Waitlist Maker', url: '/waitlist' },
-        { name: 'Templates', url: '/waitlist/templates' },
+        { name: 'Demo Studio', url: '/demo-studio' },
+        { name: 'Templates', url: '/demo-studio/templates' },
       ]),
     ],
     [],
@@ -46,7 +46,7 @@ export default function WaitlistTemplatesPage() {
 
     if (!user) {
       startTemplateNavigation(() => {
-        navigate(`/signup?source=waitlist_template&return=${encodeURIComponent(`/waitlist?template=${template.id}`)}`);
+        navigate(`/signup?source=waitlist_template&return=${encodeURIComponent(`/demo-studio?template=${template.id}`)}`);
       });
       return;
     }
@@ -69,23 +69,23 @@ export default function WaitlistTemplatesPage() {
     }
 
     startTemplateNavigation(() => {
-      navigate(`/waitlist?template=${template.id}`);
+      navigate(`/demo-studio?template=${template.id}`);
     });
   };
 
   const handleBackToWaitlist = () => {
     startBackNavigation(() => {
-      navigate('/waitlist');
+      navigate('/demo-studio');
     });
   };
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-background">
       <SEO
-        title="Waitlist Maker Templates - Creatives Takeover"
+        title="Demo Studio Templates - Creatives Takeover"
         description="Turn your idea into a landing page that attracts early believers before you write a line of code."
         keywords="waitlist templates, landing page templates, startup waitlist"
-        url="/waitlist/templates"
+        url="/demo-studio/templates"
         structuredData={structuredData}
       />
       <WaitlistMakerWallpaper />

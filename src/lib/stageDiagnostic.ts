@@ -187,7 +187,7 @@ export const STAGES: Record<FounderStageId, StageMeta> = {
       "You are testing real demand. The focus is proving people want this enough to sign up, pay, or keep engaging.",
     topFocus: [
       { label: "Run a PMF Lab", href: "/pmf-lab" },
-      { label: "Build a waitlist", href: "/waitlist" },
+      { label: "Build a waitlist", href: "/demo-studio" },
     ],
   },
   4: {
@@ -209,7 +209,7 @@ export const STAGES: Record<FounderStageId, StageMeta> = {
       "You are taking the product to market. The focus shifts to positioning, launch channels, and first customers.",
     topFocus: [
       { label: "Build your GTM strategy", href: "/go-to-market" },
-      { label: "Launch your waitlist", href: "/waitlist" },
+      { label: "Launch your waitlist", href: "/demo-studio" },
     ],
   },
   6: {

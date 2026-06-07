@@ -96,7 +96,7 @@ const STAGE_REQUIRED_PLAN: Record<JourneyStageKey, Plan> = {
 const STAGE_TOOL_LABEL: Record<JourneyStageKey, string> = {
   foundation: 'Startup Profile',
   identity: 'ICP Builder',
-  prototype: 'Waitlist Maker',
+  prototype: 'Demo Studio',
   validation: 'PMF Lab',
   build: 'MVP Builder',
   stack: 'Tech Stack Builder',
@@ -214,8 +214,8 @@ function buildPrototypeDeliverable(waitlist: WaitlistRow | null): StageDeliverab
     summary: truncate(waitlist.value_proposition, 220) || 'Waitlist page prepared.',
     bullets,
     completedAt: waitlist.published_at ?? waitlist.mark_ready_at ?? waitlist.created_at,
-    route: '/waitlist',
-    routeLabel: 'Open Waitlist Maker',
+    route: '/demo-studio',
+    routeLabel: 'Open Demo Studio',
     externalUrl: waitlist.published_url,
   };
 }

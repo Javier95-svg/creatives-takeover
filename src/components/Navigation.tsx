@@ -125,7 +125,7 @@ const Navigation = () => {
 
   const routeFeatureMap: Partial<Record<string, FeatureKey>> = {
     "/icp-builder": "icp_builder",
-    "/waitlist": "waitlist_maker",
+    "/demo-studio": "waitlist_maker",
     "/pmf-lab": "pmf_lab",
     "/mvp-builder": "mvp_builder",
     "/tech-stack": "tech_stack",

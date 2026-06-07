@@ -505,7 +505,7 @@ export function mapLegacyAnalysisToArtifact(
         .map((action, index) => ({
           title: action,
           description: "Use the saved ICP analysis to drive the next execution step.",
-          route: index === 0 ? "/pmf-lab" : "/waitlist",
+          route: index === 0 ? "/pmf-lab" : "/demo-studio",
         })),
     },
     dashboardContext: {
@@ -548,18 +548,18 @@ export function buildDraftDashboardContext(artifact: StoredIcpArtifact) {
           confidence === "low"
             ? "Low-confidence drafts should produce better evidence, not more assumptions."
             : "A sharper ICP should immediately change what you build or test next.",
-        actionUrl: confidence === "low" ? "/pmf-lab" : artifact.draftDocument.nextActions[0]?.route || "/waitlist",
+        actionUrl: confidence === "low" ? "/pmf-lab" : artifact.draftDocument.nextActions[0]?.route || "/demo-studio",
         priority: 12,
         type: "action" as const,
       },
       {
-        title: confidence === "low" ? "Pressure-test the pain in PMF Lab" : "Capture demand with Waitlist Maker",
+        title: confidence === "low" ? "Pressure-test the pain in PMF Lab" : "Capture demand with Demo Studio",
         description:
           confidence === "low"
             ? "Run interviews and demand checks against the exact segment the draft recommends."
             : "Use the ICP Draft language to create a clear waitlist message before you build more.",
         reason: "The best next move should follow from the draft, not from generic startup advice.",
-        actionUrl: confidence === "low" ? "/pmf-lab" : "/waitlist",
+        actionUrl: confidence === "low" ? "/pmf-lab" : "/demo-studio",
         priority: 11,
         type: "action" as const,
       },

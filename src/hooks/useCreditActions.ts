@@ -27,7 +27,7 @@ const CREDIT_FEATURE_LABELS: Record<CreditFeature, string> = {
   PMF_ANALYSIS: 'Product-Market Fit Lab',
   PMF_SCORING: 'PMF Evidence Score',
   GTM_ANALYSIS: 'GTM Strategist',
-  WAITLIST_GENERATION: 'Waitlist Maker',
+  WAITLIST_GENERATION: 'Demo Studio',
   APP_BUILDER_GENERATE: 'MVP Builder Generation',
   APP_BUILDER_REFINE: 'MVP Builder Refinement',
   APP_BUILDER_DEBUG: 'MVP Builder Bug Fix',

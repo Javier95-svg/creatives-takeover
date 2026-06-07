@@ -191,7 +191,7 @@ export const DashboardCustomization = () => {
                 />
                 <ToggleItem
                   id="waitlist-maker"
-                  title="Waitlist Maker"
+                  title="Demo Studio"
                   description="Create and publish your waitlist page"
                   checked={preferences.showWaitlistMaker}
                   onToggle={() => togglePreference('showWaitlistMaker')}

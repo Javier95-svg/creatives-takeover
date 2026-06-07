@@ -55,8 +55,8 @@ export const BIZMAP_TOOLS: BizMapToolDefinition[] = [
   },
   {
     id: 'waitlist-maker',
-    name: 'Waitlist Maker',
-    route: '/waitlist',
+    name: 'Demo Studio',
+    route: '/demo-studio',
     stage: 'PROTOTYPE',
     description: 'Create and publish your demand-capture landing page.',
     icon: Layers,
@@ -193,9 +193,9 @@ export const STAGE_TASKS: Record<BizMapStage, StageTaskTemplate[]> = {
     { id: 'identity-segments', stage: 'IDENTITY', title: 'Select target industries and buyer persona', priority: 'medium', route: '/icp-builder' },
   ],
   PROTOTYPE: [
-    { id: 'prototype-value-prop', stage: 'PROTOTYPE', title: 'Write a one-line value proposition for the waitlist page', priority: 'high', route: '/waitlist' },
-    { id: 'prototype-page-copy', stage: 'PROTOTYPE', title: 'Draft hero copy and core benefits', priority: 'medium', route: '/waitlist' },
-    { id: 'prototype-publish', stage: 'PROTOTYPE', title: 'Publish your waitlist and get one signup (or mark it ready)', priority: 'high', route: '/waitlist' },
+    { id: 'prototype-value-prop', stage: 'PROTOTYPE', title: 'Write a one-line value proposition for the waitlist page', priority: 'high', route: '/demo-studio' },
+    { id: 'prototype-page-copy', stage: 'PROTOTYPE', title: 'Draft hero copy and core benefits', priority: 'medium', route: '/demo-studio' },
+    { id: 'prototype-publish', stage: 'PROTOTYPE', title: 'Publish your waitlist and get one signup (or mark it ready)', priority: 'high', route: '/demo-studio' },
   ],
   VALIDATING: [
     { id: 'validating-checklist', stage: 'VALIDATING', title: 'Save PMF validation checklist', priority: 'high', route: '/pmf-lab' },

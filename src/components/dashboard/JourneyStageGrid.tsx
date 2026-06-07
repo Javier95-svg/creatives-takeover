@@ -39,9 +39,9 @@ const STAGES: Stage[] = [
   },
   {
     id: 2,
-    name: 'Waitlist Maker',
+    name: 'Demo Studio',
     description: 'Build demand before you launch.',
-    href: '/waitlist',
+    href: '/demo-studio',
     icon: Radio,
     planFeature: 'waitlist_maker',
     badge: 'Credits',

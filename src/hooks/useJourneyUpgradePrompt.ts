@@ -39,7 +39,7 @@ const JOURNEY_UPGRADE_CONFIG: Record<JourneyUpgradeTrigger, JourneyUpgradeConfig
     requiredCurrentPlans: ["rookie"],
     targetPlan: "starter",
     featureName: "PMF Lab",
-    sourceTool: "Waitlist Maker",
+    sourceTool: "Demo Studio",
     description: "Your waitlist is live. Starter unlocks PMF Lab, Email Templates, and more research access so you can turn early interest into validation.",
   },
   starter_pmf_complete: {

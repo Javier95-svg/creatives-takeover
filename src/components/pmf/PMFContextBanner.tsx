@@ -30,10 +30,10 @@ export function PMFContextBanner({
     },
     {
       label: 'Stage II',
-      name: 'Waitlist Maker',
+      name: 'Demo Studio',
       detail: waitlistProductName ?? null,
       done: hasWaitlist,
-      route: '/waitlist',
+      route: '/demo-studio',
       icon: Layers,
     },
     {
@@ -101,7 +101,7 @@ export function PMFContextBanner({
         ) : hasIcp ? (
           <p className="text-sm leading-relaxed text-muted-foreground">
             You defined <span className="font-semibold text-foreground">{icpPersonaName}</span> in Stage I.{' '}
-            <Link to="/waitlist" className="text-primary underline underline-offset-2 hover:no-underline">
+            <Link to="/demo-studio" className="text-primary underline underline-offset-2 hover:no-underline">
               Build your waitlist page in Stage II
             </Link>{' '}
             before running PMF Lab for a more accurate score.
@@ -121,7 +121,7 @@ export function PMFContextBanner({
               Start with the ICP Builder
             </Link>{' '}
             to define your customer, then{' '}
-            <Link to="/waitlist" className="text-primary underline underline-offset-2 hover:no-underline">
+            <Link to="/demo-studio" className="text-primary underline underline-offset-2 hover:no-underline">
               build a waitlist page
             </Link>{' '}
             before validating here.

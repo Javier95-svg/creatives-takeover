@@ -24,7 +24,7 @@ const TIER_FEATURES: Record<Plan, { label: string; features: string[] }> = {
   starter: {
     label: 'Starter',
     features: [
-      'Waitlist Maker and PMF Lab access',
+      'Demo Studio and PMF Lab access',
       'Unlimited Discovery Calls at 10 credits per confirmed booking',
       '100 AI credits per month',
     ],

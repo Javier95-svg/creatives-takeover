@@ -25,7 +25,7 @@ const PricingPage = () => {
     }),
     createProductSchema({
       name: "Creatives Takeover Starter Plan",
-      description: "Validation-focused founder plan with 100 monthly credits, Waitlist Maker, PMF Lab, and light fundraising access.",
+      description: "Validation-focused founder plan with 100 monthly credits, Demo Studio, PMF Lab, and light fundraising access.",
       price: 9,
       currency: "USD"
     }),

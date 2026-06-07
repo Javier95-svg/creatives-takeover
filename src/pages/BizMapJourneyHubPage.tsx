@@ -70,7 +70,7 @@ export default function BizMapJourneyHubPage() {
       description:
         'AI startup builder for founders who need validation workflows, customer research, MVP planning, and launch support in one platform.',
       url: '/bizmap-ai',
-      featureList: ['ICP Builder', 'PMF Lab', 'Waitlist Maker', 'MVP Builder', 'GTM Strategist'],
+      featureList: ['ICP Builder', 'PMF Lab', 'Demo Studio', 'MVP Builder', 'GTM Strategist'],
     }),
     createFAQSchema(faqs),
     createBreadcrumbSchema([

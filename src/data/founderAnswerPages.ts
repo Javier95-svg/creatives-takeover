@@ -432,8 +432,8 @@ export const founderAnswerPages: FounderAnswerPage[] = [
     ],
     cta: {
       label: "Turn ICP Into a Waitlist",
-      href: "/waitlist?utm_source=seo&utm_medium=answer_page&utm_campaign=waitlist_before_mvp",
-      description: "Use Waitlist Maker to test the promise before building the product.",
+      href: "/demo-studio?utm_source=seo&utm_medium=answer_page&utm_campaign=waitlist_before_mvp",
+      description: "Use Demo Studio to test the promise before building the product.",
     },
     faqs: [
       {
@@ -1431,7 +1431,7 @@ export const founderAnswerPages: FounderAnswerPage[] = [
     ],
     cta: {
       label: "Build My Waitlist Free",
-      href: "/waitlist?utm_source=seo&utm_medium=answer_page&utm_campaign=product_hunt",
+      href: "/demo-studio?utm_source=seo&utm_medium=answer_page&utm_campaign=product_hunt",
       description: "Build the pre-launch audience that makes launch day convert.",
     },
     faqs: [

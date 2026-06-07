@@ -272,7 +272,7 @@ export function selectSmartTaskRecommendation(context: RecommendationContext): T
       reason: 'A visible waitlist gives you real demand feedback instead of internal planning.',
       priority: 'high',
       stage: 'PROTOTYPE' as BizMapStage,
-      sourceRoute: '/waitlist',
+      sourceRoute: '/demo-studio',
     },
     currentStage === 'VALIDATING' && !toolSignals.pmfCompleted && {
       key: 'tool:pmf-lab',

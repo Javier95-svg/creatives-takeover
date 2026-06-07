@@ -67,7 +67,7 @@ const PrivacyPolicy = () => {
                 <p>We use personal information to operate, secure, and improve the platform, including to:</p>
                 <ul className="list-disc list-inside space-y-2 pl-4">
                   <li>Create and manage user accounts and profiles.</li>
-                  <li>Provide the Startup Development Cycle experience and related tools, including BizMap AI, ICP Builder, Waitlist Maker, PMF Lab, MVP Builder, Tech Stack, GTM Strategist, Directories, Focus Funnel, Prompt Library, and Insighta features.</li>
+                  <li>Provide the Startup Development Cycle experience and related tools, including BizMap AI, ICP Builder, Demo Studio, PMF Lab, MVP Builder, Tech Stack, GTM Strategist, Directories, Focus Funnel, Prompt Library, and Insighta features.</li>
                   <li>Save your workspace progress, startup materials, and tool outputs.</li>
                   <li>Enable community participation, direct messaging, mentor outreach, co-founder matching, angel discovery, and booking workflows.</li>
                   <li>Process subscriptions, payments, credits, invoices, and refunds.</li>

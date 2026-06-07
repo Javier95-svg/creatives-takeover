@@ -21,7 +21,7 @@ const FAQPage = () => {
       },
       {
         question: "What is the credit system?",
-        answer: "Credits power metered AI actions across the platform. Plan gates decide which tools you can access, and credits meter generative actions inside unlocked tools. Waitlist Maker costs 4 credits on Rookie and 3 credits on paid plans, PMF Lab uses credits on Starter and above, and MVP Builder uses per-action credits on Rising and Pro. Tech Stack Builder, GTM Strategist, and Pitch Deck Analyzer also use credits on Rising and Pro. ICP Builder remains free."
+        answer: "Credits power metered AI actions across the platform. Plan gates decide which tools you can access, and credits meter generative actions inside unlocked tools. Demo Studio costs 4 credits on Rookie and 3 credits on paid plans, PMF Lab uses credits on Starter and above, and MVP Builder uses per-action credits on Rising and Pro. Tech Stack Builder, GTM Strategist, and Pitch Deck Analyzer also use credits on Rising and Pro. ICP Builder remains free."
       },
       {
         question: "What makes Creatives Takeover different?",

@@ -211,7 +211,7 @@ export const PLAN_HIGHLIGHTS: Record<Plan, string[]> = {
   ],
   starter: [
     'Stages 1–3 active dashboard',
-    'Waitlist Maker + PMF Lab (uses credits)',
+    'Demo Studio + PMF Lab (uses credits)',
     'Email Templates (full access)',
     'VC Search & Accelerator Hunt (2 views/month)',
     'Unlimited Discovery Calls (10 credits/booking)',
@@ -299,7 +299,7 @@ const DASHBOARD_SURFACE_PATHS: Record<Exclude<DashboardSurfaceFeature, 'dashboar
 export const FEATURE_LABELS: Record<FeatureKey, string> = {
   dashboard_mode: 'Dashboard Mode',
   icp_builder: 'ICP Builder',
-  waitlist_maker: 'Waitlist Maker',
+  waitlist_maker: 'Demo Studio',
   pmf_lab: 'PMF Lab',
   mvp_builder: 'MVP Builder',
   tech_stack: 'Tech Stack Builder',

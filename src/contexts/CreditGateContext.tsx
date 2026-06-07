@@ -14,7 +14,7 @@ const TOOL_CREDIT_GATE_PATHS = [
   "/go-to-market",
   "/validate",
   "/decision-sprint",
-  "/waitlist",
+  "/demo-studio",
   "/insighta-test",
   "/bizmap-ai/chat",
 ];

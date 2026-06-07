@@ -378,7 +378,7 @@ export const INDEXABLE_ROUTES = [
     ],
   },
   {
-    path: "/waitlist",
+    path: "/demo-studio",
     title: "Startup Waitlist Page Builder | Creatives Takeover",
     description:
       "Build a startup waitlist page, capture early signups, and validate demand before spending time on development.",
@@ -390,8 +390,8 @@ export const INDEXABLE_ROUTES = [
     updatedLabel: "March 2026",
     sections: [
       {
-        heading: "What Waitlist Maker is for",
-        copy: "Waitlist Maker helps founders launch a pre-release page that explains the offer clearly and captures early demand before product development is fully underway.",
+        heading: "What Demo Studio is for",
+        copy: "Demo Studio helps founders launch a pre-release page that explains the offer clearly and captures early demand before product development is fully underway.",
       },
       {
         heading: "Why a waitlist matters",

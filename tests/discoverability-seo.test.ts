@@ -29,7 +29,7 @@ test("answer pages route to tool-specific conversion paths", () => {
 
   [
     "/icp-builder?utm_source=seo",
-    "/waitlist?utm_source=seo",
+    "/demo-studio?utm_source=seo",
     "/pmf-lab?utm_source=seo",
     "/mvp-builder?utm_source=seo",
     "/go-to-market?utm_source=seo",

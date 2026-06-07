@@ -123,7 +123,7 @@ function normalizeList(value: unknown, maxItems = 5) {
 function normalizeRoutes(route: unknown, fallback: string) {
   const value = typeof route === "string" ? route.toLowerCase() : "";
   if (value.includes("pmf")) return "/pmf-lab";
-  if (value.includes("waitlist")) return "/waitlist";
+  if (value.includes("waitlist")) return "/demo-studio";
   if (value.includes("mvp")) return "/mvp-builder";
   if (value.includes("gtm") || value.includes("go-to-market")) return "/go-to-market";
   if (value.includes("mentor")) return "/mentorship/mentor-marketplace";
@@ -346,7 +346,7 @@ When real evidence sources are present, ground the pain quote, behaviors, "where
 
 function buildDashboardContext(draftDocument: DraftDocument) {
   const level = draftDocument.confidence.level ?? "medium";
-  const defaultRoute = level === "low" ? "/pmf-lab" : "/waitlist";
+  const defaultRoute = level === "low" ? "/pmf-lab" : "/demo-studio";
 
   return {
     message: "We know who you’re building for — here’s what to do next.",
@@ -374,13 +374,13 @@ function buildDashboardContext(draftDocument: DraftDocument) {
         type: "action",
       },
       {
-        title: level === "low" ? "Pressure-test the pain in PMF Lab" : "Capture demand with Waitlist Maker",
+        title: level === "low" ? "Pressure-test the pain in PMF Lab" : "Capture demand with Demo Studio",
         description:
           level === "low"
             ? "Run interviews and demand checks against the exact segment the draft recommends."
             : "Use the ICP Draft language to create a clear waitlist message before you build more.",
         reason: "The best next move should follow from the draft, not from generic startup advice.",
-        actionUrl: level === "low" ? "/pmf-lab" : "/waitlist",
+        actionUrl: level === "low" ? "/pmf-lab" : "/demo-studio",
         priority: 11,
         type: "action",
       },
@@ -513,7 +513,7 @@ function normalizeDraftDocument(parsed: Record<string, any>, enrichment: DraftEn
           .map((item: any, index: number) => ({
             title: cleanText(item?.title, `Next action ${index + 1}`),
             description: cleanText(item?.description, "Use the ICP Draft to move from analysis into execution."),
-            route: normalizeRoutes(item?.route, overallConfidence === "low" ? "/pmf-lab" : "/waitlist"),
+            route: normalizeRoutes(item?.route, overallConfidence === "low" ? "/pmf-lab" : "/demo-studio"),
           }))
       : [],
     // Citations are attached deterministically from real retrieved evidence so

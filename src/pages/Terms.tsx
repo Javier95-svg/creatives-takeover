@@ -42,7 +42,7 @@ const Terms = () => {
                 <p>The platform may include, for example:</p>
                 <ul className="list-disc list-inside space-y-2 pl-4">
                   <li><strong className="text-primary">BizMap AI</strong> and the Startup Development Cycle workflow.</li>
-                  <li><strong className="text-primary">Founder tools</strong> such as ICP Builder, Waitlist Maker, PMF Lab, MVP Builder, Tech Stack, GTM Strategist, Directories, Focus Funnel, and Prompt Library.</li>
+                  <li><strong className="text-primary">Founder tools</strong> such as ICP Builder, Demo Studio, PMF Lab, MVP Builder, Tech Stack, GTM Strategist, Directories, Focus Funnel, and Prompt Library.</li>
                   <li><strong className="text-primary">Insighta features</strong> such as VC Search, Accelerator Hunt, Email Templates, Pitch Deck Analyzer, and the Insighta Test.</li>
                   <li><strong className="text-primary">Community features</strong> including profiles, posts, comments, matching, messaging, and founder networking.</li>
                   <li><strong className="text-primary">Marketplace and support features</strong> including mentor discovery, booking flows, and founder-to-founder or founder-to-mentor communication.</li>

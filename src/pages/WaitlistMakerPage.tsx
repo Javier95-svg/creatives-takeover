@@ -1,19 +1,20 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { ArrowRight, Sparkles } from 'lucide-react';
 import SEO, { createBreadcrumbSchema, createFAQSchema } from '@/components/SEO';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import PageFAQSection from '@/components/seo/PageFAQSection';
 import { PreviewModeWrapper } from '@/components/ui/PreviewModeWrapper';
-import WaitlistEditor, { type BuilderTab, type WaitlistEditorInitialSeed } from '@/components/waitlist/WaitlistEditor';
+import WaitlistEditor, { type BuilderTab, type WaitlistEditorInitialSeed } from '@/components/demo-studio/WaitlistEditor';
 import WaitlistMakerWallpaper from '@/components/wallpapers/WaitlistMakerWallpaper';
-import WaitlistModeSelect from '@/components/waitlist/WaitlistModeSelect';
-import WaitlistSmartHydrate from '@/components/waitlist/WaitlistSmartHydrate';
+import WaitlistModeSelect from '@/components/demo-studio/WaitlistModeSelect';
+import WaitlistSmartHydrate from '@/components/demo-studio/WaitlistSmartHydrate';
 import { getPublicTabConfig } from '@/config/publicTabVisibility';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { normalizeWaitlistContent, type WaitlistContent } from '@/lib/waitlist';
-import { getWaitlistTemplate } from '@/lib/waitlistTemplates';
+import { normalizeWaitlistContent, type WaitlistContent } from '@/lib/demo-studio';
+import { getWaitlistTemplate } from '@/lib/demo-studioTemplates';
 
 type Screen = 'mode_select' | 'smart_hydrate' | 'editor';
 const LAST_EDITOR_STORAGE_KEY = 'waitlist_builder_last_editor_v1';
@@ -44,7 +45,7 @@ interface LatestIcpSummary {
 
 export default function WaitlistMakerPage() {
   const { user, loading: authLoading } = useAuth();
-  const publicTab = getPublicTabConfig('/waitlist');
+  const publicTab = getPublicTabConfig('/demo-studio');
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -139,7 +140,7 @@ export default function WaitlistMakerPage() {
     setSeed(null);
     setHasEditorSession(false);
     setInitialEditorTab('content');
-    navigate('/waitlist/templates');
+    navigate('/demo-studio/templates');
     if (searchParams.has('icp')) {
       const next = new URLSearchParams(searchParams);
       next.delete('icp');
@@ -193,22 +194,22 @@ export default function WaitlistMakerPage() {
       {
         '@context': 'https://schema.org',
         '@type': 'WebPage',
-        name: 'Waitlist Maker',
+        name: 'Demo Studio',
         description: 'Create and publish your waitlist page to validate demand before building.',
-        url: 'https://creatives-takeover.com/waitlist',
+        url: 'https://creatives-takeover.com/demo-studio',
       },
       createFAQSchema(faqs),
       createBreadcrumbSchema([
         { name: 'Home', url: '/' },
         { name: 'BizMap AI', url: '/bizmap-ai' },
-        { name: 'Waitlist Maker', url: '/waitlist' },
+        { name: 'Demo Studio', url: '/demo-studio' },
       ]),
     ],
     [faqs],
   );
 
   const backToTemplates = seed?.source === 'manual' && initialEditorTab !== 'launchKit'
-    ? () => navigate('/waitlist/templates')
+    ? () => navigate('/demo-studio/templates')
     : undefined;
 
   const editorNode = user ? (
@@ -228,10 +229,10 @@ export default function WaitlistMakerPage() {
   return (
     <div className="relative min-h-screen overflow-hidden bg-background">
       <SEO
-        title="Waitlist Maker - Creatives Takeover"
+        title="Demo Studio - Creatives Takeover"
         description="Build your Stage II waitlist page and capture demand signals before development."
         keywords="waitlist page, demand validation, startup prototype"
-        url="/waitlist"
+        url="/demo-studio"
         structuredData={structuredData}
       />
       <WaitlistMakerWallpaper />
@@ -242,11 +243,19 @@ export default function WaitlistMakerPage() {
           <div className="container mx-auto max-w-[1580px] space-y-8">
             <div className="mx-auto max-w-4xl space-y-4 px-2 text-center">
               <h1 className="pb-2 text-center font-bold leading-[0.95] text-4xl sm:text-5xl md:text-6xl lg:text-7xl">
-                <span className="takeover-gradient creatives-font">Waitlist Maker</span>
+                <span className="takeover-gradient creatives-font">Demo Studio</span>
               </h1>
                 <p className="text-lg leading-relaxed text-muted-foreground md:text-xl">
                   Turn your idea into a landing page that attracts early believers before you write a line of code.
                 </p>
+                <Link
+                  to="/demo-studio/projects"
+                  className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-4 py-1.5 text-sm font-medium text-primary transition hover:bg-primary/20"
+                >
+                  <Sparkles className="h-4 w-4" />
+                  New: build an interactive demo + pitch video
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
             </div>
 
             {screen === 'mode_select' && (

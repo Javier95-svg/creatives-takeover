@@ -30,7 +30,7 @@ const creditBreakdown: {
       badgeClassName: "bg-green-50 dark:bg-green-950/30",
     },
     {
-      name: "Waitlist Maker",
+      name: "Demo Studio",
       description: `Unlocked on every plan. Publishing or generating a waitlist costs ${getCreditCostForPlan('WAITLIST_GENERATION', 'rookie')} credits on Rookie and ${CREDIT_COSTS.WAITLIST_GENERATION} credits on paid plans.`,
       badge: `${getCreditCostForPlan('WAITLIST_GENERATION', 'rookie')} / ${CREDIT_COSTS.WAITLIST_GENERATION} credits`,
       badgeVariant: "outline",

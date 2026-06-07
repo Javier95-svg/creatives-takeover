@@ -13,9 +13,9 @@ export const PUBLIC_TAB_VISIBILITY: Record<string, PublicTabConfig> = {
     state: 'accessible',
     featureName: 'ICP Builder',
   },
-  '/waitlist': {
+  '/demo-studio': {
     state: 'accessible',
-    featureName: 'Waitlist Maker',
+    featureName: 'Demo Studio',
   },
   '/pmf-lab': {
     state: 'locked',
