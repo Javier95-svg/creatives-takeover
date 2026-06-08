@@ -36,7 +36,7 @@ export const PulseFeedbackView = () => {
   };
 
   return (
-    <div className="flex flex-col gap-3 px-3 pb-3 pt-2 overflow-y-auto flex-1 min-h-0">
+    <div className="flex flex-col gap-2.5 px-3 pb-3 pt-2 overflow-y-auto flex-1 min-h-0">
       {/* Feedback Type Selection */}
       <div className="space-y-1.5">
         <Label className="text-xs">What type of feedback?</Label>
@@ -47,13 +47,13 @@ export const PulseFeedbackView = () => {
               type="button"
               variant={selectedType === type ? 'default' : 'outline'}
               className={cn(
-                'h-auto flex-col gap-1 py-2 text-xs',
+                'h-10 justify-start gap-2 px-2 text-xs',
                 selectedType === type && 'ring-2 ring-primary'
               )}
               onClick={() => setSelectedType(type)}
             >
               <Icon className={cn('h-4 w-4', selectedType === type ? 'text-primary-foreground' : color)} />
-              <span>{label}</span>
+              <span className="truncate">{label}</span>
             </Button>
           ))}
         </div>
@@ -62,14 +62,14 @@ export const PulseFeedbackView = () => {
       {/* Rating */}
       <div className="space-y-1">
         <Label className="text-xs">Rate your experience (optional)</Label>
-        <div className="flex gap-1">
+        <div className="flex gap-0.5">
           {[1, 2, 3, 4, 5].map((star) => (
             <Button
               key={star}
               type="button"
               variant="ghost"
               size="sm"
-              className="p-1 h-auto"
+              className="h-7 w-7 p-0"
               onClick={() => setRating(star)}
             >
               <Star
@@ -91,8 +91,8 @@ export const PulseFeedbackView = () => {
           placeholder="Tell us about your experience..."
           value={message}
           onChange={(e) => setMessage(e.target.value)}
-          rows={4}
-          className="resize-none text-sm min-h-[96px]"
+          rows={3}
+          className="resize-none text-sm min-h-[84px]"
         />
         <p className="text-xs text-muted-foreground">{message.length}/1000</p>
       </div>

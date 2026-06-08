@@ -411,7 +411,7 @@ serve(async (req) => {
     // 🚀 OPTIMIZATION: Generate cache keys in parallel (only if template didn't match)
     const [requestFingerprint, cacheKey] = await Promise.all([
       generateRequestFingerprint(sessionId, message, businessContext, conversationHistory),
-      generateCacheKey(message, businessContext, conversationHistory, chatMode)
+      chatMode === 'pulse' ? Promise.resolve(null) : generateCacheKey(message, businessContext, conversationHistory, chatMode)
     ]);
     const idempotencyKey = req.headers.get('Idempotency-Key')?.trim() || `chat-streaming:${sessionId}:${requestFingerprint}`;
 
@@ -420,13 +420,15 @@ serve(async (req) => {
     // Request deduplication is handled by the requestFingerprint check above
 
     // Check response cache (DB query)
-    const cachedResponse = await checkResponseCache(supabase, cacheKey, message);
-    if (cachedResponse) {
-      logInfo('Cache hit - returning cached response', { cacheKey });
-      // User message save is already in progress, return immediately
-      const response = createCachedStream(cachedResponse, message, conversation, businessContext, conversationHistory, chatMode, supabase);
-      // Don't cache Response objects - they're streams that can only be consumed once
-      return response;
+    if (cacheKey) {
+      const cachedResponse = await checkResponseCache(supabase, cacheKey, message);
+      if (cachedResponse) {
+        logInfo('Cache hit - returning cached response', { cacheKey });
+        // User message save is already in progress, return immediately
+        const response = createCachedStream(cachedResponse, message, conversation, businessContext, conversationHistory, chatMode, supabase);
+        // Don't cache Response objects - they're streams that can only be consumed once
+        return response;
+      }
     }
 
     // 💳 CREDIT DEDUCTION: Check and deduct credits for authenticated users
@@ -539,7 +541,9 @@ serve(async (req) => {
     if (searchIntent === 'general' && webSearchData?.success && webSearchData.answer) {
       const response = createWebSearchStream(webSearchData, message, conversation, businessContext, optimizedHistory, chatMode, supabase);
       // Cache the response
-      await saveResponseCache(supabase, cacheKey, webSearchData.answer, 'web-search', webSearchData.model || 'perplexity', message, businessContext);
+      if (cacheKey) {
+        await saveResponseCache(supabase, cacheKey, webSearchData.answer, 'web-search', webSearchData.model || 'perplexity', message, businessContext);
+      }
       return response;
     }
     
@@ -547,7 +551,9 @@ serve(async (req) => {
     if (searchIntent === 'hybrid' && webSearchData?.success && (ragData?.answer || webSearchData.answer)) {
       const mergedData = mergeSearchResults(ragData, webSearchData);
       const response = createMergedSearchStream(mergedData, message, conversation, businessContext, optimizedHistory, chatMode, supabase);
-      await saveResponseCache(supabase, cacheKey, mergedData.answer, 'hybrid-search', mergedData.model || 'hybrid', message, businessContext);
+      if (cacheKey) {
+        await saveResponseCache(supabase, cacheKey, mergedData.answer, 'hybrid-search', mergedData.model || 'hybrid', message, businessContext);
+      }
       return response;
     }
 
@@ -568,14 +574,16 @@ serve(async (req) => {
       const response = createRAGStream(enhancedRagData, message, conversation, businessContext, optimizedHistory, chatMode, supabase);
       // Cache the response content (not the Response object - streams can only be consumed once)
       const ragModel = ragData.model || 'google/gemini-2.5-flash';
-      await saveResponseCache(supabase, cacheKey, ragData.answer, 'rag-chat', ragModel, message, businessContext);
+      if (cacheKey) {
+        await saveResponseCache(supabase, cacheKey, ragData.answer, 'rag-chat', ragModel, message, businessContext);
+      }
       // Don't cache Response objects - they're streams that can only be consumed once
       return response;
     }
 
     logInfo('Using conversational Lovable AI', { chatMode, messageLength: message.length });
     logInfo('🔍 DEBUG: Before createAIStream', { messageCount: messages.length });
-    const response = await createAIStream(messages, message, conversation, businessContext, optimizedHistory, chatMode, supabase, cacheKey, message);
+    const response = await createAIStream(messages, message, conversation, businessContext, optimizedHistory, chatMode, supabase, cacheKey ?? undefined, message);
     logInfo('🔍 DEBUG: After createAIStream', { 
       hasResponse: !!response, 
       responseType: response?.constructor?.name,
@@ -1231,15 +1239,16 @@ ${projectContext}
 
 STYLE:
 - Sound like a normal helpful conversation, similar to ChatGPT or Claude.
-- Default to short answers: 2-5 concise paragraphs or a few bullets.
+- Default to short answers: 50-120 words, usually 2-4 concise paragraphs or a few bullets.
 - Be warm, direct, and specific. Avoid corporate or robotic phrasing.
 - Do not start with "I'll help you" or "Let me break this down."
 - Do not force sections like Problem, Insight, Recommendation, or Next Actions.
 - Do not use fake citations such as [Source 1]. Only cite sources if real source data was provided in the prompt.
 - Use the saved project context when it helps. Mention concrete project details naturally.
 - If context is missing, say what you can help with from the current tool and ask for one missing detail.
-- For "What should I focus on?", give the top 1-3 priorities based on the current tool and saved project context, then ask one useful follow-up question.
+- For "What should I focus on?", answer in 1-3 short priorities based on the current tool and saved project context. Keep it under 90 words, then ask one useful follow-up question only if needed.
 - Use headings only when the user asks for a deeper strategy or the answer is complex.
+- Never invent statistics, benchmark numbers, or source placeholders.
 
 BOUNDARIES:
 - Do not pretend to know project details that are not in the saved context.
@@ -2430,7 +2439,7 @@ function selectOptimalModel(complexity: 'simple' | 'moderate' | 'complex', chatM
     return {
       model: 'google/gemini-2.5-flash',
       strategy: 'speed',
-      maxTokens: complexity === 'complex' ? 700 : 420,
+      maxTokens: complexity === 'complex' ? 520 : 260,
       temperature: 0.45
     };
   }

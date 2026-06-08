@@ -33,8 +33,8 @@ export const PulseChatView = ({ messages, isStreaming, quickReplies, onSendMessa
   useEffect(() => {
     const textarea = textareaRef.current;
     if (textarea) {
-      textarea.style.height = '44px';
-      textarea.style.height = Math.min(textarea.scrollHeight, 100) + 'px';
+      textarea.style.height = '38px';
+      textarea.style.height = Math.min(textarea.scrollHeight, 76) + 'px';
     }
   }, [input]);
 
@@ -56,8 +56,8 @@ export const PulseChatView = ({ messages, isStreaming, quickReplies, onSendMessa
   return (
     <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
       {/* Messages */}
-      <ScrollArea ref={scrollRef} className="flex-1 px-3 py-2">
-        <div className="space-y-3">
+      <ScrollArea ref={scrollRef} className="flex-1 min-h-0 px-3 py-2">
+        <div className="space-y-3 pb-2">
           {messages.map((msg, i) => (
             <PulseMessageBubble
               key={msg.id}
@@ -76,14 +76,14 @@ export const PulseChatView = ({ messages, isStreaming, quickReplies, onSendMessa
       </ScrollArea>
 
       {/* Input */}
-      <div className="border-t p-2.5 flex gap-2 items-end bg-background">
+      <div className="border-t bg-background p-2 flex gap-2 items-end">
         <Textarea
           ref={textareaRef}
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="Ask me anything..."
-          className="min-h-[40px] max-h-[92px] resize-none text-sm flex-1"
+          className="min-h-[38px] max-h-[76px] resize-none text-sm flex-1 py-2"
           rows={1}
           disabled={isStreaming}
         />
@@ -91,7 +91,7 @@ export const PulseChatView = ({ messages, isStreaming, quickReplies, onSendMessa
           onClick={handleSend}
           disabled={!input.trim() || isStreaming}
           size="icon"
-          className="min-h-[40px] min-w-[40px] rounded-full flex-shrink-0"
+          className="min-h-[38px] min-w-[38px] rounded-full flex-shrink-0"
         >
           <Send className="h-4 w-4" />
         </Button>
