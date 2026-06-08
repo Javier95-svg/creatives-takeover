@@ -33,7 +33,7 @@ export const DeadlineConfirmationDialog = ({ userId }: DeadlineConfirmationDialo
 
   const checkForOverdueTasks = useCallback(async () => {
     try {
-      // Create a capped daily bell reminder for newly expired tasks.
+      // Create a capped bell reminder for newly expired tasks.
       await supabase.rpc('notify_task_deadline_expired' as never, { p_user_id: userId } as never);
 
       // Keep the currently open dialog stable until user acts.
@@ -61,7 +61,7 @@ export const DeadlineConfirmationDialog = ({ userId }: DeadlineConfirmationDialo
   }, [userId]);
 
   useEffect(() => {
-    checkForOverdueTasks();
+    void checkForOverdueTasks();
     // Check every minute for overdue tasks
     const interval = setInterval(checkForOverdueTasks, 60000);
     return () => clearInterval(interval);
@@ -85,7 +85,7 @@ export const DeadlineConfirmationDialog = ({ userId }: DeadlineConfirmationDialo
 
       toast.success('Great job! Task marked as completed! 🎉');
       setOverdueTask(null);
-      checkForOverdueTasks();
+      void checkForOverdueTasks();
     } catch (error) {
       console.error('Error completing task:', error);
       toast.error('Failed to update task');
@@ -110,7 +110,7 @@ export const DeadlineConfirmationDialog = ({ userId }: DeadlineConfirmationDialo
 
       toast.info('Task deadline acknowledged. Don\'t forget to complete it!');
       setOverdueTask(null);
-      checkForOverdueTasks();
+      void checkForOverdueTasks();
     } catch (error) {
       console.error('Error updating task:', error);
       toast.error('Failed to update task');
