@@ -12,7 +12,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, idempotency-key',
 };
 
-const PULSE_PRIMARY_MODEL = 'google/gemini-3-flash';
+const PULSE_PRIMARY_MODEL = 'google/gemini-2.5-flash';
 const PULSE_FALLBACK_MODEL = 'google/gemini-2.5-flash';
 
 // ========== INLINED TEMPLATE MATCHING (avoiding import issues) ==========
