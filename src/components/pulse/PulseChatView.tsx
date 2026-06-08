@@ -54,9 +54,9 @@ export const PulseChatView = ({ messages, isStreaming, quickReplies, onSendMessa
   const showQuickReplies = messages.length <= 1 && !isStreaming;
 
   return (
-    <div className="flex flex-col flex-1 min-h-0">
+    <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
       {/* Messages */}
-      <ScrollArea ref={scrollRef} className="flex-1 p-3">
+      <ScrollArea ref={scrollRef} className="flex-1 px-3 py-2">
         <div className="space-y-3">
           {messages.map((msg, i) => (
             <PulseMessageBubble
@@ -69,21 +69,21 @@ export const PulseChatView = ({ messages, isStreaming, quickReplies, onSendMessa
 
         {/* Quick replies shown after first message */}
         {showQuickReplies && (
-          <div className="mt-4">
+          <div className="mt-3">
             <PulseQuickReplies replies={quickReplies} onSelect={onSendMessage} />
           </div>
         )}
       </ScrollArea>
 
       {/* Input */}
-      <div className="border-t p-3 flex gap-2 items-end">
+      <div className="border-t p-2.5 flex gap-2 items-end bg-background">
         <Textarea
           ref={textareaRef}
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="Ask me anything..."
-          className="min-h-[44px] max-h-[100px] resize-none text-sm flex-1"
+          className="min-h-[40px] max-h-[92px] resize-none text-sm flex-1"
           rows={1}
           disabled={isStreaming}
         />
@@ -91,7 +91,7 @@ export const PulseChatView = ({ messages, isStreaming, quickReplies, onSendMessa
           onClick={handleSend}
           disabled={!input.trim() || isStreaming}
           size="icon"
-          className="min-h-[44px] min-w-[44px] rounded-full flex-shrink-0"
+          className="min-h-[40px] min-w-[40px] rounded-full flex-shrink-0"
         >
           <Send className="h-4 w-4" />
         </Button>

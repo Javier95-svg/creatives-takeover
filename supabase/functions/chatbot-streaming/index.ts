@@ -262,6 +262,12 @@ interface BusinessContext {
   location?: string;
   budget?: string;
   goals?: string[];
+  currentPage?: string;
+  currentTool?: {
+    name?: string;
+    purpose?: string;
+  } | null;
+  projectContext?: Record<string, any> | null;
 }
 
 serve(async (req) => {
@@ -370,7 +376,7 @@ serve(async (req) => {
     // 🚀 OPTIMIZATION: Check template match first (fastest path, synchronous, no crypto needed)
     // Skip for detailed business ideas
     logInfo('🔍 DEBUG: Before template match', { message: message.substring(0, 50) });
-    const matchedTemplate = matchTemplate(message, businessContext);
+    const matchedTemplate = chatMode === 'pulse' ? null : matchTemplate(message, businessContext);
     logInfo('🔍 DEBUG: After template match', { 
       matched: !!matchedTemplate, 
       hasResponse: !!matchedTemplate?.response,
@@ -943,6 +949,9 @@ function getCachedSystemPrompt(businessContext: BusinessContext, wizardMode: any
   const promptKey = JSON.stringify({ 
     industry: businessContext.industry,
     stage: businessContext.stage,
+    currentPage: businessContext.currentPage,
+    currentTool: businessContext.currentTool?.name,
+    projectContext: businessContext.projectContext,
     wizardMode: wizardMode?.enabled,
     currentStep,
     chatMode
@@ -968,6 +977,73 @@ function getCachedSystemPrompt(businessContext: BusinessContext, wizardMode: any
 }
 
 // 🚀 OPTIMIZATION: Fetch RAG data (extracted for parallel processing with timeout)
+function formatPulseProjectContext(projectContext: Record<string, any> | null | undefined): string {
+  if (!projectContext || Object.keys(projectContext).length === 0) {
+    return 'No saved project context was provided for this user.';
+  }
+
+  const lines: string[] = [];
+  const push = (label: string, value: unknown) => {
+    if (typeof value === 'string' && value.trim()) lines.push(`- ${label}: ${value.trim()}`);
+    if (typeof value === 'number') lines.push(`- ${label}: ${value}`);
+  };
+  const pushList = (label: string, value: unknown) => {
+    if (Array.isArray(value) && value.length > 0) {
+      lines.push(`- ${label}: ${value.filter(Boolean).slice(0, 6).join(', ')}`);
+    }
+  };
+
+  push('Startup', projectContext.startupName);
+  push('Stage', projectContext.stage);
+  push('Industry', projectContext.industry);
+  push('Country', projectContext.country);
+  push('Description', projectContext.description);
+  push('Positioning', projectContext.positioning);
+  push('Target market', projectContext.targetMarket);
+  push('Revenue model', projectContext.revenueModel);
+  pushList('Support needed', projectContext.supportAreasNeeded);
+
+  const icp = projectContext.icp || {};
+  push('ICP persona', icp.personaName);
+  push('ICP role', icp.roleLine);
+  push('Core pain', icp.corePainPoint);
+  push('Value proposition', icp.valueProposition);
+  pushList('Pain points', icp.painPoints);
+  pushList('Competitors', icp.competitors);
+  push('Competitive landscape', icp.competitiveLandscape);
+
+  const pmf = projectContext.pmf || {};
+  push('PMF score', pmf.score);
+  push('PMF verdict', pmf.verdict);
+  push('PMF insight', pmf.summaryInsight);
+  pushList('PMF gaps', pmf.gaps);
+  pushList('PMF recommendations', pmf.recommendations);
+
+  const techStack = projectContext.techStack || {};
+  push('Tech stack report', techStack.name);
+  push('Tech stack budget', techStack.budgetTotal);
+  pushList('Selected tools', techStack.selectedTools);
+
+  const waitlist = projectContext.waitlist || {};
+  push('Waitlist', waitlist.title);
+  push('Waitlist summary', waitlist.summary);
+  push('Waitlist status', waitlist.status);
+
+  const mvp = projectContext.mvp || {};
+  push('MVP scope', mvp.title);
+  push('MVP summary', mvp.summary);
+  push('MVP status', mvp.status);
+
+  const gtm = projectContext.gtm || {};
+  push('GTM plan', gtm.title);
+  push('GTM summary', gtm.summary);
+  push('GTM status', gtm.status);
+
+  push('Context updated', projectContext.lastUpdatedAt);
+
+  return lines.length ? lines.join('\n') : 'No saved project context was provided for this user.';
+}
+
 async function fetchRAGData(supabase: any, messages: ChatMessage[], userId: string | null, businessContext: BusinessContext, conversationId?: string): Promise<any> {
   console.log('🔍 Knowledge query detected - calling RAG');
   try {
@@ -1136,6 +1212,39 @@ Platform: Creatives Takeover helps creative entrepreneurs launch in 30 days.
 - Community & accountability tools
 
 Answer questions about features, pricing, getting started. Be friendly but BRIEF.`;
+  }
+
+  if (chatMode === 'pulse') {
+    const toolName = businessContext.currentTool?.name || 'this tool';
+    const toolPurpose = businessContext.currentTool?.purpose || 'helping the founder make progress';
+    const projectContext = formatPulseProjectContext(businessContext.projectContext);
+
+    return `You are Pulse, the compact in-app assistant for Creatives Takeover.
+
+CURRENT TOOL:
+- Name: ${toolName}
+- Purpose: ${toolPurpose}
+- Page: ${businessContext.currentPage || 'Unknown'}
+
+SAVED PROJECT CONTEXT:
+${projectContext}
+
+STYLE:
+- Sound like a normal helpful conversation, similar to ChatGPT or Claude.
+- Default to short answers: 2-5 concise paragraphs or a few bullets.
+- Be warm, direct, and specific. Avoid corporate or robotic phrasing.
+- Do not start with "I'll help you" or "Let me break this down."
+- Do not force sections like Problem, Insight, Recommendation, or Next Actions.
+- Do not use fake citations such as [Source 1]. Only cite sources if real source data was provided in the prompt.
+- Use the saved project context when it helps. Mention concrete project details naturally.
+- If context is missing, say what you can help with from the current tool and ask for one missing detail.
+- For "What should I focus on?", give the top 1-3 priorities based on the current tool and saved project context, then ask one useful follow-up question.
+- Use headings only when the user asks for a deeper strategy or the answer is complex.
+
+BOUNDARIES:
+- Do not pretend to know project details that are not in the saved context.
+- Do not give long essays unless the user explicitly asks for depth.
+- Keep advice practical and immediately usable inside ${toolName}.`;
   }
 
   const { industry, businessType, stage, location, budget, goals = [] } = businessContext;
@@ -2317,6 +2426,15 @@ function selectOptimalModel(complexity: 'simple' | 'moderate' | 'complex', chatM
   }
   
   // Planning mode (wizard) → optimized for Gemini 2.5 Flash
+  if (chatMode === 'pulse') {
+    return {
+      model: 'google/gemini-2.5-flash',
+      strategy: 'speed',
+      maxTokens: complexity === 'complex' ? 700 : 420,
+      temperature: 0.45
+    };
+  }
+
   if (chatMode === 'wizard') {
     if (complexity === 'complex') {
       return {
@@ -2501,6 +2619,10 @@ async function trackPerformanceMetrics(
 // Gemini 2.5 Flash performs best with 0.4-0.6 range for structured business responses
 function determineTemperature(message: string, complexity: 'simple' | 'moderate' | 'complex', chatMode: string): number {
   const lowerMessage = message.toLowerCase();
+  if (chatMode === 'pulse') {
+    if (/(creative|brainstorm|idea|think|design|imagine|come up with)/i.test(lowerMessage)) return 0.5;
+    return complexity === 'simple' ? 0.35 : 0.45;
+  }
   
   // Factual queries → low temperature for accuracy and speed (0.3-0.4)
   if (/^(what|when|where|who|how many|how much|which|list|show|tell me about)/i.test(message) && 

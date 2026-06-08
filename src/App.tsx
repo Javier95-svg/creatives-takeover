@@ -14,6 +14,7 @@ import CreditStatusBanner from "@/components/CreditStatusBanner";
 import MobileOptimization from "@/components/MobileOptimization";
 import VersionUpdateBanner from "@/components/VersionUpdateBanner";
 import { useVersionCheck } from "@/hooks/useVersionCheck";
+import { shouldShowPulseForPath } from "@/config/pulseRoutes";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { RouteErrorBoundary } from '@/components/RouteErrorBoundary';
 import ScrollToTop from "./components/ScrollToTop";
@@ -164,11 +165,8 @@ const LegacyCommunityRedirect = () => {
 const PulseWidgetWrapper = () => {
   const location = useLocation();
 
-  // Show Pulse on all pages except auth flows and admin
-  const excludedPaths = ['/onboarding', '/auth', '/login', '/signup', '/forgot-password', '/reset-password'];
-  const isExcluded = excludedPaths.some(p => location.pathname.startsWith(p));
+  if (!shouldShowPulseForPath(location.pathname)) return null;
 
-  if (isExcluded) return null;
   return <PulseWidget />;
 };
 

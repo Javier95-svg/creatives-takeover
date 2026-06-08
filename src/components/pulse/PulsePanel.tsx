@@ -38,13 +38,13 @@ export const PulsePanel = ({
         "fixed z-40 bg-background border rounded-2xl shadow-2xl flex flex-col animate-in slide-in-from-bottom-4 fade-in duration-300",
         compactMobileHomepage
           ? "bottom-[calc(8.5rem+env(safe-area-inset-bottom,0px))] left-4 right-4 w-auto max-w-none h-[min(32rem,62vh)]"
-          : "bottom-24 right-6 w-96 max-w-[calc(100vw-32px)] h-[480px] max-h-[70vh]"
+          : "bottom-24 right-6 w-[400px] max-w-[calc(100vw-32px)] h-[560px] max-h-[78vh]"
       )}
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b">
+      <div className="flex items-center justify-between px-3 py-2.5 border-b">
         <div className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center">
+          <div className="h-7 w-7 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center">
             <Sparkles className="h-4 w-4 text-primary-foreground" />
           </div>
           <div>
@@ -67,9 +67,9 @@ export const PulsePanel = ({
       <Tabs
         value={activeTab}
         onValueChange={(v) => onTabChange(v as 'chat' | 'feedback')}
-        className="flex flex-col flex-1 min-h-0"
+        className="flex flex-col flex-1 min-h-0 overflow-hidden"
       >
-        <TabsList className="grid grid-cols-2 mx-4 mt-2">
+        <TabsList className="grid grid-cols-2 mx-3 mt-2 h-8">
           <TabsTrigger value="chat" className="text-xs">Chat</TabsTrigger>
           <TabsTrigger value="feedback" className="text-xs">Feedback</TabsTrigger>
         </TabsList>

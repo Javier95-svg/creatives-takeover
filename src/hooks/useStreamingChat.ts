@@ -13,6 +13,12 @@ interface BusinessContext {
   location?: string;
   budget?: string;
   goals?: string[];
+  currentPage?: string;
+  currentTool?: {
+    name: string;
+    purpose: string;
+  } | null;
+  projectContext?: Record<string, unknown> | null;
 }
 
 interface WizardMode {
@@ -52,7 +58,7 @@ export const streamChat = async (
   userId: string | null,
   wizardMode: WizardMode | null,
   currentStep: number | null,
-  chatMode: 'wizard' | 'freeform' | 'tour-guide',
+  chatMode: 'wizard' | 'freeform' | 'tour-guide' | 'pulse',
   files?: File[],
   onChunk?: (chunk: string) => void,
   onComplete?: (fullMessage: string, quickActions?: Array<{text: string, id: string}>, sources?: any[]) => void,
@@ -225,7 +231,7 @@ export const streamChat = async (
             }
           };
 
-          processStream();
+          void processStream();
         }).catch((fetchError) => {
           console.error('❌ Fetch error:', fetchError);
           

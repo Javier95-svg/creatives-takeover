@@ -36,9 +36,9 @@ export const PulseFeedbackView = () => {
   };
 
   return (
-    <div className="flex flex-col gap-4 p-4 overflow-y-auto flex-1">
+    <div className="flex flex-col gap-3 px-3 pb-3 pt-2 overflow-y-auto flex-1 min-h-0">
       {/* Feedback Type Selection */}
-      <div className="space-y-2">
+      <div className="space-y-1.5">
         <Label className="text-xs">What type of feedback?</Label>
         <div className="grid grid-cols-2 gap-2">
           {feedbackTypes.map(({ type, label, icon: Icon, color }) => (
@@ -47,7 +47,7 @@ export const PulseFeedbackView = () => {
               type="button"
               variant={selectedType === type ? 'default' : 'outline'}
               className={cn(
-                'h-auto flex-col gap-1.5 py-2.5 text-xs',
+                'h-auto flex-col gap-1 py-2 text-xs',
                 selectedType === type && 'ring-2 ring-primary'
               )}
               onClick={() => setSelectedType(type)}
@@ -60,7 +60,7 @@ export const PulseFeedbackView = () => {
       </div>
 
       {/* Rating */}
-      <div className="space-y-1.5">
+      <div className="space-y-1">
         <Label className="text-xs">Rate your experience (optional)</Label>
         <div className="flex gap-1">
           {[1, 2, 3, 4, 5].map((star) => (
@@ -84,7 +84,7 @@ export const PulseFeedbackView = () => {
       </div>
 
       {/* Message */}
-      <div className="space-y-1.5">
+      <div className="space-y-1">
         <Label htmlFor="pulse-feedback" className="text-xs">Your feedback *</Label>
         <Textarea
           id="pulse-feedback"
@@ -92,7 +92,7 @@ export const PulseFeedbackView = () => {
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           rows={4}
-          className="resize-none text-sm"
+          className="resize-none text-sm min-h-[96px]"
         />
         <p className="text-xs text-muted-foreground">{message.length}/1000</p>
       </div>
