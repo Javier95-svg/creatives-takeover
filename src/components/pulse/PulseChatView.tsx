@@ -54,9 +54,9 @@ export const PulseChatView = ({ messages, isStreaming, quickReplies, onSendMessa
   const showQuickReplies = messages.length <= 1 && !isStreaming;
 
   return (
-    <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
+    <div className="grid h-full min-h-0 grid-rows-[minmax(0,1fr)_auto] overflow-hidden">
       {/* Messages */}
-      <ScrollArea ref={scrollRef} className="flex-1 min-h-0 px-3 py-2">
+      <ScrollArea ref={scrollRef} className="h-full min-h-0 px-3 py-3">
         <div className="space-y-3 pb-2">
           {messages.map((msg, i) => (
             <PulseMessageBubble
@@ -76,7 +76,7 @@ export const PulseChatView = ({ messages, isStreaming, quickReplies, onSendMessa
       </ScrollArea>
 
       {/* Input */}
-      <div className="border-t bg-background p-2 flex gap-2 items-end">
+      <div className="shrink-0 border-t bg-background p-2 flex gap-2 items-end">
         <Textarea
           ref={textareaRef}
           value={input}

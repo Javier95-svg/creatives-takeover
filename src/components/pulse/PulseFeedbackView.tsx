@@ -36,76 +36,78 @@ export const PulseFeedbackView = () => {
   };
 
   return (
-    <div className="flex flex-col gap-2.5 px-3 pb-3 pt-2 overflow-y-auto flex-1 min-h-0">
-      {/* Feedback Type Selection */}
-      <div className="space-y-1.5">
-        <Label className="text-xs">What type of feedback?</Label>
-        <div className="grid grid-cols-2 gap-2">
-          {feedbackTypes.map(({ type, label, icon: Icon, color }) => (
-            <Button
-              key={type}
-              type="button"
-              variant={selectedType === type ? 'default' : 'outline'}
-              className={cn(
-                'h-10 justify-start gap-2 px-2 text-xs',
-                selectedType === type && 'ring-2 ring-primary'
-              )}
-              onClick={() => setSelectedType(type)}
-            >
-              <Icon className={cn('h-4 w-4', selectedType === type ? 'text-primary-foreground' : color)} />
-              <span className="truncate">{label}</span>
-            </Button>
-          ))}
-        </div>
-      </div>
-
-      {/* Rating */}
-      <div className="space-y-1">
-        <Label className="text-xs">Rate your experience (optional)</Label>
-        <div className="flex gap-0.5">
-          {[1, 2, 3, 4, 5].map((star) => (
-            <Button
-              key={star}
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="h-7 w-7 p-0"
-              onClick={() => setRating(star)}
-            >
-              <Star
+    <div className="h-full min-h-0 overflow-y-auto px-3 pb-3 pt-3">
+      <div className="space-y-2.5">
+        {/* Feedback Type Selection */}
+        <div className="space-y-1.5">
+          <Label className="text-xs">What type of feedback?</Label>
+          <div className="grid grid-cols-2 gap-2">
+            {feedbackTypes.map(({ type, label, icon: Icon, color }) => (
+              <Button
+                key={type}
+                type="button"
+                variant={selectedType === type ? 'default' : 'outline'}
                 className={cn(
-                  'h-5 w-5 transition-colors',
-                  star <= rating ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground'
+                  'h-10 justify-start gap-2 px-2 text-xs',
+                  selectedType === type && 'ring-2 ring-primary'
                 )}
-              />
-            </Button>
-          ))}
+                onClick={() => setSelectedType(type)}
+              >
+                <Icon className={cn('h-4 w-4', selectedType === type ? 'text-primary-foreground' : color)} />
+                <span className="truncate">{label}</span>
+              </Button>
+            ))}
+          </div>
         </div>
-      </div>
 
-      {/* Message */}
-      <div className="space-y-1">
-        <Label htmlFor="pulse-feedback" className="text-xs">Your feedback *</Label>
-        <Textarea
-          id="pulse-feedback"
-          placeholder="Tell us about your experience..."
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          rows={3}
-          className="resize-none text-sm min-h-[84px]"
-        />
-        <p className="text-xs text-muted-foreground">{message.length}/1000</p>
-      </div>
+        {/* Rating */}
+        <div className="space-y-1">
+          <Label className="text-xs">Rate your experience (optional)</Label>
+          <div className="flex gap-0.5">
+            {[1, 2, 3, 4, 5].map((star) => (
+              <Button
+                key={star}
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-7 w-7 p-0"
+                onClick={() => setRating(star)}
+              >
+                <Star
+                  className={cn(
+                    'h-5 w-5 transition-colors',
+                    star <= rating ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground'
+                  )}
+                />
+              </Button>
+            ))}
+          </div>
+        </div>
 
-      {/* Submit */}
-      <Button
-        onClick={handleSubmit}
-        disabled={isSubmitting || !message.trim()}
-        className="w-full"
-        size="sm"
-      >
-        {isSubmitting ? 'Submitting...' : 'Submit Feedback'}
-      </Button>
+        {/* Message */}
+        <div className="space-y-1">
+          <Label htmlFor="pulse-feedback" className="text-xs">Your feedback *</Label>
+          <Textarea
+            id="pulse-feedback"
+            placeholder="Tell us about your experience..."
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            rows={3}
+            className="resize-none text-sm min-h-[84px]"
+          />
+          <p className="text-xs text-muted-foreground">{message.length}/1000</p>
+        </div>
+
+        {/* Submit */}
+        <Button
+          onClick={handleSubmit}
+          disabled={isSubmitting || !message.trim()}
+          className="w-full"
+          size="sm"
+        >
+          {isSubmitting ? 'Submitting...' : 'Submit Feedback'}
+        </Button>
+      </div>
     </div>
   );
 };

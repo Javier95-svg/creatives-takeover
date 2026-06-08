@@ -1,5 +1,5 @@
 import { X, Sparkles } from 'lucide-react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PulseChatView } from './PulseChatView';
 import { PulseFeedbackView } from './PulseFeedbackView';
 import type { PulseMessage } from '@/hooks/usePulseWidget';
@@ -67,7 +67,7 @@ export const PulsePanel = ({
       <Tabs
         value={activeTab}
         onValueChange={(v) => onTabChange(v as 'chat' | 'feedback')}
-        className="flex flex-col flex-1 min-h-0 overflow-hidden"
+        className="shrink-0"
       >
         <div className="border-b px-3 py-1.5">
           <TabsList className="grid h-7 w-full grid-cols-2 gap-1 bg-transparent p-0">
@@ -75,20 +75,20 @@ export const PulsePanel = ({
             <TabsTrigger value="feedback" className="h-7 rounded-md px-2 text-xs data-[state=active]:bg-muted">Feedback</TabsTrigger>
           </TabsList>
         </div>
+      </Tabs>
 
-        <TabsContent value="chat" className="m-0 flex-1 min-h-0 flex flex-col">
+      <div className="flex-1 min-h-0 overflow-hidden">
+        {activeTab === 'chat' ? (
           <PulseChatView
             messages={messages}
             isStreaming={isStreaming}
             quickReplies={quickReplies}
             onSendMessage={onSendMessage}
           />
-        </TabsContent>
-
-        <TabsContent value="feedback" className="m-0 flex-1 min-h-0 flex flex-col">
+        ) : (
           <PulseFeedbackView />
-        </TabsContent>
-      </Tabs>
+        )}
+      </div>
     </div>
   );
 };
