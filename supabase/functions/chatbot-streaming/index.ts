@@ -489,9 +489,9 @@ serve(async (req) => {
       }
     }
 
-    // 💳 CREDIT DEDUCTION: Check and deduct credits for authenticated users
-    // Tour-guide mode is free for everyone to encourage exploration and signups
-    const shouldChargeCredits = resolvedUserId !== null && chatMode !== 'tour-guide';
+    // 💳 CREDIT DEDUCTION: Check and deduct credits for authenticated users.
+    // Pulse is product/support guidance and must stay free, including for signed-in users.
+    const shouldChargeCredits = resolvedUserId !== null && chatMode !== 'tour-guide' && chatMode !== 'pulse';
     
     if (shouldChargeCredits) {
       const creditCost = CREDIT_COSTS.AI_CHAT_MESSAGE;
@@ -3024,8 +3024,8 @@ async function createAIStream(messages: ChatMessage[], userMessage: string, conv
     // Refund credits if all AI API attempts failed (including fallbacks) and credits were charged
     // This runs only if we reach here (fallbacks failed or didn't apply)
     if (!recoveredFromApiException) {
-    const shouldRefund = conversation.user_id && conversation.chat_mode !== 'tour-guide';
-    if (shouldRefund) {
+      const shouldRefund = conversation.user_id && chatMode !== 'tour-guide' && chatMode !== 'pulse';
+      if (shouldRefund) {
       try {
         const creditCost = CREDIT_COSTS.AI_CHAT_MESSAGE;
         await refundCredits(
@@ -3110,7 +3110,7 @@ async function createAIStream(messages: ChatMessage[], userMessage: string, conv
       logWarn('🔍 DEBUG: Model not found, falling back', { requestId, model: selectedModel, status, error: err.substring(0, 300) });
     } else if ([400, 401, 403, 404, 402].includes(status) && !isGPT5 && !isDeepSeek && !shouldTryPulseFallback) {
       // Refund credits before returning error
-      const shouldRefund = conversation.user_id && conversation.chat_mode !== 'tour-guide';
+      const shouldRefund = conversation.user_id && chatMode !== 'tour-guide' && chatMode !== 'pulse';
       if (shouldRefund) {
         try {
           const creditCost = CREDIT_COSTS.AI_CHAT_MESSAGE;
