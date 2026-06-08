@@ -77,10 +77,47 @@ export const PULSE_ROUTE_CONTEXTS: PulseRouteContext[] = [
   },
 ];
 
+const PULSE_HIDDEN_PATH_PREFIXES = [
+  "/dashboard",
+  "/mvp-builder",
+  "/mvp-scope",
+  "/projects-dashboard",
+  "/onboarding",
+  "/auth",
+  "/auth/callback",
+  "/login",
+  "/signup",
+  "/sign-up",
+  "/forgot-password",
+  "/reset-password",
+  "/admin",
+  "/creatives-takeover",
+  "/rag-test",
+  "/test-phase1",
+  "/demo/",
+  "/embed/demo/",
+  "/w/",
+  "/icp/",
+];
+
+function matchesPathPrefix(pathname: string, pathPrefix: string): boolean {
+  return pathname === pathPrefix || pathname.startsWith(`${pathPrefix}/`);
+}
+
 export function getPulseRouteContext(pathname: string): PulseRouteContext | null {
-  return PULSE_ROUTE_CONTEXTS.find(({ pathPrefix }) => pathname === pathPrefix || pathname.startsWith(`${pathPrefix}/`)) ?? null;
+  const explicitContext = PULSE_ROUTE_CONTEXTS.find(({ pathPrefix }) => matchesPathPrefix(pathname, pathPrefix));
+
+  if (explicitContext) return explicitContext;
+
+  if (!shouldShowPulseForPath(pathname)) return null;
+
+  return {
+    pathPrefix: pathname,
+    toolName: "Creatives Takeover",
+    toolPurpose: "helping the founder navigate the platform and decide what to do next",
+  };
 }
 
 export function shouldShowPulseForPath(pathname: string): boolean {
-  return getPulseRouteContext(pathname) !== null;
+  return !PULSE_HIDDEN_PATH_PREFIXES.some((pathPrefix) => matchesPathPrefix(pathname, pathPrefix));
 }

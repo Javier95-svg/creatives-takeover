@@ -37,10 +37,6 @@ const PulseWidget = () => {
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, closePanel]);
 
-  if (compactMobileHomepage) {
-    return null;
-  }
-
   return (
     <>
       {/* Proactive message bubble */}
@@ -63,6 +59,7 @@ const PulseWidget = () => {
         quickReplies={getQuickReplies()}
         onSendMessage={sendMessage}
         userName={userName}
+        compactMobileHomepage={compactMobileHomepage}
       />
 
       {/* Floating bubble (hidden when panel is open) */}
@@ -70,6 +67,7 @@ const PulseWidget = () => {
         <PulseBubble
           hasUnread={proactiveVisible}
           onClick={openPanel}
+          compactMobileHomepage={compactMobileHomepage}
         />
       )}
     </>
