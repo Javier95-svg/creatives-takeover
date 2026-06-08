@@ -16,6 +16,7 @@ interface Prefs {
   task_reminders: boolean;
   retention_emails: boolean;
   product_updates: boolean;
+  investor_updates: boolean;
 }
 
 const DEFAULTS: Prefs = {
@@ -24,6 +25,7 @@ const DEFAULTS: Prefs = {
   task_reminders: true,
   retention_emails: true,
   product_updates: true,
+  investor_updates: false,
 };
 
 // db typing escape: these tables aren't in the generated types yet.
@@ -44,7 +46,7 @@ export function NotificationPreferencesCard() {
       try {
         const { data } = await db
           .from("notification_preferences")
-          .select("push_enabled, routine_reminders, task_reminders, retention_emails, product_updates")
+          .select("push_enabled, routine_reminders, task_reminders, retention_emails, product_updates, investor_updates")
           .eq("user_id", user.id)
           .maybeSingle();
         if (!cancelled && data) setPrefs({ ...DEFAULTS, ...data });
@@ -101,6 +103,7 @@ export function NotificationPreferencesCard() {
     { key: "task_reminders", label: "Task & deadline reminders", desc: "Heads-up when a task is due or overdue." },
     { key: "retention_emails", label: "Progress & re-engagement emails", desc: "Weekly progress and occasional come-back nudges by email." },
     { key: "product_updates", label: "Product updates", desc: "Major new features and announcements." },
+    { key: "investor_updates", label: "New investor alerts", desc: "Get pinged when a new angel investor joins the network." },
   ];
 
   return (
