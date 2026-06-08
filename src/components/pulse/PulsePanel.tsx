@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { X, Sparkles } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PulseChatView } from './PulseChatView';
@@ -30,19 +31,37 @@ export const PulsePanel = ({
   userName,
   compactMobileHomepage = false,
 }: PulsePanelProps) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  useEffect(() => {
+    if (!isOpen) {
+      setIsExpanded(false);
+    }
+  }, [isOpen]);
+
+  const mobilePanelSizeClass = isExpanded
+    ? "bottom-[calc(8.5rem+env(safe-area-inset-bottom,0px))] left-4 right-4 w-auto max-w-none h-[min(34rem,70vh)]"
+    : "bottom-[calc(8.5rem+env(safe-area-inset-bottom,0px))] left-4 right-4 w-auto max-w-none h-[min(28rem,60vh)]";
+
+  const desktopPanelSizeClass = isExpanded
+    ? "bottom-24 right-6 w-[400px] max-w-[calc(100vw-32px)] h-[600px] max-h-[82vh]"
+    : "bottom-24 right-6 w-[360px] max-w-[calc(100vw-32px)] h-[460px] max-h-[68vh]";
+
   if (!isOpen) return null;
 
   return (
     <div
       className={cn(
         "fixed z-40 bg-background border rounded-xl shadow-2xl flex flex-col animate-in slide-in-from-bottom-4 fade-in duration-300",
-        compactMobileHomepage
-          ? "bottom-[calc(8.5rem+env(safe-area-inset-bottom,0px))] left-4 right-4 w-auto max-w-none h-[min(34rem,70vh)]"
-          : "bottom-24 right-6 w-[400px] max-w-[calc(100vw-32px)] h-[600px] max-h-[82vh]"
+        compactMobileHomepage ? mobilePanelSizeClass : desktopPanelSizeClass
       )}
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-3 py-2 border-b">
+      <div
+        className="flex items-center justify-between px-3 py-2 border-b select-none"
+        onDoubleClick={() => setIsExpanded((current) => !current)}
+        title={isExpanded ? 'Double-click to make Pulse smaller' : 'Double-click to expand Pulse'}
+      >
         <div className="flex items-center gap-2">
           <div className="h-6 w-6 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center">
             <Sparkles className="h-3.5 w-3.5 text-primary-foreground" />
