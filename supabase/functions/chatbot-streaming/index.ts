@@ -12,6 +12,9 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, idempotency-key',
 };
 
+const PULSE_PRIMARY_MODEL = 'google/gemini-3-flash';
+const PULSE_FALLBACK_MODEL = 'google/gemini-2.5-flash';
+
 // ========== INLINED TEMPLATE MATCHING (avoiding import issues) ==========
 interface Template {
   patterns: RegExp[];
@@ -2535,10 +2538,10 @@ function selectOptimalModel(complexity: 'simple' | 'moderate' | 'complex', chatM
     };
   }
   
-  // Planning mode (wizard) → optimized for Gemini 2.5 Flash
+  // Pulse mode -> Gemini 3 Flash for stronger context reasoning, with Gemini 2.5 fallback.
   if (chatMode === 'pulse') {
     return {
-      model: 'google/gemini-2.5-flash',
+      model: PULSE_PRIMARY_MODEL,
       strategy: 'speed',
       maxTokens: complexity === 'complex' ? 520 : 260,
       temperature: 0.45
@@ -2934,6 +2937,67 @@ async function createAIStream(messages: ChatMessage[], userMessage: string, conv
     // Try fallback if primary model failed
     const isDeepSeek = selectedModel.startsWith('deepseek-');
     const isGemini = selectedModel.includes('gemini');
+    const shouldTryPulseFallback = selectedModel === PULSE_PRIMARY_MODEL;
+
+    // If Gemini 3 Flash fails at the gateway level, keep Pulse alive on Gemini 2.5 Flash.
+    if (shouldTryPulseFallback) {
+      logWarn('Pulse primary model failed, trying stable Gemini fallback', { requestId, model: selectedModel });
+      try {
+        const fallbackResponse = await fetchWithRetry(
+          'https://ai.gateway.lovable.dev/v1/chat/completions',
+          {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${LOVABLE_API_KEY}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              model: PULSE_FALLBACK_MODEL,
+              messages,
+              stream: true,
+              temperature: finalTemperature,
+              max_tokens: Math.min(maxTokens, 500)
+            }),
+            timeout: 30000,
+            retryOptions: {
+              maxAttempts: 2,
+              initialDelay: 1000,
+              maxDelay: 2000,
+            }
+          }
+        ).catch(() => null);
+
+        if (fallbackResponse?.ok) {
+          logInfo('Pulse stable Gemini fallback succeeded', { requestId, fallbackModel: PULSE_FALLBACK_MODEL });
+          const reader = fallbackResponse.body?.getReader();
+          if (reader) {
+            return new Response(
+              new ReadableStream({
+                async start(controller) {
+                  try {
+                    while (true) {
+                      const { done, value } = await reader.read();
+                      if (done) break;
+                      controller.enqueue(value);
+                    }
+                    controller.close();
+                  } catch (error) {
+                    controller.error(error);
+                  }
+                }
+              }),
+              {
+                headers: {
+                  ...corsHeaders,
+                  'Content-Type': 'text/event-stream',
+                  'Cache-Control': 'no-cache',
+                  'Connection': 'keep-alive'
+                }
+              }
+            );
+          }
+        }
+      } catch (fallbackError: any) {
+        logError('Pulse stable Gemini fallback failed', { requestId, error: fallbackError?.message });
+      }
+    }
     
     // If DeepSeek fails, try Gemini as fallback
     if (isDeepSeek && !isGemini) {
@@ -3071,12 +3135,13 @@ async function createAIStream(messages: ChatMessage[], userMessage: string, conv
     const isGPT5 = selectedModel === 'openai/gpt-5-2025-08-07' || selectedModel.includes('gpt-5');
     const isDeepSeek = selectedModel.startsWith('deepseek-');
     const isGemini = selectedModel.includes('gemini');
+    const shouldTryPulseFallback = selectedModel === PULSE_PRIMARY_MODEL;
     const isModelNotFound = status === 400 || status === 404;
     
     // For model not found errors, skip error return and go straight to fallback
-    if (isModelNotFound && (isGPT5 || isDeepSeek)) {
+    if (isModelNotFound && (isGPT5 || isDeepSeek || shouldTryPulseFallback)) {
       logWarn('🔍 DEBUG: Model not found, falling back', { requestId, model: selectedModel, status, error: err.substring(0, 300) });
-    } else if ([400, 401, 403, 404, 402].includes(status) && !isGPT5 && !isDeepSeek) {
+    } else if ([400, 401, 403, 404, 402].includes(status) && !isGPT5 && !isDeepSeek && !shouldTryPulseFallback) {
       // Refund credits before returning error
       const shouldRefund = conversation.user_id && conversation.chat_mode !== 'tour-guide';
       if (shouldRefund) {
@@ -3112,9 +3177,48 @@ async function createAIStream(messages: ChatMessage[], userMessage: string, conv
     // Fallback chain: Gemini → DeepSeek → GPT-5 → Claude
     let fallbackModel: string | null = null;
     let fallbackResponse: Response | null = null;
+
+    if (shouldTryPulseFallback) {
+      fallbackModel = PULSE_FALLBACK_MODEL;
+      logInfo('Pulse primary model returned non-OK, trying stable Gemini fallback', {
+        requestId,
+        originalModel: selectedModel,
+        fallbackModel,
+        status
+      });
+
+      try {
+        fallbackResponse = await fetchWithRetry(
+          'https://ai.gateway.lovable.dev/v1/chat/completions',
+          {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${LOVABLE_API_KEY}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              model: fallbackModel,
+              messages,
+              stream: true,
+              temperature: finalTemperature,
+              max_tokens: Math.min(maxTokens, 500)
+            }),
+            timeout: 30000,
+            retryOptions: {
+              maxAttempts: 2,
+              initialDelay: 1000,
+              maxDelay: 2000,
+            }
+          }
+        ).catch((fallbackError) => {
+          logError('Pulse stable Gemini fallback failed', { requestId, fallbackError: fallbackError?.message });
+          return null;
+        });
+      } catch (fallbackError: any) {
+        logError('Pulse stable Gemini fallback exception', { requestId, error: fallbackError?.message });
+        fallbackResponse = null;
+      }
+    }
     
     // If Gemini fails, try DeepSeek
-    if (isGemini && DEEPSEEK_API_KEY) {
+    if (!fallbackResponse?.ok && isGemini && DEEPSEEK_API_KEY) {
       fallbackModel = 'deepseek-chat';
       logInfo('🔍 DEBUG: Falling back to DeepSeek', { requestId, originalModel: selectedModel, fallbackModel, reason: 'Gemini failed' });
       
