@@ -181,8 +181,12 @@ function buildPulseProjectContext(model: StartupCommandCenterModel): PulseProjec
 }
 
 function generateProactiveMessage(context: PulseContext | null, isAuthenticated: boolean): string {
-  if (!isAuthenticated || !context) {
-    return 'Welcome to Creatives Takeover! How can I help you?';
+  if (!isAuthenticated) {
+    return 'Welcome to Creatives Takeover. I can explain what this is, show you the best tools, or help you decide where to start.';
+  }
+
+  if (!context) {
+    return 'Welcome back. I can help you pick the next best step.';
   }
 
   const name = context.userName?.split(' ')[0] || 'there';

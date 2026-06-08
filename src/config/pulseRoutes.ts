@@ -6,6 +6,11 @@ export interface PulseRouteContext {
 
 export const PULSE_ROUTE_CONTEXTS: PulseRouteContext[] = [
   {
+    pathPrefix: "/",
+    toolName: "Creatives Takeover",
+    toolPurpose: "helping visitors understand the product, find the right tool, and decide where to start",
+  },
+  {
     pathPrefix: "/icp-builder",
     toolName: "ICP Builder",
     toolPurpose: "helping the founder define their ideal customer, pain points, and positioning",
