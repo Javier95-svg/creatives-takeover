@@ -9,25 +9,55 @@ interface Template {
 }
 
 const templates: Template[] = [
+  // Creatives Takeover platform questions. Keep this before BizMap templates so
+  // homepage/support questions cannot be misrouted to the BizMap workflow copy.
+  {
+    patterns: [
+      /^(what is|what's|explain|tell me about)\s+(this platform|creatives takeover|ct)[\s?.!]*$/i,
+      /^what (does|is) creatives takeover/i,
+      /^what is this platform[\s?.!]*$/i,
+    ],
+    response: "Creatives Takeover is the founder support platform. It helps you move from idea to ICP, validation, MVP, launch, traction, and fundraising with AI tools, mentors, community, and investor resources.\n\nBizMap AI is one workflow inside that ecosystem. It helps with early planning, while tools like ICP Builder, PMF Lab, Tech Stack Builder, GTM Strategist, Pitch Deck Analyzer, VC Search, and the mentor/co-founder spaces help with the rest of the journey.",
+    quickActions: [
+      { text: "Start with ICP Builder", id: "navigate_icp_builder" },
+      { text: "How does the AI work?", id: "ask_ai_work" },
+      { text: "Show pricing", id: "navigate_pricing" }
+    ]
+  },
+
+  // BizMap-specific questions. BizMap is a workflow, not the platform identity.
+  {
+    patterns: [
+      /^(what is|what's|tell me about|explain)\s+(bizmap|biz map|bizmap ai)[\s?.!]*$/i,
+      /^what does (bizmap|biz map|bizmap ai) do/i,
+    ],
+    response: "BizMap AI is one planning workflow inside Creatives Takeover.\n\nIt helps founders turn an early idea into a clearer plan: customer, problem, validation, MVP, launch direction, pricing, and goals. The wider platform also includes focused tools for ICP, PMF, tech stack, go-to-market, fundraising, mentors, investors, and founder community.",
+    quickActions: [
+      { text: "Open BizMap AI", id: "navigate_bizmap" },
+      { text: "Start with ICP Builder", id: "navigate_icp_builder" },
+      { text: "Show the roadmap", id: "ask_roadmap" }
+    ]
+  },
+
   // Greetings
   {
     patterns: [/^(hi|hello|hey|greetings|good morning|good afternoon|good evening)[\s!.,]*$/i],
-    response: "Hi there! 👋 I'm BizMap AI, your business planning co-founder. I'm here to help you turn your idea into a launch-ready plan. What business idea are you working on?",
+    response: "Hi there. I'm Pulse, the Creatives Takeover assistant. I can explain the platform, point you to the right tool, or help you think through what you're building.",
     quickActions: [
-      { text: "I have a business idea", id: "start_planning" },
-      { text: "Tell me about BizMap AI", id: "ask_about_bizmap" },
+      { text: "What is this platform?", id: "ask_platform" },
+      { text: "Where should I start?", id: "ask_start" },
       { text: "How does this work?", id: "ask_how_it_works" }
     ]
   },
   
-  // What is BizMap AI
+  // BizMap questions only. Platform questions must stay with Creatives Takeover.
   {
-    patterns: [/what (is|does) (bizmap|biz map|this)/i, /tell me about (bizmap|biz map|this)/i, /explain (bizmap|biz map)/i],
-    response: "BizMap AI is your AI co-founder that guides you through creating a complete business plan in 7 steps. I'll help you:\n\n• Validate your business idea\n• Define your target market\n• Plan your MVP\n• Create a launch strategy\n• Set pricing and goals\n\nReady to start? Just share your business idea!",
+    patterns: [/what (is|does) (bizmap|biz map|bizmap ai)/i, /tell me about (bizmap|biz map|bizmap ai)/i, /explain (bizmap|biz map|bizmap ai)/i],
+    response: "BizMap AI is a planning workflow inside Creatives Takeover.\n\nIt helps founders clarify an idea, customer, problem, validation plan, MVP direction, launch path, pricing, and goals. It is one part of the wider Creatives Takeover ecosystem, not the platform itself.",
     quickActions: [
-      { text: "Start planning", id: "start_planning" },
-      { text: "See an example", id: "see_example" },
-      { text: "How long does it take?", id: "ask_duration" }
+      { text: "Open BizMap AI", id: "navigate_bizmap" },
+      { text: "Start with ICP Builder", id: "navigate_icp_builder" },
+      { text: "Show the roadmap", id: "ask_roadmap" }
     ]
   },
   

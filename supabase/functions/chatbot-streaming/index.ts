@@ -21,25 +21,55 @@ interface Template {
 }
 
 const templates: Template[] = [
+  // Creatives Takeover platform questions. Keep this before BizMap templates so
+  // homepage/support questions cannot be misrouted to the BizMap workflow copy.
+  {
+    patterns: [
+      /^(what is|what's|explain|tell me about)\s+(this platform|creatives takeover|ct)[\s?.!]*$/i,
+      /^what (does|is) creatives takeover/i,
+      /^what is this platform[\s?.!]*$/i,
+    ],
+    response: "Creatives Takeover is the founder support platform. It helps you move from idea to ICP, validation, MVP, launch, traction, and fundraising with AI tools, mentors, community, and investor resources.\n\nBizMap AI is one workflow inside that ecosystem. It helps with early planning, while tools like ICP Builder, PMF Lab, Tech Stack Builder, GTM Strategist, Pitch Deck Analyzer, VC Search, and the mentor/co-founder spaces help with the rest of the journey.",
+    quickActions: [
+      { text: "Start with ICP Builder", id: "navigate_icp_builder" },
+      { text: "How does the AI work?", id: "ask_ai_work" },
+      { text: "Show pricing", id: "navigate_pricing" }
+    ]
+  },
+
+  // BizMap-specific questions. BizMap is a workflow, not the platform identity.
+  {
+    patterns: [
+      /^(what is|what's|tell me about|explain)\s+(bizmap|biz map|bizmap ai)[\s?.!]*$/i,
+      /^what does (bizmap|biz map|bizmap ai) do/i,
+    ],
+    response: "BizMap AI is one planning workflow inside Creatives Takeover.\n\nIt helps founders turn an early idea into a clearer plan: customer, problem, validation, MVP, launch direction, pricing, and goals. The wider platform also includes focused tools for ICP, PMF, tech stack, go-to-market, fundraising, mentors, investors, and founder community.",
+    quickActions: [
+      { text: "Open BizMap AI", id: "navigate_bizmap" },
+      { text: "Start with ICP Builder", id: "navigate_icp_builder" },
+      { text: "Show the roadmap", id: "ask_roadmap" }
+    ]
+  },
+
   // Greetings
   {
     patterns: [/^(hi|hello|hey|greetings|good morning|good afternoon|good evening)[\s!.,]*$/i],
-    response: "Hi there! 👋 I'm BizMap AI, your business planning co-founder. I'm here to help you turn your idea into a launch-ready plan. What business idea are you working on?",
+    response: "Hi there. I'm Pulse, the Creatives Takeover assistant. I can explain the platform, point you to the right tool, or help you think through what you're building.",
     quickActions: [
-      { text: "I have a business idea", id: "start_planning" },
-      { text: "Tell me about BizMap AI", id: "ask_about_bizmap" },
+      { text: "What is this platform?", id: "ask_platform" },
+      { text: "Where should I start?", id: "ask_start" },
       { text: "How does this work?", id: "ask_how_it_works" }
     ]
   },
   
-  // What is BizMap AI
+  // BizMap questions only. Platform questions must stay with Creatives Takeover.
   {
-    patterns: [/what (is|does) (bizmap|biz map|this)/i, /tell me about (bizmap|biz map|this)/i, /explain (bizmap|biz map)/i],
-    response: "BizMap AI is your AI co-founder that guides you through creating a complete business plan in 7 steps. I'll help you:\n\n• Validate your business idea\n• Define your target market\n• Plan your MVP\n• Create a launch strategy\n• Set pricing and goals\n\nReady to start? Just share your business idea!",
+    patterns: [/what (is|does) (bizmap|biz map|bizmap ai)/i, /tell me about (bizmap|biz map|bizmap ai)/i, /explain (bizmap|biz map|bizmap ai)/i],
+    response: "BizMap AI is a planning workflow inside Creatives Takeover.\n\nIt helps founders clarify an idea, customer, problem, validation plan, MVP direction, launch path, pricing, and goals. It is one part of the wider Creatives Takeover ecosystem, not the platform itself.",
     quickActions: [
-      { text: "Start planning", id: "start_planning" },
-      { text: "See an example", id: "see_example" },
-      { text: "How long does it take?", id: "ask_duration" }
+      { text: "Open BizMap AI", id: "navigate_bizmap" },
+      { text: "Start with ICP Builder", id: "navigate_icp_builder" },
+      { text: "Show the roadmap", id: "ask_roadmap" }
     ]
   },
   
@@ -112,98 +142,6 @@ const templates: Template[] = [
     ]
   }
 ];
-
-const pulseFixedAnswers: Template[] = [
-  {
-    patterns: [
-      /^(what is|what's|explain|tell me about)\s+(this platform|creatives takeover|ct)[\s?.!]*$/i,
-      /^what (does|is) creatives takeover/i,
-      /^what is this[\s?.!]*$/i,
-      /^what is this platform[\s?.!]*$/i,
-    ],
-    response: "Creatives Takeover is a founder support platform for turning a startup idea into something real.\n\nIt gives you a structured path from idea, ICP, validation, MVP, launch, traction, and fundraising, with AI tools, mentors, founder community, and investor/funding resources around each step.\n\nBizMap AI is one part of that system. It helps with early planning and validation, while tools like ICP Builder, PMF Lab, Tech Stack Builder, GTM Strategist, Pitch Deck Analyzer, VC Search, and the mentor/co-founder spaces help you keep moving.\n\nIf you're new, start with ICP Builder or tell me what you're building and I'll point you to the best first step.",
-    quickActions: [
-      { text: "Start with ICP Builder", id: "navigate_icp_builder" },
-      { text: "How does the AI work?", id: "ask_ai_work" },
-      { text: "Show pricing", id: "navigate_pricing" }
-    ]
-  },
-  {
-    patterns: [
-      /^how (does|do) (the )?ai work[\s?.!]*$/i,
-      /^how (does|do) (this|it|the platform) work[\s?.!]*$/i,
-      /^how does creatives takeover work/i,
-    ],
-    response: "Creatives Takeover uses AI as guidance inside the founder workflow, not as a generic chatbot bolted onto the site.\n\nPulse helps you understand the platform and answer questions in context. The builder tools handle specific jobs: ICP Builder for your customer, PMF Lab for validation signals, GTM Strategist for channels, Pitch Deck Analyzer for fundraising clarity, and BizMap AI for early planning.\n\nIf you're signed in, Pulse can also use your saved project context so advice is tied to what you're building instead of generic startup advice.",
-    quickActions: [
-      { text: "Start with ICP Builder", id: "navigate_icp_builder" },
-      { text: "Show the roadmap", id: "ask_roadmap" },
-      { text: "Use my project context", id: "ask_project_context" }
-    ]
-  },
-  {
-    patterns: [
-      /^(show me pricing|show pricing|pricing|plans|view pricing)[\s?.!]*$/i,
-      /^how much (does|do|is|are).*(creatives takeover|this platform|this app|this tool|it).*(cost|price|pricing)/i,
-      /^(is|are).*(creatives takeover|this platform|this app|it).*(free|paid|pricing|cost)/i,
-    ],
-    response: "Creatives Takeover has a free Rookie plan so founders can start without a credit card.\n\nPaid plans add more monthly credits and deeper access across validation, build, launch, fundraising, and community tools. The pricing page is the source of truth for current limits and plan details.\n\nIf you tell me whether you're validating, building an MVP, launching, or preparing for fundraising, I can point you to the plan that fits best.",
-    quickActions: [
-      { text: "View pricing", id: "navigate_pricing" },
-      { text: "What are credits?", id: "ask_credits" },
-      { text: "Which plan fits me?", id: "ask_plan_fit" }
-    ]
-  },
-  {
-    patterns: [
-      /^how (do|can) i (start|begin|get started)/i,
-      /^(where|what) should i start/i,
-      /^how do i use (this|creatives takeover|the platform)/i,
-      /^start[\s?.!]*$/i,
-    ],
-    response: "If you're new, start with ICP Builder. It gives you the clearest first step: who you're building for, what pain you're solving, and why your offer should matter.\n\nAfter that, move into PMF Lab for validation, Tech Stack Builder or MVP Builder when you're ready to build, and GTM Strategist when you're preparing to launch.\n\nTell me what stage you're at - idea, validation, MVP, launch, or fundraising - and I'll point you to the next best tool.",
-    quickActions: [
-      { text: "Open ICP Builder", id: "navigate_icp_builder" },
-      { text: "Find my next step", id: "ask_next_step" },
-      { text: "Show the roadmap", id: "ask_roadmap" }
-    ]
-  },
-  {
-    patterns: [
-      /^(what is|what's|tell me about|explain)\s+(bizmap|biz map|bizmap ai)[\s?.!]*$/i,
-      /^what does (bizmap|biz map|bizmap ai) do/i,
-    ],
-    response: "BizMap AI is one workflow inside Creatives Takeover, not the whole platform.\n\nIt helps founders turn a rough business idea into a clearer plan: customer, problem, MVP, validation, launch direction, and next steps. Around it, Creatives Takeover also includes focused tools like ICP Builder, PMF Lab, Tech Stack Builder, GTM Strategist, investor tools, and founder community support.",
-    quickActions: [
-      { text: "Open BizMap AI", id: "navigate_bizmap" },
-      { text: "Start with ICP Builder", id: "navigate_icp_builder" },
-      { text: "Show the roadmap", id: "ask_roadmap" }
-    ]
-  },
-  {
-    patterns: [
-      /^(help|i need help|can you help|what can you do)[\s?.!]*$/i,
-    ],
-    response: "I can help you understand Creatives Takeover, choose the right tool, or use your saved project context to decide the next move.\n\nIf you're just exploring, ask me what the platform does, how the AI works, or where to start. If you're building, tell me your stage and I'll keep the answer practical.",
-    quickActions: [
-      { text: "What is this platform?", id: "ask_platform" },
-      { text: "Where should I start?", id: "ask_start" },
-      { text: "Use my project context", id: "ask_project_context" }
-    ]
-  }
-];
-
-function matchPulseFixedAnswer(message: string): Template | null {
-  const normalizedMessage = message.trim().toLowerCase();
-
-  for (const answer of pulseFixedAnswers) {
-    if (answer.patterns.some((pattern) => pattern.test(normalizedMessage))) {
-      return answer;
-    }
-  }
-
-  return null;
-}
 
 function matchTemplate(message: string, businessContext?: any): Template | null {
   const normalizedMessage = message.trim().toLowerCase();
@@ -362,6 +300,22 @@ interface BusinessContext {
   projectContext?: Record<string, any> | null;
 }
 
+function inferChatMode(requestedChatMode: string | null | undefined, businessContext: BusinessContext): string {
+  if (requestedChatMode === 'pulse') return 'pulse';
+
+  const hasPulseContext = Boolean(
+    businessContext?.currentTool ||
+    businessContext?.projectContext ||
+    (typeof businessContext?.currentPage === 'string' && businessContext.currentPage.trim().length > 0)
+  );
+
+  if (hasPulseContext && (!requestedChatMode || requestedChatMode === 'wizard' || requestedChatMode === 'freeform')) {
+    return 'pulse';
+  }
+
+  return requestedChatMode || 'wizard';
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -378,9 +332,10 @@ serve(async (req) => {
       userId = null,
       wizardMode = null,
       currentStep = null,
-      chatMode = 'wizard',
+      chatMode: requestedChatMode = 'wizard',
       attachments = []
     } = await req.json();
+    const chatMode = inferChatMode(requestedChatMode, businessContext);
     const authUser = await getUserFromAuth(req);
     const resolvedUserId = authUser?.id ?? null;
 
@@ -468,25 +423,6 @@ serve(async (req) => {
     // 🚀 OPTIMIZATION: Check template match first (fastest path, synchronous, no crypto needed)
     // Skip for detailed business ideas
     logInfo('🔍 DEBUG: Before template match', { message: message.substring(0, 50) });
-    // Pulse support answers are brand-safe, instant, and free.
-    const pulseFixedAnswer = chatMode === 'pulse' ? matchPulseFixedAnswer(message) : null;
-    if (pulseFixedAnswer) {
-      logInfo('Pulse fixed answer matched', {
-        messageLength: message.length,
-        responsePreview: pulseFixedAnswer.response.substring(0, 80)
-      });
-
-      return createTemplateStream(
-        pulseFixedAnswer.response,
-        pulseFixedAnswer.quickActions || [],
-        conversation,
-        businessContext,
-        conversationHistory,
-        chatMode,
-        supabase
-      );
-    }
-
     const matchedTemplate = chatMode === 'pulse' ? null : matchTemplate(message, businessContext);
     logInfo('🔍 DEBUG: After template match', { 
       matched: !!matchedTemplate, 
@@ -1340,6 +1276,13 @@ Answer questions about features, pricing, getting started. Be friendly but BRIEF
 
     return `You are Pulse, the compact in-app assistant for Creatives Takeover.
 
+CRITICAL PLATFORM IDENTITY:
+- The platform is Creatives Takeover.
+- BizMap AI is only one planning workflow/module inside Creatives Takeover.
+- If the user asks "What is this platform?", "What is Creatives Takeover?", or a similar homepage question, answer as Creatives Takeover. Do not answer as BizMap AI.
+- Do not use old canned BizMap-first platform copy.
+- Generate the answer naturally from the user's question, route context, and saved project context. Do not rely on fixed platform scripts.
+
 CURRENT TOOL:
 - Name: ${toolName}
 - Purpose: ${toolPurpose}
@@ -1904,8 +1847,8 @@ function generateQuickActions(stage: string, chatMode: string, userMessage: stri
         ];
       }
       return [
-        { text: "What is BizMap AI?", id: "ask_bizmap" },
-        { text: "What is Insighta?", id: "ask_insighta" },
+        { text: "What is Creatives Takeover?", id: "ask_platform" },
+        { text: "How does the AI work?", id: "ask_ai_work" },
         { text: "View pricing", id: "navigate_pricing" }
       ];
     }
@@ -1944,7 +1887,7 @@ function generateQuickActions(stage: string, chatMode: string, userMessage: stri
     
     // Default contextual suggestions
     return [
-      { text: "Try BizMap AI", id: "navigate_bizmap" },
+      { text: "Start with ICP Builder", id: "navigate_icp_builder" },
       { text: "Try Insighta", id: "navigate_insighta" },
       { text: "View pricing", id: "navigate_pricing" }
     ];
@@ -1954,7 +1897,7 @@ function generateQuickActions(stage: string, chatMode: string, userMessage: stri
   switch (stage) {
     case 'discovery':
       return [
-        { text: "Tell me about BizMap AI", id: "ask_bizmap" },
+        { text: "What is Creatives Takeover?", id: "ask_platform" },
         { text: "How can you help?", id: "ask_help" },
         { text: "I have a business idea", id: "start_planning" }
       ];
