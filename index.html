@@ -55,26 +55,31 @@
           attributes: { "data-website-id": "b6a9bcb8-c6ac-41c5-b624-75b3f6957742" },
         });
 
-        var amplitudeInitialized = false;
-        var initializeAmplitude = function () {
-          if (amplitudeInitialized) {
-            return;
+        var amplitudeApiKey = "%VITE_AMPLITUDE_API_KEY%";
+        var hasAmplitudeApiKey = amplitudeApiKey && amplitudeApiKey.charAt(0) !== "%";
+
+        if (hasAmplitudeApiKey) {
+          var amplitudeInitialized = false;
+          var initializeAmplitude = function () {
+            if (amplitudeInitialized) {
+              return;
+            }
+
+            if (window.amplitude && window.sessionReplay) {
+              window.amplitude.add(window.sessionReplay.plugin({ sampleRate: 0.1 }));
+              window.amplitude.init(amplitudeApiKey, { autocapture: { elementInteractions: true } });
+              amplitudeInitialized = true;
+            }
+          };
+
+          loadScript("https://cdn.amplitude.com/libs/analytics-browser-2.11.1-min.js.gz", { defer: true, onload: initializeAmplitude, attributes: { integrity: "sha384-XxDPxKDB79eXOLF+koPFe4h9iVF6LgQ1J6Do9sdhcohvTlVMK7EJE74b1b0iK3uK", crossorigin: "anonymous" } });
+          loadScript("https://cdn.amplitude.com/libs/plugin-session-replay-browser-1.25.0-min.js.gz", { defer: true, onload: initializeAmplitude, attributes: { integrity: "sha384-w/8o1T6e81D5lOWP8nN3YXVXE20le69jhB0ZMRw6bRV6HWtnj+wItvrFzecb+b9B", crossorigin: "anonymous" } });
+
+          if (document.readyState === "complete") {
+            initializeAmplitude();
+          } else {
+            window.addEventListener("load", initializeAmplitude, { once: true });
           }
-
-          if (window.amplitude && window.sessionReplay) {
-            window.amplitude.add(window.sessionReplay.plugin({ sampleRate: 0.1 }));
-            window.amplitude.init("%VITE_AMPLITUDE_API_KEY%", { autocapture: { elementInteractions: true } });
-            amplitudeInitialized = true;
-          }
-        };
-
-        loadScript("https://cdn.amplitude.com/libs/analytics-browser-2.11.1-min.js.gz", { defer: true, onload: initializeAmplitude, attributes: { integrity: "sha384-TQgP6oZ+yX8iXNS4m0H7LuWSyrhEfoifZx/7cP3qSQU869coM2r0irxJEPQ82Nl+", crossorigin: "anonymous" } });
-        loadScript("https://cdn.amplitude.com/libs/plugin-session-replay-browser-1.25.0-min.js.gz", { defer: true, onload: initializeAmplitude, attributes: { integrity: "sha384-KoMRtjnkikxJbtyEyY3IXWnq6JKDvqLY0s3Sv0weN1Ixr5vVBNELQ7gKNUEGMqcc", crossorigin: "anonymous" } });
-
-        if (document.readyState === "complete") {
-          initializeAmplitude();
-        } else {
-          window.addEventListener("load", initializeAmplitude, { once: true });
         }
       })();
     </script>

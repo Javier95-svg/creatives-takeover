@@ -608,7 +608,6 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
         nextUnreadCounts[conversationId] = (nextUnreadCounts[conversationId] || 0) + 1;
       });
 
-      console.log('[UNREAD_SYNC] Reloaded unread counts:', nextUnreadCounts);
       setUnreadCounts(nextUnreadCounts);
     } catch (error) {
       logError('Error loading unread counts', error);
@@ -1029,10 +1028,6 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
 
       await loadUnreadCounts(conversationIds);
 
-      console.log('[CONVERSATION_SYNC] Reloaded conversations from backend:', {
-        conversationCount: loadedConversations.length,
-        conversationIds
-      });
     } catch (error) {
       logError('Error loading conversations', error);
       if (!suppressLoadErrors) {
@@ -1058,7 +1053,6 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
           filter: `participants.cs.{${user.id}}`
         },
         () => {
-          console.log('[CONVERSATION_SYNC] Realtime conversation change received, reloading from backend');
           loadConversationsFromServer();
         }
       )
@@ -1085,11 +1079,6 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
             filter: `conversation_id=eq.${conversation.id}`
           },
           (payload) => {
-            console.log('[UNREAD_SYNC] Scoped message event received:', {
-              eventType: payload.eventType,
-              conversationId: conversation.id
-            });
-
             loadUnreadCounts([conversation.id]);
 
             // Keep sidebar ordering synchronized when conversations receive/lose messages.
@@ -1236,8 +1225,6 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
           filter: `conversation_id=eq.${activeConversationId}`
         },
         async (payload) => {
-          console.log('[REALTIME] Message event:', payload.eventType, payload);
-
           if (payload.eventType === 'DELETE') {
             setMessages(prev => ({
               ...prev,
@@ -2114,13 +2101,8 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
   const markAsRead = useCallback(async (conversationId: string) => {
     if (!user) return;
 
-    console.log('[MARK_READ] Marking conversation as read:', {
-      conversationId,
-      userId: user.id
-    });
-
     try {
-      const { data, error } = await safe.update(async () => {
+      const { error } = await safe.update(async () => {
         const result = await supabase
           .from('messages')
           .update({ is_read: true })
@@ -2132,15 +2114,8 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
       });
 
       if (error) {
-        console.error('[MARK_READ] Error:', error);
         throw error;
       }
-
-      const updatedCount = data?.length || 0;
-      console.log('[MARK_READ] Backend write succeeded:', {
-        conversationId,
-        updatedCount
-      });
 
       const unreadMessages = (messagesRef.current[conversationId] || []).filter(
         (message) => message.sender_id !== user.id && !message.is_read && !message.id.startsWith('temp-')
@@ -2190,7 +2165,6 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
       // Force reload from source of truth to prevent stale badge reappearance.
       await loadUnreadCounts([conversationId]);
     } catch (error) {
-      console.error('[MARK_READ] Exception:', error);
       logError('Error marking messages as read', error);
     }
   }, [user, loadUnreadCounts]);
@@ -2292,12 +2266,6 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
         return false;
       }
 
-      console.log('[DELETE] Attempting conversation removal:', {
-        conversationId,
-        userId: user.id,
-        participants: conversation.participants
-      });
-
       // Try hard delete first and verify the backend actually deleted rows.
       const { data: deletedRows, error: deleteError } = await safe.delete(async () =>
         await supabase
@@ -2308,14 +2276,12 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
       );
 
       if (deleteError) {
-        console.error('[DELETE] Hard delete failed:', deleteError);
         logError('Error deleting conversation', deleteError);
         toast.error('Failed to delete conversation');
         return false;
       }
 
       const hardDeleteCount = deletedRows?.length || 0;
-      let removalMode: 'hard-delete' | 'participant-removal' = 'hard-delete';
 
       if (hardDeleteCount === 0) {
         // Fallback for environments where DELETE policy is unavailable:
@@ -2331,20 +2297,12 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
         );
 
         if (participantUpdateError || !participantUpdateRows || participantUpdateRows.length === 0) {
-          console.error('[DELETE] Fallback participant removal failed:', participantUpdateError);
           logError('Error removing participant from conversation during delete fallback', participantUpdateError);
           toast.error('Failed to delete conversation');
           return false;
         }
 
-        removalMode = 'participant-removal';
       }
-
-      console.log('[DELETE] Backend write succeeded:', {
-        conversationId,
-        hardDeleteCount,
-        removalMode
-      });
 
       // Remove from local state only after successful database deletion
       setConversations(prev => prev.filter(c => c.id !== conversationId));
@@ -2370,7 +2328,6 @@ export const useMessaging = (options: UseMessagingOptions = {}) => {
       toast.success('Conversation deleted successfully');
       return true;
     } catch (error) {
-      console.error('[DELETE] Exception:', error);
       logError('Error deleting conversation', error);
       toast.error('Failed to delete conversation');
       return false;
