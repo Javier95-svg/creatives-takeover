@@ -88,7 +88,7 @@ export const NotificationBell = () => {
     }
 
     if (notification.notification_type === 'newspaper_article_published') {
-      navigateTo('/newspaper');
+      navigateTo(metadataRoute || '/newspaper');
       return;
     }
 
