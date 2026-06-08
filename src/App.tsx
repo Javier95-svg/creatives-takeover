@@ -135,8 +135,11 @@ const ProjectsDashboard = lazy(() => import("./components/dashboard/ProjectsDash
 const DemoStudioProjectsPage = lazy(() => import("./pages/demo-studio/ProjectsDashboardPage"));
 const DemoStudioProjectOverviewPage = lazy(() => import("./pages/demo-studio/ProjectOverviewPage"));
 const DemoStudioEditorPage = lazy(() => import("./pages/demo-studio/DemoEditorPage"));
+const DemoStudioVslStudioPage = lazy(() => import("./pages/demo-studio/VslStudioPage"));
+const DemoStudioLaunchComposerPage = lazy(() => import("./pages/demo-studio/LaunchComposerPage"));
 const PublicDemoPage = lazy(() => import("./pages/demo-studio/PublicDemoPage"));
 const EmbedDemoPage = lazy(() => import("./pages/demo-studio/EmbedDemoPage"));
+const PublicLaunchPage = lazy(() => import("./pages/demo-studio/PublicLaunchPage"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -288,6 +291,9 @@ function App() {
                         <Route path="/demo-studio/templates" element={<Navigate to="/demo-studio/classic/templates" replace />} />
                         <Route path="/demo-studio/projects/:id" element={<RouteErrorBoundary routeName="Demo Studio Project"><DemoStudioProjectOverviewPage /></RouteErrorBoundary>} />
                         <Route path="/demo-studio/projects/:projectId/demos/:demoId/edit" element={<RouteErrorBoundary routeName="Demo Editor"><DemoStudioEditorPage /></RouteErrorBoundary>} />
+                        <Route path="/demo-studio/projects/:id/vsl" element={<RouteErrorBoundary routeName="VSL Studio"><DemoStudioVslStudioPage /></RouteErrorBoundary>} />
+                        <Route path="/demo-studio/projects/:id/launch" element={<RouteErrorBoundary routeName="Launch Composer"><DemoStudioLaunchComposerPage /></RouteErrorBoundary>} />
+                        <Route path="/p/:slug" element={<PublicLaunchPage />} />
                         <Route path="/demo/:publicId" element={<PublicDemoPage />} />
                         <Route path="/embed/demo/:publicId" element={<EmbedDemoPage />} />
                         <Route path="/waitlist" element={<Navigate to="/demo-studio/classic" replace />} />

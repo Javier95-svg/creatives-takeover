@@ -4,18 +4,21 @@ import { toast } from 'sonner';
 import {
   ArrowLeft,
   ExternalLink,
+  Globe,
   Loader2,
   MonitorPlay,
   Pencil,
   Plus,
+  Rocket,
   Trash2,
+  Video,
 } from 'lucide-react';
 import SEO from '@/components/SEO';
 import Navigation from '@/components/Navigation';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
-import { createDemo, deleteDemo, getProject, listDemos } from '@/lib/demoStudio/api';
-import type { DemoStudioDemo, DemoStudioProject } from '@/lib/demoStudio/types';
+import { createDemo, deleteDemo, getProject, getProjectReadiness, listDemos, listVsls } from '@/lib/demoStudio/api';
+import type { DemoStudioDemo, DemoStudioProject, DemoStudioReadiness, DemoStudioVsl } from '@/lib/demoStudio/types';
 import GettingStartedChecklist, { type ChecklistStep } from '@/components/demo-studio/GettingStartedChecklist';
 import WhatIsADemoPopover from '@/components/demo-studio/WhatIsADemoPopover';
 
@@ -25,6 +28,8 @@ export default function ProjectOverviewPage() {
   const navigate = useNavigate();
   const [project, setProject] = useState<DemoStudioProject | null>(null);
   const [demos, setDemos] = useState<DemoStudioDemo[]>([]);
+  const [vsls, setVsls] = useState<DemoStudioVsl[]>([]);
+  const [readiness, setReadiness] = useState<DemoStudioReadiness | null>(null);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
 
@@ -36,9 +41,14 @@ export default function ProjectOverviewPage() {
     }
     if (!projectId) return;
     let active = true;
-    (async () => {
+    void (async () => {
       try {
-        const [projectRow, demoRows] = await Promise.all([getProject(projectId), listDemos(projectId)]);
+        const [projectRow, demoRows, vslRows, ready] = await Promise.all([
+          getProject(projectId),
+          listDemos(projectId),
+          listVsls(projectId),
+          getProjectReadiness(projectId),
+        ]);
         if (!active) return;
         if (!projectRow) {
           toast.error('Project not found.');
@@ -47,6 +57,8 @@ export default function ProjectOverviewPage() {
         }
         setProject(projectRow);
         setDemos(demoRows);
+        setVsls(vslRows);
+        setReadiness(ready);
       } catch (e) {
         toast.error(e instanceof Error ? e.message : 'Failed to load project.');
       } finally {
@@ -83,6 +95,7 @@ export default function ProjectOverviewPage() {
   };
 
   const hasPublishedDemo = demos.some((d) => d.status === 'published');
+  const hasVsl = vsls.length > 0;
   const firstDemoId = demos[0]?.id;
   const roadmapSteps: ChecklistStep[] = [
     {
@@ -102,14 +115,14 @@ export default function ProjectOverviewPage() {
     {
       label: 'Record a pitch video',
       description: 'Up to 3 Loom variations to A/B test on your launch page.',
-      done: false,
-      soon: true,
+      done: hasVsl,
+      action: { label: 'Open VSL Studio', to: `/demo-studio/projects/${projectId}/vsl` },
     },
     {
       label: 'Publish your launch page',
       description: 'Your demo + pitch + waitlist signup on one public page.',
-      done: false,
-      soon: true,
+      done: Boolean(project?.launch_published),
+      action: { label: 'Compose page', to: `/demo-studio/projects/${projectId}/launch` },
     },
   ];
 
@@ -144,10 +157,25 @@ export default function ProjectOverviewPage() {
 
         <GettingStartedChecklist
           title="Your launch roadmap"
-          subtitle="Build a demo first — the pitch video and launch page come next."
+          subtitle="Demo Studio is complete when your demo, pitch video, and launch page are all live."
           steps={roadmapSteps}
           className="mb-8"
         />
+
+        <div className="mb-8 grid gap-4 md:grid-cols-3">
+          <div className="rounded-xl border border-border bg-card p-4">
+            <p className="text-xs uppercase tracking-wide text-muted-foreground">Published demos</p>
+            <p className="mt-2 text-2xl font-semibold">{readiness?.publishedDemoCount ?? 0}</p>
+          </div>
+          <div className="rounded-xl border border-border bg-card p-4">
+            <p className="text-xs uppercase tracking-wide text-muted-foreground">VSL variations</p>
+            <p className="mt-2 text-2xl font-semibold">{readiness?.vslCount ?? 0}/3</p>
+          </div>
+          <div className="rounded-xl border border-border bg-card p-4">
+            <p className="text-xs uppercase tracking-wide text-muted-foreground">Launch page</p>
+            <p className="mt-2 text-2xl font-semibold">{project?.launch_published ? 'Live' : 'Draft'}</p>
+          </div>
+        </div>
 
         {/* Demos */}
         <section className="mb-10">
@@ -223,6 +251,45 @@ export default function ProjectOverviewPage() {
               ))}
             </div>
           )}
+        </section>
+
+        <section className="grid gap-4 md:grid-cols-2">
+          <div className="rounded-xl border border-border bg-card p-5">
+            <h2 className="flex items-center gap-2 text-lg font-semibold">
+              <Video className="h-5 w-5 text-primary" /> VSL Studio
+            </h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Record or paste up to three Loom pitch variations for this demo.
+            </p>
+            <Button asChild className="mt-4 gap-2">
+              <Link to={`/demo-studio/projects/${projectId}/vsl`}>
+                Open VSL Studio <Video className="h-4 w-4" />
+              </Link>
+            </Button>
+          </div>
+
+          <div className="rounded-xl border border-border bg-card p-5">
+            <h2 className="flex items-center gap-2 text-lg font-semibold">
+              <Globe className="h-5 w-5 text-primary" /> Launch Page
+            </h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Publish one page with the demo, VSL, and signup form.
+            </p>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <Button asChild className="gap-2">
+                <Link to={`/demo-studio/projects/${projectId}/launch`}>
+                  Compose page <Rocket className="h-4 w-4" />
+                </Link>
+              </Button>
+              {project?.launch_published && project.slug && (
+                <Button asChild variant="outline" className="gap-2">
+                  <a href={`/p/${project.slug}`} target="_blank" rel="noopener noreferrer">
+                    View live <ExternalLink className="h-4 w-4" />
+                  </a>
+                </Button>
+              )}
+            </div>
+          </div>
         </section>
       </main>
     </div>

@@ -8,10 +8,11 @@ import {
   ImagePlus,
   Loader2,
   MonitorPlay,
-  MousePointerClick,
   Plus,
+  Rocket,
   Share2,
   Sparkles,
+  Video,
 } from 'lucide-react';
 import SEO from '@/components/SEO';
 import Navigation from '@/components/Navigation';
@@ -35,9 +36,11 @@ import GettingStartedChecklist, { type ChecklistStep } from '@/components/demo-s
 import WhatIsADemoPopover from '@/components/demo-studio/WhatIsADemoPopover';
 
 const HOW_IT_WORKS = [
-  { icon: ImagePlus, step: '1', title: 'Upload screenshots', desc: 'Each image becomes a step in the walkthrough.' },
-  { icon: MousePointerClick, step: '2', title: 'Add hotspots', desc: 'Drag clickable regions that advance or link out.' },
-  { icon: Share2, step: '3', title: 'Publish & share', desc: 'Get a public link and an embed for your site or deck.' },
+  { icon: Sparkles, step: '1', title: 'Define the story', desc: 'Audience, promise, aha moment, and CTA.' },
+  { icon: ImagePlus, step: '2', title: 'Build the demo', desc: 'Screenshots, captions, and hotspots.' },
+  { icon: Video, step: '3', title: 'Record the VSL', desc: 'Save up to three Loom pitch variations.' },
+  { icon: Rocket, step: '4', title: 'Publish the page', desc: 'One URL with demo, pitch, and signup.' },
+  { icon: Share2, step: '5', title: 'Measure interest', desc: 'Views, VSL impressions, and signups.' },
 ];
 
 export default function ProjectsDashboardPage() {
@@ -58,7 +61,7 @@ export default function ProjectsDashboardPage() {
       return;
     }
     let active = true;
-    (async () => {
+    void (async () => {
       try {
         const [rows, demoCounts] = await Promise.all([
           listProjects(user.id),
@@ -110,7 +113,7 @@ export default function ProjectsDashboardPage() {
     },
     {
       label: 'Publish & share',
-      description: 'Get a public link and an embed snippet you can send anywhere.',
+      description: 'Publish a demo, record a VSL, then ship the launch page.',
       done: counts.published > 0,
       action: recentProjectId
         ? { label: 'Open project', to: `/demo-studio/projects/${recentProjectId}` }
@@ -137,13 +140,12 @@ export default function ProjectsDashboardPage() {
               <Sparkles className="h-3.5 w-3.5" /> Demo Studio · Prototype stage
             </span>
             <h1 className="creatives-font mt-4 text-4xl font-bold leading-[1.05] md:text-5xl">
-              Build a <span className="takeover-gradient">clickable product demo</span> in an afternoon
+              Build a <span className="takeover-gradient">demo + founder pitch</span> in an afternoon
             </h1>
             <p className="mt-4 text-base text-muted-foreground md:text-lg">
-              A demo is an{' '}
-              <strong className="font-semibold text-foreground">interactive, click-through walkthrough</strong> of your
-              product — built from screenshots with clickable hotspots. It is <span className="text-foreground">not</span>{' '}
-              a landing page; that's your <span className="whitespace-nowrap">Launch Page</span> (coming next).
+              Define the product story, turn screenshots into an{' '}
+              <strong className="font-semibold text-foreground">interactive walkthrough</strong>, record a VSL, and
+              publish one proof page with signup capture.
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
               <Button size="lg" className="gap-2" onClick={() => setDialogOpen(true)}>
@@ -162,7 +164,7 @@ export default function ProjectsDashboardPage() {
 
         {/* How it works — concretely defines a "demo" */}
         {!allChecklistDone && (
-          <div className="mb-8 grid gap-4 sm:grid-cols-3">
+          <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
             {HOW_IT_WORKS.map((s) => (
               <div key={s.step} className="rounded-2xl border border-border/60 bg-card p-5">
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 text-primary">
@@ -282,7 +284,7 @@ export default function ProjectsDashboardPage() {
                 placeholder="e.g. Acme Analytics"
                 onChange={(e) => setName(e.target.value)}
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter') handleCreate();
+                  if (e.key === 'Enter') void handleCreate();
                 }}
               />
             </div>

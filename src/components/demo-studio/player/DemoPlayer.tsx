@@ -26,7 +26,7 @@ export default function DemoPlayer({
   projectId = null,
   demoId = null,
   ctaHref = null,
-  ctaLabel = 'Get started',
+  ctaLabel,
   className,
 }: DemoPlayerProps) {
   const [index, setIndex] = useState(0);
@@ -34,6 +34,8 @@ export default function DemoPlayer({
   const primaryColor = theme?.primaryColor || '#6366f1';
   const total = steps.length;
   const current = steps[index];
+  const resolvedCtaLabel = ctaLabel || theme?.endCtaLabel || 'Get started';
+  const resolvedCtaHref = ctaHref || theme?.endCtaHref || null;
 
   // Emit a single demo_view per session when the player goes live.
   useEffect(() => {
@@ -127,9 +129,9 @@ export default function DemoPlayer({
             <h3 className="text-2xl font-semibold">That's the demo 🎬</h3>
             <p className="max-w-sm text-sm text-white/70">Thanks for watching. Want to see more?</p>
             <div className="flex flex-wrap items-center justify-center gap-3">
-              {ctaHref && (
+              {resolvedCtaHref && (
                 <Button asChild style={{ backgroundColor: primaryColor }}>
-                  <a href={ctaHref}>{ctaLabel}</a>
+                  <a href={resolvedCtaHref}>{resolvedCtaLabel}</a>
                 </Button>
               )}
               <Button variant="outline" onClick={restart} className="gap-2 bg-white/10 text-white hover:bg-white/20">
@@ -193,6 +195,12 @@ export default function DemoPlayer({
               >
                 Made with Creatives Takeover
               </a>
+            )}
+            {(current?.title || current?.caption) && (
+              <div className="absolute inset-x-3 bottom-3 max-w-xl rounded-lg bg-slate-950/85 p-3 text-white shadow-lg backdrop-blur">
+                {current.title && <h3 className="text-sm font-semibold">{current.title}</h3>}
+                {current.caption && <p className="mt-1 text-xs text-white/75">{current.caption}</p>}
+              </div>
             )}
           </div>
         )}

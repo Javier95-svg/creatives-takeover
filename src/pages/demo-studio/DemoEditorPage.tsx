@@ -5,6 +5,7 @@ import {
   ArrowLeft,
   Check,
   Copy,
+  CopyPlus,
   Eye,
   Globe,
   ImagePlus,
@@ -16,6 +17,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Dialog,
   DialogContent,
@@ -35,6 +37,7 @@ import {
   createStep,
   deleteHotspot,
   deleteStep,
+  duplicateStep,
   getDemo,
   listHotspotsForDemo,
   listSteps,
@@ -42,6 +45,7 @@ import {
   publishDemo,
   updateDemo,
   updateHotspot,
+  updateStep,
   uploadStepAsset,
 } from '@/lib/demoStudio/api';
 import type {
@@ -180,6 +184,36 @@ export default function DemoEditorPage() {
     } catch {
       setSteps(prev);
       toast.error('Could not delete the step.');
+    }
+  };
+
+  const handleDuplicateStep = async (id: string) => {
+    const step = steps.find((item) => item.id === id);
+    if (!step) return;
+    try {
+      const created = await duplicateStep(step, steps.length);
+      setSteps((prev) => [...prev, created]);
+      setSelectedStepId(created.id);
+      setSelectedHotspotId(null);
+      toast.success('Step duplicated.');
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Could not duplicate the step.');
+    }
+  };
+
+  const patchStepLocal = useCallback((id: string, patch: Partial<DemoStepWithHotspots>) => {
+    setSteps((prev) => prev.map((step) => (step.id === id ? { ...step, ...patch } : step)));
+  }, []);
+
+  const handleStepFieldCommit = async (
+    id: string,
+    patch: Partial<Pick<DemoStepWithHotspots, 'title' | 'caption' | 'speaker_notes'>>,
+  ) => {
+    patchStepLocal(id, patch);
+    try {
+      await updateStep(id, patch);
+    } catch {
+      toast.error('Could not save step details.');
     }
   };
 
@@ -365,6 +399,7 @@ export default function DemoEditorPage() {
             }}
             onReorder={handleReorder}
             onDelete={handleDeleteStep}
+            onDuplicate={handleDuplicateStep}
             onAddClick={() => fileInputRef.current?.click()}
           />
         </aside>
@@ -426,6 +461,39 @@ export default function DemoEditorPage() {
 
         {/* Right: inspector + theme */}
         <aside className="space-y-4 lg:sticky lg:top-[68px] lg:h-fit">
+          <div className="space-y-4 rounded-xl border border-border bg-card p-4">
+            <h4 className="text-sm font-semibold">Demo brief</h4>
+            <div className="space-y-1.5">
+              <Label htmlFor="brief-audience">Audience</Label>
+              <Input
+                id="brief-audience"
+                defaultValue={theme.brief?.audience ?? ''}
+                placeholder="Who needs to see this?"
+                onBlur={(e) => updateTheme({ brief: { ...theme.brief, audience: e.target.value || undefined } })}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="brief-promise">Product promise</Label>
+              <Textarea
+                id="brief-promise"
+                rows={2}
+                defaultValue={theme.brief?.promise ?? ''}
+                placeholder="The clear outcome your product creates."
+                onBlur={(e) => updateTheme({ brief: { ...theme.brief, promise: e.target.value || undefined } })}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="brief-aha">Aha moment</Label>
+              <Textarea
+                id="brief-aha"
+                rows={2}
+                defaultValue={theme.brief?.ahaMoment ?? ''}
+                placeholder="The moment the viewer should understand the value."
+                onBlur={(e) => updateTheme({ brief: { ...theme.brief, ahaMoment: e.target.value || undefined } })}
+              />
+            </div>
+          </div>
+
           <HotspotInspector
             hotspot={selectedHotspot}
             stepCount={steps.length}
@@ -434,7 +502,74 @@ export default function DemoEditorPage() {
           />
 
           <div className="space-y-4 rounded-xl border border-border bg-card p-4">
+            <div className="flex items-center justify-between gap-2">
+              <h4 className="text-sm font-semibold">Step script</h4>
+              {selectedStep && (
+                <Button size="sm" variant="ghost" className="h-8 gap-1" onClick={() => handleDuplicateStep(selectedStep.id)}>
+                  <CopyPlus className="h-4 w-4" /> Duplicate
+                </Button>
+              )}
+            </div>
+            {selectedStep ? (
+              <div className="space-y-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="step-title">Step title</Label>
+                  <Input
+                    id="step-title"
+                    value={selectedStep.title ?? ''}
+                    placeholder="e.g. Create your first project"
+                    onChange={(e) => patchStepLocal(selectedStep.id, { title: e.target.value })}
+                    onBlur={(e) => handleStepFieldCommit(selectedStep.id, { title: e.target.value || null })}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="step-caption">Viewer caption</Label>
+                  <Textarea
+                    id="step-caption"
+                    rows={3}
+                    value={selectedStep.caption ?? ''}
+                    placeholder="Tell viewers what they are seeing and why it matters."
+                    onChange={(e) => patchStepLocal(selectedStep.id, { caption: e.target.value })}
+                    onBlur={(e) => handleStepFieldCommit(selectedStep.id, { caption: e.target.value || null })}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="speaker-notes">VSL speaker notes</Label>
+                  <Textarea
+                    id="speaker-notes"
+                    rows={3}
+                    value={selectedStep.speaker_notes ?? ''}
+                    placeholder="Notes for what to say when recording your VSL."
+                    onChange={(e) => patchStepLocal(selectedStep.id, { speaker_notes: e.target.value })}
+                    onBlur={(e) => handleStepFieldCommit(selectedStep.id, { speaker_notes: e.target.value || null })}
+                  />
+                </div>
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">Select a step to write its guide copy.</p>
+            )}
+          </div>
+
+          <div className="space-y-4 rounded-xl border border-border bg-card p-4">
             <h4 className="text-sm font-semibold">Theme</h4>
+            <div className="space-y-1.5">
+              <Label htmlFor="demo-cta-label">End CTA label</Label>
+              <Input
+                id="demo-cta-label"
+                defaultValue={theme.endCtaLabel ?? ''}
+                placeholder="Join the waitlist"
+                onBlur={(e) => updateTheme({ endCtaLabel: e.target.value || undefined })}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="demo-cta-url">End CTA URL</Label>
+              <Input
+                id="demo-cta-url"
+                defaultValue={theme.endCtaHref ?? ''}
+                placeholder="/p/your-launch-page"
+                onBlur={(e) => updateTheme({ endCtaHref: e.target.value || undefined })}
+              />
+            </div>
             <div className="flex items-center justify-between">
               <Label htmlFor="primary-color">Primary color</Label>
               <input

@@ -379,41 +379,41 @@ export const INDEXABLE_ROUTES = [
   },
   {
     path: "/demo-studio",
-    title: "Startup Waitlist Page Builder | Creatives Takeover",
+    title: "Demo Studio for Startup Founders | Creatives Takeover",
     description:
-      "Build a startup waitlist page, capture early signups, and validate demand before spending time on development.",
+      "Build an interactive product demo, record a founder VSL, and publish one proof page with signup capture.",
     changefreq: "weekly",
     priority: 0.75,
-    heroHeading: "Startup Waitlist Page Builder",
+    heroHeading: "Demo Studio for Startup Founders",
     heroCopy:
-      "Create a pre-launch page, explain your offer clearly, and collect real demand signals before you build the product.",
-    updatedLabel: "March 2026",
+      "Turn a rough product idea into something people can actually see: a click-through demo, a founder pitch video, and a public launch page.",
+    updatedLabel: "June 2026",
     sections: [
       {
         heading: "What Demo Studio is for",
-        copy: "Demo Studio helps founders launch a pre-release page that explains the offer clearly and captures early demand before product development is fully underway.",
+        copy: "Demo Studio helps founders create the assets they need to show the product before the product is fully mature: an interactive demo and a VSL.",
       },
       {
-        heading: "Why a waitlist matters",
-        copy: "A waitlist gives you evidence. It shows whether people understand the value proposition, whether the message is working, and whether real signups exist before you invest more time.",
+        heading: "Why a demo matters",
+        copy: "A demo gives people something concrete to react to. It is easier to validate interest when prospects can click through the experience and hear the founder explain the value.",
       },
       {
         heading: "What founders learn from it",
-        copy: "You learn whether your headline, offer, and audience are strong enough to attract interest, which makes later MVP and launch decisions less risky.",
+        copy: "You learn whether the walkthrough, pitch angle, and CTA are strong enough to earn attention and signups.",
       },
     ],
     faqs: [
       {
-        question: "Why should founders build a waitlist before an MVP?",
-        answer: "A waitlist is a lightweight way to test demand before you build. If people will not sign up for the idea, that is an important signal to catch early.",
+        question: "What can founders build in Demo Studio?",
+        answer: "Founders can build a clickable product demo, save up to three VSL pitch variations, and publish a launch page that combines the demo, video, and signup form.",
       },
       {
-        question: "What should a startup waitlist page include?",
-        answer: "It should clearly explain the problem, the offer, who it is for, and why someone should sign up now instead of waiting.",
+        question: "Does Demo Studio replace a waitlist page?",
+        answer: "Yes. The launch page still captures signups, but it is backed by an interactive demo and founder pitch so visitors have something real to evaluate.",
       },
       {
-        question: "Can a waitlist page help with investor conversations?",
-        answer: "Yes. Even early signup interest can strengthen your story by showing that real people responded to the positioning and offer.",
+        question: "Why record multiple VSL variations?",
+        answer: "Different hooks and CTAs can change conversion. Demo Studio stores up to three variations so founders can compare the pitch angles that earn the most signups.",
       },
     ],
   },

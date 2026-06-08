@@ -13,7 +13,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { GripVertical, Loader2, Plus, Trash2 } from 'lucide-react';
+import { Copy, GripVertical, Loader2, Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import type { DemoStudioStep } from '@/lib/demoStudio/types';
@@ -25,6 +25,7 @@ interface StepThumbnailListProps {
   onSelect: (id: string) => void;
   onReorder: (orderedIds: string[]) => void;
   onDelete: (id: string) => void;
+  onDuplicate?: (id: string) => void;
   onAddClick: () => void;
 }
 
@@ -34,12 +35,14 @@ function SortableStep({
   selected,
   onSelect,
   onDelete,
+  onDuplicate,
 }: {
   step: DemoStudioStep;
   index: number;
   selected: boolean;
   onSelect: (id: string) => void;
   onDelete: (id: string) => void;
+  onDuplicate?: (id: string) => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: step.id,
@@ -77,7 +80,21 @@ function SortableStep({
         ) : (
           <span className="h-10 w-16 rounded bg-muted" />
         )}
+        <span className="min-w-0 truncate text-xs text-muted-foreground">
+          {step.title || `Step ${index + 1}`}
+        </span>
       </button>
+      {onDuplicate && (
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7 text-muted-foreground opacity-0 transition group-hover:opacity-100"
+          onClick={() => onDuplicate(step.id)}
+          aria-label="Duplicate step"
+        >
+          <Copy className="h-3.5 w-3.5" />
+        </Button>
+      )}
       <Button
         variant="ghost"
         size="icon"
@@ -98,6 +115,7 @@ export default function StepThumbnailList({
   onSelect,
   onReorder,
   onDelete,
+  onDuplicate,
   onAddClick,
 }: StepThumbnailListProps) {
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
@@ -136,6 +154,7 @@ export default function StepThumbnailList({
                   selected={step.id === selectedStepId}
                   onSelect={onSelect}
                   onDelete={onDelete}
+                  onDuplicate={onDuplicate}
                 />
               ))}
             </div>
