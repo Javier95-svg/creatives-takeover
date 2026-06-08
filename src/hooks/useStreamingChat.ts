@@ -153,6 +153,7 @@ export const streamChat = async (
           const reader = response.body.getReader();
           const decoder = new TextDecoder();
           let buffer = '';
+          let hasCompleted = false;
 
           console.log('📡 SSE connection established');
 
@@ -163,7 +164,10 @@ export const streamChat = async (
                 
                 if (done) {
                   console.log('✅ Stream complete. Message length:', fullMessage.length);
-                  onComplete?.(fullMessage);
+                  if (!hasCompleted) {
+                    hasCompleted = true;
+                    onComplete?.(fullMessage);
+                  }
                   resolve(fullMessage);
                   break;
                 }
@@ -179,6 +183,11 @@ export const streamChat = async (
                   const data = line.slice(6).trim();
                   
                   if (data === '[DONE]') {
+                    if (hasCompleted) {
+                      resolve(fullMessage);
+                      return;
+                    }
+                    hasCompleted = true;
                     console.log('✅ Received [DONE] signal');
                     onComplete?.(fullMessage);
                     resolve(fullMessage);
@@ -196,10 +205,14 @@ export const streamChat = async (
                       onSources?.(parsed.sources);
                     } else if (parsed.type === 'complete') {
                       console.log('✅ Stream complete with quick actions and sources');
+                      hasCompleted = true;
                       onComplete?.(fullMessage, parsed.quickActions, parsed.sources);
                     } else if (parsed.type === 'error') {
                       console.error('❌ Stream error:', parsed.error);
-                      throw new Error(parsed.error);
+                      const streamError = new Error(parsed.error);
+                      onError?.(streamError);
+                      reject(streamError);
+                      return;
                     }
                   } catch (parseError) {
                     console.error('⚠️ Parse error:', parseError, 'Data:', data.substring(0, 100));

@@ -324,6 +324,10 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  let safeMessage = '';
+  let safeChatMode = 'wizard';
+  let safeSupabase: any = null;
+
   try {
     logInfo('🔍 DEBUG: Request received', { method: req.method, hasBody: !!req.body });
     
@@ -338,7 +342,10 @@ serve(async (req) => {
       chatMode: requestedChatMode = 'wizard',
       attachments = []
     } = await req.json();
+    safeMessage = typeof message === 'string' ? message : '';
     const chatMode = inferChatMode(requestedChatMode, businessContext);
+    safeChatMode = chatMode;
+    const persistedChatMode = chatMode === 'pulse' ? 'freeform' : chatMode;
     const authUser = await getUserFromAuth(req);
     const resolvedUserId = authUser?.id ?? null;
 
@@ -377,6 +384,7 @@ serve(async (req) => {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
+    safeSupabase = supabase;
 
     // 🎯 ROUTE: If bizmap-structured mode, route to structured system
     if (chatMode === 'bizmap-structured') {
@@ -400,7 +408,7 @@ serve(async (req) => {
           user_id: resolvedUserId,
           business_context: businessContext,
           conversation_stage: 'discovery',
-          chat_mode: chatMode
+          chat_mode: persistedChatMode
         })
         .select()
         .single();
@@ -646,18 +654,20 @@ serve(async (req) => {
     logError('🔍 DEBUG: Error caught in main handler', {
       errorMessage: error?.message,
       errorStack: error?.stack?.substring(0, 500),
-      chatMode,
-      messageLength: message?.length || 0,
+      chatMode: safeChatMode,
+      messageLength: safeMessage.length,
     });
     logError('Chatbot Streaming Error', {
       error: error.message,
       stack: error.stack,
-      chatMode,
-      messageLength: message?.length || 0,
+      chatMode: safeChatMode,
+      messageLength: safeMessage.length,
     });
     
     // Track error metrics
-    trackPerformanceMetrics(supabase, `req_${Date.now()}`, 0, 0, 'unknown', false, 1).catch(() => {});
+    if (safeSupabase) {
+      trackPerformanceMetrics(safeSupabase, `req_${Date.now()}`, 0, 0, 'unknown', false, 1).catch(() => {});
+    }
     
     return new Response(JSON.stringify({ 
       error: "I'm experiencing technical difficulties. Please try again.",
@@ -2875,7 +2885,7 @@ async function createAIStream(messages: ChatMessage[], userMessage: string, conv
   });
 
   // 🚀 OPTIMIZATION: Use retry logic with exponential backoff and timeout
-  let aiResponse: Response;
+  let aiResponse: Response | null = null;
   
   // Check if DeepSeek model is selected
   const isDeepSeekModel = selectedModel.startsWith('deepseek-');
@@ -2938,6 +2948,7 @@ async function createAIStream(messages: ChatMessage[], userMessage: string, conv
     const isDeepSeek = selectedModel.startsWith('deepseek-');
     const isGemini = selectedModel.includes('gemini');
     const shouldTryPulseFallback = selectedModel === PULSE_PRIMARY_MODEL;
+    let recoveredFromApiException = false;
 
     // If Gemini 3 Flash fails at the gateway level, keep Pulse alive on Gemini 2.5 Flash.
     if (shouldTryPulseFallback) {
@@ -2966,33 +2977,8 @@ async function createAIStream(messages: ChatMessage[], userMessage: string, conv
 
         if (fallbackResponse?.ok) {
           logInfo('Pulse stable Gemini fallback succeeded', { requestId, fallbackModel: PULSE_FALLBACK_MODEL });
-          const reader = fallbackResponse.body?.getReader();
-          if (reader) {
-            return new Response(
-              new ReadableStream({
-                async start(controller) {
-                  try {
-                    while (true) {
-                      const { done, value } = await reader.read();
-                      if (done) break;
-                      controller.enqueue(value);
-                    }
-                    controller.close();
-                  } catch (error) {
-                    controller.error(error);
-                  }
-                }
-              }),
-              {
-                headers: {
-                  ...corsHeaders,
-                  'Content-Type': 'text/event-stream',
-                  'Cache-Control': 'no-cache',
-                  'Connection': 'keep-alive'
-                }
-              }
-            );
-          }
+          aiResponse = fallbackResponse;
+          recoveredFromApiException = true;
         }
       } catch (fallbackError: any) {
         logError('Pulse stable Gemini fallback failed', { requestId, error: fallbackError?.message });
@@ -3027,33 +3013,8 @@ async function createAIStream(messages: ChatMessage[], userMessage: string, conv
         
         if (fallbackResponse?.ok) {
           logInfo('🔍 DEBUG: Gemini fallback succeeded after DeepSeek failure', { requestId });
-          const reader = fallbackResponse.body?.getReader();
-          if (reader) {
-            return new Response(
-              new ReadableStream({
-                async start(controller) {
-                  try {
-                    while (true) {
-                      const { done, value } = await reader.read();
-                      if (done) break;
-                      controller.enqueue(value);
-                    }
-                    controller.close();
-                  } catch (error) {
-                    controller.error(error);
-                  }
-                }
-              }),
-              {
-                headers: {
-                  ...corsHeaders,
-                  'Content-Type': 'text/event-stream',
-                  'Cache-Control': 'no-cache',
-                  'Connection': 'keep-alive'
-                }
-              }
-            );
-          }
+          aiResponse = fallbackResponse;
+          recoveredFromApiException = true;
         }
       } catch (fallbackError: any) {
         logError('🔍 DEBUG: Gemini fallback also failed', { requestId, error: fallbackError?.message });
@@ -3062,6 +3023,7 @@ async function createAIStream(messages: ChatMessage[], userMessage: string, conv
 
     // Refund credits if all AI API attempts failed (including fallbacks) and credits were charged
     // This runs only if we reach here (fallbacks failed or didn't apply)
+    if (!recoveredFromApiException) {
     const shouldRefund = conversation.user_id && conversation.chat_mode !== 'tour-guide';
     if (shouldRefund) {
       try {
@@ -3093,6 +3055,11 @@ async function createAIStream(messages: ChatMessage[], userMessage: string, conv
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
     );
+    }
+  }
+
+  if (!aiResponse) {
+    throw new Error('AI response was not initialized');
   }
 
   if (!aiResponse.ok) {
@@ -3310,37 +3277,11 @@ async function createAIStream(messages: ChatMessage[], userMessage: string, conv
     
     if (fallbackResponse?.ok) {
       logInfo('🔍 DEBUG: Fallback succeeded', { requestId, fallbackModel });
-      const reader = fallbackResponse.body?.getReader();
-      if (reader) {
-        return new Response(
-          new ReadableStream({
-            async start(controller) {
-              try {
-                while (true) {
-                  const { done, value } = await reader.read();
-                  if (done) break;
-                  controller.enqueue(value);
-                }
-                controller.close();
-              } catch (error) {
-                controller.error(error);
-              }
-            }
-          }),
-          {
-            headers: {
-              ...corsHeaders,
-              'Content-Type': 'text/event-stream',
-              'Cache-Control': 'no-cache',
-              'Connection': 'keep-alive'
-            }
-          }
-        );
-      }
+      aiResponse = fallbackResponse;
+    } else {
+      // If all fallbacks fail, throw error
+      throw new Error(`AI Error: ${aiResponse.status} - ${err}`);
     }
-    
-    // If all fallbacks fail, throw error
-    throw new Error(`AI Error: ${aiResponse.status} - ${err}`);
   }
 
   const stream = new ReadableStream({
