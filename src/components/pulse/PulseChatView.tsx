@@ -51,7 +51,7 @@ export const PulseChatView = ({ messages, isStreaming, quickReplies, onSendMessa
     }
   };
 
-  const showQuickReplies = messages.length <= 1 && !isStreaming;
+  const showQuickReplies = quickReplies.length > 0 && !isStreaming;
 
   return (
     <div className="grid h-full min-h-0 grid-rows-[minmax(0,1fr)_auto] overflow-hidden">

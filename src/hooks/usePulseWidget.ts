@@ -14,6 +14,21 @@ export interface PulseMessage {
   timestamp: Date;
 }
 
+interface PulseQuickAction {
+  text: string;
+  id: string;
+}
+
+const DEFAULT_PULSE_REPLIES = ['What should I focus on?', 'Show the roadmap', 'Recommend a tool'];
+
+function toThreeQuickReplies(replies: string[]): string[] {
+  const uniqueReplies = [...replies, ...DEFAULT_PULSE_REPLIES].filter((reply, index, all) => (
+    reply.trim().length > 0 && all.indexOf(reply) === index
+  ));
+
+  return uniqueReplies.slice(0, 3);
+}
+
 interface PulseContext {
   userName: string | null;
   businessStage: string | null;
@@ -264,6 +279,7 @@ export const usePulseWidget = () => {
   // Chat state
   const [messages, setMessages] = useState<PulseMessage[]>([]);
   const [isStreaming, setIsStreaming] = useState(false);
+  const [latestQuickReplies, setLatestQuickReplies] = useState<string[] | null>(null);
   const sessionIdRef = useRef(crypto.randomUUID());
 
   // Context
@@ -395,6 +411,7 @@ export const usePulseWidget = () => {
   // Send a chat message
   const sendMessage = useCallback(async (text: string) => {
     if (!text.trim() || isStreaming) return;
+    setLatestQuickReplies(null);
 
     const userMessage: PulseMessage = {
       id: 'user-' + Date.now(),
@@ -463,7 +480,12 @@ export const usePulseWidget = () => {
             )
           );
         },
-        () => {
+        (_fullMessage, quickActions?: PulseQuickAction[]) => {
+          if (quickActions?.length) {
+            setLatestQuickReplies(toThreeQuickReplies(quickActions.map((action) => action.text)));
+          } else {
+            setLatestQuickReplies((current) => current ?? null);
+          }
           setIsStreaming(false);
         },
         undefined, // onSources
@@ -487,36 +509,40 @@ export const usePulseWidget = () => {
 
   // Get quick replies based on context
   const getQuickReplies = useCallback((): string[] => {
+    if (latestQuickReplies?.length) {
+      return toThreeQuickReplies(latestQuickReplies);
+    }
+
     if (!isAuthenticated) {
-      return [
+      return toThreeQuickReplies([
         'What is this platform?',
         'Show me pricing',
         'How does the AI work?',
-      ];
+      ]);
     }
 
     if (context?.businessStage === 'idea') {
-      return ['Help me validate my idea', 'Find my ICP', 'Review my concept'];
+      return toThreeQuickReplies(['Help me validate my idea', 'Find my ICP', 'Review my concept']);
     }
     if (context?.businessStage === 'validation') {
-      return ['Plan customer interviews', 'Analyze my feedback', 'Check my PMF score'];
+      return toThreeQuickReplies(['Plan customer interviews', 'Analyze my feedback', 'Check my PMF score']);
     }
     if (context?.businessStage === 'mvp') {
-      return ['Help me ship faster', 'Find beta users', 'Review my MVP'];
+      return toThreeQuickReplies(['Help me ship faster', 'Find beta users', 'Review my MVP']);
     }
     if (context?.businessStage === 'launched' || context?.businessStage === 'scaling') {
-      return ['Growth strategies', 'Fundraising readiness', 'Optimize my metrics'];
+      return toThreeQuickReplies(['Growth strategies', 'Fundraising readiness', 'Optimize my metrics']);
     }
 
     if (routeContext?.toolName === 'ICP Builder') {
-      return ['What should I focus on?', 'Sharpen my ICP', 'Review my positioning'];
+      return toThreeQuickReplies(['What should I focus on?', 'Sharpen my ICP', 'Review my positioning']);
     }
     if (routeContext?.toolName === 'GTM Strategist') {
-      return ['What channel first?', 'Review my offer', 'Find first customers'];
+      return toThreeQuickReplies(['What channel first?', 'Review my offer', 'Find first customers']);
     }
 
-    return ['What should I focus on?', 'Use my project context', 'Suggest next step'];
-  }, [isAuthenticated, context, routeContext]);
+    return toThreeQuickReplies(['What should I focus on?', 'Use my project context', 'Suggest next step']);
+  }, [latestQuickReplies, isAuthenticated, context, routeContext]);
 
   return {
     // UI state
