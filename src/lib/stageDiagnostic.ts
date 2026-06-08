@@ -231,6 +231,7 @@ export const STAGES: Record<FounderStageId, StageMeta> = {
       "You are preparing or actively working an investor process. The priority is your pitch, investor list, traction narrative, and data room.",
     topFocus: [
       { label: "Search VCs", href: "/vc-search" },
+      { label: "Find accelerators", href: "/accelerator-hunt" },
       { label: "Analyze your pitch deck", href: "/pitch-deck-analyzer" },
     ],
   },

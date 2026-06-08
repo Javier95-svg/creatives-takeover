@@ -110,6 +110,14 @@ export const BIZMAP_TOOLS: BizMapToolDefinition[] = [
     icon: Target,
   },
   {
+    id: 'accelerator-hunt',
+    name: 'Accelerator Hunt',
+    route: '/accelerator-hunt',
+    stage: 'FUNDRAISING',
+    description: 'Find accelerator programs that match your geography, format, focus area, and funding needs.',
+    icon: Rocket,
+  },
+  {
     id: 'pitch-deck-analyzer',
     name: 'Pitch Deck Analyzer',
     route: '/pitch-deck-analyzer',
@@ -221,6 +229,7 @@ export const STAGE_TASKS: Record<BizMapStage, StageTaskTemplate[]> = {
   FUNDRAISING: [
     { id: 'fundraising-pitch-deck', stage: 'FUNDRAISING', title: 'Review your pitch deck narrative', priority: 'high', route: '/pitch-deck-analyzer' },
     { id: 'fundraising-investor-list', stage: 'FUNDRAISING', title: 'Build a target investor list', priority: 'high', route: '/vc-search' },
+    { id: 'fundraising-accelerator-shortlist', stage: 'FUNDRAISING', title: 'Shortlist accelerator programs that fit your stage', priority: 'medium', route: '/accelerator-hunt' },
     { id: 'fundraising-traction-story', stage: 'FUNDRAISING', title: 'Write the traction story investors should remember', priority: 'high', route: '/go-to-market' },
     { id: 'fundraising-data-room', stage: 'FUNDRAISING', title: 'Prepare a lightweight data room checklist', priority: 'medium', route: '/vc-search' },
   ],
