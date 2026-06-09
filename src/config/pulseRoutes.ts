@@ -33,7 +33,7 @@ export const PULSE_ROUTE_CONTEXTS: PulseRouteContext[] = [
   {
     pathPrefix: "/demo-studio",
     toolName: "Demo Studio",
-    toolPurpose: "helping the founder shape a demo, waitlist, or validation page",
+    toolPurpose: "helping the founder build an interactive demo, record a VSL, and publish a launch page",
   },
   {
     pathPrefix: "/tech-stack",
