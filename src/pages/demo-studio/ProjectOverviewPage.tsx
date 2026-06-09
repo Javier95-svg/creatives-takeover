@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import {
   ArrowLeft,
   ExternalLink,
+  FileText,
   Globe,
   Loader2,
   MonitorPlay,
@@ -99,8 +100,14 @@ export default function ProjectOverviewPage() {
   const firstDemoId = demos[0]?.id;
   const roadmapSteps: ChecklistStep[] = [
     {
-      label: 'Build a demo',
-      description: 'Upload screenshots, then add clickable hotspots.',
+      label: 'Define the proof story',
+      description: 'Audience, pain, promise, aha moment, and CTA before screenshots.',
+      done: Boolean(readiness?.hasBrief),
+      action: { label: 'Open brief', to: `/demo-studio/projects/${projectId}/brief` },
+    },
+    {
+      label: 'Build a guided demo',
+      description: 'Apply the storyboard, upload screenshots, then add clickable hotspots.',
       done: demos.length > 0,
       action: { label: 'New demo', onClick: handleCreateDemo },
     },
@@ -120,7 +127,7 @@ export default function ProjectOverviewPage() {
     },
     {
       label: 'Publish your launch page',
-      description: 'Your demo + pitch + waitlist signup on one public page.',
+      description: 'Your demo + pitch + early-access signup on one public page.',
       done: Boolean(project?.launch_published),
       action: { label: 'Compose page', to: `/demo-studio/projects/${projectId}/launch` },
     },
@@ -162,7 +169,11 @@ export default function ProjectOverviewPage() {
           className="mb-8"
         />
 
-        <div className="mb-8 grid gap-4 md:grid-cols-3">
+        <div className="mb-8 grid gap-4 md:grid-cols-4">
+          <div className="rounded-xl border border-border bg-card p-4">
+            <p className="text-xs uppercase tracking-wide text-muted-foreground">Brief</p>
+            <p className="mt-2 text-2xl font-semibold">{readiness?.hasBrief ? 'Ready' : 'Draft'}</p>
+          </div>
           <div className="rounded-xl border border-border bg-card p-4">
             <p className="text-xs uppercase tracking-wide text-muted-foreground">Published demos</p>
             <p className="mt-2 text-2xl font-semibold">{readiness?.publishedDemoCount ?? 0}</p>
@@ -254,6 +265,20 @@ export default function ProjectOverviewPage() {
         </section>
 
         <section className="grid gap-4 md:grid-cols-2">
+          <div className="rounded-xl border border-border bg-card p-5">
+            <h2 className="flex items-center gap-2 text-lg font-semibold">
+              <FileText className="h-5 w-5 text-primary" /> Demo Brief
+            </h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Define the story, generate AI drafts, and create a guided demo storyboard.
+            </p>
+            <Button asChild className="mt-4 gap-2">
+              <Link to={`/demo-studio/projects/${projectId}/brief`}>
+                Open brief <FileText className="h-4 w-4" />
+              </Link>
+            </Button>
+          </div>
+
           <div className="rounded-xl border border-border bg-card p-5">
             <h2 className="flex items-center gap-2 text-lg font-semibold">
               <Video className="h-5 w-5 text-primary" /> VSL Studio

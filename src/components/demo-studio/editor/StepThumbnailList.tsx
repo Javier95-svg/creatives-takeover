@@ -78,7 +78,9 @@ function SortableStep({
         {step.asset_url ? (
           <img src={step.asset_url} alt={`Step ${index + 1}`} className="h-10 w-16 rounded object-cover" />
         ) : (
-          <span className="h-10 w-16 rounded bg-muted" />
+          <span className="flex h-10 w-16 items-center justify-center rounded bg-muted text-[10px] text-muted-foreground">
+            Needs image
+          </span>
         )}
         <span className="min-w-0 truncate text-xs text-muted-foreground">
           {step.title || `Step ${index + 1}`}

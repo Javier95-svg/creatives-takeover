@@ -378,7 +378,7 @@ function buildDashboardContext(draftDocument: DraftDocument) {
         description:
           level === "low"
             ? "Run interviews and demand checks against the exact segment the draft recommends."
-            : "Use the ICP Draft language to create a clear waitlist message before you build more.",
+            : "Use the ICP Draft language to create a demo brief, VSL script, and proof page before you build more.",
         reason: "The best next move should follow from the draft, not from generic startup advice.",
         actionUrl: level === "low" ? "/pmf-lab" : "/demo-studio",
         priority: 11,

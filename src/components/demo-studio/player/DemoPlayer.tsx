@@ -46,6 +46,12 @@ export default function DemoPlayer({
       dedupeKey: `view_${demoId}`,
       meta: { total_steps: total },
     });
+    void trackDemoEvent('demo_start', {
+      projectId,
+      demoId,
+      dedupeKey: `start_${demoId}`,
+      meta: { total_steps: total },
+    });
   }, [mode, demoId, projectId, total]);
 
   // Emit a step event whenever the active step changes while live.
@@ -103,6 +109,16 @@ export default function DemoPlayer({
     setFinished(false);
   };
 
+  useEffect(() => {
+    if (mode !== 'live' || !demoId || !finished) return;
+    void trackDemoEvent('demo_complete', {
+      projectId,
+      demoId,
+      dedupeKey: `complete_${demoId}`,
+      meta: { total_steps: total },
+    });
+  }, [mode, demoId, projectId, finished, total]);
+
   const progress = useMemo(() => (total === 0 ? 0 : ((index + 1) / total) * 100), [index, total]);
 
   if (total === 0) {
@@ -131,7 +147,20 @@ export default function DemoPlayer({
             <div className="flex flex-wrap items-center justify-center gap-3">
               {resolvedCtaHref && (
                 <Button asChild style={{ backgroundColor: primaryColor }}>
-                  <a href={resolvedCtaHref}>{resolvedCtaLabel}</a>
+                  <a
+                    href={resolvedCtaHref}
+                    onClick={() => {
+                      if (mode === 'live') {
+                        void trackDemoEvent('cta_click', {
+                          projectId,
+                          demoId,
+                          meta: { placement: 'demo_complete' },
+                        });
+                      }
+                    }}
+                  >
+                    {resolvedCtaLabel}
+                  </a>
                 </Button>
               )}
               <Button variant="outline" onClick={restart} className="gap-2 bg-white/10 text-white hover:bg-white/20">

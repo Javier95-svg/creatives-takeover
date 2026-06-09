@@ -9,6 +9,7 @@ import LoomEmbed from '@/components/demo-studio/vsl/LoomEmbed';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { createLaunchSignup, getPublicLaunchPage } from '@/lib/demoStudio/api';
+import { DEFAULT_DEMO_STUDIO_CTA } from '@/lib/demoStudio/brief';
 import { trackDemoEvent } from '@/lib/demoStudio/events';
 import type { PublicLaunchPage as PublicLaunchPageData } from '@/lib/demoStudio/types';
 
@@ -60,6 +61,11 @@ export default function PublicLaunchPage() {
     if (!data || !email.trim()) return;
     setSubmitting(true);
     try {
+      void trackDemoEvent('signup_attempt', {
+        projectId: data.project.id,
+        vslId: data.vsl?.id,
+        meta: { variation_label: data.vsl?.variation_label ?? null },
+      });
       await createLaunchSignup(data.project.id, email, {
         referrer: document.referrer || null,
         vslVariationSeen: data.vsl?.variation_label ?? null,
@@ -95,9 +101,20 @@ export default function PublicLaunchPage() {
   }
 
   const primaryColor = data.launchPage.theme?.primaryColor || '#6366f1';
+  const background = data.launchPage.theme?.background ?? 'dark';
+  const layout = data.launchPage.theme?.layoutStyle ?? 'split';
+  const successMessage = data.launchPage.theme?.successMessage || 'You are on the early access list.';
+  const ctaLabel = data.launchPage.cta_label || DEFAULT_DEMO_STUDIO_CTA;
+  const pageClass = background === 'light'
+    ? 'min-h-screen bg-white text-slate-950'
+    : background === 'gradient'
+      ? 'min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(99,102,241,0.28),transparent_34%),linear-gradient(135deg,#020617,#111827)] text-white'
+      : 'min-h-screen bg-slate-950 text-white';
+  const mutedText = background === 'light' ? 'text-slate-600' : 'text-white/70';
+  const mediaOrder = layout === 'demo_first' ? 'lg:order-first' : '';
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white">
+    <div className={pageClass}>
       <SEO
         title={`${data.project.name} demo and founder pitch`}
         description={data.launchPage.subheadline || data.project.tagline || `See the ${data.project.name} demo.`}
@@ -108,8 +125,18 @@ export default function PublicLaunchPage() {
           <Link to="/demo-studio" className="text-sm font-semibold text-white/80 hover:text-white">
             Creatives Takeover Demo Studio
           </Link>
-          <a href="#signup" className="rounded-full bg-white px-4 py-2 text-sm font-medium text-slate-950">
-            {data.launchPage.cta_label || 'Join the waitlist'}
+          <a
+            href="#signup"
+            className="rounded-full bg-white px-4 py-2 text-sm font-medium text-slate-950"
+            onClick={() => {
+              void trackDemoEvent('cta_click', {
+                projectId: data.project.id,
+                vslId: data.vsl?.id,
+                meta: { placement: 'header', variation_label: data.vsl?.variation_label ?? null },
+              });
+            }}
+          >
+            {ctaLabel}
           </a>
         </header>
 
@@ -119,8 +146,8 @@ export default function PublicLaunchPage() {
             <h1 className="creatives-font text-4xl font-bold leading-tight md:text-6xl">
               {data.launchPage.headline || data.project.name}
             </h1>
-            <p className="mt-5 max-w-2xl text-lg text-white/70">
-              {data.launchPage.subheadline || data.project.tagline || 'Watch the pitch, click through the demo, and join the early list.'}
+            <p className={`mt-5 max-w-2xl text-lg ${mutedText}`}>
+              {data.launchPage.subheadline || data.project.tagline || 'Watch the pitch, click through the demo, and get early access.'}
             </p>
             <form id="signup" onSubmit={handleSubmit} className="mt-8 flex max-w-lg flex-col gap-3 sm:flex-row">
               <Input
@@ -131,18 +158,30 @@ export default function PublicLaunchPage() {
                 className="h-12 border-white/15 bg-white/10 text-white placeholder:text-white/40"
                 onChange={(e) => setEmail(e.target.value)}
               />
-              <Button type="submit" disabled={submitting || submitted} className="h-12 shrink-0" style={{ backgroundColor: primaryColor }}>
-                {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : submitted ? 'Joined' : data.launchPage.cta_label}
+              <Button
+                type="submit"
+                disabled={submitting || submitted}
+                className="h-12 shrink-0"
+                style={{ backgroundColor: primaryColor }}
+                onClick={() => {
+                  void trackDemoEvent('cta_click', {
+                    projectId: data.project.id,
+                    vslId: data.vsl?.id,
+                    meta: { placement: 'signup_form', variation_label: data.vsl?.variation_label ?? null },
+                  });
+                }}
+              >
+                {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : submitted ? 'Joined' : ctaLabel}
               </Button>
             </form>
             {submitted && (
               <p className="mt-3 inline-flex items-center gap-1.5 text-sm text-emerald-300">
-                <CheckCircle2 className="h-4 w-4" /> You are on the list.
+                <CheckCircle2 className="h-4 w-4" /> {successMessage}
               </p>
             )}
           </div>
 
-          <div className="space-y-4">
+          <div className={`space-y-4 ${mediaOrder}`}>
             <LoomEmbed embedUrl={data.vsl?.loom_embed_url} sharedUrl={data.vsl?.loom_shared_url} title={data.vsl?.title} />
             {data.vsl?.hook && <p className="text-sm text-white/60">{data.vsl.hook}</p>}
           </div>

@@ -7,14 +7,15 @@ import Navigation from '@/components/Navigation';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import VslStudio from '@/components/demo-studio/vsl/VslStudio';
-import { getProject, listVsls } from '@/lib/demoStudio/api';
-import type { DemoStudioProject, DemoStudioVsl } from '@/lib/demoStudio/types';
+import { getBrief, getProject, listVsls } from '@/lib/demoStudio/api';
+import type { DemoStudioBrief, DemoStudioProject, DemoStudioVsl } from '@/lib/demoStudio/types';
 
 export default function VslStudioPage() {
   const { id: projectId } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const [project, setProject] = useState<DemoStudioProject | null>(null);
+  const [brief, setBrief] = useState<DemoStudioBrief | null>(null);
   const [vsls, setVsls] = useState<DemoStudioVsl[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -28,7 +29,7 @@ export default function VslStudioPage() {
     let active = true;
     void (async () => {
       try {
-        const [projectRow, vslRows] = await Promise.all([getProject(projectId), listVsls(projectId)]);
+        const [projectRow, vslRows, briefRow] = await Promise.all([getProject(projectId), listVsls(projectId), getBrief(projectId)]);
         if (!active) return;
         if (!projectRow) {
           toast.error('Project not found.');
@@ -36,6 +37,7 @@ export default function VslStudioPage() {
           return;
         }
         setProject(projectRow);
+        setBrief(briefRow);
         setVsls(vslRows);
       } catch (e) {
         toast.error(e instanceof Error ? e.message : 'Could not load VSL Studio.');
@@ -85,7 +87,13 @@ export default function VslStudioPage() {
         </div>
 
         {projectId && user && (
-          <VslStudio projectId={projectId} ownerId={user.id} initialVsls={vsls} onChange={setVsls} />
+          <VslStudio
+            projectId={projectId}
+            ownerId={user.id}
+            initialVsls={vsls}
+            scriptDrafts={brief?.ai_vsl_scripts ?? []}
+            onChange={setVsls}
+          />
         )}
       </main>
     </div>

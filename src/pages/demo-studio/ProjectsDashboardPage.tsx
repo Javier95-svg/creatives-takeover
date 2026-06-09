@@ -87,7 +87,7 @@ export default function ProjectsDashboardPage() {
     try {
       const project = await createProject(user.id, { name: name.trim(), tagline: tagline.trim() || undefined });
       toast.success('Project created.');
-      navigate(`/demo-studio/projects/${project.id}`);
+      navigate(`/demo-studio/projects/${project.id}/brief`);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : 'Could not create project.');
     } finally {
@@ -104,15 +104,15 @@ export default function ProjectsDashboardPage() {
       action: { label: 'New project', onClick: () => setDialogOpen(true) },
     },
     {
-      label: 'Build a demo',
-      description: 'Upload screenshots, then add clickable hotspots.',
+      label: 'Define the proof story',
+      description: 'Write the brief, then generate storyboard, VSL scripts, and launch copy.',
       done: counts.total > 0,
       action: recentProjectId
-        ? { label: 'Open project', to: `/demo-studio/projects/${recentProjectId}` }
+        ? { label: 'Open brief', to: `/demo-studio/projects/${recentProjectId}/brief` }
         : { label: 'New project', onClick: () => setDialogOpen(true) },
     },
     {
-      label: 'Publish & share',
+      label: 'Publish proof page',
       description: 'Publish a demo, record a VSL, then ship the launch page.',
       done: counts.published > 0,
       action: recentProjectId

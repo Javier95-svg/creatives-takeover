@@ -7,13 +7,22 @@ export type DemoStatus = 'draft' | 'published';
 export type HotspotType = 'hotspot' | 'tooltip' | 'callout';
 export type HotspotAction = 'next' | 'goto' | 'url';
 export type CaptureMethod = 'upload' | 'screen' | 'extension';
+export type DemoStudioGeneratorMode = 'full_kit' | 'storyboard' | 'vsl_scripts' | 'launch_copy';
+export type DemoStudioTone = 'professional' | 'friendly' | 'bold' | 'conversational' | 'inspirational';
+export type DemoStudioProductStage = 'idea' | 'prototype' | 'mvp' | 'launched';
+export type DemoStudioGoal = 'collect_signups' | 'book_calls' | 'validate_interest' | 'sell_product';
+export type DemoStudioMetricsWindow = 'all' | '7d' | '30d';
 export type DemoStudioEventType =
   | 'demo_view'
+  | 'demo_start'
+  | 'demo_complete'
   | 'demo_step'
   | 'launch_page_view'
   | 'vsl_impression'
   | 'vsl_play'
   | 'vsl_complete'
+  | 'cta_click'
+  | 'signup_attempt'
   | 'signup'
   | 'waitlist_signup';
 
@@ -93,6 +102,64 @@ export interface PublicDemo {
   steps: DemoStepWithHotspots[];
 }
 
+export interface DemoStudioStoryboardStep {
+  title: string;
+  caption: string;
+  speaker_notes: string;
+  hotspot_label: string;
+  suggested_action: HotspotAction;
+}
+
+export interface DemoStudioVslScript {
+  variation: 'A' | 'B' | 'C';
+  title: string;
+  hook: string;
+  outline: string[];
+  script: string;
+  target_duration_seconds: number;
+}
+
+export interface DemoStudioLaunchHeadline {
+  variant: 'A' | 'B' | 'C';
+  headline: string;
+  subheadline: string;
+  rationale: string;
+}
+
+export interface DemoStudioLaunchCopy {
+  headlines: DemoStudioLaunchHeadline[];
+  subheadline: string;
+  cta_label: string;
+  proof_bullets: string[];
+  success_message?: string;
+}
+
+export interface DemoStudioAiKit {
+  storyboard?: DemoStudioStoryboardStep[];
+  vsl_scripts?: DemoStudioVslScript[];
+  launch_copy?: DemoStudioLaunchCopy;
+}
+
+export interface DemoStudioBrief {
+  id: string;
+  project_id: string;
+  owner_id: string;
+  audience: string | null;
+  problem: string | null;
+  product_promise: string | null;
+  aha_moment: string | null;
+  primary_cta_label: string | null;
+  primary_cta_url: string | null;
+  tone: DemoStudioTone;
+  product_stage: DemoStudioProductStage;
+  demo_goal: DemoStudioGoal;
+  ai_storyboard: DemoStudioStoryboardStep[] | null;
+  ai_vsl_scripts: DemoStudioVslScript[] | null;
+  ai_launch_copy: DemoStudioLaunchCopy | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface DemoStudioVsl {
   id: string;
   project_id: string;
@@ -106,13 +173,18 @@ export interface DemoStudioVsl {
   video_url: string | null;
   thumbnail_url: string | null;
   duration_seconds: number | null;
+  script: string | null;
+  script_outline: string[] | null;
+  target_duration_seconds: number | null;
   is_primary: boolean;
   created_at: string;
 }
 
 export interface LaunchPageTheme {
   primaryColor?: string;
-  background?: string;
+  background?: 'dark' | 'light' | 'gradient';
+  layoutStyle?: 'vsl_first' | 'demo_first' | 'split';
+  successMessage?: string;
 }
 
 export interface DemoStudioLaunchPage {
@@ -141,6 +213,11 @@ export interface DemoStudioSignup {
 export interface DemoStudioReadiness {
   hasPublishedDemo: boolean;
   hasVsl: boolean;
+  hasBrief?: boolean;
+  hasHeadline?: boolean;
+  hasSubheadline?: boolean;
+  hasCta?: boolean;
+  hasSlug?: boolean;
   publishedDemoCount: number;
   vslCount: number;
   canPublishLaunchPage: boolean;
@@ -151,7 +228,11 @@ export interface DemoStudioMetrics {
   demoViews: number;
   demoStepEvents: number;
   launchPageViews: number;
+  demoStarts: number;
+  demoCompletions: number;
   vslImpressions: number;
+  ctaClicks: number;
+  signupAttempts: number;
   signups: number;
   signupRate: number;
   byVslVariation: Array<{

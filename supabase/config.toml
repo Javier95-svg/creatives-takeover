@@ -5,6 +5,9 @@ project_id = "rcjlaybjnozqbsoxzboa"
 [functions.stripe-webhook]
 verify_jwt = true
 
+[functions.demo-studio-generator]
+verify_jwt = true
+
 [functions.check-subscription]
 verify_jwt = true
 

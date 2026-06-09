@@ -33,7 +33,7 @@ test('Loom URL normalization stores share and embed URLs', () => {
 test('launch publish missing reasons match the Demo Studio guarantee', () => {
   assert.deepEqual(getLaunchPublishMissing({ hasPublishedDemo: false, hasVsl: false }), [
     'Publish at least one interactive demo.',
-    'Save at least one VSL variation.',
+    'Attach at least one recorded VSL variation.',
   ]);
   assert.deepEqual(getLaunchPublishMissing({ hasPublishedDemo: true, hasVsl: true }), []);
 });

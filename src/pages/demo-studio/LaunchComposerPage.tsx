@@ -6,6 +6,7 @@ import SEO from '@/components/SEO';
 import Navigation from '@/components/Navigation';
 import DemoPlayer from '@/components/demo-studio/player/DemoPlayer';
 import LoomEmbed from '@/components/demo-studio/vsl/LoomEmbed';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -21,6 +22,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   getOrCreateLaunchPage,
+  getBrief,
   getProject,
   getProjectMetrics,
   getProjectReadiness,
@@ -29,15 +31,21 @@ import {
   listSteps,
   listVsls,
   publishLaunchPage,
+  isLaunchSlugAvailable,
+  normalizeProjectSlug,
   updateLaunchPage,
+  updateProject,
   unpublishLaunchPage,
 } from '@/lib/demoStudio/api';
+import { DEFAULT_DEMO_STUDIO_CTA } from '@/lib/demoStudio/brief';
 import type {
+  DemoStudioBrief,
   DemoStepWithHotspots,
   DemoStudioDemo,
   DemoStudioHotspot,
   DemoStudioLaunchPage,
   DemoStudioMetrics,
+  DemoStudioMetricsWindow,
   DemoStudioProject,
   DemoStudioReadiness,
   DemoStudioVsl,
@@ -48,11 +56,15 @@ export default function LaunchComposerPage() {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const [project, setProject] = useState<DemoStudioProject | null>(null);
+  const [brief, setBrief] = useState<DemoStudioBrief | null>(null);
   const [launchPage, setLaunchPage] = useState<DemoStudioLaunchPage | null>(null);
   const [demos, setDemos] = useState<DemoStudioDemo[]>([]);
   const [vsls, setVsls] = useState<DemoStudioVsl[]>([]);
   const [readiness, setReadiness] = useState<DemoStudioReadiness | null>(null);
   const [metrics, setMetrics] = useState<DemoStudioMetrics | null>(null);
+  const [metricsWindow, setMetricsWindow] = useState<DemoStudioMetricsWindow>('all');
+  const [slugDraft, setSlugDraft] = useState('');
+  const [slugChecking, setSlugChecking] = useState(false);
   const [previewSteps, setPreviewSteps] = useState<DemoStepWithHotspots[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -73,15 +85,18 @@ export default function LaunchComposerPage() {
           navigate('/demo-studio/projects');
           return;
         }
-        const [launchRow, demoRows, vslRows, ready, metricRows] = await Promise.all([
+        const [launchRow, demoRows, vslRows, ready, metricRows, briefRow] = await Promise.all([
           getOrCreateLaunchPage(projectRow, user.id),
           listDemos(projectId),
           listVsls(projectId),
           getProjectReadiness(projectId),
-          getProjectMetrics(projectId),
+          getProjectMetrics(projectId, metricsWindow),
+          getBrief(projectId),
         ]);
         if (!active) return;
         setProject(projectRow);
+        setBrief(briefRow);
+        setSlugDraft(projectRow.slug || normalizeProjectSlug(projectRow.name));
         setLaunchPage(launchRow);
         setDemos(demoRows);
         setVsls(vslRows);
@@ -96,7 +111,7 @@ export default function LaunchComposerPage() {
     return () => {
       active = false;
     };
-  }, [authLoading, user, projectId, navigate]);
+  }, [authLoading, user, projectId, navigate, metricsWindow]);
 
   const selectedDemo = useMemo(
     () => demos.find((demo) => demo.id === launchPage?.primary_demo_id) ?? demos.find((demo) => demo.status === 'published') ?? demos[0] ?? null,
@@ -156,6 +171,41 @@ export default function LaunchComposerPage() {
     }
   };
 
+  const handleSlugBlur = async (value: string) => {
+    if (!project || !value.trim()) return;
+    const slug = normalizeProjectSlug(value);
+    setSlugDraft(slug);
+    setSlugChecking(true);
+    try {
+      const available = await isLaunchSlugAvailable(slug, project.id);
+      if (!available) {
+        toast.error('That public slug is already taken.');
+        return;
+      }
+      await updateProject(project.id, { slug });
+      setProject({ ...project, slug });
+      toast.success('Public slug saved.');
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Could not save slug.');
+    } finally {
+      setSlugChecking(false);
+    }
+  };
+
+  const applyLaunchHeadline = async (index: number) => {
+    const headline = brief?.ai_launch_copy?.headlines[index];
+    if (!headline) return;
+    await patchLaunch({
+      headline: headline.headline,
+      subheadline: headline.subheadline || brief?.ai_launch_copy?.subheadline || launchPage?.subheadline,
+      cta_label: brief?.ai_launch_copy?.cta_label || DEFAULT_DEMO_STUDIO_CTA,
+      theme: {
+        ...(launchPage?.theme ?? {}),
+        successMessage: brief?.ai_launch_copy?.success_message || launchPage?.theme?.successMessage,
+      },
+    });
+  };
+
   const handleUnpublish = async () => {
     if (!project) return;
     setSaving(true);
@@ -179,6 +229,15 @@ export default function LaunchComposerPage() {
   }
 
   const launchUrl = project?.slug ? `${window.location.origin}/p/${project.slug}` : '';
+  const attachedVslCount = vsls.filter((vsl) => vsl.loom_embed_url || vsl.loom_shared_url || vsl.video_url).length;
+  const launchChecklist = [
+    { label: 'Published demo', done: demos.some((demo) => demo.status === 'published') },
+    { label: 'Recorded VSL', done: attachedVslCount > 0 },
+    { label: 'Headline', done: Boolean(launchPage?.headline?.trim()) },
+    { label: 'Subheadline', done: Boolean(launchPage?.subheadline?.trim()) },
+    { label: 'CTA', done: Boolean(launchPage?.cta_label?.trim()) },
+    { label: 'Public slug', done: Boolean(project?.slug?.trim()) },
+  ];
 
   return (
     <div className="min-h-screen bg-background">
@@ -259,9 +318,93 @@ export default function LaunchComposerPage() {
                     id="launch-cta"
                     value={launchPage?.cta_label ?? ''}
                     onChange={(e) => setLaunchPage((prev) => prev ? { ...prev, cta_label: e.target.value } : prev)}
-                    onBlur={(e) => patchLaunch({ cta_label: e.target.value || 'Join the waitlist' })}
+                    onBlur={(e) => patchLaunch({ cta_label: e.target.value || DEFAULT_DEMO_STUDIO_CTA })}
                   />
                 </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="launch-slug">Public slug</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="launch-slug"
+                      value={slugDraft}
+                      onChange={(e) => setSlugDraft(e.target.value)}
+                      onBlur={(e) => handleSlugBlur(e.target.value)}
+                    />
+                    {slugChecking && <Loader2 className="mt-3 h-4 w-4 animate-spin text-muted-foreground" />}
+                  </div>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="launch-color">Primary color</Label>
+                    <input
+                      id="launch-color"
+                      type="color"
+                      value={launchPage?.theme?.primaryColor ?? '#6366f1'}
+                      onChange={(e) => patchLaunch({ theme: { ...(launchPage?.theme ?? {}), primaryColor: e.target.value } })}
+                      className="h-10 w-full cursor-pointer rounded border border-border bg-transparent"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Background</Label>
+                    <Select
+                      value={launchPage?.theme?.background ?? 'dark'}
+                      onValueChange={(value) => patchLaunch({ theme: { ...(launchPage?.theme ?? {}), background: value as 'dark' | 'light' | 'gradient' } })}
+                    >
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="dark">Dark</SelectItem>
+                        <SelectItem value="light">Light</SelectItem>
+                        <SelectItem value="gradient">Gradient</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Layout</Label>
+                  <Select
+                    value={launchPage?.theme?.layoutStyle ?? 'split'}
+                    onValueChange={(value) => patchLaunch({ theme: { ...(launchPage?.theme ?? {}), layoutStyle: value as 'split' | 'vsl_first' | 'demo_first' } })}
+                  >
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="split">Split hero</SelectItem>
+                      <SelectItem value="vsl_first">VSL first</SelectItem>
+                      <SelectItem value="demo_first">Demo first</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="success-message">Signup success message</Label>
+                  <Input
+                    id="success-message"
+                    value={launchPage?.theme?.successMessage ?? ''}
+                    placeholder="You are on the early access list."
+                    onChange={(e) => setLaunchPage((prev) => prev ? { ...prev, theme: { ...prev.theme, successMessage: e.target.value } } : prev)}
+                    onBlur={(e) => patchLaunch({ theme: { ...(launchPage?.theme ?? {}), successMessage: e.target.value || 'You are on the early access list.' } })}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">AI copy options</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {brief?.ai_launch_copy?.headlines?.length ? brief.ai_launch_copy.headlines.map((headline, index) => (
+                  <button
+                    key={headline.variant}
+                    type="button"
+                    className="w-full rounded-lg border border-border p-3 text-left transition hover:border-primary/50"
+                    onClick={() => applyLaunchHeadline(index)}
+                  >
+                    <Badge variant="outline">Variant {headline.variant}</Badge>
+                    <p className="mt-2 text-sm font-semibold">{headline.headline}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">{headline.subheadline}</p>
+                  </button>
+                )) : (
+                  <p className="text-sm text-muted-foreground">Generate launch copy from the Demo Brief to choose headline variants here.</p>
+                )}
               </CardContent>
             </Card>
 
@@ -301,13 +444,40 @@ export default function LaunchComposerPage() {
 
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">Funnel</CardTitle>
+                <div className="flex items-center justify-between gap-3">
+                  <CardTitle className="text-base">Funnel</CardTitle>
+                  <Select value={metricsWindow} onValueChange={(value) => setMetricsWindow(value as DemoStudioMetricsWindow)}>
+                    <SelectTrigger className="h-8 w-28"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All time</SelectItem>
+                      <SelectItem value="7d">7 days</SelectItem>
+                      <SelectItem value="30d">30 days</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </CardHeader>
               <CardContent className="grid grid-cols-2 gap-3 text-sm">
                 <Metric label="Launch views" value={metrics?.launchPageViews ?? 0} />
-                <Metric label="Demo views" value={metrics?.demoViews ?? 0} />
+                <Metric label="Demo starts" value={metrics?.demoStarts ?? 0} />
+                <Metric label="Demo completes" value={metrics?.demoCompletions ?? 0} />
                 <Metric label="VSL impressions" value={metrics?.vslImpressions ?? 0} />
+                <Metric label="CTA clicks" value={metrics?.ctaClicks ?? 0} />
+                <Metric label="Signup attempts" value={metrics?.signupAttempts ?? 0} />
                 <Metric label="Signups" value={metrics?.signups ?? 0} />
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Launch checklist</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {launchChecklist.map((item) => (
+                  <div key={item.label} className="flex items-center justify-between rounded-lg bg-muted/40 px-3 py-2 text-sm">
+                    <span>{item.label}</span>
+                    <Badge variant={item.done ? 'default' : 'outline'}>{item.done ? 'Ready' : 'Missing'}</Badge>
+                  </div>
+                ))}
               </CardContent>
             </Card>
           </div>
@@ -322,7 +492,7 @@ export default function LaunchComposerPage() {
               </div>
               <div className="mt-6 flex max-w-md gap-2">
                 <Input readOnly placeholder="founder@example.com" />
-                <Button>{launchPage?.cta_label || 'Join the waitlist'}</Button>
+                <Button>{launchPage?.cta_label || DEFAULT_DEMO_STUDIO_CTA}</Button>
               </div>
             </div>
           </section>

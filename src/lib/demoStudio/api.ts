@@ -4,14 +4,18 @@
 import { supabase } from '@/integrations/supabase/client';
 import type {
   DemoStudioProject,
+  DemoStudioAiKit,
+  DemoStudioBrief,
   DemoStudioDemo,
   DemoStudioStep,
   DemoStudioHotspot,
   DemoStudioLaunchPage,
   DemoStudioMetrics,
+  DemoStudioMetricsWindow,
   DemoStudioReadiness,
   DemoStudioSignup,
   DemoStudioVsl,
+  DemoStudioStoryboardStep,
   DemoStepWithHotspots,
   DemoTheme,
   HotspotAction,
@@ -19,6 +23,7 @@ import type {
   PublicLaunchPage,
   PublicDemo,
 } from './types';
+import { DEFAULT_DEMO_STUDIO_CTA, normalizeAiKit, normalizeProjectSlug } from './brief';
 import {
   calculateSignupRate,
   canAddVsl,
@@ -31,6 +36,7 @@ const PROJECTS = 'demo_studio_projects' as any;
 const DEMOS = 'demo_studio_demos' as any;
 const STEPS = 'demo_studio_demo_steps' as any;
 const HOTSPOTS = 'demo_studio_demo_hotspots' as any;
+const BRIEFS = 'demo_studio_briefs' as any;
 const VSLS = 'demo_studio_vsls' as any;
 const LAUNCH_PAGES = 'demo_studio_launch_pages' as any;
 const SIGNUPS = 'demo_studio_signups' as any;
@@ -48,13 +54,11 @@ function shortId(length = 9): string {
 }
 
 function slugify(value: string): string {
-  const base = value
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, 48);
+  const base = normalizeProjectSlug(value).slice(0, 48);
   return `${base || 'demo'}-${shortId(5)}`;
 }
+
+export { normalizeProjectSlug };
 
 function unwrap<T>(result: { data: T | null; error: { message: string } | null }): T {
   if (result.error) throw new Error(result.error.message);
@@ -110,6 +114,113 @@ export async function updateProject(
 export async function deleteProject(id: string): Promise<void> {
   const { error } = await supabase.from(PROJECTS).delete().eq('id', id);
   if (error) throw new Error(error.message);
+}
+
+export async function isLaunchSlugAvailable(slug: string, currentProjectId?: string | null): Promise<boolean> {
+  const normalized = normalizeProjectSlug(slug);
+  if (!normalized) return false;
+  let query = supabase.from(PROJECTS).select('id').eq('slug', normalized).limit(1);
+  if (currentProjectId) query = query.neq('id', currentProjectId);
+  const { data, error } = await query;
+  if (error) throw new Error(error.message);
+  return (data ?? []).length === 0;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Demo brief                                                                  */
+/* -------------------------------------------------------------------------- */
+
+export async function getBrief(projectId: string): Promise<DemoStudioBrief | null> {
+  const { data, error } = await supabase
+    .from(BRIEFS)
+    .select('*')
+    .eq('project_id', projectId)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  return (data as unknown as DemoStudioBrief) ?? null;
+}
+
+export async function getOrCreateBrief(
+  project: DemoStudioProject,
+  ownerId: string,
+): Promise<DemoStudioBrief> {
+  const existing = await getBrief(project.id);
+  if (existing) return existing;
+  const result = await supabase
+    .from(BRIEFS)
+    .insert({
+      project_id: project.id,
+      owner_id: ownerId,
+      product_promise: project.tagline,
+      primary_cta_label: DEFAULT_DEMO_STUDIO_CTA,
+      tone: 'conversational',
+      product_stage: 'prototype',
+      demo_goal: 'collect_signups',
+      ai_storyboard: [],
+      ai_vsl_scripts: [],
+      ai_launch_copy: {},
+    } as any)
+    .select('*')
+    .single();
+  return unwrap(result) as unknown as DemoStudioBrief;
+}
+
+export async function updateBrief(
+  projectId: string,
+  ownerId: string,
+  patch: Partial<Pick<
+    DemoStudioBrief,
+    | 'audience'
+    | 'problem'
+    | 'product_promise'
+    | 'aha_moment'
+    | 'primary_cta_label'
+    | 'primary_cta_url'
+    | 'tone'
+    | 'product_stage'
+    | 'demo_goal'
+    | 'ai_storyboard'
+    | 'ai_vsl_scripts'
+    | 'ai_launch_copy'
+  >>,
+): Promise<DemoStudioBrief> {
+  const existing = await getBrief(projectId);
+  if (!existing) {
+    const result = await supabase
+      .from(BRIEFS)
+      .insert({
+        project_id: projectId,
+        owner_id: ownerId,
+        primary_cta_label: DEFAULT_DEMO_STUDIO_CTA,
+        tone: 'conversational',
+        product_stage: 'prototype',
+        demo_goal: 'collect_signups',
+        ...patch,
+      } as any)
+      .select('*')
+      .single();
+    return unwrap(result) as unknown as DemoStudioBrief;
+  }
+  const result = await supabase
+    .from(BRIEFS)
+    .update(patch as any)
+    .eq('project_id', projectId)
+    .select('*')
+    .single();
+  return unwrap(result) as unknown as DemoStudioBrief;
+}
+
+export async function generateDemoStudioKit(args: {
+  mode: 'full_kit' | 'storyboard' | 'vsl_scripts' | 'launch_copy';
+  project: Pick<DemoStudioProject, 'id' | 'name' | 'tagline' | 'category'>;
+  brief: Partial<DemoStudioBrief>;
+}): Promise<DemoStudioAiKit> {
+  const { data, error } = await supabase.functions.invoke('demo-studio-generator', {
+    body: args,
+  });
+  if (error) throw new Error(error.message);
+  if (!data?.success) throw new Error(data?.error || 'Could not generate Demo Studio drafts.');
+  return normalizeAiKit(data.kit);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -206,21 +317,42 @@ export async function listSteps(demoId: string): Promise<DemoStudioStep[]> {
 export async function createStep(
   demoId: string,
   position: number,
-  asset: { url: string; width: number | null; height: number | null; title?: string | null },
+  asset: { url?: string | null; width?: number | null; height?: number | null; title?: string | null; caption?: string | null; speaker_notes?: string | null },
 ): Promise<DemoStudioStep> {
   const result = await supabase
     .from(STEPS)
     .insert({
       demo_id: demoId,
       position,
-      asset_url: asset.url,
-      asset_width: asset.width,
-      asset_height: asset.height,
+      asset_url: asset.url ?? null,
+      asset_width: asset.width ?? null,
+      asset_height: asset.height ?? null,
       title: asset.title ?? `Step ${position + 1}`,
+      caption: asset.caption ?? null,
+      speaker_notes: asset.speaker_notes ?? null,
     } as any)
     .select('*')
     .single();
   return unwrap(result) as unknown as DemoStudioStep;
+}
+
+export async function applyStoryboardToDemo(
+  demoId: string,
+  storyboard: DemoStudioStoryboardStep[],
+  startPosition: number,
+): Promise<DemoStepWithHotspots[]> {
+  const created: DemoStepWithHotspots[] = [];
+  let position = startPosition;
+  for (const item of storyboard) {
+    const step = await createStep(demoId, position, {
+      title: item.title,
+      caption: item.caption,
+      speaker_notes: item.speaker_notes,
+    });
+    created.push({ ...step, hotspots: [] });
+    position += 1;
+  }
+  return created;
 }
 
 export async function updateStep(
@@ -360,11 +492,14 @@ export async function createVsl(
     variation_label?: string;
     title?: string;
     hook?: string;
+    script?: string;
+    script_outline?: string[];
     loom_shared_url?: string;
     loom_embed_url?: string | null;
     loom_video_id?: string | null;
     thumbnail_url?: string | null;
     duration_seconds?: number | null;
+    target_duration_seconds?: number | null;
   },
 ): Promise<DemoStudioVsl> {
   const existing = await listVsls(projectId);
@@ -380,11 +515,14 @@ export async function createVsl(
       variation_label: fields.variation_label || getNextVslLabel(existing.map((vsl) => vsl.variation_label)),
       title: fields.title?.trim() || null,
       hook: fields.hook?.trim() || null,
+      script: fields.script?.trim() || null,
+      script_outline: fields.script_outline ?? [],
       loom_video_id: fields.loom_video_id ?? fromUrl?.videoId ?? null,
       loom_shared_url: fromUrl?.sharedUrl ?? fields.loom_shared_url ?? null,
       loom_embed_url: fields.loom_embed_url ?? fromUrl?.embedUrl ?? null,
       thumbnail_url: fields.thumbnail_url ?? null,
       duration_seconds: fields.duration_seconds ?? null,
+      target_duration_seconds: fields.target_duration_seconds ?? null,
       is_primary: existing.length === 0,
     } as any)
     .select('*')
@@ -394,7 +532,7 @@ export async function createVsl(
 
 export async function updateVsl(
   id: string,
-  patch: Partial<Pick<DemoStudioVsl, 'variation_label' | 'title' | 'hook' | 'loom_shared_url' | 'loom_embed_url' | 'thumbnail_url' | 'duration_seconds' | 'is_primary'>>,
+  patch: Partial<Pick<DemoStudioVsl, 'variation_label' | 'title' | 'hook' | 'script' | 'script_outline' | 'loom_shared_url' | 'loom_embed_url' | 'thumbnail_url' | 'duration_seconds' | 'target_duration_seconds' | 'is_primary'>>,
 ): Promise<void> {
   const normalizedPatch = { ...patch };
   if (patch.loom_shared_url) {
@@ -445,8 +583,8 @@ export async function getOrCreateLaunchPage(
       owner_id: ownerId,
       headline: project.name,
       subheadline: project.tagline,
-      cta_label: 'Join the waitlist',
-      theme: { primaryColor: '#6366f1' },
+      cta_label: DEFAULT_DEMO_STUDIO_CTA,
+      theme: { primaryColor: '#6366f1', background: 'dark', layoutStyle: 'split', successMessage: 'You are on the early access list.' },
     } as any)
     .select('*')
     .single();
@@ -477,16 +615,31 @@ export async function updateLaunchPage(
 }
 
 export async function getProjectReadiness(projectId: string): Promise<DemoStudioReadiness> {
-  const [demos, vsls] = await Promise.all([listDemos(projectId), listVsls(projectId)]);
+  const [project, demos, vsls, launchPage, brief] = await Promise.all([
+    getProject(projectId),
+    listDemos(projectId),
+    listVsls(projectId),
+    getLaunchPage(projectId),
+    getBrief(projectId),
+  ]);
   const publishedDemoCount = demos.filter((demo) => demo.status === 'published').length;
+  const attachedVslCount = vsls.filter((vsl) => vsl.loom_embed_url || vsl.loom_shared_url || vsl.video_url).length;
   const vslCount = vsls.length;
   const missing = getLaunchPublishMissing({
     hasPublishedDemo: publishedDemoCount > 0,
-    hasVsl: vslCount > 0,
+    hasVsl: attachedVslCount > 0,
   });
+  if (!launchPage?.headline?.trim()) missing.push('Add a launch page headline.');
+  if (!launchPage?.subheadline?.trim()) missing.push('Add a launch page subheadline.');
+  if (!launchPage?.cta_label?.trim()) missing.push('Set the launch page CTA.');
   return {
     hasPublishedDemo: publishedDemoCount > 0,
-    hasVsl: vslCount > 0,
+    hasVsl: attachedVslCount > 0,
+    hasBrief: Boolean(brief?.audience && brief.product_promise && brief.aha_moment),
+    hasHeadline: Boolean(launchPage?.headline?.trim()),
+    hasSubheadline: Boolean(launchPage?.subheadline?.trim()),
+    hasCta: Boolean(launchPage?.cta_label?.trim()),
+    hasSlug: Boolean(project?.slug?.trim()),
     publishedDemoCount,
     vslCount,
     canPublishLaunchPage: missing.length === 0,
@@ -506,8 +659,10 @@ export async function publishLaunchPage(project: DemoStudioProject, ownerId: str
   }
   const primaryDemoId =
     launchPage.primary_demo_id || demos.find((demo) => demo.status === 'published')?.id || null;
+  const playableVsls = vsls.filter((vsl) => vsl.loom_embed_url || vsl.loom_shared_url || vsl.video_url);
+  const selectedLaunchVsl = playableVsls.find((vsl) => vsl.id === launchPage.primary_vsl_id);
   const primaryVslId =
-    launchPage.primary_vsl_id || vsls.find((vsl) => vsl.is_primary)?.id || vsls[0]?.id || null;
+    selectedLaunchVsl?.id || playableVsls.find((vsl) => vsl.is_primary)?.id || playableVsls[0]?.id || null;
 
   await updateLaunchPage(project.id, ownerId, {
     primary_demo_id: primaryDemoId,
@@ -573,7 +728,8 @@ export async function getPublicLaunchPage(slug: string): Promise<PublicLaunchPag
     .order('created_at', { ascending: true });
   if (vslError) throw new Error(vslError.message);
   const vsls = (vslRows ?? []) as unknown as DemoStudioVsl[];
-  const vsl = vsls.find((row) => row.id === launchPage.primary_vsl_id) ?? vsls.find((row) => row.is_primary) ?? vsls[0] ?? null;
+  const playableVsls = vsls.filter((row) => row.loom_embed_url || row.loom_shared_url || row.video_url);
+  const vsl = playableVsls.find((row) => row.id === launchPage.primary_vsl_id) ?? playableVsls.find((row) => row.is_primary) ?? playableVsls[0] ?? null;
 
   return { project, launchPage, demo, vsl };
 }
@@ -605,10 +761,25 @@ export async function createLaunchSignup(
   return signup;
 }
 
-export async function getProjectMetrics(projectId: string): Promise<DemoStudioMetrics> {
+function getMetricsWindowStart(window: DemoStudioMetricsWindow): string | null {
+  if (window === 'all') return null;
+  const days = window === '7d' ? 7 : 30;
+  const date = new Date();
+  date.setDate(date.getDate() - days);
+  return date.toISOString();
+}
+
+export async function getProjectMetrics(projectId: string, window: DemoStudioMetricsWindow = 'all'): Promise<DemoStudioMetrics> {
+  const since = getMetricsWindowStart(window);
+  let eventsQuery = supabase.from(EVENTS).select('type, vsl_id, meta, created_at').eq('project_id', projectId);
+  let signupsQuery = supabase.from(SIGNUPS).select('vsl_variation_seen, created_at').eq('project_id', projectId);
+  if (since) {
+    eventsQuery = eventsQuery.gte('created_at', since);
+    signupsQuery = signupsQuery.gte('created_at', since);
+  }
   const [{ data: eventsData, error: eventsError }, { data: signupData, error: signupError }] = await Promise.all([
-    supabase.from(EVENTS).select('type, vsl_id, meta').eq('project_id', projectId),
-    supabase.from(SIGNUPS).select('vsl_variation_seen').eq('project_id', projectId),
+    eventsQuery,
+    signupsQuery,
   ]);
   if (eventsError) throw new Error(eventsError.message);
   if (signupError) throw new Error(signupError.message);
@@ -636,7 +807,11 @@ export async function getProjectMetrics(projectId: string): Promise<DemoStudioMe
     demoViews: events.filter((event) => event.type === 'demo_view').length,
     demoStepEvents: events.filter((event) => event.type === 'demo_step').length,
     launchPageViews: events.filter((event) => event.type === 'launch_page_view').length,
+    demoStarts: events.filter((event) => event.type === 'demo_start').length,
+    demoCompletions: events.filter((event) => event.type === 'demo_complete').length,
     vslImpressions: vslImpressions.length,
+    ctaClicks: events.filter((event) => event.type === 'cta_click').length,
+    signupAttempts: events.filter((event) => event.type === 'signup_attempt').length,
     signups: signups.length,
     signupRate: calculateSignupRate(signups.length, vslImpressions.length || events.filter((event) => event.type === 'launch_page_view').length),
     byVslVariation: Array.from(byVariation.entries()).map(([variation, row]) => ({

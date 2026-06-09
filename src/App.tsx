@@ -134,6 +134,7 @@ const ProjectsDashboard = lazy(() => import("./components/dashboard/ProjectsDash
 // Demo Studio (interactive demo builder + public demo viewer)
 const DemoStudioProjectsPage = lazy(() => import("./pages/demo-studio/ProjectsDashboardPage"));
 const DemoStudioProjectOverviewPage = lazy(() => import("./pages/demo-studio/ProjectOverviewPage"));
+const DemoStudioBriefPage = lazy(() => import("./pages/demo-studio/DemoBriefPage"));
 const DemoStudioEditorPage = lazy(() => import("./pages/demo-studio/DemoEditorPage"));
 const DemoStudioVslStudioPage = lazy(() => import("./pages/demo-studio/VslStudioPage"));
 const DemoStudioLaunchComposerPage = lazy(() => import("./pages/demo-studio/LaunchComposerPage"));
@@ -290,6 +291,7 @@ function App() {
                         <Route path="/demo-studio/classic/templates" element={<WaitlistTemplatesPage />} />
                         <Route path="/demo-studio/templates" element={<Navigate to="/demo-studio/classic/templates" replace />} />
                         <Route path="/demo-studio/projects/:id" element={<RouteErrorBoundary routeName="Demo Studio Project"><DemoStudioProjectOverviewPage /></RouteErrorBoundary>} />
+                        <Route path="/demo-studio/projects/:id/brief" element={<RouteErrorBoundary routeName="Demo Brief"><DemoStudioBriefPage /></RouteErrorBoundary>} />
                         <Route path="/demo-studio/projects/:projectId/demos/:demoId/edit" element={<RouteErrorBoundary routeName="Demo Editor"><DemoStudioEditorPage /></RouteErrorBoundary>} />
                         <Route path="/demo-studio/projects/:id/vsl" element={<RouteErrorBoundary routeName="VSL Studio"><DemoStudioVslStudioPage /></RouteErrorBoundary>} />
                         <Route path="/demo-studio/projects/:id/launch" element={<RouteErrorBoundary routeName="Launch Composer"><DemoStudioLaunchComposerPage /></RouteErrorBoundary>} />
@@ -394,11 +396,6 @@ function App() {
       </Suspense>
     </ErrorBoundary>
   );
-};
-
-const SignUpAlias = () => {
-  const location = useLocation();
-  return <Navigate replace to={`/signup${location.search}`} />;
 };
 
 export default App;

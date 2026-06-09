@@ -97,7 +97,7 @@ const PAGE_HINTS: Record<string, string> = {
   '/pmf-lab': 'Product-Market Fit can feel abstract. I can help you understand your score.',
   '/pitch-deck-analyzer': 'Upload your pitch deck and I\'ll analyze it across 6 key dimensions.',
   '/go-to-market': 'Working on your go-to-market plan? I can help you sharpen the next move.',
-  '/demo-studio': 'Building a demo or waitlist page? I can help make the promise clearer.',
+  '/demo-studio': 'Building a demo, VSL, or proof page? I can help sharpen the story and next step.',
   '/tech-stack': 'Choosing tools? I can help you keep the stack practical and lean.',
   '/mentorship': 'The community is full of founders at your stage. Want me to help you find relevant discussions?',
 };

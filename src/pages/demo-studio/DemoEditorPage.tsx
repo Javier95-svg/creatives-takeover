@@ -13,6 +13,7 @@ import {
   Rocket,
 } from 'lucide-react';
 import SEO from '@/components/SEO';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -27,18 +28,21 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { useSubscription } from '@/hooks/useSubscription';
 import StepThumbnailList from '@/components/demo-studio/editor/StepThumbnailList';
+import StoryboardRail from '@/components/demo-studio/editor/StoryboardRail';
 import HotspotCanvas from '@/components/demo-studio/editor/HotspotCanvas';
 import HotspotInspector from '@/components/demo-studio/editor/HotspotInspector';
 import DemoPlayer from '@/components/demo-studio/player/DemoPlayer';
 import WhatIsADemoPopover from '@/components/demo-studio/WhatIsADemoPopover';
 import { canRemoveWatermark, shouldShowWatermark } from '@/lib/demoStudio/plan';
 import {
+  applyStoryboardToDemo,
   createHotspot,
   createStep,
   deleteHotspot,
   deleteStep,
   duplicateStep,
   getDemo,
+  getBrief,
   listHotspotsForDemo,
   listSteps,
   persistStepOrder,
@@ -48,7 +52,9 @@ import {
   updateStep,
   uploadStepAsset,
 } from '@/lib/demoStudio/api';
+import { getDemoReadiness } from '@/lib/demoStudio/readiness';
 import type {
+  DemoStudioBrief,
   DemoStepWithHotspots,
   DemoStudioDemo,
   DemoStudioHotspot,
@@ -74,6 +80,7 @@ export default function DemoEditorPage() {
   const hotspotPersistTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
 
   const [demo, setDemo] = useState<DemoStudioDemo | null>(null);
+  const [brief, setBrief] = useState<DemoStudioBrief | null>(null);
   const [steps, setSteps] = useState<DemoStepWithHotspots[]>([]);
   const [selectedStepId, setSelectedStepId] = useState<string | null>(null);
   const [selectedHotspotId, setSelectedHotspotId] = useState<string | null>(null);
@@ -83,7 +90,7 @@ export default function DemoEditorPage() {
   const [previewOpen, setPreviewOpen] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  const theme: DemoTheme = demo?.theme ?? {};
+  const theme = useMemo<DemoTheme>(() => demo?.theme ?? {}, [demo?.theme]);
   const primaryColor = theme.primaryColor || DEFAULT_COLOR;
 
   useEffect(() => {
@@ -116,7 +123,9 @@ export default function DemoEditorPage() {
           byStep.set(h.step_id, arr);
         });
         const merged = stepRows.map((s) => ({ ...s, hotspots: byStep.get(s.id) ?? [] }));
+        const briefRow = projectId ? await getBrief(projectId) : null;
         setDemo(demoRow);
+        setBrief(briefRow);
         setSteps(merged);
         setSelectedStepId((prev) => prev ?? merged[0]?.id ?? null);
       } catch (e) {
@@ -139,6 +148,7 @@ export default function DemoEditorPage() {
     () => selectedStep?.hotspots.find((h) => h.id === selectedHotspotId) ?? null,
     [selectedStep, selectedHotspotId],
   );
+  const demoReadiness = useMemo(() => getDemoReadiness(steps, theme), [steps, theme]);
 
   const handleFiles = async (files: FileList | null) => {
     if (!files || files.length === 0 || !user || !demoId) return;
@@ -146,9 +156,24 @@ export default function DemoEditorPage() {
     try {
       let position = steps.length;
       const created: DemoStepWithHotspots[] = [];
-      for (const file of Array.from(files)) {
+      const imageFiles = Array.from(files).filter((file) => file.type.startsWith('image/'));
+      const selectedEmptyStep = selectedStep && !selectedStep.asset_url ? selectedStep : null;
+      for (const [index, file] of imageFiles.entries()) {
         if (!file.type.startsWith('image/')) continue;
         const asset = await uploadStepAsset(user.id, file);
+        if (index === 0 && selectedEmptyStep) {
+          await updateStep(selectedEmptyStep.id, {
+            asset_url: asset.url,
+            asset_width: asset.width,
+            asset_height: asset.height,
+          });
+          patchStepLocal(selectedEmptyStep.id, {
+            asset_url: asset.url,
+            asset_width: asset.width,
+            asset_height: asset.height,
+          });
+          continue;
+        }
         const step = await createStep(demoId, position, asset);
         created.push({ ...step, hotspots: [] });
         position += 1;
@@ -157,6 +182,8 @@ export default function DemoEditorPage() {
         setSteps((prev) => [...prev, ...created]);
         setSelectedStepId((prev) => prev ?? created[0].id);
         toast.success(`Added ${created.length} step${created.length > 1 ? 's' : ''}.`);
+      } else if (selectedEmptyStep && imageFiles.length > 0) {
+        toast.success('Screenshot attached to storyboard step.');
       }
     } catch (e) {
       toast.error(e instanceof Error ? e.message : 'Upload failed.');
@@ -198,6 +225,18 @@ export default function DemoEditorPage() {
       toast.success('Step duplicated.');
     } catch (e) {
       toast.error(e instanceof Error ? e.message : 'Could not duplicate the step.');
+    }
+  };
+
+  const handleApplyStoryboard = async () => {
+    if (!demo || !brief?.ai_storyboard?.length) return;
+    try {
+      const created = await applyStoryboardToDemo(demo.id, brief.ai_storyboard, steps.length);
+      setSteps((prev) => [...prev, ...created]);
+      setSelectedStepId(created[0]?.id ?? selectedStepId);
+      toast.success('Storyboard steps added.');
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Could not apply the storyboard.');
     }
   };
 
@@ -302,6 +341,9 @@ export default function DemoEditorPage() {
       toast.error('Add at least one step before publishing.');
       return;
     }
+    if (!demoReadiness.ready) {
+      toast.warning(`Demo readiness is ${demoReadiness.score}%. Publishing anyway so you can keep moving.`);
+    }
     setPublishing(true);
     try {
       const updated = await publishDemo(demo.id);
@@ -388,7 +430,27 @@ export default function DemoEditorPage() {
 
       <div className="grid grid-cols-1 gap-4 p-4 lg:grid-cols-[260px_minmax(0,1fr)_300px]">
         {/* Left: steps */}
-        <aside className="lg:sticky lg:top-[68px] lg:h-fit">
+        <aside className="space-y-4 lg:sticky lg:top-[68px] lg:h-fit">
+          <StoryboardRail
+            storyboard={brief?.ai_storyboard ?? []}
+            disabled={!demo || !brief?.ai_storyboard?.length}
+            onApply={handleApplyStoryboard}
+          />
+          <div className="rounded-xl border border-border bg-card p-4">
+            <div className="flex items-center justify-between gap-3">
+              <h4 className="text-sm font-semibold">Readiness</h4>
+              <Badge variant={demoReadiness.ready ? 'default' : 'outline'}>{demoReadiness.score}%</Badge>
+            </div>
+            {demoReadiness.missing.length ? (
+              <ul className="mt-3 space-y-1 text-xs text-muted-foreground">
+                {demoReadiness.missing.slice(0, 5).map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            ) : (
+              <p className="mt-3 text-xs text-muted-foreground">Demo has the essentials for a strong walkthrough.</p>
+            )}
+          </div>
           <StepThumbnailList
             steps={steps}
             selectedStepId={selectedStepId}
