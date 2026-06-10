@@ -10,11 +10,12 @@ import { logWarn } from '@/lib/logger';
  * `profiles.user_preferences` (jsonb) so no schema migration is required and the
  * whole feature is reversible by flipping the flag.
  *
- * Rollout flag: ships OFF. Set `VITE_FORCE_ONBOARDING_PATH=true` to enable. While
- * off, the dashboard behaves exactly as before (legacy Day1Welcome gate, full nav).
+ * Rollout flag: ships ON, acting as a kill switch. Set
+ * `VITE_FORCE_ONBOARDING_PATH=false` to disable and fall back to the legacy
+ * Day1Welcome gate + full nav. Any other value (including unset) keeps it enabled.
  */
 export const FORCED_ONBOARDING_ENABLED =
-  import.meta.env.VITE_FORCE_ONBOARDING_PATH === 'true';
+  import.meta.env.VITE_FORCE_ONBOARDING_PATH !== 'false';
 
 export type OnboardingPath = 'icp' | 'mentor';
 
