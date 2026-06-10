@@ -56,6 +56,16 @@ const PH_HOST =
   'https://us.i.posthog.com';
 const AMPLITUDE_API_KEY = import.meta.env.VITE_AMPLITUDE_API_KEY ?? '';
 
+// Internal/test accounts whose activity must not pollute product metrics. The admin
+// account is always included; VITE_INTERNAL_EMAILS (comma-separated) can add more.
+const INTERNAL_EMAILS = new Set<string>(
+  (import.meta.env.VITE_INTERNAL_EMAILS ?? '')
+    .split(',')
+    .map((email) => email.trim().toLowerCase())
+    .filter(Boolean),
+);
+INTERNAL_EMAILS.add('admin@creatives-takeover.com');
+
 const FIRST_TOUCH_UTM_KEY = 'ct_posthog_first_touch_utms';
 const AUTH_METHOD_STORAGE_KEY = 'ct_auth_method';
 const SIGNUP_INTENT_STORAGE_KEY = 'ct_signup_intent';
@@ -68,6 +78,9 @@ let posthogClient: typeof posthog | null = null;
 let initPromise: Promise<void> | null = null;
 let initialized = false;
 let amplitudeInitialized = false;
+// When true, all capture() calls are dropped so internal/admin activity never
+// enters the event stream. Set from AuthContext once the signed-in email is known.
+let internalUser = false;
 const queuedEvents: Array<{ eventName: string; properties?: AnalyticsProperties }> = [];
 const queuedIdentifies: Array<{ id: string; properties?: AnalyticsProperties }> = [];
 
@@ -284,7 +297,27 @@ export const bootstrapPosthog = () => {
   setTimeout(start, 1500);
 };
 
+/** True when `email` belongs to an internal/test account excluded from analytics. */
+export const isInternalEmail = (email?: string | null): boolean =>
+  !!email && INTERNAL_EMAILS.has(email.trim().toLowerCase());
+
+/**
+ * Flag the current visitor as internal (admin/test). While set, captureEvent is a
+ * no-op for both PostHog and Amplitude, and identify tags the person `is_internal`
+ * so PostHog's "filter internal and test users" setting can also exclude autocapture.
+ */
+export const setInternalUser = (value: boolean) => {
+  internalUser = value;
+};
+
+export const isInternalUser = () => internalUser;
+
 export const captureEvent = (eventName: string, properties?: AnalyticsProperties) => {
+  // Drop all events from internal/admin accounts so they never pollute metrics.
+  if (internalUser) {
+    return;
+  }
+
   const safeProperties = sanitizeAnalyticsProperties(properties);
   captureAmplitudeEvent(eventName, safeProperties);
 
@@ -304,6 +337,11 @@ export const captureEvent = (eventName: string, properties?: AnalyticsProperties
 
 export const identify = (id: string, properties?: AnalyticsProperties) => {
   const safeProperties = sanitizeAnalyticsProperties(properties);
+  // Tag internal accounts on the person record so PostHog-side internal-user
+  // filtering (which also covers autocapture) can exclude them.
+  if (internalUser) {
+    safeProperties.is_internal = true;
+  }
   identifyAmplitudeUser(id, safeProperties);
 
   if (isPosthogReady(posthogClient)) {

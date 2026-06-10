@@ -18,8 +18,10 @@ import {
   consumeSignupIntent,
   identify,
   initAmplitudeWithUser,
+  isInternalEmail,
   readAuthMethod,
   resetAmplitude,
+  setInternalUser,
   trackSignupCompleted,
   type SignupMethod,
 } from '@/lib/analytics';
@@ -101,6 +103,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const userId = signedInUser.id;
       const email = signedInUser.email || '';
       const isAdmin = isAdminEmail(email);
+
+      // Suppress analytics for internal/admin accounts before any capture/identify
+      // runs below, so admin activity never pollutes product metrics.
+      setInternalUser(isInternalEmail(email));
 
       // ── Step 1: Check if profile exists (SINGLE call) ──
       const { data: existingProfileData, error: existingProfileError } = await supabase
@@ -339,6 +345,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         // Clear processed ref on sign out so next sign-in gets processed
         if (event === 'SIGNED_OUT') {
           resetAmplitude();
+          // Re-enable analytics so a different user on this browser is tracked again.
+          setInternalUser(false);
           signInProcessedRef.current = null;
           identifiedUserRef.current = null;
         }
