@@ -158,7 +158,13 @@ export async function getOrCreateBrief(
       demo_goal: 'collect_signups',
       ai_storyboard: [],
       ai_vsl_scripts: [],
-      ai_launch_copy: {},
+      ai_launch_copy: {
+        headlines: [],
+        subheadline: '',
+        cta_label: DEFAULT_DEMO_STUDIO_CTA,
+        proof_bullets: [],
+        success_message: 'You are on the early access list.',
+      },
     } as any)
     .select('*')
     .single();

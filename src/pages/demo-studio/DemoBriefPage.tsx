@@ -38,7 +38,23 @@ import {
   DEMO_STUDIO_TONES,
   getBriefCompleteness,
 } from '@/lib/demoStudio/brief';
-import type { DemoStudioAiKit, DemoStudioBrief, DemoStudioProject } from '@/lib/demoStudio/types';
+import type { DemoStudioAiKit, DemoStudioBrief, DemoStudioLaunchCopy, DemoStudioProject } from '@/lib/demoStudio/types';
+
+function getRenderableLaunchCopy(value: unknown): DemoStudioLaunchCopy | null {
+  if (!value || typeof value !== 'object') return null;
+  const launchCopy = value as Partial<DemoStudioLaunchCopy>;
+  if (!Array.isArray(launchCopy.headlines) || launchCopy.headlines.length === 0) return null;
+  return {
+    headlines: launchCopy.headlines,
+    subheadline: typeof launchCopy.subheadline === 'string' ? launchCopy.subheadline : '',
+    cta_label:
+      typeof launchCopy.cta_label === 'string' && launchCopy.cta_label.trim()
+        ? launchCopy.cta_label
+        : DEFAULT_DEMO_STUDIO_CTA,
+    proof_bullets: Array.isArray(launchCopy.proof_bullets) ? launchCopy.proof_bullets : [],
+    success_message: typeof launchCopy.success_message === 'string' ? launchCopy.success_message : undefined,
+  };
+}
 
 export default function DemoBriefPage() {
   const { id: projectId } = useParams<{ id: string }>();
@@ -82,6 +98,14 @@ export default function DemoBriefPage() {
   }, [authLoading, user, projectId, navigate]);
 
   const completeness = useMemo(() => getBriefCompleteness(brief), [brief]);
+  const aiKit: DemoStudioAiKit = useMemo(
+    () => ({
+      storyboard: Array.isArray(brief?.ai_storyboard) ? brief.ai_storyboard : [],
+      vsl_scripts: Array.isArray(brief?.ai_vsl_scripts) ? brief.ai_vsl_scripts : [],
+      launch_copy: getRenderableLaunchCopy(brief?.ai_launch_copy) ?? undefined,
+    }),
+    [brief],
+  );
 
   const patchBrief = async (patch: Partial<DemoStudioBrief>) => {
     if (!projectId || !user || !brief) return;
@@ -151,20 +175,21 @@ export default function DemoBriefPage() {
   };
 
   const handleApplyLaunchCopy = async () => {
-    if (!project || !user || !brief?.ai_launch_copy) return;
+    const launchCopy = getRenderableLaunchCopy(brief?.ai_launch_copy);
+    if (!project || !user || !launchCopy) return;
     setSaving(true);
     try {
       await getOrCreateLaunchPage(project, user.id);
-      const headline = brief.ai_launch_copy.headlines[0];
+      const headline = launchCopy.headlines[0];
       await updateLaunchPage(project.id, user.id, {
         headline: headline?.headline || project.name,
-        subheadline: headline?.subheadline || brief.ai_launch_copy.subheadline || project.tagline,
-        cta_label: brief.ai_launch_copy.cta_label || brief.primary_cta_label || DEFAULT_DEMO_STUDIO_CTA,
+        subheadline: headline?.subheadline || launchCopy.subheadline || project.tagline,
+        cta_label: launchCopy.cta_label || brief?.primary_cta_label || DEFAULT_DEMO_STUDIO_CTA,
         theme: {
           primaryColor: '#6366f1',
           background: 'dark',
           layoutStyle: 'split',
-          successMessage: brief.ai_launch_copy.success_message || 'You are on the early access list.',
+          successMessage: launchCopy.success_message || 'You are on the early access list.',
         },
       });
       toast.success('Launch copy applied.');
@@ -182,12 +207,6 @@ export default function DemoBriefPage() {
       </div>
     );
   }
-
-  const aiKit: DemoStudioAiKit = {
-    storyboard: brief?.ai_storyboard ?? [],
-    vsl_scripts: brief?.ai_vsl_scripts ?? [],
-    launch_copy: brief?.ai_launch_copy ?? undefined,
-  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -332,7 +351,7 @@ export default function DemoBriefPage() {
               <CardContent className="space-y-3">
                 {aiKit.launch_copy ? (
                   <>
-                    {aiKit.launch_copy.headlines.map((headline) => (
+                    {aiKit.launch_copy.headlines?.map((headline) => (
                       <div key={headline.variant} className="rounded-lg border border-border p-3">
                         <Badge variant="outline">Variant {headline.variant}</Badge>
                         <p className="mt-2 text-sm font-semibold">{headline.headline}</p>
