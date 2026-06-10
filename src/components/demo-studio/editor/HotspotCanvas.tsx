@@ -208,7 +208,7 @@ export default function HotspotCanvas({
       ) : step.hotspots.length === 0 ? (
         <div className="pointer-events-none absolute inset-x-0 top-3 flex justify-center px-3">
           <span className="rounded-full bg-black/75 px-3 py-1.5 text-xs font-medium text-white shadow-lg">
-            Drag anywhere on the image to add a clickable hotspot
+            Drag on the screenshot to create a clickable hotspot
           </span>
         </div>
       ) : (

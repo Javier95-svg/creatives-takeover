@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
-import { ArrowLeft, FileText, Loader2, MonitorPlay, Rocket, Sparkles, Wand2 } from 'lucide-react';
+import { ArrowLeft, ArrowRight, FileText, Loader2, MonitorPlay, Rocket, Sparkles, Wand2 } from 'lucide-react';
 import SEO from '@/components/SEO';
 import Navigation from '@/components/Navigation';
 import { Badge } from '@/components/ui/badge';
@@ -106,6 +106,8 @@ export default function DemoBriefPage() {
     }),
     [brief],
   );
+  const hasGeneratedKit = Boolean(aiKit.storyboard?.length || aiKit.vsl_scripts?.length || aiKit.launch_copy);
+  const guideSteps = ['Define the story', 'Build the demo', 'Record the VSL', 'Publish the page', 'Measure interest'];
 
   const patchBrief = async (patch: Partial<DemoStudioBrief>) => {
     if (!projectId || !user || !brief) return;
@@ -200,6 +202,32 @@ export default function DemoBriefPage() {
     }
   };
 
+  const focusBrief = () => {
+    document.getElementById('brief-audience')?.focus();
+  };
+
+  const nextBriefAction = !completeness.complete
+    ? {
+        label: 'Complete brief',
+        description: `Fill in ${completeness.missing.join(', ')} to unlock storyboard and VSL script generation.`,
+        onClick: focusBrief,
+        icon: FileText,
+      }
+    : !hasGeneratedKit
+      ? {
+          label: 'Generate storyboard + VSL scripts',
+          description: 'Turn the brief into demo steps, VSL script drafts, and launch page copy.',
+          onClick: () => handleGenerate('full_kit'),
+          icon: Sparkles,
+        }
+      : {
+          label: 'Create guided demo',
+          description: 'Use the generated storyboard to create your first interactive demo.',
+          onClick: handleCreateDemoFromStoryboard,
+          icon: MonitorPlay,
+        };
+  const NextActionIcon = nextBriefAction.icon;
+
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
@@ -236,14 +264,44 @@ export default function DemoBriefPage() {
             </Button>
             <Button onClick={() => handleGenerate('full_kit')} disabled={generating || !completeness.complete} className="gap-2">
               {generating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-              Generate full kit
+              Generate storyboard + VSL scripts
+            </Button>
+            {!completeness.complete && (
+              <p className="w-full text-xs text-muted-foreground">
+                Complete Audience, Problem, Product promise, Aha moment, and CTA to unlock this.
+              </p>
+            )}
+          </div>
+        </div>
+
+        <div className="mb-6 rounded-2xl border border-primary/20 bg-primary/5 p-5">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <p className="text-sm font-semibold text-primary">Step 1 of 5: Define the story</p>
+              <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+                Fill your proof brief first. From there, Demo Studio can generate storyboard steps and VSL scripts, then help you build the demo and publish the launch page.
+              </p>
+            </div>
+            <Button onClick={nextBriefAction.onClick} disabled={generating || saving || (hasGeneratedKit && !aiKit.storyboard?.length)} className="gap-2">
+              <NextActionIcon className="h-4 w-4" />
+              {nextBriefAction.label}
+              <ArrowRight className="h-4 w-4" />
             </Button>
           </div>
+          <div className="mt-4 grid gap-2 sm:grid-cols-5">
+            {guideSteps.map((step, index) => (
+              <div key={step} className="rounded-lg border border-border/70 bg-background/70 px-3 py-2">
+                <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Step {index + 1}</p>
+                <p className="text-sm font-semibold">{step}</p>
+              </div>
+            ))}
+          </div>
+          <p className="mt-3 text-xs text-muted-foreground">{nextBriefAction.description}</p>
         </div>
 
         {!completeness.complete && (
           <div className="mb-6 rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm text-amber-900">
-            Complete these fields before AI generation: {completeness.missing.join(', ')}.
+            Complete Audience, Problem, Product promise, Aha moment, and CTA to unlock storyboard and VSL script generation. Missing now: {completeness.missing.join(', ')}.
           </div>
         )}
 
@@ -254,7 +312,7 @@ export default function DemoBriefPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <Field label="Audience">
-                <Input value={brief?.audience ?? ''} placeholder="Who needs this most?" onChange={(e) => setBrief((prev) => prev ? { ...prev, audience: e.target.value } : prev)} onBlur={(e) => patchBrief({ audience: e.target.value || null })} />
+                <Input id="brief-audience" value={brief?.audience ?? ''} placeholder="Who needs this most?" onChange={(e) => setBrief((prev) => prev ? { ...prev, audience: e.target.value } : prev)} onBlur={(e) => patchBrief({ audience: e.target.value || null })} />
               </Field>
               <Field label="Problem">
                 <Textarea rows={3} value={brief?.problem ?? ''} placeholder="What painful moment are they stuck in?" onChange={(e) => setBrief((prev) => prev ? { ...prev, problem: e.target.value } : prev)} onBlur={(e) => patchBrief({ problem: e.target.value || null })} />

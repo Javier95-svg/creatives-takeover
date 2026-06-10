@@ -37,7 +37,7 @@ export default function PasteLoomDialog({ open, label, saving, onOpenChange, onS
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Save VSL variation {label}</DialogTitle>
+          <DialogTitle>Add Loom link for variation {label}</DialogTitle>
           <DialogDescription>
             Paste the Loom share link for this pitch variation. Demo Studio stores the Loom URL and uses it on the launch page.
           </DialogDescription>
@@ -75,7 +75,7 @@ export default function PasteLoomDialog({ open, label, saving, onOpenChange, onS
         <DialogFooter>
           <Button onClick={handleSave} disabled={!url.trim() || saving} className="gap-2">
             {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Link2 className="h-4 w-4" />}
-            Save variation
+            Save Loom link
           </Button>
         </DialogFooter>
       </DialogContent>

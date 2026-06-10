@@ -80,7 +80,7 @@ export default function VslSlot({
               </div>
               {scriptDraft && (
                 <Button size="sm" variant="outline" className="h-8 gap-1" onClick={() => onApplyScript(label)} disabled={saving}>
-                  <Wand2 className="h-3.5 w-3.5" /> Use
+                  <Wand2 className="h-3.5 w-3.5" /> Use script
                 </Button>
               )}
             </div>
@@ -112,7 +112,7 @@ export default function VslSlot({
                 <p className="text-sm font-medium">Script saved. Add the Loom recording next.</p>
                 <p className="mt-1 text-sm text-muted-foreground">Record with the teleprompter open, then paste the Loom link here.</p>
                 <Button type="button" variant="outline" className="mt-3 gap-2" onClick={() => setPasteOpen(true)} disabled={saving}>
-                  <Clipboard className="h-4 w-4" /> Paste Loom
+                  <Clipboard className="h-4 w-4" /> Add Loom link
                 </Button>
               </div>
             )}
@@ -123,11 +123,11 @@ export default function VslSlot({
             <div className="flex flex-wrap gap-2">
               <Button size="sm" variant="outline" className="gap-1.5" onClick={() => onSetPrimary(vsl)} disabled={vsl.is_primary || saving}>
                 {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Star className="h-4 w-4" />}
-                Set primary
+                Use on launch page
               </Button>
               {(vsl.loom_embed_url || vsl.loom_shared_url) && (
                 <Button type="button" size="sm" variant="outline" className="gap-1.5" onClick={() => setPasteOpen(true)} disabled={saving}>
-                  <Clipboard className="h-4 w-4" /> Replace Loom
+                  <Clipboard className="h-4 w-4" /> Replace Loom link
                 </Button>
               )}
               <Button size="sm" variant="ghost" className="gap-1.5 text-destructive hover:text-destructive" onClick={() => onDelete(vsl)} disabled={saving}>
@@ -148,7 +148,7 @@ export default function VslSlot({
             <div className="flex flex-wrap gap-2">
               <LoomRecorderButton disabled={saving} onRecorded={(video) => onCreateFromLoom(label, video)} />
               <Button type="button" variant="outline" className="gap-2" onClick={() => setPasteOpen(true)} disabled={saving}>
-                <Clipboard className="h-4 w-4" /> Paste Loom
+                <Clipboard className="h-4 w-4" /> Add Loom link
               </Button>
             </div>
           </div>

@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import {
   ArrowLeft,
+  ArrowRight,
   ExternalLink,
   FileText,
   Globe,
@@ -11,6 +12,7 @@ import {
   Pencil,
   Plus,
   Rocket,
+  Sparkles,
   Trash2,
   Video,
 } from 'lucide-react';
@@ -18,8 +20,8 @@ import SEO from '@/components/SEO';
 import Navigation from '@/components/Navigation';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
-import { createDemo, deleteDemo, getProject, getProjectReadiness, listDemos, listVsls } from '@/lib/demoStudio/api';
-import type { DemoStudioDemo, DemoStudioProject, DemoStudioReadiness, DemoStudioVsl } from '@/lib/demoStudio/types';
+import { applyStoryboardToDemo, createDemo, deleteDemo, getBrief, getProject, getProjectReadiness, listDemos, listVsls } from '@/lib/demoStudio/api';
+import type { DemoStudioBrief, DemoStudioDemo, DemoStudioProject, DemoStudioReadiness, DemoStudioVsl } from '@/lib/demoStudio/types';
 import GettingStartedChecklist, { type ChecklistStep } from '@/components/demo-studio/GettingStartedChecklist';
 import WhatIsADemoPopover from '@/components/demo-studio/WhatIsADemoPopover';
 
@@ -28,6 +30,7 @@ export default function ProjectOverviewPage() {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [project, setProject] = useState<DemoStudioProject | null>(null);
+  const [brief, setBrief] = useState<DemoStudioBrief | null>(null);
   const [demos, setDemos] = useState<DemoStudioDemo[]>([]);
   const [vsls, setVsls] = useState<DemoStudioVsl[]>([]);
   const [readiness, setReadiness] = useState<DemoStudioReadiness | null>(null);
@@ -44,11 +47,12 @@ export default function ProjectOverviewPage() {
     let active = true;
     void (async () => {
       try {
-        const [projectRow, demoRows, vslRows, ready] = await Promise.all([
+        const [projectRow, demoRows, vslRows, ready, briefRow] = await Promise.all([
           getProject(projectId),
           listDemos(projectId),
           listVsls(projectId),
           getProjectReadiness(projectId),
+          getBrief(projectId),
         ]);
         if (!active) return;
         if (!projectRow) {
@@ -57,6 +61,7 @@ export default function ProjectOverviewPage() {
           return;
         }
         setProject(projectRow);
+        setBrief(briefRow);
         setDemos(demoRows);
         setVsls(vslRows);
         setReadiness(ready);
@@ -71,7 +76,7 @@ export default function ProjectOverviewPage() {
     };
   }, [authLoading, user, projectId, navigate]);
 
-  const handleCreateDemo = async () => {
+  const handleCreateBlankDemo = async () => {
     if (!user || !projectId) return;
     setCreating(true);
     try {
@@ -79,6 +84,23 @@ export default function ProjectOverviewPage() {
       navigate(`/demo-studio/projects/${projectId}/demos/${demo.id}/edit`);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : 'Could not create demo.');
+      setCreating(false);
+    }
+  };
+
+  const handleCreateGuidedDemo = async () => {
+    if (!user || !projectId) return;
+    if (!brief?.ai_storyboard?.length) {
+      navigate(`/demo-studio/projects/${projectId}/brief`);
+      return;
+    }
+    setCreating(true);
+    try {
+      const demo = await createDemo(projectId, user.id, `${project?.name ?? 'Product'} guided demo`);
+      await applyStoryboardToDemo(demo.id, brief.ai_storyboard, 0);
+      navigate(`/demo-studio/projects/${projectId}/demos/${demo.id}/edit`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Could not create guided demo.');
       setCreating(false);
     }
   };
@@ -96,27 +118,79 @@ export default function ProjectOverviewPage() {
   };
 
   const hasPublishedDemo = demos.some((d) => d.status === 'published');
-  const hasVsl = vsls.length > 0;
+  const hasVsl = vsls.some((vsl) => vsl.loom_embed_url || vsl.loom_shared_url || vsl.video_url);
+  const hasStoryboard = Boolean(brief?.ai_storyboard?.length);
+  const briefComplete = Boolean(
+    brief?.audience?.trim() &&
+    brief?.problem?.trim() &&
+    brief?.product_promise?.trim() &&
+    brief?.aha_moment?.trim() &&
+    brief?.primary_cta_label?.trim(),
+  );
   const firstDemoId = demos[0]?.id;
+  const nextProjectAction = !briefComplete
+    ? {
+        label: 'Complete brief',
+        description: `Start by defining who ${project?.name ?? 'your product'} is for, the pain it solves, and the proof your demo should show.`,
+        to: `/demo-studio/projects/${projectId}/brief`,
+        icon: FileText,
+      }
+    : !hasStoryboard
+      ? {
+          label: 'Generate storyboard + VSL scripts',
+          description: 'Use the completed brief to create guided demo steps and pitch scripts.',
+          to: `/demo-studio/projects/${projectId}/brief`,
+          icon: Sparkles,
+        }
+      : demos.length === 0
+        ? {
+            label: 'Create guided demo',
+            description: 'Turn the generated storyboard into an editable demo with steps ready for screenshots.',
+            onClick: handleCreateGuidedDemo,
+            icon: MonitorPlay,
+          }
+        : !hasPublishedDemo
+          ? {
+              label: 'Add screenshots',
+              description: 'Open the editor, attach screenshots, add hotspots, and publish the walkthrough.',
+              to: firstDemoId ? `/demo-studio/projects/${projectId}/demos/${firstDemoId}/edit` : undefined,
+              icon: MonitorPlay,
+            }
+          : !hasVsl
+            ? {
+                label: 'Record VSL',
+                description: 'Save one Loom founder pitch so the launch page has both proof formats.',
+                to: `/demo-studio/projects/${projectId}/vsl`,
+                icon: Video,
+              }
+            : {
+                label: 'Compose launch page',
+                description: 'Combine your published demo, VSL, and signup CTA into one public proof page.',
+                to: `/demo-studio/projects/${projectId}/launch`,
+                icon: Rocket,
+              };
+  const NextProjectActionIcon = nextProjectAction.icon;
   const roadmapSteps: ChecklistStep[] = [
     {
       label: 'Define the proof story',
       description: 'Audience, pain, promise, aha moment, and CTA before screenshots.',
-      done: Boolean(readiness?.hasBrief),
-      action: { label: 'Open brief', to: `/demo-studio/projects/${projectId}/brief` },
+      done: briefComplete,
+      action: { label: 'Complete brief', to: `/demo-studio/projects/${projectId}/brief` },
     },
     {
       label: 'Build a guided demo',
       description: 'Apply the storyboard, upload screenshots, then add clickable hotspots.',
       done: demos.length > 0,
-      action: { label: 'New demo', onClick: handleCreateDemo },
+      action: hasStoryboard
+        ? { label: 'Create guided demo', onClick: handleCreateGuidedDemo }
+        : { label: 'Open brief', to: `/demo-studio/projects/${projectId}/brief` },
     },
     {
       label: 'Publish & share',
       description: 'Publish to get a public link and an embed snippet.',
       done: hasPublishedDemo,
       action: firstDemoId
-        ? { label: 'Open editor', to: `/demo-studio/projects/${projectId}/demos/${firstDemoId}/edit` }
+        ? { label: 'Add screenshots', to: `/demo-studio/projects/${projectId}/demos/${firstDemoId}/edit` }
         : undefined,
     },
     {
@@ -162,6 +236,34 @@ export default function ProjectOverviewPage() {
           {project?.tagline && <p className="mt-1 text-muted-foreground">{project.tagline}</p>}
         </div>
 
+        <div className="mb-6 rounded-2xl border border-primary/20 bg-primary/5 p-5">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div>
+              <p className="text-sm font-semibold text-primary">Next best action</p>
+              <h2 className="mt-1 flex items-center gap-2 text-xl font-semibold">
+                <NextProjectActionIcon className="h-5 w-5 text-primary" />
+                {nextProjectAction.label}
+              </h2>
+              <p className="mt-1 max-w-2xl text-sm text-muted-foreground">{nextProjectAction.description}</p>
+              <p className="mt-2 text-xs text-muted-foreground">
+                Your launch page needs one published demo and one recorded VSL. You can create them in either order.
+              </p>
+            </div>
+            {nextProjectAction.to ? (
+              <Button asChild className="shrink-0 gap-2">
+                <Link to={nextProjectAction.to}>
+                  {nextProjectAction.label} <ArrowRight className="h-4 w-4" />
+                </Link>
+              </Button>
+            ) : (
+              <Button onClick={nextProjectAction.onClick} disabled={creating} className="shrink-0 gap-2">
+                {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : <NextProjectActionIcon className="h-4 w-4" />}
+                {nextProjectAction.label}
+              </Button>
+            )}
+          </div>
+        </div>
+
         <GettingStartedChecklist
           title="Your launch roadmap"
           subtitle="Demo Studio is complete when your demo, pitch video, and launch page are all live."
@@ -202,8 +304,8 @@ export default function ProjectOverviewPage() {
                 An interactive, click-through walkthrough of your product — screenshots + clickable hotspots.
               </p>
             </div>
-            <Button size="sm" className="shrink-0 gap-1.5" onClick={handleCreateDemo} disabled={creating}>
-              {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />} New demo
+            <Button size="sm" variant="outline" className="shrink-0 gap-1.5" onClick={handleCreateBlankDemo} disabled={creating}>
+              {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />} Start blank demo
             </Button>
           </div>
 
@@ -213,9 +315,23 @@ export default function ProjectOverviewPage() {
               <p className="mt-3 text-sm text-muted-foreground">
                 Build your first interactive demo — upload screenshots and add clickable hotspots.
               </p>
-              <Button className="mt-4 gap-1.5" onClick={handleCreateDemo} disabled={creating}>
-                <Plus className="h-4 w-4" /> New demo
-              </Button>
+              <div className="mt-4 flex flex-wrap justify-center gap-2">
+                {hasStoryboard ? (
+                  <Button className="gap-1.5" onClick={handleCreateGuidedDemo} disabled={creating}>
+                    {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : <MonitorPlay className="h-4 w-4" />}
+                    Create guided demo from brief
+                  </Button>
+                ) : (
+                  <Button asChild className="gap-1.5">
+                    <Link to={`/demo-studio/projects/${projectId}/brief`}>
+                      Open brief <FileText className="h-4 w-4" />
+                    </Link>
+                  </Button>
+                )}
+                <Button variant="outline" className="gap-1.5" onClick={handleCreateBlankDemo} disabled={creating}>
+                  <Plus className="h-4 w-4" /> Start blank demo
+                </Button>
+              </div>
             </div>
           ) : (
             <div className="space-y-3">

@@ -238,6 +238,25 @@ export default function LaunchComposerPage() {
     { label: 'CTA', done: Boolean(launchPage?.cta_label?.trim()) },
     { label: 'Public slug', done: Boolean(project?.slug?.trim()) },
   ];
+  type LaunchFixAction = { label: string; to: string } | { label: string; onClick: () => void };
+  const launchFixActions: LaunchFixAction[] = [];
+  if (!launchChecklist[0].done) {
+    launchFixActions.push({
+      label: 'Publish demo',
+      to: selectedDemo
+        ? `/demo-studio/projects/${projectId}/demos/${selectedDemo.id}/edit`
+        : `/demo-studio/projects/${projectId}`,
+    });
+  }
+  if (!launchChecklist[1].done) {
+    launchFixActions.push({ label: 'Record VSL', to: `/demo-studio/projects/${projectId}/vsl` });
+  }
+  if (!launchChecklist[2].done) {
+    launchFixActions.push({ label: 'Add headline', onClick: () => document.getElementById('launch-headline')?.focus() });
+  }
+  if (!launchChecklist[5].done) {
+    launchFixActions.push({ label: 'Set slug', onClick: () => document.getElementById('launch-slug')?.focus() });
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -283,6 +302,21 @@ export default function LaunchComposerPage() {
         {readiness && !readiness.canPublishLaunchPage && (
           <div className="mb-6 rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm text-amber-900">
             {readiness.missing.join(' ')}
+            {launchFixActions.length > 0 && (
+              <div className="mt-3 flex flex-wrap gap-2">
+                {launchFixActions.map((action) =>
+                  'to' in action ? (
+                    <Button key={action.label} asChild size="sm" variant="outline">
+                      <Link to={action.to}>{action.label}</Link>
+                    </Button>
+                  ) : (
+                    <Button key={action.label} size="sm" variant="outline" onClick={action.onClick}>
+                      {action.label}
+                    </Button>
+                  ),
+                )}
+              </div>
+            )}
           </div>
         )}
 

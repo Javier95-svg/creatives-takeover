@@ -86,6 +86,13 @@ export default function VslStudioPage() {
           </Button>
         </div>
 
+        <div className="mb-6 rounded-2xl border border-primary/20 bg-primary/5 p-5">
+          <p className="text-sm font-semibold text-primary">Record one founder pitch first</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Start with variation A. Variations B and C are optional tests for different hooks or CTAs. Your launch page needs one published demo and one recorded VSL; you can create them in either order.
+          </p>
+        </div>
+
         {projectId && user && (
           <VslStudio
             projectId={projectId}

@@ -371,6 +371,17 @@ export default function DemoEditorPage() {
       toast.error('Could not copy.');
     }
   };
+  const hasStoryboard = Boolean(brief?.ai_storyboard?.length);
+  const setupChecklist = [
+    { label: 'Screenshots', done: steps.length > 0 && steps.every((step) => Boolean(step.asset_url)) },
+    { label: 'Captions', done: steps.length > 0 && steps.every((step) => Boolean(step.caption?.trim())) },
+    {
+      label: 'Hotspots',
+      done: steps.length > 0 && steps.every((step, index) => index === steps.length - 1 || step.hotspots.length > 0),
+    },
+    { label: 'CTA', done: Boolean(theme.endCtaLabel?.trim()) },
+    { label: 'Publish', done: demo?.status === 'published' },
+  ];
 
   if (loading) {
     return (
@@ -468,13 +479,33 @@ export default function DemoEditorPage() {
 
         {/* Center: canvas */}
         <main className="min-w-0">
+          <div className="mb-4 rounded-xl border border-primary/20 bg-primary/5 p-4">
+            <p className="text-sm font-semibold text-primary">Build the interactive demo</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Your launch page needs one published demo and one recorded VSL. You can create them in either order.
+            </p>
+            <div className="mt-3 grid gap-2 sm:grid-cols-5">
+              {setupChecklist.map((item, index) => (
+                <div key={item.label} className="flex items-center gap-2 rounded-lg border border-border/70 bg-background/70 px-3 py-2">
+                  <span className={item.done ? 'text-emerald-600' : 'text-muted-foreground'}>
+                    {item.done ? <Check className="h-4 w-4" /> : <span className="flex h-4 w-4 items-center justify-center rounded-full border text-[10px]">{index + 1}</span>}
+                  </span>
+                  <span className="text-xs font-medium">{item.label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
           {steps.length === 0 ? (
             <div className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-muted-foreground/30 bg-muted/20 px-6 py-20 text-center">
               <ImagePlus className="h-10 w-10 text-muted-foreground" />
-              <h3 className="mt-4 text-lg font-semibold">Start with a screenshot</h3>
+              <h3 className="mt-4 text-lg font-semibold">
+                {hasStoryboard ? 'Attach screenshots to your storyboard steps' : 'Upload screenshots to start a blank walkthrough'}
+              </h3>
               <p className="mt-1 max-w-sm text-sm text-muted-foreground">
-                Upload images of your product — each one becomes a step. Next you'll drag clickable hotspots on
-                top to make it interactive.
+                {hasStoryboard
+                  ? 'Use the Storyboard panel to apply guided steps, then upload product screenshots for each step.'
+                  : "Upload images of your product — each one becomes a step. Next you'll drag clickable hotspots on top to make it interactive."}
               </p>
               <Button
                 className="mt-5 gap-1.5"
