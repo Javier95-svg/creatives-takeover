@@ -143,7 +143,7 @@ export default function ProjectsDashboardPage() {
               <Sparkles className="h-3.5 w-3.5" /> Demo Studio · Prototype stage
             </span>
             <h1 className="creatives-font mt-4 text-4xl font-bold leading-[1.05] md:text-5xl">
-              Build a <span className="takeover-gradient">demo + founder pitch</span> in an afternoon
+              Build your <span className="takeover-gradient">demo + VSL</span> in an afternoon
             </h1>
             <p className="mt-4 text-base text-muted-foreground md:text-lg">
               Define the product story, turn screenshots into an{' '}
@@ -168,8 +168,12 @@ export default function ProjectsDashboardPage() {
         {/* How it works — concretely defines a "demo" */}
         {!allChecklistDone && (
           <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-            {HOW_IT_WORKS.map((s) => (
-              <div key={s.step} className="rounded-2xl border border-white/10 bg-card/[0.84] p-5 shadow-sm backdrop-blur-md">
+            {HOW_IT_WORKS.map((s, index) => (
+              <div
+                key={s.step}
+                className="demo-step-card rounded-2xl border border-white/10 bg-card/[0.84] p-5 shadow-sm backdrop-blur-md transition duration-300 hover:-translate-y-1 hover:border-primary/35 hover:shadow-lg hover:shadow-primary/10"
+                style={{ animationDelay: `${index * 90}ms` }}
+              >
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 text-primary">
                   <s.icon className="h-5 w-5" />
                 </div>
@@ -181,6 +185,28 @@ export default function ProjectsDashboardPage() {
             ))}
           </div>
         )}
+        <style>{`
+          @keyframes demoStepRise {
+            from {
+              opacity: 0;
+              transform: translateY(12px);
+            }
+            to {
+              opacity: 1;
+              transform: translateY(0);
+            }
+          }
+
+          .demo-step-card {
+            animation: demoStepRise 520ms ease-out both;
+          }
+
+          @media (prefers-reduced-motion: reduce) {
+            .demo-step-card {
+              animation: none;
+            }
+          }
+        `}</style>
 
         {/* Getting-started checklist */}
         {!loading && !allChecklistDone && (
