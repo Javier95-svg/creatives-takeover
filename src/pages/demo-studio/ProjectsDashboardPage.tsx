@@ -34,6 +34,7 @@ import { createProject, getOwnerDemoCounts, listProjects } from '@/lib/demoStudi
 import type { DemoStudioProject } from '@/lib/demoStudio/types';
 import GettingStartedChecklist, { type ChecklistStep } from '@/components/demo-studio/GettingStartedChecklist';
 import WhatIsADemoPopover from '@/components/demo-studio/WhatIsADemoPopover';
+import DemoStudioWallpaper from '@/components/wallpapers/DemoStudioWallpaper';
 
 const HOW_IT_WORKS = [
   { icon: Sparkles, step: '1', title: 'Define the story', desc: 'Audience, promise, aha moment, and CTA.' },
@@ -123,18 +124,20 @@ export default function ProjectsDashboardPage() {
   const allChecklistDone = checklistSteps.every((s) => s.done);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="relative min-h-screen overflow-hidden bg-background">
       <SEO
         title="Demo Studio — Build interactive product demos"
         description="Create an interactive, click-through demo of your product from screenshots, then publish a shareable, embeddable walkthrough."
         url="/demo-studio/projects"
       />
+      <DemoStudioWallpaper />
       <Navigation />
 
-      <main className="container mx-auto max-w-6xl px-4 pt-28 pb-20 md:pt-32">
+      <main className="relative z-10 container mx-auto max-w-6xl px-4 pt-28 pb-20 md:pt-32">
         {/* Hero — what Demo Studio (and a "demo") is */}
-        <section className="relative mb-8 overflow-hidden rounded-3xl border border-border/60 bg-gradient-to-br from-primary/10 via-card to-card p-8 md:p-10">
-          <div className="pointer-events-none absolute -right-20 -top-24 h-64 w-64 rounded-full bg-primary/15 blur-3xl" />
+        <section className="relative mb-8 overflow-hidden rounded-3xl border border-white/[0.12] bg-card/[0.82] p-8 shadow-2xl shadow-black/10 backdrop-blur-xl md:p-10">
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/[0.35] to-transparent" />
+          <div className="pointer-events-none absolute bottom-0 right-0 h-36 w-72 rounded-tl-full border-l border-t border-white/10 bg-white/5" />
           <div className="relative max-w-2xl">
             <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
               <Sparkles className="h-3.5 w-3.5" /> Demo Studio · Prototype stage
@@ -166,7 +169,7 @@ export default function ProjectsDashboardPage() {
         {!allChecklistDone && (
           <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
             {HOW_IT_WORKS.map((s) => (
-              <div key={s.step} className="rounded-2xl border border-border/60 bg-card p-5">
+              <div key={s.step} className="rounded-2xl border border-white/10 bg-card/[0.84] p-5 shadow-sm backdrop-blur-md">
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 text-primary">
                   <s.icon className="h-5 w-5" />
                 </div>
@@ -207,7 +210,7 @@ export default function ProjectsDashboardPage() {
             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
           </div>
         ) : projects.length === 0 ? (
-          <div className="rounded-3xl border border-dashed border-primary/30 bg-primary/5 px-6 py-16 text-center">
+          <div className="rounded-3xl border border-dashed border-primary/[0.35] bg-card/[0.78] px-6 py-16 text-center shadow-xl shadow-black/5 backdrop-blur-xl">
             <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 text-primary">
               <MonitorPlay className="h-7 w-7" />
             </div>
@@ -226,7 +229,7 @@ export default function ProjectsDashboardPage() {
               <Link
                 key={project.id}
                 to={`/demo-studio/projects/${project.id}`}
-                className="group relative overflow-hidden rounded-2xl border border-border/60 bg-card p-5 transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-lg"
+                className="group relative overflow-hidden rounded-2xl border border-white/10 bg-card/[0.86] p-5 shadow-sm backdrop-blur-md transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-lg"
               >
                 <div className="mb-4 flex items-center justify-between">
                   <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 text-primary">
@@ -258,7 +261,7 @@ export default function ProjectsDashboardPage() {
             <button
               type="button"
               onClick={() => setDialogOpen(true)}
-              className="flex min-h-[150px] flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-muted-foreground/30 text-muted-foreground transition hover:border-primary/40 hover:text-primary"
+              className="flex min-h-[150px] flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-muted-foreground/30 bg-card/[0.58] text-muted-foreground backdrop-blur-sm transition hover:border-primary/40 hover:text-primary"
             >
               <Plus className="h-6 w-6" />
               <span className="text-sm font-medium">New project</span>
