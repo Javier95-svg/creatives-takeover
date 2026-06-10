@@ -29,7 +29,6 @@ interface StoryRecord {
   published_at: string | null;
   updated_at: string | null;
   body_content: string | null;
-  author_name: string | null;
 }
 
 function escapeAttr(value: string): string {
@@ -206,11 +205,19 @@ export default async function handler(request: Request): Promise<Response> {
       `${SUPABASE_URL}/rest/v1/stories_articles` +
         `?slug=eq.${encodeURIComponent(slug)}` +
         `&status=eq.published` +
-        `&select=slug,title,banner_image_url,excerpt,meta_title,meta_description,hashtags,published_at,updated_at,body_content,author_name` +
+        `&select=slug,title,banner_image_url,excerpt,meta_title,meta_description,hashtags,published_at,updated_at,body_content` +
         `&limit=1`,
       { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } },
     );
-    const records = (await res.json()) as StoryRecord[];
+    if (!res.ok) {
+      return passthrough();
+    }
+
+    const records = await res.json();
+    if (!Array.isArray(records)) {
+      return passthrough();
+    }
+
     article = records[0] ?? null;
   } catch {
     // Network/parse error — fall back to the generic shell rather than failing the page.
@@ -242,7 +249,7 @@ export default async function handler(request: Request): Promise<Response> {
   html = setMeta(html, 'name', 'twitter:image', ogImageUrl);
 
   // Article structured data (E-E-A-T: author, dates, publisher, image).
-  const authorName = (article.author_name || 'Creatives Takeover').trim();
+  const authorName = 'Creatives Takeover';
   const publishedIso = article.published_at || article.updated_at || new Date().toISOString();
   const modifiedIso = article.updated_at || publishedIso;
   html = injectJsonLd(html, {
