@@ -9,6 +9,7 @@ import { useConversationMemory } from './useConversationMemory';
 import { MEMORY_PATTERNS, detectMood, detectTone, extractTitle } from './useChatbot-memory-helpers';
 import { useSocraticEngine } from './useSocraticEngine';
 import { SocraticContext, ReasoningAnalysis, SocraticQuestion } from '@/types/socratic';
+import { captureEvent } from '@/lib/analytics';
 // Dynamic FAQ functionality removed - using static FAQs
 // Advanced analytics functionality removed - to be implemented per IMPLEMENTATION_PLAN.md
 
@@ -1717,10 +1718,22 @@ What specific aspect of your business would you like to focus on first?`;
       }
     }
 
-    // Track user interaction
-    trackUserInteraction({ 
-      type: 'question_asked', 
-      data: { question: content } 
+    // Track user interaction (in-memory metrics only)
+    trackUserInteraction({
+      type: 'question_asked',
+      data: { question: content }
+    });
+
+    // FIX(retention): emit chat_message_sent to PostHog/Amplitude via the real
+    // analytics gateway. The live chatbot previously only updated in-memory
+    // chatAnalytics state, and the standalone useChatAnalytics hook routed to the
+    // logger no-op — so this event never reached PostHog despite real chat volume.
+    // Send length + metadata only; never the raw message content (PII-safe).
+    captureEvent('chat_message_sent', {
+      session_id: sessionId,
+      chat_mode: chatMode,
+      message_length: content.trim().length,
+      has_attachments: messageAttachments.length > 0,
     });
 
     // Create user message

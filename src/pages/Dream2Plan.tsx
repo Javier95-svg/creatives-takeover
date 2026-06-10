@@ -34,6 +34,7 @@ import {
   trackBizMapFirstMessage,
   trackBizMapOutputGenerated,
   trackBizMapOutputSaved,
+  trackBizMapDemoStarted,
   trackBizMapDemoCompleted,
   trackBizMapDemoConverted,
   trackShareLinkCreated,
@@ -211,6 +212,10 @@ const BizMapAI = () => {
     if (!isDemoMode || !demoIdea) return;
     const trimmedIdea = demoIdea.trim();
     if (!trimmedIdea) return;
+    // FIX(retention): mark the top of the BizMap demo funnel. trackBizMapDemoStarted
+    // was defined but never called, so bizmap_demo_started never reached PostHog even
+    // though demo_completed/demo_converted (further down the funnel) did.
+    trackBizMapDemoStarted({ idea: trimmedIdea });
     setMessage(trimmedIdea);
     // Small delay so the UI renders first
     const timer = setTimeout(() => {
