@@ -18,6 +18,8 @@ import { useDashboardMetrics } from '@/hooks/useDashboardMetrics';
 import { useSubscription } from '@/hooks/useSubscription';
 import { normalizePlan, resolveDashboardMode } from '@/config/planPermissions';
 import { shouldRedirectToGuidedOnboarding } from '@/lib/guidedOnboarding';
+import { shouldShowOnboardingPathGate } from '@/lib/onboardingPath';
+import { OnboardingPathGate } from '@/components/onboarding/OnboardingPathGate';
 import { cn } from '@/lib/utils';
 import { DashboardSidebar } from './DashboardSidebar';
 import { DashboardStreakChip } from './DashboardStreakChip';
@@ -246,6 +248,12 @@ export function DashboardShell() {
         <DashboardPreview />
       </>
     );
+  }
+
+  // Task 4: forced single onboarding path (flag-gated). When enabled, the path
+  // chooser replaces both the legacy guided-onboarding redirect and Day1Welcome.
+  if (day1Profile && shouldShowOnboardingPathGate(day1Profile)) {
+    return <OnboardingPathGate profile={day1Profile} onProfilePatch={handleDay1ProfilePatch} />;
   }
 
   if (day1Profile && shouldRedirectToGuidedOnboarding(day1Profile)) {

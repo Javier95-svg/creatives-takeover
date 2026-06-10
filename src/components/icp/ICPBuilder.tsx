@@ -35,6 +35,7 @@ import {
   trackUpgradeClicked,
   trackUpgradePromptShown,
 } from "@/lib/analytics";
+import { markOnboardingPathCompleted } from "@/lib/onboardingPath";
 import { normalizePlan } from "@/config/planPermissions";
 import {
   fastIcpInputSchema,
@@ -922,6 +923,10 @@ const ICPBuilder: React.FC = () => {
       credits_used: 0,
     });
     trackActivationCompleted({ trigger: 'icp_completed', artifact: 'icp_completed' });
+    // Task 4: completing the ICP path unlocks the full dashboard nav (flag-gated no-op otherwise).
+    if (user?.id) {
+      void markOnboardingPathCompleted(user.id, 'icp');
+    }
     trackICPDashboardOpened({
       page_path: "/icp-builder",
       mode,

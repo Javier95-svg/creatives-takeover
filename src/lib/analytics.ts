@@ -9,6 +9,7 @@ type StoredAuthMethod = 'google' | 'linkedin' | 'email' | 'github';
 export type ActivationCompletedTrigger =
   | 'icp_completed'
   | 'mentor_saved'
+  | 'mentor_intro_sent'
   | 'first_message_sent'
   | 'first_artifact_created'
   | 'icp_seed_prefilled'
@@ -472,6 +473,9 @@ export const consumeSignupIntent = (): SignupMethod | null => {
 export const trackActivationCompleted = (
   properties: AnalyticsProperties & { trigger: ActivationCompletedTrigger },
 ) => captureEvent('activation_completed', properties);
+
+export const trackOnboardingPathSelected = (properties: { path: 'icp' | 'mentor' }) =>
+  captureEvent('onboarding_path_selected', properties);
 
 export const trackOnboardingStarted = (properties: {
   source: OnboardingStartedSource;

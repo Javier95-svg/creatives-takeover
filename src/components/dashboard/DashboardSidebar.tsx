@@ -56,6 +56,12 @@ import {
 } from '@/config/planPermissions';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useDashboardNavigation } from '@/contexts/DashboardNavigationContext';
+import { shouldReduceOnboardingNav } from '@/lib/onboardingPath';
+
+// Task 4: during the forced-onboarding window, collapse the sidebar to the
+// essentials — dashboard home, the daily loop, and the two onboarding paths.
+const ONBOARDING_NAV_PATHS = new Set(['/dashboard', '/dashboard/tasks', '/dashboard/routine']);
+const ONBOARDING_TOOL_KEYS = new Set<DashboardSidebarToolKey>(['icp_builder', 'find_mentor']);
 
 interface SidebarPreferences {
   showICPBuilder: boolean;
@@ -145,6 +151,7 @@ export const DashboardSidebar = () => {
   const incompleteTaskCount = useContext(TaskCountContext);
   const { activeSection, setActiveSection } = useDashboardNavigation();
   const [sidebarPreferences, setSidebarPreferences] = useState<SidebarPreferences>(defaultSidebarPreferences);
+  const [reduceOnboardingNav, setReduceOnboardingNav] = useState(false);
   const currentPlan = normalizePlan(subscriptionData?.subscription_tier);
   const modeConfig = getDashboardModeConfig(resolveDashboardMode(currentPlan));
 
@@ -154,13 +161,20 @@ export const DashboardSidebar = () => {
 
       const { data } = await supabase
         .from('profiles')
-        .select('sidebar_preferences')
+        .select('sidebar_preferences, user_preferences, onboarding_completed')
         .eq('id', user.id)
         .single();
 
       if (data?.sidebar_preferences) {
         setSidebarPreferences(normalizePreferences(data.sidebar_preferences as LegacySidebarPreferences));
       }
+
+      setReduceOnboardingNav(
+        shouldReduceOnboardingNav(
+          { onboarding_completed: data?.onboarding_completed, user_preferences: data?.user_preferences },
+          user.created_at,
+        ),
+      );
     };
 
     loadPreferences();
@@ -185,10 +199,12 @@ export const DashboardSidebar = () => {
     repeat_2: Repeat2,
   };
 
-  const dashboardNavItems = modeConfig.navItems.map((item) => ({
-    ...item,
-    icon: navIconMap[item.iconKey],
-  }));
+  const dashboardNavItems = modeConfig.navItems
+    .filter((item) => !reduceOnboardingNav || ONBOARDING_NAV_PATHS.has(item.path))
+    .map((item) => ({
+      ...item,
+      icon: navIconMap[item.iconKey],
+    }));
 
   const buildNavTarget = (path: string, sectionId?: string) => {
     if (!sectionId) {
@@ -253,6 +269,10 @@ export const DashboardSidebar = () => {
     { toolKey: 'newspaper', path: '/newspaper', label: 'Newspaper', icon: BookOpen, prefKey: 'showNewspaper', featureKey: 'newspaper' },
     { toolKey: 'prompt_library', path: '/prompt-library', label: 'Prompt Library', icon: Library, prefKey: 'showPromptLibrary', featureKey: 'prompt_library' },
   ].filter((item) => {
+    if (reduceOnboardingNav && !ONBOARDING_TOOL_KEYS.has(item.toolKey)) {
+      return false;
+    }
+
     if (!modeConfig.visibleTools.includes(item.toolKey)) {
       return false;
     }
