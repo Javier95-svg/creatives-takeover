@@ -138,8 +138,8 @@ export default function ProjectsDashboardPage() {
         <section className="relative mb-8 overflow-hidden rounded-3xl border border-white/[0.12] bg-card/[0.82] p-8 shadow-2xl shadow-black/10 backdrop-blur-xl md:p-10">
           <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/[0.35] to-transparent" />
           <div className="pointer-events-none absolute bottom-0 right-0 h-36 w-72 rounded-tl-full border-l border-t border-white/10 bg-white/5" />
-          <div className="relative max-w-2xl">
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+          <div className="relative w-full text-center">
+            <span className="mx-auto inline-flex items-center justify-center gap-1.5 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
               <Sparkles className="h-3.5 w-3.5" /> Demo Studio · Prototype stage
             </span>
             <h1 className="creatives-font mt-4 text-4xl font-bold leading-[1.05] md:text-5xl">
@@ -150,7 +150,7 @@ export default function ProjectsDashboardPage() {
               <strong className="font-semibold text-foreground">interactive walkthrough</strong>, record a VSL, and
               publish one proof page with signup capture.
             </p>
-            <div className="mt-6 flex flex-wrap gap-3">
+            <div className="mt-6 flex flex-wrap justify-center gap-3">
               <Button size="lg" className="gap-2" onClick={() => setDialogOpen(true)}>
                 <Plus className="h-4 w-4" /> New project
               </Button>
