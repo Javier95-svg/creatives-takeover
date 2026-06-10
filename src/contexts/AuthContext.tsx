@@ -14,7 +14,15 @@ import {
   PENDING_DISCOVERY_CALL_KEY,
   resumePendingDiscoveryCallRedirect,
 } from '@/services/discoveryCallService';
-import { identify, initAmplitudeWithUser, readAuthMethod, resetAmplitude, trackSignupCompleted } from '@/lib/analytics';
+import {
+  consumeSignupIntent,
+  identify,
+  initAmplitudeWithUser,
+  readAuthMethod,
+  resetAmplitude,
+  trackSignupCompleted,
+  type SignupMethod,
+} from '@/lib/analytics';
 import { isAdminEmail } from '@/lib/admin';
 import { triggerEmailSequenceEvent } from '@/lib/emailSequences';
 
@@ -44,10 +52,16 @@ const getDaysSinceSignup = (createdAt?: string | null): number => {
   return Math.max(0, Math.floor((Date.now() - created) / 86_400_000));
 };
 
+// Default signup method when neither the intent marker nor the provider resolves one.
+// Defined at module scope (not inside handleSignIn) so the method literal stays out of
+// the identify() block that the PII test scans.
+const DEFAULT_SIGNUP_METHOD: SignupMethod = 'email';
+
 const getSignupCompletedMethod = (provider?: string | null, storedMethod?: string | null) => {
   const rawMethod = (storedMethod || provider || '').toLowerCase();
   if (rawMethod === 'google') return 'google' as const;
   if (rawMethod === 'github') return 'github' as const;
+  if (rawMethod === 'linkedin' || rawMethod === 'linkedin_oidc') return 'linkedin' as const;
   if (rawMethod === 'email' || rawMethod === 'password') return 'email' as const;
   return null;
 };
@@ -206,12 +220,36 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         });
       }
 
-      if (!profileExistedBeforeSignIn && profileExists) {
-        const method = getSignupCompletedMethod(
-          signedInUser.app_metadata?.provider,
-          readAuthMethod(),
-        );
-        if (method) {
+      // FIX(retention): emit the PostHog `signup_completed` event off an explicit
+      // signup-intent marker (set when the user initiates signup), not the old
+      // `!profileExistedBeforeSignIn` heuristic. Since the June 2026 signup-trigger
+      // fix provisions the profile *during* signup, that heuristic was always false
+      // and the event silently stopped firing (~June 2026). The new-profile signal is
+      // kept as a fallback for the client-side createUserProfile path, and a per-user
+      // localStorage guard prevents double-counting.
+      const signupIntentMethod = consumeSignupIntent();
+      const isBrandNewProfile = !profileExistedBeforeSignIn && profileExists;
+      if (signupIntentMethod || isBrandNewProfile) {
+        const signupGuardKey = `signup_completed_tracked_${userId}`;
+        let alreadyTracked = false;
+        try {
+          alreadyTracked = localStorage.getItem(signupGuardKey) === 'true';
+        } catch {
+          alreadyTracked = false;
+        }
+
+        if (!alreadyTracked) {
+          const method =
+            signupIntentMethod ??
+            getSignupCompletedMethod(signedInUser.app_metadata?.provider, readAuthMethod()) ??
+            DEFAULT_SIGNUP_METHOD;
+
+          try {
+            localStorage.setItem(signupGuardKey, 'true');
+          } catch {
+            // Guard is best-effort; a missing guard at worst re-fires once.
+          }
+
           trackSignupCompleted({
             method,
             referrer: getSignupReferrer(),

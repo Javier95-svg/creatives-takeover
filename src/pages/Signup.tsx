@@ -17,7 +17,7 @@ import MobileFormOptimizer from "@/components/MobileFormOptimizer";
 import { AuthSocialButtons } from "@/components/auth/AuthSocialButtons";
 import { mapSignUpError } from "@/lib/authErrors";
 import { MIN_PASSWORD_LENGTH, PASSWORD_LENGTH_ERROR } from "@/lib/passwordPolicy";
-import { captureEvent, persistAuthMethod, trackSignupCompletedAttributed } from "@/lib/analytics";
+import { captureEvent, persistAuthMethod, persistSignupIntent, trackSignupCompletedAttributed } from "@/lib/analytics";
 import { useCTAAttribution } from "@/hooks/useCTAAttribution";
 import {
   isUsernameAvailable,
@@ -298,6 +298,9 @@ const Signup = () => {
         returnUrl: conversionSource.returnUrl,
       });
       trackSignupStarted(triggerType);
+      // Mark this as a fresh email signup so AuthContext fires `signup_completed`
+      // to PostHog once the resulting SIGNED_IN event is handled.
+      persistSignupIntent('email');
 
       const fullName = [formData.firstName.trim(), formData.lastName.trim()].filter(Boolean).join(" ");
       const pendingReferralCode = getPendingReferralCode();
@@ -415,6 +418,12 @@ const Signup = () => {
       beforeRedirect: () => {
         if (signupMethod === 'google' || signupMethod === 'linkedin') {
           persistAuthMethod(signupMethod);
+        }
+
+        // Mark this as a fresh OAuth signup so AuthContext fires `signup_completed`
+        // to PostHog after the OAuth round-trip resolves to SIGNED_IN.
+        if (signupMethod === 'google' || signupMethod === 'linkedin' || signupMethod === 'github') {
+          persistSignupIntent(signupMethod);
         }
 
         localStorage.setItem('oauth_return_url', conversionSource.returnUrl);

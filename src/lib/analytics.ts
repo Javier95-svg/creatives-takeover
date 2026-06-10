@@ -26,7 +26,8 @@ export type UpgradePromptTrigger = 'soft_gate_banner' | 'hard_gate_modal' | 'pos
 export type IcpBuilderOpenedSource = 'dashboard' | 'onboarding' | 'direct' | 'seed_redirect';
 export type OnboardingStartedSource = 'signup_redirect' | 'dashboard_prompt' | 'direct';
 
-export interface SignupCompletedProps { method: 'email' | 'google' | 'github'; referrer: string | null; }
+export type SignupMethod = 'email' | 'google' | 'github' | 'linkedin';
+export interface SignupCompletedProps { method: SignupMethod; referrer: string | null; }
 export interface OnboardingCompletedProps {
   quiz_completed: boolean;
   creative_niche: string | null;
@@ -57,6 +58,11 @@ const AMPLITUDE_API_KEY = import.meta.env.VITE_AMPLITUDE_API_KEY ?? '';
 
 const FIRST_TOUCH_UTM_KEY = 'ct_posthog_first_touch_utms';
 const AUTH_METHOD_STORAGE_KEY = 'ct_auth_method';
+const SIGNUP_INTENT_STORAGE_KEY = 'ct_signup_intent';
+// Honor a stored signup intent for this long. Covers the OAuth round-trip and the
+// immediate auto-sign-in after email signup; stale markers (e.g. a much later login)
+// are ignored so we never mislabel a returning login as a fresh signup.
+const SIGNUP_INTENT_MAX_AGE_MS = 30 * 60 * 1000;
 
 let posthogClient: typeof posthog | null = null;
 let initPromise: Promise<void> | null = null;
@@ -363,6 +369,66 @@ export const readAuthMethod = (): StoredAuthMethod | null => {
   storage.removeItem(AUTH_METHOD_STORAGE_KEY);
 
   return method === 'google' || method === 'linkedin' || method === 'email' || method === 'github' ? method : null;
+};
+
+/**
+ * Mark that the current visitor just initiated a *signup* (not a login), so the
+ * subsequent SIGNED_IN handler can emit `signup_completed` to PostHog reliably.
+ *
+ * Stored in localStorage (survives the OAuth redirect round-trip) with a timestamp
+ * so stale markers are ignored. Replaces the old profile-existence heuristic, which
+ * broke once the signup DB trigger began provisioning the profile before sign-in.
+ */
+export const persistSignupIntent = (method: SignupMethod) => {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  try {
+    getSafeLocalStorage().setItem(
+      SIGNUP_INTENT_STORAGE_KEY,
+      JSON.stringify({ method, ts: Date.now() }),
+    );
+  } catch (error) {
+    logWarn('Failed to persist signup intent', error);
+  }
+};
+
+/** Read-and-clear the signup intent marker. Returns null if absent or stale. */
+export const consumeSignupIntent = (): SignupMethod | null => {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+
+  const storage = getSafeLocalStorage();
+  let raw: string | null = null;
+  try {
+    raw = storage.getItem(SIGNUP_INTENT_STORAGE_KEY);
+    storage.removeItem(SIGNUP_INTENT_STORAGE_KEY);
+  } catch (error) {
+    logWarn('Failed to read signup intent', error);
+    return null;
+  }
+
+  if (!raw) {
+    return null;
+  }
+
+  try {
+    const parsed = JSON.parse(raw) as { method?: unknown; ts?: unknown };
+    if (typeof parsed?.method !== 'string' || typeof parsed.ts !== 'number') {
+      return null;
+    }
+    if (Date.now() - parsed.ts > SIGNUP_INTENT_MAX_AGE_MS) {
+      return null;
+    }
+    const method = parsed.method;
+    return method === 'email' || method === 'google' || method === 'github' || method === 'linkedin'
+      ? method
+      : null;
+  } catch {
+    return null;
+  }
 };
 
 export const trackActivationCompleted = (
