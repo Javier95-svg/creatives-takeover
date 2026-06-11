@@ -9,6 +9,8 @@ import {
   Flame,
   ListChecks,
   Repeat2,
+  TrendingUp,
+  Zap,
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -17,6 +19,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/contexts/AuthContext";
+import { useDailyMission } from "@/hooks/useDailyMission";
 import { useRoutine } from "@/hooks/useRoutine";
 import { useTaskCalendarEngine } from "@/hooks/useTaskCalendarEngine";
 import { getTaskRuntimeStatus, toDateKey, type CalendarTaskRow } from "@/lib/taskCalendar";
@@ -62,6 +65,7 @@ function StatTile({
 export default function DashboardTodayCockpit() {
   const { user } = useAuth();
   const routine = useRoutine();
+  const dailyMission = useDailyMission();
   const {
     groupedTasks,
     completeTask,
@@ -127,7 +131,7 @@ export default function DashboardTodayCockpit() {
             </p>
           </div>
 
-          <div className="grid w-full max-w-md grid-cols-3 gap-2 lg:w-auto">
+          <div className="grid w-full max-w-md grid-cols-2 gap-2 sm:grid-cols-4 lg:w-auto">
             <StatTile
               icon={Flame}
               label="Streak"
@@ -139,6 +143,23 @@ export default function DashboardTodayCockpit() {
               label="Done today"
               value={`${completedCount}/${totalCount}`}
               accent="emerald"
+            />
+            <StatTile
+              icon={TrendingUp}
+              label="7-day pace"
+              value={
+                routine.stats.completedPrev7 > 0 || routine.stats.completedLast7 > 0
+                  ? `${routine.stats.completedLast7}${
+                      routine.stats.completedLast7 >= routine.stats.completedPrev7 ? " ↑" : " ↓"
+                    }`
+                  : "0"
+              }
+              accent={
+                routine.stats.completedLast7 >= routine.stats.completedPrev7 &&
+                routine.stats.completedLast7 > 0
+                  ? "emerald"
+                  : "default"
+              }
             />
             <StatTile
               icon={AlertTriangle}
@@ -157,6 +178,40 @@ export default function DashboardTodayCockpit() {
               <span className="font-medium text-foreground">{progress}%</span>
             </div>
             <Progress value={progress} className="h-2" />
+          </div>
+        ) : null}
+
+        {/* Daily mission: one stage-aware action that changes every day, so each
+            return visit has something new waiting (variable reward). */}
+        {dailyMission.mission ? (
+          <div className="mt-5 rounded-xl border border-primary/25 bg-primary/[0.06] p-4">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-primary/80">
+                  <Zap className="h-3.5 w-3.5" aria-hidden="true" />
+                  Daily mission · {dailyMission.stageLabel}
+                </p>
+                <p className="mt-1.5 text-sm leading-6 text-foreground">
+                  {dailyMission.mission.mission_text}
+                </p>
+              </div>
+              {dailyMission.mission.completed ? (
+                <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-3 py-1.5 text-xs font-semibold text-emerald-700 dark:text-emerald-300">
+                  <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
+                  Done
+                </span>
+              ) : (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="shrink-0"
+                  onClick={() => void dailyMission.markAsDone()}
+                  disabled={dailyMission.completing}
+                >
+                  {dailyMission.completing ? "Saving…" : "Mark done"}
+                </Button>
+              )}
+            </div>
           </div>
         ) : null}
 

@@ -231,7 +231,7 @@ function buildEmail(ctx: UserContext, sequence: SequenceSlug): BuiltEmail {
   const resetDate = formatResetDate(ctx.credits.current_period_end);
   const icpUrl = `${ctx.appUrl}/icp-builder`;
   const dashboardUrl = `${ctx.appUrl}/dashboard`;
-  const waitlistUrl = `${ctx.appUrl}/waitlist`;
+  const waitlistUrl = `${ctx.appUrl}/demo-studio`;
 
   switch (sequence) {
     case "activation_day0":
@@ -537,11 +537,16 @@ async function runEvent(event: EventName, userId: string) {
   };
 }
 
+// Full 24h bucket: profiles created between `day+1` and `day` days ago. A ±6h
+// window around the cron hour permanently missed the ~56% of signups that
+// happened in the other half of the day; a full-day bucket catches everyone
+// exactly once per sequence (the per-user `alreadySent` dedupe makes daily
+// re-runs idempotent).
 function windowForDay(day: number) {
-  const target = Date.now() - day * 86_400_000;
+  const now = Date.now();
   return {
-    start: new Date(target - 6 * 60 * 60 * 1000).toISOString(),
-    end: new Date(target + 6 * 60 * 60 * 1000).toISOString(),
+    start: new Date(now - (day + 1) * 86_400_000).toISOString(),
+    end: new Date(now - day * 86_400_000).toISOString(),
   };
 }
 

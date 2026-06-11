@@ -477,6 +477,13 @@ export const trackActivationCompleted = (
 export const trackOnboardingPathSelected = (properties: { path: 'icp' | 'mentor' }) =>
   captureEvent('onboarding_path_selected', properties);
 
+/** Top of the forced-onboarding funnel: the path chooser rendered. */
+export const trackOnboardingGateShown = () => captureEvent('onboarding_gate_shown');
+
+/** The funnel leak: user dismissed the chooser without picking a path. */
+export const trackOnboardingPathSkipped = (properties: { view: 'choose' | 'mentor' }) =>
+  captureEvent('onboarding_path_skipped', properties);
+
 export const trackOnboardingStarted = (properties: {
   source: OnboardingStartedSource;
   userId?: string;

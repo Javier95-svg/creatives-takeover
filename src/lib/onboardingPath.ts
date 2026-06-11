@@ -1,6 +1,9 @@
 import { supabase } from '@/integrations/supabase/client';
+import type { Json } from '@/integrations/supabase/types';
+import { captureEvent } from '@/lib/analytics';
 import { getUserPreferencesRecord } from '@/lib/guidedOnboarding';
 import { logWarn } from '@/lib/logger';
+import { createRoutineConfig, serializeRoutineConfig } from '@/lib/routineTemplates';
 
 /**
  * Task 4 — forced single onboarding path.
@@ -91,6 +94,45 @@ export function shouldReduceOnboardingNav(
   if (getOnboardingPathState(profile.user_preferences).completed) return false;
   const age = accountAgeMs(userCreatedAt);
   return age !== null && age < ONBOARDING_NAV_WINDOW_MS;
+}
+
+/**
+ * RET-003: start the habit loop *for* the user instead of asking them to assemble
+ * it. When a new user passes the onboarding gate, seed the "validate idea" routine
+ * (2 daily + 1 weekly task) so the Today cockpit and streak are alive on day 1
+ * instead of showing an empty state and a permanent 0-day flame.
+ * Never overwrites a routine the user already configured.
+ */
+export async function seedDefaultRoutineForOnboarding(userId: string): Promise<void> {
+  if (!userId) return;
+
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('routine_config')
+    .eq('id', userId)
+    .maybeSingle();
+
+  if (error) {
+    logWarn('seedDefaultRoutineForOnboarding: failed to read routine_config', error);
+    return;
+  }
+  if (data?.routine_config) return; // user already has a routine — leave it alone
+
+  const goal = 'validate_idea';
+  const { error: updateError } = await supabase
+    .from('profiles')
+    .update({
+      routine_config: serializeRoutineConfig(createRoutineConfig(goal)) as Json,
+      routine_primary_goal: goal,
+    })
+    .eq('id', userId);
+
+  if (updateError) {
+    logWarn('seedDefaultRoutineForOnboarding: failed to seed routine', updateError);
+    return;
+  }
+
+  captureEvent('routine_auto_seeded', { goal, trigger: 'onboarding_path' });
 }
 
 /**

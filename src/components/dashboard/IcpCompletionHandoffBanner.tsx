@@ -28,8 +28,10 @@ export function IcpCompletionHandoffBanner({
     }) ?? recommendations[0] ?? null;
 
   const { summary, analysisId } = primaryIcp;
-  const actionUrl = nextAction?.action_url || '/dashboard#my-files';
-  const actionLabel = nextAction?.title || 'Open My Files';
+  // RET-006: the demonstrated retention corridor is ICP -> validation -> MVP, so
+  // the fallback continues the cycle instead of parking the user in their files.
+  const actionUrl = nextAction?.action_url || '/validate';
+  const actionLabel = nextAction?.title || 'Validate the demand';
 
   const dismiss = () => {
     const nextParams = new URLSearchParams(searchParams);
@@ -64,6 +66,24 @@ export function IcpCompletionHandoffBanner({
               Next recommended action: <span className="font-medium text-foreground">{nextAction.description}</span>
             </p>
           ) : null}
+
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs font-medium text-muted-foreground">
+            <span className="inline-flex items-center gap-1 text-primary">
+              <CheckCircle2 className="h-3.5 w-3.5" /> ICP defined
+            </span>
+            <ArrowRight className="h-3 w-3" aria-hidden="true" />
+            <Link to="/validate" className="underline-offset-4 hover:text-foreground hover:underline">
+              Validate demand
+            </Link>
+            <ArrowRight className="h-3 w-3" aria-hidden="true" />
+            <Link to="/mvp-scope" className="underline-offset-4 hover:text-foreground hover:underline">
+              Scope your MVP
+            </Link>
+            <ArrowRight className="h-3 w-3" aria-hidden="true" />
+            <Link to="/demo-studio" className="underline-offset-4 hover:text-foreground hover:underline">
+              Launch a demo page
+            </Link>
+          </div>
         </div>
 
         <div className="flex flex-col gap-2 sm:flex-row lg:shrink-0">

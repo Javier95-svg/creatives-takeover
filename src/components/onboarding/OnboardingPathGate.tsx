@@ -9,9 +9,15 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useMessaging } from '@/hooks/useMessaging';
 import { supabase } from '@/integrations/supabase/client';
 import type { Json } from '@/integrations/supabase/types';
-import { trackActivationCompleted, trackOnboardingPathSelected } from '@/lib/analytics';
+import {
+  trackActivationCompleted,
+  trackOnboardingGateShown,
+  trackOnboardingPathSelected,
+  trackOnboardingPathSkipped,
+} from '@/lib/analytics';
 import { triggerEmailSequenceEvent } from '@/lib/emailSequences';
 import {
+  seedDefaultRoutineForOnboarding,
   withOnboardingPath,
   withOnboardingPathCompleted,
 } from '@/lib/onboardingPath';
@@ -50,6 +56,10 @@ export function OnboardingPathGate({ profile, onProfilePatch }: OnboardingPathGa
   const [mentors, setMentors] = useState<SuggestedMentor[]>([]);
   const [mentorsLoading, setMentorsLoading] = useState(false);
   const [sendingMentorId, setSendingMentorId] = useState<string | null>(null);
+
+  useEffect(() => {
+    trackOnboardingGateShown();
+  }, []);
 
   const loadMentors = useCallback(async () => {
     setMentorsLoading(true);
@@ -91,6 +101,7 @@ export function OnboardingPathGate({ profile, onProfilePatch }: OnboardingPathGa
       if (error) throw error;
 
       trackOnboardingPathSelected({ path: 'icp' });
+      void seedDefaultRoutineForOnboarding(user.id);
       onProfilePatch({ user_preferences: nextPrefs as Json, onboarding_completed: true });
       navigate('/icp-builder?source=onboarding');
     } catch (error) {
@@ -112,6 +123,7 @@ export function OnboardingPathGate({ profile, onProfilePatch }: OnboardingPathGa
       if (error) throw error;
 
       trackOnboardingPathSelected({ path: 'mentor' });
+      void seedDefaultRoutineForOnboarding(user.id);
       onProfilePatch({ user_preferences: nextPrefs as Json });
       setView('mentor');
     } catch (error) {
@@ -173,6 +185,8 @@ export function OnboardingPathGate({ profile, onProfilePatch }: OnboardingPathGa
         .eq('id', user.id);
       if (error) throw error;
 
+      trackOnboardingPathSkipped({ view });
+      void seedDefaultRoutineForOnboarding(user.id);
       onProfilePatch({ onboarding_completed: true });
       navigate('/dashboard', { replace: true });
     } catch (error) {

@@ -303,6 +303,19 @@ export function useRoutine() {
   const progressPercentage = totalCurrentCount > 0 ? Math.round((completedCurrentCount / totalCurrentCount) * 100) : 0;
   const dailyStreak = calculateDailyStreak(historyCompletions);
   const consistencyPercentage = calculateConsistency(historyCompletions);
+  // RET-008: visible momentum — completed actions this week vs the week before,
+  // so progress compounds in front of the founder instead of resetting daily.
+  const last7Key = getLocalDateKey(subDays(new Date(), 7));
+  const prev14Key = getLocalDateKey(subDays(new Date(), 14));
+  const completedLast7 = historyCompletions.filter(
+    (completion) => completion.status === 'completed' && completion.period_date >= last7Key,
+  ).length;
+  const completedPrev7 = historyCompletions.filter(
+    (completion) =>
+      completion.status === 'completed' &&
+      completion.period_date >= prev14Key &&
+      completion.period_date < last7Key,
+  ).length;
   const selectedGoal = parseRoutineGoal(profile?.routine_primary_goal) ?? config?.primaryGoal ?? null;
   const suggestions = useMemo(() => profile ? buildRoutineSuggestions(profile, config) : [], [config, profile]);
 
@@ -327,6 +340,8 @@ export function useRoutine() {
       progressPercentage,
       dailyStreak,
       consistencyPercentage,
+      completedLast7,
+      completedPrev7,
     },
     initializeRoutine,
     saveConfig,

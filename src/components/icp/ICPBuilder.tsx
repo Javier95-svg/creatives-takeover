@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useActivationJourney } from "@/hooks/useActivationJourney";
 import { useToast } from "@/hooks/use-toast";
+import { useWebPush } from "@/hooks/useWebPush";
 import { useCredits } from "@/hooks/useCredits";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useAuth } from "@/contexts/AuthContext";
@@ -364,6 +365,7 @@ const ICPBuilder: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuth();
   const { toast } = useToast();
+  const webPush = useWebPush();
   const { refreshActivation } = useActivationJourney("stage_i");
   const { totalAvailable, subscriptionTier, loading: creditsLoading } = useCredits();
   const { createCheckout } = useSubscription();
@@ -384,6 +386,7 @@ const ICPBuilder: React.FC = () => {
   const [synthesisError, setSynthesisError] = useState<string | null>(null);
   const [persistError, setPersistError] = useState<string | null>(null);
   const [showCelebration, setShowCelebration] = useState(false);
+  const [celebrationPushOffer, setCelebrationPushOffer] = useState(false);
   const [pendingNavigatePath, setPendingNavigatePath] = useState<string | null>(null);
   const [pendingPostIcpNudge, setPendingPostIcpNudge] = useState(false);
   const [showPostIcpNudge, setShowPostIcpNudge] = useState(false);
@@ -490,28 +493,68 @@ const ICPBuilder: React.FC = () => {
     }
   }, [session.currentScreen]);
 
+  const proceedAfterCelebration = useCallback(() => {
+    if (!pendingNavigatePath) return;
+    if (pendingPostIcpNudge) {
+      setShowCelebration(false);
+      setShowPostIcpNudge(true);
+      if (!postIcpPromptTrackedRef.current) {
+        postIcpPromptTrackedRef.current = true;
+        trackUpgradePromptShown({
+          trigger: "post_icp_nudge",
+          credits_remaining: totalAvailable,
+          current_plan: "rookie",
+          target_plan: "starter",
+        });
+      }
+      return;
+    }
+
+    navigate(pendingNavigatePath, { replace: true });
+  }, [pendingNavigatePath, pendingPostIcpNudge, totalAvailable, navigate]);
+
+  // RET-005: the moment the first ICP lands is the highest-intent point in the
+  // product — offer push there ("notify me when the next step is ready") instead
+  // of relying on a passive dashboard card. Ineligible users keep the old 2s
+  // auto-redirect.
+  const handleEnablePushAfterIcp = useCallback(async () => {
+    const ok = await webPush.subscribe();
+    captureEvent("push_prompt_answered", { placement: "post_icp_celebration", enabled: ok });
+    if (ok) {
+      toast({
+        title: "Notifications on",
+        description: "We'll nudge you when your next validation step is ready.",
+      });
+    }
+    proceedAfterCelebration();
+  }, [webPush, proceedAfterCelebration, toast]);
+
   useEffect(() => {
     if (!showCelebration || !pendingNavigatePath) return;
-    const timer = window.setTimeout(() => {
-      if (pendingPostIcpNudge) {
-        setShowCelebration(false);
-        setShowPostIcpNudge(true);
-        if (!postIcpPromptTrackedRef.current) {
-          postIcpPromptTrackedRef.current = true;
-          trackUpgradePromptShown({
-            trigger: "post_icp_nudge",
-            credits_remaining: totalAvailable,
-            current_plan: "rookie",
-            target_plan: "starter",
-          });
-        }
-        return;
-      }
+    if (celebrationPushOffer) return; // offer is showing — wait for the user
 
-      navigate(pendingNavigatePath, { replace: true });
-    }, 2000);
+    const pushEligible =
+      webPush.supported && !webPush.isSubscribed && webPush.permission !== "denied";
+
+    if (pushEligible) {
+      const timer = window.setTimeout(() => {
+        setCelebrationPushOffer(true);
+        captureEvent("push_prompt_shown", { placement: "post_icp_celebration" });
+      }, 1200);
+      return () => window.clearTimeout(timer);
+    }
+
+    const timer = window.setTimeout(proceedAfterCelebration, 2000);
     return () => window.clearTimeout(timer);
-  }, [showCelebration, pendingNavigatePath, pendingPostIcpNudge, totalAvailable, navigate]);
+  }, [
+    showCelebration,
+    pendingNavigatePath,
+    celebrationPushOffer,
+    webPush.supported,
+    webPush.isSubscribed,
+    webPush.permission,
+    proceedAfterCelebration,
+  ]);
 
   useEffect(() => {
     const restoredSeed = normalizeIcpSeed(searchParams.get("seed"));
@@ -1859,7 +1902,23 @@ const ICPBuilder: React.FC = () => {
         >
           <p className="text-5xl" role="img" aria-label="Celebration">🎉</p>
           <h1 className="text-3xl font-semibold tracking-tight text-foreground">Your ICP is ready</h1>
-          <p className="text-sm text-muted-foreground">Taking you to your dashboard...</p>
+          {celebrationPushOffer ? (
+            <>
+              <p className="max-w-sm text-sm text-muted-foreground">
+                Tomorrow's validation step builds on this. Want a nudge when it's ready?
+              </p>
+              <div className="flex items-center gap-2">
+                <Button onClick={handleEnablePushAfterIcp} disabled={webPush.isBusy}>
+                  {webPush.isBusy ? "Enabling…" : "Notify me"}
+                </Button>
+                <Button variant="ghost" onClick={proceedAfterCelebration} disabled={webPush.isBusy}>
+                  Continue
+                </Button>
+              </div>
+            </>
+          ) : (
+            <p className="text-sm text-muted-foreground">Taking you to your dashboard...</p>
+          )}
         </div>
         <style>{`@keyframes fadeInScale { from { opacity: 0; transform: scale(0.88); } to { opacity: 1; transform: scale(1); } }`}</style>
       </div>

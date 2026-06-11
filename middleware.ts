@@ -10,7 +10,7 @@ export const config = {
 const BOT_UA =
   /linkedinbot|twitterbot|facebookexternalhit|slackbot|discordbot|whatsapp|telegrambot|applebot|iframely|redditbot|pinterest/i;
 
-const SUPABASE_URL = process.env.VITE_SUPABASE_URL ?? 'https://lkugysnbxzfuvahopagp.supabase.co';
+const SUPABASE_URL = process.env.VITE_SUPABASE_URL ?? 'https://rcjlaybjnozqbsoxzboa.supabase.co';
 const SUPABASE_KEY = process.env.VITE_SUPABASE_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? '';
 
 function esc(s: string): string {
