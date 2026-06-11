@@ -45,8 +45,8 @@ const FAQPage = () => {
   return (
     <>
       <SEO
-        title="FAQ - Creatives Takeover"
-        description="Find answers to frequently asked questions about Creatives Takeover's AI startup tools, pricing plans, credits system, BizMap AI, PMF Lab, and community features."
+        title="FAQ | Creatives Takeover"
+        description="Answers to common questions about Creatives Takeover's AI startup tools, pricing, credits, BizMap AI, PMF Lab, Insighta, and community features."
         keywords="FAQ, frequently asked questions, startup platform help, BizMap AI, PMF Lab, pricing, credits, VC Search, Pitch Deck Analyzer"
         url="/faq"
         canonical="https://creatives-takeover.com/faq"

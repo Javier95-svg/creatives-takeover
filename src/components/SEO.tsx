@@ -24,7 +24,7 @@ const SEO = ({
   title,
   description,
   keywords,
-  image = 'https://creatives-takeover.com/favicon.png',
+  image = 'https://creatives-takeover.com/og-image.png',
   url,
   type = 'website',
   author,
@@ -104,7 +104,7 @@ export const createOrganizationSchema = () => ({
   "@type": "Organization",
   "name": "Creatives Takeover",
   "url": "https://creatives-takeover.com",
-  "logo": "https://creatives-takeover.com/favicon.png",
+  "logo": "https://creatives-takeover.com/favicon-192x192.png",
   "description": "The creative entrepreneur's AI co-founder. Go from scattered ideas to profitable launch in 30 days.",
   "sameAs": [
     "https://twitter.com/CreativesTakeover",
@@ -159,7 +159,7 @@ export const createArticleSchema = (article: {
     "@type": "Article",
     "headline": article.title,
     "description": article.description,
-    "image": article.image || "https://creatives-takeover.com/favicon.png",
+    "image": article.image || "https://creatives-takeover.com/og-image.png",
     "author": {
       "@type": "Person",
       "name": article.author
@@ -169,7 +169,7 @@ export const createArticleSchema = (article: {
       "name": "Creatives Takeover",
       "logo": {
         "@type": "ImageObject",
-        "url": "https://creatives-takeover.com/favicon.png"
+        "url": "https://creatives-takeover.com/favicon-192x192.png"
       }
     },
     "datePublished": article.publishedTime,
@@ -245,7 +245,7 @@ export const createProductSchema = (product: {
   "@type": "Product",
   "name": product.name,
   "description": product.description,
-  "image": product.image || "https://creatives-takeover.com/favicon.png",
+  "image": product.image || "https://creatives-takeover.com/og-image.png",
   "offers": {
     "@type": "Offer",
     "price": product.price,
@@ -312,7 +312,7 @@ export const createAboutPageSchema = () => ({
     "@type": "Organization",
     "name": "Creatives Takeover",
     "url": "https://creatives-takeover.com",
-    "logo": "https://creatives-takeover.com/favicon.png",
+    "logo": "https://creatives-takeover.com/favicon-192x192.png",
     "description": "The creative entrepreneur's AI co-founder. Go from scattered ideas to profitable launch in 30 days.",
     "sameAs": [
       "https://twitter.com/CreativesTakeover",
@@ -395,7 +395,7 @@ export const createLocalBusinessSchema = () => ({
   "@context": "https://schema.org",
   "@type": "LocalBusiness",
   "name": "Creatives Takeover",
-  "image": "https://creatives-takeover.com/favicon.png",
+  "image": "https://creatives-takeover.com/og-image.png",
   "url": "https://creatives-takeover.com",
   "telephone": "",
   "email": "admin@creatives-takeover.com",

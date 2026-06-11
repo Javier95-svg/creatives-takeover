@@ -16,6 +16,19 @@ const PRIMARY_NAV = [
 
 function buildFallbackHtml(routeConfig) {
   const nav = PRIMARY_NAV.map((item) => `<a href="${item.href}">${item.label}</a>`).join(" | ");
+  const quickAnswer = routeConfig.quickAnswer
+    ? `        <section>
+          <h2>Quick answer: ${routeConfig.quickAnswer.title}</h2>
+          <dl>
+${routeConfig.quickAnswer.items
+  .map(
+    (item) => `            <dt>${item.label}: ${item.title}</dt>
+            <dd>${item.description}</dd>`
+  )
+  .join("\n")}
+          </dl>
+        </section>`
+    : "";
   const sections = (routeConfig.sections || [])
     .map(
       (section) => `        <section>
@@ -24,18 +37,38 @@ function buildFallbackHtml(routeConfig) {
         </section>`
     )
     .join("\n");
+  const checklist = (routeConfig.checklist || []).length
+    ? `        <section>
+          <h2>Founder checklist</h2>
+          <ul>
+${routeConfig.checklist.map((item) => `            <li>${item}</li>`).join("\n")}
+          </ul>
+        </section>`
+    : "";
   const faqs = (routeConfig.faqs || [])
     .map(
       (faq) => `          <dt>${faq.question}</dt>
           <dd>${faq.answer}</dd>`
     )
     .join("\n");
+  const cta = routeConfig.cta
+    ? `        <section>
+          <h2>Turn the answer into action</h2>
+          <p>${routeConfig.cta.description}</p>
+          <p><a href="${routeConfig.cta.href}">${routeConfig.cta.label}</a></p>
+        </section>`
+    : "";
 
-  const ctaLinks = [
-    { href: "/pricing", label: "See pricing" },
-    { href: "/newspaper", label: "Read founder insights" },
-    { href: "/mentorship", label: "Explore community" },
-  ]
+  // Answer pages interlink within their topic cluster; other pages fall back to
+  // the generic cross-links.
+  const exploreLinks = (routeConfig.relatedLinks && routeConfig.relatedLinks.length
+    ? routeConfig.relatedLinks
+    : [
+        { href: "/pricing", label: "See pricing" },
+        { href: "/newspaper", label: "Read founder insights" },
+        { href: "/mentorship", label: "Explore community" },
+      ]
+  )
     .filter((item) => item.href !== routeConfig.path)
     .map((item) => `<li><a href="${item.href}">${item.label}</a></li>`)
     .join("");
@@ -53,17 +86,20 @@ function buildFallbackHtml(routeConfig) {
           <p>${routeConfig.heroCopy || routeConfig.description}</p>
           ${routeConfig.updatedLabel ? `<p>Last updated ${routeConfig.updatedLabel}</p>` : ""}
         </section>
+${quickAnswer}
 ${sections}
+${checklist}
         ${faqs ? `        <section>
           <h2>Common questions</h2>
           <dl>
 ${faqs}
           </dl>
         </section>` : ""}
+${cta}
         <section>
-          <h2>Explore more</h2>
+          <h2>${routeConfig.relatedLinks ? "Keep learning" : "Explore more"}</h2>
           <ul>
-            ${ctaLinks}
+            ${exploreLinks}
           </ul>
         </section>
       </article>`;
@@ -98,6 +134,123 @@ function replaceMetaByProperty(html, property, content) {
   return html.replace("</head>", `    ${replacement}\n  </head>`);
 }
 
+// Site-wide schema entities, kept identical to the index.html template so every
+// page reinforces the same WebSite/Organization identity.
+const WEBSITE_SCHEMA = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "@id": `${BASE_URL}/#website`,
+  url: `${BASE_URL}/`,
+  name: SITE_NAME,
+  description:
+    "AI-powered startup builder for first-time founders — customer discovery, MVP planning, fundraising prep, and go-to-market execution.",
+  potentialAction: {
+    "@type": "SearchAction",
+    target: { "@type": "EntryPoint", urlTemplate: `${BASE_URL}/answers?q={search_term_string}` },
+    "query-input": "required name=search_term_string",
+  },
+};
+
+const ORGANIZATION_SCHEMA = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "@id": `${BASE_URL}/#organization`,
+  name: SITE_NAME,
+  url: BASE_URL,
+  logo: { "@type": "ImageObject", url: `${BASE_URL}/favicon-192x192.png`, width: 192, height: 192 },
+  founder: { "@type": "Person", name: "Javier Alonso" },
+  sameAs: [
+    "https://twitter.com/CreativesTakeover",
+    "https://linkedin.com/company/creatives-takeover",
+    "https://www.youtube.com/@CreativesTakeover",
+  ],
+};
+
+// The dist/index.html template ships the homepage's JSON-LD (WebSite, Organization,
+// SoftwareApplication, homepage FAQ). On inner pages that block is wrong — replace
+// it with route-specific schema mirroring what react-helmet renders after hydration.
+function buildStructuredData(routeConfig) {
+  if (routeConfig.path === "/") return null; // homepage keeps the template block
+
+  const canonical = `${BASE_URL}${routeConfig.path}`;
+  const data = [WEBSITE_SCHEMA, ORGANIZATION_SCHEMA];
+
+  if (routeConfig.breadcrumb && routeConfig.breadcrumb.length) {
+    data.push({
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: routeConfig.breadcrumb.map((item, index) => ({
+        "@type": "ListItem",
+        position: index + 1,
+        name: item.name,
+        item: `${BASE_URL}${item.url}`,
+      })),
+    });
+  }
+
+  if (routeConfig.faqs && routeConfig.faqs.length) {
+    data.push({
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      mainEntity: routeConfig.faqs.map((faq) => ({
+        "@type": "Question",
+        name: faq.question,
+        acceptedAnswer: { "@type": "Answer", text: faq.answer },
+      })),
+    });
+  }
+
+  // Founder answer guides mirror FounderAnswerPage.tsx: HowTo + Article.
+  if (routeConfig.path.startsWith("/answers/")) {
+    const updatedIso = routeConfig.lastmod || new Date().toISOString().split("T")[0];
+    if (routeConfig.sections && routeConfig.sections.length) {
+      data.push({
+        "@context": "https://schema.org",
+        "@type": "HowTo",
+        name: routeConfig.heroHeading,
+        description: routeConfig.heroCopy,
+        url: canonical,
+        publisher: { "@type": "Organization", name: SITE_NAME, url: BASE_URL },
+        step: routeConfig.sections.map((section, index) => ({
+          "@type": "HowToStep",
+          position: index + 1,
+          name: section.heading,
+          text: section.copy,
+          url: `${canonical}#step-${index + 1}`,
+        })),
+      });
+    }
+    data.push({
+      "@context": "https://schema.org",
+      "@type": "Article",
+      headline: routeConfig.heroHeading,
+      description: routeConfig.description,
+      datePublished: updatedIso,
+      dateModified: updatedIso,
+      author: { "@type": "Person", name: "Javier Alonso", url: `${BASE_URL}/about` },
+      publisher: {
+        "@type": "Organization",
+        name: SITE_NAME,
+        logo: { "@type": "ImageObject", url: `${BASE_URL}/favicon-192x192.png` },
+      },
+      mainEntityOfPage: { "@type": "WebPage", "@id": canonical },
+      ...(routeConfig.keyword ? { keywords: `${routeConfig.keyword}, startup founder guide, ${SITE_NAME}` } : {}),
+    });
+  }
+
+  return data;
+}
+
+function replaceJsonLd(html, routeConfig) {
+  const data = buildStructuredData(routeConfig);
+  if (!data) return html;
+  const json = JSON.stringify(data, null, 2).replace(/</g, "\\u003c");
+  return html.replace(
+    /<script type="application\/ld\+json">[\s\S]*?<\/script>/i,
+    `<script type="application/ld+json">\n${json}\n    </script>`
+  );
+}
+
 // Per-route dynamic OG image so each page gets a distinct, on-brand social card.
 function buildOgImage(routeConfig) {
   if (routeConfig.path === "/") return OG_IMAGE; // homepage keeps the brand hero image
@@ -129,6 +282,7 @@ function renderRoute(template, routeConfig) {
     /<link\s+rel="canonical"\s+href="[^"]*"\s*\/?>/i,
     `<link rel="canonical" href="${canonical}" />`
   );
+  html = replaceJsonLd(html, routeConfig);
   html = replaceTag(
     html,
     /<main id="seo-fallback">[\s\S]*?<\/main>/i,

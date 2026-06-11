@@ -1,6 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import { BASE_URL, INDEXABLE_ROUTES, ROBOTS_DISALLOW } from "./seo-route-config.mjs";
+import { BASE_URL, INDEXABLE_ROUTES, ROBOTS_DISALLOW, updatedLabelToIso } from "./seo-route-config.mjs";
 
 const PUBLIC_DIR = path.resolve(process.cwd(), "public");
 const SITEMAP_INDEX_PATH = path.join(PUBLIC_DIR, "sitemap.xml");
@@ -12,15 +12,17 @@ const ROBOTS_PATH = path.join(PUBLIC_DIR, "robots.txt");
 // a runtime sitemap (/sitemap-articles.xml -> /api/sitemap-articles) that always
 // reflects the latest published stories without waiting for a rebuild.
 function generatePagesSitemapXml() {
-  const now = new Date().toISOString().split("T")[0];
-  const urls = INDEXABLE_ROUTES.map(
-    (route) => `  <url>
+  // Only emit <lastmod> when the route declares a real update date. Stamping the
+  // build date on every URL each deploy teaches Google to distrust lastmod sitewide.
+  const urls = INDEXABLE_ROUTES.map((route) => {
+    const lastmod =
+      route.lastmod || (route.updatedLabel ? updatedLabelToIso(route.updatedLabel) : null);
+    return `  <url>
     <loc>${BASE_URL}${route.path}</loc>
-    <lastmod>${route.lastmod || now}</lastmod>
-    <changefreq>${route.changefreq}</changefreq>
+${lastmod ? `    <lastmod>${lastmod}</lastmod>\n` : ""}    <changefreq>${route.changefreq}</changefreq>
     <priority>${route.priority.toFixed(1)}</priority>
-  </url>`
-  ).join("\n");
+  </url>`;
+  }).join("\n");
 
   return `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">

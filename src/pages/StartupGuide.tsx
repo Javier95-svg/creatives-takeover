@@ -198,8 +198,8 @@ export default function StartupGuide() {
     <div className="relative min-h-screen overflow-hidden">
       <HomeWallpaper />
       <SEO
-        title="How to Build a Startup: The Complete First-Time Founder Guide | Creatives Takeover"
-        description="A step-by-step guide for first-time founders: define your ICP, validate your idea, scope your MVP, launch your go-to-market strategy, and prepare for fundraising — all in one place."
+        title="How to Build a Startup: First-Time Founder Guide"
+        description="A step-by-step guide for first-time founders: define your ICP, validate your idea, scope your MVP, plan go-to-market, and prepare for fundraising."
         keywords="how to build a startup, startup guide for beginners, first-time founder guide, startup idea validation, MVP planning, go-to-market strategy startup, startup fundraising guide, how to start a tech company"
         url="/startup-guide"
         canonical="https://creatives-takeover.com/startup-guide"

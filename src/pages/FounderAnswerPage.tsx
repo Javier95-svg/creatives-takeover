@@ -72,7 +72,7 @@ export default function FounderAnswerPage() {
         name: "Creatives Takeover",
         logo: {
           "@type": "ImageObject",
-          url: "https://creatives-takeover.com/favicon.png",
+          url: "https://creatives-takeover.com/favicon-192x192.png",
         },
       },
       mainEntityOfPage: {

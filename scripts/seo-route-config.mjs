@@ -1,6 +1,34 @@
+// Node 22.18+ strips TypeScript types natively, so the build scripts can import
+// the app's founder-answer content directly. Single source of truth: the same
+// data renders the React pages (FounderAnswerPage.tsx) and the prerendered HTML.
+import {
+  founderAnswerPages,
+  getRelatedFounderAnswerPages,
+} from "../src/data/founderAnswerPages.ts";
+
 export const BASE_URL = "https://creatives-takeover.com";
 export const SITE_NAME = "Creatives Takeover";
 export const OG_IMAGE = `${BASE_URL}/og-image.png`;
+
+// Mirror the truncation rules in src/components/SEO.tsx so the prerendered
+// <title>/<meta description> match what react-helmet renders after hydration.
+const truncateTitle = (title) => (title.length > 60 ? `${title.substring(0, 57)}...` : title);
+const truncateDescription = (description) =>
+  description.length > 160 ? `${description.substring(0, 157)}...` : description;
+
+// Mirror updatedLabelToIso in src/pages/FounderAnswerPage.tsx ("May 2026" -> "2026-05-01").
+const MONTHS = {
+  january: "01", february: "02", march: "03", april: "04", may: "05", june: "06",
+  july: "07", august: "08", september: "09", october: "10", november: "11", december: "12",
+};
+export function updatedLabelToIso(label) {
+  const match = /([a-zA-Z]+)\s+(\d{4})/.exec(label || "");
+  if (match) {
+    const month = MONTHS[match[1].toLowerCase()];
+    if (month) return `${match[2]}-${month}-01`;
+  }
+  return null;
+}
 
 export const ROBOTS_DISALLOW = [
   "/admin/",
@@ -34,46 +62,42 @@ export const ROBOTS_DISALLOW = [
   "/test-phase1",
 ];
 
-const FOUNDER_ANSWER_ROUTES = [
-  "how-to-define-icp-for-startup",
-  "ideal-customer-profile-template",
-  "startup-positioning-examples",
-  "how-to-validate-startup-idea",
-  "waitlist-before-mvp",
-  "product-market-fit-survey-questions",
-  "mvp-builder-for-startups",
-  "tech-stack-for-startup",
-  "go-to-market-strategy-for-startup",
-  "first-users-for-saas",
-  "startup-launch-checklist",
-  "pitch-deck-feedback-for-startups",
-  "vc-search-for-startups",
-  "accelerator-alternatives",
-  // Expansion batch (long-tail founder intent)
-  "how-to-find-your-target-audience",
-  "customer-interview-questions",
-  "signs-your-startup-idea-is-good",
-  "no-code-vs-code-for-mvp",
-  "mvp-feature-prioritization",
-  "how-to-get-first-100-users",
-  "product-hunt-launch-guide",
-  "cold-email-for-startups",
-  "how-to-find-investors-for-startup",
-  "pre-seed-vs-seed-funding",
-  "startup-pitch-deck-outline",
-].map((slug) => ({
-  path: `/answers/${slug}`,
-  title: `${slug
-    .split("-")
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(" ")} | Creatives Takeover`,
-  description:
-    "A practical founder answer guide from Creatives Takeover, mapped to ICP, validation, build, launch, or fundraising workflows.",
+// Each answer route carries the page's real, hand-written meta and body content
+// so the prerendered HTML is unique per page and matches the hydrated React page.
+const FOUNDER_ANSWER_ROUTES = founderAnswerPages.map((page) => ({
+  path: `/answers/${page.slug}`,
+  title: truncateTitle(page.metaTitle),
+  description: truncateDescription(page.metaDescription),
   changefreq: "monthly",
   priority: 0.65,
-  heroHeading: "Founder answer guide",
-  heroCopy:
-    "A practical startup guide that helps founders move from search intent into a concrete next step.",
+  lastmod: updatedLabelToIso(page.updatedLabel),
+  heroHeading: page.title,
+  heroCopy: page.summary,
+  updatedLabel: page.updatedLabel,
+  keyword: page.keyword,
+  quickAnswer: {
+    title: page.keyword,
+    items: page.quickAnswerItems,
+  },
+  sections: page.sections.map((section) => ({
+    heading: section.title,
+    copy: section.description,
+  })),
+  checklist: page.checklist,
+  cta: page.cta,
+  faqs: page.faqs,
+  relatedLinks: [
+    ...getRelatedFounderAnswerPages(page).map((related) => ({
+      href: `/answers/${related.slug}`,
+      label: related.title,
+    })),
+    { href: "/answers", label: "Founder Answer Library" },
+  ],
+  breadcrumb: [
+    { name: "Home", url: "/" },
+    { name: "Founder Answer Library", url: "/answers" },
+    { name: page.title, url: `/answers/${page.slug}` },
+  ],
 }));
 
 export const INDEXABLE_ROUTES = [
@@ -149,6 +173,80 @@ export const INDEXABLE_ROUTES = [
       "Browse practical startup guides for ICP clarity, validation, MVP scope, go-to-market strategy, and fundraising preparation.",
   },
   ...FOUNDER_ANSWER_ROUTES,
+  {
+    path: "/startup-guide",
+    title: "How to Build a Startup: First-Time Founder Guide",
+    description:
+      "A step-by-step guide for first-time founders: define your ICP, validate your idea, scope your MVP, plan go-to-market, and prepare for fundraising.",
+    changefreq: "monthly",
+    priority: 0.85,
+    heroHeading: "How to Build a Startup: The Complete First-Time Founder Guide",
+    heroCopy:
+      "The full startup journey in one place — from customer clarity and idea validation through MVP scoping, launch, and fundraising preparation.",
+    sections: [
+      {
+        heading: "Define who you're building for",
+        copy: "Start with ideal customer profile (ICP) clarity. Narrow your first market, name the pain worth solving, and make your positioning specific enough to test.",
+      },
+      {
+        heading: "Prove the problem before you build",
+        copy: "Validate demand with customer interviews, waitlists, and real signals before writing code. Most startups fail by building first and asking later.",
+      },
+      {
+        heading: "Scope and ship your MVP in 6–8 weeks",
+        copy: "Cut scope to the riskiest assumption, choose a stack that matches your stage, and ship a first version designed to learn, not to impress.",
+      },
+      {
+        heading: "Get your first 100 customers",
+        copy: "Pick one or two acquisition channels, craft messaging from customer language, and run a focused go-to-market plan for your first 90 days.",
+      },
+      {
+        heading: "Prepare for investors when you're ready",
+        copy: "Build a defensible traction story, tighten your pitch deck, and research the right VCs and accelerators before you start outreach.",
+      },
+    ],
+    breadcrumb: [
+      { name: "Home", url: "/" },
+      { name: "Startup Guide", url: "/startup-guide" },
+    ],
+  },
+  {
+    path: "/faq",
+    title: "FAQ | Creatives Takeover",
+    description:
+      "Answers to common questions about Creatives Takeover's AI startup tools, pricing, credits, BizMap AI, PMF Lab, Insighta, and community features.",
+    changefreq: "monthly",
+    priority: 0.6,
+    heroHeading: "Frequently Asked Questions",
+    heroCopy:
+      "Everything founders ask about Creatives Takeover: what the platform does, how pricing and credits work, and what you get on the free plan.",
+    faqs: [
+      {
+        question: "What is Creatives Takeover?",
+        answer:
+          "Creatives Takeover is a founder support platform built to help people build startups from scratch. BizMap AI guides users through the Startup Development Cycle, while tools like PMF Lab, ICP Builder, Tech Stack Builder, VC Search, and the mentor and co-founder community help turn ideas into real execution.",
+      },
+      {
+        question: "How much does it cost?",
+        answer:
+          "We offer four plans: Rookie is free with 50 credits/month, Starter is $9/month or $79/year with 100 credits, Rising is $29/month or $239/year with 250 credits, and Pro is $65/month or $589/year with 600 credits. Extra credit packs remain available on every plan.",
+      },
+      {
+        question: "Can I try it for free?",
+        answer:
+          "Yes. Rookie is free forever with 50 credits per month and no credit card required. You get free ICP Builder access, Insighta Test, Newspaper, early-stage browsing or preview access, and community browsing features.",
+      },
+      {
+        question: "What makes Creatives Takeover different?",
+        answer:
+          "We help founders, indie hackers, and builders move from scratch to launch through a practical Startup Development Cycle supported by AI, founder tools, mentors, co-founders, and fundraising resources.",
+      },
+    ],
+    breadcrumb: [
+      { name: "Home", url: "/" },
+      { name: "FAQ", url: "/faq" },
+    ],
+  },
   {
     path: "/mentorship",
     title: "Mentor Marketplace | Creatives Takeover",

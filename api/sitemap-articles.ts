@@ -15,7 +15,6 @@ interface StoryRow {
   slug: string;
   updated_at: string | null;
   published_at: string | null;
-  hashtags: string[] | null;
 }
 
 function xmlEscape(value: string): string {
@@ -25,17 +24,6 @@ function xmlEscape(value: string): string {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&apos;');
-}
-
-function slugifyTag(tag: string): string {
-  return tag
-    .replace(/^#+/, '')
-    .trim()
-    .toLowerCase()
-    .replace(/[\s_]+/g, '-')
-    .replace(/[^a-z0-9-]/g, '')
-    .replace(/-+/g, '-')
-    .replace(/^-+|-+$/g, '');
 }
 
 function urlEntry(loc: string, lastmod: string, changefreq: string, priority: string): string {
@@ -61,7 +49,7 @@ export default async function handler(): Promise<Response> {
     const res = await fetch(
       `${SUPABASE_URL}/rest/v1/stories_articles` +
         `?status=eq.published` +
-        `&select=slug,updated_at,published_at,hashtags` +
+        `&select=slug,updated_at,published_at` +
         `&order=published_at.desc&limit=5000`,
       { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } },
     );
@@ -70,24 +58,16 @@ export default async function handler(): Promise<Response> {
     stories = [];
   }
 
+  // Tag archives (/newspaper/tags/*) are intentionally excluded: they are pure
+  // client-rendered SPA routes with no prerendered content or per-page canonical,
+  // so listing them invites Google to crawl pages it reads as homepage duplicates.
+  // Re-add them once they get server-rendered shells like article pages have.
   const entries: string[] = [];
-  const tagLastmod = new Map<string, string>();
 
   for (const story of stories) {
     if (!story.slug) continue;
     const lastmod = (story.updated_at || story.published_at || new Date().toISOString()).split('T')[0];
     entries.push(urlEntry(`${SITE_ORIGIN}/newspaper/${story.slug}`, lastmod, 'weekly', '0.7'));
-
-    for (const rawTag of story.hashtags ?? []) {
-      const tag = slugifyTag(rawTag);
-      if (!tag) continue;
-      const prev = tagLastmod.get(tag);
-      if (!prev || lastmod > prev) tagLastmod.set(tag, lastmod);
-    }
-  }
-
-  for (const [tag, lastmod] of tagLastmod) {
-    entries.push(urlEntry(`${SITE_ORIGIN}/newspaper/tags/${tag}`, lastmod, 'weekly', '0.5'));
   }
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>

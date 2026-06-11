@@ -1,11 +1,26 @@
 {
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
+  "redirects": [
+    {
+      "source": "/(.*)",
+      "has": [{ "type": "host", "value": "www.creatives-takeover.com" }],
+      "destination": "https://creatives-takeover.com/$1",
+      "permanent": true
+    },
+    { "source": "/community/co-founders/:path*", "destination": "/co-founder/:path*", "permanent": true },
+    { "source": "/community/angels/:path*", "destination": "/investors/:path*", "permanent": true },
+    { "source": "/community/co-founders", "destination": "/co-founder", "permanent": true },
+    { "source": "/community/angels", "destination": "/investors", "permanent": true },
+    { "source": "/community/:path*", "destination": "/mentorship", "permanent": true },
+    { "source": "/community", "destination": "/mentorship", "permanent": true },
+    { "source": "/waitlist/templates", "destination": "/demo-studio/classic/templates", "permanent": true },
+    { "source": "/waitlist", "destination": "/demo-studio/classic", "permanent": true },
+    { "source": "/waitlist-maker", "destination": "/demo-studio/classic", "permanent": true }
+  ],
   "rewrites": [
     { "source": "/pricing", "destination": "/pricing/index.html" },
     { "source": "/pricing/", "destination": "/pricing/index.html" },
-    { "source": "/community", "destination": "/community/index.html" },
-    { "source": "/community/", "destination": "/community/index.html" },
     { "source": "/resources", "destination": "/resources/index.html" },
     { "source": "/resources/", "destination": "/resources/index.html" },
     { "source": "/newspaper/:slug", "destination": "/api/newspaper-og?slug=:slug" },
