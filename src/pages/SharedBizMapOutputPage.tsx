@@ -154,7 +154,7 @@ export default function SharedBizMapOutputPage() {
           </div>
         ) : !record ? (
           <div className="flex flex-1 items-center justify-center">
-            <div className="max-w-lg rounded-[2rem] border border-border/60 bg-background/80 p-8 text-center shadow-sm">
+            <div className="max-w-lg rounded-5xl border border-border/60 bg-background/80 p-8 text-center shadow-sm">
               <p className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">Share link unavailable</p>
               <h1 className="mt-4 text-3xl font-semibold">This BizMap output is no longer public.</h1>
               <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
@@ -164,7 +164,7 @@ export default function SharedBizMapOutputPage() {
           </div>
         ) : (
           <div className="flex-1 space-y-8">
-            <section className="rounded-[2rem] border border-border/60 bg-background/80 p-6 shadow-[0_28px_90px_-48px_rgba(15,23,42,0.45)] backdrop-blur">
+            <section className="rounded-5xl border border-border/60 bg-background/80 p-6 shadow-[0_28px_90px_-48px_rgba(15,23,42,0.45)] backdrop-blur">
               <div className="flex flex-wrap items-center gap-3">
                 <SourceBadge sourceType={record.source_type} />
                 <Badge variant="outline" className="rounded-full px-3 py-1">
@@ -199,7 +199,7 @@ export default function SharedBizMapOutputPage() {
 
             {isICPSharedSnapshot(record.snapshot) ? (
               <div className="grid gap-6 lg:grid-cols-2">
-                <section className="rounded-[1.75rem] border border-border/60 bg-background/75 p-6 shadow-sm">
+                <section className="rounded-4xl border border-border/60 bg-background/75 p-6 shadow-sm">
                   <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary/70">Recommendation</p>
                   <h2 className="mt-3 text-2xl font-semibold">{record.snapshot.recommendation.primaryIcp}</h2>
                   <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{record.snapshot.recommendation.whyThisIcp}</p>
@@ -215,7 +215,7 @@ export default function SharedBizMapOutputPage() {
                   </div>
                 </section>
 
-                <section className="rounded-[1.75rem] border border-border/60 bg-background/75 p-6 shadow-sm">
+                <section className="rounded-4xl border border-border/60 bg-background/75 p-6 shadow-sm">
                   <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary/70">Positioning</p>
                   <p className="mt-3 text-lg font-semibold">{record.snapshot.positioning.oneLiner}</p>
                   <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{record.snapshot.positioning.valueProposition}</p>
@@ -227,7 +227,7 @@ export default function SharedBizMapOutputPage() {
                   </div>
                 </section>
 
-                <section className="rounded-[1.75rem] border border-border/60 bg-background/75 p-6 shadow-sm lg:col-span-2">
+                <section className="rounded-4xl border border-border/60 bg-background/75 p-6 shadow-sm lg:col-span-2">
                   <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary/70">Validation experiments</p>
                   <div className="mt-4 grid gap-4 md:grid-cols-2">
                     {record.snapshot.validationPlan.experiments.slice(0, 4).map((experiment, index) => (
@@ -246,12 +246,12 @@ export default function SharedBizMapOutputPage() {
             {isPMFSharedSnapshot(record.snapshot) ? (
               <div className="space-y-6">
                 <section className="grid gap-4 md:grid-cols-4">
-                  <div className="rounded-[1.5rem] border border-border/60 bg-background/75 p-5 shadow-sm md:col-span-1">
+                  <div className="rounded-3xl border border-border/60 bg-background/75 p-5 shadow-sm md:col-span-1">
                     <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">PMF score</p>
                     <p className="mt-3 text-4xl font-semibold">{record.snapshot.overallScore}</p>
                     <p className="mt-2 text-sm text-muted-foreground">{record.snapshot.verdictLabel}</p>
                   </div>
-                  <div className="rounded-[1.5rem] border border-border/60 bg-background/75 p-5 shadow-sm md:col-span-3">
+                  <div className="rounded-3xl border border-border/60 bg-background/75 p-5 shadow-sm md:col-span-3">
                     <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary/70">Summary insight</p>
                     <p className="mt-3 text-base leading-relaxed text-muted-foreground">{record.snapshot.summaryInsight}</p>
                     {record.snapshot.nextExperiment ? (
@@ -261,7 +261,7 @@ export default function SharedBizMapOutputPage() {
                 </section>
 
                 <div className="grid gap-6 lg:grid-cols-2">
-                  <section className="rounded-[1.75rem] border border-border/60 bg-background/75 p-6 shadow-sm">
+                  <section className="rounded-4xl border border-border/60 bg-background/75 p-6 shadow-sm">
                     <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary/70">Strongest signals</p>
                     <div className="mt-4 space-y-2">
                       {record.snapshot.buyingSignals.slice(0, 5).map((item, index) => (
@@ -269,7 +269,7 @@ export default function SharedBizMapOutputPage() {
                       ))}
                     </div>
                   </section>
-                  <section className="rounded-[1.75rem] border border-border/60 bg-background/75 p-6 shadow-sm">
+                  <section className="rounded-4xl border border-border/60 bg-background/75 p-6 shadow-sm">
                     <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary/70">Missing proof</p>
                     <div className="mt-4 space-y-2">
                       {record.snapshot.gaps.slice(0, 5).map((item, index) => (
@@ -279,7 +279,7 @@ export default function SharedBizMapOutputPage() {
                   </section>
                 </div>
 
-                <section className="rounded-[1.75rem] border border-border/60 bg-background/75 p-6 shadow-sm">
+                <section className="rounded-4xl border border-border/60 bg-background/75 p-6 shadow-sm">
                   <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary/70">Recommended next steps</p>
                   <div className="mt-4 grid gap-4 md:grid-cols-2">
                     {record.snapshot.recommendations.slice(0, 4).map((item, index) => (
@@ -297,14 +297,14 @@ export default function SharedBizMapOutputPage() {
 
             {isGTMSharedSnapshot(record.snapshot) ? (
               <div className="space-y-6">
-                <section className="rounded-[1.75rem] border border-border/60 bg-background/75 p-6 shadow-sm">
+                <section className="rounded-4xl border border-border/60 bg-background/75 p-6 shadow-sm">
                   <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary/70">Strategy summary</p>
                   <h2 className="mt-3 text-2xl font-semibold">{record.snapshot.planTitle}</h2>
                   <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{record.snapshot.summaryInsight}</p>
                 </section>
 
                 <div className="grid gap-6 lg:grid-cols-2">
-                  <section className="rounded-[1.75rem] border border-border/60 bg-background/75 p-6 shadow-sm">
+                  <section className="rounded-4xl border border-border/60 bg-background/75 p-6 shadow-sm">
                     <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary/70">Positioning</p>
                     <p className="mt-3 text-sm font-semibold">{record.snapshot.positioning.positioningStatement}</p>
                     <p className="mt-3 text-sm text-muted-foreground">{record.snapshot.positioning.uniqueValueProposition}</p>
@@ -314,7 +314,7 @@ export default function SharedBizMapOutputPage() {
                       ))}
                     </div>
                   </section>
-                  <section className="rounded-[1.75rem] border border-border/60 bg-background/75 p-6 shadow-sm">
+                  <section className="rounded-4xl border border-border/60 bg-background/75 p-6 shadow-sm">
                     <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary/70">Messaging</p>
                     <p className="mt-3 text-lg font-semibold">{record.snapshot.messaging.headline}</p>
                     <p className="mt-3 text-sm text-muted-foreground">{record.snapshot.messaging.hookLine}</p>
@@ -322,7 +322,7 @@ export default function SharedBizMapOutputPage() {
                   </section>
                 </div>
 
-                <section className="rounded-[1.75rem] border border-border/60 bg-background/75 p-6 shadow-sm">
+                <section className="rounded-4xl border border-border/60 bg-background/75 p-6 shadow-sm">
                   <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary/70">Recommended channels</p>
                   <div className="mt-4 grid gap-4 md:grid-cols-2">
                     {record.snapshot.channels.slice(0, 4).map((channel, index) => (
@@ -345,7 +345,7 @@ export default function SharedBizMapOutputPage() {
               </div>
             ) : null}
 
-            <section className="rounded-[2rem] border border-border/60 bg-slate-950 px-6 py-8 text-white shadow-sm dark:bg-slate-900">
+            <section className="rounded-5xl border border-border/60 bg-slate-950 px-6 py-8 text-white shadow-sm dark:bg-slate-900">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-300">Build your own</p>
               <h2 className="mt-3 text-2xl font-semibold">Turn your idea into a real founder output.</h2>
               <p className="mt-3 max-w-2xl text-sm leading-relaxed text-slate-300">

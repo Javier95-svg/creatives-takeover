@@ -30,7 +30,7 @@ export function ActivationJourneyStrip({
   return (
     <div
       className={cn(
-        'rounded-[1.75rem] border px-5 py-5 shadow-sm backdrop-blur-sm',
+        'rounded-4xl border px-5 py-5 shadow-sm backdrop-blur-sm',
         isComplete
           ? 'border-green-500/25 bg-green-500/10'
           : 'border-sky-500/25 bg-sky-500/10',

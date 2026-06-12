@@ -209,7 +209,7 @@ export function WelcomeBackBanner() {
   return (
     <div
       className={cn(
-        'relative rounded-[1.75rem] border border-primary/25 bg-primary/[0.07] px-5 py-5 shadow-sm backdrop-blur-sm transition-opacity duration-700',
+        'relative rounded-4xl border border-primary/25 bg-primary/[0.07] px-5 py-5 shadow-sm backdrop-blur-sm transition-opacity duration-700',
         fading ? 'opacity-0' : 'opacity-100'
       )}
       onMouseEnter={pauseAutoTimer}

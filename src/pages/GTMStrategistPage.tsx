@@ -211,7 +211,7 @@ export default function GTMStrategistPage() {
 	                    onRegenerate={resetToIntake}
 	                  />
 
-	                  <div className="flex flex-wrap gap-3 rounded-[1.5rem] border border-border/60 bg-background/80 px-4 py-4 shadow-sm">
+	                  <div className="flex flex-wrap gap-3 rounded-3xl border border-border/60 bg-background/80 px-4 py-4 shadow-sm">
 	                    <Button variant="outline" onClick={openShareDialog} disabled={!planId} className="gap-2">
 	                      <Share2 className="h-4 w-4" />
 	                      Share strategy brief

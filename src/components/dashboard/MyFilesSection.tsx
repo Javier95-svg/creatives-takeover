@@ -758,7 +758,7 @@ export function MyFilesSection({ files, primaryIcp, refreshDashboard }: MyFilesS
                 {loadError}
               </div>
             ) : selectedArtifact ? (
-              <div className="overflow-hidden rounded-[2rem] border border-border/60 bg-background/40">
+              <div className="overflow-hidden rounded-5xl border border-border/60 bg-background/40">
                 <IcpFolioDocument
                   draft={selectedArtifact.draftDocument}
                   tone="platformPreview"
@@ -767,7 +767,7 @@ export function MyFilesSection({ files, primaryIcp, refreshDashboard }: MyFilesS
                 />
               </div>
             ) : selectedPdfUrl ? (
-              <div className="overflow-hidden rounded-[2rem] border border-border/60 bg-background/40">
+              <div className="overflow-hidden rounded-5xl border border-border/60 bg-background/40">
                 <iframe
                   src={selectedPdfUrl}
                   title={selectedFile.title}
@@ -775,7 +775,7 @@ export function MyFilesSection({ files, primaryIcp, refreshDashboard }: MyFilesS
                 />
               </div>
             ) : selectedFile.file_extension === 'md' ? (
-              <div className="rounded-[2rem] border border-border/60 bg-background/50 p-5">
+              <div className="rounded-5xl border border-border/60 bg-background/50 p-5">
                 <div className="prose prose-sm max-w-none dark:prose-invert prose-p:my-3 prose-headings:mt-5 prose-headings:mb-2">
                   <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]}>
                     {selectedFile.extracted_text ?? ''}
@@ -783,7 +783,7 @@ export function MyFilesSection({ files, primaryIcp, refreshDashboard }: MyFilesS
                 </div>
               </div>
             ) : (
-              <div className="rounded-[2rem] border border-border/60 bg-background/50 p-5">
+              <div className="rounded-5xl border border-border/60 bg-background/50 p-5">
                 <div className="whitespace-pre-wrap text-sm leading-7 text-foreground/90">
                   {selectedFile.extracted_text ?? 'This file preview is still being prepared.'}
                 </div>

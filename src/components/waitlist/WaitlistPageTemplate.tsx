@@ -564,8 +564,8 @@ export default function WaitlistPageTemplate({
         );
       case 'phone':
         return (
-          <div className="mx-auto max-w-[290px] rounded-[36px] border p-3" style={{ ...cardStyle, borderRadius: 36 }} data-template-layout="mobile-app">
-            <div className="rounded-[28px] p-4" style={{ backgroundColor: palette.pageBackground }}>
+          <div className="mx-auto max-w-[290px] rounded-5xl border p-3" style={{ ...cardStyle, borderRadius: 36 }} data-template-layout="mobile-app">
+            <div className="rounded-4xl p-4" style={{ backgroundColor: palette.pageBackground }}>
               <div className="mx-auto mb-4 h-1 w-16 rounded-full" style={accentStyle} />
               <div className="space-y-3">
                 <div className="h-28 rounded-2xl" style={{ background: `linear-gradient(135deg, ${accentHex}66, transparent)` }} />

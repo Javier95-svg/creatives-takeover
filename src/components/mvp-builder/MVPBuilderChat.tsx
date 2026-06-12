@@ -632,7 +632,7 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
                 return (
                   <div
                     key={card.id}
-                    className="rounded-[24px] border border-sky-400/14 bg-[linear-gradient(180deg,rgba(56,189,248,0.08),rgba(255,255,255,0.03))] p-4 shadow-[0_18px_40px_rgba(0,0,0,0.22)]"
+                    className="rounded-3xl border border-sky-400/14 bg-[linear-gradient(180deg,rgba(56,189,248,0.08),rgba(255,255,255,0.03))] p-4 shadow-[0_18px_40px_rgba(0,0,0,0.22)]"
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div>
@@ -689,7 +689,7 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
       </ScrollArea>
 
       <div className="shrink-0 border-t border-white/6 bg-[linear-gradient(180deg,rgba(10,15,29,0.2),rgba(10,15,29,0.96))] px-4 pb-4 pt-3">
-        <div className="rounded-[24px] border border-white/10 bg-white/[0.04] p-3 shadow-[0_30px_60px_rgba(0,0,0,0.35)] backdrop-blur-xl transition-all duration-200 focus-within:border-sky-400/25 focus-within:bg-white/[0.06]">
+        <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-3 shadow-[0_30px_60px_rgba(0,0,0,0.35)] backdrop-blur-xl transition-all duration-200 focus-within:border-sky-400/25 focus-within:bg-white/[0.06]">
           {queuedSubmissions.length > 0 && (
             <div className="mb-3 flex items-center justify-between gap-3 rounded-2xl border border-amber-400/20 bg-amber-400/10 px-3 py-2 text-xs text-amber-100">
               <span>

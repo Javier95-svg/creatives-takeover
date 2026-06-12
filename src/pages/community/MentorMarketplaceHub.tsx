@@ -441,7 +441,7 @@ const MentorMarketplaceHub = () => {
 	          {/* Hero Section */}
 	          <section className="relative py-10 lg:py-14">
             <div className="container mx-auto max-w-6xl px-4 sm:px-6">
-              <div className="rounded-[2rem] border border-border/60 bg-white/80 p-5 shadow-sm backdrop-blur dark:bg-slate-950/70 sm:p-8">
+              <div className="rounded-5xl border border-border/60 bg-white/80 p-5 shadow-sm backdrop-blur dark:bg-slate-950/70 sm:p-8">
                 <div className="flex flex-col gap-6">
                   <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
                     <div className="space-y-5 lg:flex-1">
@@ -483,7 +483,7 @@ const MentorMarketplaceHub = () => {
 	                    </div>
 
                     {activationBanner && ActivationBannerIcon && (
-                      <div className="rounded-[1.75rem] border border-accent-teal/30 bg-accent-teal/10 p-4 shadow-sm sm:p-5">
+                      <div className="rounded-4xl border border-accent-teal/30 bg-accent-teal/10 p-4 shadow-sm sm:p-5">
                         <div className="flex items-start gap-3">
                           <div className="rounded-2xl bg-white/80 p-3 text-accent-teal">
                             <ActivationBannerIcon className="h-5 w-5" />
@@ -503,7 +503,7 @@ const MentorMarketplaceHub = () => {
                       </div>
                     )}
 
-	                  <div className="rounded-[1.75rem] border border-border/60 bg-background/80 p-4 shadow-sm dark:bg-slate-900/75 sm:p-5">
+	                  <div className="rounded-4xl border border-border/60 bg-background/80 p-4 shadow-sm dark:bg-slate-900/75 sm:p-5">
                     <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
                       <div className="relative w-full xl:max-w-md">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />

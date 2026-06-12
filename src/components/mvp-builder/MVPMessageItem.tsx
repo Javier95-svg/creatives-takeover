@@ -14,7 +14,7 @@ export const MVPMessageItem: React.FC<MVPMessageItemProps> = ({ message }) => {
   if (isUser) {
     return (
       <div className="mb-4 flex justify-end">
-        <div className="max-w-[82%] rounded-[24px] rounded-br-md border border-sky-400/20 bg-gradient-to-br from-sky-500 to-cyan-500 px-4 py-3 text-sm leading-relaxed text-slate-950 shadow-[0_18px_40px_rgba(14,165,233,0.28)]">
+        <div className="max-w-[82%] rounded-3xl rounded-br-md border border-sky-400/20 bg-gradient-to-br from-sky-500 to-cyan-500 px-4 py-3 text-sm leading-relaxed text-slate-950 shadow-[0_18px_40px_rgba(14,165,233,0.28)]">
           <div className="mb-1 flex items-center justify-between gap-3 text-caption font-semibold uppercase tracking-[0.24em] text-slate-900/70">
             <span>You</span>
           </div>
@@ -33,7 +33,7 @@ export const MVPMessageItem: React.FC<MVPMessageItemProps> = ({ message }) => {
         <Sparkles className="h-3.5 w-3.5 text-sky-200" />
       </div>
 
-      <div className="max-w-[88%] rounded-[26px] rounded-tl-md border border-white/10 bg-white/[0.045] px-4 py-3 text-sm text-slate-100 shadow-[0_22px_48px_rgba(0,0,0,0.28)] backdrop-blur-sm">
+      <div className="max-w-[88%] rounded-3xl rounded-tl-md border border-white/10 bg-white/[0.045] px-4 py-3 text-sm text-slate-100 shadow-[0_22px_48px_rgba(0,0,0,0.28)] backdrop-blur-sm">
         {showTypingDots ? (
           <div className="py-1">
             <div className="mb-2 flex items-center gap-2 text-caption font-semibold uppercase tracking-[0.24em] text-slate-400">
