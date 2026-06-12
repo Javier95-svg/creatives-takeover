@@ -81,7 +81,7 @@ const VisitorNavbar = () => {
 
   const linkClassName = (href: string, sectionId?: string) =>
     cn(
-      "rounded-[14px] px-3.5 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+      "rounded-2xl px-3.5 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
       isActive(href, sectionId)
         ? "bg-background text-foreground shadow-sm"
         : "text-muted-foreground hover:bg-background/80 hover:text-foreground"
@@ -96,7 +96,7 @@ const VisitorNavbar = () => {
       <div className="mx-auto max-w-[1600px] px-3 pt-3 sm:px-5 lg:px-8">
         <div
           className={cn(
-            "rounded-[22px] border backdrop-blur-xl transition-all duration-300",
+            "rounded-3xl border backdrop-blur-xl transition-all duration-300",
             scrolled
               ? "border-border/80 bg-background/92 shadow-[0_18px_48px_-32px_rgba(15,23,42,0.32)]"
               : "border-border/68 bg-background/76 shadow-[0_12px_32px_-26px_rgba(15,23,42,0.22)]"

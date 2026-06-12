@@ -272,14 +272,14 @@ const Navigation = () => {
   };
 
   const navTriggerBaseClass =
-    "group relative flex items-center gap-2 px-3.5 py-2 rounded-[14px] whitespace-nowrap font-medium text-sm outline-none nav-item-hover-effect";
+    "group relative flex items-center gap-2 px-3.5 py-2 rounded-2xl whitespace-nowrap font-medium text-sm outline-none nav-item-hover-effect";
   const navTriggerActiveClass =
     "text-foreground bg-background/90 shadow-[0_10px_24px_-20px_rgba(15,23,42,0.45),inset_0_0_0_1px_hsl(var(--border)/0.9)] nav-active-indicator active";
   const navTriggerInactiveClass = "text-muted-foreground hover:text-foreground";
   const navDropdownClass =
     "nav-dropdown-surface max-w-[calc(100vw-2rem)]";
   const navActionButtonClass =
-    "nav-action-button relative h-10 w-10 rounded-[14px] text-muted-foreground hover:text-foreground";
+    "nav-action-button relative h-10 w-10 rounded-2xl text-muted-foreground hover:text-foreground";
   if (!loading && !user) {
     return <VisitorNavbar />;
   }
@@ -293,7 +293,7 @@ const Navigation = () => {
         <div className="max-w-[1600px] mx-auto px-3 sm:px-5 lg:px-8 pt-3">
           <div
             className={cn(
-              "rounded-[22px] border transition-all duration-300 backdrop-blur-xl",
+              "rounded-3xl border transition-all duration-300 backdrop-blur-xl",
               scrolled
                 ? "bg-background/88 border-border/80 shadow-[0_18px_48px_-32px_rgba(15,23,42,0.28)]"
                 : "bg-background/72 border-border/68 shadow-[0_12px_32px_-26px_rgba(15,23,42,0.2)]"
@@ -706,7 +706,7 @@ const Navigation = () => {
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <button
-                        className={cn("cursor-pointer self-center outline-none focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 nav-action-button h-[42px] w-[42px] rounded-[15px]")}
+                        className={cn("cursor-pointer self-center outline-none focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 nav-action-button h-[42px] w-[42px] rounded-2xl")}
                         style={{ height: 42, width: 42, flexShrink: 0 }}
                       >
                         {/* Explicit pixel sizing on both the container and the image
