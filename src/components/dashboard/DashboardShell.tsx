@@ -250,14 +250,19 @@ export function DashboardShell() {
     );
   }
 
-  // Task 4: forced single onboarding path (flag-gated). When enabled, the path
-  // chooser replaces both the legacy guided-onboarding redirect and Day1Welcome.
-  if (day1Profile && shouldShowOnboardingPathGate(day1Profile)) {
-    return <OnboardingPathGate profile={day1Profile} onProfilePatch={handleDay1ProfilePatch} />;
-  }
-
+  // The onboarding quiz is the single path for new accounts: it records stage,
+  // sector, country, and activation intent (dashboard personalization + mentor
+  // matching), and its final step already routes into a first action — so it
+  // must run before the path-chooser gate, which marks onboarding complete
+  // without capturing any of that.
   if (day1Profile && shouldRedirectToGuidedOnboarding(day1Profile)) {
     return <Navigate to="/onboarding?source=dashboard_prompt" replace />;
+  }
+
+  // Task 4 path chooser remains as a fallback for accounts exempt from the
+  // guided quiz (legacy profiles without the flag, icp_unlock bootstraps).
+  if (day1Profile && shouldShowOnboardingPathGate(day1Profile)) {
+    return <OnboardingPathGate profile={day1Profile} onProfilePatch={handleDay1ProfilePatch} />;
   }
 
   if (day1Profile && day1Profile.onboarding_completed !== true) {

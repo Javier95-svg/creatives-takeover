@@ -32,6 +32,7 @@ import {
 import { trackActivity } from '@/lib/activity';
 import { cn } from '@/lib/utils';
 import { refreshOnboardingMentorRecommendations } from '@/lib/onboardingMentorRecommendations';
+import { seedDefaultRoutineForOnboarding } from '@/lib/onboardingPath';
 import { getActivationRoute, startActivationJourney, type ActivationIntent } from '@/lib/retentionSystem';
 import {
   assignFounderStageV3,
@@ -131,6 +132,34 @@ function toggleValue(current: string[], value: string) {
     : [...current, value];
 }
 
+// Draft persists in localStorage (not sessionStorage) so closing the tab
+// mid-quiz doesn't lose progress; the sessionStorage read is a migration
+// fallback for drafts saved before this change.
+function readOnboardingDraft(userId: string | undefined): string | null {
+  if (!userId) return null;
+  const key = `onboarding_draft_${userId}`;
+  return localStorage.getItem(key) ?? sessionStorage.getItem(key);
+}
+
+// Best-effort guess from the browser locale so most users just confirm their
+// country instead of searching for it.
+function detectCountryFromLocale(): string | null {
+  try {
+    const region = (navigator.language || '').split('-')[1];
+    if (!region || region.length !== 2) return null;
+    const name = new Intl.DisplayNames(['en'], { type: 'region' }).of(region.toUpperCase());
+    if (!name) return null;
+    const lower = name.toLowerCase();
+    return (
+      COUNTRY_OPTIONS.find((country) => country.toLowerCase() === lower) ??
+      COUNTRY_OPTIONS.find((country) => country.toLowerCase().startsWith(lower)) ??
+      null
+    );
+  } catch {
+    return null;
+  }
+}
+
 function hasCompleteStageAnswers(stageAnswers: Partial<FounderStageQuizAnswersV3>) {
   return FOUNDER_STAGE_QUESTIONS.every((question) => Boolean(stageAnswers[question.id]));
 }
@@ -153,7 +182,7 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
   const [countrySearch, setCountrySearch] = useState('');
   const [currentStep, setCurrentStep] = useState(() => {
     try {
-      const draft = sessionStorage.getItem(`onboarding_draft_${user?.id}`);
+      const draft = readOnboardingDraft(user?.id);
       return draft ? (JSON.parse(draft).currentStep ?? 0) : 0;
     } catch {
       return 0;
@@ -166,7 +195,7 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
 
   const [formData, setFormData] = useState<OnboardingData>(() => {
     try {
-      const draft = sessionStorage.getItem(`onboarding_draft_${user?.id}`);
+      const draft = readOnboardingDraft(user?.id);
       if (draft) {
         const parsed = JSON.parse(draft);
         return {
@@ -180,7 +209,7 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
     } catch {
       /* ignore */
     }
-    return emptyOnboardingData;
+    return { ...emptyOnboardingData, country: detectCountryFromLocale() ?? '' };
   });
 
   // Steps are dynamic: the fundraising follow-up only appears when the primary
@@ -257,7 +286,7 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
   useEffect(() => {
     if (!user?.id) return;
     try {
-      sessionStorage.setItem(`onboarding_draft_${user.id}`, JSON.stringify({
+      localStorage.setItem(`onboarding_draft_${user.id}`, JSON.stringify({
         currentStep,
         stageAnswers: formData.stageAnswers,
         startupSectors: formData.startupSectors,
@@ -325,6 +354,26 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
     return Object.keys(newErrors).length === 0;
   };
 
+  // Single-select steps advance automatically shortly after a choice, saving a
+  // "Next" click per question. The latest-handleNext ref ensures the deferred
+  // call validates against the just-committed answer; re-clicks reset the timer.
+  const handleNextRef = useRef<() => void | Promise<void>>(() => {});
+  const autoAdvanceTimer = useRef<number | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (autoAdvanceTimer.current) window.clearTimeout(autoAdvanceTimer.current);
+    };
+  }, []);
+
+  const queueAutoAdvance = () => {
+    if (autoAdvanceTimer.current) window.clearTimeout(autoAdvanceTimer.current);
+    autoAdvanceTimer.current = window.setTimeout(() => {
+      autoAdvanceTimer.current = null;
+      void handleNextRef.current();
+    }, 300);
+  };
+
   const handleNext = async () => {
     if (!validateStep(currentStep)) return;
 
@@ -349,7 +398,15 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
     await handleSubmit();
   };
 
+  useEffect(() => {
+    handleNextRef.current = handleNext;
+  });
+
   const handleBack = () => {
+    if (autoAdvanceTimer.current) {
+      window.clearTimeout(autoAdvanceTimer.current);
+      autoAdvanceTimer.current = null;
+    }
     if (currentStep > 0) {
       setCurrentStep((prev) => prev - 1);
       setErrors({});
@@ -395,6 +452,10 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
         assignedStage: finalAssignedStage,
         stageAnswers,
       });
+
+      // RET-003: seed the starter routine here too — previously only the
+      // dashboard path gate did this, and the quiz is now the primary path.
+      void seedDefaultRoutineForOnboarding(user.id);
 
       captureEvent('activation_intent_selected', {
         stage: businessStage,
@@ -449,6 +510,7 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
       toast.success('Your launchpad is ready. Opening your first action now.');
 
       try {
+        localStorage.removeItem(`onboarding_draft_${user.id}`);
         sessionStorage.removeItem(`onboarding_draft_${user.id}`);
       } catch {
         /* ignore */
@@ -495,6 +557,7 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
                     },
                   }));
                   setErrors((prev) => ({ ...prev, [question.id]: undefined }));
+                  queueAutoAdvance();
                 }}
                 aria-pressed={selected}
                 className={cn(
@@ -606,6 +669,7 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
                   setFormData((prev) => ({ ...prev, country }));
                   setCountrySearch(country);
                   setErrors((prev) => ({ ...prev, country: undefined }));
+                  queueAutoAdvance();
                 }}
                 aria-pressed={selected}
                 className={cn(

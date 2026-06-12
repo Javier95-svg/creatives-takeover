@@ -10,7 +10,7 @@ import { normalizePlanId, trackUpgradeClicked } from "@/lib/analytics";
 import { useCTAAttribution } from "@/hooks/useCTAAttribution";
 import { useLocation } from "react-router-dom";
 import { PLAN_HIGHLIGHTS, PLAN_MONTHLY_CREDITS } from "@/config/planPermissions";
-import { redirectToCheckoutUrl, resolveCheckoutIntentUrl } from "@/lib/checkoutRedirect";
+import { appendCheckoutIntentParam, redirectToCheckoutUrl, resolveCheckoutIntentUrl } from "@/lib/checkoutRedirect";
 import { RevealGroup } from "@/components/animations/ScrollReveal";
 
 type BillingCycle = "monthly" | "yearly";
@@ -162,6 +162,19 @@ export default function Pricing() {
     });
 
     const checkoutIntent = `${plan}-${billingCycle}`;
+
+    // Anonymous buyers must create an account first so the Stripe checkout
+    // carries client_reference_id — otherwise the webhook can't attach the
+    // subscription and the payment is orphaned. Signup consumes the stored
+    // intent and forwards straight to Stripe.
+    if (!user) {
+      setAttribution(`pricing_${plan}`, location.pathname);
+      startNavigation(() => {
+        navigate(appendCheckoutIntentParam("/signup?source=pricing_page", checkoutIntent));
+      });
+      return;
+    }
+
     const checkoutUrl = resolveCheckoutIntentUrl(checkoutIntent);
 
     if (checkoutUrl) {
@@ -224,14 +237,10 @@ export default function Pricing() {
             return (
               <div
                 key={plan.key}
-                role="button"
-                tabIndex={0}
-                className={`relative w-full max-w-[480px] cursor-pointer rounded-2xl border bg-card/80 p-6 sm:p-8 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl flex flex-col backdrop-blur ${cardStyle.border} ${
+                className={`relative w-full max-w-[480px] rounded-2xl border bg-card/80 p-6 sm:p-8 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl flex flex-col backdrop-blur ${cardStyle.border} ${
                   isCurrentPlan || isPopular || isPro ? `ring-1 ${cardStyle.ring} shadow-md` : ""
                 }`}
                 style={{ animationDelay: `${index * 0.08}s` }}
-                onClick={() => void handleSubscribe(plan.key)}
-                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); void handleSubscribe(plan.key); } }}
               >
                 {((isCurrentPlan && user) || isPopular || plan.highlight) && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2">

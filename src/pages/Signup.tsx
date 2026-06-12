@@ -56,7 +56,9 @@ const signupHeroSlides = [
 ];
 
 const Signup = () => {
-  const defaultPostSignupPath = '/dashboard';
+  // New accounts go to the onboarding quiz first; the dashboard's guided
+  // redirect catches anyone who arrives with an explicit return=/dashboard.
+  const defaultPostSignupPath = '/onboarding';
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
