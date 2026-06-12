@@ -68,7 +68,7 @@ const DemoStudioWallpaper = () => {
 
       {/* Main demo playback surface */}
       <div className="absolute left-1/2 top-[8%] hidden h-[28rem] w-[44rem] -translate-x-1/2 rotate-[-2deg] rounded-5xl border border-white/[0.16] bg-background/[0.28] shadow-[0_30px_110px_rgba(0,0,0,0.32)] backdrop-blur-sm lg:block">
-        <div className="absolute inset-x-0 top-0 h-12 rounded-t-[2rem] border-b border-white/[0.12] bg-white/[0.08]" />
+        <div className="absolute inset-x-0 top-0 h-12 rounded-t-5xl border-b border-white/[0.12] bg-white/[0.08]" />
         <div className="absolute left-6 top-5 h-2 w-2 rounded-full bg-red-400/80" />
         <div className="absolute left-11 top-5 h-2 w-2 rounded-full bg-yellow-300/80" />
         <div className="absolute left-16 top-5 h-2 w-2 rounded-full bg-emerald-300/80" />
