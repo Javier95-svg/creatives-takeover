@@ -122,7 +122,7 @@ export const TabletNavigation: React.FC<TabletNavigationProps> = ({
                   <TooltipTrigger asChild>
                     <DropdownMenuTrigger className={triggerClassName}>
                       {Icon && <Icon className="h-4 w-4" />}
-                      <span className="flex items-center gap-1 text-[10px] leading-tight text-center max-w-[70px]">
+                      <span className="flex items-center gap-1 text-caption leading-tight text-center max-w-[70px]">
                         <span className="truncate">{item.name}</span>
                         <ChevronDown className="h-3 w-3 flex-shrink-0" />
                       </span>
@@ -140,7 +140,7 @@ export const TabletNavigation: React.FC<TabletNavigationProps> = ({
                       return (
                         <React.Fragment key={`${subItem.label}-${index}`}>
                           {index > 0 && <DropdownMenuSeparator />}
-                          <DropdownMenuLabel className="text-[10px] font-semibold uppercase tracking-wider text-primary">
+                          <DropdownMenuLabel className="text-caption font-semibold uppercase tracking-wider text-primary">
                             {subItem.label}
                           </DropdownMenuLabel>
                         </React.Fragment>
@@ -192,7 +192,7 @@ export const TabletNavigation: React.FC<TabletNavigationProps> = ({
                   className={triggerClassName}
                 >
                   {Icon && <Icon className="h-4 w-4" />}
-                  <span className="text-[10px] leading-tight text-center max-w-[60px] truncate">
+                  <span className="text-caption leading-tight text-center max-w-[60px] truncate">
                     {item.name}
                   </span>
                 </Link>

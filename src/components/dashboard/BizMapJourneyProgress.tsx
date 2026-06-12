@@ -342,7 +342,7 @@ function StepNode({
         {stage.outcome}
       </span>
       {requiresUpgrade ? (
-        <span className="mt-2 rounded-full border border-primary/25 bg-primary/5 px-2 py-0.5 text-[10px] font-medium text-primary">
+        <span className="mt-2 rounded-full border border-primary/25 bg-primary/5 px-2 py-0.5 text-caption font-medium text-primary">
           {PLAN_LABELS[stage.requiredPlan]}
         </span>
       ) : null}

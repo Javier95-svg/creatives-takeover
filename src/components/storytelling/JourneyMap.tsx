@@ -65,11 +65,11 @@ export const JourneyMap = ({ milestones }: JourneyMapProps) => {
               
               {/* Milestone Label */}
               <div className="text-center max-w-[80px]">
-                <p className="text-[10px] font-semibold text-foreground mb-1 leading-tight">
+                <p className="text-caption font-semibold text-foreground mb-1 leading-tight">
                   {milestone.label}
                 </p>
                 {milestone.description && (
-                  <p className="text-[9px] text-muted-foreground leading-tight">
+                  <p className="text-caption text-muted-foreground leading-tight">
                     {milestone.description}
                   </p>
                 )}

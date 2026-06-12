@@ -629,7 +629,7 @@ export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({
                       </div>
                     </div>
                   )}
-                  <div className="max-h-40 overflow-y-auto border-t border-white/10 bg-black/70 px-3 py-2 font-mono text-[11px]">
+                  <div className="max-h-40 overflow-y-auto border-t border-white/10 bg-black/70 px-3 py-2 font-mono text-label">
                     <div className="mb-1 flex items-center gap-1.5 text-slate-400">
                       <TerminalSquare className="h-3.5 w-3.5" />
                       Runtime logs

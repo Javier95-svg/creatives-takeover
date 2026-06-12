@@ -45,7 +45,7 @@ function StatusBadge({ status }: { status: MVPIntegrationStatus }) {
     <Badge
       variant="outline"
       className={cn(
-        'shrink-0 text-[11px]',
+        'shrink-0 text-label',
         healthy && 'border-emerald-400/30 bg-emerald-400/10 text-emerald-300',
         warn && 'border-amber-300/30 bg-amber-300/10 text-amber-100',
         !healthy && !warn && 'border-white/10 bg-white/5 text-slate-400'
@@ -117,7 +117,7 @@ export const MVPBuilderIntegrationPanel: React.FC<MVPBuilderIntegrationPanelProp
             </span>
             <div>
               <p className="text-sm font-semibold text-white">GitHub</p>
-              <p className="text-[11px] text-slate-400">
+              <p className="text-label text-slate-400">
                 {githubRepoSession
                   ? `${githubRepoSession.fullName} · main`
                   : githubConnection.connected
@@ -158,7 +158,7 @@ export const MVPBuilderIntegrationPanel: React.FC<MVPBuilderIntegrationPanelProp
           <div className="space-y-3">
             <div className="flex items-end gap-2">
               <label className="flex-1 space-y-1.5">
-                <span className="text-[11px] font-medium uppercase tracking-wider text-slate-500">Repository</span>
+                <span className="text-label font-medium uppercase tracking-wider text-slate-500">Repository</span>
                 <select
                   value={selectedRepo}
                   onChange={(e) => setSelectedRepo(e.target.value)}
@@ -183,7 +183,7 @@ export const MVPBuilderIntegrationPanel: React.FC<MVPBuilderIntegrationPanelProp
               </Button>
             </div>
             {selectedRepoMeta?.defaultBranch && selectedRepoMeta.defaultBranch !== 'main' && (
-              <p className="text-[11px] text-amber-200">
+              <p className="text-label text-amber-200">
                 Default branch is <code>{selectedRepoMeta.defaultBranch}</code> — import will use main.
               </p>
             )}
@@ -219,7 +219,7 @@ export const MVPBuilderIntegrationPanel: React.FC<MVPBuilderIntegrationPanelProp
             </span>
             <div>
               <p className="text-sm font-semibold text-white">Supabase</p>
-              <p className="text-[11px] text-slate-400">
+              <p className="text-label text-slate-400">
                 {supabaseConnection.project?.ref
                   ? `${supabaseConnection.project.ref}.supabase.co`
                   : 'Paste your project URL and service role key'}
@@ -257,7 +257,7 @@ export const MVPBuilderIntegrationPanel: React.FC<MVPBuilderIntegrationPanelProp
         ) : (
           <div className="space-y-3">
             <div className="space-y-1.5">
-              <label className="text-[11px] font-medium uppercase tracking-wider text-slate-500">
+              <label className="text-label font-medium uppercase tracking-wider text-slate-500">
                 Project URL
               </label>
               <input
@@ -270,7 +270,7 @@ export const MVPBuilderIntegrationPanel: React.FC<MVPBuilderIntegrationPanelProp
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-[11px] font-medium uppercase tracking-wider text-slate-500">
+              <label className="text-label font-medium uppercase tracking-wider text-slate-500">
                 Service Role Key
               </label>
               <div className="relative">
@@ -286,12 +286,12 @@ export const MVPBuilderIntegrationPanel: React.FC<MVPBuilderIntegrationPanelProp
                 <button
                   type="button"
                   onClick={() => setShowKey((v) => !v)}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-slate-500 hover:text-white"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-caption text-slate-500 hover:text-white"
                 >
                   {showKey ? 'hide' : 'show'}
                 </button>
               </div>
-              <p className="text-[10px] text-slate-600">
+              <p className="text-caption text-slate-600">
                 Found in Supabase Dashboard → Project Settings → API → service_role key
               </p>
             </div>

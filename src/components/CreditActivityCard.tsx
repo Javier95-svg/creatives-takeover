@@ -73,7 +73,7 @@ export function CreditActivityCard() {
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
                       <p className="font-medium text-sm text-foreground">{String(toolName)}</p>
-                      <Badge variant="outline" className="text-[11px] uppercase">
+                      <Badge variant="outline" className="text-label uppercase">
                         {tx.tx_type}
                       </Badge>
                     </div>

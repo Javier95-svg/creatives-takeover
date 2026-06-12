@@ -164,7 +164,7 @@ export const MVPBuilderIntegrationGate: React.FC<MVPBuilderIntegrationGateProps>
                   <>
                     <div className="flex items-end gap-2">
                       <label className="flex-1 space-y-1.5">
-                        <span className="text-[11px] font-medium uppercase text-slate-500">Repository</span>
+                        <span className="text-label font-medium uppercase text-slate-500">Repository</span>
                         <select
                           value={selectedRepo}
                           onChange={(event) => setSelectedRepo(event.target.value)}
@@ -251,7 +251,7 @@ export const MVPBuilderIntegrationGate: React.FC<MVPBuilderIntegrationGateProps>
                   <>
                     <div className="flex items-end gap-2">
                       <label className="flex-1 space-y-1.5">
-                        <span className="text-[11px] font-medium uppercase text-slate-500">Project</span>
+                        <span className="text-label font-medium uppercase text-slate-500">Project</span>
                         <select
                           value={selectedProjectRef}
                           onChange={(event) => setSelectedProjectRef(event.target.value)}

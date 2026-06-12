@@ -365,7 +365,7 @@ const Navigation = () => {
 	                          {bizMapSubmenu.map((subItem, idx) => {
 	                            if ('type' in subItem && subItem.type === 'label') {
                               return (
-                                <DropdownMenuLabel key={idx} className="text-[10px] font-semibold uppercase tracking-wider text-primary mt-2 first:mt-0">
+                                <DropdownMenuLabel key={idx} className="text-caption font-semibold uppercase tracking-wider text-primary mt-2 first:mt-0">
                                   {subItem.label}
                                 </DropdownMenuLabel>
                               );
@@ -474,7 +474,7 @@ const Navigation = () => {
 	                          {insightaSubmenu.map((subItem, idx) => {
                               if ('type' in subItem && subItem.type === 'label') {
                                 return (
-                                  <DropdownMenuLabel key={idx} className="text-[10px] font-semibold uppercase tracking-wider text-primary mt-2 first:mt-0">
+                                  <DropdownMenuLabel key={idx} className="text-caption font-semibold uppercase tracking-wider text-primary mt-2 first:mt-0">
                                     {subItem.label}
                                   </DropdownMenuLabel>
                                 );
@@ -858,7 +858,7 @@ const Navigation = () => {
                                 return (
                                   <div
                                     key={sub.label}
-                                    className="px-3 pt-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-primary"
+                                    className="px-3 pt-3 pb-1 text-caption font-semibold uppercase tracking-wider text-primary"
                                   >
                                     {sub.label}
                                   </div>

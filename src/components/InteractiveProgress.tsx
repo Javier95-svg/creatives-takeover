@@ -175,7 +175,7 @@ const InteractiveProgress = ({
                     
                     {/* Step Description */}
                     <p className={`
-                      text-[10px] sm:text-xs text-center leading-relaxed max-w-[140px] transition-all duration-300
+                      text-caption sm:text-xs text-center leading-relaxed max-w-[140px] transition-all duration-300
                       ${isCurrent ? 'text-muted-foreground' : 'text-muted-foreground/80'}
                     `}>
                       {step.description}

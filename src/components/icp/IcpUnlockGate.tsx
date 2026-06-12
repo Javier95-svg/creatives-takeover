@@ -130,7 +130,7 @@ export function IcpUnlockGate({
         <div className="border-b border-border/50 px-6 py-5 sm:px-8">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.22em] text-accent-teal">
+              <p className="mb-3 text-caption font-semibold uppercase tracking-[0.22em] text-accent-teal">
                 Preview ready
               </p>
               <p className="text-base font-semibold text-foreground">{personaName}</p>

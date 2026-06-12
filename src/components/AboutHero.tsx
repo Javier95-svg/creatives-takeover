@@ -17,12 +17,12 @@ const AboutHero = () => {
                 <span className="block lg:whitespace-nowrap">The Future Belongs</span>
                 <span className="block lg:whitespace-nowrap">to Founders</span>
               </h1>
-              <p className="text-[15px] sm:text-base font-medium tracking-[-0.01em] text-foreground/90 leading-relaxed">We're entering a world where AI and automation will eliminate most traditional jobs but also unlock unprecedented entrepreneurial opportunities. Everyone will need to think and act like a founder, and we're here to make that transition possible.</p>
+              <p className="text-sm sm:text-base font-medium tracking-[-0.01em] text-foreground/90 leading-relaxed">We're entering a world where AI and automation will eliminate most traditional jobs but also unlock unprecedented entrepreneurial opportunities. Everyone will need to think and act like a founder, and we're here to make that transition possible.</p>
             </div>
               
             <div className="space-y-3 sm:space-y-4">
-              <p className="text-[15px] sm:text-base font-medium tracking-[-0.01em] text-foreground/85 leading-relaxed">The biggest challenge isn't coming up with ideas but moving them from scattered brainstorming into real execution. Creatives Takeover transforms raw thoughts into clear, actionable roadmaps and creates an ecosystem where founders, entrepreneurs, creators, and freelancers collaborate to bring ideas to life.</p>
-              <p className="text-[15px] sm:text-base font-medium tracking-[-0.01em] text-foreground/85 leading-relaxed">This isn't just a tool. It's an ecosystem designed for the next wave of builders who will define their own future instead of waiting for one to be handed to them.</p>
+              <p className="text-sm sm:text-base font-medium tracking-[-0.01em] text-foreground/85 leading-relaxed">The biggest challenge isn't coming up with ideas but moving them from scattered brainstorming into real execution. Creatives Takeover transforms raw thoughts into clear, actionable roadmaps and creates an ecosystem where founders, entrepreneurs, creators, and freelancers collaborate to bring ideas to life.</p>
+              <p className="text-sm sm:text-base font-medium tracking-[-0.01em] text-foreground/85 leading-relaxed">This isn't just a tool. It's an ecosystem designed for the next wave of builders who will define their own future instead of waiting for one to be handed to them.</p>
             </div>
 
             </div>

@@ -76,7 +76,7 @@ export function InsightaActivityCard() {
                 <Icon className={`h-4 w-4 ${stat.color}`} />
                 <p className="text-base font-bold text-foreground leading-none">{stat.value}</p>
                 <p className="text-xs text-muted-foreground leading-tight">{stat.label}</p>
-                <p className="text-[10px] text-muted-foreground/70">{stat.sub}</p>
+                <p className="text-caption text-muted-foreground/70">{stat.sub}</p>
               </div>
             );
           })}

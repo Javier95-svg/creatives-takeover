@@ -173,7 +173,7 @@ export default function HotspotCanvas({
             }}
           >
             {h.label && (
-              <span className="pointer-events-none absolute left-0 top-0 -translate-y-full rounded bg-slate-900 px-1.5 py-0.5 text-[10px] text-white">
+              <span className="pointer-events-none absolute left-0 top-0 -translate-y-full rounded bg-slate-900 px-1.5 py-0.5 text-caption text-white">
                 {h.label}
               </span>
             )}
@@ -212,7 +212,7 @@ export default function HotspotCanvas({
           </span>
         </div>
       ) : (
-        <p className="pointer-events-none absolute left-2 top-2 rounded bg-black/50 px-2 py-1 text-[10px] text-white/70">
+        <p className="pointer-events-none absolute left-2 top-2 rounded bg-black/50 px-2 py-1 text-caption text-white/70">
           Drag to add another hotspot
         </p>
       )}

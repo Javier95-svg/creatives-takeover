@@ -384,7 +384,7 @@ const EntrepreneurProblems = () => {
                   <div className="md:hidden space-y-5">
                     <div className="text-center">
                       <div className="mb-3 flex justify-center">
-                        <span className="inline-flex items-center rounded-full border border-border/72 bg-background/88 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
+                        <span className="inline-flex items-center rounded-full border border-border/72 bg-background/88 px-3 py-1 text-label font-medium uppercase tracking-[0.18em] text-muted-foreground">
                           {step.phase}
                         </span>
                       </div>
@@ -414,7 +414,7 @@ const EntrepreneurProblems = () => {
                       <>
                         <div className="md:col-start-2 md:row-start-1 text-center">
                           <div className="mb-3 flex justify-center">
-                            <span className="inline-flex items-center rounded-full border border-border/72 bg-background/88 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
+                            <span className="inline-flex items-center rounded-full border border-border/72 bg-background/88 px-3 py-1 text-label font-medium uppercase tracking-[0.18em] text-muted-foreground">
                               {step.phase}
                             </span>
                           </div>
@@ -443,7 +443,7 @@ const EntrepreneurProblems = () => {
                       <>
                         <div className="md:col-start-1 md:row-start-1 text-center">
                           <div className="mb-3 flex justify-center">
-                            <span className="inline-flex items-center rounded-full border border-border/72 bg-background/88 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
+                            <span className="inline-flex items-center rounded-full border border-border/72 bg-background/88 px-3 py-1 text-label font-medium uppercase tracking-[0.18em] text-muted-foreground">
                               {step.phase}
                             </span>
                           </div>

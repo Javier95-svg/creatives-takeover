@@ -39,7 +39,7 @@ export default function WaitlistModeSelect({
           onClick={hasCompletedIcp && !icpCtaLoading ? onChooseIcpPowered : undefined}
         >
           {hasCompletedIcp && (
-            <span className="absolute right-4 top-4 rounded-full bg-primary px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-primary-foreground">
+            <span className="absolute right-4 top-4 rounded-full bg-primary px-2.5 py-1 text-caption font-semibold uppercase tracking-wider text-primary-foreground">
               Recommended
             </span>
           )}
@@ -144,7 +144,7 @@ export default function WaitlistModeSelect({
           <div>
             <div className="flex items-center gap-2">
               <h3 className="text-xl font-semibold">Launch Kit</h3>
-              <span className="rounded-full bg-sky-500/10 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-sky-600 dark:text-sky-400">Copy only</span>
+              <span className="rounded-full bg-sky-500/10 px-2.5 py-0.5 text-caption font-semibold uppercase tracking-wider text-sky-600 dark:text-sky-400">Copy only</span>
             </div>
             <p className="mt-1 text-sm text-muted-foreground">
               Skip the page builder. Generate your full copy package — A/B headlines, value props, CTAs, a 3-email pre-launch sequence, and referral hook — ready to deploy immediately.

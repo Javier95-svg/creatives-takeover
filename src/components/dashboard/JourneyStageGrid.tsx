@@ -134,7 +134,7 @@ function StageCard({ stage }: { stage: Stage }) {
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
             <Icon className="h-4.5 w-4.5 text-primary" />
           </div>
-          <Badge variant="outline" className="px-1.5 text-[10px] font-semibold uppercase tracking-wider">
+          <Badge variant="outline" className="px-1.5 text-caption font-semibold uppercase tracking-wider">
             Preview
           </Badge>
         </div>
@@ -144,11 +144,11 @@ function StageCard({ stage }: { stage: Stage }) {
         <p className="flex-1 text-xs leading-snug text-muted-foreground">
           {previewCopy}
         </p>
-        <p className="mt-3 rounded-lg border border-border/60 bg-background/60 px-2 py-1.5 text-[11px] leading-4 text-muted-foreground">
+        <p className="mt-3 rounded-lg border border-border/60 bg-background/60 px-2 py-1.5 text-label leading-4 text-muted-foreground">
           {proofCopy}
         </p>
         <div className="mt-3 flex items-center gap-2">
-          <Button asChild size="sm" variant="outline" className="h-8 px-2 text-[11px]">
+          <Button asChild size="sm" variant="outline" className="h-8 px-2 text-label">
             <Link
               to={stage.href}
               onClick={() => trackSoftPreviewClicked({
@@ -166,7 +166,7 @@ function StageCard({ stage }: { stage: Stage }) {
             </Link>
           </Button>
           {targetPlan ? (
-            <Button asChild size="sm" variant="ghost" className="h-8 px-2 text-[11px]">
+            <Button asChild size="sm" variant="ghost" className="h-8 px-2 text-label">
               <Link
                 to={`/pricing#${targetPlan}`}
                 onClick={() => trackSoftPreviewClicked({
@@ -198,7 +198,7 @@ function StageCard({ stage }: { stage: Stage }) {
           <Icon className="h-4.5 w-4.5 text-primary" />
         </div>
         {stage.badge && (
-          <Badge variant="outline" className="px-1.5 text-[10px] font-semibold uppercase tracking-wider">
+          <Badge variant="outline" className="px-1.5 text-caption font-semibold uppercase tracking-wider">
             {stage.badge}
           </Badge>
         )}
@@ -209,7 +209,7 @@ function StageCard({ stage }: { stage: Stage }) {
       <p className="mb-3 flex-1 text-xs leading-snug text-muted-foreground">
         {stage.description}
       </p>
-      <div className="flex items-center gap-1 text-[11px] font-medium text-primary opacity-0 transition-opacity group-hover:opacity-100">
+      <div className="flex items-center gap-1 text-label font-medium text-primary opacity-0 transition-opacity group-hover:opacity-100">
         Open <ArrowRight className="h-3 w-3" />
       </div>
     </Link>

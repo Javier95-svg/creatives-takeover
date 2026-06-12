@@ -22,7 +22,7 @@ import {
 
 function SourceBadge({ sourceType }: { sourceType: BizMapSharedOutputRecord['source_type'] }) {
   return (
-    <Badge variant="secondary" className="rounded-full px-3 py-1 text-[11px] uppercase tracking-[0.18em]">
+    <Badge variant="secondary" className="rounded-full px-3 py-1 text-label uppercase tracking-[0.18em]">
       {sourceType === 'icp' ? 'ICP Builder' : sourceType === 'pmf' ? 'PMF Lab' : 'GTM Strategist'}
     </Badge>
   );

@@ -221,10 +221,10 @@ const SignupModal = ({ open, intent, onClose }: SignupModalProps) => {
             <div className="mt-4 flex w-full items-start gap-3 rounded-xl border bg-muted/40 px-3.5 py-3 text-left">
               <Zap className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
               <div>
-                <p className="font-mono text-[9.5px] uppercase tracking-[0.16em] text-muted-foreground">
+                <p className="font-mono text-caption uppercase tracking-[0.16em] text-muted-foreground">
                   You&rsquo;re about to build
                 </p>
-                <p className="mt-0.5 text-[13px] font-semibold text-foreground">
+                <p className="mt-0.5 text-xs font-semibold text-foreground">
                   {intent || 'A brand-new product'}
                 </p>
               </div>
@@ -275,7 +275,7 @@ const SignupModal = ({ open, intent, onClose }: SignupModalProps) => {
               </Button>
             </div>
 
-            <p className="mt-5 text-[11.5px] leading-relaxed text-muted-foreground/70">
+            <p className="mt-5 text-xs leading-relaxed text-muted-foreground/70">
               By continuing, you agree to the{' '}
               <Link to="/terms" className="underline underline-offset-2 hover:text-muted-foreground">Terms</Link>
               {' '}and{' '}
@@ -374,13 +374,13 @@ const BuildHero = ({ onOpen }: HeroProps) => {
                       setIsEditing(false);
                     }
                   }}
-                  className="relative z-10 min-h-[54px] text-[17px] leading-relaxed text-foreground outline-none"
+                  className="relative z-10 min-h-[54px] text-base leading-relaxed text-foreground outline-none"
                   style={{ caretColor: 'hsl(var(--primary))' }}
                 />
                 {/* animated placeholder */}
                 {!userInput && (
                   <div className="pointer-events-none absolute inset-0 z-0 flex items-start pt-0.5" aria-hidden="true">
-                    <span className="text-[17px] leading-relaxed text-muted-foreground/55">
+                    <span className="text-base leading-relaxed text-muted-foreground/55">
                       {animatedText}
                       {!isEditing && (
                         <span
@@ -395,7 +395,7 @@ const BuildHero = ({ onOpen }: HeroProps) => {
 
               {/* bottom bar */}
               <div className="mt-2 flex items-center gap-2.5 border-t border-border/60 pt-3">
-                <span className="flex items-center gap-1.5 rounded-lg border border-border/70 bg-muted/40 px-2.5 py-1.5 text-[13px] font-semibold text-muted-foreground">
+                <span className="flex items-center gap-1.5 rounded-lg border border-border/70 bg-muted/40 px-2.5 py-1.5 text-xs font-semibold text-muted-foreground">
                   <Zap className="h-3.5 w-3.5 opacity-70" aria-hidden="true" />
                   Build
                 </span>
@@ -413,7 +413,7 @@ const BuildHero = ({ onOpen }: HeroProps) => {
 
             {/* suggestion chips */}
             <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
-              <span className="font-mono text-[10.5px] uppercase tracking-[0.16em] text-muted-foreground/60">
+              <span className="font-mono text-label uppercase tracking-[0.16em] text-muted-foreground/60">
                 Try
               </span>
               {CHIPS.map((chip) => (
@@ -421,7 +421,7 @@ const BuildHero = ({ onOpen }: HeroProps) => {
                   key={chip.label}
                   type="button"
                   onClick={() => onOpen(chip.intent)}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-muted/30 px-3 py-1.5 text-[12.5px] font-medium text-muted-foreground transition-all hover:-translate-y-0.5 hover:border-blue-400/40 hover:text-foreground"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-muted/30 px-3 py-1.5 text-xs font-medium text-muted-foreground transition-all hover:-translate-y-0.5 hover:border-blue-400/40 hover:text-foreground"
                 >
                   <span className="h-1.5 w-1.5 rounded-full" style={{ background: chip.dot }} />
                   {chip.label}
@@ -437,7 +437,7 @@ const BuildHero = ({ onOpen }: HeroProps) => {
                 <span
                   key={init}
                   className={cn(
-                    'flex h-8 w-8 items-center justify-center rounded-full border-2 border-background text-[11px] font-bold text-white',
+                    'flex h-8 w-8 items-center justify-center rounded-full border-2 border-background text-label font-bold text-white',
                     i > 0 && '-ml-2.5',
                   )}
                   style={{
@@ -481,7 +481,7 @@ const BuildHowItWorks = () => (
     <div className="mx-auto max-w-[1200px] px-4 sm:px-6 lg:px-8">
       <ScrollReveal>
         <div className="mx-auto mb-14 max-w-[720px] text-center">
-          <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-muted-foreground">How it works</p>
+          <p className="font-mono text-label uppercase tracking-[0.22em] text-muted-foreground">How it works</p>
           <h2 className="mt-4 font-space-grotesk text-[clamp(32px,3.8vw,46px)] font-bold leading-[1.08] tracking-[-0.03em] text-balance">
             <span className="bg-gradient-rgb bg-clip-text text-transparent">Three steps from sentence to shipped</span>
           </h2>
@@ -497,7 +497,7 @@ const BuildHowItWorks = () => (
               className="relative rounded-2xl border border-border/60 bg-card/50 p-7 backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:border-border hover:shadow-xl"
             >
               <div className="mb-12 flex items-center justify-between">
-                <span className="font-mono text-[13px] font-bold tracking-[0.12em] text-muted-foreground/60">
+                <span className="font-mono text-xs font-bold tracking-[0.12em] text-muted-foreground/60">
                   {step.num}
                 </span>
                 <span
@@ -512,7 +512,7 @@ const BuildHowItWorks = () => (
                 <div className="absolute right-[-12px] top-[50px] z-10 hidden h-px w-6 bg-border sm:block" aria-hidden="true" />
               )}
               <h3 className="font-space-grotesk text-[22px] font-bold tracking-[-0.02em]">{step.title}</h3>
-              <p className="mt-2 text-[14.5px] leading-relaxed text-muted-foreground">{step.body}</p>
+              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{step.body}</p>
             </div>
           );
         })}
@@ -528,7 +528,7 @@ const BuildWhatYouCanBuild = () => (
     <div className="mx-auto max-w-[1200px] px-4 sm:px-6 lg:px-8">
       <ScrollReveal>
         <div className="mx-auto mb-14 max-w-[720px] text-center">
-          <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-muted-foreground">What you can build</p>
+          <p className="font-mono text-label uppercase tracking-[0.22em] text-muted-foreground">What you can build</p>
           <h2 className="mt-4 font-space-grotesk text-[clamp(32px,3.8vw,46px)] font-bold leading-[1.08] tracking-[-0.03em] text-balance">
             <span className="bg-gradient-rgb bg-clip-text text-transparent">Anything you can describe.</span>
           </h2>
@@ -555,13 +555,13 @@ const BuildWhatYouCanBuild = () => (
                   <div className="h-1.5 w-2/3 rounded-full bg-muted" />
                 </div>
               </div>
-              <span className="absolute left-3 top-3 rounded-lg border border-border/60 bg-background/70 px-2 py-1 font-mono text-[9px] uppercase tracking-[0.14em] text-muted-foreground backdrop-blur-sm">
+              <span className="absolute left-3 top-3 rounded-lg border border-border/60 bg-background/70 px-2 py-1 font-mono text-caption uppercase tracking-[0.14em] text-muted-foreground backdrop-blur-sm">
                 {card.tag}
               </span>
             </div>
             <div className="p-4">
-              <h4 className="font-space-grotesk text-[17px] font-bold tracking-[-0.01em]">{card.title}</h4>
-              <p className="mt-1.5 text-[13px] leading-[1.5] text-muted-foreground">{card.body}</p>
+              <h4 className="font-space-grotesk text-base font-bold tracking-[-0.01em]">{card.title}</h4>
+              <p className="mt-1.5 text-xs leading-[1.5] text-muted-foreground">{card.body}</p>
             </div>
           </div>
         ))}
@@ -581,11 +581,11 @@ const BuildStageSelector = () => {
       <div className="mx-auto max-w-[1200px] px-4 sm:px-6 lg:px-8">
         <ScrollReveal>
           <div className="mx-auto mb-10 max-w-[720px] text-center">
-            <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-muted-foreground">The Startup Development Cycle</p>
+            <p className="font-mono text-label uppercase tracking-[0.22em] text-muted-foreground">The Startup Development Cycle</p>
             <h2 className="mt-4 font-space-grotesk text-[clamp(32px,3.8vw,46px)] font-bold leading-[1.08] tracking-[-0.03em] text-balance">
               <span className="bg-gradient-rgb bg-clip-text text-transparent">Trust the Process</span>
             </h2>
-            <p className="mt-4 text-[17px] leading-relaxed text-muted-foreground text-balance">
+            <p className="mt-4 text-base leading-relaxed text-muted-foreground text-balance">
               You don&rsquo;t have to start from Stage 1. However, we highly recommend not skipping Validation.
               It exists to make sure you are building the right thing.
             </p>
@@ -615,16 +615,16 @@ const BuildStageSelector = () => {
                     } : {}}
                   >
                     {stage.youAreHere && (
-                      <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-gradient-rgb px-2 py-0.5 font-mono text-[8.5px] font-bold uppercase tracking-[0.14em] text-white shadow-[0_6px_16px_-6px_rgba(59,130,246,0.45)]">
+                      <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-gradient-rgb px-2 py-0.5 font-mono text-caption font-bold uppercase tracking-[0.14em] text-white shadow-[0_6px_16px_-6px_rgba(59,130,246,0.45)]">
                         You are here
                       </span>
                     )}
-                    <p className="font-mono text-[10px] tracking-[0.14em] text-muted-foreground/60">Stage {stage.num}</p>
-                    <p className={cn('mt-2 font-space-grotesk font-bold tracking-[-0.01em]', isSel ? 'text-[16px]' : 'text-[15px]')}>
+                    <p className="font-mono text-caption tracking-[0.14em] text-muted-foreground/60">Stage {stage.num}</p>
+                    <p className={cn('mt-2 font-space-grotesk font-bold tracking-[-0.01em]', isSel ? 'text-base' : 'text-sm')}>
                       <span className="mr-1.5 inline-block h-2.5 w-2.5 rounded-full align-middle" style={{ background: stage.dot }} />
                       {stage.name}
                     </p>
-                    <p className="mt-0.5 text-[11.5px] text-muted-foreground">{stage.tool}</p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">{stage.tool}</p>
                   </button>
                 );
               })}
@@ -634,12 +634,12 @@ const BuildStageSelector = () => {
             <div className="mt-6 border-t border-border/50 pt-6">
               <div className="mb-2.5 flex items-center gap-2">
                 <span className="h-2.5 w-2.5 rounded-full" style={{ background: activeStage.dot }} />
-                <span className="font-space-grotesk text-[15px] font-bold">{activeStage.name}</span>
-                <span className="font-mono text-[9.5px] uppercase tracking-[0.14em] text-muted-foreground/60">
+                <span className="font-space-grotesk text-sm font-bold">{activeStage.name}</span>
+                <span className="font-mono text-caption uppercase tracking-[0.14em] text-muted-foreground/60">
                   {activeStage.tool}
                 </span>
               </div>
-              <p className="text-[14.5px] leading-[1.65] text-muted-foreground">{activeStage.description}</p>
+              <p className="text-sm leading-[1.65] text-muted-foreground">{activeStage.description}</p>
             </div>
           </div>
         </ScrollReveal>
@@ -664,7 +664,7 @@ const BuildTestimonials = () => {
       <div className="mx-auto max-w-[1200px] px-4 sm:px-6 lg:px-8">
         <ScrollReveal>
           <div className="mx-auto mb-12 max-w-[720px] text-center">
-            <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-muted-foreground">No gatekeepers</p>
+            <p className="font-mono text-label uppercase tracking-[0.22em] text-muted-foreground">No gatekeepers</p>
             <h2 className="mt-4 font-space-grotesk text-[clamp(32px,3.8vw,46px)] font-bold leading-[1.08] tracking-[-0.03em]">
               <span className="bg-gradient-rgb bg-clip-text text-transparent">Who&rsquo;s Next?</span>
             </h2>
@@ -685,7 +685,7 @@ const BuildTestimonials = () => {
               aria-hidden={i >= TESTIMONIALS.length}
             >
               <span className="font-space-grotesk text-[40px] leading-[0.4] text-primary">&ldquo;</span>
-              <p className="mt-2 text-[15px] font-medium leading-relaxed text-foreground">
+              <p className="mt-2 text-sm font-medium leading-relaxed text-foreground">
                 {t.quote.split(t.em).map((part, pi) =>
                   pi === 0 ? part :
                     <span key={pi}>
@@ -696,14 +696,14 @@ const BuildTestimonials = () => {
               </p>
               <div className="mt-4 flex items-center gap-3">
                 <span
-                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[13px] font-bold text-white"
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
                   style={{ background: `linear-gradient(135deg,${t.from},${t.to})` }}
                 >
                   {t.initials}
                 </span>
                 <div>
-                  <p className="text-[13.5px] font-bold">{t.name}</p>
-                  <p className="text-[11.5px] text-muted-foreground">{t.role}</p>
+                  <p className="text-sm font-bold">{t.name}</p>
+                  <p className="text-xs text-muted-foreground">{t.role}</p>
                 </div>
               </div>
             </div>
@@ -713,11 +713,11 @@ const BuildTestimonials = () => {
 
       <ScrollReveal>
         <div className="mx-auto flex max-w-[1200px] flex-wrap items-center justify-center gap-x-8 gap-y-3 px-4">
-          <span className="w-full text-center font-mono text-[10.5px] uppercase tracking-[0.2em] text-muted-foreground/60">
+          <span className="w-full text-center font-mono text-label uppercase tracking-[0.2em] text-muted-foreground/60">
             Featured in the founder feeds you actually read
           </span>
           {['Reddit r/startups', 'Product Hunt', 'Indie Hackers', 'Hacker News', 'X / Build in Public'].map((name) => (
-            <span key={name} className="font-space-grotesk text-[16px] font-bold text-muted-foreground/60">
+            <span key={name} className="font-space-grotesk text-base font-bold text-muted-foreground/60">
               {name}
             </span>
           ))}

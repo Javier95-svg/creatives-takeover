@@ -488,7 +488,7 @@ export default function DemoEditorPage() {
               {setupChecklist.map((item, index) => (
                 <div key={item.label} className="flex items-center gap-2 rounded-lg border border-border/70 bg-background/70 px-3 py-2">
                   <span className={item.done ? 'text-emerald-600' : 'text-muted-foreground'}>
-                    {item.done ? <Check className="h-4 w-4" /> : <span className="flex h-4 w-4 items-center justify-center rounded-full border text-[10px]">{index + 1}</span>}
+                    {item.done ? <Check className="h-4 w-4" /> : <span className="flex h-4 w-4 items-center justify-center rounded-full border text-caption">{index + 1}</span>}
                   </span>
                   <span className="text-xs font-medium">{item.label}</span>
                 </div>
@@ -542,7 +542,7 @@ export default function DemoEditorPage() {
               <div className="space-y-1.5">
                 <Label className="text-xs text-muted-foreground">Embed snippet</Label>
                 <div className="flex items-start gap-2">
-                  <code className="block flex-1 overflow-x-auto rounded-md bg-muted p-2 text-[11px]">{embedSnippet}</code>
+                  <code className="block flex-1 overflow-x-auto rounded-md bg-muted p-2 text-label">{embedSnippet}</code>
                   <Button size="icon" variant="outline" className="h-9 w-9 shrink-0" onClick={() => copyShare(embedSnippet)}>
                     <Copy className="h-4 w-4" />
                   </Button>
@@ -677,7 +677,7 @@ export default function DemoEditorPage() {
               <div>
                 <Label htmlFor="watermark">Show watermark</Label>
                 {!canRemoveWatermark(planTier) && (
-                  <p className="text-[11px] text-muted-foreground">Upgrade to remove on free plan.</p>
+                  <p className="text-label text-muted-foreground">Upgrade to remove on free plan.</p>
                 )}
               </div>
               <Switch

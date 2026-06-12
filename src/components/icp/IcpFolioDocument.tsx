@@ -107,19 +107,19 @@ function SectionExplainerContent({
         ×
       </button>
       <div>
-        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-popover-foreground/65">
+        <p className="text-label font-semibold uppercase tracking-[0.16em] text-popover-foreground/65">
           What this section is
         </p>
         <p className="mt-1.5 text-sm leading-6 text-popover-foreground">{explainer.what}</p>
       </div>
       <div>
-        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-popover-foreground/65">
+        <p className="text-label font-semibold uppercase tracking-[0.16em] text-popover-foreground/65">
           Why it matters
         </p>
         <p className="mt-1.5 text-sm leading-6 text-popover-foreground">{explainer.why}</p>
       </div>
       <div>
-        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-popover-foreground/65">
+        <p className="text-label font-semibold uppercase tracking-[0.16em] text-popover-foreground/65">
           How the Builder generates it
         </p>
         <p className="mt-1.5 text-sm leading-6 text-popover-foreground">{explainer.how}</p>
@@ -986,7 +986,7 @@ export function IcpFolioDocument({
                 aria-label="ICP draft sections"
                 className="rounded-xl border border-border/70 bg-background/92 p-3 text-sm backdrop-blur-sm transition-colors"
               >
-                <p className="px-2 pb-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-foreground/60">
+                <p className="px-2 pb-3 text-label font-semibold uppercase tracking-[0.16em] text-foreground/60">
                   Jump to section
                 </p>
                 <div className="space-y-1">
@@ -1038,7 +1038,7 @@ export function IcpFolioDocument({
                   className="h-9 w-9 rounded-lg object-cover"
                   draggable={false}
                 />
-                <span className="text-[9px] font-semibold uppercase tracking-[0.18em] text-foreground">
+                <span className="text-caption font-semibold uppercase tracking-[0.18em] text-foreground">
                   Creatives Takeover
                 </span>
               </div>
@@ -1078,7 +1078,7 @@ export function IcpFolioDocument({
                       const label = source.type === "competitor" ? "Competitor" : source.type === "market" ? "Market" : "Community";
                       const content = (
                         <>
-                          <span className="mt-0.5 inline-flex shrink-0 rounded-md bg-primary/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary">
+                          <span className="mt-0.5 inline-flex shrink-0 rounded-md bg-primary/10 px-2 py-0.5 text-caption font-semibold uppercase tracking-wide text-primary">
                             {label}
                           </span>
                           <span className="min-w-0 flex-1">

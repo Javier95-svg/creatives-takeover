@@ -180,7 +180,7 @@ const GTMIntakeForm: React.FC<GTMIntakeFormProps> = ({ prefillData, prefillSourc
               type="button"
               onClick={() => isDone && setCurrentStep(i)}
               className={cn(
-                'relative w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-bold transition-all duration-300 shrink-0',
+                'relative w-8 h-8 rounded-full flex items-center justify-center text-label font-bold transition-all duration-300 shrink-0',
                 isDone
                   ? 'bg-primary text-primary-foreground cursor-pointer shadow-sm'
                   : isActive
@@ -396,7 +396,7 @@ const GTMIntakeForm: React.FC<GTMIntakeFormProps> = ({ prefillData, prefillSourc
               <div className="flex items-center gap-3">
                 <span className="text-4xl font-bold font-mono text-primary/20 leading-none select-none">07</span>
                 <div className="h-px flex-1 bg-gradient-to-r from-primary/20 to-transparent" />
-                <span className="text-xs text-muted-foreground flex items-center gap-1">7 of {TOTAL_STEPS} <Badge variant="outline" className="text-[10px] py-0">Optional</Badge></span>
+                <span className="text-xs text-muted-foreground flex items-center gap-1">7 of {TOTAL_STEPS} <Badge variant="outline" className="text-caption py-0">Optional</Badge></span>
               </div>
               <h2 className="text-xl md:text-2xl font-semibold leading-snug">What's your monthly marketing budget?</h2>
               <p className="text-sm text-muted-foreground">Paid channels are excluded when budget is $0 or minimal. Skip if you're unsure.</p>
@@ -421,7 +421,7 @@ const GTMIntakeForm: React.FC<GTMIntakeFormProps> = ({ prefillData, prefillSourc
               <div className="flex items-center gap-3">
                 <span className="text-4xl font-bold font-mono text-primary/20 leading-none select-none">08</span>
                 <div className="h-px flex-1 bg-gradient-to-r from-primary/20 to-transparent" />
-                <span className="text-xs text-muted-foreground flex items-center gap-1">8 of {TOTAL_STEPS} <Badge variant="outline" className="text-[10px] py-0">Optional</Badge></span>
+                <span className="text-xs text-muted-foreground flex items-center gap-1">8 of {TOTAL_STEPS} <Badge variant="outline" className="text-caption py-0">Optional</Badge></span>
               </div>
               <h2 className="text-xl md:text-2xl font-semibold leading-snug">What are you naturally good at?</h2>
               <p className="text-sm text-muted-foreground">We match channels to your strengths so you build momentum faster.</p>

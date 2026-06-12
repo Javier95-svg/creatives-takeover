@@ -293,7 +293,7 @@ export default function ICPBuilderPage() {
             ) : (
               <form className="space-y-4" onSubmit={handleLeadSubmit}>
                 <div className="space-y-2">
-                  <div className="inline-flex items-center gap-2 rounded-full border border-accent-teal/20 bg-accent-teal/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#168996]">
+                  <div className="inline-flex items-center gap-2 rounded-full border border-accent-teal/20 bg-accent-teal/10 px-3 py-1 text-label font-semibold uppercase tracking-[0.18em] text-[#168996]">
                     <ShieldCheck className="h-3.5 w-3.5" />
                     ICP Draft checkpoint
                   </div>

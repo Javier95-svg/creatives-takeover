@@ -101,13 +101,13 @@ export function HierarchyTreeView({ hierarchy, onTaskStatusChange }: HierarchyTr
       {task.priority !== 'medium' && (
         <Badge
           variant="outline"
-          className={cn("text-[10px] px-1.5 h-5", getPriorityColor(task.priority))}
+          className={cn("text-caption px-1.5 h-5", getPriorityColor(task.priority))}
         >
           {task.priority}
         </Badge>
       )}
       {task.deadline && (
-        <span className="text-[10px] text-muted-foreground">
+        <span className="text-caption text-muted-foreground">
           {new Date(task.deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
         </span>
       )}
@@ -158,7 +158,7 @@ export function HierarchyTreeView({ hierarchy, onTaskStatusChange }: HierarchyTr
                     <FolderKanban className="h-3.5 w-3.5 text-muted-foreground" />
                     <span className="text-sm flex-1 text-left truncate">{project.title}</span>
                     {getStatusIcon(project.status)}
-                    <span className="text-[10px] text-muted-foreground">
+                    <span className="text-caption text-muted-foreground">
                       {project.tasks.filter(t => t.status === 'done').length}/{project.tasks.length}
                     </span>
                   </Button>
@@ -175,7 +175,7 @@ export function HierarchyTreeView({ hierarchy, onTaskStatusChange }: HierarchyTr
               {/* Orphan tasks under this goal (no project) */}
               {goal.orphanTasks.length > 0 && (
                 <div className="ml-4 pt-1 border-t border-border/30">
-                  <span className="text-[10px] text-muted-foreground uppercase tracking-wide px-2">
+                  <span className="text-caption text-muted-foreground uppercase tracking-wide px-2">
                     Unassigned Tasks
                   </span>
                   {goal.orphanTasks.map(task => renderTask(task, 0))}

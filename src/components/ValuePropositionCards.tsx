@@ -485,7 +485,7 @@ const ValuePropositionCards = () => {
                               <Icon className="h-5 w-5 text-primary" />
                             </div>
                             <div>
-                              <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+                              <p className="text-label uppercase tracking-[0.18em] text-muted-foreground">
                                 {card.title}
                               </p>
                               <h3 className="value-prop-card__heading font-space-grotesk text-[1.75rem] font-semibold tracking-tight text-foreground">
@@ -494,7 +494,7 @@ const ValuePropositionCards = () => {
                             </div>
                           </div>
 
-                          <div className="value-prop-card__body text-[15px] leading-7 text-muted-foreground space-y-4">
+                          <div className="value-prop-card__body text-sm leading-7 text-muted-foreground space-y-4">
                             {card.description.split('\n\n').map((paragraph, idx) => (
                               <p key={idx}>{paragraph}</p>
                             ))}

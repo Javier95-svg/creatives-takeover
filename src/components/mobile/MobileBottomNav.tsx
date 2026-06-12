@@ -90,7 +90,7 @@ export const MobileBottomNav = () => {
                 )}
               </div>
               <span className={cn(
-                "text-[10px] font-medium transition-colors",
+                "text-caption font-medium transition-colors",
                 isActive ? "text-primary" : "text-muted-foreground"
               )}>
                 {item.name}

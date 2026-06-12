@@ -231,7 +231,7 @@ export default function IcpDraftPage() {
                   <CheckCircle2 className="h-5 w-5" />
                 </div>
                 <div className="space-y-1">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-emerald-700">
+                  <p className="text-label font-semibold uppercase tracking-[0.24em] text-emerald-700">
                     Unlocked
                   </p>
                   <h2 className="text-xl font-semibold text-slate-950 sm:text-2xl">
@@ -274,7 +274,7 @@ export default function IcpDraftPage() {
                 <Sparkles className="h-5 w-5" />
               </div>
               <div className="space-y-1">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#7dd3fc]">Next step</p>
+                <p className="text-label font-semibold uppercase tracking-[0.24em] text-[#7dd3fc]">Next step</p>
                 <h2 className="text-xl font-semibold text-white sm:text-2xl">
                   You built your ICP. Now let’s get your first users.
                 </h2>

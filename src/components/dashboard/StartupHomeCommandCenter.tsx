@@ -108,7 +108,7 @@ function splitIndustryInput(value: string) {
 
 function SourceBadge({ children }: { children: string }) {
   return (
-    <Badge variant="outline" className="rounded-full border-primary/20 bg-primary/5 text-[11px] text-primary">
+    <Badge variant="outline" className="rounded-full border-primary/20 bg-primary/5 text-label text-primary">
       {children}
     </Badge>
   );
@@ -713,7 +713,7 @@ function StartupProfileSection() {
                         </div>
                         <div className="mt-3 flex flex-wrap gap-2">
                           {sectors.slice(0, 3).map((sector) => (
-                            <Badge key={sector} variant="secondary" className="rounded-full text-[11px]">
+                            <Badge key={sector} variant="secondary" className="rounded-full text-label">
                               {sector}
                             </Badge>
                           ))}

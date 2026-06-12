@@ -9,22 +9,22 @@ export const VCWallpaper: React.FC = () => {
       <div className="absolute inset-x-0 top-44 h-px bg-gradient-to-r from-transparent via-cyan-400/20 to-transparent" />
 
       <div className="absolute left-[8%] top-24 hidden w-72 rotate-[-8deg] rounded-3xl border border-sky-500/20 bg-background/70 p-5 shadow-[0_24px_80px_rgba(14,116,144,0.12)] backdrop-blur xl:block">
-        <p className="text-[11px] uppercase tracking-[0.35em] text-sky-600/75">Deal Memo</p>
+        <p className="text-label uppercase tracking-[0.35em] text-sky-600/75">Deal Memo</p>
         <div className="mt-4 space-y-3">
           <div className="h-2.5 w-24 rounded-full bg-sky-500/30" />
           <div className="h-2 w-full rounded-full bg-border/70" />
           <div className="h-2 w-5/6 rounded-full bg-border/60" />
           <div className="grid grid-cols-3 gap-2 pt-1">
-            <div className="rounded-2xl border border-sky-500/20 bg-sky-500/10 px-3 py-2 text-center text-[11px] font-medium text-sky-700">Seed</div>
-            <div className="rounded-2xl border border-violet-500/20 bg-violet-500/10 px-3 py-2 text-center text-[11px] font-medium text-violet-700">SaaS</div>
-            <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-3 py-2 text-center text-[11px] font-medium text-emerald-700">EU</div>
+            <div className="rounded-2xl border border-sky-500/20 bg-sky-500/10 px-3 py-2 text-center text-label font-medium text-sky-700">Seed</div>
+            <div className="rounded-2xl border border-violet-500/20 bg-violet-500/10 px-3 py-2 text-center text-label font-medium text-violet-700">SaaS</div>
+            <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-3 py-2 text-center text-label font-medium text-emerald-700">EU</div>
           </div>
         </div>
       </div>
 
       <div className="absolute right-[9%] top-32 hidden w-80 rotate-[7deg] rounded-[2rem] border border-cyan-500/20 bg-background/75 p-5 shadow-[0_30px_90px_rgba(8,145,178,0.12)] backdrop-blur xl:block">
         <div className="flex items-center justify-between">
-          <p className="text-[11px] uppercase tracking-[0.32em] text-cyan-700/75">Market Watch</p>
+          <p className="text-label uppercase tracking-[0.32em] text-cyan-700/75">Market Watch</p>
           <div className="flex gap-1.5">
             <span className="h-2.5 w-2.5 rounded-full bg-cyan-400/50" />
             <span className="h-2.5 w-2.5 rounded-full bg-sky-400/35" />
@@ -39,7 +39,7 @@ export const VCWallpaper: React.FC = () => {
           <div className="w-full rounded-t-2xl bg-violet-500/30" style={{ height: '64%' }} />
           <div className="w-full rounded-t-2xl bg-violet-500/40" style={{ height: '92%' }} />
         </div>
-        <div className="mt-4 flex items-center justify-between text-[11px] text-muted-foreground">
+        <div className="mt-4 flex items-center justify-between text-label text-muted-foreground">
           <span>Stage</span>
           <span>Sector</span>
           <span>Geography</span>

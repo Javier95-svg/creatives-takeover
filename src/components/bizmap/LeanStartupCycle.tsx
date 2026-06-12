@@ -35,7 +35,7 @@ export default function LeanStartupCycle({ currentPhase }: LeanStartupCycleProps
                 )}
               </div>
               <span
-                className={`text-[10px] sm:text-xs font-medium ${
+                className={`text-caption sm:text-xs font-medium ${
                   isActive ? 'text-primary' : 'text-muted-foreground'
                 }`}
               >

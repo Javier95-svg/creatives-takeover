@@ -486,7 +486,7 @@ export function AiGoalsPlanner() {
                     >
                       <div className="flex items-center justify-between gap-2">
                         <span className="font-medium">{goal.title}</span>
-                        <Badge variant="outline" className="text-[10px]">
+                        <Badge variant="outline" className="text-caption">
                           P{goal.priority}
                         </Badge>
                       </div>
@@ -557,7 +557,7 @@ export function AiGoalsPlanner() {
                     >
                       <div className="flex items-center justify-between gap-2">
                         <span className="font-medium">{project.title}</span>
-                        <Badge variant="outline" className="text-[10px]">
+                        <Badge variant="outline" className="text-caption">
                           P{project.priority}
                         </Badge>
                       </div>
@@ -660,7 +660,7 @@ export function AiGoalsPlanner() {
                         <div className="space-y-1">
                           <p className="font-medium">{task.title}</p>
                           <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                            <Badge variant="outline" className="text-[10px]">
+                            <Badge variant="outline" className="text-caption">
                               {task.priority}
                             </Badge>
                             {task.deadline && <span>Due {task.deadline}</span>}
@@ -696,7 +696,7 @@ export function AiGoalsPlanner() {
                   Draft, reflect, and clarify your next move.
                 </p>
               </div>
-              <Badge variant="outline" className="text-[10px]">
+              <Badge variant="outline" className="text-caption">
                 Decision Support
               </Badge>
             </div>

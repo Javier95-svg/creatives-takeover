@@ -42,7 +42,7 @@ const IcpWedgeHero = () => {
           <span className="block text-white [text-shadow:0_0_24px_rgba(255,255,255,0.18),0_2px_10px_rgba(15,23,42,0.28)]">Before You Build</span>
         </h1>
 
-        <p className="mx-auto mb-8 max-w-xl text-[15px] leading-[1.8] text-muted-foreground sm:text-base md:text-lg">
+        <p className="mx-auto mb-8 max-w-xl text-sm leading-[1.8] text-muted-foreground sm:text-base md:text-lg">
           Describe your idea. We&apos;ll draft your customer, pain, and positioning for free before you create an account.
         </p>
 

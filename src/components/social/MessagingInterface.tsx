@@ -1365,7 +1365,7 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
           >
             Main
             {mainUnreadCount > 0 && (
-              <Badge variant="secondary" className="h-5 px-1.5 text-[10px]">
+              <Badge variant="secondary" className="h-5 px-1.5 text-caption">
                 {mainUnreadCount > 9 ? '9+' : mainUnreadCount}
               </Badge>
             )}
@@ -1379,7 +1379,7 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
           >
             Requests
             {requestConversations.length > 0 && (
-              <Badge variant={requestUnreadCount > 0 ? 'default' : 'secondary'} className="h-5 px-1.5 text-[10px]">
+              <Badge variant={requestUnreadCount > 0 ? 'default' : 'secondary'} className="h-5 px-1.5 text-caption">
                 {requestConversations.length > 9 ? '9+' : requestConversations.length}
               </Badge>
             )}
@@ -1496,7 +1496,7 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
 	                            <BellOff className="h-3 w-3 flex-shrink-0 text-muted-foreground" />
 	                          )}
 	                          {settings?.request_status === 'pending' && (
-	                            <Badge variant="outline" className="h-5 px-1.5 text-[10px]">Request</Badge>
+	                            <Badge variant="outline" className="h-5 px-1.5 text-caption">Request</Badge>
 	                          )}
 	                        </div>
 	                        {conversation.last_message_at && (
@@ -1603,9 +1603,9 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
 	                          {conversationName}
 	                        </h4>
 	                        <div className="flex items-center gap-1">
-	                          {isPinned && <Badge variant="secondary" className="h-5 px-1.5 text-[10px]">Pinned</Badge>}
-	                          {isMuted && <Badge variant="outline" className="h-5 px-1.5 text-[10px]">Muted</Badge>}
-	                          {isRequest && <Badge variant="default" className="h-5 px-1.5 text-[10px]">Request</Badge>}
+	                          {isPinned && <Badge variant="secondary" className="h-5 px-1.5 text-caption">Pinned</Badge>}
+	                          {isMuted && <Badge variant="outline" className="h-5 px-1.5 text-caption">Muted</Badge>}
+	                          {isRequest && <Badge variant="default" className="h-5 px-1.5 text-caption">Request</Badge>}
 	                        </div>
 	                      </div>
 	                    </div>

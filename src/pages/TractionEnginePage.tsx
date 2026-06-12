@@ -150,8 +150,8 @@ function StepNav({ active, onSelect }: { active: TractionTab; onSelect: (t: Trac
           )}>
             {tab.step}
           </span>
-          <span className="text-[11px] font-semibold leading-tight sm:text-xs">{tab.label}</span>
-          <span className="hidden text-[10px] leading-tight text-muted-foreground sm:block">{tab.subtitle}</span>
+          <span className="text-label font-semibold leading-tight sm:text-xs">{tab.label}</span>
+          <span className="hidden text-caption leading-tight text-muted-foreground sm:block">{tab.subtitle}</span>
         </button>
       ))}
     </div>
@@ -496,7 +496,7 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
               <div className="grid grid-cols-2 gap-2 pt-1">
                 {(['Consistency', 'Channel Efficiency', 'Experiment Quality', 'Retention Health'] as const).map((label) => (
                   <div key={label} className="rounded-md border border-border/50 bg-muted/30 px-3 py-2">
-                    <p className="text-[11px] font-medium text-muted-foreground">{label}</p>
+                    <p className="text-label font-medium text-muted-foreground">{label}</p>
                     <p className="mt-0.5 text-xs text-muted-foreground/60">25% weight</p>
                   </div>
                 ))}
@@ -546,7 +546,7 @@ function TractionEngineWorkflow({ userId }: { userId?: string }) {
                     {tab.step}
                   </span>
                   <span className="text-xs font-semibold leading-tight">{tab.label}</span>
-                  <span className="text-[10px] leading-tight text-muted-foreground">{tab.subtitle}</span>
+                  <span className="text-caption leading-tight text-muted-foreground">{tab.subtitle}</span>
                 </button>
               ))}
             </div>

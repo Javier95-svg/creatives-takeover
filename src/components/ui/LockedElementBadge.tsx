@@ -86,7 +86,7 @@ export function LockedElementBadge({
         {/* Lock badge — top-right corner */}
         <div className="absolute top-2 right-2 z-10 flex items-center gap-1 px-2 py-0.5 rounded-full bg-background/90 border border-border shadow-sm">
           <Lock className="w-3 h-3 text-muted-foreground" />
-          <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+          <span className="text-caption font-semibold uppercase tracking-wider text-muted-foreground">
             {reason === 'progressive' ? 'Locked' : planLabel}
           </span>
         </div>

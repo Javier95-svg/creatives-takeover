@@ -26,7 +26,7 @@ export const StoryTimeline = ({ stages }: StoryTimelineProps) => {
         {stages.map((stage, index) => (
           <div key={index} className="flex-1 flex flex-col items-center">
             <div className={`w-2 h-2 rounded-full bg-gradient-to-br ${getEmotionColor(stage.emotion)} mb-1 transition-all duration-500`} />
-            <span className="text-[10px] text-muted-foreground text-center max-w-[60px] leading-tight">
+            <span className="text-caption text-muted-foreground text-center max-w-[60px] leading-tight">
               {stage.label}
             </span>
           </div>

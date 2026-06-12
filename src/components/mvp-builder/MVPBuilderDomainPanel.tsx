@@ -71,14 +71,14 @@ function DnsRow({
       <div className="flex items-center justify-between gap-2">
         <div>
           <p className="font-semibold text-foreground">{label}</p>
-          <p className="text-[10px] uppercase tracking-wide text-muted-foreground">
+          <p className="text-caption uppercase tracking-wide text-muted-foreground">
             {recordType}
           </p>
         </div>
         {verified !== undefined ? (
           <span
             className={cn(
-              'flex items-center gap-1 text-[10px] font-medium',
+              'flex items-center gap-1 text-caption font-medium',
               verified ? 'text-emerald-600' : 'text-amber-600'
             )}
           >
@@ -162,7 +162,7 @@ export const MVPBuilderDomainPanel: React.FC<MVPBuilderDomainPanelProps> = ({
         <Globe className="h-4 w-4 shrink-0 text-primary/70" />
         <div>
           <p className="font-semibold text-foreground">Custom Domain</p>
-          <p className="text-[11px] text-muted-foreground">
+          <p className="text-label text-muted-foreground">
             Connect a domain you own to this MVP project and verify the DNS setup.
           </p>
         </div>
@@ -189,7 +189,7 @@ export const MVPBuilderDomainPanel: React.FC<MVPBuilderDomainPanelProps> = ({
             </Button>
           </div>
 
-          <div className="space-y-1 text-[11px] text-muted-foreground">
+          <div className="space-y-1 text-label text-muted-foreground">
             <p>Use the exact hostname you want your app to live on.</p>
             <p>
               For subdomains like <span className="font-mono text-foreground">app.yourdomain.com</span>,
@@ -214,7 +214,7 @@ export const MVPBuilderDomainPanel: React.FC<MVPBuilderDomainPanelProps> = ({
               )}
               <div>
                 <p className="text-xs font-medium text-foreground">{record.domain}</p>
-                <p className="text-[10px] text-muted-foreground">
+                <p className="text-caption text-muted-foreground">
                   Project URL: {record.config.connectedUrl}
                 </p>
               </div>
@@ -246,9 +246,9 @@ export const MVPBuilderDomainPanel: React.FC<MVPBuilderDomainPanelProps> = ({
             >
               {statusSummary.title}
             </p>
-            <p className="mt-1 text-[11px] text-muted-foreground">{statusSummary.body}</p>
+            <p className="mt-1 text-label text-muted-foreground">{statusSummary.body}</p>
             {record.lastCheckedAt ? (
-              <p className="mt-2 text-[10px] text-muted-foreground">
+              <p className="mt-2 text-caption text-muted-foreground">
                 Last checked: {new Date(record.lastCheckedAt).toLocaleString()}
               </p>
             ) : null}
@@ -256,7 +256,7 @@ export const MVPBuilderDomainPanel: React.FC<MVPBuilderDomainPanelProps> = ({
 
           <div className="space-y-1">
             <p className="text-xs font-semibold text-foreground">Step 1 - Add these DNS records</p>
-            <p className="text-[11px] text-muted-foreground">
+            <p className="text-label text-muted-foreground">
               Open your domain registrar or DNS provider, remove any conflicting records for this hostname,
               and add the records exactly as shown.
             </p>
@@ -278,7 +278,7 @@ export const MVPBuilderDomainPanel: React.FC<MVPBuilderDomainPanelProps> = ({
             verified={record.routingVerified}
           />
 
-          <div className="space-y-2 rounded-lg border border-primary/20 bg-primary/5 px-3 py-3 text-[11px] text-muted-foreground">
+          <div className="space-y-2 rounded-lg border border-primary/20 bg-primary/5 px-3 py-3 text-label text-muted-foreground">
             <p className="font-medium text-foreground/90">Registrar notes</p>
             <div className="flex gap-1.5">
               <ChevronRight className="mt-0.5 h-3 w-3 shrink-0 text-primary/70" />
@@ -305,7 +305,7 @@ export const MVPBuilderDomainPanel: React.FC<MVPBuilderDomainPanelProps> = ({
 
           <div className="space-y-1">
             <p className="text-xs font-semibold text-foreground">Step 2 - Verify the configuration</p>
-            <p className="text-[11px] text-muted-foreground">
+            <p className="text-label text-muted-foreground">
               We will check both ownership and routing. The domain is marked connected only after both records are live.
             </p>
           </div>
@@ -333,11 +333,11 @@ export const MVPBuilderDomainPanel: React.FC<MVPBuilderDomainPanelProps> = ({
                 </span>
               </div>
               {record.checks.txt.found.length > 0 ? (
-                <p className="mt-2 break-all font-mono text-[11px] text-muted-foreground">
+                <p className="mt-2 break-all font-mono text-label text-muted-foreground">
                   Found: {record.checks.txt.found.join(', ')}
                 </p>
               ) : (
-                <p className="mt-2 text-[11px] text-muted-foreground">No matching TXT record detected yet.</p>
+                <p className="mt-2 text-label text-muted-foreground">No matching TXT record detected yet.</p>
               )}
             </div>
 
@@ -349,11 +349,11 @@ export const MVPBuilderDomainPanel: React.FC<MVPBuilderDomainPanelProps> = ({
                 </span>
               </div>
               {record.checks.routing.found.length > 0 ? (
-                <p className="mt-2 break-all font-mono text-[11px] text-muted-foreground">
+                <p className="mt-2 break-all font-mono text-label text-muted-foreground">
                   Found: {record.checks.routing.found.join(', ')}
                 </p>
               ) : (
-                <p className="mt-2 text-[11px] text-muted-foreground">
+                <p className="mt-2 text-label text-muted-foreground">
                   No matching {record.config.routingType} record detected yet.
                 </p>
               )}

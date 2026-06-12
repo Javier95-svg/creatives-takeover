@@ -220,7 +220,7 @@ export default function DemoPlayer({
                 href="https://creatives-takeover.com/demo-studio"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="absolute bottom-2 right-2 rounded-full bg-black/60 px-2.5 py-1 text-[10px] font-medium text-white/80 backdrop-blur hover:text-white"
+                className="absolute bottom-2 right-2 rounded-full bg-black/60 px-2.5 py-1 text-caption font-medium text-white/80 backdrop-blur hover:text-white"
               >
                 Made with Creatives Takeover
               </a>

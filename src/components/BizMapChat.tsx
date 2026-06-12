@@ -430,7 +430,7 @@ export const BizMapChat = ({
                     : 'message-user bg-primary text-primary-foreground shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30'
                 }`}
               >
-                <p className="text-[15px] sm:text-base leading-7 sm:leading-relaxed whitespace-pre-wrap" role="text">{msg.content}</p>
+                <p className="text-sm sm:text-base leading-7 sm:leading-relaxed whitespace-pre-wrap" role="text">{msg.content}</p>
               </div>
               {!msg.isBot && (
                 <Avatar 
@@ -460,7 +460,7 @@ export const BizMapChat = ({
               <Bot className="w-5 h-5 sm:w-6 sm:h-6 text-primary-foreground" />
             </div>
             <div className="max-w-[80%] sm:max-w-[75%] rounded-2xl sm:rounded-3xl p-4 sm:p-5 md:p-6 message-bot glass-chat border border-primary/10 shadow-lg shadow-black/5">
-              <p className="text-sm sm:text-base md:text-[15px] leading-relaxed whitespace-pre-wrap">
+              <p className="text-sm sm:text-base md:text-sm leading-relaxed whitespace-pre-wrap">
                 {streamingMessage}
                 <span className="inline-block w-0.5 h-5 ml-1 bg-primary animate-pulse" />
               </p>

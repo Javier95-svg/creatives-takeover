@@ -25,7 +25,7 @@ const ProgressCommunityPage = () => {
             <CardContent className="p-6 sm:p-8">
               <div className="max-w-3xl space-y-4">
                 <div className="flex flex-wrap items-center gap-2">
-                  <Badge className="border border-primary/20 bg-primary/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-primary hover:bg-primary/10">
+                  <Badge className="border border-primary/20 bg-primary/10 px-3 py-1 text-label font-semibold uppercase tracking-[0.18em] text-primary hover:bg-primary/10">
                     <Megaphone className="h-3.5 w-3.5 mr-1" />
                     Founder progress
                   </Badge>
@@ -38,21 +38,21 @@ const ProgressCommunityPage = () => {
                 </p>
                 <div className="grid gap-3 sm:grid-cols-3 pt-2">
                   <div className="rounded-2xl border border-border/60 bg-background/80 p-4">
-                    <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                    <div className="mb-2 flex items-center gap-2 text-label font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                       <TrendingUp className="h-3.5 w-3.5" />
                       Share
                     </div>
                     <p className="text-sm text-foreground">Weekly updates, launches, traction, and pivots.</p>
                   </div>
                   <div className="rounded-2xl border border-border/60 bg-background/80 p-4">
-                    <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                    <div className="mb-2 flex items-center gap-2 text-label font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                       <Flame className="h-3.5 w-3.5 text-orange-500" />
                       Signal
                     </div>
                     <p className="text-sm text-foreground">Consistency matters more than polished positioning.</p>
                   </div>
                   <div className="rounded-2xl border border-border/60 bg-background/80 p-4">
-                    <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                    <div className="mb-2 flex items-center gap-2 text-label font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                       <Megaphone className="h-3.5 w-3.5" />
                       Feedback
                     </div>

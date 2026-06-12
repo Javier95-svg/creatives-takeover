@@ -72,7 +72,7 @@ function FeedCard({
 
           <div className="min-w-0 flex-1 space-y-3">
             <div className="flex flex-wrap items-center gap-2">
-              <Badge variant="outline" className={cn('border text-[11px]', labelToneByLayer[card.layer])}>
+              <Badge variant="outline" className={cn('border text-label', labelToneByLayer[card.layer])}>
                 {card.sourceLabel}
               </Badge>
               <span className="text-xs text-muted-foreground">{formatFreshness(card.freshnessDate)}</span>

@@ -148,7 +148,7 @@ export function ShipUpdateFeed() {
                   {update.profiles?.full_name || update.profiles?.username || 'Founder'}
                 </span>
                 {update.stage && STAGE_LABEL[update.stage] && (
-                  <Badge variant="secondary" className="ml-2 text-[10px] px-1.5 py-0 rounded-full">
+                  <Badge variant="secondary" className="ml-2 text-caption px-1.5 py-0 rounded-full">
                     {STAGE_LABEL[update.stage]}
                   </Badge>
                 )}

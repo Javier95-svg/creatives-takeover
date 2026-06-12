@@ -33,7 +33,7 @@ export default function StoryboardRail({ storyboard, disabled, onApply }: Storyb
                 <Badge variant="outline">{index + 1}</Badge>
                 <p className="truncate text-xs font-medium">{step.title}</p>
               </div>
-              <p className="mt-1 line-clamp-2 text-[11px] text-muted-foreground">{step.caption}</p>
+              <p className="mt-1 line-clamp-2 text-label text-muted-foreground">{step.caption}</p>
             </div>
           ))}
         </div>

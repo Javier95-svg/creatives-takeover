@@ -51,7 +51,7 @@ const ChecklistSection: React.FC<{
                 {isDone && <svg className="w-2.5 h-2.5 text-primary-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
               </div>
               <div className="flex items-start gap-2 flex-wrap">
-                <Badge variant="outline" className={cn('text-[10px] py-0 px-1.5 shrink-0', cfg.className)}>
+                <Badge variant="outline" className={cn('text-caption py-0 px-1.5 shrink-0', cfg.className)}>
                   {cfg.label}
                 </Badge>
                 <span className={cn('text-sm', isDone && 'line-through text-muted-foreground')}>{item}</span>
@@ -72,9 +72,9 @@ const GTMLaunchChecklist: React.FC<GTMLaunchChecklistProps> = ({ checklist }) =>
         <h2 className="text-xl font-bold">Launch Checklist</h2>
       </div>
       <div className="flex items-center gap-4 text-xs text-muted-foreground">
-        <span className="flex items-center gap-1.5"><Badge variant="outline" className="text-[10px] py-0 bg-destructive/10 text-destructive border-destructive/20">Must</Badge> Required</span>
-        <span className="flex items-center gap-1.5"><Badge variant="outline" className="text-[10px] py-0 bg-yellow-100 text-yellow-700 border-yellow-200">Should</Badge> Recommended</span>
-        <span className="flex items-center gap-1.5"><Badge variant="outline" className="text-[10px] py-0">Nice</Badge> Optional</span>
+        <span className="flex items-center gap-1.5"><Badge variant="outline" className="text-caption py-0 bg-destructive/10 text-destructive border-destructive/20">Must</Badge> Required</span>
+        <span className="flex items-center gap-1.5"><Badge variant="outline" className="text-caption py-0 bg-yellow-100 text-yellow-700 border-yellow-200">Should</Badge> Recommended</span>
+        <span className="flex items-center gap-1.5"><Badge variant="outline" className="text-caption py-0">Nice</Badge> Optional</span>
       </div>
       <div className="space-y-6">
         {checklist.prelaunch?.length > 0 && (

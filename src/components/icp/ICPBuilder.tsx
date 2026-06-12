@@ -1502,7 +1502,7 @@ const ICPBuilder: React.FC = () => {
           <div className="relative z-10">
             <div className="flex items-center gap-2">
               <p className="text-sm font-semibold uppercase tracking-[0.18em] text-accent-teal">Fast Mode</p>
-              <span className="rounded-full border border-accent-teal/30 bg-accent-teal/10 px-2.5 py-0.5 text-[11px] font-semibold text-accent-teal">~60 sec</span>
+              <span className="rounded-full border border-accent-teal/30 bg-accent-teal/10 px-2.5 py-0.5 text-label font-semibold text-accent-teal">~60 sec</span>
             </div>
             <p className="mt-4 text-xl font-semibold text-foreground">I can describe my startup idea clearly</p>
             <p className="mt-4 text-sm leading-6 text-muted-foreground">
@@ -1531,7 +1531,7 @@ const ICPBuilder: React.FC = () => {
           <div className="relative z-10">
             <div className="flex items-center gap-2">
               <p className="text-sm font-semibold uppercase tracking-[0.18em] text-accent-teal">Guided Mode</p>
-              <span className="rounded-full border border-accent-teal/30 bg-accent-teal/10 px-2.5 py-0.5 text-[11px] font-semibold text-accent-teal">~4 min, 4 steps</span>
+              <span className="rounded-full border border-accent-teal/30 bg-accent-teal/10 px-2.5 py-0.5 text-label font-semibold text-accent-teal">~4 min, 4 steps</span>
             </div>
             <p className="mt-4 text-xl font-semibold text-foreground">I&apos;m still figuring things out</p>
             <p className="mt-4 text-sm leading-6 text-muted-foreground">
@@ -1586,7 +1586,7 @@ const ICPBuilder: React.FC = () => {
                 </span>
               )}
             </div>
-            <span className="select-none text-[11px] text-muted-foreground/60">Auto-saved</span>
+            <span className="select-none text-label text-muted-foreground/60">Auto-saved</span>
           </div>
           {isGuided && (
             <div className="h-1 w-full overflow-hidden rounded-full bg-border/40">

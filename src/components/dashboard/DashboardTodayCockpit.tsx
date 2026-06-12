@@ -53,7 +53,7 @@ function StatTile({
           : "text-primary";
   return (
     <div className="rounded-xl border border-border/60 bg-background/80 p-3">
-      <div className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+      <div className="mb-1 flex items-center gap-1.5 text-label font-semibold uppercase tracking-[0.16em] text-muted-foreground">
         <Icon className={cn("h-3.5 w-3.5", accentClass)} aria-hidden="true" />
         {label}
       </div>
@@ -120,7 +120,7 @@ export default function DashboardTodayCockpit() {
         {/* Header: greeting + streak + progress */}
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div className="space-y-1">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary/80">
+            <p className="text-label font-semibold uppercase tracking-[0.18em] text-primary/80">
               Today
             </p>
             <h1 className="font-space-grotesk text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
@@ -187,7 +187,7 @@ export default function DashboardTodayCockpit() {
           <div className="mt-5 rounded-xl border border-primary/25 bg-primary/[0.06] p-4">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div className="min-w-0">
-                <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-primary/80">
+                <p className="flex items-center gap-1.5 text-label font-semibold uppercase tracking-[0.16em] text-primary/80">
                   <Zap className="h-3.5 w-3.5" aria-hidden="true" />
                   Daily mission · {dailyMission.stageLabel}
                 </p>

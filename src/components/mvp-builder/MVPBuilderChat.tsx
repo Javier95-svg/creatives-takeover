@@ -617,7 +617,7 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
           ) : (
             <div className="space-y-4">
               {projectVersions.length > 0 && (
-                <div className="flex items-center justify-between rounded-md border border-white/10 bg-white/[0.03] px-3 py-2 text-[11px] text-slate-300">
+                <div className="flex items-center justify-between rounded-md border border-white/10 bg-white/[0.03] px-3 py-2 text-label text-slate-300">
                   <span>Version history</span>
                   <Badge variant="outline" className="border-white/10 text-slate-300">
                     v{projectVersions[0]?.version_number ?? projectVersions.length}
@@ -636,7 +636,7 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div>
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-sky-200/75">
+                        <p className="text-label font-semibold uppercase tracking-[0.22em] text-sky-200/75">
                           Build change summary
                         </p>
                         <p className="mt-1 text-sm font-medium text-white">
@@ -645,7 +645,7 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
                       </div>
                       <button
                         type="button"
-                        className="inline-flex items-center gap-1 rounded-full border border-white/10 px-3 py-1 text-[11px] font-medium text-slate-300 hover:bg-white/[0.05] hover:text-white"
+                        className="inline-flex items-center gap-1 rounded-full border border-white/10 px-3 py-1 text-label font-medium text-slate-300 hover:bg-white/[0.05] hover:text-white"
                         onClick={() =>
                           setExpandedChangeCards((prev) => ({
                             ...prev,
@@ -706,7 +706,7 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
             </div>
           )}
 
-          <div className="mb-3 flex flex-wrap items-center gap-2 text-[11px] text-slate-400">
+          <div className="mb-3 flex flex-wrap items-center gap-2 text-label text-slate-400">
             <button
               type="button"
               onClick={() => setModelsOpen(true)}
@@ -738,7 +738,7 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
             >
               <AtSign className="h-3.5 w-3.5" />
             </button>
-            <div className="ml-auto flex items-center gap-2 text-[11px] text-slate-500">
+            <div className="ml-auto flex items-center gap-2 text-label text-slate-500">
               <span>{selectedModelLabels[0]}</span>
               <span>·</span>
               <span>{githubConnection.connected ? 'Repo linked' : 'No repo linked'}</span>
@@ -777,7 +777,7 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
                   key={label}
                   type="button"
                   onClick={() => applyActionPrompt(prompt)}
-                  className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-[11px] font-medium text-slate-300 hover:border-sky-300/30 hover:bg-sky-300/10 hover:text-white"
+                  className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-label font-medium text-slate-300 hover:border-sky-300/30 hover:bg-sky-300/10 hover:text-white"
                 >
                   {label}
                 </button>
@@ -816,7 +816,7 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
                       onClick={() => handleSelectReference(reference.id)}
                       className="flex w-full items-start gap-3 rounded-xl px-3 py-2 text-left hover:bg-white/[0.05]"
                     >
-                      <span className="mt-0.5 rounded-full border border-white/10 bg-white/[0.04] px-2 py-0.5 text-[10px] font-semibold text-sky-200">
+                      <span className="mt-0.5 rounded-full border border-white/10 bg-white/[0.04] px-2 py-0.5 text-caption font-semibold text-sky-200">
                         {reference.label}
                       </span>
                       <span className="text-xs leading-relaxed text-slate-400">
@@ -866,11 +866,11 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
               </button>
             ))}
           </div>
-          <div className="text-[11px] text-slate-500">
+          <div className="text-label text-slate-500">
             {builderMode === 'chat' ? 'Text-only planning' : 'Generates and renders'}
           </div>
           {builderMode === 'build' && lastActionQuote && (
-            <div className="mt-2 rounded-md border border-white/10 bg-white/[0.03] px-3 py-2 text-[11px] text-slate-300">
+            <div className="mt-2 rounded-md border border-white/10 bg-white/[0.03] px-3 py-2 text-label text-slate-300">
               {lastActionQuote.actionType === 'unsupported'
                 ? 'Phase 2 supports frontend app generation, edits, bug fixes, add-page, add-feature, and redesign.'
                 : lastActionQuote.actionType === 'unclear'
@@ -880,12 +880,12 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
           )}
           <Link
             to="/pricing#credit-packs"
-            className="text-[11px] font-medium text-sky-300 hover:text-sky-200"
+            className="text-label font-medium text-sky-300 hover:text-sky-200"
           >
             Buy credits
           </Link>
         </div>
-        <p className="mt-2 text-right text-[10px] text-slate-500">
+        <p className="mt-2 text-right text-caption text-slate-500">
           Enter to send - Shift+Enter for a new line - Type @ to reference founder context
         </p>
       </div>
@@ -944,13 +944,13 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
                             {model.label}
                           </p>
                           <p className="text-xs text-muted-foreground">{model.description}</p>
-                          <p className="text-[11px] text-muted-foreground/90">
+                          <p className="text-label text-muted-foreground/90">
                             Best for: {model.bestFor}
                           </p>
                         </div>
                         <div className="flex flex-col items-end gap-1">
                           {isDefault && (
-                            <span className="text-[10px] rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-primary">
+                            <span className="text-caption rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-primary">
                               Default
                             </span>
                           )}
@@ -971,7 +971,7 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
                           type="button"
                           size="sm"
                           variant="outline"
-                          className="h-6 text-[11px]"
+                          className="h-6 text-label"
                           onClick={(event) => {
                             event.stopPropagation();
                             setSingleModel(model.id);
@@ -1082,7 +1082,7 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <label className="space-y-1.5">
-                          <span className="text-[11px] uppercase tracking-wide text-muted-foreground">
+                          <span className="text-label uppercase tracking-wide text-muted-foreground">
                             Repository
                           </span>
                           <select
@@ -1101,7 +1101,7 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
                         </label>
 
                         <label className="space-y-1.5">
-                          <span className="text-[11px] uppercase tracking-wide text-muted-foreground">
+                          <span className="text-label uppercase tracking-wide text-muted-foreground">
                             Branch (locked)
                           </span>
                           <select
@@ -1190,18 +1190,18 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
                                   </code>
                                 </div>
                                 {change.reason && (
-                                  <span className="text-[11px] text-muted-foreground">{change.reason}</span>
+                                  <span className="text-label text-muted-foreground">{change.reason}</span>
                                 )}
                               </div>
 
                               <div className="rounded-md border border-border/50 overflow-hidden">
-                                <div className="grid grid-cols-[58px_58px_auto] gap-2 px-2 py-1 text-[10px] uppercase tracking-wide text-muted-foreground bg-muted/40 border-b border-border/40">
+                                <div className="grid grid-cols-[58px_58px_auto] gap-2 px-2 py-1 text-caption uppercase tracking-wide text-muted-foreground bg-muted/40 border-b border-border/40">
                                   <span>Old</span>
                                   <span>New</span>
                                   <span>Content</span>
                                 </div>
                                 <ScrollArea className="max-h-56">
-                                  <div className="font-mono text-[11px]">
+                                  <div className="font-mono text-label">
                                     {preview.lines.map((line, lineIndex) => (
                                       <div
                                         key={`${id}-${lineIndex}`}
@@ -1226,7 +1226,7 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
                                   </div>
                                 </ScrollArea>
                                 {preview.truncated && (
-                                  <p className="px-2 py-1 text-[10px] text-muted-foreground border-t border-border/40 bg-muted/30">
+                                  <p className="px-2 py-1 text-caption text-muted-foreground border-t border-border/40 bg-muted/30">
                                     Diff preview truncated for performance.
                                   </p>
                                 )}
@@ -1241,7 +1241,7 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
                       <p className="text-sm font-medium">Commit / Push to main</p>
 
                       <label className="space-y-1.5 block">
-                        <span className="text-[11px] uppercase tracking-wide text-muted-foreground">
+                        <span className="text-label uppercase tracking-wide text-muted-foreground">
                           Commit message
                         </span>
                         <Textarea
@@ -1338,7 +1338,7 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
                               <div className="flex items-start justify-between gap-2">
                                 <div className="space-y-1 min-w-0">
                                   <p className="text-xs font-medium truncate">{commit.message}</p>
-                                  <p className="text-[11px] text-muted-foreground truncate">
+                                  <p className="text-label text-muted-foreground truncate">
                                     {commit.shortSha} · {formatDateTime(commit.committedAt)}
                                     {commit.author ? ` · ${commit.author}` : ''}
                                   </p>
@@ -1349,7 +1349,7 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
                                       href={commit.url}
                                       target="_blank"
                                       rel="noreferrer"
-                                      className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-[11px] hover:bg-muted"
+                                      className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-label hover:bg-muted"
                                     >
                                       Open
                                       <ExternalLink className="h-3 w-3" />
@@ -1359,7 +1359,7 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
                                     type="button"
                                     size="sm"
                                     variant="outline"
-                                    className="h-7 px-2 text-[11px]"
+                                    className="h-7 px-2 text-label"
                                     onClick={() => handleRollback(commit.sha)}
                                     disabled={isGitHubBusy}
                                   >
@@ -1404,17 +1404,17 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
                       className="rounded-xl border border-border/60 bg-card/60 p-3 space-y-2"
                     >
                       <div className="space-y-1">
-                        <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                        <div className="flex items-center gap-1.5 text-label text-muted-foreground">
                           <Clock3 className="h-3.5 w-3.5" />
                           {formatDateTime(item.committedAt)}
                         </div>
                         {item.branch && (
-                          <p className="text-[11px] text-muted-foreground">
+                          <p className="text-label text-muted-foreground">
                             Branch: <span className="font-mono">{item.branch}</span>
                           </p>
                         )}
                         {item.commitRef && (
-                          <p className="text-[11px] text-muted-foreground">
+                          <p className="text-label text-muted-foreground">
                             Ref: <span className="font-mono">{item.commitRef}</span>
                           </p>
                         )}
@@ -1425,7 +1425,7 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
                                 href={item.commitUrl}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="inline-flex items-center gap-1 text-[11px] text-primary hover:underline"
+                                className="inline-flex items-center gap-1 text-label text-primary hover:underline"
                               >
                                 GitHub commit
                                 <ExternalLink className="h-3 w-3" />
@@ -1436,7 +1436,7 @@ export const MVPBuilderChat: React.FC<MVPBuilderChatProps> = ({
                                 href={item.pullRequestUrl}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="inline-flex items-center gap-1 text-[11px] text-primary hover:underline"
+                                className="inline-flex items-center gap-1 text-label text-primary hover:underline"
                               >
                                 Pull request
                                 <ExternalLink className="h-3 w-3" />

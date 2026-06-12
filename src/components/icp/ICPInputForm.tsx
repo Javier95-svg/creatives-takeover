@@ -458,7 +458,7 @@ const ICPInputForm: React.FC<ICPInputFormProps> = ({
               <button
                 type="button"
                 onClick={() => setCurrentStep(index)}
-                className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[11px] font-bold transition-all duration-300 cursor-pointer bg-primary text-primary-foreground shadow-sm"
+                className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-label font-bold transition-all duration-300 cursor-pointer bg-primary text-primary-foreground shadow-sm"
                 title={`Edit: ${item.question}`}
               >
                 {/* FIX(dead-click): /icp-builder — future step indicators are no longer clickable until the user actually unlocks them. */}
@@ -468,7 +468,7 @@ const ICPInputForm: React.FC<ICPInputFormProps> = ({
               <div
                 aria-current={isActive ? 'step' : undefined}
                 className={cn(
-                  'relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[11px] font-bold transition-all duration-300',
+                  'relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-label font-bold transition-all duration-300',
                   isActive
                     ? 'border-2 border-primary bg-primary/10 text-primary ring-2 ring-primary/20'
                     : 'border border-border/60 bg-muted/70 text-muted-foreground',

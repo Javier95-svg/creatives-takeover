@@ -94,7 +94,7 @@ export const QuotaCounterWidgets = () => {
                 <Icon className="w-4 h-4 text-primary" />
                 <span className="text-xs font-medium text-muted-foreground">{label}</span>
               </div>
-              <span className="text-[11px] text-muted-foreground">{resetLabel}</span>
+              <span className="text-label text-muted-foreground">{resetLabel}</span>
             </div>
             <div className="flex items-end gap-1">
               <span className="text-2xl font-bold">{used}</span>

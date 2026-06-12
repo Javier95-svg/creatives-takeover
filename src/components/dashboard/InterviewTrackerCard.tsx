@@ -227,7 +227,7 @@ export function InterviewTrackerCard() {
                   <p className="text-sm font-medium text-foreground truncate">{interview.name}</p>
                   <p className="text-xs text-muted-foreground truncate">{interview.segment}</p>
                 </div>
-                <span className="shrink-0 rounded-full border border-border/60 px-2 py-0.5 text-[10px] text-muted-foreground">
+                <span className="shrink-0 rounded-full border border-border/60 px-2 py-0.5 text-caption text-muted-foreground">
                   {BUYING_INTENT_LABELS[interview.buyingIntent] || interview.buyingIntent}
                 </span>
               </div>

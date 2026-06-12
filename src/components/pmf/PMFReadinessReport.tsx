@@ -158,7 +158,7 @@ const PMFReadinessReport: React.FC<PMFReadinessReportProps> = ({
             verdictLabel={analysis.verdictLabel}
           />
           {belowSampleThreshold && (
-            <Badge variant="secondary" className="bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/30 text-[10px]">
+            <Badge variant="secondary" className="bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/30 text-caption">
               Low sample size — score reliability reduced
             </Badge>
           )}
@@ -428,7 +428,7 @@ const PMFReadinessReport: React.FC<PMFReadinessReportProps> = ({
             <div className="space-y-1 min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Do this first</p>
-                <span className="rounded-full border border-primary/20 bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
+                <span className="rounded-full border border-primary/20 bg-primary/10 px-2 py-0.5 text-caption font-medium text-primary">
                   {criticalRec.timeframe}
                 </span>
               </div>
@@ -496,7 +496,7 @@ const PMFReadinessReport: React.FC<PMFReadinessReportProps> = ({
                   className="rounded-xl border border-border/40 bg-muted/10 p-3"
                 >
                   <div className="flex flex-wrap items-center gap-2 text-sm">
-                    <span className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-primary/15 bg-primary/10 text-[10px] font-semibold text-primary">
+                    <span className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-primary/15 bg-primary/10 text-caption font-semibold text-primary">
                       {index + 1}
                     </span>
                     <span className="font-medium text-foreground">{interview.intervieweeName}</span>

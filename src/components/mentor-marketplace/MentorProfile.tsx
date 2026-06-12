@@ -482,7 +482,7 @@ export const MentorProfile = ({ mentor, onBookClick }: MentorProfileProps) => {
             {/* Expertise Areas */}
             {mentor.expertise && mentor.expertise.length > 0 && (
               <div>
-                <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-primary/85">
+                <p className="mb-2 text-label font-semibold uppercase tracking-wider text-primary/85">
                   Expertise Areas
                 </p>
                 <div className="flex flex-wrap gap-2">

@@ -72,13 +72,13 @@ function SortableStep({
         onClick={() => onSelect(step.id)}
         className="flex flex-1 items-center gap-2 overflow-hidden text-left"
       >
-        <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-muted text-[11px] font-medium">
+        <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-muted text-label font-medium">
           {index + 1}
         </span>
         {step.asset_url ? (
           <img src={step.asset_url} alt={`Step ${index + 1}`} className="h-10 w-16 rounded object-cover" />
         ) : (
-          <span className="flex h-10 w-16 items-center justify-center rounded bg-muted text-[10px] text-muted-foreground">
+          <span className="flex h-10 w-16 items-center justify-center rounded bg-muted text-caption text-muted-foreground">
             Needs image
           </span>
         )}

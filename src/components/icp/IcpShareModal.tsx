@@ -73,7 +73,7 @@ export function IcpShareModal({
         <div className="relative overflow-hidden bg-gradient-to-br from-[#0f172a] via-[#111827] to-[#1e1b4b] px-6 py-7">
           <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-accent-teal/20 blur-3xl" />
           <DialogHeader className="relative space-y-2">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#7dd3fc]">
+            <p className="text-label font-semibold uppercase tracking-[0.22em] text-[#7dd3fc]">
               Your ICP card is live
             </p>
             <DialogTitle className="text-2xl font-semibold leading-tight tracking-tight text-white">
@@ -101,7 +101,7 @@ export function IcpShareModal({
           {/* Divider */}
           <div className="flex items-center gap-3">
             <div className="h-px flex-1 bg-slate-100" />
-            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">
+            <p className="text-label font-semibold uppercase tracking-[0.14em] text-slate-400">
               Share on social
             </p>
             <div className="h-px flex-1 bg-slate-100" />

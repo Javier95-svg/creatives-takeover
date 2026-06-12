@@ -38,7 +38,7 @@ export function IcpGuestUnlockTeaser({ artifact, className = "" }: IcpGuestUnloc
     >
       <div className="flex items-center gap-2">
         <Sparkles className="h-4 w-4 text-accent-teal" aria-hidden="true" />
-        <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#0f5b64] dark:text-[#8fe6ef]">
+        <p className="text-label font-semibold uppercase tracking-[0.22em] text-[#0f5b64] dark:text-[#8fe6ef]">
           Unlocks after signup
         </p>
       </div>

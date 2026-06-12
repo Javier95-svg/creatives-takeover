@@ -336,7 +336,7 @@ export const DashboardSidebar = () => {
                         <item.icon className="h-4 w-4 shrink-0" />
                         <span className="flex-1">{item.label}</span>
                         {isTasksItem && incompleteTaskCount > 0 && (
-                          <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[10px] font-semibold text-primary-foreground group-data-[collapsible=icon]:hidden">
+                          <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-caption font-semibold text-primary-foreground group-data-[collapsible=icon]:hidden">
                             {incompleteTaskCount > 99 ? '99+' : incompleteTaskCount}
                           </span>
                         )}

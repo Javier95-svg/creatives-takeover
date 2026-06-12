@@ -86,12 +86,12 @@ export default function GettingStartedChecklist({
                     {step.label}
                   </p>
                   {step.soon && (
-                    <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+                    <span className="rounded-full bg-muted px-1.5 py-0.5 text-caption font-medium text-muted-foreground">
                       Soon
                     </span>
                   )}
                   {isCurrent && !step.soon && (
-                    <span className="rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary">
+                    <span className="rounded-full bg-primary/10 px-1.5 py-0.5 text-caption font-medium text-primary">
                       Next
                     </span>
                   )}

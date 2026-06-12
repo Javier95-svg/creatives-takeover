@@ -66,11 +66,11 @@ export function SmartNextActions() {
                     </span>
                     <Badge
                       variant="outline"
-                      className={`text-[10px] px-1.5 py-0 ${URGENCY_STYLES[action.urgency]}`}
+                      className={`text-caption px-1.5 py-0 ${URGENCY_STYLES[action.urgency]}`}
                     >
                       {action.urgency}
                     </Badge>
-                    <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                    <Badge variant="outline" className="text-caption px-1.5 py-0">
                       ~{action.estimatedMinutes} min
                     </Badge>
                   </div>

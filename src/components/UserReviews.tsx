@@ -266,7 +266,7 @@ const UserReviews = () => {
                   <div className={`absolute inset-[31%] rounded-full border-2 border-primary/20 bg-gradient-to-br ${activeStep.color} backdrop-blur-sm flex items-center justify-center px-4 text-center transition-all duration-700 shadow-lg`}>
                     <div key={`mobile-active-${activeStepIndex}`} className="animate-in fade-in zoom-in duration-500">
                       <ActiveIcon className="mx-auto mb-2 h-7 w-7 text-primary" />
-                      <p className="text-[10px] tracking-[0.22em] uppercase text-muted-foreground">Active</p>
+                      <p className="text-caption tracking-[0.22em] uppercase text-muted-foreground">Active</p>
                       <p className="mt-1 font-space-grotesk text-sm font-semibold text-foreground leading-tight">
                         {activeStep.shortLabel}
                       </p>
@@ -302,10 +302,10 @@ const UserReviews = () => {
                         aria-label={`Select ${step.title}`}
                       >
                         <StepIcon className="mx-auto h-3.5 w-3.5" />
-                        <span className="mt-1 block text-[9px] uppercase tracking-[0.16em] opacity-80">
+                        <span className="mt-1 block text-caption uppercase tracking-[0.16em] opacity-80">
                           {index + 1}
                         </span>
-                        <span className="mt-0.5 block text-[10px] font-semibold leading-tight">
+                        <span className="mt-0.5 block text-caption font-semibold leading-tight">
                           {step.shortLabel}
                         </span>
                       </button>
@@ -466,7 +466,7 @@ const UserReviews = () => {
                     >
                       <div className="relative z-10">
                         <StepIcon className={`w-4 h-4 mx-auto mb-1 transition-all duration-300 ${isActive ? '' : 'group-hover:scale-125 group-hover:rotate-12'}`} />
-                        <span className="block text-[10px] sm:text-[11px] tracking-[0.1em] uppercase opacity-75">
+                        <span className="block text-caption sm:text-label tracking-[0.1em] uppercase opacity-75">
                           {index + 1}
                         </span>
                         <span className="block mt-0.5 leading-tight font-semibold">{step.shortLabel}</span>

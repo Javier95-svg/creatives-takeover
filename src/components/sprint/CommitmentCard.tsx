@@ -126,7 +126,7 @@ const CommitmentCard = React.memo<CommitmentCardProps>(({
             <Calendar className="w-3 h-3" />
             <span>Target: {format(new Date(commitment.target_date), 'MMM dd, yyyy')}</span>
             {isExpired && commitment.status === 'active' && (
-              <Badge variant="destructive" className="ml-1 text-[10px] px-1 py-0">Overdue</Badge>
+              <Badge variant="destructive" className="ml-1 text-caption px-1 py-0">Overdue</Badge>
             )}
           </div>
           <div className="flex items-center gap-1">

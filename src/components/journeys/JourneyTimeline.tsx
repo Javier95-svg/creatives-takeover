@@ -65,7 +65,7 @@ function HorizontalTimeline({ days, selectedDay, getDayStatus, onSelectDay }: Jo
                   )}
                 </div>
                 <span
-                  className={`text-[10px] max-w-[60px] text-center truncate ${
+                  className={`text-caption max-w-[60px] text-center truncate ${
                     isSelected ? 'font-semibold text-foreground' : 'text-muted-foreground'
                   }`}
                 >

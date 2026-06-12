@@ -80,11 +80,11 @@ export function StageMapRail({
                     {completed ? statusIcon : stage.numeral}
                   </div>
                   {isCurrent && !completed ? (
-                    <Badge variant="default" className="text-[10px]">Active</Badge>
+                    <Badge variant="default" className="text-caption">Active</Badge>
                   ) : completed ? (
-                    <Badge variant="outline" className="text-[10px] border-primary/30 text-primary">Done</Badge>
+                    <Badge variant="outline" className="text-caption border-primary/30 text-primary">Done</Badge>
                   ) : !unlocked ? (
-                    <Badge variant="outline" className="text-[10px]">Locked</Badge>
+                    <Badge variant="outline" className="text-caption">Locked</Badge>
                   ) : null}
                 </div>
                 <div>

@@ -552,7 +552,7 @@ export default function WaitlistPageTemplate({
           <div className="space-y-3 p-5" style={cardStyle} data-template-layout="ai-tool">
             <div className="flex items-center justify-between">
               <span className="text-xs font-semibold uppercase tracking-[0.22em]" style={{ color: accentHex }}>AI output preview</span>
-              <span className="rounded-full px-2 py-1 text-[10px] font-semibold" style={{ backgroundColor: `${accentHex}22`, color: accentHex }}>Beta</span>
+              <span className="rounded-full px-2 py-1 text-caption font-semibold" style={{ backgroundColor: `${accentHex}22`, color: accentHex }}>Beta</span>
             </div>
             <div className="rounded-xl border p-4 font-mono text-xs" style={{ borderColor: `${palette.borderColor}99`, backgroundColor: palette.pageBackground }}>
               <p style={mutedStyle}>Input: messy workflow</p>
@@ -769,7 +769,7 @@ export default function WaitlistPageTemplate({
                   backgroundColor: `${accentHex}08`,
                 }}
               >
-                <h2 className="mb-2 text-[11px] font-semibold uppercase tracking-[0.22em]" style={{ color: accentHex }}>
+                <h2 className="mb-2 text-label font-semibold uppercase tracking-[0.22em]" style={{ color: accentHex }}>
                   The problem
                 </h2>
                 <p style={{ fontSize: `${typography.bodySize + 1}px`, lineHeight: 1.6, color: palette.textPrimary }}>
@@ -783,7 +783,7 @@ export default function WaitlistPageTemplate({
                   backgroundColor: `${palette.textPrimary}06`,
                 }}
               >
-                <h2 className="mb-2 text-[11px] font-semibold uppercase tracking-[0.22em]" style={{ color: palette.textPrimary }}>
+                <h2 className="mb-2 text-label font-semibold uppercase tracking-[0.22em]" style={{ color: palette.textPrimary }}>
                   The solution
                 </h2>
                 <p style={{ fontSize: `${typography.bodySize + 1}px`, lineHeight: 1.6, color: palette.textPrimary }}>
@@ -959,7 +959,7 @@ export default function WaitlistPageTemplate({
 
             <div className="mb-4 flex flex-wrap items-center gap-2">
               <p
-                className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em]"
+                className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-label font-semibold uppercase tracking-[0.22em]"
                 style={{
                   backgroundColor: `${accentHex}22`,
                   color: accentHex,
@@ -974,7 +974,7 @@ export default function WaitlistPageTemplate({
                 Pre-launch
               </p>
               <p
-                className="inline-flex rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em]"
+                className="inline-flex rounded-full border px-3 py-1 text-label font-semibold uppercase tracking-[0.22em]"
                 style={{ borderColor: `${palette.textPrimary}40`, color: palette.textPrimary }}
               >
                 {productName || 'Startup'}
@@ -1042,7 +1042,7 @@ export default function WaitlistPageTemplate({
           renderItem={(item) => (
             <div className="group/section relative">
               <div
-                className="pointer-events-none absolute left-4 top-3 z-10 rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-wide opacity-0 shadow-sm transition-opacity group-hover/section:opacity-100"
+                className="pointer-events-none absolute left-4 top-3 z-10 rounded-full px-3 py-1 text-caption font-semibold uppercase tracking-wide opacity-0 shadow-sm transition-opacity group-hover/section:opacity-100"
                 style={{ backgroundColor: palette.buttonBackground, color: palette.buttonText }}
               >
                 Drag to reorder

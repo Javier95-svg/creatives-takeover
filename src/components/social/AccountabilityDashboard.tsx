@@ -143,7 +143,7 @@ export const AccountabilityDashboard = () => {
         <CardContent className="space-y-5">
           <div className="grid gap-4 lg:grid-cols-[1.3fr_0.7fr]">
             <div className="rounded-2xl border border-border/60 bg-background/80 p-5">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">This week, I will</p>
+              <p className="text-label font-semibold uppercase tracking-[0.18em] text-muted-foreground">This week, I will</p>
               <p className="mt-3 text-lg font-semibold leading-8 text-foreground">
                 {currentMission?.mission_goal || 'Set one weekly commitment, then let your partners and community see that it is real.'}
               </p>
@@ -155,7 +155,7 @@ export const AccountabilityDashboard = () => {
 
             <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
               <div className="rounded-2xl border border-border/60 bg-background/80 p-4">
-                <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                <div className="mb-2 flex items-center gap-2 text-label font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                   <Flame className="h-3.5 w-3.5 text-orange-500" />
                   Consistency
                 </div>
@@ -163,7 +163,7 @@ export const AccountabilityDashboard = () => {
                 <p className="mt-1 text-xs leading-5 text-muted-foreground">The public signal that proves whether your work rhythm is real.</p>
               </div>
               <div className="rounded-2xl border border-border/60 bg-background/80 p-4">
-                <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                <div className="mb-2 flex items-center gap-2 text-label font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                   <Users className="h-3.5 w-3.5" />
                   Peer pressure
                 </div>
@@ -171,7 +171,7 @@ export const AccountabilityDashboard = () => {
                 <p className="mt-1 text-xs leading-5 text-muted-foreground">Pairing matters more when progress has a visible scoreboard.</p>
               </div>
               <div className="rounded-2xl border border-border/60 bg-background/80 p-4">
-                <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                <div className="mb-2 flex items-center gap-2 text-label font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                   <Bell className="h-3.5 w-3.5 text-red-500" />
                   Pressure
                 </div>

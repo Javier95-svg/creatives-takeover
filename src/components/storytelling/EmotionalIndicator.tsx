@@ -66,7 +66,7 @@ export const EmotionalIndicator = ({ emotion, intensity = 'medium' }: EmotionalI
   return (
     <div className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-md ${config.bgColor} border ${config.borderColor}`}>
       <Icon className={`${size} ${config.color}`} />
-      <span className={`text-[10px] font-medium ${config.color}`}>{config.label}</span>
+      <span className={`text-caption font-medium ${config.color}`}>{config.label}</span>
     </div>
   );
 };

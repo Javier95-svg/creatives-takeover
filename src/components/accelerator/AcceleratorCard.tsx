@@ -45,12 +45,12 @@ const AcceleratorCard = ({ accelerator, profileLink }: AcceleratorCardProps) => 
           <div className="min-w-0 flex-1">
             <div className="mb-3 flex flex-wrap gap-1">
               {accelerator.focus_stage?.slice(0, 2).map((stage, idx) => (
-                <Badge key={idx} variant="outline" className="text-[11px] capitalize">
+                <Badge key={idx} variant="outline" className="text-label capitalize">
                   {stage.replace("-", " ")}
                 </Badge>
               ))}
               {accelerator.program_format && (
-                <Badge variant="secondary" className="text-[11px]">
+                <Badge variant="secondary" className="text-label">
                   {accelerator.program_format}
                 </Badge>
               )}

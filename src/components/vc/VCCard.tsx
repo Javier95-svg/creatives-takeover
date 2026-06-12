@@ -44,7 +44,7 @@ const VCCard = ({ vc, canViewProfile = true }: VCCardProps) => {
           <div className="min-w-0 flex-1">
             <div className="mb-3 flex flex-wrap gap-1">
               {vc.investment_stages.slice(0, 3).map((stage, idx) => (
-                <Badge key={idx} variant="outline" className="text-[11px] capitalize">
+                <Badge key={idx} variant="outline" className="text-label capitalize">
                   {stage.replace('-', ' ')}
                 </Badge>
               ))}

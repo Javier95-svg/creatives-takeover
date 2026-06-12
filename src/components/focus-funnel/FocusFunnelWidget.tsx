@@ -165,7 +165,7 @@ export function FocusFunnelWidget({ compact = false, onOpenAIPartner }: FocusFun
                     task.priority === 'urgent' ? 'bg-red-500' : 'bg-amber-500'
                   )} />
                   <span className="text-sm truncate flex-1 text-left">{task.title}</span>
-                  <Badge variant="outline" className="text-[10px] px-1.5">
+                  <Badge variant="outline" className="text-caption px-1.5">
                     {task.priority}
                   </Badge>
                 </button>

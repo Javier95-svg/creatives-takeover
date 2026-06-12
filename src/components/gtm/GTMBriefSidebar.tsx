@@ -37,7 +37,7 @@ const GTMBriefSidebar: React.FC = () => {
 
   return (
     <nav className="hidden lg:flex flex-col gap-1 sticky top-24 w-44 shrink-0 self-start">
-      <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest mb-2 px-2">Contents</p>
+      <p className="text-label font-semibold text-muted-foreground uppercase tracking-widest mb-2 px-2">Contents</p>
       {SECTIONS.map(({ id, label }) => (
         <button
           key={id}

@@ -262,11 +262,11 @@ export default function ProjectsDashboardPage() {
                     <MonitorPlay className="h-5 w-5" />
                   </div>
                   {project.launch_published ? (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[11px] font-medium text-emerald-600">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-label font-medium text-emerald-600">
                       <Globe className="h-3 w-3" /> Live
                     </span>
                   ) : (
-                    <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] text-muted-foreground">Draft</span>
+                    <span className="rounded-full bg-muted px-2 py-0.5 text-label text-muted-foreground">Draft</span>
                   )}
                 </div>
                 <h3 className="font-semibold group-hover:text-primary">{project.name}</h3>

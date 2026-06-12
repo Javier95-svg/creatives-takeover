@@ -118,7 +118,7 @@ export const MVPBuilderHeader: React.FC<MVPBuilderHeaderProps> = ({
     return (
       <span
         className={cn(
-          'hidden lg:flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[11px] font-medium',
+          'hidden lg:flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-label font-medium',
           healthy && 'border-emerald-500/20 bg-emerald-500/10 text-emerald-300',
           needsAuth && 'border-amber-300/25 bg-amber-300/10 text-amber-100',
           !healthy && !needsAuth && 'border-white/10 bg-white/5 text-slate-300'
@@ -133,7 +133,7 @@ export const MVPBuilderHeader: React.FC<MVPBuilderHeaderProps> = ({
   const saveIndicator = () => {
     if (isSavingProject) {
       return (
-        <span className="hidden sm:flex items-center gap-1 text-[11px] text-slate-400">
+        <span className="hidden sm:flex items-center gap-1 text-label text-slate-400">
           <Loader2 className="h-3 w-3 animate-spin" />
           Saving…
         </span>
@@ -143,7 +143,7 @@ export const MVPBuilderHeader: React.FC<MVPBuilderHeaderProps> = ({
       return (
         <button
           onClick={onSaveProject}
-          className="hidden sm:flex items-center gap-1 text-[11px] text-amber-300 hover:text-amber-200 transition-colors"
+          className="hidden sm:flex items-center gap-1 text-label text-amber-300 hover:text-amber-200 transition-colors"
         >
           <AlertCircle className="h-3 w-3" />
           Unsaved
@@ -152,7 +152,7 @@ export const MVPBuilderHeader: React.FC<MVPBuilderHeaderProps> = ({
     }
     if (lastSavedAt) {
       return (
-        <span className="hidden sm:flex items-center gap-1 text-[11px] text-slate-500">
+        <span className="hidden sm:flex items-center gap-1 text-label text-slate-500">
           <Check className="h-3 w-3 text-emerald-400" />
           Saved {formatRelativeTime(lastSavedAt)}
         </span>
@@ -182,12 +182,12 @@ export const MVPBuilderHeader: React.FC<MVPBuilderHeaderProps> = ({
           </Link>
           <button
             onClick={() => setProjectsOpen(true)}
-            className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 text-[11px] font-medium text-slate-300 hover:bg-white/[0.08] hover:text-white transition-colors"
+            className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 text-label font-medium text-slate-300 hover:bg-white/[0.08] hover:text-white transition-colors"
           >
             <FolderOpen className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">Projects</span>
             {savedProjects.length > 0 && (
-              <span className="ml-0.5 rounded-full bg-white/10 px-1.5 py-0.5 text-[10px] text-slate-300">
+              <span className="ml-0.5 rounded-full bg-white/10 px-1.5 py-0.5 text-caption text-slate-300">
                 {savedProjects.length}
               </span>
             )}
@@ -226,7 +226,7 @@ export const MVPBuilderHeader: React.FC<MVPBuilderHeaderProps> = ({
         <div className="relative flex items-center gap-2">
           {renderStatusChip('GitHub', integrations.github.status, Github)}
           {renderStatusChip('Supabase', integrations.supabase.status, Database)}
-          <span className="hidden md:flex items-center gap-1.5 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[11px] font-medium text-emerald-300">
+          <span className="hidden md:flex items-center gap-1.5 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-label font-medium text-emerald-300">
             {primaryModelLabel}
             {additionalModels > 0 ? ` +${additionalModels}` : ''}
           </span>
@@ -299,7 +299,7 @@ export const MVPBuilderHeader: React.FC<MVPBuilderHeaderProps> = ({
                       <div className="flex items-center justify-between gap-2">
                         <div className="min-w-0">
                           <p className="text-sm font-medium text-white truncate">{project.title || 'Untitled Project'}</p>
-                          <div className="mt-1 flex items-center gap-2 text-[11px] text-slate-500">
+                          <div className="mt-1 flex items-center gap-2 text-label text-slate-500">
                             <Clock className="h-3 w-3 shrink-0" />
                             <span>{formatRelativeTime(project.updated_at)}</span>
                             {project.deployment_url && (

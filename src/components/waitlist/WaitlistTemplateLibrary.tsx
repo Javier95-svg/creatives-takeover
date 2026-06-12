@@ -27,7 +27,7 @@ function TemplateMiniPreview({ template }: { template: WaitlistTemplateDefinitio
         fontFamily: content.typography?.bodyFamily,
       }}
     >
-      <div className="absolute right-3 top-3 rounded-full px-2 py-1 text-[10px] font-semibold" style={{ backgroundColor: accent, color: colors?.buttonText }}>
+      <div className="absolute right-3 top-3 rounded-full px-2 py-1 text-caption font-semibold" style={{ backgroundColor: accent, color: colors?.buttonText }}>
         {template.previewLabel}
       </div>
       <div className={cn('flex h-full flex-col justify-between', content.layout === 'split' && 'max-w-[64%]')}>
@@ -98,7 +98,7 @@ export default function WaitlistTemplateLibrary({ onSelectTemplate, pendingTempl
                 <div className="min-h-[116px]">
                   <div className="flex items-center justify-between gap-3">
                     <h3 className="text-lg font-semibold">{template.name}</h3>
-                    <span className="rounded-full bg-primary/10 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-primary">
+                    <span className="rounded-full bg-primary/10 px-2 py-1 text-caption font-semibold uppercase tracking-wide text-primary">
                       {template.productType}
                     </span>
                   </div>
