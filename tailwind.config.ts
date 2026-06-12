@@ -47,6 +47,9 @@ export default {
 				'body': ['16px', { lineHeight: '1.6', fontWeight: '400' }],
 				'button': ['16px', { lineHeight: '1.5', fontWeight: '600' }],
 				'button-sm': ['15px', { lineHeight: '1.5', fontWeight: '600' }],
+				// Size-only tokens for small UI text (no line-height/weight bundled)
+				'caption': '0.625rem', // 10px
+				'label': '0.6875rem', // 11px
 			},
 			colors: {
 				border: 'hsl(var(--border))',
@@ -114,7 +117,15 @@ export default {
 				planning: 'hsl(var(--blue-primary))',
 				action: 'hsl(var(--red-primary))',
 				growth: 'hsl(var(--green-primary))',
-				success: 'hsl(var(--success))'
+				success: 'hsl(var(--success))',
+				// Brand teal accent (onboarding / ICP / mentor surfaces)
+				'accent-teal': {
+					DEFAULT: 'hsl(var(--accent-teal) / <alpha-value>)',
+					hover: 'hsl(var(--accent-teal-hover) / <alpha-value>)',
+					deep: 'hsl(var(--accent-teal-deep) / <alpha-value>)',
+				},
+				// Deep chrome surface for the MVP builder dark sub-theme
+				'surface-deep': 'hsl(var(--surface-deep) / <alpha-value>)'
 			},
 			borderRadius: {
 				lg: '0.5rem', // 8px for cards
@@ -123,10 +134,15 @@ export default {
 				'button': '0.75rem', // 12px for buttons
 				'card': '0.5rem', // 8px for cards
 				'large': '1rem', // 16px for larger elements
+				'2.5xl': '1.25rem', // 20px — inner cards/pills
+				'4xl': '1.75rem', // 28px — modals/large cards
+				'5xl': '2rem', // 32px — hero/wallpaper containers
 			},
 			spacing: {
 				'section-desktop': '80px',
 				'section-mobile': '60px',
+				'header-offset': '6rem', // 96px — page top padding under fixed nav
+				'13': '3.25rem', // 52px — MVP builder header chrome
 			},
 			boxShadow: {
 				// Modern, subtle shadows - Professional SaaS quality
@@ -141,6 +157,8 @@ export default {
 				// Colored shadows for emphasis
 				'primary': '0 4px 14px 0 hsl(var(--primary) / 0.25)',
 				'primary-lg': '0 8px 24px 0 hsl(var(--primary) / 0.3)',
+				'overlay': '0 18px 40px rgb(2 6 23 / 0.35)',
+				'accent-teal-lg': '0 32px 100px -54px hsl(var(--accent-teal) / 0.4)',
 			},
 backgroundImage: {
 				'gradient-rgb': 'var(--gradient-rgb)',

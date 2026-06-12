@@ -53,6 +53,11 @@ All colors MUST be HSL.
     /* Green - Success (for positive actions, success states) */
     --success: 142 76% 36%; /* #10B981 - Professional green */
     --success-foreground: 0 0% 100%;
+
+    /* Brand teal accent (onboarding / ICP / mentor surfaces) */
+    --accent-teal: 185.7 59.7% 48.6%; /* #32b8c6 */
+    --accent-teal-hover: 185.3 63% 42.4%; /* #28a4b0 */
+    --accent-teal-deep: 185.9 70.8% 28.2%; /* #15717b */
     
     /* Blue variants */
     --blue-primary: 217 91% 60%; /* #3B82F6 */
@@ -275,6 +280,11 @@ All colors MUST be HSL.
     /* Success color - brighter for visibility */
     --success: 142 72% 45%;
     --success-foreground: 0 0% 100%;
+
+    /* Brand teal accent — theme-invariant for now */
+    --accent-teal: 185.7 59.7% 48.6%; /* #32b8c6 */
+    --accent-teal-hover: 185.3 63% 42.4%; /* #28a4b0 */
+    --accent-teal-deep: 185.9 70.8% 28.2%; /* #15717b */
     
     /* RGB Color Variants for Dark Mode (brighter for visibility) */
     --blue-primary: 217 92% 65%;
@@ -412,6 +422,14 @@ All colors MUST be HSL.
 
     /* Infographic Pattern Overlay - Dark mode */
     --pattern-infographic-dots: radial-gradient(circle at 1px 1px, hsl(var(--foreground) / 0.04) 1px, transparent 1px);
+  }
+
+  /* MVP Builder dark sub-theme — scoped navy surfaces (use with .dark) */
+  .mvp-surface {
+    --background: 224.2 48.7% 7.6%; /* #0a0f1d */
+    --card: 225.7 48.8% 8.4%; /* #0b1020 */
+    --popover: 225.7 48.8% 8.4%;
+    --surface-deep: 221.3 57.1% 5.5%; /* #060b16 */
   }
 }
 
