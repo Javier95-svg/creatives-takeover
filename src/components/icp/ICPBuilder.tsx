@@ -1444,7 +1444,7 @@ const ICPBuilder: React.FC = () => {
   const renderModeSelect = () => (
     <div className="mx-auto flex min-h-screen max-w-5xl flex-col justify-center px-4 pb-20 pt-32 text-foreground sm:px-6 md:pt-36">
       <div className="space-y-5 text-center">
-        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#32b8c6]">ICP Builder</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-accent-teal">ICP Builder</p>
         <h1 className="takeover-gradient creatives-font pb-3 text-4xl font-semibold leading-[1.12] tracking-tight sm:pb-4 sm:text-5xl">
           Get your ICP Draft
         </h1>
@@ -1454,7 +1454,7 @@ const ICPBuilder: React.FC = () => {
       </div>
 
       {session.mode !== null && (
-        <div className="mt-6 flex flex-col items-start justify-between gap-4 rounded-[2rem] border border-[#32b8c6]/30 bg-[#32b8c6]/8 px-5 py-4 sm:flex-row sm:items-center">
+        <div className="mt-6 flex flex-col items-start justify-between gap-4 rounded-[2rem] border border-accent-teal/30 bg-accent-teal/10 px-5 py-4 sm:flex-row sm:items-center">
           <div>
             <p className="text-sm font-semibold text-foreground">You have an unfinished ICP draft</p>
             <p className="mt-0.5 text-xs text-muted-foreground">Pick up where you left off, or start fresh.</p>
@@ -1494,21 +1494,21 @@ const ICPBuilder: React.FC = () => {
           type="button"
           role="button"
           tabIndex={0}
-          className="group relative overflow-hidden rounded-[2rem] border border-border/60 bg-white/80 p-6 text-left shadow-[0_28px_90px_-52px_rgba(15,23,42,0.3)] backdrop-blur transition-transform duration-300 hover:-translate-y-1 hover:border-[#32b8c6]/40 hover:shadow-[0_32px_100px_-54px_rgba(50,184,198,0.4)] motion-safe:animate-[glow_4.8s_ease-in-out_infinite_alternate] dark:bg-slate-950/70"
+          className="group relative overflow-hidden rounded-[2rem] border border-border/60 bg-white/80 p-6 text-left shadow-[0_28px_90px_-52px_rgba(15,23,42,0.3)] backdrop-blur transition-transform duration-300 hover:-translate-y-1 hover:border-accent-teal/40 hover:shadow-accent-teal-lg motion-safe:animate-[glow_4.8s_ease-in-out_infinite_alternate] dark:bg-slate-950/70"
           onClick={handleSelectFastMode}
           onKeyDown={(event) => handleModeCardKeyDown(event, handleSelectFastMode)}
         >
-          <div className="pointer-events-none absolute inset-0 rounded-[2rem] border border-[#32b8c6]/15 opacity-60 motion-safe:animate-[pulse-slow_4s_ease-in-out_infinite]" />
+          <div className="pointer-events-none absolute inset-0 rounded-[2rem] border border-accent-teal/15 opacity-60 motion-safe:animate-[pulse-slow_4s_ease-in-out_infinite]" />
           <div className="relative z-10">
             <div className="flex items-center gap-2">
-              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#32b8c6]">Fast Mode</p>
-              <span className="rounded-full border border-[#32b8c6]/30 bg-[#32b8c6]/10 px-2.5 py-0.5 text-[11px] font-semibold text-[#32b8c6]">~60 sec</span>
+              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-accent-teal">Fast Mode</p>
+              <span className="rounded-full border border-accent-teal/30 bg-accent-teal/10 px-2.5 py-0.5 text-[11px] font-semibold text-accent-teal">~60 sec</span>
             </div>
             <p className="mt-4 text-xl font-semibold text-foreground">I can describe my startup idea clearly</p>
             <p className="mt-4 text-sm leading-6 text-muted-foreground">
               Paste a paragraph about your idea and see your ideal customer and their biggest frustration in under 60 seconds.
             </p>
-            <div className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-[#32b8c6]">
+            <div className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-accent-teal">
               Start here
               <ArrowRight className="h-4 w-4" />
             </div>
@@ -1519,25 +1519,25 @@ const ICPBuilder: React.FC = () => {
           type="button"
           role="button"
           tabIndex={0}
-          className="group relative overflow-hidden rounded-[2rem] border border-border/60 bg-white/80 p-6 text-left shadow-[0_28px_90px_-52px_rgba(15,23,42,0.3)] backdrop-blur transition-transform duration-300 hover:-translate-y-1 hover:border-[#32b8c6]/40 hover:shadow-[0_32px_100px_-54px_rgba(50,184,198,0.4)] motion-safe:animate-[glow_4.8s_ease-in-out_infinite_alternate] dark:bg-slate-950/70"
+          className="group relative overflow-hidden rounded-[2rem] border border-border/60 bg-white/80 p-6 text-left shadow-[0_28px_90px_-52px_rgba(15,23,42,0.3)] backdrop-blur transition-transform duration-300 hover:-translate-y-1 hover:border-accent-teal/40 hover:shadow-accent-teal-lg motion-safe:animate-[glow_4.8s_ease-in-out_infinite_alternate] dark:bg-slate-950/70"
           style={{ animationDelay: "0.45s" }}
           onClick={handleSelectGuidedMode}
           onKeyDown={(event) => handleModeCardKeyDown(event, handleSelectGuidedMode)}
         >
           <div
-            className="pointer-events-none absolute inset-0 rounded-[2rem] border border-[#32b8c6]/15 opacity-60 motion-safe:animate-[pulse-slow_4s_ease-in-out_infinite]"
+            className="pointer-events-none absolute inset-0 rounded-[2rem] border border-accent-teal/15 opacity-60 motion-safe:animate-[pulse-slow_4s_ease-in-out_infinite]"
             style={{ animationDelay: "0.45s" }}
           />
           <div className="relative z-10">
             <div className="flex items-center gap-2">
-              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#32b8c6]">Guided Mode</p>
-              <span className="rounded-full border border-[#32b8c6]/30 bg-[#32b8c6]/10 px-2.5 py-0.5 text-[11px] font-semibold text-[#32b8c6]">~4 min, 4 steps</span>
+              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-accent-teal">Guided Mode</p>
+              <span className="rounded-full border border-accent-teal/30 bg-accent-teal/10 px-2.5 py-0.5 text-[11px] font-semibold text-accent-teal">~4 min, 4 steps</span>
             </div>
             <p className="mt-4 text-xl font-semibold text-foreground">I&apos;m still figuring things out</p>
             <p className="mt-4 text-sm leading-6 text-muted-foreground">
               Answer 4 short questions, one at a time, and we&apos;ll reveal the sharpest part of the draft before signup. Usually 3–4 minutes.
             </p>
-            <div className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-[#32b8c6]">
+            <div className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-accent-teal">
               Start here
               <ArrowRight className="h-4 w-4" />
             </div>
@@ -1591,7 +1591,7 @@ const ICPBuilder: React.FC = () => {
           {isGuided && (
             <div className="h-1 w-full overflow-hidden rounded-full bg-border/40">
               <div
-                className="h-full rounded-full bg-[#32b8c6] transition-all duration-500 ease-out"
+                className="h-full rounded-full bg-accent-teal transition-all duration-500 ease-out"
                 style={{ width: `${guidedPct}%` }}
               />
             </div>
@@ -1643,7 +1643,7 @@ const ICPBuilder: React.FC = () => {
     renderQuestionShell(
       <div className="space-y-5">
         <div className="space-y-3">
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#32b8c6]">Fast Mode</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-accent-teal">Fast Mode</p>
           <h1 className="text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">{getScreenTitle(session.currentScreen, session)}</h1>
           <p className="text-base leading-7 text-muted-foreground">
             The more detail you give, the better your ICP Draft will be. 3–5 sentences is ideal.
@@ -1687,7 +1687,7 @@ const ICPBuilder: React.FC = () => {
         return renderQuestionShell(
           <div className="space-y-5">
             <div className="space-y-3">
-              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#32b8c6]">Guided Mode</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-accent-teal">Guided Mode</p>
               <h1 className="text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">{getScreenTitle(session.currentScreen, session)}</h1>
               <p className="text-base leading-7 text-muted-foreground">
                 One or two sentences is enough. We&apos;ll predict the customer first, then pressure-test their pain and workaround.
@@ -1710,7 +1710,7 @@ const ICPBuilder: React.FC = () => {
         return renderQuestionShell(
           <div className="space-y-5">
             <div className="space-y-3">
-              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#32b8c6]">Predicted ICP</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-accent-teal">Predicted ICP</p>
               <h1 className="text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">{getScreenTitle(session.currentScreen, session)}</h1>
               <p className="text-base leading-7 text-muted-foreground">
                 We used your idea to draft the most likely early customer. Keep it if it feels right, or edit the details.
@@ -1720,7 +1720,7 @@ const ICPBuilder: React.FC = () => {
             <div className="space-y-4 rounded-[2rem] border border-border/60 bg-white/80 p-5 shadow-sm backdrop-blur dark:bg-slate-950/70">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                 <div className="space-y-2">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#32b8c6]">Best-fit customer</p>
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent-teal">Best-fit customer</p>
                   <div>
                     <h2 className="text-2xl font-semibold tracking-tight text-foreground">{session.guided.persona?.role || "Ideal customer"}</h2>
                     <p className="mt-1 text-sm text-muted-foreground">{session.guided.persona?.industry || "Industry"}</p>
@@ -1738,7 +1738,7 @@ const ICPBuilder: React.FC = () => {
               </div>
 
               {suggestedPain ? (
-                <div className="rounded-[1.5rem] border border-[#32b8c6]/20 bg-[#32b8c6]/8 px-4 py-4">
+                <div className="rounded-[1.5rem] border border-accent-teal/20 bg-accent-teal/10 px-4 py-4">
                   <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#0f5b64] dark:text-[#8fe6ef]">Pain we expect first</p>
                   <p className="mt-2 text-sm leading-6 text-foreground">{suggestedPain}</p>
                 </div>
@@ -1818,7 +1818,7 @@ const ICPBuilder: React.FC = () => {
         return renderQuestionShell(
           <div className="space-y-5">
             <div className="space-y-3">
-              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#32b8c6]">Guided Mode</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-accent-teal">Guided Mode</p>
               <h1 className="text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">{getScreenTitle(session.currentScreen, session)}</h1>
               <p className="text-base leading-7 text-muted-foreground">
                 Think about the moment this customer gets most frustrated. What breaks, what gets delayed, or what makes them look bad?
@@ -1840,7 +1840,7 @@ const ICPBuilder: React.FC = () => {
         return renderQuestionShell(
           <div className="space-y-5">
             <div className="space-y-3">
-              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#32b8c6]">Guided Mode</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-accent-teal">Guided Mode</p>
               <h1 className="text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">{getScreenTitle(session.currentScreen, session)}</h1>
               <p className="text-base leading-7 text-muted-foreground">
                 Even if it&apos;s messy. Email, spreadsheets, agencies, WhatsApp, or just brute force all count.
@@ -1982,7 +1982,7 @@ const ICPBuilder: React.FC = () => {
         <IcpProgressBar progress={progress} pulse shellOffset />
         <div className="flex min-h-screen items-center justify-center px-6 text-center">
           <div className="space-y-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#32b8c6]">Guided Mode</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-accent-teal">Guided Mode</p>
             <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">Analysing your idea...</h1>
           </div>
         </div>

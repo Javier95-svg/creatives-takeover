@@ -41,21 +41,21 @@ export function IcpSynthesisLoader({
     <div className="flex min-h-screen items-center justify-center bg-transparent px-6 pt-28 text-foreground md:pt-32">
       <div className="w-full max-w-xl space-y-8">
         <div className="space-y-3 text-center">
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#32b8c6]">Synthesis</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-accent-teal">Synthesis</p>
           <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">Building your ICP Draft...</h1>
         </div>
 
         <div className="space-y-3 rounded-[2rem] border border-border/60 bg-white/80 p-6 shadow-[0_28px_80px_-48px_rgba(15,23,42,0.35)] backdrop-blur dark:bg-slate-950/70">
           {completedSteps.map((step) => (
             <div key={step.label} className="flex items-center gap-3 text-sm sm:text-base">
-              <CheckCircle2 className="h-5 w-5 shrink-0 text-[#32b8c6]" />
+              <CheckCircle2 className="h-5 w-5 shrink-0 text-accent-teal" />
               <span className="text-foreground/70">{step.label}</span>
             </div>
           ))}
 
           {activeStep ? (
             <div className="flex items-center gap-3 text-sm font-medium sm:text-base">
-              <Loader2 className="h-5 w-5 shrink-0 animate-spin text-[#32b8c6]" />
+              <Loader2 className="h-5 w-5 shrink-0 animate-spin text-accent-teal" />
               <span>{activeStep.label}...</span>
             </div>
           ) : null}

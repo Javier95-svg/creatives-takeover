@@ -472,7 +472,7 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
     return (
       <div className="space-y-6">
         <div>
-          <p className="mb-2 text-xs font-semibold uppercase text-[#32b8c6]">{step.chapter}</p>
+          <p className="mb-2 text-xs font-semibold uppercase text-accent-teal">{step.chapter}</p>
           <h2 className="font-space-grotesk text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
             {question.question}
           </h2>
@@ -500,15 +500,15 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
                 className={cn(
                   'flex min-h-14 items-start gap-3 rounded-lg border p-3 text-left transition-all',
                   selected
-                    ? 'border-[#32b8c6] bg-[#32b8c6]/10 shadow-sm shadow-[#32b8c6]/10'
-                    : 'border-border/60 bg-background/70 hover:border-[#32b8c6]/50 hover:bg-accent/60',
+                    ? 'border-accent-teal bg-accent-teal/10 shadow-sm shadow-accent-teal/10'
+                    : 'border-border/60 bg-background/70 hover:border-accent-teal/50 hover:bg-accent/60',
                 )}
               >
                 <span
                   className={cn(
                     'mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-xs font-semibold',
                     selected
-                      ? 'border-[#32b8c6] bg-[#32b8c6] text-white'
+                      ? 'border-accent-teal bg-accent-teal text-white'
                       : 'border-border text-muted-foreground',
                   )}
                 >
@@ -529,7 +529,7 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
   const renderSectorStep = () => (
     <div className="space-y-6">
       <div>
-        <p className="mb-2 text-xs font-semibold uppercase text-[#32b8c6]">Context</p>
+        <p className="mb-2 text-xs font-semibold uppercase text-accent-teal">Context</p>
         <h2 className="font-space-grotesk text-2xl font-semibold tracking-tight sm:text-3xl">
           What sector are you in?
         </h2>
@@ -552,13 +552,13 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
               className={cn(
                 'group min-h-12 rounded-lg border px-3 py-3 text-left text-sm transition-all',
                 selected
-                  ? 'border-[#32b8c6] bg-[#32b8c6]/10 text-foreground shadow-sm shadow-[#32b8c6]/10'
-                  : 'border-border/60 bg-background/70 hover:border-[#32b8c6]/50 hover:bg-accent/60',
+                  ? 'border-accent-teal bg-accent-teal/10 text-foreground shadow-sm shadow-accent-teal/10'
+                  : 'border-border/60 bg-background/70 hover:border-accent-teal/50 hover:bg-accent/60',
               )}
             >
               <span className="flex items-center justify-between gap-3 font-medium">
                 <span>{option}</span>
-                {selected ? <Check className="h-4 w-4 shrink-0 text-[#32b8c6]" /> : null}
+                {selected ? <Check className="h-4 w-4 shrink-0 text-accent-teal" /> : null}
               </span>
             </button>
           );
@@ -571,7 +571,7 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
   const renderCountryStep = () => (
     <div className="space-y-6">
       <div>
-        <p className="mb-2 text-xs font-semibold uppercase text-[#32b8c6]">Context</p>
+        <p className="mb-2 text-xs font-semibold uppercase text-accent-teal">Context</p>
         <h2 className="font-space-grotesk text-2xl font-semibold tracking-tight sm:text-3xl">
           Where are you building from?
         </h2>
@@ -610,7 +610,7 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
                 aria-pressed={selected}
                 className={cn(
                   'min-h-10 rounded-md px-3 py-2 text-left text-sm transition-colors',
-                  selected ? 'bg-[#32b8c6]/15 font-semibold text-foreground' : 'hover:bg-accent',
+                  selected ? 'bg-accent-teal/15 font-semibold text-foreground' : 'hover:bg-accent',
                 )}
               >
                 {country}
@@ -626,7 +626,7 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
   const renderActivationStep = () => (
     <div className="space-y-6">
       <div>
-        <p className="mb-2 text-xs font-semibold uppercase text-[#32b8c6]">First action</p>
+        <p className="mb-2 text-xs font-semibold uppercase text-accent-teal">First action</p>
         <h2 className="font-space-grotesk text-2xl font-semibold tracking-tight sm:text-3xl">
           Choose your first win
         </h2>
@@ -636,16 +636,16 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
       </div>
 
       {stageMeta && diagnostic ? (
-        <div className="rounded-lg border border-[#32b8c6]/30 bg-[#32b8c6]/10 p-4">
+        <div className="rounded-lg border border-accent-teal/30 bg-accent-teal/10 p-4">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase text-[#32b8c6]">Your founder stage</p>
+              <p className="text-xs font-semibold uppercase text-accent-teal">Your founder stage</p>
               <p className="mt-1 font-space-grotesk text-xl font-semibold">
                 Stage {stageMeta.id}: {stageMeta.name}
               </p>
               <p className="mt-1 text-sm leading-6 text-muted-foreground">{stageMeta.description}</p>
             </div>
-            <div className="shrink-0 rounded-full border border-[#32b8c6]/30 bg-background/70 px-3 py-1 text-sm font-semibold">
+            <div className="shrink-0 rounded-full border border-accent-teal/30 bg-background/70 px-3 py-1 text-sm font-semibold">
               {diagnostic.confidence}% match
             </div>
           </div>
@@ -675,14 +675,14 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
               className={cn(
                 'flex min-h-24 w-full items-start gap-4 rounded-lg border p-4 text-left transition-all',
                 isSelected
-                  ? 'border-[#32b8c6] bg-[#32b8c6]/10 shadow-sm shadow-[#32b8c6]/10'
-                  : 'border-border/60 bg-background/70 hover:border-[#32b8c6]/50 hover:bg-accent/60',
+                  ? 'border-accent-teal bg-accent-teal/10 shadow-sm shadow-accent-teal/10'
+                  : 'border-border/60 bg-background/70 hover:border-accent-teal/50 hover:bg-accent/60',
               )}
             >
               <span
                 className={cn(
                   'flex h-10 w-10 shrink-0 items-center justify-center rounded-lg',
-                  isSelected ? 'bg-[#32b8c6] text-white' : 'bg-muted text-muted-foreground',
+                  isSelected ? 'bg-accent-teal text-white' : 'bg-muted text-muted-foreground',
                 )}
               >
                 <Icon className="h-5 w-5" />
@@ -691,7 +691,7 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
                 <span className="block font-space-grotesk text-base font-semibold">{card.headline}</span>
                 <span className="mt-1 block text-sm leading-6 text-muted-foreground">{card.sub}</span>
                 {isSelected && selectedRoute ? (
-                  <span className="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-[#32b8c6]">
+                  <span className="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-accent-teal">
                     {card.cta}
                     <ArrowRight className="h-3.5 w-3.5" />
                   </span>
@@ -738,7 +738,7 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
           <div className="grid min-h-[640px] lg:grid-cols-[280px_minmax(0,1fr)]">
             <aside className="border-b border-border/60 bg-background/60 p-5 lg:border-b-0 lg:border-r">
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#32b8c6]/15 text-[#32b8c6]">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent-teal/15 text-accent-teal">
                   <Compass className="h-5 w-5" />
                 </div>
                 <div>
@@ -754,7 +754,7 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
                 </div>
                 <div className="h-2 overflow-hidden rounded-full bg-muted">
                   <motion.div
-                    className="h-full rounded-full bg-[#32b8c6]"
+                    className="h-full rounded-full bg-accent-teal"
                     animate={{ width: `${progress}%` }}
                     transition={{ duration: 0.28, ease: 'easeOut' }}
                   />
@@ -770,16 +770,16 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
                       key={`${item.id}-${index}`}
                       className={cn(
                         'flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors',
-                        isActive ? 'bg-[#32b8c6]/10 text-foreground' : 'text-muted-foreground',
+                        isActive ? 'bg-accent-teal/10 text-foreground' : 'text-muted-foreground',
                       )}
                     >
                       <span
                         className={cn(
                           'flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-xs font-semibold',
                           isComplete
-                            ? 'border-[#32b8c6] bg-[#32b8c6] text-white'
+                            ? 'border-accent-teal bg-accent-teal text-white'
                             : isActive
-                              ? 'border-[#32b8c6] text-[#32b8c6]'
+                              ? 'border-accent-teal text-accent-teal'
                               : 'border-border',
                         )}
                       >
@@ -794,7 +794,7 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
               {stageMeta ? (
                 <div className="mt-7 rounded-lg border border-border/60 bg-background/70 p-4">
                   <div className="flex items-start gap-3">
-                    <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-[#32b8c6]" />
+                    <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-accent-teal" />
                     <div>
                       <p className="text-sm font-semibold">{stageMeta.label}</p>
                       <p className="mt-1 text-xs leading-5 text-muted-foreground">{stageMeta.topFocus[0]?.label}</p>

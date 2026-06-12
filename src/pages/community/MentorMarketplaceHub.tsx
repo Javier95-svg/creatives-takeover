@@ -483,13 +483,13 @@ const MentorMarketplaceHub = () => {
 	                    </div>
 
                     {activationBanner && ActivationBannerIcon && (
-                      <div className="rounded-[1.75rem] border border-[#32b8c6]/30 bg-[#32b8c6]/10 p-4 shadow-sm sm:p-5">
+                      <div className="rounded-[1.75rem] border border-accent-teal/30 bg-accent-teal/10 p-4 shadow-sm sm:p-5">
                         <div className="flex items-start gap-3">
-                          <div className="rounded-2xl bg-white/80 p-3 text-[#32b8c6]">
+                          <div className="rounded-2xl bg-white/80 p-3 text-accent-teal">
                             <ActivationBannerIcon className="h-5 w-5" />
                           </div>
                           <div className="space-y-1">
-                            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#15717b]">
+                            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent-teal-deep">
                               {activationBanner.eyebrow}
                             </p>
                             <h2 className="text-xl font-semibold text-foreground">

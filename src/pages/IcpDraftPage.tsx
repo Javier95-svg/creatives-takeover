@@ -198,7 +198,7 @@ export default function IcpDraftPage() {
         <div className="flex min-h-screen items-center justify-center px-6">
           <Card className="max-w-lg rounded-[2rem] border-slate-200 bg-white shadow-sm">
             <CardContent className="space-y-4 p-8 text-center">
-              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#32b8c6]">Draft unavailable</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-accent-teal">Draft unavailable</p>
               <h1 className="text-3xl font-semibold tracking-tight text-slate-950">We couldn't open this ICP Draft.</h1>
               <p className="text-sm leading-6 text-slate-500">
                 Sign in again or return to the builder to regenerate it.
@@ -267,7 +267,7 @@ export default function IcpDraftPage() {
         ) : null}
 
         <div className="group relative overflow-hidden rounded-[1.75rem] border border-slate-200 bg-gradient-to-br from-[#0f172a] via-[#111827] to-[#1e1b4b] p-6 shadow-[0_24px_60px_-44px_rgba(15,23,42,0.4)] sm:p-7">
-          <div className="absolute -right-8 -top-8 h-40 w-40 rounded-full bg-[#32b8c6]/20 blur-3xl" aria-hidden />
+          <div className="absolute -right-8 -top-8 h-40 w-40 rounded-full bg-accent-teal/20 blur-3xl" aria-hidden />
           <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-start gap-4">
               <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/10 text-[#7dd3fc] ring-1 ring-white/15">

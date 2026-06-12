@@ -71,7 +71,7 @@ export function IcpShareModal({
       <DialogContent className="w-[calc(100%-2rem)] max-w-md overflow-hidden rounded-[1.75rem] border-slate-200 p-0 shadow-[0_28px_80px_-32px_rgba(15,23,42,0.45)]">
         {/* Dark header */}
         <div className="relative overflow-hidden bg-gradient-to-br from-[#0f172a] via-[#111827] to-[#1e1b4b] px-6 py-7">
-          <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-[#32b8c6]/20 blur-3xl" />
+          <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-accent-teal/20 blur-3xl" />
           <DialogHeader className="relative space-y-2">
             <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#7dd3fc]">
               Your ICP card is live

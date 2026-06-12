@@ -37,7 +37,7 @@ export function IcpGuestUnlockTeaser({ artifact, className = "" }: IcpGuestUnloc
       className={`mt-6 overflow-hidden rounded-[2rem] border border-border/60 bg-gradient-to-br from-[#f5fdfe] via-white to-[#eef8fa] p-6 shadow-[0_24px_80px_-60px_rgba(15,23,42,0.35)] dark:from-slate-950/80 dark:via-slate-950/60 dark:to-slate-900/60 sm:p-8 ${className}`}
     >
       <div className="flex items-center gap-2">
-        <Sparkles className="h-4 w-4 text-[#32b8c6]" aria-hidden="true" />
+        <Sparkles className="h-4 w-4 text-accent-teal" aria-hidden="true" />
         <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#0f5b64] dark:text-[#8fe6ef]">
           Unlocks after signup
         </p>
@@ -52,7 +52,7 @@ export function IcpGuestUnlockTeaser({ artifact, className = "" }: IcpGuestUnloc
 
       <ul className="mt-5 space-y-3">
         <li className="flex items-start gap-3 rounded-2xl border border-border/50 bg-white/80 px-4 py-3 dark:bg-slate-950/60">
-          <span className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#32b8c6]/15 text-[#0f5b64] dark:text-[#8fe6ef]">
+          <span className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent-teal/15 text-[#0f5b64] dark:text-[#8fe6ef]">
             <Zap className="h-4 w-4" aria-hidden="true" />
           </span>
           <div>
@@ -61,7 +61,7 @@ export function IcpGuestUnlockTeaser({ artifact, className = "" }: IcpGuestUnloc
           </div>
         </li>
         <li className="flex items-start gap-3 rounded-2xl border border-border/50 bg-white/80 px-4 py-3 dark:bg-slate-950/60">
-          <span className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#32b8c6]/15 text-[#0f5b64] dark:text-[#8fe6ef]">
+          <span className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent-teal/15 text-[#0f5b64] dark:text-[#8fe6ef]">
             <Compass className="h-4 w-4" aria-hidden="true" />
           </span>
           <div>
@@ -70,7 +70,7 @@ export function IcpGuestUnlockTeaser({ artifact, className = "" }: IcpGuestUnloc
           </div>
         </li>
         <li className="flex items-start gap-3 rounded-2xl border border-border/50 bg-white/80 px-4 py-3 dark:bg-slate-950/60">
-          <span className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#32b8c6]/15 text-[#0f5b64] dark:text-[#8fe6ef]">
+          <span className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent-teal/15 text-[#0f5b64] dark:text-[#8fe6ef]">
             <Shield className="h-4 w-4" aria-hidden="true" />
           </span>
           <div>

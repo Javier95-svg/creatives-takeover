@@ -49,10 +49,10 @@ const FirstRunCard = () => {
   return (
     <>
       {onboardingCompleted === false && (
-        <div className="mb-6 rounded-2xl border border-[#32b8c6]/30 bg-[#32b8c6]/8 p-5 shadow-sm">
+        <div className="mb-6 rounded-2xl border border-accent-teal/30 bg-accent-teal/10 p-5 shadow-sm">
           <div className="flex items-start justify-between gap-4">
             <div className="flex items-start gap-3">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#32b8c6]/15 text-[#32b8c6]">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-accent-teal/15 text-accent-teal">
                 <Zap className="h-5 w-5" />
               </div>
               <div>
@@ -66,7 +66,7 @@ const FirstRunCard = () => {
             </div>
             <Link
               to="/icp-builder?mode=fast"
-              className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-[#32b8c6] px-4 py-2 text-sm font-semibold text-white hover:bg-[#28a4b0] transition-colors"
+              className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-accent-teal px-4 py-2 text-sm font-semibold text-white hover:bg-accent-teal-hover transition-colors"
               onClick={() => captureEvent("first_run_card_clicked", { card: "onboarding" })}
             >
               Run ICP Builder
@@ -82,7 +82,7 @@ const FirstRunCard = () => {
             You haven&apos;t tried a tool yet.{" "}
             <Link
               to="/icp-builder?mode=fast"
-              className="font-semibold text-foreground underline underline-offset-2 hover:text-[#32b8c6] transition-colors"
+              className="font-semibold text-foreground underline underline-offset-2 hover:text-accent-teal transition-colors"
               onClick={() => captureEvent("first_run_card_clicked", { card: "24h_nudge" })}
             >
               Most founders start here →

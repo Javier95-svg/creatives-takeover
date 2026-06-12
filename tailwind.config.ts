@@ -158,6 +158,7 @@ export default {
 				'primary': '0 4px 14px 0 hsl(var(--primary) / 0.25)',
 				'primary-lg': '0 8px 24px 0 hsl(var(--primary) / 0.3)',
 				'overlay': '0 18px 40px rgb(2 6 23 / 0.35)',
+				'accent-teal-md': '0 12px 28px -18px hsl(var(--accent-teal) / 0.7)',
 				'accent-teal-lg': '0 32px 100px -54px hsl(var(--accent-teal) / 0.4)',
 			},
 backgroundImage: {

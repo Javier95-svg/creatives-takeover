@@ -130,7 +130,7 @@ export function IcpUnlockGate({
         <div className="border-b border-border/50 px-6 py-5 sm:px-8">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.22em] text-[#32b8c6]">
+              <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.22em] text-accent-teal">
                 Preview ready
               </p>
               <p className="text-base font-semibold text-foreground">{personaName}</p>
@@ -150,7 +150,7 @@ export function IcpUnlockGate({
           </div>
 
           <div className="mt-4 rounded-[1.5rem] border border-border/60 bg-background/70 px-4 py-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#32b8c6]">What you already unlocked</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent-teal">What you already unlocked</p>
             <p className="mt-2 text-sm leading-6 text-foreground">{customerSummary}</p>
             {painLine ? (
               <p className="mt-3 text-sm leading-6 text-foreground/80 italic">

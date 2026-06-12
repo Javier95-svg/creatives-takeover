@@ -253,7 +253,7 @@ export default function ICPBuilderPage() {
           fallback={
             <div className="flex min-h-screen items-center justify-center bg-transparent px-4 pt-28 md:pt-32">
               <div className="flex items-center gap-3 rounded-[2rem] border border-border/60 bg-white/80 px-6 py-5 text-muted-foreground shadow-sm backdrop-blur dark:bg-slate-950/70">
-                <Loader2 className="h-5 w-5 animate-spin text-[#32b8c6]" />
+                <Loader2 className="h-5 w-5 animate-spin text-accent-teal" />
                 Loading ICP Builder...
               </div>
             </div>
@@ -265,13 +265,13 @@ export default function ICPBuilderPage() {
 
       {showLeadBanner && (!leadCaptured || leadSubmitState === "submitted") ? (
         <div className="fixed inset-x-4 bottom-4 z-50 mx-auto w-auto max-w-[24rem] overflow-hidden rounded-[1.5rem] border border-white/70 bg-white/90 text-slate-950 shadow-[0_28px_80px_-32px_rgba(15,23,42,0.45)] backdrop-blur-2xl dark:border-white/10 dark:bg-slate-950/90 dark:text-white sm:left-auto sm:right-5 sm:mx-0">
-          <div className="pointer-events-none absolute -right-16 -top-20 h-36 w-36 rounded-full bg-[#32b8c6]/25 blur-3xl" />
+          <div className="pointer-events-none absolute -right-16 -top-20 h-36 w-36 rounded-full bg-accent-teal/25 blur-3xl" />
           <div className="pointer-events-none absolute -bottom-20 left-6 h-28 w-28 rounded-full bg-emerald-400/20 blur-3xl" />
 
           <button
             type="button"
             aria-label="Dismiss save progress banner"
-            className="absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full border border-slate-200/70 bg-white/80 text-slate-500 shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-950 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#32b8c6]/50 dark:border-white/10 dark:bg-white/10 dark:text-slate-300 dark:hover:bg-white dark:hover:text-slate-950"
+            className="absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full border border-slate-200/70 bg-white/80 text-slate-500 shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-950 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-teal/50 dark:border-white/10 dark:bg-white/10 dark:text-slate-300 dark:hover:bg-white dark:hover:text-slate-950"
             onClick={handleDismissLeadBanner}
           >
             <X className="h-4 w-4" />
@@ -293,7 +293,7 @@ export default function ICPBuilderPage() {
             ) : (
               <form className="space-y-4" onSubmit={handleLeadSubmit}>
                 <div className="space-y-2">
-                  <div className="inline-flex items-center gap-2 rounded-full border border-[#32b8c6]/20 bg-[#32b8c6]/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#168996]">
+                  <div className="inline-flex items-center gap-2 rounded-full border border-accent-teal/20 bg-accent-teal/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#168996]">
                     <ShieldCheck className="h-3.5 w-3.5" />
                     ICP Draft checkpoint
                   </div>
@@ -326,12 +326,12 @@ export default function ICPBuilderPage() {
                         event.currentTarget.form?.requestSubmit();
                       }}
                       placeholder="you@company.com"
-                      className="h-11 w-full rounded-xl border border-slate-200 bg-white pl-9 pr-3 text-sm text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-[#32b8c6] focus:ring-4 focus:ring-[#32b8c6]/15 dark:border-white/10 dark:bg-slate-950/70 dark:text-white"
+                      className="h-11 w-full rounded-xl border border-slate-200 bg-white pl-9 pr-3 text-sm text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-accent-teal focus:ring-4 focus:ring-accent-teal/15 dark:border-white/10 dark:bg-slate-950/70 dark:text-white"
                     />
                   </div>
                 </div>
 
-                <Button type="submit" className="h-11 w-full rounded-xl text-sm font-semibold shadow-[0_12px_28px_-18px_rgba(50,184,198,0.7)]">
+                <Button type="submit" className="h-11 w-full rounded-xl text-sm font-semibold shadow-accent-teal-md">
                   Send resume link
                 </Button>
               </form>
