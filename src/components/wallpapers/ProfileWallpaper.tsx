@@ -105,8 +105,8 @@ const ProfileWallpaper = () => {
       ].map((particle, index) => {
         const colorClasses = {
           blue: 'dark:bg-cyan-300/40 bg-primary/30 dark:shadow-[0_0_8px_rgba(59,130,246,0.4)] shadow-[0_0_6px_hsl(var(--primary)/0.3)]',
-          red: 'dark:bg-red-300/40 bg-[#ef4444]/30 dark:shadow-[0_0_8px_rgba(239,68,68,0.4)] shadow-[0_0_6px_rgba(239,68,68,0.3)]',
-          green: 'dark:bg-emerald-300/40 bg-[#10b981]/30 dark:shadow-[0_0_8px_rgba(16,185,129,0.4)] shadow-[0_0_6px_rgba(16,185,129,0.3)]',
+          red: 'dark:bg-red-300/40 bg-[#ef4444]/30 dark:shadow-glow-danger shadow-[0_0_6px_rgba(239,68,68,0.3)]',
+          green: 'dark:bg-emerald-300/40 bg-[#10b981]/30 dark:shadow-glow-success shadow-[0_0_6px_rgba(16,185,129,0.3)]',
         };
         
         return (
@@ -134,9 +134,9 @@ const ProfileWallpaper = () => {
         { top: '75%', left: '45%', color: 'red' },
       ].map((node, index) => {
         const colorClasses = {
-          blue: 'dark:bg-cyan-200 bg-primary/60 dark:shadow-[0_0_12px_rgba(59,130,246,0.5)] shadow-[0_0_8px_hsl(var(--primary)/0.4)]',
-          red: 'dark:bg-red-200 bg-[#ef4444]/60 dark:shadow-[0_0_12px_rgba(239,68,68,0.5)] shadow-[0_0_8px_rgba(239,68,68,0.4)]',
-          green: 'dark:bg-emerald-200 bg-[#10b981]/60 dark:shadow-[0_0_12px_rgba(16,185,129,0.5)] shadow-[0_0_8px_rgba(16,185,129,0.4)]',
+          blue: 'dark:bg-cyan-200 bg-primary/60 dark:shadow-glow-info shadow-[0_0_8px_hsl(var(--primary)/0.4)]',
+          red: 'dark:bg-red-200 bg-[#ef4444]/60 dark:shadow-[0_0_12px_rgba(239,68,68,0.5)] shadow-glow-danger',
+          green: 'dark:bg-emerald-200 bg-[#10b981]/60 dark:shadow-[0_0_12px_rgba(16,185,129,0.5)] shadow-glow-success',
         };
         
         return (

@@ -81,7 +81,7 @@ const BizmapWallpaper = () => {
             key={`bizmap-node-${index}`}
             className="absolute w-2.5 h-2.5 rounded-full 
               dark:bg-cyan-300/80 dark:shadow-[0_0_14px_rgba(56,189,248,0.6)]
-              bg-cyan-500/60 shadow-[0_0_12px_rgba(59,130,246,0.5)]"
+              bg-cyan-500/60 shadow-glow-info"
             style={{
               ...pos,
               animation: 'pulse 2.8s ease-in-out infinite',

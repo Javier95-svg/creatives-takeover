@@ -194,9 +194,9 @@ const StoriesWallpaper = () => {
         { top: '40%', left: '82%', size: 14, delay: '10.5s', color: 'red', shape: 'circle' },
       ].map((element, index) => {
         const colorClasses = {
-          blue: 'dark:bg-cyan-300/50 bg-primary/40 dark:shadow-[0_0_12px_rgba(59,130,246,0.5)] shadow-[0_0_8px_hsl(var(--primary)/0.4)]',
-          red: 'dark:bg-red-300/50 bg-[#ef4444]/40 dark:shadow-[0_0_12px_rgba(239,68,68,0.5)] shadow-[0_0_8px_rgba(239,68,68,0.4)]',
-          green: 'dark:bg-emerald-300/50 bg-[#10b981]/40 dark:shadow-[0_0_12px_rgba(16,185,129,0.5)] shadow-[0_0_8px_rgba(16,185,129,0.4)]',
+          blue: 'dark:bg-cyan-300/50 bg-primary/40 dark:shadow-glow-info shadow-[0_0_8px_hsl(var(--primary)/0.4)]',
+          red: 'dark:bg-red-300/50 bg-[#ef4444]/40 dark:shadow-[0_0_12px_rgba(239,68,68,0.5)] shadow-glow-danger',
+          green: 'dark:bg-emerald-300/50 bg-[#10b981]/40 dark:shadow-[0_0_12px_rgba(16,185,129,0.5)] shadow-glow-success',
         };
         
         const shapeClass = element.shape === 'circle' ? 'rounded-full' : 'rounded-sm';
