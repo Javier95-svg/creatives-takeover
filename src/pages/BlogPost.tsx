@@ -129,7 +129,7 @@ const BlogPost = () => {
         onComplete={handleReadingComplete}
       />
       
-      <main className="pt-24 pb-16">
+      <main className="pt-header-offset pb-16">
         <article className="container mx-auto px-6 max-w-4xl">
           {/* Back Button */}
           <div className="mb-8">

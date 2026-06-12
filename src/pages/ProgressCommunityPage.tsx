@@ -20,7 +20,7 @@ const ProgressCommunityPage = () => {
       <div className="min-h-screen bg-background">
         <Navigation />
 
-        <main className="container mx-auto px-4 pt-24 pb-8 space-y-6">
+        <main className="container mx-auto px-4 pt-header-offset pb-8 space-y-6">
           <Card className="border-primary/20 bg-gradient-to-br from-primary/10 via-card to-card shadow-sm">
             <CardContent className="p-6 sm:p-8">
               <div className="max-w-3xl space-y-4">

@@ -97,7 +97,7 @@ const StoryArticle = () => {
     return (
       <div className="min-h-screen bg-background">
         <Navigation />
-        <main className="pt-24 pb-16">
+        <main className="pt-header-offset pb-16">
           <div className="container mx-auto px-6 max-w-4xl">
             <div className="text-center py-16">
               <p className="text-muted-foreground">Loading article...</p>

@@ -365,7 +365,7 @@ const FindYourAngel = () => {
 	      <div className="min-h-screen bg-background relative">
           <CommunityAngelsWallpaper />
 	        <Navigation />
-	        <div className="pt-16 relative z-10">
+	        <div className="pt-header-offset relative z-10">
             <div className="container mx-auto px-4 sm:px-6 pt-8">
 	            <Button variant="ghost" size="sm" asChild>
 	              <Link to="/mentorship" className="flex items-center gap-2">

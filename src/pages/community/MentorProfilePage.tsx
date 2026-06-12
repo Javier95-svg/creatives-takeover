@@ -203,7 +203,7 @@ const MentorProfilePage = () => {
         <CommunityMentorsWallpaper />
         <div className="relative z-10">
           <Navigation />
-          <div className="pt-16">
+          <div className="pt-header-offset">
             <div className="container mx-auto px-4 py-8">
               <div className="flex items-center justify-between mb-6">
                 <Button variant="ghost" size="sm" asChild>

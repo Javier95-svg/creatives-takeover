@@ -137,7 +137,7 @@ const EditCoFounderPost = () => {
         <AccountWallpaper />
         <div className="relative z-10">
           <Navigation />
-          <div className="container mx-auto px-6 pt-24">
+          <div className="container mx-auto px-6 pt-header-offset">
             <Card className="max-w-md mx-auto backdrop-blur-sm bg-card/80 border-border/50">
               <CardHeader>
                 <CardTitle>Access Denied</CardTitle>
@@ -158,7 +158,7 @@ const EditCoFounderPost = () => {
         <AccountWallpaper />
         <div className="relative z-10">
           <Navigation />
-          <div className="container mx-auto px-6 pt-24">
+          <div className="container mx-auto px-6 pt-header-offset">
             <Card className="max-w-md mx-auto backdrop-blur-sm bg-card/80 border-border/50">
               <CardContent className="pt-6 text-center py-12">
                 <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" />
@@ -176,7 +176,7 @@ const EditCoFounderPost = () => {
       <AccountWallpaper />
       <div className="relative z-10">
         <Navigation />
-        <div className="container mx-auto px-6 pt-24 pb-12">
+        <div className="container mx-auto px-6 pt-header-offset pb-12">
           {/* Header */}
           <div className="text-center py-8 space-y-4">
             <div className="inline-flex items-center gap-2 mb-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20">

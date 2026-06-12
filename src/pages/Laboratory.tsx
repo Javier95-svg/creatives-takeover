@@ -23,7 +23,7 @@ const Laboratory = () => {
       <div className="min-h-screen bg-background">
         <Navigation />
 
-        <header className="pt-24 pb-10 border-b border-border">
+        <header className="pt-header-offset pb-10 border-b border-border">
           <div className="container mx-auto px-6">
             <h1 className="text-3xl md:text-4xl font-bold tracking-tight">Laboratory: Real-Time Market Research Hub</h1>
             <p className="mt-4 text-muted-foreground max-w-3xl">

@@ -88,7 +88,7 @@ export default function AdminFeedback() {
       </Helmet>
       <Navigation />
       
-      <main className="min-h-screen pt-20 pb-16 bg-background">
+      <main className="min-h-screen pt-header-offset pb-16 bg-background">
         <div className="container mx-auto px-4">
           <div className="mb-8">
             <h1 className="text-4xl font-bold mb-2">Feedback Dashboard</h1>

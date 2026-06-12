@@ -179,7 +179,7 @@ const StoryTagPage = () => {
       <div className="min-h-screen bg-background">
         <Navigation />
 
-        <main className="pt-24 pb-16">
+        <main className="pt-header-offset pb-16">
           <div className="container mx-auto px-6 max-w-7xl">
             {/* Back Button */}
             <div className="mb-6">

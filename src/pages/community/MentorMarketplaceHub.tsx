@@ -437,7 +437,7 @@ const MentorMarketplaceHub = () => {
 	      <div className="min-h-screen bg-background relative">
 	        <CommunityMentorsWallpaper />
 	        <Navigation />
-	        <div className="pt-16 relative z-10">
+	        <div className="pt-header-offset relative z-10">
 	          {/* Hero Section */}
 	          <section className="relative py-10 lg:py-14">
             <div className="container mx-auto max-w-6xl px-4 sm:px-6">

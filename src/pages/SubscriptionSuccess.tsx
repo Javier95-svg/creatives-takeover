@@ -91,7 +91,7 @@ export default function SubscriptionSuccess() {
 
       <Navigation />
 
-      <main className="flex-1 pt-20 pb-12">
+      <main className="flex-1 pt-header-offset pb-12">
         <div className="container mx-auto px-6 py-12">
           <div className="max-w-2xl mx-auto text-center space-y-8">
             {verifying && (

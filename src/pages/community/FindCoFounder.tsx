@@ -463,7 +463,7 @@ const FindCoFounder = () => {
 	          <Navigation />
 
 	        {/* Hero Section */}
-	        <section className="pt-24 pb-16 px-6">
+	        <section className="pt-header-offset pb-16 px-6">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12">
             <div className="inline-flex items-center gap-2 mb-4 px-4 py-2 rounded-full bg-primary/10 border border-primary/20">

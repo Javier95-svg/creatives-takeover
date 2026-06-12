@@ -46,7 +46,7 @@ const Portal = () => {
           description="You don't have permission to access this area."
         />
         <Navigation />
-        <div className="min-h-screen pt-24 pb-16 px-4">
+        <div className="min-h-screen pt-header-offset pb-16 px-4">
           <div className="max-w-2xl mx-auto">
             <Card className="border-destructive/50">
               <CardHeader>
@@ -78,7 +78,7 @@ const Portal = () => {
       />
       <Navigation />
       <ScrollToTop />
-      <div className="min-h-screen pt-24 pb-16 px-4">
+      <div className="min-h-screen pt-header-offset pb-16 px-4">
         <div className="max-w-7xl mx-auto">
           <div className="mb-8">
             <h1 className="text-4xl font-bold mb-2">Portal</h1>

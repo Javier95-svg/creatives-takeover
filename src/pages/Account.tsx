@@ -697,7 +697,7 @@ const Account = () => {
         <AccountWallpaper />
         <div className="relative z-10">
           <Navigation />
-          <div className="container mx-auto px-6 pt-24">
+          <div className="container mx-auto px-6 pt-header-offset">
             <Card className="max-w-md mx-auto backdrop-blur-sm bg-card/80 border-border/50">
               <CardHeader>
                 <CardTitle>Access Denied</CardTitle>
@@ -717,7 +717,7 @@ const Account = () => {
       <AccountWallpaper />
       <div className="relative z-10">
         <Navigation />
-        <div className="container mx-auto px-6 pt-24 pb-12">
+        <div className="container mx-auto px-6 pt-header-offset pb-12">
           {/* Centered Hero Section */}
           <div className="text-center py-12 space-y-4">
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight">

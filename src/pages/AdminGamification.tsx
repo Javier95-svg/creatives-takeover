@@ -58,7 +58,7 @@ const AdminGamification = () => {
       <div className="relative min-h-screen overflow-hidden">
         <div className="relative z-10">
           <Navigation />
-          <div className="pt-24 pb-12 px-4">
+          <div className="pt-header-offset pb-12 px-4">
             <div className="max-w-7xl mx-auto">
               <div className="mb-8">
                 <h1 className="text-4xl font-bold mb-2">Gamification Analytics</h1>

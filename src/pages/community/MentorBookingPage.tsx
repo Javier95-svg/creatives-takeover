@@ -181,7 +181,7 @@ const MentorBookingPage = () => {
       <div className="relative min-h-screen overflow-hidden">
         <div className="relative z-10">
           <Navigation />
-          <div className="pt-16">
+          <div className="pt-header-offset">
             <div className="container mx-auto px-4 py-8 max-w-2xl">
               <Button variant="ghost" size="sm" asChild className="mb-6">
                 <Link to={`/mentorship/mentors/${id}`} className="flex items-center gap-2">

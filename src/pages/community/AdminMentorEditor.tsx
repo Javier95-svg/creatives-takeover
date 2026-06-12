@@ -411,7 +411,7 @@ const AdminMentorEditor = () => {
     <div className="min-h-screen bg-background">
       <Navigation />
 
-      <main className="pt-24 pb-16">
+      <main className="pt-header-offset pb-16">
         <div className="container mx-auto px-6 max-w-4xl">
           {/* Header */}
           <div className="flex items-center justify-between mb-6">

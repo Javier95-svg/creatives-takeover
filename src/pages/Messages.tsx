@@ -168,7 +168,7 @@ const Messages = () => {
         <MessagesBackground />
         <div className="relative z-10">
           <Navigation />
-          <main className="container mx-auto px-3 md:px-4 pt-20 md:pt-24 pb-10 md:pb-16">
+          <main className="container mx-auto px-3 md:px-4 pt-20 md:pt-header-offset pb-10 md:pb-16">
             <div className="max-w-6xl mx-auto">
               <div className="mb-4 md:mb-6 text-center">
                 <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-2">
