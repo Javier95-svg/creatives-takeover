@@ -506,7 +506,7 @@ export const MVPBuilderPreview: React.FC<MVPBuilderPreviewProps> = ({
         )}
 
         {activeTab === 'integrations' && (
-          <div className="min-h-0 flex-1 overflow-y-auto bg-[#0a0f1d]">
+          <div className="min-h-0 flex-1 overflow-y-auto bg-background">
             <MVPBuilderIntegrationPanel
               integrations={integrations}
               githubConnection={githubConnection}

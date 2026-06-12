@@ -163,7 +163,7 @@ export const MVPBuilderIntegrationPanel: React.FC<MVPBuilderIntegrationPanelProp
                   value={selectedRepo}
                   onChange={(e) => setSelectedRepo(e.target.value)}
                   disabled={isGitHubBusy}
-                  className="h-8 w-full rounded-lg border border-white/10 bg-[#0b1020] px-3 text-sm text-white outline-none focus:ring-2 focus:ring-sky-400/30"
+                  className="h-9 w-full rounded-lg border border-white/10 bg-card px-3 text-sm text-white outline-none focus:ring-2 focus:ring-sky-400/30"
                 >
                   <option value="">Select repository</option>
                   {githubRepositories.map((r) => (
@@ -266,7 +266,7 @@ export const MVPBuilderIntegrationPanel: React.FC<MVPBuilderIntegrationPanelProp
                 onChange={(e) => setSupabaseUrl(e.target.value)}
                 placeholder="https://xxxxxxxxxxxx.supabase.co"
                 disabled={isSupabaseBusy}
-                className="h-8 w-full rounded-lg border border-white/10 bg-[#0b1020] px-3 text-sm text-white placeholder:text-slate-600 outline-none focus:ring-2 focus:ring-sky-400/30"
+                className="h-9 w-full rounded-lg border border-white/10 bg-card px-3 text-sm text-white placeholder:text-slate-600 outline-none focus:ring-2 focus:ring-sky-400/30"
               />
             </div>
             <div className="space-y-1.5">
@@ -281,7 +281,7 @@ export const MVPBuilderIntegrationPanel: React.FC<MVPBuilderIntegrationPanelProp
                   onChange={(e) => setSupabaseKey(e.target.value)}
                   placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6Ikp..."
                   disabled={isSupabaseBusy}
-                  className="h-8 w-full rounded-lg border border-white/10 bg-[#0b1020] px-3 pr-14 text-sm text-white placeholder:text-slate-600 outline-none focus:ring-2 focus:ring-sky-400/30"
+                  className="h-9 w-full rounded-lg border border-white/10 bg-card px-3 pr-14 text-sm text-white placeholder:text-slate-600 outline-none focus:ring-2 focus:ring-sky-400/30"
                 />
                 <button
                   type="button"

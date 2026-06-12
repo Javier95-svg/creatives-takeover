@@ -164,8 +164,7 @@ export const MVPBuilderHeader: React.FC<MVPBuilderHeaderProps> = ({
   return (
     <>
       <header
-        className="relative flex items-center justify-between px-5 col-span-2 shrink-0 bg-[#060b16]/96 backdrop-blur-2xl border-b border-white/8 overflow-hidden"
-        style={{ height: '52px' }}
+        className="relative flex h-13 items-center justify-between px-5 col-span-2 shrink-0 bg-surface-deep/95 backdrop-blur-2xl border-b border-white/8 overflow-hidden"
       >
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
           <div className="h-14 w-[34rem] rounded-full bg-[radial-gradient(circle,rgba(59,130,246,0.16),transparent_65%)] blur-3xl" />
@@ -180,9 +179,11 @@ export const MVPBuilderHeader: React.FC<MVPBuilderHeaderProps> = ({
             <ArrowLeft className="h-4 w-4" />
             <span className="hidden sm:inline">Platform</span>
           </Link>
-          <button
+          <Button
+            variant="ghost"
+            size="pill-sm"
             onClick={() => setProjectsOpen(true)}
-            className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 text-label font-medium text-slate-300 hover:bg-white/[0.08] hover:text-white transition-colors"
+            className="gap-1.5 border border-white/10 bg-white/[0.04] px-2.5 font-medium text-slate-300 hover:bg-white/[0.08] hover:text-white transition-colors"
           >
             <FolderOpen className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">Projects</span>
@@ -191,7 +192,7 @@ export const MVPBuilderHeader: React.FC<MVPBuilderHeaderProps> = ({
                 {savedProjects.length}
               </span>
             )}
-          </button>
+          </Button>
         </div>
 
         {/* Centre — project name */}
@@ -273,7 +274,7 @@ export const MVPBuilderHeader: React.FC<MVPBuilderHeaderProps> = ({
 
       {/* Projects drawer */}
       <Sheet open={projectsOpen} onOpenChange={setProjectsOpen}>
-        <SheetContent side="left" className="w-[320px] sm:w-[380px] p-0 bg-[#0a0f1d] border-white/10 text-slate-100">
+        <SheetContent side="left" className="dark mvp-surface w-[320px] sm:w-[380px] p-0 bg-background border-white/10 text-slate-100">
           <SheetHeader className="px-5 pt-5 pb-4 border-b border-white/8">
             <SheetTitle className="text-white text-sm font-semibold">Your Projects</SheetTitle>
             <SheetDescription className="text-slate-400 text-xs">
@@ -328,7 +329,7 @@ export const MVPBuilderHeader: React.FC<MVPBuilderHeaderProps> = ({
 
       {/* Confirm "New" when there's an active project */}
       <AlertDialog open={confirmNewOpen} onOpenChange={setConfirmNewOpen}>
-        <AlertDialogContent className="bg-[#0a0f1d] border-white/10 text-slate-100">
+        <AlertDialogContent className="dark mvp-surface bg-background border-white/10 text-slate-100">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-white">Start a new project?</AlertDialogTitle>
             <AlertDialogDescription className="text-slate-400">

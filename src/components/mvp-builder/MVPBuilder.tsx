@@ -6,6 +6,7 @@ import { MVPBuilderPreview } from './MVPBuilderPreview';
 import { MVPBuilderCreditExhaustedDialog } from './MVPBuilderCreditExhaustedDialog';
 
 import { MessageSquare, Monitor } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -178,7 +179,7 @@ export const MVPBuilder: React.FC = () => {
   );
 
   return (
-    <div className="h-screen w-screen flex flex-col overflow-hidden bg-background">
+    <div className="dark mvp-surface h-screen w-screen flex flex-col overflow-hidden bg-background">
       <MVPBuilderHeader
         projectName={projectName}
         setProjectName={setProjectName}
@@ -208,39 +209,43 @@ export const MVPBuilder: React.FC = () => {
       )}
 
 <div className="flex-1 min-h-0 flex flex-col">
-        <div className="flex md:hidden items-center justify-center border-b border-border/40 bg-[#0b1020] shrink-0 py-2">
+        <div className="flex md:hidden items-center justify-center border-b border-border/40 bg-card shrink-0 py-2">
           <div className="flex items-center rounded-full border border-white/10 bg-white/5 p-0.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-            <button
+            <Button
+              variant="ghost"
+              size="pill-sm"
               className={cn(
-                'flex items-center gap-1.5 px-4 py-1 rounded-full text-xs font-medium transition-all duration-200',
+                'gap-1.5 px-4 text-xs font-medium transition-all duration-200',
                 mobileTab === 'chat'
-                  ? 'bg-white text-slate-950 shadow-sm'
-                  : 'text-slate-300 hover:text-white'
+                  ? 'bg-white text-slate-950 shadow-sm hover:bg-white hover:text-slate-950'
+                  : 'text-slate-300 hover:bg-transparent hover:text-white'
               )}
               onClick={() => setMobileTab('chat')}
             >
               <MessageSquare className="h-3.5 w-3.5" />
               Chat
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="ghost"
+              size="pill-sm"
               className={cn(
-                'flex items-center gap-1.5 px-4 py-1 rounded-full text-xs font-medium transition-all duration-200',
+                'gap-1.5 px-4 text-xs font-medium transition-all duration-200',
                 mobileTab === 'preview'
-                  ? 'bg-white text-slate-950 shadow-sm'
-                  : 'text-slate-300 hover:text-white'
+                  ? 'bg-white text-slate-950 shadow-sm hover:bg-white hover:text-slate-950'
+                  : 'text-slate-300 hover:bg-transparent hover:text-white'
               )}
               onClick={() => setMobileTab('preview')}
             >
               <Monitor className="h-3.5 w-3.5" />
               Preview
-            </button>
+            </Button>
           </div>
         </div>
 
         <div className="flex-1 min-h-0 grid grid-cols-1 md:grid-cols-[32%_1px_minmax(0,1fr)]">
           {!isMobile && (
             <>
-              <div className="min-h-0 border-r border-white/5 bg-[#0a0f1d] shadow-[20px_0_60px_rgba(0,0,0,0.25)]">
+              <div className="min-h-0 border-r border-white/5 bg-background shadow-2xl">
                 {chatPanel}
               </div>
 

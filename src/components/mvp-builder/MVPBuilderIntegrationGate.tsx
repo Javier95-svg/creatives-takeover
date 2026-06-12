@@ -112,7 +112,7 @@ export const MVPBuilderIntegrationGate: React.FC<MVPBuilderIntegrationGateProps>
   }, [selectedProjectRef, supabaseProjects]);
 
   return (
-    <div className="absolute inset-x-0 top-[53px] bottom-0 z-40 bg-[#060b16]/96 backdrop-blur-xl">
+    <div className="absolute inset-x-0 top-13 bottom-0 z-40 bg-surface-deep/95 backdrop-blur-xl">
       <ScrollArea className="h-full">
         <div className="mx-auto flex min-h-[calc(100vh-53px)] w-full max-w-5xl flex-col justify-center px-4 py-8">
           <div className="mb-6 space-y-2">
@@ -169,7 +169,7 @@ export const MVPBuilderIntegrationGate: React.FC<MVPBuilderIntegrationGateProps>
                           value={selectedRepo}
                           onChange={(event) => setSelectedRepo(event.target.value)}
                           disabled={isGitHubBusy}
-                          className="h-9 w-full rounded-md border border-white/10 bg-[#0b1020] px-3 text-sm text-white outline-none focus:ring-2 focus:ring-sky-300/40"
+                          className="h-9 w-full rounded-md border border-white/10 bg-card px-3 text-sm text-white outline-none focus:ring-2 focus:ring-sky-300/40"
                         >
                           <option value="">Select repository</option>
                           {githubRepositories.map((repo) => (
@@ -256,7 +256,7 @@ export const MVPBuilderIntegrationGate: React.FC<MVPBuilderIntegrationGateProps>
                           value={selectedProjectRef}
                           onChange={(event) => setSelectedProjectRef(event.target.value)}
                           disabled={isSupabaseBusy}
-                          className="h-9 w-full rounded-md border border-white/10 bg-[#0b1020] px-3 text-sm text-white outline-none focus:ring-2 focus:ring-sky-300/40"
+                          className="h-9 w-full rounded-md border border-white/10 bg-card px-3 text-sm text-white outline-none focus:ring-2 focus:ring-sky-300/40"
                         >
                           <option value="">Select project</option>
                           {supabaseProjects.map((project) => (

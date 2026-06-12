@@ -28,6 +28,9 @@ const buttonVariants = cva(
         sm: "h-10 rounded-button px-3 text-button-sm",
         lg: "h-14 rounded-button px-8",
         icon: "h-12 w-12 min-h-[44px] min-w-[44px]",
+        // Compact sizes for dense tool chrome (e.g. MVP Builder)
+        "icon-sm": "h-9 w-9 min-h-0 min-w-0 rounded-2xl",
+        "pill-sm": "h-7 min-h-0 rounded-full px-3 text-label",
       },
     },
     defaultVariants: {
