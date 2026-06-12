@@ -22,7 +22,7 @@ export default function PageFAQSection({
   faqs,
 }: PageFAQSectionProps) {
   return (
-    <section className="rounded-[2rem] border border-border/60 bg-card/70 p-6 shadow-sm backdrop-blur sm:p-8">
+    <section className="rounded-5xl border border-border/60 bg-card/70 p-6 shadow-sm backdrop-blur sm:p-8">
       <div className="mx-auto max-w-3xl text-center">
         <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">{title}</h2>
         {description ? (

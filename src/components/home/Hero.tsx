@@ -40,7 +40,7 @@ const Hero = ({ onRequestSoftGate, softGateEnabled = false }: HeroProps) => {
 
       <div className="container mx-auto max-w-7xl relative z-10">
         <div className="mx-auto max-w-4xl">
-          <div className="rounded-[32px] border border-border/70 bg-background/82 px-6 py-12 shadow-[0_32px_90px_-56px_rgba(15,23,42,0.45)] backdrop-blur-xl sm:px-10 sm:py-14 lg:px-14 lg:py-16">
+          <div className="rounded-5xl border border-border/70 bg-background/82 px-6 py-12 shadow-[0_32px_90px_-56px_rgba(15,23,42,0.45)] backdrop-blur-xl sm:px-10 sm:py-14 lg:px-14 lg:py-16">
             <div className="mx-auto max-w-3xl text-center">
               <p className="text-xs font-semibold uppercase tracking-[0.26em] text-primary sm:text-sm">
                 For first-time founders
@@ -57,18 +57,18 @@ const Hero = ({ onRequestSoftGate, softGateEnabled = false }: HeroProps) => {
               className="mx-auto mt-10 max-w-3xl"
               onSubmit={handleSubmit}
             >
-              <div className="rounded-[28px] border border-border/70 bg-card/88 p-3 shadow-[0_20px_44px_-30px_rgba(15,23,42,0.3)] sm:p-4">
+              <div className="rounded-4xl border border-border/70 bg-card/88 p-3 shadow-[0_20px_44px_-30px_rgba(15,23,42,0.3)] sm:p-4">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                   <Input
                     aria-label="What problem are you obsessed with solving?"
                     autoComplete="off"
-                    className="h-14 rounded-[20px] border-border/80 bg-background/88 px-5 text-base sm:flex-1"
+                    className="h-14 rounded-2.5xl border-border/80 bg-background/88 px-5 text-base sm:flex-1"
                     onChange={(event) => setSeed(event.target.value)}
                     placeholder="What problem are you obsessed with solving?"
                     value={seed}
                   />
                   <Button
-                    className="h-14 rounded-[20px] px-6 text-base font-semibold sm:min-w-[220px]"
+                    className="h-14 rounded-2.5xl px-6 text-base font-semibold sm:min-w-[220px]"
                     size="lg"
                     type="submit"
                   >

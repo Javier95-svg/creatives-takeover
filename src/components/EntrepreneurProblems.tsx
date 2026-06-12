@@ -315,7 +315,7 @@ const EntrepreneurProblems = () => {
     return (
       <Link
         to={action.to}
-        className={`journey-action-card group relative block w-full overflow-hidden rounded-[24px] touch-manipulation ${className}`}
+        className={`journey-action-card group relative block w-full overflow-hidden rounded-3xl touch-manipulation ${className}`}
         data-accent={action.accentName}
         data-idle={action.idleVariant}
         style={actionStyle}
@@ -331,7 +331,7 @@ const EntrepreneurProblems = () => {
                 <h4 className="journey-action-card__title font-space-grotesk font-semibold leading-tight">
                   {action.title}
                 </h4>
-                <div className="journey-action-card__icon-shell rounded-[16px] p-2 text-[hsl(var(--journey-accent-strong))] sm:p-2.5">
+                <div className="journey-action-card__icon-shell rounded-2xl p-2 text-[hsl(var(--journey-accent-strong))] sm:p-2.5">
                   <ActionIcon className="h-5 w-5" />
                 </div>
               </div>

@@ -13,7 +13,7 @@ interface RelatedToolsSectionProps {
 
 export default function RelatedToolsSection({ tools }: RelatedToolsSectionProps) {
   return (
-    <section className="rounded-[2rem] border border-border/60 bg-card/70 p-6 shadow-sm backdrop-blur sm:p-8">
+    <section className="rounded-5xl border border-border/60 bg-card/70 p-6 shadow-sm backdrop-blur sm:p-8">
       <div className="mx-auto max-w-3xl">
         <h2 className="mb-2 text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
           Related Tools

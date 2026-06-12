@@ -48,7 +48,7 @@ const DemoStudioWallpaper = () => {
         {storyboardFrames.map((frame, index) => (
           <div
             key={index}
-            className="absolute rounded-[18px] border border-white/[0.18] bg-background/[0.35] shadow-2xl backdrop-blur-sm"
+            className="absolute rounded-2xl border border-white/[0.18] bg-background/[0.35] shadow-2xl backdrop-blur-sm"
             style={{
               top: frame.top,
               left: frame.left,
@@ -67,7 +67,7 @@ const DemoStudioWallpaper = () => {
       </div>
 
       {/* Main demo playback surface */}
-      <div className="absolute left-1/2 top-[8%] hidden h-[28rem] w-[44rem] -translate-x-1/2 rotate-[-2deg] rounded-[2rem] border border-white/[0.16] bg-background/[0.28] shadow-[0_30px_110px_rgba(0,0,0,0.32)] backdrop-blur-sm lg:block">
+      <div className="absolute left-1/2 top-[8%] hidden h-[28rem] w-[44rem] -translate-x-1/2 rotate-[-2deg] rounded-5xl border border-white/[0.16] bg-background/[0.28] shadow-[0_30px_110px_rgba(0,0,0,0.32)] backdrop-blur-sm lg:block">
         <div className="absolute inset-x-0 top-0 h-12 rounded-t-[2rem] border-b border-white/[0.12] bg-white/[0.08]" />
         <div className="absolute left-6 top-5 h-2 w-2 rounded-full bg-red-400/80" />
         <div className="absolute left-11 top-5 h-2 w-2 rounded-full bg-yellow-300/80" />
@@ -93,7 +93,7 @@ const DemoStudioWallpaper = () => {
       </div>
 
       {/* Recording and launch column */}
-      <div className="absolute right-[-1rem] top-[15%] hidden h-[30rem] w-[20rem] rotate-[5deg] rounded-[2rem] border border-white/[0.14] bg-background/30 shadow-2xl backdrop-blur-sm md:block">
+      <div className="absolute right-[-1rem] top-[15%] hidden h-[30rem] w-[20rem] rotate-[5deg] rounded-5xl border border-white/[0.14] bg-background/30 shadow-2xl backdrop-blur-sm md:block">
         <div className="absolute left-6 right-6 top-6 h-36 rounded-2xl border border-fuchsia-300/20 bg-fuchsia-300/10" />
         <div className="absolute left-12 top-12 h-14 w-14 rounded-full border border-white/[0.22] bg-white/10" />
         <div className="absolute right-12 top-14 h-3 w-16 rounded-full bg-red-400/[0.55]" />

@@ -56,7 +56,7 @@ const CommunityCofoundersWallpaper = () => {
       ].map((card, index) => (
         <div
           key={`cofounder-card-${index}`}
-          className="absolute rounded-[30px] border border-white/45 bg-white/50 px-6 py-5 backdrop-blur-md dark:border-white/10 dark:bg-white/[0.05]"
+          className="absolute rounded-4xl border border-white/45 bg-white/50 px-6 py-5 backdrop-blur-md dark:border-white/10 dark:bg-white/[0.05]"
           style={{
             top: card.top,
             left: card.left,

@@ -195,19 +195,19 @@ const SignupModal = ({ open, intent, onClose }: SignupModalProps) => {
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-w-[420px] gap-0 rounded-[20px] p-0 [&>button]:hidden">
-        <div className="relative rounded-[20px] border border-border bg-card p-7 shadow-[0_50px_110px_-30px_rgba(0,0,0,0.5)] ring-1 ring-inset ring-white/5">
+      <DialogContent className="max-w-[420px] gap-0 rounded-2.5xl p-0 [&>button]:hidden">
+        <div className="relative rounded-2.5xl border border-border bg-card p-7 shadow-[0_50px_110px_-30px_rgba(0,0,0,0.5)] ring-1 ring-inset ring-white/5">
           <button
             type="button"
             onClick={onClose}
-            className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-[9px] bg-muted/60 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-xl bg-muted/60 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             aria-label="Close"
           >
             <X className="h-4 w-4" />
           </button>
 
           <div className="flex flex-col items-center text-center">
-            <img src={ctLogoMark} alt="Creatives Takeover" className="mb-4 h-14 w-14 rounded-[14px] object-cover shadow-lg" />
+            <img src={ctLogoMark} alt="Creatives Takeover" className="mb-4 h-14 w-14 rounded-2xl object-cover shadow-lg" />
 
             <DialogTitle className="font-space-grotesk text-2xl font-bold tracking-tight">
               Ready to build?{' '}
@@ -351,7 +351,7 @@ const BuildHero = ({ onOpen }: HeroProps) => {
           <div className="mx-auto mt-10 max-w-[720px]">
             <div
               className={cn(
-                'group relative cursor-text rounded-[18px] border bg-card/40 p-5 pb-3.5 shadow-[0_30px_80px_-40px_rgba(0,0,0,0.5)] backdrop-blur-sm transition-all duration-300',
+                'group relative cursor-text rounded-2xl border bg-card/40 p-5 pb-3.5 shadow-[0_30px_80px_-40px_rgba(0,0,0,0.5)] backdrop-blur-sm transition-all duration-300',
                 'hover:border-blue-400/30 hover:shadow-[0_36px_90px_-40px_rgba(0,0,0,0.7),0_0_60px_-20px_rgba(59,130,246,0.2)]',
                 'focus-within:border-blue-400/40 focus-within:shadow-[0_36px_90px_-40px_rgba(0,0,0,0.7),0_0_60px_-20px_rgba(59,130,246,0.25)]',
               )}
@@ -402,7 +402,7 @@ const BuildHero = ({ onOpen }: HeroProps) => {
                 <span className="flex-1" />
                 <Button
                   size="sm"
-                  className="h-9 gap-2 rounded-[11px] bg-gradient-rgb px-4 text-sm font-bold text-white shadow-[0_8px_22px_-8px_rgba(59,130,246,0.5)] transition-all hover:scale-[1.02] hover:brightness-105"
+                  className="h-9 gap-2 rounded-xl bg-gradient-rgb px-4 text-sm font-bold text-white shadow-[0_8px_22px_-8px_rgba(59,130,246,0.5)] transition-all hover:scale-[1.02] hover:brightness-105"
                   onClick={() => onOpen(getCurrentIntent())}
                 >
                   Build now
@@ -501,7 +501,7 @@ const BuildHowItWorks = () => (
                   {step.num}
                 </span>
                 <span
-                  className={cn('flex h-11 w-11 items-center justify-center rounded-[13px] bg-gradient-to-br text-white', c.tile)}
+                  className={cn('flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br text-white', c.tile)}
                   style={{ boxShadow: `0 10px 24px -8px ${c.shadow}` }}
                 >
                   <step.Icon className="h-5 w-5" aria-hidden="true" />
@@ -593,7 +593,7 @@ const BuildStageSelector = () => {
         </ScrollReveal>
 
         <ScrollReveal>
-          <div className="rounded-[20px] border border-border/60 bg-card/40 p-6 backdrop-blur-sm sm:p-8">
+          <div className="rounded-2.5xl border border-border/60 bg-card/40 p-6 backdrop-blur-sm sm:p-8">
             {/* rail */}
             <div className="flex flex-wrap gap-2.5">
               {STAGES.map((stage) => {
@@ -604,7 +604,7 @@ const BuildStageSelector = () => {
                     type="button"
                     onClick={() => setSelected(stage.key)}
                     className={cn(
-                      'relative flex-1 basis-[calc(14.28%-10px)] min-w-[100px] rounded-[14px] border p-3.5 text-left transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                      'relative flex-1 basis-[calc(14.28%-10px)] min-w-[100px] rounded-2xl border p-3.5 text-left transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
                       isSel
                         ? 'border-transparent -translate-y-1.5 shadow-[var(--shadow-rgb)]'
                         : 'border-border/60 bg-background/60 hover:-translate-y-0.5 hover:border-border',

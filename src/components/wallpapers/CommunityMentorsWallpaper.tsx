@@ -62,7 +62,7 @@ const CommunityMentorsWallpaper = () => {
       ].map((panel, index) => (
         <div
           key={`mentor-panel-${index}`}
-          className="absolute rounded-[28px] border border-white/40 bg-white/45 px-6 py-5 backdrop-blur-md dark:border-white/10 dark:bg-white/[0.05]"
+          className="absolute rounded-4xl border border-white/40 bg-white/45 px-6 py-5 backdrop-blur-md dark:border-white/10 dark:bg-white/[0.05]"
           style={{
             top: panel.top,
             left: panel.left,

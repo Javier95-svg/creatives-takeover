@@ -323,7 +323,7 @@ export default function StartupGuide() {
 
           {/* Mentor CTA */}
           <ScrollReveal variant="card">
-            <section className="mx-auto mt-20 max-w-4xl rounded-[2rem] border border-primary/20 bg-primary/5 p-8 text-center">
+            <section className="mx-auto mt-20 max-w-4xl rounded-5xl border border-primary/20 bg-primary/5 p-8 text-center">
               <h2 className="text-2xl font-semibold tracking-tight">Sometimes you need a human, not a framework</h2>
               <p className="mx-auto mt-3 max-w-2xl text-base leading-relaxed text-muted-foreground">
                 CT's Mentor Marketplace connects first-time founders with vetted startup mentors who have

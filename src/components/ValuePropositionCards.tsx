@@ -407,7 +407,7 @@ const ValuePropositionCards = () => {
                 const isUploadingPosition = uploading === card.position;
                 return (
                   <CarouselItem key={card.title} className="pl-4 basis-full h-full">
-                    <Card className="value-prop-card surface-panel trust-outline overflow-hidden h-full relative rounded-[30px]" data-value-card>
+                    <Card className="value-prop-card surface-panel trust-outline overflow-hidden h-full relative rounded-4xl" data-value-card>
                       <Button
                         type="button"
                         variant="outline"

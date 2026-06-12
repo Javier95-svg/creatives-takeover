@@ -22,7 +22,7 @@ export const VCWallpaper: React.FC = () => {
         </div>
       </div>
 
-      <div className="absolute right-[9%] top-32 hidden w-80 rotate-[7deg] rounded-[2rem] border border-cyan-500/20 bg-background/75 p-5 shadow-[0_30px_90px_rgba(8,145,178,0.12)] backdrop-blur xl:block">
+      <div className="absolute right-[9%] top-32 hidden w-80 rotate-[7deg] rounded-5xl border border-cyan-500/20 bg-background/75 p-5 shadow-[0_30px_90px_rgba(8,145,178,0.12)] backdrop-blur xl:block">
         <div className="flex items-center justify-between">
           <p className="text-label uppercase tracking-[0.32em] text-cyan-700/75">Market Watch</p>
           <div className="flex gap-1.5">

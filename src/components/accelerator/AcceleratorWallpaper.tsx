@@ -10,7 +10,7 @@ export const AcceleratorWallpaper: React.FC = () => {
       <div className="absolute left-[2%] top-26 h-56 w-56 rounded-full border border-orange-500/15 opacity-50" />
       <div className="absolute right-[4%] top-24 h-80 w-80 rounded-full border border-amber-400/15 opacity-45" />
 
-      <div className="absolute left-[9%] top-28 hidden w-72 rotate-[-7deg] rounded-[2rem] border border-amber-500/20 bg-background/75 p-5 shadow-[0_28px_90px_rgba(217,119,6,0.14)] backdrop-blur xl:block">
+      <div className="absolute left-[9%] top-28 hidden w-72 rotate-[-7deg] rounded-5xl border border-amber-500/20 bg-background/75 p-5 shadow-[0_28px_90px_rgba(217,119,6,0.14)] backdrop-blur xl:block">
         <p className="text-label uppercase tracking-[0.34em] text-amber-700/75">Cohort Board</p>
         <div className="mt-4 space-y-3">
           <div className="rounded-2xl border border-amber-500/20 bg-amber-500/10 px-3 py-2 text-label font-medium text-amber-700">
@@ -26,7 +26,7 @@ export const AcceleratorWallpaper: React.FC = () => {
         </div>
       </div>
 
-      <div className="absolute right-[8%] top-36 hidden w-80 rotate-[8deg] rounded-[2rem] border border-orange-500/20 bg-background/80 p-5 shadow-[0_34px_100px_rgba(249,115,22,0.14)] backdrop-blur xl:block">
+      <div className="absolute right-[8%] top-36 hidden w-80 rotate-[8deg] rounded-5xl border border-orange-500/20 bg-background/80 p-5 shadow-[0_34px_100px_rgba(249,115,22,0.14)] backdrop-blur xl:block">
         <div className="flex items-center justify-between">
           <p className="text-label uppercase tracking-[0.32em] text-orange-700/75">Launch Map</p>
           <div className="flex gap-2">

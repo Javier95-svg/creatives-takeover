@@ -15,7 +15,7 @@ export default function FounderAnswerLibraryTeaser({ compact = false }: FounderA
   return (
     <section className={compact ? "py-12" : "py-16 lg:py-20"}>
       <div className="container mx-auto px-4 sm:px-6">
-        <div className="rounded-[2rem] border border-border/60 bg-card/80 p-6 shadow-sm backdrop-blur sm:p-8">
+        <div className="rounded-5xl border border-border/60 bg-card/80 p-6 shadow-sm backdrop-blur sm:p-8">
           <div className="grid gap-8 lg:grid-cols-[0.85fr_1.15fr] lg:items-center">
             <div>
               <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-primary">

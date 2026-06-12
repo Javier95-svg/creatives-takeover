@@ -139,7 +139,7 @@ export default function FounderAnswerPage() {
               ))}
             </section>
 
-            <section className="mt-10 rounded-[2rem] border border-border/60 bg-card/80 p-6 shadow-sm backdrop-blur sm:p-8">
+            <section className="mt-10 rounded-5xl border border-border/60 bg-card/80 p-6 shadow-sm backdrop-blur sm:p-8">
               <div className="grid gap-8 lg:grid-cols-[1fr_0.8fr] lg:items-center">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
