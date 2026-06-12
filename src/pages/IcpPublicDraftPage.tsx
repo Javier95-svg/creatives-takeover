@@ -52,7 +52,7 @@ export default function IcpPublicDraftPage() {
       <div className="min-h-screen bg-[#f6f7fb]">
         <IcpProgressBar progress={100} />
         <div className="flex min-h-screen items-center justify-center px-6">
-          <Card className="rounded-[2rem] border-slate-200 bg-white shadow-sm">
+          <Card className="rounded-5xl border-slate-200 bg-white shadow-sm">
             <CardContent className="flex items-center gap-3 px-6 py-8 text-slate-500">
               <Loader2 className="h-5 w-5 animate-spin" />
               Loading shared ICP Draft...
@@ -68,7 +68,7 @@ export default function IcpPublicDraftPage() {
       <div className="min-h-screen bg-[#f6f7fb]">
         <IcpProgressBar progress={100} />
         <div className="flex min-h-screen items-center justify-center px-6">
-          <Card className="max-w-lg rounded-[2rem] border-slate-200 bg-white shadow-sm">
+          <Card className="max-w-lg rounded-5xl border-slate-200 bg-white shadow-sm">
             <CardContent className="space-y-4 p-8 text-center">
               <p className="text-xs font-semibold uppercase tracking-[0.24em] text-accent-teal">Share link unavailable</p>
               <h1 className="text-3xl font-semibold tracking-tight text-slate-950">This ICP Draft is no longer public.</h1>

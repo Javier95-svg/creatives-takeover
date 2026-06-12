@@ -1454,7 +1454,7 @@ const ICPBuilder: React.FC = () => {
       </div>
 
       {session.mode !== null && (
-        <div className="mt-6 flex flex-col items-start justify-between gap-4 rounded-[2rem] border border-accent-teal/30 bg-accent-teal/10 px-5 py-4 sm:flex-row sm:items-center">
+        <div className="mt-6 flex flex-col items-start justify-between gap-4 rounded-5xl border border-accent-teal/30 bg-accent-teal/10 px-5 py-4 sm:flex-row sm:items-center">
           <div>
             <p className="text-sm font-semibold text-foreground">You have an unfinished ICP draft</p>
             <p className="mt-0.5 text-xs text-muted-foreground">Pick up where you left off, or start fresh.</p>
@@ -1494,11 +1494,11 @@ const ICPBuilder: React.FC = () => {
           type="button"
           role="button"
           tabIndex={0}
-          className="group relative overflow-hidden rounded-[2rem] border border-border/60 bg-white/80 p-6 text-left shadow-[0_28px_90px_-52px_rgba(15,23,42,0.3)] backdrop-blur transition-transform duration-300 hover:-translate-y-1 hover:border-accent-teal/40 hover:shadow-accent-teal-lg motion-safe:animate-[glow_4.8s_ease-in-out_infinite_alternate] dark:bg-slate-950/70"
+          className="group relative overflow-hidden rounded-5xl border border-border/60 bg-white/80 p-6 text-left shadow-[0_28px_90px_-52px_rgba(15,23,42,0.3)] backdrop-blur transition-transform duration-300 hover:-translate-y-1 hover:border-accent-teal/40 hover:shadow-accent-teal-lg motion-safe:animate-[glow_4.8s_ease-in-out_infinite_alternate] dark:bg-slate-950/70"
           onClick={handleSelectFastMode}
           onKeyDown={(event) => handleModeCardKeyDown(event, handleSelectFastMode)}
         >
-          <div className="pointer-events-none absolute inset-0 rounded-[2rem] border border-accent-teal/15 opacity-60 motion-safe:animate-[pulse-slow_4s_ease-in-out_infinite]" />
+          <div className="pointer-events-none absolute inset-0 rounded-5xl border border-accent-teal/15 opacity-60 motion-safe:animate-[pulse-slow_4s_ease-in-out_infinite]" />
           <div className="relative z-10">
             <div className="flex items-center gap-2">
               <p className="text-sm font-semibold uppercase tracking-[0.18em] text-accent-teal">Fast Mode</p>
@@ -1519,13 +1519,13 @@ const ICPBuilder: React.FC = () => {
           type="button"
           role="button"
           tabIndex={0}
-          className="group relative overflow-hidden rounded-[2rem] border border-border/60 bg-white/80 p-6 text-left shadow-[0_28px_90px_-52px_rgba(15,23,42,0.3)] backdrop-blur transition-transform duration-300 hover:-translate-y-1 hover:border-accent-teal/40 hover:shadow-accent-teal-lg motion-safe:animate-[glow_4.8s_ease-in-out_infinite_alternate] dark:bg-slate-950/70"
+          className="group relative overflow-hidden rounded-5xl border border-border/60 bg-white/80 p-6 text-left shadow-[0_28px_90px_-52px_rgba(15,23,42,0.3)] backdrop-blur transition-transform duration-300 hover:-translate-y-1 hover:border-accent-teal/40 hover:shadow-accent-teal-lg motion-safe:animate-[glow_4.8s_ease-in-out_infinite_alternate] dark:bg-slate-950/70"
           style={{ animationDelay: "0.45s" }}
           onClick={handleSelectGuidedMode}
           onKeyDown={(event) => handleModeCardKeyDown(event, handleSelectGuidedMode)}
         >
           <div
-            className="pointer-events-none absolute inset-0 rounded-[2rem] border border-accent-teal/15 opacity-60 motion-safe:animate-[pulse-slow_4s_ease-in-out_infinite]"
+            className="pointer-events-none absolute inset-0 rounded-5xl border border-accent-teal/15 opacity-60 motion-safe:animate-[pulse-slow_4s_ease-in-out_infinite]"
             style={{ animationDelay: "0.45s" }}
           />
           <div className="relative z-10">
@@ -1668,7 +1668,7 @@ const ICPBuilder: React.FC = () => {
             }}
             onKeyDown={handleFieldSubmit}
             placeholder="e.g. I'm building a client feedback tool for freelance designers. Right now they manage revisions through email and WhatsApp, which causes things to get lost and makes them look unprofessional. My tool puts all revision feedback in one place with version tracking. I'm a freelance designer myself so I know this market well."
-            className="min-h-[280px] rounded-[2rem] border-border/60 bg-white/85 px-5 py-5 text-base leading-7 shadow-sm dark:bg-slate-950/70"
+            className="min-h-[280px] rounded-5xl border-border/60 bg-white/85 px-5 py-5 text-base leading-7 shadow-sm dark:bg-slate-950/70"
           />
           {session.fastDescription.length > 0 ? (
             <p className={`px-1 text-xs transition-colors ${fastWordCount >= 30 ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground"}`}>
@@ -1701,7 +1701,7 @@ const ICPBuilder: React.FC = () => {
               onChange={(event) => updateQuickstartSeed(event.target.value)}
               onKeyDown={handleFieldSubmit}
               placeholder="e.g. A tool that helps freelancers manage client feedback without drowning in email threads"
-              className="rounded-[2rem] border-border/60 bg-white/85 px-5 py-5 text-base leading-7 shadow-sm dark:bg-slate-950/70"
+              className="rounded-5xl border-border/60 bg-white/85 px-5 py-5 text-base leading-7 shadow-sm dark:bg-slate-950/70"
             />
           </div>,
         );
@@ -1717,7 +1717,7 @@ const ICPBuilder: React.FC = () => {
               </p>
             </div>
 
-            <div className="space-y-4 rounded-[2rem] border border-border/60 bg-white/80 p-5 shadow-sm backdrop-blur dark:bg-slate-950/70">
+            <div className="space-y-4 rounded-5xl border border-border/60 bg-white/80 p-5 shadow-sm backdrop-blur dark:bg-slate-950/70">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                 <div className="space-y-2">
                   <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent-teal">Best-fit customer</p>
@@ -1738,7 +1738,7 @@ const ICPBuilder: React.FC = () => {
               </div>
 
               {suggestedPain ? (
-                <div className="rounded-[1.5rem] border border-accent-teal/20 bg-accent-teal/10 px-4 py-4">
+                <div className="rounded-3xl border border-accent-teal/20 bg-accent-teal/10 px-4 py-4">
                   <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#0f5b64] dark:text-[#8fe6ef]">Pain we expect first</p>
                   <p className="mt-2 text-sm leading-6 text-foreground">{suggestedPain}</p>
                 </div>
@@ -1831,7 +1831,7 @@ const ICPBuilder: React.FC = () => {
               onChange={(event) => updateGuided("pain", event.target.value)}
               onKeyDown={handleFieldSubmit}
               placeholder="e.g. They lose clients because revision feedback is scattered across email, WhatsApp, and voice notes — and nothing gets tracked"
-              className="rounded-[2rem] border-border/60 bg-white/85 px-5 py-5 text-base leading-7 shadow-sm dark:bg-slate-950/70"
+              className="rounded-5xl border-border/60 bg-white/85 px-5 py-5 text-base leading-7 shadow-sm dark:bg-slate-950/70"
             />
           </div>,
         );
@@ -1852,7 +1852,7 @@ const ICPBuilder: React.FC = () => {
               onChange={(event) => updateGuided("workaround", event.target.value)}
               onKeyDown={handleFieldSubmit}
               placeholder="e.g. A mix of email threads, Google Drive comments, and hoping clients remember what they said"
-              className="rounded-[2rem] border-border/60 bg-white/85 px-5 py-5 text-base leading-7 shadow-sm dark:bg-slate-950/70"
+              className="rounded-5xl border-border/60 bg-white/85 px-5 py-5 text-base leading-7 shadow-sm dark:bg-slate-950/70"
             />
             <p className="text-sm leading-6 text-muted-foreground">
               We&apos;ll use this to generate your preview now. You can sharpen solution angle, founder edge, and market context after you unlock the full draft.
@@ -1965,7 +1965,7 @@ const ICPBuilder: React.FC = () => {
       <div className="min-h-screen bg-transparent">
         <IcpProgressBar progress={0} shellOffset />
         <div className="flex min-h-screen items-center justify-center px-6">
-          <Card className="rounded-[2rem] border-border/60 bg-white/80 shadow-sm backdrop-blur dark:bg-slate-950/75">
+          <Card className="rounded-5xl border-border/60 bg-white/80 shadow-sm backdrop-blur dark:bg-slate-950/75">
             <CardContent className="flex items-center gap-3 px-6 py-8 text-muted-foreground">
               <Loader2 className="h-5 w-5 animate-spin" />
               {isHydratingEdit ? "Restoring your ICP Draft for editing..." : "Restoring your ICP Draft..."}
@@ -2063,7 +2063,7 @@ const ICPBuilder: React.FC = () => {
 
       {showLegacy && legacyAnalysis ? (
         <div className="mx-auto max-w-4xl px-4 pb-10 sm:px-6">
-          <Card className="rounded-[2rem] border-border/60 bg-white/80 shadow-sm backdrop-blur dark:bg-slate-950/75">
+          <Card className="rounded-5xl border-border/60 bg-white/80 shadow-sm backdrop-blur dark:bg-slate-950/75">
             <CardContent className="space-y-4 p-6 text-sm leading-7 text-muted-foreground">
               <p className="font-semibold text-foreground">Legacy analysis</p>
               <pre className="overflow-auto whitespace-pre-wrap font-mono text-xs text-muted-foreground">

@@ -126,7 +126,7 @@ export function IcpUnlockGate({
 
   return (
     <div className={`relative z-20 w-full ${className}`}>
-      <div className="w-full rounded-[2rem] border border-border/60 bg-white/95 shadow-[0_30px_90px_-60px_rgba(15,23,42,0.45)] backdrop-blur dark:bg-slate-950/90 sm:overflow-hidden">
+      <div className="w-full rounded-5xl border border-border/60 bg-white/95 shadow-[0_30px_90px_-60px_rgba(15,23,42,0.45)] backdrop-blur dark:bg-slate-950/90 sm:overflow-hidden">
         <div className="border-b border-border/50 px-6 py-5 sm:px-8">
           <div className="flex items-start justify-between gap-4">
             <div>
@@ -149,7 +149,7 @@ export function IcpUnlockGate({
             ) : null}
           </div>
 
-          <div className="mt-4 rounded-[1.5rem] border border-border/60 bg-background/70 px-4 py-4">
+          <div className="mt-4 rounded-3xl border border-border/60 bg-background/70 px-4 py-4">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent-teal">What you already unlocked</p>
             <p className="mt-2 text-sm leading-6 text-foreground">{customerSummary}</p>
             {painLine ? (
@@ -214,7 +214,7 @@ export function IcpUnlockGate({
             </button>
           </div>
 
-          <div className="mt-5 rounded-[1.5rem] border border-border/50 bg-background/60 px-4 py-4">
+          <div className="mt-5 rounded-3xl border border-border/50 bg-background/60 px-4 py-4">
             <div className="flex items-start gap-3">
               <div className="flex shrink-0 text-amber-400">
                 {[0, 1, 2, 3, 4].map((i) => (

@@ -15,7 +15,7 @@ const ICPPositioning: React.FC<ICPPositioningProps> = ({ positioning }) => {
 
   return (
     <div className="space-y-6">
-      <Card className="overflow-hidden rounded-[1.9rem] border border-primary/20 bg-[radial-gradient(circle_at_top_left,rgba(168,85,247,0.12),transparent_42%),rgba(14,165,233,0.05)] shadow-[0_20px_60px_-36px_rgba(14,165,233,0.42)]">
+      <Card className="overflow-hidden rounded-4xl border border-primary/20 bg-[radial-gradient(circle_at_top_left,rgba(168,85,247,0.12),transparent_42%),rgba(14,165,233,0.05)] shadow-[0_20px_60px_-36px_rgba(14,165,233,0.42)]">
         <CardHeader className="space-y-5 pb-0">
           <div className="inline-flex w-fit items-center gap-2 rounded-full border border-sky-500/20 bg-white/80 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-sky-700 dark:bg-slate-950/60 dark:text-sky-300">
             <Megaphone className="h-3.5 w-3.5" />
@@ -28,13 +28,13 @@ const ICPPositioning: React.FC<ICPPositioningProps> = ({ positioning }) => {
         </CardHeader>
         <CardContent className="space-y-5 pt-6">
           <p className="text-2xl font-semibold leading-tight sm:text-3xl">{positioning.oneLiner}</p>
-          <blockquote className="rounded-[1.35rem] border border-border/60 bg-background/80 px-5 py-4 text-sm italic leading-relaxed text-muted-foreground">
+          <blockquote className="rounded-2.5xl border border-border/60 bg-background/80 px-5 py-4 text-sm italic leading-relaxed text-muted-foreground">
             {positioning.positioningStatement}
           </blockquote>
         </CardContent>
       </Card>
 
-      <Card className="rounded-[1.75rem] border border-border/60 shadow-sm">
+      <Card className="rounded-4xl border border-border/60 shadow-sm">
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center gap-2 text-base">
             <Sparkles className="h-4 w-4 text-primary" />
@@ -47,7 +47,7 @@ const ICPPositioning: React.FC<ICPPositioningProps> = ({ positioning }) => {
             <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Differentiators</p>
             <div className="space-y-2">
               {differentiators.map((item, index) => (
-                <div key={index} className="flex items-start gap-3 rounded-[1.2rem] border border-emerald-200/60 bg-emerald-50/80 p-4 dark:border-emerald-900/40 dark:bg-emerald-900/10">
+                <div key={index} className="flex items-start gap-3 rounded-2.5xl border border-emerald-200/60 bg-emerald-50/80 p-4 dark:border-emerald-900/40 dark:bg-emerald-900/10">
                   <Shield className="mt-0.5 h-4 w-4 flex-shrink-0 text-green-600" />
                   <span className="text-sm">{item}</span>
                 </div>
@@ -58,7 +58,7 @@ const ICPPositioning: React.FC<ICPPositioningProps> = ({ positioning }) => {
       </Card>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <Card className="rounded-[1.75rem] border border-border/60 shadow-sm">
+        <Card className="rounded-4xl border border-border/60 shadow-sm">
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-base">
               <Megaphone className="h-4 w-4 text-primary" />
@@ -67,7 +67,7 @@ const ICPPositioning: React.FC<ICPPositioningProps> = ({ positioning }) => {
           </CardHeader>
           <CardContent className="space-y-3">
             {messagePillars.map((pillar, index) => (
-              <div key={index} className="flex items-start gap-3 rounded-[1.15rem] border border-border/50 bg-background/70 px-4 py-3 text-sm">
+              <div key={index} className="flex items-start gap-3 rounded-2.5xl border border-border/50 bg-background/70 px-4 py-3 text-sm">
                 <span className="mt-0.5 flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-xs font-medium text-primary">
                   {index + 1}
                 </span>
@@ -77,7 +77,7 @@ const ICPPositioning: React.FC<ICPPositioningProps> = ({ positioning }) => {
           </CardContent>
         </Card>
 
-        <Card className="rounded-[1.75rem] border border-border/60 shadow-sm">
+        <Card className="rounded-4xl border border-border/60 shadow-sm">
           <CardHeader className="pb-2">
             <CardTitle className="text-base">Proof To Back The Claim</CardTitle>
           </CardHeader>
@@ -94,13 +94,13 @@ const ICPPositioning: React.FC<ICPPositioningProps> = ({ positioning }) => {
       </div>
 
       {positioning.objections.length > 0 && (
-        <Card className="rounded-[1.75rem] border border-border/60 shadow-sm">
+        <Card className="rounded-4xl border border-border/60 shadow-sm">
           <CardHeader className="pb-2">
             <CardTitle className="text-base">Likely Objections To Handle</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {positioning.objections.map((item, index) => (
-              <div key={index} className="rounded-[1.2rem] border border-border/60 bg-background/80 p-4">
+              <div key={index} className="rounded-2.5xl border border-border/60 bg-background/80 p-4">
                 <p className="mb-1 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Objection</p>
                 <p className="mb-3 text-sm">{item.objection}</p>
                 <p className="mb-1 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Response</p>

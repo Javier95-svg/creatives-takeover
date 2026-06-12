@@ -438,7 +438,7 @@ const PMFEvidenceForm: React.FC<PMFEvidenceFormProps> = ({ onSubmit, isSubmittin
   const renderCurrentStep = () => {
     if (currentStep === 0) {
       return (
-        <Card ref={validationSetupRef} className="rounded-[1.75rem] border border-border/60 shadow-sm">
+        <Card ref={validationSetupRef} className="rounded-4xl border border-border/60 shadow-sm">
           <CardContent className="space-y-5 pt-6">
             <div className="flex items-center justify-between gap-3">
               <div>
@@ -517,7 +517,7 @@ const PMFEvidenceForm: React.FC<PMFEvidenceFormProps> = ({ onSubmit, isSubmittin
             </div>
           </div>
 
-          <div className="rounded-[1.75rem] border border-border/60 bg-background/80 p-5 space-y-5">
+          <div className="rounded-4xl border border-border/60 bg-background/80 p-5 space-y-5">
             <div className="flex items-center justify-between gap-3">
               <div>
                 <h3 className="text-base font-semibold">
@@ -726,7 +726,7 @@ const PMFEvidenceForm: React.FC<PMFEvidenceFormProps> = ({ onSubmit, isSubmittin
 
     if (currentStep === 2) {
       return (
-        <Card className="rounded-[1.75rem] border border-border/60 shadow-sm">
+        <Card className="rounded-4xl border border-border/60 shadow-sm">
           <CardContent className="space-y-4 pt-6">
             <div className="space-y-1.5">
               <Label className="text-xs text-muted-foreground">What repeated pain sounded strongest across your logged interviews?</Label>
@@ -762,7 +762,7 @@ const PMFEvidenceForm: React.FC<PMFEvidenceFormProps> = ({ onSubmit, isSubmittin
 
     if (currentStep === 3) {
       return (
-        <Card className="rounded-[1.75rem] border border-border/60 shadow-sm">
+        <Card className="rounded-4xl border border-border/60 shadow-sm">
           <CardContent className="space-y-5 pt-6">
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <div className="rounded-2xl border border-border/60 bg-background/70 p-4">
@@ -800,7 +800,7 @@ const PMFEvidenceForm: React.FC<PMFEvidenceFormProps> = ({ onSubmit, isSubmittin
     }
 
     return (
-      <Card className="rounded-[1.75rem] border border-border/60 shadow-sm">
+      <Card className="rounded-4xl border border-border/60 shadow-sm">
         <CardContent className="space-y-4 pt-6">
           <div className="space-y-1.5">
             <Label className="text-xs text-muted-foreground">What are you still unsure about before building?</Label>
@@ -896,7 +896,7 @@ const PMFEvidenceForm: React.FC<PMFEvidenceFormProps> = ({ onSubmit, isSubmittin
             </div>
 
             {reviewItems.map((item, index) => (
-              <Card key={item.title} className="hover-lift border-border/60 group rounded-[1.5rem]">
+              <Card key={item.title} className="hover-lift border-border/60 group rounded-3xl">
                 <CardContent className="pt-4 pb-4">
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-start gap-3 flex-1 min-w-0">
@@ -1007,7 +1007,7 @@ const PMFEvidenceForm: React.FC<PMFEvidenceFormProps> = ({ onSubmit, isSubmittin
 
       <StepView stepKey={currentStep}>
         <div className="space-y-6">
-          <div className="rounded-[1.75rem] border border-border/60 bg-background/85 p-6 shadow-sm">
+          <div className="rounded-4xl border border-border/60 bg-background/85 p-6 shadow-sm">
             <div className="space-y-4">
               <div className="flex items-center gap-3">
                 <span className="select-none text-4xl font-bold leading-none text-primary/20">{step.number}</span>

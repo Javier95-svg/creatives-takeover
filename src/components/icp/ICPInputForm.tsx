@@ -427,7 +427,7 @@ const ICPInputForm: React.FC<ICPInputFormProps> = ({
   };
 
   const StepIndicator = () => (
-    <div className="mb-8 rounded-[1.5rem] border border-border/60 bg-background/80 p-4 shadow-sm">
+    <div className="mb-8 rounded-3xl border border-border/60 bg-background/80 p-4 shadow-sm">
       <div className="mb-4 flex items-center justify-between gap-4">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Core Brief</p>
@@ -526,7 +526,7 @@ const ICPInputForm: React.FC<ICPInputFormProps> = ({
               return null;
             })()}
 
-            <Card className="rounded-[1.75rem] border-primary/20 bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.12),transparent_42%),rgba(14,165,233,0.05)]">
+            <Card className="rounded-4xl border-primary/20 bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.12),transparent_42%),rgba(14,165,233,0.05)]">
               <CardContent className="pt-6">
                 <div className="flex items-start gap-3">
                   <Sparkles className="mt-0.5 h-5 w-5 text-primary" />
@@ -541,7 +541,7 @@ const ICPInputForm: React.FC<ICPInputFormProps> = ({
             </Card>
 
             {CORE_STEPS.map((item, index) => (
-              <Card key={item.field} className="group rounded-[1.5rem] border-border/60 shadow-sm">
+              <Card key={item.field} className="group rounded-3xl border-border/60 shadow-sm">
                 <CardContent className="pt-4">
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex min-w-0 flex-1 items-start gap-3">
@@ -724,7 +724,7 @@ const ICPInputForm: React.FC<ICPInputFormProps> = ({
       <StepView stepKey={currentStep}>
         <div className="space-y-6">
           <div className="space-y-6">
-            <div className="rounded-[1.75rem] border border-border/60 bg-background/85 p-6 shadow-sm">
+            <div className="rounded-4xl border border-border/60 bg-background/85 p-6 shadow-sm">
               <div className="space-y-4">
               <div className="flex items-center gap-3">
                 <span className="select-none text-4xl font-bold leading-none text-primary/20">{step.number}</span>
@@ -740,7 +740,7 @@ const ICPInputForm: React.FC<ICPInputFormProps> = ({
               </div>
             </div>
 
-            <Card className="rounded-[1.75rem] border border-border/60 shadow-sm">
+            <Card className="rounded-4xl border border-border/60 shadow-sm">
               <CardContent className="space-y-4 pt-6">
                 <div className="flex items-center justify-between gap-3">
                   <div>
@@ -765,7 +765,7 @@ const ICPInputForm: React.FC<ICPInputFormProps> = ({
                 placeholder={step.placeholder}
                 rows={8}
                 className={cn(
-                  'resize-none rounded-[1.35rem] border-border/60 bg-muted/20 p-5 text-base leading-relaxed transition-all duration-200',
+                  'resize-none rounded-2.5xl border-border/60 bg-muted/20 p-5 text-base leading-relaxed transition-all duration-200',
                   'focus:border-primary/60 focus:ring-2 focus:ring-primary/30',
                   canContinue && 'border-primary/30 shadow-[0_0_0_1px_rgba(14,165,233,0.08)]',
                 )}

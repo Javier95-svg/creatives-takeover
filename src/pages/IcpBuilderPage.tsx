@@ -252,7 +252,7 @@ export default function ICPBuilderPage() {
         <Suspense
           fallback={
             <div className="flex min-h-screen items-center justify-center bg-transparent px-4 pt-28 md:pt-32">
-              <div className="flex items-center gap-3 rounded-[2rem] border border-border/60 bg-white/80 px-6 py-5 text-muted-foreground shadow-sm backdrop-blur dark:bg-slate-950/70">
+              <div className="flex items-center gap-3 rounded-5xl border border-border/60 bg-white/80 px-6 py-5 text-muted-foreground shadow-sm backdrop-blur dark:bg-slate-950/70">
                 <Loader2 className="h-5 w-5 animate-spin text-accent-teal" />
                 Loading ICP Builder...
               </div>
@@ -264,7 +264,7 @@ export default function ICPBuilderPage() {
       </main>
 
       {showLeadBanner && (!leadCaptured || leadSubmitState === "submitted") ? (
-        <div className="fixed inset-x-4 bottom-4 z-50 mx-auto w-auto max-w-[24rem] overflow-hidden rounded-[1.5rem] border border-white/70 bg-white/90 text-slate-950 shadow-[0_28px_80px_-32px_rgba(15,23,42,0.45)] backdrop-blur-2xl dark:border-white/10 dark:bg-slate-950/90 dark:text-white sm:left-auto sm:right-5 sm:mx-0">
+        <div className="fixed inset-x-4 bottom-4 z-50 mx-auto w-auto max-w-[24rem] overflow-hidden rounded-3xl border border-white/70 bg-white/90 text-slate-950 shadow-[0_28px_80px_-32px_rgba(15,23,42,0.45)] backdrop-blur-2xl dark:border-white/10 dark:bg-slate-950/90 dark:text-white sm:left-auto sm:right-5 sm:mx-0">
           <div className="pointer-events-none absolute -right-16 -top-20 h-36 w-36 rounded-full bg-accent-teal/25 blur-3xl" />
           <div className="pointer-events-none absolute -bottom-20 left-6 h-28 w-28 rounded-full bg-emerald-400/20 blur-3xl" />
 

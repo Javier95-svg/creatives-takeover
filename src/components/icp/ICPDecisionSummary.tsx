@@ -22,7 +22,7 @@ const ICPDecisionSummary: React.FC<ICPDecisionSummaryProps> = ({ recommendation 
 
   return (
     <div className="space-y-6">
-      <Card className="overflow-hidden rounded-[1.9rem] border border-primary/20 bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.16),transparent_42%),rgba(14,165,233,0.06)] shadow-[0_20px_60px_-36px_rgba(14,165,233,0.55)]">
+      <Card className="overflow-hidden rounded-4xl border border-primary/20 bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.16),transparent_42%),rgba(14,165,233,0.06)] shadow-[0_20px_60px_-36px_rgba(14,165,233,0.55)]">
         <CardHeader className="space-y-5 pb-0">
           <div className="inline-flex w-fit items-center gap-2 rounded-full border border-sky-500/20 bg-white/80 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-sky-700 dark:bg-slate-950/60 dark:text-sky-300">
             <Compass className="h-3.5 w-3.5" />
@@ -45,15 +45,15 @@ const ICPDecisionSummary: React.FC<ICPDecisionSummaryProps> = ({ recommendation 
           </div>
 
           <div className="grid gap-4 md:grid-cols-3">
-            <div className="rounded-[1.4rem] border border-border/60 bg-background/85 p-4 shadow-sm">
+            <div className="rounded-2.5xl border border-border/60 bg-background/85 p-4 shadow-sm">
               <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Problem to win</p>
               <p className="text-sm">{recommendation.problemToWin}</p>
             </div>
-            <div className="rounded-[1.4rem] border border-border/60 bg-background/85 p-4 shadow-sm">
+            <div className="rounded-2.5xl border border-border/60 bg-background/85 p-4 shadow-sm">
               <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Value wedge</p>
               <p className="text-sm">{recommendation.valueWedge}</p>
             </div>
-            <div className="rounded-[1.4rem] border border-border/60 bg-background/85 p-4 shadow-sm">
+            <div className="rounded-2.5xl border border-border/60 bg-background/85 p-4 shadow-sm">
               <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Decision</p>
               <p className="text-sm">{recommendation.decision}</p>
             </div>
@@ -62,7 +62,7 @@ const ICPDecisionSummary: React.FC<ICPDecisionSummaryProps> = ({ recommendation 
       </Card>
 
       <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-        <Card className="rounded-[1.75rem] border border-border/60 shadow-sm">
+        <Card className="rounded-4xl border border-border/60 shadow-sm">
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-base">
               <Compass className="w-4 h-4 text-primary" />
@@ -71,14 +71,14 @@ const ICPDecisionSummary: React.FC<ICPDecisionSummaryProps> = ({ recommendation 
           </CardHeader>
           <CardContent className="space-y-3">
             <p className="text-sm leading-relaxed">{recommendation.decision}</p>
-            <div className="rounded-[1.35rem] border border-border/60 bg-muted/40 p-4">
+            <div className="rounded-2.5xl border border-border/60 bg-muted/40 p-4">
               <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Why this confidence level</p>
               <p className="text-sm text-muted-foreground">{recommendation.confidenceReason}</p>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="rounded-[1.75rem] border border-border/60 shadow-sm">
+        <Card className="rounded-4xl border border-border/60 shadow-sm">
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-base">
               <CheckCircle2 className="w-4 h-4 text-primary" />
@@ -88,7 +88,7 @@ const ICPDecisionSummary: React.FC<ICPDecisionSummaryProps> = ({ recommendation 
           <CardContent>
             <ul className="space-y-2">
               {evidenceSignals.map((signal, index) => (
-                <li key={index} className="flex items-start gap-3 rounded-[1.15rem] border border-border/50 bg-background/70 px-4 py-3 text-sm">
+                <li key={index} className="flex items-start gap-3 rounded-2.5xl border border-border/50 bg-background/70 px-4 py-3 text-sm">
                   <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-sky-500" />
                   <span>{signal}</span>
                 </li>
@@ -99,7 +99,7 @@ const ICPDecisionSummary: React.FC<ICPDecisionSummaryProps> = ({ recommendation 
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <Card className="rounded-[1.75rem] border border-border/60 shadow-sm">
+        <Card className="rounded-4xl border border-border/60 shadow-sm">
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-base">
               <ShieldAlert className="w-4 h-4 text-primary" />
@@ -109,7 +109,7 @@ const ICPDecisionSummary: React.FC<ICPDecisionSummaryProps> = ({ recommendation 
           <CardContent>
             <ul className="space-y-2">
               {doNotTargetYet.map((segment, index) => (
-                <li key={index} className="flex items-start gap-3 rounded-[1.15rem] border border-border/50 bg-background/70 px-4 py-3 text-sm">
+                <li key={index} className="flex items-start gap-3 rounded-2.5xl border border-border/50 bg-background/70 px-4 py-3 text-sm">
                   <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-orange-500" />
                   <span>{segment}</span>
                 </li>
@@ -118,7 +118,7 @@ const ICPDecisionSummary: React.FC<ICPDecisionSummaryProps> = ({ recommendation 
           </CardContent>
         </Card>
 
-        <Card className="rounded-[1.75rem] border border-border/60 shadow-sm">
+        <Card className="rounded-4xl border border-border/60 shadow-sm">
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-base">
               <HelpCircle className="w-4 h-4 text-primary" />
@@ -128,7 +128,7 @@ const ICPDecisionSummary: React.FC<ICPDecisionSummaryProps> = ({ recommendation 
           <CardContent>
             <ul className="space-y-2">
               {openQuestions.map((question, index) => (
-                <li key={index} className="flex items-start gap-3 rounded-[1.15rem] border border-border/50 bg-background/70 px-4 py-3 text-sm">
+                <li key={index} className="flex items-start gap-3 rounded-2.5xl border border-border/50 bg-background/70 px-4 py-3 text-sm">
                   <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-emerald-500" />
                   <span>{question}</span>
                 </li>

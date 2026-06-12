@@ -180,7 +180,7 @@ export default function IcpDraftPage() {
       <div className="min-h-screen bg-[#f6f7fb]">
         <IcpProgressBar progress={100} />
         <div className="flex min-h-screen items-center justify-center px-6">
-          <Card className="rounded-[2rem] border-slate-200 bg-white shadow-sm">
+          <Card className="rounded-5xl border-slate-200 bg-white shadow-sm">
             <CardContent className="flex items-center gap-3 px-6 py-8 text-slate-500">
               <Loader2 className="h-5 w-5 animate-spin" />
               Loading your ICP Draft...
@@ -196,7 +196,7 @@ export default function IcpDraftPage() {
       <div className="min-h-screen bg-[#f6f7fb]">
         <IcpProgressBar progress={100} />
         <div className="flex min-h-screen items-center justify-center px-6">
-          <Card className="max-w-lg rounded-[2rem] border-slate-200 bg-white shadow-sm">
+          <Card className="max-w-lg rounded-5xl border-slate-200 bg-white shadow-sm">
             <CardContent className="space-y-4 p-8 text-center">
               <p className="text-xs font-semibold uppercase tracking-[0.24em] text-accent-teal">Draft unavailable</p>
               <h1 className="text-3xl font-semibold tracking-tight text-slate-950">We couldn't open this ICP Draft.</h1>
@@ -224,7 +224,7 @@ export default function IcpDraftPage() {
 
       <div className="mx-auto max-w-6xl px-4 pt-6 sm:px-6 lg:px-8">
         {isUnlockSource ? (
-          <div className="mb-5 overflow-hidden rounded-[1.75rem] border border-emerald-200 bg-gradient-to-br from-emerald-50 via-white to-cyan-50 p-6 shadow-[0_24px_60px_-44px_rgba(15,23,42,0.35)] sm:p-7">
+          <div className="mb-5 overflow-hidden rounded-4xl border border-emerald-200 bg-gradient-to-br from-emerald-50 via-white to-cyan-50 p-6 shadow-[0_24px_60px_-44px_rgba(15,23,42,0.35)] sm:p-7">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-start gap-4">
                 <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-700 ring-1 ring-emerald-500/20">
@@ -266,7 +266,7 @@ export default function IcpDraftPage() {
           </div>
         ) : null}
 
-        <div className="group relative overflow-hidden rounded-[1.75rem] border border-slate-200 bg-gradient-to-br from-[#0f172a] via-[#111827] to-[#1e1b4b] p-6 shadow-[0_24px_60px_-44px_rgba(15,23,42,0.4)] sm:p-7">
+        <div className="group relative overflow-hidden rounded-4xl border border-slate-200 bg-gradient-to-br from-[#0f172a] via-[#111827] to-[#1e1b4b] p-6 shadow-[0_24px_60px_-44px_rgba(15,23,42,0.4)] sm:p-7">
           <div className="absolute -right-8 -top-8 h-40 w-40 rounded-full bg-accent-teal/20 blur-3xl" aria-hidden />
           <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-start gap-4">
@@ -357,7 +357,7 @@ export default function IcpDraftPage() {
             {showLegacy ? "Hide legacy analysis" : "View legacy analysis"}
           </Button>
           {showLegacy && legacyAnalysis ? (
-            <Card className="mt-4 rounded-[2rem] border-slate-200 bg-white shadow-sm">
+            <Card className="mt-4 rounded-5xl border-slate-200 bg-white shadow-sm">
               <CardContent className="space-y-4 p-6 text-sm leading-7 text-slate-600">
                 <pre className="overflow-auto whitespace-pre-wrap font-mono text-xs text-slate-600">
                   {JSON.stringify(legacyAnalysis, null, 2)}
