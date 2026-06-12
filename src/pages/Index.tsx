@@ -8,7 +8,6 @@ import AISpecializationTrends from "@/components/AISpecializationTrends";
 import StickyMobileCTA from "@/components/StickyMobileCTA";
 import { PullToRefresh } from "@/components/mobile/PullToRefresh";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { ScrollReveal } from "@/components/animations/ScrollReveal";
 
 import SEO, { createOrganizationSchema, createWebSiteSchema, createBreadcrumbSchema } from "@/components/SEO";
 import Footer from "@/components/Footer";
@@ -67,66 +66,42 @@ const Index = () => {
         {isMobile ? (
           <PullToRefresh onRefresh={handleRefresh}>
             <Hero ctaHref="/icp-builder" />
-            <ScrollReveal variant="fade" amount={0.05}>
-              <div className="homepage-band-muted">
-                <EntrepreneurProblems />
-              </div>
-            </ScrollReveal>
-            <ScrollReveal variant="fade" amount={0.05}>
-              <UserReviews />
-            </ScrollReveal>
-            <ScrollReveal variant="fade" amount={0.05}>
-              <div className="homepage-band-muted">
-                <AISpecializationTrends />
-              </div>
-            </ScrollReveal>
-            <ScrollReveal variant="fade" amount={0.05}>
-              <ValuePropositionCards />
-            </ScrollReveal>
-            <ScrollReveal variant="fade" amount={0.05}>
-              <Suspense fallback={<div className="h-64 animate-pulse bg-muted/20" />}>
-                <FounderAnswerLibraryTeaser compact />
+            <div className="homepage-band-muted">
+              <EntrepreneurProblems />
+            </div>
+            <UserReviews />
+            <div className="homepage-band-muted">
+              <AISpecializationTrends />
+            </div>
+            <ValuePropositionCards />
+            <Suspense fallback={<div className="h-64 animate-pulse bg-muted/20" />}>
+              <FounderAnswerLibraryTeaser compact />
+            </Suspense>
+            <div className="homepage-band-muted">
+              <Suspense fallback={<div className="h-96 animate-pulse bg-muted/20" />}>
+                <HomeFAQ />
               </Suspense>
-            </ScrollReveal>
-            <ScrollReveal variant="fade" amount={0.05}>
-              <div className="homepage-band-muted">
-                <Suspense fallback={<div className="h-96 animate-pulse bg-muted/20" />}>
-                  <HomeFAQ />
-                </Suspense>
-              </div>
-            </ScrollReveal>
+            </div>
           </PullToRefresh>
         ) : (
           <>
             <Hero ctaHref="/icp-builder" />
-            <ScrollReveal variant="fade" amount={0.05}>
-              <div className="homepage-band-muted">
-                <EntrepreneurProblems />
-              </div>
-            </ScrollReveal>
-            <ScrollReveal variant="fade" amount={0.05}>
-              <UserReviews />
-            </ScrollReveal>
-            <ScrollReveal variant="fade" amount={0.05}>
-              <div className="homepage-band-muted">
-                <AISpecializationTrends />
-              </div>
-            </ScrollReveal>
-            <ScrollReveal variant="fade" amount={0.05}>
-              <ValuePropositionCards />
-            </ScrollReveal>
-            <ScrollReveal variant="fade" amount={0.05}>
-              <Suspense fallback={<div className="h-64 animate-pulse bg-muted/20" />}>
-                <FounderAnswerLibraryTeaser compact />
+            <div className="homepage-band-muted">
+              <EntrepreneurProblems />
+            </div>
+            <UserReviews />
+            <div className="homepage-band-muted">
+              <AISpecializationTrends />
+            </div>
+            <ValuePropositionCards />
+            <Suspense fallback={<div className="h-64 animate-pulse bg-muted/20" />}>
+              <FounderAnswerLibraryTeaser compact />
+            </Suspense>
+            <div className="homepage-band-muted">
+              <Suspense fallback={<div className="h-96 animate-pulse bg-muted/20" />}>
+                <HomeFAQ />
               </Suspense>
-            </ScrollReveal>
-            <ScrollReveal variant="fade" amount={0.05}>
-              <div className="homepage-band-muted">
-                <Suspense fallback={<div className="h-96 animate-pulse bg-muted/20" />}>
-                  <HomeFAQ />
-                </Suspense>
-              </div>
-            </ScrollReveal>
+            </div>
           </>
         )}
       </main>
