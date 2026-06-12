@@ -274,8 +274,12 @@ const Hero = ({
 
         <div className="ct-hero__stats" aria-label="Founder stats for 2026">
           <div className="ct-hero__stats-track">
-            {stats.map((stat) => (
-              <div key={`${stat.value}-${stat.label}`} className="ct-hero__strip-stat">
+            {[...stats, ...stats].map((stat, index) => (
+              <div
+                key={`${stat.value}-${stat.label}-${index}`}
+                className="ct-hero__strip-stat"
+                aria-hidden={index >= stats.length || undefined}
+              >
                 <div className="v">
                   {stat.value}
                   {stat.unit ? <span className="small">{stat.unit}</span> : null}
