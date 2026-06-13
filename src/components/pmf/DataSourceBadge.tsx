@@ -22,9 +22,8 @@ export const DataSourceBadge: React.FC<DataSourceBadgeProps> = ({
   compact = false,
 }) => {
   const getConfidenceColor = () => {
-    if (confidence >= 0.8) return 'text-green-600';
-    if (confidence >= 0.6) return 'text-yellow-600';
-    return 'text-orange-600';
+    if (confidence >= 0.8) return 'text-success';
+    return 'text-warning';
   };
 
   const getConfidenceLabel = () => {
@@ -38,7 +37,7 @@ export const DataSourceBadge: React.FC<DataSourceBadgeProps> = ({
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
-            <Badge variant="outline" className="text-xs bg-green-50 dark:bg-green-900/10 border-green-200 dark:border-green-800 text-green-700 dark:text-green-300">
+            <Badge variant="outline" className="text-xs bg-success-subtle border-success/30 text-success">
               <CheckCircle2 className="w-3 h-3 mr-1" />
               Auto-filled
             </Badge>
@@ -58,10 +57,10 @@ export const DataSourceBadge: React.FC<DataSourceBadgeProps> = ({
   }
 
   return (
-    <div className="flex items-start gap-2 p-2 bg-green-50 dark:bg-green-900/10 border border-green-200 dark:border-green-800 rounded-md">
-      <CheckCircle2 className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
+    <div className="flex items-start gap-2 p-2 bg-success-subtle border border-success/30 rounded-md">
+      <CheckCircle2 className="w-4 h-4 text-success mt-0.5 flex-shrink-0" />
       <div className="flex-1 space-y-1">
-        <p className="text-xs font-medium text-green-700 dark:text-green-300">
+        <p className="text-xs font-medium text-success">
           ✓ Auto-filled from Business Plan
         </p>
         <p className="text-xs text-muted-foreground">
@@ -69,7 +68,7 @@ export const DataSourceBadge: React.FC<DataSourceBadgeProps> = ({
         </p>
         {confidence < 0.8 && (
           <div className="flex items-start gap-1.5 mt-1">
-            <Info className="w-3 h-3 text-yellow-600 mt-0.5 flex-shrink-0" />
+            <Info className="w-3 h-3 text-warning mt-0.5 flex-shrink-0" />
             <p className={`text-xs ${getConfidenceColor()}`}>
               {getConfidenceLabel()} - Please review and update if needed
             </p>

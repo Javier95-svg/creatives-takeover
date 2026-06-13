@@ -31,6 +31,7 @@ All colors MUST be HSL.
     --muted-foreground: 220 10% 38%;
 
     /* Accent - Medium blue for highlights */
+    /* DEPRECATED: near-duplicate of --primary; prefer `primary` in new code. See DESIGN_SYSTEM.md. */
     --accent: 220 78% 53%; /* Restrained accent blue */
     --accent-foreground: 0 0% 100%;
 
@@ -53,6 +54,19 @@ All colors MUST be HSL.
     /* Green - Success (for positive actions, success states) */
     --success: 142 76% 36%; /* #10B981 - Professional green */
     --success-foreground: 0 0% 100%;
+
+    /* Status family — semantic intent colors (see DESIGN_SYSTEM.md).
+       Use these for status; NOT the categorical planning/action/growth palette. */
+    --warning: 38 92% 50%; /* #F59E0B - amber, for cautions/pending */
+    --warning-foreground: 0 0% 100%;
+    --info: 217 91% 60%; /* #3B82F6 - informational blue (distinct from primary) */
+    --info-foreground: 0 0% 100%;
+    /* Subtle tints for alert/badge surfaces (replaces the bg-*-50/100 pattern).
+       Alpha is baked in, so wire these WITHOUT <alpha-value> in tailwind.config. */
+    --success-subtle: 142 76% 36% / 0.12;
+    --warning-subtle: 38 92% 50% / 0.12;
+    --info-subtle: 217 91% 60% / 0.12;
+    --destructive-subtle: 0 72.2% 50.6% / 0.1;
 
     /* Brand teal accent (onboarding / ICP / mentor surfaces) */
     --accent-teal: 185.7 59.7% 48.6%; /* #32b8c6 */
@@ -280,6 +294,16 @@ All colors MUST be HSL.
     /* Success color - brighter for visibility */
     --success: 142 72% 45%;
     --success-foreground: 0 0% 100%;
+
+    /* Status family — brighter in dark mode for visibility (see DESIGN_SYSTEM.md) */
+    --warning: 38 95% 58%;
+    --warning-foreground: 0 0% 100%;
+    --info: 217 92% 65%;
+    --info-foreground: 0 0% 100%;
+    --success-subtle: 142 72% 45% / 0.16;
+    --warning-subtle: 38 95% 58% / 0.16;
+    --info-subtle: 217 92% 65% / 0.16;
+    --destructive-subtle: 0 70% 58% / 0.16;
 
     /* Brand teal accent — theme-invariant for now */
     --accent-teal: 185.7 59.7% 48.6%; /* #32b8c6 */

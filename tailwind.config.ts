@@ -67,7 +67,8 @@ export default {
 				},
 				destructive: {
 					DEFAULT: 'hsl(var(--destructive))',
-					foreground: 'hsl(var(--destructive-foreground))'
+					foreground: 'hsl(var(--destructive-foreground))',
+					subtle: 'hsl(var(--destructive-subtle))'
 				},
 				muted: {
 					DEFAULT: 'hsl(var(--muted))',
@@ -117,7 +118,23 @@ export default {
 				planning: 'hsl(var(--blue-primary))',
 				action: 'hsl(var(--red-primary))',
 				growth: 'hsl(var(--green-primary))',
-				success: 'hsl(var(--success))',
+				success: {
+					DEFAULT: 'hsl(var(--success) / <alpha-value>)',
+					foreground: 'hsl(var(--success-foreground) / <alpha-value>)',
+					subtle: 'hsl(var(--success-subtle))',
+				},
+				// Status family — semantic intent colors (see DESIGN_SYSTEM.md).
+				// `subtle` tints bake in alpha, so they omit <alpha-value>.
+				warning: {
+					DEFAULT: 'hsl(var(--warning) / <alpha-value>)',
+					foreground: 'hsl(var(--warning-foreground) / <alpha-value>)',
+					subtle: 'hsl(var(--warning-subtle))',
+				},
+				info: {
+					DEFAULT: 'hsl(var(--info) / <alpha-value>)',
+					foreground: 'hsl(var(--info-foreground) / <alpha-value>)',
+					subtle: 'hsl(var(--info-subtle))',
+				},
 				// Brand teal accent (onboarding / ICP / mentor surfaces)
 				'accent-teal': {
 					DEFAULT: 'hsl(var(--accent-teal) / <alpha-value>)',
