@@ -122,20 +122,20 @@ const PMFScore: React.FC<PMFScoreProps> = ({ score, nextSteps = [], analysis, an
   const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
   const verdict = score.verdict || (score.overall >= 70 ? 'Strong Fit' : score.overall >= 50 ? 'Moderate Fit' : 'Weak Fit');
   
-  const scoreColor = 
-    score.overall >= 70 ? 'text-green-600' :
-    score.overall >= 50 ? 'text-yellow-600' :
-    'text-red-600';
+  const scoreColor =
+    score.overall >= 70 ? 'text-success' :
+    score.overall >= 50 ? 'text-warning' :
+    'text-destructive';
 
-  const scoreBgColor = 
-    score.overall >= 70 ? 'bg-green-500' :
-    score.overall >= 50 ? 'bg-yellow-500' :
-    'bg-red-500';
+  const scoreBgColor =
+    score.overall >= 70 ? 'bg-success' :
+    score.overall >= 50 ? 'bg-warning' :
+    'bg-destructive';
 
-  const verdictBadgeColor = 
-    verdict === 'Strong Fit' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
-    verdict === 'Moderate Fit' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' :
-    'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
+  const verdictBadgeColor =
+    verdict === 'Strong Fit' ? 'bg-success-subtle text-success' :
+    verdict === 'Moderate Fit' ? 'bg-warning-subtle text-warning' :
+    'bg-destructive-subtle text-destructive';
 
   const subScoreItems = [
     { label: 'Demand', value: score.subScores?.demand || 0, description: 'Market demand strength for 2026' },
@@ -145,15 +145,15 @@ const PMFScore: React.FC<PMFScoreProps> = ({ score, nextSteps = [], analysis, an
   ];
 
   const priorityColors = {
-    High: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
-    Medium: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
-    Low: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+    High: 'bg-destructive-subtle text-destructive',
+    Medium: 'bg-warning-subtle text-warning',
+    Low: 'bg-info-subtle text-info',
   };
 
   const severityColors = {
-    High: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 border-red-200 dark:border-red-800',
-    Medium: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400 border-yellow-200 dark:border-yellow-800',
-    Low: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 border-blue-200 dark:border-blue-800',
+    High: 'bg-destructive-subtle text-destructive border-destructive/30',
+    Medium: 'bg-warning-subtle text-warning border-warning/30',
+    Low: 'bg-info-subtle text-info border-info/30',
   };
 
   // Aggregate strengths from all analysis sections
@@ -378,10 +378,10 @@ const PMFScore: React.FC<PMFScoreProps> = ({ score, nextSteps = [], analysis, an
         <CardContent className="space-y-4">
           {subScoreItems.map((item, index) => {
             const percentage = item.value;
-            const itemColor = 
-              percentage >= 70 ? 'text-green-600' :
-              percentage >= 50 ? 'text-yellow-600' :
-              'text-red-600';
+            const itemColor =
+              percentage >= 70 ? 'text-success' :
+              percentage >= 50 ? 'text-warning' :
+              'text-destructive';
 
             return (
               <div key={index} className="space-y-2">
@@ -403,9 +403,9 @@ const PMFScore: React.FC<PMFScoreProps> = ({ score, nextSteps = [], analysis, an
 
       {/* Strengths Section */}
       {analysis && strengths.length > 0 && (
-        <Card className="border-green-200 dark:border-green-800">
+        <Card className="border-success/30">
           <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2 text-green-700 dark:text-green-400">
+            <CardTitle className="text-base flex items-center gap-2 text-success">
               <CheckCircle2 className="w-4 h-4" />
               Key Strengths
             </CardTitle>
@@ -414,7 +414,7 @@ const PMFScore: React.FC<PMFScoreProps> = ({ score, nextSteps = [], analysis, an
             <ul className="space-y-2">
               {strengths.map((strength, i) => (
                 <li key={i} className="flex items-start gap-2 text-sm">
-                  <CheckCircle2 className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
+                  <CheckCircle2 className="w-4 h-4 text-success mt-0.5 flex-shrink-0" />
                   <span>{strength}</span>
                 </li>
               ))}
@@ -425,9 +425,9 @@ const PMFScore: React.FC<PMFScoreProps> = ({ score, nextSteps = [], analysis, an
 
       {/* Weaknesses Section */}
       {analysis && weaknesses.length > 0 && (
-        <Card className="border-yellow-200 dark:border-yellow-800">
+        <Card className="border-warning/30">
           <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2 text-yellow-700 dark:text-yellow-400">
+            <CardTitle className="text-base flex items-center gap-2 text-warning">
               <AlertTriangle className="w-4 h-4" />
               Areas of Concern
             </CardTitle>
@@ -439,7 +439,7 @@ const PMFScore: React.FC<PMFScoreProps> = ({ score, nextSteps = [], analysis, an
                   key={i}
                   className={cn(
                     "p-3 rounded-lg border",
-                    weakness.severity ? severityColors[weakness.severity] : "bg-yellow-50 dark:bg-yellow-900/10 border-yellow-200 dark:border-yellow-800"
+                    weakness.severity ? severityColors[weakness.severity] : "bg-warning-subtle border-warning/30"
                   )}
                 >
                   <div className="flex items-start justify-between gap-2 mb-1">
@@ -575,7 +575,7 @@ const PMFScore: React.FC<PMFScoreProps> = ({ score, nextSteps = [], analysis, an
                           className={cn(
                             "w-5 h-5",
                             rating && rating >= star
-                              ? "fill-yellow-400 text-yellow-400"
+                              ? "fill-warning text-warning"
                               : "text-muted-foreground"
                           )}
                         />
@@ -624,15 +624,15 @@ const PMFScore: React.FC<PMFScoreProps> = ({ score, nextSteps = [], analysis, an
       )}
 
       {feedbackSubmitted && (
-        <Card className="border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/10">
+        <Card className="border-success/30 bg-success-subtle">
           <CardContent className="pt-6">
             <div className="flex items-start gap-3">
-              <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5" />
+              <CheckCircle2 className="w-5 h-5 text-success mt-0.5" />
               <div>
-                <p className="font-medium text-green-800 dark:text-green-200">
+                <p className="font-medium text-success">
                   Thank you for your feedback!
                 </p>
-                <p className="text-sm text-green-700 dark:text-green-300 mt-1">
+                <p className="text-sm text-success/90 mt-1">
                   Your input helps us continuously improve the accuracy of PMF analysis.
                 </p>
               </div>

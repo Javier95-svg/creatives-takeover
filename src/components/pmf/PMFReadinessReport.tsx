@@ -79,15 +79,15 @@ const PMFReadinessReport: React.FC<PMFReadinessReportProps> = ({
 
   const thresholdBanner = isReady
     ? {
-        bg: 'bg-green-500/10 border-green-500/30',
+        bg: 'bg-success-subtle border-success/30',
         icon: CheckCircle2,
-        iconColor: 'text-green-600 dark:text-green-400',
+        iconColor: 'text-success',
         message: "You've crossed the threshold. You have enough evidence to start scoping your MVP.",
       }
     : {
-        bg: 'bg-amber-500/10 border-amber-500/30',
+        bg: 'bg-warning-subtle border-warning/30',
         icon: XCircle,
-        iconColor: 'text-amber-600 dark:text-amber-400',
+        iconColor: 'text-warning',
         message: `You need a score of 75 to proceed. You're at ${analysis.overallScore}. Here's what's holding you back:`,
       };
 
@@ -117,17 +117,17 @@ const PMFReadinessReport: React.FC<PMFReadinessReportProps> = ({
       <div className={cn(
         'rounded-2xl border p-5 flex items-start gap-4',
         lowestDimScore <= 7
-          ? 'border-red-500/25 bg-red-500/8'
+          ? 'border-destructive/25 bg-destructive-subtle'
           : lowestDimScore <= 13
-          ? 'border-amber-500/25 bg-amber-500/8'
+          ? 'border-warning/25 bg-warning-subtle'
           : 'border-primary/20 bg-primary/5'
       )}>
         <div className={cn(
           'mt-0.5 rounded-xl p-2 shrink-0',
           lowestDimScore <= 7
-            ? 'bg-red-500/15 text-red-600 dark:text-red-400'
+            ? 'bg-destructive-subtle text-destructive'
             : lowestDimScore <= 13
-            ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400'
+            ? 'bg-warning-subtle text-warning'
             : 'bg-primary/15 text-primary'
         )}>
           <TrendingUp className="h-4 w-4" />
@@ -136,9 +136,9 @@ const PMFReadinessReport: React.FC<PMFReadinessReportProps> = ({
           <p className={cn(
             'text-xs font-semibold uppercase tracking-[0.18em]',
             lowestDimScore <= 7
-              ? 'text-red-600 dark:text-red-400'
+              ? 'text-destructive'
               : lowestDimScore <= 13
-              ? 'text-amber-600 dark:text-amber-400'
+              ? 'text-warning'
               : 'text-primary'
           )}>
             Primary Finding
@@ -158,7 +158,7 @@ const PMFReadinessReport: React.FC<PMFReadinessReportProps> = ({
             verdictLabel={analysis.verdictLabel}
           />
           {belowSampleThreshold && (
-            <Badge variant="secondary" className="bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/30 text-caption">
+            <Badge variant="secondary" className="bg-warning-subtle text-warning border-warning/30 text-caption">
               Low sample size — score reliability reduced
             </Badge>
           )}
@@ -176,8 +176,8 @@ const PMFReadinessReport: React.FC<PMFReadinessReportProps> = ({
             <div className={cn(
               'rounded-2xl border px-4 py-3 text-sm font-medium',
               meetsThreshold
-                ? 'border-green-500/30 bg-green-500/10 text-green-700 dark:text-green-400'
-                : 'border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400'
+                ? 'border-success/30 bg-success-subtle text-success'
+                : 'border-warning/30 bg-warning-subtle text-warning'
             )}>
               {meetsThreshold ? 'Recommendation unlocked' : 'Iteration required'}
             </div>
@@ -281,14 +281,14 @@ const PMFReadinessReport: React.FC<PMFReadinessReportProps> = ({
 
       {/* Contradictions panel */}
       {analysis.contradictions && analysis.contradictions.length > 0 && (
-        <div className="rounded-2xl border border-amber-500/25 bg-amber-500/8 p-5 space-y-3">
+        <div className="rounded-2xl border border-warning/25 bg-warning-subtle p-5 space-y-3">
           <div className="flex items-center gap-2">
-            <GitFork className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0" />
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-600 dark:text-amber-400">Tensions in your data</p>
+            <GitFork className="h-4 w-4 text-warning shrink-0" />
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-warning">Tensions in your data</p>
           </div>
           <div className="space-y-2">
             {analysis.contradictions.map((item, i) => (
-              <div key={i} className="rounded-xl border border-amber-500/20 bg-background/60 px-4 py-3">
+              <div key={i} className="rounded-xl border border-warning/20 bg-background/60 px-4 py-3">
                 <p className="text-sm leading-relaxed text-foreground">{item}</p>
               </div>
             ))}
@@ -327,7 +327,7 @@ const PMFReadinessReport: React.FC<PMFReadinessReportProps> = ({
 
         <div className="rounded-2xl border border-border/60 bg-background/70 p-5 space-y-3">
           <div className="flex items-center gap-2">
-            <MessageSquareWarning className="h-4 w-4 text-amber-500" />
+            <MessageSquareWarning className="h-4 w-4 text-warning" />
             <h3 className="text-sm font-semibold">Most common objections</h3>
           </div>
           {commonObjections.length > 0 ? (
@@ -347,7 +347,7 @@ const PMFReadinessReport: React.FC<PMFReadinessReportProps> = ({
       <div className="grid gap-4 md:grid-cols-2">
         <div className="rounded-2xl border border-border/60 bg-background/70 p-5 space-y-3">
           <div className="flex items-center gap-2">
-            <AlertTriangle className="h-4 w-4 text-red-500" />
+            <AlertTriangle className="h-4 w-4 text-destructive" />
             <h3 className="text-sm font-semibold">What users think is missing</h3>
           </div>
           {missingFeatures.length > 0 ? (
@@ -385,14 +385,14 @@ const PMFReadinessReport: React.FC<PMFReadinessReportProps> = ({
       {/* Strengths & Gaps */}
       <div className="grid gap-4 sm:grid-cols-2">
         {analysis.strengths?.length > 0 && (
-          <div className="rounded-lg border border-green-500/20 bg-green-500/5 p-4 space-y-2">
-            <p className="text-xs font-bold text-green-700 dark:text-green-400 uppercase tracking-wider">
+          <div className="rounded-lg border border-success/20 bg-success/5 p-4 space-y-2">
+            <p className="text-xs font-bold text-success uppercase tracking-wider">
               What's working
             </p>
             <ul className="space-y-1.5">
               {analysis.strengths.map((s, i) => (
                 <li key={i} className="flex items-start gap-2 text-sm text-foreground">
-                  <CheckCircle2 className="w-3.5 h-3.5 shrink-0 mt-0.5 text-green-500" />
+                  <CheckCircle2 className="w-3.5 h-3.5 shrink-0 mt-0.5 text-success" />
                   {s}
                 </li>
               ))}
@@ -400,14 +400,14 @@ const PMFReadinessReport: React.FC<PMFReadinessReportProps> = ({
           </div>
         )}
         {analysis.gaps?.length > 0 && (
-          <div className="rounded-lg border border-red-500/20 bg-red-500/5 p-4 space-y-2">
-            <p className="text-xs font-bold text-red-700 dark:text-red-400 uppercase tracking-wider">
+          <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-4 space-y-2">
+            <p className="text-xs font-bold text-destructive uppercase tracking-wider">
               What's missing
             </p>
             <ul className="space-y-1.5">
               {analysis.gaps.map((g, i) => (
                 <li key={i} className="flex items-start gap-2 text-sm text-foreground">
-                  <XCircle className="w-3.5 h-3.5 shrink-0 mt-0.5 text-red-500" />
+                  <XCircle className="w-3.5 h-3.5 shrink-0 mt-0.5 text-destructive" />
                   {g}
                 </li>
               ))}
@@ -509,7 +509,7 @@ const PMFReadinessReport: React.FC<PMFReadinessReportProps> = ({
                       <span className={cn(
                         'rounded-full border px-2 py-0.5',
                         interview.buyingIntent === 'ready_to_pay'
-                          ? 'border-green-500/30 bg-green-500/10 text-green-700 dark:text-green-400'
+                          ? 'border-success/30 bg-success-subtle text-success'
                           : interview.buyingIntent === 'high'
                           ? 'border-primary/30 bg-primary/10 text-primary'
                           : 'border-border/60'

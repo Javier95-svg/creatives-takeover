@@ -20,9 +20,9 @@ interface ValidationExperimentsProps {
 
 const ValidationExperiments: React.FC<ValidationExperimentsProps> = ({ experiments = [] }) => {
   const priorityColors = {
-    High: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 border-red-200 dark:border-red-800',
-    Medium: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400 border-yellow-200 dark:border-yellow-800',
-    Low: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 border-blue-200 dark:border-blue-800',
+    High: 'bg-destructive-subtle text-destructive border-destructive/30',
+    Medium: 'bg-warning-subtle text-warning border-warning/30',
+    Low: 'bg-info-subtle text-info border-info/30',
   };
 
   const typeIcons: Record<string, React.ReactNode> = {

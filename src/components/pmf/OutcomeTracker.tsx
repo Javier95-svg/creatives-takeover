@@ -121,15 +121,15 @@ const OutcomeTracker: React.FC<OutcomeTrackerProps> = ({
 
   if (submitted) {
     return (
-      <Card className="border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/10">
+      <Card className="border-success/30 bg-success-subtle">
         <CardContent className="pt-6">
           <div className="flex items-start gap-3">
-            <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5" />
+            <CheckCircle2 className="w-5 h-5 text-success mt-0.5" />
             <div>
-              <p className="font-medium text-green-800 dark:text-green-200">
+              <p className="font-medium text-success">
                 Outcome Recorded
               </p>
-              <p className="text-sm text-green-700 dark:text-green-300 mt-1">
+              <p className="text-sm text-success/90 mt-1">
                 Thank you for sharing your outcome! This helps us improve the accuracy of future PMF analyses.
               </p>
             </div>

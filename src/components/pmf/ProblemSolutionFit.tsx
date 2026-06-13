@@ -36,15 +36,15 @@ const ProblemSolutionFit: React.FC<ProblemSolutionFitProps> = ({
   onExportSurvey,
   onExportInterviewScript,
 }) => {
-  const scoreColor = 
-    fit.alignmentScore >= 70 ? 'text-green-600' :
-    fit.alignmentScore >= 50 ? 'text-yellow-600' :
-    'text-red-600';
+  const scoreColor =
+    fit.alignmentScore >= 70 ? 'text-success' :
+    fit.alignmentScore >= 50 ? 'text-warning' :
+    'text-destructive';
 
-  const scoreBgColor = 
-    fit.alignmentScore >= 70 ? 'bg-green-500' :
-    fit.alignmentScore >= 50 ? 'bg-yellow-500' :
-    'bg-red-500';
+  const scoreBgColor =
+    fit.alignmentScore >= 70 ? 'bg-success' :
+    fit.alignmentScore >= 50 ? 'bg-warning' :
+    'bg-destructive';
 
   return (
     <div className="space-y-6">
@@ -76,9 +76,9 @@ const ProblemSolutionFit: React.FC<ProblemSolutionFitProps> = ({
 
       {/* Strengths */}
       {fit.strengths.length > 0 && (
-        <Card className="border-green-200 dark:border-green-800">
+        <Card className="border-success/30">
           <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2 text-green-700 dark:text-green-400">
+            <CardTitle className="text-base flex items-center gap-2 text-success">
               <CheckCircle2 className="w-4 h-4" />
               Strengths
             </CardTitle>
@@ -87,7 +87,7 @@ const ProblemSolutionFit: React.FC<ProblemSolutionFitProps> = ({
             <ul className="space-y-2">
               {fit.strengths.map((strength, i) => (
                 <li key={i} className="flex items-start gap-2 text-sm">
-                  <CheckCircle2 className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
+                  <CheckCircle2 className="w-4 h-4 text-success mt-0.5 flex-shrink-0" />
                   <span>{strength}</span>
                 </li>
               ))}
@@ -98,9 +98,9 @@ const ProblemSolutionFit: React.FC<ProblemSolutionFitProps> = ({
 
       {/* Gaps & Weaknesses */}
       {(fit.gaps.length > 0 || fit.weaknesses.length > 0) && (
-        <Card className="border-yellow-200 dark:border-yellow-800">
+        <Card className="border-warning/30">
           <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2 text-yellow-700 dark:text-yellow-400">
+            <CardTitle className="text-base flex items-center gap-2 text-warning">
               <AlertCircle className="w-4 h-4" />
               Gaps & Weaknesses
             </CardTitle>
@@ -112,7 +112,7 @@ const ProblemSolutionFit: React.FC<ProblemSolutionFitProps> = ({
                 <ul className="space-y-2">
                   {fit.gaps.map((gap, i) => (
                     <li key={i} className="flex items-start gap-2 text-sm">
-                      <XCircle className="w-4 h-4 text-yellow-600 mt-0.5 flex-shrink-0" />
+                      <XCircle className="w-4 h-4 text-warning mt-0.5 flex-shrink-0" />
                       <span>{gap}</span>
                     </li>
                   ))}
@@ -126,7 +126,7 @@ const ProblemSolutionFit: React.FC<ProblemSolutionFitProps> = ({
                 <ul className="space-y-2">
                   {fit.weaknesses.map((weakness, i) => (
                     <li key={i} className="flex items-start gap-2 text-sm">
-                      <XCircle className="w-4 h-4 text-yellow-600 mt-0.5 flex-shrink-0" />
+                      <XCircle className="w-4 h-4 text-warning mt-0.5 flex-shrink-0" />
                       <span>{weakness}</span>
                     </li>
                   ))}

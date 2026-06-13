@@ -55,9 +55,9 @@ export const AdvancedFieldsSection: React.FC<AdvancedFieldsSectionProps> = ({
 
       {isOpen && (
         <div className="space-y-4 p-4 border-2 border-primary/10 rounded-lg bg-background/50">
-          <div className="flex items-start gap-2 p-3 bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-900 rounded-md mb-4">
-            <Sparkles className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
-            <p className="text-xs text-blue-800 dark:text-blue-200">
+          <div className="flex items-start gap-2 p-3 bg-info-subtle border border-info/30 rounded-md mb-4">
+            <Sparkles className="w-4 h-4 text-info mt-0.5 flex-shrink-0" />
+            <p className="text-xs text-info">
               <strong>Pro Tip:</strong> Completing these optional fields helps us provide more
               accurate PMF analysis, industry-specific insights, and competitive positioning advice.
             </p>

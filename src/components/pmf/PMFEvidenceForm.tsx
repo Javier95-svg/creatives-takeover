@@ -569,7 +569,7 @@ const PMFEvidenceForm: React.FC<PMFEvidenceFormProps> = ({ onSubmit, isSubmittin
                   value={draftInterview.mainFeedback}
                   onChange={(e) => updateDraft('mainFeedback', e.target.value)}
                   placeholder="What did they say after seeing the landing page and hearing your pitch?"
-                  className="min-h-[110px] resize-none text-sm"
+                  className="min-h-28 resize-none text-sm"
                 />
               </div>
               <div className="space-y-1.5 md:col-span-1">
@@ -578,7 +578,7 @@ const PMFEvidenceForm: React.FC<PMFEvidenceFormProps> = ({ onSubmit, isSubmittin
                   value={draftInterview.objections}
                   onChange={(e) => updateDraft('objections', e.target.value)}
                   placeholder="What stopped them from wanting it right now?"
-                  className="min-h-[110px] resize-none text-sm"
+                  className="min-h-28 resize-none text-sm"
                 />
               </div>
               <div className="space-y-1.5 md:col-span-1">
@@ -587,7 +587,7 @@ const PMFEvidenceForm: React.FC<PMFEvidenceFormProps> = ({ onSubmit, isSubmittin
                   value={draftInterview.missingFeatures}
                   onChange={(e) => updateDraft('missingFeatures', e.target.value)}
                   placeholder="What did they say was missing before they would adopt or buy?"
-                  className="min-h-[110px] resize-none text-sm"
+                  className="min-h-28 resize-none text-sm"
                 />
               </div>
             </div>
@@ -922,10 +922,10 @@ const PMFEvidenceForm: React.FC<PMFEvidenceFormProps> = ({ onSubmit, isSubmittin
 
             {/* Soft warning for below-threshold interview count */}
             {testTypes.length > 0 && !meetsInterviewThreshold && (
-              <div className="rounded-2xl border border-amber-500/25 bg-amber-500/8 p-4 space-y-3">
+              <div className="rounded-2xl border border-warning/25 bg-warning-subtle p-4 space-y-3">
                 <div className="flex items-start gap-3">
-                  <div className="mt-0.5 rounded-xl bg-amber-500/10 p-1.5">
-                    <FlaskConical className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                  <div className="mt-0.5 rounded-xl bg-warning-subtle p-1.5">
+                    <FlaskConical className="h-4 w-4 text-warning" />
                   </div>
                   <div className="space-y-1">
                     <p className="text-sm font-semibold text-foreground">
@@ -942,7 +942,7 @@ const PMFEvidenceForm: React.FC<PMFEvidenceFormProps> = ({ onSubmit, isSubmittin
                     type="checkbox"
                     checked={belowThresholdAcknowledged}
                     onChange={(e) => setBelowThresholdAcknowledged(e.target.checked)}
-                    className="h-4 w-4 rounded border-border accent-amber-600"
+                    className="h-4 w-4 rounded border-border accent-warning"
                   />
                   I understand the results may be less accurate with fewer interviews
                 </label>
@@ -996,8 +996,8 @@ const PMFEvidenceForm: React.FC<PMFEvidenceFormProps> = ({ onSubmit, isSubmittin
   return (
     <form onSubmit={handleSubmit} className="max-w-4xl mx-auto space-y-6">
       {/* Pre-requisite callout */}
-      <div className="rounded-2xl border border-amber-500/25 bg-amber-500/8 px-4 py-3">
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-600 dark:text-amber-400 mb-1">
+      <div className="rounded-2xl border border-warning/25 bg-warning-subtle px-4 py-3">
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-warning mb-1">
           Before you start
         </p>
         <p className="text-sm text-muted-foreground leading-relaxed">

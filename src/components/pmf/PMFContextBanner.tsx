@@ -70,7 +70,7 @@ export function PMFContextBanner({
                   step.current
                     ? 'border-primary bg-primary text-primary-foreground'
                     : step.done
-                    ? 'border-green-500/30 bg-green-500/10 text-green-700 dark:text-green-400'
+                    ? 'border-success/30 bg-success-subtle text-success'
                     : 'border-border bg-background/70 text-muted-foreground'
                 )}
               >

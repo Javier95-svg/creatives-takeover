@@ -35,15 +35,15 @@ const DIMENSION_LABELS: Array<{ key: keyof PMFReadinessAnalysis['dimensions']; l
 ];
 
 const getBarColor = (score: number): string => {
-  if (score >= 14) return 'bg-green-500';
-  if (score >= 8) return 'bg-amber-500';
-  return 'bg-red-500';
+  if (score >= 14) return 'bg-success';
+  if (score >= 8) return 'bg-warning';
+  return 'bg-destructive';
 };
 
 const getScoreBadge = (score: number): string => {
-  if (score >= 14) return 'text-green-700 dark:text-green-400 bg-green-500/10';
-  if (score >= 8) return 'text-amber-700 dark:text-amber-400 bg-amber-500/10';
-  return 'text-red-700 dark:text-red-400 bg-red-500/10';
+  if (score >= 14) return 'text-success bg-success-subtle';
+  if (score >= 8) return 'text-warning bg-warning-subtle';
+  return 'text-destructive bg-destructive-subtle';
 };
 
 const PMFDimensionBars: React.FC<PMFDimensionBarsProps> = ({ dimensions }) => {

@@ -18,19 +18,19 @@ const PMFScoreCircle: React.FC<PMFScoreCircleProps> = ({ score, verdict, verdict
   const dashOffset = circumference - (progress / 100) * circumference;
 
   const color =
-    verdict === 'ready' ? '#16a34a' :
-    verdict === 'partial' ? '#d97706' :
-    '#dc2626';
+    verdict === 'ready' ? 'hsl(var(--success))' :
+    verdict === 'partial' ? 'hsl(var(--warning))' :
+    'hsl(var(--destructive))';
 
   const textColor =
-    verdict === 'ready' ? 'text-green-600 dark:text-green-400' :
-    verdict === 'partial' ? 'text-amber-600 dark:text-amber-400' :
-    'text-red-600 dark:text-red-400';
+    verdict === 'ready' ? 'text-success' :
+    verdict === 'partial' ? 'text-warning' :
+    'text-destructive';
 
   const badgeBg =
-    verdict === 'ready' ? 'bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/30' :
-    verdict === 'partial' ? 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/30' :
-    'bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/30';
+    verdict === 'ready' ? 'bg-success-subtle text-success border-success/30' :
+    verdict === 'partial' ? 'bg-warning-subtle text-warning border-warning/30' :
+    'bg-destructive-subtle text-destructive border-destructive/30';
 
   return (
     <div className="flex flex-col items-center gap-3">

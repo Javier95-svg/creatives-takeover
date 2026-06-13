@@ -46,8 +46,8 @@ function deriveSegments(interviews: PMFInterviewLog[]): SegmentData[] {
 
 function intentColor(highIntent: number, count: number) {
   const ratio = count > 0 ? highIntent / count : 0;
-  if (ratio >= 0.6) return 'text-green-600 dark:text-green-400';
-  if (ratio >= 0.3) return 'text-amber-600 dark:text-amber-400';
+  if (ratio >= 0.6) return 'text-success';
+  if (ratio >= 0.3) return 'text-warning';
   return 'text-muted-foreground';
 }
 
@@ -91,7 +91,7 @@ const PMFSegmentBreakdown: React.FC<PMFSegmentBreakdownProps> = ({ interviews })
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">Ready to pay</p>
-                <p className={`mt-1 text-lg font-semibold ${seg.readyToPay > 0 ? 'text-green-600 dark:text-green-400' : 'text-muted-foreground'}`}>
+                <p className={`mt-1 text-lg font-semibold ${seg.readyToPay > 0 ? 'text-success' : 'text-muted-foreground'}`}>
                   {seg.readyToPay}
                 </p>
               </div>

@@ -56,10 +56,10 @@ const CustomerSegments: React.FC<CustomerSegmentsProps> = ({
       <div className="grid gap-4 md:grid-cols-2">
         {segments.map((segment, index) => {
           const isSelected = selectedSegment === segment.name;
-          const accessibilityColor = 
-            segment.accessibilityScore >= 7 ? 'text-green-600' :
-            segment.accessibilityScore >= 4 ? 'text-yellow-600' :
-            'text-red-600';
+          const accessibilityColor =
+            segment.accessibilityScore >= 7 ? 'text-success' :
+            segment.accessibilityScore >= 4 ? 'text-warning' :
+            'text-destructive';
 
           return (
             <Card

@@ -96,15 +96,15 @@ const PMFAnalysisResults: React.FC<PMFAnalysisResultsProps> = ({
   };
 
   const severityColors = {
-    High: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
-    Medium: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
-    Low: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+    High: 'bg-destructive-subtle text-destructive',
+    Medium: 'bg-warning-subtle text-warning',
+    Low: 'bg-info-subtle text-info',
   };
 
   const intensityColors = {
-    High: 'text-red-600',
-    Medium: 'text-yellow-600',
-    Low: 'text-green-600',
+    High: 'text-destructive',
+    Medium: 'text-warning',
+    Low: 'text-success',
   };
 
   return (
@@ -199,7 +199,7 @@ const PMFAnalysisResults: React.FC<PMFAnalysisResultsProps> = ({
                       <h5 className="font-medium text-sm">{competitor.name}</h5>
                       {competitor.strengths && competitor.strengths.length > 0 && (
                         <div>
-                          <p className="text-xs font-medium text-green-600 mb-1">Strengths:</p>
+                          <p className="text-xs font-medium text-success mb-1">Strengths:</p>
                           <ul className="list-disc list-inside space-y-1 text-xs text-muted-foreground">
                             {competitor.strengths.map((strength, i) => (
                               <li key={i}>{strength}</li>
@@ -209,7 +209,7 @@ const PMFAnalysisResults: React.FC<PMFAnalysisResultsProps> = ({
                       )}
                       {competitor.weaknesses && competitor.weaknesses.length > 0 && (
                         <div>
-                          <p className="text-xs font-medium text-red-600 mb-1">Weaknesses:</p>
+                          <p className="text-xs font-medium text-destructive mb-1">Weaknesses:</p>
                           <ul className="list-disc list-inside space-y-1 text-xs text-muted-foreground">
                             {competitor.weaknesses.map((weakness, i) => (
                               <li key={i}>{weakness}</li>
@@ -287,7 +287,7 @@ const PMFAnalysisResults: React.FC<PMFAnalysisResultsProps> = ({
             )}
             {marketAnalysis.differentiation.differentiationGaps && marketAnalysis.differentiation.differentiationGaps.length > 0 && (
               <div>
-                <h4 className="font-semibold text-sm mb-2 text-orange-600">Differentiation Gaps</h4>
+                <h4 className="font-semibold text-sm mb-2 text-warning">Differentiation Gaps</h4>
                 <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
                   {marketAnalysis.differentiation.differentiationGaps.map((gap, index) => (
                     <li key={index}>{gap}</li>
@@ -332,7 +332,7 @@ const PMFAnalysisResults: React.FC<PMFAnalysisResultsProps> = ({
             </div>
             {marketAnalysis.scalability.growthConstraints && marketAnalysis.scalability.growthConstraints.length > 0 && (
               <div>
-                <h4 className="font-semibold text-sm mb-2 text-orange-600">Growth Constraints</h4>
+                <h4 className="font-semibold text-sm mb-2 text-warning">Growth Constraints</h4>
                 <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
                   {marketAnalysis.scalability.growthConstraints.map((constraint, index) => (
                     <li key={index}>{constraint}</li>
@@ -371,7 +371,7 @@ const PMFAnalysisResults: React.FC<PMFAnalysisResultsProps> = ({
             {marketAnalysis.risks.marketRisks && marketAnalysis.risks.marketRisks.length > 0 && (
               <div>
                 <h4 className="font-semibold text-sm mb-3 flex items-center gap-2">
-                  <AlertTriangle className="w-4 h-4 text-orange-500" />
+                  <AlertTriangle className="w-4 h-4 text-warning" />
                   Market Risks
                 </h4>
                 <div className="space-y-3">
@@ -397,7 +397,7 @@ const PMFAnalysisResults: React.FC<PMFAnalysisResultsProps> = ({
             {marketAnalysis.risks.executionRisks && marketAnalysis.risks.executionRisks.length > 0 && (
               <div>
                 <h4 className="font-semibold text-sm mb-3 flex items-center gap-2">
-                  <AlertTriangle className="w-4 h-4 text-orange-500" />
+                  <AlertTriangle className="w-4 h-4 text-warning" />
                   Execution Risks
                 </h4>
                 <div className="space-y-3">
@@ -423,7 +423,7 @@ const PMFAnalysisResults: React.FC<PMFAnalysisResultsProps> = ({
             {marketAnalysis.risks.timingRisks && marketAnalysis.risks.timingRisks.length > 0 && (
               <div>
                 <h4 className="font-semibold text-sm mb-3 flex items-center gap-2">
-                  <AlertTriangle className="w-4 h-4 text-orange-500" />
+                  <AlertTriangle className="w-4 h-4 text-warning" />
                   Timing Risks
                 </h4>
                 <div className="space-y-3">

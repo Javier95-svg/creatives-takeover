@@ -421,15 +421,15 @@ const PMFInputForm: React.FC<PMFInputFormProps> = ({
 
       {/* Validation Status */}
       {!isFormValid && (
-        <Card className="border-yellow-200 dark:border-yellow-800 bg-yellow-50 dark:bg-yellow-900/10">
+        <Card className="border-warning/30 bg-warning-subtle">
           <CardContent className="pt-6">
             <div className="flex items-start gap-3">
-              <AlertCircle className="w-5 h-5 text-yellow-600 mt-0.5" />
+              <AlertCircle className="w-5 h-5 text-warning mt-0.5" />
               <div className="flex-1">
-                <p className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
+                <p className="text-sm font-medium text-warning">
                   Complete Required Fields
                 </p>
-                <p className="text-xs text-yellow-700 dark:text-yellow-300 mt-1">
+                <p className="text-xs text-warning/90 mt-1">
                   Please fill in all required fields (marked with *) to proceed with analysis.
                 </p>
               </div>
@@ -439,15 +439,15 @@ const PMFInputForm: React.FC<PMFInputFormProps> = ({
       )}
 
       {isFormValid && (
-        <Card className="border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/10">
+        <Card className="border-success/30 bg-success-subtle">
           <CardContent className="pt-6">
             <div className="flex items-start gap-3">
-              <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5" />
+              <CheckCircle2 className="w-5 h-5 text-success mt-0.5" />
               <div className="flex-1">
-                <p className="text-sm font-medium text-green-800 dark:text-green-200">
+                <p className="text-sm font-medium text-success">
                   Ready to Analyze Market Need
                 </p>
-                <p className="text-xs text-green-700 dark:text-green-300 mt-1">
+                <p className="text-xs text-success/90 mt-1">
                   All required fields are complete. Click "Analyze Market Need" to proceed.
                 </p>
               </div>
