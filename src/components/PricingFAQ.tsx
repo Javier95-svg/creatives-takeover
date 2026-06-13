@@ -156,7 +156,7 @@ The default self-serve offering now centers on Rookie, Starter, Rising, and Pro,
                           variant="ghost"
                           size="sm"
                           onClick={() => handleVote(index, "up")}
-                          className={`h-9 w-9 rounded-full border border-border/60 ${vote === "up" ? "text-green-600" : ""}`}
+                          className={`h-9 w-9 rounded-full border border-border/60 ${vote === "up" ? "text-success" : ""}`}
                         >
                           <ThumbsUp className="w-4 h-4" />
                         </Button>
@@ -164,7 +164,7 @@ The default self-serve offering now centers on Rookie, Starter, Rising, and Pro,
                           variant="ghost"
                           size="sm"
                           onClick={() => handleVote(index, "down")}
-                          className={`h-9 w-9 rounded-full border border-border/60 ${vote === "down" ? "text-red-600" : ""}`}
+                          className={`h-9 w-9 rounded-full border border-border/60 ${vote === "down" ? "text-destructive" : ""}`}
                         >
                           <ThumbsDown className="w-4 h-4" />
                         </Button>

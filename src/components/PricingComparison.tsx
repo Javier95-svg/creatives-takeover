@@ -85,11 +85,11 @@ const renderFeatureValue = (value: FeatureValue) => {
     return value ? (
       <Check className="w-5 h-5 text-primary mx-auto" />
     ) : (
-      <X className="w-5 h-5 text-gray-300 dark:text-muted-foreground/40 mx-auto" />
+      <X className="w-5 h-5 text-muted-foreground/40 mx-auto" />
     );
   }
 
-  return <span className="text-sm font-medium text-center block text-gray-900 dark:text-foreground">{value}</span>;
+  return <span className="text-sm font-medium text-center block text-foreground">{value}</span>;
 };
 
 const PricingComparison = () => {
@@ -141,7 +141,7 @@ const PricingComparison = () => {
             </button>
           </div>
 
-          <Card className={`glass rounded-2xl bg-card/80 backdrop-blur shadow-lg ${plans[currentMobileIndex].isPopular ? "border-2 border-blue-500/80" : "border-border/60"}`}>
+          <Card className={`glass rounded-2xl bg-card/80 backdrop-blur shadow-lg ${plans[currentMobileIndex].isPopular ? "border-2 border-primary/80" : "border-border/60"}`}>
             <CardHeader>
               <CardTitle className="text-center text-2xl font-semibold tracking-tight gradient-text font-space-grotesk">
                 {plans[currentMobileIndex].name}
@@ -194,7 +194,7 @@ const PricingComparison = () => {
                     {plans.map((plan) => (
                       <th
                         key={plan.name}
-                        className={`text-center p-5 font-semibold text-base text-foreground min-w-[180px] relative border-r border-border/60 last:border-r-0 font-space-grotesk ${plan.isPopular ? "bg-blue-500/10 shadow-[inset_0_0_0_2px_hsl(var(--primary)/0.45)]" : "bg-muted/40"}`}
+                        className={`text-center p-5 font-semibold text-base text-foreground min-w-[180px] relative border-r border-border/60 last:border-r-0 font-space-grotesk ${plan.isPopular ? "bg-primary/10 shadow-[inset_0_0_0_2px_hsl(var(--primary)/0.45)]" : "bg-muted/40"}`}
                       >
                         {plan.name}
                         <div className="text-2xl font-semibold mt-2 text-foreground font-space-grotesk tabular-nums">
@@ -224,7 +224,7 @@ const PricingComparison = () => {
                             {item.feature}
                           </td>
                           <td className="p-4 text-center border-r border-border/40">{renderFeatureValue(item.rookie)}</td>
-                          <td className="p-4 text-center border-r border-border/40 bg-blue-500/5 shadow-[inset_2px_0_0_hsl(var(--primary)/0.3),inset_-2px_0_0_hsl(var(--primary)/0.3)]">{renderFeatureValue(item.starter)}</td>
+                          <td className="p-4 text-center border-r border-border/40 bg-primary/5 shadow-[inset_2px_0_0_hsl(var(--primary)/0.3),inset_-2px_0_0_hsl(var(--primary)/0.3)]">{renderFeatureValue(item.starter)}</td>
                           <td className="p-4 text-center border-r border-border/40">{renderFeatureValue(item.rising)}</td>
                           <td className="p-4 text-center">{renderFeatureValue(item.pro)}</td>
                         </tr>

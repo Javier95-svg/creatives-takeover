@@ -86,28 +86,31 @@ const PLAN_CONFIG: Array<{
 ];
 
 const PLAN_CARD_STYLES: Record<PlanKey, { border: string; ring: string; button: string; buttonVariant: "default" | "outline" }> = {
+  // Single-accent system: cards stay neutral; only the recommended tier
+  // (starter) carries the brand primary emphasis. Tier identity is conveyed
+  // by name/price/badge, not by a per-tier color (see DESIGN_SYSTEM.md).
   rookie: {
-    border: "border-green-500/60",
-    ring: "ring-green-500/30",
-    button: "border-green-600 bg-green-600 text-white hover:bg-green-700 hover:border-green-700",
+    border: "border-border",
+    ring: "ring-border",
+    button: "",
     buttonVariant: "outline",
   },
   starter: {
-    border: "border-2 border-blue-500/80",
-    ring: "ring-blue-500/30",
+    border: "border-2 border-primary/80",
+    ring: "ring-primary/30",
     button: "bg-primary text-primary-foreground hover:bg-primary/90",
     buttonVariant: "default",
   },
   rising: {
-    border: "border-amber-400/70",
-    ring: "ring-amber-400/30",
-    button: "border-amber-500/70 text-amber-700 hover:bg-amber-500/10 dark:text-amber-300",
+    border: "border-border",
+    ring: "ring-border",
+    button: "",
     buttonVariant: "outline",
   },
   pro: {
-    border: "border-red-500/50",
-    ring: "ring-red-500/20",
-    button: "border-red-500/70 text-red-700 hover:bg-red-500/10 dark:text-red-300",
+    border: "border-border",
+    ring: "ring-border",
+    button: "",
     buttonVariant: "outline",
   },
 };
@@ -216,7 +219,7 @@ export default function Pricing() {
               </TabsTrigger>
               <TabsTrigger className="rounded-full text-sm font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" value="yearly">
                 Yearly
-                <Badge variant="secondary" className="ml-2 rounded-full bg-green-500/10 text-green-600 border-green-500/20 text-xs px-2.5">
+                <Badge variant="secondary" className="ml-2 rounded-full bg-success-subtle text-success border-success/30 text-xs px-2.5">
                   Save up to 31%
                 </Badge>
               </TabsTrigger>
@@ -246,10 +249,10 @@ export default function Pricing() {
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                     <Badge className={`px-3 py-1 text-xs font-medium ${
                       isCurrentPlan
-                        ? "bg-green-600 text-white"
+                        ? "bg-success text-success-foreground"
                         : isPopular
-                          ? "bg-amber-500 text-amber-950"
-                          : "bg-red-600 text-white"
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-foreground text-background"
                     }`}>
                       {isCurrentPlan ? <><Crown className="w-3 h-3 mr-1 inline" />Your Plan</> : isPopular ? <><Star className="w-3 h-3 mr-1 inline fill-current" />Most Popular</> : <><Sparkles className="w-3 h-3 mr-1 inline" />Premium</>}
                     </Badge>
@@ -276,7 +279,7 @@ export default function Pricing() {
                       )}
                     </div>
                     {billingCycle === "yearly" && plan.key !== "rookie" && (
-                      <div className="text-sm text-green-600 mt-1">
+                      <div className="text-sm text-success mt-1">
                         {plan.yearlyEquivalent} billed annually
                       </div>
                     )}

@@ -37,7 +37,7 @@ const BillingToggle = ({ onToggle }: BillingToggleProps) => {
         <span className={`text-sm font-medium transition-colors ${isAnnual ? 'text-foreground' : 'text-muted-foreground'}`}>
           Annual
         </span>
-        <Badge variant="secondary" className="bg-green-500/10 text-green-600 border-green-500/20">
+        <Badge variant="secondary" className="bg-success-subtle text-success border-success/30">
           Save 20%
         </Badge>
       </div>
