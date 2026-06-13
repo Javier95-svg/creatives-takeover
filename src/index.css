@@ -9,8 +9,8 @@ All colors MUST be HSL.
 @layer base {
   :root {
     /* Professional Light Theme for SaaS Platform */
-    --background: 220 33% 98%;
-    --foreground: 222 27% 14%;
+    --background: 220 24% 98.5%; /* softer, less stark near-white */
+    --foreground: 222 28% 12%; /* deeper ink for stronger text contrast */
 
     --card: 0 0% 100%;
     --card-foreground: 222 27% 14%;
@@ -20,7 +20,7 @@ All colors MUST be HSL.
 
     /* RGB Color Palette from Logo */
     /* Blue - Primary (for CTAs, links, primary actions) */
-    --primary: 220 87% 57%; /* Premium blue for primary actions */
+    --primary: 224 64% 48%; /* Refined deep brand blue (was 220 87% 57% — less neon, more premium) */
     --primary-foreground: 0 0% 100%;
 
     /* Secondary - Gray tones for secondary actions */
@@ -28,7 +28,7 @@ All colors MUST be HSL.
     --secondary-foreground: 0 0% 100%;
 
     --muted: 220 20% 95%;
-    --muted-foreground: 220 10% 38%;
+    --muted-foreground: 220 13% 34%; /* darker for readable secondary text */
 
     /* Accent - Medium blue for highlights */
     /* DEPRECATED: near-duplicate of --primary; prefer `primary` in new code. See DESIGN_SYSTEM.md. */
@@ -39,9 +39,9 @@ All colors MUST be HSL.
     --destructive: 0 72.2% 50.6%; /* #DC2626 - Deeper red for errors */
     --destructive-foreground: 0 0% 100%;
 
-    --border: 220 18% 87%;
-    --input: 220 18% 87%;
-    --ring: 220 87% 57%; /* Blue for focus rings */
+    --border: 220 16% 91%; /* softer hairlines (was 87% — less boxed-in) */
+    --input: 220 16% 89%;
+    --ring: 224 64% 48%; /* matches refined primary */
 
     --radius: 0.5rem;
 
@@ -97,7 +97,7 @@ All colors MUST be HSL.
     --neutral-gray-light: 215 20% 65%;
 
     /* RGB Gradients for Light Theme - Enhanced contrast */
-    --gradient-primary: linear-gradient(135deg, hsl(220 87% 55%), hsl(224 76% 48%));
+    --gradient-primary: linear-gradient(135deg, hsl(224 64% 52%), hsl(230 58% 42%));
     --gradient-hero: linear-gradient(180deg, hsl(220 33% 98%), hsl(220 25% 97%));
     --gradient-glass: linear-gradient(135deg, rgba(59, 130, 246, 0.045), rgba(15, 23, 42, 0.015));
     
@@ -271,8 +271,8 @@ All colors MUST be HSL.
     --popover: 222 15% 12%;
     --popover-foreground: 210 20% 95%;
 
-    /* Brighter blue for visibility in dark mode */
-    --primary: 217 92% 65%;
+    /* Brighter blue for visibility in dark mode (aligned to refined brand hue) */
+    --primary: 224 76% 68%;
     --primary-foreground: 0 0% 100%;
 
     /* Light gray for secondary actions */
@@ -294,7 +294,7 @@ All colors MUST be HSL.
     /* Visible borders */
     --border: 222 15% 25%;
     --input: 222 15% 18%;
-    --ring: 217 92% 65%; /* Brighter blue focus ring */
+    --ring: 224 76% 68%; /* matches refined primary */
     
     /* Success color - brighter for visibility */
     --success: 142 72% 45%;
@@ -801,7 +801,14 @@ All colors MUST be HSL.
     @apply bg-background text-foreground;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   }
-  
+
+  /* Unify display typography on the brand font for a consistent, "designed" hierarchy.
+     Components may still opt out with an explicit font-* utility. */
+  h1, h2, h3 {
+    font-family: 'Space Grotesk', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    letter-spacing: -0.025em;
+  }
+
 }
 
 /* Visible, consistent keyboard focus styles */
@@ -822,8 +829,8 @@ All colors MUST be HSL.
 
   .section-shell {
     position: relative;
-    padding-top: 4.5rem;
-    padding-bottom: 4.5rem;
+    padding-top: 5.75rem;
+    padding-bottom: 5.75rem;
   }
 
   .homepage-band-muted {

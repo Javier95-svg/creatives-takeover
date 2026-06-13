@@ -145,7 +145,7 @@ const AISpecializationTrends = () => {
         {/* Section Header - Enhanced */}
         <div className="text-center mb-14 sm:mb-16">
           <Badge variant="outline" className="homepage-section-badge mb-5">
-            The Power of Small Teams 👥
+            The Power of Small Teams
           </Badge>
           <h2 className="homepage-section-title text-3xl sm:text-4xl lg:text-[2.9rem] mb-5">
             The Future of Work Is Here

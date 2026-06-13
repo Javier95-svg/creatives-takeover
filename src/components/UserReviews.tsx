@@ -122,7 +122,7 @@ const UserReviews = () => {
   const sectionHeader = (
     <div className="startup-cycle-header text-center mb-16 sm:mb-20 px-6 sm:px-8 lg:px-12">
       <Badge variant="outline" className="homepage-section-badge mb-5 animate-in fade-in slide-in-from-top duration-700">
-        The 7 Stage Journey 🧭
+        The 7 Stage Journey
       </Badge>
       <h2 className="homepage-section-title startup-cycle-title text-3xl sm:text-4xl lg:text-[2.9rem] mb-5 break-words animate-in fade-in slide-in-from-bottom duration-700 delay-100">
         Startup Development Cycle

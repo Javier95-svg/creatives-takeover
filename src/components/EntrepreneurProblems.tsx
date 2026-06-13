@@ -352,7 +352,7 @@ const EntrepreneurProblems = () => {
         {/* Section Header */}
         <ScrollReveal className="text-center mb-14 sm:mb-16 max-w-3xl mx-auto">
           <Badge variant="outline" className="homepage-section-badge mb-5">
-            Own Your Path 🚀
+            Own Your Path
           </Badge>
           <h2 id="journey-heading" className="homepage-section-title founder-journey-section__title text-3xl sm:text-4xl lg:text-[2.9rem] mb-5">
             Every Founder's Journey is Unique

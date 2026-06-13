@@ -378,7 +378,7 @@ const ValuePropositionCards = () => {
         {/* Section Header */}
         <div className="max-w-3xl mx-auto text-center mb-12 sm:mb-16">
           <Badge variant="outline" className="homepage-section-badge mb-5">
-            The Perfect Ecosystem ♻️
+            The Perfect Ecosystem
           </Badge>
           <h2 className="homepage-section-title value-prop-section__title text-3xl sm:text-4xl lg:text-[2.9rem] mb-4">
             Creatives Takeover in a Nutshell
