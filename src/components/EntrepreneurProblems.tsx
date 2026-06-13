@@ -261,19 +261,19 @@ const EntrepreneurProblems = () => {
         glow: "shadow-primary/20",
       },
       red: {
-        icon: "bg-red-500/10 border-red-500/30 text-red-600 dark:text-red-400",
-        timeline: "bg-red-500/20",
-        glow: "shadow-red-500/20",
+        icon: "bg-destructive-subtle border-destructive/30 text-destructive",
+        timeline: "bg-destructive/20",
+        glow: "shadow-destructive/20",
       },
       green: {
-        icon: "bg-green-500/10 border-green-500/30 text-green-600 dark:text-green-400",
-        timeline: "bg-green-500/20",
-        glow: "shadow-green-500/20",
+        icon: "bg-success-subtle border-success/30 text-success",
+        timeline: "bg-success/20",
+        glow: "shadow-success/20",
       },
       amber: {
-        icon: "bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-400",
-        timeline: "bg-amber-500/20",
-        glow: "shadow-amber-500/20",
+        icon: "bg-warning-subtle border-warning/30 text-warning",
+        timeline: "bg-warning/20",
+        glow: "shadow-warning/20",
       },
     };
     return classes[color as keyof typeof classes] || classes.blue;
