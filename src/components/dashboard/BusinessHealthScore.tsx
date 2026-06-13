@@ -86,9 +86,9 @@ export const BusinessHealthScore = ({ userId }: BusinessHealthScoreProps) => {
         </CardTitle>
         <CardDescription>
           Risk Level: <span className={`font-semibold ${
-            scoreData.risk === 'low' ? 'text-green-600' : 
-            scoreData.risk === 'medium' ? 'text-yellow-600' : 
-            'text-red-600'
+            scoreData.risk === 'low' ? 'text-success' : 
+            scoreData.risk === 'medium' ? 'text-warning' : 
+            'text-destructive'
           }`}>{scoreData.risk.toUpperCase()}</span>
         </CardDescription>
       </CardHeader>

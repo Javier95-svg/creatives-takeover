@@ -31,7 +31,7 @@ export const CustomerNeedsAnalysis = ({ validation }: CustomerNeedsAnalysisProps
       case 'high':
         return 'text-[hsl(var(--red-primary))] bg-[hsl(var(--red-primary))]/10 border-[hsl(var(--red-primary))]/20';
       case 'medium':
-        return 'text-yellow-600 bg-yellow-500/10 border-yellow-500/20';
+        return 'text-warning bg-warning-subtle border-warning/20';
       case 'low':
         return 'text-[hsl(var(--blue-primary))] bg-[hsl(var(--blue-primary))]/10 border-[hsl(var(--blue-primary))]/20';
       default:
@@ -41,7 +41,7 @@ export const CustomerNeedsAnalysis = ({ validation }: CustomerNeedsAnalysisProps
 
   const getImportanceColor = (importance: number) => {
     if (importance >= 70) return 'text-[hsl(var(--green-primary))] bg-[hsl(var(--green-primary))]/10';
-    if (importance >= 40) return 'text-yellow-600 bg-yellow-500/10';
+    if (importance >= 40) return 'text-warning bg-warning-subtle';
     return 'text-[hsl(var(--blue-primary))] bg-[hsl(var(--blue-primary))]/10';
   };
 

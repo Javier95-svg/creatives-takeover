@@ -43,19 +43,19 @@ export const BusinessHealthSummary = () => {
   };
 
   const getScoreColor = (score: number) => {
-    if (score >= 75) return 'text-green-600';
-    if (score >= 50) return 'text-yellow-600';
-    return 'text-orange-600';
+    if (score >= 75) return 'text-success';
+    if (score >= 50) return 'text-warning';
+    return 'text-warning';
   };
 
   const getRiskColor = (risk: string) => {
     switch (risk) {
       case 'low':
-        return 'bg-green-500/10 text-green-600 border-green-500/20';
+        return 'bg-success-subtle text-success border-success/20';
       case 'medium':
-        return 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20';
+        return 'bg-warning-subtle text-warning border-warning/20';
       case 'high':
-        return 'bg-red-500/10 text-red-600 border-red-500/20';
+        return 'bg-destructive-subtle text-destructive border-destructive/20';
       default:
         return 'bg-muted text-muted-foreground border-border';
     }

@@ -31,10 +31,10 @@ export const DemandTrends = ({ validation }: DemandTrendsProps) => {
     switch (direction) {
       case 'increasing':
       case 'rising':
-        return <TrendingUp className="h-4 w-4 text-green-600" />;
+        return <TrendingUp className="h-4 w-4 text-success" />;
       case 'decreasing':
       case 'falling':
-        return <TrendingDown className="h-4 w-4 text-red-600" />;
+        return <TrendingDown className="h-4 w-4 text-destructive" />;
       default:
         return <Minus className="h-4 w-4 text-muted-foreground" />;
     }
@@ -44,10 +44,10 @@ export const DemandTrends = ({ validation }: DemandTrendsProps) => {
     switch (direction) {
       case 'increasing':
       case 'rising':
-        return 'text-green-600 bg-green-500/10';
+        return 'text-success bg-success-subtle';
       case 'decreasing':
       case 'falling':
-        return 'text-red-600 bg-red-500/10';
+        return 'text-destructive bg-destructive-subtle';
       default:
         return 'text-muted-foreground bg-muted';
     }

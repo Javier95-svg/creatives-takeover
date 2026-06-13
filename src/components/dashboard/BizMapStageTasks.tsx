@@ -190,7 +190,7 @@ export function BizMapStageTasks() {
                     aria-label={done ? 'Mark task incomplete' : 'Mark task complete'}
                   >
                     {done ? (
-                      <CheckCircle2 className="h-5 w-5 text-green-600" />
+                      <CheckCircle2 className="h-5 w-5 text-success" />
                     ) : (
                       <Circle className="h-5 w-5 text-muted-foreground" />
                     )}
@@ -218,7 +218,7 @@ export function BizMapStageTasks() {
         <div className="flex flex-wrap items-center gap-2 border-t border-border/60 pt-3">
           {nextStage && stageState[nextStage].unlocked ? (
             <>
-              <Badge className="bg-green-500/10 text-green-700 border-green-500/30">Next stage unlocked</Badge>
+              <Badge className="bg-success-subtle text-success border-success/30">Next stage unlocked</Badge>
               <Button size="sm" variant="outline" onClick={() => setCurrentStage(nextStage)}>
                 <Sparkles className="mr-2 h-4 w-4" />
                 Switch to Stage {BIZMAP_STAGES.find((stage) => stage.id === nextStage)?.numeral}
@@ -235,7 +235,7 @@ export function BizMapStageTasks() {
 
           <Badge variant="outline">Highest unlocked: {highestUnlockedStage}</Badge>
           {progress?.launch_completed_at && (
-            <Badge className="bg-green-500/10 text-green-700 border-green-500/30">Launch plan completed</Badge>
+            <Badge className="bg-success-subtle text-success border-success/30">Launch plan completed</Badge>
           )}
         </div>
       </CardContent>

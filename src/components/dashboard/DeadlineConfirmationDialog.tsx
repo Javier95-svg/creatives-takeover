@@ -125,7 +125,7 @@ export const DeadlineConfirmationDialog = ({ userId }: DeadlineConfirmationDialo
     <Dialog open={!!overdueTask} onOpenChange={() => {}}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <div className="flex items-center gap-2 text-orange-500 mb-2">
+          <div className="flex items-center gap-2 text-warning mb-2">
             <AlertTriangle className="h-6 w-6" />
             <DialogTitle className="text-xl">Task Deadline Reached</DialogTitle>
           </div>
@@ -153,7 +153,7 @@ export const DeadlineConfirmationDialog = ({ userId }: DeadlineConfirmationDialo
           <Button
             onClick={handleComplete}
             disabled={isUpdating}
-            className="w-full sm:w-auto bg-green-600 hover:bg-green-700"
+            className="w-full sm:w-auto bg-success hover:bg-success/90"
           >
             <CheckCircle2 className="h-4 w-4 mr-2" />
             Yes, Completed!

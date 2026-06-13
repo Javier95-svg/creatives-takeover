@@ -114,22 +114,22 @@ export const DecisionHelp = () => {
                       <p className="font-semibold text-sm">{option.label}</p>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                         <div>
-                          <p className="font-medium text-green-600 mb-1">Pros:</p>
+                          <p className="font-medium text-success mb-1">Pros:</p>
                           <ul className="space-y-1">
                             {option.pros.map((pro, i) => (
                               <li key={i} className="flex items-start gap-1">
-                                <CheckCircle2 className="h-3 w-3 text-green-600 mt-0.5 flex-shrink-0" />
+                                <CheckCircle2 className="h-3 w-3 text-success mt-0.5 flex-shrink-0" />
                                 <span>{pro}</span>
                               </li>
                             ))}
                           </ul>
                         </div>
                         <div>
-                          <p className="font-medium text-red-600 mb-1">Cons:</p>
+                          <p className="font-medium text-destructive mb-1">Cons:</p>
                           <ul className="space-y-1">
                             {option.cons.map((con, i) => (
                               <li key={i} className="flex items-start gap-1">
-                                <span className="text-red-600">×</span>
+                                <span className="text-destructive">×</span>
                                 <span>{con}</span>
                               </li>
                             ))}

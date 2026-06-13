@@ -79,7 +79,7 @@ export const GmailIntegration = () => {
               Connected to {connection.email}
             </CardDescription>
           </div>
-          <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-500/20">
+          <Badge variant="outline" className="bg-success-subtle text-success border-success/20">
             <CheckCircle2 className="h-3 w-3 mr-1" />
             Connected
           </Badge>

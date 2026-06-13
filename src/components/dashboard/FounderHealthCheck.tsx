@@ -92,11 +92,11 @@ export const FounderHealthCheck = () => {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'good':
-        return <CheckCircle2 className="h-5 w-5 text-green-600" />;
+        return <CheckCircle2 className="h-5 w-5 text-success" />;
       case 'needs_attention':
-        return <AlertCircle className="h-5 w-5 text-yellow-600" />;
+        return <AlertCircle className="h-5 w-5 text-warning" />;
       case 'critical':
-        return <XCircle className="h-5 w-5 text-red-600" />;
+        return <XCircle className="h-5 w-5 text-destructive" />;
       default:
         return <HelpCircle className="h-5 w-5 text-muted-foreground" />;
     }
@@ -105,11 +105,11 @@ export const FounderHealthCheck = () => {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'good':
-        return <Badge className="bg-green-500/10 text-green-600 border-green-500/20">🟢 Good</Badge>;
+        return <Badge className="bg-success-subtle text-success border-success/20">🟢 Good</Badge>;
       case 'needs_attention':
-        return <Badge className="bg-yellow-500/10 text-yellow-600 border-yellow-500/20">🟡 Needs Attention</Badge>;
+        return <Badge className="bg-warning-subtle text-warning border-warning/20">🟡 Needs Attention</Badge>;
       case 'critical':
-        return <Badge className="bg-red-500/10 text-red-600 border-red-500/20">🔴 Critical</Badge>;
+        return <Badge className="bg-destructive-subtle text-destructive border-destructive/20">🔴 Critical</Badge>;
       default:
         return null;
     }

@@ -180,7 +180,7 @@ export const MonthlyMilestone = () => {
                   className="flex items-center gap-3 p-2 rounded-lg border bg-muted/30 hover:bg-muted/50 transition-colors cursor-pointer"
                 >
                   {task.completed ? (
-                    <CheckCircle2 className="h-4 w-4 text-green-600 flex-shrink-0" />
+                    <CheckCircle2 className="h-4 w-4 text-success flex-shrink-0" />
                   ) : (
                     <Circle className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                   )}

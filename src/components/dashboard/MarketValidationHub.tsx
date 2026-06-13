@@ -45,8 +45,8 @@ export const MarketValidationHub = () => {
   };
 
   const getTrendIcon = () => {
-    if (scoreTrend > 0) return <TrendingUp className="h-4 w-4 text-green-600" />;
-    if (scoreTrend < 0) return <TrendingUp className="h-4 w-4 text-red-600 rotate-180" />;
+    if (scoreTrend > 0) return <TrendingUp className="h-4 w-4 text-success" />;
+    if (scoreTrend < 0) return <TrendingUp className="h-4 w-4 text-destructive rotate-180" />;
     return null;
   };
 
@@ -62,7 +62,7 @@ export const MarketValidationHub = () => {
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               {getTrendIcon()}
               {scoreTrend !== 0 && (
-                <span className={scoreTrend > 0 ? 'text-green-600' : 'text-red-600'}>
+                <span className={scoreTrend > 0 ? 'text-success' : 'text-destructive'}>
                   {scoreTrend > 0 ? '+' : ''}{scoreTrend.toFixed(1)} pts
                 </span>
               )}

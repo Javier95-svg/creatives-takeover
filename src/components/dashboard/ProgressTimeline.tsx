@@ -49,9 +49,9 @@ export const ProgressTimeline = () => {
   };
 
   const getMoodEmoji = (rating: number) => {
-    if (rating >= 4) return <Smile className="w-5 h-5 text-green-500" />;
-    if (rating >= 3) return <Meh className="w-5 h-5 text-yellow-500" />;
-    return <Frown className="w-5 h-5 text-orange-500" />;
+    if (rating >= 4) return <Smile className="w-5 h-5 text-success" />;
+    if (rating >= 3) return <Meh className="w-5 h-5 text-warning" />;
+    return <Frown className="w-5 h-5 text-warning" />;
   };
 
   const getEnergyIndicators = (level: number) => {

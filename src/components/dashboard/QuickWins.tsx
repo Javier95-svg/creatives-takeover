@@ -125,12 +125,12 @@ export const QuickWins = () => {
               onClick={() => toggleQuickWin(win.id)}
               className={`flex items-start gap-3 p-3 rounded-lg border transition-all cursor-pointer ${
                 win.completed
-                  ? 'bg-green-500/10 border-green-500/20'
+                  ? 'bg-success-subtle border-success/20'
                   : 'bg-muted/30 hover:bg-muted/50 border-border/50'
               }`}
             >
               {win.completed ? (
-                <CheckCircle2 className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
+                <CheckCircle2 className="h-5 w-5 text-success flex-shrink-0 mt-0.5" />
               ) : (
                 <Circle className="h-5 w-5 text-muted-foreground flex-shrink-0 mt-0.5" />
               )}

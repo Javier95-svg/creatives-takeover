@@ -68,7 +68,7 @@ export const CompetitorAnalysis = ({ validation }: CompetitorAnalysisProps) => {
 
                   {competitor.strengths && competitor.strengths.length > 0 && (
                     <div className="mt-2">
-                      <p className="text-xs font-medium text-green-600 mb-1">Strengths:</p>
+                      <p className="text-xs font-medium text-success mb-1">Strengths:</p>
                       <div className="flex flex-wrap gap-1">
                         {competitor.strengths.slice(0, 3).map((strength, i) => (
                           <Badge key={i} variant="outline" className="text-xs">
@@ -81,7 +81,7 @@ export const CompetitorAnalysis = ({ validation }: CompetitorAnalysisProps) => {
 
                   {competitor.weaknesses && competitor.weaknesses.length > 0 && (
                     <div className="mt-2">
-                      <p className="text-xs font-medium text-red-600 mb-1">Weaknesses:</p>
+                      <p className="text-xs font-medium text-destructive mb-1">Weaknesses:</p>
                       <div className="flex flex-wrap gap-1">
                         {competitor.weaknesses.slice(0, 2).map((weakness, i) => (
                           <Badge key={i} variant="outline" className="text-xs">
@@ -128,9 +128,9 @@ export const CompetitorAnalysis = ({ validation }: CompetitorAnalysisProps) => {
                       <Badge
                         variant="outline"
                         className={`text-xs ${
-                          gap.difficulty === 'low' ? 'text-green-600' :
-                          gap.difficulty === 'medium' ? 'text-yellow-600' :
-                          'text-red-600'
+                          gap.difficulty === 'low' ? 'text-success' :
+                          gap.difficulty === 'medium' ? 'text-warning' :
+                          'text-destructive'
                         }`}
                       >
                         {gap.difficulty}
