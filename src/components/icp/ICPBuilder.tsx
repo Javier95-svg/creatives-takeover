@@ -36,6 +36,11 @@ import {
   trackUpgradeClicked,
   trackUpgradePromptShown,
 } from "@/lib/analytics";
+import {
+  trackContextualUpgradeImpression,
+  trackContextualUpgradeCtaClicked,
+  trackContextualUpgradeDismissed,
+} from "@/lib/contextualUpgrade";
 import { markOnboardingPathCompleted } from "@/lib/onboardingPath";
 import { normalizePlan } from "@/config/planPermissions";
 import {
@@ -505,6 +510,14 @@ const ICPBuilder: React.FC = () => {
           credits_remaining: totalAvailable,
           current_plan: "rookie",
           target_plan: "starter",
+        });
+        trackContextualUpgradeImpression({
+          trigger: "activation_complete",
+          sourceTool: "icp_builder",
+          currentPlan: "rookie",
+          targetPlan: "starter",
+          outcome: "plan",
+          context: "Your ICP draft is ready — validate the demand behind it.",
         });
       }
       return;
@@ -1877,6 +1890,14 @@ const ICPBuilder: React.FC = () => {
       to_plan: "STARTER",
       location: "post_icp_nudge",
     });
+    trackContextualUpgradeCtaClicked({
+      trigger: "activation_complete",
+      sourceTool: "icp_builder",
+      currentPlan: normalizePlan(subscriptionTier),
+      targetPlan: "starter",
+      outcome: "plan",
+      context: "Post-ICP Starter upgrade",
+    });
 
     setIsStarterCheckoutLoading(true);
     try {
@@ -1950,7 +1971,19 @@ const ICPBuilder: React.FC = () => {
                 {isStarterCheckoutLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                 Upgrade to Starter - $9/mo
               </Button>
-              <Button variant="ghost" onClick={continueToDashboard}>
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  trackContextualUpgradeDismissed({
+                    trigger: "activation_complete",
+                    sourceTool: "icp_builder",
+                    currentPlan: normalizePlan(subscriptionTier),
+                    targetPlan: "starter",
+                    outcome: "plan",
+                  });
+                  continueToDashboard();
+                }}
+              >
                 Skip for now
               </Button>
             </div>

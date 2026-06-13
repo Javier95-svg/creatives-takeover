@@ -10,6 +10,7 @@ import { useCredits } from "@/hooks/useCredits";
 import { Helmet } from "react-helmet-async";
 import { toast } from "sonner";
 import { trackActivity } from "@/lib/activity";
+import { attributeContextualConversion } from "@/lib/contextualUpgrade";
 
 export default function SubscriptionSuccess() {
   const [searchParams] = useSearchParams();
@@ -22,6 +23,16 @@ export default function SubscriptionSuccess() {
 
   const { refreshSubscription, subscriptionData } = useSubscription();
   const { refreshBalance, balance } = useCredits();
+
+  // Credit-pack purchases complete at Stripe (no subscription state to verify),
+  // so attribute their conversion once on arrival. Subscription upgrades are
+  // attributed inside the verification branch below.
+  useEffect(() => {
+    if (searchParams.get("purchase_type") === "credit_pack") {
+      attributeContextualConversion();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     const verifySubscription = async () => {
@@ -41,6 +52,10 @@ export default function SubscriptionSuccess() {
             } catch (activityError) {
               console.warn("Unable to track subscription activity:", activityError);
             }
+            // Close the loop: if this upgrade was driven by a contextual prompt
+            // CTA within the last hour, log the conversion with the original
+            // trigger and elapsed time (feeds prompt-to-conversion + time-to-upgrade).
+            attributeContextualConversion({ currentPlan: tier });
             setVerifying(false);
             return;
           }

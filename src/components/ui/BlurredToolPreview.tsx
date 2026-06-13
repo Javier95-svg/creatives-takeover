@@ -6,11 +6,17 @@
  */
 
 import type { ReactNode } from 'react';
+import { useEffect } from 'react';
 import { Lock, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { useSubscription } from '@/hooks/useSubscription';
+import { normalizePlan } from '@/config/planPermissions';
 import { normalizePlanId, trackUpgradeClicked } from '@/lib/analytics';
+import {
+  trackContextualUpgradeImpression,
+  trackContextualUpgradeCtaClicked,
+} from '@/lib/contextualUpgrade';
 
 interface BlurredToolPreviewProps {
   /** Content to render underneath (blurred when locked, normal when accessible) */
@@ -23,6 +29,8 @@ interface BlurredToolPreviewProps {
   unlockCondition: string;
   /** Plan to show on the upgrade CTA when the tool is tier-gated */
   requiredPlan?: 'starter' | 'rising' | 'pro';
+  /** Stable key for analytics, e.g. "pmf_lab". Defaults to the feature name. */
+  sourceTool?: string;
 }
 
 export function BlurredToolPreview({
@@ -31,9 +39,27 @@ export function BlurredToolPreview({
   featureName,
   unlockCondition,
   requiredPlan,
+  sourceTool,
 }: BlurredToolPreviewProps) {
   const navigate = useNavigate();
   const { subscriptionData } = useSubscription();
+
+  const contextualProps = {
+    trigger: 'stage_gate' as const,
+    sourceTool: sourceTool ?? featureName,
+    currentPlan: normalizePlan(subscriptionData?.subscription_tier),
+    targetPlan: requiredPlan,
+    outcome: 'plan' as const,
+    context: `${featureName} is locked on your plan`,
+  };
+
+  // Trigger 2 (stage gate): a Rookie reached a plan-locked tool. The lock card
+  // is a real friction event, so log an impression whenever it renders locked.
+  useEffect(() => {
+    if (locked) trackContextualUpgradeImpression(contextualProps);
+    // Fire once per lock render for this tool.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [locked, featureName]);
 
   if (!locked) return <>{children}</>;
 
@@ -59,6 +85,7 @@ export function BlurredToolPreview({
                   to_plan: normalizePlanId(requiredPlan),
                   location: 'feature_gate',
                 });
+                trackContextualUpgradeCtaClicked(contextualProps);
                 navigate('/pricing');
               }}
               className="gap-2"

@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Coins, CreditCard, TrendingUp } from 'lucide-react';
@@ -10,6 +11,12 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { useSubscription } from '@/hooks/useSubscription';
+import { normalizePlan } from '@/config/planPermissions';
+import {
+  trackContextualUpgradeImpression,
+  trackContextualUpgradeCtaClicked,
+  trackContextualUpgradeDismissed,
+} from '@/lib/contextualUpgrade';
 
 const CREDIT_PACKS = [
   { id: 'pack_20', label: 'Starter Pack', credits: 20 },
@@ -27,10 +34,25 @@ export const MVPBuilderCreditExhaustedDialog = ({
   onOpenChange,
 }: MVPBuilderCreditExhaustedDialogProps) => {
   const navigate = useNavigate();
-  const { createCreditPackCheckout, actionLoading } = useSubscription();
+  const { createCreditPackCheckout, actionLoading, subscriptionData } = useSubscription();
   const [pendingPackId, setPendingPackId] = useState<string | null>(null);
 
+  const contextualProps = {
+    trigger: 'mvp_credit_zero' as const,
+    sourceTool: 'mvp_builder',
+    currentPlan: normalizePlan(subscriptionData?.subscription_tier),
+    creditsRemaining: 0,
+    context: 'MVP Builder credits exhausted',
+  };
+
+  useEffect(() => {
+    if (open) trackContextualUpgradeImpression(contextualProps);
+    // Fire once per open; props are stable enough for this rule-based prompt.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
+
   const openPackCheckout = async (packId: string) => {
+    trackContextualUpgradeCtaClicked({ ...contextualProps, outcome: 'credits', context: packId });
     setPendingPackId(packId);
     try {
       await createCreditPackCheckout(packId);
@@ -39,8 +61,13 @@ export const MVPBuilderCreditExhaustedDialog = ({
     }
   };
 
+  const handleOpenChange = (next: boolean) => {
+    if (!next && open) trackContextualUpgradeDismissed(contextualProps);
+    onOpenChange(next);
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -57,6 +84,7 @@ export const MVPBuilderCreditExhaustedDialog = ({
             type="button"
             className="h-auto justify-between gap-3 px-4 py-3"
             onClick={() => {
+              trackContextualUpgradeCtaClicked({ ...contextualProps, outcome: 'plan' });
               onOpenChange(false);
               navigate('/pricing');
             }}

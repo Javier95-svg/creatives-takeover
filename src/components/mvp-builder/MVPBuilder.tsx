@@ -4,6 +4,7 @@ import { MVPBuilderHeader } from './MVPBuilderHeader';
 import { MVPBuilderChat } from './MVPBuilderChat';
 import { MVPBuilderPreview } from './MVPBuilderPreview';
 import { MVPBuilderCreditExhaustedDialog } from './MVPBuilderCreditExhaustedDialog';
+import { MVPBuilderLowCreditBanner } from './MVPBuilderLowCreditBanner';
 
 import { MessageSquare, Monitor } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -207,6 +208,8 @@ export const MVPBuilder: React.FC = () => {
           {creditsAvailable} credits available - {heldCredits} credits held while MVP Builder works
         </div>
       )}
+
+      {!isGenerating && <MVPBuilderLowCreditBanner projectName={projectName} />}
 
 <div className="flex-1 min-h-0 flex flex-col">
         <div className="flex md:hidden items-center justify-center border-b border-border/40 bg-card shrink-0 py-2">

@@ -91,13 +91,24 @@ const MentorBookingPage = () => {
             featureName: "Discovery Calls",
             requiredCredits: bookingIntent.requiredCredits ?? 10,
             description: bookingIntent.error || "You need 10 credits to book a discovery call.",
+            contextualTrigger: "mentor_booking_gate",
+            sourceTool: "mentor_booking",
+            contextLine: mentor ? `Booking a discovery call with ${mentor.name}.` : undefined,
           });
           return;
         }
 
         if (bookingIntent.errorCode === "PLAN_UPGRADE_REQUIRED") {
-          toast.error(bookingIntent.error || "Unable to book this discovery call on your current plan.");
-          navigate("/pricing");
+          openUpgradePrompt({
+            reason: "feature",
+            featureName: "Discovery Calls",
+            description:
+              bookingIntent.error ||
+              "Discovery calls with mentors are available on a paid plan. Upgrade to book this session.",
+            contextualTrigger: "mentor_booking_gate",
+            sourceTool: "mentor_booking",
+            contextLine: mentor ? `Booking a discovery call with ${mentor.name}.` : undefined,
+          });
           return;
         }
 

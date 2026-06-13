@@ -27,6 +27,8 @@ import {
 } from '@/components/ui/dialog';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSubscription } from '@/hooks/useSubscription';
+import { useUpgradePrompt } from '@/contexts/UpgradePromptContext';
+import { normalizePlan } from '@/config/planPermissions';
 import StepThumbnailList from '@/components/demo-studio/editor/StepThumbnailList';
 import StoryboardRail from '@/components/demo-studio/editor/StoryboardRail';
 import HotspotCanvas from '@/components/demo-studio/editor/HotspotCanvas';
@@ -76,6 +78,7 @@ export default function DemoEditorPage() {
   const { user, loading: authLoading } = useAuth();
   const { subscriptionData } = useSubscription();
   const planTier = subscriptionData?.subscription_tier;
+  const { openUpgradePrompt } = useUpgradePrompt();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const hotspotPersistTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
 
@@ -349,6 +352,24 @@ export default function DemoEditorPage() {
       const updated = await publishDemo(demo.id);
       setDemo(updated);
       toast.success('Demo published!');
+      // Trigger 4 (activation complete): publishing a demo is a milestone. For
+      // free-tier founders, surface a light prompt for the plan that removes the
+      // watermark and unlocks the next stage — fired after the success toast so
+      // it never interrupts the publish flow itself.
+      if (normalizePlan(planTier) === 'rookie') {
+        setTimeout(() => {
+          openUpgradePrompt({
+            reason: 'feature',
+            featureName: 'Demo Studio',
+            requiredTier: 'starter',
+            description:
+              'Your demo is live. Upgrade to remove the watermark and unlock the next steps in your launch journey.',
+            contextualTrigger: 'activation_complete',
+            sourceTool: 'demo_studio',
+            contextLine: `"${updated.title ?? 'Your demo'}" is published and ready to share.`,
+          });
+        }, 1200);
+      }
     } catch (e) {
       toast.error(e instanceof Error ? e.message : 'Publish failed.');
     } finally {

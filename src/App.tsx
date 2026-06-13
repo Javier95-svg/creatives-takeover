@@ -38,6 +38,7 @@ const Analytics = lazy(() =>
 const Index = lazy(() => import("./pages/Index"));
 const About = lazy(() => import("./pages/About"));
 const PricingPage = lazy(() => import("./pages/PricingPage"));
+const SubscriptionSuccess = lazy(() => import("./pages/SubscriptionSuccess"));
 const Contact = lazy(() => import("./pages/Contact"));
 const FAQPage = lazy(() => import("./pages/FAQPage"));
 const Resources = lazy(() => import("./pages/Resources"));
@@ -224,6 +225,7 @@ function App() {
                         <Route path="/" element={<Index />} />
                         <Route path="/about" element={<About />} />
                         <Route path="/pricing" element={<PricingPage />} />
+                        <Route path="/subscription-success" element={<SubscriptionSuccess />} />
                         <Route path="/build" element={<BuildPage />} />
                         <Route path="/contact" element={<Contact />} />
                         <Route path="/faq" element={<FAQPage />} />

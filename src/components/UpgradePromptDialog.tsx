@@ -17,6 +17,12 @@ import {
   trackJourneyUpgradePromptShown,
   trackUpgradeClicked,
 } from "@/lib/analytics";
+import {
+  trackContextualUpgradeImpression,
+  trackContextualUpgradeCtaClicked,
+  trackContextualUpgradeDismissed,
+  type ContextualUpgradeTrigger,
+} from "@/lib/contextualUpgrade";
 import { toast } from "sonner";
 
 const TOP_UP_PACKAGES = [
@@ -65,6 +71,15 @@ export interface UpgradePromptDialogProps {
   description?: string;
   journeyTrigger?: string;
   sourceTool?: string;
+  /**
+   * Canonical contextual-upgrade trigger. When set, the dialog auto-logs
+   * impression / CTA / dismiss through the unified taxonomy in
+   * `@/lib/contextualUpgrade`, so prompt-to-conversion can be measured per
+   * trigger and the resulting conversion attributed after checkout.
+   */
+  contextualTrigger?: ContextualUpgradeTrigger;
+  /** One plain-language line of what the user was doing when blocked. */
+  contextLine?: string;
   onUpgrade?: () => void;
 }
 
@@ -80,6 +95,8 @@ const UpgradePromptDialog = ({
   description,
   journeyTrigger,
   sourceTool,
+  contextualTrigger,
+  contextLine,
   onUpgrade,
 }: UpgradePromptDialogProps) => {
   const navigate = useNavigate();
@@ -124,6 +141,20 @@ const UpgradePromptDialog = ({
 
   const canUpgrade = Boolean(tierDetails) && recommendedTier !== normalizedCurrentTier;
   const journeyTargetPlan = recommendedTier === "rookie" ? "starter" : recommendedTier;
+
+  const contextualOutcome = reason === "credits" ? "credits" : "plan";
+  const contextualBase = useMemo(
+    () => ({
+      trigger: contextualTrigger!,
+      sourceTool,
+      currentPlan: normalizedCurrentTier,
+      targetPlan: journeyTargetPlan,
+      outcome: contextualOutcome as "plan" | "credits",
+      creditsRemaining: reason === "credits" ? balance : undefined,
+      context: contextLine ?? featureName,
+    }),
+    [balance, contextLine, contextualOutcome, contextualTrigger, featureName, journeyTargetPlan, normalizedCurrentTier, reason, sourceTool],
+  );
   const vcViewText = tierDetails?.vcViewLimit === Infinity
     ? "Unlimited VC views"
     : `${tierDetails?.vcViewLimit} VC views/month`;
@@ -134,6 +165,10 @@ const UpgradePromptDialog = ({
       to_plan: normalizePlanId(recommendedTier),
       location: "feature_gate",
     });
+
+    if (contextualTrigger) {
+      trackContextualUpgradeCtaClicked({ ...contextualBase, outcome: "plan" });
+    }
 
     if (!canUpgrade) {
       navigate("/pricing");
@@ -175,6 +210,11 @@ const UpgradePromptDialog = ({
     });
   }, [journeyTargetPlan, journeyTrigger, normalizedCurrentTier, open, sourceTool, tierDetails]);
 
+  useEffect(() => {
+    if (!open || !contextualTrigger) return;
+    trackContextualUpgradeImpression(contextualBase);
+  }, [open, contextualTrigger, contextualBase]);
+
   const handleOpenChange = (nextOpen: boolean) => {
     if (!nextOpen && open && journeyTrigger) {
       try {
@@ -187,6 +227,9 @@ const UpgradePromptDialog = ({
         source_tool: sourceTool,
         route: typeof window !== "undefined" ? window.location.pathname : undefined,
       });
+    }
+    if (!nextOpen && open && contextualTrigger) {
+      trackContextualUpgradeDismissed(contextualBase);
     }
     onOpenChange(nextOpen);
   };
@@ -202,6 +245,11 @@ const UpgradePromptDialog = ({
           <DialogDescription>
             {description || defaultDescription}
           </DialogDescription>
+          {contextLine ? (
+            <p className="mt-1 rounded-md bg-muted/60 px-3 py-2 text-sm text-muted-foreground">
+              {contextLine}
+            </p>
+          ) : null}
         </DialogHeader>
 
         {reason === "credits" ? (
@@ -223,6 +271,9 @@ const UpgradePromptDialog = ({
                     <button
                       key={label}
                       onClick={() => {
+                        if (contextualTrigger) {
+                          trackContextualUpgradeCtaClicked({ ...contextualBase, outcome: "credits", context: label });
+                        }
                         handleOpenChange(false);
                         openTopUp(url, user?.email, user?.id);
                       }}
@@ -250,6 +301,9 @@ const UpgradePromptDialog = ({
               <Button
                 className="w-full sm:w-auto gap-2"
                 onClick={() => {
+                  if (contextualTrigger) {
+                    trackContextualUpgradeCtaClicked({ ...contextualBase, outcome: "plan" });
+                  }
                   navigate("/pricing");
                   handleOpenChange(false);
                 }}
@@ -310,6 +364,9 @@ const UpgradePromptDialog = ({
                     to_plan: normalizePlanId(recommendedTier),
                     location: "feature_gate",
                   });
+                  if (contextualTrigger) {
+                    trackContextualUpgradeCtaClicked({ ...contextualBase, outcome: "plan" });
+                  }
                   navigate("/pricing");
                   onOpenChange(false);
                 }}
