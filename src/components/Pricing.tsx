@@ -249,7 +249,7 @@ export default function Pricing() {
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                     <Badge className={`px-3 py-1 text-xs font-medium ${
                       isCurrentPlan
-                        ? "bg-success text-success-foreground"
+                        ? "bg-success-subtle text-success border border-success/30"
                         : isPopular
                           ? "bg-primary text-primary-foreground"
                           : "bg-foreground text-background"

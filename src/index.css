@@ -61,7 +61,7 @@ All colors MUST be HSL.
        Light-mode values are darkened for AA text contrast on white/subtle bgs;
        dark mode (below) keeps them bright for contrast on dark surfaces.
        Use these for status; NOT the categorical planning/action/growth palette. */
-    --warning: 35 92% 38%; /* amber — AA-legible as text (~4.7:1 on white) */
+    --warning: 32 95% 33%; /* deep amber — AA-legible as text (~5.2:1 on white, 4.7:1 on warning-subtle) */
     --warning-foreground: 0 0% 100%;
     --info: 221 83% 45%; /* informational blue, distinct from primary (~5.6:1) */
     --info-foreground: 0 0% 100%;
